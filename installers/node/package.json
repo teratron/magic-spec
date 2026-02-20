@@ -4,12 +4,32 @@
   "description": "Magic Specification-Driven Development (SDD) Workflow Installer",
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "MIT",
+  "homepage": "https://github.com/teratron/magic-spec",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/teratron/magic-spec.git"
+  },
   "main": "bin/magic.js",
   "bin": {
     "magic-spec": "bin/magic.js"
   },
   "files": [
     "bin",
-    "core"
-  ]
+    ".magic",
+    ".agent",
+    "adapters",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=16"
+  },
+  "scripts": {
+    "sync": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..');['/.magic','/.agent','/adapters'].forEach(d=>fs.cpSync(r+d,__dirname+d,{recursive:true,force:true}));console.log('✅ synced from root')\"",
+    "check": "npm run sync && npm pack --dry-run",
+    "publish": "npm run sync && node ../../scripts/publish-npm.js",
+    "publish:dry": "npm run sync && npm publish --access public --dry-run",
+    "version:patch": "npm version patch --no-git-tag-version",
+    "version:minor": "npm version minor --no-git-tag-version",
+    "version:major": "npm version major --no-git-tag-version"
+  }
 }

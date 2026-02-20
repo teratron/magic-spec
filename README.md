@@ -174,3 +174,10 @@ Works with any AI coding agent that can read markdown workflow files:
 ## 📄 License
 
 [MIT](./LICENSE) © 2026 Oleg Alexandrov
+
+---
+
+## TODO: Magic Spec
+
+- Changelog
+- Docs

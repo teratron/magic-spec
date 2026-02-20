@@ -1,43 +1,4 @@
-if (!(Test-Path -Path ".git")) {
-    Write-Host "Note: not a git repository. Proceeding with SDD initialization anyway."
-}
-
-$D = ".design"
-foreach ($dir in @($D, "$D/specifications", "$D/tasks")) {
-    New-Item -ItemType Directory -Force -Path $dir | Out-Null
-}
-$Date = Get-Date -Format "yyyy-MM-dd"
-
-$IndexPath = "$D/INDEX.md"
-if (!(Test-Path $IndexPath)) {
-    Set-Content $IndexPath -Encoding UTF8 @"
-# Specifications Registry
-**Version:** 1.0.0
-**Status:** Active
-
-## Overview
-Central registry of all project specifications and their current state.
-
-## System Files
-- [RULES.md](RULES.md) - Project constitution and standing conventions.
-
-## Domain Specifications
-| File | Description | Status | Version |
-| :--- | :--- | :--- | :--- |
-<!-- Add your specifications here -->
-
-## Meta Information
-- **Maintainer**: Core Team
-- **License**: MIT
-- **Last Updated**: $Date
-"@
-    Write-Host "Created .design/INDEX.md"
-}
-
-$RulesPath = "$D/RULES.md"
-if (!(Test-Path $RulesPath)) {
-    Set-Content $RulesPath -Encoding UTF8 @"
-# Project Specification Rules
+﻿# Project Specification Rules
 **Version:** 1.0.0
 **Status:** Active
 
@@ -46,8 +7,8 @@ Constitution of the specification system for this project.
 Read by the agent before every operation. Updated only via explicit triggers.
 
 ## 1. Naming Conventions
-- Spec files use lowercase kebab-case: ``api.md``, ``database-schema.md``.
-- System files use uppercase: ``INDEX.md``, ``RULES.md``.
+- Spec files use lowercase kebab-case: `api.md`, `database-schema.md`.
+- System files use uppercase: `INDEX.md`, `RULES.md`.
 - Section names within specs are title-cased.
 
 ## 2. Status Rules
@@ -72,7 +33,7 @@ Read by the agent before every operation. Updated only via explicit triggers.
 
 ## 6. Relations Rules
 - Every spec that depends on another must declare it in Related Specifications.
-- Cross-file content duplication is not permitted — use a link instead.
+- Cross-file content duplication is not permitted вЂ” use a link instead.
 - Circular dependencies must be flagged and resolved.
 
 ## 7. Project Conventions
@@ -82,7 +43,4 @@ Read by the agent before every operation. Updated only via explicit triggers.
 ## Document History
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
-| 1.0.0 | $Date | Agent | Initial constitution |
-"@
-    Write-Host "Created .design/RULES.md"
-}
+| 1.0.0 | 2026-02-20 | Agent | Initial constitution |

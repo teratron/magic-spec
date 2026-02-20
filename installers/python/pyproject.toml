@@ -4,9 +4,13 @@ version = "1.0.0"
 description = "Magic Specification-Driven Development (SDD) Workflow Installer"
 readme = "README.md"
 requires-python = ">=3.8"
-license = {text = "MIT License"}
+license = { text = "MIT License" }
 authors = [{ name = "Oleg Alexandrov", email = "alexandrovoleg.ru@gmail.com" }]
 dependencies = []
+
+[project.urls]
+Homepage = "https://github.com/teratron/magic-spec"
+Repository = "https://github.com/teratron/magic-spec"
 
 [project.scripts]
 magic-spec = "magic_spec.__main__:main"
@@ -19,10 +23,16 @@ build-backend = "hatchling.build"
 packages = ["magic_spec"]
 
 [tool.hatch.build.targets.sdist]
-include = [
-    "/magic_spec",
-    "/core",
-]
+include = ["/magic_spec", "/.magic", "/.agent", "/adapters"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"core" = "core"
+".magic" = ".magic"
+".agent" = ".agent"
+"adapters" = "adapters"
+
+[tool.hatch.envs.default.scripts]
+sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent','adapters']]; print('synced from root')\""
+build = ["sync", "uv build"]
+check = ["sync", "uv build --no-sources"]
+publish = ["sync", "python ../../scripts/publish-pypi.py"]
+publish-dry = ["sync", "uv publish --dry-run"]

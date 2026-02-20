@@ -1,0 +1,140 @@
+# Distribution: npm (npx)
+
+**Version:** 0.1.1
+**Status:** Draft
+
+## Overview
+
+Defines the npm package structure, `package.json` configuration, bundling strategy,
+and the `npm publish` process that enables users to run `npx magic-spec@latest`.
+
+## Related Specifications
+
+- [architecture.md](architecture.md) — Defines `core/` as the source for bundled files.
+- [cli-installer.md](cli-installer.md) — Defines the CLI behavior implemented in `bin/magic.js`.
+
+## 1. Motivation
+
+Publishing `magic-spec` to the npm registry makes the tool universally accessible to any
+developer with Node.js installed — regardless of their project's language or stack.
+`npx magic-spec@latest` requires zero prior installation and always fetches the latest version.
+
+## 2. Constraints & Assumptions
+
+- No build step / bundler required — the CLI is plain Node.js with zero dependencies.
+- The `core/` snapshot inside the package must be current at publish time (manually synced).
+- The package is published with `--access public` (scoped or unscoped public package).
+- Minimum supported Node.js version: 16 (LTS).
+- The `bin` field must be executable — `magic.js` must have `#!/usr/bin/env node` shebang.
+
+## 3. Detailed Design
+
+### 3.1 Package Structure (published to npm)
+
+```plaintext
+magic-spec@X.Y.Z  (npm package contents)
+│
+├── bin/
+│   └── magic.js      # CLI entry point (shebang: #!/usr/bin/env node)
+├── core/
+│   ├── .magic/       # SDD engine files
+│   └── .agent/       # Agent trigger wrappers
+├── package.json
+└── README.md
+```
+
+### 3.2 package.json Fields
+
+```plaintext
+name:          "magic-spec"
+version:       semver (X.Y.Z), synced with git tag
+description:   "Magic SDD workflow installer"
+license:       "MIT"
+main:          "bin/magic.js"
+bin:
+  magic-spec:  "bin/magic.js"
+files:
+  - "bin"
+  - "core"
+  - "README.md"
+engines:
+  node:        ">=16"
+```
+
+The `files` field acts as an allowlist — only the listed paths are included in the published package.
+Everything else (`.git`, `.design`, `installers/python`, etc.) is excluded automatically.
+
+### 3.3 Publish Flow
+
+```mermaid
+graph TD
+    A["Update core/ in repo"] --> B["Sync: copy core/ → installers/node/core/"]
+    B --> C["Bump version in package.json"]
+    C --> D["npm publish --access public"]
+    D --> E["npm registry: magic-spec@X.Y.Z available"]
+    E --> F["Users: npx magic-spec@latest ✅"]
+```
+
+### 3.4 Version Strategy
+
+`magic-spec` follows **Semantic Versioning (semver)**:
+
+| Change type | Version bump | Example |
+| :--- | :--- | :--- |
+| New workflow file / feature in engine | `minor` | 1.0.0 → 1.1.0 |
+| Bug fix in CLI or engine template | `patch` | 1.1.0 → 1.1.1 |
+| Breaking change to directory structure | `major` | 1.1.1 → 2.0.0 |
+
+The npm package version and the git tag must always be in sync.
+
+### 3.5 Pre-publish Checklist
+
+```plaintext
+□ core/ is up to date with latest .magic/ and .agent/
+□ installers/node/core/ is a fresh copy of core/
+□ version in package.json matches intended release
+□ README.md is current
+□ npm whoami confirms correct identity
+□ npm publish --dry-run passes without errors
+```
+
+### 3.6 Script Reference
+
+All scripts run from `installers/node/` directory via `npm run <script>`.
+
+| Script | Command | Description |
+| :--- | :--- | :--- |
+| `sync` | `node -e "fs.cpSync(...)"` | Copy `../../core` → `./core` |
+| `check` | `sync` + `npm pack --dry-run` | Verify package contents before publish |
+| `publish` | `sync` + `node ../../scripts/publish-npm.js` | Load `.env`, publish to npm |
+| `publish:dry` | `sync` + `npm publish --dry-run` | Dry-run: validate without uploading |
+| `version:patch` | `npm version patch --no-git-tag-version` | Bump patch version in `package.json` |
+| `version:minor` | `npm version minor --no-git-tag-version` | Bump minor version in `package.json` |
+| `version:major` | `npm version major --no-git-tag-version` | Bump major version in `package.json` |
+
+> `publish` delegates to `scripts/publish-npm.js` (repo root) which loads `.env` / `.env.production`
+> and sets `NPM_TOKEN` before calling `npm publish`. See `secrets-management.md`.
+
+## 4. Implementation Notes
+
+1. Run `npm publish` from `installers/node/` directory, not from the repo root.
+2. The `core/` inside `installers/node/` is gitignored — refresh it before every publish.
+3. Use `npm publish --dry-run` to verify what will be included in the package before publishing.
+4. Use `npm version patch|minor|major` to bump version and create a git tag atomically.
+
+## 5. Drawbacks & Alternatives
+
+**Alternative: scoped package (`@teratron/magic-spec`)**
+Avoids name conflicts on npm. Rejected for MVP — an unscoped name is more discoverable
+and simpler to type (`npx magic-spec` vs `npx @teratron/magic-spec`).
+
+**Alternative: bundle with esbuild**
+Bundle `bin/magic.js` into a single minified file. Rejected — the script has zero external
+dependencies, so bundling adds complexity with no benefit.
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 0.1.0 | 2026-02-20 | Agent | Initial Draft |
+| 0.1.1 | 2026-02-20 | Agent | Added §3.6 Script Reference (sync / check / publish / version) |
