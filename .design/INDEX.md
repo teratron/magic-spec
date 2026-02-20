@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Active
 
 ## Overview
@@ -44,3 +44,4 @@ Central registry of all project specifications and their current state.
 | 1.7.0 | 2026-02-20 | Agent | Added installer-features.md (8 advanced features); updated cli-installer to v0.2.1 |
 | 1.8.0 | 2026-02-20 | Agent | Added changelog.md (two-level draft/compile strategy) |
 | 1.9.0 | 2026-02-20 | Agent | changelog.md v0.2.0: added Task Change Record §3.2 (Created/Modified/Decided fields) |
+| 1.10.0 | 2026-02-21 | Agent | Updated distribution-pypi.md to v0.1.2 (uv migration + registration checklist) |

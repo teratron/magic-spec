@@ -60,7 +60,9 @@ magic-spec/                         ← Repository root = Source of Truth
 └── installers/                     ← Layer 2: Distribution
     ├── node/                       # npm package (npx entry point)
     │   ├── src/index.js            # CLI script
-    │   └── package.json
+    │   ├── publish.js              # Publish runner
+    │   ├── package.json
+    │   └── dist/                   # Build artifact (gitignored)
     └── python/                     # PyPI package (uvx entry point)
         ├── magic_spec/
         │   ├── __init__.py
@@ -68,8 +70,8 @@ magic-spec/                         ← Repository root = Source of Truth
         └── pyproject.toml
 ```
 
-> **Note:** `.magic/`, `.agent/`, `adapters/` are synced into `installers/node/` and `installers/python/`
-> before each publish by the `sync` script. These synced copies are gitignored.
+> **Note:** Required root files are assembled into `dist/` (Node) or included via `hatch` (Python)
+> before each publish by the `build` script.
 
 ### 3.2 Data Flow: From Source to Installed Project
 

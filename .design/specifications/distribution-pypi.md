@@ -1,6 +1,6 @@
 # Distribution: PyPI (uvx)
 
-**Version:** 0.1.1
+**Version:** 0.1.2
 **Status:** Draft
 
 ## Overview
@@ -131,18 +131,37 @@ Both packages must be published with the **same version number** for every relea
 
 ### 3.8 Script Reference
 
-All scripts run from `installers/python/` directory via `hatch run <script>`.
+All scripts run from `installers/python/` directory via `uv run <script>`.
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `sync` | `python -e "shutil.copytree(...)"` | Copy `../../core` → `./core` |
-| `build` | `sync` + `uv build` | Build wheel and sdist into `dist/` |
-| `check` | `sync` + `uv build --no-sources` | Validate package without full build |
-| `publish` | `sync` + `python ../../scripts/publish-pypi.py` | Load `.env`, publish to PyPI |
-| `publish-dry` | `sync` + `uv publish --dry-run` | Dry-run: validate without uploading |
+| `sync` | `node -e ...` or `python -e ...` | Copy `../../.magic`, `../../.agent`, `../../adapters` → local |
+| `build` | `uv build` | Build wheel and sdist into `dist/` |
+| `publish` | `uv publish` | Upload `dist/*` to PyPI (interactive login) |
+| `publish:token` | `uv publish --token $PYPI_TOKEN` | Automated upload using API Token |
 
-> `publish` delegates to `scripts/publish-pypi.py` (repo root) which loads `.env` / `.env.production`
-> and sets `PYPI_TOKEN` before calling `uv publish`. See `secrets-management.md`.
+> `publish` uses `uv`'s native publishing capabilities. See `secrets-management.md` for token details.
+
+### 3.9 Primary PyPI Registration
+
+If the package `magic-spec` is not yet registered on PyPI:
+
+1. **Register Account:** Create an account at [pypi.org](https://pypi.org/account/register/).
+2. **Enable 2FA:** Mandatory for all PyPI publishers. Use an app (Authy, Google Authenticator) or security key.
+3. **Check Availability:** Verify [pypi.org/project/magic-spec/](https://pypi.org/project/magic-spec/) is 404.
+4. **Generate Token:**
+   - Go to "Account Settings" -> "API tokens" -> "Add API token".
+   - Name it (e.g., `magic-spec-deploy`).
+   - Scope: "Entire account" (if first push) or specific project (after first push).
+5. **First Push:**
+
+   ```bash
+   cd installers/python
+   uv build
+   uv publish --token pypi-YOUR_TOKEN_HERE
+   ```
+
+   *The name is reserved for your account upon the first successful upload.*
 
 ## 4. Implementation Notes
 

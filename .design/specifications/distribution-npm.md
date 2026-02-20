@@ -1,6 +1,6 @@
 # Distribution: npm (npx)
 
-**Version:** 0.1.2
+**Version:** 0.1.3
 **Status:** Draft
 
 ## Overview
@@ -29,33 +29,40 @@ developer with Node.js installed — regardless of their project's language or s
 
 ## 3. Detailed Design
 
-### 3.1 Package Structure (published to npm)
+### 3.1 Assembly Structure (dist/)
+
+Unlike most packages, `magic-spec` is assembled from repository root files into a `dist/`
+directory before publishing.
 
 ```plaintext
-magic-spec@X.Y.Z  (npm package contents)
-│
-├── bin/
-│   └── magic.js      # CLI entry point (shebang: #!/usr/bin/env node)
-├── core/
-│   ├── .magic/       # SDD engine files
-│   └── .agent/       # Agent trigger wrappers
-├── package.json
-└── README.md
+installers/node/
+├── src/                # Local source (index.js)
+├── publish.js          # Deployment script (ignored in package)
+├── package.json        # Manifest
+└── dist/               # ASSEMBLY ROOT (gitignored)
+    ├── src/            # Copied from ../src/
+    ├── .magic/         # Synced from ../../../.magic/
+    ├── .agent/         # Synced from ../../../.agent/
+    ├── adapters/       # Synced from ../../../adapters/
+    ├── README.md       # Synced from ../../../README.md
+    └── package.json    # Copied from ../package.json
 ```
 
-### 3.2 package.json Fields
+### 3.2 package.json Fields (in dist/package.json)
 
 ```plaintext
 name:          "magic-spec"
 version:       semver (X.Y.Z), synced with git tag
-description:   "Magic SDD workflow installer"
+description:   "Magic SDD workflow"
 license:       "MIT"
 main:          "src/index.js"
 bin:
   magic-spec:  "src/index.js"
 files:
-  - "bin"
-  - "core"
+  - "src"
+  - ".magic"
+  - ".agent"
+  - "adapters"
   - "README.md"
 engines:
   node:        ">=16"
@@ -68,10 +75,10 @@ Everything else (`.git`, `.design`, `installers/python`, etc.) is excluded autom
 
 ```mermaid
 graph TD
-    A["Update core/ in repo"] --> B["Sync: copy core/ → installers/node/core/"]
-    B --> C["Bump version in package.json"]
-    C --> D["npm publish --access public"]
-    D --> E["npm registry: magic-spec@X.Y.Z available"]
+    A["Update engine in root"] --> B["Run: npm run build"]
+    B --> C["Assemble dist/ folder"]
+    C --> D["Run: npm run publish"]
+    D --> E["Publish from dist/ to npm registry"]
     E --> F["Users: npx magic-spec@latest ✅"]
 ```
 
@@ -104,10 +111,10 @@ All scripts run from `installers/node/` directory via `npm run <script>`.
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `sync` | `node -e "fs.cpSync(...)"` | Copy `../../core` → `./core` |
-| `check` | `sync` + `npm pack --dry-run` | Verify package contents before publish |
-| `publish` | `sync` + `node ../../scripts/publish-npm.js` | Load `.env`, publish to npm |
-| `publish:dry` | `sync` + `npm publish --dry-run` | Dry-run: validate without uploading |
+| `build` | `node -e "..."` | Assemble root files + local src into `./dist/` |
+| `check` | `npm run build` + `cd dist && npm pack --dry-run` | Verify package contents in `dist/` |
+| `publish` | `npm run build` + `node publish.js` | Run build, then execute publish logic |
+| `publish:dry` | `npm run build` + `cd dist && npm publish --dry-run` | Dry-run from the `dist/` folder |
 | `version:patch` | `npm version patch --no-git-tag-version` | Bump patch version in `package.json` |
 | `version:minor` | `npm version minor --no-git-tag-version` | Bump minor version in `package.json` |
 | `version:major` | `npm version major --no-git-tag-version` | Bump major version in `package.json` |
@@ -117,10 +124,10 @@ All scripts run from `installers/node/` directory via `npm run <script>`.
 
 ## 4. Implementation Notes
 
-1. Run `npm publish` from `installers/node/` directory, not from the repo root.
-2. The synced copies inside `installers/node/` are gitignored — refresh before every publish via `npm run sync`.
-3. Use `npm run check` (`sync` + `npm pack --dry-run`) to verify package contents before publishing.
-4. Use `npm version patch|minor|major` to bump version; bump in sync with `pyproject.toml`.
+1. Run `npm run publish` from `installers/node/` directory.
+2. The assembly `dist/` folder is gitignored — refresh before every publish via `npm run build`.
+3. The `publish.js` script uses native Node.js `process.loadEnvFile()` (Node.js >= 21.7).
+4. Bump version in `package.json`; bump in sync with `pyproject.toml`.
 
 ### 4.1 Local Testing
 
@@ -129,16 +136,16 @@ Test the installer locally **before** publishing:
 ```plaintext
 # Method A — npm link (fastest, works like global install)
 cd installers/node
-npm run test:link         # sync + npm link
+npm run test:link         # build + cd dist && npm link
 magic-spec                # test in any directory
 magic-spec --env cursor
 npm unlink -g magic-spec  # cleanup
 
 # Method B — tarball (closest to real npx experience)
 cd installers/node
-npm run test:pack                         # creates magic-spec-1.0.0.tgz
+npm run test:pack                         # creates magic-spec-X.Y.Z.tgz in dist/
 cd C:\tmp\test-project
-npm install path\to\magic-spec-1.0.0.tgz
+npm install path\to\magic-spec-X.Y.Z.tgz
 npx magic-spec
 
 # Method C — direct node (fastest iteration, no install needed)
@@ -163,3 +170,4 @@ dependencies, so bundling adds complexity with no benefit.
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Added §3.6 Script Reference (sync / check / publish / version) |
 | 0.1.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |
+| 0.1.3 | 2026-02-21 | Agent | Aligned to Assembly Pattern (dist/ folder); renamed sync to build |

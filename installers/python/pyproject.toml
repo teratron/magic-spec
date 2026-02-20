@@ -1,7 +1,7 @@
 [project]
 name = "magic-spec"
 version = "1.0.0"
-description = "Magic Specification-Driven Development (SDD) Workflow Installer"
+description = "Magic Specification-Driven Development (SDD) Workflow"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { text = "MIT License" }
@@ -23,7 +23,14 @@ build-backend = "hatchling.build"
 packages = ["magic_spec"]
 
 [tool.hatch.build.targets.sdist]
-include = ["/magic_spec", "/.magic", "/.agent", "/adapters"]
+include = [
+    "/magic_spec",
+    "/.magic",
+    "/.agent",
+    "/adapters",
+    "/README.md",
+    "/LICENSE",
+]
 
 [tool.hatch.build.targets.wheel.shared-data]
 ".magic" = ".magic"
@@ -31,8 +38,6 @@ include = ["/magic_spec", "/.magic", "/.agent", "/adapters"]
 "adapters" = "adapters"
 
 [tool.hatch.envs.default.scripts]
-sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent','adapters']]; print('synced from root')\""
-build = ["sync", "uv build"]
-check = ["sync", "uv build --no-sources"]
-publish = ["sync", "python ../../scripts/publish-pypi.py"]
-publish-dry = ["sync", "uv publish --dry-run"]
+sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent','adapters']]; [shutil.copy2(root/f, pathlib.Path.cwd()/f) for f in ['README.md','LICENSE'] if (root/f).exists()]; print('✅ synced from root')\""
+build = "uv build"
+publish = "uv publish"

@@ -1,7 +1,7 @@
 {
   "name": "magic-spec",
   "version": "1.0.0",
-  "description": "Magic Specification-Driven Development (SDD) Workflow Installer",
+  "description": "Magic Specification-Driven Development (SDD) Workflow",
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/teratron/magic-spec",
@@ -24,12 +24,12 @@
     "node": ">=16"
   },
   "scripts": {
-    "sync": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..');['/.magic','/.agent','/adapters'].forEach(d=>fs.cpSync(r+d,__dirname+d,{recursive:true,force:true}));console.log('✅ synced from root')\"",
-    "check": "npm run sync && npm pack --dry-run",
-    "publish": "npm run sync && node ../../scripts/publish-npm.js",
-    "publish:dry": "npm run sync && npm publish --access public --dry-run",
-    "test:link": "npm run sync && npm link",
-    "test:pack": "npm run sync && npm pack",
+    "build": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..'),d=p.join(__dirname,'dist');if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true});fs.mkdirSync(p.join(d,'src'),{recursive:true});['/.magic','/.agent','/adapters'].forEach(dir=>fs.cpSync(r+dir,p.join(d,dir),{recursive:true,force:true}));['README.md','LICENSE'].forEach(f=>{if(fs.existsSync(p.join(r,f)))fs.copyFileSync(p.join(r,f),p.join(d,f))});fs.cpSync(p.join(__dirname,'src'),p.join(d,'src'),{recursive:true});fs.copyFileSync(p.join(__dirname,'package.json'),p.join(d,'package.json'));console.log('\u2705 Build complete in dist/')\"",
+    "check": "npm run build && cd dist && npm pack --dry-run",
+    "publish": "npm run build && node publish.js",
+    "publish:dry": "npm run build && cd dist && npm publish --access public --dry-run",
+    "test:link": "npm run build && cd dist && npm link",
+    "test:pack": "npm run build && cd dist && npm pack",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version"

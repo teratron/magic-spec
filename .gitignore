@@ -42,3 +42,6 @@ installers/python/adapters/
 # Misc
 *.txt
 *.log
+
+# Node installer build artifacts
+installers/node/dist/
