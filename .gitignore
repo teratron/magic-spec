@@ -23,17 +23,16 @@ dist/
 *.egg-info/
 .hatch/
 
-# SDD Local State (if initialized for the engine repo itself)
-.design/
-
-# Root level workflow files (those should be tracked only in core/)
-# We ignore them in root to prevent accidental pollution if npx is run locally
-/.magic/
-/.agent/
+# SDD workspace — tracked as part of the engine project
+# .design/ is intentionally committed here
 
 # Duplicated core folders in installers (maintained in root /core)
 installers/node/core/
 installers/python/core/
+
+# Dotenv template
+.env*
+!.env.example
 
 # Misc
 *.txt

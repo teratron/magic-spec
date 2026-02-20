@@ -17,7 +17,7 @@ def main():
         source_root = current_file.parent.parent.parent / "core"
 
     if not source_root.exists():
-        print(f"❌ Error: Core directory not found.")
+        print("❌ Error: Core directory not found.")
         sys.exit(1)
 
     dest = pathlib.Path.cwd()
