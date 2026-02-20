@@ -9,12 +9,12 @@
     "type": "git",
     "url": "https://github.com/teratron/magic-spec.git"
   },
-  "main": "bin/magic.js",
+  "main": "src/index.js",
   "bin": {
-    "magic-spec": "bin/magic.js"
+    "magic-spec": "src/index.js"
   },
   "files": [
-    "bin",
+    "src",
     ".magic",
     ".agent",
     "adapters",
@@ -28,6 +28,8 @@
     "check": "npm run sync && npm pack --dry-run",
     "publish": "npm run sync && node ../../scripts/publish-npm.js",
     "publish:dry": "npm run sync && npm publish --access public --dry-run",
+    "test:link": "npm run sync && npm link",
+    "test:pack": "npm run sync && npm pack",
     "version:patch": "npm version patch --no-git-tag-version",
     "version:minor": "npm version minor --no-git-tag-version",
     "version:major": "npm version major --no-git-tag-version"

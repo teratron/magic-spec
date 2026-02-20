@@ -59,7 +59,7 @@ magic-spec/                         ← Repository root = Source of Truth
 │
 └── installers/                     ← Layer 2: Distribution
     ├── node/                       # npm package (npx entry point)
-    │   ├── bin/magic.js            # CLI script
+    │   ├── src/index.js            # CLI script
     │   └── package.json
     └── python/                     # PyPI package (uvx entry point)
         ├── magic_spec/

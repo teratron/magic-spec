@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-// Package root: installers/node/ — .magic, .agent, adapters are synced here before publish
+// Package root: installers/node/ — .magic, .agent, adapters synced here before publish
 const pkgRoot = path.join(__dirname, '..');
 const cwd = process.cwd();
 
@@ -37,28 +37,33 @@ console.log('🪄 Initializing magic-spec...');
 // 1. Copy .magic (SDD engine)
 copyDir(path.join(pkgRoot, '.magic'), path.join(cwd, '.magic'));
 
-// 2. Copy default agent adapter
-copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
-
-// 3. Copy optional env adapters
-for (const env of envValues) {
-    const adapterSrc = path.join(pkgRoot, 'adapters', env);
-    const adapterDest = path.join(cwd, ADAPTERS[env] || `.${env}`);
-    if (!ADAPTERS[env]) {
-        console.warn(`⚠️  Unknown --env value: "${env}"`);
-        console.warn(`   Valid values: ${Object.keys(ADAPTERS).join(', ')}`);
-        console.warn(`   To request a new adapter: https://github.com/teratron/magic-spec/issues`);
-        continue;
+// 2. Copy default agent adapter OR env-specific adapter
+if (envValues.length > 0) {
+    for (const env of envValues) {
+        const adapterSrc = path.join(pkgRoot, 'adapters', env);
+        const adapterDest = path.join(cwd, ADAPTERS[env] || `.${env}`);
+        if (!ADAPTERS[env]) {
+            console.warn(`⚠️  Unknown --env value: "${env}". Falling back to default .agent/`);
+            console.warn(`   Valid values: ${Object.keys(ADAPTERS).join(', ')}`);
+            console.warn(`   To request a new adapter: https://github.com/teratron/magic-spec/issues`);
+            copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
+            continue;
+        }
+        if (!fs.existsSync(adapterSrc)) {
+            console.warn(`⚠️  Adapter "${env}" not yet implemented. Falling back to default .agent/`);
+            console.warn(`   Copy .agent/workflows/magic/ manually to ${ADAPTERS[env]}/`);
+            copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
+            continue;
+        }
+        copyDir(adapterSrc, adapterDest);
+        console.log(`✅ Adapter installed: ${env} → ${ADAPTERS[env]}/`);
     }
-    if (!fs.existsSync(adapterSrc)) {
-        console.warn(`⚠️  Adapter "${env}" not yet implemented. Copy .agent/ manually to ${ADAPTERS[env]}/`);
-        continue;
-    }
-    copyDir(adapterSrc, adapterDest);
-    console.log(`✅ Adapter installed: ${env} → ${ADAPTERS[env]}/`);
+} else {
+    // Default: install .agent/
+    copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
 }
 
-// 4. Run init script
+// 3. Run init script
 const isWindows = process.platform === 'win32';
 const initScript = isWindows
     ? path.join(cwd, '.magic', 'scripts', 'init.ps1')

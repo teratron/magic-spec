@@ -1,6 +1,6 @@
 # CLI Installer
 
-**Version:** 0.2.1
+**Version:** 0.2.2
 **Status:** Draft
 
 ## Overview
@@ -113,7 +113,7 @@ else:
 
 ## 4. Implementation Notes
 
-1. Node.js CLI entry point: `installers/node/bin/magic.js` — uses only Node.js stdlib (`fs`, `path`, `child_process`).
+1. Node.js CLI entry point: `installers/node/src/index.js` — uses only Node.js stdlib (`fs`, `path`, `child_process`).
 2. Python CLI entry point: `installers/python/magic_spec/__main__.py` — uses only stdlib (`shutil`, `pathlib`, `subprocess`, `sys`, `os`).
 3. Both implementations must produce identical console output for the same input.
 4. The `--help` flag must print usage without executing any file operations.
@@ -135,3 +135,4 @@ ensures users always run the newest version without a manual upgrade step.
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.2.0 | 2026-02-20 | Agent | Added --env flag; updated copy table to reflect core/adapters/ structure |
 | 0.2.1 | 2026-02-20 | Agent | Added new CLI arguments (--check, info, --eject, --list-envs); linked installer-features.md |
+| 0.2.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |

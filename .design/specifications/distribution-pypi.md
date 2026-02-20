@@ -147,9 +147,32 @@ All scripts run from `installers/python/` directory via `hatch run <script>`.
 ## 4. Implementation Notes
 
 1. Run `uv build` and `uv publish` from `installers/python/` directory.
-2. The `core/` inside `installers/python/` is gitignored — refresh it before every build.
+2. The synced copies inside `installers/python/` are gitignored — refresh before every build via `hatch run sync`.
 3. Set `PYPI_TOKEN` environment variable for `uv publish` authentication, or use `uv publish --token`.
 4. Bump version in `pyproject.toml` in sync with `installers/node/package.json` for every release.
+
+### 4.1 Local Testing
+
+Test the installer locally **before** publishing:
+
+```plaintext
+# Method A — editable install (fastest iteration)
+cd installers/python
+pip install -e .
+magic-spec                # test in any directory
+magic-spec --env cursor
+
+# Method B — wheel install (closest to real uvx experience)
+cd installers/python
+uv build                             # creates dist/magic_spec-1.0.0-py3-none-any.whl
+pip install dist/magic_spec-*.whl
+magic-spec
+
+# Method C — run module directly (no install)
+cd installers/python
+uv run python -m magic_spec
+uv run python -m magic_spec --env cursor
+```
 
 ## 5. Drawbacks & Alternatives
 

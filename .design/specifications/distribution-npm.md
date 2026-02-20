@@ -1,6 +1,6 @@
 # Distribution: npm (npx)
 
-**Version:** 0.1.1
+**Version:** 0.1.2
 **Status:** Draft
 
 ## Overview
@@ -11,7 +11,7 @@ and the `npm publish` process that enables users to run `npx magic-spec@latest`.
 ## Related Specifications
 
 - [architecture.md](architecture.md) — Defines `core/` as the source for bundled files.
-- [cli-installer.md](cli-installer.md) — Defines the CLI behavior implemented in `bin/magic.js`.
+- [cli-installer.md](cli-installer.md) — Defines the CLI behavior implemented in `src/index.js`.
 
 ## 1. Motivation
 
@@ -50,9 +50,9 @@ name:          "magic-spec"
 version:       semver (X.Y.Z), synced with git tag
 description:   "Magic SDD workflow installer"
 license:       "MIT"
-main:          "bin/magic.js"
+main:          "src/index.js"
 bin:
-  magic-spec:  "bin/magic.js"
+  magic-spec:  "src/index.js"
 files:
   - "bin"
   - "core"
@@ -118,9 +118,33 @@ All scripts run from `installers/node/` directory via `npm run <script>`.
 ## 4. Implementation Notes
 
 1. Run `npm publish` from `installers/node/` directory, not from the repo root.
-2. The `core/` inside `installers/node/` is gitignored — refresh it before every publish.
-3. Use `npm publish --dry-run` to verify what will be included in the package before publishing.
-4. Use `npm version patch|minor|major` to bump version and create a git tag atomically.
+2. The synced copies inside `installers/node/` are gitignored — refresh before every publish via `npm run sync`.
+3. Use `npm run check` (`sync` + `npm pack --dry-run`) to verify package contents before publishing.
+4. Use `npm version patch|minor|major` to bump version; bump in sync with `pyproject.toml`.
+
+### 4.1 Local Testing
+
+Test the installer locally **before** publishing:
+
+```plaintext
+# Method A — npm link (fastest, works like global install)
+cd installers/node
+npm run test:link         # sync + npm link
+magic-spec                # test in any directory
+magic-spec --env cursor
+npm unlink -g magic-spec  # cleanup
+
+# Method B — tarball (closest to real npx experience)
+cd installers/node
+npm run test:pack                         # creates magic-spec-1.0.0.tgz
+cd C:\tmp\test-project
+npm install path\to\magic-spec-1.0.0.tgz
+npx magic-spec
+
+# Method C — direct node (fastest iteration, no install needed)
+node installers/node/src/index.js
+node installers/node/src/index.js --env cursor
+```
 
 ## 5. Drawbacks & Alternatives
 
@@ -129,7 +153,7 @@ Avoids name conflicts on npm. Rejected for MVP — an unscoped name is more disc
 and simpler to type (`npx magic-spec` vs `npx @teratron/magic-spec`).
 
 **Alternative: bundle with esbuild**
-Bundle `bin/magic.js` into a single minified file. Rejected — the script has zero external
+Bundle `src/index.js` into a single minified file. Rejected — the script has zero external
 dependencies, so bundling adds complexity with no benefit.
 
 ## Document History
@@ -138,3 +162,4 @@ dependencies, so bundling adds complexity with no benefit.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Added §3.6 Script Reference (sync / check / publish / version) |
+| 0.1.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |

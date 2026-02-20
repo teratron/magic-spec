@@ -178,6 +178,3 @@ Works with any AI coding agent that can read markdown workflow files:
 ---
 
 ## TODO: Magic Spec
-
-- Changelog
-- Docs
