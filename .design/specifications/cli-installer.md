@@ -1,6 +1,6 @@
 # CLI Installer
 
-**Version:** 0.2.0
+**Version:** 0.2.1
 **Status:** Draft
 
 ## Overview
@@ -14,6 +14,7 @@ conflict handling, and cross-platform support.
 - [architecture.md](architecture.md) — Defines the source directories the installer copies from.
 - [distribution-npm.md](distribution-npm.md) — Defines the npm package that ships the Node.js CLI.
 - [distribution-pypi.md](distribution-pypi.md) — Defines the PyPI package that ships the Python CLI.
+- [installer-features.md](installer-features.md) — Defines advanced CLI features: --check, info, --eject, backup, .magicrc, auto-detect.
 
 ## 1. Motivation
 
@@ -81,11 +82,15 @@ This is intentional: the engine files are managed by `magic-spec`, not by the us
 | Argument | Description |
 | :--- | :--- |
 | *(none)* | Default install: `.magic/` + `adapters/agent/` + init |
-| `--env <name>` | Install additional adapter: `cursor`, `github`, `kilocode`, `windsurf` |
+| `--env <name>` | Install env adapter: `cursor`, `github`, `kilocode`, `windsurf` |
 | `--env <a>,<b>` | Install multiple adapters in one command |
-| `--update` | Alias for default behavior; communicates intent clearly |
+| `--update` | Re-run install to refresh engine + adapter files |
+| `--check` | Check if installed version is up to date (no file changes) |
+| `--list-envs` | List all supported environment adapters |
+| `--eject` | Remove all installer-managed files (.magic/, adapter dir) |
+| `info` | Show current installation status |
 | `--help` | Print usage information and exit |
-| `--version` | Print current `magic-spec` version and exit |
+| `--version` | Print current `magic-spec` package version and exit |
 
 ### 3.5 Platform Detection
 
@@ -129,3 +134,4 @@ ensures users always run the newest version without a manual upgrade step.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.2.0 | 2026-02-20 | Agent | Added --env flag; updated copy table to reflect core/adapters/ structure |
+| 0.2.1 | 2026-02-20 | Agent | Added new CLI arguments (--check, info, --eject, --list-envs); linked installer-features.md |

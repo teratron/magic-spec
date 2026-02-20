@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.6.0
+**Version:** 1.7.0
 **Status:** Active
 
 ## Overview
@@ -16,11 +16,12 @@ Central registry of all project specifications and their current state.
 | File | Description | Status | Version |
 | :--- | :--- | :--- | :--- |
 | [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Draft | 1.0.0 |
-| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Draft | 0.2.0 |
+| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Draft | 0.2.1 |
 | [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Draft | 0.1.1 |
 | [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Draft | 0.1.1 |
 | [secrets-management.md](specifications/secrets-management.md) | .env-based credentials management for npm and PyPI publish scripts | Draft | 0.1.1 |
 | [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support: Cursor, GitHub Copilot, Kilo Code, Windsurf | Draft | 0.1.1 |
+| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Draft | 0.1.0 |
 
 ## Meta Information
 
@@ -39,3 +40,4 @@ Central registry of all project specifications and their current state.
 | 1.4.0 | 2026-02-20 | Agent | Added agent-environments.md |
 | 1.5.0 | 2026-02-20 | Agent | Eliminated core/; root is source of truth; updated architecture.md to v1.0.0 |
 | 1.6.0 | 2026-02-20 | Agent | Clarified --env replaces .agent/; updated cli-installer v0.2.0, agent-environments v0.1.1 |
+| 1.7.0 | 2026-02-20 | Agent | Added installer-features.md (8 advanced features); updated cli-installer to v0.2.1 |
