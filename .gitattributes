@@ -1,0 +1,18 @@
+# Configure line endings
+* text=auto eol=lf
+
+# Denote all files in the assets directory are binary
+assets/** binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.mp3 binary
+*.wav binary
+*.ogg binary
+*.ttf binary
+*.otf binary
+*.woff binary
+*.woff2 binary
+*.glb binary
+*.gltf binary
