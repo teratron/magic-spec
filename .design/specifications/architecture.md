@@ -59,7 +59,7 @@ magic-spec/                         ← Repository root = Source of Truth
 │
 └── installers/                     ← Layer 2: Distribution
     ├── node/                       # npm package (npx entry point)
-    │   ├── src/index.js            # CLI script
+    │   ├── index.js                # CLI script
     │   ├── publish.js              # Publish runner
     │   ├── package.json
     │   └── dist/                   # Build artifact (gitignored)

@@ -9,12 +9,12 @@
     "type": "git",
     "url": "https://github.com/teratron/magic-spec.git"
   },
-  "main": "src/index.js",
+  "main": "index.js",
   "bin": {
-    "magic-spec": "src/index.js"
+    "magic-spec": "index.js"
   },
   "files": [
-    "src",
+    "index.js",
     ".magic",
     ".agent",
     "adapters",
@@ -24,7 +24,7 @@
     "node": ">=16"
   },
   "scripts": {
-    "build": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..'),d=p.join(__dirname,'dist');if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true});fs.mkdirSync(p.join(d,'src'),{recursive:true});['/.magic','/.agent','/adapters'].forEach(dir=>fs.cpSync(r+dir,p.join(d,dir),{recursive:true,force:true}));['README.md','LICENSE'].forEach(f=>{if(fs.existsSync(p.join(r,f)))fs.copyFileSync(p.join(r,f),p.join(d,f))});fs.cpSync(p.join(__dirname,'src'),p.join(d,'src'),{recursive:true});fs.copyFileSync(p.join(__dirname,'package.json'),p.join(d,'package.json'));console.log('\u2705 Build complete in dist/')\"",
+    "build": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..'),d=p.join(__dirname,'dist');if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true});fs.mkdirSync(d,{recursive:true});['/.magic','/.agent','/adapters'].forEach(dir=>fs.cpSync(r+dir,p.join(d,dir),{recursive:true,force:true}));['README.md','LICENSE'].forEach(f=>{if(fs.existsSync(p.join(r,f)))fs.copyFileSync(p.join(r,f),p.join(d,f))});['index.js','package.json'].forEach(f=>fs.copyFileSync(p.join(__dirname,f),p.join(d,f)));console.log('\u2705 Build complete in dist/')\"",
     "check": "npm run build && cd dist && npm pack --dry-run",
     "publish": "npm run build && node publish.js",
     "publish:dry": "npm run build && cd dist && npm publish --access public --dry-run",

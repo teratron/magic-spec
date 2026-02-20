@@ -36,11 +36,11 @@ directory before publishing.
 
 ```plaintext
 installers/node/
-├── src/                # Local source (index.js)
+├── index.js            # Local source (CLI entry point)
 ├── publish.js          # Deployment script (ignored in package)
 ├── package.json        # Manifest
 └── dist/               # ASSEMBLY ROOT (gitignored)
-    ├── src/            # Copied from ../src/
+    ├── index.js        # Copied from ../index.js
     ├── .magic/         # Synced from ../../../.magic/
     ├── .agent/         # Synced from ../../../.agent/
     ├── adapters/       # Synced from ../../../adapters/
@@ -57,9 +57,9 @@ description:   "Magic SDD workflow"
 license:       "MIT"
 main:          "src/index.js"
 bin:
-  magic-spec:  "src/index.js"
+  magic-spec:  "index.js"
 files:
-  - "src"
+  - "index.js"
   - ".magic"
   - ".agent"
   - "adapters"
@@ -171,3 +171,4 @@ dependencies, so bundling adds complexity with no benefit.
 | 0.1.1 | 2026-02-20 | Agent | Added §3.6 Script Reference (sync / check / publish / version) |
 | 0.1.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |
 | 0.1.3 | 2026-02-21 | Agent | Aligned to Assembly Pattern (dist/ folder); renamed sync to build |
+| 0.1.4 | 2026-02-21 | Agent | Removed src/ wrapper; index.js moved to installer root |
