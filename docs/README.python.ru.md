@@ -47,12 +47,12 @@ magic-spec
 │       ├── init.sh             # Скрипт инициализации (macOS/Linux)
 │       └── init.ps1            # Скрипт инициализации (Windows)
 │
-├── .agent/workflows/magic/     # Точки входа для AI-агентов (Cursor, Claude и др.)
-│   ├── plan.md
-│   ├── retrospective.md
-│   ├── rule.md
-│   ├── specification.md
-│   └── task.md
+├── .agent/workflows/               # Точки входа для AI-агентов (Cursor, Claude и др.)
+│   ├── magic.plan.md
+│   ├── magic.retrospective.md
+│   ├── magic.rule.md
+│   ├── magic.specification.md
+│   └── magic.task.md
 │
 └── .design/                    # Ваше рабочее пространство (создаётся при инициализации)
     ├── INDEX.md                # Реестр спецификаций

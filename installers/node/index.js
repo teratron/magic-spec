@@ -51,7 +51,7 @@ if (envValues.length > 0) {
         }
         if (!fs.existsSync(adapterSrc)) {
             console.warn(`⚠️  Adapter "${env}" not yet implemented. Falling back to default .agent/`);
-            console.warn(`   Copy .agent/workflows/magic/ manually to ${ADAPTERS[env]}/`);
+            console.warn(`   Copy .agent/workflows/magic.*.md manually to ${ADAPTERS[env]}/`);
             copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
             continue;
         }

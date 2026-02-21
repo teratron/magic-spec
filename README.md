@@ -46,7 +46,7 @@ uvx magic-spec
 Both commands do exactly the same thing:
 
 1. Copy `.magic/` (the SDD engine) into your project.
-2. Copy `.agent/workflows/magic/` (agent trigger wrappers) into your project.
+2. Copy `.agent/workflows/magic.*.md` (agent trigger wrappers) into your project.
 3. Run the init script — creates your `.design/` workspace with `INDEX.md` and `RULES.md`.
 
 ## 🧭 Core Philosophy
@@ -65,12 +65,12 @@ After running `npx magic-spec@latest` in your project root:
 ```plaintext
 your-project/
 │
-├── .agent/workflows/magic/     # Agent entry points (slash commands)
-│   ├── plan.md
-│   ├── retrospective.md
-│   ├── rule.md
-│   ├── specification.md
-│   └── task.md
+├── .agent/workflows/               # Agent entry points (slash commands)
+│   ├── magic.plan.md
+│   ├── magic.retrospective.md
+│   ├── magic.rule.md
+│   ├── magic.specification.md
+│   └── magic.task.md
 │
 ├── .magic/                     # SDD Engine (workflow logic, read-only)
 │   ├── init.md
