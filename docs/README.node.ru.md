@@ -165,16 +165,14 @@ npm run version:minor   # X.Y.Z → X.Y+1.0
 npm run version:major   # X.Y.Z → X+1.0.0
 ```
 
-### Переменные окружения для публикации
+### Авторизация для публикации
 
-Сохраните ваш npm-токен в файле `.env` или `.env.production` в **корне репозитория**:
-
-```plaintext
-NPM_TOKEN=npm_xxxxxxxxxxxxxxxxxx
-PUBLISH_ENV=development   # или production
+```bash
+# Один раз — откроет браузер для подтверждения
+npm login
 ```
 
-Скрипт `publish.js` автоматически подхватывает их через встроенный `process.loadEnvFile()` (Node.js >= 21.7).
+Сессия сохраняется в `~/.npmrc` до явного `npm logout`.
 
 ---
 

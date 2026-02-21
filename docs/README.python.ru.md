@@ -182,20 +182,14 @@ uv run python -m magic_spec --env cursor
 # version = "X.Y.Z" → поднять нужную часть
 ```
 
-### Переменные окружения для публикации
-
-Сохраните ваш PyPI-токен в файле `.env.production` или передайте напрямую:
+### Авторизация для публикации
 
 ```bash
-# Через аргумент (рекомендуется для ручной публикации)
+# Передайте токен напрямую при публикации
 uv publish --token pypi-xxxxxxxxxxxxxxxxxx
-
-# Через переменную окружения
-export PYPI_TOKEN=pypi-xxxxxxxxxxxxxxxxxx
-uv publish --token $PYPI_TOKEN
 ```
 
-> **Безопасность:** Никогда не коммитьте токены в git. Файлы `.env` и `.env.production` добавлены в `.gitignore`.
+Токен получается на [pypi.org](https://pypi.org/) → **Account Settings** → **API tokens**.
 
 ---
 
