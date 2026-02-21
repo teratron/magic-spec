@@ -45,6 +45,7 @@ Every task has a fixed structure:
   Phase:    {n} / Track {A|B|C...}
   Depends:  {T-ID, T-ID, ... | —}
   Status:   {Todo | In Progress | Done | Blocked}
+  Changes:  {required when Done — see changelog.md §3.2}
   Assignee: {Developer-A | Developer-B | ... | unassigned}
   Notes:    {optional}
 ```
@@ -65,10 +66,10 @@ Within each phase, tasks are grouped into **Execution Tracks**. Tasks in differe
 ```
 Phase 2
   Track A: [T-2A01] → [T-2A02] → [T-2A03]   ══╗
-                                               ║ (parallel)
-  Track B: [T-2B01] → [T-2B02]               ══╣
-                                               ║
-  Track C: [T-2C01]  (depends on A + B)      ══╝ (after A and B complete)
+                                              ║ (parallel)
+  Track B: [T-2B01] → [T-2B02]              ══╣
+                                              ║
+  Track C: [T-2C01]  (depends on A + B)     ══╝ (after A and B complete)
 ```
 
 Track assignment is derived from the dependency graph in PLAN.md — specs that don't depend on each other can be different tracks.
@@ -202,8 +203,12 @@ graph TD
     G -->|Blocked| I[Mark Blocked, state reason in Notes]
     H --> J[Check if phase complete]
     J -->|Phase done| K[Auto-snapshot: run retrospective Level 1]
-    K --> L{Entire plan complete?}
+    K --> L1[Auto-compile: parse Change Records to CHANGELOG_DRAFT.md]
+    L1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
+    M --> M1[Run: Changelog Level 2 compile]
+    M1 --> M2[Present compiled entry for user review]
+    M2 --> N1[Write to CHANGELOG.md on approval]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
     I --> O[Escalate to user]
@@ -215,7 +220,10 @@ graph TD
 4. **Report**: After each task, briefly state what was done and what is next.
 5. **On phase completion**:
     - Run **retrospective Level 1 (auto-snapshot)**: read INDEX.md, TASKS.md, RULES.md → count stats → append one row to `.design/RETROSPECTIVE.md` Snapshots table. Do this **silently** — no user confirmation needed.
-    - Check if the **entire plan** is complete (all phases, all tasks Done). If yes → auto-run **retrospective Level 2 (full)** as the final step.
+    - Compile **CHANGELOG_DRAFT.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG_DRAFT.md`. Do this **silently**.
+    - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
+        1. Auto-run **retrospective Level 2 (full)**.
+        2. Run **Changelog Level 2 compile** and present entry for user review. Write to `CHANGELOG.md` when approved.
     - If not done → report phase complete and propose the next phase.
 
 ### Executing Tasks (Parallel Mode)
@@ -234,8 +242,12 @@ graph TD
     G --> I{All tasks done?}
     I -->|No| C
     I -->|Yes| J[Auto-snapshot: run retrospective Level 1]
-    J --> L{Entire plan complete?}
+    J --> J1[Auto-compile: parse Change Records to CHANGELOG_DRAFT.md]
+    J1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
+    M --> M1[Run: Changelog Level 2 compile]
+    M1 --> M2[Present compiled entry for user review]
+    M2 --> N1[Write to CHANGELOG.md on approval]
     L -->|No| N[Manager: Report phase complete]
     H --> K[User decision]
     K --> C
@@ -403,6 +415,7 @@ See [phase-2.md](phase-2.md) for full breakdown.
 - **Spec:** [{spec-name}.md](../specifications/{spec-name}.md) §{section}
 - **Depends:** —
 - **Status:** Todo
+- **Changes:** (required when Done)
 - **Assignee:** unassigned
 - **Notes:** —
 
@@ -421,6 +434,7 @@ See [phase-2.md](phase-2.md) for full breakdown.
 - **Spec:** [{spec-name}.md](../specifications/{spec-name}.md) §{section}
 - **Depends:** —
 - **Status:** Todo
+- **Changes:** (required when Done)
 - **Assignee:** unassigned
 - **Notes:** —
 
@@ -431,6 +445,7 @@ See [phase-2.md](phase-2.md) for full breakdown.
 - **Spec:** [{spec-name}.md](../specifications/{spec-name}.md) §{section}
 - **Depends:** T-{N}A02, T-{N}B01
 - **Status:** Todo
+- **Changes:** (required when Done)
 - **Assignee:** unassigned
 - **Notes:** —
 
@@ -440,6 +455,7 @@ See [phase-2.md](phase-2.md) for full breakdown.
 - [ ] No open blockers
 - [ ] TASKS.md summary updated
 - [ ] Retrospective auto-snapshot appended to RETROSPECTIVE.md
+- [ ] Changelog auto-compiled to CHANGELOG_DRAFT.md
 - [ ] Next phase unlocked: Phase {N+1}
-- [ ] If all phases complete: full retrospective (Level 2) was run
+- [ ] If all phases complete: full retrospective + changelog compile (Level 2) was run
 ```

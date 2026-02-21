@@ -65,28 +65,32 @@ def main() -> None:
 
     is_update = "--update" in args
 
-    print("🪄 Initializing magic-spec...")
+    if is_update:
+        print("🪄 Updating magic-spec (.magic only)...")
+    else:
+        print("🪄 Initializing magic-spec...")
 
     # 1. Copy .magic (SDD engine)
     _copy_dir(source_root / ".magic", dest / ".magic")
 
-    # 2. Copy agent adapter(s) or default .agent/
-    if env_values:
-        for env in env_values:
-            adapter_src = source_root / "adapters" / env
-            adapter_dest_rel = ADAPTERS.get(env)
-            if not adapter_dest_rel:
-                print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(ADAPTERS)}')
-                _copy_dir(source_root / ".agent", dest / ".agent")
-                continue
-            if not adapter_src.exists():
-                print(f'⚠️  Adapter "{env}" not yet implemented. Using default .agent/')
-                _copy_dir(source_root / ".agent", dest / ".agent")
-                continue
-            _copy_dir(adapter_src, dest / adapter_dest_rel)
-            print(f"✅ Adapter installed: {env} → {adapter_dest_rel}/")
-    else:
-        _copy_dir(source_root / ".agent", dest / ".agent")
+    # 2. Copy agent adapter(s) or default .agent/ (skip on --update)
+    if not is_update:
+        if env_values:
+            for env in env_values:
+                adapter_src = source_root / "adapters" / env
+                adapter_dest_rel = ADAPTERS.get(env)
+                if not adapter_dest_rel:
+                    print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(ADAPTERS)}')
+                    _copy_dir(source_root / ".agent", dest / ".agent")
+                    continue
+                if not adapter_src.exists():
+                    print(f'⚠️  Adapter "{env}" not yet implemented. Using default .agent/')
+                    _copy_dir(source_root / ".agent", dest / ".agent")
+                    continue
+                _copy_dir(adapter_src, dest / adapter_dest_rel)
+                print(f"✅ Adapter installed: {env} → {adapter_dest_rel}/")
+        else:
+            _copy_dir(source_root / ".agent", dest / ".agent")
 
     # 3. Run init script (skip on --update)
     if not is_update:
@@ -109,8 +113,9 @@ def main() -> None:
             if init_script.exists():
                 os.chmod(init_script, 0o755)
                 subprocess.run(["bash", str(init_script)], check=False)
-
-    print("✅ magic-spec initialized successfully!")
+        print("✅ magic-spec initialized successfully!")
+    else:
+        print("✅ magic-spec updated successfully!")
 
 
 if __name__ == "__main__":

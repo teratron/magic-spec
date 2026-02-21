@@ -35,16 +35,16 @@ It must be predictable, safe (never delete user data), and require zero configur
 ### 3.1 Invocation
 
 ```plaintext
-npx magic-spec@latest                          # Default install
+npx magic-spec@latest                         # Default install
 npx magic-spec@latest --env cursor            # Install + Cursor adapter
 npx magic-spec@latest --env cursor,windsurf   # Install + multiple adapters
-npx magic-spec@latest --update                # Explicit update mode
+npx magic-spec@latest --update                # Explicit update mode (skips adapters)
 ```
 
 ```plaintext
-uvx magic-spec                                # Default install
+uvx magic-spec                               # Default install
 uvx magic-spec --env cursor                  # Install + Cursor adapter
-uvx magic-spec --update                      # Explicit update mode
+uvx magic-spec --update                      # Explicit update mode (skips adapters)
 ```
 
 ### 3.2 Execution Steps
@@ -84,7 +84,7 @@ This is intentional: the engine files are managed by `magic-spec`, not by the us
 | *(none)* | Default install: `.magic/` + `.agent/workflows/magic.*.md` + init |
 | `--env <name>` | Install env adapter: `cursor`, `github`, `kilocode`, `windsurf` |
 | `--env <a>,<b>` | Install multiple adapters in one command |
-| `--update` | Re-run install to refresh engine + adapter files |
+| `--update` | Updates `.magic/` to the latest version, skips adapters and init script |
 | `--check` | Check if installed version is up to date (no file changes) |
 | `--list-envs` | List all supported environment adapters |
 | `--eject` | Remove all installer-managed files (.magic/, adapter dir) |

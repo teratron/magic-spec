@@ -4,12 +4,13 @@ const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
 
-// Package root: installers/node/ — .magic, .agent, adapters synced here before publish
-const pkgRoot = path.join(__dirname, '..');
+// Package root: dist/ or wherever index.js is running from
+const pkgRoot = __dirname;
 const cwd = process.cwd();
 
 // Parse arguments
 const args = process.argv.slice(2);
+const isUpdate = args.includes('--update');
 const envFlag = args.find(a => a.startsWith('--env'));
 const envValues = envFlag
     ? envFlag.includes('=')
@@ -38,7 +39,9 @@ console.log('🪄 Initializing magic-spec...');
 copyDir(path.join(pkgRoot, '.magic'), path.join(cwd, '.magic'));
 
 // 2. Copy default agent adapter OR env-specific adapter
-if (envValues.length > 0) {
+if (isUpdate) {
+    console.log('✅ Update complete (.magic only, adapters skipped)');
+} else if (envValues.length > 0) {
     for (const env of envValues) {
         const adapterSrc = path.join(pkgRoot, 'adapters', env);
         const adapterDest = path.join(cwd, ADAPTERS[env] || `.${env}`);
@@ -63,7 +66,12 @@ if (envValues.length > 0) {
     copyDir(path.join(pkgRoot, '.agent'), path.join(cwd, '.agent'));
 }
 
-// 3. Run init script
+// 3. Run init script (skip if updating)
+if (isUpdate) {
+    console.log('✅ magic-spec updated successfully!');
+    process.exit(0);
+}
+
 const isWindows = process.platform === 'win32';
 const initScript = isWindows
     ? path.join(cwd, '.magic', 'scripts', 'init.ps1')
