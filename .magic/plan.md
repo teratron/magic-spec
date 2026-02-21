@@ -46,7 +46,8 @@ Use when `.design/PLAN.md` does not exist or needs to be built from scratch.
 
 ```mermaid
 graph TD
-    A[Trigger: Create Plan] --> B[Read INDEX.md + RULES.md]
+    A[Trigger: Create Plan] --> Z["Pre-flight: Consistency Check\n(specification.md)"]
+    Z --> B[Read INDEX.md + RULES.md]
     B --> C[Read all spec files]
     C --> D[Extract dependency graph]
     D --> E[Identify critical path]
@@ -56,6 +57,7 @@ graph TD
     G --> H[Task Completion Checklist]
 ```
 
+0. **Consistency Check**: Before reading specs, run the *Consistency Check (Pre-flight)* from `specification.md`. This verifies that all specs match the actual project state. If issues are found — fix them first. Do not plan based on stale specs.
 1. **Read INDEX.md**: Get the full list of existing spec files and their statuses. Path: `.design/INDEX.md`.
 2. **Read RULES.md**: Check for any project conventions that affect planning. Path: `.design/RULES.md`.
 3. **Read all spec files**: For each spec in `.design/specifications/`, extract:

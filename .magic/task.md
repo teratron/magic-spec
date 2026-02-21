@@ -105,7 +105,8 @@ Use when `.design/tasks/TASKS.md` does not exist.
 
 ```mermaid
 graph TD
-    A[Trigger: Generate Tasks] --> B[Read PLAN.md]
+    A[Trigger: Generate Tasks] --> Z["Pre-flight: Consistency Check\n(specification.md)"]
+    Z --> B[Read PLAN.md]
     B --> C[Read all referenced spec files]
     C --> D{First run?}
     D -->|Yes| E[Ask execution mode]
@@ -120,6 +121,7 @@ graph TD
     K --> L[Task Completion Checklist]
 ```
 
+0. **Consistency Check**: Before reading the plan, run the *Consistency Check (Pre-flight)* from `specification.md`. This verifies that specs match the actual project state. If issues are found — fix them first. Do not generate tasks based on stale specs.
 1. **Read PLAN.md**: Get phases, specs per phase, dependency graph, and critical path.
 2. **Read spec files**: For each spec in PLAN.md, read its `Implementation Notes` (§4) if present — these directly inform task decomposition.
 3. **Ask execution mode** (first run only):

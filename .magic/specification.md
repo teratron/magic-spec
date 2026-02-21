@@ -267,6 +267,71 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 
 9. **Apply**: Only after user approval. Update `INDEX.md`, `RULES.md`, and `Document History` in affected files.
 
+### Consistency Check (Pre-flight)
+
+Verifies that specification content matches the **actual project state**: file paths, directory structure, tool configurations, and removed/renamed entities. This prevents plans and tasks from being built on stale specifications.
+
+> **Key difference from Audit:** The Registry Audit checks specs against each other and against RULES.md (internal consistency). The Consistency Check compares specs against the real project filesystem (external consistency).
+
+**Trigger phrase**: *"Check specs"*, *"Verify specs"*, *"Spec consistency"*
+
+**Auto-trigger**: Called by `plan.md` and `task.md` before they begin their work. If issues are found, specs must be fixed before planning/task generation proceeds.
+
+```mermaid
+graph TD
+    A["Trigger: plan.md / task.md / manual"] --> B["Read INDEX.md — get list of active specs"]
+    B --> C["For each spec: extract paths, structure refs, tool names"]
+    C --> D["Scan project filesystem for referenced items"]
+    D --> E{"All references valid?"}
+    E -->|Yes| F["✅ Consistency OK — proceed with plan/task"]
+    E -->|No| G["Compile issues list"]
+    G --> H["Present Consistency Report to user"]
+    H --> I{"Apply fixes?"}
+    I -->|Yes| J["Fix specs: update paths, mark deprecated, bump versions"]
+    J --> K["Sync INDEX.md"]
+    K --> F
+    I -->|Skip| F
+```
+
+**What it checks:**
+
+| Check | Description | Example |
+| :--- | :--- | :--- |
+| **Path validity** | File/directory paths mentioned in specs exist in the project | `src/index.js` referenced but only `index.js` exists |
+| **Structure accuracy** | Directory trees in specs match actual tree | Spec shows `workflows/magic/` but actual is `workflows/magic.*.md` |
+| **Removed entities** | Specs don't reference deleted files, directories, or configs | `.env` files referenced but were removed |
+| **Renamed entities** | Specs reflect current names after renames | `core/` referenced but was eliminated |
+| **Tool/config sync** | `package.json`, `pyproject.toml` fields match spec descriptions | Spec says `main: "src/index.js"` but `package.json` says `index.js` |
+| **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
+
+**Report format:**
+
+```
+Consistency Report — {YYYY-MM-DD}
+
+Stale paths found:
+- distribution-npm.md §3.2: references `src/index.js` — actual: `index.js`
+  → Auto-fix: update path
+
+Removed entities:
+- secrets-management.md: describes `.env` files — removed from project
+  → Recommend: mark spec as Deprecated
+
+Structure drift:
+- cli-installer.md §3.3: shows `core/.magic/` — directory `core/` was eliminated
+  → Auto-fix: replace with `.magic/`
+
+Issues: 3 critical, 0 minor
+Apply all fixes? (yes / select / skip)
+```
+
+**Execution rules:**
+
+1. **Lightweight**: Read only paths, trees, and config references from specs — do not re-read entire spec bodies.
+2. **Non-blocking with skip**: The user can skip fixes and proceed. But if >5 stale references are found, warn that the plan/tasks may be based on outdated assumptions.
+3. **Fixes follow Update workflow**: Every fix triggers version bump, Document History entry, INDEX.md sync (standard Update flow).
+4. **Skip Deprecated specs**: Specs with `Status: Deprecated` are excluded from the check — they are historical records.
+
 ### Task Completion Checklist
 
 **Must be shown to the user at the end of every task — no exceptions.**
