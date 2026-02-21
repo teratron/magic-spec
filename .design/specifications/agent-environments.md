@@ -1,6 +1,6 @@
 # Agent Environment Adapters
 
-**Version:** 0.1.1
+**Version:** 0.2.0
 **Status:** Draft
 
 ## Overview
@@ -44,7 +44,7 @@ breaking the default behavior.
 
 | Env name | Target directory | File format | Tool |
 | :--- | :--- | :--- | :--- |
-| *(none — default)* | `.agent/workflows/magic/` | `.md` | Gemini, general agents |
+| *(none — default)* | `.agent/workflows/` | `.md` (`magic.*.md`) | Gemini, general agents |
 | `--env cursor` | `.cursor/rules/` | `.mdc` | Cursor IDE |
 | `--env github` | `.github/` | `.md` | GitHub Copilot |
 | `--env kilocode` | `.kilocode/` | `.md` | Kilo Code |
@@ -55,7 +55,7 @@ breaking the default behavior.
 ```plaintext
 magic-spec/  (repo root)
 ├── .magic/              # SDD Engine (always installed)
-├── .agent/              # Default adapter → .agent/workflows/magic/
+├── .agent/              # Default adapter → .agent/workflows/magic.*.md
 └── adapters/            # Env-specific adapters (replace .agent/ when --env used)
     ├── cursor/          # --env cursor → .cursor/rules/
     │   ├── plan.mdc
@@ -94,7 +94,7 @@ npx magic-spec@latest --env github
 graph TD
     A["npx magic-spec@latest [--env X]"] --> B["Copy .magic → CWD/.magic"]
     B --> C{"--env flag provided?"}
-    C -->|No| D["Copy .agent → CWD/.agent/workflows/magic/"]
+    C -->|No| D["Copy .agent/workflows/magic.*.md → CWD/.agent/workflows/"]
     C -->|Yes| E{"env value valid?"}
     E -->|Unknown| F["⚠️ Warning: unknown env 'X'\nFalling back to default"]
     F --> D
@@ -112,9 +112,9 @@ When a user's tool is not yet supported, the CLI falls back to default (`.agent/
 
 ```plaintext
 ⚠️ Unknown --env value: "myeditor"
-   Falling back to default: .agent/workflows/magic/
+   Falling back to default: .agent/workflows/magic.*.md
 
-   To use with your tool, copy .agent/workflows/magic/
+   To use with your tool, copy .agent/workflows/magic.*.md
    into your tool's config directory manually.
 
    Supported --env values: cursor, github, kilocode, windsurf
@@ -125,7 +125,7 @@ When a user's tool is not yet supported, the CLI falls back to default (`.agent/
 
 All adapters contain the **same 5 workflow trigger files** with identical logic — only the file
 format and folder destination differ. Content of `specification.md` in all adapters is identical
-to the current `.agent/workflows/magic/specification.md`.
+to the current `.agent/workflows/magic.specification.md`.
 
 The `cursor` adapter uses `.mdc` extension (Cursor's MDC format), but the file content is
 identical to `.md` counterparts. Format differences beyond extension are tracked as future work.
@@ -158,3 +158,4 @@ burden with no user benefit over a single `--env` flag.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Clarified: --env REPLACES .agent/, not adds; removed stale core/ refs |
+| 0.2.0 | 2026-02-21 | Agent | Updated to magic.*.md flat naming; removed workflows/magic/ subdirectory |

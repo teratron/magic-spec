@@ -113,7 +113,7 @@ Output:
 
 ```plaintext
 Supported environments:
-  (default)    .agent/workflows/magic/     general agents, Gemini
+  (default)    .agent/workflows/magic.*.md  general agents, Gemini
   cursor       .cursor/rules/              Cursor IDE  (.mdc format)
   github       .github/                    GitHub Copilot
   kilocode     .kilocode/                  Kilo Code

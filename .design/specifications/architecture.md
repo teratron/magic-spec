@@ -12,9 +12,9 @@ The repository root is the **source of truth** — there is no separate `core/` 
 ## Related Specifications
 
 - [cli-installer.md](cli-installer.md) — Defines the installer behavior that performs the copy operation.
-- [distribution-npm.md](distribution-npm.md) — Defines where the `core/` layer ends up in the npm bundle.
-- [distribution-pypi.md](distribution-pypi.md) — Defines where the `core/` layer ends up in the PyPI bundle.
-- [agent-environments.md](agent-environments.md) — Defines the `core/adapters/` structure and multi-env strategy.
+- [distribution-npm.md](distribution-npm.md) — Defines how engine files are assembled into the npm bundle.
+- [distribution-pypi.md](distribution-pypi.md) — Defines how engine files are packaged into the PyPI wheel.
+- [agent-environments.md](agent-environments.md) — Defines the `adapters/` structure and multi-env strategy.
 
 ## 1. Motivation
 

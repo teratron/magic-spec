@@ -1,13 +1,17 @@
 # Secrets Management
 
-**Version:** 0.1.1
-**Status:** Draft
+**Version:** 0.2.0
+**Status:** Deprecated
 
 ## Overview
 
 Defines how sensitive credentials (npm token, PyPI token) are stored and consumed
 during the build and publish process for `magic-spec`. Access to secrets is managed
 through `.env` files that are read automatically by publish scripts.
+
+> **⚠️ DEPRECATED:** This specification has been superseded. The `.env`-based approach was removed
+> from the project. Authentication is now handled directly: `npm login` for npm, `uv publish --token`
+> for PyPI. See [distribution-npm.md](distribution-npm.md) and [distribution-pypi.md](distribution-pypi.md).
 
 ## Related Specifications
 
@@ -151,3 +155,4 @@ shell/PowerShell scripts, not Node.js. Keeping the toolchain dependency-free is 
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Clarified semantic roles of .env.example vs .env vs .env.production |
+| 0.2.0 | 2026-02-21 | Agent | Deprecated: .env approach removed; auth via npm login / uv publish --token |

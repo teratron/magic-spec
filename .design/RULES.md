@@ -57,7 +57,7 @@ that gets shipped to end users. Any modification to files inside `.magic/` must 
 
 1. **Read first** — open and fully read every file that will be affected before touching anything.
 2. **Analyse impact** — trace how the changed file is referenced by other `.magic/` files,
-   `.agent/workflows/magic/` wrappers, `adapters/`, and `init.ps1` / `init.sh`.
+   `.agent/workflows/magic.*.md` wrappers, `adapters/`, and `init.ps1` / `init.sh`.
 3. **Verify SDD continuity** — confirm that after the change all five workflows
    (specification, plan, task, rule, retrospective) remain fully functional.
 4. **Never edit blindly** — if the scope of impact is unclear, stop and ask before proceeding.

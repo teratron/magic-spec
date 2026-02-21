@@ -1,6 +1,6 @@
 # CLI Installer
 
-**Version:** 0.2.2
+**Version:** 0.3.0
 **Status:** Draft
 
 ## Overview
@@ -51,9 +51,9 @@ uvx magic-spec --update                      # Explicit update mode
 
 ```mermaid
 graph TD
-    A["User runs: npx magic-spec@latest"] --> B["Locate core/ inside package"]
-    B --> C["Copy core/.magic → CWD/.magic"]
-    C --> D["Copy core/.agent → CWD/.agent"]
+    A["User runs: npx magic-spec@latest"] --> B["Locate engine files inside package"]
+    B --> C["Copy .magic/ → CWD/.magic/"]
+    C --> D["Copy .agent/workflows/ → CWD/.agent/workflows/"]
     D --> E{"OS?"}
     E -->|Windows| F["Run: init.ps1"]
     E -->|macOS / Linux| G["chmod +x init.sh\nRun: init.sh"]
@@ -69,9 +69,9 @@ graph TD
 
 | Source (inside package) | Destination (user's CWD) | Conflict behavior |
 | :--- | :--- | :--- |
-| `core/.magic/` | `./.magic/` | Overwrite (engine update) |
-| `core/adapters/agent/` | `./.agent/workflows/magic/` | Overwrite (default adapter, always) |
-| `core/adapters/{env}/` | `./{env-target-dir}/` | Overwrite (optional, via `--env`) |
+| `.magic/` | `./.magic/` | Overwrite (engine update) |
+| `.agent/workflows/magic.*.md` | `./.agent/workflows/magic.*.md` | Overwrite (default adapter, always) |
+| `adapters/{env}/` | `./{env-target-dir}/` | Overwrite (optional, via `--env`) |
 | *(init script output)* | `./.design/` | Skip if exists |
 
 The copy operation uses **recursive overwrite** for `.magic/` and `.agent/`.
@@ -81,7 +81,7 @@ This is intentional: the engine files are managed by `magic-spec`, not by the us
 
 | Argument | Description |
 | :--- | :--- |
-| *(none)* | Default install: `.magic/` + `adapters/agent/` + init |
+| *(none)* | Default install: `.magic/` + `.agent/workflows/magic.*.md` + init |
 | `--env <name>` | Install env adapter: `cursor`, `github`, `kilocode`, `windsurf` |
 | `--env <a>,<b>` | Install multiple adapters in one command |
 | `--update` | Re-run install to refresh engine + adapter files |
@@ -106,14 +106,14 @@ else:
 
 | Error | Behavior |
 | :--- | :--- |
-| `core/` not found in package | Print error message and exit with code 1 |
+| Engine files not found in package | Print error message and exit with code 1 |
 | Init script not found | Print warning, skip script, continue |
 | Init script execution fails | Print error output, exit with code 1 |
 | `.design/` write permission denied | Print error, exit with code 1 |
 
 ## 4. Implementation Notes
 
-1. Node.js CLI entry point: `installers/node/src/index.js` — uses only Node.js stdlib (`fs`, `path`, `child_process`).
+1. Node.js CLI entry point: `installers/node/index.js` — uses only Node.js stdlib (`fs`, `path`, `child_process`).
 2. Python CLI entry point: `installers/python/magic_spec/__main__.py` — uses only stdlib (`shutil`, `pathlib`, `subprocess`, `sys`, `os`).
 3. Both implementations must produce identical console output for the same input.
 4. The `--help` flag must print usage without executing any file operations.
@@ -133,6 +133,7 @@ ensures users always run the newest version without a manual upgrade step.
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
-| 0.2.0 | 2026-02-20 | Agent | Added --env flag; updated copy table to reflect core/adapters/ structure |
+| 0.2.0 | 2026-02-20 | Agent | Added --env flag; updated copy table to reflect adapters/ structure |
 | 0.2.1 | 2026-02-20 | Agent | Added new CLI arguments (--check, info, --eject, --list-envs); linked installer-features.md |
 | 0.2.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |
+| 0.3.0 | 2026-02-21 | Agent | Major refactor: removed core/, updated to magic.*.md naming, index.js at root |

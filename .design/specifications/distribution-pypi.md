@@ -1,6 +1,6 @@
 # Distribution: PyPI (uvx)
 
-**Version:** 0.1.2
+**Version:** 0.2.0
 **Status:** Draft
 
 ## Overview
@@ -10,7 +10,7 @@ using `uv`, and how `uvx magic-spec` resolves and executes the installer.
 
 ## Related Specifications
 
-- [architecture.md](architecture.md) — Defines `core/` as the source for bundled files.
+- [architecture.md](architecture.md) — Defines the root as source of truth for engine files.
 - [cli-installer.md](cli-installer.md) — Defines the CLI behavior implemented in `magic_spec/__main__.py`.
 
 ## 1. Motivation
@@ -24,7 +24,7 @@ runs the tool in an isolated environment with no prior installation required.
 - Build backend: **hatchling** (fast, standards-compliant, natively supported by `uv`).
 - Package manager / publish tool: **uv** (`uv build` + `uv publish`).
 - Minimum Python version: 3.8 (for `shutil.copytree` with `dirs_exist_ok=True`).
-- The `core/` snapshot inside the package must be current at build time (manually synced).
+- The `.magic/`, `.agent/`, and `adapters/` snapshots must be current at build time (synced from root).
 - No third-party Python dependencies — stdlib only.
 - The `magic-spec` entry point is defined via `[project.scripts]` in `pyproject.toml`.
 
@@ -36,11 +36,11 @@ runs the tool in an isolated environment with no prior installation required.
 magic-spec-X.Y.Z  (PyPI wheel / sdist contents)
 │
 ├── magic_spec/
-│   ├── __init__.py       # Empty
+│   ├── __init__.py       # Package metadata + version
 │   └── __main__.py       # CLI entry point
-├── core/
-│   ├── .magic/           # SDD Engine files
-│   └── .agent/           # Agent trigger wrappers
+├── .magic/               # SDD Engine files (shared-data)
+├── .agent/               # Agent trigger wrappers (shared-data)
+├── adapters/             # Env-specific adapters (shared-data)
 ├── pyproject.toml
 └── README.md
 ```
@@ -66,10 +66,12 @@ build-backend   = "hatchling.build"
 packages        = ["magic_spec"]
 
 [tool.hatch.build.targets.wheel.shared-data]
-"core"          = "core"             # bundle core/ into the wheel
+".magic"        = ".magic"
+".agent"        = ".agent"
+"adapters"      = "adapters"
 
 [tool.hatch.build.targets.sdist]
-include         = ["/magic_spec", "/core"]
+include         = ["/magic_spec", "/.magic", "/.agent", "/adapters", "/README.md", "/LICENSE"]
 ```
 
 ### 3.3 How uvx Resolves the Package
@@ -80,34 +82,29 @@ graph TD
     B --> C["uv creates isolated venv"]
     C --> D["pip install magic-spec into venv"]
     D --> E["uv runs: magic-spec entry point\n(magic_spec.__main__:main)"]
-    E --> F["CLI copies core/ → CWD\nRuns init script"]
+    E --> F["CLI copies .magic/, .agent/ → CWD\nRuns init script"]
 ```
 
-### 3.4 Locating `core/` at Runtime
+### 3.4 Locating Engine Files at Runtime
 
-The `core/` directory is shipped as `shared-data` inside the wheel. At runtime, `__main__.py`
-must locate it relative to the installed package location:
+The `.magic/`, `.agent/`, and `adapters/` directories are shipped as `shared-data` inside the wheel.
+At runtime, `__main__.py` locates them by walking up the directory tree from its own `__file__`:
 
 ```plaintext
-Strategy 1: resolve from __file__
+Strategy: resolve from __file__
   __main__.py is at: <site-packages>/magic_spec/__main__.py
-  core/ is at:       <site-packages>/core/
-  → parent.parent / "core"
-
-Strategy 2 (fallback): resolve from importlib.resources
-  Use importlib.resources to locate bundled data files
-  (more robust across editable installs)
+  .magic/ is at:     <somewhere up the tree> — walk parent dirs until .magic/ is found
 ```
 
 ### 3.5 Build and Publish Flow
 
 ```mermaid
 graph TD
-    A["Update core/ in repo"] --> B["Sync: copy core/ → installers/python/core/"]
+    A["Update engine in repo root"] --> B["Sync: copy README.md + LICENSE → installers/python/"]
     B --> C["Bump version in pyproject.toml"]
     C --> D["uv build"]
     D --> E["dist/ contains .whl and .tar.gz"]
-    E --> F["uv publish"]
+    E --> F["uv publish --token pypi-XXX"]
     F --> G["PyPI: magic-spec X.Y.Z available"]
     G --> H["Users: uvx magic-spec ✅"]
 ```
@@ -120,27 +117,26 @@ Both packages must be published with the **same version number** for every relea
 ### 3.7 Pre-publish Checklist
 
 ```plaintext
-□ core/ is up to date with latest .magic/ and .agent/
-□ installers/python/core/ is a fresh copy of core/
+□ .magic/, .agent/, adapters/ in repo root are up to date
+□ README.md and LICENSE synced to installers/python/
 □ version in pyproject.toml matches npm package version
-□ README.md is current
 □ uv build completes without errors
-□ twine check dist/* passes (optional but recommended)
-□ uv publish --dry-run passes without errors
+□ wheel contains magic_spec/__init__.py and magic_spec/__main__.py
 ```
 
 ### 3.8 Script Reference
 
-All scripts run from `installers/python/` directory via `uv run <script>`.
+All commands run from `installers/python/` directory.
 
-| Script | Command | Description |
-| :--- | :--- | :--- |
-| `sync` | `node -e ...` or `python -e ...` | Copy `../../.magic`, `../../.agent`, `../../adapters` → local |
-| `build` | `uv build` | Build wheel and sdist into `dist/` |
-| `publish` | `uv publish` | Upload `dist/*` to PyPI (interactive login) |
-| `publish:token` | `uv publish --token $PYPI_TOKEN` | Automated upload using API Token |
+| Command | Description |
+| :--- | :--- |
+| `uv build` | Build wheel and sdist into `dist/` |
+| `uv publish --token pypi-XXX` | Upload `dist/*` to PyPI with token |
+| `pip install -e .` | Editable install for development |
+| `uv run python -m magic_spec` | Run module directly (no install) |
 
-> `publish` uses `uv`'s native publishing capabilities. See `secrets-management.md` for token details.
+> Authentication is handled by passing the token directly to `uv publish --token`.
+> No `.env` files or environment variables are required.
 
 ### 3.9 Primary PyPI Registration
 
@@ -166,8 +162,8 @@ If the package `magic-spec` is not yet registered on PyPI:
 ## 4. Implementation Notes
 
 1. Run `uv build` and `uv publish` from `installers/python/` directory.
-2. The synced copies inside `installers/python/` are gitignored — refresh before every build via `hatch run sync`.
-3. Set `PYPI_TOKEN` environment variable for `uv publish` authentication, or use `uv publish --token`.
+2. The `.magic/`, `.agent/`, `adapters/` inside `installers/python/` are gitignored — synced from root before build.
+3. Pass token directly: `uv publish --token pypi-XXX`. No `.env` files needed.
 4. Bump version in `pyproject.toml` in sync with `installers/node/package.json` for every release.
 
 ### 4.1 Local Testing
@@ -202,7 +198,7 @@ natively supported by `uv`, and requires less boilerplate.
 **Alternative: Poetry for packaging**
 Full-featured but heavy. Rejected — `uv` covers all needed functionality with better performance.
 
-**Alternative: include `core/` as Python package data instead of shared-data**
+**Alternative: include engine files as Python package data instead of shared-data**
 Would bundle the markdown files inside the `magic_spec/` Python namespace. Rejected —
 `shared-data` keeps the file layout cleaner and decouples the SDD engine from the Python module.
 
@@ -212,3 +208,5 @@ Would bundle the markdown files inside the `magic_spec/` Python namespace. Rejec
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Added §3.8 Script Reference (sync / build / check / publish) |
+| 0.1.2 | 2026-02-21 | Agent | Migrated from hatch to uv; added §3.9 registration checklist |
+| 0.2.0 | 2026-02-21 | Agent | Major refactor: replaced core/ with .magic/.agent/adapters; removed .env references |

@@ -70,7 +70,7 @@ graph TD
 - **Spec:** cli-installer.md §3.1
 - **Status:** Done ✓
 - **Changes:**
-  - Created:  installers/node/src/index.js
+  - Created:  installers/node/index.js
   - Modified: installers/node/package.json (added bin field, files field)
   - Decided:  use cpSync over manual copy for atomic overwrite behaviour
 ```
