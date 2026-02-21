@@ -110,7 +110,7 @@ graph TD
 
 | # | Workflow | Purpose |
 | :--- | :--- | :--- |
-| 1 | **Specification** | Converts raw thoughts into structured specs. Manages statuses: `Draft → RFC → Stable → Deprecated`. |
+| 1 | **Specification** | Converts raw thoughts into structured specs. Verifies specs against project state. Manages statuses: `Draft → RFC → Stable → Deprecated`. |
 | 2 | **Plan** | Reads Stable specs, builds a dependency graph, and produces a phased `PLAN.md`. |
 | 3 | **Task** | Decomposes the plan into atomic tasks with sequential and parallel execution tracks. |
 
@@ -140,6 +140,9 @@ Just talk to your AI agent naturally. Initialization is **automatic** — no set
 
 "Add rule: always use snake_case for file names"
 → Runs Rule workflow
+
+"Check if specs match the actual project state"
+→ Runs Specification workflow (Consistency Check)
 
 "Run retrospective"
 → Runs Retrospective workflow

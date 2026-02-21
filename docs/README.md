@@ -36,7 +36,7 @@ graph TD
 
 | # | Workflow | File | Purpose |
 |---|---|---|---|
-| 1 | **Specification** | `specification.md` | 📋 Converts raw thoughts into structured specs. Manages statuses (Draft → RFC → Stable → Deprecated) |
+| 1 | **Specification** | `specification.md` | 📋 Converts raw thoughts into structured specs. Verifies consistency with the project state. Manages statuses (Draft → RFC → Stable → Deprecated) |
 | 2 | **Plan** | `plan.md` | 🗺️ Reads Stable specs, builds dependency graph, extracts critical path, produces phased `PLAN.md` |
 | 3 | **Task** | `task.md` | ⚡ Decomposes Plan into atomic tasks with execution tracks. Sequential & Parallel modes |
 
@@ -52,6 +52,7 @@ graph TD
 | | File | Purpose |
 |---|---|---|
 | **Init** | `init.md` + `scripts/` | 🏗️ Automatic pre-flight check. On first invocation of any workflow, verifies `.design/` exists. If not — creates the directory structure, `INDEX.md`, and `RULES.md`. No manual command needed |
+| **Check Specs** | `specification.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs. |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -208,6 +209,7 @@ Simply instruct your AI agent (Cursor, Claude, Gemini, or any terminal agent). I
 
 | Command | What Happens |
 |---|---|
+| *"Check if specs match the actual project state"* | Runs Specification → executes Consistency Check (Pre-flight) |
 | *"Add rule: always use snake_case naming"* | Runs Rule → adds convention to RULES.md §7 |
 | *"Run retrospective"* | Runs Retrospective → analyzes usage, generates recommendations |
 
