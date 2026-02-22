@@ -9,10 +9,10 @@ import pathlib
 
 
 ADAPTERS = {
-    "cursor": ".cursor/rules",
-    "github": ".github",
-    "kilocode": ".kilocode",
-    "windsurf": ".windsurf/rules",
+    "cursor": {"dest": ".cursor/rules", "ext": ".mdc"},
+    "github": {"dest": ".github", "ext": ".md"},
+    "kilocode": {"dest": ".kilocode", "ext": ".md"},
+    "windsurf": {"dest": ".windsurf/rules", "ext": ".md"},
 }
 
 
@@ -23,13 +23,40 @@ def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
+def install_adapter(source_root: pathlib.Path, dest: pathlib.Path, env: str) -> None:
+    adapter = ADAPTERS.get(env)
+    if not adapter:
+        print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(ADAPTERS)}')
+        _copy_dir(source_root / ".agent", dest / ".agent")
+        return
+
+    src_dir = source_root / ".agent" / "workflows"
+    dest_dir = dest / adapter["dest"]
+
+    if not src_dir.exists():
+        print(f"⚠️  Source .agent/workflows/ not found.")
+        return
+
+    dest_dir.mkdir(parents=True, exist_ok=True)
+    target_ext = adapter["ext"]
+
+    for src_file in src_dir.glob("*.md"):
+        dest_name = src_file.stem
+        if env == "cursor":
+            dest_name = dest_name.replace("magic.", "")
+        dest_name = dest_name + target_ext
+        shutil.copy2(src_file, dest_dir / dest_name)
+
+    print(f"✅ Adapter installed: {env} → {adapter['dest']}/ ({target_ext})")
+
+
 def main() -> None:
     # Package root: the directory where .magic, .agent, adapters were installed.
     # When installed via pip/uvx, shared-data puts them relative to the package.
     # hatchling shared-data installs to data_dir, accessible via importlib or
     # by resolving relative to this file:
     #   magic_spec/__main__.py  →  site-packages/magic_spec/
-    #   shared-data (.magic, .agent, adapters) → data_dir (usually site-packages/../..)
+    #   shared-data (.magic, .agent) → data_dir (usually site-packages/../..)
     # We search up until we find .magic/.
     pkg_file = pathlib.Path(__file__).resolve()
     pkg_root = pkg_file.parent  # magic_spec/
@@ -73,22 +100,11 @@ def main() -> None:
     # 1. Copy .magic (SDD engine)
     _copy_dir(source_root / ".magic", dest / ".magic")
 
-    # 2. Copy agent adapter(s) or default .agent/ (skip on --update)
+    # 2. Adapters (skip on --update)
     if not is_update:
         if env_values:
             for env in env_values:
-                adapter_src = source_root / "adapters" / env
-                adapter_dest_rel = ADAPTERS.get(env)
-                if not adapter_dest_rel:
-                    print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(ADAPTERS)}')
-                    _copy_dir(source_root / ".agent", dest / ".agent")
-                    continue
-                if not adapter_src.exists():
-                    print(f'⚠️  Adapter "{env}" not yet implemented. Using default .agent/')
-                    _copy_dir(source_root / ".agent", dest / ".agent")
-                    continue
-                _copy_dir(adapter_src, dest / adapter_dest_rel)
-                print(f"✅ Adapter installed: {env} → {adapter_dest_rel}/")
+                install_adapter(source_root, dest, env)
         else:
             _copy_dir(source_root / ".agent", dest / ".agent")
 

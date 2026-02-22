@@ -27,7 +27,6 @@ include = [
     "/magic_spec",
     "/.magic",
     "/.agent",
-    "/adapters",
     "/README.md",
     "/LICENSE",
 ]
@@ -35,9 +34,8 @@ include = [
 [tool.hatch.build.targets.wheel.shared-data]
 ".magic" = ".magic"
 ".agent" = ".agent"
-"adapters" = "adapters"
 
 [tool.hatch.envs.default.scripts]
-sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent','adapters']]; [shutil.copy2(root/f, pathlib.Path.cwd()/f) for f in ['README.md','LICENSE'] if (root/f).exists()]; print('✅ synced from root')\""
+sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent']]; [shutil.copy2(root/f, pathlib.Path.cwd()/f) for f in ['README.md','LICENSE'] if (root/f).exists()]; print('✅ synced from root')\""
 build = "uv build"
 publish = "uv publish"
