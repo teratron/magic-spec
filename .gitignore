@@ -22,6 +22,7 @@ build/
 dist/
 *.egg-info/
 .hatch/
+uv.lock
 
 # SDD workspace — tracked as part of the engine project
 # .design/ is intentionally committed here
@@ -44,4 +45,4 @@ installers/python/adapters/
 *.log
 
 # Node installer build artifacts
-installers/node/dist/
+dist/

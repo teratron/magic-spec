@@ -1,0 +1,12 @@
+# Ignore copied build artifacts
+/.magic/
+/.agent/
+adapters.json
+README.md
+LICENSE
+
+# Ignore Python specific files and build artifacts
+/.venv/
+/dist/
+__pycache__/
+*.pyc

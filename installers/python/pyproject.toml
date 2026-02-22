@@ -29,13 +29,16 @@ include = [
     "/.agent",
     "/README.md",
     "/LICENSE",
+    "/installers/adapters.json",
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]
 ".magic" = ".magic"
 ".agent" = ".agent"
+"installers/adapters.json" = "adapters.json"
 
 [tool.hatch.envs.default.scripts]
-sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent']]; [shutil.copy2(root/f, pathlib.Path.cwd()/f) for f in ['README.md','LICENSE'] if (root/f).exists()]; print('✅ synced from root')\""
+sync = "python -c \"import shutil, pathlib; root=pathlib.Path.cwd().parent.parent; [shutil.copytree(root/d, pathlib.Path.cwd()/d, dirs_exist_ok=True) for d in ['.magic','.agent']]; [shutil.copy2(root/f, pathlib.Path.cwd()/(f.split('/')[-1] if '/' in f else f)) for f in ['README.md','LICENSE','installers/adapters.json'] if (root/f).exists()]; print('✅ synced from root')\""
 build = "uv build"
+clean = "python -c \"import shutil, pathlib; [shutil.rmtree(pathlib.Path.cwd()/d, ignore_errors=True) for d in ['.magic','.agent']]; [pathlib.Path.cwd().joinpath(f).unlink(missing_ok=True) for f in ['README.md','LICENSE','adapters.json']]; print('🧹 cleaned temporary build files')\""
 publish = "uv publish"

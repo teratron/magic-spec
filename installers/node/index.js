@@ -16,12 +16,8 @@ const envValues = envFlag
         : (args[args.indexOf(envFlag) + 1] || '').split(',').filter(Boolean)
     : [];
 
-const ADAPTERS = {
-    cursor: { dest: '.cursor/rules', ext: '.mdc' },
-    github: { dest: '.github', ext: '.md' },
-    kilocode: { dest: '.kilocode', ext: '.md' },
-    windsurf: { dest: '.windsurf/rules', ext: '.md' },
-};
+let ADAPTERS = {};
+try { ADAPTERS = JSON.parse(fs.readFileSync(path.join(pkgRoot, 'adapters.json'), 'utf8')); } catch (e) { }
 
 function copyDir(src, dest) {
     if (!fs.existsSync(src)) {
@@ -57,8 +53,8 @@ function installAdapter(env) {
         const srcFile = path.join(srcDir, file);
         // Replace .md extension with target ext
         let destName = file.replace(/\.md$/, adapter.ext);
-        if (env === 'cursor') {
-            destName = destName.replace(/^magic\./, '');
+        if (adapter.removePrefix) {
+            destName = destName.replace(adapter.removePrefix, '');
         }
         const destFile = path.join(destDir, destName);
         fs.copyFileSync(srcFile, destFile);

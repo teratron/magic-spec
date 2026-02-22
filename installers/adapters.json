@@ -1,0 +1,19 @@
+{
+    "cursor": {
+        "dest": ".cursor/rules",
+        "ext": ".mdc",
+        "removePrefix": "magic."
+    },
+    "github": {
+        "dest": ".github",
+        "ext": ".md"
+    },
+    "kilocode": {
+        "dest": ".kilocode",
+        "ext": ".md"
+    },
+    "windsurf": {
+        "dest": ".windsurf/rules",
+        "ext": ".md"
+    }
+}

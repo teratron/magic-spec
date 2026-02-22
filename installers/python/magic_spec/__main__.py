@@ -8,12 +8,7 @@ import sys
 import pathlib
 
 
-ADAPTERS = {
-    "cursor": {"dest": ".cursor/rules", "ext": ".mdc"},
-    "github": {"dest": ".github", "ext": ".md"},
-    "kilocode": {"dest": ".kilocode", "ext": ".md"},
-    "windsurf": {"dest": ".windsurf/rules", "ext": ".md"},
-}
+import json
 
 
 def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
@@ -23,10 +18,12 @@ def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
-def install_adapter(source_root: pathlib.Path, dest: pathlib.Path, env: str) -> None:
-    adapter = ADAPTERS.get(env)
+def install_adapter(
+    source_root: pathlib.Path, dest: pathlib.Path, env: str, adapters: dict
+) -> None:
+    adapter = adapters.get(env)
     if not adapter:
-        print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(ADAPTERS)}')
+        print(f'⚠️  Unknown --env: "{env}". Valid: {", ".join(adapters)}')
         _copy_dir(source_root / ".agent", dest / ".agent")
         return
 
@@ -34,16 +31,17 @@ def install_adapter(source_root: pathlib.Path, dest: pathlib.Path, env: str) -> 
     dest_dir = dest / adapter["dest"]
 
     if not src_dir.exists():
-        print(f"⚠️  Source .agent/workflows/ not found.")
+        print("⚠️  Source .agent/workflows/ not found.")
         return
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     target_ext = adapter["ext"]
+    remove_prefix = adapter.get("removePrefix")
 
     for src_file in src_dir.glob("*.md"):
         dest_name = src_file.stem
-        if env == "cursor":
-            dest_name = dest_name.replace("magic.", "")
+        if remove_prefix:
+            dest_name = dest_name.replace(remove_prefix, "")
         dest_name = dest_name + target_ext
         shutil.copy2(src_file, dest_dir / dest_name)
 
@@ -74,6 +72,12 @@ def main() -> None:
     source_root = search
     dest = pathlib.Path.cwd()
 
+    try:
+        with open(source_root / "adapters.json", "r", encoding="utf-8") as f:
+            adapters = json.load(f)
+    except Exception:
+        adapters = {}
+
     # Parse --env flags
     args = sys.argv[1:]
     env_values: list[str] = []
@@ -86,7 +90,7 @@ def main() -> None:
             i += 1
         elif args[i] in ("--help", "-h"):
             print("Usage: magic-spec [--env <adapter>] [--update]")
-            print("Adapters:", ", ".join(ADAPTERS.keys()))
+            print("Adapters:", ", ".join(adapters.keys()))
             sys.exit(0)
         i += 1
 
@@ -104,7 +108,7 @@ def main() -> None:
     if not is_update:
         if env_values:
             for env in env_values:
-                install_adapter(source_root, dest, env)
+                install_adapter(source_root, dest, env, adapters)
         else:
             _copy_dir(source_root / ".agent", dest / ".agent")
 
