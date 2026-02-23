@@ -15,12 +15,13 @@ It operates **after** the Plan Workflow — the plan is its input, not its conce
 **CRITICAL INSTRUCTIONS FOR AI:**
 
 1. **Plan First**: Never generate tasks without reading `.design/PLAN.md`. Tasks are derived from the plan — they do not invent scope.
-2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
-3. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
-4. **Dependency Respect**: Never mark a task as available if its declared dependencies are not `Done`.
-5. **Mode Awareness**: Always know the current execution mode (Sequential or Parallel). Behaviour differs significantly between them.
-6. **Manager Role**: In Parallel mode, the Manager Agent coordinates — it does not implement. It reads status, unblocks tracks, and escalates conflicts.
-7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
+2. **Rules First**: RULES.md is the project constitution. Always read and adhere to project conventions before generating tasks or writing any code.
+3. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
+4. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
+5. **Dependency Respect**: Never mark a task as available if its declared dependencies are not `Done`.
+6. **Mode Awareness**: Always know the current execution mode (Sequential or Parallel). Behaviour differs significantly between them.
+7. **Manager Role**: In Parallel mode, the Manager Agent coordinates — it does not implement. It reads status, unblocks tracks, and escalates conflicts.
+8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
 
 ## Directory Structure
 
