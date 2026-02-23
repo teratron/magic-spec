@@ -9,6 +9,7 @@ const cwd = process.cwd();
 
 const args = process.argv.slice(2);
 const isUpdate = args.includes('--update');
+const isDoctor = args.includes('--doctor') || args.includes('--check');
 const envFlag = args.find(a => a.startsWith('--env'));
 const envValues = envFlag
     ? envFlag.includes('=')
@@ -61,6 +62,73 @@ function installAdapter(env) {
     }
 
     console.log(`✅ Adapter installed: ${env} → ${adapter.dest}/ (${adapter.ext})`);
+}
+
+if (isDoctor) {
+    const isWindows = process.platform === 'win32';
+    const checkScript = isWindows
+        ? path.join(cwd, '.magic', 'scripts', 'check-prerequisites.ps1')
+        : path.join(cwd, '.magic', 'scripts', 'check-prerequisites.sh');
+
+    if (!fs.existsSync(checkScript)) {
+        console.error('❌ Error: SDD engine not initialized. Run magic-spec first.');
+        process.exit(1);
+    }
+
+    console.log('🔍 Magic-spec Doctor:');
+    try {
+        let result;
+        if (isWindows) {
+            result = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', checkScript, '-json'], { encoding: 'utf-8' });
+        } else {
+            result = spawnSync('bash', [checkScript, '--json'], { encoding: 'utf-8' });
+        }
+
+        let jsonStr = result.stdout.trim();
+        // Clean out any rogue newlines before parsing
+        const match = jsonStr.match(/\{[\s\S]*\}/);
+        if (match) {
+            jsonStr = match[0];
+        }
+
+        const data = JSON.parse(jsonStr);
+
+        // Print results for base artifacts
+        const arts = data.artifacts || {};
+        const checkItem = (name, item, requiredHint) => {
+            if (item && item.exists) {
+                console.log(`✅ ${item.path} is present`);
+            } else {
+                const hint = requiredHint ? ` (Hint: ${requiredHint})` : '';
+                console.log(`❌ .design/${name} is missing${hint}`);
+            }
+        };
+
+        checkItem('INDEX.md', arts['INDEX.md'], 'Run /magic.specification');
+        checkItem('RULES.md', arts['RULES.md'], 'Created at init');
+
+        if (arts['PLAN.md']) {
+            checkItem('PLAN.md', arts['PLAN.md'], 'Run /magic.plan');
+        }
+        if (arts['TASKS.md']) {
+            checkItem('TASKS.md', arts['TASKS.md'], 'Run /magic.task');
+        }
+
+        if (data.warnings && data.warnings.length > 0) {
+            data.warnings.forEach(warn => {
+                console.log(`⚠️  ${warn}`);
+            });
+        }
+
+        if (arts.specs) {
+            const { stable } = arts.specs;
+            if (stable > 0) console.log(`✅ ${stable} specifications are Stable`);
+        }
+
+    } catch (err) {
+        console.error('❌ Failed to parse doctor output', err.message);
+    }
+    process.exit(0);
 }
 
 console.log(isUpdate ? '🪄 Updating magic-spec (.magic only)...' : '🪄 Initializing magic-spec...');

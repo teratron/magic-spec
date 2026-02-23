@@ -1,6 +1,6 @@
 $designDir = "D:\Projects\src\github.com\teratron\magic-spec\.design"
 $planFile = "$designDir\PLAN.md"
-$changelogFile = "$designDir\CHANGELOG_DRAFT.md"
+$changelogFile = "$designDir\CHANGELOG.md"
 $indexFile = "$designDir\INDEX.md"
 $contextFile = "$designDir\CONTEXT.md"
 

@@ -34,7 +34,7 @@ The two-level draft → compile approach resolves both.
 ## 2. Constraints & Assumptions
 
 - `CHANGELOG.md` lives in the **repository root** and is committed to git.
-- `.design/CHANGELOG_DRAFT.md` is the internal accumulator — committed to git as part of `.design/`.
+- `.design/CHANGELOG.md` is the internal accumulator — committed to git as part of `.design/`.
 - Changelog generation is **automatic** — triggered by existing task workflow events.
 - The agent generates the changelog text; the user reviews before it is committed.
 - Changelog version is read from `.magic/.version` (set during install/update).
@@ -50,11 +50,11 @@ graph TD
     T["Task marked Done"] --> CR["Agent appends\nChange Record to task"]
     CR --> P{"Phase complete?"}
     P -->|No| T
-    P -->|Yes| L1["Level 1: Read Change Records\n→ append phase block to CHANGELOG_DRAFT.md"]
+    P -->|Yes| L1["Level 1: Read Change Records\n→ append phase block to CHANGELOG.md"]
     L1 --> PL{"Plan complete?\n(all phases Done)"}
     PL -->|No| NEXT["Propose next phase"]
     PL -->|Yes| L2["Level 2: Compile draft\n→ CHANGELOG.md ## [X.Y.Z]"]
-    L2 --> CLR["Clear CHANGELOG_DRAFT.md"]
+    L2 --> CLR["Clear CHANGELOG.md"]
     CLR --> DONE["✅ Release changelog ready"]
 ```
 
@@ -96,7 +96,7 @@ Rules:
 **Trigger:** All tasks in a phase reach `Done` status.
 
 **Action:** Agent reads `Changes:` blocks from all Done tasks in the phase,
-then appends a phase block to `.design/CHANGELOG_DRAFT.md`:
+then appends a phase block to `.design/CHANGELOG.md`:
 
 ```plaintext
 ## Phase {N} — {Phase Name} ({YYYY-MM-DD})
@@ -119,14 +119,14 @@ Extraction rules (reading from `Changes:` blocks):
 - `Decided:` entries are **excluded** from the draft — they are internal context only
 - Empty sections are omitted
 
-`.design/CHANGELOG_DRAFT.md` accumulates entries silently across phases —
+`.design/CHANGELOG.md` accumulates entries silently across phases —
 no user confirmation needed for each append (matches retrospective Level 1 behaviour).
 
 ### 3.4 Level 2 — Compile to CHANGELOG.md (User-Facing)
 
 **Trigger:** All phases in the plan reach `Done` status (plan complete).
 
-**Action:** Agent reads `.design/CHANGELOG_DRAFT.md`, compiles a single clean
+**Action:** Agent reads `.design/CHANGELOG.md`, compiles a single clean
 `## [X.Y.Z]` block and appends it to `CHANGELOG.md` at the repo root.
 
 **Output format in CHANGELOG.md:**
@@ -152,7 +152,7 @@ no user confirmation needed for each append (matches retrospective Level 1 behav
 4. Remove internal/SDD-specific language — rephrase for external readability.
 5. Show compiled entry to user for review **before** writing to `CHANGELOG.md`.
 6. After user approval: prepend the block to `CHANGELOG.md` (newest first).
-7. Clear `.design/CHANGELOG_DRAFT.md` (reset to empty template).
+7. Clear `.design/CHANGELOG.md` (reset to empty template).
 
 **User review prompt:**
 
@@ -234,7 +234,7 @@ New flow:
 | File | Location | Committed | Cleared after release |
 | :--- | :--- | :--- | :--- |
 | `CHANGELOG.md` | Repo root | ✅ Yes | ❌ Accumulates releases |
-| `CHANGELOG_DRAFT.md` | `.design/` | ✅ Yes | ✅ Yes — after Level 2 |
+| `CHANGELOG.md` | `.design/` | ✅ Yes | ✅ Yes — after Level 2 |
 
 ## 4. Implementation Notes
 
@@ -242,7 +242,7 @@ New flow:
 2. Level 2 (compile) requires **user review** — same principle as retrospective Level 2.
 3. If a Done task has no `Changes:` block, Level 1 falls back to inferring from task title (degraded mode).
 4. `Decided:` entries from Change Records are never included in `CHANGELOG.md` — they are for internal context only.
-5. If `.design/CHANGELOG_DRAFT.md` is empty at Level 2, agent generates from TASKS.md directly.
+5. If `.design/CHANGELOG.md` is empty at Level 2, agent generates from TASKS.md directly.
 6. Version in `CHANGELOG.md` entry must exactly match `.magic/.version`.
 7. `CHANGELOG.md` must be added to `files` in `package.json` and `pyproject.toml`.
 

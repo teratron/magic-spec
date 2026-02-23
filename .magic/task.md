@@ -221,7 +221,7 @@ graph TD
     G -->|Blocked| I[Mark Blocked, state reason in Notes]
     H --> J[Check if phase complete]
     J -->|Phase done| K[Auto-snapshot: run retrospective Level 1]
-    K --> L1[Auto-compile: parse Change Records to CHANGELOG_DRAFT.md]
+    K --> L1[Auto-compile: parse Change Records to CHANGELOG.md]
     L1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
@@ -238,7 +238,7 @@ graph TD
 4. **Report**: After each task, briefly state what was done and what is next.
 5. **On phase completion**:
     - Run **retrospective Level 1 (auto-snapshot)**: read INDEX.md, TASKS.md, RULES.md → count stats → append one row to `.design/RETROSPECTIVE.md` Snapshots table. Do this **silently** — no user confirmation needed.
-    - Compile **CHANGELOG_DRAFT.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG_DRAFT.md`. Do this **silently**.
+    - Compile **CHANGELOG.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG.md`. Do this **silently**.
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and present entry for user review. Write to `CHANGELOG.md` when approved.
@@ -261,7 +261,7 @@ graph TD
     G --> I{All tasks done?}
     I -->|No| C
     I -->|Yes| J[Auto-snapshot: run retrospective Level 1]
-    J --> J1[Auto-compile: parse Change Records to CHANGELOG_DRAFT.md]
+    J --> J1[Auto-compile: parse Change Records to CHANGELOG.md]
     J1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
@@ -483,7 +483,7 @@ Parallel-safe: T-{N}A01 [P], T-{N}B01 [P]
 - [ ] No open blockers
 - [ ] TASKS.md summary updated
 - [ ] Retrospective auto-snapshot appended to RETROSPECTIVE.md
-- [ ] Changelog auto-compiled to CHANGELOG_DRAFT.md
+- [ ] Changelog auto-compiled to CHANGELOG.md
 - [ ] CONTEXT.md regenerated
 - [ ] Next phase unlocked: Phase {N+1}
 - [ ] If all phases complete: full retrospective + changelog compile (Level 2) was run

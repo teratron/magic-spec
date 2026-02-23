@@ -6,6 +6,7 @@
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Phase 1 | 3 | 0 | 0 | 3 | 0 |
 | Phase 2 | 5 | 0 | 0 | 5 | 0 |
+| Phase 3 | 4 | 0 | 0 | 4 | 0 |
 
 ## Phase 1 — Foundation
 
@@ -24,3 +25,12 @@
 | [T-2B01] | Write `generate-context.sh` and `generate-context.ps1` scripts | Done | Agent |
 | [T-2C01] | Update rules in `specification.md` for Explore Mode & Deltas | Done | Agent |
 | [T-2C02] | Update `magic.specification.md` workflow wrapper | Done | Agent |
+
+## Phase 3 — CLI & Developer Experience
+
+| ID | Title | Status | Assignee |
+| :--- | :--- | :--- | :--- |
+| [T-3A01] | Implement CLI `--doctor` in Node.js installers | Done | Agent |
+| [T-3B01] | Implement CLI `--doctor` in Python installers | Done | Agent |
+| [T-3C01] | Create `.magic/onboard.md` script | Done | Agent |
+| [T-3C02] | Create `.agent/workflows/magic.onboard.md` wrapper | Done | Agent |

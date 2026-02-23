@@ -9,6 +9,7 @@ import pathlib
 
 
 import json
+import re
 
 
 def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
@@ -89,12 +90,13 @@ def main() -> None:
             env_values.extend(args[i + 1].split(","))
             i += 1
         elif args[i] in ("--help", "-h"):
-            print("Usage: magic-spec [--env <adapter>] [--update]")
+            print("Usage: magic-spec [--env <adapter>] [--update] [--doctor | --check]")
             print("Adapters:", ", ".join(adapters.keys()))
             sys.exit(0)
         i += 1
 
     is_update = "--update" in args
+    is_doctor = "--doctor" in args or "--check" in args
 
     if is_update:
         print("🪄 Updating magic-spec (.magic only)...")
@@ -104,16 +106,16 @@ def main() -> None:
     # 1. Copy .magic (SDD engine)
     _copy_dir(source_root / ".magic", dest / ".magic")
 
-    # 2. Adapters (skip on --update)
-    if not is_update:
+    # 2. Adapters (skip on --update or --doctor)
+    if not is_update and not is_doctor:
         if env_values:
             for env in env_values:
                 install_adapter(source_root, dest, env, adapters)
         else:
             _copy_dir(source_root / ".agent", dest / ".agent")
 
-    # 3. Run init script (skip on --update)
-    if not is_update:
+    # 3. Run init script (skip on --update or --doctor)
+    if not is_update and not is_doctor:
         is_windows = sys.platform == "win32"
         if is_windows:
             init_script = dest / ".magic" / "scripts" / "init.ps1"
@@ -134,8 +136,74 @@ def main() -> None:
                 os.chmod(init_script, 0o755)
                 subprocess.run(["bash", str(init_script)], check=False)
         print("✅ magic-spec initialized successfully!")
-    else:
+    elif is_update:
         print("✅ magic-spec updated successfully!")
+
+    # 4. Doctor mode
+    if is_doctor:
+        is_windows = sys.platform == "win32"
+        if is_windows:
+            check_script = dest / ".magic" / "scripts" / "check-prerequisites.ps1"
+        else:
+            check_script = dest / ".magic" / "scripts" / "check-prerequisites.sh"
+
+        if not check_script.exists():
+            print("❌ Error: SDD engine not initialized. Run magic-spec first.")
+            sys.exit(1)
+
+        print("🔍 Magic-spec Doctor:")
+        try:
+            if is_windows:
+                cmd = [
+                    "powershell.exe",
+                    "-ExecutionPolicy",
+                    "Bypass",
+                    "-File",
+                    str(check_script),
+                    "-json",
+                ]
+            else:
+                cmd = ["bash", str(check_script), "--json"]
+
+            result = subprocess.run(cmd, capture_output=True, text=True, check=False)
+            json_str = result.stdout.strip()
+
+            # Clean out any rogue newlines before parsing
+            match = re.search(r"\{.*\}", json_str, re.DOTALL)
+            if match:
+                json_str = match.group(0)
+
+            data = json.loads(json_str)
+            arts = data.get("artifacts", {})
+
+            def check_item(name: str, item: dict, required_hint: str = "") -> None:
+                if item and item.get("exists"):
+                    print(f"✅ {item.get('path', name)} is present")
+                else:
+                    hint = f" (Hint: {required_hint})" if required_hint else ""
+                    print(f"❌ .design/{name} is missing{hint}")
+
+            check_item("INDEX.md", arts.get("INDEX.md", {}), "Run /magic.specification")
+            check_item("RULES.md", arts.get("RULES.md", {}), "Created at init")
+
+            if "PLAN.md" in arts:
+                check_item("PLAN.md", arts["PLAN.md"], "Run /magic.plan")
+            if "TASKS.md" in arts:
+                check_item("TASKS.md", arts["TASKS.md"], "Run /magic.task")
+
+            warnings = data.get("warnings", [])
+            for warn in warnings:
+                print(f"⚠️  {warn}")
+
+            specs = arts.get("specs", {})
+            if specs:
+                stable = specs.get("stable", 0)
+                if stable > 0:
+                    print(f"✅ {stable} specifications are Stable")
+
+        except Exception as e:
+            print(f"❌ Failed to parse doctor output: {e}")
+        sys.exit(0)
 
 
 if __name__ == "__main__":

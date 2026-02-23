@@ -38,16 +38,20 @@ magic-spec
 ваш-проект/
 │
 ├── .magic/                     # Движок SDD (не трогать вручную)
+│   ├── onboard.md
 │   ├── plan.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── specification.md
 │   ├── task.md
 │   └── scripts/
+│       ├── check-prerequisites.* # Проверки для --doctor
+│       ├── generate-context.*    # Сборка CONTEXT.md
 │       ├── init.sh             # Скрипт инициализации (macOS/Linux)
 │       └── init.ps1            # Скрипт инициализации (Windows)
 │
 ├── .agent/workflows/           # Точки входа для AI-агентов (Cursor, Claude и др.)
+│   ├── magic.onboard.md
 │   ├── magic.plan.md
 │   ├── magic.rule.md
 │   ├── magic.specification.md
@@ -95,6 +99,16 @@ uvx magic-spec --env cursor --env claude
 
 ```bash
 uvx magic-spec --update
+```
+
+### Проверка здоровья проекта (Doctor)
+
+Запускает скрипт валидации без AI-агента. Проверяет наличие обязательных файлов, состояние `INDEX.md` и спецификаций:
+
+```bash
+uvx magic-spec --doctor
+# или
+uvx magic-spec --check
 ```
 
 ### Справка

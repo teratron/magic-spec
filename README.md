@@ -58,6 +58,18 @@ Both commands do exactly the same thing:
 | **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
 | **Self-Improving** | After each phase and at plan completion, the Task workflow automatically runs a retrospective and generates improvement recommendations. |
 
+## 🩺 System Health (CLI Doctor)
+
+You can check if your SDD workspace is properly initialized and healthy without invoking the AI. Just append the `--doctor` (or `--check`) flag:
+
+```bash
+npx magic-spec@latest --doctor
+# or
+uvx magic-spec --doctor
+```
+
+This returns a visually formatted validation report of your project's `.design` structure, preventing broken context before you start coding.
+
 ## 📁 What Gets Installed
 
 After running `npx magic-spec@latest` in your project root:
@@ -66,6 +78,7 @@ After running `npx magic-spec@latest` in your project root:
 your-project/
 │
 ├── .agent/workflows/               # Agent entry points (slash commands)
+│   ├── magic.onboard.md        # Interactive tutorial for new devs
 │   ├── magic.plan.md
 │   ├── magic.rule.md
 │   ├── magic.specification.md
@@ -73,12 +86,15 @@ your-project/
 │
 ├── .magic/                     # SDD Engine (workflow logic, read-only)
 │   ├── init.md
+│   ├── onboard.md              # Onboarding script payload
 │   ├── plan.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── specification.md
 │   ├── task.md
 │   └── scripts/
+│       ├── check-prerequisites.*  # Used by --doctor
+│       ├── generate-context.*     # Auto-compiles CONTEXT.md
 │       ├── init.sh             # Init for macOS / Linux
 │       └── init.ps1            # Init for Windows
 │
@@ -113,11 +129,12 @@ graph TD
 | 2 | **Plan** | Reads Stable specs, builds a dependency graph, and produces a phased `PLAN.md`. |
 | 3 | **Task** | Decomposes the plan into atomic tasks with sequential and parallel execution tracks. Automatically runs a retrospective at phase and plan completion. |
 
-### Auxiliary Workflow
+### Auxiliary Workflows
 
 | Workflow | Purpose |
 | :--- | :--- |
 | **Rule** | Manages the project constitution (`RULES.md §7`). Add, amend, or remove conventions. |
+| **Onboard** | Interactive tutorial guiding new developers through their first Magic SDD cycle. |
 
 > **Retrospective** runs automatically inside the Task workflow — at phase completion (snapshot) and plan completion (full analysis). No manual command needed.
 
@@ -143,6 +160,9 @@ Just talk to your AI agent naturally. Initialization is **automatic** — no set
 
 "Check if specs match the actual project state"
 → Runs Specification workflow (Consistency Check)
+
+"Start the interactive tutorial"
+→ Runs Onboard workflow
 ```
 
 The AI reads the corresponding `.magic/*.md` workflow file and executes the request within the bounds of the SDD system. **No code escapes the pipeline.** ✨
