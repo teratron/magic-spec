@@ -1,6 +1,6 @@
 # CLI Installer
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Status:** Draft
 
 ## Overview
@@ -77,12 +77,24 @@ graph TD
 The copy operation uses **recursive overwrite** for `.magic/` and `.agent/`.
 This is intentional: the engine files are managed by `magic-spec`, not by the user.
 
-### 3.4 Argument Reference
+### 3.4 Template Compilation
+
+When copying adapters (from `adapters/{env}/` or the default `.agent/`), the installer processes the files as **abstract templates** rather than performing raw copies.
+
+1. **Read Abstract Template**: The installer reads the base workflow definition.
+2. **Resolve Variables**: It replaces placeholders based on the `target_format` of the `--env`:
+   - If output is Markdown (`.md` / `.mdc`): `{ARGUMENTS}` resolves to `$ARGUMENTS`.
+   - If output is TOML (`.toml`): `{ARGUMENTS}` resolves to `{{args}}`.
+3. **Write Output**: The compiled content is written to the destination directory.
+
+This allows a single source of truth for workflow instructions while natively supporting agents with significantly different command schemas (e.g., `gemini` CLI vs `claude` CLI).
+
+### 3.5 Argument Reference
 
 | Argument | Description |
 | :--- | :--- |
 | *(none)* | Default install: `.magic/` + `.agent/workflows/magic.*.md` + init |
-| `--env <name>` | Install env adapter: `cursor`, `github`, `kilocode`, `windsurf` |
+| `--env <name>` | Install env adapter: `claude`, `cursor`, `gemini`, `github`, `kilocode`, `qwen`, `windsurf` |
 | `--env <a>,<b>` | Install multiple adapters in one command |
 | `--update` | Updates `.magic/` to the latest version, skips adapters and init script |
 | `--check` | Check if installed version is up to date (no file changes) |
@@ -92,7 +104,7 @@ This is intentional: the engine files are managed by `magic-spec`, not by the us
 | `--help` | Print usage information and exit |
 | `--version` | Print current `magic-spec` package version and exit |
 
-### 3.5 Platform Detection
+### 3.6 Platform Detection
 
 ```plaintext
 if platform == "win32":
@@ -102,7 +114,7 @@ else:
     run: bash .magic/scripts/init.sh
 ```
 
-### 3.6 Error Handling
+### 3.7 Error Handling
 
 | Error | Behavior |
 | :--- | :--- |
@@ -137,3 +149,4 @@ ensures users always run the newest version without a manual upgrade step.
 | 0.2.1 | 2026-02-20 | Agent | Added new CLI arguments (--check, info, --eject, --list-envs); linked installer-features.md |
 | 0.2.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |
 | 0.3.0 | 2026-02-21 | Agent | Major refactor: removed core/, updated to magic.*.md naming, index.js at root |
+| 0.4.0 | 2026-02-23 | Agent | Inserted Template Compilation section for multi-format agent support |

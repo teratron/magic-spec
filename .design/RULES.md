@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Active
 
 ## Overview
@@ -64,9 +64,16 @@ that gets shipped to end users. Any modification to files inside `.magic/` must 
 5. **Document the change** — any modification to engine files must be recorded in the
    relevant spec (if applicable) and in a git commit message explaining the reason.
 
+### C2 — Workflow Minimalism
+
+**Declared by:** User (2026-02-23)
+
+Limit the SDD workflow to the core set of commands (`magic.specification`, `magic.plan`, `magic.task`, `magic.rule`) to maximize process automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-20 | Agent | Initial constitution |
 | 1.1.0 | 2026-02-20 | Agent | Added C1: .magic/ modification safety protocol (T4 trigger) |
+| 1.2.0 | 2026-02-23 | Agent | Added C2: Workflow Minimalism |

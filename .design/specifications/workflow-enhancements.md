@@ -1,11 +1,11 @@
 # Workflow Enhancements
 
-**Version:** 0.1.0
+**Version:** 0.2.0
 **Status:** Draft
 
 ## Overview
 
-Three targeted improvements to the Magic SDD engine that increase automation and reduce
+Four targeted improvements to the Magic SDD engine that increase automation and reduce
 friction without adding new commands. All changes are additive — they extend existing
 workflows rather than replace them.
 
@@ -21,10 +21,11 @@ workflows rather than replace them.
 ## 1. Motivation
 
 The current engine executes each workflow in isolation. The agent has no built-in signal
-for what comes next, tasks lack explicit priority and parallelism markers, and prerequisite
-validation is done via prose instructions rather than machine-readable checks.
+for what comes next, tasks lack explicit priority and parallelism markers, prerequisite
+validation is done via prose instructions rather than machine-readable checks, and there
+is no single aggregated context file for the agent to read current state without burning tokens on old specs.
 
-These three improvements address each gap independently. They share no dependencies on
+These four improvements address each gap independently. They share no dependencies on
 each other and can be implemented in any order.
 
 ---
@@ -183,6 +184,7 @@ Two new optional fields are appended to every task block:
 1. Extract user stories from `Implementation Notes` in spec files if present; otherwise
    derive them from section groupings in `Detailed Design`.
 2. Assign priority by asking the user once per phase before writing:
+
    ```
    Phase 2 user stories detected:
      US-01 — Launch without path config
@@ -191,6 +193,7 @@ Two new optional fields are appended to every task block:
 
    Assign priorities (P1/P2/P3) or accept defaults? (yes / adjust)
    ```
+
 3. Mark `[P]` automatically for tasks in different tracks with no shared state.
    Surface the full list for user confirmation before writing.
 4. If a phase has only one track, omit the User Stories section entirely — it adds
@@ -283,15 +286,39 @@ Replace the current prose prerequisite description in Step 0 with:
 
 ---
 
+### 3.4 Auto-Generated Context File (CONTEXT.md)
+
+To optimize token usage and prevent agents from digesting stale requirements, a new `CONTEXT.md` file is generated and maintained in the `.design/` directory.
+
+**Purpose:** Provide the AI with a single, highly condensed snapshot of the project's current active state. Instead of reading all specification files and history, the agent uses `CONTEXT.md` alongside `INDEX.md` and `RULES.md` to establish its baseline context.
+
+**Content Structure:**
+
+- **Active Technologies**: Extracted from recent `PLAN.md` logic (e.g., framework, DB, language).
+- **Core Project Structure**: The current high-level repository structure diagram.
+- **Recent Changes**: The last 3 implemented features/phases (extracted from `CHANGELOG.md` or closed phase files).
+
+**Generation Trigger:**
+The file is compiled and overwritten automatically at key milestones without user-facing commands:
+
+1. End of `magic.plan` execution (when technical stack is solidified or modified).
+2. End of a Phase in `magic.task` (when a feature is shipped and changelog is accumulated).
+
+**Agent Consumption:**
+All workflows instruct the agent to read `.design/CONTEXT.md` if it exists to gain immediate project awareness without re-reading the entire `.design/specifications/` folder.
+
+---
+
 ## 4. Implementation Notes
 
 1. **Handoffs first** — purely additive to existing frontmatter, zero risk of breakage.
    Add to all five `.agent/workflows/magic.*.md` files in one pass.
 2. **Prerequisite script second** — self-contained, testable independently. Write bash
    version first, then port to PowerShell.
-3. **User story structure last** — requires changes to task.md workflow logic and
+3. **User story structure third** — requires changes to task.md workflow logic and
    phase file templates. Depends on understanding of how tasks are actually generated
    in practice.
+4. **Context File Generation last** — create a new script `generate-context.sh`/`.ps1` that parses `PLAN.md` and `CHANGELOG.md` to rewrite `CONTEXT.md`. Hook it into `plan.md` and `task.md`.
 
 ---
 
@@ -316,3 +343,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-23 | Agent | Initial Draft — three workflow enhancements |
+| 0.2.0 | 2026-02-23 | Agent | Added 4th enhancement: Auto-Generated Context File (CONTEXT.md) |

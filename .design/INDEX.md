@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.13.0
+**Version:** 1.15.0
 **Status:** Active
 
 ## Overview
@@ -16,15 +16,15 @@ Central registry of all project specifications and their current state.
 | File | Description | Status | Version |
 | :--- | :--- | :--- | :--- |
 | [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Draft | 1.0.0 |
-| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Draft | 0.3.0 |
+| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Draft | 0.4.0 |
 | [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Draft | 0.2.0 |
 | [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Draft | 0.2.0 |
 | [secrets-management.md](specifications/secrets-management.md) | ~~.env-based credentials management~~ — Deprecated | Deprecated | 0.2.0 |
-| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support: Cursor, GitHub Copilot, Kilo Code, Windsurf | Draft | 0.2.0 |
+| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | Draft | 0.3.0 |
 | [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Draft | 0.1.0 |
 | [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Draft | 0.2.0 |
 | [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for 3 README variants: GitHub root, npm package, PyPI package | Draft | 0.1.0 |
-| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Three targeted improvements: handoffs, user stories, and prerequisite validation | Draft | 0.1.0 |
+| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Four targeted improvements: handoffs, user stories, prerequisite validation, and CONTEXT.md | Draft | 0.2.0 |
 
 ## Meta Information
 
@@ -50,3 +50,5 @@ Central registry of all project specifications and their current state.
 | 1.11.0 | 2026-02-21 | Agent | Added readme-strategy.md (3-variant README content strategy) |
 | 1.12.0 | 2026-02-21 | Agent | Major spec refactor: synced 7 specs to current structure; deprecated secrets-management |
 | 1.13.0 | 2026-02-23 | Agent | Handled workflow-enhancements.md |
+| 1.14.0 | 2026-02-23 | Agent | Updated agent-environments (v0.3.0) and cli-installer (v0.4.0) to support abstract templates |
+| 1.15.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.2.0 (added CONTEXT.md feature) |

@@ -1,6 +1,6 @@
 # Agent Environment Adapters
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** Draft
 
 ## Overview
@@ -42,12 +42,15 @@ breaking the default behavior.
 
 ### 3.1 Environment Matrix
 
-| Env name | Target directory | File format | Tool |
+| Env name | Target directory | Output format | Tool |
 | :--- | :--- | :--- | :--- |
-| *(none — default)* | `.agent/workflows/` | `.md` (`magic.*.md`) | Gemini, general agents |
+| *(none — default)* | `.agent/workflows/` | `.md` (`magic.*.md`) | General agents |
+| `--env claude` | `.claude/commands/` | `.md` | Claude Code CLI |
 | `--env cursor` | `.cursor/rules/` | `.mdc` | Cursor IDE |
+| `--env gemini` | `.gemini/commands/` | `.toml` | Gemini CLI |
 | `--env github` | `.github/` | `.md` | GitHub Copilot |
 | `--env kilocode` | `.kilocode/` | `.md` | Kilo Code |
+| `--env qwen` | `.qwen/commands/` | `.toml` | Qwen Code CLI |
 | `--env windsurf` | `.windsurf/rules/` | `.md` | Windsurf |
 
 ### 3.2 Root adapters/ Structure
@@ -121,14 +124,21 @@ When a user's tool is not yet supported, the CLI falls back to default (`.agent/
    To request a new adapter: https://github.com/teratron/magic-spec/issues
 ```
 
-### 3.6 Adapter Content
+### 3.6 Abstract Templates & Compilation
 
-All adapters contain the **same 5 workflow trigger files** with identical logic — only the file
-format and folder destination differ. Content of `specification.md` in all adapters is identical
-to the current `.agent/workflows/magic.specification.md`.
+Instead of maintaining hardcoded `.md` files for each adapter, workflow instructions are authored
+as **abstract templates**. These templates contain meta-tags and placeholders that are resolved
+during installation based on the target environment's specific format requirements.
 
-The `cursor` adapter uses `.mdc` extension (Cursor's MDC format), but the file content is
-identical to `.md` counterparts. Format differences beyond extension are tracked as future work.
+**Supported Placeholders:**
+
+- `{SCRIPT}` — path to the underlying workflow script (e.g., `.magic/specification.md`).
+- `$ARGUMENTS` — standard argument passing variable for Markdown-based agents (Claude, Cursor, Copilot).
+- `{{args}}` — argument passing variable for TOML-based agents (Gemini, Qwen).
+
+During installation, the CLI reads the abstract template, applies the correct placeholders for the
+requested `--env`, and outputs either a Markdown file or a TOML configuration, avoiding duplication
+of instructions.
 
 ## 4. Implementation Notes
 
@@ -159,3 +169,4 @@ burden with no user benefit over a single `--env` flag.
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.1.1 | 2026-02-20 | Agent | Clarified: --env REPLACES .agent/, not adds; removed stale core/ refs |
 | 0.2.0 | 2026-02-21 | Agent | Updated to magic.*.md flat naming; removed workflows/magic/ subdirectory |
+| 0.3.0 | 2026-02-23 | Agent | Added abstract templates via placeholders; expanded matrix for Markdown/TOML support |
