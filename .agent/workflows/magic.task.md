@@ -5,10 +5,6 @@ handoffs:
     workflow: magic.plan
     prompt: "Update the project plan based on task progress."
     condition: null
-  - label: "Run retrospective"
-    workflow: magic.retrospective
-    prompt: "Run an SDD retrospective to analyze phase metrics."
-    condition: "phase_complete"
 ---
 
 # Task Workflow

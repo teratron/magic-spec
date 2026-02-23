@@ -46,3 +46,5 @@ installers/python/adapters/
 
 # Node installer build artifacts
 dist/
+
+references/
