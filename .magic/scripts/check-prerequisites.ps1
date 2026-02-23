@@ -70,9 +70,6 @@ if ($json) {
         warnings = $warnings
     }
     
-    # Needs ConvertTo-Json with deeper depth to avoid clipping nested objects
-    $jsonOutput = $output | ConvertTo-Json -Depth 5 -Compress
-    
     # The spec required non-compressed, cleanly formatted json
     $jsonOutputFormat = $output | ConvertTo-Json -Depth 5
     Write-Output $jsonOutputFormat

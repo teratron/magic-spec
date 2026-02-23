@@ -19,14 +19,21 @@ echo "" >> "$CONTEXT_FILE"
 
 echo "## Active Technologies" >> "$CONTEXT_FILE"
 echo "" >> "$CONTEXT_FILE"
-if [ -f "$PLAN_FILE" ]; then
-    # Look for keywords or a specific section if available
-    echo "Refer to Architecture and Plan for the technology stack. Extracted from PLAN.md." >> "$CONTEXT_FILE"
-    echo "" >> "$CONTEXT_FILE"
+
+TECH_LIST=""
+[ -f "package.json" ] && TECH_LIST="$TECH_LIST - Node.js\n"
+[ -f "pyproject.toml" ] && TECH_LIST="$TECH_LIST - Python (uv/poetry/hatch)\n"
+[ -f "requirements.txt" ] && TECH_LIST="$TECH_LIST - Python\n"
+[ -f "Cargo.toml" ] && TECH_LIST="$TECH_LIST - Rust\n"
+[ -f "go.mod" ] && TECH_LIST="$TECH_LIST - Go\n"
+[ -f "Makefile" ] && TECH_LIST="$TECH_LIST - Make\n"
+
+if [ -z "$TECH_LIST" ]; then
+    echo "- Unknown (no manifest detected)" >> "$CONTEXT_FILE"
 else
-    echo "No PLAN.md found." >> "$CONTEXT_FILE"
-    echo "" >> "$CONTEXT_FILE"
+    echo -e "$TECH_LIST" >> "$CONTEXT_FILE"
 fi
+echo "" >> "$CONTEXT_FILE"
 
 echo "## Core Project Structure" >> "$CONTEXT_FILE"
 echo "" >> "$CONTEXT_FILE"

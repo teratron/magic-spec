@@ -9,6 +9,16 @@ handoffs: []
 >
 > **Important:** Provide output clearly formatted with markdown. Do not write implementation code during this workflow. Complete each step and explicitly wait for the user to confirm before proceeding to the next step.
 
+## ⚠️ SAFETY FIRST
+
+This tutorial will create real files in your project.
+If you are already in a production project with existing SDD artifacts, **be careful**:
+
+- This script will append to or create `.design/PLAN.md` and `.design/tasks/TASKS.md`.
+- It is recommended to run this in a **clean, empty directory** for learning.
+
+---
+
 ## Step 1: Introduction
 
 1. Introduce yourself as the Magic SDD onboarding guide.

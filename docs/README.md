@@ -58,7 +58,7 @@ graph TD
 
 The SDD system consists of three main directories:
 
-1. **`.agent/workflows/magic.*.md`** — AI agent entry points (e.g., slash commands in Cursor or Claude). These thin wrappers (~12 lines each) trigger the actual Magic workflows. There are **4 wrappers**: specification, plan, task, rule.
+1. **`.agent/workflows/magic.*.md`** — AI agent entry points (e.g., slash commands in Cursor or Claude). These thin wrappers (~12 lines each) trigger the actual Magic workflows. There are **5 wrappers**: onboard, specification, plan, task, rule.
 2. **`.magic/`** — The core SDD engine: workflow definitions, templates, scripts, and documentation. Immutable during normal operation.
 3. **`.design/`** — The living state of your project. All generated specs, plans, tasks, and retrospectives reside here.
 
@@ -68,6 +68,7 @@ The SDD system consists of three main directories:
 project-root/
 │
 ├── .agent/workflows/               # 🎯 Agent Triggers (entry points)
+│   ├── magic.onboard.md            #    → triggers .magic/onboard.md
 │   ├── magic.plan.md               #    → triggers .magic/plan.md
 │   ├── magic.rule.md               #    → triggers .magic/rule.md
 │   ├── magic.specification.md      #    → triggers .magic/specification.md
@@ -77,6 +78,7 @@ project-root/
 │   ├── README.md               #    Documentation (EN)
 │   ├── README.ru.md            #    Documentation (RU)
 │   ├── init.md                 #    Auto-init logic (pre-flight check)
+│   ├── onboard.md              #    Interactive onboarding tutorial script
 │   ├── plan.md                 #    Planning workflow + templates
 │   ├── retrospective.md        #    Self-analysis engine (auto-triggered by task.md)
 │   ├── rule.md                 #    Constitution management workflow (auxiliary)

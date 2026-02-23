@@ -24,7 +24,7 @@ Central registry of all project specifications and their current state.
 | [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Draft | 0.1.0 |
 | [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Draft | 0.2.0 |
 | [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for 3 README variants: GitHub root, npm package, PyPI package | Draft | 0.1.0 |
-| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 0.5.0 |
+| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 1.1.0 |
 
 ## Meta Information
 
@@ -54,3 +54,4 @@ Central registry of all project specifications and their current state.
 | 1.15.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.2.0 (added CONTEXT.md feature) |
 | 1.16.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.3.0 |
 | 1.17.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.5.0 and marked as Stable |
+| 1.18.0 | 2026-02-23 | Agent | Bumped workflow-enhancements to v1.1.0 for release alignment |

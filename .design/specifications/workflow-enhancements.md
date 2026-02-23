@@ -1,6 +1,6 @@
 # Workflow Enhancements
 
-**Version:** 0.5.0
+**Version:** 1.1.0
 **Status:** Stable
 
 ## Overview

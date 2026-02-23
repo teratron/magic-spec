@@ -22,55 +22,55 @@ Parallel-safe: none (sequential dependency)
 
 ### [T-3A01] Implement CLI `--doctor` in Node.js installers [P]
 
-- **Spec:** [workflow-enhancements.md](../specifications/workflow-enhancements.md) §3.7
-- **Story:** US-04
-- **Priority:** P2
-- **Phase:** 3 / Track A
-- **Depends:** —
-- **Status:** Done
-- **Changes:** Added isDoctor parsing logic to index.js and formatted JSON output with emojis
-- **Assignee:** Agent
-- **Notes:** Parse prerequisite script JSON response in `installers/node/index.js` to display visually structured validation data when running with `--doctor` or `--check`.
+  Spec:     workflow-enhancements.md §3.7
+  Story:    US-04
+  Priority: P2
+  Phase:    3 / Track A
+  Depends:  —
+  Status:   Done
+  Changes:  Added isDoctor parsing logic to index.js and formatted JSON output with emojis
+  Assignee: Agent
+  Notes:    Parse prerequisite script JSON response in `installers/node/index.js` to display visually structured validation data when running with `--doctor` or `--check`.
 
 ## Track B — CLI Doctor (Python) *(parallel with A)*
 
 ### [T-3B01] Implement CLI `--doctor` in Python installers [P]
 
-- **Spec:** [workflow-enhancements.md](../specifications/workflow-enhancements.md) §3.7
-- **Story:** US-04
-- **Priority:** P2
-- **Phase:** 3 / Track B
-- **Depends:** —
-- **Status:** Done
-- **Changes:** Handled --doctor flag in python **main**.py, executing script and printing visually structured results
-- **Assignee:** Agent
-- **Notes:** Parse prerequisite script JSON response in `installers/python/magic_spec/__main__.py` to display visually structured validation data when running with `--doctor` or `--check`.
+  Spec:     workflow-enhancements.md §3.7
+  Story:    US-04
+  Priority: P2
+  Phase:    3 / Track B
+  Depends:  —
+  Status:   Done
+  Changes:  Handled --doctor flag in python **main**.py, executing script and printing visually structured results
+  Assignee: Agent
+  Notes:    Parse prerequisite script JSON response in `installers/python/magic_spec/__main__.py` to display visually structured validation data when running with `--doctor` or `--check`.
 
 ## Track C — Interactive Onboarding Workflow
 
 ### [T-3C01] Create `.magic/onboard.md` script
 
-- **Spec:** [workflow-enhancements.md](../specifications/workflow-enhancements.md) §3.6
-- **Story:** US-05
-- **Priority:** P2
-- **Phase:** 3 / Track C
-- **Depends:** —
-- **Status:** Done
-- **Changes:** Created the .magic/onboard.md interactive tutorial script following step-by-step guidance style
-- **Assignee:** Agent
-- **Notes:** Create the explicit, targeted workflow command for onboarding new developers.
+  Spec:     workflow-enhancements.md §3.6
+  Story:    US-05
+  Priority: P2
+  Phase:    3 / Track C
+  Depends:  —
+  Status:   Done
+  Changes:  Created the .magic/onboard.md interactive tutorial script following step-by-step guidance style
+  Assignee: Agent
+  Notes:    Create the explicit, targeted workflow command for onboarding new developers.
 
 ### [T-3C02] Create `.agent/workflows/magic.onboard.md` wrapper
 
-- **Spec:** [workflow-enhancements.md](../specifications/workflow-enhancements.md) §3.6
-- **Story:** US-05
-- **Priority:** P2
-- **Phase:** 3 / Track C
-- **Depends:** T-3C01
-- **Status:** Done
-- **Changes:** Created the wrapper inside .agent/workflows/magic.onboard.md to trigger the script
-- **Assignee:** Agent
-- **Notes:** Create the entry point wrapper for the new onboard workflow, adding it to the UI.
+  Spec:     workflow-enhancements.md §3.6
+  Story:    US-05
+  Priority: P2
+  Phase:    3 / Track C
+  Depends:  T-3C01
+  Status:   Done
+  Changes:  Created the wrapper inside .agent/workflows/magic.onboard.md to trigger the script
+  Assignee: Agent
+  Notes:    Create the entry point wrapper for the new onboard workflow, adding it to the UI.
 
 ## Phase Completion
 

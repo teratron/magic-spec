@@ -1,4 +1,4 @@
-$designDir = "D:\Projects\src\github.com\teratron\magic-spec\.design"
+$designDir = ".design"
 $planFile = "$designDir\PLAN.md"
 $changelogFile = "$designDir\CHANGELOG.md"
 $indexFile = "$designDir\INDEX.md"
@@ -13,12 +13,20 @@ $dateStamp = Get-Date -Format "yyyy-MM-dd"
 $bt = [char]96
 $codeFence = "$bt$bt$bt"
 
-$activeTech = ""
-if (Test-Path $planFile) {
-    $activeTech = "Refer to Architecture and Plan for the technology stack. Extracted from PLAN.md."
-} else {
-    $activeTech = "No PLAN.md found."
-}
+$isNode = Test-Path "package.json"
+$isPython = (Test-Path "pyproject.toml") -or (Test-Path "requirements.txt")
+$isRust = Test-Path "Cargo.toml"
+$isGo = Test-Path "go.mod"
+$isMake = Test-Path "Makefile"
+
+$techList = @()
+if ($isNode) { $techList += "- Node.js" }
+if ($isPython) { $techList += "- Python (uv/pip)" }
+if ($isRust) { $techList += "- Rust" }
+if ($isGo) { $techList += "- Go" }
+if ($isMake) { $techList += "- Make" }
+
+$activeTech = if ($techList.Count -eq 0) { "- Unknown (no manifest detected)" } else { $techList -join "`r`n" }
 
 $structure = ""
 try {

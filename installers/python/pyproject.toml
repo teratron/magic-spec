@@ -29,7 +29,7 @@ include = [
     "/.agent",
     "/README.md",
     "/LICENSE",
-    "/installers/adapters.json",
+    "installers/adapters.json",
 ]
 
 [tool.hatch.build.targets.wheel.shared-data]

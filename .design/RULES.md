@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.4.0
+**Version:** 1.5.0
 **Status:** Active
 
 ## Overview
@@ -82,6 +82,12 @@ Task execution defaults to **Parallel mode**. A Manager Agent coordinates execut
 
 Skip user story priority prompt: true. The agent must automatically assign default priorities (e.g., P2) to User Stories during task generation to maximize automation and avoid interrupting the user.
 
+### C5 — Standardized Onboarding Tutorial
+
+**Declared by:** User (2026-02-23)
+
+The `magic.onboard` workflow is explicitly authorized as a standardized, interactive entry point for new developers. This is a one-time, intentional exception to the **Workflow Minimalism (C2)** rule to facilitate rapid team scaling and engine adoption.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -91,3 +97,4 @@ Skip user story priority prompt: true. The agent must automatically assign defau
 | 1.2.0 | 2026-02-23 | Agent | Added C2: Workflow Minimalism |
 | 1.3.0 | 2026-02-23 | Agent | Added C3: Parallel Task Execution Mode |
 | 1.4.0 | 2026-02-23 | Agent | Added C4: Automate User Story Priorities |
+| 1.5.0 | 2026-02-23 | Agent | Added C5: Standardized Onboarding Tutorial (C2 Exception) |
