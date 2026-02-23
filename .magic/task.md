@@ -41,8 +41,10 @@ It operates **after** the Plan Workflow — the plan is its input, not its conce
 Every task has a fixed structure:
 
 ```
-[T-{phase}{track}{seq}] {Title}
+[T-{phase}{track}{seq}] {Title} [P]?
   Spec:     {spec-name}.md §{section}
+  Story:    US-{NN}
+  Priority: P1 | P2 | P3
   Phase:    {n} / Track {A|B|C...}
   Depends:  {T-ID, T-ID, ... | —}
   Status:   {Todo | In Progress | Done | Blocked}
@@ -123,7 +125,14 @@ graph TD
     K --> L[Task Completion Checklist]
 ```
 
-0. **Consistency Check**: Before reading the plan, run the *Consistency Check (Pre-flight)* from `specification.md`. This verifies that specs match the actual project state. If issues are found — fix them first. Do not generate tasks based on stale specs.
+0. **Consistency Check**: Before reading the plan, run the pre-flight check script:
+   - **bash**: `bash .magic/scripts/check-prerequisites.sh --json --require-specs`
+   - **Windows**: `pwsh .magic/scripts/check-prerequisites.ps1 -json -require_specs`
+
+   Parse JSON result:
+   - If `ok: false` → surface `missing_required` list to user, halt, do not proceed.
+   - If `warnings` is non-empty → surface warnings, continue.
+   - If `ok: true` → proceed silently.
 1. **Read PLAN.md**: Get phases, specs per phase, dependency graph, and critical path.
 2. **Read spec files**: For each spec in PLAN.md, read its `Implementation Notes` (§4) if present — these directly inform task decomposition.
 3. **Ask execution mode** (first run only):
@@ -138,10 +147,14 @@ graph TD
     You can change it at any time with: "Switch to parallel mode"
     ```
 
-4. **Decompose**: For each spec in each phase, extract atomic tasks from:
+4. **Decompose & Group by User Story**: For each spec in each phase, extract atomic tasks from:
     - Numbered sections in `Detailed Design`
     - Steps listed in `Implementation Notes`
-    - Logical units implied by the spec's structure
+
+    *User Story Rules:*
+    - Extract user stories from `Implementation Notes` or derive them.
+    - Apply rule **RULES.md §7 C4** if it exists (skip priority prompt and assign e.g., P2). Otherwise, prompt user to assign priorities.
+    - For independent tasks within the same story, append a `[P]` tag to the Task Title, signaling it is parallel-safe.
 
     One spec section = one task (or a few if the section is large). Never bundle multiple specs into one task.
 
@@ -156,8 +169,12 @@ graph TD
 
     Execution mode: Sequential
 
+    Phase 1 user stories detected:
+      US-01 — App State and Reliability
+    
     Track A — Core Layer
-      [T-1A01] Define AppState FSM structure
+      [T-1A01] Define AppState FSM structure [P]
+               Story: US-01
                Spec: architecture.md §3.1
                Depends: —
 
@@ -226,6 +243,7 @@ graph TD
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and present entry for user review. Write to `CHANGELOG.md` when approved.
     - If not done → report phase complete and propose the next phase.
+    - **Crucial Update:** Finally, silently run `bash .magic/scripts/generate-context.sh` (or `.ps1`) to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
 ### Executing Tasks (Parallel Mode)
 
@@ -249,7 +267,9 @@ graph TD
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> M2[Present compiled entry for user review]
     M2 --> N1[Write to CHANGELOG.md on approval]
+    N1 --> O[Generate CONTEXT.md]
     L -->|No| N[Manager: Report phase complete]
+    N --> O
     H --> K[User decision]
     K --> C
 ```
@@ -409,6 +429,13 @@ See [phase-2.md](phase-2.md) for full breakdown.
 **Execution Mode:** {Sequential | Parallel}
 **Tracks:** {A, B, C...}
 
+## User Stories
+
+### [P2] US-01 — As a user, I can...
+
+Tasks: T-{N}A01, T-{N}A02, T-{N}B01
+Parallel-safe: T-{N}A01 [P], T-{N}B01 [P]
+
 ## Track A — {Track Name}
 
 ### [T-{N}A01] {Task Title}
@@ -457,6 +484,7 @@ See [phase-2.md](phase-2.md) for full breakdown.
 - [ ] TASKS.md summary updated
 - [ ] Retrospective auto-snapshot appended to RETROSPECTIVE.md
 - [ ] Changelog auto-compiled to CHANGELOG_DRAFT.md
+- [ ] CONTEXT.md regenerated
 - [ ] Next phase unlocked: Phase {N+1}
 - [ ] If all phases complete: full retrospective + changelog compile (Level 2) was run
 ```

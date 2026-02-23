@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Active
 
 ## Overview
@@ -76,6 +76,12 @@ Limit the SDD workflow to the core set of commands (`magic.specification`, `magi
 
 Task execution defaults to **Parallel mode**. A Manager Agent coordinates execution, reads status, unblocks tracks, and escalates conflicts, while tasks with no shared constraints are implemented in parallel tracks.
 
+### C4 — Automate User Story Priorities
+
+**Declared by:** User (2026-02-23)
+
+Skip user story priority prompt: true. The agent must automatically assign default priorities (e.g., P2) to User Stories during task generation to maximize automation and avoid interrupting the user.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -84,3 +90,4 @@ Task execution defaults to **Parallel mode**. A Manager Agent coordinates execut
 | 1.1.0 | 2026-02-20 | Agent | Added C1: .magic/ modification safety protocol (T4 trigger) |
 | 1.2.0 | 2026-02-23 | Agent | Added C2: Workflow Minimalism |
 | 1.3.0 | 2026-02-23 | Agent | Added C3: Parallel Task Execution Mode |
+| 1.4.0 | 2026-02-23 | Agent | Added C4: Automate User Story Priorities |

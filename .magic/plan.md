@@ -54,10 +54,18 @@ graph TD
     E --> F[Propose phase structure to user]
     F -->|Approved| G[Write PLAN.md]
     F -->|Adjusted| F
-    G --> H[Task Completion Checklist]
+    G --> H[Generate CONTEXT.md]
+    H --> I[Task Completion Checklist]
 ```
 
-0. **Consistency Check**: Before reading specs, run the *Consistency Check (Pre-flight)* from `specification.md`. This verifies that all specs match the actual project state. If issues are found — fix them first. Do not plan based on stale specs.
+0. **Consistency Check**: Before reading specs, run the pre-flight check script:
+   - **bash**: `bash .magic/scripts/check-prerequisites.sh --json --require-specs`
+   - **Windows**: `pwsh .magic/scripts/check-prerequisites.ps1 -json -require_specs`
+
+   Parse JSON result:
+   - If `ok: false` → surface `missing_required` list to user, halt, do not proceed.
+   - If `warnings` is non-empty → surface warnings, continue.
+   - If `ok: true` → proceed silently.
 1. **Read INDEX.md**: Get the full list of existing spec files and their statuses. Path: `.design/INDEX.md`.
 2. **Read RULES.md**: Check for any project conventions that affect planning. Path: `.design/RULES.md`.
 3. **Read all spec files**: For each spec in `.design/specifications/`, extract:
@@ -113,7 +121,8 @@ graph TD
     ```
 
 6. **Write PLAN.md**: After user approval, create `.design/PLAN.md` using the *PLAN.md Template*.
-7. **Task Completion Checklist**: Present the checklist to the user.
+7. **Generate Context**: Silently run `bash .magic/scripts/generate-context.sh` (or `.ps1` on Windows) to initialize/update `.design/CONTEXT.md`.
+8. **Task Completion Checklist**: Present the checklist to the user.
 
 ### Updating an Existing Plan
 
@@ -181,6 +190,7 @@ When the user signals a change in order or priority:
     ```
 
 3. Wait for explicit confirmation before writing any changes.
+4. After writing, silently run `bash .magic/scripts/generate-context.sh` (or `.ps1`) to update context.
 
 #### Phase Completion
 

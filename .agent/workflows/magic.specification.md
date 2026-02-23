@@ -15,6 +15,10 @@ handoffs:
 
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"Audit specs"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
 **Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
+**Hints:**
+
+- **Explore Mode**: Do not modify live files during brainstorming until explicitly approved.
+- **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
 Planning and execution are handled by `magic.plan` and `magic.task`.
 
 > **Full implementation:** `.magic/specification.md`

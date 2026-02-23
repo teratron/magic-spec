@@ -22,7 +22,9 @@ This workflow defines a universal, technology-agnostic process for creating and 
 7. **Capture First**: When the user provides unstructured input (thoughts, notes, ideas), always follow the *Dispatching from Raw Input* workflow before writing anything.
 8. **Review Always**: After every create or update operation, run *Post-Update Review* before closing the task. No operation is complete without it.
 9. **Rules Are Constitution**: RULES.md is the source of truth for project conventions. Read it before every operation. Update it on every defined trigger. Never contradict it without proposing an explicit amendment.
-10. **Checklist Before Done**: Every task must end with the *Task Completion Checklist* shown to the user. A task is not complete until the checklist is presented and all items are confirmed.
+10. **Explore Mode Safety**: When users trigger brainstorming or exploration (*"Explore"*, *"Analyze"*), act as a thinking partner. Do not modify live spec files or registries (`INDEX.md`, `PLAN.md`, `.design/specifications/`) until explicitly approved.
+11. **Delta Editing for Specs**: When modifying existing large specifications (>200 lines), always use surgical search-and-replace tools. Mark block updates in your summary with semantic tags: `[ADDED]`, `[MODIFIED]`, or `[REMOVED]`.
+12. **Checklist Before Done**: Every task must end with the *Task Completion Checklist* shown to the user. A task is not complete until the checklist is presented and all items are confirmed.
 
 ## Directory Structure
 
@@ -63,6 +65,17 @@ graph LR
 ```
 
 ## Workflow Steps
+
+### Explore Mode (Brainstorming)
+
+Use this workflow for safe exploration without violating the "Workflow Minimalism" rule.
+
+**Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*
+
+1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
+2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file.
+3. **Strict Prohibition**: You MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents.
+4. **Transition**: Only update live specs when the user explicitly approves transitioning the brainstorm into a formal spec update (triggering *Dispatching from Raw Input* or *Updating an Existing Specification*).
 
 ### Dispatching from Raw Input
 
@@ -141,9 +154,10 @@ graph TD
 3. **Document History**: Append a new row to the `Document History` table inside the spec file.
 4. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
 5. **INDEX.md Sync**: Update the `Version` and `Status` columns in `INDEX.md` to match the new state.
-6. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
-7. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
-8. **Task Completion Checklist**: Present the checklist to the user.
+6. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
+7. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
+8. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
+9. **Task Completion Checklist**: Present the checklist to the user.
 
 ### Post-Update Review
 

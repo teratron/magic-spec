@@ -1,32 +1,18 @@
-# magic-spec — Python инстоллер
+# magic-spec — Node.js инстоллер
 
-Инстоллер `magic-spec` для PyPI/uvx. Устанавливает систему Specification-Driven Development (SDD) в любой проект.
+Инстоллер `magic-spec` для npm/npx. Устанавливает систему Specification-Driven Development (SDD) в любой проект.
 
 ---
 
 ## Быстрый старт
 
-### Через `uvx` (рекомендуется, без глобальной установки)
+Запустите в корне вашего проекта:
 
 ```bash
-uvx magic-spec
+npx magic-spec@latest
 ```
 
-`uvx` автоматически скачает и запустит пакет в изолированном окружении. Повторные запуски используют кэш.
-
-### Через `pip`
-
-```bash
-pip install magic-spec
-magic-spec
-```
-
-### Через `pipx` (глобальная установка)
-
-```bash
-pipx install magic-spec
-magic-spec
-```
+Больше ничего устанавливать не нужно. `npx` скачает последнюю версию и мгновенно запустит установку.
 
 ---
 
@@ -47,9 +33,8 @@ magic-spec
 │       ├── init.sh             # Скрипт инициализации (macOS/Linux)
 │       └── init.ps1            # Скрипт инициализации (Windows)
 │
-├── .agent/workflows/               # Точки входа для AI-агентов (Cursor, Claude и др.)
+├── .agent/workflows/           # Точки входа для AI-агентов (Cursor, Claude и др.)
 │   ├── magic.plan.md
-│   ├── magic.retrospective.md
 │   ├── magic.rule.md
 │   ├── magic.specification.md
 │   └── magic.task.md
@@ -67,7 +52,7 @@ magic-spec
 ### Установка движка (по умолчанию)
 
 ```bash
-uvx magic-spec
+npx magic-spec@latest
 ```
 
 Устанавливает `.magic/` и весь `.agent/` (полный набор адаптеров).
@@ -78,16 +63,16 @@ uvx magic-spec
 
 ```bash
 # Только для Cursor
-uvx magic-spec --env cursor
+npx magic-spec@latest --env cursor
 
 # Только для Claude
-uvx magic-spec --env claude
+npx magic-spec@latest --env claude
 
 # Только для Gemini
-uvx magic-spec --env gemini
+npx magic-spec@latest --env gemini
 
 # Несколько окружений сразу
-uvx magic-spec --env cursor --env claude
+npx magic-spec@latest --env cursor --env claude
 ```
 
 ### Обновление движка
@@ -95,13 +80,13 @@ uvx magic-spec --env cursor --env claude
 Обновляет `.magic/` до последней версии, **не затрагивая** `.design/` (ваши спеки, планы, задачи):
 
 ```bash
-uvx magic-spec --update
+npx magic-spec@latest --update
 ```
 
 ### Справка
 
 ```bash
-uvx magic-spec --help
+npx magic-spec@latest --help
 ```
 
 ---
@@ -110,8 +95,8 @@ uvx magic-spec --help
 
 | Инструмент | Минимальная версия |
 | :--- | :--- |
-| Python | >= 3.8 |
-| uv / pip / pipx | любая актуальная |
+| Node.js | >= 16 |
+| npm | >= 7 |
 
 ---
 
@@ -132,70 +117,67 @@ uvx magic-spec --help
 ## Структура инстоллера (для разработчиков)
 
 ```plaintext
-installers/python/
+installers/node/
 │
-├── magic_spec/
-│   ├── __init__.py     # Пакет Python
-│   └── __main__.py     # Точка входа CLI
+├── index.js        # CLI-скрипт: точка входа пакета
+├── publish.js      # Скрипт публикации (не попадает в пакет)
+├── package.json    # Конфигурация npm-пакета
 │
-├── pyproject.toml      # Конфигурация пакета (hatchling + uv)
-├── README.md           # Этот файл
-├── LICENSE             # Лицензия
-│
-└── dist/               # Папка сборки (gitignored)
-    ├── magic_spec-X.Y.Z-py3-none-any.whl
-    └── magic_spec-X.Y.Z.tar.gz
+└── dist/           # Папка сборки (gitignored)
+    ├── index.js
+    ├── .magic/
+    ├── .agent/
+    ├── adapters/
+    ├── README.md
+    └── package.json
 ```
 
-### Доступные команды для разработчика
+### Доступные скрипты для разработчика
 
-Все команды выполняются из папки `installers/python/`:
+Все команды выполняются из папки `installers/node/`:
 
 ```bash
-# Синхронизировать движок из корня репозитория
-# (подтягивает .magic/, .agent/, adapters/, README.md, LICENSE)
-uv run hatch run sync
+# Собрать пакет в dist/
+npm run build
 
-# Собрать пакет (.whl и .tar.gz в dist/)
-uv build
+# Проверить содержимое пакета (без загрузки)
+npm run check
 
-# Опубликовать на PyPI (интерактивно)
-uv publish
+# Опубликовать на npmjs.com
+npm run publish
 
-# Опубликовать с токеном
-uv publish --token pypi-xxxxxxxxxxxxxxxxxx
+# Dry-run (имитация публикации)
+npm run publish:dry
 
-# Локальное тестирование — метод A (editable install)
-pip install -e .
+# Локальное тестирование — метод A (npm link)
+npm run test:link
 magic-spec              # проверить в любой директории
-magic-spec --env cursor
+npm unlink -g magic-spec
 
-# Локальное тестирование — метод B (wheel)
-uv build
-pip install dist/magic_spec-*.whl
+# Локальное тестирование — метод B (tarball)
+npm run test:pack
+# создаст magic-spec-X.Y.Z.tgz в dist/
 
-# Локальное тестирование — метод C (прямой запуск, без установки)
-uv run python -m magic_spec
-uv run python -m magic_spec --env cursor
-
-# Повысить версию (вручную в pyproject.toml)
-# version = "X.Y.Z" → поднять нужную часть
+# Повысить версию
+npm run version:patch   # X.Y.Z → X.Y.Z+1
+npm run version:minor   # X.Y.Z → X.Y+1.0
+npm run version:major   # X.Y.Z → X+1.0.0
 ```
 
 ### Авторизация для публикации
 
 ```bash
-# Передайте токен напрямую при публикации
-uv publish --token pypi-xxxxxxxxxxxxxxxxxx
+# Один раз — откроет браузер для подтверждения
+npm login
 ```
 
-Токен получается на [pypi.org](https://pypi.org/) → **Account Settings** → **API tokens**.
+Сессия сохраняется в `~/.npmrc` до явного `npm logout`.
 
 ---
 
 ## Ссылки
 
 - [Главный репозиторий](https://github.com/teratron/magic-spec)
-- [npm пакет (Node.js-версия)](https://www.npmjs.com/package/magic-spec)
-- [PyPI](https://pypi.org/project/magic-spec/)
+- [PyPI пакет (Python-версия)](https://pypi.org/project/magic-spec/)
+- [npmjs.com](https://www.npmjs.com/package/magic-spec)
 - [Документация и спецификации](.design/)
