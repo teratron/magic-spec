@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.17.0
+**Version:** 1.18.0
 **Status:** Active
 
 ## Overview
@@ -30,7 +30,7 @@ Central registry of all project specifications and their current state.
 
 - **Maintainer**: Oleg Alexandrov
 - **License**: MIT
-- **Last Updated**: 2026-02-21
+- **Last Updated**: 2026-02-23
 
 ## Document History
 
