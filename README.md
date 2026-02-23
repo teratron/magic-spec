@@ -14,7 +14,7 @@ Stop your AI from writing code before it understands the problem.
 `magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Claude, Gemini, Copilot, etc.). It acts as an operating system for agentic development, enforcing a rigorous, structured pipeline:
 
 ```
-💡 Idea  →  📋 Specification  →  🗺️ Plan  →  ⚡ Task  →  🚀 Code  →  🔍 Retrospective
+💡 Idea  →  📋 Specification  →  🗺️ Plan  →  ⚡ Task  →  🚀 Code
 ```
 
 Once installed, your AI agent will automatically:
@@ -22,7 +22,7 @@ Once installed, your AI agent will automatically:
 - Convert raw thoughts into structured specification files.
 - Build a phased implementation plan from approved specs.
 - Decompose the plan into atomic, trackable tasks.
-- Analyze its own workflow and suggest improvements.
+- Analyze its own workflow and suggest improvements — automatically, at phase completion.
 
 **No code is written until a specification exists. No spec is implemented without a plan.**
 
@@ -56,7 +56,7 @@ Both commands do exactly the same thing:
 | **Specs First, Code Later** | The agent is forbidden from writing code from raw input. All ideas become specs first. |
 | **Deterministic Process** | A strict pipeline is enforced: *Thought → Spec → Plan → Task → Code*. |
 | **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
-| **Self-Improving** | The Retrospective workflow analyzes real usage and generates improvement recommendations. |
+| **Self-Improving** | After each phase and at plan completion, the Task workflow automatically runs a retrospective and generates improvement recommendations. |
 
 ## 📁 What Gets Installed
 
@@ -67,7 +67,6 @@ your-project/
 │
 ├── .agent/workflows/               # Agent entry points (slash commands)
 │   ├── magic.plan.md
-│   ├── magic.retrospective.md
 │   ├── magic.rule.md
 │   ├── magic.specification.md
 │   └── magic.task.md
@@ -102,7 +101,7 @@ graph TD
     SPEC --> PLAN["🗺️ Plan"]
     PLAN --> TASK["⚡ Task"]
     TASK --> CODE["🚀 Code"]
-    CODE --> RETRO["🔍 Retrospective"]
+    TASK -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
     RETRO -.->|Feedback loop| SPEC
 ```
 
@@ -112,14 +111,15 @@ graph TD
 | :--- | :--- | :--- |
 | 1 | **Specification** | Converts raw thoughts into structured specs. Verifies specs against project state. Manages statuses: `Draft → RFC → Stable → Deprecated`. |
 | 2 | **Plan** | Reads Stable specs, builds a dependency graph, and produces a phased `PLAN.md`. |
-| 3 | **Task** | Decomposes the plan into atomic tasks with sequential and parallel execution tracks. |
+| 3 | **Task** | Decomposes the plan into atomic tasks with sequential and parallel execution tracks. Automatically runs a retrospective at phase and plan completion. |
 
-### Auxiliary Workflows
+### Auxiliary Workflow
 
 | Workflow | Purpose |
 | :--- | :--- |
 | **Rule** | Manages the project constitution (`RULES.md §7`). Add, amend, or remove conventions. |
-| **Retrospective** | Analyzes SDD usage, collects metrics, and generates improvement recommendations. |
+
+> **Retrospective** runs automatically inside the Task workflow — at phase completion (snapshot) and plan completion (full analysis). No manual command needed.
 
 ## 💬 How to Use (with any AI agent)
 
@@ -143,9 +143,6 @@ Just talk to your AI agent naturally. Initialization is **automatic** — no set
 
 "Check if specs match the actual project state"
 → Runs Specification workflow (Consistency Check)
-
-"Run retrospective"
-→ Runs Retrospective workflow
 ```
 
 The AI reads the corresponding `.magic/*.md` workflow file and executes the request within the bounds of the SDD system. **No code escapes the pipeline.** ✨

@@ -1,6 +1,6 @@
 # Workflow Enhancements
 
-**Version:** 0.3.0
+**Version:** 0.4.0
 **Status:** Draft
 
 ## Overview
@@ -107,9 +107,11 @@ silently skipped — never shown as an error.
 | :--- | :--- |
 | `magic.specification` | Create plan (`specs_stable`), Add a rule (always) |
 | `magic.plan` | Generate tasks (`plan_exists`) |
-| `magic.task` | Update plan (always), Run retrospective (`phase_complete`) |
+| `magic.task` | Update plan (always) |
 | `magic.rule` | Create spec (always), Update plan (always) |
-| `magic.retrospective` | Update plan (always) |
+
+> **Note:** Retrospective is not a user-facing handoff — it runs automatically inside
+> `magic.task` at phase completion (Level 1) and plan completion (Level 2).
 
 ---
 
@@ -377,7 +379,7 @@ To prevent LLM file corruption when rewriting massive specification documents, t
 ## 4. Implementation Notes
 
 1. **Handoffs first** — purely additive to existing frontmatter, zero risk of breakage.
-   Add to all five `.agent/workflows/magic.*.md` files in one pass.
+   Add to all four `.agent/workflows/magic.*.md` files in one pass.
 2. **Prerequisite script second** — self-contained, testable independently. Write bash
    version first, then port to PowerShell.
 3. **User story structure third** — requires changes to task.md workflow logic and
@@ -413,3 +415,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | 0.1.0 | 2026-02-23 | Agent | Initial Draft — three workflow enhancements |
 | 0.2.0 | 2026-02-23 | Agent | Added 4th enhancement: Auto-Generated Context File (CONTEXT.md) |
 | 0.3.0 | 2026-02-23 | Agent | Added enhancements 3.5-3.8 inspired by OpenSpec analysis |
+| 0.4.0 | 2026-02-23 | Agent | Removed magic.retrospective from handoffs (retrospective is automatic in task.md); updated handoffs table to 4 workflows |

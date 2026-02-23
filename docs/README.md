@@ -9,11 +9,11 @@ It consists of a set of markdown-based workflow instructions for AI agents, effe
 1. **Specs First, Code Later:** The agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
 2. **Deterministic Process:** The system enforces a strict pipeline: *Thought → Spec → Plan → Task → Code*.
 3. **Constitution-Driven:** All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution.
-4. **Self-Improving:** The system collects usage statistics and generates recommendations to improve its own workflows, templates, and checklists.
+4. **Self-Improving:** After each phase and at plan completion, the Task workflow automatically runs a retrospective, collecting metrics and generating actionable recommendations — no manual command needed.
 
 ## 🔗 The Pipeline
 
-Magic operates through **3 core workflows** and **2 auxiliary workflows**, forming a complete lifecycle — from raw idea to implemented code, and back to self-analysis. Initialization is automatic and requires no manual command.
+Magic operates through **3 core workflows** and **1 auxiliary workflow**, forming a complete lifecycle — from raw idea to implemented code, with built-in self-analysis. Initialization is automatic and requires no manual command.
 
 ```mermaid
 graph TD
@@ -24,7 +24,7 @@ graph TD
     SPEC --> PLAN["🗺️ Plan<br/>plan.md"]
     PLAN --> TASK["⚡ Task<br/>task.md"]
     TASK --> CODE["🚀 Code"]
-    CODE --> RETRO["🔍 Retrospective<br/>retrospective.md"]
+    TASK -.->|"auto: phase done"| RETRO["🔍 Retrospective<br/>retrospective.md"]
     RETRO -.->|Feedback loop| SPEC
 
     style INIT fill:#2d333b,stroke:#f0883e,stroke-dasharray: 5 5
@@ -38,27 +38,27 @@ graph TD
 |---|---|---|---|
 | 1 | **Specification** | `specification.md` | 📋 Converts raw thoughts into structured specs. Verifies consistency with the project state. Manages statuses (Draft → RFC → Stable → Deprecated) |
 | 2 | **Plan** | `plan.md` | 🗺️ Reads Stable specs, builds dependency graph, extracts critical path, produces phased `PLAN.md` |
-| 3 | **Task** | `task.md` | ⚡ Decomposes Plan into atomic tasks with execution tracks. Sequential & Parallel modes |
+| 3 | **Task** | `task.md` | ⚡ Decomposes Plan into atomic tasks with execution tracks. Sequential & Parallel modes. Automatically triggers Retrospective at phase and plan completion |
 
-### Auxiliary Workflows
+### Auxiliary Workflow
 
 | Workflow | File | Purpose |
 |---|---|---|
 | **Rule** | `rule.md` | 📜 Manages the project constitution (`RULES.md §7`). Add / Amend / Remove / List conventions |
-| **Retrospective** | `retrospective.md` | 🔍 Analyzes SDD usage, collects metrics, generates improvement recommendations |
 
-### Auto-Init
+### Auto-Init & Auto-Retrospective
 
 | | File | Purpose |
 |---|---|---|
 | **Init** | `init.md` + `scripts/` | 🏗️ Automatic pre-flight check. On first invocation of any workflow, verifies `.design/` exists. If not — creates the directory structure, `INDEX.md`, and `RULES.md`. No manual command needed |
-| **Check Specs** | `specification.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs. |
+| **Check Specs** | `specification.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs |
+| **Retrospective** | `retrospective.md` | 🔍 Called automatically by `task.md`: Level 1 snapshot after each phase, Level 2 full analysis when the entire plan completes. Not a user command |
 
 ## 🏗️ Architecture & Directory Structure
 
 The SDD system consists of three main directories:
 
-1. **`.agent/workflows/magic.*.md`** — AI agent entry points (e.g., slash commands in Cursor or Claude). These thin wrappers (~12 lines each) trigger the actual Magic workflows.
+1. **`.agent/workflows/magic.*.md`** — AI agent entry points (e.g., slash commands in Cursor or Claude). These thin wrappers (~12 lines each) trigger the actual Magic workflows. There are **4 wrappers**: specification, plan, task, rule.
 2. **`.magic/`** — The core SDD engine: workflow definitions, templates, scripts, and documentation. Immutable during normal operation.
 3. **`.design/`** — The living state of your project. All generated specs, plans, tasks, and retrospectives reside here.
 
@@ -69,7 +69,6 @@ project-root/
 │
 ├── .agent/workflows/               # 🎯 Agent Triggers (entry points)
 │   ├── magic.plan.md               #    → triggers .magic/plan.md
-│   ├── magic.retrospective.md      #    → triggers .magic/retrospective.md
 │   ├── magic.rule.md               #    → triggers .magic/rule.md
 │   ├── magic.specification.md      #    → triggers .magic/specification.md
 │   └── magic.task.md               #    → triggers .magic/task.md
@@ -79,7 +78,7 @@ project-root/
 │   ├── README.ru.md            #    Documentation (RU)
 │   ├── init.md                 #    Auto-init logic (pre-flight check)
 │   ├── plan.md                 #    Planning workflow + templates
-│   ├── retrospective.md        #    Self-analysis workflow + templates (auxiliary)
+│   ├── retrospective.md        #    Self-analysis engine (auto-triggered by task.md)
 │   ├── rule.md                 #    Constitution management workflow (auxiliary)
 │   ├── specification.md        #    Specification authoring workflow + templates
 │   ├── task.md                 #    Task decomposition & execution workflow
@@ -105,22 +104,20 @@ To prevent AI hallucination, context drift, or skipped steps, every workflow in 
 
 Each checklist item must be marked `✓` (done) or `✗` (skipped/failed). Any `✗` requires an explanation. A task with unresolved `✗` items is **not complete**.
 
-## 🔍 Retrospective — The Feedback Loop
+## 🔍 Retrospective — Automatic Feedback Loop
 
-The Retrospective workflow is Magic's **self-improvement mechanism**. It closes the feedback loop by analyzing actual SDD usage data and producing actionable recommendations.
+The Retrospective is Magic's **self-improvement mechanism**, built directly into the Task workflow. It closes the feedback loop by analyzing actual SDD usage data and producing actionable recommendations — without requiring any manual command.
 
 ### Two-Level System
 
-The retrospective operates on two levels to balance thoroughness with efficiency:
-
 | Level | Name | Trigger | Cost | Output |
 |---|---|---|---|---|
-| **Level 1** | Auto-snapshot | Automatic after phase completion | ~10s | One row in Snapshots table |
-| **Level 2** | Full retrospective | Manual or auto after entire plan completes | ~2–5 min | Full analysis + recommendations |
+| **Level 1** | Auto-snapshot | Automatic after every phase completion | ~10s | One row appended to Snapshots table in `RETROSPECTIVE.md` |
+| **Level 2** | Full retrospective | Automatic when entire plan completes | ~2–5 min | Full analysis + recommendations presented to user |
 
 **Level 1** collects numbers silently — no analysis, no user interruption. It creates a trail of metrics for trend analysis.
 
-**Level 2** performs deep analysis and generates actionable recommendations. It uses Level 1 snapshots for trend comparison.
+**Level 2** performs deep analysis and generates actionable recommendations. It uses Level 1 snapshots for trend comparison and presents results for user review before any changes are applied.
 
 ### Why It Exists
 
@@ -139,41 +136,8 @@ The Retrospective detects these issues **before they compound**.
 |---|---|---|
 | 🏁 Phase complete | **Level 1** | Auto-snapshot: silent, no interruption |
 | 🎯 Entire plan complete | **Level 2** | Full retro: auto-runs, presents report |
-| 📝 Every 5th spec update | — | Suggests: *"Run retrospective?"* |
-| 🗺️ Plan restructure | — | Suggests: *"Run retrospective?"* |
-| 💬 Manual command | **Level 2** | Full retro: runs on demand |
-
-### Snapshot Example (Level 1)
-
-```markdown
-## Snapshots
-
-| Date       | Phase   | Specs (D/R/S) | Tasks (Done/Blocked) | Rules | Signal |
-|------------|---------|---------------|----------------------|-------|--------|
-| 2026-02-20 | Phase 1 | 2/1/4         | 8/0                  | 12    | 🟢     |
-| 2026-02-25 | Phase 2 | 0/0/7         | 5/3                  | 14    | 🟡     |
-```
-
-### Full Analysis Example (Level 2)
-
-```markdown
-📊 Observations
-
-| # | Severity | Area       | Observation                                 |
-|---|----------|------------|---------------------------------------------|
-| 1 | 🔴       | Tasks      | 3/8 Phase 2 tasks Blocked                   |
-| 2 | 🟡       | Specs      | architecture.md: Draft→RFC→Draft→RFC→Stable |
-| 3 | 🟢       | Checklists | "No code in specs" never failed in 12 runs  |
-| 4 | ✨       | Plan       | Phase 1 completed with 0 Blocked tasks      |
-
-💡 Recommendations
-
-| # | Recommendation                                         | Target File             |
-|---|--------------------------------------------------------|-------------------------|
-| 1 | Review PLAN.md dependency graph — high blocking rate   | .magic/plan.md          |
-| 2 | Add "definition of done" to spec template              | .magic/specification.md |
-| 3 | Remove "No code in specs" checklist item — zero signal | .magic/specification.md |
-```
+| 📝 Every 5th spec update | — | Suggests: *"Run retrospective?"* (manual) |
+| 🗺️ Plan restructure | — | Suggests: *"Run retrospective?"* (manual) |
 
 ### How Recommendations Are Applied
 
@@ -211,8 +175,9 @@ Simply instruct your AI agent (Cursor, Claude, Gemini, or any terminal agent). I
 |---|---|
 | *"Check if specs match the actual project state"* | Runs Specification → executes Consistency Check (Pre-flight) |
 | *"Add rule: always use snake_case naming"* | Runs Rule → adds convention to RULES.md §7 |
-| *"Run retrospective"* | Runs Retrospective → analyzes usage, generates recommendations |
 
 > **Auto-Init:** On first invocation of any command, the system automatically checks for `.design/` and creates it if missing. No manual initialization needed.
+>
+> **Auto-Retrospective:** Runs automatically inside Task workflow at phase and plan completion. No command needed.
 
 The AI will automatically read the corresponding `.magic/*.md` workflow file and execute the request within the bounds of the SDD system. No code escapes the pipeline. ✨
