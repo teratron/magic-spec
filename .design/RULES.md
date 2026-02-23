@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Active
 
 ## Overview
@@ -70,6 +70,12 @@ that gets shipped to end users. Any modification to files inside `.magic/` must 
 
 Limit the SDD workflow to the core set of commands (`magic.specification`, `magic.plan`, `magic.task`, `magic.rule`) to maximize process automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary.
 
+### C3 — Parallel Task Execution Mode
+
+**Declared by:** User (2026-02-23)
+
+Task execution defaults to **Parallel mode**. A Manager Agent coordinates execution, reads status, unblocks tracks, and escalates conflicts, while tasks with no shared constraints are implemented in parallel tracks.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -77,3 +83,4 @@ Limit the SDD workflow to the core set of commands (`magic.specification`, `magi
 | 1.0.0 | 2026-02-20 | Agent | Initial constitution |
 | 1.1.0 | 2026-02-20 | Agent | Added C1: .magic/ modification safety protocol (T4 trigger) |
 | 1.2.0 | 2026-02-23 | Agent | Added C2: Workflow Minimalism |
+| 1.3.0 | 2026-02-23 | Agent | Added C3: Parallel Task Execution Mode |

@@ -1,7 +1,7 @@
 # Workflow Enhancements
 
-**Version:** 0.4.0
-**Status:** Draft
+**Version:** 0.5.0
+**Status:** Stable
 
 ## Overview
 
@@ -414,5 +414,6 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-23 | Agent | Initial Draft — three workflow enhancements |
 | 0.2.0 | 2026-02-23 | Agent | Added 4th enhancement: Auto-Generated Context File (CONTEXT.md) |
-| 0.3.0 | 2026-02-23 | Agent | Added enhancements 3.5-3.8 inspired by OpenSpec analysis |
+| 0.3.0 | 2026-02-23 | Agent | Added enhancements 3.5-3.8 |
 | 0.4.0 | 2026-02-23 | Agent | Removed magic.retrospective from handoffs (retrospective is automatic in task.md); updated handoffs table to 4 workflows |
+| 0.5.0 | 2026-02-23 | Agent | Status changed to Stable for planning |
