@@ -1,5 +1,10 @@
 ---
 description: Workflow for creating and managing the implementation plan.
+handoffs:
+  - label: "Generate tasks"
+    workflow: magic.task
+    prompt: "Generate implementation tasks for the current plan."
+    condition: "plan_exists"
 ---
 
 # Plan Workflow

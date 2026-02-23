@@ -1,5 +1,14 @@
 ---
 description: Workflow for creating and managing project specifications.
+handoffs:
+  - label: "Create plan"
+    workflow: magic.plan
+    prompt: "Create a plan based on the finalized specifications."
+    condition: "specs_stable"
+  - label: "Add a rule"
+    workflow: magic.rule
+    prompt: "Add a project-wide convention discovered during spec work."
+    condition: null
 ---
 
 # Specification Workflow

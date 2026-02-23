@@ -1,5 +1,10 @@
 ---
 description: Workflow for analyzing SDD usage and generating improvement recommendations.
+handoffs:
+  - label: "Update plan"
+    workflow: magic.plan
+    prompt: "Update the project plan based on retrospective findings."
+    condition: null
 ---
 
 # Retrospective Workflow

@@ -1,5 +1,14 @@
 ---
 description: Workflow for manually adding or amending project conventions in RULES.md.
+handoffs:
+  - label: "Create spec"
+    workflow: magic.specification
+    prompt: "Create a new specification document."
+    condition: null
+  - label: "Update plan"
+    workflow: magic.plan
+    prompt: "Update the project plan after amending standing rules."
+    condition: null
 ---
 
 # Rule Workflow
