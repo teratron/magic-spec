@@ -44,5 +44,3 @@ installers/python/.agent/
 
 # Node installer build artifacts
 dist/
-
-references/

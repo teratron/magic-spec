@@ -13,8 +13,8 @@ handoffs:
 
 # Specification Workflow
 
-**Triggers:** *"Create spec"*, *"Update spec"*, *"Audit specs"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
-**Scope:** Specification authoring — what exists and how it is structured.
+**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"Audit specs"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
+**Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
 Planning and execution are handled by `magic.plan` and `magic.task`.
 
 > **Full implementation:** `.magic/specification.md`

@@ -1,13 +1,13 @@
 # Workflow Enhancements
 
-**Version:** 0.2.0
+**Version:** 0.3.0
 **Status:** Draft
 
 ## Overview
 
-Four targeted improvements to the Magic SDD engine that increase automation and reduce
-friction without adding new commands. All changes are additive — they extend existing
-workflows rather than replace them.
+Eight targeted improvements to the Magic SDD engine that increase automation and reduce
+friction without adding new commands (with one strict exception for onboarding). All changes are
+additive — they extend existing workflows rather than replace them.
 
 ## Related Specifications
 
@@ -24,8 +24,11 @@ The current engine executes each workflow in isolation. The agent has no built-i
 for what comes next, tasks lack explicit priority and parallelism markers, prerequisite
 validation is done via prose instructions rather than machine-readable checks, and there
 is no single aggregated context file for the agent to read current state without burning tokens on old specs.
+Furthermore, users lack native support for safe architectural brainstorming without mutating live specs,
+there is no soft-landing interactive tutorial for new users, CLI health checks lack human-readable output,
+and AI agents risk file corruption when rewriting large specs from scratch.
 
-These four improvements address each gap independently. They share no dependencies on
+These eight improvements address each gap independently. They share no dependencies on
 each other and can be implemented in any order.
 
 ---
@@ -309,6 +312,68 @@ All workflows instruct the agent to read `.design/CONTEXT.md` if it exists to ga
 
 ---
 
+### 3.5 Explore Mode Integration (`magic.specification`)
+
+To support safe brainstorming without violating the "Workflow Minimalism" rule (Rule C2), the existing `magic.specification` workflow is expanded to include an **Explore Mode**.
+
+**Concept**: Instead of a dedicated `/magic.explore` command, the agent recognizes triggers like *"Explore"*, *"Brainstorm"*, or *"Analyze"*.
+
+**Agent Rules**:
+
+- The agent acts as a thinking partner.
+- It may use codebase reasoning tools (e.g., `Sequential Thinking`, `grep_search`).
+- It may output thoughts directly to the chat or create a temporary `proposal.md` file.
+- **Strict Prohibition**: The agent MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents until the user explicitly approves transitioning the brainstorm into a formal spec update.
+
+---
+
+### 3.6 Interactive Onboarding Workflow (`magic.onboard`)
+
+A new, targeted workflow command to dramatically lower the entry barrier for new developers. This is an explicit, one-time exception to the Workflow Minimalism rule.
+
+**Trigger**: *"Onboard"*, *"Tutorial"*, *"Start learning"*
+
+**Execution Strategy**:
+
+1. The AI introduces itself and the magic-spec methodology.
+2. The AI creates a "toy" specification (e.g., a simple logging module) step by step.
+3. The AI guides the user through registering it in `INDEX.md`.
+4. The AI generates a mini `PLAN.md`.
+5. The AI generates a single atomic task in `TASKS.md` and simulates its execution.
+6. The onboarding concludes, leaving the user with hands-on experience of the SDD lifecycle.
+
+---
+
+### 3.7 CLI Doctor Command (`--doctor` / `--check`)
+
+Building on the JSON Prerequisite Script (Enhancement 3.3), the CLI exposes a human-readable variant to help developers diagnose environment issues instantly without AI assistance.
+
+**Execution**: `npx magic-spec@latest --doctor` (or `--check`)
+
+**Output**:
+Instead of raw JSON, the CLI prints a colored health log:
+
+```text
+🔍 Magic-spec Doctor:
+✅ .design/INDEX.md is present
+✅ .design/RULES.md is present
+❌ .design/PLAN.md is missing (Hint: Run /magic.plan)
+⚠️ 2 specifications are in Draft status
+```
+
+---
+
+### 3.8 Semantic Spec Updates (Delta Hints)
+
+To prevent LLM file corruption when rewriting massive specification documents, the engine introduces a delta-editing constraint.
+
+**Agent Rules**:
+
+- When updating an existing large spec (e.g., >200 lines), the agent MUST utilize surgical search-and-replace tools (`replace_file_content`, `multi_replace_file_content`) instead of regenerating and overwriting the entire file.
+- The agent marks the specific blocks semantically in the `CHANGELOG.md` or task result using tags like `[ADDED]`, `[MODIFIED]`, or `[REMOVED]` (e.g., `[MODIFIED] Settings Domain: Added dark mode toggle`).
+
+---
+
 ## 4. Implementation Notes
 
 1. **Handoffs first** — purely additive to existing frontmatter, zero risk of breakage.
@@ -318,7 +383,10 @@ All workflows instruct the agent to read `.design/CONTEXT.md` if it exists to ga
 3. **User story structure third** — requires changes to task.md workflow logic and
    phase file templates. Depends on understanding of how tasks are actually generated
    in practice.
-4. **Context File Generation last** — create a new script `generate-context.sh`/`.ps1` that parses `PLAN.md` and `CHANGELOG.md` to rewrite `CONTEXT.md`. Hook it into `plan.md` and `task.md`.
+4. **Context File Generation** — create a new script `generate-context.sh`/`.ps1` that parses `PLAN.md` and `CHANGELOG.md` to rewrite `CONTEXT.md`. Hook it into `plan.md` and `task.md`.
+5. **Explore & Delta Hints** — Update the `magic.specification` engine logic (`.magic/specification.md`) and the triggers in `.agent/workflows/magic.specification.md`.
+6. **CLI Doctor** — Update the CLI entry point to parse the JSON script output and print terminal UI elements.
+7. **Onboarding Workflow** — Create `.magic/onboard.md` and its corresponding wrapper.
 
 ---
 
@@ -344,3 +412,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-23 | Agent | Initial Draft — three workflow enhancements |
 | 0.2.0 | 2026-02-23 | Agent | Added 4th enhancement: Auto-Generated Context File (CONTEXT.md) |
+| 0.3.0 | 2026-02-23 | Agent | Added enhancements 3.5-3.8 inspired by OpenSpec analysis |
