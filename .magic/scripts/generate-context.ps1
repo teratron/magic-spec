@@ -1,7 +1,5 @@
 $designDir = ".design"
-$planFile = "$designDir\PLAN.md"
 $changelogFile = "$designDir\CHANGELOG.md"
-$indexFile = "$designDir\INDEX.md"
 $contextFile = "$designDir\CONTEXT.md"
 
 if (-not (Test-Path $designDir)) {
@@ -13,18 +11,18 @@ $dateStamp = Get-Date -Format "yyyy-MM-dd"
 $bt = [char]96
 $codeFence = "$bt$bt$bt"
 
-$isNode = Test-Path "package.json"
+$isNode   = Test-Path "package.json"
 $isPython = (Test-Path "pyproject.toml") -or (Test-Path "requirements.txt")
-$isRust = Test-Path "Cargo.toml"
-$isGo = Test-Path "go.mod"
-$isMake = Test-Path "Makefile"
+$isRust   = Test-Path "Cargo.toml"
+$isGo     = Test-Path "go.mod"
+$isMake   = Test-Path "Makefile"
 
 $techList = @()
-if ($isNode) { $techList += "- Node.js" }
-if ($isPython) { $techList += "- Python (uv/pip)" }
-if ($isRust) { $techList += "- Rust" }
-if ($isGo) { $techList += "- Go" }
-if ($isMake) { $techList += "- Make" }
+if ($isNode)   { $techList += "- Node.js" }
+if ($isPython) { $techList += "- Python (uv/poetry/hatch)" }
+if ($isRust)   { $techList += "- Rust" }
+if ($isGo)     { $techList += "- Go" }
+if ($isMake)   { $techList += "- Make" }
 
 $activeTech = if ($techList.Count -eq 0) { "- Unknown (no manifest detected)" } else { $techList -join "`r`n" }
 
@@ -44,11 +42,7 @@ try {
 $recentChanges = ""
 if (Test-Path $changelogFile) {
     $recentLog = Get-Content $changelogFile -Tail 15 -ErrorAction SilentlyContinue
-    if ($recentLog) {
-        $recentChanges = $recentLog -join "`r`n"
-    } else {
-        $recentChanges = "No recent changelog found."
-    }
+    $recentChanges = if ($recentLog) { $recentLog -join "`r`n" } else { "No recent changelog found." }
 } else {
     $recentChanges = "No recent changelog found."
 }

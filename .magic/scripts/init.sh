@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ ! -d ".git" ]; then
   echo "Note: not a git repository. Proceeding with SDD initialization anyway."
 fi

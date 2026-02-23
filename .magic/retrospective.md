@@ -189,8 +189,10 @@ graph TD
 
 ### Task Completion Checklist
 
+**Must be shown at the end of every retrospective operation — no exceptions.**
+
 ```
-Retrospective Checklist — {date}
+Task Completion Checklist — {date}
 
 Data Integrity
   ☐ INDEX.md was read and all entries counted
