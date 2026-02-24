@@ -65,7 +65,9 @@ graph TD
     - `Related Specifications` — direct dependencies
     - `Implementation Notes` — if present, surface them in the plan/tasks
 2. **Build dependency graph**: Map which specs depend on which. Identify the critical path.
-3. **Propose Plan Structure**: Group specifications into Phases (e.g. Phase 1 - Foundation, Phase 2 - Services) based on their dependencies.
+3. **Propose Plan Structure**: Group specifications into Phases according to their layer and dependencies:
+    - Layer 1 (concept) specifications must be grouped into early requirements phases (e.g., Phase 0 or Phase 1).
+    - Layer 2 (implementation) specifications must be scheduled in execution phases that follow their Layer 1 parent, and can be grouped by technology track.
 4. **Ask execution mode** (first run only):
 
     ```

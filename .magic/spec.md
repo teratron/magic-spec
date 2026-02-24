@@ -47,6 +47,15 @@ This workflow defines a universal, technology-agnostic process for creating and 
 | `INDEX.md` | Central registry of all spec files | Every create/update |
 | `RULES.md` | Project constitution and conventions | Defined triggers |
 
+## Specification Layers
+
+All specifications must declare their layer in the metadata header using `Layer:`.
+
+- **Layer 1 (concept)**: Abstract requirements, business logic, and domain mechanics. Technology-agnostic. Can be ported to any stack.
+- **Layer 2 (implementation)**: Concrete realization of a Layer 1 concept in a specific technology stack.
+  - Must include an `Implements: {layer-1-file.md}` metadata field pointing to its Layer 1 parent.
+  - Cannot enter `RFC` or `Stable` status until its parent Layer 1 specification is `Stable`.
+
 ## Status Lifecycle
 
 All specification files must use one of the following statuses:
@@ -135,7 +144,8 @@ graph TD
 3. **State Check**: Verify if `.design/` and its core files exist.
 4. **Auto-Init**: If `.design/INDEX.md` or `.design/RULES.md` are missing, automatically run the Init pre-flight check (`.magic/init.md`) and continue.
 5. **Content Creation**:
-    - Create `{specification-name}.md` using the *Specification Template*.
+    - Determine if the spec is Layer 1 (concept) or Layer 2 (implementation).
+    - Create `{specification-name}.md` using the *Specification Template*. Ensure the `Layer:` field is present, and add `Implements:` if it is Layer 2.
     - Use `plaintext` for directory trees and `mermaid` for diagrams.
     - Fill in `Related Specifications` with any dependencies on existing specs.
     - Fill in `Implementation Notes` if the implementation order is non-obvious.
@@ -312,6 +322,7 @@ graph TD
 | Check | Description | Example |
 | :--- | :--- | :--- |
 | **Path validity** | File/directory paths mentioned in specs exist in the project | `src/index.js` referenced but only `index.js` exists |
+| **Layer integrity** | Layer 2 specs have a valid `Implements` parent | `cli-installer.md` implements `cli-contract.md` (which is missing) |
 | **Structure accuracy** | Directory trees in specs match actual tree | Spec shows `workflows/magic/` but actual is `workflows/magic.*.md` |
 | **Removed entities** | Specs don't reference deleted files, directories, or configs | `.env` files referenced but were removed |
 | **Renamed entities** | Specs reflect current names after renames | `core/` referenced but was eliminated |
@@ -326,6 +337,10 @@ Consistency Report — {YYYY-MM-DD}
 Stale paths found:
 - distribution-npm.md §3.2: references `src/index.js` — actual: `index.js`
   → Auto-fix: update path
+
+Layer integrity errors:
+- distribution-npm.md: `Implements:` points to `distribution.md`, which does not exist
+  → Recommend: Create the L1 parent spec or change `Implements:` reference
 
 Removed entities:
 - secrets-management.md: describes `.env` files — removed from project
@@ -393,6 +408,8 @@ Review
 
 **Version:** {X.Y.Z}
 **Status:** {Draft | RFC | Stable | Deprecated}
+**Layer:** {concept | implementation}
+**Implements:** {layer-1-file.md} <!-- Only if Layer is implementation -->
 
 ## Overview
 

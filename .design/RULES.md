@@ -41,8 +41,6 @@ Read by the agent before every operation. Updated only via explicit triggers.
 ## 6. Relations Rules
 
 - Every spec that depends on another must declare it in Related Specifications.
-- Cross-file content duplication is not permitted — use a link instead.
-- Circular dependencies must be flagged and resolved.
 
 ## 7. Project Conventions
 
