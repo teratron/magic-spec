@@ -2,7 +2,6 @@
 /.magic/
 /.agent/
 adapters.json
-README.md
 LICENSE
 
 # Ignore Python specific files and build artifacts

@@ -20,7 +20,7 @@
     "node": ">=16"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "python scripts/run_tests.py",
     "build": "echo \"Build is no longer required for the thin client. Use 'npm pack' to verify the package.\"",
     "check": "npm pack --pack-destination dist",
     "publish:dry": "npm publish --dry-run"

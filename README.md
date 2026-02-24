@@ -13,7 +13,7 @@ Stop your AI from writing code before it understands the problem.
 
 `magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Claude, Gemini, Copilot, etc.). It acts as an operating system for agentic development, enforcing a rigorous, structured pipeline:
 
-```
+```plaintext
 💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
 ```
 
@@ -29,15 +29,19 @@ Once installed, your AI agent will automatically:
 ## 🚀 Quick Start
 
 Works with **any project** — Rust, Go, Python, JavaScript, or anything else.  
-No runtime lock-in. Requires only Node.js *or* Python to install.
+No runtime lock-in. Requires only Node.js or Python to install.
 
 ### Option A — Node.js (npx)
+
+Requires **Node.js >= 16**.
 
 ```bash
 npx magic-spec@latest
 ```
 
 ### Option B — Python (uvx)
+
+Requires **Python >= 3.8** and the [**uv**](https://github.com/astral-sh/uv) package manager.
 
 ```bash
 uvx magic-spec

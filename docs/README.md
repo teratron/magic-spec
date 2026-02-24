@@ -35,7 +35,7 @@ graph TD
 ### Core Workflows
 
 | # | Workflow | File | Purpose |
-|---|---|---|---|
+| ---: | :--- | :--- | :--- |
 | 1 | **Specification** | `spec.md` | 📋 Converts raw thoughts into structured specs. Verifies consistency with the project state. Manages statuses (Draft → RFC → Stable → Deprecated) |
 | 2 | **Task** | `task.md` | 🗺️ Reads Stable specs, builds dependency graph, extracts critical path, produces phased `PLAN.md`, and decomposes into atomic tasks (`TASKS.md`) |
 | 3 | **Run** | `run.md` | ⚡ Executes tasks from `TASKS.md` with execution tracks. Sequential & Parallel modes. Automatically triggers Retrospective at phase and plan completion |
