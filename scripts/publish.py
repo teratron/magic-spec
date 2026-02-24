@@ -34,6 +34,18 @@ def run_command(
 
     # For security, avoid leaking environment tokens in exception traces by default,
     # but subprocess.run does not print env vars.
+    is_windows = os.name == "nt"
+    if is_windows and cmd[0] == "git":
+        # On Windows, os.system is often more reliable for simple git calls in a script
+        # Join and replace / with \ for better compatibility
+        full_cmd = " ".join(
+            [arg.replace("/", "\\") if "/" in arg else arg for arg in cmd]
+        )
+        print(f"Running (os.system): {full_cmd}")
+        ret = os.system(f"cd /d {cwd} && {full_cmd}")
+        if check and ret != 0:
+            raise subprocess.CalledProcessError(ret, cmd)
+        return subprocess.CompletedProcess(cmd, ret)
     return subprocess.run(cmd, cwd=cwd, check=check, text=True)
 
 
@@ -136,9 +148,28 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
         return
 
     # Assuming we want to stage the modified version files
-    run_command(["git", "add"] + files_to_add, cwd=PROJECT_ROOT)
-    run_command(["git", "commit", "-m", f"Release {tag}"], cwd=PROJECT_ROOT)
-    run_command(["git", "tag", "-a", tag, "-m", f"Release {tag}"], cwd=PROJECT_ROOT)
+    try:
+        run_command(["git", "add"] + files_to_add, cwd=str(PROJECT_ROOT))
+    except subprocess.CalledProcessError as e:
+        print(f"  ⚠️  Warning: git add failed (might be no changes): {e}")
+
+    # Check if there are staged changes to commit
+    status = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=PROJECT_ROOT)
+    if status.returncode != 0:
+        try:
+            run_command(
+                ["git", "commit", "-m", f"Release {tag}"], cwd=str(PROJECT_ROOT)
+            )
+        except subprocess.CalledProcessError as e:
+            print(f"  ❌ Error: git commit failed: {e}")
+            raise
+    else:
+        print("  (Nothing to commit, skipping step)")
+
+    # Use -f to overwrite tag if it exists
+    run_command(
+        ["git", "tag", "-f", "-a", tag, "-m", f"Release {tag}"], cwd=str(PROJECT_ROOT)
+    )
 
     # We might not want to push automatically if the user wants to verify first, but standard release scripts usually push.
     # run_command(["git", "push", "origin", "main", "--tags"], cwd=PROJECT_ROOT)
