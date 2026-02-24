@@ -5,7 +5,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const https = require('https');
 const os = require('os');
-const { version } = require('./package.json');
+const { version } = require('../../package.json');
 
 const GITHUB_REPO = 'teratron/magic-spec';
 const cwd = process.cwd();
