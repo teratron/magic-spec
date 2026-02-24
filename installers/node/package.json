@@ -14,24 +14,12 @@
     "magic-spec": "index.js"
   },
   "files": [
-    "index.js",
-    ".magic",
-    ".agent",
-    "adapters.json",
-    "README.md"
+    "index.js"
   ],
   "engines": {
     "node": ">=16"
   },
   "scripts": {
-    "build": "node -e \"const fs=require('fs'),p=require('path'),r=p.resolve(__dirname,'../..'),d=p.join(__dirname,'dist');if(fs.existsSync(d))fs.rmSync(d,{recursive:true,force:true});fs.mkdirSync(d,{recursive:true});['/.magic','/.agent'].forEach(dir=>fs.cpSync(r+dir,p.join(d,dir),{recursive:true,force:true}));fs.copyFileSync(p.join(r,'installers','adapters.json'),p.join(d,'adapters.json'));['README.md','LICENSE'].forEach(f=>{if(fs.existsSync(p.join(r,f)))fs.copyFileSync(p.join(r,f),p.join(d,f))});['index.js','package.json'].forEach(f=>fs.copyFileSync(p.join(__dirname,f),p.join(d,f)));console.log('\u2705 Build complete in dist/')\"",
-    "check": "npm run build && cd dist && npm pack --dry-run",
-    "publish": "npm run build && node publish.js",
-    "publish:dry": "npm run build && cd dist && npm publish --access public --dry-run",
-    "test:link": "npm run build && cd dist && npm link",
-    "test:pack": "npm run build && cd dist && npm pack",
-    "version:patch": "npm version patch --no-git-tag-version",
-    "version:minor": "npm version minor --no-git-tag-version",
-    "version:major": "npm version major --no-git-tag-version"
+    "test": "echo \"Error: no test specified\" && exit 1"
   }
 }
