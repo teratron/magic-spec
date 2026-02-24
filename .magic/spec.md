@@ -7,7 +7,7 @@ description: Workflow for creating and managing project specifications and the s
 This workflow defines a universal, technology-agnostic process for creating and managing project specifications in the `.design/specifications/` directory. It is designed to be applicable across any stack (Frontend, Backend, Fullstack, GameDev, etc.).
 
 > **Scope**: This workflow covers specification authoring only — what exists and how it is structured.
-> Prioritization, phasing, and implementation order are handled by the **Plan Workflow** (`plan.md`).
+> Prioritization, phasing, and implementation order are handled by the **Task Workflow** (`task.md`).
 
 ## Agent Guidelines
 
@@ -289,11 +289,11 @@ Verifies that specification content matches the **actual project state**: file p
 
 **Trigger phrase**: *"Check specs"*, *"Verify specs"*, *"Spec consistency"*
 
-**Auto-trigger**: Called by `plan.md` and `task.md` before they begin their work. If issues are found, specs must be fixed before planning/task generation proceeds.
+**Auto-trigger**: Called by `task.md` before it begins its work. If issues are found, specs must be fixed before task generation proceeds.
 
 ```mermaid
 graph TD
-    A["Trigger: plan.md / task.md / manual"] --> B["Read INDEX.md — get list of active specs"]
+    A["Trigger: task.md / manual"] --> B["Read INDEX.md — get list of active specs"]
     B --> C["For each spec: extract paths, structure refs, tool names"]
     C --> D["Scan project filesystem for referenced items"]
     D --> E{"All references valid?"}

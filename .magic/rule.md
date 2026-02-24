@@ -8,7 +8,7 @@ Manages `.design/RULES.md §7 Project Conventions` directly.
 Use when you want to declare a convention without going through the Spec Workflow.
 
 > **Scope**: Direct management of `RULES.md §7 Project Conventions`.
-> Automatic rule capture during spec work (triggers T1–T4) is handled by `specification.md`.
+> Automatic rule capture during spec work (triggers T1–T4) is handled by `spec.md`.
 
 ## Agent Guidelines
 

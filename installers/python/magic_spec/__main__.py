@@ -183,11 +183,11 @@ def main() -> None:
                     hint = f" (Hint: {required_hint})" if required_hint else ""
                     print(f"❌ .design/{name} is missing{hint}")
 
-            check_item("INDEX.md", arts.get("INDEX.md", {}), "Run /magic.specification")
+            check_item("INDEX.md", arts.get("INDEX.md", {}), "Run /magic.spec")
             check_item("RULES.md", arts.get("RULES.md", {}), "Created at init")
 
             if "PLAN.md" in arts:
-                check_item("PLAN.md", arts["PLAN.md"], "Run /magic.plan")
+                check_item("PLAN.md", arts["PLAN.md"], "Run /magic.task")
             if "TASKS.md" in arts:
                 check_item("TASKS.md", arts["TASKS.md"], "Run /magic.task")
 

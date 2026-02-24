@@ -25,10 +25,10 @@ npx magic-spec@latest
 │
 ├── .magic/                     # Движок SDD (не трогать вручную)
 │   ├── onboard.md
-│   ├── plan.md
 │   ├── retrospective.md
 │   ├── rule.md
-│   ├── specification.md
+│   ├── run.md
+│   ├── spec.md
 │   ├── task.md
 │   └── scripts/
 │       ├── check-prerequisites.* # Проверки для --doctor
@@ -38,9 +38,9 @@ npx magic-spec@latest
 │
 ├── .agent/workflows/           # Точки входа для AI-агентов (Cursor, Claude и др.)
 │   ├── magic.onboard.md
-│   ├── magic.plan.md
 │   ├── magic.rule.md
-│   ├── magic.specification.md
+│   ├── magic.run.md
+│   ├── magic.spec.md
 │   └── magic.task.md
 │
 └── .design/                    # Ваше рабочее пространство (создаётся при инициализации)
@@ -129,51 +129,31 @@ npx magic-spec@latest --help
 ## Структура инстоллера (для разработчиков)
 
 ```plaintext
-installers/node/
+project-root/
 │
-├── index.js        # CLI-скрипт: точка входа пакета
-├── publish.js      # Скрипт публикации (не попадает в пакет)
-├── package.json    # Конфигурация npm-пакета
+├── package.json    # Конфигурация npm-пакета (в корне)
 │
-└── dist/           # Папка сборки (gitignored)
-    ├── index.js
-    ├── .magic/
-    ├── .agent/
-    ├── adapters/
-    ├── README.md
-    └── package.json
+└── installers/node/
+    ├── index.js        # CLI-скрипт: точка входа пакета
+    └── publish.js      # Скрипт публикации
 ```
 
 ### Доступные скрипты для разработчика
 
-Все команды выполняются из папки `installers/node/`:
+Все команды для сборки и тестирования теперь выполняются из корня репозитория:
 
 ```bash
-# Собрать пакет в dist/
-npm run build
+# Проверить содержимое пакета (создаст magic-spec-X.Y.Z.tgz)
+npm pack
 
-# Проверить содержимое пакета (без загрузки)
-npm run check
-
-# Опубликовать на npmjs.com
-npm run publish
+# Опубликовать на npmjs.com вручную
+npm publish
 
 # Dry-run (имитация публикации)
-npm run publish:dry
+npm publish --dry-run
 
-# Локальное тестирование — метод A (npm link)
-npm run test:link
-magic-spec              # проверить в любой директории
-npm unlink -g magic-spec
-
-# Локальное тестирование — метод B (tarball)
-npm run test:pack
-# создаст magic-spec-X.Y.Z.tgz в dist/
-
-# Повысить версию
-npm run version:patch   # X.Y.Z → X.Y.Z+1
-npm run version:minor   # X.Y.Z → X.Y+1.0
-npm run version:major   # X.Y.Z → X+1.0.0
+# Полноценный релиз с обновлением версий (рекомендуется)
+python scripts/publish.py <old_version> <new_version>
 ```
 
 ### Авторизация для публикации

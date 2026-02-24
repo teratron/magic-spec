@@ -39,10 +39,10 @@ magic-spec
 │
 ├── .magic/                     # Движок SDD (не трогать вручную)
 │   ├── onboard.md
-│   ├── plan.md
 │   ├── retrospective.md
 │   ├── rule.md
-│   ├── specification.md
+│   ├── run.md
+│   ├── spec.md
 │   ├── task.md
 │   └── scripts/
 │       ├── check-prerequisites.* # Проверки для --doctor
@@ -52,9 +52,9 @@ magic-spec
 │
 ├── .agent/workflows/           # Точки входа для AI-агентов (Cursor, Claude и др.)
 │   ├── magic.onboard.md
-│   ├── magic.plan.md
 │   ├── magic.rule.md
-│   ├── magic.specification.md
+│   ├── magic.run.md
+│   ├── magic.spec.md
 │   └── magic.task.md
 │
 └── .design/                    # Ваше рабочее пространство (создаётся при инициализации)
@@ -145,30 +145,26 @@ uvx magic-spec --help
 ## Структура инстоллера (для разработчиков)
 
 ```plaintext
-installers/python/
+project-root/
 │
-├── magic_spec/
-│   ├── __init__.py     # Пакет Python
-│   └── __main__.py     # Точка входа CLI
+├── pyproject.toml      # Конфигурация пакета (в корне)
+├── uv.lock             # Lock-файл зависимостей
 │
-├── pyproject.toml      # Конфигурация пакета (hatchling + uv)
-├── README.md           # Этот файл
-├── LICENSE             # Лицензия
+├── installers/python/
+│   └── magic_spec/
+│       ├── __init__.py     # Пакет Python
+│       └── __main__.py     # Точка входа CLI
 │
-└── dist/               # Папка сборки (gitignored)
+└── dist/               # Папка сборки (создается при uv build)
     ├── magic_spec-X.Y.Z-py3-none-any.whl
     └── magic_spec-X.Y.Z.tar.gz
 ```
 
 ### Доступные команды для разработчика
 
-Все команды выполняются из папки `installers/python/`:
+Все команды выполняются из корня репозитория:
 
 ```bash
-# Синхронизировать движок из корня репозитория
-# (подтягивает .magic/, .agent/, adapters/, README.md, LICENSE)
-uv run hatch run sync
-
 # Собрать пакет (.whl и .tar.gz в dist/)
 uv build
 

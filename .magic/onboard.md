@@ -65,7 +65,7 @@ This tutorial will create real files in your project:
 
 ### Step 4: Mini PLAN.md
 
-1. Explain that normally, the `magic.plan` workflow scans all stable specs and calculates a critical path.
+1. Explain that normally, the `magic.task` workflow scans all stable specs and calculates a critical path.
 2. Generate a minimal `.design/PLAN.md` with a single Phase 1 containing the `logger-module.md` feature.
 3. Show the user a small preview of the plan.
 4. Tell the user: *"Now we decompose this plan into atomic tasks. Type `task` to generate tasks."*

@@ -18,7 +18,7 @@ Verifies that `.design/` exists and contains all required system files. If anyth
 
 ## When It Runs
 
-This check is embedded as **Step 0** in every workflow (`specification.md`, `plan.md`, `task.md`, `rule.md`, `retrospective.md`). The agent executes it before any workflow-specific logic.
+This check is embedded as **Step 0** in every workflow (`spec.md`, `task.md`, `run.md`, `rule.md`, `retrospective.md`). The agent executes it before any workflow-specific logic.
 
 ```mermaid
 graph TD

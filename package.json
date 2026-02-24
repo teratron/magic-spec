@@ -1,6 +1,6 @@
 {
   "name": "magic-spec",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Magic Specification-Driven Development (SDD) Workflow",
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "MIT",
@@ -9,17 +9,20 @@
     "type": "git",
     "url": "https://github.com/teratron/magic-spec.git"
   },
-  "main": "index.js",
+  "main": "installers/node/index.js",
   "bin": {
-    "magic-spec": "index.js"
+    "magic-spec": "installers/node/index.js"
   },
   "files": [
-    "index.js"
+    "installers/node/index.js"
   ],
   "engines": {
     "node": ">=16"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "echo \"Build is no longer required for the thin client. Use 'npm pack' to verify the package.\"",
+    "check": "npm pack",
+    "publish:dry": "npm publish --dry-run"
   }
 }

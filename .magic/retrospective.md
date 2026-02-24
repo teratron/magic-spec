@@ -257,10 +257,10 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 
 | # | Refs Observation | Recommendation | Target File |
 | :--- | :--- | :--- | :--- |
-| R1 | #1 | Review dependency graph in PLAN.md — Phase 2 blocking rate suggests wrong task ordering | `.magic/plan.md` |
-| R2 | #2 | Add "definition of done" criteria to spec template to reduce Draft ↔ RFC oscillation | `.magic/specification.md` |
-| R3 | #3 | Consider simplifying T1–T3 triggers or adding examples to make them more discoverable | `.magic/specification.md` |
-| R4 | #4 | Remove "No code in specs" from checklist — zero-signal item consuming agent context | `.magic/specification.md` |
+| R1 | #1 | Review dependency graph in PLAN.md — Phase 2 blocking rate suggests wrong task ordering | `.magic/task.md` |
+| R2 | #2 | Add "definition of done" criteria to spec template to reduce Draft ↔ RFC oscillation | `.magic/spec.md` |
+| R3 | #3 | Consider simplifying T1–T3 triggers or adding examples to make them more discoverable | `.magic/spec.md` |
+| R4 | #4 | Remove "No code in specs" from checklist — zero-signal item consuming agent context | `.magic/spec.md` |
 
 ### 📈 Trends (from Snapshots)
 

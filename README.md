@@ -79,18 +79,18 @@ your-project/
 │
 ├── .agent/workflows/               # Agent entry points (slash commands)
 │   ├── magic.onboard.md        # Interactive tutorial for new devs
-│   ├── magic.plan.md
 │   ├── magic.rule.md
-│   ├── magic.specification.md
+│   ├── magic.run.md
+│   ├── magic.spec.md
 │   └── magic.task.md
 │
 ├── .magic/                     # SDD Engine (workflow logic, read-only)
 │   ├── init.md
 │   ├── onboard.md              # Onboarding script payload
-│   ├── plan.md
 │   ├── retrospective.md
 │   ├── rule.md
-│   ├── specification.md
+│   ├── run.md
+│   ├── spec.md
 │   ├── task.md
 │   └── scripts/
 │       ├── check-prerequisites.*  # Used by --doctor
@@ -114,10 +114,10 @@ graph TD
     INIT -->|.design/ exists| SPEC
     INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
     SPEC["📋 Specification"] <--> RULE["📜 Rule"]
-    SPEC --> PLAN["🗺️ Plan"]
-    PLAN --> TASK["⚡ Task"]
-    TASK --> CODE["🚀 Code"]
-    TASK -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
+    SPEC --> TASK["🗺️ Task & Plan"]
+    TASK --> RUN["⚡ Run"]
+    RUN --> CODE["🚀 Code"]
+    RUN -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
     RETRO -.->|Feedback loop| SPEC
 ```
 
@@ -126,8 +126,8 @@ graph TD
 | # | Workflow | Purpose |
 | :--- | :--- | :--- |
 | 1 | **Specification** | Converts raw thoughts into structured specs. Verifies specs against project state. Manages statuses: `Draft → RFC → Stable → Deprecated`. |
-| 2 | **Plan** | Reads Stable specs, builds a dependency graph, and produces a phased `PLAN.md`. |
-| 3 | **Task** | Decomposes the plan into atomic tasks with sequential and parallel execution tracks. Automatically runs a retrospective at phase and plan completion. |
+| 2 | **Task** | Reads Stable specs, builds a dependency graph, produces a phased `PLAN.md`, and decomposes into atomic tasks. |
+| 3 | **Run** | Executes tasks with sequential and parallel tracks. Automatically runs a retrospective at phase and plan completion. |
 
 ### Auxiliary Workflows
 
@@ -136,7 +136,7 @@ graph TD
 | **Rule** | Manages the project constitution (`RULES.md §7`). Add, amend, or remove conventions. |
 | **Onboard** | Interactive tutorial guiding new developers through their first Magic SDD cycle. |
 
-> **Retrospective** runs automatically inside the Task workflow — at phase completion (snapshot) and plan completion (full analysis). No manual command needed.
+> **Retrospective** runs automatically inside the Run workflow — at phase completion (snapshot) and plan completion (full analysis). No manual command needed.
 
 ## 💬 How to Use (with any AI agent)
 
@@ -147,13 +147,13 @@ Just talk to your AI agent naturally. Initialization is **automatic** — no set
 → Runs Specification workflow
 
 "Create an implementation plan"
-→ Runs Plan workflow
+→ Runs Task workflow
 
 "Generate tasks for Phase 1"
 → Runs Task workflow
 
 "Execute the next task"
-→ Runs Task workflow (execution mode)
+→ Runs Run workflow
 
 "Add rule: always use snake_case for file names"
 → Runs Rule workflow

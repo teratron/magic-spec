@@ -20,11 +20,11 @@ graph TD
     IDEA["💡 Idea"] --> INIT{"🏗️ Auto-Init<br/>init.md"}
     INIT -->|.design/ exists| SPEC
     INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
-    SPEC["📋 Specification<br/>specification.md"] <--> RULE["📜 Rule<br/>rule.md"]
-    SPEC --> PLAN["🗺️ Plan<br/>plan.md"]
-    PLAN --> TASK["⚡ Task<br/>task.md"]
-    TASK --> CODE["🚀 Code"]
-    TASK -.->|"auto: phase done"| RETRO["🔍 Retrospective<br/>retrospective.md"]
+    SPEC["📋 Specification<br/>spec.md"] <--> RULE["📜 Rule<br/>rule.md"]
+    SPEC --> TASK["🗺️ Task & Plan<br/>task.md"]
+    TASK --> RUN["⚡ Run<br/>run.md"]
+    RUN --> CODE["🚀 Code"]
+    RUN -.->|"auto: phase done"| RETRO["🔍 Retrospective<br/>retrospective.md"]
     RETRO -.->|Feedback loop| SPEC
 
     style INIT fill:#2d333b,stroke:#f0883e,stroke-dasharray: 5 5
@@ -36,9 +36,9 @@ graph TD
 
 | # | Workflow | File | Purpose |
 |---|---|---|---|
-| 1 | **Specification** | `specification.md` | 📋 Converts raw thoughts into structured specs. Verifies consistency with the project state. Manages statuses (Draft → RFC → Stable → Deprecated) |
-| 2 | **Plan** | `plan.md` | 🗺️ Reads Stable specs, builds dependency graph, extracts critical path, produces phased `PLAN.md` |
-| 3 | **Task** | `task.md` | ⚡ Decomposes Plan into atomic tasks with execution tracks. Sequential & Parallel modes. Automatically triggers Retrospective at phase and plan completion |
+| 1 | **Specification** | `spec.md` | 📋 Converts raw thoughts into structured specs. Verifies consistency with the project state. Manages statuses (Draft → RFC → Stable → Deprecated) |
+| 2 | **Task** | `task.md` | 🗺️ Reads Stable specs, builds dependency graph, extracts critical path, produces phased `PLAN.md`, and decomposes into atomic tasks (`TASKS.md`) |
+| 3 | **Run** | `run.md` | ⚡ Executes tasks from `TASKS.md` with execution tracks. Sequential & Parallel modes. Automatically triggers Retrospective at phase and plan completion |
 
 ### Auxiliary Workflow
 
@@ -51,8 +51,8 @@ graph TD
 | | File | Purpose |
 |---|---|---|
 | **Init** | `init.md` + `scripts/` | 🏗️ Automatic pre-flight check. On first invocation of any workflow, verifies `.design/` exists. If not — creates the directory structure, `INDEX.md`, and `RULES.md`. No manual command needed |
-| **Check Specs** | `specification.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs |
-| **Retrospective** | `retrospective.md` | 🔍 Called automatically by `task.md`: Level 1 snapshot after each phase, Level 2 full analysis when the entire plan completes. Not a user command |
+| **Check Specs** | `spec.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs |
+| **Retrospective** | `retrospective.md` | 🔍 Called automatically by `run.md`: Level 1 snapshot after each phase, Level 2 full analysis when the entire plan completes. Not a user command |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -69,9 +69,9 @@ project-root/
 │
 ├── .agent/workflows/               # 🎯 Agent Triggers (entry points)
 │   ├── magic.onboard.md            #    → triggers .magic/onboard.md
-│   ├── magic.plan.md               #    → triggers .magic/plan.md
 │   ├── magic.rule.md               #    → triggers .magic/rule.md
-│   ├── magic.specification.md      #    → triggers .magic/specification.md
+│   ├── magic.run.md                #    → triggers .magic/run.md
+│   ├── magic.spec.md               #    → triggers .magic/spec.md
 │   └── magic.task.md               #    → triggers .magic/task.md
 │
 ├── .magic/                     # ⚙️ SDD Engine (workflow logic)
@@ -79,11 +79,11 @@ project-root/
 │   ├── README.ru.md            #    Documentation (RU)
 │   ├── init.md                 #    Auto-init logic (pre-flight check)
 │   ├── onboard.md              #    Interactive onboarding tutorial script
-│   ├── plan.md                 #    Planning workflow + templates
-│   ├── retrospective.md        #    Self-analysis engine (auto-triggered by task.md)
+│   ├── retrospective.md        #    Self-analysis engine (auto-triggered by run.md)
 │   ├── rule.md                 #    Constitution management workflow (auxiliary)
-│   ├── specification.md        #    Specification authoring workflow + templates
-│   ├── task.md                 #    Task decomposition & execution workflow
+│   ├── run.md                  #    Execution workflow
+│   ├── spec.md                 #    Specification authoring workflow + templates
+│   ├── task.md                 #    Task decomposition & plan generation workflow
 │   └── scripts/                #    Init scripts (auto-run on first use)
 │       ├── init.sh             #       macOS / Linux
 │       └── init.ps1            #       Windows
@@ -108,7 +108,7 @@ Each checklist item must be marked `✓` (done) or `✗` (skipped/failed). Any `
 
 ## 🔍 Retrospective — Automatic Feedback Loop
 
-The Retrospective is Magic's **self-improvement mechanism**, built directly into the Task workflow. It closes the feedback loop by analyzing actual SDD usage data and producing actionable recommendations — without requiring any manual command.
+The Retrospective is Magic's **self-improvement mechanism**, built directly into the Run workflow. It closes the feedback loop by analyzing actual SDD usage data and producing actionable recommendations — without requiring any manual command.
 
 ### Two-Level System
 
@@ -167,9 +167,9 @@ Simply instruct your AI agent (Cursor, Claude, Gemini, or any terminal agent). I
 | Command | What Happens |
 |---|---|
 | *"Dispatch this thought into specs..."* | Runs Specification → parses, maps, and writes spec files |
-| *"Create an implementation plan"* | Runs Plan → builds phased plan with dependency graph |
+| *"Create an implementation plan"* | Runs Task → builds phased plan with dependency graph |
 | *"Generate tasks for Phase 1"* | Runs Task → decomposes plan into atomic tasks with tracks |
-| *"Execute the next task"* | Runs Task → picks and implements the next available task |
+| *"Execute the next task"* | Runs Run → picks and implements the next available task |
 
 ### Auxiliary Commands (optional)
 

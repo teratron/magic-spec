@@ -1,17 +1,17 @@
 ---
-description: Workflow for generating and executing implementation tasks.
+description: Workflow for orchestrating tasks and generating the implementation plan.
 handoffs:
-  - label: "Update plan"
-    workflow: magic.plan
-    prompt: "Update the project plan based on task progress."
-    condition: null
+  - label: "Execute tasks"
+    workflow: magic.run
+    prompt: "Execute the unblocked tasks from the generated plan."
+    condition: "tasks_generated"
 ---
 
 # Task Workflow
 
-**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Start tasks"*, *"Next task"*, *"Continue"*, *"Update tasks"*, *"Sync tasks"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*
-**Scope:** Task generation, execution tracking, parallelism, implementation, and agent coordination.
-Planning is handled by `magic.plan`.
+**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
+**Scope:** Plan generation, task decomposition, and execution orchestration.
+Execution is handled by `magic.run`.
 
 > **Full implementation:** `.magic/task.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

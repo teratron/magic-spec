@@ -25,7 +25,7 @@ def run_command(
 
 
 def update_python_version(version: str) -> None:
-    pyproject_path = PROJECT_ROOT / "installers" / "python" / "pyproject.toml"
+    pyproject_path = PROJECT_ROOT / "pyproject.toml"
     init_path = PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__init__.py"
 
     # Update pyproject.toml
@@ -49,7 +49,7 @@ def update_python_version(version: str) -> None:
 
 
 def update_node_version(version: str) -> None:
-    package_json_path = PROJECT_ROOT / "installers" / "node" / "package.json"
+    package_json_path = PROJECT_ROOT / "package.json"
     content = package_json_path.read_text(encoding="utf-8")
     content = re.sub(r'"version":\s*".*"', f'"version": "{version}"', content, count=1)
     package_json_path.write_text(content, encoding="utf-8")
@@ -95,9 +95,9 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     print(f"\n📦 Committing changes and creating tag {tag}...")
 
     files_to_add = [
-        "installers/python/pyproject.toml",
+        "pyproject.toml",
         "installers/python/magic_spec/__init__.py",
-        "installers/node/package.json",
+        "package.json",
     ]
     files_to_add.extend(docs_files)
 
@@ -122,7 +122,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
 
 def publish_python(dry_run: bool) -> None:
     print("\n🐍 Building and publishing Python package...")
-    cwd = PROJECT_ROOT / "installers" / "python"
+    cwd = PROJECT_ROOT
 
     if dry_run:
         print(f"  [Dry Run] uv build in {cwd}")
@@ -136,7 +136,7 @@ def publish_python(dry_run: bool) -> None:
 
 def publish_node(dry_run: bool) -> None:
     print("\n📦 Publishing Node package...")
-    cwd = PROJECT_ROOT / "installers" / "node"
+    cwd = PROJECT_ROOT
 
     if dry_run:
         print(f"  [Dry Run] npm publish in {cwd}")

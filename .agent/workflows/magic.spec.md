@@ -1,9 +1,9 @@
 ---
 description: Workflow for creating and managing project specifications.
 handoffs:
-  - label: "Create plan"
-    workflow: magic.plan
-    prompt: "Create a plan based on the finalized specifications."
+  - label: "Generate tasks"
+    workflow: magic.task
+    prompt: "Generate the implementation plan and tasks based on finalized specifications."
     condition: "specs_stable"
   - label: "Add a rule"
     workflow: magic.rule
@@ -19,7 +19,7 @@ handoffs:
 
 - **Explore Mode**: Do not modify live files during brainstorming until explicitly approved.
 - **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
-Planning and execution are handled by `magic.plan` and `magic.task`.
+Orchestration and execution are handled by `magic.task` and `magic.run`.
 
-> **Full implementation:** `.magic/specification.md`
+> **Full implementation:** `.magic/spec.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

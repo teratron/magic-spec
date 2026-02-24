@@ -101,11 +101,11 @@ function runDoctor() {
             }
         };
 
-        checkItem('INDEX.md', arts['INDEX.md'], 'Run /magic.specification');
+        checkItem('INDEX.md', arts['INDEX.md'], 'Run /magic.spec');
         checkItem('RULES.md', arts['RULES.md'], 'Created at init');
 
         if (arts['PLAN.md']) {
-            checkItem('PLAN.md', arts['PLAN.md'], 'Run /magic.plan');
+            checkItem('PLAN.md', arts['PLAN.md'], 'Run /magic.task');
         }
         if (arts['TASKS.md']) {
             checkItem('TASKS.md', arts['TASKS.md'], 'Run /magic.task');
