@@ -56,28 +56,60 @@ def update_node_version(version: str) -> None:
     print("✅ Updated Node package.json")
 
 
-def commit_and_tag(version: str, dry_run: bool) -> None:
+def update_docs_versions(old_version: str, new_version: str) -> list[str]:
+    print("\n📝 Updating versions in documentation...")
+    modified_files = []
+
+    # Target files: README.md, CHANGELOG.md, and docs/*.md
+    targets = [PROJECT_ROOT / "README.md", PROJECT_ROOT / "CHANGELOG.md"]
+    docs_dir = PROJECT_ROOT / "docs"
+    if docs_dir.exists():
+        targets.extend(list(docs_dir.rglob("*.md")))
+
+    for file_path in targets:
+        if not file_path.exists():
+            continue
+
+        try:
+            content = file_path.read_text(encoding="utf-8")
+            if old_version in content:
+                new_content = content.replace(old_version, new_version)
+                file_path.write_text(new_content, encoding="utf-8")
+
+                # Make path relative to project root for cleaner output
+                try:
+                    rel_path = file_path.relative_to(PROJECT_ROOT)
+                except ValueError:
+                    rel_path = file_path.name
+
+                print(f"✅ Updated {rel_path}")
+                modified_files.append(str(rel_path).replace("\\", "/"))
+        except Exception as e:
+            print(f"⚠️  Could not update {file_path.name}: {e}")
+
+    return modified_files
+
+
+def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     tag = f"v{version}"
     print(f"\n📦 Committing changes and creating tag {tag}...")
 
+    files_to_add = [
+        "installers/python/pyproject.toml",
+        "installers/python/magic_spec/__init__.py",
+        "installers/node/package.json",
+    ]
+    files_to_add.extend(docs_files)
+
     if dry_run:
-        print("  [Dry Run] git add .")
+        print(f"  [Dry Run] git add {' '.join(files_to_add)}")
         print(f"  [Dry Run] git commit -m 'Release {tag}'")
         print(f"  [Dry Run] git tag -a {tag} -m 'Release {tag}'")
         print("  [Dry Run] git push origin main --tags")
         return
 
     # Assuming we want to stage the modified version files
-    run_command(
-        [
-            "git",
-            "add",
-            "installers/python/pyproject.toml",
-            "installers/python/magic_spec/__init__.py",
-            "installers/node/package.json",
-        ],
-        cwd=PROJECT_ROOT,
-    )
+    run_command(["git", "add"] + files_to_add, cwd=PROJECT_ROOT)
     run_command(["git", "commit", "-m", f"Release {tag}"], cwd=PROJECT_ROOT)
     run_command(["git", "tag", "-a", tag, "-m", f"Release {tag}"], cwd=PROJECT_ROOT)
 
@@ -118,6 +150,9 @@ def main() -> None:
     parser = argparse.ArgumentParser(
         description="Unified release script for magic-spec"
     )
+    parser.add_argument(
+        "old_version", help="The current version to be replaced in docs (e.g., 1.1.0)"
+    )
     parser.add_argument("version", help="The new version to release (e.g., 1.1.1)")
     parser.add_argument(
         "--dry-run",
@@ -131,17 +166,20 @@ def main() -> None:
     )
 
     args = parser.parse_args()
+    old_version = args.old_version.lstrip("v")
     version = args.version.lstrip("v")
 
-    print(f"🚀 Starting release process for v{version}")
+    print(f"🚀 Starting release process: v{old_version} -> v{version}")
 
+    docs_files = []
     if args.dry_run:
         print("⚠️  DRY RUN MODE ENABLED. No files will be modified.")
     else:
         update_python_version(version)
         update_node_version(version)
+        docs_files = update_docs_versions(old_version, version)
 
-    commit_and_tag(version, args.dry_run)
+    commit_and_tag(version, docs_files, args.dry_run)
 
     if args.skip_publish:
         print("\n⏭️  Skipping publication as requested.")
