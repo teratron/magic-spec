@@ -19,6 +19,12 @@ magic-spec = "magic_spec.__main__:main"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
+[tool.hatch.build]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+]
+
 [tool.hatch.build.targets.wheel]
 packages = ["installers/python/magic_spec"]
 

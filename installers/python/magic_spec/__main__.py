@@ -16,7 +16,7 @@ import tempfile
 try:
     from . import __version__
 except ImportError:
-    __version__ = "1.1.0"
+    __version__ = "1.2.3"
 
 GITHUB_REPO = "teratron/magic-spec"
 

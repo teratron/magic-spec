@@ -72,6 +72,42 @@ class TestIntegration(unittest.TestCase):
         )
         self.assertIn("Magic-spec Doctor:", result.stdout)
 
+    def test_doctor_command_node(self):
+        """Test the --doctor flag in the node installer."""
+        # First, we need to have a .magic directory for --doctor to work
+        os.makedirs(".magic/scripts", exist_ok=True)
+
+        # Create a mock check-prerequisites script
+        if os.name == "nt":
+            check_script = Path(".magic/scripts/check-prerequisites.ps1")
+            check_script.write_text(
+                'echo "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
+            )
+        else:
+            check_script = Path(".magic/scripts/check-prerequisites.sh")
+            check_script.write_text(
+                '#!/bin/bash\necho "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
+            )
+            check_script.chmod(0o755)
+
+        installer = PROJECT_ROOT / "installers" / "node" / "index.js"
+
+        # Node installer needs to find ../../package.json relative to its location
+        # subprocess.run should handle this if we point to the absolute path
+        result = subprocess.run(
+            ["node", str(installer), "--doctor"],
+            capture_output=True,
+            text=True,
+            encoding="utf-8",
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            f"Node Installer failed with code {result.returncode}. Error: {result.stderr}",
+        )
+        self.assertIn("Magic-spec Doctor:", result.stdout)
+
 
 if __name__ == "__main__":
     unittest.main()

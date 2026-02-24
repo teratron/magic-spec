@@ -2,9 +2,10 @@
 """Unified release script for magic-spec.
 
 Bumps versions in:
-- installers/python/pyproject.toml
+- pyproject.toml
 - installers/python/magic_spec/__init__.py
-- installers/node/package.json
+- installers/python/magic_spec/__main__.py
+- package.json
 
 Then commits, tags, and publishes.
 """
@@ -66,6 +67,7 @@ def load_env() -> None:
 def update_python_version(version: str) -> None:
     pyproject_path = PROJECT_ROOT / "pyproject.toml"
     init_path = PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__init__.py"
+    main_path = PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__main__.py"
 
     # Update pyproject.toml
     content = pyproject_path.read_text(encoding="utf-8")
@@ -86,6 +88,18 @@ def update_python_version(version: str) -> None:
     init_path.write_text(content, encoding="utf-8")
     print("✅ Updated Python __init__.py")
 
+    # Update __main__.py fallback
+    if main_path.exists():
+        content = main_path.read_text(encoding="utf-8")
+        content = re.sub(
+            r'^__version__\s*=\s*".*"',
+            f'__version__ = "{version}"',
+            content,
+            flags=re.MULTILINE,
+        )
+        main_path.write_text(content, encoding="utf-8")
+        print("✅ Updated Python __main__.py fallback")
+
 
 def update_node_version(version: str) -> None:
     package_json_path = PROJECT_ROOT / "package.json"
@@ -99,8 +113,15 @@ def update_docs_versions(old_version: str, new_version: str) -> list[str]:
     print("\n📝 Updating versions in documentation...")
     modified_files = []
 
-    # Target files: README.md, CHANGELOG.md, and docs/*.md
+    # Target files: README.md, CHANGELOG.md, installer READMEs, and docs/*.md
     targets = [PROJECT_ROOT / "README.md", PROJECT_ROOT / "CHANGELOG.md"]
+
+    # Installer READMEs
+    for p in ["node", "python"]:
+        readme = PROJECT_ROOT / "installers" / p / "README.md"
+        if readme.exists():
+            targets.append(readme)
+
     docs_dir = PROJECT_ROOT / "docs"
     if docs_dir.exists():
         targets.extend(list(docs_dir.rglob("*.md")))
@@ -136,6 +157,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     files_to_add = [
         "pyproject.toml",
         "installers/python/magic_spec/__init__.py",
+        "installers/python/magic_spec/__main__.py",
         "package.json",
     ]
     files_to_add.extend(docs_files)

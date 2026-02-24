@@ -15,12 +15,16 @@ const isUpdate = args.includes('--update');
 const isDoctor = args.includes('--doctor') || args.includes('--check');
 const isFallbackMain = args.includes('--fallback-main');
 
-const envFlag = args.find(a => a.startsWith('--env'));
-const envValues = envFlag
-    ? envFlag.includes('=')
-        ? envFlag.split('=')[1].split(',')
-        : (args[args.indexOf(envFlag) + 1] || '').split(',').filter(Boolean)
-    : [];
+const envValues = [];
+for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('--env=')) {
+        const val = args[i].split('=')[1];
+        if (val) envValues.push(...val.split(',').filter(Boolean));
+    } else if (args[i] === '--env' && i + 1 < args.length) {
+        envValues.push(...args[i + 1].split(',').filter(Boolean));
+        i++;
+    }
+}
 
 function copyDir(src, dest) {
     if (!fs.existsSync(src)) {
@@ -171,14 +175,13 @@ async function downloadPayload(targetVersion) {
                         // For a pure JS solution without dependencies, you would use a package like 'tar'
                         const isWindows = process.platform === 'win32';
 
-                        let result;
-                        if (isWindows) {
-                            // Use PowerShell to extract tar on Windows 10+
-                            result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir]);
-                        } else {
-                            // Standard Linux/macOS tar
-                            result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir]);
+                        // Check if tar exists
+                        const tarCheck = spawnSync('tar', ['--version']);
+                        if (tarCheck.error) {
+                            throw new Error("The 'tar' command was not found. Please install tar or use a system that supports it (Windows 10+, macOS, Linux). Output: " + tarCheck.error.message);
                         }
+
+                        const result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir]);
 
                         if (result.error || result.status !== 0) {
                             throw new Error('Tar extraction failed. ' + (result.stderr ? result.stderr.toString() : ''));
