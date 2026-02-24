@@ -73,6 +73,18 @@ if [ "$RFC_COUNT" -gt 0 ]; then
     WARNINGS+=("$RFC_COUNT specs are still in RFC status")
 fi
 
+if [ "$PLAN_EXISTS" = "true" ] && [ "$INDEX_EXISTS" = "true" ]; then
+    # Extract spec filenames from INDEX.md
+    INDEX_SPECS=$(grep -o "specifications/[^)]*\.md" "$INDEX_PATH" | sed 's|specifications/||' || true)
+    
+    # magic.task.md hint: "Generate or update the implementation plan and tasks based on ALL registered specifications."
+    for spec in $INDEX_SPECS; do
+        if ! grep -q "$spec" "$PLAN_PATH"; then
+            WARNINGS+=("Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md")
+        fi
+    done
+fi
+
 if [ ${#MISSING[@]} -gt 0 ]; then
     OK="false"
 else

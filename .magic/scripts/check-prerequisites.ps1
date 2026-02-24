@@ -34,6 +34,22 @@ if ($indexExists) {
     $draftCount = ($lines | Where-Object { $_ -match "\|\s*Draft\s*\|" }).Count
     $rfcCount = ($lines | Where-Object { $_ -match "\|\s*RFC\s*\|" }).Count
     $specCount = $stableCount + $draftCount + $rfcCount
+    
+    if ($planExists) {
+        # Extract spec filenames from INDEX.md (lines matching "| [file.md](specifications/file.md) |")
+        $indexSpecs = $lines | Where-Object { $_ -match "\|\s*\[.*?\]\(specifications/(.*?\.md)\)" } | ForEach-Object { 
+            if ($_ -match "specifications/(.*?\.md)") { $Matches[1] }
+        }
+        
+        # Check if each spec is mentioned in PLAN.md
+        $planContent = Get-Content $planPath -Raw
+        foreach ($spec in $indexSpecs) {
+            # Use fixed-string matching instead of regex to avoid path character issues
+            if ($planContent -notlike "*$spec*") {
+                $warnings += "Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md"
+            }
+        }
+    }
 }
 
 if ($require_specs -and $stableCount -eq 0) {
@@ -54,7 +70,6 @@ if ($rfcCount -gt 0) {
 $ok = $missing.Count -eq 0
 
 if ($json) {
-    # Custom structure to exactly match JSON format from specification
     $output = @{
         ok = $ok
         checked_at = (Get-Date -Format "yyyy-MM-dd")
@@ -70,12 +85,14 @@ if ($json) {
         warnings = $warnings
     }
     
-    # The spec required non-compressed, cleanly formatted json
     $jsonOutputFormat = $output | ConvertTo-Json -Depth 5
     Write-Output $jsonOutputFormat
     exit 0
 } else {
     if ($ok) {
+        if ($warnings.Count -gt 0) {
+            foreach ($w in $warnings) { Write-Host "WARNING: $w" }
+        }
         exit 0
     } else {
         $missingStr = $missing -join ", "

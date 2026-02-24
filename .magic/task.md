@@ -14,12 +14,13 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
-1. **Specs First**: Never generate a plan or tasks without reading all spec files listed in `INDEX.md`.
+1. **Registry Integrity**: Never generate a plan or tasks without reading all spec files listed in `INDEX.md`.
 2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
-3. **Confirm Before Commit**: Always show the proposed phase structure and task breakdown to the user before writing `PLAN.md` and `TASKS.md`.
-4. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
-5. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
-6. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
+3. **No Orphans**: Every spec in `INDEX.md` must be assigned to a phase in `PLAN.md`. Any spec found in `INDEX.md` but missing from `PLAN.md` must be flagged as "Orphaned" and addressed immediately.
+4. **Confirm Before Commit**: Always show the proposed phase structure and task breakdown to the user before writing `PLAN.md` and `TASKS.md`.
+5. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
+6. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
+7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
 
 ## Directory Structure
 
@@ -89,10 +90,11 @@ graph TD
 **Trigger phrase**: *"Update tasks"*, *"Sync tasks"*, *"Update plan"*, *"Reprioritize"*
 
 1. Read current `TASKS.md` and `PLAN.md` and compare against `INDEX.md`.
-2. Detect changes:
-    - New spec added to `INDEX.md` → propose assigned phase and new tasks
-    - Spec updated (new section) → propose additional tasks
-    - Spec deprecated → move to Archived in `PLAN.md`, mark related tasks `Cancelled` in `TASKS.md`.
+2. Detect changes (Registry Synchronization Check):
+    - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
+    - **Orphaned Specs**: Any spec in `INDEX.md` missing from `PLAN.md` must be proposed for a phase assignment.
+    - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
+    - **Deprecated Specs**: Move to Archived in `PLAN.md`, mark related tasks `Cancelled` in `TASKS.md`.
 3. Show diff to user before writing. Let user approve the reprioritization.
 
 ### Task Completion Checklist
@@ -104,6 +106,7 @@ Task Workflow Checklist — {operation description}
 
 Input Integrity
   ☐ All spec files in INDEX.md were read before plan was written
+  ☐ Every spec in INDEX.md is assigned to a phase (no orphaned specs)
   ☐ No content copied from specs — only references used
 
 Plan & Task Structure

@@ -67,8 +67,9 @@ The retrospective analyzes the following metric categories:
 | Metric | Source | What It Reveals |
 | :--- | :--- | :--- |
 | Number of spec files created | INDEX.md row count | Growth rate of the specification base |
-| Orphaned specs (in INDEX.md but not in PLAN.md) | Cross-reference INDEX.md ↔ PLAN.md | Missed planning for existing specs |
-| Specs referenced in PLAN.md but missing from INDEX.md | Cross-reference PLAN.md ↔ INDEX.md | Phantom specs in the plan |
+| Planning Coverage (%) | Cross-reference INDEX.md ↔ PLAN.md | Percentage of registered specs assigned to phases |
+| Orphaned specs | Specs in INDEX.md but missing from PLAN.md | Specs forgotten during the planning process |
+| Phantom specs | Specs referenced in PLAN.md but missing from INDEX.md | Broken references or deleted files in the plan |
 
 ### ⚡ Task Execution Health
 
@@ -168,8 +169,8 @@ graph TD
 5. **Scan spec files**: For each spec in `.design/specifications/`, read only the Document History table. Count version bumps, status transitions, and regressions (RFC → Draft).
 6. **Cross-reference**: Compare INDEX.md entries against PLAN.md spec references and TASKS.md task-to-spec mappings. Flag mismatches.
 7. **Compile observations**: Build a list of factual findings with severity:
-    - 🔴 **Critical** — broken references, missing files, contradictions
-    - 🟡 **Medium** — inefficiencies, recurring patterns worth addressing
+    - 🔴 **Critical** — broken references, missing files, or specs in `INDEX.md` missing from `PLAN.md` (orphaned)
+    - 🟡 **Medium** — inefficiencies, recurring patterns, or planning coverage < 100%
     - 🟢 **Low** — minor improvements, cosmetic suggestions
     - ✨ **Positive** — things working well (reinforcement matters too)
 8. **Generate recommendations**: For each non-positive observation, propose a specific action.
