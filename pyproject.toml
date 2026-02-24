@@ -28,5 +28,8 @@ exclude = [
 [tool.hatch.build.targets.wheel]
 packages = ["installers/python/magic_spec"]
 
+[tool.hatch.build.targets.wheel.force-include]
+"installers/config.json" = "magic_spec/config.json"
+
 [tool.hatch.build.targets.sdist]
-include = ["/installers/python/magic_spec", "/README.md", "/LICENSE"]
+include = ["/installers/python/magic_spec", "/installers/config.json", "/README.md", "/LICENSE"]

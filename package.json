@@ -14,7 +14,8 @@
     "magic-spec": "installers/node/index.js"
   },
   "files": [
-    "installers/node/index.js"
+    "installers/node/index.js",
+    "installers/config.json"
   ],
   "engines": {
     "node": ">=16"

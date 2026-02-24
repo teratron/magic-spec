@@ -1,0 +1,11 @@
+{
+    "githubRepo": "teratron/magic-spec",
+    "packageName": "magic-spec",
+    "download": {
+        "timeoutMs": 60000
+    },
+    "userAgent": {
+        "node": "magic-spec-node",
+        "python": "magic-spec-cli"
+    }
+}

@@ -65,15 +65,17 @@ Installs the `.magic/` engine and all `.agent/` entry points.
 
 To install adapters only for specific AI agents, use the `--env` flag:
 
+Supported adapters: `cursor`, `github`, `kilocode`, `windsurf`.
+
 ```bash
 # For Cursor only
 npx magic-spec@latest --env cursor
 
-# For Claude only
-npx magic-spec@latest --env claude
+# For GitHub workflows only
+npx magic-spec@latest --env github
 
 # For multiple environments
-npx magic-spec@latest --env cursor --env claude
+npx magic-spec@latest --env cursor --env windsurf
 ```
 
 ### Update Engine

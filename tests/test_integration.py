@@ -37,13 +37,11 @@ class TestIntegration(unittest.TestCase):
         # Create a mock check-prerequisites script
         if os.name == "nt":
             check_script = Path(".magic/scripts/check-prerequisites.ps1")
-            check_script.write_text(
-                'echo "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
-            )
+            check_script.write_text("Write-Output '{\"status\":\"ok\",\"artifacts\":{}}'")
         else:
             check_script = Path(".magic/scripts/check-prerequisites.sh")
             check_script.write_text(
-                '#!/bin/bash\necho "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
+                "#!/bin/bash\necho '{\"status\":\"ok\",\"artifacts\":{}}'"
             )
             check_script.chmod(0o755)
 
@@ -51,7 +49,7 @@ class TestIntegration(unittest.TestCase):
             PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__main__.py"
         )
         # Use PYTHONPATH to ensure relative imports in the installer works
-        # And set PYTHONIOENCODING to utf-8 for Windows emoji support
+        # Keep UTF-8 output stable across Windows/Linux shells
         env = os.environ.copy()
         env["PYTHONPATH"] = str(PROJECT_ROOT / "installers" / "python")
         env["PYTHONIOENCODING"] = "utf-8"
@@ -80,13 +78,11 @@ class TestIntegration(unittest.TestCase):
         # Create a mock check-prerequisites script
         if os.name == "nt":
             check_script = Path(".magic/scripts/check-prerequisites.ps1")
-            check_script.write_text(
-                'echo "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
-            )
+            check_script.write_text("Write-Output '{\"status\":\"ok\",\"artifacts\":{}}'")
         else:
             check_script = Path(".magic/scripts/check-prerequisites.sh")
             check_script.write_text(
-                '#!/bin/bash\necho "{\\"status\\": \\"ok\\", \\"artifacts\\": {}}"'
+                "#!/bin/bash\necho '{\"status\":\"ok\",\"artifacts\":{}}'"
             )
             check_script.chmod(0o755)
 

@@ -7,7 +7,69 @@ const https = require('https');
 const os = require('os');
 const { version } = require('../../package.json');
 
-const GITHUB_REPO = 'teratron/magic-spec';
+function failConfig(message) {
+    console.error(`❌ Installer config error: ${message}`);
+    process.exit(1);
+}
+
+function requireNonEmptyString(value, fieldName) {
+    if (typeof value !== 'string' || value.trim().length === 0) {
+        failConfig(`field '${fieldName}' must be a non-empty string`);
+    }
+    return value.trim();
+}
+
+function requirePositiveInteger(value, fieldName) {
+    if (!Number.isInteger(value) || value <= 0) {
+        failConfig(`field '${fieldName}' must be a positive integer`);
+    }
+    return value;
+}
+
+function loadInstallerConfig() {
+    const configPath = path.join(__dirname, '..', 'config.json');
+    if (!fs.existsSync(configPath)) {
+        failConfig('installers/config.json was not found');
+    }
+
+    let parsed;
+    try {
+        parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch (err) {
+        failConfig(`failed to read installers/config.json: ${err.message}`);
+    }
+
+    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
+        failConfig('root must be a JSON object');
+    }
+
+    const githubRepo = requireNonEmptyString(parsed.githubRepo, 'githubRepo');
+
+    if (!parsed.download || typeof parsed.download !== 'object' || Array.isArray(parsed.download)) {
+        failConfig("field 'download' must be an object");
+    }
+    const timeoutMs = requirePositiveInteger(parsed.download.timeoutMs, 'download.timeoutMs');
+
+    if (!parsed.userAgent || typeof parsed.userAgent !== 'object' || Array.isArray(parsed.userAgent)) {
+        failConfig("field 'userAgent' must be an object");
+    }
+    const nodeUserAgent = requireNonEmptyString(parsed.userAgent.node, 'userAgent.node');
+
+    return {
+        githubRepo,
+        download: { timeoutMs },
+        userAgent: { node: nodeUserAgent },
+    };
+}
+
+const INSTALLER_CONFIG = loadInstallerConfig();
+const GITHUB_REPO = INSTALLER_CONFIG.githubRepo;
+const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
+const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
+if (!Number.isInteger(DOWNLOAD_TIMEOUT_MS) || DOWNLOAD_TIMEOUT_MS <= 0) {
+    failConfig("field 'download.timeoutMs' must be a positive integer");
+}
+
 const cwd = process.cwd();
 
 const args = process.argv.slice(2);
@@ -15,16 +77,24 @@ const isUpdate = args.includes('--update');
 const isDoctor = args.includes('--doctor') || args.includes('--check');
 const isFallbackMain = args.includes('--fallback-main');
 
-const envValues = [];
-for (let i = 0; i < args.length; i++) {
-    if (args[i].startsWith('--env=')) {
-        const val = args[i].split('=')[1];
-        if (val) envValues.push(...val.split(',').filter(Boolean));
-    } else if (args[i] === '--env' && i + 1 < args.length) {
-        envValues.push(...args[i + 1].split(',').filter(Boolean));
-        i++;
-    }
+function parseCsvValues(raw) {
+    return raw.split(',').map((item) => item.trim()).filter(Boolean);
 }
+
+function collectEnvValues(argv) {
+    const parsed = [];
+    for (let i = 0; i < argv.length; i++) {
+        if (argv[i].startsWith('--env=')) {
+            parsed.push(...parseCsvValues(argv[i].split('=', 2)[1] || ''));
+        } else if (argv[i] === '--env' && i + 1 < argv.length) {
+            parsed.push(...parseCsvValues(argv[i + 1]));
+            i++;
+        }
+    }
+    return [...new Set(parsed)];
+}
+
+const envValues = collectEnvValues(args);
 
 function copyDir(src, dest) {
     if (!fs.existsSync(src)) {
@@ -59,7 +129,9 @@ function installAdapter(sourceRoot, env, adapters) {
         const srcFile = path.join(srcDir, file);
         let destName = file.replace(/\.md$/, adapter.ext);
         if (adapter.removePrefix) {
-            destName = destName.replace(adapter.removePrefix, '');
+            if (destName.startsWith(adapter.removePrefix)) {
+                destName = destName.slice(adapter.removePrefix.length);
+            }
         }
         const destFile = path.join(destDir, destName);
         fs.copyFileSync(srcFile, destFile);
@@ -88,10 +160,26 @@ function runDoctor() {
             result = spawnSync('bash', [checkScript, '--json'], { encoding: 'utf-8' });
         }
 
+        if (result.error) {
+            console.error('❌ Failed to run doctor prerequisite check:', result.error.message);
+            process.exit(1);
+        }
+        if (result.status !== 0) {
+            console.error(`❌ Doctor prerequisite check failed with code ${result.status}.`);
+            if (result.stderr) {
+                console.error(result.stderr.trim());
+            }
+            process.exit(1);
+        }
+
         let jsonStr = result.stdout.trim();
         const match = jsonStr.match(/\{[\s\S]*\}/);
         if (match) {
             jsonStr = match[0];
+        }
+        if (!jsonStr) {
+            console.error('❌ Doctor output did not contain JSON.');
+            process.exit(1);
         }
 
         const data = JSON.parse(jsonStr);
@@ -128,6 +216,7 @@ function runDoctor() {
 
     } catch (err) {
         console.error('❌ Failed to parse doctor output', err.message);
+        process.exit(1);
     }
     process.exit(0);
 }
@@ -146,10 +235,14 @@ async function downloadPayload(targetVersion) {
         const file = fs.createWriteStream(archivePath);
 
         const makeRequest = (requestUrl) => {
-            https.get(requestUrl, { headers: { 'User-Agent': 'magic-spec-node' } }, (response) => {
+            const req = https.get(requestUrl, { headers: { 'User-Agent': NODE_USER_AGENT } }, (response) => {
                 if (response.statusCode === 301 || response.statusCode === 302) {
                     // Follow redirect
-                    return makeRequest(response.headers.location);
+                    if (response.headers.location) {
+                        return makeRequest(response.headers.location);
+                    }
+                    reject(new Error('Redirect response did not include a location header.'));
+                    return;
                 }
 
                 if (response.statusCode === 404) {
@@ -173,18 +266,17 @@ async function downloadPayload(targetVersion) {
                     try {
                         // Using spawnSync for tar extraction. Requires 'tar' available on system.
                         // For a pure JS solution without dependencies, you would use a package like 'tar'
-                        const isWindows = process.platform === 'win32';
-
                         // Check if tar exists
-                        const tarCheck = spawnSync('tar', ['--version']);
-                        if (tarCheck.error) {
-                            throw new Error("The 'tar' command was not found. Please install tar or use a system that supports it (Windows 10+, macOS, Linux). Output: " + tarCheck.error.message);
+                        const tarCheck = spawnSync('tar', ['--version'], { encoding: 'utf-8' });
+                        if (tarCheck.error || tarCheck.status !== 0) {
+                            const tarReason = tarCheck.error ? tarCheck.error.message : (tarCheck.stderr || '').trim();
+                            throw new Error("The 'tar' command was not found. Please install tar or use a system that supports it (Windows 10+, macOS, Linux). Output: " + tarReason);
                         }
 
-                        const result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir]);
+                        const result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir], { encoding: 'utf-8' });
 
                         if (result.error || result.status !== 0) {
-                            throw new Error('Tar extraction failed. ' + (result.stderr ? result.stderr.toString() : ''));
+                            throw new Error('Tar extraction failed. ' + (result.stderr || ''));
                         }
 
                         const items = fs.readdirSync(tempDir);
@@ -203,7 +295,13 @@ async function downloadPayload(targetVersion) {
                         reject(err);
                     }
                 });
-            }).on('error', (err) => {
+            });
+
+            req.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
+                req.destroy(new Error(`Request timeout after ${Math.round(DOWNLOAD_TIMEOUT_MS / 1000)} seconds`));
+            });
+
+            req.on('error', (err) => {
                 fs.unlink(archivePath, () => reject(err));
             });
         };
@@ -258,10 +356,16 @@ async function main() {
 
             if (fs.existsSync(initScript)) {
                 if (isWindows) {
-                    spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', initScript], { stdio: 'inherit' });
+                    const initResult = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', initScript], { stdio: 'inherit' });
+                    if (initResult.error || initResult.status !== 0) {
+                        throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
+                    }
                 } else {
                     fs.chmodSync(initScript, '755');
-                    spawnSync('bash', [initScript], { stdio: 'inherit' });
+                    const initResult = spawnSync('bash', [initScript], { stdio: 'inherit' });
+                    if (initResult.error || initResult.status !== 0) {
+                        throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
+                    }
                 }
             }
             console.log('✅ magic-spec initialized successfully!');

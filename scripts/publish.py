@@ -4,11 +4,12 @@
 Bumps versions in:
 - pyproject.toml
 - installers/python/magic_spec/__init__.py
-- installers/python/magic_spec/__main__.py
 - package.json
 
 Then commits, tags, and publishes.
 """
+
+from __future__ import annotations
 
 import argparse
 import os
@@ -20,8 +21,9 @@ PROJECT_ROOT = Path(__file__).parent.parent
 
 
 def run_command(
-    cmd: list[str], cwd: Path, check: bool = True
+    cmd: list[str], cwd: Path | str, check: bool = True
 ) -> subprocess.CompletedProcess:
+    cwd_path = Path(cwd)
     # Do not print tokens
     display_cmd = []
     for arg in cmd:
@@ -31,7 +33,7 @@ def run_command(
             display_cmd.append("--token ***")
         else:
             display_cmd.append(arg)
-    print(f"Running: {' '.join(display_cmd)} in {cwd}")
+    print(f"Running: {' '.join(display_cmd)} in {cwd_path}")
 
     # For security, avoid leaking environment tokens in exception traces by default,
     # but subprocess.run does not print env vars.
@@ -43,11 +45,11 @@ def run_command(
             [arg.replace("/", "\\") if "/" in arg else arg for arg in cmd]
         )
         print(f"Running (os.system): {full_cmd}")
-        ret = os.system(f"cd /d {cwd} && {full_cmd}")
+        ret = os.system(f'cd /d "{cwd_path}" && {full_cmd}')
         if check and ret != 0:
             raise subprocess.CalledProcessError(ret, cmd)
         return subprocess.CompletedProcess(cmd, ret)
-    return subprocess.run(cmd, cwd=cwd, check=check, text=True)
+    return subprocess.run(cmd, cwd=cwd_path, check=check, text=True)
 
 
 def load_env() -> None:
@@ -67,7 +69,6 @@ def load_env() -> None:
 def update_python_version(version: str) -> None:
     pyproject_path = PROJECT_ROOT / "pyproject.toml"
     init_path = PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__init__.py"
-    main_path = PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__main__.py"
 
     # Update pyproject.toml
     content = pyproject_path.read_text(encoding="utf-8")
@@ -75,30 +76,18 @@ def update_python_version(version: str) -> None:
         r'^version\s*=\s*".*"', f'version = "{version}"', content, flags=re.MULTILINE
     )
     pyproject_path.write_text(content, encoding="utf-8")
-    print("✅ Updated Python pyproject.toml")
+    print("Updated Python pyproject.toml")
 
     # Update __init__.py
     content = init_path.read_text(encoding="utf-8")
     content = re.sub(
-        r'^__version__\s*=\s*".*"',
+        r'^\s*__version__\s*=\s*".*"',
         f'__version__ = "{version}"',
         content,
         flags=re.MULTILINE,
     )
     init_path.write_text(content, encoding="utf-8")
-    print("✅ Updated Python __init__.py")
-
-    # Update __main__.py fallback
-    if main_path.exists():
-        content = main_path.read_text(encoding="utf-8")
-        content = re.sub(
-            r'^__version__\s*=\s*".*"',
-            f'__version__ = "{version}"',
-            content,
-            flags=re.MULTILINE,
-        )
-        main_path.write_text(content, encoding="utf-8")
-        print("✅ Updated Python __main__.py fallback")
+    print("Updated Python __init__.py")
 
 
 def update_node_version(version: str) -> None:
@@ -106,11 +95,11 @@ def update_node_version(version: str) -> None:
     content = package_json_path.read_text(encoding="utf-8")
     content = re.sub(r'"version":\s*".*"', f'"version": "{version}"', content, count=1)
     package_json_path.write_text(content, encoding="utf-8")
-    print("✅ Updated Node package.json")
+    print("Updated Node package.json")
 
 
 def update_docs_versions(old_version: str, new_version: str) -> list[str]:
-    print("\n📝 Updating versions in documentation...")
+    print("\nUpdating versions in documentation...")
     modified_files = []
 
     # Target files: README.md, CHANGELOG.md, installer READMEs, and docs/*.md
@@ -142,22 +131,21 @@ def update_docs_versions(old_version: str, new_version: str) -> list[str]:
                 except ValueError:
                     rel_path = file_path.name
 
-                print(f"✅ Updated {rel_path}")
+                print(f"Updated {rel_path}")
                 modified_files.append(str(rel_path).replace("\\", "/"))
         except Exception as e:
-            print(f"⚠️  Could not update {file_path.name}: {e}")
+            print(f"Warning: could not update {file_path.name}: {e}")
 
     return modified_files
 
 
 def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     tag = f"v{version}"
-    print(f"\n📦 Committing changes and creating tag {tag}...")
+    print(f"\nCommitting changes and creating tag {tag}...")
 
     files_to_add = [
         "pyproject.toml",
         "installers/python/magic_spec/__init__.py",
-        "installers/python/magic_spec/__main__.py",
         "package.json",
     ]
     files_to_add.extend(docs_files)
@@ -173,7 +161,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     try:
         run_command(["git", "add"] + files_to_add, cwd=str(PROJECT_ROOT))
     except subprocess.CalledProcessError as e:
-        print(f"  ⚠️  Warning: git add failed (might be no changes): {e}")
+        print(f"  Warning: git add failed (might be no changes): {e}")
 
     # Check if there are staged changes to commit
     status = subprocess.run(["git", "diff", "--cached", "--quiet"], cwd=PROJECT_ROOT)
@@ -183,7 +171,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
                 ["git", "commit", "-m", f"Release {tag}"], cwd=str(PROJECT_ROOT)
             )
         except subprocess.CalledProcessError as e:
-            print(f"  ❌ Error: git commit failed: {e}")
+            print(f"  Error: git commit failed: {e}")
             raise
     else:
         print("  (Nothing to commit, skipping step)")
@@ -196,12 +184,12 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     # We might not want to push automatically if the user wants to verify first, but standard release scripts usually push.
     # run_command(["git", "push", "origin", "main", "--tags"], cwd=PROJECT_ROOT)
     print(
-        "✅ Committed and tagged locally. Note: `git push origin main --tags` was skipped for safety and should be run manually."
+        "Committed and tagged locally. Note: `git push origin main --tags` was skipped for safety and should be run manually."
     )
 
 
 def publish_python(dry_run: bool) -> None:
-    print("\n🐍 Building and publishing Python package...")
+    print("\nBuilding and publishing Python package...")
     cwd = PROJECT_ROOT
 
     if dry_run:
@@ -211,11 +199,11 @@ def publish_python(dry_run: bool) -> None:
 
     run_command(["uv", "build"], cwd=cwd)
     run_command(["uv", "publish"], cwd=cwd)
-    print("✅ Published Python package")
+    print("Published Python package")
 
 
 def publish_node(dry_run: bool) -> None:
-    print("\n📦 Publishing Node package...")
+    print("\nPublishing Node package...")
     cwd = PROJECT_ROOT
 
     if dry_run:
@@ -228,7 +216,7 @@ def publish_node(dry_run: bool) -> None:
         cmd.append(f"--//registry.npmjs.org/:_authToken={npm_token}")
 
     run_command(cmd, cwd=cwd)
-    print("✅ Published Node package")
+    print("Published Node package")
 
 
 def main() -> None:
@@ -256,11 +244,11 @@ def main() -> None:
 
     load_env()
 
-    print(f"🚀 Starting release process: v{old_version} -> v{version}")
+    print(f"Starting release process: v{old_version} -> v{version}")
 
     docs_files = []
     if args.dry_run:
-        print("⚠️  DRY RUN MODE ENABLED. No files will be modified.")
+        print("WARNING: dry-run mode enabled. No files will be modified.")
     else:
         update_python_version(version)
         update_node_version(version)
@@ -269,12 +257,12 @@ def main() -> None:
     commit_and_tag(version, docs_files, args.dry_run)
 
     if args.skip_publish:
-        print("\n⏭️  Skipping publication as requested.")
+        print("\nSkipping publication as requested.")
     else:
         publish_python(args.dry_run)
         publish_node(args.dry_run)
 
-    print("\n🎉 Release completed successfully!")
+    print("\nRelease completed successfully!")
 
 
 if __name__ == "__main__":
