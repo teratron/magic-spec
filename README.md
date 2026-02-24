@@ -1,20 +1,20 @@
 # 🪄 Magic Spec
 
-[![npm version](https://img.shields.io/npm/v/magic-spec)](https://www.npmjs.com/package/magic-spec)
+[![NPM version](https://img.shields.io/npm/v/magic-spec)](https://www.npmjs.com/package/magic-spec)
 [![PyPI version](https://img.shields.io/pypi/v/magic-spec)](https://pypi.org/project/magic-spec/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
 **Specification-Driven Development (SDD) workflow for AI coding agents.**
 
 Stop your AI from writing code before it understands the problem.  
-`magic-spec` installs a structured pipeline — *Thought → Spec → Plan → Task → Code* — directly into any project, regardless of stack.
+`magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of stack.
 
 ## ✨ What is Magic Spec?
 
 `magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Claude, Gemini, Copilot, etc.). It acts as an operating system for agentic development, enforcing a rigorous, structured pipeline:
 
 ```
-💡 Idea  →  📋 Specification  →  🗺️ Plan  →  ⚡ Task  →  🚀 Code
+💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
 ```
 
 Once installed, your AI agent will automatically:
@@ -54,7 +54,7 @@ Both commands do exactly the same thing:
 | Principle | Description |
 | :--- | :--- |
 | **Specs First, Code Later** | The agent is forbidden from writing code from raw input. All ideas become specs first. |
-| **Deterministic Process** | A strict pipeline is enforced: *Thought → Spec → Plan → Task → Code*. |
+| **Deterministic Process** | A strict pipeline is enforced: *Thought → Spec → Task → Run → Code*. |
 | **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
 | **Self-Improving** | After each phase and at plan completion, the Task workflow automatically runs a retrospective and generates improvement recommendations. |
 

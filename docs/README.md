@@ -7,7 +7,7 @@ It consists of a set of markdown-based workflow instructions for AI agents, effe
 ## 🧭 Core Philosophy
 
 1. **Specs First, Code Later:** The agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
-2. **Deterministic Process:** The system enforces a strict pipeline: *Thought → Spec → Plan → Task → Code*.
+2. **Deterministic Process:** The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
 3. **Constitution-Driven:** All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution.
 4. **Self-Improving:** After each phase and at plan completion, the Task workflow automatically runs a retrospective, collecting metrics and generating actionable recommendations — no manual command needed.
 

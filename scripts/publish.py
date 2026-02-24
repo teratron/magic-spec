@@ -10,6 +10,7 @@ Then commits, tags, and publishes.
 """
 
 import argparse
+import os
 import re
 import subprocess
 from pathlib import Path
@@ -20,8 +21,34 @@ PROJECT_ROOT = Path(__file__).parent.parent
 def run_command(
     cmd: list[str], cwd: Path, check: bool = True
 ) -> subprocess.CompletedProcess:
-    print(f"Running: {' '.join(cmd)} in {cwd}")
+    # Do not print tokens
+    display_cmd = []
+    for arg in cmd:
+        if arg.startswith("--//registry.npmjs.org/:_authToken="):
+            display_cmd.append("--//registry.npmjs.org/:_authToken=***")
+        elif arg.startswith("--token"):
+            display_cmd.append("--token ***")
+        else:
+            display_cmd.append(arg)
+    print(f"Running: {' '.join(display_cmd)} in {cwd}")
+
+    # For security, avoid leaking environment tokens in exception traces by default,
+    # but subprocess.run does not print env vars.
     return subprocess.run(cmd, cwd=cwd, check=check, text=True)
+
+
+def load_env() -> None:
+    env_path = PROJECT_ROOT / ".env"
+    if not env_path.exists():
+        return
+    with open(env_path, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            key, sep, val = line.partition("=")
+            if sep:
+                os.environ[key.strip()] = val.strip().strip("'\"")
 
 
 def update_python_version(version: str) -> None:
@@ -142,7 +169,12 @@ def publish_node(dry_run: bool) -> None:
         print(f"  [Dry Run] npm publish in {cwd}")
         return
 
-    run_command(["npm", "publish"], cwd=cwd)
+    cmd = ["npm", "publish"]
+    npm_token = os.environ.get("NPM_TOKEN")
+    if npm_token:
+        cmd.append(f"--//registry.npmjs.org/:_authToken={npm_token}")
+
+    run_command(cmd, cwd=cwd)
     print("✅ Published Node package")
 
 
@@ -168,6 +200,8 @@ def main() -> None:
     args = parser.parse_args()
     old_version = args.old_version.lstrip("v")
     version = args.version.lstrip("v")
+
+    load_env()
 
     print(f"🚀 Starting release process: v{old_version} -> v{version}")
 
