@@ -72,7 +72,7 @@ npm run build
 | `npm run test:link` | `build` + `npm link` | Установить локально как глобальный пакет |
 | `npm run test:pack` | `build` + `npm pack` | Создать `.tgz` архив пакета в `dist/` |
 | `npm run version:patch` | `npm version patch` | Поднять версию: `1.0.0 → 1.0.1` |
-| `npm run version:minor` | `npm version minor` | Поднять версию: `1.0.0 → 1.2.1` |
+| `npm run version:minor` | `npm version minor` | Поднять версию: `1.0.0 → 1.2.2` |
 | `npm run version:major` | `npm version major` | Поднять версию: `1.0.0 → 2.0.0` |
 
 ### Локальное тестирование (до публикации)

@@ -1,6 +1,6 @@
 [project]
 name = "magic-spec"
-version = "1.2.1"
+version = "1.2.2"
 description = "Magic Specification-Driven Development (SDD) Workflow"
 readme = "README.md"
 requires-python = ">=3.8"
@@ -22,11 +22,5 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["installers/python/magic_spec"]
 
-[tool.hatch.build.targets.wheel.sources]
-"installers/python/magic_spec" = "magic_spec"
-
 [tool.hatch.build.targets.sdist]
-include = ["installers/python/magic_spec"]
-
-[tool.hatch.build.targets.sdist.sources]
-"installers/python/magic_spec" = "magic_spec"
+include = ["/installers/python/magic_spec", "/README.md", "/LICENSE"]
