@@ -8,7 +8,7 @@ param (
 $indexPath = ".design\INDEX.md"
 $rulesPath = ".design\RULES.md"
 $planPath = ".design\PLAN.md"
-$tasksPath = ".design\tasks\TASKS.md"
+$tasksPath = ".design\TASKS.md"
 
 $indexExists = Test-Path $indexPath
 $rulesExists = Test-Path $rulesPath
@@ -21,7 +21,7 @@ $warnings = @()
 if (-not $indexExists) { $missing += "INDEX.md" }
 if (-not $rulesExists) { $missing += "RULES.md" }
 if ($require_plan -and -not $planExists) { $missing += "PLAN.md" }
-if ($require_tasks -and -not $tasksExists) { $missing += "tasks/TASKS.md" }
+if ($require_tasks -and -not $tasksExists) { $missing += "TASKS.md" }
 
 $specCount = 0
 $stableCount = 0
@@ -63,7 +63,7 @@ if ($json) {
             "INDEX.md" = @{ exists = $indexExists; path = ".design/INDEX.md" }
             "RULES.md" = @{ exists = $rulesExists; path = ".design/RULES.md" }
             "PLAN.md"  = @{ exists = $planExists; path = ".design/PLAN.md" }
-            "TASKS.md" = @{ exists = $tasksExists; path = ".design/tasks/TASKS.md" }
+            "TASKS.md" = @{ exists = $tasksExists; path = ".design/TASKS.md" }
             "specs"    = @{ count = $specCount; stable = $stableCount; draft = $draftCount }
         }
         missing_required = $missing

@@ -4,7 +4,7 @@ description: Workflow for generating the implementation plan and orchestrating t
 
 # Task Workflow
 
-This workflow reads finalized specifications and produces a structured implementation plan (`.design/PLAN.md`), and immediately decomposes it into atomic, executable tasks (`.design/tasks/TASKS.md`).
+This workflow reads finalized specifications and produces a structured implementation plan (`.design/PLAN.md`), and immediately decomposes it into atomic, executable tasks (`.design/TASKS.md`).
 It operates **after** the Spec Workflow — specifications are its input, not its concern.
 
 > **Scope**: Prioritization, phasing, dependency analysis, task generation, and orchestration.
@@ -28,10 +28,10 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 ├── INDEX.md # Input: registry of all specs
 ├── RULES.md # Input: project conventions
 ├── PLAN.md # Output: implementation plan 
+├── TASKS.md # Output: master task index
 ├── specifications/ # Input: spec files 
 │   └── *.md
-└── tasks/ # Output: task files 
-    ├── TASKS.md
+└── tasks/ # Output: phase task files 
     └── phase-{n}.md
 ```
 
@@ -39,7 +39,7 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 
 ### Initializing Plan & Tasks
 
-Use when `.design/PLAN.md` or `.design/tasks/TASKS.md` do not exist.
+Use when `.design/PLAN.md` or `.design/TASKS.md` do not exist.
 
 **Trigger phrase**: *"Create plan"*, *"Generate plan"*, *"Create tasks"*, *"Generate tasks"*
 
@@ -81,7 +81,7 @@ graph TD
 5. **Decompose Phase 1**: Break down Phase 1 specifications into atomic tasks. Extract user stories from `Implementation Notes`. Apply tracking IDs (e.g., `T-1A01`).
 6. **Assign tracks**: Group tasks into Execution Tracks (A, B, C) based on task-level independence.
 7. **Propose breakdown to user**: Show the Plan Phases and the Phase 1 Task Outline before writing. Wait for the user to approve changes.
-8. **Write files**: Write `.design/PLAN.md`, `.design/tasks/TASKS.md`, and `.design/tasks/phase-1.md` based on approval.
+8. **Write files**: Write `.design/PLAN.md`, `.design/TASKS.md`, and `.design/tasks/phase-1.md` based on approval.
 9. **Generate Context**: Silently run `bash .magic/scripts/generate-context.sh` (or `.ps1` on Windows) to initialize `.design/CONTEXT.md`.
 
 ### Updating Tasks & Plan

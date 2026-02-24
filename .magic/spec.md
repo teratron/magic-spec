@@ -35,8 +35,8 @@ This workflow defines a universal, technology-agnostic process for creating and 
 ├── PLAN.md # Implementation plan (managed by Plan Workflow)
 ├── specifications/ # Spec files
 │   └── *.md
+├── TASKS.md # Master task index
 └── tasks/ # Task files (managed by Task Workflow)
-    ├── TASKS.md # Master task index
     └── phase-{n}.md # Per-phase task files
 ```
 

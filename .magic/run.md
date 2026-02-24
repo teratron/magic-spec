@@ -4,7 +4,7 @@ description: Workflow for executing tasks from the project plan.
 
 # Run Workflow
 
-This workflow reads `.design/tasks/TASKS.md` and executes atomic tasks.
+This workflow reads `.design/TASKS.md` and executes atomic tasks.
 It operates **after** the Task Workflow — tasks are its input, not its concern.
 
 > **Scope**: Code execution, task state management, parallelism, and changelog generation.
@@ -30,8 +30,8 @@ It operates **after** the Task Workflow — tasks are its input, not its concern
 ├── RULES.md
 ├── PLAN.md 
 ├── specifications/
+├── TASKS.md # Input: Master index
 └── tasks/ 
-    ├── TASKS.md # Input: Master index
     └── phase-{n}.md # Input: Per-phase track breakdowns
 ```
 

@@ -93,10 +93,10 @@ project-root/
     ├── RULES.md                #    Project constitution
     ├── PLAN.md                 #    Implementation plan with phases
     ├── RETROSPECTIVE.md        #    SDD usage analytics & recommendations
+    ├── TASKS.md                #    Master task index
     ├── specifications/         #    Specification files
     │   └── *.md
     └── tasks/                  #    Task execution breakdowns
-        ├── TASKS.md            #    Master task index
         └── phase-*.md          #    Per-phase tracks & sequences
 ```
 

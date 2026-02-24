@@ -45,8 +45,8 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 ├── RETROSPECTIVE.md    # Output: observations and recommendations
 ├── specifications/     # Input: spec files (version history)
 │   └── *.md
-└── tasks/              # Input: task execution data
-    ├── TASKS.md
+├── TASKS.md              # Input: task execution data
+└── tasks/              # Per-phase files
     └── phase-*.md
 ```
 

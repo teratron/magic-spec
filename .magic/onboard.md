@@ -26,7 +26,7 @@ This tutorial will create real files in your project:
 - `.design/specifications/logger-module.md`
 - `.design/INDEX.md` (appended)
 - `.design/PLAN.md`
-- `.design/tasks/TASKS.md`
+- `.design/TASKS.md`
 - `.design/tasks/phase-1.md`
 
 **Recommended**: run this in a clean, empty directory to avoid interfering with existing SDD artifacts.
@@ -74,7 +74,7 @@ This tutorial will create real files in your project:
 ### Step 5: Atomic Task and Execution
 
 1. Explain that normally, `magic.task` breaks down plan phases into parallel tracks and individual steps.
-2. Create `.design/tasks/TASKS.md` with 1 total task for Phase 1.
+2. Create `.design/TASKS.md` with 1 total task for Phase 1.
 3. Create `.design/tasks/phase-1.md` with a single track and a single task `[T-1A01] Implement console logger`.
 4. Simulate execution by changing the task status to `Done` and updating the TASKS.md count.
 5. Explain what happened: *"The task was implemented and the system marked it Done. In the real workflow, this is where code gets written."*

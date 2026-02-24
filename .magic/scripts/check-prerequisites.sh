@@ -22,7 +22,7 @@ WARNINGS=()
 INDEX_PATH=".design/INDEX.md"
 RULES_PATH=".design/RULES.md"
 PLAN_PATH=".design/PLAN.md"
-TASKS_PATH=".design/tasks/TASKS.md"
+TASKS_PATH=".design/TASKS.md"
 
 [ -f "$INDEX_PATH" ] && INDEX_EXISTS="true" || INDEX_EXISTS="false"
 [ -f "$RULES_PATH" ] && RULES_EXISTS="true" || RULES_EXISTS="false"
@@ -41,7 +41,7 @@ if [ "$REQ_PLAN" = "1" ] && [ "$PLAN_EXISTS" = "false" ]; then
 fi
 
 if [ "$REQ_TASKS" = "1" ] && [ "$TASKS_EXISTS" = "false" ]; then
-    MISSING+=("tasks/TASKS.md")
+    MISSING+=("TASKS.md")
 fi
 
 # Spec counts
