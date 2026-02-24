@@ -16,6 +16,7 @@ from importlib.metadata import PackageNotFoundError, version as package_version
 import urllib.error
 import urllib.request
 
+
 def _find_installer_config_path() -> pathlib.Path:
     candidates = [
         pathlib.Path(__file__).with_name("config.json"),
@@ -51,7 +52,9 @@ def _load_installer_config() -> dict:
         raise RuntimeError(f"Failed to read installers/config.json: {e}") from e
 
     if not isinstance(parsed, dict):
-        raise RuntimeError("Invalid installers/config.json: root must be a JSON object.")
+        raise RuntimeError(
+            "Invalid installers/config.json: root must be a JSON object."
+        )
 
     github_repo = _require_non_empty_str(parsed.get("githubRepo"), "githubRepo")
     package_name = _require_non_empty_str(parsed.get("packageName"), "packageName")
@@ -61,7 +64,9 @@ def _load_installer_config() -> dict:
         raise RuntimeError(
             "Invalid installers/config.json: field 'download' must be an object."
         )
-    timeout_ms = _require_positive_int(download_cfg.get("timeoutMs"), "download.timeoutMs")
+    timeout_ms = _require_positive_int(
+        download_cfg.get("timeoutMs"), "download.timeoutMs"
+    )
 
     user_agent_cfg = parsed.get("userAgent")
     if not isinstance(user_agent_cfg, dict):
@@ -282,7 +287,9 @@ def run_doctor(dest: pathlib.Path) -> int:
 
         result = subprocess.run(cmd, capture_output=True, text=True, check=False)
         if result.returncode != 0:
-            print(f"Error: doctor prerequisite script failed with code {result.returncode}.")
+            print(
+                f"Error: doctor prerequisite script failed with code {result.returncode}."
+            )
             if result.stderr:
                 print(result.stderr.strip())
             return 1
@@ -329,7 +336,7 @@ def run_doctor(dest: pathlib.Path) -> int:
         return 1
 
 
-def run_init(dest: pathlib.Path) -> None:
+def run_init(dest: pathlib.Path, auto_accept: bool = False) -> None:
     is_windows = sys.platform == "win32"
     if is_windows:
         init_script = dest / ".magic" / "scripts" / "init.ps1"
@@ -337,6 +344,20 @@ def run_init(dest: pathlib.Path) -> None:
         init_script = dest / ".magic" / "scripts" / "init.sh"
 
     if not init_script.exists():
+        return
+
+    should_run = auto_accept
+    if not should_run:
+        print(f"\n⚠️  The initialization script will be executed: {init_script}")
+        print("   This script may modify your system environment.")
+        try:
+            answer = input("   Do you want to continue? (y/N): ").strip().lower()
+            should_run = answer == "y"
+        except EOFError:
+            should_run = False
+
+    if not should_run:
+        print("⚠️  Initialization script skipped by user.")
         return
 
     if is_windows:
@@ -365,9 +386,10 @@ def main() -> None:
     args = sys.argv[1:]
     env_values = _parse_env_values(args)
     fallback_main = "--fallback-main" in args
+    auto_accept = "--yes" in args or "-y" in args
     if "--help" in args or "-h" in args:
         print(
-            "Usage: magic-spec [--env <adapter>] [--update] [--doctor | --check] [--fallback-main]"
+            "Usage: magic-spec [--env <adapter>] [--update] [--doctor | --check] [--fallback-main] [--yes]"
         )
         sys.exit(0)
 
@@ -412,7 +434,7 @@ def main() -> None:
 
             # 3. Run init script (skip on --update)
             if not is_update:
-                run_init(dest)
+                run_init(dest, auto_accept=auto_accept)
                 print("magic-spec initialized successfully!")
             else:
                 print("magic-spec updated successfully!")

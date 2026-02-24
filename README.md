@@ -37,14 +37,18 @@ Requires **Node.js >= 16**.
 
 ```bash
 npx magic-spec@latest
+# For non-interactive (CI/CD) use:
+npx magic-spec@latest --yes
 ```
 
-### Option B — Python (uvx)
+### Option B — Python (uvx or pipx)
 
-Requires **Python >= 3.8** and the [**uv**](https://github.com/astral-sh/uv) package manager.
+Requires **Python >= 3.8** and a package manager like [**uv**](https://github.com/astral-sh/uv) or `pipx`.
 
 ```bash
 uvx magic-spec
+# or
+pipx run magic-spec --yes
 ```
 
 Both commands do exactly the same thing:
@@ -62,8 +66,6 @@ Both commands do exactly the same thing:
 | **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
 | **Self-Improving** | After each phase and at plan completion, the Task workflow automatically runs a retrospective and generates improvement recommendations. |
 
-## 🩺 System Health (CLI Doctor)
-
 You can check if your SDD workspace is properly initialized and healthy without invoking the AI. Just append the `--doctor` (or `--check`) flag:
 
 ```bash
@@ -71,6 +73,9 @@ npx magic-spec@latest --doctor
 # or
 uvx magic-spec --doctor
 ```
+
+> [!NOTE]
+> The doctor command requires the project to have been initialized at least once.
 
 This returns a visually formatted validation report of your project's `.design` structure, preventing broken context before you start coding.
 

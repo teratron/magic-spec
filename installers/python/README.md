@@ -1,105 +1,41 @@
 # magic-spec — Python Installer
 
-The `magic-spec` installer for PyPI/uvx. It sets up the Specification-Driven Development (SDD) workflow in any project.
+The `magic-spec` installer for Python. It sets up the Specification-Driven Development (SDD) workflow in any project.
 
 ---
 
 ## Quick Start
 
-### Via `uvx` (Recommended)
+Run in your project root:
 
 ```bash
 uvx magic-spec
+# For non-interactive (CI/CD) use:
+uvx magic-spec --yes
 ```
 
-`uvx` automatically downloads and runs the package in an isolated environment. Subsequent runs use the cache.
-
-### Via `pip` / `pipx`
-
-```bash
-pip install magic-spec
-# or
-pipx install magic-spec
-
-magic-spec
-```
+Also works with `pipx run magic-spec`.
 
 ---
 
 ## What the Installer Does
 
-After execution, the following structure will be created in your project:
-
-```plaintext
-your-project/
-│
-├── .magic/                     # SDD Engine (read-only)
-│   ├── onboard.md
-│   ├── retrospective.md
-│   ├── rule.md
-│   ├── run.md
-│   ├── spec.md
-│   ├── task.md
-│   └── scripts/
-│       ├── check-prerequisites.* # System health checks
-│       ├── generate-context.*    # CONTEXT.md compilation
-│       ├── init.sh               # Init script (macOS/Linux)
-│       └── init.ps1              # Init script (Windows)
-│
-├── .agent/workflows/             # AI Agent Entry Points (Cursor, Claude, etc.)
-│   ├── magic.onboard.md
-│   ├── magic.rule.md
-│   ├── magic.run.md
-│   ├── magic.spec.md
-│   └── magic.task.md
-│
-└── .design/                    # Project Workspace (created on init)
-    ├── INDEX.md                # Specification registry
-    ├── RULES.md                # Project constitution
-    └── specifications/         # Your technical specifications
-```
+1. **Download**: Pulls the versioned payload from GitHub.
+2. **Security Check**: Verifies the downloaded payload for path traversal vulnerabilities (using Python's `tarfile` safe extraction).
+3. **Confirm Script Execution**: Unless `--yes` is provided, you will be prompted to confirm the execution of the initialization script.
+4. **Extract**: Temp-extracts the payload.
+5. **Copy**: Moves `.magic/` and `.agent/` workflows into your folder.
+6. **Run Init**: Executes `.magic/scripts/init.sh` (or `.ps1` on Windows) to create the `.design/` workspace (`INDEX.md`, `RULES.md`).
 
 ---
 
 ## Command Line Arguments
 
-### Engine Installation (Default)
-
-```bash
-uvx magic-spec
-```
-
-Installs the `.magic/` engine and all `.agent/` entry points.
-
-### Select Environment (Adapter)
-
-To install adapters only for specific AI agents, use the `--env` flag:
-
-Supported adapters: `cursor`, `github`, `kilocode`, `windsurf`.
-
-```bash
-# For Cursor only
-uvx magic-spec --env cursor
-
-# For multiple environments
-uvx magic-spec --env cursor --env windsurf
-```
-
-### Update Engine
-
-Updates the `.magic/` core logic to the latest version without touching your `.design/` data:
-
-```bash
-uvx magic-spec --update
-```
-
-### System Health Check (Doctor)
-
-Validates the `.design/` structure, specification statuses, and registry consistency:
-
-```bash
-uvx magic-spec --doctor
-```
+- `--env <adapter>`: Install a specific environment adapter (e.g., `react`, `bevy`). Can be used multiple times.
+- `--yes`, `-y`: Skip the security prompt for executing the initialization script.
+- `--update`: Only update the `.magic/` engine, skipping workspace initialization.
+- `--doctor`, `--check`: Validate the state of the `.design/` workspace (Requires previous initialization).
+- `--fallback-main`: Force pull from the `main` branch instead of the package version tag.
 
 ---
 
@@ -108,7 +44,7 @@ uvx magic-spec --doctor
 | Tool | Minimum Version |
 | :--- | :--- |
 | Python | >= 3.8 |
-| uv / pip / pipx | Any modern version |
+| uv or pipx | (Recommended) |
 
 ---
 

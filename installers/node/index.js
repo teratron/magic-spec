@@ -5,6 +5,7 @@ const path = require('path');
 const { spawnSync } = require('child_process');
 const https = require('https');
 const os = require('os');
+const readline = require('readline');
 const { version } = require('../../package.json');
 
 function failConfig(message) {
@@ -76,6 +77,7 @@ const args = process.argv.slice(2);
 const isUpdate = args.includes('--update');
 const isDoctor = args.includes('--doctor') || args.includes('--check');
 const isFallbackMain = args.includes('--fallback-main');
+const autoAccept = args.includes('--yes') || args.includes('-y');
 
 function parseCsvValues(raw) {
     return raw.split(',').map((item) => item.trim()).filter(Boolean);
@@ -95,6 +97,17 @@ function collectEnvValues(argv) {
 }
 
 const envValues = collectEnvValues(args);
+
+function askQuestion(query) {
+    const rl = readline.createInterface({
+        input: process.stdin,
+        output: process.stdout,
+    });
+    return new Promise((resolve) => rl.question(query, (ans) => {
+        rl.close();
+        resolve(ans);
+    }));
+}
 
 function copyDir(src, dest) {
     if (!fs.existsSync(src)) {
@@ -264,13 +277,28 @@ async function downloadPayload(targetVersion) {
                     console.log('📦 Extracting payload...');
 
                     try {
-                        // Using spawnSync for tar extraction. Requires 'tar' available on system.
-                        // For a pure JS solution without dependencies, you would use a package like 'tar'
                         // Check if tar exists
                         const tarCheck = spawnSync('tar', ['--version'], { encoding: 'utf-8' });
                         if (tarCheck.error || tarCheck.status !== 0) {
-                            const tarReason = tarCheck.error ? tarCheck.error.message : (tarCheck.stderr || '').trim();
-                            throw new Error("The 'tar' command was not found. Please install tar or use a system that supports it (Windows 10+, macOS, Linux). Output: " + tarReason);
+                            let msg = "The 'tar' command was not found.";
+                            if (process.platform === 'win32') {
+                                msg += "\n   On Windows, 'tar' is included in Windows 10 (build 17063) and later.";
+                                msg += "\n   Please upgrade Windows or install a tar-compatible utility (e.g., via Git for Windows or WSL).";
+                            } else {
+                                msg += "\n   Please install 'tar' using your package manager.";
+                            }
+                            throw new Error(msg);
+                        }
+
+                        // Security: Check for path traversal in archive
+                        const listResult = spawnSync('tar', ['-tf', archivePath], { encoding: 'utf-8' });
+                        if (listResult.status === 0) {
+                            const files = listResult.stdout.split('\n').filter(Boolean);
+                            for (const f of files) {
+                                if (f.startsWith('/') || f.includes('..')) {
+                                    throw new Error(`Security Alert: Suspicious path detected in archive: ${f}`);
+                                }
+                            }
                         }
 
                         const result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir], { encoding: 'utf-8' });
@@ -302,7 +330,8 @@ async function downloadPayload(targetVersion) {
             });
 
             req.on('error', (err) => {
-                fs.unlink(archivePath, () => reject(err));
+                if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath);
+                reject(err);
             });
         };
 
@@ -324,9 +353,11 @@ async function main() {
     console.log(isUpdate ? '🪄 Updating magic-spec (.magic only)...' : '🪄 Initializing magic-spec...');
 
     const versionToFetch = isFallbackMain ? 'main' : version;
+    let sourceRoot = null;
 
     try {
-        const sourceRoot = await downloadPayload(versionToFetch);
+        sourceRoot = await downloadPayload(versionToFetch);
+
 
         let ADAPTERS = {};
         try {
@@ -355,17 +386,29 @@ async function main() {
                 : path.join(cwd, '.magic', 'scripts', 'init.sh');
 
             if (fs.existsSync(initScript)) {
-                if (isWindows) {
-                    const initResult = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', initScript], { stdio: 'inherit' });
-                    if (initResult.error || initResult.status !== 0) {
-                        throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
+                let shouldRun = autoAccept;
+                if (!shouldRun) {
+                    console.log(`\n⚠️  The initialization script will be executed: ${initScript}`);
+                    console.log('   This script may modify your system environment.');
+                    const answer = await askQuestion('   Do you want to continue? (y/N): ');
+                    shouldRun = answer.toLowerCase() === 'y';
+                }
+
+                if (shouldRun) {
+                    if (isWindows) {
+                        const initResult = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', initScript], { stdio: 'inherit' });
+                        if (initResult.error || initResult.status !== 0) {
+                            throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
+                        }
+                    } else {
+                        fs.chmodSync(initScript, '755');
+                        const initResult = spawnSync('bash', [initScript], { stdio: 'inherit' });
+                        if (initResult.error || initResult.status !== 0) {
+                            throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
+                        }
                     }
                 } else {
-                    fs.chmodSync(initScript, '755');
-                    const initResult = spawnSync('bash', [initScript], { stdio: 'inherit' });
-                    if (initResult.error || initResult.status !== 0) {
-                        throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
-                    }
+                    console.log('⚠️  Initialization script skipped by user.');
                 }
             }
             console.log('✅ magic-spec initialized successfully!');
@@ -376,6 +419,17 @@ async function main() {
     } catch (err) {
         console.error('❌ magic-spec initialization failed:', err.message);
         process.exit(1);
+    } finally {
+        if (sourceRoot) {
+            const tempDir = path.dirname(sourceRoot);
+            if (fs.existsSync(tempDir) && tempDir.includes('magic-spec-')) {
+                try {
+                    fs.rmSync(tempDir, { recursive: true, force: true });
+                } catch (e) {
+                    // Ignore cleanup errors
+                }
+            }
+        }
     }
 }
 
