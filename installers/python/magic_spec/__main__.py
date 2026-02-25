@@ -81,8 +81,14 @@ def _load_installer_config() -> dict:
     return {
         "githubRepo": github_repo,
         "packageName": package_name,
-        "download": {"timeoutMs": timeout_ms},
+        "download": {
+            "timeoutMs": timeout_ms,
+            "tempPrefix": parsed["download"].get("tempPrefix", "magic-spec-"),
+        },
         "userAgent": {"python": python_user_agent},
+        "ejectTargets": parsed.get("eject", {}).get(
+            "targets", [".magic", ".agent", ".magic.bak", ".agent.bak"]
+        ),
     }
 
 
@@ -205,7 +211,9 @@ def download_and_extract(version: str, target_dir: pathlib.Path) -> pathlib.Path
         sys.exit(1)
 
     print("Extracting payload...")
-    extract_dir = target_dir / f"magic-spec-extraction-{version}"
+    extract_dir = (
+        target_dir / f"{INSTALLER_CONFIG['download']['tempPrefix']}extraction-{version}"
+    )
     extract_dir.mkdir(parents=True, exist_ok=True)
 
     try:
@@ -272,7 +280,7 @@ def run_doctor(dest: pathlib.Path) -> int:
         print("Error: SDD engine not initialized. Run magic-spec first.")
         return 1
 
-    print("Magic-spec Doctor:")
+    print(f"🔍 {PACKAGE_NAME} Doctor:")
     try:
         if is_windows:
             cmd = [
@@ -308,10 +316,10 @@ def run_doctor(dest: pathlib.Path) -> int:
 
         def check_item(name: str, item: dict, required_hint: str = "") -> None:
             if item and item.get("exists"):
-                print(f"OK: {item.get('path', name)} is present")
+                print(f"✅ {item.get('path', name)} is present")
             else:
                 hint = f" (Hint: {required_hint})" if required_hint else ""
-                print(f"Missing: .design/{name}{hint}")
+                print(f"❌ .design/{name}{hint}")
 
         check_item("INDEX.md", arts.get("INDEX.md", {}), "Run /magic.spec")
         check_item("RULES.md", arts.get("RULES.md", {}), "Created at init")
@@ -329,7 +337,7 @@ def run_doctor(dest: pathlib.Path) -> int:
         if specs:
             stable = specs.get("stable", 0)
             if stable > 0:
-                print(f"OK: {stable} specifications are Stable")
+                print(f"✅ {stable} specifications are Stable")
         return 0
 
     except Exception as e:
@@ -338,7 +346,7 @@ def run_doctor(dest: pathlib.Path) -> int:
 
 
 def run_info(dest: pathlib.Path) -> int:
-    print("magic-spec installation status")
+    print(f"{PACKAGE_NAME} installation status")
     print("────────────────────────────────")
 
     version_file = dest / ".magic" / ".version"
@@ -369,7 +377,7 @@ def run_info(dest: pathlib.Path) -> int:
     )
 
     print("────────────────────────────────")
-    print("Run `magic-spec --update` to refresh engine files.")
+    print(f"Run `{PACKAGE_NAME} --update` to refresh engine files.")
     return 0
 
 
@@ -437,7 +445,7 @@ def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
             should_run = False
 
     if should_run:
-        targets = [".magic", ".agent", ".magic.bak", ".agent.bak"]
+        targets = INSTALLER_CONFIG["ejectTargets"]
         for target in targets:
             p = dest / target
             if p.exists():
@@ -446,22 +454,18 @@ def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
                 else:
                     p.unlink()
                 print(f"🗑️  Removed: {target}/")
-        print("✅ magic-spec ejected successfully.")
+        print(f"✅ {PACKAGE_NAME} ejected successfully.")
         return 0
     else:
         print("❌ Eject cancelled.")
         return 1
 
 
-def _detect_environment(dest: pathlib.Path) -> str | None:
-    if (dest / ".cursor").exists():
-        return "cursor"
-    if (dest / ".windsurf").exists():
-        return "windsurf"
-    if (dest / ".github").exists():
-        return "github"
-    if (dest / ".kilocode").exists():
-        return "kilocode"
+def _detect_environment(dest: pathlib.Path, adapters: dict) -> str | None:
+    for env, item in adapters.items():
+        marker = item.get("marker")
+        if marker and (dest / marker).exists():
+            return env
     return None
 
 
@@ -686,7 +690,7 @@ def main() -> None:
             elif magicrc.get("env"):
                 selected_env = magicrc["env"]
             elif not is_update:
-                detected = _detect_environment(dest)
+                detected = _detect_environment(dest, adapters)
                 if detected and detected in adapters:
                     adapter_desc = adapters[detected].get("description", detected)
                     print(
@@ -732,9 +736,9 @@ def main() -> None:
             # 3. Run init script (skip on --update)
             if not is_update:
                 run_init(dest, auto_accept=auto_accept)
-                print("magic-spec initialized successfully!")
+                print(f"✅ {PACKAGE_NAME} initialized successfully!")
             else:
-                print("magic-spec updated successfully!")
+                print(f"✅ {PACKAGE_NAME} updated successfully!")
 
             # 4. Write version file (.magic/.version) - [T-2B01]
             try:

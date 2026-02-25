@@ -205,9 +205,8 @@ Current flow (task.md L204):
 
 New flow:
   Plan complete → Auto-run: full retrospective Level 2
-               → Run: Changelog Level 2 compile
-               → Present compiled entry for user review
-               → Write to CHANGELOG.md on approval
+                → Run: Changelog Level 2 compile
+                → Write to CHANGELOG.md (Zero-Prompt Automation)
 ```
 
 > ⚠️ Modification of `.magic/task.md` must follow RULES.md §7 C1 protocol.
@@ -223,7 +222,7 @@ New flow:
 ## 4. Implementation Notes
 
 1. Level 1 (phase append) runs **silently** — same principle as retrospective Level 1.
-2. Level 2 (compile) requires **user review** — same principle as retrospective Level 2.
+2. Level 2 (compile) is fully automated (Zero-Prompt Automation) — same principle as retrospective Level 2.
 3. If a Done task has no `Changes:` block, Level 1 falls back to inferring from task title (degraded mode).
 4. `Decided:` entries from Change Records are never included in `CHANGELOG.md` — they are for internal context only.
 5. If `.design/CHANGELOG.md` is empty at Level 2, agent generates from TASKS.md directly.

@@ -20,6 +20,18 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
+def load_config() -> dict:
+    config_path = PROJECT_ROOT / "installers" / "config.json"
+    if not config_path.exists():
+        return {}
+    import json
+
+    return json.loads(config_path.read_text(encoding="utf-8"))
+
+
+CONFIG = load_config()
+
+
 def run_command(
     cmd: list[str], cwd: Path | str, check: bool = True
 ) -> subprocess.CompletedProcess:
@@ -127,16 +139,13 @@ def update_docs_versions(old_version: str, new_version: str) -> list[str]:
     print("\nUpdating versions in documentation...")
     modified_files = []
 
-    # Target files: README.md, CHANGELOG.md, installer READMEs, and docs/*.md
-    targets = [PROJECT_ROOT / "README.md", PROJECT_ROOT / "CHANGELOG.md"]
+    # Target files from config
+    publish_cfg = CONFIG.get("publish", {})
+    docs_targets = publish_cfg.get("docsTargets", ["README.md", "CHANGELOG.md"])
+    targets = [PROJECT_ROOT / f for f in docs_targets]
 
-    # Installer READMEs
-    for p in ["node", "python"]:
-        readme = PROJECT_ROOT / "installers" / p / "README.md"
-        if readme.exists():
-            targets.append(readme)
-
-    docs_dir = PROJECT_ROOT / "docs"
+    docs_dir_name = publish_cfg.get("docsDir", "docs")
+    docs_dir = PROJECT_ROOT / docs_dir_name
     if docs_dir.exists():
         targets.extend(list(docs_dir.rglob("*.md")))
 
@@ -168,12 +177,16 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     tag = f"v{version}"
     print(f"\nCommitting changes and creating tag {tag}...")
 
-    files_to_add = [
-        "pyproject.toml",
-        "installers/python/magic_spec/__init__.py",
-        "package.json",
-        ".magic/.version",
-    ]
+    publish_cfg = CONFIG.get("publish", {})
+    files_to_add = publish_cfg.get(
+        "versionFiles",
+        [
+            "pyproject.toml",
+            "installers/python/magic_spec/__init__.py",
+            "package.json",
+            ".magic/.version",
+        ],
+    )
     files_to_add.extend(docs_files)
 
     if dry_run:

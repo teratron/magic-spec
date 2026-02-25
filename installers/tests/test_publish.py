@@ -27,7 +27,9 @@ class TestPublish(unittest.TestCase):
             with patch.object(publish, "PROJECT_ROOT", root):
                 publish.update_python_version("1.2.4")
 
-            self.assertIn('version = "1.2.4"', pyproject_path.read_text(encoding="utf-8"))
+            self.assertIn(
+                'version = "1.2.4"', pyproject_path.read_text(encoding="utf-8")
+            )
             self.assertIn(
                 '__version__ = "1.2.4"', init_path.read_text(encoding="utf-8")
             )

@@ -16,7 +16,8 @@
   "files": [
     "installers/node/index.js",
     "installers/config.json",
-    "package.json"
+    "package.json",
+    "CHANGELOG.md"
   ],
   "engines": {
     "node": ">=16"

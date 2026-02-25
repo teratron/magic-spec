@@ -46,31 +46,37 @@ function loadInstallerConfig() {
     }
 
     const githubRepo = requireNonEmptyString(parsed.githubRepo, 'githubRepo');
+    const packageName = requireNonEmptyString(parsed.packageName, 'packageName');
 
     if (!parsed.download || typeof parsed.download !== 'object' || Array.isArray(parsed.download)) {
         failConfig("field 'download' must be an object");
     }
     const timeoutMs = requirePositiveInteger(parsed.download.timeoutMs, 'download.timeoutMs');
+    const tempPrefix = requireNonEmptyString(parsed.download.tempPrefix, 'download.tempPrefix');
 
     if (!parsed.userAgent || typeof parsed.userAgent !== 'object' || Array.isArray(parsed.userAgent)) {
         failConfig("field 'userAgent' must be an object");
     }
     const nodeUserAgent = requireNonEmptyString(parsed.userAgent.node, 'userAgent.node');
 
+    if (!parsed.eject || !Array.isArray(parsed.eject.targets)) {
+        failConfig("field 'eject.targets' must be an array");
+    }
+
     return {
         githubRepo,
-        download: { timeoutMs },
+        packageName,
+        download: { timeoutMs, tempPrefix },
         userAgent: { node: nodeUserAgent },
+        ejectTargets: parsed.eject.targets
     };
 }
 
 const INSTALLER_CONFIG = loadInstallerConfig();
 const GITHUB_REPO = INSTALLER_CONFIG.githubRepo;
+const PACKAGE_NAME = INSTALLER_CONFIG.packageName;
 const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
 const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
-if (!Number.isInteger(DOWNLOAD_TIMEOUT_MS) || DOWNLOAD_TIMEOUT_MS <= 0) {
-    failConfig("field 'download.timeoutMs' must be a positive integer");
-}
 
 const cwd = process.cwd();
 
@@ -169,7 +175,7 @@ function runDoctor() {
         process.exit(1);
     }
 
-    console.log('🔍 Magic-spec Doctor:');
+    console.log(`🔍 ${PACKAGE_NAME} Doctor:`);
     try {
         let result;
         if (isWindows) {
@@ -267,7 +273,7 @@ function runInfo() {
     console.log(`Workspace         : .design/    ${designPresent ? '✅ present' : '❌ missing'}`);
 
     console.log('────────────────────────────────');
-    console.log(`Run \`npx magic-spec@latest --update\` to refresh engine files.`);
+    console.log(`Run \`npx ${PACKAGE_NAME}@latest --update\` to refresh engine files.`);
     process.exit(0);
 }
 
@@ -348,7 +354,7 @@ async function runEject() {
     }
 
     if (shouldRun) {
-        const targets = ['.magic', '.agent', '.magic.bak', '.agent.bak'];
+        const targets = INSTALLER_CONFIG.ejectTargets;
         for (const target of targets) {
             const p = path.join(cwd, target);
             if (fs.existsSync(p)) {
@@ -356,18 +362,18 @@ async function runEject() {
                 console.log(`🗑️  Removed: ${target}/`);
             }
         }
-        console.log('✅ magic-spec ejected successfully.');
+        console.log(`✅ ${PACKAGE_NAME} ejected successfully.`);
     } else {
         console.log('❌ Eject cancelled.');
     }
     process.exit(0);
 }
 
-function detectEnvironment() {
-    if (fs.existsSync(path.join(cwd, '.cursor'))) return 'cursor';
-    if (fs.existsSync(path.join(cwd, '.windsurf'))) return 'windsurf';
-    if (fs.existsSync(path.join(cwd, '.github'))) return 'github';
-    if (fs.existsSync(path.join(cwd, '.kilocode'))) return 'kilocode';
+function detectEnvironment(adapters) {
+    for (const env in adapters) {
+        const marker = adapters[env].marker;
+        if (marker && fs.existsSync(path.join(cwd, marker))) return env;
+    }
     return null;
 }
 
@@ -452,9 +458,9 @@ async function downloadPayload(targetVersion) {
         ? `https://github.com/${GITHUB_REPO}/archive/refs/heads/main.tar.gz`
         : `https://github.com/${GITHUB_REPO}/archive/refs/tags/v${targetVersion}.tar.gz`;
 
-    console.log(`📥 Downloading magic-spec payload (${targetVersion}) from GitHub...`);
+    console.log(`📥 Downloading ${PACKAGE_NAME} payload (${targetVersion}) from GitHub...`);
 
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-spec-'));
+    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), `${INSTALLER_CONFIG.download.tempPrefix}`));
     const archivePath = path.join(tempDir, 'payload.tar.gz');
 
     return new Promise((resolve, reject) => {
@@ -628,7 +634,7 @@ async function main() {
             selectedEnv = magicrc.env;
         } else if (!isUpdate) {
             // Auto-detect for new installs
-            const detected = detectEnvironment();
+            const detected = detectEnvironment(ADAPTERS);
             if (detected && ADAPTERS[detected]) {
                 const adapterName = ADAPTERS[detected].description || detected;
                 console.log(`\n💡 Detected ${adapterName} (${detected}/ directory found).`);
@@ -705,9 +711,9 @@ async function main() {
             }
         }
         if (!isUpdate) {
-            console.log('✅ magic-spec initialized successfully!');
+            console.log(`✅ ${PACKAGE_NAME} initialized successfully!`);
         } else {
-            console.log('✅ magic-spec updated successfully!');
+            console.log(`✅ ${PACKAGE_NAME} updated successfully!`);
         }
 
         // 4. Write version file (.magic/.version) - [T-2B01]

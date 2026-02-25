@@ -62,13 +62,12 @@ class TestIntegration(unittest.TestCase):
             encoding="utf-8",
         )
 
-        # Should see "Magic-spec Doctor:" in output
         self.assertEqual(
             result.returncode,
             0,
             f"Installer failed with code {result.returncode}. Error: {result.stderr}",
         )
-        self.assertIn("Magic-spec Doctor:", result.stdout)
+        self.assertIn("magic-spec Doctor:", result.stdout)
 
     def test_doctor_command_node(self):
         """Test the --doctor flag in the node installer."""
@@ -102,7 +101,7 @@ class TestIntegration(unittest.TestCase):
             0,
             f"Node Installer failed with code {result.returncode}. Error: {result.stderr}",
         )
-        self.assertIn("Magic-spec Doctor:", result.stdout)
+        self.assertIn("magic-spec Doctor:", result.stdout)
 
 
 if __name__ == "__main__":

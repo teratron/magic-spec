@@ -2,10 +2,32 @@
     "githubRepo": "teratron/magic-spec",
     "packageName": "magic-spec",
     "download": {
-        "timeoutMs": 60000
+        "timeoutMs": 60000,
+        "tempPrefix": "magic-spec-"
     },
     "userAgent": {
         "node": "magic-spec-node",
         "python": "magic-spec-cli"
+    },
+    "eject": {
+        "targets": [
+            ".magic",
+            ".agent",
+            ".magic.bak",
+            ".agent.bak"
+        ]
+    },
+    "publish": {
+        "versionFiles": [
+            "pyproject.toml",
+            "installers/python/magic_spec/__init__.py",
+            "package.json",
+            ".magic/.version"
+        ],
+        "docsTargets": [
+            "README.md",
+            "CHANGELOG.md"
+        ],
+        "docsDir": "docs"
     }
 }
