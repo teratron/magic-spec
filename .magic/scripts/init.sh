@@ -20,8 +20,8 @@ Central registry of all project specifications and their current state.
 - [RULES.md](RULES.md) - Project constitution and standing conventions.
 
 ## Domain Specifications
-| File | Description | Status | Version |
-| :--- | :--- | :--- | :--- |
+| File | Description | Status | Layer | Version |
+| :--- | :--- | :--- | :--- | :--- |
 <!-- Add your specifications here -->
 
 ## Meta Information

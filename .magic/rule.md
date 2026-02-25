@@ -18,8 +18,9 @@ Use when you want to declare a convention without going through the Spec Workflo
 2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding. Do not ask — just initialize and continue.
 3. **Scope**: Only §7 Project Conventions is modified here. Sections 1–6 are the universal constitution — amend them only if the user explicitly targets them.
 4. **No Silent Changes**: Always show the proposed change before writing.
-5. **Version Discipline**: Every change to RULES.md requires a version bump and a Document History row.
-6. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
+5. **Version Discipline**: Every change to RULES.md requires a version bump and a Document History row. Clarification: Typo fixes or rephrasing without changing intent is a `patch` (0.0.X).
+6. **Context Awareness**: Before adding a manual rule, check `.design/CONTEXT.md` to see if it aligns with recent project decisions.
+7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
 
 ## Directory Structure
 
@@ -87,6 +88,7 @@ Use when you want to declare a convention without going through the Spec Workflo
     ```
 
 2. On approval: remove the entry, bump version (`major`), add Document History row.
+    - *Exception*: If removal is part of a refactor where the rule is moved or merged without loss of intent, use `minor`.
 3. **Task Completion Checklist**: Present the checklist.
 
 ### Listing Conventions

@@ -38,7 +38,7 @@ The two-level draft → compile approach resolves both.
 - `CHANGELOG.md` lives in the **repository root** and is committed to git.
 - `.design/CHANGELOG.md` is the internal accumulator — committed to git as part of `.design/`.
 - Changelog generation is **automatic** — triggered by existing task workflow events.
-- The agent generates the changelog text; the user reviews before it is committed.
+- The agent generates the changelog text and writes it directly without user confirmation (Zero-Prompt Automation).
 - Changelog version is read from `.magic/.version` (set during install/update).
 - Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) + [SemVer](https://semver.org/).
 - No external changelog generation tool is required — the agent writes it directly.

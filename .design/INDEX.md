@@ -13,18 +13,18 @@ Central registry of all project specifications and their current state.
 
 ## Domain Specifications
 
-| File | Description | Status | Version |
-| :--- | :--- | :--- | :--- |
-| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Stable | 1.2.0 |
-| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Stable | 1.0.0 |
-| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Stable | 1.0.0 |
-| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Stable | 1.0.0 |
-| [secrets-management.md](specifications/secrets-management.md) | ~~.env-based credentials management~~ — Deprecated | Deprecated | 0.2.0 |
-| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | Stable | 1.0.0 |
-| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Stable | 1.0.0 |
-| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Stable | 1.0.0 |
-| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for the unified Single README variant (GitHub root, npm, PyPI) | Stable | 1.0.0 |
-| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 1.2.0 |
+| File | Description | Status | Layer | Version |
+| :--- | :--- | :--- | :--- | :--- |
+| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Stable | implementation | 1.2.0 |
+| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Stable | implementation | 1.0.0 |
+| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Stable | implementation | 1.0.0 |
+| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Stable | implementation | 1.0.0 |
+| [secrets-management.md](specifications/secrets-management.md) | ~~.env-based credentials management~~ — Deprecated | Deprecated | implementation | 0.2.0 |
+| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | Stable | implementation | 1.0.0 |
+| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Stable | implementation | 1.0.0 |
+| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Stable | implementation | 1.0.0 |
+| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for the unified Single README variant (GitHub root, npm, PyPI) | Stable | implementation | 1.0.0 |
+| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | implementation | 1.2.0 |
 
 ## Meta Information
 
@@ -57,3 +57,4 @@ Central registry of all project specifications and their current state.
 | 1.18.0 | 2026-02-23 | Agent | Bumped workflow-enhancements to v1.1.0 for release alignment |
 | 1.19.0 | 2026-02-25 | Agent | Synchronized all specs with SDD standard metadata (Layer, RFC status update) |
 | 1.20.0 | 2026-02-25 | Agent | Updated all installer specs to Stable and matched them to current Thin Client architecture |
+| 1.21.0 | 2026-02-25 | Agent | Added Layer column to Domain Specifications table |

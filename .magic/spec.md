@@ -155,7 +155,7 @@ graph TD
     - Use `plaintext` for directory trees and `mermaid` for diagrams.
     - Fill in `Related Specifications` with any dependencies on existing specs.
     - Fill in `Implementation Notes` if the implementation order is non-obvious.
-7. **Registry Update**: Add the new file as a row in the `INDEX.md` table with its status and version.
+7. **Registry Update**: Add the new file as a row in the `INDEX.md` table with its status, **layer**, and version.
 8. **Post-Update Review**: Run the review checklist on the newly created file.
 9. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
 10. **Task Completion Checklist**: Present the checklist to the user.
@@ -176,7 +176,7 @@ graph TD
     - `major` (X.0.0) — breaking restructure or significant design change.
 4. **Document History**: Append a new row to the `Document History` table inside the spec file.
 5. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
-6. **INDEX.md Sync**: Update the `Version` and `Status` columns in `INDEX.md` to match the new state.
+6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
 8. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
 9. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
@@ -279,6 +279,11 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 
     ```
     Registry Audit Report — {YYYY-MM-DD}
+    
+    Layering Gaps:
+    - distribution-npm.md (RFC) implements architecture.md (Draft)
+      → Rule 57: L1 parent must be Stable before L2 can reach RFC.
+      → Recommend: revert L2 to Draft or stabilize L1.
 
     Rules violations:
     - gameplay-config.md contains Rust code — violates RULES.md §5
@@ -353,9 +358,13 @@ Stale paths found:
 - distribution-npm.md §3.2: references `src/index.js` — actual: `index.js`
   → Auto-fix: update path
 
-Layer integrity errors:
+Layer integrity issues:
 - distribution-npm.md: `Implements:` points to `distribution.md`, which does not exist
   → Recommend: Create the L1 parent spec or change `Implements:` reference
+
+- s3-storage.md (RFC): Implements `cloud-storage.md` (Draft)
+  → Rule 57: L2 cannot be RFC/Stable while L1 is Draft/RFC.
+  → Recommend: Demote L2 to Draft or stabilize L1.
 
 Removed entities:
 - secrets-management.md: describes `.env` files — removed from project

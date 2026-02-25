@@ -50,8 +50,9 @@ To maintain consistent state tracking across all documents (`PLAN.md`, `TASKS.md
 
 ### 5.1. SDD Metadata (New)
 
-- **Layer**: Declare the implementation layer (`design`, `implementation`, `infrastructure`).
+- **Layer**: Declare the implementation layer (`concept` or `implementation`).
 - **Implements**: Reference the parent specification or standard (or `N/A`).
+- **Layering Rule**: Layer 2 (implementation) specs must implement a Layer 1 (concept) parent. Layer 2 cannot be `RFC` or `Stable` until its Layer 1 parent is `Stable`.
 - **Status Mapping**:
   - `Draft`: Development version.
   - `RFC`: Ready for review/Request for Comments.
@@ -131,11 +132,11 @@ To ensure cross-platform reliability, all internal engine scripts must be invoke
 
 To maintain a clean workspace, completed phase task files (e.g., `phase-1.md`) must be moved to `.design/archives/tasks/` immediately after a successful Level 1 retrospective.
 
-### C9 — Simulation Mandatory
+### C9 — Simulation Mandatory (Zero-Prompt Fix)
 
 **Declared by:** Agent (Simulator Workflow, 2026-02-25)
 
-After any modification to `.magic/` engine files or `.agent/workflows/` wrappers, the `magic.simulate` workflow must be executed to verify logical integrity and eliminate "rough edges" (шероховатости).
+After any modification to `.magic/` engine files or `.agent/workflows/` wrappers, the `magic.simulate` workflow must be executed to verify logical integrity. Identified "rough edges" (шероховатости) must be fixed autonomously by the agent without further confirmation (Zero-Prompt).
 
 ### C10 — Nested Phase Architecture
 
@@ -157,3 +158,5 @@ To improve implementation clarity and reduce cognitive overhead, all implementat
 | 1.7.0 | 2026-02-25 | Agent | Added C9: Simulation Mandatory; added `magic.simulate` workflow |
 | 1.8.0 | 2026-02-25 | Agent | Hardened C1-C9; added Section 5.1 (Layer/Implements metadata) |
 | 1.9.0 | 2026-02-25 | Agent | Added C10: Nested Phase Architecture |
+| 1.10.0 | 2026-02-25 | Agent | Aligned Section 5.1 with .magic/spec.md (concept/implementation layers) |
+| 1.11.0 | 2026-02-25 | Agent | Hardened C9 with Zero-Prompt Fix rule |

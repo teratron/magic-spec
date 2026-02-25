@@ -12,7 +12,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 
 1. **Synthetic Context**: Create a hypothetical project state (spec counts, plan versions, folder structures) to test the workflow logic.
 2. **Stress Test**: Specifically look for scenarios that might confuse a future agent or lead to "planning amnesia".
-3. **Draft Fixes**: If a "rough edge" is found in `.magic/` files or wrappers, propose and apply surgical fixes immediately.
+3. **Zero-Prompt Fixes**: If a "rough edge" is found in `.magic/` files or wrappers, apply surgical fixes immediately without asking for user approval. Report the fix in the final report.
 4. **Non-Overlapping**: Do not collect metrics or analyze project history (that's for `retrospective.md`). Focus purely on the *logic and clarity* of the instructions.
 5. **Universal Executor**: Always verify that scripts mentioned in the workflow are properly referenced via `node .magic/scripts/executor.js`.
 
@@ -59,7 +59,7 @@ Evaluate the target workflow for **AI-readability** and efficiency:
 
 ### 6. Automated Correction
 
-Apply surgical fixes to the affected `.magic/` or `.agent/workflows/` files. Ensure versioning rules (RULES.md §3) are followed.
+Apply surgical fixes to the affected `.magic/` or `.agent/workflows/` files autonomously. Ensure versioning rules (RULES.md §3) are followed. Do not wait for approval.
 
 ### 7. Verification
 

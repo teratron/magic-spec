@@ -9,6 +9,10 @@ handoffs:
     workflow: magic.task
     prompt: "Update the project plan and tasks after amending standing rules."
     condition: null
+  - label: "Audit specs"
+    workflow: magic.spec
+    prompt: "Audit specifications to ensure compliance with updated rules."
+    condition: null
   - label: "Simulate changes"
     workflow: magic.simulate
     prompt: "Simulate and validate the new rule logic to ensure no system friction."
