@@ -13,7 +13,6 @@
   - .agent/
   - .design/
   - .magic/
-  - adapters/
   - dist/
   - docs/
   - installers/
@@ -26,10 +25,6 @@
     - scripts/
     - Lib/
     - Scripts/
-    - cursor/
-    - github/
-    - kilocode/
-    - windsurf/
     - node/
     - python/
 ```

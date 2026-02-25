@@ -229,12 +229,16 @@ def publish_python(dry_run: bool) -> None:
 
 
 def publish_node(dry_run: bool) -> None:
-    print("\nPublishing Node package...")
+    print("\nBuilding and publishing Node package...")
     cwd = PROJECT_ROOT
 
     if dry_run:
+        print(f"  [Dry Run] npm pack --pack-destination dist in {cwd}")
         print(f"  [Dry Run] npm publish in {cwd}")
         return
+
+    # Build artifact for verification/storage
+    run_command(["npm", "pack", "--pack-destination", "dist"], cwd=cwd)
 
     cmd = ["npm", "publish"]
     npm_token = os.environ.get("NPM_TOKEN")

@@ -23,8 +23,8 @@
   },
   "scripts": {
     "test": "python scripts/run_tests.py",
-    "build": "echo \"Build is no longer required for the thin client. Use 'npm pack' to verify the package.\"",
-    "check": "npm pack --pack-destination dist",
+    "build": "npm pack --pack-destination dist",
+    "check": "npm run build -- --dry-run",
     "publish:dry": "npm publish --dry-run"
   }
 }

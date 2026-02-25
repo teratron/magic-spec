@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Generated:** 2026-02-25
 **Based on:** .design/INDEX.md v1.20.0
 **Status:** Active
@@ -45,7 +45,8 @@ graph TD
 ## Phase 2 — Multi-Environment & Advanced Features
 
 *Workflow logic, agent adapters, and installer reliability.*
-*(All tasks completed and archived)*
+
+- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `Stable`
 
 ## Phase 3 — Release Readiness & Documentation
 
@@ -63,7 +64,6 @@ graph TD
 - **Distribution: npm** ([distribution-npm.md](specifications/distribution-npm.md)) — `Stable ✓`
 - **Distribution: PyPI** ([distribution-pypi.md](specifications/distribution-pypi.md)) — `Stable ✓`
 - **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `Stable ✓`
-- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `Stable ✓`
 - **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `Stable ✓`
 - **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `Stable ✓`
 - **Secrets Management** ([secrets-management.md](specifications/secrets-management.md)) — `Deprecated`
@@ -83,3 +83,4 @@ graph TD
 | 1.1.0 | 2026-02-25 | Agent | Synchronized with INDEX.md v1.19.0; added all RFC specifications |
 | 1.1.1 | 2026-02-25 | Agent | Added secrets-management (Deprecated) to Archived to fix orphaned spec warning |
 | 1.2.0 | 2026-02-25 | Agent | Moved all RFC specifications to Archived as Stable; bumped version to sync with INDEX v1.20 |
+| 1.3.0 | 2026-02-25 | Agent | Reopened Phase 2 to implement advanced CLI features from installer-features.md |

@@ -172,7 +172,7 @@ Data Integrity
 
 **Status:** {Active | Completed}
 
-### [T-N{Track}{Seq}] {Task Title}
+## [T-N{Track}{Seq}] {Task Title}
 
 - **Spec:** {spec.md} §{section}
 - **Status:** {Todo | In Progress | Done | Blocked}
