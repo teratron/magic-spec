@@ -1,45 +1,69 @@
 # Phase 2 — Multi-Environment & Advanced Features
 
-**Status:** Done
+**Status:** Active
 
-## Track A: Adapters & Templates
+## [T-2A03] Implement template resolution in Node CLI
 
-### [T-2A03] Implement template resolution in Node CLI
-
-- **Spec:** agent-environments.md §3.6, cli-installer.md §3.4
+- **Spec:** agent-environments.md §3.4
 - **Status:** Done
+- **Changes:**
+  - Created: -
+  - Modified: -
 - **Assignee:** Agent
 
-### [T-2A04] Implement template resolution in Python CLI
+## [T-2A04] Implement template resolution in Python CLI
 
-- **Spec:** agent-environments.md §3.6, cli-installer.md §3.4
+- **Spec:** agent-environments.md §3.4
 - **Status:** Done
+- **Changes:**
+  - Created: -
+  - Modified: -
 - **Assignee:** Agent
 
-## Track B: Core Reliability
-
-### [T-2B01] Implement version tracking (.magic/.version)
+## [T-2B01] Implement version tracking (.magic/.version)
 
 - **Spec:** installer-features.md §3.1
 - **Status:** Done
+- **Changes:**
+  - Modified: installers/node/index.js, installers/python/magic_spec/**main**.py
 - **Assignee:** Agent
 
-### [T-2B02] Implement info and --check commands
+## [T-2B02] Implement info and --check commands
 
 - **Spec:** installer-features.md §3.2
 - **Status:** Done
+- **Changes:**
+  - Modified: installers/node/index.js, installers/python/magic_spec/**main**.py
 - **Assignee:** Agent
 
-## Track C: Safety & UX
+## [T-2B03] Implement --list-envs command
 
-### [T-2C01] Implement --eject and backup logic
+- **Spec:** installer-features.md §3.2
+- **Status:** Done
+- **Changes:**
+  - Modified: installers/adapters.json, installers/node/index.js, installers/python/magic_spec/**main**.py
+- **Assignee:** Agent
+
+## [T-2C01] Implement --eject and backup logic
 
 - **Spec:** installer-features.md §3.2, §3.3
 - **Status:** Done
+- **Changes:**
+  - Modified: installers/node/index.js, installers/python/magic_spec/**main**.py
 - **Assignee:** Agent
 
-### [T-2C02] Implement .magicrc persistence & auto-detect
+## [T-2C02] Implement .magicrc persistence & auto-detect
 
 - **Spec:** installer-features.md §3.4, §3.5
 - **Status:** Done
+- **Changes:**
+  - Modified: installers/node/index.js, installers/python/magic_spec/**main**.py
+- **Assignee:** Agent
+
+## [T-2C03] Implement conflict detector (.magic/.checksums)
+
+- **Spec:** installer-features.md §3.3
+- **Status:** Done
+- **Changes:**
+  - Modified: installers/node/index.js, installers/python/magic_spec/**main**.py
 - **Assignee:** Agent

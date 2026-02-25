@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Full support for abstract environment templates** with automatic resolution (`{ARGUMENTS}`) across all CLIs.
-- **Introduced `.magicrc.json`** for persistence of selected environments and their auto-detection.
+- **Introduced `.magicrc`** for persistence of selected environments and their auto-detection.
 - **Two-level automatic Changelog generation** (by accumulating `Changes` blocks within tasks).
 - **Added new CLI commands:** `info`, `--check`, `--list-envs`, and `--eject`.
 - **Introduced core version tracking** within the project via the `.magic/.version` file.

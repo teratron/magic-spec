@@ -2,18 +2,22 @@
     "cursor": {
         "dest": ".cursor/rules",
         "ext": ".mdc",
-        "removePrefix": "magic."
+        "removePrefix": "magic.",
+        "description": "Cursor IDE (.mdc format)"
     },
     "github": {
         "dest": ".github",
-        "ext": ".md"
+        "ext": ".md",
+        "description": "GitHub Copilot"
     },
     "kilocode": {
         "dest": ".kilocode",
-        "ext": ".md"
+        "ext": ".md",
+        "description": "Kilo Code"
     },
     "windsurf": {
         "dest": ".windsurf/rules",
-        "ext": ".md"
+        "ext": ".md",
+        "description": "Windsurf"
     }
 }

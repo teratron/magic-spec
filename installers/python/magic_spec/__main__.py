@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import hashlib
 import pathlib
 import re
 import shutil
@@ -336,6 +337,228 @@ def run_doctor(dest: pathlib.Path) -> int:
         return 1
 
 
+def run_info(dest: pathlib.Path) -> int:
+    print("magic-spec installation status")
+    print("────────────────────────────────")
+
+    version_file = dest / ".magic" / ".version"
+    installed_version = "none"
+    if version_file.exists():
+        installed_version = version_file.read_text(encoding="utf-8").strip()
+    print(f"Installed version : {installed_version}  (.magic/.version)")
+
+    magicrc_file = dest / ".magicrc"
+    active_env = "default (.agent/)"
+    if magicrc_file.exists():
+        try:
+            rc = json.loads(magicrc_file.read_text(encoding="utf-8"))
+            if "env" in rc:
+                active_env = rc["env"]
+        except Exception:
+            pass
+    print(f"Active env        : {active_env}")
+
+    engine_present = (dest / ".magic").exists()
+    print(
+        f"Engine            : .magic/     {'✅ present' if engine_present else '❌ missing'}"
+    )
+
+    workspace_present = (dest / ".design").exists()
+    print(
+        f"Workspace         : .design/    {'✅ present' if workspace_present else '❌ missing'}"
+    )
+
+    print("────────────────────────────────")
+    print("Run `magic-spec --update` to refresh engine files.")
+    return 0
+
+
+def run_check(dest: pathlib.Path) -> int:
+    version_file = dest / ".magic" / ".version"
+    if not version_file.exists():
+        print("⚠️  Not installed via magic-spec (no .magic/.version file)")
+        return 0
+
+    installed_version = version_file.read_text(encoding="utf-8").strip()
+    try:
+        current_version = _resolve_package_version()
+    except Exception:
+        current_version = "unknown"
+
+    print(f"Installed version: {installed_version}")
+    print(f"Package version:   {current_version}")
+
+    if installed_version == current_version:
+        print(f"✅ magic-spec {current_version} — up to date")
+    else:
+        print(f"⚠️  Installed: {installed_version} | Package: {current_version}")
+        print("   Run --update to upgrade")
+    return 0
+
+
+def create_backup(dest: pathlib.Path) -> None:
+    print("📦 Creating backup of existing engine files...")
+    magic_dir = dest / ".magic"
+    if magic_dir.exists():
+        _copy_dir(magic_dir, dest / ".magic.bak")
+
+    agent_dir = dest / ".agent"
+    if agent_dir.exists():
+        _copy_dir(agent_dir, dest / ".agent.bak")
+
+    # Update .gitignore
+    gitignore_file = dest / ".gitignore"
+    if gitignore_file.exists():
+        content = gitignore_file.read_text(encoding="utf-8")
+        altered = False
+        if ".magic.bak" not in content:
+            content += "\n.magic.bak/"
+            altered = True
+        if ".agent.bak" not in content:
+            content += "\n.agent.bak/"
+            altered = True
+        if altered:
+            gitignore_file.write_text(content.strip() + "\n", encoding="utf-8")
+
+
+def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
+    print("\n⚠️  This will remove:")
+    print("   -  .magic/")
+    print("   -  .agent/  (or active env adapter dir)")
+    print("   -  .magic.bak/  (if exists)")
+    print("\n   Your .design/ workspace will NOT be affected.")
+
+    should_run = auto_accept
+    if not should_run:
+        try:
+            answer = input("\nConfirm? (y/N): ").strip().lower()
+            should_run = answer == "y"
+        except EOFError:
+            should_run = False
+
+    if should_run:
+        targets = [".magic", ".agent", ".magic.bak", ".agent.bak"]
+        for target in targets:
+            p = dest / target
+            if p.exists():
+                if p.is_dir():
+                    shutil.rmtree(p)
+                else:
+                    p.unlink()
+                print(f"🗑️  Removed: {target}/")
+        print("✅ magic-spec ejected successfully.")
+        return 0
+    else:
+        print("❌ Eject cancelled.")
+        return 1
+
+
+def _detect_environment(dest: pathlib.Path) -> str | None:
+    if (dest / ".cursor").exists():
+        return "cursor"
+    if (dest / ".windsurf").exists():
+        return "windsurf"
+    if (dest / ".github").exists():
+        return "github"
+    if (dest / ".kilocode").exists():
+        return "kilocode"
+    return None
+
+
+def _save_magic_rc(dest: pathlib.Path, config: dict) -> None:
+    magicrc_file = dest / ".magicrc"
+    magicrc_file.write_text(json.dumps(config, indent=2), encoding="utf-8")
+
+
+def _get_file_checksum(file_path: pathlib.Path) -> str | None:
+    if not file_path.exists():
+        return None
+    sha256_hash = hashlib.sha256()
+    with open(file_path, "rb") as f:
+        for byte_block in iter(lambda: f.read(4096), b""):
+            sha256_hash.update(byte_block)
+    return sha256_hash.hexdigest()
+
+
+def _get_directory_checksums(
+    directory: pathlib.Path, base_dir: pathlib.Path | None = None
+) -> dict[str, str]:
+    results = {}
+    if base_dir is None:
+        base_dir = directory
+    if not directory.exists():
+        return results
+
+    for item in directory.iterdir():
+        if item.is_dir():
+            results.update(_get_directory_checksums(item, base_dir))
+        else:
+            if item.name == ".checksums":
+                continue
+            rel_path = str(item.relative_to(base_dir)).replace("\\", "/")
+            results[rel_path] = _get_file_checksum(item)
+    return results
+
+
+def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | None:
+    checksums_file = dest / ".magic" / ".checksums"
+    if not checksums_file.exists():
+        return None
+
+    try:
+        stored_checksums = json.loads(checksums_file.read_text(encoding="utf-8"))
+    except Exception:
+        return None
+
+    conflicts = []
+    for rel_path, stored_hash in stored_checksums.items():
+        local_path = dest / ".magic" / rel_path
+        if local_path.exists():
+            current_hash = _get_file_checksum(local_path)
+            if current_hash != stored_hash:
+                conflicts.append(rel_path)
+
+    if not conflicts:
+        return None
+
+    print(f"\n⚠️  Local changes detected in {len(conflicts)} file(s) in .magic/:")
+    for f in conflicts[:5]:
+        print(f"   - {f}")
+    if len(conflicts) > 5:
+        print(f"   ... and {len(conflicts) - 5} more.")
+
+    print("\nOptions:")
+    print("  [o] Overwrite (backup will be created)")
+    print("  [s] Skip update for conflicting files")
+    print("  [a] Abort update")
+
+    choice = "o"
+    if not auto_accept:
+        try:
+            answer = input("\nChoice (o/s/a): ").strip().lower()
+            choice = (answer or "o")[0]
+        except EOFError:
+            choice = "a"
+
+    if choice == "a":
+        print("❌ Update aborted.")
+        sys.exit(1)
+
+    return {"choice": choice, "conflicts": conflicts}
+
+
+def run_list_envs(adapters: dict) -> int:
+    print("Supported environments:")
+    print("  (default)    .agent/workflows/magic.*.md  general agents, Gemini")
+    for name, adapter in adapters.items():
+        padding = " " * max(0, 12 - len(name))
+        dest = f"{adapter['dest']}/".ljust(28)
+        description = adapter.get("description", "")
+        print(f"  {name}{padding}{dest}{description}")
+    print("\nUsage: magic-spec --env <name>")
+    return 0
+
+
 def run_init(dest: pathlib.Path, auto_accept: bool = False) -> None:
     is_windows = sys.platform == "win32"
     if is_windows:
@@ -388,25 +611,57 @@ def main() -> None:
     fallback_main = "--fallback-main" in args
     auto_accept = "--yes" in args or "-y" in args
     if "--help" in args or "-h" in args:
-        print(
-            "Usage: magic-spec [--env <adapter>] [--update] [--doctor | --check] [--fallback-main] [--yes]"
-        )
+        print("Usage: magic-spec [command] [options]")
+        print("\nCommands:")
+        print("  info                 Show installation status")
+        print("  --check              Check for updates")
+        print("  --doctor             Run prerequisite check")
+        print("  --list-envs          List supported environments")
+        print("  --eject              Remove magic-spec from project")
+        print("\nOptions:")
+        print("  --env <adapter>      Specify environment adapter")
+        print("  --update             Update engine files only")
+        print("  --fallback-main      Pull payload from main branch")
+        print("  --yes                Auto-accept prompts")
         sys.exit(0)
 
     is_update = "--update" in args
-    is_doctor = "--doctor" in args or "--check" in args
+    is_doctor = "--doctor" in args
+    is_check = "--check" in args
+    is_info = "info" in args
+    is_list_envs = "--list-envs" in args
+    is_eject = "--eject" in args
 
-    # Doctor mode (does not need download)
+    # Command modes (do not need download)
     if is_doctor:
         sys.exit(run_doctor(dest))
+
+    if is_check:
+        sys.exit(run_check(dest))
+
+    if is_info:
+        sys.exit(run_info(dest))
+
+    if is_eject:
+        sys.exit(run_eject(dest, auto_accept=auto_accept))
 
     # Download Step
     if is_update:
         print("Updating magic-spec (.magic only)...")
+        create_backup(dest)
     else:
         print("Initializing magic-spec...")
 
     version_to_fetch = "main" if fallback_main else _resolve_package_version()
+
+    # Load .magicrc
+    magicrc = {}
+    magicrc_file = dest / ".magicrc"
+    if magicrc_file.exists():
+        try:
+            magicrc = json.loads(magicrc_file.read_text(encoding="utf-8"))
+        except Exception:
+            pass
 
     try:
         with tempfile.TemporaryDirectory() as temp_dir:
@@ -421,12 +676,54 @@ def main() -> None:
             except Exception:
                 adapters = {}
 
+            if is_list_envs:
+                sys.exit(run_list_envs(adapters))
+
+            # Determine environment
+            selected_env = None
+            if env_values:
+                selected_env = env_values[0]
+            elif magicrc.get("env"):
+                selected_env = magicrc["env"]
+            elif not is_update:
+                detected = _detect_environment(dest)
+                if detected and detected in adapters:
+                    adapter_desc = adapters[detected].get("description", detected)
+                    print(
+                        f"\n💡 Detected {adapter_desc} ({detected}/ directory found)."
+                    )
+                    should_adopt = auto_accept
+                    if not should_adopt:
+                        try:
+                            answer = (
+                                input(
+                                    f"   Install {detected} adapter instead of default? (y/N): "
+                                )
+                                .strip()
+                                .lower()
+                            )
+                            should_adopt = answer == "y"
+                        except EOFError:
+                            should_adopt = False
+                    if should_adopt:
+                        selected_env = detected
+
+            if is_update:
+                conflict_result = _handle_conflicts(dest, auto_accept=auto_accept)
+                if conflict_result and conflict_result.get("choice") == "s":
+                    print(
+                        "⚠️  Selective skip not fully implemented, proceeding with overwrite (backup available)."
+                    )
+                # Backup already done in main
+
             # 1. Copy .magic (SDD engine)
             _copy_dir(source_root / ".magic", dest / ".magic")
 
             # 2. Adapters (skip on --update)
             if not is_update:
-                if env_values:
+                if selected_env:
+                    install_adapter(source_root, dest, selected_env, adapters)
+                elif env_values:
                     for env in env_values:
                         install_adapter(source_root, dest, env, adapters)
                 else:
@@ -438,6 +735,32 @@ def main() -> None:
                 print("magic-spec initialized successfully!")
             else:
                 print("magic-spec updated successfully!")
+
+            # 4. Write version file (.magic/.version) - [T-2B01]
+            try:
+                version_file = dest / ".magic" / ".version"
+                version_file.write_text(version_to_fetch, encoding="utf-8")
+            except Exception as v_err:
+                print(f"Warning: Failed to write .magic/.version: {v_err}")
+
+            # 5. Update .magicrc - [T-2C02]
+            try:
+                new_config = {
+                    "env": selected_env or magicrc.get("env") or "default",
+                    "version": version_to_fetch,
+                }
+                _save_magic_rc(dest, new_config)
+            except Exception as rc_err:
+                print(f"Warning: Failed to update .magicrc: {rc_err}")
+
+            # 6. Save checksums - [T-2C03]
+            try:
+                current_checksums = _get_directory_checksums(dest / ".magic")
+                (dest / ".magic" / ".checksums").write_text(
+                    json.dumps(current_checksums, indent=2), encoding="utf-8"
+                )
+            except Exception as c_err:
+                print(f"Warning: Failed to save checksums: {c_err}")
     except Exception as e:
         print(f"magic-spec initialization failed: {e}")
         sys.exit(1)

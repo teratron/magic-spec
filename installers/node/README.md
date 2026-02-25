@@ -31,11 +31,15 @@ No additional installation required. `npx` will download the latest version and 
 
 ## Command Line Arguments
 
-- `--env <adapter>`: Install a specific environment adapter (e.g., `react`, `bevy`). Can be used multiple times.
-- `--yes`, `-y`: Skip the security prompt for executing the initialization script.
-- `--update`: Only update the `.magic/` engine, skipping workspace initialization.
-- `--doctor`, `--check`: Validate the state of the `.design/` workspace (Requires previous initialization).
-- `--fallback-main`: Force pull from the `main` branch instead of the packge version tag.
+- `info`: Show installation status (version, active environment).
+- `--check`: Check if a newer version of `magic-spec` is available.
+- `--list-envs`: List all supported environment adapters and their descriptions.
+- `--eject`: Completely remove `magic-spec` and `.magic/` engine from the project.
+- `--doctor`: Run prerequisite check on the `.design/` workspace.
+- `--env <adapter>`: Install a specific environment adapter (e.g., `cursor`, `windsurf`).
+- `--yes`, `-y`: Auto-accept prompts (non-interactive mode).
+- `--update`: Update engine files only (retains `.design/` and `.magicrc`).
+- `--fallback-main`: Force pull payload from the `main` branch.
 
 ---
 

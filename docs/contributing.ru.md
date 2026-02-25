@@ -85,7 +85,7 @@ npm run test:link
 # Теперь команда magic-spec доступна глобально
 
 # Тестируем в любом проекте:
-cd C:\Users\Oleg\Desktop\test-project
+cd C:\Users\UserName\Desktop\test-project
 magic-spec
 magic-spec --env cursor
 
@@ -101,7 +101,7 @@ npm run test:pack
 # Создаст dist/magic-spec-1.0.0.tgz
 
 # Установить в тестовый проект:
-cd C:\Users\Oleg\Desktop\test-project
+cd C:\Users\UserName\Desktop\test-project
 npm install D:\Projects\src\github.com\teratron\magic-spec\installers\node\dist\magic-spec-1.0.0.tgz
 npx magic-spec
 ```

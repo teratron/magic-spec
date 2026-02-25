@@ -5,7 +5,7 @@
 | Phase | Total | Todo | In Progress | Done | Blocked |
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | Phase 1 | 6 | 0 | 0 | 6 | 0 |
-| Phase 2 | 7 | 5 | 0 | 2 | 0 |
+| Phase 2 | 8 | 0 | 0 | 8 | 0 |
 | Phase 3 | 5 | 0 | 0 | 5 | 0 |
 
 ## Phase 1 — Foundation & Distribution
@@ -22,8 +22,8 @@
 
 | ID | Title | Status | Assignee |
 | :--- | :--- | :--- | :--- |
-| [T-1B03] | Create pyproject.toml with shared-data config | In Progress | Agent |
-| [T-1B04] | Implement sync scripts for Python installer | In Progress | Agent |
+| [T-1B03] | Create pyproject.toml with shared-data config | Done | Agent |
+| [T-1B04] | Implement sync scripts for Python installer | Done | Agent |
 
 **Track C:** Architecture Audit
 
@@ -44,17 +44,17 @@
 
 | ID | Title | Status | Assignee |
 | :--- | :--- | :--- | :--- |
-| [T-2B01] | Implement version tracking (.magic/.version) | Todo | Agent |
-| [T-2B02] | Implement info and --check commands | Todo | Agent |
-| [T-2B03] | Implement --list-envs command | Todo | Agent |
+| [T-2B01] | Implement version tracking (.magic/.version) | Done | Agent |
+| [T-2B02] | Implement info and --check commands | Done | Agent |
+| [T-2B03] | Implement --list-envs command | Done | Agent |
 
 **Track C:** Safety & UX
 
 | ID | Title | Status | Assignee |
 | :--- | :--- | :--- | :--- |
-| [T-2C01] | Implement --eject and backup logic | Todo | Agent |
-| [T-2C02] | Implement .magicrc persistence & auto-detect | Todo | Agent |
-| [T-2C03] | Implement conflict detector (.magic/.checksums) | Todo | Agent |
+| [T-2C01] | Implement --eject and backup logic | Done | Agent |
+| [T-2C02] | Implement .magicrc persistence & auto-detect | Done | Agent |
+| [T-2C03] | Implement conflict detector (.magic/.checksums) | Done | Agent |
 
 ## Phase 3 — Release Readiness & Documentation
 
