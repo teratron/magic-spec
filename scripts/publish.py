@@ -98,6 +98,13 @@ def update_node_version(version: str) -> None:
     print("Updated Node package.json")
 
 
+def update_magic_version(version: str) -> None:
+    magic_version_path = PROJECT_ROOT / ".magic" / ".version"
+    if magic_version_path.exists():
+        magic_version_path.write_text(version, encoding="utf-8")
+        print("Updated Project Core .magic/.version")
+
+
 def update_docs_versions(old_version: str, new_version: str) -> list[str]:
     print("\nUpdating versions in documentation...")
     modified_files = []
@@ -147,6 +154,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
         "pyproject.toml",
         "installers/python/magic_spec/__init__.py",
         "package.json",
+        ".magic/.version",
     ]
     files_to_add.extend(docs_files)
 
@@ -252,6 +260,7 @@ def main() -> None:
     else:
         update_python_version(version)
         update_node_version(version)
+        update_magic_version(version)
         docs_files = update_docs_versions(old_version, version)
 
     commit_and_tag(version, docs_files, args.dry_run)
