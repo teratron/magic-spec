@@ -15,6 +15,7 @@
   },
   "files": [
     "installers/node/index.js",
+    "installers/config.json",
     "package.json"
   ],
   "engines": {

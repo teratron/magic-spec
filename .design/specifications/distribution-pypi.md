@@ -1,7 +1,7 @@
 # Distribution: PyPI (uvx)
 
-**Version:** 0.3.0
-**Status:** RFC
+**Version:** 1.0.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** architecture.md
 
@@ -26,25 +26,30 @@ runs the tool in an isolated environment with no prior installation required.
 - Build backend: **hatchling** (fast, standards-compliant, natively supported by `uv`).
 - Package manager / publish tool: **uv** (`uv build` + `uv publish`).
 - Minimum Python version: 3.8 (for `shutil.copytree` with `dirs_exist_ok=True`).
-- The `.magic/`, `.agent/`, and `adapters/` snapshots must be current at build time (synced from root).
+- Minimum Python version: 3.8.
 - No third-party Python dependencies — stdlib only.
 - The `magic-spec` entry point is defined via `[project.scripts]` in `pyproject.toml`.
 
 ## 3. Detailed Design
 
-### 3.1 Package Structure (published to PyPI)
+### 3.1 Package Source Structure
+
+The `magic-spec` package uses a Thin Client architecture, so it DOES NOT bundle `.magic/`, `.agent/`, or `adapters/`.
+The repository contains the CLI source, tests, and configuration that support it:
 
 ```plaintext
-magic-spec-X.Y.Z  (PyPI wheel / sdist contents)
-│
-├── magic_spec/
-│   ├── __init__.py       # Package metadata + version
-│   └── __main__.py       # CLI entry point
-├── .magic/               # SDD Engine files (shared-data)
-├── .agent/               # Agent trigger wrappers (shared-data)
-├── adapters/             # Env-specific adapters (shared-data)
-├── pyproject.toml
-└── README.md
+magic-spec/
+├── installers/
+│   ├── python/               # Source for PyPI wheel
+│   │   ├── magic_spec/
+│   │   │   ├── __init__.py
+│   │   │   └── __main__.py   # CLI entry point
+│   │   └── README.md         # PyPI-specific package documentation
+│   ├── adapters.json         # Adapter mapping config (downloaded at runtime)
+│   └── config.json           # Installer configuration (bundled into wheel)
+├── scripts/                  # Automation scripts (e.g., publish.py)
+├── tests/                    # Installer test suites
+└── pyproject.toml            # Python project manifest
 ```
 
 ### 3.2 pyproject.toml Key Fields
@@ -65,15 +70,18 @@ requires        = ["hatchling"]
 build-backend   = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
-packages        = ["magic_spec"]
+packages        = ["installers/python/magic_spec"]
 
-[tool.hatch.build.targets.wheel.shared-data]
-".magic"        = ".magic"
-".agent"        = ".agent"
-"adapters"      = "adapters"
+[tool.hatch.build.targets.wheel.force-include]
+"installers/config.json" = "magic_spec/config.json"
 
 [tool.hatch.build.targets.sdist]
-include         = ["/magic_spec", "/.magic", "/.agent", "/adapters", "/README.md", "/LICENSE"]
+include = [
+    "/installers/python/magic_spec",
+    "/installers/config.json",
+    "/README.md",
+    "/LICENSE",
+]
 ```
 
 ### 3.3 How uvx Resolves the Package
@@ -84,31 +92,24 @@ graph TD
     B --> C["uv creates isolated venv"]
     C --> D["pip install magic-spec into venv"]
     D --> E["uv runs: magic-spec entry point\n(magic_spec.__main__:main)"]
-    E --> F["CLI copies .magic/, .agent/ → CWD\nRuns init script"]
+    E --> F["CLI downloads release tarball from GitHub"]
+    F --> G["CLI extracts .magic/, .agent/ → CWD\nRuns init script"]
 ```
 
 ### 3.4 Locating Engine Files at Runtime
 
-The `.magic/`, `.agent/`, and `adapters/` directories are shipped as `shared-data` inside the wheel.
-At runtime, `__main__.py` locates them by walking up the directory tree from its own `__file__`:
-
-```plaintext
-Strategy: resolve from __file__
-  __main__.py is at: <site-packages>/magic_spec/__main__.py
-  .magic/ is at:     <somewhere up the tree> — walk parent dirs until .magic/ is found
-```
+At runtime, `__main__.py` downloads the `.tar.gz` payload from the GitHub repository configured in `config.json`, matching the currently running package version. The files are not shipped in the PyPI wheel.
 
 ### 3.5 Build and Publish Flow
 
+All publishing is automated via the `scripts/publish.py` tool.
+
 ```mermaid
 graph TD
-    A["Update engine in repo root"] --> B["Sync: copy README.md + LICENSE → installers/python/"]
-    B --> C["Bump version in pyproject.toml"]
-    C --> D["uv build"]
-    D --> E["dist/ contains .whl and .tar.gz"]
-    E --> F["uv publish --token pypi-XXX"]
-    F --> G["PyPI: magic-spec X.Y.Z available"]
-    G --> H["Users: uvx magic-spec ✅"]
+    A["Run scripts/publish.py <version>"] --> C["Bump versions in package.json/pyproject.toml"]
+    C --> D["Git commit and tag vX.Y.Z"]
+    D --> E["Push tags to GitHub (creates Release Tarball)"]
+    E --> F["uv build && uv publish"]
 ```
 
 ### 3.6 Version Strategy
@@ -118,27 +119,15 @@ Both packages must be published with the **same version number** for every relea
 
 ### 3.7 Pre-publish Checklist
 
-```plaintext
-□ .magic/, .agent/, adapters/ in repo root are up to date
-□ README.md and LICENSE synced to installers/python/
-□ version in pyproject.toml matches npm package version
-□ uv build completes without errors
-□ wheel contains magic_spec/__init__.py and magic_spec/__main__.py
-```
+- Ensure GitHub is accessible.
+- Authentication for npm (`npm whoami`) and PyPI (token) must be set up.
+- Code should be committed and working.
 
 ### 3.8 Script Reference
 
-All commands run from `installers/python/` directory.
-
 | Command | Description |
 | :--- | :--- |
-| `uv build` | Build wheel and sdist into `dist/` |
-| `uv publish --token pypi-XXX` | Upload `dist/*` to PyPI with token |
-| `pip install -e .` | Editable install for development |
-| `uv run python -m magic_spec` | Run module directly (no install) |
-
-> Authentication is handled by passing the token directly to `uv publish --token`.
-> No `.env` files or environment variables are required.
+| `python scripts/publish.py <version>` | Bumps versions, tags, commits, and publishes globally |
 
 ### 3.9 Primary PyPI Registration
 
@@ -163,10 +152,8 @@ If the package `magic-spec` is not yet registered on PyPI:
 
 ## 4. Implementation Notes
 
-1. Run `uv build` and `uv publish` from `installers/python/` directory.
-2. The `.magic/`, `.agent/`, `adapters/` inside `installers/python/` are gitignored — synced from root before build.
-3. Pass token directly: `uv publish --token pypi-XXX`. No `.env` files needed.
-4. Bump version in `pyproject.toml` in sync with `installers/node/package.json` for every release.
+1. Simply run `python scripts/publish.py <version>`.
+2. Ensure you have the environment variable `PYPI_TOKEN` set correctly for headless operation, or allow `uv` to use your configured token.
 
 ### 4.1 Local Testing
 
@@ -200,9 +187,9 @@ natively supported by `uv`, and requires less boilerplate.
 **Alternative: Poetry for packaging**
 Full-featured but heavy. Rejected — `uv` covers all needed functionality with better performance.
 
-**Alternative: include engine files as Python package data instead of shared-data**
-Would bundle the markdown files inside the `magic_spec/` Python namespace. Rejected —
-`shared-data` keeps the file layout cleaner and decouples the SDD engine from the Python module.
+**Alternative: include engine files as Python package data instead of Thin Client**
+Would bundle the markdown files inside the package namespace or shared data. Rejected —
+the Thin Client allows the PyPI release to be incredibly small, downloading exactly what it needs, keeping PyPI artifacts extremely lightweight.
 
 ## Document History
 
@@ -213,3 +200,4 @@ Would bundle the markdown files inside the `magic_spec/` Python namespace. Rejec
 | 0.1.2 | 2026-02-21 | Agent | Migrated from hatch to uv; added §3.9 registration checklist |
 | 0.2.0 | 2026-02-21 | Agent | Major refactor: replaced core/ with .magic/.agent/adapters; removed .env references |
 | 0.3.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.0.0 | 2026-02-25 | Agent | Updated to reflect the Thin Client model and publish script. Set to Stable. |

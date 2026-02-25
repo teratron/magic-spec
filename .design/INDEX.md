@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.19.0
+**Version:** 1.20.0
 **Status:** Active
 
 ## Overview
@@ -15,15 +15,15 @@ Central registry of all project specifications and their current state.
 
 | File | Description | Status | Version |
 | :--- | :--- | :--- | :--- |
-| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | RFC | 1.1.0 |
-| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | RFC | 0.5.0 |
-| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | RFC | 0.3.0 |
-| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | RFC | 0.3.0 |
+| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Stable | 1.2.0 |
+| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Stable | 1.0.0 |
+| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Stable | 1.0.0 |
+| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Stable | 1.0.0 |
 | [secrets-management.md](specifications/secrets-management.md) | ~~.env-based credentials management~~ — Deprecated | Deprecated | 0.2.0 |
-| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | RFC | 0.4.0 |
-| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | RFC | 0.2.0 |
-| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | RFC | 0.3.0 |
-| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for 3 README variants: GitHub root, npm package, PyPI package | RFC | 0.2.0 |
+| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | Stable | 1.0.0 |
+| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Stable | 1.0.0 |
+| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Stable | 1.0.0 |
+| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for the unified Single README variant (GitHub root, npm, PyPI) | Stable | 1.0.0 |
 | [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 1.2.0 |
 
 ## Meta Information
@@ -56,3 +56,4 @@ Central registry of all project specifications and their current state.
 | 1.17.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.5.0 and marked as Stable |
 | 1.18.0 | 2026-02-23 | Agent | Bumped workflow-enhancements to v1.1.0 for release alignment |
 | 1.19.0 | 2026-02-25 | Agent | Synchronized all specs with SDD standard metadata (Layer, RFC status update) |
+| 1.20.0 | 2026-02-25 | Agent | Updated all installer specs to Stable and matched them to current Thin Client architecture |

@@ -1,7 +1,7 @@
 # Distribution: npm (npx)
 
-**Version:** 0.3.0
-**Status:** RFC
+**Version:** 1.0.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** architecture.md
 
@@ -23,65 +23,60 @@ developer with Node.js installed — regardless of their project's language or s
 
 ## 2. Constraints & Assumptions
 
-- No build step / bundler required — the CLI is plain Node.js with zero dependencies.
-- The `.magic/`, `.agent/`, and `adapters/` snapshots must be current at publish time (synced via `npm run build`).
-- The package is published with `--access public` (scoped or unscoped public package).
 - Minimum supported Node.js version: 16 (LTS).
-- The `bin` field must be executable — `magic.js` must have `#!/usr/bin/env node` shebang.
+- The `bin` field must be executable — `index.js` must have `#!/usr/bin/env node` shebang.
 
 ## 3. Detailed Design
 
-### 3.1 Assembly Structure (dist/)
+### 3.1 Package Source Structure
 
-Unlike most packages, `magic-spec` is assembled from repository root files into a `dist/`
-directory before publishing.
+The `magic-spec` npm package is a "Thin Client". It does not contain the SDD engine files.
+Instead, the repository contains the CLI sources, tests, and configuration that support it:
 
 ```plaintext
-installers/node/
-├── index.js            # Local source (CLI entry point)
-├── publish.js          # Deployment script (ignored in package)
-├── package.json        # Manifest
-└── dist/               # ASSEMBLY ROOT (gitignored)
-    ├── index.js        # Copied from ../index.js
-    ├── .magic/         # Synced from ../../../.magic/
-    ├── .agent/         # Synced from ../../../.agent/
-    ├── adapters/       # Synced from ../../../adapters/
-    ├── README.md       # Synced from ../../../README.md
-    └── package.json    # Copied from ../package.json
+magic-spec/
+├── installers/
+│   ├── node/
+│   │   ├── index.js          # CLI entry point
+│   │   └── README.md         # npm-specific package documentation
+│   ├── adapters.json         # Adapter mappings (downloaded in payload)
+│   └── config.json           # Installer configuration (bundled)
+├── scripts/                  # Automation scripts (e.g., publish.py)
+├── tests/                    # Installer test suites
+└── package.json              # npm Manifest
 ```
 
-### 3.2 package.json Fields (in dist/package.json)
+### 3.2 package.json Fields (root package.json)
 
 ```plaintext
 name:          "magic-spec"
 version:       semver (X.Y.Z), synced with git tag
 description:   "Magic SDD workflow"
 license:       "MIT"
-main:          "index.js"
+main:          "installers/node/index.js"
 bin:
-  magic-spec:  "index.js"
+  magic-spec:  "installers/node/index.js"
 files:
-  - "index.js"
-  - ".magic"
-  - ".agent"
-  - "adapters"
-  - "README.md"
+  - "installers/node/index.js"
+  - "installers/config.json"
+  - "package.json"
 engines:
   node:        ">=16"
 ```
 
 The `files` field acts as an allowlist — only the listed paths are included in the published package.
-Everything else (`.git`, `.design`, `installers/python`, etc.) is excluded automatically.
 
 ### 3.3 Publish Flow
 
+All publishing is automated via the Python-based `scripts/publish.py` tool. No manual `npm run build` is needed.
+
 ```mermaid
 graph TD
-    A["Update engine in root"] --> B["Run: npm run build"]
-    B --> C["Assemble dist/ folder"]
-    C --> D["Run: npm run publish"]
-    D --> E["Publish from dist/ to npm registry"]
-    E --> F["Users: npx magic-spec@latest ✅"]
+    A["Run scripts/publish.py <version>"] --> C["Bump versions in package.json/pyproject.toml"]
+    C --> D["Git commit and tag vX.Y.Z"]
+    D --> E["Push tags to GitHub (creates Release Tarball)"]
+    E --> F["npm publish --access public"]
+    F --> G["uv build && uv publish"]
 ```
 
 ### 3.4 Version Strategy
@@ -98,39 +93,20 @@ The npm package version and the git tag must always be in sync.
 
 ### 3.5 Pre-publish Checklist
 
-```plaintext
-□ .magic/, .agent/, adapters/ in repo root are up to date
-□ version in package.json matches intended release
-□ README.md is current
-□ npm whoami confirms correct identity
-□ npm publish --dry-run passes without errors
-```
+- Ensure GitHub is accessible.
+- Authentication for npm (`npm whoami`) and PyPI (token) must be set up.
+- Code should be committed and working.
 
 ### 3.6 Script Reference
 
-All scripts run from `installers/node/` directory via `npm run <script>`.
-
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `build` | `node -e "..."` | Assemble root files + local src into `./dist/` |
-| `check` | `npm run build` + `cd dist && npm pack --dry-run` | Verify package contents in `dist/` |
-| `publish` | `npm run build` + `node publish.js` | Run build, then execute publish logic |
-| `publish:dry` | `npm run build` + `cd dist && npm publish --dry-run` | Dry-run from the `dist/` folder |
-| `version:patch` | `npm version patch --no-git-tag-version` | Bump patch version in `package.json` |
-| `version:minor` | `npm version minor --no-git-tag-version` | Bump minor version in `package.json` |
-| `version:major` | `npm version major --no-git-tag-version` | Bump major version in `package.json` |
-
-> `publish` delegates to `installers/node/publish.js` which runs `npm publish --access public`
-> from the `dist/` directory. Authentication is handled via `npm login`.
+| `publish` | `python scripts/publish.py <version>` | Bumps version, tags, and publishes globally |
 
 ## 4. Implementation Notes
 
-1. Run `npm run publish` from `installers/node/` directory.
-2. The assembly `dist/` folder is gitignored — refresh before every publish via `npm run build`.
-3. The `publish.js` script simply runs `npm publish` from `dist/`. Auth is via `npm login`.
-4. Bump version in `package.json`; bump in sync with `pyproject.toml`.
-
-### 4.1 Local Testing
+1. Simply run `python scripts/publish.py <version>` from the repository root.
+2. The `installers/node/index.js` script will download the corresponding GitHub release tarball based on the `package.json` version.
 
 Test the installer locally **before** publishing:
 
@@ -175,3 +151,4 @@ dependencies, so bundling adds complexity with no benefit.
 | 0.1.4 | 2026-02-21 | Agent | Removed src/ wrapper; index.js moved to installer root |
 | 0.2.0 | 2026-02-21 | Agent | Major refactor: removed core/, src/, .env references; aligned to current structure |
 | 0.3.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.0.0 | 2026-02-25 | Agent | Updated to reflect the Thin Client model and publish script. Set to Stable. |

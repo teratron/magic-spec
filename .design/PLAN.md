@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Generated:** 2026-02-25
-**Based on:** .design/INDEX.md v1.19.0
+**Based on:** .design/INDEX.md v1.20.0
 **Status:** Active
 
 ## Overview
@@ -40,41 +40,17 @@ graph TD
 ## Phase 1 — Foundation & Distribution
 
 *Specs with no dependencies. Consolidation of root-as-source-of-truth.*
-
-- **Root Architecture** ([architecture.md](specifications/architecture.md)) — `RFC`
-  - Dependencies: none (root)
-  - Notes: Audit current root structure against spec.
-- **CLI Installer Core** ([cli-installer.md](specifications/cli-installer.md)) — `RFC`
-  - Dependencies: architecture.md
-  - Notes: Harden `index.js` and `__main__.py` to match the spec exactly.
-- **Distribution: npm** ([distribution-npm.md](specifications/distribution-npm.md)) — `RFC`
-  - Dependencies: architecture.md
-  - Notes: Assembly, `dist/` folder logic, and publish scripts.
-- **Distribution: PyPI** ([distribution-pypi.md](specifications/distribution-pypi.md)) — `RFC`
-  - Dependencies: architecture.md
-  - Notes: Packaging with `hatchling` and `uv` publish workflow.
+*(All tasks completed and archived)*
 
 ## Phase 2 — Multi-Environment & Advanced Features
 
 *Workflow logic, agent adapters, and installer reliability.*
-
-- **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `RFC`
-  - Dependencies: architecture.md
-  - Notes: Multi-env support via templates (Cursor, Windsurf, etc.).
-- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `RFC`
-  - Dependencies: cli-installer.md
-  - Notes: Version tracking, backup, .magicrc, and auto-detection.
+*(All tasks completed and archived)*
 
 ## Phase 3 — Release Readiness & Documentation
 
 *Changelog automation and unified documentation strategy.*
-
-- **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `RFC`
-  - Dependencies: none
-  - Notes: Automated Phase draft accumulation and Release compile.
-- **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `RFC`
-  - Dependencies: none
-  - Notes: Refine root README and create installer-specific subsets.
+*(All tasks completed and archived)*
 
 ## Backlog
 <!-- Registered specifications waiting for prioritization -->
@@ -82,6 +58,15 @@ graph TD
 
 ## Archived
 
+- **Root Architecture** ([architecture.md](specifications/architecture.md)) — `Stable ✓`
+- **CLI Installer Core** ([cli-installer.md](specifications/cli-installer.md)) — `Stable ✓`
+- **Distribution: npm** ([distribution-npm.md](specifications/distribution-npm.md)) — `Stable ✓`
+- **Distribution: PyPI** ([distribution-pypi.md](specifications/distribution-pypi.md)) — `Stable ✓`
+- **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `Stable ✓`
+- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `Stable ✓`
+- **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `Stable ✓`
+- **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `Stable ✓`
+- **Secrets Management** ([secrets-management.md](specifications/secrets-management.md)) — `Deprecated`
 - **Handoff integrations** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
 - **CLI Prerequisite Validation Scripts** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
 - **User Story Scope Boundaries** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
@@ -96,3 +81,5 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Agent | Initial plan for workflow enhancements |
 | 1.1.0 | 2026-02-25 | Agent | Synchronized with INDEX.md v1.19.0; added all RFC specifications |
+| 1.1.1 | 2026-02-25 | Agent | Added secrets-management (Deprecated) to Archived to fix orphaned spec warning |
+| 1.2.0 | 2026-02-25 | Agent | Moved all RFC specifications to Archived as Stable; bumped version to sync with INDEX v1.20 |

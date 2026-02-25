@@ -1,7 +1,7 @@
 # Installer Features
 
-**Version:** 0.2.0
-**Status:** RFC
+**Version:** 1.0.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** cli-installer.md
 
@@ -275,3 +275,4 @@ and readable by any tool or CI script.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.0.0 | 2026-02-25 | Agent | Status updated to Stable. |

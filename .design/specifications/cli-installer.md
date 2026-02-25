@@ -1,7 +1,7 @@
 # CLI Installer
 
-**Version:** 0.5.0
-**Status:** RFC
+**Version:** 1.0.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** architecture.md
 
@@ -53,18 +53,20 @@ uvx magic-spec --update                      # Explicit update mode (skips adapt
 
 ```mermaid
 graph TD
-    A["User runs: npx magic-spec@latest"] --> B["Locate engine files inside package"]
-    B --> C["Copy .magic/ → CWD/.magic/"]
-    C --> D["Copy .agent/workflows/ → CWD/.agent/workflows/"]
-    D --> E{"OS?"}
-    E -->|Windows| F["Run: init.ps1"]
-    E -->|macOS / Linux| G["chmod +x init.sh\nRun: init.sh"]
-    F --> H{".design/ exists?"}
-    G --> H
-    H -->|No| I["Create .design/ structure\n+ INDEX.md + RULES.md"]
-    H -->|Yes| J["Skip — do not modify .design/"]
-    I --> K["Print: ✅ magic-spec initialized"]
-    J --> K
+    A["User runs: npx/uvx magic-spec"] --> B["Locate config and version"]
+    B --> C["Download release tarball from GitHub"]
+    C --> D["Extract .magic/ and adapters"]
+    D --> E["Copy .magic/ → CWD/.magic/"]
+    E --> F["Copy .agent/ workflows → CWD/.agent/workflows/"]
+    F --> G{"OS?"}
+    G -->|Windows| H["Run: init.ps1"]
+    G -->|macOS / Linux| I["chmod +x init.sh\nRun: init.sh"]
+    H --> J{".design/ exists?"}
+    I --> J
+    J -->|No| K["Create .design/ structure\n+ INDEX.md + RULES.md"]
+    J -->|Yes| L["Skip — do not modify .design/"]
+    K --> M["Print: ✅ magic-spec initialized"]
+    L --> M
 ```
 
 ### 3.3 File Copy Behavior
@@ -79,32 +81,27 @@ graph TD
 The copy operation uses **recursive overwrite** for `.magic/` and `.agent/`.
 This is intentional: the engine files are managed by `magic-spec`, not by the user.
 
-### 3.4 Template Compilation
+### 3.4 Extension Mapping
 
-When copying adapters (from `adapters/{env}/` or the default `.agent/`), the installer processes the files as **abstract templates** rather than performing raw copies.
+When copying adapters (from `adapters/{env}/` or the default `.agent/`), the installer processes the files to match the agent's expected file extensions.
 
-1. **Read Abstract Template**: The installer reads the base workflow definition.
-2. **Resolve Variables**: It replaces placeholders based on the `target_format` of the `--env`:
-   - If output is Markdown (`.md` / `.mdc`): `{ARGUMENTS}` resolves to `$ARGUMENTS`.
-   - If output is TOML (`.toml`): `{ARGUMENTS}` resolves to `{{args}}`.
-3. **Write Output**: The compiled content is written to the destination directory.
-
-This allows a single source of truth for workflow instructions while natively supporting agents with significantly different command schemas (e.g., `gemini` CLI vs `claude` CLI).
+1. **Read Provider Config**: It checks `adapters.json` for the specified `--env`.
+2. **Rename Files**: It replaces the `.md` extension with the target extension defined in `adapter.ext`.
+3. **Prefix Removal**: If `adapter.removePrefix` is defined, it removes this prefix from the destination filename.
+4. **Write Output**: The mapped files are written to the target adapter directory.
 
 ### 3.5 Argument Reference
 
 | Argument | Description |
 | :--- | :--- |
-| *(none)* | Default install: `.magic/` + `.agent/workflows/magic.*.md` + init |
-| `--env <name>` | Install env adapter: `claude`, `cursor`, `gemini`, `github`, `kilocode`, `qwen`, `windsurf` |
+| *(none)* | Default install: `.magic/` + `.agent/workflows/` + init |
+| `--env <name>` | Install env adapter: `cursor`, `github`, `kilocode`, `windsurf` |
 | `--env <a>,<b>` | Install multiple adapters in one command |
 | `--update` | Updates `.magic/` to the latest version, skips adapters and init script |
-| `--check` | Check if installed version is up to date (no file changes) |
-| `--list-envs` | List all supported environment adapters |
-| `--eject` | Remove all installer-managed files (.magic/, adapter dir) |
-| `info` | Show current installation status |
-| `--help` | Print usage information and exit |
-| `--version` | Print current `magic-spec` package version and exit |
+| `--doctor` / `--check` | Check if prerequisite artifacts exist via `.magic/scripts/check-prerequisites` |
+| `--fallback-main` | Download the payload from the `main` branch instead of the release tag |
+| `-y`, `--yes` | Auto-accept prompts (e.g. executing the initialization script) |
+| `-h`, `--help` | Print usage information and exit |
 
 ### 3.6 Platform Detection
 
@@ -153,3 +150,4 @@ ensures users always run the newest version without a manual upgrade step.
 | 0.3.0 | 2026-02-21 | Agent | Major refactor: removed core/, updated to magic.*.md naming, index.js at root |
 | 0.4.0 | 2026-02-23 | Agent | Inserted Template Compilation section for multi-format agent support |
 | 0.5.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.0.0 | 2026-02-25 | Agent | Updated to match the Thin Client model and working code. Set status to Stable. |

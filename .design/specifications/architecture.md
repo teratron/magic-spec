@@ -1,7 +1,7 @@
 # Architecture
 
-**Version:** 1.1.0
-**Status:** RFC
+**Version:** 1.2.0
+**Status:** Stable
 **Layer:** implementation
 **Implements:** N/A (Root architecture)
 
@@ -54,57 +54,43 @@ magic-spec/                         ← Repository root = Source of Truth
 │   ├── kilocode/                   #    --env kilocode → .kilocode/
 │   └── windsurf/                   #    --env windsurf → .windsurf/rules/
 ├── .design/                        #    SDD workspace for magic-spec itself
-│   ├── INDEX.md
-│   ├── RULES.md
-│   ├── specifications/
-│   └── tasks/
 │
-└── installers/                     ← Layer 2: Distribution
-    ├── node/                       # npm package (npx entry point)
-    │   ├── index.js                # CLI script
-    │   ├── publish.js              # Publish runner
-    │   ├── package.json
-    │   └── dist/                   # Build artifact (gitignored)
-    └── python/                     # PyPI package (uvx entry point)
-        ├── magic_spec/
-        │   ├── __init__.py
-        │   └── __main__.py
-        └── pyproject.toml
+├── installers/                     ← Layer 2: Distribution (Thin Clients)
+│   ├── node/                       #    Node CLI source
+│   │   ├── index.js
+│   │   └── README.md
+│   ├── python/                     #    Python CLI source
+│   │   ├── magic_spec/
+│   │   │   ├── __init__.py
+│   │   │   └── __main__.py
+│   │   └── README.md
+│   ├── adapters.json               #    Adapter mappings
+│   └── config.json                 #    Installer configuration
+├── scripts/                        # Automation scripts
+│   └── publish.py                  # Unified publish script
+├── tests/                          # Automated test suites
+├── package.json                    # Node manifest (root)
+└── pyproject.toml                  # Python manifest (root)
 ```
 
-> **Note:** Required root files are assembled into `dist/` (Node) or included via `hatch` (Python)
-> before each publish by the `build` script.
+> **Note:** The installers operate as "thin clients". They do not bundle the engine files. Instead, they download the release payload from GitHub at runtime.
 
 ### 3.2 Data Flow: From Source to Installed Project
 
 ```mermaid
 graph TD
-    R["Repo root\n.magic/ .agent/ adapters/"] -->|sync script| NI["installers/node/\n.magic .agent adapters"]
-    R -->|sync script| PI["installers/python/\n.magic .agent adapters"]
-    NI -->|npm publish| NPM["npm registry"]
-    PI -->|uv publish| PYPI["PyPI registry"]
-    NPM -->|npx magic-spec| UP["user-project/\n.magic/ + .agent/"]
-    PYPI -->|uvx magic-spec| UP
-    NPM -->|--env cursor| UPC["user-project/\n.cursor/rules/"]
-    UP -->|init script| DS["user-project/\n.design/ (created)"]
+    R["Repo root\n.magic/ .agent/ adapters/"] -->|Git Push + Tag| GH["GitHub Release Tarball"]
+    NPM["npm registry\n(index.js only)"] -->|npx magic-spec| UP["user-project/"]
+    PYPI["PyPI registry\n(__main__.py only)"] -->|uvx magic-spec| UP
+    UP -->|Thin Client downloads| GH
+    GH -->|Extracts| UP_FILES["user-project/\n.magic/ + .agent/"]
+    UP_FILES -->|init script| DS["user-project/\n.design/ (created)"]
 ```
 
 ### 3.3 Synchronization Rules
 
-Before every publish, the `sync` script copies from the repo root into each installer directory.
-The synced copies are gitignored — they are always regenerated fresh.
-
-```
-before_publish:
-  copy root/.magic   → installers/node/.magic
-  copy root/.agent   → installers/node/.agent
-  copy root/adapters → installers/node/adapters
-  copy root/.magic   → installers/python/.magic
-  copy root/.agent   → installers/python/.agent
-  copy root/adapters → installers/python/adapters
-  run: npm publish (from installers/node/)
-  run: uv build && uv publish (from installers/python/)
-```
+Engine files are no longer synchronized into the installer directories at build time. The installers are thin clients.
+The unified `scripts/publish.py` handles atomic version bumping in `package.json`, `pyproject.toml`, and `.magic/.version`, then commits, tags, and publishes to both registries.
 
 ### 3.4 Root as Dev Workspace
 
@@ -119,9 +105,9 @@ Changes to the engine or adapters are made directly in the root. No sync needed 
 
 ## 4. Implementation Notes
 
-1. All changes to the engine go directly to root `.magic/` — they are already the source of truth.
+1. All changes to the engine go directly to root `.magic/` — they are the source of truth.
 2. All changes to adapter wrappers go to root `.agent/` (default) or `adapters/{env}/`.
-3. Run `sync` before every publish — never publish without syncing.
+3. Release is fully automated via `python scripts/publish.py`.
 
 ## 5. Drawbacks & Alternatives
 
@@ -145,3 +131,4 @@ fundamentally different packaging models and must be maintained independently.
 | 0.2.0 | 2026-02-20 | Agent | Migrated core/.agent/ → core/adapters/; added multi-env adapter structure |
 | 1.0.0 | 2026-02-20 | Agent | Eliminated core/ directory; root is now the source of truth |
 | 1.1.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.2.0 | 2026-02-25 | Agent | Updated to Thin Client model, matching actual implementation. Marked as Stable. |
