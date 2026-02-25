@@ -13,7 +13,7 @@ handoffs:
 
 - **Proactive Validation**: Runs before real-world application to ensure engine changes didn't introduce logical regressions.
 - **Scenario Synthesis**: Generates synthetic project states to test edge cases in workflows.
-- **Engine Refinement**: Identifies "rough edges" (шероховатости) in implementation files.
+- **Engine Refinement**: Identifies "rough edges" in implementation files.
 
 > **Full implementation:** `.magic/simulate.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

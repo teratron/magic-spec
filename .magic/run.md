@@ -21,6 +21,7 @@ It operates **after** the Task Workflow — tasks are its input, not its concern
 5. **Mode Awareness**: Always know the current execution mode (Sequential or Parallel). Behaviour differs significantly between them.
 6. **Manager Role**: In Parallel mode, the Manager Agent coordinates — it does not implement. It reads status, unblocks tracks, and escalates conflicts.
 7. **Checklist Before Done**: Every workflow operation must end with the *Run Completion Checklist*.
+8. **Maximum Automation**: Skip all conversational confirmation prompts regarding task order or track selection within an approved phase. Execute the sequence autonomously, reporting only completion or critical blockers.
 
 ## Directory Structure
 

@@ -42,7 +42,7 @@ Describe a synthetic project state that provides a "challenge" for the workflow.
 
 ### 4. Rough Edge Identification
 
-Identify "шероховатости" (rough edges):
+Identify "rough edges":
 
 - Unnecessary interactive prompts (violates C2/C4).
 - Missing cross-platform execution hints (violates C7).

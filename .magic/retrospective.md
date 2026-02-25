@@ -33,7 +33,7 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 5. **Lightweight Execution**: This workflow must not consume excessive context. Read file headers and Document History tables — do not re-read entire spec bodies unless investigating a specific issue.
 6. **No Self-Modification**: This workflow recommends changes to `.magic/` files — it does not apply them. Changes to the SDD engine require explicit user approval and manual editing.
 7. **Level Awareness**: Always know which level you are executing. Level 1 (auto-snapshot) is silent and fast — no analysis, no recommendations. Level 2 (full) is thorough and interactive.
-8. **Documentation Sync**: When a recommendation is accepted and a `.magic/` workflow file is modified, you MUST also update `.magic/README.md` and `.magic/README.ru.md` to reflect the change. Documentation must always stay in sync with the engine.
+8. **Documentation Sync**: When a recommendation is accepted and a `.magic/` workflow file is modified, you MUST also update the engine documentation to reflect the change. Documentation must always stay in sync with the engine.
 
 ## Directory Structure
 
