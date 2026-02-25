@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Status:** Active
 
 ## Overview
@@ -31,6 +31,16 @@ Read by the agent before every operation. Updated only via explicit triggers.
 - Use plaintext blocks for all directory trees.
 - Use mermaid blocks for all flow and architecture diagrams.
 - Do not use other diagram formats.
+
+### 4.1. Checklist Notation
+
+To maintain consistent state tracking across all documents (`PLAN.md`, `TASKS.md`, `task.md` artifacts), the following notation must be used for checkboxes:
+
+- `[ ]` — **Todo**: Task identified but not yet started.
+- `[/]` — **In Progress**: Task currently being addressed by an agent.
+- `[x]` — **Done**: Task completed and verified.
+- `[~]` — **Cancelled**: Task no longer relevant or superseded.
+- `[!]` — **Blocked**: Task requires external input or dependency completion.
 
 ## 5. Content Rules
 
@@ -119,6 +129,12 @@ To maintain a clean workspace, completed phase task files (e.g., `phase-1.md`) m
 
 After any modification to `.magic/` engine files or `.agent/workflows/` wrappers, the `magic.simulate` workflow must be executed to verify logical integrity and eliminate "rough edges" (шероховатости).
 
+### C10 — Nested Phase Architecture
+
+**Declared by:** Agent (Nested Phase Architecture, 2026-02-25)
+
+To improve implementation clarity and reduce cognitive overhead, all implementation plans (`PLAN.md`) must follow a nested hierarchy: **Phase -> Specification -> Atomic Tasks/Sub-points**. Each phase must decompose its constituent specifications into 2-3 atomic actionable items that can be tracked independently.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -132,3 +148,4 @@ After any modification to `.magic/` engine files or `.agent/workflows/` wrappers
 | 1.6.0 | 2026-02-25 | Agent | Added C6-C8: Selective Planning, Universal Executor, and Phase Archival |
 | 1.7.0 | 2026-02-25 | Agent | Added C9: Simulation Mandatory; added `magic.simulate` workflow |
 | 1.8.0 | 2026-02-25 | Agent | Hardened C1-C9; added Section 5.1 (Layer/Implements metadata) |
+| 1.9.0 | 2026-02-25 | Agent | Added C10: Nested Phase Architecture |

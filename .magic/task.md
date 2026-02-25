@@ -19,9 +19,10 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 3. **No Orphans**: Every spec in `INDEX.md` must be assigned to a phase in `PLAN.md`. Any spec found in `INDEX.md` but missing from `PLAN.md` must be flagged as "Orphaned" and addressed immediately.
 4. **Confirm Before Commit**: Always show the proposed phase structure and task breakdown to the user before writing `PLAN.md` and `TASKS.md`.
 5. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
-6. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
-7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
-8. **Maximum Automation (Zero-Prompt)**: Once PLAN.md and TASKS.md are approved by the user, the agent is authorized to proceed directly to execution (`magic.run`) and conclusion workflows without further confirmation. Save reports and update changelogs silently. Skip conversational overhead.
+6. **Nested Phase Architecture (C10)**: Implementation plans in `PLAN.md` must follow a nested hierarchy: **Phase -> Specification -> Atomic Tasks**. Always decompose each specification into 2-3 atomic checklist items. Use the standardized checklist notation: `[ ]` (Todo), `[/]` (In Progress), `[x]` (Done), `[~]` (Cancelled), `[!]` (Blocked).
+7. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
+8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
+9. **Maximum Automation (Zero-Prompt)**: Once PLAN.md and TASKS.md are approved by the user, the agent is authorized to proceed directly to execution (`magic.run`) and conclusion workflows without further confirmation. Save reports and update changelogs silently. Skip conversational overhead.
 
 ## Directory Structure
 
@@ -142,7 +143,11 @@ Data Integrity
 ...
 
 ## Phase 1 — {Name}
-...
+
+- **{Spec Name}** ([{spec.md}](specifications/{spec.md}))
+  - [ ] {Task 1: Summary}
+  - [ ] {Task 2: Summary}
+  - [ ] {Task 3: (Optional)}
 
 ## Backlog
 
