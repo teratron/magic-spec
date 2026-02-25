@@ -37,81 +37,58 @@ graph TD
 
 `workflow-enhancements.md §3.3` → `workflow-enhancements.md §3.7`
 
-## Phase 1 — Foundation
+## Phase 1 — Foundation & Distribution
 
-*Specs with no dependencies. Start here.*
+*Specs with no dependencies. Consolidation of root-as-source-of-truth.*
 
-- **Root Architecture** ([architecture.md](specifications/architecture.md)) — `RFC ✓`
+- **Root Architecture** ([architecture.md](specifications/architecture.md)) — `RFC`
   - Dependencies: none (root)
-  - Notes: Establishes the two-layer structure and "source of truth" in root.
-
-- **CLI Installer Core** ([cli-installer.md](specifications/cli-installer.md)) — `RFC ✓`
+  - Notes: Audit current root structure against spec.
+- **CLI Installer Core** ([cli-installer.md](specifications/cli-installer.md)) — `RFC`
   - Dependencies: architecture.md
-  - Notes: Basic copy logic for .magic/ and .agent/.
-
-- **Handoff integrations** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.1. Add explicit handoff YAML blocks to all `magic.*.md` workflow configurations.
-
-- **CLI Prerequisite Validation Scripts** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.3. Write stand-alone `.sh` and `.ps1` validation scripts to check prerequisite environments.
-
-- **Distribution: npm & PyPI** ([distribution-npm.md](specifications/distribution-npm.md), [distribution-pypi.md](specifications/distribution-pypi.md)) — `RFC ✓`
+  - Notes: Harden `index.js` and `__main__.py` to match the spec exactly.
+- **Distribution: npm** ([distribution-npm.md](specifications/distribution-npm.md)) — `RFC`
   - Dependencies: architecture.md
-  - Notes: Assembly and publishing workflows for Node.js and Python installers.
+  - Notes: Assembly, `dist/` folder logic, and publish scripts.
+- **Distribution: PyPI** ([distribution-pypi.md](specifications/distribution-pypi.md)) — `RFC`
+  - Dependencies: architecture.md
+  - Notes: Packaging with `hatchling` and `uv` publish workflow.
 
-## Phase 2 — Core Engine & Features
+## Phase 2 — Multi-Environment & Advanced Features
 
-*Workflow logic, agent adapters, and advanced CLI tools.*
+*Workflow logic, agent adapters, and installer reliability.*
 
-- **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `RFC ✓`
+- **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `RFC`
   - Dependencies: architecture.md
   - Notes: Multi-env support via templates (Cursor, Windsurf, etc.).
-
-- **User Story Scope Boundaries** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.2. Integrate priority check into the `magic.task` workflow and update task generation template.
-
-- **Auto-Generated Context File** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.4. Create the `generate-context` scripts to parse `PLAN.md`/`CHANGELOG.md` and manage `CONTEXT.md` generation. Hook this explicitly into plan and task workflows.
-
-- **Explore Mode & Delta Hints** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.5 & §3.8. Instruct the agent to prevent overriding files in explore mode, and add delta generation constraints.
-
-- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `RFC ✓`
+- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `RFC`
   - Dependencies: cli-installer.md
-  - Notes: Advanced features: version tracking, backup, .magicrc, etc.
+  - Notes: Version tracking, backup, .magicrc, and auto-detection.
 
-## Phase 3 — CLI & Developer Experience
+## Phase 3 — Release Readiness & Documentation
 
-*New workflows, refined CLI, and documentation strategy.*
+*Changelog automation and unified documentation strategy.*
 
-- **CLI Doctor Command** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: workflow-enhancements.md §3.3
-  - Notes: Reference §3.7. Parse prerequisite JSON responses in JavaScript `index.js` (for npm) and `cli.py` (for pip) to display visually structured validation data.
+- **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `RFC`
+  - Dependencies: none
+  - Notes: Automated Phase draft accumulation and Release compile.
+- **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `RFC`
+  - Dependencies: none
+  - Notes: Refine root README and create installer-specific subsets.
 
-- **Interactive Onboarding Workflow** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
-  - Dependencies: none (root)
-  - Notes: Reference §3.6. Create the new `.magic/onboard.md` script.
-
-- **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `RFC ✓`
-  - Dependencies: none (root)
-  - Notes: Phase draft accumulation → plan-completion compile.
-
-- **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `RFC ✓`
-  - Dependencies: none (root)
-  - Notes: Maintenance of 3 README variants (GitHub, npm, PyPI).
-
-## Unassigned (No Spec File Yet)
-
-*(None)*
+## Backlog
+<!-- Registered specifications waiting for prioritization -->
+- *(None)*
 
 ## Archived
 
-*(None)*
+- **Handoff integrations** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **CLI Prerequisite Validation Scripts** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **User Story Scope Boundaries** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **Auto-Generated Context File** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **Explore Mode & Delta Hints** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **CLI Doctor Command** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
+- **Interactive Onboarding Workflow** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
 
 ## Plan History
 

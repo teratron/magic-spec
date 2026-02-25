@@ -1,38 +1,45 @@
-# Phase 1: Foundation
+# Phase 1 — Foundation & Distribution
 
-**Status:** Complete
-**Execution Mode:** Parallel
+**Status:** Active
 
-## Track A — Workflows
+## Track A: Node.js Installer & Distribution
 
-### [T-1A01] Add Handoff Integrations to workflow wrappers [P]
+### [T-1A02] Create Node package.json with build/sync scripts
 
-  Spec:     workflow-enhancements.md §3.1
-  Phase:    1 / Track A
-  Depends:  —
-  Status:   Done
-  Changes:  Handoff blocks verified or added to magic.*.md workflows
-  Assignee: Agent
-  Notes:    Add explicit handoff YAML blocks to all `magic.*.md` workflow configurations.
+- **Spec:** distribution-npm.md §3.2, §3.6
+- **Status:** Todo
+- **Assignee:** Agent
 
-## Track B — CLI Scripts
+### [T-1A03] Implement assembly logic in installers/node/
 
-### [T-1B01] Implement check-prerequisites.sh script [P]
+- **Spec:** distribution-npm.md §3.1
+- **Status:** Todo
+- **Assignee:** Agent
 
-  Spec:     workflow-enhancements.md §3.3
-  Phase:    1 / Track B
-  Depends:  —
-  Status:   Done
-  Changes:  Created .magic/scripts/check-prerequisites.sh
-  Assignee: Agent
-  Notes:    Write stand-alone `.sh` validation script with JSON output option. Use bash.
+### [T-1A04] Audit and harden installers/node/index.js
 
-### [T-1B02] Implement check-prerequisites.ps1 script
+- **Spec:** cli-installer.md
+- **Status:** Todo
+- **Assignee:** Agent
 
-  Spec:     workflow-enhancements.md §3.3
-  Phase:    1 / Track B
-  Depends:  T-1B01
-  Status:   Done
-  Changes:  Created .magic/scripts/check-prerequisites.ps1
-  Assignee: Agent
-  Notes:    Port the `.sh` validation script to `.ps1`. Use PowerShell.
+## Track B: Python Installer & Distribution
+
+### [T-1B03] Create pyproject.toml with shared-data config
+
+- **Spec:** distribution-pypi.md §3.2
+- **Status:** Todo
+- **Assignee:** Agent
+
+### [T-1B04] Implement sync scripts for Python installer
+
+- **Spec:** distribution-pypi.md §3.1, §3.8
+- **Status:** Todo
+- **Assignee:** Agent
+
+## Track C: Architecture Audit
+
+### [T-1C01] Audit root structure vs architecture.md
+
+- **Spec:** architecture.md
+- **Status:** Todo
+- **Assignee:** Agent

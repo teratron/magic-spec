@@ -1,84 +1,37 @@
-# Phase 3: CLI & Developer Experience
+# Phase 3 — Release Readiness & Documentation
 
-**Status:** Active
-**Execution Mode:** Parallel
-**Tracks:** A, B, C
+**Status:** Todo
 
-## User Stories
+## Track A: Changelog Automation
 
-### [P2] US-04 — As a user, I can run a CLI doctor command to instantly diagnose environment issues
+### [T-3A01] Implement Level 1 Changelog (phase append)
 
-Tasks: T-3A01, T-3B01
-Parallel-safe: T-3A01 [P], T-3B01 [P]
+- **Spec:** changelog.md §3.3
+- **Status:** Todo
+- **Assignee:** Agent
 
-### [P2] US-05 — As a new developer, I can run an interactive onboarding workflow to learn the SDD lifecycle
+### [T-3A02] Implement Level 2 Changelog (release compile)
 
-Tasks: T-3C01, T-3C02
-Parallel-safe: none (sequential dependency)
+- **Spec:** changelog.md §3.4
+- **Status:** Todo
+- **Assignee:** Agent
 
----
+## Track B: Unified Documentation
 
-## Track A — CLI Doctor (Node.js)
+### [T-3B01] Update repository root README.md
 
-### [T-3A01] Implement CLI `--doctor` in Node.js installers [P]
+- **Spec:** readme-strategy.md §3.1
+- **Status:** Todo
+- **Assignee:** Agent
 
-  Spec:     workflow-enhancements.md §3.7
-  Story:    US-04
-  Priority: P2
-  Phase:    3 / Track A
-  Depends:  —
-  Status:   Done
-  Changes:  Added isDoctor parsing logic to index.js and formatted JSON output with emojis
-  Assignee: Agent
-  Notes:    Parse prerequisite script JSON response in `installers/node/index.js` to display visually structured validation data when running with `--doctor` or `--check`.
+### [T-3B02] Update Node installer README.md
 
-## Track B — CLI Doctor (Python) *(parallel with A)*
+- **Spec:** readme-strategy.md §3.2
+- **Status:** Todo
+- **Assignee:** Agent
 
-### [T-3B01] Implement CLI `--doctor` in Python installers [P]
+### [T-3B03] Update Python installer README.md
 
-  Spec:     workflow-enhancements.md §3.7
-  Story:    US-04
-  Priority: P2
-  Phase:    3 / Track B
-  Depends:  —
-  Status:   Done
-  Changes:  Handled --doctor flag in python **main**.py, executing script and printing visually structured results
-  Assignee: Agent
-  Notes:    Parse prerequisite script JSON response in `installers/python/magic_spec/__main__.py` to display visually structured validation data when running with `--doctor` or `--check`.
-
-## Track C — Interactive Onboarding Workflow
-
-### [T-3C01] Create `.magic/onboard.md` script
-
-  Spec:     workflow-enhancements.md §3.6
-  Story:    US-05
-  Priority: P2
-  Phase:    3 / Track C
-  Depends:  —
-  Status:   Done
-  Changes:  Created the .magic/onboard.md interactive tutorial script following step-by-step guidance style
-  Assignee: Agent
-  Notes:    Create the explicit, targeted workflow command for onboarding new developers.
-
-### [T-3C02] Create `.agent/workflows/magic.onboard.md` wrapper
-
-  Spec:     workflow-enhancements.md §3.6
-  Story:    US-05
-  Priority: P2
-  Phase:    3 / Track C
-  Depends:  T-3C01
-  Status:   Done
-  Changes:  Created the wrapper inside .agent/workflows/magic.onboard.md to trigger the script
-  Assignee: Agent
-  Notes:    Create the entry point wrapper for the new onboard workflow, adding it to the UI.
-
-## Phase Completion
-
-- [x] All tasks Done
-- [x] No open blockers
-- [x] TASKS.md summary updated
-- [x] Retrospective auto-snapshot appended to RETROSPECTIVE.md
-- [x] Changelog auto-compiled to CHANGELOG.md
-- [x] CONTEXT.md regenerated
-- [x] Next phase unlocked: None
-- [x] If all phases complete: full retrospective + changelog compile (Level 2) was run
+- **Spec:** readme-strategy.md §3.3
+- **Status:** Todo
+- **Assignee:** Agent
