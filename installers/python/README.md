@@ -1,121 +1,54 @@
-# 🪄 Magic Spec
+# magic-spec — Python Installer
 
-[![NPM version](https://img.shields.io/npm/v/magic-spec)](https://www.npmjs.com/package/magic-spec)
-[![PyPI version](https://img.shields.io/pypi/v/magic-spec)](https://pypi.org/project/magic-spec/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+The `magic-spec` installer for Python. It sets up the Specification-Driven Development (SDD) workflow in any project.
 
-**Specification-Driven Development (SDD) workflow for AI coding agents.**
+---
 
-Stop your AI from writing code before it understands the problem.  
-`magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of stack.
+## Quick Start
 
-## ✨ What is Magic Spec?
-
-`magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude, Gemini, etc.). It acts as an project-level operating system for agentic development, enforcing a rigorous, structured pipeline:
-
-```plaintext
-💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
-```
-
-Once installed, your AI agent will automatically:
-
-- Build a phased implementation plan with hierarchical dependencies.
-- Decompose the plan into prioritized user stories and atomic, trackable tasks.
-- Facilitate safe architectural brainstorming via **Explore Mode**.
-- Analyze its own workflow and suggest improvements (Auto-Retrospective).
-- Provide a smooth onboarding experience with `magic.onboard`.
-
-**No code is written until a specification exists. No spec is implemented without a plan.**
-
-## 🚀 Quick Start
-
-Works with **any project** — Rust, Go, Python, JavaScript, or anything else.  
-No runtime lock-in. Requires only Node.js or Python to install.
-
-### Option A — Node.js (npx)
-
-```bash
-npx magic-spec@latest
-```
-
-### Option B — Python (uvx)
+Run in your project root:
 
 ```bash
 uvx magic-spec
+# For non-interactive (CI/CD) use:
+uvx magic-spec --yes
 ```
 
-**What gets installed:**
+Also works with `pipx run magic-spec`.
 
-1. `.magic/` — The live SDD engine (logic and scripts).
-2. `.agent/workflows/` — Slash-command wrappers for your AI agent.
-3. `.design/` — Your project's design workspace (Specs, Plans, Rules).
+---
 
-## 🧭 Core Philosophy
+## What the Installer Does
 
-| Principle | Description |
+1. **Download**: Pulls the versioned payload from GitHub.
+2. **Security Check**: Verifies the downloaded payload for path traversal vulnerabilities (using Python's `tarfile` safe extraction).
+3. **Confirm Script Execution**: Unless `--yes` is provided, you will be prompted to confirm the execution of the initialization script.
+4. **Extract**: Temp-extracts the payload.
+5. **Copy**: Moves `.magic/` and `.agent/` workflows into your folder.
+6. **Run Init**: Executes `.magic/scripts/init.sh` (or `.ps1` on Windows) to create the `.design/` workspace (`INDEX.md`, `RULES.md`).
+
+---
+
+## Command Line Arguments
+
+- `--env <adapter>`: Install a specific environment adapter (e.g., `react`, `bevy`). Can be used multiple times.
+- `--yes`, `-y`: Skip the security prompt for executing the initialization script.
+- `--update`: Only update the `.magic/` engine, skipping workspace initialization.
+- `--doctor`, `--check`: Validate the state of the `.design/` workspace (Requires previous initialization).
+- `--fallback-main`: Force pull from the `main` branch instead of the package version tag.
+
+---
+
+## Requirements
+
+| Tool | Minimum Version |
 | :--- | :--- |
-| **Specs First** | No code is allowed before a specification is accepted. |
-| **Deterministic** | A strict, unskippable pipeline from thought to deployment. |
-| **Constitutional** | All project conventions live in `RULES.md` — the source of truth. |
-| **Self-Improving** | Continuous feedback via built-in auto-retrospectives. |
+| Python | >= 3.8 |
+| uv or pipx | (Recommended) |
 
-## 📁 What Gets Installed
+---
 
-```plaintext
-your-project/
-├── .agent/workflows/         # slash commands (magic.spec, magic.task, etc.)
-├── .magic/                   # SDD Engine (workflow logic, read-only)
-└── .design/                  # Project Design (INDEX.md, RULES.md, PLAN.md)
-```
+## Credits & Links
 
-## 🔗 The Workflow Pipeline
-
-```mermaid
-graph TD
-    IDEA["💡 Idea"] --> INIT{"🏗️ Auto-Init"}
-    INIT -->|.design/ exists| SPEC
-    INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
-    SPEC["📋 Specification"] <--> RULE["📜 Rule"]
-    SPEC --> TASK["🗺️ Task & Plan"]
-    TASK --> RUN["⚡ Run"]
-    RUN --> CODE["🚀 Code"]
-    RUN -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
-    RETRO -.->|Feedback loop| SPEC
-```
-
-### Core Workflows
-
-| # | Workflow | Purpose |
-| :--- | :--- | :--- |
-| 1 | **Specification** | Converts raw thoughts into structured specs. Verifies sync. |
-| 2 | **Task** | Builds dependency graph, PLAN.md, and atomic task files. |
-| 3 | **Run** | Executes tasks and manages retrospectives. |
-
-## 💬 How to Use
-
-Just talk to your AI agent naturally:
-
-- *"Dispatch this thought into specs..."* → Runs Specification workflow
-- *"Create an implementation plan"* → Runs Task workflow
-- *"Execute the next task"* → Runs Run workflow
-- *"Add rule: always use Inter font"* → Runs Rule workflow
-
-## 🔄 Updating
-
-```bash
-npx magic-spec@latest --update
-# or
-uvx magic-spec --update
-```
-
-## 🤝 Compatibility
-
-- [Cursor](https://cursor.com) (Rules + Agent mode)
-- [Windsurf](https://codeium.com/windsurf) (Cascade + Flows)
-- [Claude](https://claude.ai) (Projects)
-- [Gemini](https://gemini.google.com)
-- [GitHub Copilot](https://github.com/features/copilot)
-
-## 📄 License
-
-[MIT](./LICENSE) © 2026 Oleg Alexandrov
+- [Main Repository](https://github.com/teratron/magic-spec)
+- [PyPI Package](https://pypi.org/project/magic-spec/)
