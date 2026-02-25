@@ -1,58 +1,68 @@
-# magic-spec — Python Installer
+# 🟦 magic-spec — Python Installer
 
-The `magic-spec` installer for Python. It sets up the Specification-Driven Development (SDD) workflow in any project.
+The `magic-spec` Python installer offers a robust way to deploy the Specification-Driven Development (SDD) workflow using `uv` or `pipx`. It is built for developers who prefer Python-native tooling and environments.
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-Run in your project root:
+Run in your project root using `uv` (recommended):
 
 ```bash
 uvx magic-spec
-# For non-interactive (CI/CD) use:
+```
+
+### Automation (CI/CD)
+
+To skip prompts and use default settings:
+
+```bash
 uvx magic-spec --yes
 ```
 
-Also works with `pipx run magic-spec`.
+> **Note:** Also works with `pipx run magic-spec` or dynamic execution via `python -m magic_spec`.
 
 ---
 
-## What the Installer Does
+## 🏗️ Architecture: Thin Client
 
-1. **Download**: Pulls the versioned payload from GitHub.
-2. **Security Check**: Verifies the downloaded payload for path traversal vulnerabilities (using Python's `tarfile` safe extraction).
-3. **Confirm Script Execution**: Unless `--yes` is provided, you will be prompted to confirm the execution of the initialization script.
-4. **Extract**: Temp-extracts the payload.
-5. **Copy**: Moves `.magic/` and `.agent/` workflows into your folder.
-6. **Run Init**: Executes `.magic/scripts/init.sh` (or `.ps1` on Windows) to create the `.design/` workspace (`INDEX.md`, `RULES.md`).
+Like the Node.js counterpart, this installer is a **Thin Client**. It ensures your project remains light while providing access to the latest SDD engine features:
 
----
-
-## Command Line Arguments
-
-- `info`: Show installation status (version, active environment).
-- `--check`: Check if a newer version of `magic-spec` is available.
-- `--list-envs`: List all supported environment adapters and their descriptions.
-- `--eject`: Completely remove `magic-spec` and `.magic/` engine from the project.
-- `--doctor`: Run prerequisite check on the `.design/` workspace.
-- `--env <adapter>`: Install a specific environment adapter (e.g., `cursor`, `windsurf`).
-- `--yes`, `-y`: Auto-accept prompts (non-interactive mode).
-- `--update`: Update engine files only (retains `.design/` and `.magicrc`).
-- `--fallback-main`: Force pull payload from the `main` branch.
+1. Downloads the specific versioned tarball from GitHub.
+2. Performs safe extraction using Python's `tarfile` module (hardened against path traversal).
+3. Deploys `.magic/` (engine) and `.agent/` (workflows) to your project.
+4. Executes the initialization script (`.magic/scripts/init.sh` or `.ps1`).
 
 ---
 
-## Requirements
+## 🕹️ CLI Commands & Arguments
 
-| Tool | Minimum Version |
+| Command | Description |
 | :--- | :--- |
-| Python | >= 3.8 |
-| uv or pipx | (Recommended) |
+| `info` | Displays version info, installation paths, and active environment adapter. |
+| `--update` | Updates engine components while preserving your `.design/` workspace. |
+| `--check` | Verifies if a newer version is available on GitHub/PyPI. |
+| `--list-envs` | Enumerates supported IDE adapters (Cursor, Windsurf, etc.). |
+| `--env <id>` | Switches the active environment adapter. |
+| `--doctor` | Runs health checks on the `.design/` workspace. |
+| `--eject` | Removes the Magic Spec engine and configuration from the project. |
+| `--yes`, `-y` | Enables non-interactive mode. |
+| `--fallback-main` | Forces download from the `main` branch. |
 
 ---
 
-## Credits & Links
+## 📋 Requirements
 
-- [Main Repository](https://github.com/teratron/magic-spec)
+| Prerequisite | Minimum Version |
+| :--- | :--- |
+| **Python** | 3.8 or higher |
+| **Tooling** | `uv`, `pipx`, or standard `pip` |
+| **Connectivity** | GitHub access for payload download |
+
+---
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/teratron/magic-spec)
 - [PyPI Package](https://pypi.org/project/magic-spec/)
+- [Project Documentation](../../docs/README.md)

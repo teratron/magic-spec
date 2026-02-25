@@ -1,59 +1,68 @@
-# magic-spec — Node.js Installer
+# 🟩 magic-spec — Node.js Installer
 
-The `magic-spec` installer for npm/npx. It sets up the Specification-Driven Development (SDD) workflow in any project.
+The `magic-spec` Node.js installer provides a lightweight way to deploy the Specification-Driven Development (SDD) workflow using `npm` or `npx`. It is designed for speed, security, and zero-configuration setups.
 
 ---
 
-## Quick Start
+## ⚡ Quick Start
 
-Run in your project root:
+Run in your project root to install or initialize:
 
 ```bash
 npx magic-spec@latest
-# For non-interactive (CI/CD) use:
+```
+
+### Automation (CI/CD)
+
+To skip prompts and use default settings:
+
+```bash
 npx magic-spec@latest --yes
 ```
 
-No additional installation required. `npx` will download the latest version and start the setup immediately.
+---
+
+## 🏗️ Architecture: Thin Client
+
+This installer acts as a **Thin Client**. It does not bundle the entire SDD engine. Instead, it:
+
+1. Downloads the specific versioned payload from GitHub releases.
+2. Verifies the payload integrity and prevents path traversal.
+3. Extracts the payload into your local directory.
+4. Triggers the platform-specific initialization script (`.magic/scripts/init.sh` or `.ps1`).
 
 ---
 
-## What the Installer Does
+## 🕹️ CLI Commands & Arguments
 
-1. **Download**: Pulls the versioned payload from GitHub.
-2. **Security Check**: Verifies the downloaded payload for path traversal vulnerabilities.
-3. **Confirm Script Execution**: Unless `--yes` is provided, you will be prompted to confirm the execution of the initialization script.
-4. **Extract**: Temp-extracts the payload.
-5. **Copy**: Moves `.magic/` and `.agent/` workflows into your folder.
-6. **Run Init**: Executes `.magic/scripts/init.sh` (or `.ps1` on Windows) to create the `.design/` workspace (`INDEX.md`, `RULES.md`).
+Manage your Magic Spec installation with these flags:
 
----
-
-## Command Line Arguments
-
-- `info`: Show installation status (version, active environment).
-- `--check`: Check if a newer version of `magic-spec` is available.
-- `--list-envs`: List all supported environment adapters and their descriptions.
-- `--eject`: Completely remove `magic-spec` and `.magic/` engine from the project.
-- `--doctor`: Run prerequisite check on the `.design/` workspace.
-- `--env <adapter>`: Install a specific environment adapter (e.g., `cursor`, `windsurf`).
-- `--yes`, `-y`: Auto-accept prompts (non-interactive mode).
-- `--update`: Update engine files only (retains `.design/` and `.magicrc`).
-- `--fallback-main`: Force pull payload from the `main` branch.
-
----
-
-## Requirements
-
-| Tool | Minimum Version |
+| Command | Description |
 | :--- | :--- |
-| Node.js | >= 16 |
-| npm | >= 7 |
-| tar | (Required for extraction) |
+| `info` | Displays version info, installation paths, and detected environment. |
+| `--update` | Pulls the latest engine components without touching your `.design/` folder. |
+| `--check` | Checks GitHub for available updates. |
+| `--list-envs` | Lists available IDE adapters (Cursor, Windsurf, Copilot, etc.). |
+| `--env <id>` | Configures Magic Spec for a specific IDE (e.g., `--env cursor`). |
+| `--doctor` | Checks for missing files or inconsistencies in your `.design/` workspace. |
+| `--eject` | Uninstalls Magic Spec and removes the `.magic/` folder. |
+| `--yes` | Non-interactive mode (auto-accepts all prompts). |
+| `--fallback-main` | Downloads the payload from the `main` branch instead of a tagged release. |
 
 ---
 
-## Credits & Links
+## 📋 Requirements
 
-- [Main Repository](https://github.com/teratron/magic-spec)
+| Prerequisite | Minimum Version |
+| :--- | :--- |
+| **Node.js** | 16.x or higher |
+| **npm** | 7.x or higher |
+| **tar** | System utility for extraction |
+
+---
+
+## 🔗 Links
+
+- [GitHub Repository](https://github.com/teratron/magic-spec)
 - [npm Package](https://www.npmjs.com/package/magic-spec)
+- [Project Documentation](../../docs/README.md)
