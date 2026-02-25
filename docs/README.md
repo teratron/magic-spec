@@ -113,4 +113,4 @@ It runs **automatically** after every phase completion, providing the user with 
 
 ---
 
-[Main Repository](https://github.com/teratron/magic-spec) | [Installer Guide](../installers/README.md)
+[Main Repository](https://github.com/teratron/magic-spec) | [Installer Guide](../installers/README.md) | [Engine Integrity (Checksums)](checksums.md)

@@ -81,6 +81,14 @@ that gets shipped to end users. Any modification to files inside `.magic/` must 
 5. **Document the change** — any modification to engine files must be recorded in the
    relevant spec (if applicable) and in a git commit message explaining the reason.
 
+#### 7.1.1 Internal Engine Development (New)
+
+When manually updating workflows or engine logic in `.magic/`, always regenerate checksums to prevent installer conflicts:
+
+```powershell
+node .magic/scripts/executor.js generate-checksums
+```
+
 ### C2 — Workflow Minimalism
 
 **Declared by:** User (2026-02-23)

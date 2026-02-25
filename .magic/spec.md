@@ -305,9 +305,9 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 
 9. **Apply**: Only after user approval. Update `INDEX.md`, `RULES.md`, and `Document History` in affected files.
 
-### Consistency Check (Pre-flight)
+### Consistency Check & Engine Integrity (Pre-flight)
 
-Verifies that specification content matches the **actual project state**: file paths, directory structure, tool configurations, and removed/renamed entities. This prevents plans and tasks from being built on stale specifications.
+Verifies that specification content matches the **actual project state** (file paths, structure, configs) AND ensures the **SDD Engine itself** hasn't been corrupted or modified without updating checksums.
 
 > **Key difference from Audit:** The Registry Audit checks specs against each other and against RULES.md (internal consistency). The Consistency Check compares specs against the real project filesystem (external consistency).
 
@@ -341,6 +341,7 @@ graph TD
 | **Removed entities** | Specs don't reference deleted files, directories, or configs | `.env` files referenced but were removed |
 | **Renamed entities** | Specs reflect current names after renames | `core/` referenced but was eliminated |
 | **Tool/config sync** | `package.json`, `pyproject.toml` fields match spec descriptions | Spec says `main: "src/index.js"` but `package.json` says `index.js` |
+| **Engine Integrity** | Contents of `.magic/` match the hashes in `.checksums` | `task.md` was modified but checksum wasn't regenerated |
 | **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
 
 **Report format:**

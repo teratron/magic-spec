@@ -14,9 +14,47 @@ $indexExists = Test-Path $indexPath
 $rulesExists = Test-Path $rulesPath
 $planExists = Test-Path $planPath
 $tasksExists = Test-Path $tasksPath
+# Write-Host "DEBUG: CWD is $(Get-Location)"
+$checksumsExists = Test-Path ".magic\.checksums"
 
 $missing = @()
 $warnings = @()
+
+# Engine Integrity Check (Internal logic check)
+if ($checksumsExists) {
+    try {
+        # Use CWD and Join-Path for reliability
+        $root = (Get-Item ".").FullName
+        $checksumsPath = Join-Path $root ".magic\.checksums"
+        $magicDir = Join-Path $root ".magic"
+        
+        $checksums = Get-Content $checksumsPath -Raw | ConvertFrom-Json
+        
+        foreach ($prop in $checksums.PSObject.Properties) {
+            $relPath = $prop.Name
+            # Skip the checksums file itself
+            if ($relPath -eq ".checksums") { continue }
+            
+            $storedHash = $prop.Value
+            $fullPath = Join-Path $magicDir ($relPath.Replace('/', '\'))
+            if (Test-Path $fullPath -PathType Leaf) {
+                # Use .NET for hash calculation to be more robust across environments
+                $stream = [System.IO.File]::OpenRead($fullPath)
+                $sha256 = [System.Security.Cryptography.SHA256]::Create()
+                $hash = [System.BitConverter]::ToString($sha256.ComputeHash($stream)).Replace("-", "").ToLower()
+                $stream.Close()
+                
+                if ($hash -ne $storedHash) {
+                    $warnings += "Engine Integrity: '.magic/$relPath' has been modified locally. Run 'node .magic/scripts/executor.js generate-checksums' if this was intentional."
+                }
+            }
+        }
+    } catch {
+        $warnings += "Engine Integrity: '.magic/.checksums' check failed ($($_.Exception.Message))."
+    }
+} else {
+    $warnings += "Engine Integrity: '.magic/.checksums' is missing."
+}
 
 if (-not $indexExists) { $missing += "INDEX.md" }
 if (-not $rulesExists) { $missing += "RULES.md" }

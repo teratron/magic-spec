@@ -18,6 +18,44 @@ done
 MISSING=()
 WARNINGS=()
 
+# Engine Integrity Check
+CHECKSUMS_FILE=".magic/.checksums"
+if [ -f "$CHECKSUMS_FILE" ]; then
+    # Use Node.js to verify checksums since we already rely on it for the executor
+    VERIFY_RESULT=$(node -e "
+        const fs = require('fs');
+        const crypto = require('crypto');
+        const path = require('path');
+        const MAGIC_DIR = '.magic';
+        try {
+            const checksums = JSON.parse(fs.readFileSync('$CHECKSUMS_FILE', 'utf8'));
+            let warnings = [];
+            for (const [relPath, storedHash] of Object.entries(checksums)) {
+                if (relPath === '.checksums') continue;
+                const fullPath = path.join(MAGIC_DIR, relPath);
+                if (fs.existsSync(fullPath)) {
+                    const currentHash = crypto.createHash('sha256').update(fs.readFileSync(fullPath)).digest('hex');
+                    if (currentHash !== storedHash) {
+                        warnings.push('Engine Integrity: \".magic/' + relPath + '\" has been modified locally.');
+                    }
+                }
+            }
+            if (warnings.length > 0) {
+                console.log(warnings.join('|') + '|Run \"node .magic/scripts/executor.js generate-checksums\" if this was intentional.');
+            }
+        } catch (e) {}
+    " || echo "")
+    
+    if [ ! -z "$VERIFY_RESULT" ]; then
+        IFS='|' read -ra ADDR <<< "$VERIFY_RESULT"
+        for i in "${ADDR[@]}"; do
+            WARNINGS+=("$i")
+        done
+    fi
+else
+    WARNINGS+=("Engine Integrity: '.magic/.checksums' is missing.")
+fi
+
 # Paths
 INDEX_PATH=".design/INDEX.md"
 RULES_PATH=".design/RULES.md"

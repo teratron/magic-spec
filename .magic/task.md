@@ -61,8 +61,9 @@ graph TD
     I --> J[Task Completion Checklist]
 ```
 
-0. **Consistency Check**: Before running, check `INDEX.md` against the file system by running:
+0. **Consistency Check & Engine Integrity**: Before running, verify specification consistency and engine file integrity by running:
    - `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
+   - **Action**: If any "Engine Integrity" warnings appear, the agent must inform the user and recommend regenerating checksums if the changes were intentional.
 1. **Read all spec files**: For each spec in `.design/specifications/`, extract:
     - `Related Specifications` — direct dependencies
     - `Implementation Notes` — if present, surface them in the plan/tasks

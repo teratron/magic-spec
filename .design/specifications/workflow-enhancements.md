@@ -1,6 +1,6 @@
 # Workflow Enhancements
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** N/A (Core enhancements)
@@ -251,11 +251,14 @@ bash .magic/scripts/check-prerequisites.sh --json --require-specs
     "specs":     { "count": 4, "stable": 2, "draft": 2 }
   },
   "missing_required": ["PLAN.md"],
-  "warnings": []
+  "warnings": ["Engine Integrity: '.magic/task.md' has been modified locally"]
 }
 ```
 
 `ok` is `true` only when all artifacts declared via `--require-*` flags are present.
+
+**Engine Integrity Check (Checksums):**
+The script also verifies the integrity of the `.magic/` directory by comparing local file hashes against the `.magic/.checksums` registry. If a mismatch is detected, a warning is added to the `warnings` list.
 
 **Failure response format (for agent consumption):**
 
@@ -420,3 +423,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | 0.4.0 | 2026-02-23 | Agent | Removed magic.retrospective from handoffs (retrospective is automatic in task.md); updated handoffs table to 4 workflows |
 | 0.5.0 | 2026-02-23 | Agent | Status changed to Stable for planning |
 | 1.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
+| 1.3.0 | 2026-02-25 | Agent | Added Internal Engine Integrity Check (Checksums) to Prerequisite Validation |

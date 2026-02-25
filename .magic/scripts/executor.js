@@ -1,5 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
+const fs = require('fs');
 
 /**
  * Universal script executor for Magic SDD.
@@ -15,20 +16,27 @@ if (!scriptName) {
 }
 
 const isWindows = process.platform === 'win32';
-const extension = isWindows ? '.ps1' : '.sh';
-const scriptPath = path.join(__dirname, `${scriptName}${extension}`);
+const jsPath = path.join(__dirname, `${scriptName}.js`);
+const shellExtension = isWindows ? '.ps1' : '.sh';
+const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
 
 let command, cmdArgs;
 
-if (isWindows) {
-    command = 'powershell.exe';
-    cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
+if (fs.existsSync(jsPath)) {
+    command = 'node';
+    cmdArgs = [jsPath, ...args];
 } else {
-    command = 'bash';
-    cmdArgs = [scriptPath, ...args];
+    const scriptPath = shellPath;
+    if (isWindows) {
+        command = 'powershell.exe';
+        cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
+    } else {
+        command = 'bash';
+        cmdArgs = [scriptPath, ...args];
+    }
 }
 
-const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: isWindows });
+const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: false });
 
 child.on('exit', (code) => {
     process.exit(code || 0);
