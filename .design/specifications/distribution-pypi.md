@@ -1,7 +1,9 @@
 # Distribution: PyPI (uvx)
 
-**Version:** 0.2.0
-**Status:** Draft
+**Version:** 0.3.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** architecture.md
 
 ## Overview
 
@@ -210,3 +212,4 @@ Would bundle the markdown files inside the `magic_spec/` Python namespace. Rejec
 | 0.1.1 | 2026-02-20 | Agent | Added §3.8 Script Reference (sync / build / check / publish) |
 | 0.1.2 | 2026-02-21 | Agent | Migrated from hatch to uv; added §3.9 registration checklist |
 | 0.2.0 | 2026-02-21 | Agent | Major refactor: replaced core/ with .magic/.agent/adapters; removed .env references |
+| 0.3.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

@@ -1,7 +1,9 @@
 # CLI Installer
 
-**Version:** 0.4.0
-**Status:** Draft
+**Version:** 0.5.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** architecture.md
 
 ## Overview
 
@@ -150,3 +152,4 @@ ensures users always run the newest version without a manual upgrade step.
 | 0.2.2 | 2026-02-20 | Agent | Renamed bin/magic.js → src/index.js |
 | 0.3.0 | 2026-02-21 | Agent | Major refactor: removed core/, updated to magic.*.md naming, index.js at root |
 | 0.4.0 | 2026-02-23 | Agent | Inserted Template Compilation section for multi-format agent support |
+| 0.5.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

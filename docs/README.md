@@ -43,13 +43,13 @@ graph TD
 ### Auxiliary Workflow
 
 | Workflow | File | Purpose |
-|---|---|---|
+| :--- | :--- | :--- |
 | **Rule** | `rule.md` | 📜 Manages the project constitution (`RULES.md §7`). Add / Amend / Remove / List conventions |
 
 ### Auto-Init & Auto-Retrospective
 
 | | File | Purpose |
-|---|---|---|
+| :--- | :--- | :--- |
 | **Init** | `init.md` + `scripts/` | 🏗️ Automatic pre-flight check. On first invocation of any workflow, verifies `.design/` exists. If not — creates the directory structure, `INDEX.md`, and `RULES.md`. No manual command needed |
 | **Check Specs** | `spec.md` | ⚖️ Pre-flight consistency check. Runs before planning/task generation to verify specs match actual project paths, structures, and configs |
 | **Retrospective** | `retrospective.md` | 🔍 Called automatically by `run.md`: Level 1 snapshot after each phase, Level 2 full analysis when the entire plan completes. Not a user command |
@@ -113,7 +113,7 @@ The Retrospective is Magic's **self-improvement mechanism**, built directly into
 ### Two-Level System
 
 | Level | Name | Trigger | Cost | Output |
-|---|---|---|---|---|
+| :--- | :--- | :--- | :--- | :--- |
 | **Level 1** | Auto-snapshot | Automatic after every phase completion | ~10s | One row appended to Snapshots table in `RETROSPECTIVE.md` |
 | **Level 2** | Full retrospective | Automatic when entire plan completes | ~2–5 min | Full analysis + recommendations presented to user |
 
@@ -135,7 +135,7 @@ The Retrospective detects these issues **before they compound**.
 ### When It Runs
 
 | Trigger | Level | Behaviour |
-|---|---|---|
+| :--- | :--- | :--- |
 | 🏁 Phase complete | **Level 1** | Auto-snapshot: silent, no interruption |
 | 🎯 Entire plan complete | **Level 2** | Full retro: auto-runs, presents report |
 | 📝 Every 5th spec update | — | Suggests: *"Run retrospective?"* (manual) |
@@ -165,7 +165,7 @@ Simply instruct your AI agent (Cursor, Claude, Gemini, or any terminal agent). I
 ### Core Commands
 
 | Command | What Happens |
-|---|---|
+| :--- | :--- |
 | *"Dispatch this thought into specs..."* | Runs Specification → parses, maps, and writes spec files |
 | *"Create an implementation plan"* | Runs Task → builds phased plan with dependency graph |
 | *"Generate tasks for Phase 1"* | Runs Task → decomposes plan into atomic tasks with tracks |
@@ -174,7 +174,7 @@ Simply instruct your AI agent (Cursor, Claude, Gemini, or any terminal agent). I
 ### Auxiliary Commands (optional)
 
 | Command | What Happens |
-|---|---|
+| :--- | :--- |
 | *"Check if specs match the actual project state"* | Runs Specification → executes Consistency Check (Pre-flight) |
 | *"Add rule: always use snake_case naming"* | Runs Rule → adds convention to RULES.md §7 |
 

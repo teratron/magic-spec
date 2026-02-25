@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Status:** Active
 
 ## Overview
@@ -37,6 +37,15 @@ Read by the agent before every operation. Updated only via explicit triggers.
 - No implementation code (no Rust, JS, Python, SQL, etc.).
 - Pseudo-code and logic flows are permitted.
 - Every spec must have: Overview, Motivation, Document History.
+
+### 5.1. SDD Metadata (New)
+
+- **Layer**: Declare the implementation layer (`design`, `implementation`, `infrastructure`).
+- **Implements**: Reference the parent specification or standard (or `N/A`).
+- **Status Mapping**:
+  - `Draft`: Development version.
+  - `RFC`: Ready for review/Request for Comments.
+  - `Stable`: Approved and implemented.
 
 ## 6. Relations Rules
 
@@ -122,3 +131,4 @@ After any modification to `.magic/` engine files or `.agent/workflows/` wrappers
 | 1.5.0 | 2026-02-23 | Agent | Added C5: Standardized Onboarding Tutorial (C2 Exception) |
 | 1.6.0 | 2026-02-25 | Agent | Added C6-C8: Selective Planning, Universal Executor, and Phase Archival |
 | 1.7.0 | 2026-02-25 | Agent | Added C9: Simulation Mandatory; added `magic.simulate` workflow |
+| 1.8.0 | 2026-02-25 | Agent | Hardened C1-C9; added Section 5.1 (Layer/Implements metadata) |

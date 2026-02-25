@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.0.0
-**Generated:** 2026-02-23
-**Based on:** .design/INDEX.md v1.17.0
+**Version:** 1.1.0
+**Generated:** 2026-02-25
+**Based on:** .design/INDEX.md v1.19.0
 **Status:** Active
 
 ## Overview
@@ -14,6 +14,16 @@ Specs are the source of truth. To update: *"Update plan"*.
 
 ```mermaid
 graph TD
+    %% Phase 1
+    architecture --> cli-installer
+    architecture --> distribution-npm
+    architecture --> distribution-pypi
+    architecture --> agent-environments
+    
+    %% Phase 2
+    cli-installer --> installer-features
+    
+    %% Phase 3
     workflow-enhancements-3.3 --> workflow-enhancements-3.7
     workflow-enhancements-3.1
     workflow-enhancements-3.2
@@ -31,6 +41,14 @@ graph TD
 
 *Specs with no dependencies. Start here.*
 
+- **Root Architecture** ([architecture.md](specifications/architecture.md)) — `RFC ✓`
+  - Dependencies: none (root)
+  - Notes: Establishes the two-layer structure and "source of truth" in root.
+
+- **CLI Installer Core** ([cli-installer.md](specifications/cli-installer.md)) — `RFC ✓`
+  - Dependencies: architecture.md
+  - Notes: Basic copy logic for .magic/ and .agent/.
+
 - **Handoff integrations** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
   - Dependencies: none (root)
   - Notes: Reference §3.1. Add explicit handoff YAML blocks to all `magic.*.md` workflow configurations.
@@ -39,9 +57,17 @@ graph TD
   - Dependencies: none (root)
   - Notes: Reference §3.3. Write stand-alone `.sh` and `.ps1` validation scripts to check prerequisite environments.
 
-## Phase 2 — Core Engine Upgrades
+- **Distribution: npm & PyPI** ([distribution-npm.md](specifications/distribution-npm.md), [distribution-pypi.md](specifications/distribution-pypi.md)) — `RFC ✓`
+  - Dependencies: architecture.md
+  - Notes: Assembly and publishing workflows for Node.js and Python installers.
 
-*Workflow logic and agent constraints.*
+## Phase 2 — Core Engine & Features
+
+*Workflow logic, agent adapters, and advanced CLI tools.*
+
+- **Agent Environment Adapters** ([agent-environments.md](specifications/agent-environments.md)) — `RFC ✓`
+  - Dependencies: architecture.md
+  - Notes: Multi-env support via templates (Cursor, Windsurf, etc.).
 
 - **User Story Scope Boundaries** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
   - Dependencies: none (root)
@@ -55,9 +81,13 @@ graph TD
   - Dependencies: none (root)
   - Notes: Reference §3.5 & §3.8. Instruct the agent to prevent overriding files in explore mode, and add delta generation constraints.
 
+- **Installer Features** ([installer-features.md](specifications/installer-features.md)) — `RFC ✓`
+  - Dependencies: cli-installer.md
+  - Notes: Advanced features: version tracking, backup, .magicrc, etc.
+
 ## Phase 3 — CLI & Developer Experience
 
-*New workflows and refined CLI.*
+*New workflows, refined CLI, and documentation strategy.*
 
 - **CLI Doctor Command** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
   - Dependencies: workflow-enhancements.md §3.3
@@ -66,6 +96,14 @@ graph TD
 - **Interactive Onboarding Workflow** ([workflow-enhancements.md](specifications/workflow-enhancements.md)) — `Stable ✓`
   - Dependencies: none (root)
   - Notes: Reference §3.6. Create the new `.magic/onboard.md` script.
+
+- **Two-Level Changelog Generation** ([changelog.md](specifications/changelog.md)) — `RFC ✓`
+  - Dependencies: none (root)
+  - Notes: Phase draft accumulation → plan-completion compile.
+
+- **README Content Strategy** ([readme-strategy.md](specifications/readme-strategy.md)) — `RFC ✓`
+  - Dependencies: none (root)
+  - Notes: Maintenance of 3 README variants (GitHub, npm, PyPI).
 
 ## Unassigned (No Spec File Yet)
 
@@ -80,3 +118,4 @@ graph TD
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Agent | Initial plan for workflow enhancements |
+| 1.1.0 | 2026-02-25 | Agent | Synchronized with INDEX.md v1.19.0; added all RFC specifications |

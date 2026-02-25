@@ -1,7 +1,9 @@
 # Agent Environment Adapters
 
-**Version:** 0.3.0
-**Status:** Draft
+**Version:** 0.4.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** architecture.md
 
 ## Overview
 
@@ -170,3 +172,4 @@ burden with no user benefit over a single `--env` flag.
 | 0.1.1 | 2026-02-20 | Agent | Clarified: --env REPLACES .agent/, not adds; removed stale core/ refs |
 | 0.2.0 | 2026-02-21 | Agent | Updated to magic.*.md flat naming; removed workflows/magic/ subdirectory |
 | 0.3.0 | 2026-02-23 | Agent | Added abstract templates via placeholders; expanded matrix for Markdown/TOML support |
+| 0.4.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

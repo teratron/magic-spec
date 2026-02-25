@@ -1,7 +1,9 @@
 # Distribution: npm (npx)
 
-**Version:** 0.2.0
-**Status:** Draft
+**Version:** 0.3.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** architecture.md
 
 ## Overview
 
@@ -172,3 +174,4 @@ dependencies, so bundling adds complexity with no benefit.
 | 0.1.3 | 2026-02-21 | Agent | Aligned to Assembly Pattern (dist/ folder); renamed sync to build |
 | 0.1.4 | 2026-02-21 | Agent | Removed src/ wrapper; index.js moved to installer root |
 | 0.2.0 | 2026-02-21 | Agent | Major refactor: removed core/, src/, .env references; aligned to current structure |
+| 0.3.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

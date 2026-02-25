@@ -19,10 +19,11 @@ Stop your AI from writing code before it understands the problem.
 
 Once installed, your AI agent will automatically:
 
-- Convert raw thoughts into structured specification files.
-- Build a phased implementation plan from approved specs.
-- Decompose the plan into atomic, trackable tasks.
-- Analyze its own workflow and suggest improvements — automatically, at phase completion.
+- Build a phased implementation plan with hierarchical dependencies.
+- Decompose the plan into prioritized user stories and atomic, trackable tasks.
+- Facilitate safe architectural brainstorming via the new **Explore Mode**.
+- Analyze its own workflow and suggest improvements (Auto-Retrospective).
+- Provide a smooth onboarding experience with `magic.onboard`.
 
 **No code is written until a specification exists. No spec is implemented without a plan.**
 
@@ -62,9 +63,10 @@ Both commands do exactly the same thing:
 | Principle | Description |
 | :--- | :--- |
 | **Specs First, Code Later** | The agent is forbidden from writing code from raw input. All ideas become specs first. |
-| **Deterministic Process** | A strict pipeline is enforced: *Thought → Spec → Task → Run → Code*. |
+| **Deterministic Process** | A strict pipeline: *Thought → Spec → Task → Run (Execute) → Code*. |
 | **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
-| **Self-Improving** | After each phase and at plan completion, the Task workflow automatically runs a retrospective and generates improvement recommendations. |
+| **Self-Improving** | The engine automatically runs retrospectives to optimize its own performance. |
+| **Simulation Mandatory** | Every engine change is validated via `magic.simulate` before deployment. |
 
 You can check if your SDD workspace is properly initialized and healthy without invoking the AI. Just append the `--doctor` (or `--check`) flag:
 

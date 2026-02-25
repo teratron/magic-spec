@@ -1,7 +1,9 @@
 # Changelog
 
-**Version:** 0.2.0
-**Status:** Draft
+**Version:** 0.3.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** N/A (Project standard)
 
 ## Overview
 
@@ -266,3 +268,4 @@ manual trigger risks forgetting and an incomplete changelog at publish time.
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.2.0 | 2026-02-20 | Agent | Added §3.2 Task Change Record (Variant A); updated Level 1 to read Change Records |
+| 0.3.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

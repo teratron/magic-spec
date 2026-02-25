@@ -1,7 +1,9 @@
 # Architecture
 
-**Version:** 1.0.0
-**Status:** Draft
+**Version:** 1.1.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** N/A (Root architecture)
 
 ## Overview
 
@@ -142,3 +144,4 @@ fundamentally different packaging models and must be maintained independently.
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
 | 0.2.0 | 2026-02-20 | Agent | Migrated core/.agent/ → core/adapters/; added multi-env adapter structure |
 | 1.0.0 | 2026-02-20 | Agent | Eliminated core/ directory; root is now the source of truth |
+| 1.1.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

@@ -1,7 +1,9 @@
 # README Strategy
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.2.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** N/A (Strategy)
 
 ## Overview
 
@@ -230,3 +232,4 @@ that change rarely. Manual maintenance is simpler and produces better copy.
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-21 | Agent | Initial Draft |
+| 0.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

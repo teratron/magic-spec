@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.18.0
+**Version:** 1.19.0
 **Status:** Active
 
 ## Overview
@@ -15,22 +15,22 @@ Central registry of all project specifications and their current state.
 
 | File | Description | Status | Version |
 | :--- | :--- | :--- | :--- |
-| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | Draft | 1.0.0 |
-| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | Draft | 0.4.0 |
-| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | Draft | 0.2.0 |
-| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | Draft | 0.2.0 |
+| [architecture.md](specifications/architecture.md) | Two-layer repository structure: root (source of truth) + installers/ | RFC | 1.1.0 |
+| [cli-installer.md](specifications/cli-installer.md) | CLI behavior for npx and uvx commands | RFC | 0.5.0 |
+| [distribution-npm.md](specifications/distribution-npm.md) | npm package structure and publish process (npx) | RFC | 0.3.0 |
+| [distribution-pypi.md](specifications/distribution-pypi.md) | PyPI package structure and publish process via uv (uvx) | RFC | 0.3.0 |
 | [secrets-management.md](specifications/secrets-management.md) | ~~.env-based credentials management~~ — Deprecated | Deprecated | 0.2.0 |
-| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | Draft | 0.3.0 |
-| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | Draft | 0.1.0 |
-| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | Draft | 0.2.0 |
-| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for 3 README variants: GitHub root, npm package, PyPI package | Draft | 0.1.0 |
-| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 1.1.0 |
+| [agent-environments.md](specifications/agent-environments.md) | Multi-environment adapter support via abstract templates (Markdown/TOML) for major IDEs and CLIs | RFC | 0.4.0 |
+| [installer-features.md](specifications/installer-features.md) | Advanced CLI features: version tracking, info/check/eject, backup, .magicrc, auto-detect | RFC | 0.2.0 |
+| [changelog.md](specifications/changelog.md) | Two-level Changelog generation: phase draft accumulation → plan-completion compile to CHANGELOG.md | RFC | 0.3.0 |
+| [readme-strategy.md](specifications/readme-strategy.md) | Content strategy for 3 README variants: GitHub root, npm package, PyPI package | RFC | 0.2.0 |
+| [workflow-enhancements.md](specifications/workflow-enhancements.md) | Eight targeted improvements: handoffs, user stories, prerequisite validation, CONTEXT.md, explore mode, onboarding, CLI doctor, and delta hints | Stable | 1.2.0 |
 
 ## Meta Information
 
 - **Maintainer**: Oleg Alexandrov
 - **License**: MIT
-- **Last Updated**: 2026-02-23
+- **Last Updated**: 2026-02-25
 
 ## Document History
 
@@ -55,3 +55,4 @@ Central registry of all project specifications and their current state.
 | 1.16.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.3.0 |
 | 1.17.0 | 2026-02-23 | Agent | Updated workflow-enhancements to v0.5.0 and marked as Stable |
 | 1.18.0 | 2026-02-23 | Agent | Bumped workflow-enhancements to v1.1.0 for release alignment |
+| 1.19.0 | 2026-02-25 | Agent | Synchronized all specs with SDD standard metadata (Layer, RFC status update) |

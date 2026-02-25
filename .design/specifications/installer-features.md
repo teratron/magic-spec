@@ -1,7 +1,9 @@
 # Installer Features
 
-**Version:** 0.1.0
-**Status:** Draft
+**Version:** 0.2.0
+**Status:** RFC
+**Layer:** implementation
+**Implements:** cli-installer.md
 
 ## Overview
 
@@ -272,3 +274,4 @@ and readable by any tool or CI script.
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 0.1.0 | 2026-02-20 | Agent | Initial Draft |
+| 0.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |

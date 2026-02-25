@@ -1,7 +1,9 @@
 # Workflow Enhancements
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
+**Layer:** implementation
+**Implements:** N/A (Core enhancements)
 
 ## Overview
 
@@ -417,3 +419,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | 0.3.0 | 2026-02-23 | Agent | Added enhancements 3.5-3.8 |
 | 0.4.0 | 2026-02-23 | Agent | Removed magic.retrospective from handoffs (retrospective is automatic in task.md); updated handoffs table to 4 workflows |
 | 0.5.0 | 2026-02-23 | Agent | Status changed to Stable for planning |
+| 1.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
