@@ -105,6 +105,24 @@ def update_magic_version(version: str) -> None:
         print("Updated Project Core .magic/.version")
 
 
+def get_current_old_version() -> str:
+    pyproject_path = PROJECT_ROOT / "pyproject.toml"
+    if not pyproject_path.exists():
+        return ""
+    content = pyproject_path.read_text(encoding="utf-8")
+    match = re.search(r'^version\s*=\s*"(.*)"', content, flags=re.MULTILINE)
+    if match:
+        return match.group(1)
+    return ""
+
+
+def get_magic_version_target() -> str:
+    magic_path = PROJECT_ROOT / ".magic" / ".version"
+    if magic_path.exists():
+        return magic_path.read_text(encoding="utf-8").strip()
+    return ""
+
+
 def update_docs_versions(old_version: str, new_version: str) -> list[str]:
     print("\nUpdating versions in documentation...")
     modified_files = []
@@ -232,9 +250,15 @@ def main() -> None:
         description="Unified release script for magic-spec"
     )
     parser.add_argument(
-        "old_version", help="The current version to be replaced in docs (e.g., 1.1.0)"
+        "old_version",
+        nargs="?",
+        help="The current version to be replaced in docs (e.g., 1.1.0)",
     )
-    parser.add_argument("version", help="The new version to release (e.g., 1.1.1)")
+    parser.add_argument(
+        "version",
+        nargs="?",
+        help="The new version to release (e.g., 1.1.1). If not provided, it is autodetected.",
+    )
     parser.add_argument(
         "--dry-run",
         action="store_true",
@@ -247,8 +271,24 @@ def main() -> None:
     )
 
     args = parser.parse_args()
-    old_version = args.old_version.lstrip("v")
-    version = args.version.lstrip("v")
+
+    if args.old_version and args.version:
+        old_version = args.old_version.lstrip("v")
+        version = args.version.lstrip("v")
+    else:
+        version = get_magic_version_target().lstrip("v")
+        old_version = get_current_old_version().lstrip("v")
+        if not version or not old_version:
+            import sys
+
+            print(
+                "Error: Could not autodetect versions from .magic/.version and pyproject.toml."
+            )
+            print(
+                "Please provide them manually: python publish.py <old_version> <new_version>"
+            )
+            sys.exit(1)
+        print(f"Autodetected versions: {old_version} -> {version}")
 
     load_env()
 
