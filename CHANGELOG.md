@@ -9,19 +9,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- Полная поддержка абстрактных шаблонов окружения с автоматическим разрешением (`{ARGUMENTS}`) во всех CLI.
-- Внедрен файл `.magicrc.json` для персистентности выбранных окружений и их автоопределения.
-- Двухуровневая автоматическая генерация Changelog (через накопление блоков `Changes` в задачах).
-- В CLI добавлены команды: `info`, `--check`, `--list-envs` и `--eject`.
-- Внедрено отслеживание версии ядра в рамках проекта через файл `.magic/.version`.
+- **Full support for abstract environment templates** with automatic resolution (`{ARGUMENTS}`) across all CLIs.
+- **Introduced `.magicrc.json`** for persistence of selected environments and their auto-detection.
+- **Two-level automatic Changelog generation** (by accumulating `Changes` blocks within tasks).
+- **Added new CLI commands:** `info`, `--check`, `--list-envs`, and `--eject`.
+- **Introduced core version tracking** within the project via the `.magic/.version` file.
 
 ### Changed
 
-- **Архитектура:** Репозиторий перестроен в двухуровневую модель (root = source of truth + installers), папка `core/` удалена для устранения дублирования.
-- **Node Installer:** Полностью переработан механизм установки (теперь он использует скомпилированные файлы из NPM, а не скачивает их с GitHub, устранена уязвимость Path Traversal).
-- **Python Installer:** Реализован изолированный пакет на базе `hatchling` (через shared-data) без внешних зависимостей к GitHub.
-- **Документация:** Разделены стратегии `README.md` (разные фокусы для GitHub, NPM пакета и PyPI пакета).
-- **Обновление:** Более безопасная логика обновления `.magic` (старые папки теперь перемещаются в `.magic/archives/`, а не просто удаляются).
+- **Architecture:** Restructured the repository into a two-level model (root = source of truth + installers), and removed the `core/` folder to eliminate duplication.
+- **Node Installer:** Completely overhauled the installation mechanism (it now uses compiled files from NPM instead of downloading them from GitHub, eliminating Path Traversal vulnerabilities).
+- **Python Installer:** Implemented an isolated package based on `hatchling` (via shared-data) without external dependencies on GitHub.
+- **Documentation:** Separated `README.md` strategies (different focuses for GitHub, NPM package, and PyPI package).
+- **Update Logic:** Improved `.magic` update logic to be safer (old folders are now moved to `.magic/archives/` rather than simply deleted).
 
 ## [1.2.3] - 2026-02-23
 
