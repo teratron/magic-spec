@@ -82,6 +82,7 @@ graph TD
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> N1[Write compiled entry to CHANGELOG.md silently]
+    N1 --> N2[Bump version: update package.json & .magic/.version]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
     I --> O[Escalate to user]
@@ -99,6 +100,7 @@ graph TD
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and silently write to `CHANGELOG.md` (no user review needed per Zero-Prompt Automation).
+        3. **Auto-Bump Version**: Update `package.json` and `.magic/.version` to match the newly compiled version.
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
@@ -124,7 +126,8 @@ graph TD
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> N1[Write compiled entry to CHANGELOG.md silently]
-    N1 --> O[Generate CONTEXT.md]
+    N1 --> N2[Bump version: update package.json & .magic/.version]
+    N2 --> O[Generate CONTEXT.md]
     L -->|No| N[Manager: Report phase complete]
     N --> O
     H --> K[User decision]
