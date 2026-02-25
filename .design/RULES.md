@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.5.0
+**Version:** 1.7.0
 **Status:** Active
 
 ## Overview
@@ -86,6 +86,30 @@ Skip user story priority prompt: true. The agent must automatically assign defau
 
 The `magic.onboard` workflow is explicitly authorized as a standardized, interactive entry point for new developers. This is a one-time, intentional exception to the **Workflow Minimalism (C2)** rule to facilitate rapid team scaling and engine adoption.
 
+### C6 — Selective Planning & Backlog
+
+**Declared by:** Agent (Fix Engine Friction, 2026-02-25)
+
+To prevent "Waterfall traps", only `Stable` specifications prioritized by the user are included in the active `PLAN.md`. All other specifications in `INDEX.md` reside in a virtual **Backlog** until explicitly pulled into a phase.
+
+### C7 — Universal Script Execution
+
+**Declared by:** Agent (Fix Engine Friction, 2026-02-25)
+
+To ensure cross-platform reliability, all internal engine scripts must be invoked via `node .magic/scripts/executor.js <script_name>`. This wrapper handles the `bash` vs `powershell` detection automatically.
+
+### C8 — Phase Archival
+
+**Declared by:** Agent (Fix Engine Friction, 2026-02-25)
+
+To maintain a clean workspace, completed phase task files (e.g., `phase-1.md`) must be moved to `.design/archives/tasks/` immediately after a successful Level 1 retrospective.
+
+### C9 — Simulation Mandatory
+
+**Declared by:** Agent (Simulator Workflow, 2026-02-25)
+
+After any modification to `.magic/` engine files or `.agent/workflows/` wrappers, the `magic.simulate` workflow must be executed to verify logical integrity and eliminate "rough edges" (шероховатости).
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -96,3 +120,5 @@ The `magic.onboard` workflow is explicitly authorized as a standardized, interac
 | 1.3.0 | 2026-02-23 | Agent | Added C3: Parallel Task Execution Mode |
 | 1.4.0 | 2026-02-23 | Agent | Added C4: Automate User Story Priorities |
 | 1.5.0 | 2026-02-23 | Agent | Added C5: Standardized Onboarding Tutorial (C2 Exception) |
+| 1.6.0 | 2026-02-25 | Agent | Added C6-C8: Selective Planning, Universal Executor, and Phase Archival |
+| 1.7.0 | 2026-02-25 | Agent | Added C9: Simulation Mandatory; added `magic.simulate` workflow |

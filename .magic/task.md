@@ -60,8 +60,7 @@ graph TD
 ```
 
 0. **Consistency Check**: Before running, check `INDEX.md` against the file system by running:
-   - **bash**: `bash .magic/scripts/check-prerequisites.sh --json --require-specs`
-   - **Windows**: `pwsh .magic/scripts/check-prerequisites.ps1 -json -require_specs`
+   - `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
 1. **Read all spec files**: For each spec in `.design/specifications/`, extract:
     - `Related Specifications` — direct dependencies
     - `Implementation Notes` — if present, surface them in the plan/tasks
@@ -83,16 +82,19 @@ graph TD
 6. **Assign tracks**: Group tasks into Execution Tracks (A, B, C) based on task-level independence.
 7. **Propose breakdown to user**: Show the Plan Phases and the Phase 1 Task Outline before writing. Wait for the user to approve changes.
 8. **Write files**: Write `.design/PLAN.md`, `.design/TASKS.md`, and `.design/tasks/phase-1.md` based on approval.
-9. **Generate Context**: Silently run `bash .magic/scripts/generate-context.sh` (or `.ps1` on Windows) to initialize `.design/CONTEXT.md`.
+9. **Generate Context**: Silently run `node .magic/scripts/executor.js generate-context` to initialize `.design/CONTEXT.md`.
 
 ### Updating Tasks & Plan
 
 **Trigger phrase**: *"Update tasks"*, *"Sync tasks"*, *"Update plan"*, *"Reprioritize"*
 
 1. Read current `TASKS.md` and `PLAN.md` and compare against `INDEX.md`.
-2. Detect changes (Registry Synchronization Check):
+2. **Detect changes (Registry Synchronization Check)**:
     - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
-    - **Orphaned Specs**: Any spec in `INDEX.md` missing from `PLAN.md` must be proposed for a phase assignment.
+    - **Selective Planning (C6)**:
+        - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
+        - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
+    - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
     - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
     - **Deprecated Specs**: Move to Archived in `PLAN.md`, mark related tasks `Cancelled` in `TASKS.md`.
 3. Show diff to user before writing. Let user approve the reprioritization.
@@ -137,6 +139,14 @@ Data Integrity
 
 ## Overview
 ...
+
+## Phase 1 — {Name}
+...
+
+## Backlog
+
+<!-- Registered specifications waiting for prioritization (Draft or non-critical Stable) -->
+- [specification.md](specifications/specification.md)
 ```
 
 ### TASKS.md — Master Index

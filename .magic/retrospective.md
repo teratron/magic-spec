@@ -101,30 +101,32 @@ The retrospective analyzes the following metric categories:
 
 **Trigger**: Automatic — called by `task.md` when a phase completes (all tasks `Done`).
 
-The agent does NOT ask the user for permission — it runs silently as part of the phase completion flow.
+**Fast-Path Strategy (AOP)**: Minimize context usage. Read only summary tables, do not scan full spec bodies or individual phase files.
 
 ```mermaid
 graph TD
-    A["Phase complete (all tasks Done)"] --> B[Read INDEX.md — count specs by status]
-    B --> C[Read TASKS.md — count Done/Blocked per phase]
+    A["Phase complete"] --> B[Read INDEX.md — status counts]
+    B --> C[Read TASKS.md — summary table only]
     C --> D[Read RULES.md — count §7 entries]
-    D --> E[Calculate signal: 🟢 / 🟡 / 🔴]
-    E --> F{RETROSPECTIVE.md exists?}
-    F -->|Yes| G[Append row to Snapshots table]
-    F -->|No| H[Create RETROSPECTIVE.md with Snapshots table]
-    G & H --> I[Continue working — no user interruption]
+    D --> E[Calculate signal]
+    E --> F[Append Snapshots table]
+    F --> G[Archival (C8)]
+    G --> H[Continue working]
 ```
 
 **Steps:**
 
-1. **Read INDEX.md**: Count specs by status (Draft / RFC / Stable).
-2. **Read TASKS.md**: Extract Done and Blocked counts for the completed phase.
-3. **Read RULES.md**: Count §7 entries.
-4. **Calculate signal**:
-    - 🟢 — 0 Blocked tasks, no orphaned specs
-    - 🟡 — ≤20% tasks Blocked, or minor mismatches
-    - 🔴 — >20% tasks Blocked, or critical mismatches
-5. **Append row** to the `## Snapshots` table in `RETROSPECTIVE.md`.
+1. **Read INDEX.md**: Extract status counts (D/R/S).
+2. **Read TASKS.md**: Extract Done/Blocked counts from the **Summary Table** only.
+3. **Read RULES.md**: Count entries in section §7.
+4. **Calculate Signal**:
+    - 🟢 — 0 Blocked tasks, 100% planning coverage.
+    - 🟡 — ≤20% tasks Blocked, or minor orphaned specs.
+    - 🔴 — >20% tasks Blocked, or critical spec/plan gaps.
+5. **Append row** to `RETROSPECTIVE.md`.
+6. **Archival (C8)**:
+    - Move `.design/tasks/phase-{N}.md` to `.design/archives/tasks/`.
+    - Update `TASKS.md`: Change link `(tasks/phase-{N}.md)` to `(archives/tasks/phase-{N}.md)`.
 
 **Snapshot row format:**
 
@@ -177,6 +179,7 @@ graph TD
 9. **Analyze trends**: Compare current metrics against the Snapshots table. Calculate deltas.
 10. **Write RETROSPECTIVE.md**: Append a new session entry (never overwrite previous sessions).
 11. **Present report**: Show the user the full session output.
+12. **Lessons Learned**: Ask the user to provide 1-3 "lessons learned" or observations from the recent plan execution. Append these to the session under a `### 💡 Lessons Learned` header.
 
 ### Trigger Summary
 

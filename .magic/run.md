@@ -88,7 +88,8 @@ graph TD
 ```
 
 0. **Consistency Check**: Before running, check `TASKS.md` against `.design/PLAN.md`.
-1. **Find next available task**: The task with status `Todo` whose all dependencies are `Done`. In sequential mode: pick the first one in track order.
+1. **Find next available task**: Locate the task with status `Todo` whose all dependencies are `Done`.
+    - **AOP/Archive Check**: If searching for task context or history, check both `.design/tasks/` and `.design/archives/tasks/` to ensure continuity.
 2. **Execute**: Perform the implementation work described by the task. Stay within the task's spec section — do not expand scope.
 3. **Update status**: Mark `In Progress` when starting, `Done` when complete, `Blocked` if a blocker is encountered.
 4. **Report**: After each task, briefly state what was done and what is next.
@@ -99,7 +100,7 @@ graph TD
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and present entry for user review. Write to `CHANGELOG.md` when approved.
     - If not done → report phase complete and propose the next phase.
-    - **Crucial Update:** Finally, silently run `bash .magic/scripts/generate-context.sh` (or `.ps1`) to regenerate `.design/CONTEXT.md` based on new changelog entries.
+    - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
 ### Executing Tasks (Parallel Mode)
 

@@ -22,3 +22,4 @@ Execution is handled by `magic.run`.
 
 > **Full implementation:** `.magic/task.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
+> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.

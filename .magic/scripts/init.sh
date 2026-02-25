@@ -4,7 +4,7 @@ if [ ! -d ".git" ]; then
 fi
 
 DESIGN_DIR=".design"
-mkdir -p "$DESIGN_DIR/specifications" "$DESIGN_DIR/tasks"
+mkdir -p "$DESIGN_DIR/specifications" "$DESIGN_DIR/tasks" "$DESIGN_DIR/archives/tasks"
 DATE=$(date +%Y-%m-%d)
 
 if [ ! -f "$DESIGN_DIR/INDEX.md" ]; then

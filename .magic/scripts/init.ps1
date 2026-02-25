@@ -3,7 +3,7 @@ if (!(Test-Path -Path ".git")) {
 }
 
 $D = ".design"
-foreach ($dir in @($D, "$D/specifications", "$D/tasks")) {
+foreach ($dir in @($D, "$D/specifications", "$D/tasks", "$D/archives/tasks")) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
 $Date = Get-Date -Format "yyyy-MM-dd"

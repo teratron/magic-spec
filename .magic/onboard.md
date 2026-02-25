@@ -40,17 +40,18 @@ This tutorial will create real files in your project:
 1. Introduce yourself as the Magic SDD onboarding guide.
 2. Explain the core philosophy in one sentence: *"No code is written until a specification exists, and no spec is implemented without a plan."*
 3. Invite the user to create their very first Magic specification: a toy "console logger" module.
-4. Tell the user to type `ready` to begin.
-5. **Wait for user confirmation.**
+4. **Modern Engine**: Mention that all automation is powered by a universal cross-platform executor (`executor.js`), ensuring the engine works identically on Windows and Unix.
+5. Tell the user to type `ready` to begin.
+6. **Wait for user confirmation.**
 
 ### Step 2: The Toy Spec
 
 1. Tell the user you are creating a toy specification.
 2. Create the file `.design/specifications/logger-module.md`.
 3. The specification should contain:
-   - **Overview**: A simple console logger.
-   - **Detailed Design**: A class with `info(msg)`, `warn(msg)`, and `error(msg)` methods.
-   - **Status**: Stable.
+    - **Overview**: A simple console logger.
+    - **Detailed Design**: A class with `info(msg)`, `warn(msg)`, and `error(msg)` methods.
+    - **Status**: Stable.
 4. Explain that specs normally start as `Draft`, advance to `RFC` for review, and become `Stable` when approved. For this tutorial, we skipped straight to `Stable`.
 5. Tell the user to type `continue` to proceed to registration.
 6. **Wait for user confirmation.**
@@ -78,6 +79,8 @@ This tutorial will create real files in your project:
 3. Create `.design/tasks/phase-1.md` with a single track and a single task `[T-1A01] Implement console logger`.
 4. Simulate execution by changing the task status to `Done` and updating the TASKS.md count.
 5. Explain what happened: *"The task was implemented and the system marked it Done. In the real workflow, this is where code gets written."*
+6. **Archival (C8)**: Simulate the archival process by moving `.design/tasks/phase-1.md` to `.design/archives/tasks/`.
+7. Explain: *"To keep your workspace clean, finished phases are automatically moved to the archives. This keeps the engine fast and your focused area small."*
 
 ### Step 6: Conclusion
 

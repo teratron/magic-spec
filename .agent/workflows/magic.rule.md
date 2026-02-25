@@ -9,6 +9,9 @@ handoffs:
     workflow: magic.task
     prompt: "Update the project plan and tasks after amending standing rules."
     condition: null
+  - label: "Simulate changes"
+    workflow: magic.simulate
+    prompt: "Simulate and validate the new rule logic to ensure no system friction."
 ---
 
 # Rule Workflow
@@ -19,3 +22,4 @@ Automatic rule capture during spec work is handled by `magic.spec`.
 
 > **Full implementation:** `.magic/rule.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
+> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.

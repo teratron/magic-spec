@@ -4,7 +4,10 @@ handoffs:
   - label: "Generate tasks"
     workflow: magic.task
     prompt: "Generate the implementation plan and tasks based on finalized specifications."
-    condition: "specs_stable"
+    condition: "registry_updated"
+  - label: "Simulate engine change"
+    workflow: magic.simulate
+    prompt: "Simulate the updated engine logic after modifying .magic or RULES.md."
   - label: "Add a rule"
     workflow: magic.rule
     prompt: "Add a project-wide convention discovered during spec work."
@@ -23,3 +26,4 @@ Orchestration and execution are handled by `magic.task` and `magic.run`.
 
 > **Full implementation:** `.magic/spec.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
+> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.

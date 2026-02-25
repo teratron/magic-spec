@@ -39,14 +39,13 @@ graph TD
 
     | OS | Script | Run with |
     | :--- | :--- | :--- |
-    | macOS / Linux | `.magic/scripts/init.sh` | `bash .magic/scripts/init.sh` |
-    | Windows | `.magic/scripts/init.ps1` | `pwsh .magic/scripts/init.ps1` |
+    | Universal | `.magic/scripts/init` | `node .magic/scripts/executor.js init` |
 
 4. **Report result** (brief, inline with the calling workflow):
 
     ```
     SDD initialized — {YYYY-MM-DD}
-    Created: .design/INDEX.md, .design/RULES.md, .design/specifications/, .design/tasks/
+    Created: .design/INDEX.md, .design/RULES.md, .design/specifications/, .design/tasks/, .design/archives/tasks/
     Continuing with {workflow name}...
     ```
 
@@ -59,7 +58,9 @@ graph TD
 ├── INDEX.md         # Spec registry
 ├── RULES.md         # Project constitution
 ├── specifications/  # Spec files go here
-└── tasks/           # Task files go here
+├── tasks/           # Task files go here
+└── archives/        # Archived tasks go here
+    └── tasks/
 ```
 
 `PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.

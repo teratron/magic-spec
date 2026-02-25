@@ -15,3 +15,4 @@ Task generation and orchestration are handled by `magic.task`.
 
 > **Full implementation:** `.magic/run.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
+> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.

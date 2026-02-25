@@ -9,3 +9,4 @@ description: Interactive tutorial to learn the Magic SDD lifecycle.
 
 > **Full implementation:** `.magic/onboard.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
+> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.
