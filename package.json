@@ -22,7 +22,7 @@
     "node": ">=16"
   },
   "scripts": {
-    "test": "python scripts/run_tests.py",
+    "test": "python installers/scripts/run_tests.py",
     "build": "npm pack --pack-destination dist",
     "check": "npm run build -- --dry-run",
     "publish:dry": "npm publish --dry-run"

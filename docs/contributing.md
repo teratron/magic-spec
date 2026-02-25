@@ -9,28 +9,18 @@ This guide describes how to contribute to `magic-spec`, work with scripts, build
 ```plaintext
 magic-spec/                         # Repository Root
 │
-├── .magic/                         # 🔧 SDD Engine (Source of Truth)
-├── .agent/                         # 🎯 AI Agent Entry Points
-├── adapters/                       # 🔌 Environment-specific Adapters
-│   ├── cursor/
-│   ├── github/
-│   ├── kilocode/
-│   └── windsurf/
+├── .magic/                         # 🔧 Template Engine (Source of Truth)
+├── .agent/                         # 🎯 Template Workflows
 │
 ├── installers/
-│   ├── node/                       # 📦 npm Package (npx magic-spec)
-│   │   ├── src/index.js            #    CLI: Entry point
-│   │   ├── publish.js              #    npm Publishing script
-│   │   ├── package.json            #    npm Config & Scripts
-│   │   └── dist/                   #    Build output (gitignored)
-│   │
-│   └── python/                     # 📦 PyPI Package (uvx magic-spec)
-│       ├── magic_spec/
-│       │   ├── __init__.py
-│       │   └── __main__.py         #    CLI: Entry point
-│       ├── pyproject.toml          #    PyPI Config
-│       └── dist/                   #    Build output (gitignored)
+│   ├── node/                       # 📦 Node.js Installer (Thin Client)
+│   ├── python/                     # 📦 Python Installer (Thin Client)
+│   ├── scripts/                    # 🚀 Automation & Release scripts
+│   ├── tests/                      # 🧪 Integration & Unit tests
+│   ├── adapters.json               # 🔌 IDE Adapter definitions
+│   └── config.json                 # ⚙️ Installer configuration
 │
+├── .design/                        # 🏠 Self-referential SDD State
 └── docs/                           # 📄 Documentation
     ├── README.md                   #    Main Guide
     └── contributing.md             #    Developer Guide (This file)
@@ -44,41 +34,24 @@ All commands should be executed from the `installers/node/` directory.
 
 ### Build Process
 
-Before publishing, you must **build** the package by assembling files from the repository root into the `dist/` directory:
+The Node.js installer is a **Thin Client**. It doesn't bundle the engine; instead, it downloads the current version from the GitHub repository during installation.
 
-```bash
-cd installers/node
-npm run build
-```
+To test the installer locally:
 
-The `build` command:
-
-1. Removes the old `dist/` folder.
-2. Copies `index.js` and `package.json` into `dist/`.
-3. Synchronizes `.magic/`, `.agent/`, and `adapters/` from the root.
-4. Copies `README.md` and `LICENSE` from the root.
+1. Ensure `installers/config.json` is present.
+2. Run the script directly (see Method B below).
 
 ### Script Reference
 
 | Script | Command | Description |
 | :--- | :--- | :--- |
-| `npm run build` | `node build.js` | Assembles everything into `dist/`. |
-| `npm run check` | `build` + `npm pack --dry-run` | Inspects package contents without uploading. |
-| `npm run publish` | `build` + `node publish.js` | Builds and publishes to npm. |
-| `npm run test:link` | `build` + `npm link` | Installs the local version globally. |
-| `npm run test:pack` | `build` + `npm pack` | Creates a `.tgz` archive in `dist/`. |
+| `npm test` | `python installers/scripts/run_tests.py` | Runs all integration tests. |
+| `npm run build` | `npm pack --pack-destination dist` | Creates an npm package archive in `dist/`. |
+| `npm run publish:dry` | `npm publish --dry-run` | Simulation of npm publication. |
 
 ### Local Testing
 
-**Method A: npm link** (Fastest for global testing):
-
-```bash
-cd installers/node
-npm run test:link
-# Now 'magic-spec' is available globally.
-```
-
-**Method B: Direct Execution** (Instant feedback):
+**Method A: Direct Execution** (Instant feedback):
 
 ```bash
 node installers/node/index.js --info
@@ -105,28 +78,48 @@ This generates both `.whl` and `.tar.gz` files in the `dist/` directory using `h
 | :--- | :--- |
 | `uv build` | Build the package into `dist/`. |
 | `uv publish` | Publish to PyPI (interactive token entry). |
-| `pip install -e .` | Editable install for development. |
-| `python -m magic_spec` | Run directly without installation. |
+
+### editable install (Recommended for dev)
+
+```bash
+pip install -e .
+```
+
+This installs `magic-spec` command pointing to your local source.
+
+### Run via Module
+
+```bash
+python -m magic_spec --info
+```
+
+(Requires `PYTHONPATH` to include `installers/python`)
 
 ---
 
-## 🚀 Release Checklist
+## 🚀 Release Process
+
+We use a unified release script located in `installers/scripts/publish.py`. This script handles version bumping, documentation updates, and registry publication.
+
+**Usage:**
+
+```bash
+python installers/scripts/publish.py <old_version> <new_version>
+```
+
+### Release Checklist
 
 Before every release, ensure:
 
 1. [ ] Changes are committed and pushed to git.
-2. [ ] Version is updated in `installers/node/package.json`.
-3. [ ] Version is updated in `installers/python/pyproject.toml`.
-4. [ ] Versions match across both files.
-5. [ ] `npm run build` passes for both installers.
-6. [ ] Engine files (`.magic/`, `.agent/`) are up-to-date.
-7. [ ] `npm run publish` (Node) and `uv publish` (Python) executed.
-8. [ ] Git tag created: `git tag vX.Y.Z && git push --tags`.
+2. [ ] Tests pass: `npm test`.
+3. [ ] Version is set in `.magic/.version` (The Source of Truth).
+4. [ ] `python installers/scripts/publish.py` executed successfully.
 
 ---
 
 ## ❓ Common Issues
 
-- **"No such file or directory"**: Ensure you are in the correct `installers/` subdirectory.
-- **"Readme file does not exist"**: Run the synchronization script or copy `README.md` from the root.
-- **Version Collision**: npm and PyPI do not allow overwriting versions. Increment the version number before publishing.
+- **"No such file or directory"**: Ensure you are in the correct directory. Developers should work from the root or `installers/` subfolders.
+- **"Payload not found"**: Ensure the version in `package.json` or `.magic/.version` has been tagged and pushed to GitHub.
+- **Version Collision**: npm and PyPI do not allow overwriting versions. Increment the version number in `.magic/.version` before running `publish.py`.

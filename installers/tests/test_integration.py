@@ -6,7 +6,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).parent.parent.absolute()
+PROJECT_ROOT = Path(__file__).parent.parent.parent.absolute()
 
 
 class TestIntegration(unittest.TestCase):
@@ -37,11 +37,11 @@ class TestIntegration(unittest.TestCase):
         # Create a mock check-prerequisites script
         if os.name == "nt":
             check_script = Path(".magic/scripts/check-prerequisites.ps1")
-            check_script.write_text("Write-Output '{\"status\":\"ok\",\"artifacts\":{}}'")
+            check_script.write_text('Write-Output \'{"status":"ok","artifacts":{}}\'')
         else:
             check_script = Path(".magic/scripts/check-prerequisites.sh")
             check_script.write_text(
-                "#!/bin/bash\necho '{\"status\":\"ok\",\"artifacts\":{}}'"
+                '#!/bin/bash\necho \'{"status":"ok","artifacts":{}}\''
             )
             check_script.chmod(0o755)
 
@@ -78,11 +78,11 @@ class TestIntegration(unittest.TestCase):
         # Create a mock check-prerequisites script
         if os.name == "nt":
             check_script = Path(".magic/scripts/check-prerequisites.ps1")
-            check_script.write_text("Write-Output '{\"status\":\"ok\",\"artifacts\":{}}'")
+            check_script.write_text('Write-Output \'{"status":"ok","artifacts":{}}\'')
         else:
             check_script = Path(".magic/scripts/check-prerequisites.sh")
             check_script.write_text(
-                "#!/bin/bash\necho '{\"status\":\"ok\",\"artifacts\":{}}'"
+                '#!/bin/bash\necho \'{"status":"ok","artifacts":{}}\''
             )
             check_script.chmod(0o755)
 

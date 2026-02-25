@@ -18,7 +18,7 @@ Run this script before every commit or release to ensure no regressions.
 **Usage:**
 
 ```bash
-python scripts/run_tests.py
+python installers/scripts/run_tests.py
 ```
 
 *Note: You can also use `npm test` which triggers this script.*
@@ -32,7 +32,7 @@ The unified release script for both Python (PyPI) and Node.js (npm).
 **Usage:**
 
 ```bash
-python scripts/publish.py <old_version> <new_version> [flags]
+python installers/scripts/publish.py <old_version> <new_version> [flags]
 ```
 
 **Common Flags:**
@@ -43,7 +43,7 @@ python scripts/publish.py <old_version> <new_version> [flags]
 **Example:**
 
 ```bash
-python scripts/publish.py 1.2.3 1.2.4
+python installers/scripts/publish.py 1.2.3 1.2.4
 ```
 
 ---
