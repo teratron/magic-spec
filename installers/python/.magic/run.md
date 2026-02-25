@@ -21,7 +21,7 @@ It operates **after** the Task Workflow — tasks are its input, not its concern
 5. **Mode Awareness**: Always know the current execution mode (Sequential or Parallel). Behaviour differs significantly between them.
 6. **Manager Role**: In Parallel mode, the Manager Agent coordinates — it does not implement. It reads status, unblocks tracks, and escalates conflicts.
 7. **Checklist Before Done**: Every workflow operation must end with the *Run Completion Checklist*.
-8. **Maximum Automation (Zero-Prompt)**: Skip all conversational confirmation prompts (task order, track selection, changelog generation, retrospective reporting). Execute the execution and conclusion sequence autonomously, reporting only completion or critical blockers. Do not ask for lessons learned or approval to write system files.
+8. **Maximum Automation**: Skip all conversational confirmation prompts regarding task order or track selection within an approved phase. Execute the sequence autonomously, reporting only completion or critical blockers.
 
 ## Directory Structure
 
@@ -81,7 +81,8 @@ graph TD
     L1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
-    M1 --> N1[Write compiled entry to CHANGELOG.md silently]
+    M1 --> M2[Present compiled entry for user review]
+    M2 --> N1[Write to CHANGELOG.md on approval]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
     I --> O[Escalate to user]
@@ -98,7 +99,7 @@ graph TD
     - Compile **CHANGELOG.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG.md`. Do this **silently**.
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
-        2. Run **Changelog Level 2 compile** and silently write to `CHANGELOG.md` (no user review needed per Zero-Prompt Automation).
+        2. Run **Changelog Level 2 compile** and present entry for user review. Write to `CHANGELOG.md` when approved.
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
@@ -123,7 +124,8 @@ graph TD
     J1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
-    M1 --> N1[Write compiled entry to CHANGELOG.md silently]
+    M1 --> M2[Present compiled entry for user review]
+    M2 --> N1[Write to CHANGELOG.md on approval]
     N1 --> O[Generate CONTEXT.md]
     L -->|No| N[Manager: Report phase complete]
     N --> O

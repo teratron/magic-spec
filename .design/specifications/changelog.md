@@ -152,27 +152,9 @@ no user confirmation needed for each append (matches retrospective Level 1 behav
 2. Merge all `Added` / `Changed` / `Fixed` lists from all phase blocks in the draft.
 3. Deduplicate and consolidate overlapping entries.
 4. Remove internal/SDD-specific language — rephrase for external readability.
-5. Show compiled entry to user for review **before** writing to `CHANGELOG.md`.
-6. After user approval: prepend the block to `CHANGELOG.md` (newest first).
+5. Silently write compiled entry directly to `CHANGELOG.md` without prompting the user (Zero-Prompt Automation).
+6. Prepend the block to `CHANGELOG.md` (newest first).
 7. Clear `.design/CHANGELOG.md` (reset to empty template).
-
-**User review prompt:**
-
-```plaintext
-📋 Changelog entry ready for review (v{X.Y.Z}):
-
-## [{X.Y.Z}] — {YYYY-MM-DD}
-
-### Added
-- Installed .magic/ + .agent/ adapter on npx / uvx invocation
-- Added --env flag to select target AI environment adapter
-- Added --check, --list-envs, --eject CLI commands (see installer-features.md)
-
-### Changed
-- Eliminated core/ directory; repo root is now the source of truth
-
-Approve and write to CHANGELOG.md? (yes / edit / skip)
-```
 
 ### 3.5 CHANGELOG.md Structure
 

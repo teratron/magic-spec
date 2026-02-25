@@ -1,436 +1,253 @@
 #!/usr/bin/env node
 
+/**
+ * Magic SDD CLI Installer (Node.js)
+ * Version: 0.5.0
+ */
+
 const fs = require('fs');
 const path = require('path');
 const { spawnSync } = require('child_process');
-const https = require('https');
-const os = require('os');
-const readline = require('readline');
-const { version } = require('../../package.json');
 
-function failConfig(message) {
-    console.error(`❌ Installer config error: ${message}`);
-    process.exit(1);
-}
-
-function requireNonEmptyString(value, fieldName) {
-    if (typeof value !== 'string' || value.trim().length === 0) {
-        failConfig(`field '${fieldName}' must be a non-empty string`);
-    }
-    return value.trim();
-}
-
-function requirePositiveInteger(value, fieldName) {
-    if (!Number.isInteger(value) || value <= 0) {
-        failConfig(`field '${fieldName}' must be a positive integer`);
-    }
-    return value;
-}
-
-function loadInstallerConfig() {
-    const configPath = path.join(__dirname, '..', 'config.json');
-    if (!fs.existsSync(configPath)) {
-        failConfig('installers/config.json was not found');
-    }
-
-    let parsed;
-    try {
-        parsed = JSON.parse(fs.readFileSync(configPath, 'utf8'));
-    } catch (err) {
-        failConfig(`failed to read installers/config.json: ${err.message}`);
-    }
-
-    if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) {
-        failConfig('root must be a JSON object');
-    }
-
-    const githubRepo = requireNonEmptyString(parsed.githubRepo, 'githubRepo');
-
-    if (!parsed.download || typeof parsed.download !== 'object' || Array.isArray(parsed.download)) {
-        failConfig("field 'download' must be an object");
-    }
-    const timeoutMs = requirePositiveInteger(parsed.download.timeoutMs, 'download.timeoutMs');
-
-    if (!parsed.userAgent || typeof parsed.userAgent !== 'object' || Array.isArray(parsed.userAgent)) {
-        failConfig("field 'userAgent' must be an object");
-    }
-    const nodeUserAgent = requireNonEmptyString(parsed.userAgent.node, 'userAgent.node');
-
-    return {
-        githubRepo,
-        download: { timeoutMs },
-        userAgent: { node: nodeUserAgent },
-    };
-}
-
-const INSTALLER_CONFIG = loadInstallerConfig();
-const GITHUB_REPO = INSTALLER_CONFIG.githubRepo;
-const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
-const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
-if (!Number.isInteger(DOWNLOAD_TIMEOUT_MS) || DOWNLOAD_TIMEOUT_MS <= 0) {
-    failConfig("field 'download.timeoutMs' must be a positive integer");
-}
+// Determine if running from published package or repository source
+const isDist = fs.existsSync(path.join(__dirname, 'adapters'));
+const pkg = isDist
+    ? require('./package.json')
+    : require('../../package.json');
 
 const cwd = process.cwd();
-
+const sourceRoot = __dirname;
 const args = process.argv.slice(2);
-const isUpdate = args.includes('--update');
-const isDoctor = args.includes('--doctor') || args.includes('--check');
-const isFallbackMain = args.includes('--fallback-main');
-const autoAccept = args.includes('--yes') || args.includes('-y');
 
-function parseCsvValues(raw) {
-    return raw.split(',').map((item) => item.trim()).filter(Boolean);
-}
-
-function collectEnvValues(argv) {
-    const parsed = [];
-    for (let i = 0; i < argv.length; i++) {
-        if (argv[i].startsWith('--env=')) {
-            parsed.push(...parseCsvValues(argv[i].split('=', 2)[1] || ''));
-        } else if (argv[i] === '--env' && i + 1 < argv.length) {
-            parsed.push(...parseCsvValues(argv[i + 1]));
-            i++;
-        }
-    }
-    return [...new Set(parsed)];
-}
-
-const envValues = collectEnvValues(args);
-
-function askQuestion(query) {
-    const rl = readline.createInterface({
-        input: process.stdin,
-        output: process.stdout,
-    });
-    return new Promise((resolve) => rl.question(query, (ans) => {
-        rl.close();
-        resolve(ans);
-    }));
-}
-
-function copyDir(src, dest) {
-    if (!fs.existsSync(src)) {
-        console.warn(`⚠️  Source not found: ${src}`);
-        return;
-    }
-    fs.cpSync(src, dest, { recursive: true, force: true });
-}
-
-function installAdapter(sourceRoot, env, adapters) {
-    const adapter = adapters[env];
-    if (!adapter) {
-        console.warn(`⚠️  Unknown --env value: "${env}".`);
-        console.warn(`   Valid values: ${Object.keys(adapters).join(', ')}`);
-        console.warn(`   Falling back to default .agent/`);
-        copyDir(path.join(sourceRoot, '.agent'), path.join(cwd, '.agent'));
-        return;
-    }
-
-    const srcDir = path.join(sourceRoot, '.agent', 'workflows');
-    const destDir = path.join(cwd, adapter.dest);
-
-    if (!fs.existsSync(srcDir)) {
-        console.warn(`⚠️  Source .agent/workflows/ not found.`);
-        return;
-    }
-
-    fs.mkdirSync(destDir, { recursive: true });
-
-    const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.md'));
-    for (const file of files) {
-        const srcFile = path.join(srcDir, file);
-        let destName = file.replace(/\.md$/, adapter.ext);
-        if (adapter.removePrefix) {
-            if (destName.startsWith(adapter.removePrefix)) {
-                destName = destName.slice(adapter.removePrefix.length);
-            }
-        }
-        const destFile = path.join(destDir, destName);
-        fs.copyFileSync(srcFile, destFile);
-    }
-
-    console.log(`✅ Adapter installed: ${env} → ${adapter.dest}/ (${adapter.ext})`);
-}
-
-function runDoctor() {
-    const isWindows = process.platform === 'win32';
-    const checkScript = isWindows
-        ? path.join(cwd, '.magic', 'scripts', 'check-prerequisites.ps1')
-        : path.join(cwd, '.magic', 'scripts', 'check-prerequisites.sh');
-
-    if (!fs.existsSync(checkScript)) {
-        console.error('❌ Error: SDD engine not initialized. Run magic-spec first.');
-        process.exit(1);
-    }
-
-    console.log('🔍 Magic-spec Doctor:');
-    try {
-        let result;
-        if (isWindows) {
-            result = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', checkScript, '-json'], { encoding: 'utf-8' });
-        } else {
-            result = spawnSync('bash', [checkScript, '--json'], { encoding: 'utf-8' });
-        }
-
-        if (result.error) {
-            console.error('❌ Failed to run doctor prerequisite check:', result.error.message);
-            process.exit(1);
-        }
-        if (result.status !== 0) {
-            console.error(`❌ Doctor prerequisite check failed with code ${result.status}.`);
-            if (result.stderr) {
-                console.error(result.stderr.trim());
-            }
-            process.exit(1);
-        }
-
-        let jsonStr = result.stdout.trim();
-        const match = jsonStr.match(/\{[\s\S]*\}/);
-        if (match) {
-            jsonStr = match[0];
-        }
-        if (!jsonStr) {
-            console.error('❌ Doctor output did not contain JSON.');
-            process.exit(1);
-        }
-
-        const data = JSON.parse(jsonStr);
-        const arts = data.artifacts || {};
-        const checkItem = (name, item, requiredHint) => {
-            if (item && item.exists) {
-                console.log(`✅ ${item.path || name} is present`);
-            } else {
-                const hint = requiredHint ? ` (Hint: ${requiredHint})` : '';
-                console.log(`❌ .design/${name} is missing${hint}`);
-            }
-        };
-
-        checkItem('INDEX.md', arts['INDEX.md'], 'Run /magic.spec');
-        checkItem('RULES.md', arts['RULES.md'], 'Created at init');
-
-        if (arts['PLAN.md']) {
-            checkItem('PLAN.md', arts['PLAN.md'], 'Run /magic.task');
-        }
-        if (arts['TASKS.md']) {
-            checkItem('TASKS.md', arts['TASKS.md'], 'Run /magic.task');
-        }
-
-        if (data.warnings && data.warnings.length > 0) {
-            data.warnings.forEach(warn => {
-                console.log(`⚠️  ${warn}`);
-            });
-        }
-
-        if (arts.specs) {
-            const { stable } = arts.specs;
-            if (stable > 0) console.log(`✅ ${stable} specifications are Stable`);
-        }
-
-    } catch (err) {
-        console.error('❌ Failed to parse doctor output', err.message);
-        process.exit(1);
-    }
-    process.exit(0);
-}
-
-async function downloadPayload(targetVersion) {
-    const url = targetVersion === 'main'
-        ? `https://github.com/${GITHUB_REPO}/archive/refs/heads/main.tar.gz`
-        : `https://github.com/${GITHUB_REPO}/archive/refs/tags/v${targetVersion}.tar.gz`;
-
-    console.log(`📥 Downloading magic-spec payload (${targetVersion}) from GitHub...`);
-
-    const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-spec-'));
-    const archivePath = path.join(tempDir, 'payload.tar.gz');
-
-    return new Promise((resolve, reject) => {
-        const file = fs.createWriteStream(archivePath);
-
-        const makeRequest = (requestUrl) => {
-            const req = https.get(requestUrl, { headers: { 'User-Agent': NODE_USER_AGENT } }, (response) => {
-                if (response.statusCode === 301 || response.statusCode === 302) {
-                    // Follow redirect
-                    if (response.headers.location) {
-                        return makeRequest(response.headers.location);
-                    }
-                    reject(new Error('Redirect response did not include a location header.'));
-                    return;
-                }
-
-                if (response.statusCode === 404) {
-                    console.error(`❌ Error: Release ${targetVersion} not found on GitHub.`);
-                    console.error('   (Use --fallback-main to pull from the main branch instead)');
-                    reject(new Error('Payload not found'));
-                    return;
-                }
-
-                if (response.statusCode !== 200) {
-                    reject(new Error(`Failed with status code: ${response.statusCode}`));
-                    return;
-                }
-
-                response.pipe(file);
-
-                file.on('finish', () => {
-                    file.close();
-                    console.log('📦 Extracting payload...');
-
-                    try {
-                        // Check if tar exists
-                        const tarCheck = spawnSync('tar', ['--version'], { encoding: 'utf-8' });
-                        if (tarCheck.error || tarCheck.status !== 0) {
-                            let msg = "The 'tar' command was not found.";
-                            if (process.platform === 'win32') {
-                                msg += "\n   On Windows, 'tar' is included in Windows 10 (build 17063) and later.";
-                                msg += "\n   Please upgrade Windows or install a tar-compatible utility (e.g., via Git for Windows or WSL).";
-                            } else {
-                                msg += "\n   Please install 'tar' using your package manager.";
-                            }
-                            throw new Error(msg);
-                        }
-
-                        // Security: Check for path traversal in archive
-                        const listResult = spawnSync('tar', ['-tf', archivePath], { encoding: 'utf-8' });
-                        if (listResult.status === 0) {
-                            const files = listResult.stdout.split('\n').filter(Boolean);
-                            for (const f of files) {
-                                if (f.startsWith('/') || f.includes('..')) {
-                                    throw new Error(`Security Alert: Suspicious path detected in archive: ${f}`);
-                                }
-                            }
-                        }
-
-                        const result = spawnSync('tar', ['-xzf', archivePath, '-C', tempDir], { encoding: 'utf-8' });
-
-                        if (result.error || result.status !== 0) {
-                            throw new Error('Tar extraction failed. ' + (result.stderr || ''));
-                        }
-
-                        const items = fs.readdirSync(tempDir);
-                        const extractedFolder = items.find(item => {
-                            const p = path.join(tempDir, item);
-                            return item !== 'payload.tar.gz' && fs.statSync(p).isDirectory();
-                        });
-
-                        if (extractedFolder) {
-                            resolve(path.join(tempDir, extractedFolder));
-                        } else {
-                            resolve(tempDir);
-                        }
-
-                    } catch (err) {
-                        reject(err);
-                    }
-                });
-            });
-
-            req.setTimeout(DOWNLOAD_TIMEOUT_MS, () => {
-                req.destroy(new Error(`Request timeout after ${Math.round(DOWNLOAD_TIMEOUT_MS / 1000)} seconds`));
-            });
-
-            req.on('error', (err) => {
-                if (fs.existsSync(archivePath)) fs.unlinkSync(archivePath);
-                reject(err);
-            });
-        };
-
-        makeRequest(url);
-    });
-}
-
+/**
+ * Main entry point
+ */
 async function main() {
-    if (isDoctor) {
-        runDoctor();
-        return;
-    }
-
+    // 0. Handle commands that exit early
     if (args.includes('--help') || args.includes('-h')) {
-        console.log("Usage: npx magic-spec [--env <adapter>] [--update] [--doctor | --check] [--fallback-main]");
+        printHelp();
         process.exit(0);
     }
 
-    console.log(isUpdate ? '🪄 Updating magic-spec (.magic only)...' : '🪄 Initializing magic-spec...');
+    if (args.includes('--version') || args.includes('-v')) {
+        console.log(pkg.version);
+        process.exit(0);
+    }
 
-    const versionToFetch = isFallbackMain ? 'main' : version;
-    let sourceRoot = null;
+    if (args.includes('--list-envs')) {
+        console.log('Supported environments: cursor, windsurf, github, kilocode');
+        process.exit(0);
+    }
+
+    if (args.includes('info')) {
+        const projectVersionFile = path.join(cwd, '.magic/.version');
+        const projectVersion = fs.existsSync(projectVersionFile)
+            ? fs.readFileSync(projectVersionFile, 'utf8').trim()
+            : 'Unknown';
+        console.log(`magic-spec CLI v${pkg.version}`);
+        console.log(`Project Engine v${projectVersion}`);
+        console.log(`Install Root: ${sourceRoot}`);
+        console.log(`Current Path: ${cwd}`);
+        process.exit(0);
+    }
+
+    const isUpdate = args.includes('--update');
+    const isCheck = args.includes('--check');
+
+    if (isCheck) {
+        console.log(`magic-spec v${pkg.version} (latest)`);
+        process.exit(0);
+    }
+
+    if (args.includes('--eject')) {
+        eject();
+        process.exit(0);
+    }
+
+    // 1. Perform Installation / Update
+    console.log(isUpdate ? '🪄  Updating magic-spec...' : '🪄  Initializing magic-spec...');
 
     try {
-        sourceRoot = await downloadPayload(versionToFetch);
+        // --- Engine Sync (Layer 1) ---
+        const folders = ['.magic', '.agent'];
+        folders.forEach(dir => {
+            const src = isDist ? path.resolve(sourceRoot, dir) : path.resolve(sourceRoot, '../..', dir);
+            const dest = path.join(cwd, dir);
+            if (fs.existsSync(src)) {
+                syncDir(src, dest);
+            }
+        });
 
+        // --- Version Tracking (T-2B01) ---
+        fs.writeFileSync(path.join(cwd, '.magic/.version'), pkg.version);
 
-        let ADAPTERS = {};
-        try {
-            ADAPTERS = JSON.parse(fs.readFileSync(path.join(sourceRoot, 'installers', 'adapters.json'), 'utf8'));
-        } catch (e) { }
-
-        // 1. Copy .magic
-        copyDir(path.join(sourceRoot, '.magic'), path.join(cwd, '.magic'));
-
-        // 2. Adapters
-        if (!isUpdate) {
-            if (envValues.length > 0) {
-                for (const env of envValues) {
-                    installAdapter(sourceRoot, env, ADAPTERS);
-                }
+        // --- Adapters Sync ---
+        const envs = getEnvArgs();
+        envs.forEach(env => {
+            const src = isDist ? path.resolve(sourceRoot, 'adapters', env) : path.resolve(sourceRoot, '../../adapters', env);
+            if (fs.existsSync(src)) {
+                installAdapter(env, src);
             } else {
-                copyDir(path.join(sourceRoot, '.agent'), path.join(cwd, '.agent'));
+                console.warn(`⚠️  Adapter not found: ${env}`);
             }
-        }
+        });
 
-        // 3. Init script
+        // --- Init Script ---
         if (!isUpdate) {
-            const isWindows = process.platform === 'win32';
-            const initScript = isWindows
-                ? path.join(cwd, '.magic', 'scripts', 'init.ps1')
-                : path.join(cwd, '.magic', 'scripts', 'init.sh');
-
-            if (fs.existsSync(initScript)) {
-                let shouldRun = autoAccept;
-                if (!shouldRun) {
-                    console.log(`\n⚠️  The initialization script will be executed: ${initScript}`);
-                    console.log('   This script may modify your system environment.');
-                    const answer = await askQuestion('   Do you want to continue? (y/N): ');
-                    shouldRun = answer.toLowerCase() === 'y';
-                }
-
-                if (shouldRun) {
-                    if (isWindows) {
-                        const initResult = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', initScript], { stdio: 'inherit' });
-                        if (initResult.error || initResult.status !== 0) {
-                            throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
-                        }
-                    } else {
-                        fs.chmodSync(initScript, '755');
-                        const initResult = spawnSync('bash', [initScript], { stdio: 'inherit' });
-                        if (initResult.error || initResult.status !== 0) {
-                            throw new Error(`Initialization script failed with code ${initResult.status ?? 'unknown'}.`);
-                        }
-                    }
-                } else {
-                    console.log('⚠️  Initialization script skipped by user.');
-                }
-            }
-            console.log('✅ magic-spec initialized successfully!');
-        } else {
-            console.log('✅ magic-spec updated successfully!');
+            runInitScript();
         }
 
+        console.log(isUpdate ? '✅ magic-spec updated successfully!' : '✅ magic-spec initialized successfully!');
     } catch (err) {
-        console.error('❌ magic-spec initialization failed:', err.message);
+        console.error(`❌ Error: ${err.message}`);
         process.exit(1);
-    } finally {
-        if (sourceRoot) {
-            const tempDir = path.dirname(sourceRoot);
-            if (fs.existsSync(tempDir) && tempDir.includes('magic-spec-')) {
-                try {
-                    fs.rmSync(tempDir, { recursive: true, force: true });
-                } catch (e) {
-                    // Ignore cleanup errors
-                }
+    }
+}
+
+/**
+ * Helpers
+ */
+
+function syncDir(src, dest) {
+    if (!fs.existsSync(src)) return;
+
+    // --- Backup Logic (T-2C01) ---
+    if (fs.existsSync(dest)) {
+        const folderName = path.basename(dest);
+        const timestamp = Date.now();
+        const backupBase = path.join(cwd, '.magic/archives');
+        const backupDir = path.join(backupBase, `backup-${timestamp}`);
+
+        // Only backup if not already in archives
+        if (!dest.includes('.magic/archives')) {
+            if (!fs.existsSync(backupBase)) fs.mkdirSync(backupBase, { recursive: true });
+
+            // Move to temp first to avoid self-nesting if dest is .magic
+            const tempBackup = path.join(os.tmpdir(), `magic-backup-${timestamp}-${folderName}`);
+            try {
+                fs.renameSync(dest, tempBackup);
+                if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+                fs.renameSync(tempBackup, path.join(backupDir, folderName));
+            } catch (e) {
+                // Fallback to copy + delete if rename fails
+                if (!fs.existsSync(backupDir)) fs.mkdirSync(backupDir, { recursive: true });
+                fs.cpSync(dest, path.join(backupDir, folderName), { recursive: true });
+                fs.rmSync(dest, { recursive: true, force: true });
             }
         }
     }
+
+    fs.cpSync(src, dest, { recursive: true, force: true });
+}
+
+function getEnvArgs() {
+    const envs = [];
+
+    // 1. Try to load from .magicrc (T-2C02)
+    const rcPath = path.join(cwd, '.magicrc.json');
+    if (fs.existsSync(rcPath)) {
+        try {
+            const config = JSON.parse(fs.readFileSync(rcPath, 'utf8'));
+            if (config.envs && Array.isArray(config.envs)) {
+                envs.push(...config.envs);
+            }
+        } catch (e) { }
+    }
+
+    // 2. Override with CLI args
+    const index = args.indexOf('--env');
+    if (index !== -1 && index + 1 < args.length) {
+        const cliEnvs = args[index + 1].split(',').map(e => e.trim()).filter(Boolean);
+        envs.push(...cliEnvs);
+
+        // Persist to .magicrc
+        const uniqueEnvs = [...new Set(envs)];
+        fs.writeFileSync(rcPath, JSON.stringify({ envs: uniqueEnvs, lastUpdated: new Date().toISOString() }, null, 2));
+    }
+
+    return [...new Set(envs)];
+}
+
+function installAdapter(env, srcDir) {
+    const map = {
+        'cursor': '.cursor/rules',
+        'windsurf': '.windsurf/rules',
+        'github': '.github',
+        'kilocode': '.kilocode'
+    };
+    const targetDir = path.join(cwd, map[env] || env);
+
+    copyRecursiveWithTemplating(srcDir, targetDir);
+    console.log(`✅ Adapter installed: ${env} → ${map[env] || env}`);
+}
+
+function copyRecursiveWithTemplating(src, dest) {
+    if (fs.statSync(src).isDirectory()) {
+        if (!fs.existsSync(dest)) fs.mkdirSync(dest, { recursive: true });
+        fs.readdirSync(src).forEach(child => {
+            if (child === '.gitkeep') return;
+            copyRecursiveWithTemplating(path.join(src, child), path.join(dest, child));
+        });
+    } else {
+        let content = fs.readFileSync(src, 'utf8');
+        const isMd = src.endsWith('.md') || src.endsWith('.mdc');
+        const isToml = src.endsWith('.toml');
+
+        if (isMd) content = content.replace(/{ARGUMENTS}/g, '$ARGUMENTS');
+        if (isToml) content = content.replace(/{ARGUMENTS}/g, '{{args}}');
+
+        fs.writeFileSync(dest, content);
+    }
+}
+
+function runInitScript() {
+    const isWindows = process.platform === 'win32';
+    const script = isWindows
+        ? path.join(cwd, '.magic/scripts/init.ps1')
+        : path.join(cwd, '.magic/scripts/init.sh');
+
+    if (!fs.existsSync(script)) return;
+
+    console.log('🚀 Running initialization script...');
+    const spawnOptions = { stdio: 'inherit', shell: isWindows };
+
+    if (isWindows) {
+        spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', script], spawnOptions);
+    } else {
+        fs.chmodSync(script, '755');
+        spawnSync('bash', [script], spawnOptions);
+    }
+}
+
+function printHelp() {
+    console.log(`
+Usage: npx magic-spec [options] [command]
+
+Options:
+  --env <names>     Install environment adapters (e.g., --env cursor,windsurf)
+  --update          Update .magic/ and .agent/ only
+  --check           Check current version
+  --list-envs       List supported environments
+  --eject           Remove library from project
+  --version, -v     Show version
+  --help, -h        Show this help
+
+Commands:
+  info              Show installation status
+    `);
+}
+
+function eject() {
+    const folders = ['.magic', '.agent', '.cursor/rules', '.windsurf/rules', '.kilocode'];
+    console.log('📤 Ejecting magic-spec (removing managed files)...');
+    folders.forEach(dir => {
+        const p = path.join(cwd, dir);
+        if (fs.existsSync(p)) {
+            console.log(`   Removing ${dir}...`);
+            fs.rmSync(p, { recursive: true, force: true });
+        }
+    });
+    console.log('✅ Eject complete.');
 }
 
 main();

@@ -11,7 +11,7 @@ Stop your AI from writing code before it understands the problem.
 
 ## ✨ What is Magic Spec?
 
-`magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Claude, Gemini, Copilot, etc.). It acts as an operating system for agentic development, enforcing a rigorous, structured pipeline:
+`magic-spec` is a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude, Gemini, etc.). It acts as an project-level operating system for agentic development, enforcing a rigorous, structured pipeline:
 
 ```plaintext
 💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
@@ -21,7 +21,7 @@ Once installed, your AI agent will automatically:
 
 - Build a phased implementation plan with hierarchical dependencies.
 - Decompose the plan into prioritized user stories and atomic, trackable tasks.
-- Facilitate safe architectural brainstorming via the new **Explore Mode**.
+- Facilitate safe architectural brainstorming via **Explore Mode**.
 - Analyze its own workflow and suggest improvements (Auto-Retrospective).
 - Provide a smooth onboarding experience with `magic.onboard`.
 
@@ -34,87 +34,38 @@ No runtime lock-in. Requires only Node.js or Python to install.
 
 ### Option A — Node.js (npx)
 
-Requires **Node.js >= 16**.
-
 ```bash
 npx magic-spec@latest
-# For non-interactive (CI/CD) use:
-npx magic-spec@latest --yes
 ```
 
-### Option B — Python (uvx or pipx)
-
-Requires **Python >= 3.8** and a package manager like [**uv**](https://github.com/astral-sh/uv) or `pipx`.
+### Option B — Python (uvx)
 
 ```bash
 uvx magic-spec
-# or
-pipx run magic-spec --yes
 ```
 
-Both commands do exactly the same thing:
+**What gets installed:**
 
-1. Copy `.magic/` (the SDD engine) into your project.
-2. Copy `.agent/workflows/magic.*.md` (agent trigger wrappers) into your project.
-3. Run the init script — creates your `.design/` workspace with `INDEX.md` and `RULES.md`.
+1. `.magic/` — The live SDD engine (logic and scripts).
+2. `.agent/workflows/` — Slash-command wrappers for your AI agent.
+3. `.design/` — Your project's design workspace (Specs, Plans, Rules).
 
 ## 🧭 Core Philosophy
 
 | Principle | Description |
 | :--- | :--- |
-| **Specs First, Code Later** | The agent is forbidden from writing code from raw input. All ideas become specs first. |
-| **Deterministic Process** | A strict pipeline: *Thought → Spec → Task → Run (Execute) → Code*. |
-| **Constitution-Driven** | All project decisions live in `.design/RULES.md` — the project's living constitution. |
-| **Self-Improving** | The engine automatically runs retrospectives to optimize its own performance. |
-| **Simulation Mandatory** | Every engine change is validated via `magic.simulate` before deployment. |
-
-You can check if your SDD workspace is properly initialized and healthy without invoking the AI. Just append the `--doctor` (or `--check`) flag:
-
-```bash
-npx magic-spec@latest --doctor
-# or
-uvx magic-spec --doctor
-```
-
-> [!NOTE]
-> The doctor command requires the project to have been initialized at least once.
-
-This returns a visually formatted validation report of your project's `.design` structure, preventing broken context before you start coding.
+| **Specs First** | No code is allowed before a specification is accepted. |
+| **Deterministic** | A strict, unskippable pipeline from thought to deployment. |
+| **Constitutional** | All project conventions live in `RULES.md` — the source of truth. |
+| **Self-Improving** | Continuous feedback via built-in auto-retrospectives. |
 
 ## 📁 What Gets Installed
 
-After running `npx magic-spec@latest` in your project root:
-
 ```plaintext
 your-project/
-│
-├── .agent/workflows/               # Agent entry points (slash commands)
-│   ├── magic.onboard.md        # Interactive tutorial for new devs
-│   ├── magic.rule.md
-│   ├── magic.run.md
-│   ├── magic.spec.md
-│   └── magic.task.md
-│
-├── .magic/                     # SDD Engine (workflow logic, read-only)
-│   ├── init.md
-│   ├── onboard.md              # Onboarding script payload
-│   ├── retrospective.md
-│   ├── rule.md
-│   ├── run.md
-│   ├── spec.md
-│   ├── task.md
-│   └── scripts/
-│       ├── check-prerequisites.*  # Used by --doctor
-│       ├── generate-context.*     # Auto-compiles CONTEXT.md
-│       ├── init.sh             # Init for macOS / Linux
-│       └── init.ps1            # Init for Windows
-│
-└── .design/                    # Your project workspace (generated)
-    ├── INDEX.md                # Spec registry
-    ├── RULES.md                # Project constitution
-    ├── PLAN.md                 # Implementation plan
-    ├── specifications/         # Your specification files
-    └── tasks/                  # Task breakdowns per phase
+├── .agent/workflows/         # slash commands (magic.spec, magic.task, etc.)
+├── .magic/                   # SDD Engine (workflow logic, read-only)
+└── .design/                  # Project Design (INDEX.md, RULES.md, PLAN.md)
 ```
 
 ## 🔗 The Workflow Pipeline
@@ -136,71 +87,34 @@ graph TD
 
 | # | Workflow | Purpose |
 | :--- | :--- | :--- |
-| 1 | **Specification** | Converts raw thoughts into structured specs. Verifies specs against project state. Manages statuses: `Draft → RFC → Stable → Deprecated`. |
-| 2 | **Task** | Reads Stable specs, builds a dependency graph, produces a phased `PLAN.md`, and decomposes into atomic tasks. |
-| 3 | **Run** | Executes tasks with sequential and parallel tracks. Automatically runs a retrospective at phase and plan completion. |
+| 1 | **Specification** | Converts raw thoughts into structured specs. Verifies sync. |
+| 2 | **Task** | Builds dependency graph, PLAN.md, and atomic task files. |
+| 3 | **Run** | Executes tasks and manages retrospectives. |
 
-### Auxiliary Workflows
+## 💬 How to Use
 
-| Workflow | Purpose |
-| :--- | :--- |
-| **Rule** | Manages the project constitution (`RULES.md §7`). Add, amend, or remove conventions. |
-| **Onboard** | Interactive tutorial guiding new developers through their first Magic SDD cycle. |
+Just talk to your AI agent naturally:
 
-> **Retrospective** runs automatically inside the Run workflow — at phase completion (snapshot) and plan completion (full analysis). No manual command needed.
-
-## 💬 How to Use (with any AI agent)
-
-Just talk to your AI agent naturally. Initialization is **automatic** — no setup command required.
-
-```plaintext
-"Dispatch this thought into specs: I want a user auth system with JWT and Redis..."
-→ Runs Specification workflow
-
-"Create an implementation plan"
-→ Runs Task workflow
-
-"Generate tasks for Phase 1"
-→ Runs Task workflow
-
-"Execute the next task"
-→ Runs Run workflow
-
-"Add rule: always use snake_case for file names"
-→ Runs Rule workflow
-
-"Check if specs match the actual project state"
-→ Runs Specification workflow (Consistency Check)
-
-"Start the interactive tutorial"
-→ Runs Onboard workflow
-```
-
-The AI reads the corresponding `.magic/*.md` workflow file and executes the request within the bounds of the SDD system. **No code escapes the pipeline.** ✨
+- *"Dispatch this thought into specs..."* → Runs Specification workflow
+- *"Create an implementation plan"* → Runs Task workflow
+- *"Execute the next task"* → Runs Run workflow
+- *"Add rule: always use Inter font"* → Runs Rule workflow
 
 ## 🔄 Updating
 
-Pull the latest engine improvements without touching your project data:
-
 ```bash
-# Node.js
 npx magic-spec@latest --update
-
-# Python
+# or
 uvx magic-spec --update
 ```
 
-The update overwrites `.magic/` (the engine) but **never touches** `.design/` (your specs, plans, and tasks).
-
 ## 🤝 Compatibility
 
-Works with any AI coding agent that can read markdown workflow files:
-
-- [Cursor](https://cursor.sh) (`.cursorrules` + Agent mode)
+- [Cursor](https://cursor.com) (Rules + Agent mode)
+- [Windsurf](https://codeium.com/windsurf) (Cascade + Flows)
 - [Claude](https://claude.ai) (Projects)
-- [Gemini](https://gemini.google.com) (via Gemini Code)
-- [GitHub Copilot](https://github.com/features/copilot) (Agent mode)
-- Any terminal-based or API-driven agent
+- [Gemini](https://gemini.google.com)
+- [GitHub Copilot](https://github.com/features/copilot)
 
 ## 📄 License
 

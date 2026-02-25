@@ -21,7 +21,7 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 5. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
 6. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
 7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
-8. **Maximum Automation (Zero-Prompt)**: Once PLAN.md and TASKS.md are approved by the user, the agent is authorized to proceed directly to execution (`magic.run`) and conclusion workflows without further confirmation. Save reports and update changelogs silently. Skip conversational overhead.
+8. **Maximum Automation**: Once PLAN.md and TASKS.md are approved by the user, the agent is authorized to proceed directly to execution (magic.run) without further sequence-related confirmation. Skip conversational overhead during implementation.
 
 ## Directory Structure
 

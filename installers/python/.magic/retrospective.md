@@ -32,7 +32,7 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 4. **Actionable Output**: Every recommendation must be concrete and implementable (e.g., "Remove checklist item X" or "Add example Y to specification.md"). Abstract advice ("improve quality") is forbidden.
 5. **Lightweight Execution**: This workflow must not consume excessive context. Read file headers and Document History tables — do not re-read entire spec bodies unless investigating a specific issue.
 6. **No Self-Modification**: This workflow recommends changes to `.magic/` files — it does not apply them. Changes to the SDD engine require explicit user approval and manual editing.
-7. **Level Awareness**: Always know which level you are executing. Level 1 (auto-snapshot) is silent and fast — no analysis, no recommendations. Level 2 (full) is thorough but fully automated — it must execute its operations silently without prompting the user for approval or lessons learned (Zero-Prompt Automation).
+7. **Level Awareness**: Always know which level you are executing. Level 1 (auto-snapshot) is silent and fast — no analysis, no recommendations. Level 2 (full) is thorough and interactive.
 8. **Documentation Sync**: When a recommendation is accepted and a `.magic/` workflow file is modified, you MUST also update the engine documentation to reflect the change. Documentation must always stay in sync with the engine.
 
 ## Directory Structure
@@ -159,7 +159,7 @@ graph TD
     K --> L{RETROSPECTIVE.md exists?}
     L -->|Yes| M[Append new session]
     L -->|No| N[Create RETROSPECTIVE.md]
-    M & N --> O[Save report silently]
+    M & N --> O[Present report to user]
 ```
 
 **Steps:**
@@ -178,7 +178,8 @@ graph TD
 8. **Generate recommendations**: For each non-positive observation, propose a specific action.
 9. **Analyze trends**: Compare current metrics against the Snapshots table. Calculate deltas.
 10. **Write RETROSPECTIVE.md**: Append a new session entry (never overwrite previous sessions).
-11. **Save report**: Save the report silently and finish the workflow.
+11. **Present report**: Show the user the full session output.
+12. **Lessons Learned**: Ask the user to provide 1-3 "lessons learned" or observations from the recent plan execution. Append these to the session under a `### 💡 Lessons Learned` header.
 
 ### Trigger Summary
 
@@ -213,7 +214,7 @@ Analysis Quality
 Output
   ☐ RETROSPECTIVE.md updated (appended, not overwritten)
   ☐ Previous sessions preserved
-  ☐ Report saved silently
+  ☐ Report presented to user
 ```
 
 ## Templates
