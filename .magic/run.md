@@ -81,7 +81,7 @@ graph TD
     L1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
-    M1 --> N1[Write compiled entry to CHANGELOG.md silently]
+    M1 --> N1[Present changelog entry for user approval]
     N1 --> N2[Bump version: update .magic/.version & primary manifest]
     N2 --> N3[Generate: CONTEXT.md]
     L -->|No| N[Report phase complete, propose next phase]
@@ -94,23 +94,33 @@ graph TD
    - If `ok: false` → surface `missing_required`, halt.
    - If `warnings` non-empty → surface warnings, continue.
    - If `ok: true` → proceed silently.
+   After pre-flight, read `RULES.md §7` to refresh project conventions (execution mode, coding standards, etc.) before executing any task.
 1. **Find next available task**: Locate the task with status `Todo` whose all dependencies are `Done`.
     - **AOP/Archive Check**: If searching for task context or history, check both `.design/tasks/` and `.design/archives/tasks/` to ensure continuity.
+    - **Stalled Phase**: If no `Todo` tasks remain but the phase has `Blocked` tasks, report the stall to the user with a summary of blocked items. Do not loop — escalate and wait.
 2. **Execute**: Perform the implementation work described by the task. Stay within the task's spec section — do not expand scope.
 3. **Update status**: Mark `In Progress` when starting, `Done` when complete, `Blocked` if a blocker is encountered.
+   - **Change Record**: For each completed task, record a one-line change summary in the task's `Changes` field (files created/modified). These records are compiled into the changelog at phase completion.
 4. **Report**: After each task, briefly state what was done and what is next.
 5. **On phase completion**:
     - **Retrospective Level 1 (auto-snapshot)**: Silently run retrospective Level 1 (snapshot). **CRITICAL**: If the command fails, the execution must HALT and report the error to the user. Silent failure of audit trails is prohibited.
-    - **Changelog Level 1 (auto-compile)**: Silently compile CHANGELOG.md Level 1. **CRITICAL**: If completion fail to append to CHANGELOG.md, HALT.
+    - **Changelog Level 1 (auto-compile)**: Silently compile CHANGELOG.md Level 1 (see *Changelog Compilation* below). If `CHANGELOG.md` does not exist, create it with a `# Changelog` header before appending. **CRITICAL**: If compilation fails to append to CHANGELOG.md, HALT.
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and **present the compiled entry to the user for a single yes/no approval** before writing to `CHANGELOG.md`. (Per C9: this is the only non-silent step in the conclusion sequence.)
-        3. **Auto-Bump Version**: Update `.magic/.version` to the newly compiled version. If a primary manifest is detected, offer to bump its version field as well:
+        3. **Auto-Bump Version**: Determine the new version from the changelog entry (patch for fixes only, minor for new features, major for breaking changes). Update `.magic/.version`. If project manifests are detected, bump ALL of them to maintain consistency:
            - Node.js → `package.json` (.version field)
            - Python  → `pyproject.toml` ([project].version)
            - Rust    → `Cargo.toml` ([package].version)
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
+
+#### Changelog Compilation
+
+The changelog is compiled in two levels matching the retrospective:
+
+- **Level 1 (auto-compile)**: After each phase completion, compile the `Changes` fields from all completed tasks in the phase into a single changelog section. Format: `## Phase {N} — {date}` followed by a bullet list of changes. Append to `.design/CHANGELOG.md`.
+- **Level 2 (release compile)**: After the entire plan completes, compile all Phase-level entries into a release entry following [Keep a Changelog](https://keepachangelog.com/) format with `Added`, `Changed`, `Fixed`, `Removed` categories. Present to user for approval (per C9).
 
 ### Executing Tasks (Parallel Mode)
 
@@ -143,6 +153,8 @@ graph TD
 ```
 
 #### Manager Agent Responsibilities
+
+1. **Pre-flight**: Before assigning tracks, run `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`. Halt if `ok: false`. Read `RULES.md §7` for project conventions.
 
 The Manager Agent does not write implementation code. Its job is coordination:
 
@@ -180,6 +192,13 @@ Status Updates
   ☐ TASKS.md updated to reflect current state
   ☐ Per-phase files updated to match TASKS.md
   ☐ All Blocked tasks have a reason stated in Notes
+
+Conclusion (on phase/plan completion)
+  ☐ Retrospective Level 1 auto-snapshot appended to RETROSPECTIVE.md
+  ☐ Changelog Level 1 compiled and appended to CHANGELOG.md
+  ☐ If plan complete: Changelog Level 2 approved and written
+  ☐ If plan complete: .magic/.version and manifests bumped
+  ☐ CONTEXT.md regenerated
 ```
 
 ## Document History
@@ -187,3 +206,4 @@ Status Updates
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
