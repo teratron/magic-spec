@@ -5,10 +5,6 @@
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "MIT",
   "homepage": "https://github.com/teratron/magic-spec",
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/teratron/magic-spec.git"
-  },
   "main": "installers/node/index.js",
   "bin": {
     "magic-spec": "installers/node/index.js"

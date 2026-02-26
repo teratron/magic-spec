@@ -38,30 +38,31 @@ def run_command(
     cwd_path = Path(cwd)
     # Do not print tokens
     display_cmd = []
-    for arg in cmd:
+    skip_next = False
+    for i, arg in enumerate(cmd):
+        if skip_next:
+            skip_next = False
+            continue
         if arg.startswith("--//registry.npmjs.org/:_authToken="):
             display_cmd.append("--//registry.npmjs.org/:_authToken=***")
-        elif arg.startswith("--token"):
+        elif arg == "--token":
             display_cmd.append("--token ***")
+            skip_next = True
         else:
             display_cmd.append(arg)
     print(f"Running: {' '.join(display_cmd)} in {cwd_path}")
 
-    # For security, avoid leaking environment tokens in exception traces by default,
-    # but subprocess.run does not print env vars.
+    # Use shell=True on Windows for better compatibility with git and other wrappers,
+    # and to ensure proper argument quoting and path handling.
     is_windows = os.name == "nt"
-    if is_windows and cmd[0] == "git":
-        # On Windows, os.system is often more reliable for simple git calls in a script
-        # Join and replace / with \ for better compatibility
-        full_cmd = " ".join(
-            [arg.replace("/", "\\") if "/" in arg else arg for arg in cmd]
+    try:
+        return subprocess.run(
+            cmd, cwd=cwd_path, check=check, text=True, shell=is_windows
         )
-        print(f"Running (os.system): {full_cmd}")
-        ret = os.system(f'cd /d "{cwd_path}" && {full_cmd}')
-        if check and ret != 0:
-            raise subprocess.CalledProcessError(ret, cmd)
-        return subprocess.CompletedProcess(cmd, ret)
-    return subprocess.run(cmd, cwd=cwd_path, check=check, text=True)
+    except subprocess.CalledProcessError:
+        if check:
+            raise
+        return subprocess.CompletedProcess(cmd, 1)
 
 
 def load_env() -> None:
@@ -237,7 +238,14 @@ def publish_python(dry_run: bool) -> None:
         return
 
     run_command(["uv", "build"], cwd=cwd)
-    run_command(["uv", "publish"], cwd=cwd)
+
+    cmd = ["uv", "publish"]
+    uv_token = os.environ.get("UV_PUBLISH_TOKEN")
+    if uv_token:
+        # Avoid printing token is handled in run_command (needs to be added if not there)
+        cmd.extend(["--token", uv_token])
+
+    run_command(cmd, cwd=cwd)
     print("Published Python package")
 
 
@@ -308,6 +316,11 @@ def main() -> None:
         print(f"Autodetected versions: {old_version} -> {version}")
 
     load_env()
+
+    # Ensure dist directory exists
+    dist_dir = PROJECT_ROOT / "dist"
+    if not args.dry_run:
+        dist_dir.mkdir(exist_ok=True)
 
     print(f"Starting release process: v{old_version} -> v{version}")
 

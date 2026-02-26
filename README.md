@@ -75,4 +75,3 @@ Magic Spec is optimized for the world's most powerful AI development environment
 ## 📄 License
 
 Distributed under the [MIT License](./LICENSE).  
-© 2026 Oleg Alexandrov & teratron. ✨
