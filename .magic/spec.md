@@ -204,7 +204,7 @@ graph TD
 - Remove or consolidate any sections that have become redundant.
 - Rewrite any passages that have grown unclear due to successive edits.
 - If a major restructure is needed, treat it as a `major` version bump and note it in `Document History`.
-- **Sync Gap**: Check if the current update increases the gap between `INDEX.md` and `PLAN.md`. If so, the task is BUILT-IN BLOCKED until a "Sync plan" handoff is presented.
+- **Sync Gap**: Check if the current update increases the gap between `INDEX.md` and `PLAN.md`. Use `node .magic/scripts/executor.js check-prerequisites --json` to detect this. If a warning is issued, the task is BUILT-IN BLOCKED until a "Sync plan" handoff is presented.
 
 > If the review reveals significant issues beyond the original edit scope, inform the user and propose a dedicated refactoring pass rather than silently rewriting large portions.
 

@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.5.0
-**Generated:** 2026-02-25
-**Based on:** .design/INDEX.md v1.20.0
+**Version:** 1.5.2
+**Generated:** 2026-02-26
+**Based on:** .design/INDEX.md v1.22.0
 **Status:** Active
 
 ## Overview
@@ -88,3 +88,5 @@ graph TD
 | 1.3.0 | 2026-02-25 | Agent | Reopened Phase 2 to implement advanced CLI features from installer-features.md |
 | 1.4.0 | 2026-02-25 | Agent | Migrated to Nested Phase Architecture (C10 standard) |
 | 1.5.0 | 2026-02-25 | Agent | Applied standard checklist notation ([ ], [/], [x]) |
+| 1.5.1 | 2026-02-26 | Agent | Synchronized with INDEX.md v1.21.0 (Simulation Fix) |
+| 1.5.2 | 2026-02-26 | Agent | Synchronized with INDEX.md v1.22.0 (Engine Hardening) |

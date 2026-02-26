@@ -1,6 +1,6 @@
 ﻿# Specifications Registry
 
-**Version:** 1.20.0
+**Version:** 1.22.0
 **Status:** Active
 
 ## Overview
@@ -30,7 +30,7 @@ Central registry of all project specifications and their current state.
 
 - **Maintainer**: Oleg Alexandrov
 - **License**: MIT
-- **Last Updated**: 2026-02-25
+- **Last Updated**: 2026-02-26
 
 ## Document History
 
@@ -58,3 +58,4 @@ Central registry of all project specifications and their current state.
 | 1.19.0 | 2026-02-25 | Agent | Synchronized all specs with SDD standard metadata (Layer, RFC status update) |
 | 1.20.0 | 2026-02-25 | Agent | Updated all installer specs to Stable and matched them to current Thin Client architecture |
 | 1.21.0 | 2026-02-25 | Agent | Added Layer column to Domain Specifications table |
+| 1.22.0 | 2026-02-26 | Agent | Engine Hardening: Added bidirectional sync and Rule 57 validation |

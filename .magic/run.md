@@ -100,8 +100,8 @@ graph TD
 3. **Update status**: Mark `In Progress` when starting, `Done` when complete, `Blocked` if a blocker is encountered.
 4. **Report**: After each task, briefly state what was done and what is next.
 5. **On phase completion**:
-    - Run **retrospective Level 1 (auto-snapshot)**: read INDEX.md, TASKS.md, RULES.md → count stats → append one row to `.design/RETROSPECTIVE.md` Snapshots table. Do this **silently** — no user confirmation needed.
-    - Compile **CHANGELOG.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG.md`. Do this **silently**.
+    - **Retrospective Level 1 (auto-snapshot)**: Silently run retrospective Level 1 (snapshot). **CRITICAL**: If the command fails, the execution must HALT and report the error to the user. Silent failure of audit trails is prohibited.
+    - **Changelog Level 1 (auto-compile)**: Silently compile CHANGELOG.md Level 1. **CRITICAL**: If completion fail to append to CHANGELOG.md, HALT.
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and **present the compiled entry to the user for a single yes/no approval** before writing to `CHANGELOG.md`. (Per C9: this is the only non-silent step in the conclusion sequence.)

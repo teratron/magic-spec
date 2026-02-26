@@ -91,16 +91,16 @@ graph TD
 
 **Trigger phrase**: *"Update tasks"*, *"Sync tasks"*, *"Update plan"*, *"Reprioritize"*
 
-1. Read current `TASKS.md` and `PLAN.md` and compare against `INDEX.md`.
-2. **Detect changes (Registry Synchronization Check)**:
+1. **Registry Synchronization Check**:
     - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
+    - **Convention Synchronization**: If `RULES.md` has changed (e.g., Task ID format, checklist notation), the agent must propose a global migration of all existing IDs and statuses in `PLAN.md` and `TASKS.md` to maintain consistency.
     - **Selective Planning (C6)**:
         - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
         - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
     - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
     - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
     - **Deprecated Specs**: Move to Archived in `PLAN.md`, mark related tasks `Cancelled` in `TASKS.md`.
-3. Show diff to user before writing. Let user approve the reprioritization.
+2. Show diff to user before writing. Let user approve the reprioritization.
 
 ### Task Completion Checklist
 

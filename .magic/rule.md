@@ -38,7 +38,8 @@ Use when you want to declare a convention without going through the Spec Workflo
 
 1. Read `.design/RULES.md`.
 2. Parse the user's input into a clean, declarative rule statement.
-3. Propose before writing:
+3. **Constitutional Guard**: Check §1–6 of `RULES.md` to ensure the new statement doesn't contradict established project-wide invariants. If it does, flag the conflict and ask for an amendment to the core section instead.
+4. Propose before writing:
 
     ```
     Proposed addition to RULES.md §7:
@@ -50,15 +51,19 @@ Use when you want to declare a convention without going through the Spec Workflo
     Add? (yes / adjust / cancel)
     ```
 
-4. On approval: append to §7, bump version (`minor`), add Document History row.
-5. **Task Completion Checklist**: Present the checklist.
+5. On approval: append to §7, bump version (`minor`), add Document History row.
+6. **Impact Analysis**: Propose the next steps to the user:
+    - "Should I run an audit of existing specifications to check compliance with this new rule?"
+    - "Should I update the implementation plan to reflect this convention in upcoming tasks?"
+7. **Task Completion Checklist**: Present the checklist.
 
 ### Amending a Convention
 
 **Trigger phrase**: *"Amend rule"*, *"Change rule"*, *"Update convention"*
 
 1. Read `.design/RULES.md §7`.
-2. Show the current rule and the proposed change side by side:
+2. **Constitutional Guard**: Ensure the amendment does not contradict project-wide invariants in §1–6.
+3. Show the current rule and the proposed change side by side:
 
     ```
     Current:  "All APIs must follow REST. GraphQL is not permitted."
@@ -69,8 +74,11 @@ Use when you want to declare a convention without going through the Spec Workflo
     Apply? (yes / adjust / cancel)
     ```
 
-3. On approval: replace the rule in place, bump version (`minor`), add Document History row.
-4. **Task Completion Checklist**: Present the checklist.
+4. On approval: replace the rule in place, bump version (`minor`), add Document History row.
+5. **Impact Analysis**: Propose the next steps to the user:
+    - "Should I run an audit of existing specifications to check compliance with this amendment?"
+    - "Should I update the implementation plan to reflect this change in upcoming tasks?"
+6. **Task Completion Checklist**: Present the checklist.
 
 ### Removing a Convention
 
@@ -89,7 +97,9 @@ Use when you want to declare a convention without going through the Spec Workflo
 
 2. On approval: remove the entry, bump version (`major`), add Document History row.
     - *Exception*: If removal is part of a refactor where the rule is moved or merged without loss of intent, use `minor`.
-3. **Task Completion Checklist**: Present the checklist.
+3. **Impact Analysis**: Propose the next steps to the user:
+    - "Should I run an audit to identify specifications that now rely on non-existent rules?"
+4. **Task Completion Checklist**: Present the checklist.
 
 ### Listing Conventions
 

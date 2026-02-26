@@ -74,17 +74,73 @@ if ($indexExists) {
     $specCount = $stableCount + $draftCount + $rfcCount
     
     if ($indexExists -and $planExists) {
-        # Extract spec filenames from INDEX.md (lines matching "| [file.md](specifications/file.md) |")
+        # Extract spec filenames from INDEX.md
         $indexSpecs = $lines | Where-Object { $_ -match "\|\s*\[.*?\]\(specifications/(.*?\.md)\)" } | ForEach-Object { 
             if ($_ -match "specifications/(.*?\.md)") { $Matches[1] }
         }
         
-        # Check if each spec is mentioned in PLAN.md
+        # Check if each spec from INDEX.md exists on disk and is in PLAN.md
         $planContent = Get-Content $planPath -Raw
         foreach ($spec in $indexSpecs) {
-            # Use fixed-string matching instead of regex to avoid path character issues
+            $specFile = Join-Path ".design\specifications" $spec
+            if (-not (Test-Path $specFile)) {
+                $warnings += "Inconsistency: '$spec' is registered in INDEX.md but file is missing from .design/specifications/"
+            }
             if ($planContent -notlike "*$spec*") {
                 $warnings += "Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md"
+            }
+        }
+
+        # Reverse Sync: Check if PLAN.md mentions specs that aren't in the registry
+        $planSpecs = [regex]::Matches($planContent, "specifications/(.*?\.md)") | ForEach-Object { $_.Groups[1].Value } | Select-Object -Unique
+        foreach ($pSpec in $planSpecs) {
+            if ($indexSpecs -notcontains $pSpec) {
+                $warnings += "Registry Mismatch: '$pSpec' is referenced in PLAN.md but missing from INDEX.md"
+            }
+        }
+        
+        # Sync Gap Check: Compare INDEX.md version with PLAN.md "Based on" version
+        $indexVersionMatch = $lines | Select-String -Pattern "^\*\*Version:\*\* ([\d\.]+)"
+        if ($indexVersionMatch) {
+            $indexVersion = $indexVersionMatch.Matches.Groups[1].Value
+            $planBasedOnMatch = Select-String -Path $planPath -Pattern "^\*\*Based on:\*\* .*? v([\d\.]+)"
+            if ($planBasedOnMatch) {
+                $planBasedOn = $planBasedOnMatch.Matches.Groups[1].Value
+                if ($indexVersion -ne $planBasedOn) {
+                    $warnings += "Sync Gap: PLAN.md is based on INDEX.md v$planBasedOn, but registry is at v$indexVersion. Run 'node .magic/scripts/executor.js generate-plan' (magic.task) to sync."
+                }
+            }
+        }
+
+        # Rule 57 Check: Layer Integrity (L2 Stable/RFC requires Stable L1)
+        $specMetadata = @{}
+        foreach ($line in $lines) {
+            if ($line -match "\|\s*\[(.*?)\]\(specifications/(.*?\.md)\)\s*\|\s*.*?\s*\|\s*(.*?)\s*\|\s*(.*?)\s*\|") {
+                $file = $Matches[2]
+                $status = $Matches[3].Trim()
+                $layer = $Matches[4].Trim()
+                $specMetadata[$file] = @{ status = $status; layer = $layer }
+            }
+        }
+
+        foreach ($spec in $indexSpecs) {
+            $meta = $specMetadata[$spec]
+            if ($meta.layer -eq "implementation" -and ($meta.status -eq "Stable" -or $meta.status -eq "RFC")) {
+                $fullPath = Join-Path ".design\specifications" $spec
+                if (Test-Path $fullPath) {
+                    $content = Get-Content $fullPath -Raw
+                    if ($content -match "\*\*Implements:\*\* (.*?\.md)") {
+                        $parent = $Matches[1].Trim()
+                        if ($specMetadata.ContainsKey($parent)) {
+                            $parentStatus = $specMetadata[$parent].status
+                            if ($parentStatus -ne "Stable") {
+                                $warnings += "Rule 57 Violation: L2 spec '$spec' is $($meta.status), but its L1 parent '$parent' is $parentStatus (Must be Stable)."
+                            }
+                        } else {
+                             $warnings += "Layer Integrity: L2 spec '$spec' implements '$parent' which is missing from INDEX.md."
+                        }
+                    }
+                }
             }
         }
     }

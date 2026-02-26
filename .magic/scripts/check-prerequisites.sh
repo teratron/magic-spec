@@ -115,12 +115,53 @@ if [ "$PLAN_EXISTS" = "true" ] && [ "$INDEX_EXISTS" = "true" ]; then
     # Extract spec filenames from INDEX.md
     INDEX_SPECS=$(grep -o "specifications/[^)]*\.md" "$INDEX_PATH" | sed 's|specifications/||' || true)
     
-    # magic.task.md hint: "Generate or update the implementation plan and tasks based on ALL registered specifications."
+    # Check if each spec registered in INDEX exists and is in PLAN
     for spec in $INDEX_SPECS; do
+        if [ ! -f ".design/specifications/$spec" ]; then
+            WARNINGS+=("Inconsistency: '$spec' is registered in INDEX.md but file is missing from .design/specifications/")
+        fi
         if ! grep -q "$spec" "$PLAN_PATH"; then
             WARNINGS+=("Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md")
         fi
     done
+
+    # Reverse Sync: Check if PLAN.md mentions specs that aren't in the registry
+    PLAN_SPECS=$(grep -o "specifications/[^)]*\.md" "$PLAN_PATH" | sed 's|specifications/||' | sort -u || true)
+    for p_spec in $PLAN_SPECS; do
+        if ! echo "$INDEX_SPECS" | grep -q "$p_spec"; then
+            WARNINGS+=("Registry Mismatch: '$p_spec' is referenced in PLAN.md but missing from INDEX.md")
+        fi
+    done
+
+    # Sync Gap Check: Compare INDEX.md version with PLAN.md "Based on" version
+    INDEX_VERSION=$(grep -m 1 "^\*\*Version:\*\*" "$INDEX_PATH" | grep -o "[0-9.]*" || true)
+    PLAN_BASED_ON=$(grep -m 1 "^\*\*Based on:\*\*" "$PLAN_PATH" | grep -o "v[0-9.]*" | sed 's/v//' || true)
+
+    if [ ! -z "$INDEX_VERSION" ] && [ ! -z "$PLAN_BASED_ON" ]; then
+        if [ "$INDEX_VERSION" != "$PLAN_BASED_ON" ]; then
+            WARNINGS+=("Sync Gap: PLAN.md is based on INDEX.md v$PLAN_BASED_ON, but registry is at v$INDEX_VERSION. Run 'node .magic/scripts/executor.js generate-plan' (magic.task) to sync.")
+        fi
+    fi
+
+    # Rule 57 Check: Layer Integrity (Partial in Bash using grep)
+    # This is a bit complex in bash without a JSON parser, but we can do a simplified version.
+    while read -r line; do
+        if echo "$line" | grep -q "| \[" && echo "$line" | grep -q "implementation"; then
+            file=$(echo "$line" | grep -o "specifications/[^)]*\.md" | sed 's|specifications/||')
+            status=$(echo "$line" | awk -F'|' '{print $4}' | xargs)
+            if [[ "$status" == "Stable" || "$status" == "RFC" ]]; then
+                if [ -f ".design/specifications/$file" ]; then
+                    parent=$(grep -m 1 "\*\*Implements:\*\*" ".design/specifications/$file" | grep -o "specifications/[^)]*\.md" | sed 's|specifications/||' | head -n 1)
+                    if [ ! -z "$parent" ]; then
+                        parent_status=$(grep "| \[$parent\]" "$INDEX_PATH" | awk -F'|' '{print $4}' | xargs)
+                        if [ ! -z "$parent_status" ] && [ "$parent_status" != "Stable" ]; then
+                            WARNINGS+=("Rule 57 Violation: L2 spec '$file' is $status, but its L1 parent '$parent' is $parent_status (Must be Stable).")
+                        fi
+                    fi
+                fi
+            fi
+        fi
+    done < "$INDEX_PATH"
 fi
 
 if [ ${#MISSING[@]} -gt 0 ]; then
