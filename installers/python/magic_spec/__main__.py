@@ -252,9 +252,12 @@ def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
 
 
 def _convert_to_toml(content: str, description: str) -> str:
-    # Escape quotes for TOML triple-quoted strings
-    escaped_content = content.replace('"""', '\\"\\"\\"')
-    return f'description = "{description}"\n\nprompt = """\n{escaped_content}\n"""\n'
+    # Escape quotes and backslashes for TOML triple-quoted strings
+    escaped_content = content.replace("\\", "\\\\").replace('"""', '\\"\\"\\"')
+    escaped_desc = description.replace("\\", "\\\\")
+    return 'description = "{}"\n\nprompt = """\n{}\n"""\n'.format(
+        escaped_desc, escaped_content
+    )
 
 
 def _convert_to_mdc(content: str, description: str) -> str:
@@ -500,7 +503,7 @@ def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
         return 0
     else:
         print("❌ Eject cancelled.")
-        return 1
+        return 0
 
 
 def _detect_environment(dest: pathlib.Path, adapters: dict) -> str | None:
@@ -617,8 +620,8 @@ def run_init(dest: pathlib.Path, auto_accept: bool = False) -> None:
     if not init_script.exists():
         return
 
-    should_run = auto_accept
-    if not should_run:
+    should_run = True
+    if not auto_accept:
         print(f"\n⚠️  The initialization script will be executed: {init_script}")
         print("   This script may modify your system environment.")
         try:
@@ -626,6 +629,8 @@ def run_init(dest: pathlib.Path, auto_accept: bool = False) -> None:
             should_run = answer == "y"
         except EOFError:
             should_run = False
+    else:
+        print(f"\nℹ️  Auto-accepting initialization script: {init_script}")
 
     if not should_run:
         print("⚠️  Initialization script skipped by user.")
@@ -732,8 +737,9 @@ def main() -> None:
             if env_values:
                 selected_env = env_values[0]
             elif magicrc.get("env"):
-                selected_env = magicrc["env"]
-            elif not is_update:
+                selected_env = magicrc["env"] if magicrc["env"] != "default" else None
+
+            if not selected_env and not is_update:
                 detected = _detect_environment(dest, adapters)
                 if detected and detected in adapters:
                     adapter_desc = adapters[detected].get("description", detected)
@@ -769,11 +775,11 @@ def main() -> None:
 
             # 2. Adapters (skip on --update)
             if not is_update:
-                if selected_env:
-                    install_adapter(source_root, dest, selected_env, adapters)
-                elif env_values:
+                if env_values:
                     for env in env_values:
                         install_adapter(source_root, dest, env, adapters)
+                elif selected_env:
+                    install_adapter(source_root, dest, selected_env, adapters)
                 else:
                     _copy_dir(source_root / ".agent", dest / ".agent")
 
@@ -787,7 +793,12 @@ def main() -> None:
             # 4. Write version file (.magic/.version) - [T-2B01]
             try:
                 version_file = dest / ".magic" / ".version"
-                version_file.write_text(version_to_fetch, encoding="utf-8")
+                real_version = (
+                    _resolve_package_version()
+                    if version_to_fetch == "main"
+                    else version_to_fetch
+                )
+                version_file.write_text(real_version, encoding="utf-8")
             except Exception as v_err:
                 print(f"Warning: Failed to write .magic/.version: {v_err}")
 
@@ -795,7 +806,7 @@ def main() -> None:
             try:
                 new_config = {
                     "env": selected_env or magicrc.get("env") or "default",
-                    "version": version_to_fetch,
+                    "version": real_version,
                 }
                 _save_magic_rc(dest, new_config)
             except Exception as rc_err:

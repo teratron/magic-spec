@@ -18,7 +18,6 @@ The file is located at `.magic/.checksums` and uses a flat JSON structure:
 
 ```json
 {
-  ".checksums": "self-checksum-to-detect-tampering",
   "spec.md": "sha256-hash-of-file",
   "task.md": "sha256-hash-of-file",
   "scripts/executor.js": "sha256-hash-of-file"
@@ -27,6 +26,7 @@ The file is located at `.magic/.checksums` and uses a flat JSON structure:
 
 - **Keys**: Relative paths of files within the `.magic/` directory.
 - **Values**: SHA256 hashes represented as lowercase hexadecimal strings.
+- **Exclusion**: The `.checksums` file itself is excluded from hashing to avoid circular dependencies.
 
 ## 3. Automation & Workflows
 

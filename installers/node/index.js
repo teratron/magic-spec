@@ -124,6 +124,27 @@ function collectEnvValues(argv) {
 }
 
 const envValues = collectEnvValues(args);
+let selectedEnv = envValues.length > 0 ? envValues[0] : null;
+
+function runListEnvs(adapters) {
+    if (!adapters) {
+        const adaptersPath = path.join(__dirname, '..', 'adapters.json');
+        adapters = {};
+        if (fs.existsSync(adaptersPath)) {
+            try {
+                adapters = JSON.parse(fs.readFileSync(adaptersPath, 'utf8'));
+            } catch (e) { }
+        }
+    }
+    console.log('Supported environments:');
+    console.log(`  (default)    ${AGENT_DIR}/${WORKFLOWS_DIR}/magic.*${DEFAULT_EXT}  general agents, Gemini`);
+    for (const [name, adapter] of Object.entries(adapters)) {
+        const padding = ' '.repeat(Math.max(0, 12 - name.length));
+        const dest = `${adapter.dest}/`.padEnd(28);
+        console.log(`  ${name}${padding}${dest}${adapter.description || ''}`);
+    }
+    console.log('\nUsage: npx magic-spec@latest --env <name>');
+}
 
 function askQuestion(query) {
     const rl = readline.createInterface({
@@ -145,9 +166,11 @@ function copyDir(src, dest) {
 }
 
 function convertToToml(content, description) {
-    // Escape quotes for TOML triple-quoted strings
-    const escapedContent = content.replace(/"""/g, '\\"\\"\\"');
-    return `description = "${description || ''}"\n\nprompt = """\n${escapedContent}\n"""\n`;
+    // Escape quotes and backslashes for TOML triple-quoted strings
+    const escapedContent = content
+        .replace(/\\/g, '\\\\')
+        .replace(/"""/g, '\\"\\"\\"');
+    return `description = "${(description || '').replace(/\\/g, '\\\\')}"\n\nprompt = """\n${escapedContent}\n"""\n`;
 }
 
 function convertToMdc(content, description) {
@@ -335,18 +358,6 @@ function runCheck() {
     process.exit(0);
 }
 
-function runListEnvs(adapters) {
-    console.log('Supported environments:');
-    console.log(`  (default)    ${AGENT_DIR}/${WORKFLOWS_DIR}/magic.*${DEFAULT_EXT}  general agents, Gemini`);
-    for (const [name, adapter] of Object.entries(adapters)) {
-        const padding = ' '.repeat(Math.max(0, 12 - name.length));
-        const dest = `${adapter.dest}/`.padEnd(28);
-        console.log(`  ${name}${padding}${dest}${adapter.description || ''}`);
-    }
-    console.log('\nUsage: npx magic-spec@latest --env <name>');
-    process.exit(0);
-}
-
 function createBackup() {
     console.log('📦 Creating backup of existing engine files...');
 
@@ -404,7 +415,6 @@ async function runEject() {
     } else {
         console.log('❌ Eject cancelled.');
     }
-    process.exit(0);
 }
 
 function detectEnvironment(adapters) {
@@ -437,6 +447,7 @@ function getDirectoryChecksums(dir, baseDir = dir) {
             if (item.name === '.checksums') continue;
             Object.assign(results, getDirectoryChecksums(fullPath, baseDir));
         } else {
+            if (item.name === '.checksums') continue;
             const relPath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
             results[relPath] = getFileChecksum(fullPath);
         }
@@ -444,7 +455,7 @@ function getDirectoryChecksums(dir, baseDir = dir) {
     return results;
 }
 
-async function handleConflicts(cwd, sourceRoot) {
+async function handleConflicts(cwd) {
     const checksumsFile = path.join(cwd, '.magic', '.checksums');
     if (!fs.existsSync(checksumsFile)) return;
 
@@ -549,12 +560,13 @@ async function downloadPayload(targetVersion) {
 
                         // Security: Check for path traversal in archive
                         const listResult = spawnSync('tar', ['-tf', archivePath], { encoding: 'utf-8' });
-                        if (listResult.status === 0) {
-                            const files = listResult.stdout.split('\n').filter(Boolean);
-                            for (const f of files) {
-                                if (f.startsWith('/') || f.includes('..')) {
-                                    throw new Error(`Security Alert: Suspicious path detected in archive: ${f}`);
-                                }
+                        if (listResult.status !== 0) {
+                            throw new Error(`Failed to verify archive integrity: ${listResult.stderr || 'unknown error'}`);
+                        }
+                        const files = listResult.stdout.split('\n').filter(Boolean);
+                        for (const f of files) {
+                            if (f.startsWith('/') || f.includes('..')) {
+                                throw new Error(`Security Alert: Suspicious path detected in archive: ${f}`);
                             }
                         }
 
@@ -614,6 +626,13 @@ async function main() {
 
     if (isEject) {
         await runEject();
+        process.exit(0);
+        return;
+    }
+
+    if (isListEnvs) {
+        runListEnvs();
+        process.exit(0);
         return;
     }
 
@@ -661,19 +680,21 @@ async function main() {
 
         if (isListEnvs) {
             runListEnvs(ADAPTERS);
+            process.exit(0);
             return;
         }
 
         // Determine environment
-        let selectedEnv = null;
+        let selectedEnvResolved = null;
         if (envValues.length > 0) {
-            selectedEnv = envValues[0]; // Take first --env if provided
-        } else if (magicrc.env) {
-            selectedEnv = magicrc.env;
-        } else if (!isUpdate) {
-            // Auto-detect for new installs
+            selectedEnvResolved = envValues[0];
+        } else if (magicrc.env && magicrc.env !== 'default') {
+            selectedEnvResolved = magicrc.env;
+        }
+
+        if (!selectedEnvResolved && !isUpdate) {
             const detected = detectEnvironment(ADAPTERS);
-            if (detected && ADAPTERS[detected]) {
+            if (detected && ADAPTERS[detected] && (!magicrc.env || magicrc.env === 'default')) {
                 const adapterName = ADAPTERS[detected].description || detected;
                 console.log(`\n💡 Detected ${adapterName} (${detected}/ directory found).`);
                 let shouldAdopt = autoAccept;
@@ -682,33 +703,48 @@ async function main() {
                     shouldAdopt = answer.toLowerCase() === 'y';
                 }
                 if (shouldAdopt) {
-                    selectedEnv = detected;
+                    selectedEnvResolved = detected;
                 }
             }
         }
 
+        let conflictsToSkip = [];
         if (isUpdate) {
-            const conflictResult = await handleConflicts(cwd, sourceRoot);
+            const conflictResult = await handleConflicts(cwd);
             // backup is already created by createBackup()
 
             if (conflictResult && conflictResult.choice === 's') {
-                // Implementing selective copy would be complex here as copyDir is used.
-                // For simplicity, we warn that 's' is not fully implemented and we fallback to overwrite with backup.
-                console.log('⚠️  Selective skip not fully implemented, proceeding with overwrite (backup available).');
+                conflictsToSkip = conflictResult.conflicts;
+                console.log(`⚠️  Skipping ${conflictsToSkip.length} conflicting file(s).`);
             }
         }
 
         // 1. Copy .magic
-        copyDir(path.join(sourceRoot, '.magic'), path.join(cwd, '.magic'));
+        if (conflictsToSkip.length > 0) {
+            const srcMagic = path.join(sourceRoot, '.magic');
+            const destMagic = path.join(cwd, '.magic');
+            const items = fs.readdirSync(srcMagic, { withFileTypes: true });
+            for (const item of items) {
+                if (conflictsToSkip.includes(item.name)) continue;
+                if (item.name === '.checksums') continue;
+                if (item.isDirectory()) {
+                    copyDir(path.join(srcMagic, item.name), path.join(destMagic, item.name));
+                } else {
+                    fs.copyFileSync(path.join(srcMagic, item.name), path.join(destMagic, item.name));
+                }
+            }
+        } else {
+            copyDir(path.join(sourceRoot, '.magic'), path.join(cwd, '.magic'));
+        }
 
         // 2. Adapters
         if (!isUpdate) {
-            if (selectedEnv) {
-                installAdapter(sourceRoot, selectedEnv, ADAPTERS);
-            } else if (envValues.length > 0) {
+            if (envValues.length > 0) {
                 for (const env of envValues) {
                     installAdapter(sourceRoot, env, ADAPTERS);
                 }
+            } else if (selectedEnvResolved) {
+                installAdapter(sourceRoot, selectedEnvResolved, ADAPTERS);
             } else {
                 copyDir(path.join(sourceRoot, '.agent'), path.join(cwd, '.agent'));
             }
@@ -722,12 +758,14 @@ async function main() {
                 : path.join(cwd, '.magic', 'scripts', 'init.sh');
 
             if (fs.existsSync(initScript)) {
-                let shouldRun = autoAccept;
-                if (!shouldRun) {
+                let shouldRun = true;
+                if (!autoAccept) {
                     console.log(`\n⚠️  The initialization script will be executed: ${initScript}`);
                     console.log('   This script may modify your system environment.');
                     const answer = await askQuestion('   Do you want to continue? (y/N): ');
                     shouldRun = answer.toLowerCase() === 'y';
+                } else {
+                    console.log(`\nℹ️  Auto-accepting initialization script: ${initScript}`);
                 }
 
                 if (shouldRun) {
@@ -765,7 +803,7 @@ async function main() {
         // 5. Update .magicrc - [T-2C02]
         try {
             const newConfig = {
-                env: selectedEnv || magicrc.env || 'default',
+                env: selectedEnvResolved || magicrc.env || 'default',
                 version: version
             };
             saveMagicRc(newConfig);
@@ -787,7 +825,7 @@ async function main() {
     } finally {
         if (sourceRoot) {
             const tempDir = path.dirname(sourceRoot);
-            if (fs.existsSync(tempDir) && tempDir.includes('magic-spec-')) {
+            if (fs.existsSync(tempDir) && path.basename(tempDir).startsWith(INSTALLER_CONFIG.download.tempPrefix)) {
                 try {
                     fs.rmSync(tempDir, { recursive: true, force: true });
                 } catch (e) {

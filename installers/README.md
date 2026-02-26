@@ -47,11 +47,11 @@ Manage your Magic Spec installation with these flags:
 | `--update` | Pulls the latest engine components while preserving your `.design/` folder. |
 | `--check` | Checks GitHub/PyPI for available updates. |
 | `--list-envs` | Lists available IDE adapters (Cursor, Windsurf, etc.). |
-| `--env <id>` | Configures Magic Spec for a specific IDE (e.g., `--env cursor`). |
+| `--env <id>` | Supported adapters: cursor-agent, copilot, claude, gemini, roo, windsurf, amp, q, kilocode, qwen, opencode, shai, bob, codebuddy, qodercli, codex, auggie, agy. |
 | `--doctor` | Checks for missing files or inconsistencies in your workspace. |
 | `--eject` | Uninstalls Magic Spec and removes the `.magic/` folder. |
-| `--yes`, `-y` | Non-interactive mode (auto-accepts all prompts). |
-| `--fallback-main` | Downloads the payload from the `main` branch instead of a release. |
+| `--yes`, `-y` | Non-interactive mode (auto-accepts prompts; still shows `init.sh` safety warning). |
+| `--fallback-main` | Downloads from `main` branch (resolves and writes actual version to `.version`). |
 
 ---
 

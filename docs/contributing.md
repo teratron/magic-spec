@@ -28,10 +28,6 @@ magic-spec/                         # Repository Root
 
 ---
 
-## 🟢 Node.js Installer (`installers/node/`)
-
-All commands should be executed from the `installers/node/` directory.
-
 ### Build Process
 
 The Node.js installer is a **Thin Client**. It doesn't bundle the engine; instead, it downloads the current version from the GitHub repository during installation.
@@ -39,7 +35,7 @@ The Node.js installer is a **Thin Client**. It doesn't bundle the engine; instea
 To test the installer locally:
 
 1. Ensure `installers/config.json` is present.
-2. Run the script directly (see Method B below).
+2. Run the commands from the project root.
 
 ### Script Reference
 
@@ -61,12 +57,11 @@ node installers/node/index.js --info
 
 ## 🔵 Python Installer (`installers/python/`)
 
-All commands should be executed from the `installers/python/` directory.
-
 ### Build Process
 
+Run this from the project root:
+
 ```bash
-cd installers/python
 uv build
 ```
 
