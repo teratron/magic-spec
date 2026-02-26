@@ -109,6 +109,7 @@ Skip the user story priority prompt. The agent must automatically assign default
 
 During plan updates, specs are handled by their status:
 - **Draft specs**: automatically moved to ``## Backlog`` in ``PLAN.md`` without user input.
+- **RFC specs**: surfaced to user with a recommendation to backlog until Stable.
 - **Stable specs**: agent asks which ones to pull into the active plan. All others go to Backlog.
 - **Orphaned specs** (in INDEX.md but absent from both plan and backlog): flagged as critical blockers.
 

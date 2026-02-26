@@ -71,7 +71,7 @@ graph TD
 3. **Propose Plan Structure**: Group specifications into Phases according to their layer and dependencies:
     - Layer 1 (concept) specifications must be grouped into early requirements phases (e.g., Phase 0 or Phase 1).
     - Layer 2 (implementation) specifications must be scheduled in execution phases that follow their Layer 1 parent, and can be grouped by technology track.
-4. **Ask execution mode** (first run only):
+4. **Ask execution mode**: Skip if `RULES.md §7` already contains the execution mode convention (C3). Otherwise, ask:
 
     ```
     How should tasks be executed?
@@ -81,7 +81,7 @@ graph TD
     This choice will be saved to RULES.md §7.
     ```
 
-5. **Decompose Phase 1**: Break down Phase 1 specifications into atomic tasks. Extract user stories from `Implementation Notes`. Apply tracking IDs (e.g., `T-1A01`).
+5. **Decompose first execution phase**: Break down the first execution phase (typically Phase 1) into atomic tasks. Phase 0 (Requirements) items are tracked inline in PLAN.md as review checklists and do not generate separate task files. Extract user stories from `Implementation Notes`. Apply tracking IDs (e.g., `T-1A01`).
 6. **Assign tracks**: Group tasks into Execution Tracks (A, B, C) based on task-level independence.
 7. **Propose breakdown to user**: Show the Plan Phases and the Phase 1 Task Outline before writing. Wait for the user to approve changes.
 8. **Write files**: Write `.design/PLAN.md`, `.design/TASKS.md`, and `.design/tasks/phase-1.md` based on approval.
@@ -91,13 +91,20 @@ graph TD
 
 **Trigger phrase**: *"Update tasks"*, *"Sync tasks"*, *"Update plan"*, *"Reprioritize"*
 
+0. **Consistency Check & Engine Integrity**: Before updating, run:
+   `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
+   - If `ok: false` → surface `missing_required`, halt.
+   - If `warnings` non-empty → surface warnings to user before proceeding with the update.
+
 1. **Registry Synchronization Check**:
     - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
-    - **Convention Synchronization**: If `RULES.md` has changed (e.g., Task ID format, checklist notation), the agent must propose a global migration of all existing IDs and statuses in `PLAN.md` and `TASKS.md` to maintain consistency.
+    - **Convention Synchronization**: Compare the RULES.md version against the version recorded in `TASKS.md` header (field `Based on RULES:`). If versions differ, review §7 changes and propose a global migration of all existing IDs and statuses in `PLAN.md` and `TASKS.md` to maintain consistency. Update the `Based on RULES:` field after migration.
     - **Selective Planning (C6)**:
         - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
+        - **RFC Specs**: Surface to user with a recommendation to backlog until Stable, unless user explicitly pulls into active plan.
         - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
     - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
+    - **Phantom Specs**: Flag specs referenced in `PLAN.md` but missing from `INDEX.md`. Propose removal from the plan and cancellation of associated tasks.
     - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
     - **Deprecated Specs**: Move to Archived in `PLAN.md`, mark related tasks `Cancelled` in `TASKS.md`.
 2. Show diff to user before writing. Let user approve the reprioritization.
@@ -117,7 +124,7 @@ Input Integrity
 Plan & Task Structure
   ☐ No spec assigned to a phase earlier than its dependencies allow
   ☐ Each task maps to exactly one spec section (no cross-spec bundling)
-  ☐ All task IDs follow the T-{phase}{track}{seq} format
+  ☐ All task IDs follow the format defined in RULES.md (default: T-{phase}{track}{seq})
 
 Track Integrity
   ☐ Tasks in different tracks have no hidden shared dependencies
@@ -173,6 +180,7 @@ Data Integrity
 **Version:** {X.Y.Z}
 **Generated:** {YYYY-MM-DD}
 **Based on:** .design/PLAN.md v{X.Y.Z}
+**Based on RULES:** .design/RULES.md v{X.Y.Z}
 **Execution Mode:** {Sequential | Parallel}
 **Status:** Active
 
@@ -203,3 +211,4 @@ Data Integrity
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to Update path, RFC handling in C6, convention sync detection via Based on RULES field, phantom spec handling, Phase 0 clarification, execution mode guard, dynamic task ID format in checklist |
