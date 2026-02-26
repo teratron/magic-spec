@@ -18,6 +18,13 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 
 ## Workflow Steps
 
+### 0. Pre-flight
+
+Run `node .magic/scripts/executor.js check-prerequisites --json` to verify engine integrity.
+
+- If `checksums_mismatch` warnings exist → surface them. The simulation may be analyzing tampered files.
+- If `.design/` is missing → this is acceptable for simulate (it doesn't require project files, only engine files).
+
 ### 1. Target Selection
 
 Identify which workflow (or set of workflows) needs validation. This is mandatory after any change to `.magic/` or `.agent/workflows/`.
@@ -63,7 +70,11 @@ Document any surgical fixes for affected `.magic/` or `.agent/workflows/` files.
 
 ### 7. Verification
 
-Re-run the simulation of the *corrected* workflow to ensure the fix works.
+Verify the applied fixes:
+
+- **Spot-check**: Re-read the modified lines to confirm they match the proposed change.
+- **Regression check**: Confirm the fix doesn't introduce contradictions with adjacent steps.
+- **Full re-simulation**: Only if the rough edge was HIGH severity or involved structural changes. For LOW/MEDIUM fixes, spot-check is sufficient.
 
 ## Task Completion Checklist
 
@@ -83,7 +94,7 @@ AI Optimization (AOP)
 
 Engine Integrity
   ☐ All script calls use node executor.js (C7)
-   ☐ Rules compliance checked (especially C1-C10)
+  ☐ Rules compliance checked (C1-C11)
   ☐ No overlap with retrospective logic (metrics/history)
 
 Cleanup
@@ -98,3 +109,4 @@ Cleanup
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification |
+| 1.2.0 | 2026-02-26 | Antigravity | Added pre-flight Step 0, lighter Step 7 verification, fixed checklist indentation and C1-C11 reference |

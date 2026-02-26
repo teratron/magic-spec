@@ -4,6 +4,9 @@ handoffs:
   - label: "Simulate workflow"
     workflow: magic.simulate
     prompt: "Pick a workflow to simulate (spec, task, run, rule, retrospective) and find logical bottlenecks."
+  - label: "Apply fixes"
+    workflow: magic.rule
+    prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
 ---
 
 # Simulation Workflow
