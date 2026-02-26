@@ -36,18 +36,21 @@ graph TD
 
 ### Core Workflows
 
-| # | Workflow | Primary File | Purpose |
-| ---: | :--- | :--- | :--- |
-| **1** | **Specification** | `spec.md` | Converts thoughts into structured specs. Manages lifecycle (Draft → RFC → Stable). |
-| **2** | **Task** | `task.md` | Reads Stable specs, builds dependency graphs, and decomposes them into atomic tasks in `PLAN.md` and `TASKS.md`. |
-| **3** | **Run** | `run.md` | Executes tasks sequentially or in parallel. Triggers automatic retrospectives at phase completion. |
+| # | Workflow | Primary File | Purpose | Documentation |
+| ---: | :--- | :--- | :--- | :--- |
+| **1** | **Specification** | `spec.md` | Converts thoughts into structured specs. Manages lifecycle (Draft → RFC → Stable). | [Detailed Guide](spec.md) |
+| **2** | **Task** | `task.md` | Reads Stable specs, builds dependency graphs, and decomposes them into atomic tasks in `PLAN.md` and `TASKS.md`. | [Detailed Guide](task.md) |
+| **3** | **Run** | `run.md` | Executes tasks sequentially or in parallel. Triggers automatic retrospectives at phase completion. | [Detailed Guide](run.md) |
 
 ### Auxiliary Workflows
 
-| Workflow | Primary File | Purpose |
-| :--- | :--- | :--- |
-| **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. |
-| **Onboard** | `onboard.md` | Provides an interactive tutorial for developers and AI agents to learn the SDD lifecycle. |
+| Workflow | Primary File | Purpose | Documentation |
+| :--- | :--- | :--- | :--- |
+| **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
+| **Onboard** | `onboard.md` | Provides an interactive tutorial for developers and AI agents to learn the SDD lifecycle. | [Detailed Guide](onboard.md) |
+| **Retrospective** | `retrospective.md` | Collects metrics and generates improvement recommendations after phase/plan completion. | [Detailed Guide](retrospective.md) |
+| **Simulate** | `simulate.md` | Validates engine logic and optimizes workflow instructions (AOP). | [Detailed Guide](simulate.md) |
+| **Init** | `init.md` | Automatic pre-flight initialization of the `.design/` directory. | [Detailed Guide](init.md) |
 
 ---
 
