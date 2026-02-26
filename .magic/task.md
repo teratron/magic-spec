@@ -197,3 +197,9 @@ Data Integrity
 - **Assignee:** {Agent | User}
 - **Notes:** (optional)
 ```
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |

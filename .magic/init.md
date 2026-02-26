@@ -64,3 +64,9 @@ graph TD
 ```
 
 `PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |

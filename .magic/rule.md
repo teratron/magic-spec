@@ -122,3 +122,9 @@ Task Completion Checklist — {operation description}
   ☐ Document History row added
   ☐ No contradiction with existing rules in §1–6
 ```
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |

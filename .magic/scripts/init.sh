@@ -50,6 +50,8 @@ Read by the agent before every operation. Updated only via explicit triggers.
 ## 2. Status Rules
 - **Draft → RFC**: all required sections filled, ready for review.
 - **RFC → Stable**: reviewed, approved, no open questions.
+- **RFC → Draft**: needs rework or significant revision.
+- **Stable → RFC**: substantive amendment (minor/major bump) requires re-review.
 - **Any → Deprecated**: explicitly superseded; replacement must be named.
 
 ## 3. Versioning Rules

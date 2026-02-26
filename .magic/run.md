@@ -181,3 +181,9 @@ Status Updates
   ☐ Per-phase files updated to match TASKS.md
   ☐ All Blocked tasks have a reason stated in Notes
 ```
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |

@@ -71,7 +71,12 @@ Status transitions follow this flow:
 graph LR
     Draft --> RFC --> Stable --> Deprecated
     RFC --> Draft
+    Stable --> RFC
 ```
+
+> **Amendment rule:** When a Stable spec receives substantive new requirements
+> (minor or major version bump), its status reverts to `RFC` for re-review.
+> Typo-only patches (0.0.X) do not require a status change.
 
 ## Workflow Steps
 
@@ -82,7 +87,7 @@ Use this workflow for safe exploration without violating the "Workflow Minimalis
 **Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*
 
 1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
-2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file.
+2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
 3. **Strict Prohibition**: You MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents.
 4. **Transition**: Only update live specs when the user explicitly approves transitioning the brainstorm into a formal spec update (triggering *Dispatching from Raw Input* or *Updating an Existing Specification*).
 
@@ -136,6 +141,8 @@ graph TD
 - If a topic doesn't fit any existing domain — propose a new spec file with a suggested name.
 - If the input contradicts an existing rule in `RULES.md` — flag the conflict explicitly and ask whether to proceed or amend the rule first.
 - If the input contradicts an existing Stable spec — flag the conflict explicitly before dispatching.
+- If the input contains a T4 trigger ("from now on...", "remember that..."), apply the rule to RULES.md immediately per T4 protocol (no confirmation required), then continue with the Dispatch flow for the remaining topics.
+- If the specification's layer is ambiguous — default to Layer 1 (concept). Layer-specific implementation details can later be extracted into an L2 spec.
 
 ### Creating a New Specification
 
@@ -266,7 +273,7 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 4. **Orphaned Content**: Flag sections with no clear connection to any other spec or declared feature.
 5. **Stale Statuses**: Flag specs in `Draft` or `RFC` without recent updates.
 6. **Broken Relations**: Check all `Related Specifications` links point to existing files.
-7. **Pattern Detection**: If the same approach appears in 2+ specs, propose a Project Convention (T2 trigger).
+7. **Pattern Detection**: If the same approach appears in 2+ specs (regardless of when they were created), propose a Project Convention. *(Extension of T2 — which normally applies within a single session.)*
 8. **Report**: Present findings before making any changes:
 
     ```
@@ -466,7 +473,7 @@ Explicit mapping of every L1 invariant to this implementation:
 
 ## 5. Detailed Design
 
-### 3.1 Component A
+### 5.1 Component A
 
 Technical details, logic, and flows.
 
@@ -508,3 +515,10 @@ Potential issues and alternative approaches considered.
 | 0.1.0 | YYYY-MM-DD | User | Initial Draft |
 
 ```
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Antigravity | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2 scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |

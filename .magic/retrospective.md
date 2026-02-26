@@ -279,3 +279,9 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 
 <!-- Previous session preserved here -->
 ```
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
