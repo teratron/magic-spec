@@ -18,7 +18,7 @@ Verifies that `.design/` exists and contains all required system files. If anyth
 
 ## When It Runs
 
-This check is embedded as **Step 0** in every workflow (`spec.md`, `task.md`, `run.md`, `rule.md`, `retrospective.md`). The agent executes it before any workflow-specific logic.
+This check is invoked when **`check-prerequisites`** (called as Step 0 by every workflow) detects that `.design/` or its required files are missing. The calling workflow runs `node .magic/scripts/executor.js check-prerequisites --json`. If `ok: false` due to missing `.design/`, the workflow calls init automatically before proceeding.
 
 ```mermaid
 graph TD
@@ -34,6 +34,7 @@ graph TD
 ## Workflow Steps
 
 1. **Check `.design/`**: Verify directory exists.
+   - **Engine Integrity**: Before creating anything, verify `.magic/.checksums` exists. If checksums are present, validate that init scripts match their stored hashes. If mismatch, warn the user before proceeding.
 2. **Check system files**: Verify `INDEX.md` and `RULES.md` exist inside `.design/`.
 3. **If anything missing**: Detect OS and run the appropriate script:
 
@@ -41,7 +42,8 @@ graph TD
     | :--- | :--- | :--- |
     | Universal | `.magic/scripts/init` | `node .magic/scripts/executor.js init` |
 
-4. **Report result** (brief, inline with the calling workflow):
+4. **Verify**: After running the script, confirm that both `INDEX.md` and `RULES.md` now exist. If either is missing, report the failure and halt — do not continue with the calling workflow.
+5. **Report result** (brief, inline with the calling workflow):
 
     ```
     SDD initialized — {YYYY-MM-DD}
@@ -49,7 +51,7 @@ graph TD
     Continuing with {workflow name}...
     ```
 
-5. **If already initialized**: Skip silently. No output needed.
+6. **If already initialized**: Skip silently. No output needed.
 
 ## Directory Structure Created
 
@@ -65,8 +67,21 @@ graph TD
 
 `PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.
 
+## Init Completion Checklist
+
+```
+Init Checklist
+  ☐ .design/ directory exists
+  ☐ INDEX.md exists and contains valid header
+  ☐ RULES.md exists and contains valid header
+  ☐ specifications/ directory exists
+  ☐ tasks/ directory exists
+  ☐ archives/tasks/ directory exists
+```
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Antigravity | Documented check-prerequisites call chain, added engine integrity check, post-init verification step, completion checklist |
