@@ -23,7 +23,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Documentation:** Separated `README.md` strategies (different focuses for GitHub, NPM package, and PyPI package).
 - **Update Logic:** Improved `.magic` update logic to be safer (old folders are now moved to `.magic/archives/` rather than simply deleted).
 
-## [1.2.3] - 2026-02-23
+## [1.3.0] - 2026-02-23
 
 ### Added
 
