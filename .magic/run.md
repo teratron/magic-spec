@@ -82,13 +82,18 @@ graph TD
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> N1[Write compiled entry to CHANGELOG.md silently]
-    N1 --> N2[Bump version: update package.json & .magic/.version]
+    N1 --> N2[Bump version: update .magic/.version & primary manifest]
+    N2 --> N3[Generate: CONTEXT.md]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
     I --> O[Escalate to user]
 ```
 
-0. **Consistency Check**: Before running, check `TASKS.md` against `.design/PLAN.md`.
+0. **Consistency Check**: Verify task state is current:
+   `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`
+   - If `ok: false` → surface `missing_required`, halt.
+   - If `warnings` non-empty → surface warnings, continue.
+   - If `ok: true` → proceed silently.
 1. **Find next available task**: Locate the task with status `Todo` whose all dependencies are `Done`.
     - **AOP/Archive Check**: If searching for task context or history, check both `.design/tasks/` and `.design/archives/tasks/` to ensure continuity.
 2. **Execute**: Perform the implementation work described by the task. Stay within the task's spec section — do not expand scope.
@@ -99,8 +104,11 @@ graph TD
     - Compile **CHANGELOG.md Level 1**: extract `Changes:` blocks from all Done tasks in this phase and append them to `.design/CHANGELOG.md`. Do this **silently**.
     - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
-        2. Run **Changelog Level 2 compile** and silently write to `CHANGELOG.md` (no user review needed per Zero-Prompt Automation).
-        3. **Auto-Bump Version**: Update `package.json` and `.magic/.version` to match the newly compiled version.
+        2. Run **Changelog Level 2 compile** and **present the compiled entry to the user for a single yes/no approval** before writing to `CHANGELOG.md`. (Per C9: this is the only non-silent step in the conclusion sequence.)
+        3. **Auto-Bump Version**: Update `.magic/.version` to the newly compiled version. If a primary manifest is detected, offer to bump its version field as well:
+           - Node.js → `package.json` (.version field)
+           - Python  → `pyproject.toml` ([project].version)
+           - Rust    → `Cargo.toml` ([package].version)
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
@@ -125,8 +133,8 @@ graph TD
     J1 --> L{Entire plan complete?}
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
-    M1 --> N1[Write compiled entry to CHANGELOG.md silently]
-    N1 --> N2[Bump version: update package.json & .magic/.version]
+    M1 --> N1[Write compiled entry to CHANGELOG.md with approval]
+    N1 --> N2[Bump version: update .magic/.version & primary manifest]
     N2 --> O[Generate CONTEXT.md]
     L -->|No| N[Manager: Report phase complete]
     N --> O

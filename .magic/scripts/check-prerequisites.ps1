@@ -73,7 +73,7 @@ if ($indexExists) {
     $rfcCount = ($lines | Where-Object { $_ -match "\|\s*RFC\s*\|" }).Count
     $specCount = $stableCount + $draftCount + $rfcCount
     
-    if ($planExists) {
+    if ($indexExists -and $planExists) {
         # Extract spec filenames from INDEX.md (lines matching "| [file.md](specifications/file.md) |")
         $indexSpecs = $lines | Where-Object { $_ -match "\|\s*\[.*?\]\(specifications/(.*?\.md)\)" } | ForEach-Object { 
             if ($_ -match "specifications/(.*?\.md)") { $Matches[1] }

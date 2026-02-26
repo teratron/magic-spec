@@ -142,12 +142,8 @@ graph TD
 1. **Read RULES.md**: Check project conventions before creating anything.
 2. **Context Analysis**: Determine the domain of the new specification and the project's tech stack.
 3. **State Check**: Verify if `.design/` and its core files exist.
-4. **Synchronicity Audit**: Compare `INDEX.md` version with `PLAN.md`. If `INDEX.md` is ahead, immediately recommend the `magic.task` workflow.
-
-    **Warning Template**:
-    > ⚠️ **SYNC ALERT**: INDEX.md (v{X}) is ahead of PLAN.md (v{Y}).
-    > Current updates are not reflected in the implementation plan.
-    > **Action Required**: Run `magic.task` to synchronize the plan before starting implementation.
+4. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
+    If `warnings` contains orphaned specs → surface them and recommend `magic.task`.
 5. **Auto-Init**: If `.design/INDEX.md` or `.design/RULES.md` are missing, automatically run the Init pre-flight check (`.magic/init.md`) and continue.
 6. **Content Creation**:
     - Determine if the spec is Layer 1 (concept) or Layer 2 (implementation).
@@ -162,12 +158,8 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Synchronicity Audit**: Compare `INDEX.md` version with `PLAN.md`. If `INDEX.md` is ahead, immediately recommend the `magic.task` workflow.
-
-    **Warning Template**:
-    > ⚠️ **SYNC ALERT**: INDEX.md (v{X}) is ahead of PLAN.md (v{Y}).
-    > Current updates are not reflected in the implementation plan.
-    > **Action Required**: Run `magic.task` to synchronize the plan before starting implementation.
+1. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
+    If `warnings` contains orphaned specs → surface them and recommend `magic.task`.
 
 2. **Read RULES.md**: Check project conventions before modifying anything.
 3. **Version Bump**: Increment the version according to the change scope:
@@ -452,7 +444,27 @@ Why is this specification needed? What problems does it solve?
 - Hard technical constraints (e.g., "REST only, no GraphQL").
 - Key design assumptions (e.g., "single-region deployment for MVP").
 
-## 3. Detailed Design
+## 3. Core Invariants (Layer 1 only)
+
+Rules that Layer 2 implementations MUST NOT violate:
+
+- {Invariant 1: written in technology-agnostic terms}
+- {Invariant 2: ...}
+
+> L2 spec cannot reach RFC status until all invariants here are addressed in its "Invariant Compliance" section.
+
+## 4. Invariant Compliance (Layer 2 only)
+
+Explicit mapping of every L1 invariant to this implementation:
+
+| L1 Invariant | Implementation |
+| :----------- | :------------- |
+| {invariant}  | {how it's done in this stack} |
+
+> This table must be complete before the spec can reach RFC status.
+> If an invariant cannot be implemented in this stack — document the conflict here and propose an L1 amendment.
+
+## 5. Detailed Design
 
 ### 3.1 Component A
 
@@ -473,11 +485,11 @@ graph TD;
     A-->B;
 ```
 
-### 3.2 Component B
+### 5.2 Component B
 
 ...
 
-## 4. Implementation Notes
+## 6. Implementation Notes
 
 <!-- Optional. Fill if implementation order is non-obvious. -->
 
@@ -485,7 +497,7 @@ graph TD;
 2. Step B — can begin after A
 3. Step C — parallel with B
 
-## 5. Drawbacks & Alternatives
+## 7. Drawbacks & Alternatives
 
 Potential issues and alternative approaches considered.
 
