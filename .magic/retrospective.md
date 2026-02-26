@@ -46,8 +46,11 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 ├── specifications/     # Input: spec files (version history)
 │   └── *.md
 ├── TASKS.md              # Input: task execution data
-└── tasks/              # Per-phase files
-    └── phase-*.md
+├── tasks/              # Per-phase files (active)
+│   └── phase-*.md
+└── archives/           # Completed phase history (C8)
+    └── tasks/
+        └── phase-*.md
 ```
 
 ## Metrics Collected
@@ -92,8 +95,8 @@ The retrospective analyzes the following metric categories:
 
 | Metric | Source | What It Reveals |
 | :--- | :--- | :--- |
-| Checklist items that have never failed (always ✓) | Agent session history | Candidates for removal (zero signal) |
-| Checklist items that frequently fail (✗) | Agent session history | Systematic weaknesses in the workflow |
+| Checklist items that have never failed (always ✓) | RETROSPECTIVE.md session notes | Candidates for removal (zero signal) |
+| Checklist items that frequently fail (✗) | RETROSPECTIVE.md session notes | Systematic weaknesses in the workflow |
 
 ## Workflow Steps
 
@@ -116,6 +119,7 @@ graph TD
 
 **Steps:**
 
+0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json`. If `ok: false`, halt and surface missing artifacts.
 1. **Read INDEX.md**: Extract status counts (D/R/S).
 2. **Read TASKS.md**: Extract Done/Blocked counts from the **Summary Table** only.
 3. **Read RULES.md**: Count entries in section §7.
@@ -123,7 +127,7 @@ graph TD
     - 🟢 — 0 Blocked tasks, 100% planning coverage.
     - 🟡 — ≤20% tasks Blocked, or minor orphaned specs.
     - 🔴 — >20% tasks Blocked, or critical spec/plan gaps.
-5. **Append row** to `RETROSPECTIVE.md`.
+5. **Append row** to `RETROSPECTIVE.md`. If the file does not exist, create it using the RETROSPECTIVE.md Template (Snapshots section only — no Session section for Level 1).
 6. **Archival (C8)**:
     - Move `.design/tasks/phase-{N}.md` to `.design/archives/tasks/`.
     - Update `TASKS.md`: Change link `(tasks/phase-{N}.md)` to `(archives/tasks/phase-{N}.md)`.
@@ -164,6 +168,7 @@ graph TD
 
 **Steps:**
 
+0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json`. If `ok: false`, halt.
 1. **Read INDEX.md**: Count specs, note statuses, identify any without a status or version.
 2. **Read RULES.md**: Count §7 entries, scan Document History for rule additions/amendments/removals.
 3. **Read PLAN.md**: Check phase completion markers, count phases, identify unassigned specs.
@@ -193,6 +198,19 @@ graph TD
 ### Task Completion Checklist
 
 **Must be shown at the end of every retrospective operation — no exceptions.**
+
+**For Level 1 (auto-snapshot)**, use the abbreviated checklist:
+
+```
+Snapshot Checklist — Phase {N}
+  ☐ INDEX.md status counts extracted
+  ☐ TASKS.md Done/Blocked counts extracted
+  ☐ Signal calculated correctly
+  ☐ Snapshot row appended to RETROSPECTIVE.md
+  ☐ Phase file archived (C8)
+```
+
+**For Level 2 (full retrospective)**, use the full checklist:
 
 ```
 Task Completion Checklist — {date}
@@ -285,3 +303,4 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to both levels, RETROSPECTIVE.md creation in Level 1, split checklists for Level 1/2, realistic checklist metric source, archives in directory structure |
