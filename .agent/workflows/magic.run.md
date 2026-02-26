@@ -5,6 +5,9 @@ handoffs:
     workflow: magic.task
     prompt: "Update the project plan and generate new tasks based on spec changes."
     condition: null
+  - label: "Simulate engine"
+    workflow: magic.simulate
+    prompt: "Validate engine logic after the execution cycle."
 ---
 
 # Run Workflow
