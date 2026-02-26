@@ -1,6 +1,11 @@
 {
     "githubRepo": "teratron/magic-spec",
     "packageName": "magic-spec",
+    "removePrefix": "magic.",
+    "engineDir": ".magic",
+    "agentDir": ".agent",
+    "workflowsDir": "workflows",
+    "defaultExt": ".md",
     "download": {
         "timeoutMs": 60000,
         "tempPrefix": "magic-spec-"

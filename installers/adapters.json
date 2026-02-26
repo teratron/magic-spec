@@ -1,27 +1,115 @@
 {
-    "cursor": {
+    "cursor-agent": {
         "marker": ".cursor",
-        "dest": ".cursor/rules",
-        "ext": ".mdc",
-        "removePrefix": "magic.",
-        "description": "Cursor IDE"
+        "dest": ".cursor/commands",
+        "ext": ".md",
+        "description": "Cursor Agent"
     },
-    "github": {
+    "copilot": {
         "marker": ".github",
-        "dest": ".github",
+        "dest": ".github/agents",
         "ext": ".md",
         "description": "GitHub Copilot"
     },
-    "kilocode": {
-        "marker": ".kilocode",
-        "dest": ".kilocode",
+    "claude": {
+        "marker": ".claude",
+        "dest": ".claude/commands",
         "ext": ".md",
-        "description": "Kilo Code"
+        "description": "Claude Code"
+    },
+    "gemini": {
+        "marker": ".gemini",
+        "dest": ".gemini/commands",
+        "ext": ".toml",
+        "format": "toml",
+        "description": "Gemini CLI"
+    },
+    "roo": {
+        "marker": ".roo",
+        "dest": ".roo/commands",
+        "ext": ".md",
+        "format": "mdc",
+        "description": "Roo Code"
     },
     "windsurf": {
         "marker": ".windsurf",
-        "dest": ".windsurf/rules",
+        "dest": ".windsurf/workflows",
         "ext": ".md",
+        "format": "mdc",
         "description": "Windsurf"
+    },
+    "amp": {
+        "marker": ".agents",
+        "dest": ".agents/commands",
+        "ext": ".md",
+        "format": "mdc",
+        "description": "Amp"
+    },
+    "q": {
+        "marker": ".amazonq",
+        "dest": ".amazonq/prompts",
+        "ext": ".md",
+        "description": "Amazon Q Developer"
+    },
+    "kilocode": {
+        "marker": ".kilocode",
+        "dest": ".kilocode/workflows",
+        "ext": ".md",
+        "description": "Kilo Code"
+    },
+    "qwen": {
+        "marker": ".qwen",
+        "dest": ".qwen/commands",
+        "ext": ".toml",
+        "format": "toml",
+        "description": "Qwen Code"
+    },
+    "opencode": {
+        "marker": ".opencode",
+        "dest": ".opencode/command",
+        "ext": ".md",
+        "description": "opencode"
+    },
+    "shai": {
+        "marker": ".shai",
+        "dest": ".shai/commands",
+        "ext": ".md",
+        "description": "SHAI (OVHcloud)"
+    },
+    "bob": {
+        "marker": ".bob",
+        "dest": ".bob/commands",
+        "ext": ".md",
+        "description": "IBM Bob"
+    },
+    "codebuddy": {
+        "marker": ".codebuddy",
+        "dest": ".codebuddy/commands",
+        "ext": ".md",
+        "description": "CodeBuddy"
+    },
+    "qodercli": {
+        "marker": ".qoder",
+        "dest": ".qoder/commands",
+        "ext": ".md",
+        "description": "Qoder CLI"
+    },
+    "codex": {
+        "marker": ".codex",
+        "dest": ".codex/prompts",
+        "ext": ".md",
+        "description": "Codex CLI"
+    },
+    "auggie": {
+        "marker": ".augment",
+        "dest": ".augment/commands",
+        "ext": ".md",
+        "description": "Auggie CLI"
+    },
+    "agy": {
+        "marker": ".agent",
+        "dest": ".agent/workflows",
+        "ext": ".md",
+        "description": "Antigravity (Source)"
     }
 }

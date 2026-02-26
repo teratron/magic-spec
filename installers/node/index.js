@@ -47,6 +47,7 @@ function loadInstallerConfig() {
 
     const githubRepo = requireNonEmptyString(parsed.githubRepo, 'githubRepo');
     const packageName = requireNonEmptyString(parsed.packageName, 'packageName');
+    const removePrefix = parsed.removePrefix || '';
 
     if (!parsed.download || typeof parsed.download !== 'object' || Array.isArray(parsed.download)) {
         failConfig("field 'download' must be an object");
@@ -63,9 +64,19 @@ function loadInstallerConfig() {
         failConfig("field 'eject.targets' must be an array");
     }
 
+    const engineDir = requireNonEmptyString(parsed.engineDir, 'engineDir');
+    const agentDir = requireNonEmptyString(parsed.agentDir, 'agentDir');
+    const workflowsDir = requireNonEmptyString(parsed.workflowsDir, 'workflowsDir');
+    const defaultExt = requireNonEmptyString(parsed.defaultExt, 'defaultExt');
+
     return {
         githubRepo,
         packageName,
+        removePrefix,
+        engineDir,
+        agentDir,
+        workflowsDir,
+        defaultExt,
         download: { timeoutMs, tempPrefix },
         userAgent: { node: nodeUserAgent },
         ejectTargets: parsed.eject.targets
@@ -75,6 +86,11 @@ function loadInstallerConfig() {
 const INSTALLER_CONFIG = loadInstallerConfig();
 const GITHUB_REPO = INSTALLER_CONFIG.githubRepo;
 const PACKAGE_NAME = INSTALLER_CONFIG.packageName;
+const ENGINE_DIR = INSTALLER_CONFIG.engineDir;
+const AGENT_DIR = INSTALLER_CONFIG.agentDir;
+const WORKFLOWS_DIR = INSTALLER_CONFIG.workflowsDir;
+const DEFAULT_EXT = INSTALLER_CONFIG.defaultExt;
+const DEFAULT_REMOVE_PREFIX = INSTALLER_CONFIG.removePrefix;
 const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
 const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
 
@@ -128,37 +144,59 @@ function copyDir(src, dest) {
     fs.cpSync(src, dest, { recursive: true, force: true });
 }
 
+function convertToToml(content, description) {
+    // Escape quotes for TOML triple-quoted strings
+    const escapedContent = content.replace(/"""/g, '\\"\\"\\"');
+    return `description = "${description || ''}"\n\nprompt = """\n${escapedContent}\n"""\n`;
+}
+
+function convertToMdc(content, description) {
+    return `---\ndescription: ${description || ''}\nglobs: \n---\n${content}`;
+}
+
 function installAdapter(sourceRoot, env, adapters) {
     const adapter = adapters[env];
     if (!adapter) {
         console.warn(`⚠️  Unknown --env value: "${env}".`);
         console.warn(`   Valid values: ${Object.keys(adapters).join(', ')}`);
-        console.warn(`   Falling back to default .agent/`);
-        copyDir(path.join(sourceRoot, '.agent'), path.join(cwd, '.agent'));
+        console.warn(`   Falling back to default ${AGENT_DIR}/`);
+        copyDir(path.join(sourceRoot, AGENT_DIR), path.join(cwd, AGENT_DIR));
         return;
     }
 
-    const srcDir = path.join(sourceRoot, '.agent', 'workflows');
+    const srcDir = path.join(sourceRoot, AGENT_DIR, WORKFLOWS_DIR);
     const destDir = path.join(cwd, adapter.dest);
 
     if (!fs.existsSync(srcDir)) {
-        console.warn(`⚠️  Source .agent/workflows/ not found.`);
+        console.warn(`⚠️  Source ${AGENT_DIR}/${WORKFLOWS_DIR}/ not found.`);
         return;
     }
 
     fs.mkdirSync(destDir, { recursive: true });
 
-    const files = fs.readdirSync(srcDir).filter(f => f.endsWith('.md'));
+    const files = fs.readdirSync(srcDir).filter(f => f.endsWith(DEFAULT_EXT));
     for (const file of files) {
         const srcFile = path.join(srcDir, file);
-        let destName = file.replace(/\.md$/, adapter.ext);
-        if (adapter.removePrefix) {
-            if (destName.startsWith(adapter.removePrefix)) {
-                destName = destName.slice(adapter.removePrefix.length);
+        let destName = file.replace(new RegExp(`${DEFAULT_EXT.replace('.', '\\.')}$`), adapter.ext);
+        const removePrefix = adapter.hasOwnProperty('removePrefix') ? adapter.removePrefix : DEFAULT_REMOVE_PREFIX;
+        if (removePrefix) {
+            if (destName.startsWith(removePrefix)) {
+                destName = destName.slice(removePrefix.length);
             }
         }
         const destFile = path.join(destDir, destName);
-        fs.copyFileSync(srcFile, destFile);
+
+        if (adapter.format === 'toml' || adapter.ext === '.toml') {
+            const content = fs.readFileSync(srcFile, 'utf8');
+            const description = `Magic SDD Workflow: ${destName}`;
+            fs.writeFileSync(destFile, convertToToml(content, description), 'utf8');
+        } else if (adapter.format === 'mdc' || adapter.ext === '.mdc') {
+            const content = fs.readFileSync(srcFile, 'utf8');
+            const description = `Magic SDD Workflow: ${destName}`;
+            fs.writeFileSync(destFile, convertToMdc(content, description), 'utf8');
+        } else {
+            fs.copyFileSync(srcFile, destFile);
+        }
     }
 
     console.log(`✅ Adapter installed: ${env} → ${adapter.dest}/ (${adapter.ext})`);
@@ -167,8 +205,8 @@ function installAdapter(sourceRoot, env, adapters) {
 function runDoctor() {
     const isWindows = process.platform === 'win32';
     const checkScript = isWindows
-        ? path.join(cwd, '.magic', 'scripts', 'check-prerequisites.ps1')
-        : path.join(cwd, '.magic', 'scripts', 'check-prerequisites.sh');
+        ? path.join(cwd, ENGINE_DIR, 'scripts', 'check-prerequisites.ps1')
+        : path.join(cwd, ENGINE_DIR, 'scripts', 'check-prerequisites.sh');
 
     if (!fs.existsSync(checkScript)) {
         console.error('❌ Error: SDD engine not initialized. Run magic-spec first.');
@@ -266,8 +304,8 @@ function runInfo() {
     }
     console.log(`Active env        : ${activeEnv}`);
 
-    const enginePresent = fs.existsSync(path.join(cwd, '.magic'));
-    console.log(`Engine            : .magic/     ${enginePresent ? '✅ present' : '❌ missing'}`);
+    const enginePresent = fs.existsSync(path.join(cwd, ENGINE_DIR));
+    console.log(`Engine            : ${ENGINE_DIR}/     ${enginePresent ? '✅ present' : '❌ missing'}`);
 
     const designPresent = fs.existsSync(path.join(cwd, '.design'));
     console.log(`Workspace         : .design/    ${designPresent ? '✅ present' : '❌ missing'}`);
@@ -278,9 +316,9 @@ function runInfo() {
 }
 
 function runCheck() {
-    const versionFile = path.join(cwd, '.magic', '.version');
+    const versionFile = path.join(cwd, ENGINE_DIR, '.version');
     if (!fs.existsSync(versionFile)) {
-        console.log('⚠️  Not installed via magic-spec (no .magic/.version file)');
+        console.log(`⚠️  Not installed via magic-spec (no ${ENGINE_DIR}/.version file)`);
         process.exit(0);
     }
 
@@ -299,7 +337,7 @@ function runCheck() {
 
 function runListEnvs(adapters) {
     console.log('Supported environments:');
-    console.log('  (default)    .agent/workflows/magic.*.md  general agents, Gemini');
+    console.log(`  (default)    ${AGENT_DIR}/${WORKFLOWS_DIR}/magic.*${DEFAULT_EXT}  general agents, Gemini`);
     for (const [name, adapter] of Object.entries(adapters)) {
         const padding = ' '.repeat(Math.max(0, 12 - name.length));
         const dest = `${adapter.dest}/`.padEnd(28);
@@ -312,13 +350,13 @@ function runListEnvs(adapters) {
 function createBackup() {
     console.log('📦 Creating backup of existing engine files...');
 
-    const magicDir = path.join(cwd, '.magic');
+    const magicDir = path.join(cwd, ENGINE_DIR);
     if (fs.existsSync(magicDir)) {
-        copyDir(magicDir, path.join(cwd, '.magic.bak'));
+        copyDir(magicDir, path.join(cwd, `${ENGINE_DIR}.bak`));
     }
 
-    if (fs.existsSync(path.join(cwd, '.agent'))) {
-        copyDir(path.join(cwd, '.agent'), path.join(cwd, '.agent.bak'));
+    if (fs.existsSync(path.join(cwd, AGENT_DIR))) {
+        copyDir(path.join(cwd, AGENT_DIR), path.join(cwd, `${AGENT_DIR}.bak`));
     }
 
     // Update .gitignore
@@ -326,12 +364,12 @@ function createBackup() {
     if (fs.existsSync(gitignoreFile)) {
         let content = fs.readFileSync(gitignoreFile, 'utf8');
         let altered = false;
-        if (!content.includes('.magic.bak')) {
-            content += '\n.magic.bak/';
+        if (!content.includes(`${ENGINE_DIR}.bak`)) {
+            content += `\n${ENGINE_DIR}.bak/`;
             altered = true;
         }
-        if (!content.includes('.agent.bak')) {
-            content += '\n.agent.bak/';
+        if (!content.includes(`${AGENT_DIR}.bak`)) {
+            content += `\n${AGENT_DIR}.bak/`;
             altered = true;
         }
         if (altered) {
@@ -342,9 +380,9 @@ function createBackup() {
 
 async function runEject() {
     console.log('\n⚠️  This will remove:');
-    console.log('   -  .magic/');
-    console.log('   -  .agent/  (or active env adapter dir)');
-    console.log('   -  .magic.bak/  (if exists)');
+    console.log(`   -  ${ENGINE_DIR}/`);
+    console.log(`   -  ${AGENT_DIR}/  (or active env adapter dir)`);
+    console.log(`   -  ${ENGINE_DIR}.bak/  (if exists)`);
     console.log('\n   Your .design/ workspace will NOT be affected.');
 
     let shouldRun = autoAccept;

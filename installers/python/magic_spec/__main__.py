@@ -89,6 +89,13 @@ def _load_installer_config() -> dict:
         "ejectTargets": parsed.get("eject", {}).get(
             "targets", [".magic", ".agent", ".magic.bak", ".agent.bak"]
         ),
+        "removePrefix": parsed.get("removePrefix", ""),
+        "engineDir": _require_non_empty_str(parsed.get("engineDir"), "engineDir"),
+        "agentDir": _require_non_empty_str(parsed.get("agentDir"), "agentDir"),
+        "workflowsDir": _require_non_empty_str(
+            parsed.get("workflowsDir"), "workflowsDir"
+        ),
+        "defaultExt": _require_non_empty_str(parsed.get("defaultExt"), "defaultExt"),
     }
 
 
@@ -97,6 +104,11 @@ GITHUB_REPO = INSTALLER_CONFIG["githubRepo"]
 PACKAGE_NAME = INSTALLER_CONFIG["packageName"]
 DOWNLOAD_TIMEOUT_SECONDS = INSTALLER_CONFIG["download"]["timeoutMs"] / 1000.0
 PYTHON_USER_AGENT = INSTALLER_CONFIG["userAgent"]["python"]
+DEFAULT_REMOVE_PREFIX = INSTALLER_CONFIG["removePrefix"]
+ENGINE_DIR = INSTALLER_CONFIG["engineDir"]
+AGENT_DIR = INSTALLER_CONFIG["agentDir"]
+WORKFLOWS_DIR = INSTALLER_CONFIG["workflowsDir"]
+DEFAULT_EXT = INSTALLER_CONFIG["defaultExt"]
 
 
 def _resolve_package_version() -> str:
@@ -239,43 +251,75 @@ def _copy_dir(src: pathlib.Path, dest: pathlib.Path) -> None:
     shutil.copytree(src, dest, dirs_exist_ok=True)
 
 
+def _convert_to_toml(content: str, description: str) -> str:
+    # Escape quotes for TOML triple-quoted strings
+    escaped_content = content.replace('"""', '\\"\\"\\"')
+    return f'description = "{description}"\n\nprompt = """\n{escaped_content}\n"""\n'
+
+
+def _convert_to_mdc(content: str, description: str) -> str:
+    return f"---\ndescription: {description}\nglobs: \n---\n{content}"
+
+
 def install_adapter(
     source_root: pathlib.Path, dest: pathlib.Path, env: str, adapters: dict
 ) -> None:
     adapter = adapters.get(env)
     if not adapter:
-        print(f'Warning: unknown --env: "{env}". Valid: {", ".join(adapters)}')
-        _copy_dir(source_root / ".agent", dest / ".agent")
+        print(f"⚠️  Unknown --env value: '{env}'.")
+        print(f"   Valid values: {', '.join(adapters.keys())}")
+        print(f"   Falling back to default {AGENT_DIR}/")
+        _copy_dir(source_root / AGENT_DIR, dest / AGENT_DIR)
         return
 
-    src_dir = source_root / ".agent" / "workflows"
+    src_dir = source_root / AGENT_DIR / WORKFLOWS_DIR
     dest_dir = dest / adapter["dest"]
 
     if not src_dir.exists():
-        print("Warning: source .agent/workflows/ not found.")
+        print(f"⚠️  Source {AGENT_DIR}/{WORKFLOWS_DIR}/ not found.")
         return
 
     dest_dir.mkdir(parents=True, exist_ok=True)
     target_ext = adapter["ext"]
-    remove_prefix = adapter.get("removePrefix")
+    remove_prefix = (
+        adapter["removePrefix"] if "removePrefix" in adapter else DEFAULT_REMOVE_PREFIX
+    )
 
-    for src_file in src_dir.glob("*.md"):
+    for src_file in src_dir.glob(f"*{DEFAULT_EXT}"):
         dest_name = src_file.stem
         if remove_prefix and dest_name.startswith(remove_prefix):
             dest_name = dest_name[len(remove_prefix) :]
-        dest_name = dest_name + target_ext
-        shutil.copy2(src_file, dest_dir / dest_name)
+
+        is_toml = adapter.get("format") == "toml" or target_ext == ".toml"
+        is_mdc = adapter.get("format") == "mdc" or target_ext == ".mdc"
+        full_dest_name = dest_name + target_ext
+        dest_file = dest_dir / full_dest_name
+
+        if is_toml:
+            content = src_file.read_text(encoding="utf-8")
+            description = f"Magic SDD Workflow: {full_dest_name}"
+            dest_file.write_text(
+                _convert_to_toml(content, description), encoding="utf-8"
+            )
+        elif is_mdc:
+            content = src_file.read_text(encoding="utf-8")
+            description = f"Magic SDD Workflow: {full_dest_name}"
+            dest_file.write_text(
+                _convert_to_mdc(content, description), encoding="utf-8"
+            )
+        else:
+            shutil.copy2(src_file, dest_file)
 
     print(f"Adapter installed: {env} -> {adapter['dest']}/ ({target_ext})")
 
 
 def run_doctor(dest: pathlib.Path) -> int:
     is_windows = sys.platform == "win32"
-    if is_windows:
-        check_script = dest / ".magic" / "scripts" / "check-prerequisites.ps1"
-    else:
-        check_script = dest / ".magic" / "scripts" / "check-prerequisites.sh"
-
+    check_script = (
+        dest / ENGINE_DIR / "scripts" / "check-prerequisites.ps1"
+        if is_windows
+        else dest / ENGINE_DIR / "scripts" / "check-prerequisites.sh"
+    )
     if not check_script.exists():
         print("Error: SDD engine not initialized. Run magic-spec first.")
         return 1
@@ -356,7 +400,7 @@ def run_info(dest: pathlib.Path) -> int:
     print(f"Installed version : {installed_version}  (.magic/.version)")
 
     magicrc_file = dest / ".magicrc"
-    active_env = "default (.agent/)"
+    active_env = f"default ({AGENT_DIR}/)"
     if magicrc_file.exists():
         try:
             rc = json.loads(magicrc_file.read_text(encoding="utf-8"))
@@ -366,9 +410,9 @@ def run_info(dest: pathlib.Path) -> int:
             pass
     print(f"Active env        : {active_env}")
 
-    engine_present = (dest / ".magic").exists()
+    engine_present = (dest / ENGINE_DIR).exists()
     print(
-        f"Engine            : .magic/     {'✅ present' if engine_present else '❌ missing'}"
+        f"Engine            : {ENGINE_DIR}/     {'✅ present' if engine_present else '❌ missing'}"
     )
 
     workspace_present = (dest / ".design").exists()
@@ -382,9 +426,9 @@ def run_info(dest: pathlib.Path) -> int:
 
 
 def run_check(dest: pathlib.Path) -> int:
-    version_file = dest / ".magic" / ".version"
+    version_file = dest / ENGINE_DIR / ".version"
     if not version_file.exists():
-        print("⚠️  Not installed via magic-spec (no .magic/.version file)")
+        print(f"⚠️  Not installed via magic-spec (no {ENGINE_DIR}/.version file)")
         return 0
 
     installed_version = version_file.read_text(encoding="utf-8").strip()
@@ -406,34 +450,32 @@ def run_check(dest: pathlib.Path) -> int:
 
 def create_backup(dest: pathlib.Path) -> None:
     print("📦 Creating backup of existing engine files...")
-    magic_dir = dest / ".magic"
+    magic_dir = dest / ENGINE_DIR
     if magic_dir.exists():
-        _copy_dir(magic_dir, dest / ".magic.bak")
+        _copy_dir(magic_dir, dest / f"{ENGINE_DIR}.bak")
 
-    agent_dir = dest / ".agent"
+    agent_dir = dest / AGENT_DIR
     if agent_dir.exists():
-        _copy_dir(agent_dir, dest / ".agent.bak")
+        _copy_dir(agent_dir, dest / f"{AGENT_DIR}.bak")
 
     # Update .gitignore
     gitignore_file = dest / ".gitignore"
     if gitignore_file.exists():
         content = gitignore_file.read_text(encoding="utf-8")
         altered = False
-        if ".magic.bak" not in content:
-            content += "\n.magic.bak/"
-            altered = True
-        if ".agent.bak" not in content:
-            content += "\n.agent.bak/"
-            altered = True
+        for entry in [f"{ENGINE_DIR}.bak/", f"{AGENT_DIR}.bak/"]:
+            if entry not in content:
+                content += f"\n{entry}"
+                altered = True
         if altered:
             gitignore_file.write_text(content.strip() + "\n", encoding="utf-8")
 
 
 def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
     print("\n⚠️  This will remove:")
-    print("   -  .magic/")
-    print("   -  .agent/  (or active env adapter dir)")
-    print("   -  .magic.bak/  (if exists)")
+    print(f"   -  {ENGINE_DIR}/")
+    print(f"   -  {AGENT_DIR}/  (or active env adapter dir)")
+    print(f"   -  {ENGINE_DIR}.bak/  (if exists)")
     print("\n   Your .design/ workspace will NOT be affected.")
 
     should_run = auto_accept
@@ -505,7 +547,7 @@ def _get_directory_checksums(
 
 
 def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | None:
-    checksums_file = dest / ".magic" / ".checksums"
+    checksums_file = dest / ENGINE_DIR / ".checksums"
     if not checksums_file.exists():
         return None
 
@@ -516,7 +558,7 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | N
 
     conflicts = []
     for rel_path, stored_hash in stored_checksums.items():
-        local_path = dest / ".magic" / rel_path
+        local_path = dest / ENGINE_DIR / rel_path
         if local_path.exists():
             current_hash = _get_file_checksum(local_path)
             if current_hash != stored_hash:
@@ -525,7 +567,7 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | N
     if not conflicts:
         return None
 
-    print(f"\n⚠️  Local changes detected in {len(conflicts)} file(s) in .magic/:")
+    print(f"\n⚠️  Local changes detected in {len(conflicts)} file(s) in {ENGINE_DIR}/:")
     for f in conflicts[:5]:
         print(f"   - {f}")
     if len(conflicts) > 5:
@@ -553,7 +595,9 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | N
 
 def run_list_envs(adapters: dict) -> int:
     print("Supported environments:")
-    print("  (default)    .agent/workflows/magic.*.md  general agents, Gemini")
+    print(
+        f"  (default)    {AGENT_DIR}/{WORKFLOWS_DIR}/magic.*{DEFAULT_EXT}  general agents, Gemini"
+    )
     for name, adapter in adapters.items():
         padding = " " * max(0, 12 - len(name))
         dest = f"{adapter['dest']}/".ljust(28)
