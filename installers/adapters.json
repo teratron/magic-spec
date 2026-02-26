@@ -4,7 +4,7 @@
         "dest": ".cursor/rules",
         "ext": ".mdc",
         "removePrefix": "magic.",
-        "description": "Cursor IDE (.mdc format)"
+        "description": "Cursor IDE"
     },
     "github": {
         "marker": ".github",
