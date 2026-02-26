@@ -221,11 +221,9 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
         ["git", "tag", "-f", "-a", tag, "-m", f"Release {tag}"], cwd=str(PROJECT_ROOT)
     )
 
-    # We might not want to push automatically if the user wants to verify first, but standard release scripts usually push.
-    # run_command(["git", "push", "origin", "main", "--tags"], cwd=PROJECT_ROOT)
-    print(
-        "Committed and tagged locally. Note: `git push origin main --tags` was skipped for safety and should be run manually."
-    )
+    # Standard release scripts usually push.
+    run_command(["git", "push", "origin", "main", "--tags"], cwd=str(PROJECT_ROOT))
+    print(f"Successfully committed, tagged and pushed {tag} to origin main.")
 
 
 def publish_python(dry_run: bool) -> None:

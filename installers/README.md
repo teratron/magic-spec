@@ -16,12 +16,10 @@ npx magic-spec@latest
 
 ### Python (Recommended for Python/Data Science)
 
-Run in your project root using `uv` (recommended) or `pipx`:
+Run in your project root using `uv` (recommended):
 
 ```bash
 uvx magic-spec
-# OR
-pipx run magic-spec
 ```
 
 ---
@@ -89,7 +87,7 @@ python installers/scripts/publish.py <old_version> <new_version> [flags]
 | Requirement | Node.js Path | Python Path |
 | :--- | :--- | :--- |
 | **Runtime** | Node.js >= 16.x | Python >= 3.8 |
-| **Tooling** | `npm` >= 7.x | `uv`, `pipx`, or standard `pip` |
+| **Tooling** | `npm` >= 7.x | `uv` or standard `pip` |
 | **Utilities** | `tar` (system utility) | `connectivity` (GitHub access) |
 
 ---
