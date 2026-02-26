@@ -4,13 +4,15 @@ description: Interactive tutorial to learn the Magic SDD lifecycle.
 
 # Magic SDD Onboarding (Interactive Tutorial)
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 
 An interactive walkthrough of the full Magic SDD lifecycle. Builds a toy "logger module" specification from scratch to give the user hands-on experience with every workflow stage.
 
 > **This is a tutorial workflow.** It creates real files in your project directory.
 > For production use, run this in a **clean, empty directory**.
+>
+> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to resume from the last completed step or clean up tutorial artifacts before restarting.
 
 ## Agent Guidelines
 
@@ -40,8 +42,9 @@ This tutorial will create real files in your project:
 
 ### Step 1: Introduction
 
-1. **Pre-flight Check**: Check if `.design/` already exists.
-    - If it does, warn the user: *"I detected an existing .design/ directory. This tutorial might overwrite or append to your production files. It is best to run this in a clean folder."*
+1. **Pre-flight Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`.
+    - If `.design/` is missing: automatically run Init (`node .magic/scripts/executor.js init`) to create the proper structure, then proceed.
+    - If `.design/` exists with production data (specs count > 0): warn the user: *"I detected an existing .design/ directory with production specifications. This tutorial will append to your INDEX.md and overwrite PLAN.md/TASKS.md. It is best to run this in a clean folder."*
 2. Introduce yourself as the Magic SDD onboarding guide.
 3. Explain the core philosophy in one sentence: *"No code is written until a specification exists, and no spec is implemented without a plan."*
 4. Invite the user to create their very first Magic specification: a toy "console logger" module.
@@ -64,7 +67,7 @@ This tutorial will create real files in your project:
 ### Step 3: Registration in INDEX.md
 
 1. Explain that for the system to recognize a spec, it must be registered in the central index.
-2. Add `logger-module.md` to `.design/INDEX.md` with status `Stable`.
+2. Add `logger-module.md` to `.design/INDEX.md` with status `Stable`. Bump the INDEX.md version (minor).
 3. Confirm to the user that the system now recognizes the spec.
 4. Tell the user: *"Next, we generate a Plan. Type `plan` to calculate the dependency graph and create the plan."*
 5. **Wait for user confirmation.**
@@ -96,9 +99,23 @@ This tutorial will create real files in your project:
 3. Point the user to the next step: *"Ready for real work? Describe your first idea and it will be converted into a specification."*
 4. End the tutorial.
 
+### Onboarding Completion Checklist
+
+```
+Onboarding Checklist — Tutorial Complete
+
+  ☐ Toy spec created (logger-module.md)
+  ☐ Spec registered in INDEX.md
+  ☐ PLAN.md generated with Phase 1
+  ☐ TASKS.md created and task simulated as Done
+  ☐ Phase archival demonstrated (C8)
+  ☐ User understands the full SDD lifecycle
+```
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
+| 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
