@@ -28,6 +28,12 @@ Run in your project root using `uv` (recommended):
 uvx magic-spec
 ```
 
+Or using `pipx`:
+
+```bash
+pipx run magic-spec
+```
+
 Or to install the latest edge version directly from the GitHub `main` branch:
 
 ```bash

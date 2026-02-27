@@ -4,15 +4,15 @@
 [![PyPI version](https://img.shields.io/pypi/v/magic-spec?color=blue&label=pypi)](https://pypi.org/project/magic-spec/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
 
+## Description
+
 **The Specification-Driven Development (SDD) Operating System for AI Coding Agents.**
 
 Stop your AI from writing fragile code before it fully understands the problem. `magic-spec` installs a high-performance, structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack.
 
 Whether you are a **coding novice** building your first application or a **senior engineer** architecting enterprise systems, Magic Spec brings **maximum automation** and professional rigor to your development process. It enforces a deterministic workflow that ensures your AI agent perfectly aligns with your vision before writing a single line of code.
 
----
-
-## ✨ The Core Concept
+### The Core Concept
 
 `magic-spec` is a set of **markdown-based workflow instructions** specifically designed for AI coding agents like Cursor, Windsurf, Claude, and Gemini. It acts as a project-level operating system that orchestrates agentic development.
 
@@ -29,68 +29,8 @@ Once initialized, your AI agent will automatically:
 - Decompose the plan into prioritized, atomic, trackable tasks.
 - Facilitate safe architectural brainstorming via **Explore Mode**.
 - Analyze its own workflow and suggest improvements via Auto-Retrospectives.
-- Provide a smooth onboarding experience with `magic.onboard`.
 
-**No code is written until a specification exists. No spec is implemented without a plan.**
-
----
-
-## 🧭 Philosophy & Principles
-
-| Principle | Description |
-| :--- | :--- |
-| **For All Skill Levels** | **Beginners** get a guiding hand and automated best practices. **Experts** get a strict constitutional framework that prevents AI hallucination and enforces architectural integrity. |
-| **Specs First** | No code is allowed before a specification is drafted and accepted. |
-| **Maximum Automation** | Reduces manual project management. Automated tracking, checking, and retrospectives keep the project moving forward flawlessly. |
-| **Deterministic** | A strict, unskippable pipeline from thought to deployment. |
-| **Constitutional** | All project conventions live in `RULES.md` — the ultimate source of truth. |
-
----
-
-## 🚀 Quick Start (Installation)
-
-Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or anything else.  
-No runtime lock-in. It requires only Node.js or Python to install.
-
-### Option A: Node.js (`npx`)
-
-**Recommended for stable release:**
-
-```bash
-npx magic-spec@latest
-```
-
-**Install the latest edge version directly from the GitHub repository:**
-
-```bash
-npx --yes github:teratron/magic-spec
-```
-
-### Option B: Python (`uvx`)
-
-**Recommended for stable release:**
-
-```bash
-uvx magic-spec
-```
-
-**Install the latest edge version directly from the GitHub repository:**
-
-```bash
-uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
-```
-
-### Option C: Python (`pipx`)
-
-If you prefer `pipx` over `uv`:
-
-```bash
-pipx run magic-spec
-```
-
----
-
-## 📁 What Gets Installed
+### What Gets Installed
 
 After running the installer, your project directory will be augmented with the following structure:
 
@@ -106,9 +46,7 @@ root-project/
 3. **`.design/`**: Initializes your project's workspace for Specifications, Rules, and Plans.
 4. **Onboarding**: An interactive tutorial (`magic.onboard`) helps you and your AI get started smoothly.
 
----
-
-## 🔗 The Workflow Pipeline
+## Visuals
 
 The engine operates on a smart, self-correcting feedback loop:
 
@@ -125,43 +63,73 @@ graph TD
     RETRO -.->|Feedback loop| SPEC
 ```
 
-### Core Workflows
+## Requirements
 
-| # | Workflow | Purpose |
-| :--- | :--- | :--- |
-| **1** | **Specification** | Converts raw thoughts into structured, technical specs. Verifies sync. |
-| **2** | **Task & Plan** | Builds the dependency graph, `PLAN.md`, and atomic task files. |
-| **3** | **Run (Execution)** | Executes the plan with automatic progress tracking and quality gates. |
-| **4** | **Rule** | Manages project conventions in a central constitutional `RULES.md` file. |
+Before installing Magic Spec, ensure you have one of the following available on your system:
 
----
+| Requirement | Details |
+| :--- | :--- |
+| **Node.js** | Version `16.x` or higher (for `npx` method) |
+| **Python** | Version `3.8` or higher (for `uvx` or `pipx` methods) |
+| **Git** | Required for installing edge versions directly from GitHub |
+| **Terminal** | `tar` utility (pre-installed on Windows/Linux/macOS) |
 
-## 💬 How to Use
+## Installation
 
-You don't need to memorize complex commands. Just talk to your AI agent naturally in your prompt interface:
+Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
 
-- *"Dispatch this thought into specs..."* → Triggers the Specification workflow
-- *"Create an implementation plan for the new feature"* → Triggers the Task workflow
-- *"Execute the next task on the plan"* → Triggers the Run workflow
-- *"Add a rule: always use the Inter font for UI"* → Triggers the Rule workflow
+### Option A: Node.js (`npx`)
 
----
-
-## 🔄 Updating Magic Spec
-
-Keep your engine up-to-date with the latest improvements:
+**Stable Release:**
 
 ```bash
-# For Node.js users:
-npx magic-spec@latest --update
-
-# For Python (uv) users:
-uvx magic-spec --update
+npx magic-spec@latest
 ```
 
----
+**Edge Version (GitHub):**
 
-## 🤝 Compatibility
+```bash
+npx --yes github:teratron/magic-spec
+```
+
+### Option B: Python (`uvx`)
+
+**Stable Release:**
+
+```bash
+uvx magic-spec
+```
+
+**Edge Version (GitHub):**
+
+```bash
+uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
+```
+
+### Option C: Python (`pipx`)
+
+```bash
+pipx run magic-spec
+```
+
+### Option D: Manual Installation (Portability)
+
+If automated installers do not fit your environment:
+
+1. **Engine**: Download the `.magic/` folder from the [GitHub repository](https://github.com/teratron/magic-spec).
+2. **Workflows**: Download command wrappers from [`.agent/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agent/workflows).
+3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
+
+## Usage
+
+Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
+
+- *"Dispatch this thought into specs..."* → Triggers **Specification** workflow.
+- *"Create an implementation plan"* → Triggers **Task & Plan** workflow.
+- *"Execute the next task"* → Triggers **Run** workflow.
+- *"Add a rule: always use Inter font"* → Triggers **Rule** workflow.
+
+### 🤝 Compatibility
 
 Magic Spec is heavily optimized and provides native workflow generation for the world's most powerful AI development environments:
 
@@ -187,16 +155,41 @@ Magic Spec is heavily optimized and provides native workflow generation for the 
 | **Antigravity IDE** | `--antigravity` |
 | **Lingma IDE** | `--lingma` |
 
----
+## Support
 
-## 📖 Documentation & Guides
+If you encounter issues or have questions:
+
+- Open an [Issue](https://github.com/teratron/magic-spec/issues) on GitHub.
+- Run `magic.onboard` in your agent to restart the interactive tutorial.
+
+### 📖 Documentation & Guides
 
 - [**Main Documentation**](./docs/README.md) — Detailed guide on workflows, architecture, and advanced features.
 - [**Installers Guide**](./installers/README.md) — Advanced CLI options and platform specifics.
 - [**Contributing**](./docs/contributing.md) — How to develop, test, and extend the engine.
 
----
+## Roadmap
 
-## 📄 License
+- [x] Multi-agent adapter system.
+- [x] Phased implementation planning.
+- [ ] Extended support for local-first LLM agents.
+- [ ] Advanced visual dashboard for project health.
+- [ ] Integration with CI/CD for automated spec validation.
 
-Distributed under the [MIT License](./LICENSE). © 2026 Oleg Alexandrov
+## Contributing
+
+We welcome contributions! Whether it's a bug fix, a new adapter, or an improvement to the workflow logic.
+Please see [**Contributing Guide**](./docs/contributing.md) for details.
+
+## Authors and acknowledgment
+
+- **Oleg Alexandrov** — Creator and Lead Maintainer.
+- Special thanks to the AI agent community for inspiration and testing.
+
+## License
+
+Distributed under the [MIT License](./LICENSE).
+
+## Project status
+
+**Active Development** (v1.x). We are constantly refining the SDD engine based on real-world usage.
