@@ -1,5 +1,5 @@
 {
-    "cursor-agent": {
+    "cursor": {
         "marker": ".cursor",
         "dest": ".cursor/commands",
         "ext": ".md",
@@ -88,11 +88,11 @@
         "ext": ".md",
         "description": "CodeBuddy"
     },
-    "qodercli": {
+    "qoder": {
         "marker": ".qoder",
         "dest": ".qoder/commands",
         "ext": ".md",
-        "description": "Qoder CLI"
+        "description": "Qoder IDE"
     },
     "codex": {
         "marker": ".codex",
@@ -100,16 +100,22 @@
         "ext": ".md",
         "description": "Codex CLI"
     },
-    "auggie": {
+    "augment": {
         "marker": ".augment",
         "dest": ".augment/commands",
         "ext": ".md",
         "description": "Auggie CLI"
     },
-    "agy": {
+    "antigravity": {
         "marker": ".agent",
         "dest": ".agent/workflows",
         "ext": ".md",
-        "description": "Antigravity (Source)"
+        "description": "Antigravity IDE"
+    },
+    "lingma": {
+        "marker": ".lingma",
+        "dest": ".lingma/commands",
+        "ext": ".md",
+        "description": "Lingma IDE"
     }
 }

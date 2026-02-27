@@ -183,37 +183,16 @@ graph TD
 
 ### Post-Update Review
 
-**Mandatory after every create or update operation, regardless of change size.**
+**Mandatory after every create or update operation.**
 
-#### Duplication Check
+1. **Duplication**: Any repeated content within file or across specs? → Consolidate, keep in most relevant file.
+2. **Coherence**: Does the document read as a consistent whole after edits? Any sections drifted out of scope?
+3. **Links & Relations**: All `Related Specifications` links accurate? New dependencies declared?
+4. **Rules Compliance**: Any contradiction with `RULES.md`? → Flag before closing, never silently resolve.
+5. **Cleanup**: Remove redundant sections. Rewrite unclear passages. Major restructure = `major` version bump.
+6. **Sync Gap**: Run `node .magic/scripts/executor.js check-prerequisites --json`. If warning → task is BLOCKED until "Sync plan" handoff.
 
-- Are there any paragraphs, rules, or decisions that repeat content already stated elsewhere in this file?
-- Is any content duplicated across other spec files? If so, keep it in the most relevant file and replace the duplicate with a cross-reference link.
-
-#### Coherence Check
-
-- Does the document read as a single consistent whole, or does it feel like a patchwork of additions?
-- Are all sections still relevant to the file's stated purpose, or have any drifted out of scope?
-- Is the logical flow of sections still correct after the update?
-
-#### Links & Relations Check
-
-- Are all links in `Related Specifications` still accurate and necessary?
-- Does the updated content introduce new dependencies on other specs that are not yet declared?
-
-#### Rules Compliance Check
-
-- Does any content in the modified file contradict a rule in `RULES.md`?
-- If a contradiction is found — flag it to the user before closing. Do not silently resolve it.
-
-#### Cleanup
-
-- Remove or consolidate any sections that have become redundant.
-- Rewrite any passages that have grown unclear due to successive edits.
-- If a major restructure is needed, treat it as a `major` version bump and note it in `Document History`.
-- **Sync Gap**: Check if the current update increases the gap between `INDEX.md` and `PLAN.md`. Use `node .magic/scripts/executor.js check-prerequisites --json` to detect this. If a warning is issued, the task is BUILT-IN BLOCKED until a "Sync plan" handoff is presented.
-
-> If the review reveals significant issues beyond the original edit scope, inform the user and propose a dedicated refactoring pass rather than silently rewriting large portions.
+> If review reveals issues beyond original scope → inform user, propose dedicated refactoring pass.
 
 ### Updating RULES.md
 
@@ -274,38 +253,7 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 5. **Stale Statuses**: Flag specs in `Draft` or `RFC` without recent updates.
 6. **Broken Relations**: Check all `Related Specifications` links point to existing files.
 7. **Pattern Detection**: If the same approach appears in 2+ specs (regardless of when they were created), propose a Project Convention. *(Extension of T2 — which normally applies within a single session.)*
-8. **Report**: Present findings before making any changes:
-
-    ```
-    Registry Audit Report — {YYYY-MM-DD}
-    
-    Layering Gaps:
-    - distribution-npm.md (RFC) implements architecture.md (Draft)
-      → Rule 57: L1 parent must be Stable before L2 can reach RFC.
-      → Recommend: revert L2 to Draft or stabilize L1.
-
-    Rules violations:
-    - gameplay-config.md contains Rust code — violates RULES.md §5
-      → Recommend: replace with pseudo-code
-
-    Duplication found:
-    - "Auth token format" in architecture.md §3.1 and api.md §2.2
-      → Recommend: keep in architecture.md, link from api.md
-
-    Stale statuses:
-    - input-system.md — Draft, no updates in 30+ days
-      → Confirm still active or mark Deprecated?
-
-    Broken relations:
-    - ui-components.md → links to architecture.md §6 (does not exist)
-      → Recommend: fix reference
-
-    Pattern detected (T2 trigger):
-    - YAML format used independently in 3 specs
-      → Propose adding to RULES.md §7 as standing convention?
-
-    Apply all recommendations? (yes / select / skip)
-    ```
+8. **Report**: Present findings grouped by category (Layering Gaps, Rules Violations, Duplication, Stale Statuses, Broken Relations, Pattern Detection). Each finding must include the source file/section, the issue, and a recommended fix. Ask: `Apply all recommendations? (yes / select / skip)`
 
 9. **Apply**: Only after user approval. Update `INDEX.md`, `RULES.md`, and `Document History` in affected files.
 
@@ -348,34 +296,7 @@ graph TD
 | **Engine Integrity** | Contents of `.magic/` match the hashes in `.checksums` | `task.md` was modified but checksum wasn't regenerated |
 | **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
 
-**Report format:**
-
-```
-Consistency Report — {YYYY-MM-DD}
-
-Stale paths found:
-- distribution-npm.md §3.2: references `src/index.js` — actual: `index.js`
-  → Auto-fix: update path
-
-Layer integrity issues:
-- distribution-npm.md: `Implements:` points to `distribution.md`, which does not exist
-  → Recommend: Create the L1 parent spec or change `Implements:` reference
-
-- s3-storage.md (RFC): Implements `cloud-storage.md` (Draft)
-  → Rule 57: L2 cannot be RFC/Stable while L1 is Draft/RFC.
-  → Recommend: Demote L2 to Draft or stabilize L1.
-
-Removed entities:
-- secrets-management.md: describes `.env` files — removed from project
-  → Recommend: mark spec as Deprecated
-
-Structure drift:
-- cli-installer.md §3.3: shows `core/.magic/` — directory `core/` was eliminated
-  → Auto-fix: replace with `.magic/`
-
-Issues: 3 critical, 0 minor
-Apply all fixes? (yes / select / skip)
-```
+**Report format:** Present findings grouped by category (Stale Paths, Layer Integrity, Removed Entities, Structure Drift). Each finding: source spec → issue → recommended auto-fix or manual action. Ask: `Apply all fixes? (yes / select / skip)`
 
 **Execution rules:**
 
@@ -421,100 +342,8 @@ Review
 
 ## Templates
 
-> `INDEX.md` and `RULES.md` are created automatically by the Init pre-flight check (`.magic/init.md`)
-> on first invocation of any workflow. No manual setup required.
-
-### Specification File Template ({name}.md)
-
-```markdown
-# {Specification Name}
-
-**Version:** {X.Y.Z}
-**Status:** {Draft | RFC | Stable | Deprecated}
-**Layer:** {concept | implementation}
-**Implements:** {layer-1-file.md} <!-- Only if Layer is implementation -->
-
-## Overview
-
-Brief summary of the specification's purpose and scope.
-
-## Related Specifications
-
-- [other-spec.md](other-spec.md) - Dependency or relationship description.
-
-## 1. Motivation
-
-Why is this specification needed? What problems does it solve?
-
-## 2. Constraints & Assumptions
-
-- Hard technical constraints (e.g., "REST only, no GraphQL").
-- Key design assumptions (e.g., "single-region deployment for MVP").
-
-## 3. Core Invariants (Layer 1 only)
-
-Rules that Layer 2 implementations MUST NOT violate:
-
-- {Invariant 1: written in technology-agnostic terms}
-- {Invariant 2: ...}
-
-> L2 spec cannot reach RFC status until all invariants here are addressed in its "Invariant Compliance" section.
-
-## 4. Invariant Compliance (Layer 2 only)
-
-Explicit mapping of every L1 invariant to this implementation:
-
-| L1 Invariant | Implementation |
-| :----------- | :------------- |
-| {invariant}  | {how it's done in this stack} |
-
-> This table must be complete before the spec can reach RFC status.
-> If an invariant cannot be implemented in this stack — document the conflict here and propose an L1 amendment.
-
-## 5. Detailed Design
-
-### 5.1 Component A
-
-Technical details, logic, and flows.
-
-**Project Structure:**
-
-```plaintext
-src/
-└── features/
-    └── component_a/
-```
-
-**Flow Diagram:**
-
-```mermaid
-graph TD;
-    A-->B;
-```
-
-### 5.2 Component B
-
-...
-
-## 6. Implementation Notes
-
-<!-- Optional. Fill if implementation order is non-obvious. -->
-
-1. Step A — prerequisite for all others
-2. Step B — can begin after A
-3. Step C — parallel with B
-
-## 7. Drawbacks & Alternatives
-
-Potential issues and alternative approaches considered.
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 0.1.0 | YYYY-MM-DD | User | Initial Draft |
-
-```
+> `INDEX.md` and `RULES.md` are created automatically by Init (`.magic/init.md`).
+> Specification template: `.magic/templates/specification.md` — read it when creating a new spec.
 
 ## Document History
 
@@ -522,3 +351,4 @@ Potential issues and alternative approaches considered.
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2 scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |
+| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted Specification Template to templates/, compressed Post-Update Review, Audit Report, and Consistency Report |

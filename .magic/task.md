@@ -137,74 +137,10 @@ Data Integrity
 
 ## Templates
 
-### PLAN.md Template
-
-```markdown
-# Implementation Plan
-
-**Version:** {X.Y.Z}
-**Generated:** {YYYY-MM-DD}
-**Based on:** .design/INDEX.md v{X.Y.Z}
-**Status:** Active
-
-## Overview
-...
-
-## Phase 0 — Requirements (Layer 1: Concept)
-
-*Abstract specifications — technology-agnostic contracts.*
-*Must reach Stable before Phase 1 can begin.*
-
-- **{Spec Name}** ([{spec.md}](specifications/{spec.md})) [L1]
-  - [ ] Define Core Invariants
-  - [ ] Review and approve concept
-
-## Phase 1 — {Name}
-
-- **{Spec Name}** ([{spec.md}](specifications/{spec.md}))
-  - [ ] {Task 1: Summary}
-  - [ ] {Task 2: Summary}
-  - [ ] {Task 3: (Optional)}
-
-## Backlog
-
-<!-- Registered specifications waiting for prioritization (Draft or non-critical Stable) -->
-- [specification.md](specifications/specification.md)
-```
-
-### TASKS.md — Master Index
-
-```markdown
-# Task Index
-
-**Version:** {X.Y.Z}
-**Generated:** {YYYY-MM-DD}
-**Based on:** .design/PLAN.md v{X.Y.Z}
-**Based on RULES:** .design/RULES.md v{X.Y.Z}
-**Execution Mode:** {Sequential | Parallel}
-**Status:** Active
-
-## Summary
-...
-```
-
-### phase-{n}.md — Per-Phase Task File
-
-```markdown
-# Phase {N} — {Phase Name}
-
-**Status:** {Active | Completed}
-
-## [T-N{Track}{Seq}] {Task Title}
-
-- **Spec:** {spec.md} §{section}
-- **Status:** {Todo | In Progress | Done | Blocked}
-- **Changes:**
-  - Created: {files}
-  - Modified: {files}
-- **Assignee:** {Agent | User}
-- **Notes:** (optional)
-```
+> Templates for `PLAN.md`, `TASKS.md`, and `phase-{n}.md` are in `.magic/templates/`:
+>
+> - `.magic/templates/plan.md` — PLAN.md structure
+> - `.magic/templates/tasks.md` — TASKS.md master index + per-phase task file
 
 ## Document History
 
@@ -212,3 +148,4 @@ Data Integrity
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to Update path, RFC handling in C6, convention sync detection via Based on RULES field, phantom spec handling, Phase 0 clarification, execution mode guard, dynamic task ID format in checklist |
+| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted PLAN.md, TASKS.md, phase-{n}.md templates to templates/ |

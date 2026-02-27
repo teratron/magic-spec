@@ -236,67 +236,7 @@ Output
 
 ## Templates
 
-### RETROSPECTIVE.md Template
-
-```markdown
-# SDD Retrospective
-
-**Last Full Run:** {YYYY-MM-DD}
-**Full Sessions:** {N}
-**Snapshots:** {N}
-
-## Snapshots
-
-Auto-collected after each phase completion. Lightweight metrics only — no analysis.
-
-| Date | Phase | Specs (D/R/S) | Tasks (Done/Blocked) | Rules | Signal |
-| :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-02-20 | Phase 1 | 2/1/4 | 8/0 | 12 | 🟢 |
-| 2026-02-25 | Phase 2 | 0/0/7 | 5/3 | 14 | 🟡 |
-
----
-
-## Session {N} — {YYYY-MM-DD}
-
-**Scope:** Full system analysis
-**Specs in registry:** {count}
-**Tasks total:** {count} (Done: {count}, Blocked: {count})
-**RULES.md §7 entries:** {count}
-
-### 📊 Observations
-
-| # | Severity | Area | Observation | Evidence |
-| :--- | :--- | :--- | :--- | :--- |
-| 1 | 🔴 Critical | Tasks | 3 of 8 Phase 2 tasks were Blocked | TASKS.md Phase 2 summary |
-| 2 | 🟡 Medium | Specs | architecture.md went RFC → Draft → RFC → Stable (3 transitions) | architecture.md Document History |
-| 3 | 🟡 Medium | Rules | All 4 rules in §7 were added via T4 (explicit). T1–T3 never triggered. | RULES.md Document History |
-| 4 | 🟢 Low | Checklists | "No code in specs" has never failed in 8 checks | Session history |
-| 5 | ✨ Positive | Plan | Phase 1 completed with 0 Blocked tasks | TASKS.md Phase 1 summary |
-| 6 | ✨ Positive | Specs | 6 of 8 specs reached Stable without regression | INDEX.md |
-
-### 💡 Recommendations
-
-| # | Refs Observation | Recommendation | Target File |
-| :--- | :--- | :--- | :--- |
-| R1 | #1 | Review dependency graph in PLAN.md — Phase 2 blocking rate suggests wrong task ordering | `.magic/task.md` |
-| R2 | #2 | Add "definition of done" criteria to spec template to reduce Draft ↔ RFC oscillation | `.magic/spec.md` |
-| R3 | #3 | Consider simplifying T1–T3 triggers or adding examples to make them more discoverable | `.magic/spec.md` |
-| R4 | #4 | Remove "No code in specs" from checklist — zero-signal item consuming agent context | `.magic/spec.md` |
-
-### 📈 Trends (from Snapshots)
-
-| Metric | Previous Snapshot | Current | Δ |
-| :--- | :--- | :--- | :--- |
-| Specs in registry | {N} | {N} | +{N} |
-| Blocked task rate | {N}% | {N}% | {±N}% |
-| Signal | 🟢 | 🟡 | ↓ |
-
----
-
-## Session {N-1} — {YYYY-MM-DD}
-
-<!-- Previous session preserved here -->
-```
+> RETROSPECTIVE.md template: `.magic/templates/retrospective.md` — read it when creating RETROSPECTIVE.md for the first time.
 
 ## Document History
 
@@ -304,3 +244,4 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to both levels, RETROSPECTIVE.md creation in Level 1, split checklists for Level 1/2, realistic checklist metric source, archives in directory structure |
+| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted RETROSPECTIVE.md template to templates/ |
