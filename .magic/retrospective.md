@@ -127,7 +127,7 @@ graph TD
     - 🟢 — 0 Blocked tasks, 100% planning coverage.
     - 🟡 — ≤20% tasks Blocked, or minor orphaned specs.
     - 🔴 — >20% tasks Blocked, or critical spec/plan gaps.
-5. **Append row** to `RETROSPECTIVE.md`. If the file does not exist, create it using the RETROSPECTIVE.md Template (Snapshots section only — no Session section for Level 1).
+5. **Append row** to `RETROSPECTIVE.md`. If the file does not exist, create it from `.magic/templates/retrospective.md` (Snapshots section only — no Session section for Level 1).
 6. **Archival (C8)**:
     - Move `.design/tasks/phase-{N}.md` to `.design/archives/tasks/`.
     - Update `TASKS.md`: Change link `(tasks/phase-{N}.md)` to `(archives/tasks/phase-{N}.md)`.

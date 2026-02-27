@@ -22,7 +22,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 
 Run `node .magic/scripts/executor.js check-prerequisites --json` to verify engine integrity.
 
-- If `checksums_mismatch` warnings exist → surface them. The simulation may be analyzing tampered files.
+- If `checksums_mismatch` warnings exist → **HALT**. Report the mismatched files to the user. Do not proceed until the user confirms the changes were intentional or checksums are regenerated via `node .magic/scripts/executor.js generate-checksums`. Simulating tampered or unverified files produces unreliable results.
 - If `.design/` is missing → this is acceptable for simulate (it doesn't require project files, only engine files).
 
 ### 1. Target Selection
@@ -68,6 +68,8 @@ Evaluate the target workflow for **AI-readability** and efficiency:
 
 Document any surgical fixes for affected `.magic/` or `.agent/workflows/` files. Ensure versioning rules (RULES.md §3) are followed. **Wait for user approval before applying changes (C1 compliance).**
 
+> **Checksum Rule**: Run `node .magic/scripts/executor.js generate-checksums` only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files that will be modified.
+
 ### 7. Verification
 
 Verify the applied fixes:
@@ -110,3 +112,4 @@ Cleanup
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification |
 | 1.2.0 | 2026-02-26 | Antigravity | Added pre-flight Step 0, lighter Step 7 verification, fixed checklist indentation and C1-C11 reference |
+| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; added Checksum Rule to Step 6 (generate after approval) |

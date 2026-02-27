@@ -42,7 +42,7 @@ graph TD
     | :--- | :--- | :--- |
     | Universal | `.magic/scripts/init` | `node .magic/scripts/executor.js init` |
 
-4. **Verify**: After running the script, confirm that both `INDEX.md` and `RULES.md` now exist. If either is missing, report the failure and halt — do not continue with the calling workflow.
+4. **Verify**: After running the script, confirm that all expected artifacts exist: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`. If any are missing, report the failure and halt — do not continue with the calling workflow.
 5. **Report result** (brief, inline with the calling workflow):
 
     ```
@@ -67,6 +67,8 @@ graph TD
 
 `PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.
 
+> **Maintainer Note**: `init.ps1` and `init.sh` contain a hardcoded `RULES.md` template with all conventions (C1–C11). When adding new conventions to the engine, both scripts MUST be updated in sync.
+
 ## Init Completion Checklist
 
 ```
@@ -85,3 +87,4 @@ Init Checklist
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Documented check-prerequisites call chain, added engine integrity check, post-init verification step, completion checklist |
+| 1.2.0 | 2026-02-27 | Antigravity | Simulation fix: expanded verification to all 5 artifacts, added Maintainer Note for hardcoded RULES.md sync |

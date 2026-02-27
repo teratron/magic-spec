@@ -94,7 +94,8 @@ graph TD
    - If `ok: false` → surface `missing_required`, halt.
    - If `warnings` non-empty → surface warnings, continue.
    - If `ok: true` → proceed silently.
-   After pre-flight, read `RULES.md §7` to refresh project conventions (execution mode, coding standards, etc.) before executing any task.
+   After pre-flight, read `RULES.md §7` to refresh project conventions before executing any task.
+   - **Mode Guard**: If `RULES.md §7` does not contain an execution mode convention → **HALT**. Inform the user: "Execution mode is not defined. Please run `magic.task` first to establish the plan and execution mode." Do not assume Sequential or Parallel — an undefined mode means the plan may not be ready.
 1. **Find next available task**: Locate the task with status `Todo` whose all dependencies are `Done`.
     - **AOP/Archive Check**: If searching for task context or history, check both `.design/tasks/` and `.design/archives/tasks/` to ensure continuity.
     - **Stalled Phase**: If no `Todo` tasks remain but the phase has `Blocked` tasks, report the stall to the user with a summary of blocked items. Do not loop — escalate and wait.
@@ -207,3 +208,4 @@ Conclusion (on phase/plan completion)
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
+| 1.2.0 | 2026-02-27 | Antigravity | Stress-test fix: Mode Guard added — halt if execution mode not in RULES.md §7 |

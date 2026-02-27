@@ -141,6 +141,7 @@ graph TD
 - If a topic doesn't fit any existing domain — propose a new spec file with a suggested name.
 - If the input contradicts an existing rule in `RULES.md` — flag the conflict explicitly and ask whether to proceed or amend the rule first.
 - If the input contradicts an existing Stable spec — flag the conflict explicitly before dispatching.
+- If topics within a single input contradict each other (e.g., "use GraphQL" and "remove GraphQL") — flag all internal conflicts first and ask the user to resolve before mapping. Do not guess which statement takes precedence.
 - If the input contains a T4 trigger ("from now on...", "remember that..."), apply the rule to RULES.md immediately per T4 protocol (no confirmation required), then continue with the Dispatch flow for the remaining topics.
 - If the specification's layer is ambiguous — default to Layer 1 (concept). Layer-specific implementation details can later be extracted into an L2 spec.
 
@@ -154,7 +155,7 @@ graph TD
 5. **Auto-Init**: If `.design/INDEX.md` or `.design/RULES.md` are missing, automatically run the Init pre-flight check (`.magic/init.md`) and continue.
 6. **Content Creation**:
     - Determine if the spec is Layer 1 (concept) or Layer 2 (implementation).
-    - Create `{specification-name}.md` using the *Specification Template*. Ensure the `Layer:` field is present, and add `Implements:` if it is Layer 2.
+    - Create `{specification-name}.md` using `.magic/templates/specification.md` as template. Ensure the `Layer:` field is present, and add `Implements:` if it is Layer 2.
     - Use `plaintext` for directory trees and `mermaid` for diagrams.
     - Fill in `Related Specifications` with any dependencies on existing specs.
     - Fill in `Implementation Notes` if the implementation order is non-obvious.
@@ -176,6 +177,7 @@ graph TD
 4. **Document History**: Append a new row to the `Document History` table inside the spec file.
 5. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
 6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
+   - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
 8. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
 9. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
@@ -253,7 +255,9 @@ Run when the user requests it, or proactively suggest after every 5 updates acro
 5. **Stale Statuses**: Flag specs in `Draft` or `RFC` without recent updates.
 6. **Broken Relations**: Check all `Related Specifications` links point to existing files.
 7. **Pattern Detection**: If the same approach appears in 2+ specs (regardless of when they were created), propose a Project Convention. *(Extension of T2 — which normally applies within a single session.)*
-8. **Report**: Present findings grouped by category (Layering Gaps, Rules Violations, Duplication, Stale Statuses, Broken Relations, Pattern Detection). Each finding must include the source file/section, the issue, and a recommended fix. Ask: `Apply all recommendations? (yes / select / skip)`
+8. **Report**: Present findings grouped by category (Layering Gaps, Rules Violations, etc.).
+   *Format: - {spec.md} §{section}: {issue} → {recommendation}*
+   Ask: `Apply all recommendations? (yes / select / skip)`
 
 9. **Apply**: Only after user approval. Update `INDEX.md`, `RULES.md`, and `Document History` in affected files.
 
@@ -296,7 +300,9 @@ graph TD
 | **Engine Integrity** | Contents of `.magic/` match the hashes in `.checksums` | `task.md` was modified but checksum wasn't regenerated |
 | **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
 
-**Report format:** Present findings grouped by category (Stale Paths, Layer Integrity, Removed Entities, Structure Drift). Each finding: source spec → issue → recommended auto-fix or manual action. Ask: `Apply all fixes? (yes / select / skip)`
+**Report format:** Group findings by category (Stale Paths, Layer Integrity, etc.).
+*Format: - {spec.md} §{section}: {item} exists? {status} → {action}*
+Ask: `Apply all fixes? (yes / select / skip)`
 
 **Execution rules:**
 
@@ -352,3 +358,5 @@ Review
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2 scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |
 | 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted Specification Template to templates/, compressed Post-Update Review, Audit Report, and Consistency Report |
+| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: added intra-input self-contradiction edge case to Dispatching |
+| 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |

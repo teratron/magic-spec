@@ -12,7 +12,7 @@ An interactive walkthrough of the full Magic SDD lifecycle. Builds a toy "logger
 > **This is a tutorial workflow.** It creates real files in your project directory.
 > For production use, run this in a **clean, empty directory**.
 >
-> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to resume from the last completed step or clean up tutorial artifacts before restarting.
+> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to resume from the last completed step or clean up tutorial artifacts before restarting. Before resuming, check if `PLAN.md` contains non-tutorial data (more than 1 spec in phases). If yes, treat as production collision and apply the backup/cancel guard from Step 1.
 
 ## Agent Guidelines
 
@@ -44,7 +44,7 @@ This tutorial will create real files in your project:
 
 1. **Pre-flight Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`.
     - If `.design/` is missing: automatically run Init (`node .magic/scripts/executor.js init`) to create the proper structure, then proceed.
-    - If `.design/` exists with production data (specs count > 0): warn the user: *"I detected an existing .design/ directory with production specifications. This tutorial will append to your INDEX.md and overwrite PLAN.md/TASKS.md. It is best to run this in a clean folder."*
+    - If `.design/` exists with production data (specs count > 0): **HALT**. Inform the user: *"I detected an existing .design/ directory with production specifications. This tutorial will overwrite PLAN.md and TASKS.md. Options: (A) Backup first — I will copy PLAN.md → PLAN.md.bak and TASKS.md → TASKS.md.bak before proceeding. (B) Cancel — run this in a clean directory."* Do not proceed without explicit choice.
 2. Introduce yourself as the Magic SDD onboarding guide.
 3. Explain the core philosophy in one sentence: *"No code is written until a specification exists, and no spec is implemented without a plan."*
 4. Invite the user to create their very first Magic specification: a toy "console logger" module.
@@ -75,7 +75,7 @@ This tutorial will create real files in your project:
 ### Step 4: Mini PLAN.md
 
 1. Explain that normally, the `magic.task` workflow scans all stable specs and calculates a critical path.
-2. Generate a minimal `.design/PLAN.md` with a single Phase 1 containing the `logger-module.md` feature.
+2. Generate a minimal `.design/PLAN.md` (based on `.magic/templates/plan.md`) with a single Phase 1 containing the `logger-module.md` feature.
 3. Show the user a small preview of the plan.
 4. Tell the user: *"Now we decompose this plan into atomic tasks. Type `task` to generate tasks."*
 5. **Wait for user confirmation.**
@@ -83,8 +83,8 @@ This tutorial will create real files in your project:
 ### Step 5: Atomic Task and Execution
 
 1. Explain that normally, `magic.task` breaks down plan phases into parallel tracks and individual steps.
-2. Create `.design/TASKS.md` with 1 total task for Phase 1.
-3. Create `.design/tasks/phase-1.md` with a single track and a single task `[T-1A01] Implement console logger`.
+2. Create `.design/TASKS.md` (based on `.magic/templates/tasks.md`) with 1 total task for Phase 1.
+3. Create `.design/tasks/phase-1.md` (based on `.magic/templates/tasks.md`) with a single track and a single task `[T-1A01] Implement console logger`.
 4. Simulate execution by changing the task status to `Done` and updating the TASKS.md count.
 5. Explain what happened: *"The task was implemented and the system marked it Done. In the real workflow, this is where code gets written."*
 6. **Archival (C8)**: Perform the archival process by moving `.design/tasks/phase-1.md` to `.design/archives/tasks/`.
@@ -119,3 +119,4 @@ Onboarding Checklist — Tutorial Complete
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
 | 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
+| 1.3.0 | 2026-02-27 | Antigravity | Simulation fix: production collision HALT with backup/cancel, re-entry checks production PLAN.md, template references for PLAN/TASKS |
