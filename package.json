@@ -1,6 +1,6 @@
 {
   "name": "magic-spec",
-  "version": "1.3.0",
+  "version": "1.3.1",
   "description": "Magic Specification-Driven Development (SDD) Workflow",
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "MIT",

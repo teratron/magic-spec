@@ -160,9 +160,10 @@ graph TD
 The Manager Agent does not write implementation code. Its job is coordination:
 
 - **At start of phase**: Read TASKS.md, identify all `Todo` tasks whose dependencies are satisfied, assign each available track to a Developer Agent.
+  - **Shared-Constraint Detection**: Before assigning tracks, scan task descriptions for overlapping target files. If two tasks in different tracks modify the same file, serialize them — schedule one after the other within the same track. Log the serialization decision in the status report.
 - **On task completion**: Update task status to `Done`, recalculate which tasks are now unblocked, assign newly available tasks.
 - **On blocking**: Read the blocker reason, determine if it can be resolved (missing spec detail → consult spec file, dependency not done → reorder), escalate to user if not resolvable.
-- **On conflict**: If two Developer Agents need to modify the same file simultaneously, Manager serializes access — one waits while the other finishes.
+- **On conflict**: If two Developer Agents need to modify the same file simultaneously despite pre-scan, Manager serializes access — one waits while the other finishes.
 - **Status report**: After each round of completions, show a compact summary.
 
 #### Developer Agent Responsibilities
@@ -209,3 +210,4 @@ Conclusion (on phase/plan completion)
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
 | 1.2.0 | 2026-02-27 | Antigravity | Stress-test fix: Mode Guard added — halt if execution mode not in RULES.md §7 |
+| 1.3.0 | 2026-02-27 | Antigravity | Test suite fix T20: proactive Shared-Constraint Detection in parallel Manager Agent |

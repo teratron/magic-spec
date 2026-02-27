@@ -11,7 +11,7 @@ handoffs:
 
 # Simulation Workflow
 
-**Triggers:** *"Simulate"*, *"Dry run"*, *"Test workflow"*, *"Check engine logic"*, *"Find rough edges"*
+**Triggers:** *"Simulate"*, *"Dry run"*, *"Test workflow"*, *"Check engine logic"*, *"Find rough edges"*, *"Run tests"*, *"test"*
 **Scope:**
 
 - **Proactive Validation**: Runs before real-world application to ensure engine changes didn't introduce logical regressions.

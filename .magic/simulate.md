@@ -29,6 +29,7 @@ Run `node .magic/scripts/executor.js check-prerequisites --json` to verify engin
 
 Identify which workflow (or set of workflows) needs validation. This is mandatory after any change to `.magic/` or `.agent/workflows/`.
 
+- **Test Suite**: If the argument is `test` (e.g., `/magic.simulate test`), read `.magic/tests/suite.md` and execute all predefined test scenarios sequentially. Skip Steps 2–5 — go directly to the report. For each scenario: simulate the workflow logic against the synthetic state and compare with expected outcomes. Report results as a PASS/FAIL table (see suite.md for format). If any test fails, document the failure reason and propose a fix (Step 6).
 - **Direct Target**: If a workflow name was provided as an argument (e.g., `/magic.simulate task`), proceed with that workflow.
 - **Ambiguous or Missing Target**: If no specific workflow was named, list all available workflows in `.agent/workflows/` and ask the user to choose one, or offer to simulate **all workflows** as a suite.
 
@@ -113,3 +114,4 @@ Cleanup
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification |
 | 1.2.0 | 2026-02-26 | Antigravity | Added pre-flight Step 0, lighter Step 7 verification, fixed checklist indentation and C1-C11 reference |
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; added Checksum Rule to Step 6 (generate after approval) |
+| 1.4.0 | 2026-02-27 | Antigravity | Added Test Suite mode: `/magic.simulate test` runs predefined scenarios from `.magic/tests/suite.md` |

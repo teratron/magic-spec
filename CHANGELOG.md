@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.1] - 2026-02-27
+
+### Added
+
+- **Workflow Test Suite** (`.magic/tests/suite.md`): 16 predefined regression test scenarios covering all 8 engine workflows. Run via `/magic.simulate test`.
+- **Test Suite mode** in `simulate.md`: reads `suite.md` and reports PASS/FAIL for each scenario.
+- **Template directory** (`.magic/templates/`): extracted inline templates from core workflow files:
+  - `specification.md` — Specification Template (from `spec.md`)
+  - `plan.md` — PLAN.md Template (from `task.md`)
+  - `tasks.md` — TASKS.md + phase-{n}.md Templates (from `task.md`)
+  - `retrospective.md` — RETROSPECTIVE.md Template (from `retrospective.md`)
+
+### Changed
+
+- **AOP Optimization**: Compressed verbose prose in `spec.md` (Post-Update Review, Audit/Consistency Reports). ~17% token reduction across core workflows.
+- **Stress-test hardening** across all workflows:
+  - `spec.md`: Intra-input self-contradiction guard, Deprecation Cascade (scan Related Specs for stale refs)
+  - `task.md`: Circular Dependency Guard, Phantom Done-task preservation (Archive not Cancel), Deprecated Done-task preservation, Convention Sync wording fix
+  - `run.md`: Mode Guard — HALT if execution mode not in RULES.md §7
+  - `rule.md`: Duplication Guard, convention-not-found handler, Workflow Dependency Check in Remove Impact Analysis
+  - `simulate.md`: Checksums mismatch upgraded to HALT, Checksum Rule (generate after approval only)
+  - `onboard.md`: Production collision HALT with backup/cancel, re-entry checks production PLAN.md
+  - `init.md`: Expanded post-init verification to all 5 artifacts, Maintainer Note for hardcoded RULES.md sync
+
+### Fixed
+
+- Template references now explicitly point to `.magic/templates/*.md` in creation steps of `spec.md`, `task.md`, `retrospective.md`, and `onboard.md`.
+
 ## [1.3.0] - 2026-02-25
 
 ### Added
