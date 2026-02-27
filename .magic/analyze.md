@@ -162,6 +162,14 @@ Compile all findings into a structured proposal document.
 | 2 | `{module-name}.md` | {module scope} | {evidence} |
 | ... | ... | ... | ... |
 
+### Layer 2 (Implementation)
+
+| # | Proposed Spec | Implements | Based On Code |
+|---|---|---|---|
+| 3 | `architecture-{stack}.md` | `architecture.md` | `package.json`, generic stack |
+| 4 | `{module-name}-{stack}.md` | `{module-name}.md` | `src/{module}/` directory |
+| ... | ... | ... | ... |
+
 ### RULES.md Proposals
 
 | # | Proposed Convention | Source |
@@ -202,9 +210,10 @@ Options:
 On approval, delegate back to `spec.md` for standard spec creation:
 
 1. For each approved spec → run "Creating a New Specification" from `spec.md`.
-2. For each approved convention → apply via RULES.md T4 protocol (immediate, no confirmation needed — user already approved).
-3. After all specs are created → run Post-Update Review.
-4. Present Task Completion Checklist.
+2. **Bootstrapping Exemption**: Because the codebase already physically exists and functions, bypassing the `Draft → RFC → Stable` lifecycle is permitted. When dispatching approved reverse-engineered specs, the agent may create both Layer 1 and Layer 2 specs directly as **Stable** simultaneously.
+3. For each approved convention → apply via RULES.md T4 protocol (immediate, no confirmation needed — user already approved).
+4. After all specs are created → run Post-Update Review.
+5. Present Task Completion Checklist.
 
 ## Re-Analysis Mode
 
@@ -246,19 +255,20 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 
 ## Coverage Matrix
 
-| Module | Spec | Status |
-|---|---|---|
-| `auth/` | `authentication.md` | ✅ Covered |
-| `payments/` | — | ⚠️ Uncovered |
-| — | `legacy-api.md` | 🔴 Orphaned |
-| `database/` | `database-schema.md` | 🔄 Drifted (paths changed) |
+| Module | L1 Spec (Concept) | L2 Spec (Impl) | Status |
+|---|---|---|---|
+| `auth/` | `authentication.md` | `auth-firebase.md` | ✅ Covered |
+| `payments/` | — | — | ⚠️ Uncovered |
+| — | `legacy-api.md` | — | 🔴 Orphaned |
+| `database/` | `database-schema.md` | `db-postgres.md` | 🔄 Drifted (paths changed) |
 
 ## Proposed Actions
 
 ### New Specs Needed
-| # | Proposed Spec | Module | Reason |
-|---|---|---|---|
-| 1 | `payments.md` | `payments/` | No spec coverage |
+| # | Proposed Spec | Layer | Module | Reason |
+|---|---|---|---|---|
+| 1 | `payments.md` | 1 | `payments/` | No spec coverage |
+| 2 | `payments-stripe.md` | 2 | `payments/` | No spec coverage |
 
 ### Specs Needing Update
 | # | Spec | Issue | Suggested Fix |
@@ -278,6 +288,7 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 
 1. **User Review**: Present the gap report with the same options (Approve all / Select / Adjust / Cancel).
 2. **Dispatch**: On approval, new specs go through "Creating a New Specification", updates through "Updating an Existing Specification", deprecations through status change — all in `spec.md`.
+   - **Bootstrapping Exemption**: For new specs generated from existing, functional uncovered modules, the agent may bypass the `Draft → RFC → Stable` lifecycle and create both L1 and L2 specs directly as **Stable**.
 
 ## Depth Control
 
@@ -304,3 +315,5 @@ Options:
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-27 | Antigravity | Initial creation: First-Time Analysis, Re-Analysis Mode, Depth Control |
+| 1.1.0 | 2026-02-27 | Antigravity | Added Layer 2 (Implementation) extraction and Bootstrapping Exemption for existing codebases |
+| 1.2.0 | 2026-02-27 | Antigravity | Fixed Re-Analysis Gap Report to support L1/L2 duality and extended Bootstrapping Exemption to gap detection |

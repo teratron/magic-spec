@@ -558,7 +558,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Step 3: Architecture inferred — Frontend SPA (pages/ + components/) with API routes
   - [ ] Step 4: Conventions detected from `.eslintrc.json`, `tsconfig.json`
   - [ ] Step 5: Proposal generated to **agent artifacts** (NOT `.design/`)
-  - [ ] Proposal contains: ≥3 proposed L1 specs, ≥1 RULES.md §7 convention
+  - [ ] Proposal contains: ≥3 proposed L1 specs, ≥3 proposed L2 specs, ≥1 RULES.md §7 convention
   - [ ] Step 6: User prompted with options (Approve all / Select / Adjust / Cancel)
   - [ ] No `.design/specifications/` files created until approval
 - **Guards tested:** Delegation routing, First-Time detection, read-only scan, Explore Mode safety (no live writes)
@@ -590,8 +590,8 @@ If any test fails, document the failure reason and propose a fix.
     - `src/db/` → `database.md` 🔄 Drifted (renamed to `src/database/`)
     - `src/payments/` → ⚠️ Uncovered
     - `src/notifications/` → ⚠️ Uncovered
-  - [ ] Gap Report generated to agent artifacts with Coverage Matrix
-  - [ ] 2 new specs proposed (`payments.md`, `notifications.md`)
+  - [ ] Gap Report generated to agent artifacts with L1/L2 paired Coverage Matrix
+  - [ ] 2 new L1 specs proposed (`payments.md`, `notifications.md`) + 2 paired L2 specs
   - [ ] 2 spec updates proposed (path fixes in `auth.md`, `database.md`)
   - [ ] User prompted before any live modifications
 - **Guards tested:** Re-Analysis mode detection, delta comparison, drift detection, uncovered module detection
@@ -679,3 +679,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.0.0 | 2026-02-27 | Antigravity | Initial test suite — 16 scenarios covering 8 workflows |
 | 1.1.0 | 2026-02-27 | Antigravity | Extended suite: added T17–T28 (12 scenarios) — T4 trigger, Explore Mode, amendment, parallel run, conclusion cascade, multi-phase, Level 2 retro, Selective Planning, core amendment, re-entry, consistency audit, end-to-end lifecycle. Total: 28 scenarios |
 | 1.2.0 | 2026-02-27 | Antigravity | Added T29–T33 (5 scenarios): analyze.md first-time analysis, re-analysis gap detection, delegation routing, init codebase hint, depth control. Total: 33 scenarios |
+| 1.3.0 | 2026-02-27 | Antigravity | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
