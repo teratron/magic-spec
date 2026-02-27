@@ -14,12 +14,24 @@ Run in your project root using `npx`:
 npx magic-spec@latest
 ```
 
+Or to install the latest edge version directly from the GitHub `main` branch:
+
+```bash
+npx --yes github:teratron/magic-spec
+```
+
 ### Python (Recommended for Python/Data Science)
 
 Run in your project root using `uv` (recommended):
 
 ```bash
 uvx magic-spec
+```
+
+Or to install the latest edge version directly from the GitHub `main` branch:
+
+```bash
+uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
 ```
 
 ---

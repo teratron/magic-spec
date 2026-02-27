@@ -7,8 +7,9 @@
     },
     "copilot": {
         "marker": ".github",
-        "dest": ".github/agents",
-        "ext": ".md",
+        "dest": ".github/prompts",
+        "ext": ".prompt.md",
+        "format": "mdc",
         "description": "GitHub Copilot"
     },
     "claude": {
@@ -60,15 +61,15 @@
     "qwen": {
         "marker": ".qwen",
         "dest": ".qwen/commands",
-        "ext": ".toml",
-        "format": "toml",
+        "ext": ".md",
+        "format": "mdc",
         "description": "Qwen Code"
     },
     "opencode": {
         "marker": ".opencode",
-        "dest": ".opencode/command",
+        "dest": ".opencode/commands",
         "ext": ".md",
-        "description": "opencode"
+        "description": "OpenCode"
     },
     "shai": {
         "marker": ".shai",

@@ -30,10 +30,22 @@ Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything el
 npx magic-spec@latest
 ```
 
+Or to install the latest edge version directly from the GitHub `main` branch:
+
+```bash
+npx --yes github:teratron/magic-spec
+```
+
 ### Option B: Python (uvx)
 
 ```bash
 uvx magic-spec
+```
+
+Or to install the latest edge version directly from the GitHub `main` branch:
+
+```bash
+uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
 ```
 
 **What happens next?**
