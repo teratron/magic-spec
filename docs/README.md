@@ -22,6 +22,8 @@ graph TD
     IDEA["💡 Idea"] --> INIT{"🏗️ Auto-Init"}
     INIT -->|.design/ exists| SPEC
     INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
+    INIT -.->|"existing code detected"| ANALYZE["🔬 Analyze"]
+    ANALYZE -->|"proposals approved"| SPEC
     SPEC["📋 Specification"] <--> RULE["📜 Rule"]
     SPEC --> TASK["🗺️ Task & Plan"]
     TASK --> RUN["⚡ Run"]
@@ -30,6 +32,7 @@ graph TD
     RETRO -.->|Feedback loop| SPEC
 
     style INIT fill:#1e1e2e,stroke:#fab387,stroke-dasharray: 5 5
+    style ANALYZE fill:#1e1e2e,stroke:#74c7ec,stroke-dasharray: 5 5
     style RULE fill:#1e1e2e,stroke:#9399b2,stroke-dasharray: 3 3
     style RETRO fill:#1e1e2e,stroke:#9399b2,stroke-dasharray: 3 3
 ```
@@ -51,6 +54,7 @@ graph TD
 | **Retrospective** | `retrospective.md` | Collects metrics and generates improvement recommendations after phase/plan completion. | [Detailed Guide](retrospective.md) |
 | **Simulate** | `simulate.md` | Validates engine logic and optimizes workflow instructions (AOP). | [Detailed Guide](simulate.md) |
 | **Init** | `init.md` | Automatic pre-flight initialization of the `.design/` directory. | [Detailed Guide](init.md) |
+| **Analyze** | `analyze.md` | Scans existing codebases to generate specification proposals. Supports first-time analysis and re-analysis. | [Detailed Guide](analyze.md) |
 
 ---
 

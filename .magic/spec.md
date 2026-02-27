@@ -86,6 +86,8 @@ Use this workflow for safe exploration without violating the "Workflow Minimalis
 
 **Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*
 
+> **Project Analysis Delegation**: If the user's intent is to analyze the *existing codebase* (e.g., *"Analyze project"*, *"Scan project"*, *"What does this project do?"*, *"Generate specs from code"*, *"Re-analyze"*, *"Scan for uncovered modules"*), or if `.design/INDEX.md` exists but contains no registered specifications — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow instead of the generic Explore Mode below.
+
 1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
 2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
 3. **Strict Prohibition**: You MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents.
@@ -360,3 +362,4 @@ Review
 | 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted Specification Template to templates/, compressed Post-Update Review, Audit Report, and Consistency Report |
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: added intra-input self-contradiction edge case to Dispatching |
 | 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
+| 1.5.0 | 2026-02-27 | Antigravity | Project Analysis delegation: Explore Mode routes codebase analysis triggers to `.magic/analyze.md` |

@@ -51,7 +51,16 @@ graph TD
     Continuing with {workflow name}...
     ```
 
-6. **If already initialized**: Skip silently. No output needed.
+6. **Existing Codebase Hint**: After successful initialization, check if the project already contains source code by scanning for indicators (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `src/`, `lib/`, `app/`, or 5+ source files at root). If detected, append to the report:
+
+    ```
+    💡 Existing codebase detected.
+       To generate initial specifications from your code, say: "Analyze project"
+    ```
+
+    > This hint delegates to `.magic/analyze.md` via the Spec Workflow.
+
+7. **If already initialized**: Skip silently. No output needed.
 
 ## Directory Structure Created
 
@@ -88,3 +97,4 @@ Init Checklist
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Documented check-prerequisites call chain, added engine integrity check, post-init verification step, completion checklist |
 | 1.2.0 | 2026-02-27 | Antigravity | Simulation fix: expanded verification to all 5 artifacts, added Maintainer Note for hardcoded RULES.md sync |
+| 1.3.0 | 2026-02-27 | Antigravity | Existing codebase hint: after init, suggest "Analyze project" if source code detected |

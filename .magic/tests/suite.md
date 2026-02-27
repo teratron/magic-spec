@@ -541,6 +541,135 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No orphaned specs, no stale references, no version mismatches
 - **Guards tested:** Full chain integrity, all workflow handoffs, all guards in sequence
 
+### T29 — Analyze First-Time on Existing Project
+
+- **Workflow:** `analyze.md` (First-Time Analysis, delegated from `spec.md`)
+- **Synthetic State:**
+  - `.design/` initialized (INDEX.md exists, empty — 0 specs registered)
+  - Project has: `package.json` (Next.js), `src/` with `components/`, `pages/`, `api/`, `lib/`
+  - `.eslintrc.json`, `tsconfig.json`, `tailwind.config.js` exist
+  - ~80 source files total
+- **Action:** User says: "Analyze this project"
+- **Expected:**
+  - [ ] `spec.md` Explore Mode triggered → delegation rule fires → `analyze.md` read
+  - [ ] INDEX.md empty → First-Time Analysis mode selected (not Re-Analysis)
+  - [ ] Step 1: Structure scan identifies `src/components/`, `src/pages/`, `src/api/`, `src/lib/`
+  - [ ] Step 2: Stack detected — Next.js + TypeScript + Tailwind
+  - [ ] Step 3: Architecture inferred — Frontend SPA (pages/ + components/) with API routes
+  - [ ] Step 4: Conventions detected from `.eslintrc.json`, `tsconfig.json`
+  - [ ] Step 5: Proposal generated to **agent artifacts** (NOT `.design/`)
+  - [ ] Proposal contains: ≥3 proposed L1 specs, ≥1 RULES.md §7 convention
+  - [ ] Step 6: User prompted with options (Approve all / Select / Adjust / Cancel)
+  - [ ] No `.design/specifications/` files created until approval
+- **Guards tested:** Delegation routing, First-Time detection, read-only scan, Explore Mode safety (no live writes)
+
+---
+
+### T30 — Analyze Re-Analysis Gap Detection
+
+- **Workflow:** `analyze.md` (Re-Analysis Mode, delegated from `spec.md`)
+- **Synthetic State:**
+  - `.design/INDEX.md`: 3 specs registered:
+    - `architecture.md` (Stable L1) — describes `src/core/`, `src/api/`
+    - `auth.md` (Stable L1) — describes `src/auth/`
+    - `database.md` (Stable L1) — describes `src/db/`
+  - **Actual project structure:**
+    - `src/core/` → exists (covered ✅)
+    - `src/auth/` → renamed to `src/authentication/` (drifted 🔄)
+    - `src/db/` → deleted, replaced by `src/database/` (drifted 🔄)
+    - `src/payments/` → new module, no spec (uncovered ⚠️)
+    - `src/notifications/` → new module, no spec (uncovered ⚠️)
+- **Action:** User says: "Re-analyze the project"
+- **Expected:**
+  - [ ] INDEX.md read → 3 active specs found → Re-Analysis Mode selected
+  - [ ] Active specs read: paths and structures extracted
+  - [ ] Project scanned: actual directories discovered
+  - [ ] Delta computed:
+    - `src/core/` → `architecture.md` ✅ Covered
+    - `src/auth/` → `auth.md` 🔄 Drifted (renamed to `src/authentication/`)
+    - `src/db/` → `database.md` 🔄 Drifted (renamed to `src/database/`)
+    - `src/payments/` → ⚠️ Uncovered
+    - `src/notifications/` → ⚠️ Uncovered
+  - [ ] Gap Report generated to agent artifacts with Coverage Matrix
+  - [ ] 2 new specs proposed (`payments.md`, `notifications.md`)
+  - [ ] 2 spec updates proposed (path fixes in `auth.md`, `database.md`)
+  - [ ] User prompted before any live modifications
+- **Guards tested:** Re-Analysis mode detection, delta comparison, drift detection, uncovered module detection
+
+---
+
+### T31 — Analyze Delegation Routing from spec.md
+
+- **Workflow:** `spec.md` → `analyze.md` (Delegation)
+- **Synthetic State:**
+  - `.design/` initialized, INDEX.md has 2 specs registered
+  - Project has existing code
+- **Test A — Analysis trigger:**
+  - **Input:** `"Scan the project for uncovered modules"`
+  - **Expected:**
+    - [ ] `spec.md` Explore Mode entered
+    - [ ] Delegation rule matches: "Scan ... modules" → `analyze.md`
+    - [ ] `analyze.md` read and Re-Analysis flow executed
+- **Test B — Generic brainstorm (no delegation):**
+  - **Input:** `"Let's brainstorm about caching strategies"`
+  - **Expected:**
+    - [ ] `spec.md` Explore Mode entered
+    - [ ] Delegation rule does NOT match (no project analysis intent)
+    - [ ] Standard Explore Mode proceeds (thinking partner, no live writes)
+- **Guards tested:** Delegation trigger accuracy, non-matching triggers stay in Explore Mode
+
+---
+
+### T32 — Init Existing Codebase Hint
+
+- **Workflow:** `init.md` (Existing Codebase Hint)
+- **Test A — Project with code:**
+  - **Synthetic State:**
+    - `.design/` does NOT exist
+    - Project root has: `package.json`, `src/`, `README.md`, 20+ source files
+  - **Action:** Any workflow triggers init
+  - **Expected:**
+    - [ ] Init runs: `.design/` created with all 5 artifacts
+    - [ ] Post-init: codebase indicators scanned — `package.json` found
+    - [ ] Hint appended: `💡 Existing codebase detected. To generate initial specifications from your code, say: "Analyze project"`
+    - [ ] Calling workflow continues after hint
+- **Test B — Empty project (no code):**
+  - **Synthetic State:**
+    - `.design/` does NOT exist
+    - Project root has only `.magic/` (freshly installed magic-spec, no user code)
+  - **Action:** Any workflow triggers init
+  - **Expected:**
+    - [ ] Init runs: `.design/` created with all 5 artifacts
+    - [ ] Post-init: no codebase indicators found
+    - [ ] **No hint** — analysis not suggested for empty projects
+    - [ ] Calling workflow continues
+- **Guards tested:** Codebase detection heuristic, hint presence/absence
+
+---
+
+### T33 — Analyze Depth Control for Large Projects
+
+- **Workflow:** `analyze.md` (Depth Control)
+- **Test A — Small project (<50 files):**
+  - **Synthetic State:**
+    - 30 source files, `.design/INDEX.md` empty
+  - **Expected:**
+    - [ ] Full scan starts automatically — no prompt
+- **Test B — Medium project (50–500 files):**
+  - **Synthetic State:**
+    - 200 source files, `.design/INDEX.md` empty
+  - **Expected:**
+    - [ ] Agent offers: Full scan or Focused scan
+    - [ ] Proceeds only after user choice
+- **Test C — Large project (>500 files):**
+  - **Synthetic State:**
+    - 1200 source files across 80 directories, `.design/INDEX.md` empty
+  - **Expected:**
+    - [ ] Agent recommends Focused or Quick scan
+    - [ ] Full scan offered as option but not default
+    - [ ] Agent does NOT auto-start full scan on large projects
+- **Guards tested:** Depth Control thresholds (<50, 50–500, >500), auto-scan vs prompt
+
 ---
 
 ## Document History
@@ -549,3 +678,4 @@ If any test fails, document the failure reason and propose a fix.
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-02-27 | Antigravity | Initial test suite — 16 scenarios covering 8 workflows |
 | 1.1.0 | 2026-02-27 | Antigravity | Extended suite: added T17–T28 (12 scenarios) — T4 trigger, Explore Mode, amendment, parallel run, conclusion cascade, multi-phase, Level 2 retro, Selective Planning, core amendment, re-entry, consistency audit, end-to-end lifecycle. Total: 28 scenarios |
+| 1.2.0 | 2026-02-27 | Antigravity | Added T29–T33 (5 scenarios): analyze.md first-time analysis, re-analysis gap detection, delegation routing, init codebase hint, depth control. Total: 33 scenarios |

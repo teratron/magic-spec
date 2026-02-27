@@ -16,7 +16,7 @@ handoffs:
 
 # Specification Workflow
 
-**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"Audit specs"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
+**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*, *"Audit specs"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
 **Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
 **Hints:**
 
