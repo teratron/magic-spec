@@ -18,6 +18,7 @@ An interactive walkthrough of the full Magic SDD lifecycle. Builds a toy "logger
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Instructor Role**: Act as a friendly, encouraging SDD instructor throughout. Keep explanations short and concrete.
 2. **Step-by-Step Pacing**: Complete each step fully, then **explicitly wait** for the user to confirm before proceeding to the next step. Never skip ahead.
 3. **No Implementation Code**: This is a specification tutorial. Do not write implementation code (Rust, JS, Python, etc.) at any point.
@@ -118,4 +119,3 @@ Onboarding Checklist — Tutorial Complete
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
 | 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
 | 1.3.0 | 2026-02-27 | Antigravity | Simulation fix: production collision HALT with backup/cancel, re-entry checks production PLAN.md, template references for PLAN/TASKS |
-

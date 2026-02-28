@@ -3,7 +3,7 @@ if [ ! -d ".git" ]; then
   echo "Note: not a git repository. Proceeding with SDD initialization anyway."
 fi
 
-DESIGN_DIR=".design"
+DESIGN_DIR="${MAGIC_DESIGN_DIR:-.design}"
 mkdir -p "$DESIGN_DIR/specifications" "$DESIGN_DIR/tasks" "$DESIGN_DIR/archives/tasks"
 DATE=$(date +%Y-%m-%d)
 
@@ -29,7 +29,7 @@ Central registry of all project specifications and their current state.
 - **License**: MIT
 - **Last Updated**: $DATE
 EOF
-echo "Created .design/INDEX.md"
+echo "Created $DESIGN_DIR/INDEX.md"
 fi
 
 if [ ! -f "$DESIGN_DIR/RULES.md" ]; then
@@ -119,7 +119,7 @@ Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructio
 
 ### C8 — Phase Archival
 
-On phase completion, the per-phase task file is moved from `.design/tasks/` to `.design/archives/tasks/`. The link in `TASKS.md` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
+On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` to `$DESIGN_DIR/archives/tasks/`. The link in `TASKS.md` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
 
 ### C9 — Zero-Prompt Automation
 
@@ -145,5 +145,5 @@ Implementation plans in `PLAN.md` must follow a nested hierarchy: **Phase → Sp
 EOF
 # Replace placeholder date
 sed -i "s/INIT_DATE/$DATE/" "$DESIGN_DIR/RULES.md"
-echo "Created .design/RULES.md"
+echo "Created $DESIGN_DIR/RULES.md"
 fi

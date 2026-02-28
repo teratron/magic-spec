@@ -2,7 +2,7 @@ if (!(Test-Path -Path ".git")) {
     Write-Host "Note: not a git repository. Proceeding with SDD initialization anyway."
 }
 
-$D = ".design"
+$D = if ([string]::IsNullOrWhiteSpace($env:MAGIC_DESIGN_DIR)) { ".design" } else { $env:MAGIC_DESIGN_DIR }
 foreach ($dir in @($D, "$D/specifications", "$D/tasks", "$D/archives/tasks")) {
     New-Item -ItemType Directory -Force -Path $dir | Out-Null
 }
@@ -31,7 +31,7 @@ Central registry of all project specifications and their current state.
 - **License**: MIT
 - **Last Updated**: $Date
 "@
-    Write-Host "Created .design/INDEX.md"
+    Write-Host "Created $D/INDEX.md"
 }
 
 $RulesPath = "$D/RULES.md"
@@ -122,7 +122,7 @@ Direct calls to ``.sh`` or ``.ps1`` scripts are not permitted in workflow instru
 
 ### C8 -- Phase Archival
 
-On phase completion, the per-phase task file is moved from ``.design/tasks/`` to ``.design/archives/tasks/``. The link in ``TASKS.md`` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
+On phase completion, the per-phase task file is moved from ``$D/tasks/`` to ``$D/archives/tasks/``. The link in ``TASKS.md`` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
 
 ### C9 -- Zero-Prompt Automation
 
@@ -146,5 +146,5 @@ Implementation plans in ``PLAN.md`` must follow a nested hierarchy: **Phase -> S
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | $Date | Agent | Initial constitution |
 "@
-    Write-Host "Created .design/RULES.md"
+    Write-Host "Created $D/RULES.md"
 }

@@ -1,6 +1,6 @@
-$designDir = ".design"
-$changelogFile = "$designDir\CHANGELOG.md"
-$contextFile = "$designDir\CONTEXT.md"
+$designDir = if ([string]::IsNullOrWhiteSpace($env:MAGIC_DESIGN_DIR)) { ".design" } else { $env:MAGIC_DESIGN_DIR }
+$changelogFile = Join-Path $designDir "CHANGELOG.md"
+$contextFile = Join-Path $designDir "CONTEXT.md"
 
 if (-not (Test-Path $designDir)) {
     Write-Error "Error: $designDir directory not found"
@@ -36,7 +36,7 @@ try {
         $structure += "$indent- $($file.Name)/`r`n"
     }
 } catch {
-    $structure = "- Project root`r`n  - .design/`r`n  - .magic/`r`n"
+    $structure = "- Project root`r`n  - $designDir/`r`n  - .magic/`r`n"
 }
 
 $recentChanges = ""

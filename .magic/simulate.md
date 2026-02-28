@@ -10,6 +10,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Synthetic Context**: Create a hypothetical project state (spec counts, plan versions, folder structures) to test the workflow logic.
 2. **Stress Test**: Specifically look for scenarios that might confuse a future agent or lead to "planning amnesia".
 3. **Surgical Reporting (Fix & Test)**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. You **must also write a new regression test** for the issue and append it to `.magic/tests/suite.md`. Present and ask the user for a single yes/no approval before applying any patches. This is the only non-silent step in the simulation workflow (C1 compliance).
@@ -34,7 +35,7 @@ Identify which workflow (or set of workflows) needs validation. This is mandator
   - If exists: Read and execute predefined scenarios sequentially. Skip Steps 2–5 — go directly to the report.
   - If missing: **Automatic Fallback** to **Improv Mode** (see below). Notify the user that the suite is missing and improvise the validation.
 - **Direct Target**: If a workflow name was provided as an argument (e.g., `/magic.simulate task`), proceed with that workflow.
-- **Ambiguous or Missing Target**: If no specific workflow was named, list all available workflows in `.agent/workflows/`, the **Test Suite** (if available), and the **Improv Mode** option. If the user doesn't specify, or specifically asks for "live simulation", default to **Improv Mode**.
+- **Empty Target (Default)**: If no specific workflow or `test` argument is provided, the agent MUST explicitly trigger **Improv Mode (Live Simulation)** by default. This ensures unpredictable, full-cycle endurance testing rather than relying solely on static predefined cases.
 
 ### 1.5 Improv Mode (Live Simulation)
 
@@ -137,3 +138,4 @@ Cleanup
 | 1.5.0 | 2026-02-28 | Antigravity | Added Improv Mode (Live Simulation) and fallback for missing test suite |
 | 1.6.0 | 2026-02-28 | Antigravity | Test Automation Loop: enforced adding new tests to `suite.md` alongside any proposed workflow fixes |
 | 1.7.0 | 2026-02-28 | Antigravity | Enforced Regression Sweep (triggering test suite directly after applying fixes to workflows) |
+| 1.8.0 | 2026-02-28 | Antigravity | Dynamic Default target: calling `/magic.simulate` without arguments now automatically triggers Improv Mode (Live Stress-Test) |

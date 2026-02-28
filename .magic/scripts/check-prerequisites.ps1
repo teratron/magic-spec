@@ -5,10 +5,12 @@ param (
     [switch]$require_specs
 )
 
-$indexPath = ".design\INDEX.md"
-$rulesPath = ".design\RULES.md"
-$planPath = ".design\PLAN.md"
-$tasksPath = ".design\TASKS.md"
+$designDir = if ([string]::IsNullOrWhiteSpace($env:MAGIC_DESIGN_DIR)) { ".design" } else { $env:MAGIC_DESIGN_DIR }
+
+$indexPath = Join-Path $designDir "INDEX.md"
+$rulesPath = Join-Path $designDir "RULES.md"
+$planPath = Join-Path $designDir "PLAN.md"
+$tasksPath = Join-Path $designDir "TASKS.md"
 
 $indexExists = Test-Path $indexPath
 $rulesExists = Test-Path $rulesPath
@@ -82,9 +84,9 @@ if ($indexExists) {
         # Check if each spec from INDEX.md exists on disk and is in PLAN.md
         $planContent = Get-Content $planPath -Raw
         foreach ($spec in $indexSpecs) {
-            $specFile = Join-Path ".design\specifications" $spec
+            $specFile = Join-Path (Join-Path $designDir "specifications") $spec
             if (-not (Test-Path $specFile)) {
-                $warnings += "Inconsistency: '$spec' is registered in INDEX.md but file is missing from .design/specifications/"
+                $warnings += "Inconsistency: '$spec' is registered in INDEX.md but file is missing from $($designDir -replace '\\', '/')/specifications/"
             }
             if ($planContent -notlike "*$spec*") {
                 $warnings += "Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md"
@@ -126,7 +128,7 @@ if ($indexExists) {
         foreach ($spec in $indexSpecs) {
             $meta = $specMetadata[$spec]
             if ($meta.layer -eq "implementation" -and ($meta.status -eq "Stable" -or $meta.status -eq "RFC")) {
-                $fullPath = Join-Path ".design\specifications" $spec
+                $fullPath = Join-Path (Join-Path $designDir "specifications") $spec
                 if (Test-Path $fullPath) {
                     $content = Get-Content $fullPath -Raw
                     if ($content -match "\*\*Implements:\*\* (.*?\.md)") {
@@ -164,15 +166,16 @@ if ($rfcCount -gt 0) {
 $ok = $missing.Count -eq 0
 
 if ($json) {
+    $normDesignDir = $designDir -replace '\\', '/'
     $output = @{
         ok = $ok
         checked_at = (Get-Date -Format "yyyy-MM-dd")
-        design_dir = ".design"
+        design_dir = $normDesignDir
         artifacts = @{
-            "INDEX.md" = @{ exists = $indexExists; path = ".design/INDEX.md" }
-            "RULES.md" = @{ exists = $rulesExists; path = ".design/RULES.md" }
-            "PLAN.md"  = @{ exists = $planExists; path = ".design/PLAN.md" }
-            "TASKS.md" = @{ exists = $tasksExists; path = ".design/TASKS.md" }
+            "INDEX.md" = @{ exists = $indexExists; path = "$normDesignDir/INDEX.md" }
+            "RULES.md" = @{ exists = $rulesExists; path = "$normDesignDir/RULES.md" }
+            "PLAN.md"  = @{ exists = $planExists; path = "$normDesignDir/PLAN.md" }
+            "TASKS.md" = @{ exists = $tasksExists; path = "$normDesignDir/TASKS.md" }
             "specs"    = @{ count = $specCount; stable = $stableCount; draft = $draftCount }
         }
         missing_required = $missing

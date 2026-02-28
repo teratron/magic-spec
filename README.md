@@ -46,6 +46,9 @@ root-project/
 3. **`.design/`**: Initializes your project's workspace for Specifications, Rules, and Plans.
 4. **Onboarding**: An interactive tutorial (`magic.onboard`) helps you and your AI get started smoothly.
 
+> [!TIP]
+> **Magic Workspaces**: Magic Spec supports multiple, isolated design environments within a single repository (e.g., `.design/engine/`, `.design/installers/`). This allows you to manage fundamentally different project domains without specification overlap, while sharing a single core engine. See [workspaces.md](./workspaces.md) for details.
+
 ## 🖼️ Visuals
 
 The engine operates on a smart, self-correcting feedback loop:

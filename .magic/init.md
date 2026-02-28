@@ -12,6 +12,7 @@ Verifies that `.design/` exists and contains all required system files. If anyth
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Silent by Default**: When called automatically by another workflow, do not interrupt the user. Report init results briefly and continue with the original workflow.
 2. **Safe to Re-Run**: Skips files that already exist. Never overwrites existing `.design/` content.
 3. **First Run Only**: After successful initialization, suggest running the Spec Workflow to create the first specification.

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-DESIGN_DIR=".design"
+DESIGN_DIR="${MAGIC_DESIGN_DIR:-.design}"
 CHANGELOG_FILE="$DESIGN_DIR/CHANGELOG.md"
 CONTEXT_FILE="$DESIGN_DIR/CONTEXT.md"
 
@@ -40,7 +40,7 @@ if command -v tree &> /dev/null; then
     tree -L 2 -I 'node_modules|target|.git|.venv|__pycache__' >> "$CONTEXT_FILE"
 else
     echo "- Project root" >> "$CONTEXT_FILE"
-    echo "  - .design/" >> "$CONTEXT_FILE"
+    echo "  - $DESIGN_DIR/" >> "$CONTEXT_FILE"
     echo "  - .magic/"  >> "$CONTEXT_FILE"
 fi
 echo "\`\`\`" >> "$CONTEXT_FILE"

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.7.0
+**Version:** 1.11.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -666,6 +666,66 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
 - **Guards tested:** Post-fix regression sweep enforcement.
 
+### T38 — Workspace Context Resolution (Zero-Prompt)
+
+- **Workflow:** Any (`task.md` used as example)
+- **Synthetic State:**
+  - `.design/workspace.json` exists with `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - No prompt provided by user about workspaces.
+- **Action 1:** Workflow triggered with no environment variables or CLI flags.
+- **Expected 1:**
+  - [ ] Agent reads `.design/workspace.json`.
+  - [ ] Agent silently identifies `default` = `engine`.
+  - [ ] Agent uses `.design/engine/` for all file operations (reading `INDEX.md`, `RULES.md`, etc.).
+  - [ ] User is NOT prompted to select a workspace.
+- **Action 2:** Workflow triggered with `MAGIC_WORKSPACE=installers`
+- **Expected 2:**
+  - [ ] Agent silently uses `.design/installers/` (overriding default).
+- **Action 3:** `.design/workspace.json` is deleted. Workflow triggered.
+- **Expected 3:**
+  - [ ] Fallback kicks in silently.
+  - [ ] Agent uses root `.design/` for all operations.
+- **Guards tested:** Context Resolution Priority, Zero-Prompt Enforcement, Graceful Fallback.
+
+### T39 — Retrospective Path and Template Resilience
+
+- **Workflow:** `retrospective.md`
+- **Synthetic State:**
+  - Workspace `installers` is active (`MAGIC_DESIGN_DIR=.design/installers/`).
+  - `.design/installers/` initialized and Phase 1 just completed.
+  - `RETROSPECTIVE.md` does NOT exist in `.design/installers/`.
+- **Action:** Retrospective Level 1 triggered
+- **Expected:**
+  - [ ] Agent creates `/installers/RETROSPECTIVE.md` from `.magic/templates/retrospective.md` exactly as is without removing the "Session" sections.
+  - [ ] Agent appends a row to the Snapshots table.
+  - [ ] Agent archives the phase file purely relatively: `tasks/phase-1.md` → `archives/tasks/`
+  - [ ] Agent does NOT write anything to `.design/` root.
+- **Guards tested:** Workspace path adherence, Level 1 template fidelity.
+
+### T40 — Analyze Auto-Init Guard and Markdown List Integrity
+
+- **Workflow:** `analyze.md`
+- **Synthetic State:** Fresh repository without `.design/` directory.
+- **Action:** User prompts *"Analyze my codebase"* (triggers analyze).
+- **Expected:**
+  - [ ] Agent intercepts execution and triggers `.magic/init.md` pre-flight before scanning.
+  - [ ] Agent processes all 7 Re-Analysis steps linearly without sequence restart.
+- **Guards tested:** Auto-Init Delegation, Markdown List Continuity.
+
+### T41 — Run Phase Completion with Cancelled Tasks Guard
+
+- **Workflow:** `run.md` + `retrospective.md`
+- **Synthetic State:**
+  - `TASKS.md` summary table lists 3 `Done` and 1 `Cancelled` task.
+  - Phase 1 has no `Todo` tasks and no `Blocked` tasks.
+  - Entire plan only has Phase 1.
+- **Action:** Agent marks the final available task as `Done`.
+- **Expected:**
+  - [ ] Agent recognizes Phase 1 is complete (condition: all `Done` or `Cancelled`).
+  - [ ] Agent recognizes entirely plan is complete.
+  - [ ] Retrospective and summary extract `Cancelled` metric successfully.
+- **Guards tested:** Phase completion on Cancelled, Missing Cancelled Metric.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -678,4 +738,7 @@ If any test fails, document the failure reason and propose a fix.
 | 1.5.0 | 2026-02-28 | Antigravity | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
 | 1.6.0 | 2026-02-28 | Antigravity | Added T36 to verify `.agent/workflows/magic.run.md` handoff pointing to `magic.spec` |
 | 1.7.0 | 2026-02-28 | Antigravity | Added T37 to test regression suite sweep is triggered after any workflow fixes |
-
+| 1.8.0 | 2026-02-28 | Antigravity | Added T38 to verify Workspace Context Resolution (Zero-Prompt priority chain) |
+| 1.9.0 | 2026-02-28 | Antigravity | Added T39 to test Retrospective path safety inside workspaces and Level 1 template copy |
+| 1.10.0 | 2026-02-28 | Antigravity | Added T40 to test Analyze Auto-Init Guard and List Integrity |
+| 1.11.0 | 2026-02-28 | Antigravity | Added T41 to verify run stall prevention on `Cancelled` tasks and metric tracking |

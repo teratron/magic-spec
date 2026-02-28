@@ -48,7 +48,7 @@ graph TD
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Onboard** | `onboard.md` | Provides an interactive tutorial for developers and AI agents to learn the SDD lifecycle. | [Detailed Guide](onboard.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates improvement recommendations after phase/plan completion. | [Detailed Guide](retrospective.md) |
-| **Simulate** | `simulate.md` | Validates engine logic and optimizes workflow instructions (AOP). | [Detailed Guide](simulate.md) |
+| **Simulate** | `simulate.md` | Validates engine logic and optimizes workflow instructions. Runs predefined tests or auto-triggers Improv Mode on generic call. | [Detailed Guide](simulate.md) |
 | **Init** | `init.md` | Automatic pre-flight initialization of the `.design/` directory. | [Detailed Guide](init.md) |
 | **Analyze** | `analyze.md` | Scans existing codebases to generate specification proposals. Supports first-time analysis and re-analysis. | [Detailed Guide](analyze.md) |
 
@@ -64,11 +64,14 @@ your-project/
 │   ├── spec.md, task.md    #    Core logic definitions
 │   └── scripts/            #    Initialization & health-check scripts
 └── .design/                # 📦 Project State & Artifacts (Generated)
+    ├── workspace.json      #    (Optional) Multi-workspace routing config
     ├── INDEX.md            #    Specification registry
     ├── RULES.md            #    Project constitution (The Rules)
     ├── PLAN.md             #    The implementation roadmap
     └── specifications/     #    Directory for all .md spec files
 ```
+
+> **Advanced Routing**: For large mono-repos, `.design/` supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](../workspaces.md) for full configuration details.
 
 ## 🚀 Usage Guide
 
@@ -107,4 +110,3 @@ The Retrospective system is Magic's heartbeat. It detects:
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
 [Main Repository](https://github.com/teratron/magic-spec) | [Installer Guide](../installers/README.md) | [Engine Integrity (Checksums)](checksums.md)
-

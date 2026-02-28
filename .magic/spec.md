@@ -13,6 +13,7 @@ This workflow defines a universal, technology-agnostic process for creating and 
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **No Code in Specs**: Never generate implementation code (Rust, JS, Python, etc.) inside specification files. Use pseudo-code or logic flows if necessary.
 2. **Structure First**: Always verify `.design/INDEX.md` and `.design/RULES.md` exist before creating a new spec.
 3. **Universal Applicability**: This workflow is stack-agnostic. Adapt the content (APIs, DBs, UI) to the user's technology, but keep the *structure* rigid.

@@ -26,6 +26,7 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Read-Only Analysis**: This workflow reads `.design/` artifacts to gather data. It does NOT modify specs, plans, tasks, or RULES.md. The only file it writes to is `.design/RETROSPECTIVE.md`.
 2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
 3. **Evidence-Based**: Every observation must reference a specific file, date, or event. No speculative claims.
@@ -38,7 +39,7 @@ The retrospective operates on two levels to balance thoroughness with efficiency
 ## Directory Structure
 
 ```plaintext
-.design/
+.design/[workspace]/
 ├── INDEX.md            # Input: spec registry (status history)
 ├── RULES.md            # Input: constitution (rule additions over time)
 ├── PLAN.md             # Input: phase completion data
@@ -121,21 +122,21 @@ graph TD
 
 0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json`. If `ok: false`, halt and surface missing artifacts.
 1. **Read INDEX.md**: Extract status counts (D/R/S).
-2. **Read TASKS.md**: Extract Done/Blocked counts from the **Summary Table** only.
+2. **Read TASKS.md**: Extract Done/Blocked/Cancelled counts from the **Summary Table** only.
 3. **Read RULES.md**: Count entries in section §7.
 4. **Calculate Signal**:
     - 🟢 — 0 Blocked tasks, 100% planning coverage.
     - 🟡 — ≤20% tasks Blocked, or minor orphaned specs.
     - 🔴 — >20% tasks Blocked, or critical spec/plan gaps.
-5. **Append row** to `RETROSPECTIVE.md`. If the file does not exist, create it from `.magic/templates/retrospective.md` (Snapshots section only — no Session section for Level 1).
+5. **Append row** to `RETROSPECTIVE.md`. If the file does not exist, create it from `.magic/templates/retrospective.md` exactly as is, and append the row to the Snapshots table (leave the dummy Session section intact for future Level 2 runs).
 6. **Archival (C8)**:
-    - Move `.design/tasks/phase-{N}.md` to `.design/archives/tasks/`.
+    - Move `tasks/phase-{N}.md` to `archives/tasks/`.
     - Update `TASKS.md`: Change link `(tasks/phase-{N}.md)` to `(archives/tasks/phase-{N}.md)`.
 
 **Snapshot row format:**
 
 ```markdown
-| {YYYY-MM-DD} | Phase {N} | {D}/{R}/{S} | {Done}/{Blocked} | {count} | {🟢/🟡/🔴} |
+| {YYYY-MM-DD} | Phase {N} | {D}/{R}/{S} | {Done}/{Blocked}/{Cancelled} | {count} | {🟢/🟡/🔴} |
 ```
 
 Where `D/R/S` = Draft/RFC/Stable spec counts.
@@ -144,7 +145,7 @@ Where `D/R/S` = Draft/RFC/Stable spec counts.
 
 **Trigger phrase**: *"Run retrospective"*, *"Analyze SDD"*, *"SDD health check"*
 
-**Auto-trigger**: Runs automatically when the **entire plan** is complete (all phases, all tasks `Done`). This is the only case where a full retrospective runs without a manual command.
+**Auto-trigger**: Runs automatically when the **entire plan** is complete (all phases, all tasks `Done` or `Cancelled`). This is the only case where a full retrospective runs without a manual command.
 
 ```mermaid
 graph TD
@@ -170,8 +171,8 @@ graph TD
 1. **Read INDEX.md**: Count specs, note statuses, identify any without a status or version.
 2. **Read RULES.md**: Count §7 entries, scan Document History for rule additions/amendments/removals.
 3. **Read PLAN.md**: Check phase completion markers, count phases, identify unassigned specs.
-4. **Read TASKS.md**: Extract summary table (Total/Todo/In Progress/Done/Blocked per phase).
-5. **Scan spec files**: For each spec in `.design/specifications/`, read only the Document History table. Count version bumps, status transitions, and regressions (RFC → Draft).
+4. **Read TASKS.md**: Extract summary table (Total/Todo/In Progress/Done/Blocked/Cancelled per phase).
+5. **Scan spec files**: For each spec in the active `specifications/` directory, read only the Document History table. Count version bumps, status transitions, and regressions (RFC → Draft).
 6. **Cross-reference**: Compare INDEX.md entries against PLAN.md spec references and TASKS.md task-to-spec mappings. Flag mismatches.
 7. **Compile observations**: Build a list of factual findings with severity:
     - 🔴 **Critical** — broken references, missing files, or specs in `INDEX.md` missing from `PLAN.md` (orphaned)
@@ -202,7 +203,7 @@ graph TD
 ```
 Snapshot Checklist — Phase {N}
   ☐ INDEX.md status counts extracted
-  ☐ TASKS.md Done/Blocked counts extracted
+  ☐ TASKS.md Done/Blocked/Cancelled counts extracted
   ☐ Signal calculated correctly
   ☐ Snapshot row appended to RETROSPECTIVE.md
   ☐ Phase file archived (C8)
@@ -243,4 +244,5 @@ Output
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to both levels, RETROSPECTIVE.md creation in Level 1, split checklists for Level 1/2, realistic checklist metric source, archives in directory structure |
 | 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted RETROSPECTIVE.md template to templates/ |
-
+| 1.3.0 | 2026-02-28 | Antigravity | AOP: Fixed hardcoded `.design/` paths for Workspace compatibility, optimized template creation in Level 1 |
+| 1.4.0 | 2026-02-28 | Antigravity | Bugfix: Missing Cancelled Metric — tracking `Cancelled` tasks added to tables and snapshots |

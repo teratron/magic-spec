@@ -14,6 +14,7 @@ Use when you want to declare a convention without going through the Spec Workflo
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Read First**: Always read `.design/RULES.md` in full before any operation.
 2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding. Do not ask — just initialize and continue.
 3. **Scope**: Only §7 Project Conventions is modified here. Sections 1–6 are the universal constitution — amend them only if the user explicitly targets them.

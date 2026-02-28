@@ -27,15 +27,15 @@ Simulate a specific workflow by name:
 
 The agent creates a synthetic scenario, "executes" the workflow logic step-by-step, and identifies rough edges.
 
-### 2.2 Stress Test
+### 2.2 Live Simulation (Improv Mode)
 
-Run adversarial scenarios designed to break workflow logic:
+Run an unpredictable, end-to-end stress test across all workflows:
 
 ```
-/magic.simulate стресс-тест
+/magic.simulate
 ```
 
-The agent generates hostile synthetic states (circular dependencies, contradictory inputs, registry corruption) and verifies that guards catch every edge case.
+This is the **default behavior** when no arguments are provided. The agent generates hostile synthetic states (e.g., deleted files, contradictory changes, registry corruption) and attempts to resolve them in a single pass across `spec` → `task` → `run` → `retro`, verifying that guards catch every edge case.
 
 ### 2.3 Test Suite
 

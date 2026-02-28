@@ -14,6 +14,7 @@ It operates **after** the Task Workflow — tasks are its input, not its concern
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Tasks First**: Never execute work outside of the scope defined in `TASKS.md`.
 2. **Rules First**: `RULES.md` is the project constitution. Always read and adhere to project conventions before writing any code.
 3. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
@@ -107,7 +108,7 @@ graph TD
 5. **On phase completion**:
     - **Retrospective Level 1 (auto-snapshot)**: Silently run retrospective Level 1 (snapshot). **CRITICAL**: If the command fails, the execution must HALT and report the error to the user. Silent failure of audit trails is prohibited.
     - **Changelog Level 1 (auto-compile)**: Silently compile CHANGELOG.md Level 1 (see *Changelog Compilation* below). If `CHANGELOG.md` does not exist, create it with a `# Changelog` header before appending. **CRITICAL**: If compilation fails to append to CHANGELOG.md, HALT.
-    - Check if the **entire plan** is complete (all phases, all tasks Done). If yes:
+    - Check if the **entire plan** is complete (all phases, all tasks Done or Cancelled). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and **present the compiled entry to the user for a single yes/no approval** before writing to `CHANGELOG.md`. (Per C9: this is the only non-silent step in the conclusion sequence.)
         3. **Auto-Bump Version**: Determine the new version from the changelog entry (patch for fixes only, minor for new features, major for breaking changes). Update `.magic/.version`. If project manifests are detected, bump ALL of them to maintain consistency:
@@ -138,7 +139,7 @@ graph TD
     E --> F{Agent reports}
     F -->|Done| G[Manager: Update status, check for newly unblocked tasks]
     F -->|Blocked| H[Manager: Resolve or escalate]
-    G --> I{All tasks done?}
+    G --> I{All tasks done/cancelled?}
     I -->|No| C
     I -->|Yes| J[Auto-snapshot: run retrospective Level 1]
     J --> J1[Auto-compile: parse Change Records to CHANGELOG.md]
@@ -212,5 +213,8 @@ Conclusion (on phase/plan completion)
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
 | 1.2.0 | 2026-02-27 | Antigravity | Stress-test fix: Mode Guard added — halt if execution mode not in RULES.md §7 |
-| 1.3.0 | 2026-02-27 | Antigravity | Test suite fix T20: proactive Shared-Constraint Detection in parallel Manager Agent |
+| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; auto-compilation skips block |
 | 1.4.0 | 2026-02-28 | Antigravity | Core enhancement: Plan Amnesia fix — instructed agents to synchronize `[x]` to `PLAN.md` upon spec completion |
+| 1.5.0 | 2026-02-28 | Antigravity | Bugfix: Run Stall on Cancelled — phase completion condition now checks `Done` or `Cancelled` tasks |
+
+```

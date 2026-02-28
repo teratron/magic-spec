@@ -57,10 +57,11 @@ else
 fi
 
 # Paths
-INDEX_PATH=".design/INDEX.md"
-RULES_PATH=".design/RULES.md"
-PLAN_PATH=".design/PLAN.md"
-TASKS_PATH=".design/TASKS.md"
+DESIGN_DIR="${MAGIC_DESIGN_DIR:-.design}"
+INDEX_PATH="$DESIGN_DIR/INDEX.md"
+RULES_PATH="$DESIGN_DIR/RULES.md"
+PLAN_PATH="$DESIGN_DIR/PLAN.md"
+TASKS_PATH="$DESIGN_DIR/TASKS.md"
 
 [ -f "$INDEX_PATH" ] && INDEX_EXISTS="true" || INDEX_EXISTS="false"
 [ -f "$RULES_PATH" ] && RULES_EXISTS="true" || RULES_EXISTS="false"
@@ -117,8 +118,8 @@ if [ "$PLAN_EXISTS" = "true" ] && [ "$INDEX_EXISTS" = "true" ]; then
     
     # Check if each spec registered in INDEX exists and is in PLAN
     for spec in $INDEX_SPECS; do
-        if [ ! -f ".design/specifications/$spec" ]; then
-            WARNINGS+=("Inconsistency: '$spec' is registered in INDEX.md but file is missing from .design/specifications/")
+        if [ ! -f "$DESIGN_DIR/specifications/$spec" ]; then
+            WARNINGS+=("Inconsistency: '$spec' is registered in INDEX.md but file is missing from $DESIGN_DIR/specifications/")
         fi
         if ! grep -q "$spec" "$PLAN_PATH"; then
             WARNINGS+=("Orphaned specification: '$spec' is in INDEX.md but missing from PLAN.md")
@@ -150,8 +151,8 @@ if [ "$PLAN_EXISTS" = "true" ] && [ "$INDEX_EXISTS" = "true" ]; then
             file=$(echo "$line" | grep -o "specifications/[^)]*\.md" | sed 's|specifications/||')
             status=$(echo "$line" | awk -F'|' '{print $4}' | xargs)
             if [[ "$status" == "Stable" || "$status" == "RFC" ]]; then
-                if [ -f ".design/specifications/$file" ]; then
-                    parent=$(grep -m 1 "\*\*Implements:\*\*" ".design/specifications/$file" | grep -o "specifications/[^)]*\.md" | sed 's|specifications/||' | head -n 1)
+                if [ -f "$DESIGN_DIR/specifications/$file" ]; then
+                    parent=$(grep -m 1 "\*\*Implements:\*\*" "$DESIGN_DIR/specifications/$file" | grep -o "specifications/[^)]*\.md" | sed 's|specifications/||' | head -n 1)
                     if [ ! -z "$parent" ]; then
                         parent_status=$(grep "| \[$parent\]" "$INDEX_PATH" | awk -F'|' '{print $4}' | xargs)
                         if [ ! -z "$parent_status" ] && [ "$parent_status" != "Stable" ]; then
@@ -197,7 +198,7 @@ if [ "$JSON_OUTPUT" = "1" ]; then
 {
   "ok": $OK,
   "checked_at": "$DATE",
-  "design_dir": ".design",
+  "design_dir": "$DESIGN_DIR",
   "artifacts": {
     "INDEX.md":  { "exists": $INDEX_EXISTS,  "path": "$INDEX_PATH" },
     "RULES.md":  { "exists": $RULES_EXISTS,  "path": "$RULES_PATH" },

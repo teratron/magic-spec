@@ -9,7 +9,9 @@
 
 ## Summary
 
-...
+| Phase | Total | Todo | In Progress | Done | Blocked | Cancelled |
+| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| Phase {N} | {0} | {0} | {0} | {0} | {0} | {0} |
 
 ## Phase {N} — {Phase Name}
 
@@ -18,10 +20,9 @@
 ## [T-N{Track}{Seq}] {Task Title}
 
 - **Spec:** {spec.md} §{section}
-- **Status:** {Todo | In Progress | Done | Blocked}
+- **Status:** {Todo | In Progress | Done | Blocked | Cancelled}
 - **Changes:**
   - Created: {files}
   - Modified: {files}
 - **Assignee:** {Agent | User}
 - **Notes:** (optional)
-

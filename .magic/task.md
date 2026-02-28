@@ -14,6 +14,7 @@ It operates **after** the Spec Workflow — specifications are its input, not it
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
 1. **Registry Integrity**: Never generate a plan or tasks without reading all spec files listed in `INDEX.md`.
 2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
 3. **No Orphans**: Every spec in `INDEX.md` must be assigned to a phase in `PLAN.md`. Any spec found in `INDEX.md` but missing from `PLAN.md` must be flagged as "Orphaned" and addressed immediately.

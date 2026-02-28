@@ -14,12 +14,14 @@ Analyzes an existing codebase to understand its structure, tech stack, architect
 
 **CRITICAL INSTRUCTIONS FOR AI:**
 
-1. **Read-Only First**: During analysis, only *read* the project. Do not modify any project files, configs, or `.design/` specs until the user explicitly approves the proposal.
-2. **Proposal, Not Action**: The output of analysis is a **proposal document** saved to the agent's artifacts directory. It is NOT a live specification.
-3. **Respect Existing Specs**: If `.design/` already contains specifications, this is a **Re-Analysis**. Compare findings against existing specs — highlight gaps, not duplicates.
-4. **Stack Agnostic**: The analysis steps are universal. Adapt terminology and patterns to the detected technology stack.
-5. **Depth Control**: For large projects (>100 files), ask the user whether to analyze the full project or focus on specific directories/modules.
-6. **No Code Generation**: This workflow produces specification *proposals* only. No implementation code, no scripts.
+0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
+1. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
+2. **Read-Only First**: During analysis, only *read* the project. Do not modify any project files, configs, or `.design/` specs until the user explicitly approves the proposal.
+3. **Proposal, Not Action**: The output of analysis is a **proposal document** saved to the agent's artifacts directory. It is NOT a live specification.
+4. **Respect Existing Specs**: If `.design/` already contains specifications, this is a **Re-Analysis**. Compare findings against existing specs — highlight gaps, not duplicates.
+5. **Stack Agnostic**: The analysis steps are universal. Adapt terminology and patterns to the detected technology stack.
+6. **Depth Control**: For large projects (>100 files), ask the user whether to analyze the full project or focus on specific directories/modules.
+7. **No Code Generation**: This workflow produces specification *proposals* only. No implementation code, no scripts.
 
 ## When It Runs
 
@@ -317,3 +319,4 @@ Options:
 | 1.0.0 | 2026-02-27 | Antigravity | Initial creation: First-Time Analysis, Re-Analysis Mode, Depth Control |
 | 1.1.0 | 2026-02-27 | Antigravity | Added Layer 2 (Implementation) extraction and Bootstrapping Exemption for existing codebases |
 | 1.2.0 | 2026-02-27 | Antigravity | Fixed Re-Analysis Gap Report to support L1/L2 duality and extended Bootstrapping Exemption to gap detection |
+| 1.3.0 | 2026-02-28 | Antigravity | AOP: Added Auto-Init guard to Agent Guidelines, fixed list continuity for Re-Analysis steps |

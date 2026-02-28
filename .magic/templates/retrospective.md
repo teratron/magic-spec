@@ -8,15 +8,15 @@
 
 Auto-collected after each phase completion. Lightweight metrics only — no analysis.
 
-| Date | Phase | Specs (D/R/S) | Tasks (Done/Blocked) | Rules | Signal |
+| Date | Phase | Specs (D/R/S) | Tasks (Done/Blocked/Cancelled) | Rules | Signal |
 | :--- | :--- | :--- | :--- | :--- | :--- |
-| 2026-02-20 | Phase 1 | 2/1/4 | 8/0 | 12 | 🟢 |
+| 2026-02-20 | Phase 1 | 2/1/4 | 8/0/0 | 12 | 🟢 |
 
 ## Session {N} — {YYYY-MM-DD}
 
 **Scope:** Full system analysis
 **Specs in registry:** {count}
-**Tasks total:** {count} (Done: {count}, Blocked: {count})
+**Tasks total:** {count} (Done: {count}, Blocked: {count}, Cancelled: {count})
 **RULES.md §7 entries:** {count}
 
 ### 📊 Observations
@@ -44,4 +44,3 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 ## Session {N-1} — {YYYY-MM-DD}
 
 <!-- Previous session preserved here -->
-
