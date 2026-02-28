@@ -136,7 +136,7 @@ If automated installers do not fit your environment:
 2. **Workflows**: Download command wrappers from [`.agent/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agent/workflows).
 3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
-## � Updating
+## 🔄 Updating
 
 Keep your SDD engine up to date with the latest logic and features:
 
@@ -151,7 +151,7 @@ npx magic-spec@latest --update
 > [!TIP]
 > The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agent/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
 
-## �🚀 Usage
+## � Usage
 
 Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
 
@@ -207,7 +207,7 @@ If you encounter issues or have questions:
 - [ ] Advanced visual dashboard for project health.
 - [ ] Integration with CI/CD for automated spec validation.
 
-## 🤝 Contributing
+## 🏗️ Contributing
 
 We welcome contributions! Whether it's a bug fix, a new adapter, or an improvement to the workflow logic.
 Please see [**Contributing Guide**](./docs/contributing.md) for details.
