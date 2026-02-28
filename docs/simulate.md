@@ -47,7 +47,7 @@ Run the full predefined regression test suite:
 
 This reads `.magic/tests/suite.md` and executes all 16 predefined test scenarios covering all 8 workflows. Results are reported as a PASS/FAIL table.
 
-**Test Coverage:**
+**Test Coverage:** (Continuously expanding with auto-generated regression tests)
 
 | Workflow | Tests | Scenarios |
 | :--- | :--- | :--- |
@@ -57,8 +57,8 @@ This reads `.magic/tests/suite.md` and executes all 16 predefined test scenarios
 | run.md | 3 | Sequential happy path, mode amnesia, full deadlock |
 | rule.md | 2 | Duplicate convention, remove with workflow dependency |
 | onboard.md | 1 | Production collision |
-| retrospective.md | 1 | Level 1 auto-snapshot with missing RETRO file |
-| simulate.md | 1 | Checksums mismatch HALT |
+| retrospective.md | 2 | Level 1 auto-snapshot, Level 2 full analysis |
+| simulate.md | 3 | Checksums mismatch, Improv fallback, regression sweep |
 
 ## 3. Simulation Steps
 
@@ -79,13 +79,15 @@ Simulation analyzes the **AI-readability** of instructions: token density, promp
 If simulation reveals a logical flaw, the engine proposes a "surgical fix" (a precise search-and-replace) for the affected `.magic/` workflow file.
 **Crucially, the engine must also write a new regression test** for this specific edge case into `.magic/tests/suite.md` to ensure the flaw is permanently caught in future test runs. Changes are applied only after user approval.
 
+Once approved, the engine triggers a **Regression Sweep** — automatically executing the full test suite (`/magic.simulate test`) to ensure the surgical fix hasn't introduced regressions into adjacent workflows.
+
 > **Checksum Rule**: `generate-checksums` is run only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files.
 
 ## 4. Maintenance
 
 - **Post-Change Verification**: A simulation is mandatory after any significant modification to `.magic/` or `.agent/workflows/`.
 - **Cross-Platform Check**: Every simulation verifies that script calls use the universal `node executor.js` wrapper to maintain Windows/Unix compatibility.
-- **Regression Suite**: After major engine changes, run `/magic.simulate test` to verify all 16 scenarios still pass.
+- **Regression Suite**: After major engine changes (or post-fix), run `/magic.simulate test` to verify all scenarios still pass.
 
 ## 5. Security & Scope
 

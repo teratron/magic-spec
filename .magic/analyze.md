@@ -157,7 +157,7 @@ Compile all findings into a structured proposal document.
 ### Layer 1 (Concept)
 
 | # | Proposed Spec | Scope | Based On |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | `architecture.md` | Overall system architecture and module boundaries | Directory structure, imports |
 | 2 | `{module-name}.md` | {module scope} | {evidence} |
 | ... | ... | ... | ... |
@@ -165,7 +165,7 @@ Compile all findings into a structured proposal document.
 ### Layer 2 (Implementation)
 
 | # | Proposed Spec | Implements | Based On Code |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 3 | `architecture-{stack}.md` | `architecture.md` | `package.json`, generic stack |
 | 4 | `{module-name}-{stack}.md` | `{module-name}.md` | `src/{module}/` directory |
 | ... | ... | ... | ... |
@@ -173,7 +173,7 @@ Compile all findings into a structured proposal document.
 ### RULES.md Proposals
 
 | # | Proposed Convention | Source |
-|---|---|---|
+| --- | --- | --- |
 | 1 | {convention} | {config file} |
 | ... | ... | ... |
 
@@ -256,7 +256,7 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 ## Coverage Matrix
 
 | Module | L1 Spec (Concept) | L2 Spec (Impl) | Status |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | `auth/` | `authentication.md` | `auth-firebase.md` | ✅ Covered |
 | `payments/` | — | — | ⚠️ Uncovered |
 | — | `legacy-api.md` | — | 🔴 Orphaned |
@@ -266,23 +266,23 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 
 ### New Specs Needed
 | # | Proposed Spec | Layer | Module | Reason |
-|---|---|---|---|---|
+| --- | --- | --- | --- | --- |
 | 1 | `payments.md` | 1 | `payments/` | No spec coverage |
 | 2 | `payments-stripe.md` | 2 | `payments/` | No spec coverage |
 
 ### Specs Needing Update
 | # | Spec | Issue | Suggested Fix |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | 1 | `database-schema.md` | `src/db/` renamed to `database/` | Update paths in § Structure |
 
 ### Specs to Deprecate
 | # | Spec | Reason |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `legacy-api.md` | Referenced module `legacy/` deleted |
 
 ## Convention Drift
 | Convention (RULES.md) | Expected | Actual | Action |
-|---|---|---|---|
+| --- | --- | --- | --- |
 | Test pattern: `*.test.ts` | Match | `*.spec.ts` found in 3 files | Amend or flag |
 ```
 

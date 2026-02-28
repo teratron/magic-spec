@@ -2,8 +2,6 @@
 
 This guide describes how to contribute to `magic-spec`, work with scripts, build, and publish packages to npm and PyPI.
 
----
-
 ## 📂 Repository Structure
 
 ```plaintext
@@ -25,8 +23,6 @@ magic-spec/                         # Repository Root
     ├── README.md                   #    Main Guide
     └── contributing.md             #    Developer Guide (This file)
 ```
-
----
 
 ### Build Process
 
@@ -52,8 +48,6 @@ To test the installer locally:
 ```bash
 node installers/node/index.js --info
 ```
-
----
 
 ## 🔵 Python Installer (`installers/python/`)
 
@@ -90,8 +84,6 @@ python -m magic_spec --info
 
 (Requires `PYTHONPATH` to include `installers/python`)
 
----
-
 ## 🚀 Release Process
 
 We use a unified release script located in `installers/scripts/publish.py`. This script handles version bumping, documentation updates, and registry publication.
@@ -112,10 +104,9 @@ Before every release, ensure:
 4. [ ] Version is set in `.magic/.version` (The Source of Truth).
 5. [ ] `python installers/scripts/publish.py` executed successfully.
 
----
-
 ## ❓ Common Issues
 
 - **"No such file or directory"**: Ensure you are in the correct directory. Developers should work from the root or `installers/` subfolders.
 - **"Payload not found"**: Ensure the version in `package.json` or `.magic/.version` has been tagged and pushed to GitHub.
 - **Version Collision**: npm and PyPI do not allow overwriting versions. Increment the version number in `.magic/.version` before running `publish.py`.
+

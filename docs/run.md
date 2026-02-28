@@ -9,7 +9,7 @@ The Run Workflow is the execution engine of Magic SDD. It reads the atomic tasks
 Key Goals:
 
 - **Scope Compliance**: Ensuring implementation code strictly follows the approved specification.
-- **State Integrity**: Automatically updating task statuses and project metadata after every operation.
+- **State Integrity**: Automatically updating task statuses in `TASKS.md` and synchronously closing checkboxes (`[x]`) in `PLAN.md` after every operation (preventing "Plan Amnesia").
 - **Maximum Automation**: Running post-implementation logic (changelogs, retrospectives, version bumps) with minimal user interruption.
 
 ## 2. Execution Modes
@@ -34,6 +34,10 @@ The engine automatically extracts "Change Records" from completed tasks. When a 
 ### 3.3 Zero-Prompt Automation (C9)
 
 Once a plan is approved, the engine is authorized to handle routine tasks (writing phase reports, snapshots, and updating context files) autonomously without asking for confirmation.
+
+### 3.4 Blocked Task Escalation
+
+If a task encounters ambiguous instructions or missing details during execution, the agent marks the task as `Blocked` in `TASKS.md` and halts execution. The agent utilizes a delegated handoff to jump back into the **Spec Workflow** (Explore Mode), where the specifications are formally updated before resuming the tasks.
 
 ## 4. Lifecycle & Conclusion
 

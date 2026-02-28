@@ -2,16 +2,12 @@
 
 Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system. It acts as an operating system for AI coding agents, enforcing a rigorous, structured pipeline that ensures **no code is written until a specification is defined, reviewed, and planned.**
 
----
-
 ## 🧭 Core Philosophy
 
 1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
 3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution.
 4. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data and provide actionable recommendations after every phase.
-
----
 
 ## 🔗 The Workflow Pipeline
 
@@ -56,8 +52,6 @@ graph TD
 | **Init** | `init.md` | Automatic pre-flight initialization of the `.design/` directory. | [Detailed Guide](init.md) |
 | **Analyze** | `analyze.md` | Scans existing codebases to generate specification proposals. Supports first-time analysis and re-analysis. | [Detailed Guide](analyze.md) |
 
----
-
 ## 🏗️ Architecture & Directory Structure
 
 Once installed, Magic Spec sets up a clear separation of concerns in your project:
@@ -75,8 +69,6 @@ your-project/
     ├── PLAN.md             #    The implementation roadmap
     └── specifications/     #    Directory for all .md spec files
 ```
-
----
 
 ## 🚀 Usage Guide
 
@@ -97,16 +89,12 @@ The agent will run the **Task** workflow, generating a phased `PLAN.md` and deco
 > *"Start the implementation from the next task."*
 The agent will run the **Run** workflow, picking the most prioritized task and implementing it.
 
----
-
 ## ⚖️ Consistency & Safety
 
 Magic Spec includes built-in "Pre-flight" checks:
 
 - **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration.
 - **Task Verification**: No task is marked complete without a confirmed completion checklist presented to the user.
-
----
 
 ## 🔍 Self-Improving Engine (Retrospective)
 
@@ -118,6 +106,5 @@ The Retrospective system is Magic's heartbeat. It detects:
 
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
----
-
 [Main Repository](https://github.com/teratron/magic-spec) | [Installer Guide](../installers/README.md) | [Engine Integrity (Checksums)](checksums.md)
+

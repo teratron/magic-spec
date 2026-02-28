@@ -18,8 +18,6 @@ additive — they extend existing workflows rather than replace them.
 - [task.md](task.md) — Task workflow (user story structure, handoffs consumer)
 - [init.md](init.md) — Init pre-flight (prerequisite validation target)
 
----
-
 ## 1. Motivation
 
 The current engine executes each workflow in isolation. The agent has no built-in signal
@@ -33,8 +31,6 @@ and AI agents risk file corruption when rewriting large specs from scratch.
 These eight improvements address each gap independently. They share no dependencies on
 each other and can be implemented in any order.
 
----
-
 ## 2. Constraints & Assumptions
 
 - No new user-facing commands. Every enhancement is embedded inside an existing workflow.
@@ -43,8 +39,6 @@ each other and can be implemented in any order.
 - User story structure is optional per phase — phases with a single track may omit it.
 - JSON output from the prerequisite script is the canonical format; human-readable output
   is a secondary convenience layer.
-
----
 
 ## 3. Detailed Design
 
@@ -162,8 +156,6 @@ Parallel-safe: none (sequential dependency)
 
 Tasks: T-{N}D01
 Parallel-safe: T-{N}D01 [P]
-
----
 
 ## Track A — {Track Name}
 
@@ -411,8 +403,6 @@ If users find it disruptive, the dialog can be made opt-in via a RULES.md §7 co
 read structured output. If the agent cannot parse JSON reliably, fall back to exit codes
 only — `0` = ok, `1` = missing required, `2` = warnings.
 
----
-
 ## Document History
 
 | Version | Date | Author | Description |
@@ -424,3 +414,4 @@ only — `0` = ok, `1` = missing required, `2` = warnings.
 | 0.5.0 | 2026-02-23 | Agent | Status changed to Stable for planning |
 | 1.2.0 | 2026-02-25 | Agent | Added SDD standard metadata (Layer, RFC status update) |
 | 1.3.0 | 2026-02-25 | Agent | Added Internal Engine Integrity Check (Checksums) to Prerequisite Validation |
+

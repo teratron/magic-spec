@@ -23,18 +23,16 @@ After all tests, present a summary table:
 ```
 Workflow Test Suite — {date}
 
-| ID   | Workflow      | Scenario                  | Result |
-| :--- | :---          | :---                      | :---   |
-| T01  | init          | Fresh cold start           | ✅ PASS |
-| T02  | init          | Partial corruption         | ❌ FAIL |
+| ID | Workflow | Scenario | Result |
+| :--- | :--- | :--- | :--- |
+| T01 | init | Fresh cold start | ✅ PASS |
+| T02 | init | Partial corruption | ❌ FAIL |
 ...
 
 Total: {N} passed, {M} failed out of {T}
 ```
 
 If any test fails, document the failure reason and propose a fix.
-
----
 
 ## Test Scenarios
 
@@ -53,8 +51,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Calling workflow continues after init
 - **Guards tested:** Engine Integrity check, post-init verification (5 artifacts)
 
----
-
 ### T02 — Init Partial Corruption
 
 - **Workflow:** `init.md`
@@ -68,8 +64,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Existing RULES.md is NOT overwritten (idempotency)
   - [ ] Post-init verification confirms all 5 artifacts present
 - **Guards tested:** Safe to Re-Run (idempotency), full verification
-
----
 
 ### T03 — Spec Dispatch Multi-Topic
 
@@ -87,8 +81,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Post-Update Review runs on all modified files
 - **Guards tested:** Multi-topic dispatch, new file creation with template, registry sync
 
----
-
 ### T04 — Spec Intra-Input Self-Contradiction
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input)
@@ -102,8 +94,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent asks user to resolve before mapping — does NOT guess precedence
   - [ ] No writes occur until user resolves
 - **Guards tested:** Intra-input self-contradiction edge case
-
----
 
 ### T05 — Spec Deprecation Cascade
 
@@ -119,8 +109,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Deprecation Cascade**: `database.md` flagged as containing stale `Related Specifications` link to `api.md`
   - [ ] Post-Update Review surfaces stale references
 - **Guards tested:** Deprecation Cascade (scan Related Specs)
-
----
 
 ### T06 — Task New Plan from Stable Specs
 
@@ -139,8 +127,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md + phase-1.md created from `.magic/templates/tasks.md`
 - **Guards tested:** Dependency ordering, layer respect, template usage, mode persistence
 
----
-
 ### T07 — Task Circular Dependency
 
 - **Workflow:** `task.md` (Generating Tasks & Plan)
@@ -154,8 +140,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Proposal: break cycle by removing one Related Specifications link or splitting spec
   - [ ] No PLAN.md written until cycle resolved
 - **Guards tested:** Circular Dependency Guard
-
----
 
 ### T08 — Task Phantom Specs with Done Tasks
 
@@ -171,8 +155,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] T-1B01 (auth.md, Todo) → unaffected
   - [ ] Done work is NOT cancelled
 - **Guards tested:** Phantom spec Done-task preservation
-
----
 
 ### T09 — Run Sequential Happy Path
 
@@ -191,8 +173,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase file archived to `archives/tasks/`
 - **Guards tested:** Dependency chain, auto-snapshot, changelog, archival
 
----
-
 ### T10 — Run Mode Not in RULES.md
 
 - **Workflow:** `run.md` (Executing Tasks)
@@ -206,8 +186,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Message: "Execution mode is not defined. Please run `magic.task` first."
   - [ ] No task execution begins
 - **Guards tested:** Mode Guard (HALT on missing mode)
-
----
 
 ### T11 — Run Full Deadlock (100% Blocked)
 
@@ -224,8 +202,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT loop — escalates to user and waits
 - **Guards tested:** Stalled Phase escalation, no infinite loop
 
----
-
 ### T12 — Rule Add Duplicate Convention
 
 - **Workflow:** `rule.md` (Adding a Convention)
@@ -239,8 +215,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent shows existing C5 and asks: "This overlaps with C5. Merge, replace, or add separately?"
   - [ ] No write occurs until user decides
 - **Guards tested:** Duplication Guard
-
----
 
 ### T13 — Rule Remove with Workflow Dependency
 
@@ -258,8 +232,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Impact Analysis includes TASKS.md version staleness note
 - **Guards tested:** Workflow Dependency Check, Impact Analysis
 
----
-
 ### T14 — Onboard Production Collision
 
 - **Workflow:** `onboard.md`
@@ -275,8 +247,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT proceed without explicit user choice
   - [ ] If (A): PLAN.md → PLAN.md.bak, TASKS.md → TASKS.md.bak before tutorial
 - **Guards tested:** Production collision HALT, backup/cancel guard
-
----
 
 ### T15 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
 
@@ -298,8 +268,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase file archived to `archives/tasks/`
 - **Guards tested:** Template creation on missing file, signal calculation, archival
 
----
-
 ### T16 — Simulate Checksums Mismatch HALT
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
@@ -314,8 +282,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Options: confirm changes were intentional OR regenerate checksums
   - [ ] Simulation resumes only after user response
 - **Guards tested:** Checksums mismatch HALT (Step 0)
-
----
 
 ### T17 — Spec T4 Trigger (Auto Rule Capture)
 
@@ -333,8 +299,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `api.md` updated with gRPC requirement
 - **Guards tested:** T4 standing-rule detection, dual write (spec + rule)
 
----
-
 ### T18 — Spec Explore Mode to Formal Spec
 
 - **Workflow:** `spec.md` (Explore Mode → Formal Spec)
@@ -349,8 +313,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] INDEX.md updated with auth.md (Draft)
   - [ ] Proposal file remains as historical record
 - **Guards tested:** Explore Mode isolation, transition to formal, template usage
-
----
 
 ### T19 — Spec Update Stable → RFC (Amendment Rule)
 
@@ -368,8 +330,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] RULES.md triggers evaluated
 - **Guards tested:** Amendment rule (Stable→RFC on substantive change), version bump
 
----
-
 ### T20 — Run Parallel Mode (2 Tracks, Shared Conflict)
 
 - **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
@@ -385,8 +345,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Manager serializes conflicting tasks (one waits for the other)
   - [ ] No data loss or race condition
 - **Guards tested:** Parallel execution, shared-constraint detection, Manager serialization
-
----
 
 ### T21 — Run Full Plan Complete (Conclusion Cascade)
 
@@ -404,8 +362,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md summary updated
 - **Guards tested:** Plan completion detection, Level 2 retro trigger, changelog approval gate
 
----
-
 ### T22 — Run Phase 1→2 Transition
 
 - **Workflow:** `run.md` (Phase Transition)
@@ -422,8 +378,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] First Todo task in Phase 2 picked automatically
   - [ ] No user prompt between phases (C9: Zero-Prompt Automation)
 - **Guards tested:** Phase archival (C8), seamless transition, Zero-Prompt (C9)
-
----
 
 ### T23 — Retrospective Level 2 Full Analysis
 
@@ -443,8 +397,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User asked: "Generate external changelog?" (Level 2 approval gate)
 - **Guards tested:** Multi-phase analysis, trend detection, approval gate for Level 2 changelog
 
----
-
 ### T24 — Task Selective Planning (C6) with Mixed Statuses
 
 - **Workflow:** `task.md` (Updating Tasks & Plan)
@@ -462,8 +414,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No Draft/RFC spec enters active phases without explicit pull
 - **Guards tested:** Selective Planning (C6), mixed status handling, user choice
 
----
-
 ### T25 — Rule Amend Core Section (§1–6)
 
 - **Workflow:** `rule.md` (Amending a Convention)
@@ -478,8 +428,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User must explicitly confirm core amendment
   - [ ] If approved: §2 updated, RULES.md major version bump
 - **Guards tested:** Convention-not-found handler, core section amendment gate
-
----
 
 ### T26 — Onboard Abandoned Re-entry with Production Data
 
@@ -499,8 +447,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Options: (A) Backup, (B) Cancel, (C) Clean up tutorial artifacts and keep production
 - **Guards tested:** Re-entry + production collision guard, data preservation
 
----
-
 ### T27 — Spec Full Consistency Audit
 
 - **Workflow:** `spec.md` (Consistency Check & Audit Report)
@@ -518,8 +464,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Consistency Report generated with all 4 issues
   - [ ] No automatic fixes — all surfaced for user decision
 - **Guards tested:** Orphan detection, stale refs, layer integrity, version sync
-
----
 
 ### T28 — End-to-End Lifecycle (Cross-Workflow Chain)
 
@@ -563,8 +507,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No `.design/specifications/` files created until approval
 - **Guards tested:** Delegation routing, First-Time detection, read-only scan, Explore Mode safety (no live writes)
 
----
-
 ### T30 — Analyze Re-Analysis Gap Detection
 
 - **Workflow:** `analyze.md` (Re-Analysis Mode, delegated from `spec.md`)
@@ -596,8 +538,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User prompted before any live modifications
 - **Guards tested:** Re-Analysis mode detection, delta comparison, drift detection, uncovered module detection
 
----
-
 ### T31 — Analyze Delegation Routing from spec.md
 
 - **Workflow:** `spec.md` → `analyze.md` (Delegation)
@@ -617,8 +557,6 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Delegation rule does NOT match (no project analysis intent)
     - [ ] Standard Explore Mode proceeds (thinking partner, no live writes)
 - **Guards tested:** Delegation trigger accuracy, non-matching triggers stay in Explore Mode
-
----
 
 ### T32 — Init Existing Codebase Hint
 
@@ -645,8 +583,6 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Calling workflow continues
 - **Guards tested:** Codebase detection heuristic, hint presence/absence
 
----
-
 ### T33 — Analyze Depth Control for Large Projects
 
 - **Workflow:** `analyze.md` (Depth Control)
@@ -669,8 +605,6 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Full scan offered as option but not default
     - [ ] Agent does NOT auto-start full scan on large projects
 - **Guards tested:** Depth Control thresholds (<50, 50–500, >500), auto-scan vs prompt
-
----
 
 ### T34 — Simulate Missing Test Suite (Improv Mode Fallback)
 
@@ -732,8 +666,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
 - **Guards tested:** Post-fix regression sweep enforcement.
 
----
-
 ## Document History
 
 | Version | Date | Author | Description |
@@ -746,3 +678,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.5.0 | 2026-02-28 | Antigravity | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
 | 1.6.0 | 2026-02-28 | Antigravity | Added T36 to verify `.agent/workflows/magic.run.md` handoff pointing to `magic.spec` |
 | 1.7.0 | 2026-02-28 | Antigravity | Added T37 to test regression suite sweep is triggered after any workflow fixes |
+

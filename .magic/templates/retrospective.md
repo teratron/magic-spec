@@ -12,8 +12,6 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | :--- | :--- | :--- | :--- | :--- | :--- |
 | 2026-02-20 | Phase 1 | 2/1/4 | 8/0 | 12 | 🟢 |
 
----
-
 ## Session {N} — {YYYY-MM-DD}
 
 **Scope:** Full system analysis
@@ -43,8 +41,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | Blocked task rate | {N}% | {N}% | {±N}% |
 | Signal | {emoji} | {emoji} | {arrow} |
 
----
-
 ## Session {N-1} — {YYYY-MM-DD}
 
 <!-- Previous session preserved here -->
+

@@ -18,8 +18,6 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-02-25 | Phase 3 | 1/8/1 | 5/0 | 9 | 🟢 |
 | 2026-02-25 | Phase 2 | 0/0/9 | 18/0 | 9 | 🟢 |
 
----
-
 ## Session 3 — 2026-02-25
 
 **Scope:** Full system analysis of Installer Enhancements Plan
@@ -84,8 +82,6 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | Blocked task rate | 0% | 0% | 0% |
 | Signal | 🟢 | 🔴 | ↓ |
 
----
-
 ## Session 1 — 2026-02-23
 
 **Scope:** Implementation of workflow enhancements plan
@@ -116,3 +112,4 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | Specs in registry | 1 | 1 | 0 |
 | Blocked task rate | 0% | 0% | 0% |
 | Signal | 🟢 | 🟢 | — |
+

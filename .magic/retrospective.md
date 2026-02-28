@@ -140,8 +140,6 @@ graph TD
 
 Where `D/R/S` = Draft/RFC/Stable spec counts.
 
----
-
 ### Level 2: Full Retrospective
 
 **Trigger phrase**: *"Run retrospective"*, *"Analyze SDD"*, *"SDD health check"*
@@ -245,3 +243,4 @@ Output
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to both levels, RETROSPECTIVE.md creation in Level 1, split checklists for Level 1/2, realistic checklist metric source, archives in directory structure |
 | 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted RETROSPECTIVE.md template to templates/ |
+

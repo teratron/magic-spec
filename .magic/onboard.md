@@ -36,8 +36,6 @@ This tutorial will create real files in your project:
 
 **Recommended**: run this in a clean, empty directory to avoid interfering with existing SDD artifacts.
 
----
-
 ## Workflow Steps
 
 ### Step 1: Introduction
@@ -120,3 +118,4 @@ Onboarding Checklist — Tutorial Complete
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
 | 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
 | 1.3.0 | 2026-02-27 | Antigravity | Simulation fix: production collision HALT with backup/cancel, re-entry checks production PLAN.md, template references for PLAN/TASKS |
+

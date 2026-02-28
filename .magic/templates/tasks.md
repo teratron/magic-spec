@@ -11,8 +11,6 @@
 
 ...
 
----
-
 ## Phase {N} — {Phase Name}
 
 **Status:** {Active | Completed}
@@ -26,3 +24,4 @@
   - Modified: {files}
 - **Assignee:** {Agent | User}
 - **Notes:** (optional)
+
