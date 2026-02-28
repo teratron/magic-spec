@@ -6,6 +6,37 @@
     "agentDir": ".agent",
     "workflowsDir": "workflows",
     "defaultExt": ".md",
+    "workflows": [
+        "magic.onboard",
+        "magic.rule",
+        "magic.run",
+        "magic.simulate",
+        "magic.spec",
+        "magic.task"
+    ],
+    "magicFiles": [
+        "analyze.md",
+        "onboard.md",
+        "retrospective.md",
+        "rule.md",
+        "run.md",
+        "simulate.md",
+        "spec.md",
+        "task.md",
+        ".version",
+        ".checksums",
+        "scripts/check-prerequisites.ps1",
+        "scripts/check-prerequisites.sh",
+        "scripts/executor.js",
+        "scripts/generate-context.ps1",
+        "scripts/generate-context.sh",
+        "scripts/init.ps1",
+        "scripts/init.sh",
+        "templates/plan.md",
+        "templates/retrospective.md",
+        "templates/specification.md",
+        "templates/tasks.md"
+    ],
     "download": {
         "timeoutMs": 60000,
         "tempPrefix": "magic-spec-"

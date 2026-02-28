@@ -68,6 +68,14 @@ function loadInstallerConfig() {
     const agentDir = requireNonEmptyString(parsed.agentDir, 'agentDir');
     const workflowsDir = requireNonEmptyString(parsed.workflowsDir, 'workflowsDir');
     const defaultExt = requireNonEmptyString(parsed.defaultExt, 'defaultExt');
+    const workflows = Array.isArray(parsed.workflows) ? parsed.workflows : null;
+    if (!workflows) {
+        failConfig("field 'workflows' must be an array of strings");
+    }
+    const magicFiles = Array.isArray(parsed.magicFiles) ? parsed.magicFiles : null;
+    if (!magicFiles) {
+        failConfig("field 'magicFiles' must be an array of strings");
+    }
 
     return {
         githubRepo,
@@ -77,6 +85,8 @@ function loadInstallerConfig() {
         agentDir,
         workflowsDir,
         defaultExt,
+        workflows,
+        magicFiles,
         download: { timeoutMs, tempPrefix },
         userAgent: { node: nodeUserAgent },
         ejectTargets: parsed.eject.targets
@@ -90,6 +100,8 @@ const ENGINE_DIR = INSTALLER_CONFIG.engineDir;
 const AGENT_DIR = INSTALLER_CONFIG.agentDir;
 const WORKFLOWS_DIR = INSTALLER_CONFIG.workflowsDir;
 const DEFAULT_EXT = INSTALLER_CONFIG.defaultExt;
+const WORKFLOWS = INSTALLER_CONFIG.workflows;
+const MAGIC_FILES = INSTALLER_CONFIG.magicFiles;
 const DEFAULT_REMOVE_PREFIX = INSTALLER_CONFIG.removePrefix;
 const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
 const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
@@ -197,9 +209,11 @@ function installAdapter(sourceRoot, env, adapters) {
 
     fs.mkdirSync(destDir, { recursive: true });
 
-    const files = fs.readdirSync(srcDir).filter(f => f.endsWith(DEFAULT_EXT));
-    for (const file of files) {
+    for (const wfName of WORKFLOWS) {
+        const file = wfName + DEFAULT_EXT;
         const srcFile = path.join(srcDir, file);
+        if (!fs.existsSync(srcFile)) continue;
+
         let destName = file.replace(new RegExp(`${DEFAULT_EXT.replace('.', '\\.')}$`), adapter.ext);
         const removePrefix = adapter.hasOwnProperty('removePrefix') ? adapter.removePrefix : DEFAULT_REMOVE_PREFIX;
         if (removePrefix) {
@@ -719,22 +733,20 @@ async function main() {
             }
         }
 
-        // 1. Copy .magic
-        if (conflictsToSkip.length > 0) {
-            const srcMagic = path.join(sourceRoot, '.magic');
-            const destMagic = path.join(cwd, '.magic');
-            const items = fs.readdirSync(srcMagic, { withFileTypes: true });
-            for (const item of items) {
-                if (conflictsToSkip.includes(item.name)) continue;
-                if (item.name === '.checksums') continue;
-                if (item.isDirectory()) {
-                    copyDir(path.join(srcMagic, item.name), path.join(destMagic, item.name));
-                } else {
-                    fs.copyFileSync(path.join(srcMagic, item.name), path.join(destMagic, item.name));
-                }
+        // 1. Copy .magic (engine) - selective based on whitelist [T-3A01]
+        const srcMagic = path.join(sourceRoot, ENGINE_DIR);
+        const destMagic = path.join(cwd, ENGINE_DIR);
+        fs.mkdirSync(destMagic, { recursive: true });
+
+        for (const relPath of MAGIC_FILES) {
+            if (conflictsToSkip.includes(relPath)) continue;
+
+            const srcFile = path.join(srcMagic, relPath);
+            const destFile = path.join(destMagic, relPath);
+            if (fs.existsSync(srcFile)) {
+                fs.mkdirSync(path.dirname(destFile), { recursive: true });
+                fs.copyFileSync(srcFile, destFile);
             }
-        } else {
-            copyDir(path.join(sourceRoot, '.magic'), path.join(cwd, '.magic'));
         }
 
         // 2. Adapters
@@ -746,7 +758,30 @@ async function main() {
             } else if (selectedEnvResolved) {
                 installAdapter(sourceRoot, selectedEnvResolved, ADAPTERS);
             } else {
-                copyDir(path.join(sourceRoot, '.agent'), path.join(cwd, '.agent'));
+                // Default install
+                const srcEng = path.join(sourceRoot, AGENT_DIR);
+                const destEng = path.join(cwd, AGENT_DIR);
+                fs.mkdirSync(destEng, { recursive: true });
+                fs.mkdirSync(path.join(destEng, WORKFLOWS_DIR), { recursive: true });
+
+                for (const wfName of WORKFLOWS) {
+                    const file = wfName + DEFAULT_EXT;
+                    const srcWf = path.join(srcEng, WORKFLOWS_DIR, file);
+                    if (fs.existsSync(srcWf)) {
+                        fs.copyFileSync(srcWf, path.join(destEng, WORKFLOWS_DIR, file));
+                    }
+                }
+
+                // Copy other files in .agent if any (not workflows subfolder which we handled selectively)
+                const items = fs.readdirSync(srcEng, { withFileTypes: true });
+                for (const item of items) {
+                    if (item.name === WORKFLOWS_DIR) continue;
+                    if (item.isDirectory()) {
+                        copyDir(path.join(srcEng, item.name), path.join(destEng, item.name));
+                    } else {
+                        fs.copyFileSync(path.join(srcEng, item.name), path.join(destEng, item.name));
+                    }
+                }
             }
         }
 

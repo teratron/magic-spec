@@ -238,7 +238,7 @@ class TestIntegration(unittest.TestCase):
         # Mock source workflow
         wf_content = "# Test Workflow\nDescription here."
         (
-            source_dir / AGENT_DIR / WORKFLOWS_DIR / f"magic.test{DEFAULT_EXT}"
+            source_dir / AGENT_DIR / WORKFLOWS_DIR / f"magic.spec{DEFAULT_EXT}"
         ).write_text(wf_content, encoding="utf-8")
 
         # Create target project dir
@@ -257,7 +257,7 @@ class TestIntegration(unittest.TestCase):
         adapters = json.loads(adapters_json.read_text())
         install_adapter(source_dir, target_dir, "gemini", adapters)
 
-        toml_file = target_dir / ".gemini" / "commands" / "test.toml"
+        toml_file = target_dir / ".gemini" / "commands" / "spec.toml"
         self.assertTrue(toml_file.exists())
         toml_content = toml_file.read_text()
         self.assertIn('prompt = """', toml_content)
@@ -303,7 +303,7 @@ class TestIntegration(unittest.TestCase):
         # Mock source workflow
         wf_content = "# Test Workflow\nDescription here."
         (
-            source_dir / AGENT_DIR / WORKFLOWS_DIR / f"magic.test{DEFAULT_EXT}"
+            source_dir / AGENT_DIR / WORKFLOWS_DIR / f"magic.task{DEFAULT_EXT}"
         ).write_text(wf_content, encoding="utf-8")
 
         # Create target project dir
@@ -320,11 +320,11 @@ class TestIntegration(unittest.TestCase):
         adapters = json.loads(adapters_json.read_text())
         install_adapter(source_dir, target_dir, "windsurf", adapters)
 
-        mdc_file = target_dir / ".windsurf" / "rules" / "test.mdc"
+        mdc_file = target_dir / ".windsurf" / "rules" / "task.mdc"
         self.assertTrue(mdc_file.exists())
         mdc_content = mdc_file.read_text()
         self.assertIn("---", mdc_content)
-        self.assertIn("description: Magic SDD Workflow: test.mdc", mdc_content)
+        self.assertIn("description: Magic SDD Workflow: task.mdc", mdc_content)
         self.assertIn("globs: ", mdc_content)
         self.assertIn("# Test Workflow", mdc_content)
 

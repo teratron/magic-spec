@@ -96,6 +96,8 @@ def _load_installer_config() -> dict:
             parsed.get("workflowsDir"), "workflowsDir"
         ),
         "defaultExt": _require_non_empty_str(parsed.get("defaultExt"), "defaultExt"),
+        "workflows": parsed.get("workflows", []),
+        "magicFiles": parsed.get("magicFiles", []),
     }
 
 
@@ -109,6 +111,8 @@ ENGINE_DIR = INSTALLER_CONFIG["engineDir"]
 AGENT_DIR = INSTALLER_CONFIG["agentDir"]
 WORKFLOWS_DIR = INSTALLER_CONFIG["workflowsDir"]
 DEFAULT_EXT = INSTALLER_CONFIG["defaultExt"]
+WORKFLOWS = INSTALLER_CONFIG["workflows"]
+MAGIC_FILES = INSTALLER_CONFIG["magicFiles"]
 
 
 def _resolve_package_version() -> str:
@@ -288,7 +292,10 @@ def install_adapter(
         adapter["removePrefix"] if "removePrefix" in adapter else DEFAULT_REMOVE_PREFIX
     )
 
-    for src_file in src_dir.glob(f"*{DEFAULT_EXT}"):
+    for wf_name in WORKFLOWS:
+        src_file = src_dir / (wf_name + DEFAULT_EXT)
+        if not src_file.exists():
+            continue
         dest_name = src_file.stem
         if remove_prefix and dest_name.startswith(remove_prefix):
             dest_name = dest_name[len(remove_prefix) :]
@@ -593,7 +600,7 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict | N
         print("❌ Update aborted.")
         sys.exit(1)
 
-    return {"choice": choice, "conflicts": conflicts}
+    return {"choice": choice, "conflicts": conflicts if choice == "s" else []}
 
 
 def run_list_envs(adapters: dict) -> int:
@@ -764,14 +771,26 @@ def main() -> None:
 
             if is_update:
                 conflict_result = _handle_conflicts(dest, auto_accept=auto_accept)
-                if conflict_result and conflict_result.get("choice") == "s":
-                    print(
-                        "⚠️  Selective skip not fully implemented, proceeding with overwrite (backup available)."
-                    )
-                # Backup already done in main
+                conflicts_to_skip = (
+                    conflict_result.get("conflicts", []) if conflict_result else []
+                )
+                if conflicts_to_skip:
+                    print(f"⚠️  Skipping {len(conflicts_to_skip)} conflicting file(s).")
 
-            # 1. Copy .magic (SDD engine)
-            _copy_dir(source_root / ".magic", dest / ".magic")
+            # 1. Copy .magic (SDD engine) - selective [T-3A01]
+            src_magic = source_root / ENGINE_DIR
+            dest_magic = dest / ENGINE_DIR
+            dest_magic.mkdir(parents=True, exist_ok=True)
+
+            for rel_path in MAGIC_FILES:
+                if is_update and rel_path in conflicts_to_skip:
+                    continue
+
+                src_file = src_magic / rel_path
+                dest_file = dest_magic / rel_path
+                if src_file.exists():
+                    dest_file.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(src_file, dest_file)
 
             # 2. Adapters (skip on --update)
             if not is_update:
@@ -781,7 +800,28 @@ def main() -> None:
                 elif selected_env:
                     install_adapter(source_root, dest, selected_env, adapters)
                 else:
-                    _copy_dir(source_root / ".agent", dest / ".agent")
+                    # Default install - selective
+                    src_eng = source_root / AGENT_DIR
+                    dest_eng = dest / AGENT_DIR
+                    dest_eng.mkdir(parents=True, exist_ok=True)
+                    (dest_eng / WORKFLOWS_DIR).mkdir(parents=True, exist_ok=True)
+
+                    for wf_name in WORKFLOWS:
+                        src_wf = src_eng / WORKFLOWS_DIR / (wf_name + DEFAULT_EXT)
+                        if src_wf.exists():
+                            shutil.copy2(
+                                src_wf,
+                                dest_eng / WORKFLOWS_DIR / (wf_name + DEFAULT_EXT),
+                            )
+
+                    # Copy other files in .agent if any (not workflows subfolder)
+                    for item in src_eng.iterdir():
+                        if item.name == WORKFLOWS_DIR:
+                            continue
+                        if item.is_dir():
+                            _copy_dir(item, dest_eng / item.name)
+                        else:
+                            shutil.copy2(item, dest_eng / item.name)
 
             # 3. Run init script (skip on --update)
             if not is_update:
