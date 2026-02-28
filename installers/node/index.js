@@ -135,7 +135,7 @@ function collectEnvValues(argv) {
     return [...new Set(parsed)];
 }
 
-const envValues = collectEnvValues(args);
+let envValues = collectEnvValues(args);
 let selectedEnv = envValues.length > 0 ? envValues[0] : null;
 
 function runListEnvs(adapters) {
@@ -155,7 +155,7 @@ function runListEnvs(adapters) {
         const dest = `${adapter.dest}/`.padEnd(28);
         console.log(`  ${name}${padding}${dest}${adapter.description || ''}`);
     }
-    console.log('\nUsage: npx magic-spec@latest --env <name>');
+    console.log('\nUsage: npx magic-spec@latest --env <name>  OR  --<name> (e.g. --cursor)');
 }
 
 function askQuestion(query) {
@@ -660,6 +660,7 @@ async function main() {
         console.log("  --eject              Remove magic-spec from project");
         console.log("\nOptions:");
         console.log("  --env <adapter>      Specify environment adapter");
+        console.log("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)");
         console.log("  --update             Update engine files only");
         console.log("  --fallback-main      Pull payload from main branch");
         console.log("  --yes, -y            Auto-accept prompts");
@@ -699,6 +700,12 @@ async function main() {
         }
 
         // Determine environment
+        for (const env in ADAPTERS) {
+            if (args.includes(`--${env}`)) {
+                if (!envValues.includes(env)) envValues.push(env);
+            }
+        }
+
         let selectedEnvResolved = null;
         if (envValues.length > 0) {
             selectedEnvResolved = envValues[0];

@@ -613,7 +613,7 @@ def run_list_envs(adapters: dict) -> int:
         dest = f"{adapter['dest']}/".ljust(28)
         description = adapter.get("description", "")
         print(f"  {name}{padding}{dest}{description}")
-    print("\nUsage: magic-spec --env <name>")
+    print("\nUsage: magic-spec --env <name>  OR  --<name> (e.g. --cursor)")
     return 0
 
 
@@ -680,6 +680,7 @@ def main() -> None:
         print("  --eject              Remove magic-spec from project")
         print("\nOptions:")
         print("  --env <adapter>      Specify environment adapter")
+        print("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)")
         print("  --update             Update engine files only")
         print("  --fallback-main      Pull payload from main branch")
         print("  --yes                Auto-accept prompts")
@@ -740,6 +741,11 @@ def main() -> None:
                 sys.exit(run_list_envs(adapters))
 
             # Determine environment
+            for env in adapters:
+                if f"--{env}" in args:
+                    if env not in env_values:
+                        env_values.append(env)
+
             selected_env = None
             if env_values:
                 selected_env = env_values[0]

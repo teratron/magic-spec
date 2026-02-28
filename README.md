@@ -83,7 +83,11 @@ Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or a
 **Stable Release:**
 
 ```bash
+# Basic installation (defaults to .agent/ folder)
 npx magic-spec@latest
+
+# Targeted installation for Cursor
+npx magic-spec@latest --cursor
 ```
 
 **Edge Version (GitHub):**
@@ -97,7 +101,11 @@ npx --yes github:teratron/magic-spec
 **Stable Release:**
 
 ```bash
+# Basic installation
 uvx magic-spec
+
+# Targeted installation for Windsurf
+uvx magic-spec --windsurf
 ```
 
 **Edge Version (GitHub):**
@@ -112,7 +120,15 @@ uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
 pipx run magic-spec
 ```
 
-### Option D: Manual Installation
+### Option D: Multi-Adapter Installation
+
+You can install support for multiple adapters at once:
+
+```bash
+npx magic-spec@latest --cursor --copilot --windsurf
+```
+
+### Option E: Manual Installation
 
 If automated installers do not fit your environment:
 
@@ -120,7 +136,22 @@ If automated installers do not fit your environment:
 2. **Workflows**: Download command wrappers from [`.agent/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agent/workflows).
 3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
-## 🚀 Usage
+## � Updating
+
+Keep your SDD engine up to date with the latest logic and features:
+
+```bash
+# Check if update is available
+npx magic-spec@latest --check
+
+# Perform the update
+npx magic-spec@latest --update
+```
+
+> [!TIP]
+> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agent/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
+
+## �🚀 Usage
 
 Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
 

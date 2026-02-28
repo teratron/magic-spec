@@ -56,12 +56,26 @@ Manage your Magic Spec installation with these flags:
 | `info` | Displays version info, installation paths, and detected environment. |
 | `--update` | Pulls the latest engine components while preserving your `.design/` folder. |
 | `--check` | Checks GitHub/PyPI for available updates. |
-| `--list-envs` | Lists available IDE adapters (Cursor, Windsurf, etc.). |
-| `--env <id>` | Supported adapters: cursor-agent, copilot, claude, gemini, roo, windsurf, amp, q, kilocode, qwen, opencode, shai, bob, codebuddy, qodercli, codex, auggie, agy. |
+| `--env <id>` | Specify adapter explicitly by ID (e.g. `cursor`, `copilot`). |
+| `--<adapter>` | **New!** Shortcut flag for any adapter (e.g. `--cursor`, `--windsurf`). |
+| `--list-envs` | Lists all available IDE adapters and their destination paths. |
 | `--doctor` | Checks for missing files or inconsistencies in your workspace. |
 | `--eject` | Uninstalls Magic Spec and removes the `.magic/` folder. |
 | `--yes`, `-y` | Non-interactive mode (auto-accepts prompts; still shows `init.sh` safety warning). |
-| `--fallback-main` | Downloads from `main` branch (resolves and writes actual version to `.version`). |
+| `--fallback-main` | Downloads from `main` branch instead of the latest stable tag. |
+
+## 🧩 Adapter Shortcuts
+
+Instead of the long `--env cursor` syntax, you can now use direct flags. This is particularly useful when you have multiple AI tools open in the same project:
+
+```bash
+# Install Cursor and Copilot support simultaneously
+npx magic-spec --cursor --copilot
+```
+
+### Supported Shortcuts
+
+`--cursor`, `--copilot`, `--claude`, `--gemini`, `--roo`, `--windsurf`, `--amp`, `--q`, `--kilocode`, `--qwen`, `--opencode`, `--shai`, `--bob`, `--codebuddy`, `--qoder`, `--codex`, `--augment`, `--antigravity`, `--lingma`.
 
 ## 🛠️ Internal Automation Scripts
 
@@ -99,4 +113,3 @@ python installers/scripts/publish.py <old_version> <new_version> [flags]
 | **Utilities** | `tar` (system utility) | `connectivity` (GitHub access) |
 
 [Main README](../README.md) | [Project Documentation](../docs/README.md)
-
