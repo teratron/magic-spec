@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.15.0
+**Version:** 1.16.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -777,6 +777,31 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT attempt to modify `.magic/.version` in any way.
 - **Guards tested:** Version Bleed Prevention.
 
+### T46 — Spec Rename Retention
+
+- **Workflow:** `spec.md` & `task.md`
+- **Synthetic State:**
+  - Spec `auth-draft.md` is registered and partially completed in `PLAN.md` / `TASKS.md`.
+- **Action:** User requests to rename `auth-draft.md` to `authentication.md`.
+- **Expected:**
+  - [ ] Agent performs a global search-and-replace across all `.design/` files.
+  - [ ] Running `magic.task` after rename does NOT trigger a Phantom Spec reset.
+  - [ ] Existing tasks in `TASKS.md` retain progress but point to the new spec name.
+- **Guards tested:** Spec Renaming Protocol, Task Continuity.
+
+### T47 — Stability Downgrade Tracking
+
+- **Workflow:** `task.md`
+- **Synthetic State:**
+  - Spec `api.md` was `Stable` and has active tasks (`Done` and `Pending`).
+  - The spec receives heavy modifications and is downgraded to `RFC`.
+- **Action:** User runs `/magic.task` to update the plan.
+- **Expected:**
+  - [ ] Agent moves `api.md` to Backlog in `PLAN.md`.
+  - [ ] Agent does NOT delete active tasks.
+  - [ ] Pending tasks are marked `Blocked [!]` with "Awaiting spec stabilization".
+- **Guards tested:** Selective Planning Downgrade Policy.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -797,3 +822,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.13.0 | 2026-02-28 | Antigravity | Added T43 to test Rule Batch Operations limit and dynamic sequential ID extraction |
 | 1.14.0 | 2026-02-28 | Antigravity | Added T44 to test Onboard Wipe Protocol identity detection to prevent production data deletion |
 | 1.15.0 | 2026-02-28 | Antigravity | Added T45 to verify run completion does not modify `.magic/.version` (Version Bleed Guard) |
+| 1.16.0 | 2026-02-28 | Antigravity | Added T46 (Spec Rename Retention) and T47 (Stability Downgrade Tracking) |

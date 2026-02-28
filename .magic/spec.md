@@ -154,7 +154,8 @@ graph TD
 2. **Context Analysis**: Determine the domain of the new specification and the project's tech stack.
 3. **State Check**: Verify if `.design/` and its core files exist.
 4. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
-    If `warnings` contains orphaned specs → surface them and recommend `magic.task`.
+    - If `warnings` contains `checksums_mismatch` → **HALT** immediately. Do not proceed until engine integrity is restored.
+    - If `warnings` contains orchestrated orphaned specs → surface them and recommend `magic.task`.
 5. **Auto-Init**: If `.design/INDEX.md` or `.design/RULES.md` are missing, automatically run the Init pre-flight check (`.magic/init.md`) and continue.
 6. **Content Creation**:
     - Determine if the spec is Layer 1 (concept) or Layer 2 (implementation).
@@ -170,7 +171,8 @@ graph TD
 ### Updating an Existing Specification
 
 1. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
-    If `warnings` contains orphaned specs → surface them and recommend `magic.task`.
+    - If `warnings` contains `checksums_mismatch` → **HALT** immediately. Do not proceed until engine integrity is restored.
+    - If `warnings` contains orchestrated orphaned specs → surface them and recommend `magic.task`.
 
 2. **Read RULES.md**: Check project conventions before modifying anything.
 3. **Version Bump**: Increment the version according to the change scope:
@@ -182,9 +184,10 @@ graph TD
 6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
    - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
-8. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
-9. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
-10. **Task Completion Checklist**: Present the checklist to the user.
+8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a global search-and-replace across all `.design/` files (including `INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`, and `Related Specifications` links) to update all references to the new name. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
+9. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
+10. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
+11. **Task Completion Checklist**: Present the checklist to the user.
 
 ### Post-Update Review
 
@@ -364,3 +367,4 @@ Review
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: added intra-input self-contradiction edge case to Dispatching |
 | 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
 | 1.5.0 | 2026-02-27 | Antigravity | Project Analysis delegation: Explore Mode routes codebase analysis triggers to `.magic/analyze.md` |
+| 1.6.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard, implemented Spec Renaming Protocol to prevent Task Resets |

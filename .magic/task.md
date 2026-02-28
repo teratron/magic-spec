@@ -106,6 +106,7 @@ graph TD
         - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
         - **RFC Specs**: Surface to user with a recommendation to backlog until Stable, unless user explicitly pulls into active plan.
         - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
+        - **Downgrade Policy**: If an actively planned spec is downgraded (`Stable` → `RFC`/`Draft`), move the spec to the Backlog. Do NOT delete its tasks. Mark its `Pending`/`In Progress` tasks as `Blocked [!]` in `TASKS.md` with note: `Awaiting spec stabilization`. `Done` tasks remain untouched.
     - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
     - **Phantom Specs**: Flag specs referenced in `PLAN.md` but missing from `INDEX.md`. Propose: for tasks with status `Pending` or `In Progress` → Cancel; for `Done` tasks → mark as Archived Orphan (preserve history, remove from active planning). Do not cancel Done work.
     - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
@@ -155,3 +156,4 @@ Data Integrity
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: Phantom spec handling — Done tasks archived, not cancelled |
 | 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Circular Dependency Guard, Deprecated Done-task preservation, Convention Sync wording fix |
 | 1.5.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight checks |
+| 1.6.0 | 2026-02-28 | Antigravity | AOP: Added Downgrade Policy to Selective Planning (C6) to protect tasks when specs rollback from Stable |
