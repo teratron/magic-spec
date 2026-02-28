@@ -5,9 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.3.1] - 2026-02-27
+## [1.3.2] - 2026-02-28
 
 ### Added
+
+- **Project Analysis Workflow** (`.magic/analyze.md`): Powerful reverse-engineering tool. Delegated automatically from `spec.md` or directly via `/magic.analyze`. Supports scanning existing source code to generate structured proposals with paired Layer 1 (Concept) and Layer 2 (Implementation) specifications. Features Depth Control for massive codebases.
+- **Bootstrapping Exemption**: Special rules added to bypass standard Draft/RFC phases and create "Stable" specs directly when adopting existing working code into the SDD system.
+- **Improv Mode (Live Simulation)** in `simulate.md`: Added ability for the simulation workflow to synthesize "crisis scenarios" (e.g., INDEX.md desync) and perform full SDK lifecycle stress tests end-to-end on its own, functioning as a fallback if the static test suite is missing.
+
+### Changed
+
+- Expanded Test Suite (`.magic/tests/suite.md`) from 28 to 34 scenarios (+6), fully covering Analyze gap detection, L1/L2 generation asserts, depth control limits, and the missing test suite fallback.
+
+## [1.3.1] - 2026-02-27### Added
 
 - **Workflow Test Suite** (`.magic/tests/suite.md`): 16 predefined regression test scenarios covering all 8 engine workflows. Run via `/magic.simulate test`.
 - **Test Suite mode** in `simulate.md`: reads `suite.md` and reports PASS/FAIL for each scenario.
