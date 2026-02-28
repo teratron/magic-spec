@@ -83,7 +83,7 @@ graph TD
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> N1[Present changelog entry for user approval]
-    N1 --> N2[Bump version: update .magic/.version & primary manifest]
+    N1 --> N2[Bump version: update primary manifest or .design/VERSION]
     N2 --> N3[Generate: CONTEXT.md]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
@@ -93,7 +93,8 @@ graph TD
 0. **Consistency Check**: Verify task state is current:
    `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`
    - If `ok: false` → surface `missing_required`, halt.
-   - If `warnings` non-empty → surface warnings, continue.
+   - If `warnings` contains `checksums_mismatch` → **HALT**. Do not proceed until engine integrity is restored.
+   - If other `warnings` non-empty → surface warnings, continue.
    - If `ok: true` → proceed silently.
    After pre-flight, read `RULES.md §7` to refresh project conventions before executing any task.
    - **Mode Guard**: If `RULES.md §7` does not contain an execution mode convention → **HALT**. Inform the user: "Execution mode is not defined. Please run `magic.task` first to establish the plan and execution mode." Do not assume Sequential or Parallel — an undefined mode means the plan may not be ready.
@@ -111,10 +112,11 @@ graph TD
     - Check if the **entire plan** is complete (all phases, all tasks Done or Cancelled). If yes:
         1. Auto-run **retrospective Level 2 (full)**.
         2. Run **Changelog Level 2 compile** and **present the compiled entry to the user for a single yes/no approval** before writing to `CHANGELOG.md`. (Per C9: this is the only non-silent step in the conclusion sequence.)
-        3. **Auto-Bump Version**: Determine the new version from the changelog entry (patch for fixes only, minor for new features, major for breaking changes). Update `.magic/.version`. If project manifests are detected, bump ALL of them to maintain consistency:
+        3. **Auto-Bump Version**: Determine the new version from the changelog entry (patch for fixes only, minor for new features, major for breaking changes). If project manifests are detected, bump ALL of them to maintain consistency:
            - Node.js → `package.json` (.version field)
            - Python  → `pyproject.toml` ([project].version)
            - Rust    → `Cargo.toml` ([package].version)
+           If no manifests exist, create or update `.design/VERSION`. **CRITICAL**: Never modify `.magic/.version` — that file tracks the engine installation, not the project version.
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
@@ -147,7 +149,7 @@ graph TD
     L -->|Yes| M[Auto-run: full retrospective Level 2]
     M --> M1[Run: Changelog Level 2 compile]
     M1 --> N1[Write compiled entry to CHANGELOG.md with approval]
-    N1 --> N2[Bump version: update .magic/.version & primary manifest]
+    N1 --> N2[Bump version: update primary manifest or .design/VERSION]
     N2 --> O[Generate CONTEXT.md]
     L -->|No| N[Manager: Report phase complete]
     N --> O
@@ -202,7 +204,7 @@ Conclusion (on phase/plan completion)
   ☐ Retrospective Level 1 auto-snapshot appended to RETROSPECTIVE.md
   ☐ Changelog Level 1 compiled and appended to CHANGELOG.md
   ☐ If plan complete: Changelog Level 2 approved and written
-  ☐ If plan complete: .magic/.version and manifests bumped
+  ☐ If plan complete: project manifests or .design/VERSION bumped
   ☐ CONTEXT.md regenerated
 ```
 
@@ -216,5 +218,6 @@ Conclusion (on phase/plan completion)
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; auto-compilation skips block |
 | 1.4.0 | 2026-02-28 | Antigravity | Core enhancement: Plan Amnesia fix — instructed agents to synchronize `[x]` to `PLAN.md` upon spec completion |
 | 1.5.0 | 2026-02-28 | Antigravity | Bugfix: Run Stall on Cancelled — phase completion condition now checks `Done` or `Cancelled` tasks |
+| 1.6.0 | 2026-02-28 | Antigravity | AOP: Fixed Version Bleed (`.magic/.version` decoupled from project version logic), added explicit `checksums_mismatch` HALT guard |
 
 ```

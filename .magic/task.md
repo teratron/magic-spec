@@ -64,7 +64,7 @@ graph TD
 
 0. **Consistency Check & Engine Integrity**: Before running, verify specification consistency and engine file integrity by running:
    - `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
-   - **Action**: If any "Engine Integrity" warnings appear, the agent must inform the user and recommend regenerating checksums if the changes were intentional.
+   - **Action**: If `warnings` contains `checksums_mismatch`, **HALT** immediately. Do not proceed until engine integrity is restored. For other warnings, inform the user and recommend regenerating checksums if the changes were intentional.
 1. **Read all spec files**: For each spec in `.design/specifications/`, extract:
     - `Related Specifications` — direct dependencies
     - `Implementation Notes` — if present, surface them in the plan/tasks
@@ -96,7 +96,8 @@ graph TD
 0. **Consistency Check & Engine Integrity**: Before updating, run:
    `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
    - If `ok: false` → surface `missing_required`, halt.
-   - If `warnings` non-empty → surface warnings to user before proceeding with the update.
+   - If `warnings` contains `checksums_mismatch` → **HALT**. Do not proceed until engine integrity is restored.
+   - If other `warnings` non-empty → surface warnings to user before proceeding with the update.
 
 1. **Registry Synchronization Check**:
     - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
@@ -153,3 +154,4 @@ Data Integrity
 | 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted PLAN.md, TASKS.md, phase-{n}.md templates to templates/ |
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: Phantom spec handling — Done tasks archived, not cancelled |
 | 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Circular Dependency Guard, Deprecated Done-task preservation, Convention Sync wording fix |
+| 1.5.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight checks |

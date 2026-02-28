@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.11.0
+**Version:** 1.15.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -726,6 +726,57 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Retrospective and summary extract `Cancelled` metric successfully.
 - **Guards tested:** Phase completion on Cancelled, Missing Cancelled Metric.
 
+### T42 — Simulate Improv Mode Zero-Prompt Fallback
+
+- **Workflow:** `simulate.md` (Wrapper & Engine)
+- **Synthetic State:** Fresh design session, all files present.
+- **Action:** User prompts `"/magic.simulate"` without arguments.
+- **Expected:**
+  - [ ] Agent reads `.agent/workflows/magic.simulate.md`.
+  - [ ] Agent does NOT ask the user to "pick a workflow".
+  - [ ] Agent explicitly engages Step 1.5 "Improv Mode (Live Simulation)".
+  - [ ] Agent invents a crisis scenario and proceeds autonomously.
+- **Guards tested:** Zero-prompt fallback rule, prompt ambiguity block.
+
+### T43 — Rule Batch Operations and ID Assignment
+
+- **Workflow:** `rule.md`
+- **Synthetic State:**
+  - `RULES.md` §7 currently has rules up to C3.
+- **Action:** User prompts *"Amend C2 to say X, and add two new rules: Y and Z"*.
+- **Expected:**
+  - [ ] Agent groups the amendment and two additions into a SINGLE proposal block.
+  - [ ] Agent asks for a single "Apply all?" confirmation.
+  - [ ] New rules are accurately assigned sequential IDs by calculating highest existing (`C4` and `C5`).
+  - [ ] Agent performs a single final version bump.
+- **Guards tested:** Batch operations spam prevention, Dynamic ID assignment.
+
+### T44 — Onboard Cleanup Protocol Identity
+
+- **Workflow:** `onboard.md`
+- **Synthetic State:**
+  - Abandoned tutorial session. `.design/specifications/logger-module.md` exists.
+  - User added their own `PRODUCTION-SPEC.md` to INDEX and PLAN.
+- **Action:** User prompts `"/magic.onboard"`, agent attempts Re-entry wipe protocol.
+- **Expected:**
+  - [ ] Agent detects `PLAN.md` contains non-tutorial production data.
+  - [ ] Agent triggers HALT and applies backup/cancel guard.
+  - [ ] Agent does not wipe `.design/` blindly.
+- **Guards tested:** Safe Cleanup Protocol, Wipe Identity Guard.
+
+### T45 — Run Version Bleed Guard
+
+- **Workflow:** `run.md`
+- **Synthetic State:**
+  - Entire plan is completed (Phase 2 done).
+  - Node.js project. `package.json` exists with version `"1.0.0"`.
+  - Level 2 Changelog approved.
+- **Action:** User prompts to finish execution. Agent updates version.
+- **Expected:**
+  - [ ] Agent bumps version inside `package.json`.
+  - [ ] Agent does NOT attempt to modify `.magic/.version` in any way.
+- **Guards tested:** Version Bleed Prevention.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -742,3 +793,7 @@ If any test fails, document the failure reason and propose a fix.
 | 1.9.0 | 2026-02-28 | Antigravity | Added T39 to test Retrospective path safety inside workspaces and Level 1 template copy |
 | 1.10.0 | 2026-02-28 | Antigravity | Added T40 to test Analyze Auto-Init Guard and List Integrity |
 | 1.11.0 | 2026-02-28 | Antigravity | Added T41 to verify run stall prevention on `Cancelled` tasks and metric tracking |
+| 1.12.0 | 2026-02-28 | Antigravity | Added T42 to verify zero-prompt fallback to Improv Mode on arguments absence |
+| 1.13.0 | 2026-02-28 | Antigravity | Added T43 to test Rule Batch Operations limit and dynamic sequential ID extraction |
+| 1.14.0 | 2026-02-28 | Antigravity | Added T44 to test Onboard Wipe Protocol identity detection to prevent production data deletion |
+| 1.15.0 | 2026-02-28 | Antigravity | Added T45 to verify run completion does not modify `.magic/.version` (Version Bleed Guard) |

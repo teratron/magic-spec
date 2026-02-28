@@ -12,7 +12,8 @@ An interactive walkthrough of the full Magic SDD lifecycle. Builds a toy "logger
 > **This is a tutorial workflow.** It creates real files in your project directory.
 > For production use, run this in a **clean, empty directory**.
 >
-> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to resume from the last completed step or clean up tutorial artifacts before restarting. Before resuming, check if `PLAN.md` contains non-tutorial data (more than 1 spec in phases). If yes, treat as production collision and apply the backup/cancel guard from Step 1.
+> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to either (A) continue (determine the next step dynamically based on missing `.design/` tutorial files: INDEX > PLAN > TASKS), or (B) Wipe tutorial data and restart.
+> **Wipe Protocol**: Delete *only* `logger-module.md`, and any files named `PLAN.md`, `TASKS.md`, or `phase-1.md` *if and only if* they exclusively contain references to the toy "logger-module". Never format the whole `.design/` folder. Before wiping or resuming, check if `PLAN.md` contains non-tutorial production data (more than 1 spec in phases). If yes, apply the backup/cancel guard from Step 1.
 
 ## Agent Guidelines
 
@@ -60,7 +61,7 @@ This tutorial will create real files in your project:
     - **Detailed Design**: A class with `info(msg)`, `warn(msg)`, and `error(msg)` methods.
     - **Status**: Stable.
 4. Explain that specs normally start as `Draft`, advance to `RFC` for review, and become `Stable` when approved. For this tutorial, we skipped straight to `Stable`.
-5. Tell the user to type `continue` to proceed to registration.
+5. Tell the user to type `continue` (or anything similar) to proceed to registration.
 6. **Wait for user confirmation.**
 
 ### Step 3: Registration in INDEX.md
@@ -68,7 +69,7 @@ This tutorial will create real files in your project:
 1. Explain that for the system to recognize a spec, it must be registered in the central index.
 2. Add `logger-module.md` to `.design/INDEX.md` with status `Stable`. Bump the INDEX.md version (minor).
 3. Confirm to the user that the system now recognizes the spec.
-4. Tell the user: *"Next, we generate a Plan. Type `plan` to calculate the dependency graph and create the plan."*
+4. Tell the user: *"Next, we generate a Plan. Type `continue` to calculate the dependency graph and create the plan."*
 5. **Wait for user confirmation.**
 
 ### Step 4: Mini PLAN.md
@@ -76,7 +77,7 @@ This tutorial will create real files in your project:
 1. Explain that normally, the `magic.task` workflow scans all stable specs and calculates a critical path.
 2. Generate a minimal `.design/PLAN.md` (based on `.magic/templates/plan.md`) with a single Phase 1 containing the `logger-module.md` feature.
 3. Show the user a small preview of the plan.
-4. Tell the user: *"Now we decompose this plan into atomic tasks. Type `task` to generate tasks."*
+4. Tell the user: *"Now we decompose this plan into atomic tasks. Type `continue` to generate tasks."*
 5. **Wait for user confirmation.**
 
 ### Step 5: Atomic Task and Execution
@@ -119,3 +120,4 @@ Onboarding Checklist — Tutorial Complete
 | 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
 | 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
 | 1.3.0 | 2026-02-27 | Antigravity | Simulation fix: production collision HALT with backup/cancel, re-entry checks production PLAN.md, template references for PLAN/TASKS |
+| 1.4.0 | 2026-02-28 | Antigravity | AOP: Clarified Wipe Protocol for Re-entry context to prevent production data deletion, unified trigger words to `continue` |

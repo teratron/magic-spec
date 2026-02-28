@@ -21,7 +21,8 @@ Use when you want to declare a convention without going through the Spec Workflo
 4. **No Silent Changes**: Always show the proposed change before writing.
 5. **Version Discipline**: Every change to RULES.md requires a version bump and a Document History row. Clarification: Typo fixes or rephrasing without changing intent is a `patch` (0.0.X).
 6. **Context Awareness**: Before adding a manual rule, check `.design/CONTEXT.md` to see if it aligns with recent project decisions.
-7. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
+7. **Batch Operations**: If the user requests multiple modifications (e.g., add 2 rules and amend 1), group the proposals into a single message, ask for a single "Apply all?" confirmation, perform a single version bump reflecting the highest impact (major > minor > patch), and present only one final checklist.
+8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
 
 ## Directory Structure
 
@@ -54,7 +55,7 @@ Use when you want to declare a convention without going through the Spec Workflo
     Add? (yes / adjust / cancel)
     ```
 
-6. On approval: assign the next sequential convention ID (C{N+1}), append to §7 as a new subsection `### C{N+1} — {Title}`, bump version (`minor`), add Document History row.
+6. On approval: scan §7 to find the highest existing convention ID (e.g., C15), assign the next sequential ID (e.g., `C16`), append as a new subsection `### C16 — {Title}`, bump version (`minor`), add Document History row.
 7. **Impact Analysis**: Propose the next steps to the user:
     - "Should I run an audit of existing specifications to check compliance with this new rule?"
     - "Should I update the implementation plan to reflect this convention in upcoming tasks?"
@@ -142,3 +143,4 @@ Task Completion Checklist — {operation description}
 | 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
 | 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to all write paths, convention ID assignment (C{N+1}), target rule identification in Amend/Remove, Convention Sync note in Impact Analysis, Impact Analysis checklist item |
 | 1.2.0 | 2026-02-27 | Antigravity | Simulation fix: Duplication Guard in Add, convention-not-found handler in Amend, Workflow Dependency Check in Remove Impact Analysis |
+| 1.3.0 | 2026-02-28 | Antigravity | AOP: Fixed Batch Operation loop (spam prevention) and clarified ID extraction logic |

@@ -3,7 +3,7 @@ description: Workflow for simulating and validating Magic SDD engine logic.
 handoffs:
   - label: "Simulate workflow"
     workflow: magic.simulate
-    prompt: "Pick a workflow to simulate or use Improv Mode (Live Simulation) for end-to-end stress testing."
+    prompt: "Run the specified workflow simulation. If no target is provided, auto-trigger Improv Mode (Live Stress-Test) by default."
   - label: "Apply fixes"
     workflow: magic.rule
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
@@ -20,6 +20,7 @@ handoffs:
 - **Proactive Validation**: Runs before real-world application to ensure engine changes didn't introduce logical regressions.
 - **Scenario Synthesis**: Generates synthetic project states to test edge cases in workflows.
 - **Engine Refinement**: Identifies "rough edges" in implementation files.
+- **Live Simulation (Improv Mode)**: Full-cycle end-to-end stress test triggered automatically on generic calls.
 
 > **Full implementation:** `.magic/simulate.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
