@@ -76,7 +76,8 @@ Simulation analyzes the **AI-readability** of instructions: token density, promp
 
 ### 3.4 Rough Edge Correction
 
-If simulation reveals a logical flaw, the engine proposes a "surgical fix" (a precise search-and-replace) for the affected `.magic/` workflow file. Changes are applied only after user approval.
+If simulation reveals a logical flaw, the engine proposes a "surgical fix" (a precise search-and-replace) for the affected `.magic/` workflow file.
+**Crucially, the engine must also write a new regression test** for this specific edge case into `.magic/tests/suite.md` to ensure the flaw is permanently caught in future test runs. Changes are applied only after user approval.
 
 > **Checksum Rule**: `generate-checksums` is run only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files.
 

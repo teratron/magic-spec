@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.5.0
+**Version:** 1.7.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -704,6 +704,34 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md updated with `Done`.
 - **Guards tested:** Plan Sync mechanism (Plan Amnesia fix)
 
+### T36 — Run Task Blocked Handoff to spec.md
+
+- **Workflow:** `run.md` (Executing Tasks)
+- **Synthetic State:**
+  - `TASKS.md` Phase 2 has 1 active task mapped to `auth.md`.
+  - Task execution encounters ambiguous or missing details in the specification.
+- **Action:** User executes `/magic.run`
+- **Expected:**
+  - [ ] Agent records `Blocked` status and the specific reason in `TASKS.md` Notes.
+  - [ ] Agent utilizes the newly added `magic.spec` handoff in `.agent/workflows/magic.run.md`.
+  - [ ] Agent delegates resolution to `magic.spec` workflow (Explore/Update Mode).
+  - [ ] Once the specification is formally updated and unblocked, agent proceeds to `magic.task` to rebuild task dependencies.
+- **Guards tested:** Cross-workflow handoff routing, blocked task escalation.
+
+### T37 — Simulate Regression Sweep Post-Fix
+
+- **Workflow:** `simulate.md` (Verification Step)
+- **Synthetic State:**
+  - Logic flaw found in a workflow definition (e.g. `init.md`).
+  - Surgical fix applied.
+  - Test case appended to `suite.md`.
+- **Action:** User explicitly approves the "Corrective Proposal" changes.
+- **Expected:**
+  - [ ] Agent performs a spot-check of the modified lines in `init.md`.
+  - [ ] Agent explicitly utilizes the *Run regression tests* handoff from `.agent/workflows/magic.simulate.md` or directly triggers the `/magic.simulate test` suite.
+  - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
+- **Guards tested:** Post-fix regression sweep enforcement.
+
 ---
 
 ## Document History
@@ -716,3 +744,5 @@ If any test fails, document the failure reason and propose a fix.
 | 1.3.0 | 2026-02-27 | Antigravity | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
 | 1.4.0 | 2026-02-28 | Antigravity | Added T34 for missing test suite fallback and Improv Mode (Live Simulation) |
 | 1.5.0 | 2026-02-28 | Antigravity | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
+| 1.6.0 | 2026-02-28 | Antigravity | Added T36 to verify `.agent/workflows/magic.run.md` handoff pointing to `magic.spec` |
+| 1.7.0 | 2026-02-28 | Antigravity | Added T37 to test regression suite sweep is triggered after any workflow fixes |

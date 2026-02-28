@@ -12,7 +12,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 
 1. **Synthetic Context**: Create a hypothetical project state (spec counts, plan versions, folder structures) to test the workflow logic.
 2. **Stress Test**: Specifically look for scenarios that might confuse a future agent or lead to "planning amnesia".
-3. **Surgical Reporting**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. Present it to the user for a single yes/no approval before applying. This is the only non-silent step in the simulation workflow (C1 compliance).
+3. **Surgical Reporting (Fix & Test)**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. You **must also write a new regression test** for the issue and append it to `.magic/tests/suite.md`. Present and ask the user for a single yes/no approval before applying any patches. This is the only non-silent step in the simulation workflow (C1 compliance).
 4. **Non-Overlapping**: Do not collect metrics or analyze project history (that's for `retrospective.md`). Focus purely on the *logic and clarity* of the instructions.
 5. **Universal Executor**: Always verify that scripts mentioned in the workflow are properly referenced via `node .magic/scripts/executor.js`.
 
@@ -80,19 +80,21 @@ Evaluate the target workflow for **AI-readability** and efficiency:
 - **Structure consistency**: Does the workflow use the same markdown patterns and terminology as the rest of the engine?
 - **Context Economy**: Does the workflow minimize unnecessary `view_file` calls for large system files if only metadata is needed?
 
-### 6. Corrective Proposal
+### 6. Corrective Proposal (Fix & Test)
 
-Document any surgical fixes for affected `.magic/` or `.agent/workflows/` files. Ensure versioning rules (RULES.md §3) are followed. **Wait for user approval before applying changes (C1 compliance).**
+1. **Surgical Fix**: Document any surgical fixes for affected `.magic/` or `.agent/workflows/` files.
+2. **Regression Test Addition**: For every logical flaw identified and fixed, **you must automatically write a new regression test** targeting that specific edge case and append it to `.magic/tests/suite.md` so the flaw is covered explicitly in future tests.
+3. Ensure versioning rules (RULES.md §3) are followed for all modified files.
+4. **Wait for user approval before applying changes (C1 compliance).**
 
 > **Checksum Rule**: Run `node .magic/scripts/executor.js generate-checksums` only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files that will be modified.
 
-### 7. Verification
+### 7. Verification (Regression Sweep)
 
 Verify the applied fixes:
 
 - **Spot-check**: Re-read the modified lines to confirm they match the proposed change.
-- **Regression check**: Confirm the fix doesn't introduce contradictions with adjacent steps.
-- **Full re-simulation**: Only if the rough edge was HIGH severity or involved structural changes. For LOW/MEDIUM fixes, spot-check is sufficient.
+- **Complete Test Run**: Once a fix is applied and its corresponding test is written, the agent must prompt the user or utilize a handoff to execute the full test suite (`/magic.simulate test`) to ensure the surgical fix didn't break existing core logic.
 
 ## Task Completion Checklist
 
@@ -117,6 +119,8 @@ Engine Integrity
 
 Cleanup
   ☐ Rough edges fixed in the source files
+  ☐ New fallback/regression test added to .magic/tests/suite.md for each fix
+  ☐ Full regression suite (/magic.simulate test) triggered post-fix
   ☐ Versions bumped in modified files
   ☐ Document History updated
 ```
@@ -131,3 +135,5 @@ Cleanup
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; added Checksum Rule to Step 6 (generate after approval) |
 | 1.4.0 | 2026-02-27 | Antigravity | Added Test Suite mode: `/magic.simulate test` runs predefined scenarios from `.magic/tests/suite.md` |
 | 1.5.0 | 2026-02-28 | Antigravity | Added Improv Mode (Live Simulation) and fallback for missing test suite |
+| 1.6.0 | 2026-02-28 | Antigravity | Test Automation Loop: enforced adding new tests to `suite.md` alongside any proposed workflow fixes |
+| 1.7.0 | 2026-02-28 | Antigravity | Enforced Regression Sweep (triggering test suite directly after applying fixes to workflows) |

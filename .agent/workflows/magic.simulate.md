@@ -7,6 +7,9 @@ handoffs:
   - label: "Apply fixes"
     workflow: magic.rule
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
+  - label: "Run regression tests"
+    workflow: magic.simulate
+    prompt: "Run the full test suite (`test` target) to ensure engine modifications didn't introduce regressions."
 ---
 
 # Simulation Workflow
