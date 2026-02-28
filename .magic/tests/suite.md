@@ -672,6 +672,26 @@ If any test fails, document the failure reason and propose a fix.
 
 ---
 
+### T34 — Simulate Missing Test Suite (Improv Mode Fallback)
+
+- **Workflow:** `simulate.md` (Improv Mode)
+- **Synthetic State:**
+  - `.magic/tests/suite.md` file is missing or inaccessible.
+- **Action 1:** User runs `/magic.simulate test`
+- **Expected 1:**
+  - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
+  - [ ] Agent alerts user that test suite is missing and falls back to **Improv Mode**.
+  - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
+  - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
+  - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
+- **Action 2:** User runs `/magic.simulate` (without target), user requests generic "live simulation"
+- **Expected 2:**
+  - [ ] Agent defaults to **Improv Mode**.
+  - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
+- **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
+
+---
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -680,3 +700,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.1.0 | 2026-02-27 | Antigravity | Extended suite: added T17–T28 (12 scenarios) — T4 trigger, Explore Mode, amendment, parallel run, conclusion cascade, multi-phase, Level 2 retro, Selective Planning, core amendment, re-entry, consistency audit, end-to-end lifecycle. Total: 28 scenarios |
 | 1.2.0 | 2026-02-27 | Antigravity | Added T29–T33 (5 scenarios): analyze.md first-time analysis, re-analysis gap detection, delegation routing, init codebase hint, depth control. Total: 33 scenarios |
 | 1.3.0 | 2026-02-27 | Antigravity | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
+| 1.4.0 | 2026-02-28 | Antigravity | Added T34 for missing test suite fallback and Improv Mode (Live Simulation) |

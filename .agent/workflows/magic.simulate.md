@@ -3,7 +3,7 @@ description: Workflow for simulating and validating Magic SDD engine logic.
 handoffs:
   - label: "Simulate workflow"
     workflow: magic.simulate
-    prompt: "Pick a workflow to simulate (spec, task, run, rule, retrospective) and find logical bottlenecks."
+    prompt: "Pick a workflow to simulate or use Improv Mode (Live Simulation) for end-to-end stress testing."
   - label: "Apply fixes"
     workflow: magic.rule
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
@@ -11,7 +11,7 @@ handoffs:
 
 # Simulation Workflow
 
-**Triggers:** *"Simulate"*, *"Dry run"*, *"Test workflow"*, *"Check engine logic"*, *"Find rough edges"*, *"Run tests"*, *"test"*
+**Triggers:** *"Simulate"*, *"Dry run"*, *"Test workflow"*, *"Check engine logic"*, *"Find rough edges"*, *"Run tests"*, *"test"*, *"improvise"*
 **Scope:**
 
 - **Proactive Validation**: Runs before real-world application to ensure engine changes didn't introduce logical regressions.

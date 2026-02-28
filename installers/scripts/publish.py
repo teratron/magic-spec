@@ -194,7 +194,7 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
         print(f"  [Dry Run] git add {' '.join(files_to_add)}")
         print(f"  [Dry Run] git commit -m 'Release {tag}'")
         print(f"  [Dry Run] git tag -a {tag} -m 'Release {tag}'")
-        print("  [Dry Run] git push origin main --tags")
+        print("  [Dry Run] git push origin master --tags")
         return
 
     # Assuming we want to stage the modified version files
@@ -222,8 +222,8 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     )
 
     # Standard release scripts usually push.
-    run_command(["git", "push", "origin", "main", "--tags"], cwd=str(PROJECT_ROOT))
-    print(f"Successfully committed, tagged and pushed {tag} to origin main.")
+    run_command(["git", "push", "origin", "master", "--tags"], cwd=str(PROJECT_ROOT))
+    print(f"Successfully committed, tagged and pushed {tag} to origin master.")
 
 
 def publish_python(dry_run: bool) -> None:

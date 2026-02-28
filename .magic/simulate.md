@@ -29,9 +29,24 @@ Run `node .magic/scripts/executor.js check-prerequisites --json` to verify engin
 
 Identify which workflow (or set of workflows) needs validation. This is mandatory after any change to `.magic/` or `.agent/workflows/`.
 
-- **Test Suite**: If the argument is `test` (e.g., `/magic.simulate test`), read `.magic/tests/suite.md` and execute all predefined test scenarios sequentially. Skip Steps 2–5 — go directly to the report. For each scenario: simulate the workflow logic against the synthetic state and compare with expected outcomes. Report results as a PASS/FAIL table (see suite.md for format). If any test fails, document the failure reason and propose a fix (Step 6).
+- **Test Suite**: If the argument is `test` (e.g., `/magic.simulate test`):
+  - Check for `.magic/tests/suite.md`.
+  - If exists: Read and execute predefined scenarios sequentially. Skip Steps 2–5 — go directly to the report.
+  - If missing: **Automatic Fallback** to **Improv Mode** (see below). Notify the user that the suite is missing and improvise the validation.
 - **Direct Target**: If a workflow name was provided as an argument (e.g., `/magic.simulate task`), proceed with that workflow.
-- **Ambiguous or Missing Target**: If no specific workflow was named, list all available workflows in `.agent/workflows/` and ask the user to choose one, or offer to simulate **all workflows** as a suite.
+- **Ambiguous or Missing Target**: If no specific workflow was named, list all available workflows in `.agent/workflows/`, the **Test Suite** (if available), and the **Improv Mode** option. If the user doesn't specify, or specifically asks for "live simulation", default to **Improv Mode**.
+
+### 1.5 Improv Mode (Live Simulation)
+
+Use this mode when `suite.md` is missing or as an end-to-end engine stress test. Instead of following static scenarios, the agent must:
+
+1. **Synthesize a "Crisis" Scenario**: Imagine a project in a messy state (e.g., "A developer manually edited files, breaking the parity between `INDEX.md` and the filesystem, while `PLAN.md` is stuck in an old version").
+2. **Execute Lifecycle Flow**: Simulate the entire SDD chain in one pass:
+   - **Spec**: Detect and resolve inconsistencies/drifts.
+   - **Task**: Re-plan the project to reach a stable state.
+   - **Run**: Generate logic for a complex fix.
+   - **Retrospective**: Audit the "simulated work" for logical leaks or "ambiguity debt".
+3. **Audit Friction**: Identify "Rough Edges" where workflow handoffs feel disjointed or require too much "AI intuition" to bridge.
 
 ### 2. Scenario Synthesis
 
@@ -115,3 +130,4 @@ Cleanup
 | 1.2.0 | 2026-02-26 | Antigravity | Added pre-flight Step 0, lighter Step 7 verification, fixed checklist indentation and C1-C11 reference |
 | 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; added Checksum Rule to Step 6 (generate after approval) |
 | 1.4.0 | 2026-02-27 | Antigravity | Added Test Suite mode: `/magic.simulate test` runs predefined scenarios from `.magic/tests/suite.md` |
+| 1.5.0 | 2026-02-28 | Antigravity | Added Improv Mode (Live Simulation) and fallback for missing test suite |
