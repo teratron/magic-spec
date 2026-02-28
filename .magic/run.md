@@ -101,6 +101,7 @@ graph TD
     - **Stalled Phase**: If no `Todo` tasks remain but the phase has `Blocked` tasks, report the stall to the user with a summary of blocked items. Do not loop — escalate and wait.
 2. **Execute**: Perform the implementation work described by the task. Stay within the task's spec section — do not expand scope.
 3. **Update status**: Mark `In Progress` when starting, `Done` when complete, `Blocked` if a blocker is encountered.
+   - **Plan Sync**: When all tasks mapped to a specific specification or Phase are completed, update the corresponding `[ ]` checkbox in `.design/PLAN.md` to `[x]` (Done) to reflect high-level progress.
    - **Change Record**: For each completed task, record a one-line change summary in the task's `Changes` field (files created/modified). These records are compiled into the changelog at phase completion.
 4. **Report**: After each task, briefly state what was done and what is next.
 5. **On phase completion**:
@@ -161,7 +162,7 @@ The Manager Agent does not write implementation code. Its job is coordination:
 
 - **At start of phase**: Read TASKS.md, identify all `Todo` tasks whose dependencies are satisfied, assign each available track to a Developer Agent.
   - **Shared-Constraint Detection**: Before assigning tracks, scan task descriptions for overlapping target files. If two tasks in different tracks modify the same file, serialize them — schedule one after the other within the same track. Log the serialization decision in the status report.
-- **On task completion**: Update task status to `Done`, recalculate which tasks are now unblocked, assign newly available tasks.
+- **On task completion**: Update task status to `Done`, recalculate which tasks are now unblocked, assign newly available tasks. Synchronize `.design/PLAN.md` checkboxes to `[x]` (Done) for fully implemented specifications.
 - **On blocking**: Read the blocker reason, determine if it can be resolved (missing spec detail → consult spec file, dependency not done → reorder), escalate to user if not resolvable.
 - **On conflict**: If two Developer Agents need to modify the same file simultaneously despite pre-scan, Manager serializes access — one waits while the other finishes.
 - **Status report**: After each round of completions, show a compact summary.
@@ -193,6 +194,7 @@ Execution Mode
 Status Updates
   ☐ TASKS.md updated to reflect current state
   ☐ Per-phase files updated to match TASKS.md
+  ☐ PLAN.md updated with [x] for fully implemented specifications
   ☐ All Blocked tasks have a reason stated in Notes
 
 Conclusion (on phase/plan completion)
@@ -211,3 +213,4 @@ Conclusion (on phase/plan completion)
 | 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
 | 1.2.0 | 2026-02-27 | Antigravity | Stress-test fix: Mode Guard added — halt if execution mode not in RULES.md §7 |
 | 1.3.0 | 2026-02-27 | Antigravity | Test suite fix T20: proactive Shared-Constraint Detection in parallel Manager Agent |
+| 1.4.0 | 2026-02-28 | Antigravity | Core enhancement: Plan Amnesia fix — instructed agents to synchronize `[x]` to `PLAN.md` upon spec completion |

@@ -6,7 +6,7 @@
   "onboard.md": "af49785503fb00affd6403de3fe7ae460f98f019ea31865dea599e9af6cbbc44",
   "retrospective.md": "51329f8f4bac3313ff8099e9206884fb85350bcfc5fddd3a31016121d2920393",
   "rule.md": "3816fc18b16f4e84cfdf70c1fd2f9854a5250205003cd9c854f0903b76d79734",
-  "run.md": "fc36cbb2b67123dcc64747abfbe80fa8878d72e13b54a368f08d3642717bc8dd",
+  "run.md": "be222f1597e8df3e03a0ad13801383ba48d339b5e6f76ca7e0e6b82f934b91c8",
   "scripts/check-prerequisites.ps1": "4907a433d76e7f617999aeefb53117718a7dcc0c0ad8190264550fc3ca8a1431",
   "scripts/check-prerequisites.sh": "0d38774ae137178df424f066c7695c6ab3380a8eefb7423deddf060699d25c56",
   "scripts/executor.js": "2abf234b3643f403dbbbc122a0fc5fe099eedbb7b12645dbbb0a9fd636c93ff1",
@@ -22,5 +22,5 @@
   "templates/retrospective.md": "77c7a182db36199ba5320dd41f06720d48cc4a2ab6218368f013221ddd9355cb",
   "templates/specification.md": "212474c480955bdb8fc690aee7f45ca80e562bec62c5d609caa8e3ffcaaa247e",
   "templates/tasks.md": "464bd71e13ee240654b54471794aab8926203103bb90582999d959ec7f4bdcd1",
-  "tests/suite.md": "831a28b0a53bdc24d9891864d0198d0b0bbd8313220a0d13d4300d168e1c1a86"
+  "tests/suite.md": "fd73b135bf37ffe6e912adc71b2ccaea71706bd3103a7e9a6e14288d99147967"
 }

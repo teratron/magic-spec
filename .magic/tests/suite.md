@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.1.0
+**Version:** 1.5.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -690,6 +690,20 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
 - **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
 
+### T35 — Run Sequence Syncs to PLAN.md
+
+- **Workflow:** `run.md` (Executing Tasks)
+- **Synthetic State:**
+  - `TASKS.md` Phase 1 has 2 tasks mapped to `auth.md`.
+  - Both tasks are transition to marked `Done` after execution.
+  - `PLAN.md` has `[ ] Implement Auth module` pointing to `auth.md` under Phase 1.
+- **Action:** User says "Execute tasks"
+- **Expected:**
+  - [ ] Agent reads TASKS.md and identifies fully implemented spec (`auth.md`).
+  - [ ] Agent modifies `.design/PLAN.md` to change `[ ]` to `[x]` for `auth.md`.
+  - [ ] TASKS.md updated with `Done`.
+- **Guards tested:** Plan Sync mechanism (Plan Amnesia fix)
+
 ---
 
 ## Document History
@@ -701,3 +715,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.2.0 | 2026-02-27 | Antigravity | Added T29–T33 (5 scenarios): analyze.md first-time analysis, re-analysis gap detection, delegation routing, init codebase hint, depth control. Total: 33 scenarios |
 | 1.3.0 | 2026-02-27 | Antigravity | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
 | 1.4.0 | 2026-02-28 | Antigravity | Added T34 for missing test suite fallback and Improv Mode (Live Simulation) |
+| 1.5.0 | 2026-02-28 | Antigravity | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
