@@ -38,8 +38,17 @@ if (fs.existsSync(workspaceJsonPath)) {
         }
 
         if (workspaceName) {
-            if (workspaceData.workspaces && workspaceData.workspaces[workspaceName]) {
+            const workspaceExists = workspaceData.workspaces &&
+                typeof workspaceData.workspaces === 'object' &&
+                workspaceData.workspaces[workspaceName];
+
+            if (workspaceExists) {
                 magicDesignDir = `.design/${workspaceName}`;
+                // Physical Path Validation
+                if (!fs.existsSync(path.join(process.cwd(), magicDesignDir))) {
+                    console.error(`HALT: Workspace directory '${magicDesignDir}' does not exist on disk. Fix registry or create dir.`);
+                    process.exit(1);
+                }
             } else {
                 console.error(`HALT: Unknown workspace name '${workspaceName}'. Fix and retry.`);
                 process.exit(1);
