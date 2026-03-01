@@ -5,7 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.2] - 2026-03-01
+## [1.4.3] - 2026-03-01
+
+### Added
+
+- **Smart Adapter Updates**: Both Python and Node.js installers now seamlessly verify and update adapter `.mdc`/`.toml` wrapper files during `--update`.
+- **Smart Update Conflict Resolution**: When users manually modify `.cursor/rules/*` wrapper files in their project, the `--update` command now detects the modifications. Users can intelligently choose to skip updates for specific conflicting adapter files, preserving their changes while updating the core `.magic` engine logic.
+
+### Fixed
+
+- **Updater Integrity**: Modified files that are bypassed during an update via `[s] Skip modified files` now persist their original hashes so they don't get silently overwritten in subsequent updates.
+- **Testing Logic**: Fixed an issue in the `run_tests.py` exhaustive test suite section where failures during adapter testing cycles were mistakenly swallowed, reporting a false "All tests completed successfully".
+
+## [1.4.3] - 2026-03-01
 
 ### Fixed
 
