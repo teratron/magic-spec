@@ -231,9 +231,14 @@ def publish_python(dry_run: bool) -> None:
     cwd = PROJECT_ROOT
 
     if dry_run:
+        print(f"  [Dry Run] Clear dist/ in {cwd}")
         print(f"  [Dry Run] uv build in {cwd}")
         print(f"  [Dry Run] uv publish in {cwd}")
         return
+
+    import shutil
+
+    shutil.rmtree(cwd / "dist", ignore_errors=True)
 
     run_command(["uv", "build"], cwd=cwd)
 
