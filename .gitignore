@@ -39,3 +39,7 @@ uv.lock
 dist/
 temp/
 *tmp/
+
+# Sandbox for local testing
+.sandbox/
+installers/tests/sandbox/

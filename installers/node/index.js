@@ -116,6 +116,7 @@ const isInfo = args.includes('info');
 const isListEnvs = args.includes('--list-envs');
 const isEject = args.includes('--eject');
 const isFallbackMain = args.includes('--fallback-main');
+const isLocal = args.includes('--local');
 const autoAccept = args.includes('--yes') || args.includes('-y');
 
 function parseCsvValues(raw) {
@@ -331,16 +332,20 @@ function runInfo() {
     }
     console.log(`Installed version : ${installedVersion}  (.magic/.version)`);
 
-    const magicrcFile = path.join(cwd, '.magicrc');
-    let activeEnv = 'default (.agent/)';
-    if (fs.existsSync(magicrcFile)) {
+    const ADAPTERS_PATH = path.join(__dirname, '..', 'adapters.json');
+    let activeEnvs = [];
+    if (fs.existsSync(ADAPTERS_PATH)) {
         try {
-            const rc = JSON.parse(fs.readFileSync(magicrcFile, 'utf8'));
-            if (rc.env) activeEnv = rc.env;
+            const adapters = JSON.parse(fs.readFileSync(ADAPTERS_PATH, 'utf8'));
+            activeEnvs = detectEnvironments(adapters);
         } catch (e) { }
     }
-    console.log(`Active env        : ${activeEnv}`);
 
+    if (activeEnvs.length === 0) {
+        console.log(`Active env        : default (${AGENT_DIR}/)`);
+    } else {
+        console.log(`Active envs       : ${activeEnvs.join(', ')}`);
+    }
     const enginePresent = fs.existsSync(path.join(cwd, ENGINE_DIR));
     console.log(`Engine            : ${ENGINE_DIR}/     ${enginePresent ? '✅ present' : '❌ missing'}`);
 
@@ -431,18 +436,17 @@ async function runEject() {
     }
 }
 
-function detectEnvironment(adapters) {
+function detectEnvironments(adapters) {
+    const detected = [];
     for (const env in adapters) {
         const marker = adapters[env].marker;
-        if (marker && fs.existsSync(path.join(cwd, marker))) return env;
+        if (marker && fs.existsSync(path.join(cwd, marker))) {
+            detected.push(env);
+        }
     }
-    return null;
+    return detected;
 }
 
-function saveMagicRc(config) {
-    const magicrcFile = path.join(cwd, '.magicrc');
-    fs.writeFileSync(magicrcFile, JSON.stringify(config, null, 2), 'utf8');
-}
 
 function getFileChecksum(filePath) {
     if (!fs.existsSync(filePath)) return null;
@@ -662,6 +666,7 @@ async function main() {
         console.log("  --env <adapter>      Specify environment adapter");
         console.log("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)");
         console.log("  --update             Update engine files only");
+        console.log("  --local              Use local project files instead of GitHub");
         console.log("  --fallback-main      Pull payload from main branch");
         console.log("  --yes, -y            Auto-accept prompts");
         process.exit(0);
@@ -676,18 +681,16 @@ async function main() {
     const versionToFetch = isFallbackMain ? 'main' : version;
     let sourceRoot = null;
 
-    // Load .magicrc
-    let magicrc = {};
-    const magicrcFile = path.join(cwd, '.magicrc');
-    if (fs.existsSync(magicrcFile)) {
-        try {
-            magicrc = JSON.parse(fs.readFileSync(magicrcFile, 'utf8'));
-        } catch (e) { }
+    if (isLocal) {
+        // In local mode, source root is the parent of 'installers' folder
+        sourceRoot = path.resolve(__dirname, '..', '..');
+        console.log(`🏠 Using local project files from: ${sourceRoot}`);
     }
 
     try {
-        sourceRoot = await downloadPayload(versionToFetch);
-
+        if (!isLocal) {
+            sourceRoot = await downloadPayload(versionToFetch);
+        }
         let ADAPTERS = {};
         try {
             ADAPTERS = JSON.parse(fs.readFileSync(path.join(sourceRoot, 'installers', 'adapters.json'), 'utf8'));
@@ -706,29 +709,32 @@ async function main() {
             }
         }
 
-        let selectedEnvResolved = null;
         if (envValues.length > 0) {
             selectedEnvResolved = envValues[0];
-        } else if (magicrc.env && magicrc.env !== 'default') {
-            selectedEnvResolved = magicrc.env;
         }
 
-        if (!selectedEnvResolved && !isUpdate) {
-            const detected = detectEnvironment(ADAPTERS);
-            if (detected && ADAPTERS[detected] && (!magicrc.env || magicrc.env === 'default')) {
-                const adapterName = ADAPTERS[detected].description || detected;
-                console.log(`\n💡 Detected ${adapterName} (${detected}/ directory found).`);
-                let shouldAdopt = autoAccept;
-                if (!shouldAdopt) {
-                    const answer = await askQuestion(`   Install ${detected} adapter instead of default? (y/N): `);
-                    shouldAdopt = answer.toLowerCase() === 'y';
-                }
-                if (shouldAdopt) {
-                    selectedEnvResolved = detected;
+        if (envValues.length === 0 && !isUpdate) {
+            const detected = detectEnvironments(ADAPTERS);
+            if (detected.length > 0) {
+                // If only one detected, we can suggest it. If multiple, we need user choice or explicit flags.
+                if (detected.length === 1) {
+                    const env = detected[0];
+                    const adapterName = ADAPTERS[env].description || env;
+                    console.log(`\n💡 Detected ${adapterName} (${ADAPTERS[env].marker}/ directory found).`);
+                    let shouldAdopt = autoAccept;
+                    if (!shouldAdopt) {
+                        const answer = await askQuestion(`   Install ${env} adapter instead of default? (y/N): `);
+                        shouldAdopt = answer.toLowerCase() === 'y';
+                    }
+                    if (shouldAdopt) {
+                        selectedEnvResolved = env;
+                    }
+                } else {
+                    console.log(`\n💡 Multiple environments detected: ${detected.join(', ')}`);
+                    console.log(`   Use --env <name> or --<name> to target specific one.`);
                 }
             }
         }
-
         let conflictsToSkip = [];
         if (isUpdate) {
             const conflictResult = await handleConflicts(cwd);
@@ -842,16 +848,6 @@ async function main() {
             console.warn(`⚠️  Failed to write .magic/.version: ${vErr.message}`);
         }
 
-        // 5. Update .magicrc - [T-2C02]
-        try {
-            const newConfig = {
-                env: selectedEnvResolved || magicrc.env || 'default',
-                version: version
-            };
-            saveMagicRc(newConfig);
-        } catch (rcErr) {
-            console.warn(`⚠️  Failed to update .magicrc: ${rcErr.message}`);
-        }
 
         // 6. Save checksums - [T-2C03]
         try {

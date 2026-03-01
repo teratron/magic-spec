@@ -65,5 +65,13 @@
             "CHANGELOG.md"
         ],
         "docsDir": "docs"
+    },
+    "tests": {
+        "sandboxDir": "installers/tests/sandbox",
+        "adaptersJson": "installers/adapters.json",
+        "pythonInstaller": "installers/python/magic_spec/__main__.py",
+        "nodeInstaller": "installers/node/index.js",
+        "testDir": "installers/tests",
+        "testPattern": "test_*.py"
     }
 }

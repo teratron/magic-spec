@@ -1,9 +1,10 @@
 {
     "cursor": {
         "marker": ".cursor",
-        "dest": ".cursor/commands",
-        "ext": ".md",
-        "description": "Cursor Agent"
+        "dest": ".cursor/rules",
+        "ext": ".mdc",
+        "format": "mdc",
+        "description": "Cursor Rules"
     },
     "copilot": {
         "marker": ".github",
@@ -14,7 +15,7 @@
     },
     "claude": {
         "marker": ".claude",
-        "dest": ".claude/commands",
+        "dest": ".claude/rules",
         "ext": ".md",
         "description": "Claude Code"
     },
@@ -34,10 +35,10 @@
     },
     "windsurf": {
         "marker": ".windsurf",
-        "dest": ".windsurf/workflows",
+        "dest": ".windsurf/rules",
         "ext": ".md",
         "format": "mdc",
-        "description": "Windsurf"
+        "description": "Windsurf Cascade"
     },
     "amp": {
         "marker": ".agents",
