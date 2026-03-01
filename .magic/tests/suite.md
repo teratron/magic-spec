@@ -800,7 +800,51 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent moves `api.md` to Backlog in `PLAN.md`.
   - [ ] Agent does NOT delete active tasks.
   - [ ] Pending tasks are marked `Blocked [!]` with "Awaiting spec stabilization".
-- **Guards tested:** Selective Planning Downgrade Policy.
+
+### T48 — Automation Handoff Validation (Init)
+
+- **Workflow:** `init.md`
+- **Synthetic State:**
+  - `.design/` directory is missing.
+  - Engine `.magic/.checksums` exists.
+  - User edited `.magic/scripts/init.ps1` manually.
+  - `check-prerequisites` JSON output contains `"warnings": ["Engine Integrity: '.magic/scripts/init.ps1' has been modified..."]`.
+- **Action:** An arbitrary workflow calls `init.md` indirectly.
+- **Expected:**
+  - [ ] Agent reads the JSON output and detects the `Engine Integrity` warning.
+  - [ ] Agent does **NOT** attempt to compute SHA256 hashes manually.
+  - [ ] Agent HALTs initialization immediately and reports the mismatch.
+- **Guards tested:** AOP Automation Delegation, Engine Integrity Guard.
+
+### T49 — Analysis Depth Control (Prioritization)
+
+- **Workflow:** `analyze.md`
+- **Synthetic State:**
+  - Project contains > 600 files.
+  - No existing specs.
+- **Action:** User runs command to analyze project.
+- **Expected:**
+  - [ ] Agent executes Step 0 (Size Assessment) *before* Step 1.
+  - [ ] Agent detects `> 500 files` using an optimal scanning command (`list_dir`, `find`, or OS equiv).
+  - [ ] Agent halts and asks the user for scanning scope (Full, Focused, or Quick).
+  - [ ] Agent does not proceed to deep scan until scope is clarified.
+- **Guards tested:** Depth Control (Scan Protection).
+
+### T50 — Manual Rename Rescue (Improv Mode)
+
+- **Workflow:** `spec.md`
+- **Synthetic State:**
+  - `INDEX.md` references `core-api.md`.
+  - `core-api.md` is missing from the disk.
+  - `core-auth.md` exists on disk but is not registered.
+  - Both files share 90% content similarity (same title and structure).
+- **Action:** User runs command to sync specs or update the active plan.
+- **Expected:**
+  - [ ] Agent detects the missing spec and the unregistered spec.
+  - [ ] Agent compares the content/title of the two specs.
+  - [ ] Agent determines it is a **Manual Rename** (>80% similarity).
+  - [ ] Agent successfully cascades the rename in `INDEX.md`, `PLAN.md`, and `TASKS.md` via the Spec Renaming Protocol without deleting tasks.
+- **Guards tested:** Manual Rename Rescue (AOP), Spec Renaming Protocol.
 
 ## Document History
 
@@ -823,3 +867,6 @@ If any test fails, document the failure reason and propose a fix.
 | 1.14.0 | 2026-02-28 | Antigravity | Added T44 to test Onboard Wipe Protocol identity detection to prevent production data deletion |
 | 1.15.0 | 2026-02-28 | Antigravity | Added T45 to verify run completion does not modify `.magic/.version` (Version Bleed Guard) |
 | 1.16.0 | 2026-02-28 | Antigravity | Added T46 (Spec Rename Retention) and T47 (Stability Downgrade Tracking) |
+| 1.17.0 | 2026-03-01 | Antigravity | Added T48 to test Init AOP Delegation for Engine Integrity (prevent manual hashing) |
+| 1.18.0 | 2026-03-01 | Antigravity | Added T49 to test Analysis Depth Control Size Assessment prior to scan |
+| 1.19.0 | 2026-03-01 | Antigravity | Added T50 to test Manual Rename Rescue (Improv Mode simulation result) |

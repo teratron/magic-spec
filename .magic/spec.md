@@ -185,6 +185,7 @@ graph TD
    - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
 8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a global search-and-replace across all `.design/` files (including `INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`, and `Related Specifications` links) to update all references to the new name. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
+   - **Manual Rename Rescue (AOP)**: If you discover a "missing" spec (in `INDEX.md` but missing from disk) AND a "new" unregistered spec (on disk but missing from `INDEX.md`), immediately compare their content and `# Title`. If similarity is >80%, assume the user manually renamed the file. Do NOT delete and recreate it. Automatically trigger the Spec Renaming Protocol above to rescue task progress.
 9. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
 10. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
 11. **Task Completion Checklist**: Present the checklist to the user.

@@ -35,7 +35,7 @@ graph TD
 ## Workflow Steps
 
 1. **Check `.design/`**: Verify directory exists.
-   - **Engine Integrity**: Before creating anything, verify `.magic/.checksums` exists. If checksums are present, validate that init scripts match their stored hashes. If mismatch, warn the user before proceeding.
+   - **Engine Integrity Check**: Before running any `init` commands, verify that `check-prerequisites --json` did not return any `"Engine Integrity"` warnings in its output. If an integrity mismatch warning is detected, report the mismatch to the user and **HALT**. Do not initialize `.design/` with tampered engine scripts.
 2. **Check system files**: Verify `INDEX.md` and `RULES.md` exist inside `.design/`.
 3. **If anything missing**: Detect OS and run the appropriate script:
 

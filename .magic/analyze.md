@@ -48,6 +48,28 @@ graph TD
     J -->|Cancel| L["Discard proposal"]
 ```
 
+## Step 0: Size Assessment (Depth Control)
+
+Before proceeding with any deep file scanning (in either First-Time or Re-Analysis modes), measure the codebase size using an initial root `list_dir` or file counting command.
+
+For large projects, **stop and ask** the user before deep-scanning:
+
+```
+This project contains ~{N} files across {M} directories.
+A full analysis may take several minutes.
+
+Options:
+  (A) Full scan — analyze the entire project
+  (B) Focused scan — specify directories or modules to analyze
+  (C) Quick scan — top-level structure only (fastest)
+```
+
+**Thresholds:**
+
+- **< 50 files**: Full scan automatically, no prompt.
+- **50–500 files**: Offer Full or Focused.
+- **> 500 files**: Recommend Focused or Quick, offer Full as option.
+
 ## First-Time Analysis
 
 Use this flow when `.design/INDEX.md` is empty or has no registered specifications.
@@ -292,26 +314,6 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 2. **Dispatch**: On approval, new specs go through "Creating a New Specification", updates through "Updating an Existing Specification", deprecations through status change — all in `spec.md`.
    - **Bootstrapping Exemption**: For new specs generated from existing, functional uncovered modules, the agent may bypass the `Draft → RFC → Stable` lifecycle and create both L1 and L2 specs directly as **Stable**.
 
-## Depth Control
-
-For large projects, the agent must ask before deep-scanning:
-
-```
-This project contains ~{N} files across {M} directories.
-A full analysis may take several minutes.
-
-Options:
-  (A) Full scan — analyze the entire project
-  (B) Focused scan — specify directories or modules to analyze
-  (C) Quick scan — top-level structure only (fastest)
-```
-
-**Thresholds:**
-
-- **< 50 files**: Full scan automatically, no prompt.
-- **50–500 files**: Offer Full or Focused.
-- **> 500 files**: Recommend Focused or Quick, offer Full as option.
-
 ## Document History
 
 | Version | Date | Author | Description |
@@ -320,3 +322,4 @@ Options:
 | 1.1.0 | 2026-02-27 | Antigravity | Added Layer 2 (Implementation) extraction and Bootstrapping Exemption for existing codebases |
 | 1.2.0 | 2026-02-27 | Antigravity | Fixed Re-Analysis Gap Report to support L1/L2 duality and extended Bootstrapping Exemption to gap detection |
 | 1.3.0 | 2026-02-28 | Antigravity | AOP: Added Auto-Init guard to Agent Guidelines, fixed list continuity for Re-Analysis steps |
+| 1.4.0 | 2026-03-01 | Antigravity | AOP: Promoted Depth Control to Step 0 Size Assessment to prevent unoptimized deep scans, fixed Re-Analysis list numbering |
