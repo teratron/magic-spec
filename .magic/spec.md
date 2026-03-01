@@ -359,18 +359,3 @@ Review
 
 > `INDEX.md` and `RULES.md` are created automatically by Init (`.magic/init.md`).
 > Specification template: `.magic/templates/specification.md` — read it when creating a new spec.
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2 scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |
-| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted Specification Template to templates/, compressed Post-Update Review, Audit Report, and Consistency Report |
-| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: added intra-input self-contradiction edge case to Dispatching |
-| 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
-| 1.5.0 | 2026-02-27 | Antigravity | Project Analysis delegation: Explore Mode routes codebase analysis triggers to `.magic/analyze.md` |
-| 1.6.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard, implemented Spec Renaming Protocol to prevent Task Resets |
-| 1.7.0 | 2026-03-01 | Antigravity | Fix: Added Registry Integrity guard (Missing Specs check) during Consistency Check |
-| 1.8.0 | 2026-03-01 | Antigravity | Fix: Extended Deprecation Cascade to include `Implements` references for Layer integrity |
-| 1.9.0 | 2026-03-01 | Antigravity | Fix: Spec Renaming Protocol explicitly forbids modifying `RETROSPECTIVE.md` and `archives/` to preserve historical immutability |

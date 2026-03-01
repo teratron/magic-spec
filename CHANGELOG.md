@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.5] - 2026-03-01
+
+### Added
+
+- **Engine Versioning Protocol (C14)**: Established a mandatory convention requiring a patch version bump in `.magic/.version` whenever core engine files are modified. Integrated checkpoints into all primary workflows (`run.md`, `spec.md`, `rule.md`).
+- **History Refactoring**: Extracted "Document History" from core workflow markdown files into a dedicated `.magic/history/` directory. This significantly reduces token consumption during agentic operations while preserving audit trials.
+- **Node.js Script Transition**: Fully replaced legacy `.sh` and `.ps1` initialization and utility scripts with cross-platform Node.js implementations (`init.js`, `generate-context.js`, etc.).
+
+### Changed
+
+- **Installer Configuration**: Optimized `installers/config.json` to exclude history files from distribution and prioritize Node.js scripts.
+- **Engine Security**: `generate-checksums.js` and `executor.js` now explicitly skip history files to prevent non-functional changes from triggering integrity warnings.
+- **Template System**: `init.js` now automatically injects the new C14 protocol into target project constitution files (`RULES.md`).
+
+### Fixed
+
+- **Syntax Hygiene**: Cleaned up redundant markdown artifacts (terminal backticks) in core workflow files.
+- **Workflow Integrity**: Fixed accidental history duplication in `spec.md`.
+
 ## [1.4.3] - 2026-03-01
 
 ### Added

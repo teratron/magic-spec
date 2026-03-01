@@ -10,3 +10,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | Bugfix: Run Stall on Cancelled |
 | 1.3.2 | 2026-02-28 | Antigravity | AOP: Fixed Version Bleed and added HALT guard |
 | 1.4.4 | 2026-03-01 | Antigravity | Added C14 Engine Versioning Protocol to workflow steps |
+| 1.4.5 | 2026-03-01 | Antigravity | Fix: Removed redundant backticks at the end of the file |

@@ -45,7 +45,7 @@ Both installers act as lightweight wrappers. They do not bundle the entire SDD e
 1. **Payload Discovery**: Download the latest versioned tarball from GitHub releases.
 2. **Security Verification**: Validate the payload to prevent path traversal and ensure safe extraction.
 3. **Engine Deployment**: Extract `.magic/` (engine) and `.agent/` (workflows) into your project root.
-4. **Initialization**: Automatically run the project-level init script (`.magic/scripts/init.sh` or `.ps1`).
+4. **Initialization**: Automatically run the project-level init script via `node .magic/scripts/executor.js init`.
 
 ## 🕹️ CLI Commands & Arguments
 
@@ -61,7 +61,7 @@ Manage your Magic Spec installation with these flags:
 | `--list-envs` | Lists all available IDE adapters and their destination paths. |
 | `--doctor` | Checks for missing files or inconsistencies in your workspace. |
 | `--eject` | Uninstalls Magic Spec and removes the `.magic/` folder. |
-| `--yes`, `-y` | Non-interactive mode (auto-accepts prompts; still shows `init.sh` safety warning). |
+| `--yes`, `-y` | Non-interactive mode (auto-accepts prompts; still shows engine initialization safety warning). |
 | `--fallback-main` | Downloads from `main` branch instead of the latest stable tag. |
 
 ## 🧩 Adapter Shortcuts

@@ -209,5 +209,3 @@ Conclusion (on phase/plan completion)
   ☐ If plan complete: project manifests or .design/VERSION bumped
   ☐ CONTEXT.md regenerated
 ```
-
-```
