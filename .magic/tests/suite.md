@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.16.0
+**Version:** 1.4.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -846,6 +846,23 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent successfully cascades the rename in `INDEX.md`, `PLAN.md`, and `TASKS.md` via the Spec Renaming Protocol without deleting tasks.
 - **Guards tested:** Manual Rename Rescue (AOP), Spec Renaming Protocol.
 
+### T51 — Analyze Smart Sync (AOP)
+
+- **Workflow:** `analyze.md` (Re-Analysis Mode)
+- **Synthetic State:**
+  - `INDEX.md` references `auth.md`.
+  - `auth.md` spec describes `src/auth/` (module deleted).
+  - Directory `src/identity/` now exists (uncovered).
+  - `auth.md` contains `# Title: Authentication System`.
+- **Action:** User says "Re-analyze project"
+- **Expected:**
+  - [ ] Agent identifies `auth.md` as **Orphaned** and `src/identity/` as **Uncovered**.
+  - [ ] Agent checks for title/content similarity (Smart Sync trigger).
+  - [ ] Agent matches `Authentication System` title to `identity` module.
+  - [ ] Re-Analysis report proposes `[RESCUE]` action instead of separate delete/create.
+  - [ ] Gap Report status for `src/identity/` marked as `Manual Rename (Synced)`.
+- **Guards tested:** Smart Sync (AOP) Rename detection, Gap Report RESCUE action.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -870,3 +887,5 @@ If any test fails, document the failure reason and propose a fix.
 | 1.17.0 | 2026-03-01 | Antigravity | Added T48 to test Init AOP Delegation for Engine Integrity (prevent manual hashing) |
 | 1.18.0 | 2026-03-01 | Antigravity | Added T49 to test Analysis Depth Control Size Assessment prior to scan |
 | 1.19.0 | 2026-03-01 | Antigravity | Added T50 to test Manual Rename Rescue (Improv Mode simulation result) |
+| 1.20.0 | 2026-03-01 | Antigravity | Added T51 to test Smart Sync (AOP) Optimization in Analyze workflow |
+| 1.4.0 | 2026-03-01 | Antigravity | Synchronized suite version with engine core (1.4.0) |

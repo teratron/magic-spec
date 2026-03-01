@@ -268,6 +268,8 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 | **Orphaned** | Specs that reference code/modules that no longer exist |
 | **Drifted** | Specs whose described structure doesn't match current code |
 
+> **Smart Sync Optimization (AOP)**: During delta computation, if an **Orphaned** spec and an **Uncovered** directory share >80% content similarity (or the spec's `# Title` matches the new directory name), automatically classify this as a **Manual Rename**. In the Gap Report, propose a `[RESCUE]` action instead of separate Delete/Create actions. This maps to the `spec.md` Spec Renaming Protocol.
+
 1. **Generate Gap Report** (saved to artifacts):
 
 ```markdown
@@ -323,3 +325,4 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 | 1.2.0 | 2026-02-27 | Antigravity | Fixed Re-Analysis Gap Report to support L1/L2 duality and extended Bootstrapping Exemption to gap detection |
 | 1.3.0 | 2026-02-28 | Antigravity | AOP: Added Auto-Init guard to Agent Guidelines, fixed list continuity for Re-Analysis steps |
 | 1.4.0 | 2026-03-01 | Antigravity | AOP: Promoted Depth Control to Step 0 Size Assessment to prevent unoptimized deep scans, fixed Re-Analysis list numbering |
+| 1.5.0 | 2026-03-01 | Antigravity | AOP: Added Smart Sync Optimization to Re-Analysis Mode for automated rename detection |

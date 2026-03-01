@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.0] - 2026-03-01
+
+### Added
+
+- **Smart Sync Optimization (AOP)** in `analyze.md`: Automated detection of manual renames during project re-analysis. If an orphaned specification matches a new uncovered directory (>80% similarity or title match), it triggers a `[RESCUE]` action instead of delete/create cycle.
+- **Manual Rename Rescue** in `spec.md`: Protocol to globally update references (INDEX, PLAN, TASKS) when a specification file is moved/renamed, preserving task progress.
+- **Regression Tests (T48–T51)**: Added coverage for Engine Integrity guards, Analysis Depth Control, and Smart Sync mechanisms.
+
+### Changed
+
+- **Test Suite Synchronization**: The `suite.md` version is now synchronized with the core engine version to prevent metadata confusion.
+
 ## [1.3.2] - 2026-02-28
 
 ### Added
