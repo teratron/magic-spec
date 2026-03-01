@@ -109,4 +109,3 @@ Before every release, ensure:
 - **"No such file or directory"**: Ensure you are in the correct directory. Developers should work from the root or `installers/` subfolders.
 - **"Payload not found"**: Ensure the version in `package.json` or `.magic/.version` has been tagged and pushed to GitHub.
 - **Version Collision**: npm and PyPI do not allow overwriting versions. Increment the version number in `.magic/.version` before running `publish.py`.
-

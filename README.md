@@ -51,19 +51,46 @@ root-project/
 
 ## 🖼️ Visuals
 
-The engine operates on a smart, self-correcting feedback loop:
+The engine enforces a rigorous, unskippable pipeline: **Idea → Specification → Task & Plan → Code**. AI agents are prevented from jumping straight to coding. They must first formally specify the solution, then break it down into a concrete plan and tasks, and only then proceed to execution.
 
 ```mermaid
-graph TD
-    IDEA["💡 Idea"] --> INIT{"🏗️ Auto-Init"}
-    INIT -->|.design/ exists| SPEC
-    INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
-    SPEC["📋 Specification"] <--> RULE["📜 Rule"]
-    SPEC --> TASK["🗺️ Task & Plan"]
-    TASK --> RUN["⚡ Run"]
-    RUN --> CODE["🚀 Code"]
-    RUN -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
-    RETRO -.->|Feedback loop| SPEC
+flowchart TB
+    IDEA(["💡 Идея"])
+
+    subgraph BOX ["Magic Spec"]
+        direction TB
+
+        SPEC["📋 Spec"]
+
+        subgraph TASK ["🗺️ Task"]
+            direction TB
+            PLAN["📐 Plan"]
+            TASKS["📌 Tasks"]
+            PLAN --> TASKS
+        end
+
+        RUN["⚡ Run"]
+
+        SPEC  --> PLAN
+        TASKS --> RUN
+    end
+
+    CODE(["🚀 Код"])
+
+    IDEA --> SPEC
+    RUN  --> CODE
+
+    style IDEA  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style CODE  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
+
+    style BOX   fill:#181825,stroke:#fab387,stroke-width:3px,color:#fab387
+
+    style SPEC  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+    style RUN   fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
+
+    style TASK  fill:#11111b,stroke:#89b4fa,stroke-dasharray:5 5,color:#89b4fa
+    style PLAN  fill:#1e1e2e,stroke:#45475a,stroke-dasharray:4 4,color:#cdd6f4
+    style TASKS fill:#1e1e2e,stroke:#45475a,stroke-dasharray:4 4,color:#cdd6f4
 ```
 
 ## ⚙️ Requirements
@@ -154,7 +181,7 @@ npx magic-spec@latest --update
 > [!TIP]
 > The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agent/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
 
-## � Usage
+## 💬 Usage
 
 Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
 
@@ -165,29 +192,31 @@ Just talk to your AI agent naturally in your prompt interface. No complex comman
 
 ### 🤝 Compatibility
 
-Magic Spec is heavily optimized and provides native workflow generation for the world's most powerful AI development environments:
+Magic Spec is heavily optimized and provides native workflow generation for the world's most powerful AI development environments.
 
-| AI Agent / IDE | Installation Flag |
-| :--- | :--- |
-| [**Cursor**](https://cursor.com) (Agent Mode) | `--cursor` |
-| [**Windsurf**](https://codeium.com/windsurf) (Cascade) | `--windsurf` |
-| [**Claude Code**](https://claude.ai/code) | `--claude` |
-| [**Gemini CLI**](https://gemini.google.com) | `--gemini` |
-| [**GitHub Copilot**](https://github.com/features/copilot) | `--copilot` |
-| **Roo Code** | `--roo` |
-| **Amp** | `--amp` |
-| **Amazon Q Developer** | `--q` |
-| **Kilo Code** | `--kilocode` |
-| **Qwen Code** | `--qwen` |
-| **OpenCode** | `--opencode` |
-| **SHAI (OVHcloud)** | `--shai` |
-| **IBM Bob** | `--bob` |
-| **CodeBuddy** | `--codebuddy` |
-| **Qoder IDE** | `--qoder` |
-| **Codex CLI** | `--codex` |
-| **Auggie CLI** | `--augment` |
-| **Antigravity IDE** | `--antigravity` |
-| **Lingma IDE** | `--lingma` |
+You can install support for a specific adapter using the shortcut flag (e.g., `--cursor`) or the environment flag (e.g., `--env cursor`).
+
+| AI Agent / IDE | Shortcut Flag | Env Flag |
+| :--- | :--- | :--- |
+| [**Cursor**](https://cursor.com) (Agent Mode) | `--cursor` | `--env cursor` |
+| [**Windsurf**](https://codeium.com/windsurf) (Cascade) | `--windsurf` | `--env windsurf` |
+| [**Claude Code**](https://claude.ai/code) | `--claude` | `--env claude` |
+| [**Gemini CLI**](https://gemini.google.com) | `--gemini` | `--env gemini` |
+| [**GitHub Copilot**](https://github.com/features/copilot) | `--copilot` | `--env copilot` |
+| **Roo Code** | `--roo` | `--env roo` |
+| **Amp** | `--amp` | `--env amp` |
+| **Amazon Q Developer** | `--q` | `--env q` |
+| **Kilo Code** | `--kilocode` | `--env kilocode` |
+| **Qwen Code** | `--qwen` | `--env qwen` |
+| **OpenCode** | `--opencode` | `--env opencode` |
+| **SHAI (OVHcloud)** | `--shai` | `--env shai` |
+| **IBM Bob** | `--bob` | `--env bob` |
+| **CodeBuddy** | `--codebuddy` | `--env codebuddy` |
+| **Qoder IDE** | `--qoder` | `--env qoder` |
+| **Codex CLI** | `--codex` | `--env codex` |
+| **Auggie CLI** | `--augment` | `--env augment` |
+| **Antigravity IDE** | `--antigravity` | `--env antigravity` |
+| **Lingma IDE** | `--lingma` | `--env lingma` |
 
 ## 📚 Documentation
 
