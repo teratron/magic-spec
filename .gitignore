@@ -40,6 +40,11 @@ dist/
 temp/
 *tmp/
 
+# Magic files
+magic.*.md*
+magic.*.toml
+!.agent/workflows/magic.*.md
+
 # Sandbox for local testing
 .sandbox/
 installers/tests/sandbox/
