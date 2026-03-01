@@ -17,7 +17,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Updater Integrity**: Modified files that are bypassed during an update via `[s] Skip modified files` now persist their original hashes so they don't get silently overwritten in subsequent updates.
 - **Testing Logic**: Fixed an issue in the `run_tests.py` exhaustive test suite section where failures during adapter testing cycles were mistakenly swallowed, reporting a false "All tests completed successfully".
 
-## [1.4.3] - 2026-03-01
+## [1.4.1] - 2026-03-01
 
 ### Fixed
 

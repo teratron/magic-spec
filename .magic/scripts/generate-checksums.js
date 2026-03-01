@@ -25,10 +25,12 @@ function getAllFiles(dirPath, arrayOfFiles) {
     arrayOfFiles = arrayOfFiles || [];
 
     files.forEach((file) => {
-        if (fs.statSync(path.join(dirPath, file)).isDirectory()) {
-            arrayOfFiles = getAllFiles(path.join(dirPath, file), arrayOfFiles);
+        const fullPath = path.join(dirPath, file);
+        if (fs.statSync(fullPath).isDirectory()) {
+            if (file === 'history') return;
+            arrayOfFiles = getAllFiles(fullPath, arrayOfFiles);
         } else {
-            arrayOfFiles.push(path.join(dirPath, file));
+            arrayOfFiles.push(fullPath);
         }
     });
 

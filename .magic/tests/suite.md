@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.4.1
+**Version:** 1.7.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -863,30 +863,44 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Gap Report status for `src/identity/` marked as `Manual Rename (Synced)`.
 - **Guards tested:** Smart Sync (AOP) Rename detection, Gap Report RESCUE action.
 
-## Document History
+### T52 — Spec Consistency Registry Integrity Missing File
 
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-27 | Antigravity | Initial test suite — 16 scenarios covering 8 workflows |
-| 1.1.0 | 2026-02-27 | Antigravity | Extended suite: added T17–T28 (12 scenarios) — T4 trigger, Explore Mode, amendment, parallel run, conclusion cascade, multi-phase, Level 2 retro, Selective Planning, core amendment, re-entry, consistency audit, end-to-end lifecycle. Total: 28 scenarios |
-| 1.2.0 | 2026-02-27 | Antigravity | Added T29–T33 (5 scenarios): analyze.md first-time analysis, re-analysis gap detection, delegation routing, init codebase hint, depth control. Total: 33 scenarios |
-| 1.3.0 | 2026-02-27 | Antigravity | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
-| 1.4.0 | 2026-02-28 | Antigravity | Added T34 for missing test suite fallback and Improv Mode (Live Simulation) |
-| 1.5.0 | 2026-02-28 | Antigravity | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
-| 1.6.0 | 2026-02-28 | Antigravity | Added T36 to verify `.agent/workflows/magic.run.md` handoff pointing to `magic.spec` |
-| 1.7.0 | 2026-02-28 | Antigravity | Added T37 to test regression suite sweep is triggered after any workflow fixes |
-| 1.8.0 | 2026-02-28 | Antigravity | Added T38 to verify Workspace Context Resolution (Zero-Prompt priority chain) |
-| 1.9.0 | 2026-02-28 | Antigravity | Added T39 to test Retrospective path safety inside workspaces and Level 1 template copy |
-| 1.10.0 | 2026-02-28 | Antigravity | Added T40 to test Analyze Auto-Init Guard and List Integrity |
-| 1.11.0 | 2026-02-28 | Antigravity | Added T41 to verify run stall prevention on `Cancelled` tasks and metric tracking |
-| 1.12.0 | 2026-02-28 | Antigravity | Added T42 to verify zero-prompt fallback to Improv Mode on arguments absence |
-| 1.13.0 | 2026-02-28 | Antigravity | Added T43 to test Rule Batch Operations limit and dynamic sequential ID extraction |
-| 1.14.0 | 2026-02-28 | Antigravity | Added T44 to test Onboard Wipe Protocol identity detection to prevent production data deletion |
-| 1.15.0 | 2026-02-28 | Antigravity | Added T45 to verify run completion does not modify `.magic/.version` (Version Bleed Guard) |
-| 1.16.0 | 2026-02-28 | Antigravity | Added T46 (Spec Rename Retention) and T47 (Stability Downgrade Tracking) |
-| 1.17.0 | 2026-03-01 | Antigravity | Added T48 to test Init AOP Delegation for Engine Integrity (prevent manual hashing) |
-| 1.18.0 | 2026-03-01 | Antigravity | Added T49 to test Analysis Depth Control Size Assessment prior to scan |
-| 1.19.0 | 2026-03-01 | Antigravity | Added T50 to test Manual Rename Rescue (Improv Mode simulation result) |
-| 1.20.0 | 2026-03-01 | Antigravity | Added T51 to test Smart Sync (AOP) Optimization in Analyze workflow |
-| 1.4.0 | 2026-03-01 | Antigravity | Synchronized suite version with engine core (1.4.0) |
-| 1.4.1 | 2026-03-01 | Antigravity | Localization fixes: translated remaining Russian labels in README.md diagrams |
+- **Workflow:** `spec.md` (Consistency Check & Audit Report)
+- **Synthetic State:**
+  - `INDEX.md` references `data-model.md`.
+  - `data-model.md` is deleted from disk (does not exist).
+  - No unregistered spec exists (not a manual rename).
+- **Action:** User says "Check specs"
+- **Expected:**
+  - [ ] Agent reads `INDEX.md` and identifies `data-model.md`.
+  - [ ] Agent detects the file is completely missing from `.design/specifications/`.
+  - [ ] Agent does NOT attempt to parse paths from the missing file (avoids crash).
+  - [ ] Agent flags the **Registry Integrity** issue.
+  - [ ] Consistency Report generated proposing to remove the orphaned entry from `INDEX.md` or restoring the file.
+- **Guards tested:** Registry Integrity Guard, Missing File Exception Handling.
+
+### T53 — Spec Deprecation Cascade with Implements Hierarchy
+
+- **Workflow:** `spec.md` (Updating an Existing Specification)
+- **Synthetic State:**
+  - `auth-concept.md` (Stable L1), `auth-impl.md` (Stable L2, Implements: auth-concept.md)
+- **Action:** User says "Deprecate auth-concept.md"
+- **Expected:**
+  - [ ] Status change: `auth-concept.md` → Deprecated
+  - [ ] INDEX.md updated
+  - [ ] **Deprecation Cascade**: `auth-impl.md` flagged as containing stale `Implements` link to `auth-concept.md`
+  - [ ] Post-Update Review surfaces layer isolation logic (L2 has no valid L1 parent).
+- **Guards tested:** Deprecation Cascade on Implements clause, Layer Integrity.
+
+### T54 — Spec Rename History Immutability
+
+- **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
+- **Synthetic State:**
+  - `RETROSPECTIVE.md` exists and contains mentions of `old-api.md`.
+  - `.design/archives/tasks/phase-1.md` exists and contains mentions of `old-api.md`.
+- **Action:** User renames `old-api.md` to `new-api.md`.
+- **Expected:**
+  - [ ] Status/Renaming applied: Agent updates active files (`INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements`).
+  - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
+  - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
+- **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.

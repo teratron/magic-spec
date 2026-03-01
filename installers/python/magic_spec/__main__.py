@@ -157,7 +157,10 @@ def _get_directory_checksums(directory: pathlib.Path) -> dict[str, str]:
     checksums = {}
     if not directory.exists():
         return checksums
-    for root, _, files in os.walk(directory):
+    for root, dirs, files in os.walk(directory):
+        # Skip history directory
+        if "history" in dirs:
+            dirs.remove("history")
         for file in files:
             full_path = pathlib.Path(root) / file
             rel_path = full_path.relative_to(directory).as_posix()

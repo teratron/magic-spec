@@ -236,13 +236,3 @@ Output
 ## Templates
 
 > RETROSPECTIVE.md template: `.magic/templates/retrospective.md` — read it when creating RETROSPECTIVE.md for the first time.
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to both levels, RETROSPECTIVE.md creation in Level 1, split checklists for Level 1/2, realistic checklist metric source, archives in directory structure |
-| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted RETROSPECTIVE.md template to templates/ |
-| 1.3.0 | 2026-02-28 | Antigravity | AOP: Fixed hardcoded `.design/` paths for Workspace compatibility, optimized template creation in Level 1 |
-| 1.4.0 | 2026-02-28 | Antigravity | Bugfix: Missing Cancelled Metric — tracking `Cancelled` tasks added to tables and snapshots |

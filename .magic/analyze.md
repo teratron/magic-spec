@@ -315,14 +315,3 @@ Use this flow when `.design/INDEX.md` already contains registered specifications
 1. **User Review**: Present the gap report with the same options (Approve all / Select / Adjust / Cancel).
 2. **Dispatch**: On approval, new specs go through "Creating a New Specification", updates through "Updating an Existing Specification", deprecations through status change — all in `spec.md`.
    - **Bootstrapping Exemption**: For new specs generated from existing, functional uncovered modules, the agent may bypass the `Draft → RFC → Stable` lifecycle and create both L1 and L2 specs directly as **Stable**.
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-27 | Antigravity | Initial creation: First-Time Analysis, Re-Analysis Mode, Depth Control |
-| 1.1.0 | 2026-02-27 | Antigravity | Added Layer 2 (Implementation) extraction and Bootstrapping Exemption for existing codebases |
-| 1.2.0 | 2026-02-27 | Antigravity | Fixed Re-Analysis Gap Report to support L1/L2 duality and extended Bootstrapping Exemption to gap detection |
-| 1.3.0 | 2026-02-28 | Antigravity | AOP: Added Auto-Init guard to Agent Guidelines, fixed list continuity for Re-Analysis steps |
-| 1.4.0 | 2026-03-01 | Antigravity | AOP: Promoted Depth Control to Step 0 Size Assessment to prevent unoptimized deep scans, fixed Re-Analysis list numbering |
-| 1.5.0 | 2026-03-01 | Antigravity | AOP: Added Smart Sync Optimization to Re-Analysis Mode for automated rename detection |

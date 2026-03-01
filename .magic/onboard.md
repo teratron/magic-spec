@@ -111,13 +111,3 @@ Onboarding Checklist — Tutorial Complete
   ☐ Phase archival demonstrated (C8)
   ☐ User understands the full SDD lifecycle
 ```
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification via magic.simulate |
-| 1.2.0 | 2026-02-26 | Antigravity | Pre-flight via check-prerequisites + init, re-entry on abandonment, INDEX.md version bump, completion checklist |
-| 1.3.0 | 2026-02-27 | Antigravity | Simulation fix: production collision HALT with backup/cancel, re-entry checks production PLAN.md, template references for PLAN/TASKS |
-| 1.4.0 | 2026-02-28 | Antigravity | AOP: Clarified Wipe Protocol for Re-entry context to prevent production data deletion, unified trigger words to `continue` |

@@ -90,12 +90,3 @@ Init Checklist
   ☐ tasks/ directory exists
   ☐ archives/tasks/ directory exists
 ```
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Documented check-prerequisites call chain, added engine integrity check, post-init verification step, completion checklist |
-| 1.2.0 | 2026-02-27 | Antigravity | Simulation fix: expanded verification to all 5 artifacts, added Maintainer Note for hardcoded RULES.md sync |
-| 1.3.0 | 2026-02-27 | Antigravity | Existing codebase hint: after init, suggest "Analyze project" if source code detected |

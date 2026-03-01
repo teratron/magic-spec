@@ -145,15 +145,3 @@ Data Integrity
 >
 > - `.magic/templates/plan.md` — PLAN.md structure
 > - `.magic/templates/tasks.md` — TASKS.md master index + per-phase task file
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to Update path, RFC handling in C6, convention sync detection via Based on RULES field, phantom spec handling, Phase 0 clarification, execution mode guard, dynamic task ID format in checklist |
-| 1.2.0 | 2026-02-27 | Antigravity | AOP: Extracted PLAN.md, TASKS.md, phase-{n}.md templates to templates/ |
-| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: Phantom spec handling — Done tasks archived, not cancelled |
-| 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Circular Dependency Guard, Deprecated Done-task preservation, Convention Sync wording fix |
-| 1.5.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight checks |
-| 1.6.0 | 2026-02-28 | Antigravity | AOP: Added Downgrade Policy to Selective Planning (C6) to protect tasks when specs rollback from Stable |

@@ -165,6 +165,14 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
 5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
 
+### C14 — Engine Versioning Protocol
+
+To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the \`.magic/\` directory, including workflows and templates) MUST be accompanied by a **patch** version increment in \`.magic/.version\`. 
+
+1. **Scope**: Applies to all \`.md\` workflows, \`scripts/\`, \`templates/\`, and \`config.json\` inside the engine directory.
+2. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
+3. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
+
 ## Document History
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |

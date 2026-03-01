@@ -500,7 +500,7 @@ function getDirectoryChecksums(dir, baseDir = dir) {
     for (const item of items) {
         const fullPath = path.join(dir, item.name);
         if (item.isDirectory()) {
-            if (item.name === '.checksums') continue;
+            if (item.name === '.checksums' || item.name === 'history') continue;
             Object.assign(results, getDirectoryChecksums(fullPath, baseDir));
         } else {
             if (item.name === '.checksums') continue;

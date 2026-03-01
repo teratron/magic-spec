@@ -116,7 +116,9 @@ graph TD
            - Node.js → `package.json` (.version field)
            - Python  → `pyproject.toml` ([project].version)
            - Rust    → `Cargo.toml` ([package].version)
-           If no manifests exist, create or update `.design/VERSION`. **CRITICAL**: Never modify `.magic/.version` — that file tracks the engine installation, not the project version.
+           If no manifests exist, create or update `.design/VERSION`.
+
+           **CRITICAL (Engine Versioning)**: If the current task involves modifying the core engine files (anything inside `.magic/`), you MUST also increment the **patch** version in `.magic/.version`. For all other project-level tasks, do not modify this file.
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
@@ -207,17 +209,5 @@ Conclusion (on phase/plan completion)
   ☐ If plan complete: project manifests or .design/VERSION bumped
   ☐ CONTEXT.md regenerated
 ```
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Fixed mermaid C9 contradiction, added RULES.md read to steps, stalled phase handling, change record instruction, changelog Level 1/2 specification, CHANGELOG.md creation rule, pre-flight for Parallel mode, semantic version bump logic, multi-manifest support, conclusion checklist items |
-| 1.2.0 | 2026-02-27 | Antigravity | Stress-test fix: Mode Guard added — halt if execution mode not in RULES.md §7 |
-| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; auto-compilation skips block |
-| 1.4.0 | 2026-02-28 | Antigravity | Core enhancement: Plan Amnesia fix — instructed agents to synchronize `[x]` to `PLAN.md` upon spec completion |
-| 1.5.0 | 2026-02-28 | Antigravity | Bugfix: Run Stall on Cancelled — phase completion condition now checks `Done` or `Cancelled` tasks |
-| 1.6.0 | 2026-02-28 | Antigravity | AOP: Fixed Version Bleed (`.magic/.version` decoupled from project version logic), added explicit `checksums_mismatch` HALT guard |
 
 ```

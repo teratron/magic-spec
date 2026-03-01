@@ -125,17 +125,3 @@ Cleanup
   ☐ Versions bumped in modified files
   ☐ Document History updated
 ```
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-25 | Antigravity | Added pre-flight check, archival clarification |
-| 1.2.0 | 2026-02-26 | Antigravity | Added pre-flight Step 0, lighter Step 7 verification, fixed checklist indentation and C1-C11 reference |
-| 1.3.0 | 2026-02-27 | Antigravity | Stress-test fix: checksums_mismatch upgraded to HALT; added Checksum Rule to Step 6 (generate after approval) |
-| 1.4.0 | 2026-02-27 | Antigravity | Added Test Suite mode: `/magic.simulate test` runs predefined scenarios from `.magic/tests/suite.md` |
-| 1.5.0 | 2026-02-28 | Antigravity | Added Improv Mode (Live Simulation) and fallback for missing test suite |
-| 1.6.0 | 2026-02-28 | Antigravity | Test Automation Loop: enforced adding new tests to `suite.md` alongside any proposed workflow fixes |
-| 1.7.0 | 2026-02-28 | Antigravity | Enforced Regression Sweep (triggering test suite directly after applying fixes to workflows) |
-| 1.8.0 | 2026-02-28 | Antigravity | Dynamic Default target: calling `/magic.simulate` without arguments now automatically triggers Improv Mode (Live Stress-Test) |

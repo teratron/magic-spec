@@ -134,13 +134,5 @@ Task Completion Checklist — {operation description}
   ☐ Document History row added
   ☐ No contradiction with existing rules in §1–6
   ☐ Impact Analysis presented to user (audit/plan-update suggestions)
+  ☐ If core engine files (.magic/) were modified: .magic/.version patch bumped (C14)
 ```
-
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Added pre-flight to all write paths, convention ID assignment (C{N+1}), target rule identification in Amend/Remove, Convention Sync note in Impact Analysis, Impact Analysis checklist item |
-| 1.2.0 | 2026-02-27 | Antigravity | Simulation fix: Duplication Guard in Add, convention-not-found handler in Amend, Workflow Dependency Check in Remove Impact Analysis |
-| 1.3.0 | 2026-02-28 | Antigravity | AOP: Fixed Batch Operation loop (spam prevention) and clarified ID extraction logic |

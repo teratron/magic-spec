@@ -182,9 +182,9 @@ graph TD
 4. **Document History**: Append a new row to the `Document History` table inside the spec file.
 5. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
 6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
-   - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
+   - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` and `Implements` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
-8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a global search-and-replace across all `.design/` files (including `INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`, and `Related Specifications` links) to update all references to the new name. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
+8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a search-and-replace across active planning files (`INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`) and `Related Specifications`/`Implements` links in other specs. **Do NOT modify** `RETROSPECTIVE.md` or `.design/archives/` — historical logs must remain immutable. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
    - **Manual Rename Rescue (AOP)**: If you discover a "missing" spec (in `INDEX.md` but missing from disk) AND a "new" unregistered spec (on disk but missing from `INDEX.md`), immediately compare their content and `# Title`. If similarity is >80%, assume the user manually renamed the file. Do NOT delete and recreate it. Automatically trigger the Spec Renaming Protocol above to rescue task progress.
 9. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
 10. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
@@ -303,6 +303,7 @@ graph TD
 | **Structure accuracy** | Directory trees in specs match actual tree | Spec shows `workflows/magic/` but actual is `workflows/magic.*.md` |
 | **Removed entities** | Specs don't reference deleted files, directories, or configs | `.env` files referenced but were removed |
 | **Renamed entities** | Specs reflect current names after renames | `core/` referenced but was eliminated |
+| **Registry Integrity** | Specs registered in `INDEX.md` actually exist in `.design/specifications/` | `data-model.md` is in INDEX but missing from disk |
 | **Tool/config sync** | `package.json`, `pyproject.toml` fields match spec descriptions | Spec says `main: "src/index.js"` but `package.json` says `index.js` |
 | **Engine Integrity** | Contents of `.magic/` match the hashes in `.checksums` | `task.md` was modified but checksum wasn't regenerated |
 | **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
@@ -317,6 +318,7 @@ Ask: `Apply all fixes? (yes / select / skip)`
 2. **Non-blocking with skip**: The user can skip fixes and proceed. But if >5 stale references are found, warn that the plan/tasks may be based on outdated assumptions.
 3. **Fixes follow Update workflow**: Every fix triggers version bump, Document History entry, INDEX.md sync (standard Update flow).
 4. **Skip Deprecated specs**: Specs with `Status: Deprecated` are excluded from the check — they are historical records.
+5. **Missing Specs**: If a spec listed in `INDEX.md` is missing from disk, do not attempt to read its contents. Flag it as a Registry Integrity issue and propose removing its entry from `INDEX.md` or restoring the file.
 
 ### Task Completion Checklist
 
@@ -369,3 +371,6 @@ Review
 | 1.4.0 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
 | 1.5.0 | 2026-02-27 | Antigravity | Project Analysis delegation: Explore Mode routes codebase analysis triggers to `.magic/analyze.md` |
 | 1.6.0 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard, implemented Spec Renaming Protocol to prevent Task Resets |
+| 1.7.0 | 2026-03-01 | Antigravity | Fix: Added Registry Integrity guard (Missing Specs check) during Consistency Check |
+| 1.8.0 | 2026-03-01 | Antigravity | Fix: Extended Deprecation Cascade to include `Implements` references for Layer integrity |
+| 1.9.0 | 2026-03-01 | Antigravity | Fix: Spec Renaming Protocol explicitly forbids modifying `RETROSPECTIVE.md` and `archives/` to preserve historical immutability |
