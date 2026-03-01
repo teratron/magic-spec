@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -889,3 +889,4 @@ If any test fails, document the failure reason and propose a fix.
 | 1.19.0 | 2026-03-01 | Antigravity | Added T50 to test Manual Rename Rescue (Improv Mode simulation result) |
 | 1.20.0 | 2026-03-01 | Antigravity | Added T51 to test Smart Sync (AOP) Optimization in Analyze workflow |
 | 1.4.0 | 2026-03-01 | Antigravity | Synchronized suite version with engine core (1.4.0) |
+| 1.4.1 | 2026-03-01 | Antigravity | Localization fixes: translated remaining Russian labels in README.md diagrams |

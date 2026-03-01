@@ -55,7 +55,7 @@ The engine enforces a rigorous, unskippable pipeline: **Idea → Specification �
 
 ```mermaid
 flowchart TB
-    IDEA(["💡 Идея"])
+    IDEA(["💡 Idea"])
 
     subgraph BOX ["Magic Spec"]
         direction TB
@@ -75,7 +75,7 @@ flowchart TB
         TASKS --> RUN
     end
 
-    CODE(["🚀 Код"])
+    CODE(["🚀 Code"])
 
     IDEA --> SPEC
     RUN  --> CODE
