@@ -175,14 +175,20 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict:
     except Exception:
         return {"choice": "o", "conflicts": []}
 
-    current_checksums = _get_directory_checksums(dest / ENGINE_DIR)
     conflicts = []
-    for rel_path, current_hash in current_checksums.items():
-        if rel_path == ".checksums" or rel_path == ".version":
+    for rel_path, old_hash in old_checksums.items():
+        if rel_path in [".checksums", ".version"]:
             continue
-        old_hash = old_checksums.get(rel_path)
-        if old_hash and current_hash != old_hash:
-            conflicts.append(rel_path)
+
+        # Try finding the file in .magic/ first (backward compatibility), then in project root
+        abs_path = dest / ENGINE_DIR / rel_path
+        if not abs_path.exists():
+            abs_path = dest / rel_path
+
+        if abs_path.exists() and abs_path.is_file():
+            current_hash = _get_file_checksum(abs_path)
+            if current_hash != old_hash:
+                conflicts.append(rel_path)
 
     if not conflicts:
         return {"choice": "o", "conflicts": []}
@@ -252,10 +258,18 @@ def _convert_to_mdc(content: str, description: str) -> str:
 
 
 def install_adapter(
-    source_root: pathlib.Path, dest: pathlib.Path, env_name: str, adapters: dict
-) -> bool:
+    source_root: pathlib.Path,
+    dest: pathlib.Path,
+    env_name: str,
+    adapters: dict,
+    conflicts_to_skip: list = None,
+) -> dict:
+    installed_checksums = {}
+    if conflicts_to_skip is None:
+        conflicts_to_skip = []
+
     if env_name not in adapters:
-        return False
+        return installed_checksums
 
     config = adapters[env_name]
     marker = config.get("marker")
@@ -272,7 +286,6 @@ def install_adapter(
     src_workflows = src_agent / WORKFLOWS_DIR
 
     # Copy workflows with conversion
-    count = 0
     for wf in WORKFLOWS:
         # wf is something like "magic.spec"
         src_file = src_workflows / (wf + DEFAULT_EXT)
@@ -290,6 +303,10 @@ def install_adapter(
             dest_filename = dest_filename[len(remove_prefix) :]
 
         target_file = abs_dest / dest_filename
+        rel_target = str(target_file.relative_to(dest).as_posix())
+
+        if rel_target in conflicts_to_skip:
+            continue
 
         if output_format == "mdc":
             description = f"Magic SDD Workflow: {dest_filename}"
@@ -299,20 +316,36 @@ def install_adapter(
             content = f'prompt = """\n{content}\n"""'
 
         target_file.write_text(content, encoding="utf-8")
-        count += 1
+        installed_checksums[rel_target] = _get_file_checksum(target_file)
 
     # Copy other files from .agent
     for item in src_agent.iterdir():
         if item.name == WORKFLOWS_DIR:
             continue
-        if item.is_dir():
-            _copy_dir(item, dest / AGENT_DIR / item.name)
-        else:
-            (dest / AGENT_DIR).mkdir(parents=True, exist_ok=True)
-            shutil.copy2(item, dest / AGENT_DIR / item.name)
 
-    print(f"Adapter installed: {env_name} -> {dest_path} (.{output_format})")
-    return True
+        dest_item = dest / AGENT_DIR / item.name
+        rel_target = str(dest_item.relative_to(dest).as_posix())
+
+        if item.is_dir():
+            _copy_dir(item, dest_item)
+            for f in dest_item.rglob("*"):
+                if f.is_file():
+                    installed_checksums[str(f.relative_to(dest).as_posix())] = (
+                        _get_file_checksum(f)
+                    )
+        else:
+            if rel_target in conflicts_to_skip:
+                continue
+            (dest / AGENT_DIR).mkdir(parents=True, exist_ok=True)
+            shutil.copy2(item, dest_item)
+            installed_checksums[rel_target] = _get_file_checksum(dest_item)
+
+    print(
+        f"Adapter updated: {env_name} -> {dest_path} (.{output_format})"
+        if conflicts_to_skip or getattr(sys, "is_update", False)
+        else f"Adapter installed: {env_name} -> {dest_path} (.{output_format})"
+    )
+    return installed_checksums
 
 
 def _detect_environments(dest: pathlib.Path, adapters: dict) -> list[str]:
@@ -449,7 +482,7 @@ def main() -> None:
         print("\nOptions:")
         print("  --env <adapter>      Specify environment adapter")
         print("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)")
-        print("  --update             Update engine files only")
+        print("  --update             Update engine and adapter files")
         print("  --local              Use local project files instead of GitHub")
         print("  --fallback-main      Pull payload from main branch")
         print("  --yes                Auto-accept prompts")
@@ -473,9 +506,9 @@ def main() -> None:
 
     if is_update:
         if is_local:
-            print("Updating magic-spec (.magic only) from local files...")
+            print("Updating magic-spec from local files...")
         else:
-            print("Updating magic-spec (.magic only)...")
+            print("Updating magic-spec...")
         create_backup(dest)
     else:
         if is_local:
@@ -511,23 +544,30 @@ def main() -> None:
         if env_values:
             selected_env = env_values[0]
 
-        if not selected_env and not is_update:
+        if not selected_env and not env_values:
             detected = _detect_environments(dest, adapters)
             if detected:
-                if len(detected) == 1:
-                    env = detected[0]
-                    adapter_desc = adapters[env].get("description", env)
-                    print(
-                        f"\n💡 Detected {adapter_desc} ({adapters[env].get('marker')}/ directory found)."
-                    )
-                    if (
-                        auto_accept
-                        or input(f"   Install {env} adapter? (y/N): ").lower() == "y"
-                    ):
-                        selected_env = env
+                if is_update:
+                    env_values = detected
+                    selected_env = detected[0]
                 else:
-                    print(f"\n💡 Multiple environments detected: {', '.join(detected)}")
-                    print("   Use --env <name> or --<name> to target specific one.")
+                    if len(detected) == 1:
+                        env = detected[0]
+                        adapter_desc = adapters[env].get("description", env)
+                        print(
+                            f"\n💡 Detected {adapter_desc} ({adapters[env].get('marker')}/ directory found)."
+                        )
+                        if (
+                            auto_accept
+                            or input(f"   Install {env} adapter? (y/N): ").lower()
+                            == "y"
+                        ):
+                            selected_env = env
+                    else:
+                        print(
+                            f"\n💡 Multiple environments detected: {', '.join(detected)}"
+                        )
+                        print("   Use --env <name> or --<name> to target specific one.")
 
         conflicts_to_skip = []
         if is_update:
@@ -549,21 +589,36 @@ def main() -> None:
                 shutil.copy2(sf, df)
 
         # 2. Adapters
-        if not is_update:
-            if env_values:
-                for ev in env_values:
-                    install_adapter(source_root, dest, ev, adapters)
-            elif selected_env:
-                install_adapter(source_root, dest, selected_env, adapters)
-            else:
-                # Default
-                src_eng, dest_eng = source_root / AGENT_DIR, dest / AGENT_DIR
-                dest_eng.mkdir(parents=True, exist_ok=True)
-                for item in src_eng.iterdir():
-                    if item.is_dir():
-                        _copy_dir(item, dest_eng / item.name)
-                    else:
-                        shutil.copy2(item, dest_eng / item.name)
+        adapter_checksums = {}
+        if env_values:
+            for ev in env_values:
+                adapter_checksums.update(
+                    install_adapter(source_root, dest, ev, adapters, conflicts_to_skip)
+                )
+        elif selected_env:
+            adapter_checksums.update(
+                install_adapter(
+                    source_root, dest, selected_env, adapters, conflicts_to_skip
+                )
+            )
+        elif not is_update:
+            # Default
+            src_eng, dest_eng = source_root / AGENT_DIR, dest / AGENT_DIR
+            dest_eng.mkdir(parents=True, exist_ok=True)
+            for item in src_eng.iterdir():
+                dest_item = dest_eng / item.name
+                if item.is_dir():
+                    _copy_dir(item, dest_item)
+                    for f in dest_item.rglob("*"):
+                        if f.is_file():
+                            adapter_checksums[str(f.relative_to(dest).as_posix())] = (
+                                _get_file_checksum(f)
+                            )
+                else:
+                    shutil.copy2(item, dest_item)
+                    adapter_checksums[str(dest_item.relative_to(dest).as_posix())] = (
+                        _get_file_checksum(dest_item)
+                    )
 
         if not is_update:
             run_init(dest, auto_accept=auto_accept)
@@ -579,6 +634,23 @@ def main() -> None:
         (dest / ".magic" / ".version").write_text(real_version, encoding="utf-8")
 
         current_checksums = _get_directory_checksums(dest / ".magic")
+
+        # Preserve stored hash for files that were explicitly skipped during update
+        if is_update:
+            checksum_file = dest / ENGINE_DIR / ".checksums"
+            if checksum_file.exists():
+                try:
+                    old_checksums = json.loads(
+                        checksum_file.read_text(encoding="utf-8")
+                    )
+                    for skipped in conflicts_to_skip:
+                        if skipped in old_checksums:
+                            current_checksums[skipped] = old_checksums[skipped]
+                except Exception:
+                    pass
+
+        current_checksums.update(adapter_checksums)
+
         (dest / ".magic" / ".checksums").write_text(
             json.dumps(current_checksums, indent=2), encoding="utf-8"
         )

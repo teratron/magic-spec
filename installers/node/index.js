@@ -190,14 +190,15 @@ function convertToMdc(content, description) {
     return `---\ndescription: ${description || ''}\nglobs: \n---\n${content}`;
 }
 
-function installAdapter(sourceRoot, env, adapters) {
+function installAdapter(sourceRoot, env, adapters, conflictsToSkip = []) {
+    const installedChecksums = {};
     const adapter = adapters[env];
     if (!adapter) {
         console.warn(`⚠️  Unknown --env value: "${env}".`);
         console.warn(`   Valid values: ${Object.keys(adapters).join(', ')}`);
         console.warn(`   Falling back to default ${AGENT_DIR}/`);
         copyDir(path.join(sourceRoot, AGENT_DIR), path.join(cwd, AGENT_DIR));
-        return;
+        return installedChecksums;
     }
 
     const srcDir = path.join(sourceRoot, AGENT_DIR, WORKFLOWS_DIR);
@@ -205,9 +206,12 @@ function installAdapter(sourceRoot, env, adapters) {
 
     if (!fs.existsSync(srcDir)) {
         console.warn(`⚠️  Source ${AGENT_DIR}/${WORKFLOWS_DIR}/ not found.`);
-        return;
+        return installedChecksums;
     }
 
+    if (adapter.marker) {
+        fs.mkdirSync(path.join(cwd, adapter.marker), { recursive: true });
+    }
     fs.mkdirSync(destDir, { recursive: true });
 
     for (const wfName of WORKFLOWS) {
@@ -222,22 +226,56 @@ function installAdapter(sourceRoot, env, adapters) {
                 destName = destName.slice(removePrefix.length);
             }
         }
+
         const destFile = path.join(destDir, destName);
+        const relTarget = path.relative(cwd, destFile).replace(/\\/g, '/');
+
+        if (conflictsToSkip.includes(relTarget)) continue;
+
+        const content = fs.readFileSync(srcFile, 'utf8');
+        let finalContent = content;
 
         if (adapter.format === 'toml' || adapter.ext === '.toml') {
-            const content = fs.readFileSync(srcFile, 'utf8');
-            const description = `Magic SDD Workflow: ${destName}`;
-            fs.writeFileSync(destFile, convertToToml(content, description), 'utf8');
+            finalContent = convertToToml(content, `Magic SDD Workflow: ${destName}`);
         } else if (adapter.format === 'mdc' || adapter.ext === '.mdc') {
-            const content = fs.readFileSync(srcFile, 'utf8');
-            const description = `Magic SDD Workflow: ${destName}`;
-            fs.writeFileSync(destFile, convertToMdc(content, description), 'utf8');
-        } else {
-            fs.copyFileSync(srcFile, destFile);
+            finalContent = convertToMdc(content, `Magic SDD Workflow: ${destName}`);
+        }
+
+        fs.writeFileSync(destFile, finalContent, 'utf8');
+        installedChecksums[relTarget] = crypto.createHash('sha256').update(finalContent).digest('hex');
+    }
+
+    // Copy other files in .agent if any
+    const srcEng = path.join(sourceRoot, AGENT_DIR);
+    if (fs.existsSync(srcEng)) {
+        const items = fs.readdirSync(srcEng, { withFileTypes: true });
+        for (const item of items) {
+            if (item.name === WORKFLOWS_DIR) continue;
+
+            const srcItem = path.join(srcEng, item.name);
+            const destItem = path.join(cwd, AGENT_DIR, item.name);
+            const relTarget = path.relative(cwd, destItem).replace(/\\/g, '/');
+
+            if (item.isDirectory()) {
+                copyDir(srcItem, destItem);
+                const dirHash = getDirectoryChecksums(destItem, cwd);
+                Object.assign(installedChecksums, dirHash);
+            } else {
+                if (conflictsToSkip.includes(relTarget)) continue;
+                fs.mkdirSync(path.join(cwd, AGENT_DIR), { recursive: true });
+                fs.copyFileSync(srcItem, destItem);
+                installedChecksums[relTarget] = getFileChecksum(destItem);
+            }
         }
     }
 
-    console.log(`✅ Adapter installed: ${env} → ${adapter.dest}/ (${adapter.ext})`);
+    if (conflictsToSkip.length > 0 || isUpdate) {
+        console.log(`✅ Adapter updated: ${env} → ${adapter.dest}/ (${adapter.ext})`);
+    } else {
+        console.log(`✅ Adapter installed: ${env} → ${adapter.dest}/ (${adapter.ext})`);
+    }
+
+    return installedChecksums;
 }
 
 function runDoctor() {
@@ -486,8 +524,15 @@ async function handleConflicts(cwd) {
 
     const conflicts = [];
     for (const [relPath, storedHash] of Object.entries(storedChecksums)) {
-        const localPath = path.join(cwd, '.magic', relPath);
-        if (fs.existsSync(localPath)) {
+        if (relPath === '.checksums' || relPath === '.version') continue;
+
+        // Backward compatibility: try .magic first, then project root
+        let localPath = path.join(cwd, '.magic', relPath);
+        if (!fs.existsSync(localPath)) {
+            localPath = path.join(cwd, relPath);
+        }
+
+        if (fs.existsSync(localPath) && fs.statSync(localPath).isFile()) {
             const currentHash = getFileChecksum(localPath);
             if (currentHash !== storedHash) {
                 conflicts.push(relPath);
@@ -497,7 +542,7 @@ async function handleConflicts(cwd) {
 
     if (conflicts.length === 0) return;
 
-    console.log(`\n⚠️  Local changes detected in ${conflicts.length} file(s) in .magic/:`);
+    console.log(`\n⚠️  Local changes detected in ${conflicts.length} file(s):`);
     conflicts.slice(0, 5).forEach(f => console.log(`   - ${f}`));
     if (conflicts.length > 5) console.log(`   ... and ${conflicts.length - 5} more.`);
 
@@ -665,14 +710,14 @@ async function main() {
         console.log("\nOptions:");
         console.log("  --env <adapter>      Specify environment adapter");
         console.log("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)");
-        console.log("  --update             Update engine files only");
+        console.log("  --update             Update engine and adapter files");
         console.log("  --local              Use local project files instead of GitHub");
         console.log("  --fallback-main      Pull payload from main branch");
         console.log("  --yes, -y            Auto-accept prompts");
         process.exit(0);
     }
 
-    console.log(isUpdate ? '🪄 Updating magic-spec (.magic only)...' : '🪄 Initializing magic-spec...');
+    console.log(isUpdate ? '🪄 Updating magic-spec...' : '🪄 Initializing magic-spec...');
 
     if (isUpdate) {
         createBackup();
@@ -713,28 +758,35 @@ async function main() {
             selectedEnvResolved = envValues[0];
         }
 
-        if (envValues.length === 0 && !isUpdate) {
+        if (envValues.length === 0) {
             const detected = detectEnvironments(ADAPTERS);
             if (detected.length > 0) {
-                // If only one detected, we can suggest it. If multiple, we need user choice or explicit flags.
-                if (detected.length === 1) {
-                    const env = detected[0];
-                    const adapterName = ADAPTERS[env].description || env;
-                    console.log(`\n💡 Detected ${adapterName} (${ADAPTERS[env].marker}/ directory found).`);
-                    let shouldAdopt = autoAccept;
-                    if (!shouldAdopt) {
-                        const answer = await askQuestion(`   Install ${env} adapter instead of default? (y/N): `);
-                        shouldAdopt = answer.toLowerCase() === 'y';
+                if (isUpdate) {
+                    for (const env of detected) {
+                        if (!envValues.includes(env)) envValues.push(env);
                     }
-                    if (shouldAdopt) {
-                        selectedEnvResolved = env;
-                    }
+                    selectedEnvResolved = envValues[0];
                 } else {
-                    console.log(`\n💡 Multiple environments detected: ${detected.join(', ')}`);
-                    console.log(`   Use --env <name> or --<name> to target specific one.`);
+                    if (detected.length === 1) {
+                        const env = detected[0];
+                        const adapterName = ADAPTERS[env].description || env;
+                        console.log(`\n💡 Detected ${adapterName} (${ADAPTERS[env].marker}/ directory found).`);
+                        let shouldAdopt = autoAccept;
+                        if (!shouldAdopt) {
+                            const answer = await askQuestion(`   Install ${env} adapter instead of default? (y/N): `);
+                            shouldAdopt = answer.toLowerCase() === 'y';
+                        }
+                        if (shouldAdopt) {
+                            selectedEnvResolved = env;
+                        }
+                    } else {
+                        console.log(`\n💡 Multiple environments detected: ${detected.join(', ')}`);
+                        console.log(`   Use --env <name> or --<name> to target specific one.`);
+                    }
                 }
             }
         }
+
         let conflictsToSkip = [];
         if (isUpdate) {
             const conflictResult = await handleConflicts(cwd);
@@ -763,36 +815,45 @@ async function main() {
         }
 
         // 2. Adapters
-        if (!isUpdate) {
-            if (envValues.length > 0) {
-                for (const env of envValues) {
-                    installAdapter(sourceRoot, env, ADAPTERS);
-                }
-            } else if (selectedEnvResolved) {
-                installAdapter(sourceRoot, selectedEnvResolved, ADAPTERS);
-            } else {
-                // Default install
-                const srcEng = path.join(sourceRoot, AGENT_DIR);
-                const destEng = path.join(cwd, AGENT_DIR);
-                fs.mkdirSync(destEng, { recursive: true });
-                fs.mkdirSync(path.join(destEng, WORKFLOWS_DIR), { recursive: true });
+        let adapterChecksums = {};
+        if (envValues.length > 0) {
+            for (const env of envValues) {
+                Object.assign(adapterChecksums, installAdapter(sourceRoot, env, ADAPTERS, conflictsToSkip));
+            }
+        } else if (selectedEnvResolved) {
+            Object.assign(adapterChecksums, installAdapter(sourceRoot, selectedEnvResolved, ADAPTERS, conflictsToSkip));
+        } else if (!isUpdate) {
+            // Default install
+            const srcEng = path.join(sourceRoot, AGENT_DIR);
+            const destEng = path.join(cwd, AGENT_DIR);
+            fs.mkdirSync(destEng, { recursive: true });
+            fs.mkdirSync(path.join(destEng, WORKFLOWS_DIR), { recursive: true });
 
-                for (const wfName of WORKFLOWS) {
-                    const file = wfName + DEFAULT_EXT;
-                    const srcWf = path.join(srcEng, WORKFLOWS_DIR, file);
-                    if (fs.existsSync(srcWf)) {
-                        fs.copyFileSync(srcWf, path.join(destEng, WORKFLOWS_DIR, file));
-                    }
+            for (const wfName of WORKFLOWS) {
+                const file = wfName + DEFAULT_EXT;
+                const srcWf = path.join(srcEng, WORKFLOWS_DIR, file);
+                if (fs.existsSync(srcWf)) {
+                    const destWf = path.join(destEng, WORKFLOWS_DIR, file);
+                    fs.copyFileSync(srcWf, destWf);
+                    const relTarget = path.relative(cwd, destWf).replace(/\\/g, '/');
+                    adapterChecksums[relTarget] = getFileChecksum(destWf);
                 }
+            }
 
-                // Copy other files in .agent if any (not workflows subfolder which we handled selectively)
+            // Copy other files in .agent if any (not workflows subfolder which we handled selectively)
+            if (fs.existsSync(srcEng)) {
                 const items = fs.readdirSync(srcEng, { withFileTypes: true });
                 for (const item of items) {
                     if (item.name === WORKFLOWS_DIR) continue;
+                    const srcItem = path.join(srcEng, item.name);
+                    const destItem = path.join(destEng, item.name);
                     if (item.isDirectory()) {
-                        copyDir(path.join(srcEng, item.name), path.join(destEng, item.name));
+                        copyDir(srcItem, destItem);
+                        Object.assign(adapterChecksums, getDirectoryChecksums(destItem, cwd));
                     } else {
-                        fs.copyFileSync(path.join(srcEng, item.name), path.join(destEng, item.name));
+                        fs.copyFileSync(srcItem, destItem);
+                        const relTarget = path.relative(cwd, destItem).replace(/\\/g, '/');
+                        adapterChecksums[relTarget] = getFileChecksum(destItem);
                     }
                 }
             }
@@ -852,6 +913,23 @@ async function main() {
         // 6. Save checksums - [T-2C03]
         try {
             const currentChecksums = getDirectoryChecksums(path.join(cwd, '.magic'));
+
+            if (isUpdate) {
+                const checksumsFile = path.join(cwd, '.magic', '.checksums');
+                if (fs.existsSync(checksumsFile)) {
+                    try {
+                        const oldChecksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
+                        for (const skipped of conflictsToSkip) {
+                            if (oldChecksums[skipped]) {
+                                currentChecksums[skipped] = oldChecksums[skipped];
+                            }
+                        }
+                    } catch (e) { }
+                }
+            }
+
+            Object.assign(currentChecksums, adapterChecksums);
+
             fs.writeFileSync(path.join(cwd, '.magic', '.checksums'), JSON.stringify(currentChecksums, null, 2), 'utf8');
         } catch (cErr) {
             console.warn(`⚠️  Failed to save checksums: ${cErr.message}`);

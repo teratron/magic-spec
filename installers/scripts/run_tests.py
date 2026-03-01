@@ -49,11 +49,13 @@ def run_cmd(cmd, cwd=None):
     return True, result.stdout
 
 
-def test_installer(installer_type="python"):
+def test_installer(installer_type="python") -> bool:
     print(f"\n--- Testing {installer_type.upper()} Installer ---")
 
     with open(ADAPTERS_JSON, "r", encoding="utf-8") as f:
         adapters = json.load(f)
+
+    all_passed = True
 
     for env_name, config in adapters.items():
         reset_sandbox()
@@ -75,17 +77,20 @@ def test_installer(installer_type="python"):
 
         if not success:
             print(f"❌ {env_name} installation failed!")
+            all_passed = False
             continue
 
         # Verification
         dest_path = SANDBOX_PATH / config["dest"]
         if not dest_path.exists():
             print(f"❌ {env_name}: Destination path {dest_path} not found!")
+            all_passed = False
             continue
 
         files = list(dest_path.glob(f"*{config.get('ext', '.md')}"))
         if not files:
             print(f"❌ {env_name}: No files installed in {dest_path}!")
+            all_passed = False
             continue
 
         # MDC Format check
@@ -93,9 +98,12 @@ def test_installer(installer_type="python"):
             content = files[0].read_text(encoding="utf-8")
             if "description:" not in content or "---" not in content:
                 print(f"❌ {env_name}: MDC format check failed for {files[0].name}!")
+                all_passed = False
                 continue
 
         print(f"✅ {env_name}: Successfully installed {len(files)} files.")
+
+    return all_passed
 
 
 def run_all_tests():
@@ -130,11 +138,11 @@ if __name__ == "__main__":
 
     # 2. Run exhaustive adapter tests
     print("\n--- Running Exhaustive Adapter Validation ---")
-    test_installer("python")
-    test_installer("node")
+    python_success = test_installer("python")
+    node_success = test_installer("node")
 
-    if unit_success:
+    if unit_success and python_success and node_success:
         print("\n🎉 All tests completed successfully!")
     else:
-        print("\n⚠️  Tests completed, but there were UNIT TEST FAILURES.")
+        print("\n⚠️  Tests completed, but there were FAILURES.")
         sys.exit(1)
