@@ -6,9 +6,9 @@ This document defines the core principles and structural hierarchy for AI agents
 
 The project is divided into three primary logical layers:
 
-### 1.1. Core Engine (`.magic/` & `.agent/workflows/`)
+### 1.1. Core Engine (`.magic/` & `.agent/workflows/magic.*.md`)
 
-- **Path**: `/.magic/` (Internal Logic) and `/.agent/workflows/` (External Triggers)
+- **Path**: `/.magic/` (Internal Logic) and `/.agent/workflows/magic.*.md` (External Triggers)
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
@@ -34,7 +34,7 @@ The project is divided into three primary logical layers:
 
 1. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
 2. **Context Awareness**: Always refer to `.design/INDEX.md` to understand the current state of specifications and `.design/RULES.md` for coding conventions.
-3. **Engine Integrity**: Do not modify files in `.magic/` or `.agent/workflows/` unless the task specifically requires "Engine Improvement".
+3. **Engine Integrity**: Do not modify files in `.magic/` or `.agent/workflows/magic.*.md` unless the task specifically requires "Engine Improvement".
 4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
