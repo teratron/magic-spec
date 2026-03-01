@@ -807,8 +807,8 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/` directory is missing.
   - Engine `.magic/.checksums` exists.
-  - User edited `.magic/scripts/init.ps1` manually.
-  - `check-prerequisites` JSON output contains `"warnings": ["Engine Integrity: '.magic/scripts/init.ps1' has been modified..."]`.
+  - User edited `.magic/scripts/init.js` manually.
+  - `check-prerequisites` JSON output contains `"warnings": ["Engine Integrity: '.magic/scripts/init.js' has been modified..."]`.
 - **Action:** An arbitrary workflow calls `init.md` indirectly.
 - **Expected:**
   - [ ] Agent reads the JSON output and detects the `Engine Integrity` warning.

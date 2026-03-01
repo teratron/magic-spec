@@ -27,3 +27,4 @@ Automatic rule capture during spec work is handled by `magic.spec`.
 > **Full implementation:** `.magic/rule.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
 > **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.
+> **Anti-Hallucination Guard:** Do not invent or execute any ad-hoc physical scripts (e.g., custom `.js`, `.sh` test runners) for internal engine operations. Magic SDD workflow steps are intended to be evaluated cognitively by the LLM unless an executor script is explicitly provided.

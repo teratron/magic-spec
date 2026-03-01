@@ -11,7 +11,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 **CRITICAL INSTRUCTIONS FOR AI:**
 
 0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **Synthetic Context**: Create a hypothetical project state (spec counts, plan versions, folder structures) to test the workflow logic.
+1. **Synthetic Context (Cognitive Execution ONLY)**: Create a hypothetical project state (spec counts, plan versions, folder structures) to test the workflow logic. **CRITICAL GUARD: Do NOT write or execute any physical test scripts (e.g. `simulate.js`, `simulate.ps1`). The simulation is purely a cognitive LLM task. Evaluate the logic internally and report the expected outcome.**
 2. **Stress Test**: Specifically look for scenarios that might confuse a future agent or lead to "planning amnesia".
 3. **Surgical Reporting (Fix & Test)**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. You **must also write a new regression test** for the issue and append it to `.magic/tests/suite.md`. Present and ask the user for a single yes/no approval before applying any patches. This is the only non-silent step in the simulation workflow (C1 compliance).
 4. **Non-Overlapping**: Do not collect metrics or analyze project history (that's for `retrospective.md`). Focus purely on the *logic and clarity* of the instructions.

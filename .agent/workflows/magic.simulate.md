@@ -25,3 +25,4 @@ handoffs:
 > **Full implementation:** `.magic/simulate.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
 > **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.
+> **Anti-Hallucination Guard:** Simulation is a purely cognitive task for the AI. **DO NOT** create physical test scripts (like `simulate.js`, `simulate.ps1`, etc.). Evaluate test scenarios internally and report results directly to the chat.
