@@ -151,6 +151,20 @@ Implementation plans in \`PLAN.md\` must follow a nested hierarchy: **Phase → 
 
 \`magic.simulate\` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
 
+### C12 — Quarantine Cascade (Каскад Карантина)
+
+If a Layer 1 (Concept) specification loses its \`Stable\` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to \`RFC\` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in \`INDEX.md\`.
+
+### C13 — Agent Cognitive Discipline
+
+All AI agents operating within the Magic SDD framework must adhere to strict cognitive discipline to prevent hallucinations and silent failures:
+
+1. **Primary Source Principle**: Always read original \`.magic/\` and \`.design/\` files. Never rely on cached memory or interpretive assumptions.
+2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
+3. **Zero Assumptions**: If an instruction is absent or ambiguous, halt and ask for clarification. Do not invent missing steps or scripts.
+4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
+5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
+
 ## Document History
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |

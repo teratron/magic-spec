@@ -11,7 +11,7 @@
   "scripts/executor.js": "ebe87d0aaa11b04ff198df9e813661ca0cdf34b9fcd422bb3716df74c2388582",
   "scripts/generate-checksums.js": "a7ce7af99b27c358b3e49d9b9139a642b45fed817197b8264c8f3a52f9f7b738",
   "scripts/generate-context.js": "78ce2cfc6cb3d5cf3a8a2efff79f1de2fdbc5f83efb16cc06d6f1fb5f2b62434",
-  "scripts/init.js": "0c7f233012495b0cde8dfb919ef9717a3b6cf578f686c09025fe6386c6f14f80",
+  "scripts/init.js": "b61c786d7992d7bec7f36528e05776fed57cb62e74658c8061ce05fc056760a1",
   "simulate.md": "a1419fcd161f53d8bdfcfc68c96511a79627a4076a6dcc14eae15dc6cb4f0881",
   "spec.md": "34f05274322f411291095a21f1837bd866e15ebfe34eea6dd148ed704ab3e348",
   "task.md": "6bbb2fb5faa14f8b18e8457bea1ac7f44ae24bdb3767d9d5c37015a284df2b9d",

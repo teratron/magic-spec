@@ -1,6 +1,6 @@
 ﻿# Project Specification Rules
 
-**Version:** 1.9.0
+**Version:** 1.13.0
 **Status:** Active
 
 ## Overview
@@ -144,6 +144,30 @@ After any modification to `.magic/` engine files or `.agent/workflows/` wrappers
 
 To improve implementation clarity and reduce cognitive overhead, all implementation plans (`PLAN.md`) must follow a nested hierarchy: **Phase -> Specification -> Atomic Tasks/Sub-points**. Each phase must decompose its constituent specifications into 2-3 atomic actionable items that can be tracked independently.
 
+### C11 — Simulation Workflow (C2 Exception)
+
+**Declared by:** Agent (2026-02-27)
+
+`magic.simulate` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
+
+### C12 — Quarantine Cascade
+
+**Declared by:** Agent (2026-03-01)
+
+If a Layer 1 (Concept) specification loses its `Stable` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to `RFC` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in `INDEX.md`.
+
+### C13 — Agent Cognitive Discipline
+
+**Declared by:** Agent (2026-03-01)
+
+All AI agents operating within the Magic SDD framework must adhere to strict cognitive discipline to prevent hallucinations and silent failures:
+
+1. **Primary Source Principle**: Always read original `.magic/` and `.design/` files. Never rely on cached memory or interpretive assumptions.
+2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
+3. **Zero Assumptions**: If an instruction is absent or ambiguous, halt and ask for clarification. Do not invent missing steps or scripts.
+4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
+5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
+
 ## Document History
 
 | Version | Date | Author | Description |
@@ -160,3 +184,5 @@ To improve implementation clarity and reduce cognitive overhead, all implementat
 | 1.9.0 | 2026-02-25 | Agent | Added C10: Nested Phase Architecture |
 | 1.10.0 | 2026-02-25 | Agent | Aligned Section 5.1 with .magic/spec.md (concept/implementation layers) |
 | 1.11.0 | 2026-02-25 | Agent | Hardened C9 with Zero-Prompt Fix rule |
+| 1.12.0 | 2026-03-01 | Agent | Added C11 (Simulation Workflow) and C12 (Quarantine Cascade) |
+| 1.13.0 | 2026-03-01 | Agent | Added C13: Agent Cognitive Discipline manifesto |
