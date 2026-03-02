@@ -279,8 +279,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] check-prerequisites reports `checksums_mismatch` for `spec.md`
   - [ ] **HALT** — do NOT proceed with simulation
   - [ ] Report mismatched files to user
-  - [ ] **Hint Provided**: Agent suggests `init` or `update-engine-meta` to restore integrity.
-  - [ ] Options: confirm changes were intentional OR regenerate checksums
+  - [ ] **Hint Provided**: Agent suggests `update-engine-meta --workflow {wf}` to restore integrity.
+  - [ ] Options: confirm changes were intentional (sync meta) OR restore from origin.
   - [ ] Simulation resumes only after user response
 - **Guards tested:** Checksums mismatch HALT (Step 0)
 
@@ -615,7 +615,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 1:** User runs `/magic.simulate test`
 - **Expected 1:**
   - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
-  - [ ] Agent alerts user that test suite is missing, provides hint to run `init` or restore file, and falls back to **Improv Mode**.
+  - [ ] Agent alerts user that test suite is missing, provides hint to restore file or use `/magic.onboard`, and falls back to **Improv Mode**.
   - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
   - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
   - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
@@ -1159,3 +1159,47 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** — No PLAN.md is written.
   - [ ] Agent visualizes the full cycle chain and asks user to break the link.
 - **Guards tested:** N-Level Circular Dependency (C7).
+
+### T68 — Simulation Cold Start Guard
+
+- **Workflow:** `simulate.md` (Step 0: Pre-flight)
+- **Synthetic State:** Fresh repository, `.design/` (missing).
+- **Action:** User runs `/magic.simulate`.
+- **Expected:**
+  - [ ] `check-prerequisites` fails (no INDEX.md or RULES.md).
+  - [ ] Agent catches failure and identifies **"The Cold Start"**.
+  - [ ] **Hint Provided**: Agent suggests `/magic.onboard` for tutorial or `/magic.init` for setup.
+  - [ ] **HALT** — Simulation does not proceed until initialized.
+- **Guards tested:** Cold Start Prompt, Init Handoff Logic.
+
+### T69 — Quarantine Cascade Enforcement
+
+- **Workflow:** `run.md` (Step 0: Pre-flight)
+- **Synthetic State:**
+  - `TASKS.md` Phase 1 has 1 Todo task for `api-impl.md`.
+  - `INDEX.md` registers `api-impl.md` (Level 2) pointing to `api-core.md` (Level 1).
+  - `api-core.md` status in `INDEX.md` = `RFC` (Not `Stable`).
+- **Action:** User runs `/magic.run`.
+- **Expected:**
+  - [ ] `check-prerequisites` returns warning: "Rule 57 Violation: L2 spec 'api-impl.md' is ..., but its L1 parent 'api-core.md' is RFC (Must be Stable)."
+  - [ ] **Quarantine Guard (C12)** in `run.md` detects violation for active task.
+  - [ ] **HALT** — Execution does not begin.
+  - [ ] Message: "Quarantine Triggered: Specification `api-impl.md` has a non-Stable parent. Please run `magic.task` to update your plan."
+- **Guards tested:** Rule 57 Enforcement (C12), Runtime Quarantine Check.
+
+### T70 — Scoped Analysis Guard (C15)
+
+- **Workflow:** `analyze.md`
+- **Synthetic State:**
+  - `workspace.json`: `engine` workspace with `scope: [".magic/", ".agent/"]`.
+  - Project has `src/`, `lib/`, `.magic/`, and `.agent/`.
+- **Action:** User runs `/magic.analyze`.
+- **Expected:**
+  - [ ] `executor.js` exports `MAGIC_WORKSPACE_SCOPE=".magic/,.agent/"`.
+  - [ ] **Scoping Rule (C15)**: Agent ignores `src/` and `lib/` during structure scan.
+  - [ ] Proposal only includes modules found within the scoped paths.
+- **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.
+
+```
+**Test Suite Finalized** — v1.9.2
+```

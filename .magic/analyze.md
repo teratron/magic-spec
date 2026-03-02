@@ -22,9 +22,10 @@ Reverse-engineers code into `.design/` spec proposals. Delegated from `spec.md`.
 
 ### 1. Stack & Structure
 
-Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using `list_dir` (depth 2-3).
-
-### 2. Architecture Inference
+25: Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using `list_dir` (depth 2-3).
+26: **Isolation (C15)**: If `MAGIC_WORKSPACE_SCOPE` is defined, restrict scanning strictly to the specified directory paths.
+27:
+28: ### 2. Architecture Inference
 
 | Pattern | Indicators |
 | :--- | :--- |

@@ -67,8 +67,20 @@ if (fs.existsSync(workspaceJsonPath)) {
     process.exit(1);
 }
 
-// Expose MAGIC_DESIGN_DIR to child completely
-const childEnv = Object.assign({}, process.env, { MAGIC_DESIGN_DIR: magicDesignDir });
+// Expose MAGIC_DESIGN_DIR and optional MAGIC_WORKSPACE_SCOPE to child completely
+const envVars = { MAGIC_DESIGN_DIR: magicDesignDir };
+if (fs.existsSync(workspaceJsonPath)) {
+    try {
+        const workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
+        const workspace = workspaceData.workspaces && workspaceData.workspaces[workspaceName];
+        if (workspace && Array.isArray(workspace.scope)) {
+            envVars.MAGIC_WORKSPACE_SCOPE = workspace.scope.join(',');
+        }
+    } catch (e) {
+        // Silent fail as we're just injecting metadata
+    }
+}
+const childEnv = Object.assign({}, process.env, envVars);
 
 // Engine Meta Automation Command
 if (scriptName === 'update-engine-meta') {

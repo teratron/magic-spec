@@ -37,7 +37,7 @@ if (fs.existsSync(checksumsFile)) {
     if (warnings.length > 0) {
         // Appending the recovery hint to the last warning
         const oldLastLog = warnings[warnings.length - 1];
-        warnings[warnings.length - 1] = oldLastLog + ` Run 'node .magic/scripts/executor.js generate-checksums' if this was intentional.`;
+        warnings[warnings.length - 1] = oldLastLog + ` If changes were intentional, sync meta via: 'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'`;
     }
 } else {
     warnings.push("Engine Integrity: '.magic/.checksums' is missing.");
@@ -177,7 +177,11 @@ if (jsonOutput) {
     if (ok) {
         process.exit(0);
     } else {
-        console.error(`Missing required artifacts: ${missing.join(', ')}`);
+        let errorMsg = `Missing required artifacts: ${missing.join(', ')}`;
+        if (missing.includes('INDEX.md') && missing.includes('RULES.md')) {
+            errorMsg += `. 💡 SDD structure missing. Run '/magic.onboard' for a tutorial or '/magic.init' to setup.`;
+        }
+        console.error(errorMsg);
         process.exit(1);
     }
 }
