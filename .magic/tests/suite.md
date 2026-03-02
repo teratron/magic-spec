@@ -1063,8 +1063,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent offers to run `magic.task update` to synchronize the plan.
 - **Guards tested:** Rules Parity (Stale check), Sync Offer.
 
----
-
 ### T61 — Init: Workspace Initialized
 
 - **Workflow:** `init.md`
@@ -1077,8 +1075,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `.design/workspace.json` is created with `default: root`.
   - [ ] `.design/RULES.md` and `INDEX.md` created.
 - **Guards tested:** Core Artifact Initialization, Zero-Prompt baseline.
-
----
 
 ### T62 — Analyze: Depth Control (Threshold Enforcement)
 
@@ -1135,4 +1131,31 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent offers to Backup or Cancel.
 - **Guards tested:** Safety Protocol (C6 Bypass Prevention), Production Data Guard.
 
----
+### T66 — Spec Registry-Filesystem Desync
+
+- **Workflow:** `spec.md` (Updating an Existing Specification)
+- **Synthetic State:**
+  - `INDEX.md` lists `auth.md` (Stable).
+  - `.design/specifications/auth.md` is **missing** from disk.
+- **Action:** User says: "Update auth spec to include JWT."
+- **Expected:**
+  - [ ] `check-prerequisites` returns warning about missing file.
+  - [ ] **Existence Guard** triggers.
+  - [ ] **HALT** — Agent does not attempt to read `auth.md`.
+  - [ ] Message: "Specification `auth.md` is registered in INDEX but missing from disk. Please restore or unregister before updating."
+- **Guards tested:** Existence Guard (C1, Registry Drift).
+
+### T67 — N-Level Circular Dependency
+
+- **Workflow:** `task.md`
+- **Synthetic State:**
+  - `auth.md` (Stable, Related: api.md)
+  - `api.md` (Stable, Related: database.md)
+  - `database.md` (Stable, Related: auth.md)
+- **Action:** Call `/magic.task` to generate a plan.
+- **Expected:**
+  - [ ] Dependency matrix construction (auth -> api -> database -> auth).
+  - [ ] **Circular Guard** detects cycle at level 3.
+  - [ ] **HALT** — No PLAN.md is written.
+  - [ ] Agent visualizes the full cycle chain and asks user to break the link.
+- **Guards tested:** N-Level Circular Dependency (C7).
