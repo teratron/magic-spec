@@ -19,13 +19,21 @@ Key Goals:
 
 Simulate a specific workflow by name:
 
-```
+```powershell
 /magic.simulate spec
 /magic.simulate task
 /magic.simulate run
+/magic.simulate rule
+/magic.simulate retrospective
+/magic.simulate onboard
+/magic.simulate analyze
+/magic.simulate init
 ```
 
-The agent creates a synthetic scenario, "executes" the workflow logic step-by-step, and identifies rough edges.
+**Drag-and-Drop (AOP):**
+If your IDE supports drag-and-drop, you can simply drag a workflow file (e.g., `.magic/task.md`) directly into the chat alongside the `/magic.simulate` command. The agent will automatically recognize the target file and trigger the simulation for it. This is the fastest way to verify specific workflow logic after making changes.
+
+The agent creates a synthetic scenario, "executes" the workflow logic step-by-step, and identifies "rough edges."
 
 ### 2.2 Live Simulation (Improv Mode)
 

@@ -145,7 +145,7 @@ graph TD
 - If the input contradicts an existing rule in `RULES.md` — flag the conflict explicitly and ask whether to proceed or amend the rule first.
 - If the input contradicts an existing Stable spec — flag the conflict explicitly before dispatching.
 - If topics within a single input contradict each other (e.g., "use GraphQL" and "remove GraphQL") — flag all internal conflicts first and ask the user to resolve before mapping. Do not guess which statement takes precedence.
-- If the input contains a T4 trigger ("from now on...", "remember that..."), apply the rule to RULES.md immediately per T4 protocol (no confirmation required), then continue with the Dispatch flow for the remaining topics.
+- If the input contains a T4 trigger ("from now on...", "remember that..."), identify the rule and propose it as part of the mapping (Step 4: Confirm) instead of applying it immediately. If several topics are provided, grouping the rule with the dispatch mapping prevents partial updates if the user rejects the mapping. Once approved, apply the rule to RULES.md immediately per T4 protocol, then continue with the Dispatch flow for the remaining topics.
 - If the specification's layer is ambiguous — default to Layer 1 (concept). Layer-specific implementation details can later be extracted into an L2 spec.
 
 ### Creating a New Specification
@@ -182,10 +182,11 @@ graph TD
 4. **Document History**: Append a new row to the `Document History` table inside the spec file.
 5. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
 6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
-   - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` and `Implements` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
+    - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` and `Implements` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
+    - **Quarantine Cascade (C12)**: If a Layer 1 (Concept) specification is downgraded (e.g., `Stable → RFC`, `Stable → Draft`) or its scope is significantly reduced, you MUST scan all and flag for the user any dependent Layer 2/3 (Implementation) specifications. While `magic.task` handles the automated plan quarantine, the Specification workflow must explicitly surface these dependencies during the Post-Update Review to ensure implementation specs don't remain "Stable" while their conceptual parent is in flux.
 7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
 8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a search-and-replace across active planning files (`INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`) and `Related Specifications`/`Implements` links in other specs. **Do NOT modify** `RETROSPECTIVE.md` or `.design/archives/` — historical logs must remain immutable. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
-   - **Manual Rename Rescue (AOP)**: If you discover a "missing" spec (in `INDEX.md` but missing from disk) AND a "new" unregistered spec (on disk but missing from `INDEX.md`), immediately compare their content and `# Title`. If similarity is >80%, assume the user manually renamed the file. Do NOT delete and recreate it. Automatically trigger the Spec Renaming Protocol above to rescue task progress.
+    - **Manual Rename Rescue (AOP)**: If you discover a "missing" spec (in `INDEX.md` but missing from disk) AND a "new" unregistered spec (on disk but missing from `INDEX.md`), immediately compare their content and `# Title`. If similarity is >80%, assume the user manually renamed the file. Do NOT delete and recreate it. Automatically trigger the Spec Renaming Protocol above to rescue task progress.
 9. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
 10. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
 11. **Task Completion Checklist**: Present the checklist to the user.

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -904,3 +904,17 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
   - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
 - **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
+
+### T55 — Spec Quarantine Cascade Enforcement (C12)
+
+- **Workflow:** `spec.md` (Updating an Existing Specification)
+- **Synthetic State:**
+  - `auth-concept.md` (Stable L1)
+  - `auth-impl.md` (Stable L2, Implements: auth-concept.md)
+- **Action:** User says "Downgrade auth-concept.md to RFC"
+- **Expected:**
+  - [ ] Status change: `auth-concept.md` → RFC
+  - [ ] Agent scans for dependencies and identifies `auth-impl.md` is a dependent L2 child.
+  - [ ] **Quarantine Cascade**: Agent flags `auth-impl.md` during Post-Update Review.
+  - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) should also be demoted or quarantined."
+- **Guards tested:** Quarantine Cascade (C12) surfacing, Layer Integrity.
