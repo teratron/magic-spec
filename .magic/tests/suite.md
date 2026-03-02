@@ -1245,6 +1245,68 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report confirms restoration: "History file RESTORED (Auto-Heal)".
 - **Guards tested:** Automated Restoration, Kernel Integrity (C1).
 
+### T73 — Ghost Registry Repair Priority (Non-Destructive Boot)
+
+- **Workflow:** `analyze.md` (Mode: Registry Repair)
+- **Synthetic State:**
+  - `.design/INDEX.md` is blank.
+  - `.design/specifications/` has 3 files: `auth.md`, `db.md`, `api.md`.
+- **Action:** User prompts: "Analyze project and suggest new specs".
+- **Expected:**
+  - [ ] Ghost Registry Guard (§52) triggers.
+  - [ ] Agent explicitly ignores "suggest new specs" intent for now.
+  - [ ] Agent proposes ONLY to map existing 3 files to `INDEX.md`.
+  - [ ] Agent explains that new analysis is suspended until the registry is consistent.
+  - [ ] Report: "Registry inconsistency found — repairing before analysis".
+- **Guards tested:** Ghost Registry Guard, Intent Block (Safety).
+
+### T74 — Cross-Workspace Name Collision (Source of Truth Guard)
+
+- **Workflow:** `task.md` / `spec.md`
+- **Synthetic State:**
+  - `.design/workspace.json`: `default: engine`, secondary: `app`.
+  - `.design/engine/specifications/core.md` (Version: 2.0.0, Stable).
+  - `.design/app/specifications/core.md` (Version: 1.5.0, Stable) — stale copy.
+  - Active workspace: `app`.
+- **Action:** User runs `/magic.task` in `app`.
+- **Expected:**
+  - [ ] Agent identifies name collision across workspaces.
+  - [ ] **Parity Guard** triggers: Version mismatch detected (2.0.0 vs 1.5.0).
+  - [ ] **HALT**: Agent warns about "Source of Truth Drift".
+  - [ ] Options: (A) Sync from engine, (B) Unique rename, (C) Force ignore.
+- **Guards tested:** Cross-Workspace Parity Guard.
+
+### T75 — Local Rule Constitutional Conflict (Hierarchy Guard)
+
+- **Workflow:** `rule.md`
+- **Synthetic State:**
+  - Root `.design/RULES.md` §1 contains Core C1: "English only".
+  - Active workspace: `.design/analytics/`.
+- **Action:** User prompts in `analytics` workspace: "Add rule C8: Russian comments are allowed."
+- **Expected:**
+  - [ ] Agent identifies current workspace = `analytics`.
+  - [ ] **Hierarchy Guard** scans ROOT RULES.md §1-6 (Constitution).
+  - [ ] Agent detects that proposed C8 contradicts Root C1.
+  - [ ] **HALT**: Agent refuses to add the rule.
+  - [ ] Message: "Proposed local rule contradicts Global Constitution (§1 C1). Local conventions cannot override universal invariants."
+- **Guards tested:** Cross-Workspace Constitutional Guard, Hierarchy Integrity.
+
+### T76 — Quarantine Deadlock (Stabilization Exception)
+
+- **Workflow:** `task.md` / `run.md` (C12 Enforcement)
+- **Synthetic State:**
+  - Parent `core-l1.md` (RFC).
+  - Child `core-l2.md` (RFC, Quarantined by C12).
+  - All tasks for `core-l2.md` are in Backlog/Blocked.
+- **Action:** User prompts: "Pull tasks for core-l2.md into Phase 1 to fix implementation mismatches with Parent."
+- **Expected:**
+  - [ ] Agent identifies the intent is **Stabilization**, not new implementation.
+  - [ ] **Stabilization Exception (C12.1)** triggers.
+  - [ ] Agent allows pulling these tasks into Phase 1 despite non-stable parent.
+  - [ ] Task notes explicitly state: "Exception C12.1 applied: Stabilization Mode".
+  - [ ] **HALT** if the user tries to add NEW features to `core-l2.md` while it's in quarantine.
+- **Guards tested:** C12.1 Stabilization Exception, Context-Aware Planning.
+
 ```
-**Test Suite Finalized** — v1.9.5
+**Test Suite Finalized** — v1.9.9
 ```
