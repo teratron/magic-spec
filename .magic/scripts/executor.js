@@ -70,6 +70,58 @@ if (fs.existsSync(workspaceJsonPath)) {
 // Expose MAGIC_DESIGN_DIR to child completely
 const childEnv = Object.assign({}, process.env, { MAGIC_DESIGN_DIR: magicDesignDir });
 
+// Engine Meta Automation Command
+if (scriptName === 'update-engine-meta') {
+    const workflowNames = [];
+    for (let i = 0; i < args.length; i++) {
+        if (args[i] === '--workflow' && args[i + 1]) {
+            workflowNames.push(...args[i + 1].split(','));
+            i++;
+        }
+    }
+
+    if (workflowNames.length === 0) {
+        console.error('Usage: node executor.js update-engine-meta --workflow {run,rule,suite,...}');
+        process.exit(1);
+    }
+
+    const magicDir = path.join(__dirname, '..');
+    const versionPath = path.join(magicDir, '.version');
+    const historyDir = path.join(magicDir, 'history');
+    const date = new Date().toISOString().split('T')[0];
+
+    // 1. Increment Version (patch)
+    if (fs.existsSync(versionPath)) {
+        const currentVersion = fs.readFileSync(versionPath, 'utf8').trim();
+        const parts = currentVersion.split('.');
+        if (parts.length === 3) {
+            parts[2] = parseInt(parts[2], 10) + 1;
+            const newVersion = parts.join('.');
+            fs.writeFileSync(versionPath, newVersion);
+            console.log(`Engine version bumped: ${currentVersion} -> ${newVersion}`);
+
+            // 2. Update History
+            for (const wf of workflowNames) {
+                const historyFile = path.join(historyDir, `${wf}.md`);
+                if (fs.existsSync(historyFile)) {
+                    const entry = `| ${newVersion} | ${date} | Antigravity | Automated update via engine meta automation |\n`;
+                    fs.appendFileSync(historyFile, entry);
+                    console.log(`History updated: .magic/history/${wf}.md`);
+                } else {
+                    console.warn(`Warning: History file not found for workflow '${wf}'`);
+                }
+            }
+        }
+    }
+
+    // 3. Regenerate Checksums
+    console.log('Regenerating engine checksums...');
+    const checksumScript = path.join(__dirname, 'generate-checksums.js');
+    const child = spawn('node', [checksumScript], { stdio: 'inherit', env: childEnv });
+    child.on('exit', (code) => process.exit(code || 0));
+    return;
+}
+
 const isWindows = process.platform === 'win32';
 const jsPath = path.join(__dirname, `${scriptName}.js`);
 const shellExtension = isWindows ? '.ps1' : '.sh';

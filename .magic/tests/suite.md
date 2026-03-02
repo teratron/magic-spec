@@ -966,3 +966,36 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Task T-1A01 in `TASKS.md` is marked `Blocked [!]` with note: "Awaiting spec stabilization".
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
+
+### T58 — Run Code Quality & Engineering Standards Enforcement
+
+- **Workflow:** `run.md` (Executing Tasks)
+- **Synthetic State:**
+  - `TASKS.md` Phase 1 has 1 active task.
+  - `RULES.md` Guidelines include the new Guideline 8 (Code Quality).
+- **Action:** Agent begins task execution.
+- **Expected:**
+  - [ ] Agent acknowledges Guideline 8 (Code Quality & Engineering Standards) during pre-flight or task start.
+  - [ ] Agent applies stack-appropriate lints and conventions.
+  - [ ] Agent explicitly mentions following SOLID, DRY, KISS, YAGNI, and FSD during implementation.
+  - [ ] **MANDATORY**: Agent includes unit or integration tests as part of the task output.
+  - [ ] Documentation updates are in English per Guideline 8.
+- **Guards tested:** Mandatory Code Quality & Testing guideline enforcement.
+
+### T59 — Engine Meta Automation Enforcement
+
+- **Workflow**: `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
+- **Synthetic State**:
+  - Agent modifies `.magic/simulate.md` to add a new guideline.
+  - `.magic/.version` is `1.4.11`.
+  - `.magic/history/simulate.md` exists.
+- **Action**: Agent performs the edit.
+- **Expected**:
+  - [ ] Agent identifies that a core engine file was modified.
+  - [ ] Agent executes: `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
+  - [ ] **Automated Verifications**:
+    - [ ] `.magic/.version` bumped to `1.4.12`.
+    - [ ] `.magic/history/simulate.md` contains a new row for `1.4.12`.
+    - [ ] `.magic/.checksums` is recalculated.
+  - [ ] Results documented in the task completion checklist.
+- **Guards tested**: C1, C14, Engine Integrity Guard (via meta automation).

@@ -20,9 +20,12 @@ Use when you want to declare a convention without going through the Spec Workflo
 3. **Scope**: Only §7 Project Conventions is modified here. Sections 1–6 are the universal constitution — amend them only if the user explicitly targets them.
 4. **No Silent Changes**: Always show the proposed change before writing.
 5. **Version Discipline**: Every change to RULES.md requires a version bump and a Document History row. Clarification: Typo fixes or rephrasing without changing intent is a `patch` (0.0.X).
+   - **Engine Versioning**: If you modify `rule.md` or other engine files, you MUST update engine metadata:
+     `node .magic/scripts/executor.js update-engine-meta --workflow rule`
 6. **Context Awareness**: Before adding a manual rule, check `.design/CONTEXT.md` to see if it aligns with recent project decisions.
 7. **Batch Operations**: If the user requests multiple modifications (e.g., add 2 rules and amend 1), group the proposals into a single message, ask for a single "Apply all?" confirmation, perform a single version bump reflecting the highest impact (major > minor > patch), and present only one final checklist.
 8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
+9. **Quality Focus**: When adding or amending rules, prioritize conventions that enforce linting, testing, and modern design principles (SOLID, DRY, etc.) to ensure high-quality output in the `run` workflow.
 
 ## Directory Structure
 

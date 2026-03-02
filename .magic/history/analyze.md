@@ -8,3 +8,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | AOP: Added Auto-Init guard, fixed list continuity |
 | 1.4.0 | 2026-03-01 | Antigravity | AOP: Promoted Depth Control to Step 0 Size Assessment |
 | 1.4.3 | 2026-03-01 | Antigravity | AOP: Added Smart Sync Optimization for automated rename detection |
+| 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

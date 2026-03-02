@@ -26,6 +26,9 @@ This workflow defines a universal, technology-agnostic process for creating and 
 10. **Explore Mode Safety**: When users trigger brainstorming or exploration (*"Explore"*, *"Analyze"*), act as a thinking partner. Do not modify live spec files or registries (`INDEX.md`, `PLAN.md`, `.design/specifications/`) until explicitly approved.
 11. **Delta Editing for Specs**: When modifying existing large specifications (>200 lines), always use surgical search-and-replace tools. Mark block updates in your summary with semantic tags: `[ADDED]`, `[MODIFIED]`, or `[REMOVED]`.
 12. **Checklist Before Done**: Every task must end with the *Task Completion Checklist* shown to the user. A task is not complete until the checklist is presented and all items are confirmed.
+13. **Engine Versioning (C14)**: If the current task involves modifying core engine files (anything inside `.magic/`), you MUST also increment the **patch** version and update engine metadata by running:
+    `node .magic/scripts/executor.js update-engine-meta --workflow spec`
+    (Note: This command automatically bumps `.magic/.version`, updates history, and regenerates checksums).
 
 ## Directory Structure
 

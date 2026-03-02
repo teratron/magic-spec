@@ -13,3 +13,5 @@
 | 1.4.3 | 2026-03-01 | Antigravity | Fix: Extended Deprecation Cascade to include `Implements` references |
 | 1.4.3 | 2026-03-01 | Antigravity | Fix: Spec Renaming Protocol forbids modifying historical archives |
 | 1.4.4 | 2026-03-01 | Antigravity | Added C14 Engine Versioning Protocol to Post-Update Review checklist |
+| 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.11 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

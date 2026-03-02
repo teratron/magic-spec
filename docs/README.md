@@ -6,7 +6,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
-3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution.
+3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, etc.) during execution.
 4. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data and provide actionable recommendations after every phase.
 
 ## 🔗 The Workflow Pipeline

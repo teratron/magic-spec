@@ -9,6 +9,8 @@ The Run Workflow is the execution engine of Magic SDD. It reads the atomic tasks
 Key Goals:
 
 - **Scope Compliance**: Ensuring implementation code strictly follows the approved specification.
+- **Code Quality & Engineering Standards**: Enforcing modern design principles (OOP, SOLID, DRY, KISS, YAGNI), Feature-Sliced Design, and stack-specific linters.
+- **Mandatory Testing**: Ensuring all new or modified logic is covered by automated tests before completion.
 - **State Integrity**: Automatically updating task statuses in `TASKS.md` and synchronously closing checkboxes (`[x]`) in `PLAN.md` after every operation (preventing "Plan Amnesia").
 - **Maximum Automation**: Running post-implementation logic (changelogs, retrospectives, version bumps) with minimal user interruption.
 
@@ -43,6 +45,7 @@ If a task encounters ambiguous instructions or missing details during execution,
 
 - **Phase Completion**: Triggers a **Level 1 (Auto-snapshot) Retrospective**.
 - **Plan Completion**: Triggers a **Level 2 (Full) Retrospective** and a final version bump across the project's manifests (e.g., `package.json`).
+- **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, etc.) during execution.
 
 ## 5. Maintenance
 

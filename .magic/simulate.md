@@ -16,7 +16,9 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 3. **Surgical Reporting (Fix & Test)**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. You **must also write a new regression test** for the issue and append it to `.magic/tests/suite.md`. Present and ask the user for a single yes/no approval before applying any patches. This is the only non-silent step in the simulation workflow (C1 compliance).
 4. **Non-Overlapping**: Do not collect metrics or analyze project history (that's for `retrospective.md`). Focus purely on the *logic and clarity* of the instructions.
 5. **Universal Executor**: Always verify that scripts mentioned in the workflow are properly referenced via `node .magic/scripts/executor.js`.
-6. **Engine Versioning (C14)**: If the current task involves modifying core engine files (anything inside `.magic/`), you MUST also increment the **patch** version in `.magic/.version`.
+6. **Engine Versioning (C14)**: If the current task involves modifying core engine files (anything inside `.magic/`), you MUST also increment the **patch** version and update engine metadata by running:
+   `node .magic/scripts/executor.js update-engine-meta --workflow simulate`
+   (Note: This command automatically bumps `.magic/.version`, updates history, and regenerates checksums).
 
 ## Workflow Steps
 

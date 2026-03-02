@@ -77,7 +77,7 @@ graph TD
 
 `PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.
 
-> **Maintainer Note**: `init.js` contains a hardcoded `RULES.md` template with all conventions (C1–C11). When adding new conventions to the engine, the script MUST be updated.
+> **Maintainer Note**: `init.js` contains a hardcoded `RULES.md` template with all conventions (C1–C14). When adding new conventions to the engine, the script MUST be updated.
 
 ## Init Completion Checklist
 

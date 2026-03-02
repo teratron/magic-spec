@@ -22,7 +22,13 @@ It operates **after** the Task Workflow — tasks are its input, not its concern
 5. **Mode Awareness**: Always know the current execution mode (Sequential or Parallel). Behaviour differs significantly between them.
 6. **Manager Role**: In Parallel mode, the Manager Agent coordinates — it does not implement. It reads status, unblocks tracks, and escalates conflicts.
 7. **Checklist Before Done**: Every workflow operation must end with the *Run Completion Checklist*.
-8. **Maximum Automation (Zero-Prompt)**: Skip all conversational confirmation prompts (task order, track selection, changelog generation, retrospective reporting). Execute the execution and conclusion sequence autonomously, reporting only completion or critical blockers. Do not ask for lessons learned or approval to write system files.
+8. **Code Quality & Engineering Standards**: All generated code, documentation, and tests must adhere to the FOLLOWING standards:
+   - **Linting & Conventions**: Apply lints and conventions intrinsic to the user's technology stack.
+   - **Design Principles**: Enforce OOP (Object-Oriented Programming), SOLID, DRY (Don't Repeat Yourself), KISS (Keep It Simple, Stupid), and YAGNI (You Ain't Gonna Need It).
+   - **Architecture**: Use Feature-Sliced Design (FSD) or stack-appropriate equivalents for modularity.
+   - **Testing**: Tests are MANDATORY for all new or modified logic. Verify implementation against requirements through automated tests.
+   - **Documentation**: Inline comments and README updates must be in English (per Global Guidelines).
+9. **Maximum Automation (Zero-Prompt)**: Skip all conversational confirmation prompts (task order, track selection, changelog generation, retrospective reporting). Execute the execution and conclusion sequence autonomously, reporting only completion or critical blockers. Do not ask for lessons learned or approval to write system files.
 
 ## Directory Structure
 
@@ -120,7 +126,10 @@ graph TD
            - Rust    → `Cargo.toml` ([package].version)
            If no manifests exist, create or update `.design/VERSION`.
 
-           **CRITICAL (Engine Versioning)**: If the current task involves modifying the core engine files (anything inside `.magic/`), you MUST also increment the **patch** version in `.magic/.version`. For all other project-level tasks, do not modify this file.
+           **CRITICAL (Engine Versioning)**: If the current task involves modifying the core engine files (anything inside `.magic/`), you MUST also increment the **patch** version and update engine metadata by running:
+           `node .magic/scripts/executor.js update-engine-meta --workflow run`
+           (Note: This command automatically bumps `.magic/.version`, updates history, and regenerates checksums).
+           For all other project-level tasks, do not modify these files.
     - If not done → report phase complete and propose the next phase.
     - **Crucial Update:** Finally, silently run `node .magic/scripts/executor.js generate-context` to regenerate `.design/CONTEXT.md` based on new changelog entries.
 
