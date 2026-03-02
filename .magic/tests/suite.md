@@ -852,7 +852,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:**
-  - Project contains > 600 files.
+  - Project contains > 500 files.
   - No existing specs.
 - **Action:** User runs command to analyze project.
 - **Expected:**
@@ -1082,7 +1082,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - Project A: 40 files.
   - Project B: 200 files.
-  - Project C: 800 files.
+  - Project C: 600 files.
 - **Action:** Run analysis (e.g. "Analyze project") on each.
 - **Expected:**
   - [ ] **Project A**: Auto-scan (Step 1) starts without prompting.

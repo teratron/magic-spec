@@ -13,7 +13,7 @@ Universal process for managing project specifications in `.design/specifications
 - **Context**: flag > `MAGIC_WORKSPACE` > `.design/workspace.json` default > fallback root `.design/`. Never ask user.
 - **Prohibitions**: No implementation code in specs; use pseudo-code only. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
 - **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
-- **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec`.
+- **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
 - **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 - **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
 - **Dispatch**: Use "Raw Input" flow for unstructured ideas.

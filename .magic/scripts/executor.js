@@ -104,9 +104,32 @@ if (scriptName === 'update-engine-meta') {
             for (const wf of workflowNames) {
                 const historyFile = path.join(historyDir, `${wf}.md`);
                 if (fs.existsSync(historyFile)) {
-                    const entry = `| ${newVersion} | ${date} | Antigravity | Automated update via engine meta automation |\n`;
-                    fs.appendFileSync(historyFile, entry);
-                    console.log(`History updated: .magic/history/${wf}.md`);
+                    let content = fs.readFileSync(historyFile, 'utf8');
+                    const lines = content.trimEnd().split('\n');
+                    const lastLineIndex = lines.length - 1;
+                    const lastLine = lines[lastLineIndex] || '';
+                    const automatedMsg = 'Automated update via engine meta automation';
+
+                    if (lastLine.includes(automatedMsg)) {
+                        // Update existing automated entry with range
+                        const parts = lastLine.split('|');
+                        // | Version | Date | Author | Description |
+                        // Index 1 is Version
+                        const currentRange = parts[1].trim();
+                        const firstVersion = currentRange.split('-')[0].trim();
+                        const newRange = ` ${firstVersion} - ${newVersion} `;
+                        parts[1] = newRange;
+                        // Also update date just in case
+                        parts[2] = ` ${date} `;
+
+                        lines[lastLineIndex] = parts.join('|');
+                        fs.writeFileSync(historyFile, lines.join('\n') + '\n');
+                        console.log(`History range updated for '${wf}': ${newRange.trim()}`);
+                    } else {
+                        const entry = `| ${newVersion} | ${date} | Antigravity | ${automatedMsg} |\n`;
+                        fs.appendFileSync(historyFile, entry);
+                        console.log(`History updated: .magic/history/${wf}.md`);
+                    }
                 } else {
                     console.warn(`Warning: History file not found for workflow '${wf}'`);
                 }

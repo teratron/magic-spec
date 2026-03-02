@@ -184,7 +184,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the \`.magic/\` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: \`node .magic/scripts/executor.js update-engine-meta --workflow {workflow}\`.
 
 1. **Scope**: Applies to all \`.md\` workflows, \`scripts/\`, \`templates/\`, and \`config.json\` inside the engine directory.
-2. **Automation**: This command automatically increments the patch version in \`.magic/.version\`, updates the relevant history file in \`.magic/history/\`, and regenerates \`.magic/.checksums\`.
+2. **Automation**: This command automatically increments the patch version in \`.magic/.version\`, updates the relevant history file in \`.magic/history/\`, and regenerates \`.magic/.checksums\`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
 3. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
 
