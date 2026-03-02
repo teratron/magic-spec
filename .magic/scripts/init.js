@@ -17,6 +17,20 @@ dirsToCreate.forEach(dir => {
     fs.mkdirSync(dir, { recursive: true });
 });
 
+const workspacePath = path.join(designDir, 'workspace.json');
+if (!fs.existsSync(workspacePath)) {
+    const workspaceContent = {
+        "default": "root",
+        "workspaces": {
+            "root": {
+                "description": "Primary project workspace"
+            }
+        }
+    };
+    fs.writeFileSync(workspacePath, JSON.stringify(workspaceContent, null, 2));
+    console.log(`Created ${workspacePath.replace(/\\/g, '/')}`);
+}
+
 const date = new Date().toISOString().split('T')[0];
 
 const indexPath = path.join(designDir, 'INDEX.md');

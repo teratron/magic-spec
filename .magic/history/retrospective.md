@@ -8,3 +8,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | AOP: Fixed hardcoded paths, optimized template creation |
 | 1.3.2 | 2026-02-28 | Antigravity | Bugfix: Missing Cancelled Metric added to tables |
 | 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.31 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

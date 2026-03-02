@@ -56,7 +56,7 @@ graph TD
     - **Change Record**: Write 1-line summary in task `Changes` field.
 5. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
-    - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from task `Changes` fields) to `CHANGELOG.md`.
+    - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from **Done** task `Changes` fields) to `CHANGELOG.md`.
 
 ### Plan Completion (Succession Loop)
 

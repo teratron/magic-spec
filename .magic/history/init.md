@@ -8,3 +8,4 @@
 | 1.3.1 | 2026-02-27 | Antigravity | Existing codebase hint: suggest "Analyze project" post-init |
 | 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
 | 1.4.12 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.29 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

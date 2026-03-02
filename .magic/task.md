@@ -12,7 +12,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
     - **User Gate**: Show phase structure and task breakdown BEFORE writing files.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
-5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Halt if sync mismatch.
+5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Architectural Logic**:
     - **Circular Guard**: If cycles (A→B→A) found → **HALT**.
     - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
@@ -47,6 +47,7 @@ graph TD
 6. **Sync (Update Mode)**:
     - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]` with specific reason.
     - **Phantom Specs**: If spec in PLAN but missing in INDEX → Cancel `Todo` / `Pending`; archive `Done`.
+    - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files.
     - **Renames**: Global search-and-replace on filename changes (exclude archives).
 
 ### Plan Write-back
@@ -64,6 +65,6 @@ Task Workflow Checklist — {operation}
   ☐ All registered specs read; no orphans/phantoms left unaddressed
   ☐ Circular dependencies checked; layer order 1->2 respected
   ☐ Selective Planning (C6) and Quarantine (C12) applied
-  ☐ Execution mode saved to RULES.md §7; Task IDs valid
+  ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ PLAN.md / TASKS.md written; CONTEXT.md regenerated
 ```

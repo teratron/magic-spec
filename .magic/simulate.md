@@ -28,9 +28,9 @@ graph TD
 
 ### 1. Mode Selection
 
-- **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user.
+- **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user with hint to run `init` or restore the file.
 - **Direct**: `/magic.simulate {workflow}`. Targets specific logic.
-- **Improv**: Default if 0 args. Synthesize a "Crisis" (e.g., manual drift, broken registry) and run full SDD chain (Spec->Task->Run) to find leaks.
+- **Improv**: Default if 0 args. Synthesize a "Crisis" (e.g., manual drift, broken registry) and perform a **Cognitive Walkthrough** of the full SDD chain (Spec->Task->Run) on this imaginary state to find leaks.
 
 ### 2. Logic Audit & AOP
 
@@ -40,10 +40,12 @@ Scan for:
 - **Ambiguity**: Interpretation friction.
 - **Context Economy**: Token waste in `view_file` calls.
 - **Broken Loops**: Checklists that don't cover the work.
+- **Suite Integrity**: Verify `.magic/tests/suite.md` follows structural requirements (H3 headers for tests, Expected/Action sections).
 
 ### 3. Reporting & Fixes
 
 - **Individual Audit**: Table with `Dimension | Finding | Outcome (PASS/FAIL/ROUGH EDGE)`.
+- **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
 - **Succession**: Run `/magic.simulate test` post-fix to ensure 0 regressions.
 

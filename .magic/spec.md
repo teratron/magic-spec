@@ -142,8 +142,11 @@ graph TD
     - Append row to `Document History`.
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
-    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain invariant §52.
-    - **Renaming**: If file renamed, Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links. Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
+    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain Layer 2 stability requirements (§45, Step 52).
+    - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
+        - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
+        - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
+        - Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
 4. **Closure**: Post-Update Review → Checklist.
 
 ### Post-Update Review (Mandatory)
@@ -201,7 +204,7 @@ Compares specs vs. project filesystem and engine integrity.
 Checklist — {task description}
   ☐ No implementation code in specs (pseudo-code only)
   ☐ Registry: INDEX.md updated (Status, Layer, Version)
-  ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable)
+  ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Defensive: RULES.md triggers (T1-T4) checked/applied
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed (Coherence, Duplication)

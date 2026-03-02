@@ -16,6 +16,7 @@ Reverse-engineers code into `.design/` spec proposals. Delegated from `spec.md`.
     - **<50 files**: Auto-scan.
     - **50-500 files**: Ask: Full or Focused?
     - **>500 files**: Recommend Focused/Quick. HALT for user choice.
+6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze`.
 
 ## Operational Logic: Scan & Infer
 
@@ -49,6 +50,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 1. Build full project map.
 2. Inferred stack + architecture style.
 3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries.
+4. **Ghost Registry Guard**: If `specifications/` is NOT empty but `INDEX.md` is blank → Prioritize **Registry Repair** (Map files to registry) before proposing new content.
 
 ### [Mode B] Re-Analysis (Delta Mode)
 
@@ -91,4 +93,5 @@ Analysis Checklist — {mode}
   ☐ Mode correct (Analysis vs Re-Analysis Gap Report)
   ☐ RESCUE logic applied for renamed directories
   ☐ Dispatch: approved items created as Stable; RULES.md §7 updated
+  ☐ Engine Meta: C14 bump if .magic/ files modified
 ```

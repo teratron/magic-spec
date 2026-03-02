@@ -9,6 +9,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
+6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective`.
 
 ---
 
@@ -36,7 +37,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 ### Snapshot (L1) Execution
 
 - **Step**: Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`.
-- **Archival (C8)**: Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md`.
+- **Archival (C8)**: Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use **relative** path.
 
 ---
 
@@ -49,4 +50,5 @@ Retro Checklist — {Level}
   ☐ L1: Snapshot row appended; Phase N archived to archives/tasks/ (C8)
   ☐ L2: Actionable recommendations mapped to evidence; trends calculated
   ☐ Integrity: No speculative claims; all findings reference specific files
+  ☐ Engine Meta: C14 bump if .magic/ files modified
 ```

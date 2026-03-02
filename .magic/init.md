@@ -8,6 +8,9 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns `checksums_mismatch`.
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skips existing files. Never mutates user state.
+5. **Versioning (C14)**:
+    - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow init`.
+    - **Rules**: Initial `RULES.md` is versioned at 1.0.0.
 
 ---
 
@@ -42,6 +45,7 @@ graph TD
 .design/
 ├── INDEX.md (Registry)
 ├── RULES.md (Conventions C1-C14)
+├── workspace.json (Context)
 ├── specifications/
 ├── tasks/
 └── archives/tasks/
@@ -51,7 +55,7 @@ graph TD
 
 ```
 Init Checklist
-  ☐ .design/ structure and registry validated
+  ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
   ☐ RULES.md (C1-C14) & INDEX.md headers present
   ☐ Existing codebase check performed; analyzer suggested if applicable

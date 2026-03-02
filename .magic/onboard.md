@@ -5,9 +5,10 @@ Interactive tutorial building a toy "Logger Module". Focus: hands-on SDD lifecyc
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
-2. **Instructor Role**: Friendly, concrete guidance. **Explicit Wait**: Complete 1 step → Wait for user confirmation (e.g., "ready", "continue") before next.
+2. **Instructor Role**: Friendly, concrete guidance. **Explicit Wait**: Complete 1 step → Wait for user confirmation (e.g., "ready", "continue", "go", "ok", "да", "ок") before next.
 3. **Safety Notice**: Real files created in `.design/`. If existing production data (specs > 0) found → **HALT**. Offer Backup (copy to `.bak`) or Cancel.
 4. **Wipe Protocol**: Restarting deletes only `logger-module.md` and toy Plan/Task files. Never format the whole `.design/`.
+5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow onboard`.
 
 ---
 
@@ -45,5 +46,6 @@ Onboarding Checklist — Tutorial Complete
   ☐ Toy spec created/registered; Plan/Task structure generated
   ☐ Lifecycle: Spec -> Plan -> Task -> Done -> Archive demonstrated
   ☐ User gates (Wait steps) respected; instructor role maintained
-  ☐ Safety: Production data check passed; C14 engine integrity verified
+  ☐ Safety: Production data check passed; Backup offered if needed
+  ☐ Engine Meta: C14 bump if .magic/ files modified
 ```

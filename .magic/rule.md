@@ -8,9 +8,9 @@ Directly manages `.design/RULES.md §7 Project Conventions`.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
 4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
-5. **Versoning (C14)**:
+5. **Versioning (C14)**:
     - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule`.
-    - **Rules**: Bump Minor (add/amend) or Major (remove). Update Document History.
+    - **Rules**: Bump Minor (add/amend), Major (remove), or Patch (typos). Update Document History.
 
 ---
 
@@ -44,13 +44,14 @@ graph TD
 | **Remove** | Match ID/Keyword → Delete entry. | Major |
 | **List** | Display all §7 entries as numbered list. | N/A |
 
-### 5. Impact Analysis
+### 5. Impact Analysis & Sync
 
-After write, ask the user:
+... (replaces previous section) ...
+After write, if `TASKS.md` exists:
 
-- "Should I audit existing specs for compliance?"
-- "Should I update the implementation plan tasks?"
-- *Note*: If `TASKS.md` exists, its `Based on RULES:` version is now stale.
+1. **Notify**: Inform user that `TASKS.md` version (`Based on RULES`) is now stale.
+2. **Offer Sync**: Propose running `magic.task update` to propagate the rule changes into the active plan.
+3. **Audit**: If rule is critical (L1/C1-C10), suggest `magic.spec audit` for compliance.
 
 ---
 
@@ -61,6 +62,7 @@ Rule Checklist — {operation}
   ☐ Read full RULES.md; §1-6 core invariants respected
   ☐ Scope: only §7 target (unless core amendment requested)
   ☐ Guards: no semantic duplication; no core contradiction
-  ☐ Version bumped (Minor/Major); Document History updated
+  ☐ Version bumped (Major/Minor/Patch); Document History updated
+  ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Engine Meta: C14 bump if .magic/ files modified
 ```

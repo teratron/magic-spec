@@ -615,7 +615,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 1:** User runs `/magic.simulate test`
 - **Expected 1:**
   - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
-  - [ ] Agent alerts user that test suite is missing and falls back to **Improv Mode**.
+  - [ ] Agent alerts user that test suite is missing, provides hint to run `init` or restore file, and falls back to **Improv Mode**.
   - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
   - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
   - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
@@ -1003,3 +1003,136 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent alerts user: "Project conventions have changed since these tasks were generated. Proceed or run `magic.task update` to synchronize?".
   - [ ] No execution begins until user chooses to proceed.
 - **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.
+
+### T47 — Spec Merge Refactor (Section Re-mapping)
+
+- **Workflow:** `spec.md` + `task.md` (Structural Refactor)
+- **Synthetic State:**
+  - `INDEX.md`: `auth.md` (Stable), `session.md` (Stable)
+  - `TASKS.md`: `T-1A01` (auth.md §2), `T-2B01` (session.md §5)
+- **Action:** User merges `auth.md` and `session.md` into `security.md`. §2 moves to §security.md §3.
+- **Expected:**
+  - [ ] **Structural Refactor detected**: Merge action recognized.
+  - [ ] **Refactoring Guard**: Agent updates `T-1A01` in `TASKS.md` to point to `security.md §3`.
+  - [ ] Agent updates `T-2B01` mapping if necessary.
+  - [ ] `INDEX.md` synced: `auth.md`, `session.md` removed; `security.md` added.
+  - [ ] `PLAN.md` synced with new spec name.
+- **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
+- **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
+
+### T48 — Simulation: Suite Integrity Failure
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - `.magic/tests/suite.md` exists but lacks H3 headers for tests (uses only H2 or plain text).
+- **Action:** Run `/magic.simulate test`
+- **Expected:**
+  - [ ] Agent reads `suite.md`.
+  - [ ] **Structural Issue Detected**: "Suite integrity failure: missing H3 test headers".
+  - [ ] Agent alerts user and proposes a fix for `suite.md` formatting.
+  - [ ] Agent falls back to **Improv Mode** until fixed.
+- **Guards tested:** Suite Integrity (Structural requirements), Fallback logic.
+
+### T49 — Run: Changelog Precision (Filter Blocked)
+
+- **Workflow:** `run.md`
+- **Synthetic State:**
+  - Phase 1: `T-101` (Done, Changes: "Added A"), `T-102` (Blocked, Changes: "Started B"), `T-103` (Done, Changes: "Added C").
+- **Action:** Phase 1 completes. Agent triggers Changelog L1.
+- **Expected:**
+  - [ ] Agent reads Phase 1 tasks.
+  - [ ] **Filtering applied**: Only `T-101` and `T-103` selected.
+  - [ ] `CHANGELOG.md` updated with:
+    - Added A
+    - Added C
+  - [ ] "Started B" is **NOT** present in the changelog.
+- **Guards tested:** Changelog Filtering (Precision), Reporting Integrity.
+
+### T50 — Rule: Rules Parity Sync Offer
+
+- **Workflow:** `rule.md`
+- **Synthetic State:**
+  - `RULES.md` version 1.4.0.
+  - `TASKS.md` header contains `Based on RULES: 1.4.0`.
+- **Action:** User adds a new rule.
+- **Expected:**
+  - [ ] Agent proposes `RULES.md` update (version bump to 1.5.0).
+  - [ ] Agent writes `RULES.md`.
+  - [ ] **Rules Parity Check**: Agent detects `TASKS.md` is now stale.
+  - [ ] Agent alerts user: "`TASKS.md` is based on rules v1.4.0 but project is now v1.5.0."
+  - [ ] Agent offers to run `magic.task update` to synchronize the plan.
+- **Guards tested:** Rules Parity (Stale check), Sync Offer.
+
+---
+
+### T61 — Init: Workspace Initialized
+
+- **Workflow:** `init.md`
+- **Synthetic State:**
+  - `.design/` (missing).
+- **Action:** Trigger any workflow (e.g. `spec.md`).
+- **Expected:**
+  - [ ] `check-prerequisites` fails (missing artifacts).
+  - [ ] `init` workflow executes `init.js`.
+  - [ ] `.design/workspace.json` is created with `default: root`.
+  - [ ] `.design/RULES.md` and `INDEX.md` created.
+- **Guards tested:** Core Artifact Initialization, Zero-Prompt baseline.
+
+---
+
+### T62 — Analyze: Depth Control (Threshold Enforcement)
+
+- **Workflow:** `analyze.md`
+- **Synthetic State:**
+  - Project A: 40 files.
+  - Project B: 200 files.
+  - Project C: 800 files.
+- **Action:** Run analysis (e.g. "Analyze project") on each.
+- **Expected:**
+  - [ ] **Project A**: Auto-scan (Step 1) starts without prompting.
+  - [ ] **Project B**: Agent HALTs and asks: "Full or Focused scan?".
+  - [ ] **Project C**: Agent recommends "Focused/Quick" and HALTs for choice.
+- **Guards tested:** Depth Control (Safety) thresholds.
+
+### T63 — Retro: Snapshot Archival (C8)
+
+- **Workflow:** `retrospective.md` (Level 1 Snapshot)
+- **Synthetic State:**
+  - Workspace: `.design/api-v2/`
+  - Current phase: Phase 3
+  - File: `.design/api-v2/tasks/phase-3.md` exists.
+  - `TASKS.md` has link to `tasks/phase-3.md`.
+- **Action:** Phase 3 completes; `magic.run` triggers Retro L1.
+- **Expected:**
+  - [ ] `RETROSPECTIVE.md` (metadata) read or created.
+  - [ ] Row appended to `RETROSPECTIVE.md` Snapshots table.
+  - [ ] **Archival (C8)** executed: `phase-3.md` moved to `.design/api-v2/archives/tasks/phase-3.md`.
+  - [ ] `TASKS.md` link updated to: `[Phase 3](archives/tasks/phase-3.md)`.
+- **Guards tested:** C8 Archival, Workspace-relative pathing logic.
+
+### T64 — Onboard: Multi-step Wait Gate (Enforcement)
+
+- **Workflow:** `onboard.md`
+- **Synthetic State:** Fresh repository, `.design/` (missing).
+- **Action:** User runs `/magic.onboard`.
+- **Expected:**
+  - [ ] Agent performs Step 1 (Intro) and **HALTs**.
+  - [ ] Agent asks: "Ready to start?" (or equiv).
+  - [ ] Agent does **NOT** create `logger-module.md` until user says "ready" or "continue".
+  - [ ] Each subsequent step follows the same gate (Execute → Wait).
+- **Guards tested:** Instructor Role (Wait Gate Enforcement), Pacing Integrity.
+
+### T65 — Onboard: Production Data Safety Halt
+
+- **Workflow:** `onboard.md`
+- **Synthetic State:**
+  - `.design/specifications/` exists and contains `auth-system.md` (active spec).
+- **Action:** User runs `/magic.onboard`.
+- **Expected:**
+  - [ ] Agent scans for existing specifications (>0).
+  - [ ] Agent identifies `auth-system.md`.
+  - [ ] **Safety Halt (Step 3)**: Agent refuses to start the tutorial over production data.
+  - [ ] Agent offers to Backup or Cancel.
+- **Guards tested:** Safety Protocol (C6 Bypass Prevention), Production Data Guard.
+
+---
