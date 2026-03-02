@@ -16,3 +16,4 @@
 | 1.4.13 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
 | 1.4.14 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
 | 1.4.15 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.20 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

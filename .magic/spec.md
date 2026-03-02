@@ -142,7 +142,7 @@ graph TD
     - Append row to `Document History`.
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
-    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), flag all dependent L2/L3 specs for review.
+    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain invariant §52.
     - **Renaming**: If file renamed, Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links. Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
 4. **Closure**: Post-Update Review → Checklist.
 
@@ -191,7 +191,7 @@ Compares specs vs. project filesystem and engine integrity.
 | Layer Integrity | L2 has valid L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
 | Config Sync | `package.json`/`pyproject.toml` fields match? |
-| **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. |
+| **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. Hint: use `init` or `update-engine-meta`. |
 
 ### Task Completion Checklist
 

@@ -1,23 +1,23 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "3f38cd839bbf6e217c39910a89180bb40f2ff0aecf0c208696ce1068ec577657",
+  ".version": "c32f5bc7628680cd05c65d0e3fa57afb16ca19774be640f95f16bbd697e22bfc",
   "analyze.md": "414d919d9c913c920a7613b0038d213d77a034c86da751d97ead54181a5db1cf",
   "init.md": "5b3676066f108ab5b787c2381878fd492a19e25b1303519a5008b025bb13cabe",
   "onboard.md": "e496dbed714dc6f34bacde77e7c71f9c5f97c94d5921580cd3fb238b3a868ec8",
   "retrospective.md": "279e2ab24432b70fef6eb03b0cb83101d4121b4c073ecbbe20aadd56cd9b5582",
   "rule.md": "0a1460a16074207607b558f80aadd70ba940803c1c4a1f49973a19b97ded2fb8",
-  "run.md": "9659adb8e0ec480b941df04adc6bb78b28f4f423f3d5c50c65acc25da48343a7",
+  "run.md": "203a8886ac40731cde0a28e690dcf5d27c7cf13dde3ba2d63c5793e8b6edd621",
   "scripts/check-prerequisites.js": "8a01268ef5f65460f528ffa9233ff53e344f146ef5fbd9db8da3a966dc89047c",
   "scripts/executor.js": "22a6f78954832868fd5af5b04feaedefef44924ad9ba0fe50f7a62122b84cc46",
   "scripts/generate-checksums.js": "5818e6193dd7b1efa2a5c2709ed3d920094958ac846bd953c08af6bf9729c9d6",
   "scripts/generate-context.js": "78ce2cfc6cb3d5cf3a8a2efff79f1de2fdbc5f83efb16cc06d6f1fb5f2b62434",
   "scripts/init.js": "0273f3acaff3c31d4e133bbc0b7b52a9fbf4840b0347e3675d8369dea3fc0714",
   "simulate.md": "8bb58a0b3bc8af909643870adf1187582346e307c5003641fca1da405c1a7062",
-  "spec.md": "4bc0c17af5311c5879bf1a5459d253d9295746f11b1e98d438a26a71b244cdb4",
-  "task.md": "528eb3dd297fb2edaeb9fbae00e86a7f3d4693573d7fa524b507f3b12b0a1e14",
+  "spec.md": "b1f0fc655be941459d611eb4f84d65455c2cc1ce4e96285455a75b62a3311ed0",
+  "task.md": "27be50eb0e7ffcdcaf870b00e59f6e875ba8c71b514f1b7025d1461e8cbbed50",
   "templates/plan.md": "ecb50698464799348d068612734a686f188dc0d84f626374edb33353f62e1650",
   "templates/retrospective.md": "6133ef3bcbd42958c97d5c1b39b885e389ba938b3091284902eaf86d790456ca",
   "templates/specification.md": "212474c480955bdb8fc690aee7f45ca80e562bec62c5d609caa8e3ffcaaa247e",
   "templates/tasks.md": "df89f110e3723578edaa05d5df6745db1e242724b3a715fa94b902800f737944",
-  "tests/suite.md": "70e8fcae013a9147cbfd0a4ced8ecdf095348a9604c84e385e7974fef155b4b3"
+  "tests/suite.md": "4909a07fdd985c86373e8bfe088149b0192d0bf0543012a2e352d7648300b680"
 }

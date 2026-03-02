@@ -10,7 +10,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 4. **Logic Guards**:
     - **Dependency**: Never start a task if parents are not `Done`.
     - **Mode**: Sequential or Parallel must be in `RULES.md §7`. If missing → **HALT**.
-    - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift.
+    - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Versioning (C14)**: If `.magic/` modified, auto-run `node .magic/scripts/executor.js update-engine-meta --workflow run`.
 
@@ -20,7 +20,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 | :--- | :--- | :--- |
 | **Sequential** | Mono-Agent | Picks next `Todo` → Executes → Updates `Done` → Repeats. |
 | **Parallel** | Manager | Reads `TASKS.md` → Detects shared-file conflicts → Assigns tracks → Syncs `PLAN.md`. |
-| **Parallel** | Developer | Owns 1 track → Executes in order → Reports `Done/Blocked` → Wait for next assignment. |
+| **Parallel** | Developer | Track owner (mono or sub-agent) → Executes in order → Reports `Done/Blocked` → Wait for next assignment. |
 
 *Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions.
 
@@ -56,7 +56,7 @@ graph TD
     - **Change Record**: Write 1-line summary in task `Changes` field.
 5. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
-    - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list to `CHANGELOG.md`.
+    - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from task `Changes` fields) to `CHANGELOG.md`.
 
 ### Plan Completion (Succession Loop)
 
@@ -71,6 +71,7 @@ graph TD
 
 ```
 Checklist — {operation}
+  ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
   ☐ Parallel: Manager role enforced; shared files serialized
   ☐ Status: TASKS.md / phase files / PLAN.md [x] synced

@@ -15,8 +15,8 @@ handoffs:
 **Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
 **Scope:**
 
+- **Rules Parity**: Version of `RULES.md` must be recorded in `TASKS.md` header.
 - **Registry First**: Every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
-- **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
 - Plan generation, task decomposition, and execution orchestration.
 Execution is handled by `magic.run`.
 

@@ -10,3 +10,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight |
 | 1.3.2 | 2026-02-28 | Antigravity | AOP: Added Downgrade Policy to Selective Planning (C6) |
 | 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.19 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

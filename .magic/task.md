@@ -12,7 +12,8 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
     - **User Gate**: Show phase structure and task breakdown BEFORE writing files.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
-5. **Architectural Logic**:
+5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Halt if sync mismatch.
+6. **Architectural Logic**:
     - **Circular Guard**: If cycles (A→B→A) found → **HALT**.
     - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
     - **Selective Planning (C6)**: `Draft` → Backlog. `RFC` → Recommend Backlog. `Stable` → Propose for Plan.
@@ -44,8 +45,8 @@ graph TD
     - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
     - **Tracks**: Group tasks by file independence.
 6. **Sync (Update Mode)**:
-    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]`.
-    - **Phantom Specs**: If spec in PLAN but missing in INDEX → Cancel `Todo`; archive `Done`.
+    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]` with specific reason.
+    - **Phantom Specs**: If spec in PLAN but missing in INDEX → Cancel `Todo` / `Pending`; archive `Done`.
     - **Renames**: Global search-and-replace on filename changes (exclude archives).
 
 ### Plan Write-back

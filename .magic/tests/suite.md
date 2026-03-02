@@ -151,7 +151,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `secrets.md` flagged as Phantom Spec
   - [ ] T-1A01 (Done) → preserved as Archived Orphan (history intact)
-  - [ ] T-1A02 (In Progress) → marked Cancelled
+  - [ ] T-1A02 (In Progress) → marked Cancelled (Reason: Phantom Spec)
   - [ ] T-1B01 (auth.md, Todo) → unaffected
   - [ ] Done work is NOT cancelled
 - **Guards tested:** Phantom spec Done-task preservation
@@ -279,6 +279,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] check-prerequisites reports `checksums_mismatch` for `spec.md`
   - [ ] **HALT** — do NOT proceed with simulation
   - [ ] Report mismatched files to user
+  - [ ] **Hint Provided**: Agent suggests `init` or `update-engine-meta` to restore integrity.
   - [ ] Options: confirm changes were intentional OR regenerate checksums
   - [ ] Simulation resumes only after user response
 - **Guards tested:** Checksums mismatch HALT (Step 0)
@@ -934,7 +935,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Status change: `auth-concept.md` → RFC
   - [ ] Agent scans for dependencies and identifies `auth-impl.md` is a dependent L2 child.
   - [ ] **Quarantine Cascade**: Agent flags `auth-impl.md` during Post-Update Review.
-  - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) should also be demoted or quarantined."
+  - [ ] **Status Drop Enforced**: Agent MUST drop status of `auth-impl.md` (L2) to RFC or Draft and update INDEX.md.
+  - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) status dropped to maintain invariant §52."
 - **Guards tested:** Quarantine Cascade (C12) surfacing, Layer Integrity.
 
 ### T56 — Task Quarantine Cascade (C12)
@@ -950,7 +952,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Agent identifies that `auth-concept.md` (L1) is not Stable.
   - [ ] **Quarantine Cascade (C12)**: `auth-impl.md` is moved to `## Backlog` in `PLAN.md`.
-  - [ ] Task T-1A01 in `TASKS.md` is marked `Blocked [!]` with note: "Awaiting spec stabilization".
+  - [ ] Task T-1A01 for `auth-impl.md` (Todo) → marked `Blocked [!]` with note: "Awaiting spec stabilization (C12 Quarantine)".
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
 
