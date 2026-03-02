@@ -77,8 +77,10 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 1. **Specs**: Call `spec.md` "Creating a New Specification" (direct to Stable).
 2. **Rules**: Apply via T4 protocol to `RULES.md §7`.
-3. **Registry**: Sync `INDEX.md`.
-4. **Context**: Regenerate `CONTEXT.md`.
+3. **Dispatch**:
+    - Registry Sync: Update `INDEX.md`. Bump Registry version.
+    - Post-Update Review: Run on all created specs before closing.
+    - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
 
 ## Task Completion Checklist
 

@@ -28,7 +28,7 @@ graph TD
 
 ### 1. Mode Selection
 
-- **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`.
+- **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user.
 - **Direct**: `/magic.simulate {workflow}`. Targets specific logic.
 - **Improv**: Default if 0 args. Synthesize a "Crisis" (e.g., manual drift, broken registry) and run full SDD chain (Spec->Task->Run) to find leaks.
 

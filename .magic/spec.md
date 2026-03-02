@@ -118,7 +118,7 @@ graph TD
 **Constraints**:
 
 - **Ambiguity**: Ask one clarifying question; do not guess.
-- **Conflict**: Flag contradictions with `RULES.md` or existing `Stable` specs before writing.
+- **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval.
 
 ### Creating a New Specification
@@ -143,18 +143,17 @@ graph TD
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), flag all dependent L2/L3 specs for review.
-    - **Renaming**: If file renamed, update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`.
+    - **Renaming**: If file renamed, Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links. Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
 4. **Closure**: Post-Update Review → Checklist.
 
 ### Post-Update Review (Mandatory)
 
 Check for:
 
-1. **Duplication**: Repeated content across files? → Consolidate.
-2. **Coherence**: Does it read consistently after edits?
-3. **Links**: `Related Specifications` and `Implements` accurate?
-4. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
-5. **Sync Check**: `check-prerequisites` status.
+1. **Coherence**: Does it read consistently after edits?
+2. **Links**: `Related Specifications` and `Implements` accurate?
+3. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
+4. **Sync Check**: `check-prerequisites` status.
 
 ---
 
