@@ -1200,6 +1200,51 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Proposal only includes modules found within the scoped paths.
 - **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.
 
+### T60 — Spec T4 Rule with Missing Target File (HALT Persistence)
+
+- **Workflow:** `spec.md` (T4 + Existence Guard)
+- **Synthetic State:**
+  - `INDEX.md` contains `auth.md` (Stable).
+  - `auth.md` is missing from disk.
+  - `RULES.md` v1.0.0.
+- **Input:** `"Add MFA to auth.md and remember that all MFA must use TOTP."`
+- **Expected:**
+  - [ ] T4 detected ("remember that...").
+  - [ ] Existence Guard fails for `auth.md` -> **HALT**.
+  - [ ] Agent reports missing file.
+  - [ ] **Crucial**: Agent acknowledges the T4 rule and confirms it is "queued" pending the resolution of the missing file issue.
+  - [ ] Rule `C15 — MFA TOTP Standard` is NOT written to `RULES.md` until the target spec is restored or remapped.
+- **Guards tested:** T4 persistence during HALT, Atomic Write Integrity.
+
+### T71 — Task Primary Intent Propagation (Cold Start Memory)
+
+- **Workflow:** `task.md` -> `init.md` -> `analyze.md`
+- **Synthetic State:**
+  - `.design/` missing.
+  - Projects has code.
+- **Action:** User prompts: "Plan feature X" (starting magic.task).
+- **Expected:**
+  - [ ] `task.md` triggers `init.md`.
+  - [ ] Agent suggests and runs `analyze.md`.
+  - [ ] **Crucial**: After specs are approved, the agent automatically proposes a Plan/Task for "Feature X" using the newly generated specs.
+  - [ ] Intent "Feature X" is NOT lost during the mapping/bootstrapping of existing code.
+- **Guards tested:** Context Continuity, Intent Preservation.
+
+### T72 — Engine Meta Auto-Heal (History Resilience)
+
+- **Workflow:** `executor.js` (update-engine-meta)
+- **Synthetic State:**
+  - `.magic/spec.md` modified (checksum mismatch).
+  - `.magic/history/spec.md` is MISSING from disk.
+- **Action:** Run `node .magic/scripts/executor.js update-engine-meta --workflow spec`.
+- **Expected:**
+  - [ ] Executor detects missing history file.
+  - [ ] **Action**: Executor creates a new `history/spec.md` with proper Markdown headers.
+  - [ ] Version is bumped in `.version`.
+  - [ ] Checksums regenerated in `.checksums`.
+  - [ ] Report confirms restoration: "History file RESTORED (Auto-Heal)".
+- **Guards tested:** Automated Restoration, Kernel Integrity (C1).
+
 ```
-**Test Suite Finalized** — v1.9.2
+**Test Suite Finalized** — v1.9.5
 ```

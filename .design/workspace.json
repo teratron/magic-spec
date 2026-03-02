@@ -1,8 +1,0 @@
-{
-  "default": "root",
-  "workspaces": {
-    "root": {
-      "description": "Primary project workspace"
-    }
-  }
-}

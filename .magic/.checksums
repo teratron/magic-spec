@@ -1,6 +1,6 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "84aab1c0cfd67c766b465dfe99723ded27d9e2ea6fd072fd15ac2980e4ee7829",
+  ".version": "5d0d2c8afd301e7bd824308c1fe521e2869137612b2f54d406a8cafc42c191c3",
   "analyze.md": "ea2bcc635940e3512d1af194082fb1864955e020801ae79f2a873542ab66fe79",
   "init.md": "5629737fba6d0447e0a4248521829a123ca1a8ce0d9d47d055ca49d6f47b1f30",
   "onboard.md": "c87a8f3f1bcc3b5347369e1c44bf24f7b0b62f5014d7e2c7d44b896d1c7a2546",
@@ -8,16 +8,16 @@
   "rule.md": "f9b14045a70566e7b19e8298bc863553acf4bfa667a8843974e3491d8d42af4f",
   "run.md": "4269bf8107e9311a834befee1aa933f4c8e3ede5ab05d585a2dcd84db1696562",
   "scripts/check-prerequisites.js": "39e445e2cd8e22e5048ce25b3f166697a4f26556e35fdb03b8d1c266aa4a4fa9",
-  "scripts/executor.js": "bbaa6ad0d1ae238cc0ef8aad22e792871b4afbe629d356066841470a5a713483",
+  "scripts/executor.js": "1c5e56b18f8339b9fe30c2cc38ed4373c7d6b2ada1593a5a4c4244c16e907a28",
   "scripts/generate-checksums.js": "5818e6193dd7b1efa2a5c2709ed3d920094958ac846bd953c08af6bf9729c9d6",
   "scripts/generate-context.js": "78ce2cfc6cb3d5cf3a8a2efff79f1de2fdbc5f83efb16cc06d6f1fb5f2b62434",
   "scripts/init.js": "dac289885319deb4e397afbd4f6578b877b81250f9a5d3eaf84016ed866a797e",
   "simulate.md": "b18c865e08c705ebe0e4b5473bc49bfcaa4bb99568e7712fce364c1cc74b6f03",
-  "spec.md": "4d5cfcfb113b494cae1c96ad5bd209da179f86502019428e58b5e0a16a85bdc3",
+  "spec.md": "66ec3ea3fb7402d67e5edbc1d9ab1e1b739d7b2a7910fd4ae6568c26532c30be",
   "task.md": "66bc8be22ebfb2ce068f1bec26e7124d3a721f16715a6180cc31e9166bb1e57d",
   "templates/plan.md": "ecb50698464799348d068612734a686f188dc0d84f626374edb33353f62e1650",
   "templates/retrospective.md": "6133ef3bcbd42958c97d5c1b39b885e389ba938b3091284902eaf86d790456ca",
   "templates/specification.md": "212474c480955bdb8fc690aee7f45ca80e562bec62c5d609caa8e3ffcaaa247e",
   "templates/tasks.md": "df89f110e3723578edaa05d5df6745db1e242724b3a715fa94b902800f737944",
-  "tests/suite.md": "9631f2ff4b66c32893cf29dedd74b1bd6084fe443987daf12205d0c7f8ad9fd3"
+  "tests/suite.md": "6b0e659e6402f417be7c654920a46d733e44493e2e1d545dd46aa1818aa3b555"
 }

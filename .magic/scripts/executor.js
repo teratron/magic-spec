@@ -143,7 +143,11 @@ if (scriptName === 'update-engine-meta') {
                         console.log(`History updated: .magic/history/${wf}.md`);
                     }
                 } else {
-                    console.warn(`Warning: History file not found for workflow '${wf}'`);
+                    // C1 Kernel Integrity: Auto-Heal missing history files
+                    const wfTitle = wf.charAt(0).toUpperCase() + wf.slice(1);
+                    const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| ${newVersion} | ${date} | Antigravity | Automated reconstruction of missing history file |\n`;
+                    fs.writeFileSync(historyFile, initialContent);
+                    console.log(`History file RESTORED (Auto-Heal): .magic/history/${wf}.md`);
                 }
             }
         }

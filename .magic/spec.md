@@ -142,7 +142,7 @@ graph TD
     - Append row to `Document History`.
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
-    - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
+    - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister. **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain Layer 2 stability requirements (§45, Step 52).
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
         - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
