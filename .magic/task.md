@@ -106,7 +106,7 @@ graph TD
         - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
         - **RFC Specs**: Surface to user with a recommendation to backlog until Stable, unless user explicitly pulls into active plan.
         - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
-        - **Downgrade Policy**: If an actively planned spec is downgraded (`Stable` → `RFC`/`Draft`), move the spec to the Backlog. Do NOT delete its tasks. Mark its `Pending`/`In Progress` tasks as `Blocked [!]` in `TASKS.md` with note: `Awaiting spec stabilization`. `Done` tasks remain untouched.
+        - **Downgrade Policy (C12)**: If an actively planned spec is downgraded (`Stable` → `RFC`/`Draft`) OR its Layer 1 parent loses `Stable` status, move the spec to the Backlog. Do NOT delete its tasks. Mark its `Pending`/`In Progress` tasks as `Blocked [!]` in `TASKS.md` with note: `Awaiting spec stabilization`. `Done` tasks remain untouched.
     - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
     - **Phantom Specs**: Flag specs referenced in `PLAN.md` but missing from `INDEX.md`. Propose: for tasks with status `Pending` or `In Progress` → Cancel; for `Done` tasks → mark as Archived Orphan (preserve history, remove from active planning). Do not cancel Done work.
     - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.

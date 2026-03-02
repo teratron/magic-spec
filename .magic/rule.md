@@ -134,5 +134,4 @@ Task Completion Checklist — {operation description}
   ☐ Document History row added
   ☐ No contradiction with existing rules in §1–6
   ☐ Impact Analysis presented to user (audit/plan-update suggestions)
-  ☐ If core engine files (.magic/) were modified: .magic/.version patch bumped (C14)
 ```

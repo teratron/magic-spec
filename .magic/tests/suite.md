@@ -789,6 +789,37 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Existing tasks in `TASKS.md` retain progress but point to the new spec name.
 - **Guards tested:** Spec Renaming Protocol, Task Continuity.
 
+### T54 — Spec Rename History Immutability
+
+- **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
+- **Synthetic State:**
+  - `RETROSPECTIVE.md` exists and contains mentions of `old-api.md`.
+  - `.design/archives/tasks/phase-1.md` exists and contains mentions of `old-api.md`.
+- **Action:** User renames `old-api.md` to `new-api.md`.
+- **Expected:**
+  - [ ] Status/Renaming applied: Agent updates active files (`INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements`).
+  - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
+  - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
+- **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
+
+### T57 — Parallel Mode Shared-Constraint Detection (Deep Scan)
+
+- **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
+- **Synthetic State:**
+  - Track A: T-1A01 "Update user module" (refs `user-module.md` §2).
+  - Track B: T-1B01 "Add logging" (refs `logger.md` §4).
+  - `user-module.md` §2 says "Modifies `src/lib/manager.js`".
+  - `logger.md` §4 says "Updates logger middleware in `src/lib/manager.js`".
+  - Task descriptions DO NOT mention `src/lib/manager.js`.
+  - RULES.md §7 C3: Parallel mode.
+- **Action:** Run `/magic.run`
+- **Expected:**
+  - [ ] Manager Agent reads both associated spec sections (§2 and §4).
+  - [ ] **Shared-Constraint Detection**: Manager detects that BOTH tasks modify `src/lib/manager.js`.
+  - [ ] Manager serializes the tasks (schedules T-1A01, then T-1B01 in sequence or same track).
+  - [ ] Log entry recorded: "Serialization decision: T-1A01 and T-1B01 both modify `src/lib/manager.js`".
+- **Guards tested:** Deep Shared-Constraint Detection (Spec Scan), Conflict Prevention.
+
 ### T47 — Stability Downgrade Tracking
 
 - **Workflow:** `task.md`
@@ -918,3 +949,20 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Quarantine Cascade**: Agent flags `auth-impl.md` during Post-Update Review.
   - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) should also be demoted or quarantined."
 - **Guards tested:** Quarantine Cascade (C12) surfacing, Layer Integrity.
+
+### T56 — Task Quarantine Cascade (C12)
+
+- **Workflow:** `task.md` (Updating Tasks & Plan)
+- **Synthetic State:**
+  - `auth-concept.md` (L1, status: RFC)
+  - `auth-impl.md` (L2, status: Stable, Implements: auth-concept.md)
+  - `PLAN.md` has `auth-impl.md` in Phase 1.
+  - `TASKS.md` has task T-1A01 for `auth-impl.md` (Todo).
+  - RULES.md v1.12.0 with C12.
+- **Action:** Run `/magic.task update`
+- **Expected:**
+  - [ ] Agent identifies that `auth-concept.md` (L1) is not Stable.
+  - [ ] **Quarantine Cascade (C12)**: `auth-impl.md` is moved to `## Backlog` in `PLAN.md`.
+  - [ ] Task T-1A01 in `TASKS.md` is marked `Blocked [!]` with note: "Awaiting spec stabilization".
+  - [ ] User is notified of the quarantine.
+- **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.

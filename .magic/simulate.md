@@ -16,6 +16,7 @@ The Simulation Workflow is the "Debugger" of the Magic SDD engine. While the **R
 3. **Surgical Reporting (Fix & Test)**: If a "rough edge" is found in `.magic/` files, document the fix precisely — exact file, exact lines, exact proposed change. You **must also write a new regression test** for the issue and append it to `.magic/tests/suite.md`. Present and ask the user for a single yes/no approval before applying any patches. This is the only non-silent step in the simulation workflow (C1 compliance).
 4. **Non-Overlapping**: Do not collect metrics or analyze project history (that's for `retrospective.md`). Focus purely on the *logic and clarity* of the instructions.
 5. **Universal Executor**: Always verify that scripts mentioned in the workflow are properly referenced via `node .magic/scripts/executor.js`.
+6. **Engine Versioning (C14)**: If the current task involves modifying core engine files (anything inside `.magic/`), you MUST also increment the **patch** version in `.magic/.version`.
 
 ## Workflow Steps
 
@@ -96,6 +97,26 @@ Verify the applied fixes:
 
 - **Spot-check**: Re-read the modified lines to confirm they match the proposed change.
 - **Complete Test Run**: Once a fix is applied and its corresponding test is written, the agent must prompt the user or utilize a handoff to execute the full test suite (`/magic.simulate test`) to ensure the surgical fix didn't break existing core logic.
+
+## 6. Standardized Reporting
+
+To ensure consistency across all simulation methods (Direct Target, Drag-and-Drop, or Test Suite), always present the results using the following structures:
+
+### 6.1 Individual Workflow Audit (Direct/Drag-and-Drop)
+
+Use this table for single workflow simulations to report on logic and clarity:
+
+```markdown
+| Dimension | Finding | Outcome |
+| :--- | :--- | :--- |
+| **Logic** | [Description of logical gap or pass] | ✅ PASS / ❌ FAIL |
+| **AOP** | [Ambiguity, density, or prompt friction] | ⚠️ ROUGH EDGE |
+| **Integrity** | [Script calls, C7/C13 compliance] | ✅ OK |
+```
+
+### 6.2 Test Suite Report
+
+Use the standard table format defined in `suite.md` for the `/magic.simulate test` output.
 
 ## Task Completion Checklist
 

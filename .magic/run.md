@@ -87,7 +87,8 @@ graph TD
     N2 --> N3[Generate: CONTEXT.md]
     L -->|No| N[Report phase complete, propose next phase]
     J -->|More tasks| C
-    I --> O[Escalate to user]
+    I --> O[Escalate: Use magic.spec handoff if blocked by specification ambiguity]
+    O --> P[User decision / Resolution]
 ```
 
 0. **Consistency Check**: Verify task state is current:
@@ -103,6 +104,7 @@ graph TD
     - **Stalled Phase**: If no `Todo` tasks remain but the phase has `Blocked` tasks, report the stall to the user with a summary of blocked items. Do not loop — escalate and wait.
 2. **Execute**: Perform the implementation work described by the task. Stay within the task's spec section — do not expand scope.
 3. **Update status**: Mark `In Progress` when starting, `Done` when complete, `Blocked` if a blocker is encountered.
+   - **Ambiguity Debt (Handoff)**: If a task encounters missing, contradictory, or ambiguous information in the specifications, mark the task as `Blocked [!]` and immediately utilize the **magic.spec** handoff to resolve the ambiguity before continuing execution.
    - **Plan Sync**: When all tasks mapped to a specific specification or Phase are completed, update the corresponding `[ ]` checkbox in `.design/PLAN.md` to `[x]` (Done) to reflect high-level progress.
    - **Change Record**: For each completed task, record a one-line change summary in the task's `Changes` field (files created/modified). These records are compiled into the changelog at phase completion.
 4. **Report**: After each task, briefly state what was done and what is next.
@@ -166,7 +168,7 @@ graph TD
 The Manager Agent does not write implementation code. Its job is coordination:
 
 - **At start of phase**: Read TASKS.md, identify all `Todo` tasks whose dependencies are satisfied, assign each available track to a Developer Agent.
-  - **Shared-Constraint Detection**: Before assigning tracks, scan task descriptions for overlapping target files. If two tasks in different tracks modify the same file, serialize them — schedule one after the other within the same track. Log the serialization decision in the status report.
+- **Shared-Constraint Detection**: Before assigning tracks, scan both task descriptions AND their associated specification sections for overlapping target files. If possible, also check the actual project filesystem for files likely to be modified by both tracks. If two tasks in different tracks modify the same file, serialize them — schedule one after the other within the same track. Log the serialization decision in the status report.
 - **On task completion**: Update task status to `Done`, recalculate which tasks are now unblocked, assign newly available tasks. Synchronize `.design/PLAN.md` checkboxes to `[x]` (Done) for fully implemented specifications.
 - **On blocking**: Read the blocker reason, determine if it can be resolved (missing spec detail → consult spec file, dependency not done → reorder), escalate to user if not resolvable.
 - **On conflict**: If two Developer Agents need to modify the same file simultaneously despite pre-scan, Manager serializes access — one waits while the other finishes.
