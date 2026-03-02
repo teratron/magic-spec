@@ -6,8 +6,9 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
-3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, etc.) during execution.
-4. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data and provide actionable recommendations after every phase.
+3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
+4. **Resilience & Integrity**: Continuous validation via SHA256 checksums and automated versioning (C14).
+5. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data after every phase.
 
 ## 🔗 The Workflow Pipeline
 
@@ -47,10 +48,9 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Onboard** | `onboard.md` | Provides an interactive tutorial for developers and AI agents to learn the SDD lifecycle. | [Detailed Guide](onboard.md) |
-| **Retrospective** | `retrospective.md` | Collects metrics and generates improvement recommendations after phase/plan completion. | [Detailed Guide](retrospective.md) |
-| **Simulate** | `simulate.md` | Validates engine logic and optimizes workflow instructions. Runs predefined tests or auto-triggers Improv Mode on generic call. | [Detailed Guide](simulate.md) |
-| **Init** | `init.md` | Automatic pre-flight initialization of the `.design/` directory. | [Detailed Guide](init.md) |
-| **Analyze** | `analyze.md` | Scans existing codebases to generate specification proposals. Supports first-time analysis and re-analysis. | [Detailed Guide](analyze.md) |
+| **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
+| **Simulate** | `simulate.md` | Validates engine logic via 76+ regression tests or Improv Mode stress-testing. | [Detailed Guide](simulate.md) |
+| **Analyze** | `analyze.md` | Bootstraps specs from code; detects coverage gaps, drift, and manual renames (Smart Sync). | [Detailed Guide](analyze.md) |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -97,7 +97,9 @@ The agent will run the **Run** workflow, picking the most prioritized task and i
 Magic Spec includes built-in "Pre-flight" checks:
 
 - **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration.
-- **Task Verification**: No task is marked complete without a confirmed completion checklist presented to the user.
+- **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
+- **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
+- **Task Verification**: No task is marked complete without a confirmed completion checklist.
 
 ## 🔍 Self-Improving Engine (Retrospective)
 

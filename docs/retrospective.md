@@ -21,6 +21,8 @@ To balance thoroughness with execution speed, retrospectives are divided into tw
 | **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table. |
 | **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, identification of "rough edges," and actionable recommendations. |
 
+> **Context Economy**: Retrospectives are designed to be "read-often, write-once" records. The Level 1 snapshots are strictly restricted to metadata updates to minimize context window consumption for the agent during later phases.
+
 ## 3. Metrics Collected
 
 The system tracks several categories of data to assess project health:
@@ -34,7 +36,13 @@ The system tracks several categories of data to assess project health:
 
 ### 4.1 Signal Calculation
 
-The engine assigns a "Signal" (🟢, 🟡, 🔴) to each phase based on blocked tasks and planning coverage. This provides an immediate visual health check for the project.
+The engine assigns a "Signal" (🟢, 🟡, 🔴) to each phase based on:
+
+- **Planning Health**: Are all specs covered by tasks?
+- **Execution Health**: Percentage of `Blocked` vs. `Done` tasks.
+- **Convention Adherence**: Did the agent follow the latest `RULES.md`?
+
+This provides an immediate visual health check for the project.
 
 ### 4.2 Recommendation Engine
 
@@ -56,3 +64,4 @@ The output of this workflow is used to:
 
 - **Read-Only**: The retrospective analyzes data but does NOT modify specs, plans, or code.
 - **Evidence-Based**: Every observation must reference a specific file, timestamp, or event in the project history.
+- **Archival (C8)**: As part of the retrospective process at the end of a plan, the agent ensures that all completed task files are moved to the `archives/` directory and that `TASKS.md` is updated with historical links.

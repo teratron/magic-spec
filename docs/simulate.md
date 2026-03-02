@@ -53,7 +53,7 @@ Run the full predefined regression test suite:
 /magic.simulate test
 ```
 
-This reads `.magic/tests/suite.md` and executes all 16 predefined test scenarios covering all 8 workflows. Results are reported as a PASS/FAIL table.
+This reads `.magic/tests/suite.md` and executes all **76+** predefined test scenarios covering all workflows. Results are reported as a PASS/FAIL table.
 
 **Test Coverage:** (Continuously expanding with auto-generated regression tests)
 
@@ -67,6 +67,7 @@ This reads `.magic/tests/suite.md` and executes all 16 predefined test scenarios
 | onboard.md | 1 | Production collision |
 | retrospective.md | 2 | Level 1 auto-snapshot, Level 2 full analysis |
 | simulate.md | 3 | Checksums mismatch, Improv fallback, regression sweep |
+| **Total** | **76+** | **Comprehensive coverage of all guards & AOP logic** |
 
 ## 3. Simulation Steps
 
@@ -96,6 +97,7 @@ Once approved, the engine triggers a **Regression Sweep** — automatically exec
 - **Post-Change Verification**: A simulation is mandatory after any significant modification to `.magic/` or `.agent/workflows/`.
 - **Cross-Platform Check**: Every simulation verifies that script calls use the universal `node executor.js` wrapper to maintain Windows/Unix compatibility.
 - **Regression Suite**: After major engine changes (or post-fix), run `/magic.simulate test` to verify all scenarios still pass.
+- **Engine Meta Automation (C14)**: Any manual modification to the engine logic (`.magic/*.md`) or history files triggers the `update-engine-meta` command. This automatically bumps the engine version, updates histories, and regenerates SHA256 checksums to maintain system integrity.
 
 ## 5. Security & Scope
 

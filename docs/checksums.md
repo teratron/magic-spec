@@ -32,12 +32,9 @@ The file is located at `.magic/.checksums` and uses a flat JSON structure:
 
 ### 3.1 Prerequisite Validation
 
-The `check-prerequisites` script (available as both `.ps1` and `.sh` in `.magic/scripts/`) automatically verifies these checksums. This check is integrated into the following core workflows:
+The `check-prerequisites.js` script (executed via the universal `node .magic/scripts/executor.js check-prerequisites` wrapper) automatically verifies these checksums. This check is integrated as **Step 0** into ALL Magic SDD workflows.
 
-- **`magic.task`**: Runs as a "Pre-flight Check" to ensure the implementation plan is built using a valid engine.
-- **`magic.spec`**: Verifies that the specification management logic remains intact.
-
-If a mismatch is detected, the workflow will surface a warning:
+If a mismatch is detected, the workflow will **HALT** and surface an error:
 > `WARNING: Engine Integrity: '.magic/file.md' has been modified locally.`
 
 ### 3.2 CLI Safety
@@ -48,19 +45,19 @@ Installer features like the **Conflict Detector** use these checksums to identif
 
 When the engine logic is intentionally modified (e.g., during development or when adding new features), the checksums must be regenerated to reflect the new state.
 
-### How to update checksums
+### How to update checksums (C14)
 
-Run the following command in the project root:
+Run the following command in the project root to automatically bump the version, update history files, and regenerate checksums:
 
 ```bash
-node .magic/scripts/executor.js generate-checksums
+node .magic/scripts/executor.js update-engine-meta --workflow {current_workflow}
 ```
 
 ### When to update
 
-- Before committing changes to the `.magic/` directory.
-- Before publishing a new release (automated via the release checklist).
-- After manually editing `.magic/` files to suppress integrity warnings.
+- Whenever an engine file (`.magic/*.md`) or history file is intentionally modified.
+- Before committing changes to the project repository.
+- After manually editing `.magic/` artifacts to resolve integrity errors.
 
 ## 5. Security Note
 

@@ -65,6 +65,10 @@ A **Proposal Document** saved to the agent's artifacts directory containing:
 
 The user reviews the proposal and chooses to approve all, select specific items, adjust, or cancel.
 
+### 3.4 Ghost Registry Repair Priority (§52)
+
+If the `.design/specifications/` directory contains files that are NOT listed in `INDEX.md`, or vice-versa, the workflow enters **Registry Repair Mode**. It prioritizes mapping existing files to the registry before attempting to analyze new code. This prevents the creation of duplicate specifications for existing logic.
+
 ## 4. Re-Analysis Mode
 
 Used when `.design/INDEX.md` already contains registered specifications. Compares the current codebase against existing specs to produce a **Gap Report**.
@@ -77,6 +81,10 @@ Used when `.design/INDEX.md` already contains registered specifications. Compare
 | ⚠️ **Uncovered** | Code modules with no corresponding spec |
 | 🔴 **Orphaned** | Specs referencing code that no longer exists |
 | 🔄 **Drifted** | Specs whose described structure doesn't match current code |
+
+### 4.1 Smart Sync (AOP)
+
+During Re-Analysis, the engine uses content-similarity algorithms to detect **Manual Renames**. If a module was moved or renamed, the engine can "Rescue" the existing specification and remap it to the new location instead of deleting and recreating it, preserving the task history.
 
 ### Use Cases
 
@@ -94,6 +102,10 @@ For large projects, the workflow offers scan depth options to balance thoroughne
 | < 50 files | Full scan (no prompt) |
 | 50–500 files | Offer Full or Focused scan |
 | > 500 files | Recommend Focused or Quick, offer Full |
+
+### 5.1 Workspace Scoping (C15)
+
+In multi-workspace environments, the Analysis workflow respects the `scope` defined in `workspace.json`. It will strictly ignore files and directories outside the defined scope, allowing for isolated analysis of specific project modules (e.g., only analyzing the `api` or `frontend` folders).
 
 ## 6. Relationship to Other Workflows
 

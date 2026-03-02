@@ -1,4 +1,4 @@
-# Rules & Constitution Workflow
+# Rule Workflow
 
 This document explains the management of the project's central constitution and conventions.
 
@@ -6,45 +6,49 @@ This document explains the management of the project's central constitution and 
 
 The Rule Workflow manages the `.design/RULES.md` file, which acts as the project's "Living Constitution." It governs all development decisions, architectural constraints, and workflow preferences.
 
+- **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution.
+- **Rules Parity**: The system ensures that all implementation tasks are based on the latest version of the rules.
+
 Key Goals:
 
-- **Consistency**: Ensuring all AI agents and developers follow the same project-specific conventions.
+- **Governance**: Maintaining a single source of truth for project-specific constraints.
 - **Safety**: Preventing accidental violations of core design principles.
 - **Evolution**: Providing a structured way to add, amend, or remove rules as the project matures.
 
-## 2. The Project Constitution
+## 2. The Constitutional Guard (§1-6)
 
-Magic divides rules into two main categories:
+The `RULES.md` file is divided into two major zones:
 
-- **Universal Rules (§1–6)**: Pre-populated during initialization. These define the "laws of physics" for the Magic SDD engine.
-- **Project Conventions (§7)**: Accumulated over time based on project-specific needs (e.g., "Use Tailwind for all components").
+1. **The Universal Constitution (§1-6)**: Contains the core invariants of Magic SDD (e.g., English language, atomic tasks, spec-first). These are **protected**; the agent will **HALT** if a proposed new rule contradicts the Constitution.
+2. **Project Conventions (§7)**: Contains project-specific rules (e.g., directory structure, naming conventions). This is the primary target for the Rule Workflow.
 
 ## 3. Automation & Workflows
 
 ### 3.1 Direct Management
 
-The `magic.rule` workflow provides commands to **Add**, **Amend**, and **Remove** rules. Every modification requires a version bump and a Document History entry to maintain a full audit trail.
+The workflow is triggered by natural language commands like "Add rule..." or "Amend convention...". The agent parses user intent into a numbered C{N} convention and assigns the next available ID.
 
-### 4.2 Automatic Rule Capture
+- **Duplication Guard**: If a proposed rule semantically overlaps with an existing convention, the agent proposes a merge or refinement instead of creating a duplicate.
+- **Constitutional Bridge**: If the user desires to change a core invariant (§1-6), the agent requires an explicit "constitutional amendment" confirmation.
 
-During the Specification Workflow, the engine automatically detects potential new rules (triggers T1–T4):
+### 3.2 Trigger Types
+
+Rules are added when the engine identifies:
 
 - **T1**: Universally-scoped language ("always", "never").
 - **T2**: Recurring patterns found across multiple specifications.
 - **T4**: Explicit user declarations ("From now on, use...").
 
-## 4. Maintenance
+## 4. Impact Analysis & Sync
 
-### 4.1 Periodic Audit
+After a rule is written to disk:
 
-Rules are audited during the Specification Audit to identify overlaps, contradictions, or outdated conventions.
+1. **Notify**: The engine detects if `TASKS.md` is now based on a stale version of the rules.
+2. **Offer Sync**: The user is offered to run `magic.task update` to propagate the new standards into the implementation plan.
+3. **Audit**: If the rule is critical, the engine may suggest a `magic.spec audit` to ensure existing specs comply.
 
-### 4.2 Version Discipline
+## 5. Maintenance
 
-- **Minor Bump**: Adding or amending a convention.
-- **Major Bump**: Removing a convention (breaking change to the project constitution).
-
-## 5. Security & Governance
-
-- **Manual Approval (T1–T3)**: The engine must suggest and wait for user approval before adding rules based on detected patterns.
-- **No Silent Overrides**: If a new requirement contradicts an existing rule, the engine must flag it explicitly rather than silently ignoring the conflict.
+- **Version Bumping**: Rules use Semantic Versioning (Major for removals, Minor for additions/amendments, Patch for typos).
+- **Document History**: Every change is logged in the Document History table.
+- **Engine Meta**: Any modification to the rule engine logic triggers an automatic C14 version bump.

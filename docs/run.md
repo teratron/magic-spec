@@ -23,11 +23,16 @@ Magic supports two primary modes for implementation:
 
 The execution mode is defined as a Project Convention in `.design/RULES.md §7`.
 
+- **Shared-Constraint Detection**: In Parallel mode, the **Manager Agent** scans the implementation notes of all active tasks. If two tasks modify the same file (e.g., a shared middleware or config), the manager automatically serializes them to prevent race conditions.
+
 ## 3. Automation & Workflows
 
 ### 3.1 Pre-flight: Consistency Check
 
 Before starting any work, the `magic.run` workflow runs a mandatory check to ensure the tasks in `TASKS.md` are still valid and that the core engine logic (checksums) has not been tampered with.
+
+- **Rules Parity**: The engine verifies that the `RULES.md` version matches the base version recorded in `TASKS.md`. If a mismatch is found, it warns the user of a potential convention drift.
+- **Quarantine Check (C12)**: The engine verifies that every active task belongs to a **Stable** Layer 1 specification. If any task violates this (e.g., its concept has dropped to RFC), execution will **HALT** until the plan is re-synchronized.
 
 ### 3.2 Change Records & Changelog
 
