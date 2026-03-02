@@ -18,8 +18,6 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
     - **Selective Planning (C6)**: `Draft` → Backlog. `RFC` → Recommend Backlog. `Stable` → Propose for Plan.
 
----
-
 ## Workflow: Planning & Orchestration
 
 ```mermaid
@@ -55,8 +53,6 @@ graph TD
 - Use `.magic/templates/plan.md` and `.magic/templates/tasks.md`.
 - PLAN.md: Summarize, don't copy.
 - TASKS.md: Master index with `Based on RULES:` version.
-
----
 
 ## Task Completion Checklist
 

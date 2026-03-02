@@ -10,8 +10,6 @@ Interactive tutorial building a toy "Logger Module". Focus: hands-on SDD lifecyc
 4. **Wipe Protocol**: Restarting deletes only `logger-module.md` and toy Plan/Task files. Never format the whole `.design/`.
 5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow onboard`.
 
----
-
 ## Workflow: Interactive Pacing
 
 ```mermaid
@@ -36,8 +34,6 @@ graph TD
     - Simulate: `Todo` → `Done`. Explain: "This is where implementations happen."
 6. **Archival (C8)**: Move `phase-1.md` to `archives/tasks/`. Explain workspace focus.
 7. **Conclusion**: Trigger Level 2 Retro logic (cognitive). Suggest real work.
-
----
 
 ## Onboarding Completion Checklist
 

@@ -11,8 +11,6 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
 6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective`.
 
----
-
 ## Workflow: Feedback & Metrics
 
 | Level | Goal | Trigger | Output |
@@ -38,8 +36,6 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 - **Step**: Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`.
 - **Archival (C8)**: Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use **relative** path.
-
----
 
 ## Retrospective Completion Checklist
 

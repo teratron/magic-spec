@@ -12,8 +12,6 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
     - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow init`.
     - **Rules**: Initial `RULES.md` is versioned at 1.0.0.
 
----
-
 ## Workflow: Setup & Verification
 
 ```mermaid

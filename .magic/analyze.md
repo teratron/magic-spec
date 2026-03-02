@@ -39,8 +39,6 @@ Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.t
 
 Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfig.json`, `ruff`, etc.) for `RULES.md §7`.
 
----
-
 ## Modes: Analysis vs. Re-Analysis
 
 ### [Mode A] First-Time Analysis
@@ -64,8 +62,6 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Orphaned**: Spec refers to deleted code.
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Similarity >80% → Propose rename/sync instead of delete/create.
-
----
 
 ## Reporting & Dispatch
 

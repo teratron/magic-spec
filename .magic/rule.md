@@ -12,8 +12,6 @@ Directly manages `.design/RULES.md §7 Project Conventions`.
     - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule`.
     - **Rules**: Bump Minor (add/amend), Major (remove), or Patch (typos). Update Document History.
 
----
-
 ## Workflow: Convention Management
 
 ```mermaid
@@ -52,8 +50,6 @@ After write, if `TASKS.md` exists:
 1. **Notify**: Inform user that `TASKS.md` version (`Based on RULES`) is now stale.
 2. **Offer Sync**: Propose running `magic.task update` to propagate the rule changes into the active plan.
 3. **Audit**: If rule is critical (L1/C1-C10), suggest `magic.spec audit` for compliance.
-
----
 
 ## Rule Completion Checklist
 

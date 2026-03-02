@@ -158,8 +158,6 @@ Check for:
 3. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
 4. **Sync Check**: `check-prerequisites` status.
 
----
-
 ### Updating RULES.md (Constitution)
 
 Update only via triggers. Never contradict §1-6 without explicit amendment.

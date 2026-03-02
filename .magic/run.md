@@ -24,8 +24,6 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 
 *Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions.
 
----
-
 ## Workflow: Task Execution
 
 ```mermaid
@@ -64,8 +62,6 @@ graph TD
 2. **Changelog L2**: Present compiled release entry. **Only manual step: Yes/No approval.**
 3. **Version Bump**: Bump manifests (`package.json`, `pyproject.toml`, etc.) per changelog (Major/Minor/Patch).
 4. **Finalize**: Regenerate `CONTEXT.md`.
-
----
 
 ## Run Completion Checklist
 

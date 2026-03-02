@@ -10,8 +10,6 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 4. **Engine Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
 5. **No Metrics**: Real-world history/logs are for `retrospective.md`.
 
----
-
 ## Workflow: Validation & Stress-Testing
 
 ```mermaid
@@ -48,8 +46,6 @@ Scan for:
 - **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
 - **Succession**: Run `/magic.simulate test` post-fix to ensure 0 regressions.
-
----
 
 ## Simulation Completion Checklist
 
