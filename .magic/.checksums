@@ -1,6 +1,6 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "7fd890fffe22aa34fcf6b8f991d8abfbfed0090fe7cd76af60b46c20ad7bb027",
+  ".version": "8ceaa7b1b997a4743b4d5e74b2a46af8c5ebe7765abb07eca372441aa3cbf51e",
   "analyze.md": "55b64629b598dd1acb3fb08d38fdf0205817aca9694b7ee10feb3b8b062cf61c",
   "init.md": "c8b3facbf79112051cd8a1c7def2d9cbc755730bd8ceaf35eb04bdeb43596143",
   "onboard.md": "6c7de6de511df2166694a33a3aee277ceedbec6ce7a18fccc5ca1ba529313885",
@@ -8,7 +8,7 @@
   "rule.md": "5ca7248d05c04615379b6d957a643b7a5a77c96572edb36e39155023b3914f9d",
   "run.md": "f16037a4079e4baa5bd279dffd7a05b624a7d211244e21d8a9b693004b593368",
   "scripts/check-prerequisites.js": "8a01268ef5f65460f528ffa9233ff53e344f146ef5fbd9db8da3a966dc89047c",
-  "scripts/executor.js": "f0a2d0588557adb1c8654f233558b5978a4e11cf0181c9c68f0bd6268eef9c08",
+  "scripts/executor.js": "22a6f78954832868fd5af5b04feaedefef44924ad9ba0fe50f7a62122b84cc46",
   "scripts/generate-checksums.js": "5818e6193dd7b1efa2a5c2709ed3d920094958ac846bd953c08af6bf9729c9d6",
   "scripts/generate-context.js": "78ce2cfc6cb3d5cf3a8a2efff79f1de2fdbc5f83efb16cc06d6f1fb5f2b62434",
   "scripts/init.js": "0273f3acaff3c31d4e133bbc0b7b52a9fbf4840b0347e3675d8369dea3fc0714",
@@ -19,5 +19,5 @@
   "templates/retrospective.md": "6133ef3bcbd42958c97d5c1b39b885e389ba938b3091284902eaf86d790456ca",
   "templates/specification.md": "212474c480955bdb8fc690aee7f45ca80e562bec62c5d609caa8e3ffcaaa247e",
   "templates/tasks.md": "df89f110e3723578edaa05d5df6745db1e242724b3a715fa94b902800f737944",
-  "tests/suite.md": "39d0d3a321a0b5ac25bea4642d6f49d880a6754f4931fdb8bdb76e907c67f6f1"
+  "tests/suite.md": "70e8fcae013a9147cbfd0a4ced8ecdf095348a9604c84e385e7974fef155b4b3"
 }

@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.15] - 2026-03-02
+
+### Changed
+
+- **Executor Refactor**: Improved `executor.js` structure by replacing global `return` with an `else` block for better readability and standard Node.js practices.
+- **Test Suite Cleanup**: Removed duplicate T54 "Spec Rename History Immutability" scenario from `suite.md`.
+
+### Meta
+
+- **Automated Update**: Sequential patch bump, history update, and checksum regeneration via `update-engine-meta`.
+
 ## [1.4.5] - 2026-03-01
 
 ### Added

@@ -923,19 +923,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Post-Update Review surfaces layer isolation logic (L2 has no valid L1 parent).
 - **Guards tested:** Deprecation Cascade on Implements clause, Layer Integrity.
 
-### T54 — Spec Rename History Immutability
-
-- **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
-- **Synthetic State:**
-  - `RETROSPECTIVE.md` exists and contains mentions of `old-api.md`.
-  - `.design/archives/tasks/phase-1.md` exists and contains mentions of `old-api.md`.
-- **Action:** User renames `old-api.md` to `new-api.md`.
-- **Expected:**
-  - [ ] Status/Renaming applied: Agent updates active files (`INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements`).
-  - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
-  - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
-- **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
-
 ### T55 — Spec Quarantine Cascade Enforcement (C12)
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)

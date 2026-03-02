@@ -119,37 +119,36 @@ if (scriptName === 'update-engine-meta') {
     const checksumScript = path.join(__dirname, 'generate-checksums.js');
     const child = spawn('node', [checksumScript], { stdio: 'inherit', env: childEnv });
     child.on('exit', (code) => process.exit(code || 0));
-    return;
-}
-
-const isWindows = process.platform === 'win32';
-const jsPath = path.join(__dirname, `${scriptName}.js`);
-const shellExtension = isWindows ? '.ps1' : '.sh';
-const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
-
-let command, cmdArgs;
-
-if (fs.existsSync(jsPath)) {
-    command = 'node';
-    cmdArgs = [jsPath, ...args];
 } else {
-    const scriptPath = shellPath;
-    if (isWindows) {
-        command = 'powershell.exe';
-        cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
+    const isWindows = process.platform === 'win32';
+    const jsPath = path.join(__dirname, `${scriptName}.js`);
+    const shellExtension = isWindows ? '.ps1' : '.sh';
+    const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
+
+    let command, cmdArgs;
+
+    if (fs.existsSync(jsPath)) {
+        command = 'node';
+        cmdArgs = [jsPath, ...args];
     } else {
-        command = 'bash';
-        cmdArgs = [scriptPath, ...args];
+        const scriptPath = shellPath;
+        if (isWindows) {
+            command = 'powershell.exe';
+            cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
+        } else {
+            command = 'bash';
+            cmdArgs = [scriptPath, ...args];
+        }
     }
+
+    const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: false, env: childEnv });
+
+    child.on('exit', (code) => {
+        process.exit(code || 0);
+    });
+
+    child.on('error', (err) => {
+        console.error(`Failed to start script: ${err.message}`);
+        process.exit(1);
+    });
 }
-
-const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: false, env: childEnv });
-
-child.on('exit', (code) => {
-    process.exit(code || 0);
-});
-
-child.on('error', (err) => {
-    console.error(`Failed to start script: ${err.message}`);
-    process.exit(1);
-});
