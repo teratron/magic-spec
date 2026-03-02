@@ -13,3 +13,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | Dynamic Default target: triggers Improv Mode automatically |
 | 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
 | 1.4.10 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.13 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

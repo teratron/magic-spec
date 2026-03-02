@@ -999,3 +999,18 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] `.magic/.checksums` is recalculated.
   - [ ] Results documented in the task completion checklist.
 - **Guards tested**: C1, C14, Engine Integrity Guard (via meta automation).
+
+### T60 — Run Convention Sync Guard (Version Mismatch)
+
+- **Workflow:** `run.md`
+- **Synthetic State:**
+  - `TASKS.md` header contains `Based on RULES: 1.4.6`.
+  - `RULES.md` version is `1.4.7`.
+  - Phase 1 has 3 Todo tasks.
+- **Action:** Run `/magic.run`
+- **Expected:**
+  - [ ] Agent reads both versions during Pre-flight (Step 0).
+  - [ ] **Mismatch Detected**: 1.4.6 vs 1.4.7.
+  - [ ] Agent alerts user: "Project conventions have changed since these tasks were generated. Proceed or run `magic.task update` to synchronize?".
+  - [ ] No execution begins until user chooses to proceed.
+- **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.

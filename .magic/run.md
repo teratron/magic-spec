@@ -105,6 +105,7 @@ graph TD
    - If `ok: true` → proceed silently.
    After pre-flight, read `RULES.md §7` to refresh project conventions before executing any task.
    - **Mode Guard**: If `RULES.md §7` does not contain an execution mode convention → **HALT**. Inform the user: "Execution mode is not defined. Please run `magic.task` first to establish the plan and execution mode." Do not assume Sequential or Parallel — an undefined mode means the plan may not be ready.
+   - **Convention Sync Guard**: Compare the `Based on RULES:` version in the `TASKS.md` header with the current version of `RULES.md`. If `RULES.md` is newer, you MUST inform the user: "Project conventions have changed since these tasks were generated. Proceed or run `magic.task update` to synchronize?".
 1. **Find next available task**: Locate the task with status `Todo` whose all dependencies are `Done`.
     - **AOP/Archive Check**: If searching for task context or history, check both `.design/tasks/` and `.design/archives/tasks/` to ensure continuity.
     - **Stalled Phase**: If no `Todo` tasks remain but the phase has `Blocked` tasks, report the stall to the user with a summary of blocked items. Do not loop — escalate and wait.

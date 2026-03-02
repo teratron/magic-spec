@@ -91,7 +91,7 @@ Evaluate the target workflow for **AI-readability** and efficiency:
 3. Ensure versioning rules (RULES.md §3) are followed for all modified files.
 4. **Wait for user approval before applying changes (C1 compliance).**
 
-> **Checksum Rule**: Run `node .magic/scripts/executor.js generate-checksums` only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files that will be modified.
+> **Engine Meta Automation Rule**: Run `node .magic/scripts/executor.js update-engine-meta --workflow {workflow}` only AFTER the user approves and changes are written to `.magic/` or `.agent/workflows/`. This ensures the patch version is bumped, history is logged, and checksums are regenerated for the modified engine files (C1 compliance). No manual checksum generation is allowed.
 
 ### 7. Verification (Regression Sweep)
 
