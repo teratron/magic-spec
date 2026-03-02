@@ -4,31 +4,22 @@ description: Workflow for creating and managing project specifications and the s
 
 # Specification Workflow
 
-This workflow defines a universal, technology-agnostic process for creating and managing project specifications in the `.design/specifications/` directory. It is designed to be applicable across any stack (Frontend, Backend, Fullstack, GameDev, etc.).
+Universal process for managing project specifications in `.design/specifications/`.
 
-> **Scope**: This workflow covers specification authoring only — what exists and how it is structured.
-> Prioritization, phasing, and implementation order are handled by the **Task Workflow** (`task.md`).
+> **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
 
-## Agent Guidelines
+## Core Invariants (MUST FOLLOW)
 
-**CRITICAL INSTRUCTIONS FOR AI:**
-
-0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **No Code in Specs**: Never generate implementation code (Rust, JS, Python, etc.) inside specification files. Use pseudo-code or logic flows if necessary.
-2. **Structure First**: Always verify `.design/INDEX.md` and `.design/RULES.md` exist before creating a new spec.
-3. **Universal Applicability**: This workflow is stack-agnostic. Adapt the content (APIs, DBs, UI) to the user's technology, but keep the *structure* rigid.
-4. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding. Do not ask — just initialize and continue.
-5. **Linking**: Every new spec must be registered in `INDEX.md`. Every spec that depends on another must declare it in `Related Specifications`.
-6. **Status Discipline**: Always assign a valid status from the **Status Lifecycle** section. Never leave status blank.
-7. **Capture First**: When the user provides unstructured input (thoughts, notes, ideas), always follow the *Dispatching from Raw Input* workflow before writing anything.
-8. **Review Always**: After every create or update operation, run *Post-Update Review* before closing the task. No operation is complete without it.
-9. **Rules Are Constitution**: RULES.md is the source of truth for project conventions. Read it before every operation. Update it on every defined trigger. Never contradict it without proposing an explicit amendment.
-10. **Explore Mode Safety**: When users trigger brainstorming or exploration (*"Explore"*, *"Analyze"*), act as a thinking partner. Do not modify live spec files or registries (`INDEX.md`, `PLAN.md`, `.design/specifications/`) until explicitly approved.
-11. **Delta Editing for Specs**: When modifying existing large specifications (>200 lines), always use surgical search-and-replace tools. Mark block updates in your summary with semantic tags: `[ADDED]`, `[MODIFIED]`, or `[REMOVED]`.
-12. **Checklist Before Done**: Every task must end with the *Task Completion Checklist* shown to the user. A task is not complete until the checklist is presented and all items are confirmed.
-13. **Engine Versioning (C14)**: If the current task involves modifying core engine files (anything inside `.magic/`), you MUST also increment the **patch** version and update engine metadata by running:
-    `node .magic/scripts/executor.js update-engine-meta --workflow spec`
-    (Note: This command automatically bumps `.magic/.version`, updates history, and regenerates checksums).
+- **Context**: flag > `MAGIC_WORKSPACE` > `.design/workspace.json` default > fallback root `.design/`. Never ask user.
+- **Prohibitions**: No implementation code in specs; use pseudo-code only. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
+- **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
+- **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec`.
+- **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
+- **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
+- **Dispatch**: Use "Raw Input" flow for unstructured ideas.
+- **Delta-Editing**: For files >200 lines, use search-replace. Mark with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
+- **Closure**: Every task ends with mandatory "Task Completion Checklist".
+- **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
 
 ## Directory Structure
 
@@ -99,267 +90,124 @@ Use this workflow for safe exploration without violating the "Workflow Minimalis
 
 ### Dispatching from Raw Input
 
-Use this workflow when the user provides unstructured input: a thought, a note, a wish, a comment, or any free-form text that contains specification-relevant information.
+Handle unstructured input (thoughts, notes) by mapping them to spec domains.
 
 ```mermaid
 graph TD
-    A[Raw Input] --> R[Read RULES.md]
-    R --> B[Parse: identify distinct topics]
-    B --> C[Map: match topics to spec domains]
-    C --> D[Confirm: show mapping to user]
-    D -->|Approved| E[Dispatch: write to spec files]
-    D -->|Rejected| B
-    E --> F[Post-Update Review]
-    F --> G[Check RULES.md triggers]
-    G --> H[Sync INDEX.md]
-    H --> I[Task Completion Checklist]
+    A[Input] --> B[Parse Topics]
+    B --> C[Map to Domains]
+    C --> D{Approved?}
+    D -->|Yes| E[Write to Specs]
+    D -->|No| B
+    E --> F[Review & Sync]
 ```
 
-1. **Read RULES.md**: Before doing anything, read `RULES.md` to ensure all decisions align with established project conventions.
-2. **Parse**: Read the input and extract all distinct topics, decisions, constraints, or preferences mentioned. A single message may contain material for multiple spec files.
-3. **Map**: Match each extracted topic to an existing spec file or propose a new one:
-    - System design, modules, layers → `architecture.md`
-    - Endpoints, contracts, protocols → `api.md`
-    - Data models, storage, migrations → `database-schema.md`
-    - Visual design, components, style → `ui-components.md`
-    - Cross-cutting or unclassified → propose a new domain
-4. **Confirm**: Before writing anything, show the user the proposed mapping and wait for explicit approval:
+1. **Parse & Map**: Identify distinct topics and match to domains:
+    - Arch/Modules → `architecture.md`
+    - API/Contracts → `api.md`
+    - DB/Schema → `database-schema.md`
+    - UI/Style → `ui-components.md`
+2. **Confirm**: Show mapping and wait for approval.
+3. **Dispatch**: Write to correct spec files using templates.
+4. **Post-Update**:
+    - Run **Post-Update Review**.
+    - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
+    - Sync `INDEX.md`.
+    - Present **Task Completion Checklist**.
 
-    ```
-    I found the following topics in your input:
+**Constraints**:
 
-    - JWT + Redis auth flow       → architecture.md (section 3: Auth Design)
-    - REST-only constraint        → architecture.md (section 2: Constraints)
-    - shadcn-based design system  → ui-components.md (new file, Draft)
-
-    Proceed with this mapping? (yes / adjust)
-    ```
-
-5. **Dispatch**: Write each piece into the correct spec file following the Specification Template. Never mix topics from different domains in a single section.
-6. **Post-Update Review**: Run the review checklist on every file that was modified (see *Post-Update Review*).
-7. **Check RULES.md triggers**: After writing, evaluate whether any RULES.md update trigger was activated (see *Updating RULES.md*).
-8. **Sync INDEX.md**: Add or update rows to reflect the current state of all modified files.
-9. **Task Completion Checklist**: Present the checklist to the user.
-
-**Edge cases:**
-
-- If intent is ambiguous — ask one clarifying question before mapping, do not guess.
-- If a topic doesn't fit any existing domain — propose a new spec file with a suggested name.
-- If the input contradicts an existing rule in `RULES.md` — flag the conflict explicitly and ask whether to proceed or amend the rule first.
-- If the input contradicts an existing Stable spec — flag the conflict explicitly before dispatching.
-- If topics within a single input contradict each other (e.g., "use GraphQL" and "remove GraphQL") — flag all internal conflicts first and ask the user to resolve before mapping. Do not guess which statement takes precedence.
-- If the input contains a T4 trigger ("from now on...", "remember that..."), identify the rule and propose it as part of the mapping (Step 4: Confirm) instead of applying it immediately. If several topics are provided, grouping the rule with the dispatch mapping prevents partial updates if the user rejects the mapping. Once approved, apply the rule to RULES.md immediately per T4 protocol, then continue with the Dispatch flow for the remaining topics.
-- If the specification's layer is ambiguous — default to Layer 1 (concept). Layer-specific implementation details can later be extracted into an L2 spec.
+- **Ambiguity**: Ask one clarifying question; do not guess.
+- **Conflict**: Flag contradictions with `RULES.md` or existing `Stable` specs before writing.
+- **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval.
 
 ### Creating a New Specification
 
-1. **Read RULES.md**: Check project conventions before creating anything.
-2. **Context Analysis**: Determine the domain of the new specification and the project's tech stack.
-3. **State Check**: Verify if `.design/` and its core files exist.
-4. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
-    - If `warnings` contains `checksums_mismatch` → **HALT** immediately. Do not proceed until engine integrity is restored.
-    - If `warnings` contains orchestrated orphaned specs → surface them and recommend `magic.task`.
-5. **Auto-Init**: If `.design/INDEX.md` or `.design/RULES.md` are missing, automatically run the Init pre-flight check (`.magic/init.md`) and continue.
-6. **Content Creation**:
-    - Determine if the spec is Layer 1 (concept) or Layer 2 (implementation).
-    - Create `{specification-name}.md` using `.magic/templates/specification.md` as template. Ensure the `Layer:` field is present, and add `Implements:` if it is Layer 2.
-    - Use `plaintext` for directory trees and `mermaid` for diagrams.
-    - Fill in `Related Specifications` with any dependencies on existing specs.
-    - Fill in `Implementation Notes` if the implementation order is non-obvious.
-7. **Registry Update**: Add the new file as a row in the `INDEX.md` table with its status, **layer**, and version.
-8. **Post-Update Review**: Run the review checklist on the newly created file.
-9. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
-10. **Task Completion Checklist**: Present the checklist to the user.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`
+    - `checksums_mismatch` → **HALT**. Restore integrity.
+    - Missing `.design/` → Auto-Run `.magic/init.md`.
+2. **Creation**:
+    - Use `.magic/templates/specification.md`.
+    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}`.
+    - Register in `INDEX.md` (Name, Status, Layer, Version).
+3. **Closure**: Post-Update Review → Checklist.
 
 ### Updating an Existing Specification
 
-1. **Sync Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`
-    - If `warnings` contains `checksums_mismatch` → **HALT** immediately. Do not proceed until engine integrity is restored.
-    - If `warnings` contains orchestrated orphaned specs → surface them and recommend `magic.task`.
+1. **Pre-flight**: `check-prerequisites` (Same as Creation).
+2. **Versioning**:
+    - `patch` (0.0.X) — typos, no logic change.
+    - `minor` (0.X.0) — extensions.
+    - `major` (X.0.0) — breaking redesign.
+    - Append row to `Document History`.
+3. **Sync**:
+    - Update `Version`, `Status`, `Layer` in `INDEX.md`.
+    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), flag all dependent L2/L3 specs for review.
+    - **Renaming**: If file renamed, update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`.
+4. **Closure**: Post-Update Review → Checklist.
 
-2. **Read RULES.md**: Check project conventions before modifying anything.
-3. **Version Bump**: Increment the version according to the change scope:
-    - `patch` (0.0.X) — typo fixes, clarifications, no structural change.
-    - `minor` (0.X.0) — new section added or existing section extended.
-    - `major` (X.0.0) — breaking restructure or significant design change.
-4. **Document History**: Append a new row to the `Document History` table inside the spec file.
-5. **Status Update**: If the status changes (e.g., `Draft → RFC`), update both the spec file header and the `INDEX.md` table entry.
-6. **INDEX.md Sync**: Update the `Version`, `Status`, and `Layer` columns in `INDEX.md` to match the new state.
-    - **Deprecation Cascade**: When setting status to `Deprecated`, scan all other active specs for `Related Specifications` and `Implements` links pointing to the deprecated file. Flag stale references in the Post-Update Review.
-    - **Quarantine Cascade (C12)**: If a Layer 1 (Concept) specification is downgraded (e.g., `Stable → RFC`, `Stable → Draft`) or its scope is significantly reduced, you MUST scan all and flag for the user any dependent Layer 2/3 (Implementation) specifications. While `magic.task` handles the automated plan quarantine, the Specification workflow must explicitly surface these dependencies during the Post-Update Review to ensure implementation specs don't remain "Stable" while their conceptual parent is in flux.
-7. **Delta Restraint**: For large files (>200 lines), use search-and-replace rather than a full overwrite. Prefix your changes report with `[MODIFIED]`, `[ADDED]`, or `[REMOVED]`.
-8. **Spec Renaming Protocol**: If the update involves renaming the specification file, you MUST perform a search-and-replace across active planning files (`INDEX.md`, `PLAN.md`, `TASKS.md`, `tasks/phase-*.md`) and `Related Specifications`/`Implements` links in other specs. **Do NOT modify** `RETROSPECTIVE.md` or `.design/archives/` — historical logs must remain immutable. This preserves task continuity and prevents `magic.task` from triggering a Phantom Spec reset.
-    - **Manual Rename Rescue (AOP)**: If you discover a "missing" spec (in `INDEX.md` but missing from disk) AND a "new" unregistered spec (on disk but missing from `INDEX.md`), immediately compare their content and `# Title`. If similarity is >80%, assume the user manually renamed the file. Do NOT delete and recreate it. Automatically trigger the Spec Renaming Protocol above to rescue task progress.
-9. **Post-Update Review**: Run the review checklist on every file that was modified. This step is mandatory and must not be skipped.
-10. **Check RULES.md triggers**: Evaluate whether any RULES.md update trigger was activated.
-11. **Task Completion Checklist**: Present the checklist to the user.
+### Post-Update Review (Mandatory)
 
-### Post-Update Review
+Check for:
 
-**Mandatory after every create or update operation.**
+1. **Duplication**: Repeated content across files? → Consolidate.
+2. **Coherence**: Does it read consistently after edits?
+3. **Links**: `Related Specifications` and `Implements` accurate?
+4. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
+5. **Sync Check**: `check-prerequisites` status.
 
-1. **Duplication**: Any repeated content within file or across specs? → Consolidate, keep in most relevant file.
-2. **Coherence**: Does the document read as a consistent whole after edits? Any sections drifted out of scope?
-3. **Links & Relations**: All `Related Specifications` links accurate? New dependencies declared?
-4. **Rules Compliance**: Any contradiction with `RULES.md`? → Flag before closing, never silently resolve.
-5. **Cleanup**: Remove redundant sections. Rewrite unclear passages. Major restructure = `major` version bump.
-6. **Sync Gap**: Run `node .magic/scripts/executor.js check-prerequisites --json`. If warning → task is BLOCKED until "Sync plan" handoff.
+---
 
-> If review reveals issues beyond original scope → inform user, propose dedicated refactoring pass.
+### Updating RULES.md (Constitution)
 
-### Updating RULES.md
+Update only via triggers. Never contradict §1-6 without explicit amendment.
 
-RULES.md is the **project constitution** — the authoritative source of standing decisions and conventions. It governs how all spec work is done within this specific project.
-
-**Read RULES.md at the start of every operation. Update it only via defined triggers below.**
-
-#### Triggers
-
-| # | Trigger | Confirmation required |
+| # | Trigger | Approval |
 | :--- | :--- | :--- |
-| T1 | User uses universally-scoped language: *"always"*, *"never"*, *"in all specs"*, *"project-wide"* | Yes — propose, then wait |
-| T2 | Same pattern appears in 2+ spec files created in the same session | Yes — propose, then wait |
-| T3 | Periodic Audit reveals inconsistency that a standing rule would prevent | Yes — propose within audit report |
-| T4 | User explicitly declares a rule: *"remember that"*, *"from now on"*, *"project rule:"* | No — apply immediately |
-
-**T1–T3** — propose before writing:
-
-```
-I noticed a project-wide convention in your input:
-
-→ Proposed rule: "All APIs must follow REST. GraphQL is not permitted."
-→ Section: Project Conventions
-
-Add to RULES.md? (yes / no / adjust)
-```
-
-**T4** — apply immediately, then confirm:
-
-```
-Added to RULES.md → Project Conventions:
-"All APIs must follow REST. GraphQL is not permitted."
-```
-
-#### What Goes in RULES.md
-
-- **Universal Rules** (sections 1–6): pre-populated at initialization. Rarely changed.
-- **Project Conventions** (section 7): empty at initialization. Accumulates project-specific decisions via triggers. This is the living part.
-
-#### Amending an Existing Rule
-
-If new input contradicts a rule already in RULES.md:
-
-1. Flag the contradiction explicitly — never silently override a rule.
-2. Ask the user: (a) amend the rule, (b) follow the existing rule, or (c) treat as a one-time exception.
-3. If (a): update the rule, bump RULES.md version (`minor` for amendment, `major` for removal), add a Document History row.
+| T1-T3 | "Always/never", repeated pattern, or audit find | Propose & Wait |
+| T4 | User rule: "remember that...", "project rule:" | Apply Immediately |
 
 ### Periodic Registry Audit
 
-Run when the user requests it, or proactively suggest after every 5 updates across the registry.
+**Trigger**: *"Audit specs"* or every 5th update.
 
-**Trigger phrase**: *"Audit specs"* or *"Review registry"*
+1. **Read**: All `INDEX.md` files + `RULES.md`.
+2. **Check**:
+    - Compliance with `RULES.md`.
+    - Cross-file duplication.
+    - Orphaned sections (no ref in features/plan).
+    - Stale statuses (no update in `Draft/RFC`).
+    - Broken `Related Specifications` links.
+3. **Report**: `- {file} §{section}: {issue} → {fix}`.
 
-1. **Scope**: Read all files listed in `INDEX.md` and read `RULES.md`.
-2. **Rules Compliance**: Check all spec files against every rule in `RULES.md`. Flag violations.
-3. **Cross-file Duplication**: Identify content appearing in more than one spec file. Propose consolidation.
-4. **Orphaned Content**: Flag sections with no clear connection to any other spec or declared feature.
-5. **Stale Statuses**: Flag specs in `Draft` or `RFC` without recent updates.
-6. **Broken Relations**: Check all `Related Specifications` links point to existing files.
-7. **Pattern Detection**: If the same approach appears in 2+ specs (regardless of when they were created), propose a Project Convention. *(Extension of T2 — which normally applies within a single session.)*
-8. **Report**: Present findings grouped by category (Layering Gaps, Rules Violations, etc.).
-   *Format: - {spec.md} §{section}: {issue} → {recommendation}*
-   Ask: `Apply all recommendations? (yes / select / skip)`
+### Consistency Check (Pre-flight)
 
-9. **Apply**: Only after user approval. Update `INDEX.md`, `RULES.md`, and `Document History` in affected files.
+Compares specs vs. project filesystem and engine integrity.
 
-### Consistency Check & Engine Integrity (Pre-flight)
+**Trigger**: `magic.task` auto-run or *"Verify specs"*.
 
-Verifies that specification content matches the **actual project state** (file paths, structure, configs) AND ensures the **SDD Engine itself** hasn't been corrupted or modified without updating checksums.
-
-> **Key difference from Audit:** The Registry Audit checks specs against each other and against RULES.md (internal consistency). The Consistency Check compares specs against the real project filesystem (external consistency).
-
-**Trigger phrase**: *"Check specs"*, *"Verify specs"*, *"Spec consistency"*
-
-**Auto-trigger**: Called by `task.md` before it begins its work. If issues are found, specs must be fixed before task generation proceeds.
-
-```mermaid
-graph TD
-    A["Trigger: task.md / manual"] --> B["Read INDEX.md — get list of active specs"]
-    B --> C["For each spec: extract paths, structure refs, tool names"]
-    C --> D["Scan project filesystem for referenced items"]
-    D --> E{"All references valid?"}
-    E -->|Yes| F["✅ Consistency OK — proceed with plan/task"]
-    E -->|No| G["Compile issues list"]
-    G --> H["Present Consistency Report to user"]
-    H --> I{"Apply fixes?"}
-    I -->|Yes| J["Fix specs: update paths, mark deprecated, bump versions"]
-    J --> K["Sync INDEX.md"]
-    K --> F
-    I -->|Skip| F
-```
-
-**What it checks:**
-
-| Check | Description | Example |
-| :--- | :--- | :--- |
-| **Path validity** | File/directory paths mentioned in specs exist in the project | `src/index.js` referenced but only `index.js` exists |
-| **Layer integrity** | Layer 2 specs have a valid `Implements` parent | `cli-installer.md` implements `cli-contract.md` (which is missing) |
-| **Structure accuracy** | Directory trees in specs match actual tree | Spec shows `workflows/magic/` but actual is `workflows/magic.*.md` |
-| **Removed entities** | Specs don't reference deleted files, directories, or configs | `.env` files referenced but were removed |
-| **Renamed entities** | Specs reflect current names after renames | `core/` referenced but was eliminated |
-| **Registry Integrity** | Specs registered in `INDEX.md` actually exist in `.design/specifications/` | `data-model.md` is in INDEX but missing from disk |
-| **Tool/config sync** | `package.json`, `pyproject.toml` fields match spec descriptions | Spec says `main: "src/index.js"` but `package.json` says `index.js` |
-| **Engine Integrity** | Contents of `.magic/` match the hashes in `.checksums` | `task.md` was modified but checksum wasn't regenerated |
-| **Deprecated spec content** | Deprecated specs are not referenced as active by other specs | Active spec links to deprecated `secrets-management.md` as if current |
-
-**Report format:** Group findings by category (Stale Paths, Layer Integrity, etc.).
-*Format: - {spec.md} §{section}: {item} exists? {status} → {action}*
-Ask: `Apply all fixes? (yes / select / skip)`
-
-**Execution rules:**
-
-1. **Lightweight**: Read only paths, trees, and config references from specs — do not re-read entire spec bodies.
-2. **Non-blocking with skip**: The user can skip fixes and proceed. But if >5 stale references are found, warn that the plan/tasks may be based on outdated assumptions.
-3. **Fixes follow Update workflow**: Every fix triggers version bump, Document History entry, INDEX.md sync (standard Update flow).
-4. **Skip Deprecated specs**: Specs with `Status: Deprecated` are excluded from the check — they are historical records.
-5. **Missing Specs**: If a spec listed in `INDEX.md` is missing from disk, do not attempt to read its contents. Flag it as a Registry Integrity issue and propose removing its entry from `INDEX.md` or restoring the file.
+| Check | Action |
+| :--- | :--- |
+| Path Validity | Referenced files exist? |
+| Layer Integrity | L2 has valid L1 parent? |
+| Registry Sync | `INDEX.md` entries match disk? |
+| Config Sync | `package.json`/`pyproject.toml` fields match? |
+| **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. |
 
 ### Task Completion Checklist
 
-**Must be shown to the user at the end of every task — no exceptions.**
-Mark each item `✓` (done) or `✗` (skipped/failed). Any `✗` must be explained.
-A task with unresolved `✗` items is not complete.
+**Must be shown after every spec task.**
 
 ```
-Task Completion Checklist — {task description}
-
-Code & Content
-  ☐ No implementation code in any created or modified spec file
-  ☐ Pseudo-code used where logic illustration was needed
-
-Structure
-  ☐ All required sections present (Overview, Motivation, Document History)
-  ☐ Related Specifications declared for all dependencies
-  ☐ Implementation Notes added if implementation order is non-obvious
-
-Status & Versioning
-  ☐ Status assigned from valid lifecycle (Draft / RFC / Stable / Deprecated)
-  ☐ Status changed only via valid transition (no shortcuts)
-  ☐ Version bumped correctly (patch / minor / major)
-  ☐ Document History row added
-
-System Files
-  ☐ INDEX.md updated (new row or version/status change)
-  ☐ RULES.md trigger checked and applied if activated
-
-Review
-  ☐ Post-Update Review performed (duplication, coherence, links, rules compliance)
-  ☐ No open contradictions with RULES.md left unresolved
+Checklist — {task description}
+  ☐ No implementation code in specs (pseudo-code only)
+  ☐ Registry: INDEX.md updated (Status, Layer, Version)
+  ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable)
+  ☐ Defensive: RULES.md triggers (T1-T4) checked/applied
+  ☐ Engine: update-engine-meta run if .magic/ modified (C14)
+  ☐ Review: Post-Update Review performed (Coherence, Duplication)
 ```
-
-> Do not mark items `✓` speculatively. The checklist is a hard-stop, not a formality.
 
 ## Templates
 
-> `INDEX.md` and `RULES.md` are created automatically by Init (`.magic/init.md`).
 > Specification template: `.magic/templates/specification.md` — read it when creating a new spec.

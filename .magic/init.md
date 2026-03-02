@@ -1,92 +1,58 @@
+# Init Workflow
+
+Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workflows.
+
+## Core Invariants (Mandatory)
+
+1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+2. **Engine Integrity**: HALT if `check-prerequisites --json` returns `checksums_mismatch`.
+3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
+4. **Non-Overwriting**: Skips existing files. Never mutates user state.
+
 ---
-description: Automatic pre-flight check for .design/ directory initialization.
----
 
-# Init — Automatic Pre-Flight Check
-
-Verifies that `.design/` exists and contains all required system files. If anything is missing — creates it automatically.
-
-> **This is NOT a user-facing workflow.** It is called automatically by every other workflow on first invocation. No manual command needed.
-
-## Agent Guidelines
-
-**CRITICAL INSTRUCTIONS FOR AI:**
-
-0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **Silent by Default**: When called automatically by another workflow, do not interrupt the user. Report init results briefly and continue with the original workflow.
-2. **Safe to Re-Run**: Skips files that already exist. Never overwrites existing `.design/` content.
-3. **First Run Only**: After successful initialization, suggest running the Spec Workflow to create the first specification.
-
-## When It Runs
-
-This check is invoked when **`check-prerequisites`** (called as Step 0 by every workflow) detects that `.design/` or its required files are missing. The calling workflow runs `node .magic/scripts/executor.js check-prerequisites --json`. If `ok: false` due to missing `.design/`, the workflow calls init automatically before proceeding.
+## Workflow: Setup & Verification
 
 ```mermaid
 graph TD
-    A["Any workflow triggered"] --> B{".design/ exists?"}
-    B -->|Yes| C{"INDEX.md + RULES.md exist?"}
-    B -->|No| D["Run init scripts"]
-    C -->|Yes| E["Continue with workflow"]
-    C -->|No| D
-    D --> F["Report: SDD initialized"]
-    F --> E
+    A[Trigger: Any Workflow] --> B{Pre-reqs OK?}
+    B -->|Yes| C[Proceed]
+    B -->|No| D[Engine Integrity Match?]
+    D -->|No| E[HALT: Tampered Engine]
+    D -->|Yes| F[Run node .magic/scripts/executor.js init]
+    F --> G[Verify Artifacts]
+    G --> H[Check Existing Codebase?]
+    H --> I[Suggest: magic.analyze]
 ```
 
-## Workflow Steps
+### Steps
 
-1. **Check `.design/`**: Verify directory exists.
-   - **Engine Integrity Check**: Before running any `init` commands, verify that `check-prerequisites --json` did not return any `"Engine Integrity"` warnings in its output. If an integrity mismatch warning is detected, report the mismatch to the user and **HALT**. Do not initialize `.design/` with tampered engine scripts.
-2. **Check system files**: Verify `INDEX.md` and `RULES.md` exist inside `.design/`.
-3. **If anything missing**: Detect OS and run the appropriate script:
+1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json`.
+    - If `ok: true` → Skip silently.
+    - If `ok: false` & `checksums_mismatch` → **HALT**.
+    - If `ok: false` due to missing files → **Next**.
+2. **Init**: `node .magic/scripts/executor.js init`.
+    - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
+3. **Verify**: Ensure all 5 artifacts exist. HALT on failure.
+4. **Hint**: If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected → Suggest: *"Analyze project"*.
 
-    | OS | Script | Run with |
-    | :--- | :--- | :--- |
-    | Universal | `.magic/scripts/init` | `node .magic/scripts/executor.js init` |
+### Structure Created
 
-4. **Verify**: After running the script, confirm that all expected artifacts exist: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`. If any are missing, report the failure and halt — do not continue with the calling workflow.
-5. **Report result** (brief, inline with the calling workflow):
-
-    ```
-    SDD initialized — {YYYY-MM-DD}
-    Created: .design/INDEX.md, .design/RULES.md, .design/specifications/, .design/tasks/, .design/archives/tasks/
-    Continuing with {workflow name}...
-    ```
-
-6. **Existing Codebase Hint**: After successful initialization, check if the project already contains source code by scanning for indicators (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `src/`, `lib/`, `app/`, or 5+ source files at root). If detected, append to the report:
-
-    ```
-    💡 Existing codebase detected.
-       To generate initial specifications from your code, say: "Analyze project"
-    ```
-
-    > This hint delegates to `.magic/analyze.md` via the Spec Workflow.
-
-7. **If already initialized**: Skip silently. No output needed.
-
-## Directory Structure Created
-
-```plaintext
+```
 .design/
-├── INDEX.md         # Spec registry
-├── RULES.md         # Project constitution
-├── specifications/  # Spec files go here
-├── tasks/           # Task files go here
-└── archives/        # Archived tasks go here
-    └── tasks/
+├── INDEX.md (Registry)
+├── RULES.md (Conventions C1-C14)
+├── specifications/
+├── tasks/
+└── archives/tasks/
 ```
-
-`PLAN.md`, `TASKS.md`, and `RETROSPECTIVE.md` are created by their respective workflows — not by init.
-
-> **Maintainer Note**: `init.js` contains a hardcoded `RULES.md` template with all conventions (C1–C14). When adding new conventions to the engine, the script MUST be updated.
 
 ## Init Completion Checklist
 
 ```
 Init Checklist
-  ☐ .design/ directory exists
-  ☐ INDEX.md exists and contains valid header
-  ☐ RULES.md exists and contains valid header
-  ☐ specifications/ directory exists
-  ☐ tasks/ directory exists
-  ☐ archives/tasks/ directory exists
+  ☐ .design/ structure and registry validated
+  ☐ Engine integrity verified (no checksum mismatch)
+  ☐ RULES.md (C1-C14) & INDEX.md headers present
+  ☐ Existing codebase check performed; analyzer suggested if applicable
 ```

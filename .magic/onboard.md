@@ -1,113 +1,49 @@
+# Onboarding Workflow
+
+Interactive tutorial building a toy "Logger Module". Focus: hands-on SDD lifecycle.
+
+## Core Invariants (Mandatory)
+
+1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+2. **Instructor Role**: Friendly, concrete guidance. **Explicit Wait**: Complete 1 step → Wait for user confirmation (e.g., "ready", "continue") before next.
+3. **Safety Notice**: Real files created in `.design/`. If existing production data (specs > 0) found → **HALT**. Offer Backup (copy to `.bak`) or Cancel.
+4. **Wipe Protocol**: Restarting deletes only `logger-module.md` and toy Plan/Task files. Never format the whole `.design/`.
+
 ---
-description: Interactive tutorial to learn the Magic SDD lifecycle.
+
+## Workflow: Interactive Pacing
+
+```mermaid
+graph TD
+    A[Trigger: Onboard] --> B[Pre-flight: Pre-reqs & Safety]
+    B --> C[Step 1: Intro SDD & wait]
+    C --> D[Step 2: Create logger-module.md & wait]
+    D --> E[Step 3: Register in INDEX.md & wait]
+    E --> F[Step 4: Generate PLAN.md & wait]
+    F --> G[Step 5: Decompose TASKS & simulate Done]
+    G --> H[Step 6: Archive phase & conclude]
+```
+
+### Steps logic
+
+1. **Intro**: `node .magic/scripts/executor.js init`. Explain: "No code without spec; no spec without plan." **Wait: "ready"**.
+2. **The Toy Spec**: Create `specifications/logger-module.md` (Stable). Skip Draft/RFC for speed. **Wait: "continue"**.
+3. **Registration**: Add to `INDEX.md`. Bump version. Explain registry role. **Wait: "continue"**.
+4. **Planning**: Generate `PLAN.md` with Phase 1. Explain dependency graph role. **Wait: "continue"**.
+5. **Execution**:
+    - Create `TASKS.md` + `tasks/phase-1.md`.
+    - Simulate: `Todo` → `Done`. Explain: "This is where implementations happen."
+6. **Archival (C8)**: Move `phase-1.md` to `archives/tasks/`. Explain workspace focus.
+7. **Conclusion**: Trigger Level 2 Retro logic (cognitive). Suggest real work.
+
 ---
 
-# Magic SDD Onboarding (Interactive Tutorial)
-
-**Version:** 1.2.0
-**Status:** Stable
-
-An interactive walkthrough of the full Magic SDD lifecycle. Builds a toy "logger module" specification from scratch to give the user hands-on experience with every workflow stage.
-
-> **This is a tutorial workflow.** It creates real files in your project directory.
-> For production use, run this in a **clean, empty directory**.
->
-> **Re-entry**: If a previous onboarding session was abandoned, the agent should detect `logger-module.md` in `.design/specifications/` and offer to either (A) continue (determine the next step dynamically based on missing `.design/` tutorial files: INDEX > PLAN > TASKS), or (B) Wipe tutorial data and restart.
-> **Wipe Protocol**: Delete *only* `logger-module.md`, and any files named `PLAN.md`, `TASKS.md`, or `phase-1.md` *if and only if* they exclusively contain references to the toy "logger-module". Never format the whole `.design/` folder. Before wiping or resuming, check if `PLAN.md` contains non-tutorial production data (more than 1 spec in phases). If yes, apply the backup/cancel guard from Step 1.
-
-## Agent Guidelines
-
-**CRITICAL INSTRUCTIONS FOR AI:**
-
-0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **Instructor Role**: Act as a friendly, encouraging SDD instructor throughout. Keep explanations short and concrete.
-2. **Step-by-Step Pacing**: Complete each step fully, then **explicitly wait** for the user to confirm before proceeding to the next step. Never skip ahead.
-3. **No Implementation Code**: This is a specification tutorial. Do not write implementation code (Rust, JS, Python, etc.) at any point.
-4. **Safe Simulation**: When "executing" a task in Step 5, simulate the outcome by updating status fields only. Do not write real code.
-5. **Sandbox Warning**: Remind the user at the start that real files will be created. If an existing `.design/` is detected, warn before writing.
-
-## ⚠️ Safety Notice
-
-This tutorial will create real files in your project:
-
-- `.design/specifications/logger-module.md`
-- `.design/INDEX.md` (appended)
-- `.design/PLAN.md`
-- `.design/TASKS.md`
-- `.design/tasks/phase-1.md`
-
-**Recommended**: run this in a clean, empty directory to avoid interfering with existing SDD artifacts.
-
-## Workflow Steps
-
-### Step 1: Introduction
-
-1. **Pre-flight Check**: Run `node .magic/scripts/executor.js check-prerequisites --json`.
-    - If `.design/` is missing: automatically run Init (`node .magic/scripts/executor.js init`) to create the proper structure, then proceed.
-    - If `.design/` exists with production data (specs count > 0): **HALT**. Inform the user: *"I detected an existing .design/ directory with production specifications. This tutorial will overwrite PLAN.md and TASKS.md. Options: (A) Backup first — I will copy PLAN.md → PLAN.md.bak and TASKS.md → TASKS.md.bak before proceeding. (B) Cancel — run this in a clean directory."* Do not proceed without explicit choice.
-2. Introduce yourself as the Magic SDD onboarding guide.
-3. Explain the core philosophy in one sentence: *"No code is written until a specification exists, and no spec is implemented without a plan."*
-4. Invite the user to create their very first Magic specification: a toy "console logger" module.
-5. **Modern Engine**: Mention that all automation is powered by a universal cross-platform executor (`executor.js`), ensuring the engine works identically on Windows and Unix.
-6. Tell the user to type `ready` to begin.
-7. **Wait for user confirmation.**
-
-### Step 2: The Toy Spec
-
-1. Tell the user you are creating a toy specification.
-2. Create the file `.design/specifications/logger-module.md`.
-3. The specification should contain:
-    - **Overview**: A simple console logger.
-    - **Detailed Design**: A class with `info(msg)`, `warn(msg)`, and `error(msg)` methods.
-    - **Status**: Stable.
-4. Explain that specs normally start as `Draft`, advance to `RFC` for review, and become `Stable` when approved. For this tutorial, we skipped straight to `Stable`.
-5. Tell the user to type `continue` (or anything similar) to proceed to registration.
-6. **Wait for user confirmation.**
-
-### Step 3: Registration in INDEX.md
-
-1. Explain that for the system to recognize a spec, it must be registered in the central index.
-2. Add `logger-module.md` to `.design/INDEX.md` with status `Stable`. Bump the INDEX.md version (minor).
-3. Confirm to the user that the system now recognizes the spec.
-4. Tell the user: *"Next, we generate a Plan. Type `continue` to calculate the dependency graph and create the plan."*
-5. **Wait for user confirmation.**
-
-### Step 4: Mini PLAN.md
-
-1. Explain that normally, the `magic.task` workflow scans all stable specs and calculates a critical path.
-2. Generate a minimal `.design/PLAN.md` (based on `.magic/templates/plan.md`) with a single Phase 1 containing the `logger-module.md` feature.
-3. Show the user a small preview of the plan.
-4. Tell the user: *"Now we decompose this plan into atomic tasks. Type `continue` to generate tasks."*
-5. **Wait for user confirmation.**
-
-### Step 5: Atomic Task and Execution
-
-1. Explain that normally, `magic.task` breaks down plan phases into parallel tracks and individual steps.
-2. Create `.design/TASKS.md` (based on `.magic/templates/tasks.md`) with 1 total task for Phase 1.
-3. Create `.design/tasks/phase-1.md` (based on `.magic/templates/tasks.md`) with a single track and a single task `[T-1A01] Implement console logger`.
-4. Simulate execution by changing the task status to `Done` and updating the TASKS.md count.
-5. Explain what happened: *"The task was implemented and the system marked it Done. In the real workflow, this is where code gets written."*
-6. **Archival (C8)**: Perform the archival process by moving `.design/tasks/phase-1.md` to `.design/archives/tasks/`.
-7. Explain: *"To keep your workspace clean, finished phases are automatically moved to the archives. This keeps the engine fast and your focused area small."*
-8. Tell the user to type `finish` to conclude.
-9. **Wait for user confirmation.**
-
-### Step 6: Conclusion
-
-1. Conclude the tutorial.
-2. Explain the retrospective: *"Completing a phase triggers an auto-snapshot. Completing the full plan triggers a Level 2 retrospective. The SDD engine continuously learns from your bottlenecks."*
-3. Point the user to the next step: *"Ready for real work? Describe your first idea and it will be converted into a specification."*
-4. End the tutorial.
-
-### Onboarding Completion Checklist
+## Onboarding Completion Checklist
 
 ```
 Onboarding Checklist — Tutorial Complete
-
-  ☐ Toy spec created (logger-module.md)
-  ☐ Spec registered in INDEX.md
-  ☐ PLAN.md generated with Phase 1
-  ☐ TASKS.md created and task simulated as Done
-  ☐ Phase archival demonstrated (C8)
-  ☐ User understands the full SDD lifecycle
+  ☐ Toy spec created/registered; Plan/Task structure generated
+  ☐ Lifecycle: Spec -> Plan -> Task -> Done -> Archive demonstrated
+  ☐ User gates (Wait steps) respected; instructor role maintained
+  ☐ Safety: Production data check passed; C14 engine integrity verified
 ```

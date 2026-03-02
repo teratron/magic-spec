@@ -1,147 +1,68 @@
----
-description: Workflow for generating the implementation plan and orchestrating tasks.
----
-
 # Task Workflow
 
-This workflow reads finalized specifications and produces a structured implementation plan (`.design/PLAN.md`), and immediately decomposes it into atomic, executable tasks (`.design/TASKS.md`).
-It operates **after** the Spec Workflow — specifications are its input, not its concern.
+Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/specifications/`.
 
-> **Scope**: Prioritization, phasing, dependency analysis, task generation, and orchestration.
-> Specification authoring → Spec Workflow. Execution → Run Workflow.
+## Core Invariants (Mandatory)
 
-## Agent Guidelines
+1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
+3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+4. **Logic Guards**:
+    - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
+    - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
+    - **User Gate**: Show phase structure and task breakdown BEFORE writing files.
+    - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
+5. **Architectural Logic**:
+    - **Circular Guard**: If cycles (A→B→A) found → **HALT**.
+    - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
+    - **Selective Planning (C6)**: `Draft` → Backlog. `RFC` → Recommend Backlog. `Stable` → Propose for Plan.
 
-**CRITICAL INSTRUCTIONS FOR AI:**
+---
 
-0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **Registry Integrity**: Never generate a plan or tasks without reading all spec files listed in `INDEX.md`.
-2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding.
-3. **No Orphans**: Every spec in `INDEX.md` must be assigned to a phase in `PLAN.md`. Any spec found in `INDEX.md` but missing from `PLAN.md` must be flagged as "Orphaned" and addressed immediately.
-4. **Confirm Before Commit**: Always show the proposed phase structure and task breakdown to the user before writing `PLAN.md` and `TASKS.md`.
-5. **Atomic Tasks**: Each task must map to exactly one section of one spec file. A task that touches two specs is two tasks.
-6. **Nested Phase Architecture (C10)**: Implementation plans in `PLAN.md` must follow a nested hierarchy: **Phase -> Specification -> Atomic Tasks**. Always decompose each specification into 2-3 atomic checklist items. Use the standardized checklist notation: `[ ]` (Todo), `[/]` (In Progress), `[x]` (Done), `[~]` (Cancelled), `[!]` (Blocked).
-7. **No Duplication**: PLAN.md summarizes specs — it does not copy their content. Use references, not reproduction.
-8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*.
-9. **Maximum Automation (Zero-Prompt)**: Once PLAN.md and TASKS.md are approved by the user, the agent is authorized to proceed directly to execution (`magic.run`) and conclusion workflows without further confirmation. Save reports and update changelogs silently. Skip conversational overhead.
-
-## Directory Structure
-
-```plaintext
-.design/
-├── INDEX.md # Input: registry of all specs
-├── RULES.md # Input: project conventions
-├── PLAN.md # Output: implementation plan 
-├── TASKS.md # Output: master task index
-├── specifications/ # Input: spec files 
-│   └── *.md
-└── tasks/ # Output: phase task files 
-    └── phase-{n}.md
-```
-
-## Workflow Steps
-
-### Initializing Plan & Tasks
-
-Use when `.design/PLAN.md` or `.design/TASKS.md` do not exist.
-
-**Trigger phrase**: *"Create plan"*, *"Generate plan"*, *"Create tasks"*, *"Generate tasks"*
+## Workflow: Planning & Orchestration
 
 ```mermaid
 graph TD
-    A[Trigger: Generate Tasks] --> Z["Pre-flight: Consistency Check\n(spec.md)"]
-    Z --> B[Read INDEX.md + RULES.md + spec files]
-    B --> C[Extract dependency graph & critical path]
-    C --> D[Propose phase structure in PLAN.md]
-    D --> E[Ask execution mode (Sequential/Parallel)]
-    E --> F[Decompose Phase 1 into tasks & assign tracks]
-    F --> G[Propose task breakdown to user]
-    G -->|Approved| H[Write PLAN.md, TASKS.md, phase files]
-    G -->|Adjusted| F
+    A[Trigger: Plot/Sync] --> B[Pre-flight: Pre-reqs & Engine Guard]
+    B --> C[Build Dependency Graph]
+    C --> D[Apply Mode Choice §7]
+    D --> E[Selective Selection C6]
+    E --> F[Decompose Phase 1 Tasks]
+    F --> G[Propose Plan & Breakdown]
+    G -->|Approve| H[Write PLAN, TASKS, phase-*.md]
     H --> I[Generate CONTEXT.md]
-    I --> J[Task Completion Checklist]
 ```
 
-0. **Consistency Check & Engine Integrity**: Before running, verify specification consistency and engine file integrity by running:
-   - `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
-   - **Action**: If `warnings` contains `checksums_mismatch`, **HALT** immediately. Do not proceed until engine integrity is restored. For other warnings, inform the user and recommend regenerating checksums if the changes were intentional.
-1. **Read all spec files**: For each spec in `.design/specifications/`, extract:
-    - `Related Specifications` — direct dependencies
-    - `Implementation Notes` — if present, surface them in the plan/tasks
-2. **Build dependency graph**: Map which specs depend on which. Identify the critical path.
-   - **Circular Dependency Guard**: If the graph contains cycles (A→B→A), halt. Flag the cycle to the user and propose breaking it by removing one `Related Specifications` link or splitting the spec into independent parts.
-3. **Propose Plan Structure**: Group specifications into Phases according to their layer and dependencies:
-    - Layer 1 (concept) specifications must be grouped into early requirements phases (e.g., Phase 0 or Phase 1).
-    - Layer 2 (implementation) specifications must be scheduled in execution phases that follow their Layer 1 parent, and can be grouped by technology track.
-4. **Ask execution mode**: Skip if `RULES.md §7` already contains the execution mode convention (C3). Otherwise, ask:
+### Steps
 
-    ```
-    How should tasks be executed?
-      A) Sequential — one agent works through tasks in order (default)
-      B) Parallel   — Manager Agent + Developer Agents per track
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs`.
+    - `checksums_mismatch` → **HALT**. Restore engine first.
+2. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
+3. **Draft Plan**: Group by Layer. Check for cycles.
+4. **Execution Mode**: If not in `RULES.md §7`, ask (Sequential/Parallel) and save to §7.
+5. **Decompose**: Split Phase 1 into 2-3 tasks per spec.
+    - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
+    - **Tracks**: Group tasks by file independence.
+6. **Sync (Update Mode)**:
+    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]`.
+    - **Phantom Specs**: If spec in PLAN but missing in INDEX → Cancel `Todo`; archive `Done`.
+    - **Renames**: Global search-and-replace on filename changes (exclude archives).
 
-    This choice will be saved to RULES.md §7.
-    ```
+### Plan Write-back
 
-5. **Decompose first execution phase**: Break down the first execution phase (typically Phase 1) into atomic tasks. Phase 0 (Requirements) items are tracked inline in PLAN.md as review checklists and do not generate separate task files. Extract user stories from `Implementation Notes`. Apply tracking IDs (e.g., `T-1A01`).
-6. **Assign tracks**: Group tasks into Execution Tracks (A, B, C) based on task-level independence.
-7. **Propose breakdown to user**: Show the Plan Phases and the Phase 1 Task Outline before writing. Wait for the user to approve changes.
-8. **Write files**: Write `.design/PLAN.md` (from `.magic/templates/plan.md`), `.design/TASKS.md` and `.design/tasks/phase-1.md` (from `.magic/templates/tasks.md`) based on approval.
-9. **Generate Context**: Silently run `node .magic/scripts/executor.js generate-context` to initialize `.design/CONTEXT.md`.
+- Use `.magic/templates/plan.md` and `.magic/templates/tasks.md`.
+- PLAN.md: Summarize, don't copy.
+- TASKS.md: Master index with `Based on RULES:` version.
 
-### Updating Tasks & Plan
+---
 
-**Trigger phrase**: *"Update tasks"*, *"Sync tasks"*, *"Update plan"*, *"Reprioritize"*
-
-0. **Consistency Check & Engine Integrity**: Before updating, run:
-   `node .magic/scripts/executor.js check-prerequisites --json --require-specs`
-   - If `ok: false` → surface `missing_required`, halt.
-   - If `warnings` contains `checksums_mismatch` → **HALT**. Do not proceed until engine integrity is restored.
-   - If other `warnings` non-empty → surface warnings to user before proceeding with the update.
-
-1. **Registry Synchronization Check**:
-    - **Identification**: List all specs in `INDEX.md` and check their presence in `PLAN.md`.
-    - **Convention Synchronization**: Compare the RULES.md version against the version recorded in `TASKS.md` header (field `Based on RULES:`). If versions differ, review §7 changes and propose a compatibility review of all existing tasks against the new conventions. Update the `Based on RULES:` field after reconciliation.
-    - **Selective Planning (C6)**:
-        - **Draft Specs**: Automatically move to the `## Backlog` section of `PLAN.md`.
-        - **RFC Specs**: Surface to user with a recommendation to backlog until Stable, unless user explicitly pulls into active plan.
-        - **Stable Specs**: Ask the user which new `Stable` specs should be pulled into the active plan. All others move to the **Backlog**.
-        - **Downgrade Policy (C12)**: If an actively planned spec is downgraded (`Stable` → `RFC`/`Draft`) OR its Layer 1 parent loses `Stable` status, move the spec to the Backlog. Do NOT delete its tasks. Mark its `Pending`/`In Progress` tasks as `Blocked [!]` in `TASKS.md` with note: `Awaiting spec stabilization`. `Done` tasks remain untouched.
-    - **Orphaned Specs**: Flag specs in `INDEX.md` missing from both active plan and backlog.
-    - **Phantom Specs**: Flag specs referenced in `PLAN.md` but missing from `INDEX.md`. Propose: for tasks with status `Pending` or `In Progress` → Cancel; for `Done` tasks → mark as Archived Orphan (preserve history, remove from active planning). Do not cancel Done work.
-    - **New Sections**: For existing planned specs, check for new sections added and propose additional tasks.
-    - **Deprecated Specs**: Move to Archived in `PLAN.md`. For associated tasks: `Done` → preserve as-is (historical record); `Pending`/`In Progress` → mark `Cancelled` in `TASKS.md`.
-2. Show diff to user before writing. Let user approve the reprioritization.
-
-### Task Completion Checklist
-
-**Must be shown at the end of every task workflow operation.**
+## Task Completion Checklist
 
 ```
-Task Workflow Checklist — {operation description}
-
-Input Integrity
-  ☐ All spec files in INDEX.md were read before plan was written
-  ☐ Every spec in INDEX.md is assigned to a phase (no orphaned specs)
-  ☐ No content copied from specs — only references used
-
-Plan & Task Structure
-  ☐ No spec assigned to a phase earlier than its dependencies allow
-  ☐ Each task maps to exactly one spec section (no cross-spec bundling)
-  ☐ All task IDs follow the format defined in RULES.md (default: T-{phase}{track}{seq})
-
-Track Integrity
-  ☐ Tasks in different tracks have no hidden shared dependencies
-  ☐ Execution mode recorded in RULES.md §7
-
-Data Integrity
-  ☐ PLAN.md written and updated accurately
-  ☐ TASKS.md updated to reflect current state
+Task Workflow Checklist — {operation}
+  ☐ All registered specs read; no orphans/phantoms left unaddressed
+  ☐ Circular dependencies checked; layer order 1->2 respected
+  ☐ Selective Planning (C6) and Quarantine (C12) applied
+  ☐ Execution mode saved to RULES.md §7; Task IDs valid
+  ☐ PLAN.md / TASKS.md written; CONTEXT.md regenerated
 ```
-
-## Templates
-
-> Templates for `PLAN.md`, `TASKS.md`, and `phase-{n}.md` are in `.magic/templates/`:
->
-> - `.magic/templates/plan.md` — PLAN.md structure
-> - `.magic/templates/tasks.md` — TASKS.md master index + per-phase task file

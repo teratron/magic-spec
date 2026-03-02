@@ -1,140 +1,66 @@
----
-description: Workflow for manually adding, amending, or removing project conventions in RULES.md.
----
-
 # Rule Workflow
 
-Manages `.design/RULES.md §7 Project Conventions` directly.
-Use when you want to declare a convention without going through the Spec Workflow.
+Directly manages `.design/RULES.md §7 Project Conventions`.
 
-> **Scope**: Direct management of `RULES.md §7 Project Conventions`.
-> Automatic rule capture during spec work (triggers T1–T4) is handled by `spec.md`.
+## Core Invariants (Mandatory)
 
-## Agent Guidelines
+1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
+3. **No Silent Writes**: Always show proposed diff/statement before committing.
+4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+5. **Versoning (C14)**:
+    - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule`.
+    - **Rules**: Bump Minor (add/amend) or Major (remove). Update Document History.
 
-**CRITICAL INSTRUCTIONS FOR AI:**
+---
 
-0. **Context Resolution (Zero-Prompt)**: Always resolve the active workspace before operating on `.design/`. Check for `--workspace` flag, `MAGIC_WORKSPACE` env var, or the JSON `default` key in `.design/workspace.json`. Route all logic/files to `.design/{workspace}/` (e.g. `.design/engine/`). Default to root `.design/` only if JSON is missing. Never ask the user for workspace context.
-1. **Read First**: Always read `.design/RULES.md` in full before any operation.
-2. **Auto-Init**: If `.design/` or its system files are missing, automatically trigger the Init pre-flight check (`.magic/init.md`) before proceeding. Do not ask — just initialize and continue.
-3. **Scope**: Only §7 Project Conventions is modified here. Sections 1–6 are the universal constitution — amend them only if the user explicitly targets them.
-4. **No Silent Changes**: Always show the proposed change before writing.
-5. **Version Discipline**: Every change to RULES.md requires a version bump and a Document History row. Clarification: Typo fixes or rephrasing without changing intent is a `patch` (0.0.X).
-   - **Engine Versioning**: If you modify `rule.md` or other engine files, you MUST update engine metadata:
-     `node .magic/scripts/executor.js update-engine-meta --workflow rule`
-6. **Context Awareness**: Before adding a manual rule, check `.design/CONTEXT.md` to see if it aligns with recent project decisions.
-7. **Batch Operations**: If the user requests multiple modifications (e.g., add 2 rules and amend 1), group the proposals into a single message, ask for a single "Apply all?" confirmation, perform a single version bump reflecting the highest impact (major > minor > patch), and present only one final checklist.
-8. **Checklist Before Done**: Every workflow operation must end with the *Task Completion Checklist*. A task is not complete until the checklist is presented.
-9. **Quality Focus**: When adding or amending rules, prioritize conventions that enforce linting, testing, and modern design principles (SOLID, DRY, etc.) to ensure high-quality output in the `run` workflow.
+## Workflow: Convention Management
 
-## Directory Structure
-
-```plaintext
-.design/
-├── RULES.md         # Output: project constitution (§7 modified here)
-└── specifications/  # Input: spec files (read-only in this workflow)
+```mermaid
+graph TD
+    A[Trigger: Rule Op] --> B[Pre-flight: Pre-reqs & Init]
+    B --> C[Read RULES.md §1-6 & §7]
+    C --> D[Guard: DUP & CONSTRUCT]
+    D --> E[Propose Change & Version Bump]
+    E -->|Approve| F[Write RULES.md & History]
+    F --> G[Impact Analysis: Audit/Plan-Sync]
 ```
 
-## Workflow Steps
+### Operational Logic
 
-### Adding a Convention
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+2. **Read**: Load `RULES.md`. Parse user intent into a declarative statement.
+3. **Guards**:
+    - **Constitutional**: If new rule contradicts §1-6 core → **HALT** & report.
+    - **Duplication**: If semantically overlaps with existing C{N} → Propose merge/replace.
+4. **Propose**: Show "Current vs Proposed" side-by-side. State version impact (e.g., 1.1.0 → 1.2.0).
 
-**Trigger phrase**: *"Add rule"*, *"Add convention"*
+### Actions
 
-0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json` to verify `.design/` integrity. If `ok: false`, trigger Auto-Init.
-1. Read `.design/RULES.md`.
-2. Parse the user's input into a clean, declarative rule statement.
-3. **Duplication Guard**: Scan existing §7 entries for semantic overlap with the proposed rule. If a similar convention exists, show it and ask: `This overlaps with C{N}. Merge, replace, or add separately?`
-4. **Constitutional Guard**: Check §1–6 of `RULES.md` to ensure the new statement doesn't contradict established project-wide invariants. If it does, flag the conflict and ask for an amendment to the core section instead.
-5. Propose before writing:
+| Action | Logic | Version |
+| :--- | :--- | :--- |
+| **Add** | Find highest C{N} → Assign C{N+1} → Append. | Minor |
+| **Amend** | Match ID/Keyword → Replace in place. | Minor |
+| **Remove** | Match ID/Keyword → Delete entry. | Major |
+| **List** | Display all §7 entries as numbered list. | N/A |
 
-    ```
-    Proposed addition to RULES.md §7:
+### 5. Impact Analysis
 
-    → "All async functions must be documented with their error surface."
+After write, ask the user:
 
-    Version bump: 1.0.0 → 1.1.0 (minor — new convention added)
+- "Should I audit existing specs for compliance?"
+- "Should I update the implementation plan tasks?"
+- *Note*: If `TASKS.md` exists, its `Based on RULES:` version is now stale.
 
-    Add? (yes / adjust / cancel)
-    ```
+---
 
-6. On approval: scan §7 to find the highest existing convention ID (e.g., C15), assign the next sequential ID (e.g., `C16`), append as a new subsection `### C16 — {Title}`, bump version (`minor`), add Document History row.
-7. **Impact Analysis**: Propose the next steps to the user:
-    - "Should I run an audit of existing specifications to check compliance with this new rule?"
-    - "Should I update the implementation plan to reflect this convention in upcoming tasks?"
-    - Note: If `TASKS.md` exists, its `Based on RULES:` version is now stale. The next `magic.task` update will detect and reconcile this.
-8. **Task Completion Checklist**: Present the checklist.
-
-### Amending a Convention
-
-**Trigger phrase**: *"Amend rule"*, *"Change rule"*, *"Update convention"*
-
-0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json` to verify `.design/` integrity. If `ok: false`, trigger Auto-Init.
-1. Read `.design/RULES.md §7`.
-   Identify the target convention by its ID (e.g., C15) or by keyword match. If ambiguous, list matching rules and ask the user to confirm. If no matching convention is found in §7, inform the user: `Convention {ID} not found in §7. Did you mean a rule in §1–6? If so, I can amend core sections with your explicit approval.`
-2. **Constitutional Guard**: Ensure the amendment does not contradict project-wide invariants in §1–6.
-3. Show the current rule and the proposed change side by side:
-
-    ```
-    Current:  "All APIs must follow REST. GraphQL is not permitted."
-    Proposed: "All APIs must follow REST or GraphQL. No mixing within one service."
-
-    Version bump: 1.1.0 → 1.2.0 (minor — convention amended)
-
-    Apply? (yes / adjust / cancel)
-    ```
-
-4. On approval: replace the rule in place, bump version (`minor`), add Document History row.
-5. **Impact Analysis**: Propose the next steps to the user:
-    - "Should I run an audit of existing specifications to check compliance with this amendment?"
-    - "Should I update the implementation plan to reflect this change in upcoming tasks?"
-    - Note: If `TASKS.md` exists, its `Based on RULES:` version is now stale. The next `magic.task` update will detect and reconcile this.
-6. **Task Completion Checklist**: Present the checklist.
-
-### Removing a Convention
-
-**Trigger phrase**: *"Remove rule"*, *"Delete convention"*
-
-0. **Pre-flight**: Run `node .magic/scripts/executor.js check-prerequisites --json` to verify `.design/` integrity. If `ok: false`, trigger Auto-Init.
-1. Identify the target convention by its ID (e.g., C16) or by keyword match. If ambiguous, list matching rules and ask which to remove.
-2. Show the rule to be removed and ask for explicit confirmation:
-
-    ```
-    Removing from RULES.md §7:
-    → "All APIs must follow REST. GraphQL is not permitted."
-
-    Version bump: 1.2.0 → 2.0.0 (major — convention removed)
-
-    ⚠️ This cannot be undone automatically. Confirm? (yes / cancel)
-    ```
-
-3. On approval: remove the entry, bump version (`major`), add Document History row.
-    - *Exception*: If removal is part of a refactor where the rule is moved or merged without loss of intent, use `minor`.
-4. **Impact Analysis**: Propose the next steps to the user:
-    - "Should I run an audit to identify specifications that now rely on non-existent rules?"
-    - **Workflow Dependency Check**: Verify if the removed convention is referenced by workflow files (`.magic/*.md`) as a guard or decision point (e.g., execution mode, naming conventions). If yes, warn: `This rule is used by {workflow} as {purpose}. Removing it may break that workflow's logic.`
-    - Note: If `TASKS.md` exists, its `Based on RULES:` version is now stale. The next `magic.task` update will detect and reconcile this.
-5. **Task Completion Checklist**: Present the checklist.
-
-### Listing Conventions
-
-**Trigger phrase**: *"Show rules"*, *"List conventions"*
-
-Read and display all entries in `.design/RULES.md §7` as a numbered list.
-No writes performed. No checklist required.
-
-## Task Completion Checklist
-
-**Must be shown at the end of every rule operation — no exceptions.**
+## Rule Completion Checklist
 
 ```
-Task Completion Checklist — {operation description}
-
-  ☐ RULES.md was read in full before any change
-  ☐ Only §7 was modified (unless user explicitly targeted §1–6)
-  ☐ Proposed change shown to user before writing
-  ☐ Version bumped correctly (minor for add/amend, major for remove)
-  ☐ Document History row added
-  ☐ No contradiction with existing rules in §1–6
-  ☐ Impact Analysis presented to user (audit/plan-update suggestions)
+Rule Checklist — {operation}
+  ☐ Read full RULES.md; §1-6 core invariants respected
+  ☐ Scope: only §7 target (unless core amendment requested)
+  ☐ Guards: no semantic duplication; no core contradiction
+  ☐ Version bumped (Minor/Major); Document History updated
+  ☐ Engine Meta: C14 bump if .magic/ files modified
 ```
