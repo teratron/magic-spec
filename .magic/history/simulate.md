@@ -11,15 +11,4 @@
 | 1.3.2 | 2026-02-28 | Antigravity | Test Automation Loop: enforced adding new tests |
 | 1.3.2 | 2026-02-28 | Antigravity | Enforced Regression Sweep sweep after fixes |
 | 1.3.2 | 2026-02-28 | Antigravity | Dynamic Default target: triggers Improv Mode automatically |
-| 1.4.9 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.10 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.13 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.18 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.21 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.25 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.26 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.33 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.35 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.36 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.37 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
-| 1.4.38 - 1.4.40 | 2026-03-02 | Antigravity | Automated update via engine meta automation |
+| 1.4.9 - 1.4.50 | 2026-03-02 | Antigravity | Automated update via engine meta automation |

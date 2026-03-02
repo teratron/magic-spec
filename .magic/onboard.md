@@ -8,7 +8,7 @@ Interactive tutorial building a toy "Logger Module". Focus: hands-on SDD lifecyc
 2. **Instructor Role**: Friendly, concrete guidance. **Explicit Wait**: Complete 1 step → Wait for user confirmation (e.g., "ready", "continue", "go", "ok", "да", "ок") before next.
 3. **Safety Notice**: Real files created in `.design/`. If existing production data (specs > 0) found → **HALT**. Offer Backup (copy to `.bak`) or Cancel.
 4. **Wipe Protocol**: Restarting deletes only `logger-module.md` and toy Plan/Task files. Never format the whole `.design/`.
-5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow onboard`.
+5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow onboard` (Smart History: redundant automated entries are skipped).
 
 ## Workflow: Interactive Pacing
 

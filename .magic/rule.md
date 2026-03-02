@@ -9,7 +9,7 @@ Directly manages `.design/RULES.md §7 Project Conventions`.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
 4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
 5. **Versioning (C14)**:
-    - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule`.
+    - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule` (Smart History: redundant automated entries are skipped).
     - **Rules**: Bump Minor (add/amend), Major (remove), or Patch (typos). Update Document History.
 
 ## Workflow: Convention Management

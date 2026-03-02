@@ -16,7 +16,7 @@ Reverse-engineers code into `.design/` spec proposals. Delegated from `spec.md`.
     - **<50 files**: Auto-scan.
     - **50-500 files**: Ask: Full or Focused?
     - **>500 files**: Recommend Focused/Quick. HALT for user choice.
-6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze`.
+6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze` (Smart History: redundant automated entries are skipped).
 
 ## Operational Logic: Scan & Infer
 

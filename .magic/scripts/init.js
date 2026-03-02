@@ -112,6 +112,8 @@ Read by the agent before every operation. Updated only via explicit triggers.
 3. **Verify continuity** — confirm that after the change all workflows remain fully functional.
 4. **Never edit blindly** — if the scope of impact is unclear, stop and ask before proceeding.
 5. **Document the change** — record modifications in the relevant spec and commit message.
+6. **Atomic Update** — apply changes simultaneously across all related files (scripts, workflows, and documentation) to maintain full engine consistency.
+7. **No-Change, No-Bump** — NEVER trigger a version bump (C14) if no physical files in \`.magic/\` were modified (e.g., during simulations, dry runs, or purely cognitive tasks).
 
 ### C2 — Workflow Minimalism
 
@@ -187,6 +189,7 @@ To ensure accurate engine state tracking and reliable updates, any modification 
 2. **Automation**: This command automatically increments the patch version in \`.magic/.version\`, updates the relevant history file in \`.magic/history/\`, and regenerates \`.magic/.checksums\`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
 3. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
+5. **Simulation Exemption**: Purely cognitive simulations, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
 
 ## Document History
 | Version | Date | Author | Description |

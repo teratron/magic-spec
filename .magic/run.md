@@ -12,7 +12,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
     - **Mode**: Sequential or Parallel must be in `RULES.md §7`. If missing → **HALT**.
     - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
-6. **Engine Versioning (C14)**: If `.magic/` modified, auto-run `node .magic/scripts/executor.js update-engine-meta --workflow run`.
+6. **Engine Versioning (C14)**: If `.magic/` modified, auto-run `node .magic/scripts/executor.js update-engine-meta --workflow run` (Smart History: redundant automated entries are skipped).
 
 ## Execution Setup
 

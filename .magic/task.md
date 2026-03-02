@@ -13,7 +13,9 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **User Gate**: Show phase structure and task breakdown BEFORE writing files.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
-6. **Architectural Logic**:
+6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
+
+7. **Architectural Logic**:
     - **Circular Guard**: Deep scan `Related Specifications` across ALL levels. If ANY cycle (N-level) detected → **HALT**.
     - **Cycle Resolution**: Suggest breaking the chain by identifying the "weakest link" (Related Spec vs Implements).
     - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
@@ -64,4 +66,5 @@ Task Workflow Checklist — {operation}
   ☐ Selective Planning (C6) and Quarantine (C12) applied
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ PLAN.md / TASKS.md written; CONTEXT.md regenerated
+  ☐ Engine Meta: C14 bump performed if .magic/ files modified
 ```
