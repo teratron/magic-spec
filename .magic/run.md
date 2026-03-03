@@ -12,6 +12,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
     - **Mode**: Sequential or Parallel must be in `RULES.md §7`. If missing → **HALT**.
     - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
     - **Quarantine (C12)**: If any active task belongs to a specification with a "Rule 57 Violation" (non-stable L1 parent) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog.
+    - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (Stable→RFC or Draft) since plan generation → **HALT**. Report: "Spec `{file}` is no longer Stable. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Versioning (C14)**: If `.magic/` modified, auto-run `node .magic/scripts/executor.js update-engine-meta --workflow run` (Smart History: redundant automated entries are skipped).
 
@@ -20,7 +21,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 | Mode | Role | Process |
 | :--- | :--- | :--- |
 | **Sequential** | Mono-Agent | Picks next `Todo` → Executes → Updates `Done` → Repeats. |
-| **Parallel** | Manager | Reads `TASKS.md` → Detects shared-file conflicts → Assigns tracks → Syncs `PLAN.md`. |
+| **Parallel** | Manager | Reads `TASKS.md` → Reads associated spec sections for each task → Detects shared-file conflicts (including constraints only visible in spec body) → Assigns tracks → Syncs `PLAN.md`. |
 | **Parallel** | Developer | Track owner (mono or sub-agent) → Executes in order → Reports `Done/Blocked` → Wait for next assignment. |
 
 *Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions.
@@ -45,6 +46,7 @@ graph TD
 ### Steps
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`.
+    - **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
 3. **Execute**: Implement per spec section. No scope creep.
@@ -69,6 +71,7 @@ graph TD
 
 ```
 Checklist — {operation}
+  ☐ Spec Stability: All active-phase specs confirmed Stable in INDEX.md before execution
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
   ☐ Parallel: Manager role enforced; shared files serialized

@@ -7,6 +7,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
 1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+    - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
     - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
@@ -40,6 +41,7 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs`.
     - `checksums_mismatch` → **HALT**. Restore engine first.
+    - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
 2. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 3. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
 4. **Execution Mode**: If not in `RULES.md §7`, ask (Sequential/Parallel) and save to §7.

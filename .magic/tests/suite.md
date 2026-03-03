@@ -406,14 +406,13 @@ If any test fails, document the failure reason and propose a fix.
   - No existing PLAN.md
   - RULES.md §7: C6 active
 - **Expected:**
-  - [ ] 3 Draft specs → automatically moved to `## Backlog` in PLAN.md
-  - [ ] 4 RFC specs → surfaced to user with recommendation to backlog
-  - [ ] 3 Stable specs → agent asks which to pull into active plan
-  - [ ] User chooses 2 of 3 Stable → Phase 1 with 2 specs
-  - [ ] Remaining 1 Stable → Backlog
+  - [ ] 3 Draft specs → automatically moved to `## Backlog` in PLAN.md (no prompt — C6)
+  - [ ] 4 RFC specs → automatically moved to `## Backlog` in PLAN.md (no prompt — C6)
+  - [ ] 3 Stable specs → all automatically pulled into active plan phases (no user choice — C6)
+  - [ ] PLAN.md contains phases covering all 3 Stable specs
   - [ ] All Draft and RFC in Backlog, not in active phases
   - [ ] No Draft/RFC spec enters active phases without explicit pull
-- **Guards tested:** Selective Planning (C6), mixed status handling, user choice
+- **Guards tested:** Selective Planning (C6), mixed status handling, zero-prompt automation
 
 ### T25 — Rule Amend Core Section (§1–6)
 
@@ -1351,6 +1350,110 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Workflow (e.g., `run.md`) triggers HALT and does NOT begin execution.
 - **Guards tested:** Engine Integrity Mandatory HALT (C1).
 
+### T86 — Spec Consistency Audit: Version Drift Detection
+
+- **Workflow:** `spec.md` (Consistency Check & Audit Report)
+- **Synthetic State:**
+  - `INDEX.md`: `documentation-system.md` v1.0.0 (Stable)
+  - `documentation-system.md` file header: `Version: 1.1.0` — user manually bumped the version in the file after adding a new section, but forgot to update `INDEX.md`
+  - Amendment rule was NOT applied (INDEX.md still shows v1.0.0, status still Stable)
+- **Action:** User says "Verify specs" or "Check specs"
+- **Expected:**
+  - [ ] Agent reads all spec file headers and compares `Version:` against `INDEX.md` entries
+  - [ ] `documentation-system.md` header version (1.1.0) ≠ INDEX.md version (1.0.0) → version mismatch detected
+  - [ ] `documentation-system.md` flagged as `VERSION_DRIFT` in the Consistency Report
+  - [ ] Agent reports: "Version header out of sync with registry — external edit without lifecycle protocol detected"
+  - [ ] No automatic fix — issue surfaced for user resolution (update INDEX.md to 1.1.0 and apply amendment rule, or roll back file header)
+  - [ ] Consistency Report includes `VERSION_DRIFT` category alongside existing checks
+- **Guards tested:** Version Drift detection (RE-1), header-vs-registry mismatch, Consistency Check extension
+
+### T87 — Run Spec Stability Spot-Check (RE-2)
+
+- **Workflow:** `run.md` (Pre-flight — Spec Stability Guard)
+- **Synthetic State:**
+  - `TASKS.md` Phase 1: T-1A01 (Todo, maps to `auth-impl.md`)
+  - `INDEX.md` at plan generation: `auth-impl.md` (Stable L2)
+  - Between plan generation and run, user demotes `auth-impl.md` → RFC externally (edited INDEX.md directly)
+  - `RULES.md §7` has C3: Parallel mode
+  - No C12 violation (L1 parent `auth.md` is still Stable — this is NOT a parent-layer issue)
+- **Action:** User runs `/magic.run`
+- **Expected:**
+  - [ ] Pre-flight: `check-prerequisites` passes (no engine mismatch)
+  - [ ] **Spec Stability Spot-Check**: Agent reads `INDEX.md` for all Todo-task specs in current phase
+  - [ ] `auth-impl.md` found with status `RFC` (not Stable)
+  - [ ] **HALT** — execution does NOT begin
+  - [ ] Message: "Spec `auth-impl.md` is no longer Stable (current: RFC). Run `magic.task update` to re-evaluate the plan."
+  - [ ] C12 Quarantine guard does NOT fire (L1 parent is Stable — this is a different, complementary guard)
+- **Guards tested:** Spec Stability Spot-Check (RE-2), direct spec demotion detection, guard independence from C12
+
+### T88 — Version Drift Guard During Active Spec Update
+
+- **Workflow:** `spec.md` (Updating an Existing Specification — Sync)
+- **Synthetic State:**
+  - `INDEX.md`: `api-core.md` v1.2.0 (Stable)
+  - `api-core.md` file header: `Version: 1.3.0` — externally bumped by user; INDEX.md not updated
+  - No active plan or tasks
+- **Action:** User says "Update api-core.md to add a rate-limiting section"
+- **Expected:**
+  - [ ] Pre-flight Consistency Check runs: VERSION_DRIFT detected (`api-core.md` header 1.3.0 ≠ INDEX.md 1.2.0)
+  - [ ] **Version Drift Guard fires → HALT** before any write to `api-core.md`
+  - [ ] Agent reports: "Version drift on `api-core.md`: file header v1.3.0 ≠ registry v1.2.0. Resolve drift first: (a) sync INDEX.md and apply amendment rule, or (b) revert file header."
+  - [ ] No changes written to `api-core.md` or `INDEX.md`
+  - [ ] Execution resumes only after user resolves the drift
+- **Guards tested:** Version Drift Guard (RE-3), update atomicity, HALT before write
+
+### T89 — T4 Rule Queued on Version Drift HALT
+
+- **Workflow:** `spec.md` (T4 + Version Drift Guard)
+- **Synthetic State:**
+  - `INDEX.md`: `api-core.md` v1.2.0 (Stable)
+  - `api-core.md` file header: `Version: 1.3.0` (VERSION_DRIFT)
+  - `RULES.md` v2.1.0, no rate-limiting rule
+- **Input:** `"Update api-core.md to add a rate-limiting section, and remember that all API endpoints must include rate-limiting headers."`
+- **Expected:**
+  - [ ] T4 detected: "remember that all API endpoints must include rate-limiting headers"
+  - [ ] Pre-flight Consistency Check: VERSION_DRIFT on `api-core.md` detected
+  - [ ] **Version Drift Guard fires → HALT**
+  - [ ] Agent acknowledges T4: "T4 rule detected — queued pending drift resolution. Rule will NOT be written to RULES.md until version drift on `api-core.md` is resolved."
+  - [ ] No write to `RULES.md`, no write to `api-core.md`
+  - [ ] After user resolves drift: T4 rule applied to `RULES.md`, spec update proceeds
+- **Guards tested:** T4 queuing on VERSION_DRIFT HALT (RE-3 + RE-4), atomic write integrity, HALT persistence
+
+### T90 — Intent Preservation Through Cold-Start Delegation Chain
+
+- **Workflow:** `task.md` → `init.md` → `analyze.md` (Intent Preservation)
+- **Synthetic State:**
+  - `.design/` missing
+  - Project has existing source code
+- **Input:** User says "Plan the payment gateway feature" (starting `magic.task`)
+- **Expected:**
+  - [ ] `task.md` detects missing `.design/` → memos intent: "Plan the payment gateway feature"
+  - [ ] Delegates to `init.md` → `.design/` created
+  - [ ] Delegates to `analyze.md` → specs generated and approved
+  - [ ] After delegation chain resolves: agent resumes explicitly: "Resuming: 'Plan the payment gateway feature'"
+  - [ ] Agent generates tasks scoped to payment-related specs (intent NOT lost)
+  - [ ] Intent "payment gateway feature" is visible in the final plan output
+- **Guards tested:** Intent Preservation (RE-T71), cross-workflow context continuity
+
+### T91 — Cross-Workspace Name Collision Parity Guard
+
+- **Workflow:** `task.md` (Pre-flight — Cross-Workspace Parity)
+- **Synthetic State:**
+  - `workspace.json`: `default: engine`, secondary workspace: `app`
+  - `.design/engine/specifications/core.md` Version: 2.0.0 (Stable)
+  - `.design/app/specifications/core.md` Version: 1.5.0 (Stable) — stale copy
+  - Active workspace: `app`
+- **Action:** User runs `/magic.task` in `app` workspace
+- **Expected:**
+  - [ ] Pre-flight reads `workspace.json` → detects >1 workspace
+  - [ ] Agent scans both workspaces for identically-named spec files
+  - [ ] `core.md` found in both: `engine` v2.0.0, `app` v1.5.0 → version mismatch
+  - [ ] **Cross-Workspace Parity Guard → HALT**
+  - [ ] Report: "Source of Truth Drift: `core.md` exists in `engine` (v2.0.0) and `app` (v1.5.0)."
+  - [ ] Options presented: (a) Sync from engine, (b) Rename unique per workspace, (c) Force ignore
+  - [ ] No plan generated until user resolves
+- **Guards tested:** Cross-Workspace Parity Guard (RE-T74), multi-workspace collision detection, HALT before planning
+
 ```
-**Test Suite Finalized** — v1.9.13
+**Test Suite Finalized** — v1.9.18
 ```

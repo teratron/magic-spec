@@ -23,9 +23,6 @@ dist/
 .hatch/
 uv.lock
 
-# SDD workspace — tracked as part of the engine project
-# .design/ is intentionally committed here
-
 # Dotenv files (local secrets — never commit)
 .env*
 !.env.example
@@ -41,10 +38,19 @@ temp/
 *tmp/
 
 # Magic files
+# SDD workspace — tracked as part of the engine project
+# .design/ is intentionally committed here
 magic.*.md*
 magic.*.toml
 !.agent/workflows/magic.*.md
+.*/rules/
+!.agent/rules/
+.*/skills/
+!.agent/skills/
 
 # Sandbox for local testing
 .sandbox/
 installers/tests/sandbox/
+
+# Local settings (never commit)
+settings.local.json

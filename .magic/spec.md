@@ -151,7 +151,10 @@ graph TD
     - **Template Promotion (C16)**: If a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
+    - **Version Drift Guard**: If VERSION_DRIFT detected for the target file (file header `Version:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: "Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply amendment rule to the external change, or (b) revert file header to registry version." Resume only after user resolves.
+      - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending drift resolution." Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
     - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
+      - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending file resolution." Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file is restored or remapped.
     - **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain Layer 2 stability requirements (§45, Step 52).
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
@@ -201,6 +204,7 @@ Compares specs vs. project filesystem and engine integrity.
 | Path Validity | Referenced files exist? |
 | Layer Integrity | L2 has valid L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
+| **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | `package.json`/`pyproject.toml` fields match? |
 | **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. Hint: use `init` or `update-engine-meta`. |
 
