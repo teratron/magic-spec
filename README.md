@@ -62,8 +62,8 @@ The core design goal is to **keep humans out of the loop as much as possible** �
 Once you describe what you want, the engine takes over:
 
 - Specifications are drafted, reviewed, and promoted through their lifecycle automatically.
-- Tasks are decomposed, prioritized, and assigned default values without prompting (C4).
-- Phases execute end-to-end: retrospective snapshots fire, changelogs are compiled, and context files are regenerated — all silently (C9).
+- Tasks are decomposed, prioritized, and assigned default values without prompting.
+- Phases execute end-to-end: retrospective snapshots fire, changelogs are compiled, and context files are regenerated — all silently.
 - The only moments requiring human input are deliberate gates: approving a spec before implementation begins, and signing off on an external release changelog.
 
 Everything else is automated. The agent does the engineering. You approve the direction.
