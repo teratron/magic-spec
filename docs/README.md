@@ -50,7 +50,7 @@ graph TD
 | **Onboard** | `onboard.md` | Provides an interactive tutorial for developers and AI agents to learn the SDD lifecycle. | [Detailed Guide](onboard.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Simulate** | `simulate.md` | Validates engine logic via 76+ regression tests or Improv Mode stress-testing. | [Detailed Guide](simulate.md) |
-| **Analyze** | `analyze.md` | Bootstraps specs from code; detects coverage gaps, drift, and manual renames (Smart Sync). | [Detailed Guide](analyze.md) |
+| **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -71,7 +71,7 @@ your-project/
     └── specifications/     #    Directory for all .md spec files
 ```
 
-> **Advanced Routing**: For large mono-repos, `.design/` supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](../workspaces.md) for full configuration details.
+> **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](./workspaces.md) for full configuration details.
 
 ## 🚀 Usage Guide
 

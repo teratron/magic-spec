@@ -100,7 +100,7 @@ Before every release, ensure:
 
 1. [ ] Changes are committed and pushed to git.
 2. [ ] Tests pass: `npm test`.
-3. [ ] Checksums are updated: `node .magic/scripts/executor.js generate-checksums` (if `.magic/` files were changed).
+3. [ ] Checksums/Version updated: `node .magic/scripts/executor.js update-engine-meta --workflow {names}`.
 4. [ ] Version is set in `.magic/.version` (The Source of Truth).
 5. [ ] `python installers/scripts/publish.py` executed successfully.
 

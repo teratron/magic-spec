@@ -17,7 +17,7 @@ Universal process for managing project specifications in `.design/specifications
 - **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 - **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
 - **Dispatch**: Use "Raw Input" flow for unstructured ideas.
-- **Ventilation (C21)**: Use `magic spec analyze` to trigger a deep consistency check ("Project Ventilation").
+- **Ventilation (C21)**: Use `magic analyze` to trigger a deep consistency check ("Project Ventilation").
 - **Delta-Editing**: For files >200 lines, use search-replace. Mark with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 - **Closure**: Every task ends with mandatory "Task Completion Checklist".
 - **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
@@ -80,9 +80,11 @@ graph LR
 
 Use this workflow for safe exploration without violating the "Workflow Minimalism" rule.
 
-**Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"magic spec analyze"*, *"Ventilate"*
+### Project Analysis Delegation
 
-> **Project Analysis Delegation**: If the user's intent is to analyze the *existing codebase* (e.g., *"Analyze project"*, *"Scan project"*, *"What does this project do?"*, *"Generate specs from code"*, *"Re-analyze"*, *"Scan for uncovered modules"*, *"magic spec analyze"*, *"Ventilate"*) — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow instead of the generic Explore Mode below.
+**Trigger phrase**: `/magic.analyze`, `/magic.spec analyze`, "Analyze project", "Scan project", "Re-analyze", "Ventilate"
+
+> **Delegation Rule**: If the user's intent is to analyze the *existing codebase* — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow.
 
 1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
 2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).

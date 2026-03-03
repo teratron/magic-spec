@@ -237,6 +237,7 @@ npx magic-spec@latest --update
 Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
 
 - *"Dispatch this thought into specs..."* → Triggers **Specification** workflow.
+- *"Run a project audit"*, *"magic.analyze"* → Triggers **Analyze** (Ventilation) workflow.
 - *"Create an implementation plan"* → Triggers **Task & Plan** workflow.
 - *"Execute the next task"* → Triggers **Run** workflow.
 - *"Add a rule: always use Inter font"* → Triggers **Rule** workflow.

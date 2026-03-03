@@ -2,9 +2,11 @@
 description: Workflow for analyzing existing projects and generating initial specifications.
 ---
 
-# Project Analysis Workflow
+# Project Analysis & Ventilation Workflow
 
-Reverse-engineers code into `.design/` spec proposals. Delegated from `spec.md`.
+Audits project health, syncs registries, and reverse-engineers code into `.design/` spec proposals.
+
+**Triggers**: `/magic.analyze`, `/magic.spec analyze`, "Ventilate", "Analyze project", "Scan project", "Re-analyze"
 
 ## Core Invariants (Mandatory)
 
@@ -66,7 +68,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 ### [Mode C] Project Ventilation
 
-*Trigger*: `/magic.spec analyze`, `/magic.spec`, "magic spec analyze", "Ventilate"
+*Trigger*: `/magic.analyze`, `/magic.spec analyze`, "Ventilate"
 
 > **Audit Policy**: This mode collects ALL issues (Drift, Gaps, Violations) before reporting. It bypasses individual HALT conditions until the final report is presented.
 

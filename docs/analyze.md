@@ -15,19 +15,20 @@ Key Goals:
 
 ## 2. How It Works
 
-The Analyze workflow is a **delegated workflow** — it does not have its own slash command. It is invoked through the Specification Workflow (`/spec`) when the agent detects analysis-related triggers.
+The Analyze workflow is a **first-class workflow** with its own slash command `/magic.analyze`. It can also be invoked through the Specification Workflow (`/magic.spec analyze`) when the agent detects analysis-related triggers.
 
 ```mermaid
 graph LR
-    A["User: 'Analyze project'"] --> B["spec.md"]
-    B --> C["analyze.md"]
+    A["User: '/magic.analyze'"] --> C["analyze.md"]
+    B["User: '/magic.spec analyze'"] --> C
     C --> D["Proposal (artifacts)"]
     D -->|Approved| E["spec.md: Create Specs"]
 ```
 
 ### 2.1 Trigger Phrases
 
-- *"Analyze project"*, *"Scan project"*
+- `/magic.analyze`, `/magic.spec analyze`
+- *"Ventilate"*, *"Analyze project"*, *"Scan project"*
 - *"What does this project do?"*, *"Generate specs from code"*
 - *"Re-analyze"*, *"Scan for uncovered modules"*
 
@@ -111,7 +112,7 @@ In multi-workspace environments, the Analysis workflow respects the `scope` defi
 
 | Workflow | Relationship |
 | :--- | :--- |
-| **Spec** (`spec.md`) | Parent — delegates analysis triggers to `analyze.md` |
+| **Spec** (`spec.md`) | Partner — Analysis results are dispatched via the Spec workflow. |
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created from analysis, tasks can be planned |
 | **Rule** (`rule.md`) | Consumer — detected conventions are proposed for RULES.md |
