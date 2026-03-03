@@ -15,7 +15,7 @@
     },
     "claude": {
         "marker": ".claude",
-        "dest": ".claude/rules",
+        "dest": ".claude/commands",
         "ext": ".md",
         "description": "Claude Code"
     },
