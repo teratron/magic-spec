@@ -27,7 +27,7 @@ graph TD
 ### 1. Mode Selection
 
 - **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user with hint to restore the file from origin or use `/magic.onboard`.
-- **Direct**: `/magic.simulate {workflow}`. Targets specific logic.
+- **Direct**: `/magic.simulate {workflow}` or `/magic.simulate {workflow} {mode}` (e.g., `/magic.simulate spec analyze`). Targets specific logic or sub-modes.
 - **Improv**: Default if 0 args. Synthesize a "Crisis" (e.g., manual drift, broken registry) and perform a **Cognitive Walkthrough** of the full SDD chain (Spec->Task->Run) on this imaginary state to find leaks.
 
 ### 2. Logic Audit & AOP

@@ -17,6 +17,7 @@ Universal process for managing project specifications in `.design/specifications
 - **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 - **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
 - **Dispatch**: Use "Raw Input" flow for unstructured ideas.
+- **Ventilation (C21)**: Use `magic spec analyze` to trigger a deep consistency check ("Project Ventilation").
 - **Delta-Editing**: For files >200 lines, use search-replace. Mark with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 - **Closure**: Every task ends with mandatory "Task Completion Checklist".
 - **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
@@ -79,9 +80,9 @@ graph LR
 
 Use this workflow for safe exploration without violating the "Workflow Minimalism" rule.
 
-**Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*
+**Trigger phrase**: *"Explore"*, *"Brainstorm"*, *"Analyze"*, *"magic spec analyze"*, *"Ventilate"*
 
-> **Project Analysis Delegation**: If the user's intent is to analyze the *existing codebase* (e.g., *"Analyze project"*, *"Scan project"*, *"What does this project do?"*, *"Generate specs from code"*, *"Re-analyze"*, *"Scan for uncovered modules"*), or if `.design/INDEX.md` exists but contains no registered specifications — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow instead of the generic Explore Mode below.
+> **Project Analysis Delegation**: If the user's intent is to analyze the *existing codebase* (e.g., *"Analyze project"*, *"Scan project"*, *"What does this project do?"*, *"Generate specs from code"*, *"Re-analyze"*, *"Scan for uncovered modules"*, *"magic spec analyze"*, *"Ventilate"*) — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow instead of the generic Explore Mode below.
 
 1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
 2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
@@ -143,13 +144,13 @@ graph TD
     - **Template Promotion (C16)**: If a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
-    - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister. **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
+    - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
+    - **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain Layer 2 stability requirements (§45, Step 52).
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
         - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
         - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
         - Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
-4. **Closure**: Post-Update Review → Checklist.
 
 ### Post-Update Review (Mandatory)
 

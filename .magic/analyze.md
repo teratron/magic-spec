@@ -64,6 +64,19 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Similarity >80% → Propose rename/sync instead of delete/create.
 
+### [Mode C] Project Ventilation
+
+*Trigger*: `/magic.spec analyze`, `/magic.spec`, "magic spec analyze", "Ventilate"
+
+> **Audit Policy**: This mode collects ALL issues (Drift, Gaps, Violations) before reporting. It bypasses individual HALT conditions until the final report is presented.
+
+1. **Self-Check**: Compare `.magic/` vs `.checksums`. (Non-halting audit).
+2. **Registry Audit**: Cross-reference `INDEX.md` list vs actual files in `specifications/`.
+3. **Coverage Check**: Scan project directories. Identify folders with NO corresponding spec file (Gap Report).
+4. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+5. **Auto-Repair suggest**: Suggest commands for missing specs or registry cleanup.
+6. **Report**: Consolidated list of errors, warnings, and suggested repairs.
+
 ## Reporting & Dispatch
 
 ### Proposal Template (Artifact)

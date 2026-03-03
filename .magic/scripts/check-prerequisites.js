@@ -45,12 +45,22 @@ if (fs.existsSync(checksumsFile)) {
 
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 const indexPath = path.join(designDir, 'INDEX.md');
-const rulesPath = path.join(designDir, 'RULES.md');
 const planPath = path.join(designDir, 'PLAN.md');
 const tasksPath = path.join(designDir, 'TASKS.md');
 
 const indexExists = fs.existsSync(indexPath);
-const rulesExists = fs.existsSync(rulesPath);
+let rulesPath = path.join(designDir, 'RULES.md');
+let rulesExists = fs.existsSync(rulesPath);
+
+// Multi-workspace fallback: If RULES.md is not in workspace, check root .design/
+if (!rulesExists && designDir !== '.design') {
+    const rootRulesPath = path.join('.design', 'RULES.md');
+    if (fs.existsSync(rootRulesPath)) {
+        rulesPath = rootRulesPath;
+        rulesExists = true;
+    }
+}
+
 const planExists = fs.existsSync(planPath);
 const tasksExists = fs.existsSync(tasksPath);
 

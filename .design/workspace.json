@@ -1,0 +1,23 @@
+{
+  "default": "engine",
+  "workspaces": {
+    "engine": {
+      "description": "Magic SDD core engine logic, workflows, and history.",
+      "scope": [
+        ".magic",
+        "docs",
+        "README.md",
+        "CHANGELOG.md"
+      ]
+    },
+    "installers": {
+      "description": "Thin-client installers (Node/Python), IDE adapters, and release scripts.",
+      "scope": [
+        "installers",
+        "package.json",
+        "pyproject.toml",
+        "uv.lock"
+      ]
+    }
+  }
+}
