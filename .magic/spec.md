@@ -80,6 +80,12 @@ graph LR
 
 Use this workflow for safe exploration without violating the "Workflow Minimalism" rule.
 
+**Blank Trigger (Creative Spark)**: If triggered without specific input or arguments → Become a **Proactive Architect**.
+
+1. Scan `INDEX.md` and actual project structure.
+2. Identify "Uncovered" modules or logical next steps in the architecture.
+3. Propose 3 specific "Creative Sparks" (topics for new specs or refinement) and ask the user for direction or their own idea.
+
 ### Project Analysis Delegation
 
 **Trigger intent**: "/magic.analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate"

@@ -64,7 +64,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Uncovered**: Code found without spec coverage.
     - **Orphaned**: Spec refers to deleted code.
     - **Drifted**: Spec structure differs from code.
-    - **RESCUE (AOP)**: Similarity >80% → Propose rename/sync instead of delete/create.
+    - **RESCUE (AOP)**: Similarity >80% → Propose rename/sync. If similarity <50% despite path correlation → Treat as **Uncovered** (New Spec) + **Orphaned** (Delete Old Spec).
     - **Logic Evolution**: If code structure/logic inside covered directories has significantly changed (e.g., new sub-modules, API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation.
 
 ### [Mode C] Project Ventilation
@@ -77,7 +77,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 2. **Registry Audit**: Cross-reference `INDEX.md` list vs actual files in `specifications/`.
 3. **Coverage Check**: Scan project directories. Identify folders with NO corresponding spec file (Gap Report).
 4. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-5. **Auto-Repair suggest**: Suggest commands for missing specs or registry cleanup.
+5. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered).
 6. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
 ## Reporting & Dispatch
