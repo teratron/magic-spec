@@ -33,6 +33,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
         - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
         - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
     - **Signal**: 🟢 (Clean), 🟡 (Minor drift), 🔴 (>20% Blocked or shadow logic detected).
+    - **DORA Metrics**: Collect `Deployment Frequency` and `Change Failure Rate` (Manual Input / External Hook required).
 4. **Report**: Append to `RETROSPECTIVE.md` (Create from `.magic/templates/retrospective.md` if missing).
 
 ### Snapshot (L1) Execution

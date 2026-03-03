@@ -19,6 +19,13 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 **Tasks total:** {count} (Done: {count}, Blocked: {count}, Cancelled: {count})
 **RULES.md §7 entries:** {count}
 
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| :--- | :--- | :--- | :--- |
+| **Deployment Frequency** | {N} per {period} | Manual / CI Hook | {notes} |
+| **Change Failure Rate** | {N}% | Manual / CI Hook | {failed deploys / total} |
+
 ### 📊 Observations
 
 | # | Severity | Area | Observation | Evidence |
