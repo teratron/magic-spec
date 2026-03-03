@@ -1004,7 +1004,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No execution begins until user chooses to proceed.
 - **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.
 
-### T47 — Spec Merge Refactor (Section Re-mapping)
+### T77 — Spec Merge Refactor (Section Re-mapping)
 
 - **Workflow:** `spec.md` + `task.md` (Structural Refactor)
 - **Synthetic State:**
@@ -1020,7 +1020,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
 - **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
 
-### T48 — Simulation: Suite Integrity Failure
+### T78 — Simulation: Suite Integrity Failure
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
@@ -1033,7 +1033,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent falls back to **Improv Mode** until fixed.
 - **Guards tested:** Suite Integrity (Structural requirements), Fallback logic.
 
-### T49 — Run: Changelog Precision (Filter Blocked)
+### T79 — Run: Changelog Precision (Filter Blocked)
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
@@ -1048,7 +1048,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] "Started B" is **NOT** present in the changelog.
 - **Guards tested:** Changelog Filtering (Precision), Reporting Integrity.
 
-### T50 — Rule: Rules Parity Sync Offer
+### T80 — Rule: Rules Parity Sync Offer
 
 - **Workflow:** `rule.md`
 - **Synthetic State:**
@@ -1200,7 +1200,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Proposal only includes modules found within the scoped paths.
 - **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.
 
-### T60 — Spec T4 Rule with Missing Target File (HALT Persistence)
+### T81 — Spec T4 Rule with Missing Target File (HALT Persistence)
 
 - **Workflow:** `spec.md` (T4 + Existence Guard)
 - **Synthetic State:**
@@ -1307,6 +1307,18 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** if the user tries to add NEW features to `core-l2.md` while it's in quarantine.
 - **Guards tested:** C12.1 Stabilization Exception, Context-Aware Planning.
 
+### T82 — Init Migration: Existing Project Fallback
+
+- **Workflow:** `init.md` + `run.md`
+- **Synthetic State:**
+  - Project root has `.design/` with existing specs/plans.
+  - `.design/workspace.json` is missing.
+- **Action:** User runs `/magic.run`
+- **Expected:**
+  - [ ] Agent falls back to root `.design/`.
+  - [ ] Agent does not trigger an infinite loop of `init`.
+  - [ ] `executor.js` identifies that `workspace.json` is missing and proceeds with root directory.
+
 ```
-**Test Suite Finalized** — v1.9.9
+**Test Suite Finalized** — v1.9.10
 ```

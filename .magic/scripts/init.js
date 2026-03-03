@@ -171,6 +171,8 @@ Implementation plans in \`PLAN.md\` must follow a nested hierarchy: **Phase → 
 
 If a Layer 1 (Concept) specification loses its \`Stable\` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to \`RFC\` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in \`INDEX.md\`.
 
+**C12.1 — Stabilization Exception**: Tasks explicitly intended to stabilize or fix mismatches to regain \`Stable\` status for the parent may bypass this quarantine.
+
 ### C13 — Agent Cognitive Discipline
 
 All AI agents operating within the Magic SDD framework must adhere to strict cognitive discipline to prevent hallucinations and silent failures:
@@ -190,6 +192,10 @@ To ensure accurate engine state tracking and reliable updates, any modification 
 3. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
 5. **Simulation Exemption**: Purely cognitive simulations, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
+
+### C15 — Workspace Scope Isolation
+
+When operating in a workspace with a defined scope (via \`.design/workspace.json\`), the agent MUST restrict all analysis and file operations to the directories specified in the scope. All other project directories are treated as out-of-scope to ensure logical isolation and prevent context leakage or accidental modification of unrelated modules.
 
 ## Document History
 | Version | Date | Author | Description |

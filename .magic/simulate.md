@@ -43,6 +43,10 @@ Scan for:
 ### 3. Reporting & Fixes
 
 - **Individual Audit**: Table with `Dimension | Finding | Outcome (PASS/FAIL/ROUGH EDGE)`.
+- **Cognitive Coverage Report**:
+  - **Instruction Density**: Evaluate if instructions are too verbose or too sparse.
+  - **Guard Resilience**: Simulate attempts to bypass C1-C14 and report results.
+  - **Invariant Compliance**: Explicitly check if the workflow respects all core engine rules.
 - **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
 - **Succession**: Run `/magic.simulate test` post-fix to ensure 0 regressions.
@@ -53,6 +57,7 @@ Scan for:
 Simulation Checklist — {target}
   ☐ Cognitive-only guard respected (no synthetic script execution)
   ☐ Logic walkthrough completed; rough edges/ambiguity identified
+  ☐ Cognitive Coverage: Metrics (Density, Resilience, Compliance) reported
   ☐ AOP: instruction density and context economy optimized
   ☐ Fixes: proposed surgically; new regression test added to suite.md
   ☐ Engine Meta: C14 bump performed if source modified

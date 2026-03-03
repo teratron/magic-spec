@@ -45,10 +45,11 @@ graph TD
 5. **Decompose**: Split Phase 1 into 2-3 tasks per spec.
     - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
     - **Tracks**: Group tasks by file independence.
+    - **Testing (Mandatory)**: Every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
 6. **Sync (Update Mode)**:
-    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]` with specific reason.
+    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]` with specific reason. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
     - **Phantom Specs**: If spec in PLAN/INDEX but missing from disk → Cancel `Todo` / `Pending`; archive `Done`. Block active tasks.
-    - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files.
+    - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: Keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
     - **Renames**: Global search-and-replace on filename changes (exclude archives).
 
 ### Plan Write-back
@@ -64,6 +65,7 @@ Task Workflow Checklist — {operation}
   ☐ All registered specs read; no orphans/phantoms left unaddressed
   ☐ Circular dependencies checked; layer order 1->2 respected
   ☐ Selective Planning (C6) and Quarantine (C12) applied
+  ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ PLAN.md / TASKS.md written; CONTEXT.md regenerated
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
