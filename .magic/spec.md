@@ -17,7 +17,7 @@ Universal process for managing project specifications in `.design/specifications
 - **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 - **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
 - **Dispatch**: Use "Raw Input" flow for unstructured ideas.
-- **Ventilation (C21)**: Use `magic analyze` to trigger a deep consistency check ("Project Ventilation").
+- **Ventilation (C21)**: Use `magic analyze` to trigger a deep consistency check.
 - **Delta-Editing**: For files >200 lines, use search-replace. Mark with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 - **Closure**: Every task ends with mandatory "Task Completion Checklist".
 - **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
@@ -82,7 +82,7 @@ Use this workflow for safe exploration without violating the "Workflow Minimalis
 
 ### Project Analysis Delegation
 
-**Trigger phrase**: `/magic.analyze`, `/magic.spec analyze`, "Analyze project", "Scan project", "Re-analyze", "Ventilate"
+**Trigger intent**: "/magic.analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate"
 
 > **Delegation Rule**: If the user's intent is to analyze the *existing codebase* — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow.
 
@@ -122,7 +122,7 @@ graph TD
 
 - **Ambiguity**: Ask one clarifying question; do not guess.
 - **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
-- **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval.
+- **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 
 ### Creating a New Specification
 

@@ -166,7 +166,7 @@ The engine must proactively identify and repair its own metadata. If `executor.j
 
 ### C21 — Project Ventilation (Analyze)
 
-The command `magic spec analyze` (or `Analyze project`) triggers "Project Ventilation": a deep scan that compares the current filesystem against the `INDEX.md` and `RULES.md`. It must identify:
+The command `/magic.analyze` (or `Analyze project`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against `INDEX.md` and `RULES.md`. It must identify:
 
 - **Registry Drift**: Specs in INDEX but missing on disk.
 - **Coverage Gaps**: Code folders without corresponding specs.

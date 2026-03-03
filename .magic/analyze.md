@@ -6,7 +6,7 @@ description: Workflow for analyzing existing projects and generating initial spe
 
 Audits project health, syncs registries, and reverse-engineers code into `.design/` spec proposals.
 
-**Triggers**: `/magic.analyze`, `/magic.spec analyze`, "Ventilate", "Analyze project", "Scan project", "Re-analyze"
+**Triggers**: `/magic.analyze`, "Ventilate", "Analyze project", "Scan project", "Re-analyze"
 
 ## Core Invariants (Mandatory)
 
@@ -51,7 +51,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 1. Build full project map.
 2. Inferred stack + architecture style.
 3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries.
-4. **Ghost Registry Guard**: If `specifications/` is NOT empty but `INDEX.md` is blank → Prioritize **Registry Repair** (Map files to registry) before proposing new content.
+4. **Registry Healing Guard**: If `INDEX.md` is blank/corrupted or mismatches the content of `specifications/` (Ghost/Zombie entries) → Prioritize **Registry Healing**: automatically re-map disk files to the registry and fix orphan paths before proposing new content.
 
 ### [Mode B] Re-Analysis (Delta Mode)
 
@@ -65,10 +65,11 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Orphaned**: Spec refers to deleted code.
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Similarity >80% → Propose rename/sync instead of delete/create.
+    - **Logic Evolution**: If code structure/logic inside covered directories has significantly changed (e.g., new sub-modules, API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation.
 
 ### [Mode C] Project Ventilation
 
-*Trigger*: `/magic.analyze`, `/magic.spec analyze`, "Ventilate"
+*Trigger*: `/magic.analyze`, "Ventilate"
 
 > **Audit Policy**: This mode collects ALL issues (Drift, Gaps, Violations) before reporting. It bypasses individual HALT conditions until the final report is presented.
 

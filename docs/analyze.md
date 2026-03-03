@@ -15,19 +15,19 @@ Key Goals:
 
 ## 2. How It Works
 
-The Analyze workflow is a **first-class workflow** with its own slash command `/magic.analyze`. It can also be invoked through the Specification Workflow (`/magic.spec analyze`) when the agent detects analysis-related triggers.
+The Analyze workflow is a **first-class workflow** with its own slash command `/magic.analyze`. It is invoked when the agent detects analysis-related triggers or when explicit project audits are requested.
 
 ```mermaid
 graph LR
     A["User: '/magic.analyze'"] --> C["analyze.md"]
-    B["User: '/magic.spec analyze'"] --> C
+    B["User: '/magic.analyze'"] --> C
     C --> D["Proposal (artifacts)"]
     D -->|Approved| E["spec.md: Create Specs"]
 ```
 
 ### 2.1 Trigger Phrases
 
-- `/magic.analyze`, `/magic.spec analyze`
+- `/magic.analyze`
 - *"Ventilate"*, *"Analyze project"*, *"Scan project"*
 - *"What does this project do?"*, *"Generate specs from code"*
 - *"Re-analyze"*, *"Scan for uncovered modules"*
