@@ -29,6 +29,8 @@ if (!fs.existsSync(workspacePath)) {
     };
     fs.writeFileSync(workspacePath, JSON.stringify(workspaceContent, null, 2));
     console.log(`Created ${workspacePath.replace(/\\/g, '/')}`);
+} else {
+    console.log(`Registry preservation: ${workspacePath.replace(/\\/g, '/')} already exists. Skipping.`);
 }
 
 const date = new Date().toISOString().split('T')[0];
@@ -57,6 +59,8 @@ Central registry of all project specifications and their current state.
 `;
     fs.writeFileSync(indexPath, indexContent);
     console.log(`Created ${indexPath.replace(/\\/g, '/')}`);
+} else {
+    console.log(`Registry preservation: ${indexPath.replace(/\\/g, '/')} already exists. Skipping.`);
 }
 
 const rulesPath = path.join(designDir, 'RULES.md');
@@ -199,7 +203,7 @@ When operating in a workspace with a defined scope (via \`.design/workspace.json
 
 ### C16 — Micro-spec Convention
 
-For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. This reduces administrative overhead while maintaining the core "No code without spec" invariant.
+For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
 
 ## Document History
 | Version | Date | Author | Description |
@@ -209,4 +213,6 @@ For minor features, simple bugfixes, or changes expected to be under 50 lines of
     rulesContent = rulesContent.replace(/INIT_DATE/g, date);
     fs.writeFileSync(rulesPath, rulesContent);
     console.log(`Created ${rulesPath.replace(/\\/g, '/')}`);
+} else {
+    console.log(`Registry preservation: ${rulesPath.replace(/\\/g, '/')} already exists. Skipping.`);
 }

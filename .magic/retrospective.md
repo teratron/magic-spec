@@ -47,6 +47,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 Retro Checklist — {Level}
   ☐ Context: Zero-Prompt resolution; only RETROSPECTIVE.md modified
   ☐ Data: INDEX (statuses), PLAN (coverage), TASKS (metrics) analyzed
+  ☐ DORA Metrics: Delivery performance (DF/CFR) recorded for L2
   ☐ Deep Audit: Shadow logic and Logic-to-Spec parity verified
   ☐ L1: Snapshot row appended; Phase N archived to archives/tasks/ (C8)
   ☐ L2: Actionable recommendations mapped to evidence; trends calculated

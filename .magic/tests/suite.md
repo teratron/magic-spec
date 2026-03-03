@@ -1319,6 +1319,26 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does not trigger an infinite loop of `init`.
   - [ ] `executor.js` identifies that `workspace.json` is missing and proceeds with root directory.
 
+### T83 — Micro-spec Promotion Guard
+
+- **Workflow:** `spec.md` (Update flow)
+- **Synthetic State:** Spec `bug-x.md` using `micro-spec.md` template, currently 45 lines.
+- **Action:** User expands logic; new content makes it 75 lines.
+- **Expected:**
+  - [ ] Agent detects 50+ line threshold.
+  - [ ] Agent proposes converting to `specification.md` template (Standard).
+  - [ ] **HALT** if agent attempts to keep 75 lines in a legacy micro-template.
+
+### T84 — Init Migration: Index Preservation
+
+- **Workflow:** `init.md` (Migration Mode)
+- **Synthetic State:** Project with old `.design/INDEX.md` but no `workspace.json`.
+- **Action:** User runs `/magic.init` or Auto-Init trigger.
+- **Expected:**
+  - [ ] Agent creates `workspace.json`.
+  - [ ] **Guard**: Agent DOES NOT overwrite existing `INDEX.md` with default template.
+  - [ ] Existing specifications remain registered.
+
 ```
-**Test Suite Finalized** — v1.9.10
+**Test Suite Finalized** — v1.9.12
 ```

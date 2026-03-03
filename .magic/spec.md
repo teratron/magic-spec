@@ -140,6 +140,7 @@ graph TD
     - `minor` (0.X.0) — extensions.
     - `major` (X.0.0) — breaking redesign.
     - Append row to `Document History`.
+    - **Template Promotion (C16)**: If a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
     - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister. **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
