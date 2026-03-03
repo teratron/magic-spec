@@ -197,6 +197,10 @@ To ensure accurate engine state tracking and reliable updates, any modification 
 
 When operating in a workspace with a defined scope (via \`.design/workspace.json\`), the agent MUST restrict all analysis and file operations to the directories specified in the scope. All other project directories are treated as out-of-scope to ensure logical isolation and prevent context leakage or accidental modification of unrelated modules.
 
+### C16 — Micro-spec Convention
+
+For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. This reduces administrative overhead while maintaining the core "No code without spec" invariant.
+
 ## Document History
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |

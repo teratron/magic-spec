@@ -55,10 +55,8 @@ Scan for:
 
 ```
 Simulation Checklist — {target}
-  ☐ Cognitive-only guard respected (no synthetic script execution)
-  ☐ Logic walkthrough completed; rough edges/ambiguity identified
-  ☐ Cognitive Coverage: Metrics (Density, Resilience, Compliance) reported
-  ☐ AOP: instruction density and context economy optimized
-  ☐ Fixes: proposed surgically; new regression test added to suite.md
-  ☐ Engine Meta: C14 bump performed if source modified
+  ☐ Cognitive-only guard: No physical scripts written or executed
+  ☐ Logic walkthrough: Rough edges or logical gaps identified
+  ☐ Cognitive Coverage: Density, Resilience, and Compliance metrics reported
+  ☐ Engine Meta: C14 bump performed (if .magic/ modified)
 ```

@@ -39,9 +39,7 @@ graph TD
 
 ```
 Onboarding Checklist — Tutorial Complete
-  ☐ Toy spec created/registered; Plan/Task structure generated
   ☐ Lifecycle: Spec -> Plan -> Task -> Done -> Archive demonstrated
-  ☐ User gates (Wait steps) respected; instructor role maintained
-  ☐ Safety: Production data check passed; Backup offered if needed
-  ☐ Engine Meta: C14 bump if .magic/ files modified
+  ☐ User gates: All "Wait for confirmation" steps respected
+  ☐ Safety: Production data check passed; environment clean
 ```

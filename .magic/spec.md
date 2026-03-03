@@ -127,9 +127,9 @@ graph TD
     - `checksums_mismatch` → **HALT**. Restore integrity.
     - Missing `.design/` → Auto-Run `.magic/init.md`.
 2. **Creation**:
-    - Use `.magic/templates/specification.md`.
-    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}`.
-    - Register in `INDEX.md` (Name, Status, Layer, Version).
+    - Use \`.magic/templates/specification.md\` (Standard) or \`.magic/templates/micro-spec.md\` (Micro-spec as per C16).
+    - Set \`Layer\` (1: Concept, 2: Impl). If L2, add \`Implements: {L1-file}\`.
+    - Register in \`INDEX.md\` (Name, Status, Layer, Version).
 3. **Closure**: Post-Update Review → Checklist.
 
 ### Updating an Existing Specification
