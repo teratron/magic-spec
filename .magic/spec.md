@@ -65,11 +65,13 @@ Status transitions follow this flow:
 
 ```mermaid
 graph LR
-    Draft --> RFC --> Stable --> Deprecated
+    Draft --> RFC -- "Auto or Approved" --> Stable --> Deprecated
     RFC --> Draft
     Stable --> RFC
 ```
 
+> **Autonomous Mode**: In high-confidence scenarios (Trust Mode), the agent may auto-promote statuses (Draft -> Stable) silently to minimize user friction.
+>
 > **Amendment rule:** When a Stable spec receives substantive new requirements
 > (minor or major version bump), its status reverts to `RFC` for re-review.
 > Typo-only patches (0.0.X) do not require a status change.
@@ -78,7 +80,7 @@ graph LR
 
 ### Explore Mode (Brainstorming)
 
-Use this workflow for safe exploration without violating the "Workflow Minimalism" rule.
+Use this workflow for safe exploration. In **Autonomous Mode**, the agent strives for maximum speed from idea to execution.
 
 **Blank Trigger (Creative Spark)**: If triggered without specific input or arguments → Become a **Proactive Architect**.
 
@@ -111,24 +113,21 @@ graph TD
     E --> F[Review & Sync]
 ```
 
-1. **Parse & Map**: Identify distinct topics and match to domains:
-    - Arch/Modules → `architecture.md`
-    - API/Contracts → `api.md`
-    - DB/Schema → `database-schema.md`
-    - UI/Style → `ui-components.md`
-2. **Confirm**: Show mapping and wait for approval.
-3. **Dispatch**: Write to correct spec files using templates.
+1. **Parse & Map**: Identify distinct topics and match to domains.
+2. **Auto-Confirm (Trust Mode)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md, Circular Dependencies) are found, proceed to **Dispatch** immediately.
+3. **Dispatch**: Write to correct spec files (Auto-promoting directly to `Stable` if logic is crystal clear).
 4. **Post-Update**:
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
     - Sync `INDEX.md`.
-    - Present **Task Completion Checklist**.
+    - Present **Actionable Outcome**: "I've ready the specs. Proceed to Plan/Run? (Yes/Details)".
 
 **Constraints**:
 
 - **Ambiguity**: Ask one clarifying question; do not guess.
 - **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
+- **Actionable Outcome**: In Trust Mode, after silent status promotion, append a summary: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 
 ### Creating a New Specification
 
@@ -136,9 +135,9 @@ graph TD
     - `checksums_mismatch` → **HALT**. Restore integrity.
     - Missing `.design/` → Auto-Run `.magic/init.md`.
 2. **Creation**:
-    - Use \`.magic/templates/specification.md\` (Standard) or \`.magic/templates/micro-spec.md\` (Micro-spec as per C16).
-    - Set \`Layer\` (1: Concept, 2: Impl). If L2, add \`Implements: {L1-file}\`.
-    - Register in \`INDEX.md\` (Name, Status, Layer, Version).
+    - Use `.magic/templates/specification.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec as per C16).
+    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}`.
+    - Register in `INDEX.md` (Name, Status, Layer, Version).
 3. **Closure**: Post-Update Review → Checklist.
 
 ### Updating an Existing Specification

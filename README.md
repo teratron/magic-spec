@@ -55,16 +55,23 @@ root-project/
 
 Magic Spec is built around a single conviction: **AI agents write better code when they are forced to think before they act.** Left unconstrained, they jump straight to implementation — producing code that is fragile, misaligned, and expensive to refactor. Magic Spec installs a structured pipeline that makes this impossible.
 
-### Human-Minimal Engineering
+### Human-Minimal Engineering (Autonomous Partner)
 
-The core design goal is to **keep humans out of the loop as much as possible** — without sacrificing control over what actually matters.
+The core design goal is to **keep humans out of the loop as much as possible** — without sacrificing control over what actually matters. Magic Spec moves from manual "Status Gates" to an **Autonomous Partner** model.
+
+#### Trust Mode: Encapsulated Logic
 
 Once you describe what you want, the engine takes over:
 
-- Specifications are drafted, reviewed, and promoted through their lifecycle automatically.
-- Tasks are decomposed, prioritized, and assigned default values without prompting.
-- Phases execute end-to-end: retrospective snapshots fire, changelogs are compiled, and context files are regenerated — all silently.
-- The only moments requiring human input are deliberate gates: approving a spec before implementation begins, and signing off on an external release changelog.
+- **Type A — "AI Trust"**: You provide intent, the agent handles the rest (`Draft -> RFC -> Stable -> Plan -> Run`). The internal SDD ceremony is **encapsulated** — you only see the result and a final "Go" gate.
+- **Type B — "Expert Audit"**: You maintain full control. Inspect `.design/` at any time to review specifications and plans. The rigor is there for when you need it.
+
+#### Silent Orchestration
+
+- **Auto-Stabilization**: Specifications are drafted, reviewed, and promoted to `Stable` automatically if the logic is clear.
+- **Zero-Prompt Planning**: Tasks are decomposed, prioritized, and scheduled without interrupting your flow.
+- **Silent Operations**: Phases execute end-to-end: retrospectives, changelogs, and context regeneration happen silently.
+- **Single Execution Gate**: The only mandatory prompt is the final sign-off before implementation begins.
 
 Everything else is automated. The agent does the engineering. You approve the direction.
 

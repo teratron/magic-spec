@@ -20,12 +20,14 @@ The Analyze workflow is a **first-class workflow** with its own slash command `/
 ```mermaid
 graph LR
     A["User: '/magic.analyze'"] --> C["analyze.md"]
-    B["User: '/magic.analyze'"] --> C
     C --> D["Proposal (artifacts)"]
-    D -->|Approved| E["spec.md: Create Specs"]
+    D -- "Trust Mode (Auto)" --> E["spec.md: Create Specs"]
+    D -- "Manual Review" --> E
 ```
 
-### 2.1 Trigger Phrases
+### 2.1 Autonomous Dispatch (Trust Mode)
+
+In its latest evolution, the Analysis workflow supports **Auto-Dispatch**. If the engine is in **Trust Mode** and the analysis results are high-confidence (clear structure, well-defined modules), the agent can automatically promote the proposal to active specifications in `.design/` without a manual review gate.
 
 - `/magic.analyze`
 - *"Ventilate"*, *"Analyze project"*, *"Scan project"*

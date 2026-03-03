@@ -31,9 +31,14 @@ When running `magic.task`, the engine reads all files in `.design/INDEX.md`, bui
 
 The engine automatically breaks down each specification into 2-3 atomic tasks. Each task is assigned a unique ID (e.g., `[T-1A01]`) and mapped to a specific section of a spec file.
 
-### 3.3 Selective Planning (C6)
+### 3.3 Autonomous Selective Planning (C6)
 
-The system distinguishes between **Draft** specs (sent to the Backlog) and **Stable** specs (candidates for the active plan).
+The engine automatically handles specification selection based on their status:
+
+- **Stable Specs**: Automatically pulled into the active implementation plan.
+- **Draft/RFC Specs**: Automatically moved to the Backlog.
+
+This removes the need for manual selection prompts, ensuring that the plan always reflects the latest stable design without user intervention.
 
 - **Quarantine Cascade (C12)**: If an active task's parent specification is no longer **Stable** (due to a downgrade or quarantine), the task is automatically marked as `Blocked [!]` and moved back to the Backlog.
 

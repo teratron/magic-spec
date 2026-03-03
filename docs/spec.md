@@ -21,14 +21,16 @@ To bridge the gap between abstract ideas and concrete implementation, Magic uses
 
 > **Layer Respect**: To maintain logical integrity, a Layer 2 (Implementation) specification cannot transition to **Stable** status unless its parent Layer 1 (Concept) specification is also **Stable**.
 
-## 3. Status Lifecycle
+## 3. Status Lifecycle (Encapsulated)
 
-Specifications move through a strict lifecycle to ensure quality and maturity:
+Specifications move through a lifecycle to ensure logical maturity, but in **Trust Mode**, these transitions are hidden from the user to minimize friction:
 
-1. **Draft**: Initial exploration and drafting.
-2. **RFC (Request for Comments)**: Completed design ready for team/user review.
-3. **Stable**: Approved design; implementation can now be planned.
-4. **Deprecated**: Superseded or removed functionality, kept for history.
+1. **Draft**: Initial exploration and mapping.
+2. **RFC (Request for Comments)**: Completed design, open for feedback. In Trust Mode, this is a transient state.
+3. **Stable**: Approved/Finalized design. **Auto-Stabilization** occurs if the logic is high-confidence and non-conflicting.
+4. **Deprecated**: Superseded or removed functionality.
+
+> **Autonomous Mode**: The engine may auto-promote statuses (`Draft -> Stable`) silently if it identifies no architectural risks or contradictions with `RULES.md`.
 
 ## 4. Automation & Workflows
 

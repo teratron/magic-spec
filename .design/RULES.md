@@ -17,7 +17,7 @@ Read by the agent before every operation. Updated only via explicit triggers.
 ## 2. Status Rules
 
 - **Draft → RFC**: all required sections filled, ready for review.
-- **RFC → Stable**: reviewed, approved, no open questions.
+- **RFC → Stable**: reviewed and approved (Human Signal) **OR** Auto-Stabilized by a high-confidence agent if logic fits the architecture perfectly.
 - **RFC → Draft**: needs rework or significant revision.
 - **Stable → RFC**: substantive amendment (minor/major bump) requires re-review.
 - **Any → Deprecated**: explicitly superseded; replacement must be named.
@@ -76,14 +76,15 @@ Skip the user story priority prompt. The agent must automatically assign default
 
 `magic.onboard` is explicitly authorized as a standardized, interactive entry point for new developers. This is a one-time, intentional exception to C2 to facilitate rapid team scaling and engine adoption.
 
-### C6 — Selective Planning
+### C6 — Autonomous Selective Planning
 
-During plan updates, specs are handled by their status:
+During plan updates, specifications are automatically handled by their status to minimize user friction:
 
-- **Draft specs**: automatically moved to `## Backlog` in `PLAN.md` without user input.
-- **RFC specs**: surfaced to user with a recommendation to backlog until Stable.
-- **Stable specs**: agent asks which ones to pull into the active plan. All others go to Backlog.
-- **Orphaned specs** (in INDEX.md but absent from both plan and backlog): flagged as critical blockers.
+- **Draft/RFC specs**: Automatically moved to `## Backlog` in `PLAN.md` without prompting.
+- **Stable specs**: Automatically pulled into the active plan.
+- **Orphaned specs** (in INDEX.md but absent from both plan and backlog): Flagged as critical blockers.
+
+**Note**: Safety is maintained through **Structural Validation** (check-prerequisites) rather than status gates. If the model is from a "Strong Tier", guards are optimized for speed; "Weak Tier" models trigger more explicit consistency checks.
 
 ### C7 — Universal Script Executor
 
@@ -96,9 +97,13 @@ Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructio
 
 On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` to `$DESIGN_DIR/archives/tasks/`. The link in `TASKS.md` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
 
-### C9 — Zero-Prompt Automation
+### C9 — Zero-Prompt Automation (Trust Mode)
 
-Once the user approves the plan and task breakdown, the agent proceeds through execution and conclusion workflows without further confirmation prompts. Silent operations include: retrospective Level 1, changelog Level 1, CONTEXT.md regeneration, and status updates. The single exception is changelog Level 2 (external release artifact) which requires one explicit user approval before writing.
+Once the user provides high-level intent (ideation), the agent is authorized to proceed through the entire lifecycle (Draft → RFC → Stable → Plan → Task → Run) without further confirmation prompts, provided the logic is clear and non-conflicting. Silent operations include: status auto-promotion, planning, retrospective Level 1, changelog Level 1, and CONTEXT.md regeneration. Critical exceptions requiring explicit user approval:
+
+1. **Changelog Level 2** (external release artifacts).
+2. **Destructive Actions** (deleting files or specifications).
+3. **Ambiguous Triggers** (where >1 architectural path exists).
 
 ### C10 — Nested Phase Architecture
 

@@ -12,6 +12,7 @@ Key Goals:
 - **Code Quality & Engineering Standards**: Enforcing modern design principles (OOP, SOLID, DRY, KISS, YAGNI), Feature-Sliced Design, and stack-specific linters.
 - **Mandatory Testing**: Ensuring all new or modified logic is covered by automated tests before completion.
 - **State Integrity**: Automatically updating task statuses in `TASKS.md` and synchronously closing checkboxes (`[x]`) in `PLAN.md` after every operation (preventing "Plan Amnesia").
+- **Single Execution Gate**: Concentrating all manual approvals into one high-level "Go" confirm before implementation begins, following the **Trust Mode** philosophy.
 - **Maximum Automation**: Running post-implementation logic (changelogs, retrospectives, version bumps) with minimal user interruption.
 
 ## 2. Execution Modes

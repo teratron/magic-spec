@@ -35,7 +35,7 @@ graph TD
 2. **Init**: `node .magic/scripts/executor.js init`.
     - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
 3. **Verify**: Ensure all 5 artifacts exist. HALT on failure.
-4. **Hint**: If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected → Suggest: *"Analyze project"*.
+4. **Hint**: If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → Suggest: *"Analyze project"*.
 
 ### Structure Created
 

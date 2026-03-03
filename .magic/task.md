@@ -10,7 +10,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
     - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
-    - **User Gate**: Show phase structure and task breakdown BEFORE writing files.
+    - **User Gate**: In **Trust Mode**, show a concise summary (Phases & Goals) and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
@@ -19,7 +19,8 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Circular Guard**: Deep scan `Related Specifications` across ALL levels. If ANY cycle (N-level) detected → **HALT**.
     - **Cycle Resolution**: Suggest breaking the chain by identifying the "weakest link" (Related Spec vs Implements).
     - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
-    - **Selective Planning (C6)**: `Draft` → Backlog. `RFC` → Recommend Backlog. `Stable` → Propose for Plan.
+    - **Autonomous Selection (C6)**: **Default**: Auto-pull ALL `Stable` specs into the active `PLAN.md`. Move `Draft`/`RFC` to `## Backlog`. No user prompt required unless a priority conflict is detected.
+    - **Actionable Outcome**: After planning, show: `[Auto-Plan] {N} specs added to Phase {X}, {M} moved to Backlog.`
 
 ## Workflow: Planning & Orchestration
 

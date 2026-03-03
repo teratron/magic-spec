@@ -8,16 +8,27 @@ Magic Spec is built around a single conviction: **AI agents write better code wh
 
 ### Human-Minimal Engineering
 
-The core design goal is to **keep humans out of the loop as much as possible** — without sacrificing control over what actually matters.
+### Autonomous Partner (The "Magic" in Magic Spec)
+
+The core design goal is to **keep humans out of the loop as much as possible** — without sacrificing control over what actually matters. In its latest evolution, Magic Spec moves from a "Manual Gateway" model to an **Autonomous Partner** model.
+
+#### The Two User Profiles
+
+Magic Spec is designed to support two fundamental modes of operation:
+
+- **Type A — "AI Trust" (High Velocity)**: The user provides a high-level idea or intent. The engine handles the internal lifecycle (`Draft -> RFC -> Stable -> Plan -> Task`) silently under the hood. The user only sees a final "Actionable Outcome" and a single "Go" gate before execution. Internal statuses are **encapsulated**.
+- **Type B — "Expert Audit" (High Rigor)**: The user is a senior engineer who wants full transparency. They can inspect the `.design/` workspace at any time to review specifications, plans, and rules. The internal statuses provide the audit trail and structural integrity they require.
+
+#### Trust Mode & Auto-Stabilization
 
 Once you describe what you want, the engine takes over:
 
-- Specifications are drafted, reviewed, and promoted through their lifecycle automatically.
-- Tasks are decomposed, prioritized, and assigned default values without prompting (C4).
-- Phases execute end-to-end: retrospective snapshots fire, changelogs are compiled, and context files are regenerated — all silently (C9).
-- The only moments requiring human input are deliberate gates: approving a spec before implementation begins, and signing off on an external release changelog.
+- **Encapsulated Lifecycle**: Specifications are auto-promoted through their lifecycle (`Draft -> RFC -> Stable`) if the logic is clear and non-conflicting.
+- **Structural Safety**: Security is maintained through **Structural Validation** (check-prerequisites) rather than manual status gates. If the model is from a "Strong Tier", guards are optimized for speed; "Weak Tier" models trigger more explicit consistency checks.
+- **Zero-Prompt Orchestration**: Tasks are decomposed, prioritized, and planned without interrupting the user.
+- **Silent Operations**: Phases execute end-to-end: retrospective snapshots fire, changelogs are compiled, and context files are regenerated — all silently (C9).
 
-Everything else is automated. The agent does the engineering. You approve the direction.
+Everything else is automated. The agent does the engineering. You approve the direction at the final execution gate.
 
 ### Two-Layer Specification Model
 

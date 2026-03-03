@@ -96,6 +96,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Registry Sync: Update `INDEX.md`. Bump Registry version.
     - Post-Update Review: Run on all created specs before closing.
     - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
+    - **Actionable Outcome**: After silent dispatch, show: `[Auto-Analyze] {N} specs proposed and created as Stable.`
 
 ## Task Completion Checklist
 

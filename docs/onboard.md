@@ -12,9 +12,12 @@ Key Goals:
 - **Workflow Discovery**: Demonstrating how the engine files and scripts work together.
 - **Safety**: Ensuring the tutorial doesn't interfere with real production work.
 
-## 2. Interactive Pacing (Wait Gates)
+## 2. Pacing & Role (Autonomous Partner)
 
-The onboarding process is structured into discrete, manageable steps. To ensure the user has time to absorb the concepts, the agent is strictly mandated to **Wait** for user confirmation (e.g., "ready", "ok", "да") after completing each step before proceeding to the next.
+While the onboarding process is structured into discrete steps to ensure the user has time to absorb the concepts, it introduces the **Autonomous Partner** role used in production:
+
+- **Interactive Tutorial**: The tutorial uses **Wait Gates** (e.g., "ready", "ok", "да") to let you inspect each file as it's created.
+- **Production Trust Mode**: The tutorial explains that in real work, the engine defaults to **Trust Mode**—where the agent auto-stabilizes specs and plans silently to maximize your velocity.
 
 1. **Introduction**: Explaining the "Spec-First" philosophy and cross-platform architecture.
 2. **The Toy Spec**: Creating a simple "console logger" specification.

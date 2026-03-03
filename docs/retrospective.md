@@ -30,7 +30,9 @@ The system tracks several categories of data to assess project health:
 - **Workflow Efficiency**: Transition counts (e.g., how many specs returned from RFC to Draft).
 - **Dispatch Accuracy**: Orphaned vs. Planned specifications.
 - **Task Execution Health**: Completion velocity and frequency of "Blocked" tasks.
+- **Engineering Performance**: DORA metrics (Deployment Frequency and Change Failure Rate).
 - **Constitution Health**: Stability of `.design/RULES.md` and rule accumulation rate.
+- **Traceability (Shadow Logic)**: Detects code logic that hasn't been defined in a Stable specification.
 
 ## 4. Automation & Workflows
 

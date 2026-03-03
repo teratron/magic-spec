@@ -52,6 +52,7 @@ graph TD
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason).
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update.
     - **Sync**: If spec/phase finished → Update `[x]` in `PLAN.md`.
+    - **Actionable Outcome**: After phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
     - **Change Record**: Write 1-line summary in task `Changes` field.
 5. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
