@@ -153,7 +153,8 @@ if (planExists && indexExists) {
     }
 }
 
-const ok = missing.length === 0;
+const integrity_ok = !warnings.some(w => w.includes('Engine Integrity:'));
+const ok = missing.length === 0 && integrity_ok;
 
 if (jsonOutput) {
     const date = new Date().toISOString().split('T')[0];

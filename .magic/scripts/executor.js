@@ -100,6 +100,12 @@ if (scriptName === 'update-engine-meta') {
     const historyDir = path.join(magicDir, 'history');
     const date = new Date().toISOString().split('T')[0];
 
+    // C1 Kernel Integrity: Ensure history directory exists
+    if (!fs.existsSync(historyDir)) {
+        fs.mkdirSync(historyDir, { recursive: true });
+        console.log('History directory RESTORED (Auto-Heal)');
+    }
+
     // 1. Increment Version (patch)
     if (fs.existsSync(versionPath)) {
         const currentVersion = fs.readFileSync(versionPath, 'utf8').trim();

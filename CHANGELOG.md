@@ -5,7 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.15] - 2026-03-02
+## [1.4.77] - 2026-03-03
+
+### Added
+
+- **Regression Test T85**: Verifies mandatory engine integrity HALT when `.magic/` files are tampered (C1 enforcement).
+
+### Changed
+
+- **Engine Integrity Halt**: Upgraded `check-prerequisites.js` to set `ok: false` on checksum mismatches, ensuring a hard HALT during pre-flight checks.
+- **History Auto-Heal**: Enhanced `executor.js` to automatically recreate the `.magic/history/` directory and missing history files if deleted.
+
+### Fixed
+
+- **Resilient Logic**: Improved `check-prerequisites.js` to distinguish between critical engine integrity (HALT) and project data drift (WARNING), preserving self-healing capabilities.
+
+## [1.4.77] - 2026-03-02
 
 ### Changed
 

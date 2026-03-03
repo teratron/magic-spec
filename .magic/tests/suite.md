@@ -1339,6 +1339,18 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Guard**: Agent DOES NOT overwrite existing `INDEX.md` with default template.
   - [ ] Existing specifications remain registered.
 
+### T85 — Engine Integrity Mandatory HALT
+
+- **Workflow:** `check-prerequisites.js`
+- **Synthetic State:**
+  - `.magic/spec.md` is modified manually (hash mismatch).
+- **Action:** Call any workflow.
+- **Expected:**
+  - [ ] `ok: false` in JSON output.
+  - [ ] `warnings` contain "Engine Integrity".
+  - [ ] Workflow (e.g., `run.md`) triggers HALT and does NOT begin execution.
+- **Guards tested:** Engine Integrity Mandatory HALT (C1).
+
 ```
-**Test Suite Finalized** — v1.9.12
+**Test Suite Finalized** — v1.9.13
 ```

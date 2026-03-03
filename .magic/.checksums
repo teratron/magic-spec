@@ -1,14 +1,14 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "00f9cdb58859dbf4af960017be29581f71158c47777e583cb4d1f1063e51cf3e",
+  ".version": "3c7baa26b1388c5da8514652b055a6c38103bcbb6c40452c1408ce0696c33b99",
   "analyze.md": "ea2bcc635940e3512d1af194082fb1864955e020801ae79f2a873542ab66fe79",
   "init.md": "5629737fba6d0447e0a4248521829a123ca1a8ce0d9d47d055ca49d6f47b1f30",
   "onboard.md": "75c9c62443da2be8f34ac7c2c41a3b2adab7b6b3e427507f70327c774472b3a1",
   "retrospective.md": "8ddd39a5c659ebf1f02f6c475bedd174b09c4045d46510d123b87939943c442f",
   "rule.md": "f9b14045a70566e7b19e8298bc863553acf4bfa667a8843974e3491d8d42af4f",
   "run.md": "4269bf8107e9311a834befee1aa933f4c8e3ede5ab05d585a2dcd84db1696562",
-  "scripts/check-prerequisites.js": "39e445e2cd8e22e5048ce25b3f166697a4f26556e35fdb03b8d1c266aa4a4fa9",
-  "scripts/executor.js": "0f3675dac71c82a169c0ecfe1b8d45c78d69895a9d13b4d84c322a6c3424e066",
+  "scripts/check-prerequisites.js": "822e522fa30a4bbd0c9c99555e0a9a13bc92cd382a81ac78298cef6a8d54badf",
+  "scripts/executor.js": "3f26c0ee8e52de7f0ede7c5411821cd61a590cc8d9a53298e587f585699e7bd6",
   "scripts/generate-checksums.js": "5818e6193dd7b1efa2a5c2709ed3d920094958ac846bd953c08af6bf9729c9d6",
   "scripts/generate-context.js": "78ce2cfc6cb3d5cf3a8a2efff79f1de2fdbc5f83efb16cc06d6f1fb5f2b62434",
   "scripts/init.js": "c8431347cfac4f34361a675a52f17ebd9788dcd534e2ff6a38fb06ab139a02f7",
@@ -20,5 +20,5 @@
   "templates/retrospective.md": "9fa579aee4112e79a6885ce1ed52f54a518e14663f487519e96261591fce3e2c",
   "templates/specification.md": "212474c480955bdb8fc690aee7f45ca80e562bec62c5d609caa8e3ffcaaa247e",
   "templates/tasks.md": "df89f110e3723578edaa05d5df6745db1e242724b3a715fa94b902800f737944",
-  "tests/suite.md": "31968da1b17bd54e1075c95c5ff95f5bec4c6b8a49629a70b80068d89ae9584c"
+  "tests/suite.md": "4db1fa3bcb0c574f91e5a659466d866a542616cad09c27f804de62bbc2016c36"
 }
