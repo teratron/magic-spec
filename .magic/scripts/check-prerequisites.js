@@ -99,7 +99,7 @@ if (planExists && indexExists) {
 
     for (const spec of indexSpecs) {
         if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
-            warnings.push(`Inconsistency: '${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/`);
+            warnings.push(`Inconsistency: '${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/. 💡 Hint: run 'magic.spec --audit' or 'magic.analyze' to fix.`);
         }
         if (!planContent.includes(spec)) {
             warnings.push(`Orphaned specification: '${spec}' is in INDEX.md but missing from PLAN.md`);
@@ -111,7 +111,7 @@ if (planExists && indexExists) {
 
     for (const pSpec of planSpecs) {
         if (!indexSpecs.includes(pSpec)) {
-            warnings.push(`Registry Mismatch: '${pSpec}' is referenced in PLAN.md but missing from INDEX.md`);
+            warnings.push(`Registry Mismatch: '${pSpec}' is referenced in PLAN.md but missing from INDEX.md. 💡 Hint: run 'magic.spec --audit' to sync.`);
         }
     }
 

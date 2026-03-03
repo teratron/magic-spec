@@ -12,7 +12,8 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
     - **Mode**: Sequential or Parallel must be in `RULES.md §7`. If missing → **HALT**.
     - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
     - **Quarantine (C12)**: If any active task belongs to a specification with a "Rule 57 Violation" (non-stable L1 parent) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog.
-    - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (Stable→RFC or Draft) since plan generation → **HALT**. Report: "Spec `{file}` is no longer Stable. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.
+    - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: "Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.
+    - **Phantom Spec**: If a specification referenced by `TASKS.md` is missing from `INDEX.md` or the physical filesystem → **HALT**. Report: "Phantom Spec `{file}` detected. 💡 Hint: run `magic.spec --audit` or `magic.analyze` to resolve the discrepancy."
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Versioning (C14)**: If `.magic/` modified, auto-run `node .magic/scripts/executor.js update-engine-meta --workflow run` (Smart History: redundant automated entries are skipped).
 
