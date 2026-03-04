@@ -24,7 +24,7 @@ Magic supports two primary modes for implementation:
 
 The execution mode is defined as a Project Convention in `.design/RULES.md §7`.
 
-- **Shared-Constraint Detection**: In Parallel mode, the **Manager Agent** scans the implementation notes of all active tasks. If two tasks modify the same file (e.g., a shared middleware or config), the manager automatically serializes them to prevent race conditions.
+- **Shared-Constraint Detection (Deep Scan)**: In Parallel mode, the **Manager Agent** reads the task descriptions *and* the associated spec sections for each active task. If two tasks reference a shared file — even when the task descriptions don't mention it explicitly (constraint visible only in spec body) — the manager automatically serializes those tasks to prevent race conditions.
 
 ## 3. Automation & Workflows
 
@@ -34,6 +34,7 @@ Before starting any work, the `magic.run` workflow runs a mandatory check to ens
 
 - **Rules Parity**: The engine verifies that the `RULES.md` version matches the base version recorded in `TASKS.md`. If a mismatch is found, it warns the user of a potential convention drift.
 - **Quarantine Check (C12)**: The engine verifies that every active task belongs to a **Stable** Layer 1 specification. If any task violates this (e.g., its concept has dropped to RFC), execution will **HALT** until the plan is re-synchronized.
+- **Spec Stability Spot-Check (RE-2)**: Independently of C12, the engine reads `INDEX.md` and confirms that every spec targeted by a `Todo` task in the current phase is still `Stable`. If any spec has been directly demoted since plan generation (e.g., Stable → RFC via an external edit), execution **HALTs** immediately: *"Spec `{file}` is no longer Stable (current: RFC). Run `magic.task update` to re-evaluate the plan."* This guard catches direct demotion that C12 alone cannot detect (C12 requires a non-Stable L1 parent; this guard catches direct demotion of the target spec itself).
 
 ### 3.2 Change Records & Changelog
 

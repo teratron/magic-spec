@@ -54,9 +54,17 @@ Tasks are organized into **Execution Tracks** (Track A, Track B, etc.).
 - **Plan Synchronization**: If specifications change, the plan and tasks must be updated via the "Sync tasks" command.
 - **Archival (C8)**: Once a phase is completed, its detailed task file is moved to `.design/archives/tasks/` to keep the working area clean and efficient.
 
+## 3.4 Intent Preservation
+
+If the Task workflow needs to sub-delegate to `init.md` (cold start) or `analyze.md` (first-time analysis), the original user intent is memoized before delegation begins. After the sub-workflow resolves, the engine resumes explicitly: *"Resuming: '{original intent}'."* This prevents the user's initial goal from being silently lost across multi-workflow chains.
+
 ## 6. Pre-flight Checks
 
 The Task workflow triggers a **Consistency Check** before running to ensure the plan is based on an accurate view of the project's current filesystem and specification registry.
+
+### 6.1 Cross-Workspace Parity
+
+If `workspace.json` registers more than one workspace, the pre-flight scan checks for identically-named spec files across workspaces. A version mismatch between copies constitutes a **Source of Truth Drift** and causes a **HALT** before any planning begins. The user is offered three resolution paths: sync from the canonical workspace, rename to a unique name per workspace, or force-ignore with a documented reason.
 
 ### 7. Rules Parity
 

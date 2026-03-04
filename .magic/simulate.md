@@ -44,9 +44,9 @@ Scan for:
 
 - **Individual Audit**: Table with `Dimension | Finding | Outcome (PASS/FAIL/ROUGH EDGE)`.
 - **Cognitive Coverage Report**:
-  - **Instruction Density**: Evaluate if instructions are too verbose or too sparse.
-  - **Guard Resilience**: Simulate attempts to bypass C1-C14 and report results.
-  - **Invariant Compliance**: Explicitly check if the workflow respects all core engine rules.
+  - **Instruction Density** (1-10): Score = `10 - (vague_terms_count + duplicate_instruction_count)`. Minimum 1. Vague term = any unquantified qualifier ("many", "often", "significant"). Duplicate = same logic stated in both `.md` and `.js`.
+  - **Guard Resilience** (1-10): Score = `Guards_Triggered / Guards_Expected × 10`. Test each C1-C14 guard with a synthetic bypass attempt. Each guard that correctly HALTs = +1 triggered.
+  - **Invariant Compliance** (1-10): Score = `Rules_Followed / Rules_Applicable × 10`. Cross-check workflow steps against all applicable Core Invariants from the target `.md` file.
 - **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
 - **Succession**: Run `/magic.simulate test` post-fix to ensure 0 regressions.

@@ -106,7 +106,27 @@ For large projects, the workflow offers scan depth options to balance thoroughne
 | 50–500 files | Offer Full or Focused scan |
 | > 500 files | Recommend Focused or Quick, offer Full |
 
-### 5.1 Workspace Scoping (C15)
+### 5.1 Workspace Targeting
+
+Pass a workspace name as an optional argument to target a specific workspace directly:
+
+```
+/magic.analyze engine
+/magic.analyze installers
+```
+
+If no argument is given, the workflow resolves the workspace automatically using this priority chain:
+
+| Priority | Source | Behavior |
+| :---: | :--- | :--- |
+| 1 | Explicit argument | Use it. Unknown name → HALT with available list. |
+| 2 | `MAGIC_WORKSPACE` env var | Use silently. |
+| 3 | `workspace.json` (single) | Use silently. |
+| 3 | `workspace.json` (multiple + default) | Use default. Prints: "Active workspace: {name}." |
+| 3 | `workspace.json` (multiple, no default) | Asks: "Which workspace to analyze?" |
+| 4 | No `workspace.json` | Scans root `.design/`, logs the fallback. |
+
+### 5.2 Workspace Scoping (C15)
 
 In multi-workspace environments, the Analysis workflow respects the `scope` defined in `workspace.json`. It will strictly ignore files and directories outside the defined scope, allowing for isolated analysis of specific project modules (e.g., only analyzing the `api` or `frontend` folders).
 

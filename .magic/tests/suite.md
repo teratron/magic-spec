@@ -1454,6 +1454,243 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No plan generated until user resolves
 - **Guards tested:** Cross-Workspace Parity Guard (RE-T74), multi-workspace collision detection, HALT before planning
 
+### T92 — Analyze Mode C with Empty INDEX.md (Precedence Guard)
+
+- **Workflow:** `analyze.md` (Mode C — Mode Precedence)
+- **Synthetic State:**
+  - `.design/` initialized
+  - `INDEX.md` exists but is empty (0 specs registered)
+  - Project has source code
+- **Action:** User runs `/magic.analyze`
+- **Expected:**
+  - [ ] Mode C fires (trigger matches `/magic.analyze`)
+  - [ ] Mode A condition is also true (INDEX.md empty) — but Mode A does NOT auto-start
+  - [ ] Mode C runs to completion: self-check, registry audit, coverage check, rule validation, report
+  - [ ] Report delivered: "Registry empty — no specs registered. Coverage: 100% gap."
+  - [ ] After report: agent offers "Would you like to run first-time analysis to generate spec proposals?"
+  - [ ] Mode A starts only if user says yes
+- **Guards tested:** Mode Precedence (RE-A1), Mode C completeness before Mode A offer
+
+### T93 — Analyze Mode C Bypasses All Intermediate HALTs
+
+- **Workflow:** `analyze.md` (Mode C — Audit Policy)
+- **Synthetic State:**
+  - `.magic/` checksum mismatch exists (`checksums_mismatch`)
+  - `INDEX.md` has `api.md` registered but file is missing from disk (Existence Guard condition)
+  - `auth.md` header `Version: 1.2.0`, INDEX.md entry `Version: 1.1.0` (VERSION_DRIFT)
+  - L2 spec `api-impl.md` has non-Stable L1 parent (C12 Quarantine condition)
+- **Action:** User runs `/magic.analyze`
+- **Expected:**
+  - [ ] `checksums_mismatch` detected — NOT halted, finding collected
+  - [ ] `api.md` missing from disk — NOT halted (Existence Guard bypassed), finding collected
+  - [ ] `auth.md` VERSION_DRIFT — NOT halted, finding collected
+  - [ ] C12 Quarantine condition — NOT halted, finding collected
+  - [ ] All 4 findings surfaced in the final consolidated report
+  - [ ] Agent halts ONLY at report delivery (presents findings, awaits user action)
+- **Guards tested:** Audit Policy HALT bypass (RE-A2), all 4 bypass categories
+
+### T94 — Analyze Mode C Coverage Check with RESCUE AOP
+
+- **Workflow:** `analyze.md` (Mode C — Coverage Check + RESCUE)
+- **Synthetic State:**
+  - `INDEX.md`: `auth.md` (Stable) — describes `src/auth/`
+  - `src/auth/` deleted; `src/authentication/` exists (new uncovered directory)
+  - `auth.md` title: "Authentication System"
+  - Similarity between `auth.md` and `src/authentication/`: >80%
+- **Action:** User runs `/magic.analyze`
+- **Expected:**
+  - [ ] Mode C Coverage Check runs within workspace scope
+  - [ ] `src/auth/` → orphaned spec (`auth.md`)
+  - [ ] `src/authentication/` → uncovered directory
+  - [ ] RESCUE AOP: similarity >80% → classified as `RESCUE` (rename opportunity), NOT separate Gap + Orphan entries
+  - [ ] Report: "RESCUE: `auth.md` likely renamed to `src/authentication/` — propose registry sync"
+- **Guards tested:** RESCUE AOP in Mode C (RE-A3), rename detection, correct classification
+
+### T95 — Analyze Mode C Scope Isolation (C15)
+
+- **Workflow:** `analyze.md` (Mode C — Coverage Check Scope)
+- **Synthetic State:**
+  - Active workspace: `engine`; scope: `.magic/`, `docs/`
+  - Project also has `src/`, `lib/` directories (out of scope)
+  - `src/payments/` has no spec coverage
+- **Action:** User runs `/magic.analyze`
+- **Expected:**
+  - [ ] Mode C Coverage Check reads workspace scope from `workspace.json`
+  - [ ] Scan restricted to `.magic/` and `docs/` only
+  - [ ] `src/payments/` NOT reported as a coverage gap (out of scope)
+  - [ ] Only gaps within `.magic/` or `docs/` are reported
+- **Guards tested:** C15 scope enforcement in Mode C Coverage Check (RE-A4)
+
+### T96 — Analyze Mode C Checklist Completeness
+
+- **Workflow:** `analyze.md` (Mode C — Task Completion)
+- **Synthetic State:**
+  - Clean engine workspace. Mode C runs successfully.
+- **Action:** Mode C completes and agent presents checklist
+- **Expected:**
+  - [ ] Agent presents **Mode C: Ventilation** checklist (not Mode A/B checklist)
+  - [ ] All 6 Mode C items evaluated: self-check, registry audit, coverage, rule validation, report delivery, C14 not triggered
+  - [ ] C14 not triggered (Mode C is read-only — C1 §7 confirmed)
+  - [ ] No Mode A/B items (Depth Control, Stack/Arch, Dispatch) appear as pending items
+- **Guards tested:** Mode C checklist separation (RE-A5), C14 exemption for read-only mode
+
+### T97 — Spec Update Source of Truth Drift (Cross-Workspace Parity)
+
+- **Workflow:** `spec.md` (§Updating → Sync — Cross-Workspace Parity)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `app`.
+  - `engine/auth.md` — Status: Stable, Version: 2.0.0.
+  - `app/auth.md` — Status: Stable, Version: 1.5.0.
+  - Active workspace: `app`.
+- **Action:** "Update auth spec to add OAuth2 support"
+- **Expected:**
+  - [ ] Pre-flight detects `auth.md` exists in both `engine` (v2.0.0) and `app` (v1.5.0) — version mismatch
+  - [ ] Agent **HALTs** before writing any updates to `app/auth.md`
+  - [ ] Report: "Source of Truth Drift: `auth.md` exists in `engine` (v2.0.0) and `app` (v1.5.0)."
+  - [ ] Three resolution options presented: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore
+  - [ ] No spec content written until user selects a resolution option
+- **Guards tested:** RE-A6 (Cross-Workspace Parity in `spec.md` Pre-flight)
+
+### T98 — RE-3 Drift Resolution Validation (Registry-Only Bump Without Review)
+
+- **Workflow:** `spec.md` (§Updating → Sync — Version Drift Guard → Resolution Validation)
+- **Synthetic State:**
+  - `engine/auth.md` — file header Version: 1.2.0, INDEX.md entry: 1.1.0 (VERSION_DRIFT).
+  - User resolves by bumping INDEX.md to 1.2.0 without reviewing the external change.
+- **Action:** User says "resolved" after bumping INDEX.md only
+- **Expected:**
+  - [ ] Agent detects resolution was registry-sync-only (no amendment review)
+  - [ ] Agent flags: "External change to `auth.md` between v1.1.0 and v1.2.0 was not reviewed."
+  - [ ] Two options presented: (a) Yes — continue, (b) No — revert file header first
+  - [ ] After user confirms (a), agent re-evaluates ALL Sync guards from the top before writing
+  - [ ] No spec content written until re-evaluation completes
+- **Guards tested:** RE-B1 (Resolution Validation sub-rule of Version Drift Guard)
+
+### T99 — C12 Full Registry Scan (Dependents Not Currently Open)
+
+- **Workflow:** `spec.md` (§Updating → Sync — C12 Quarantine)
+- **Synthetic State:**
+  - `engine/auth.md` — L1, Status: Stable → drops to RFC via amendment.
+  - `engine/auth-jwt.md` — L2, `Implements: auth.md`, Status: Stable. Not open/loaded.
+  - `engine/auth-oauth.md` — L2, `Implements: auth.md`, Status: Stable. Not open/loaded.
+  - INDEX.md lists all three files.
+- **Action:** Agent updates `auth.md` status to RFC
+- **Expected:**
+  - [ ] C12 scans INDEX.md (full registry), NOT just open files
+  - [ ] Both `auth-jwt.md` and `auth-oauth.md` discovered as L2 dependents
+  - [ ] Both dropped to RFC status
+  - [ ] Report: "C12 Cascade: 2 dependents quarantined: [auth-jwt.md, auth-oauth.md]."
+- **Guards tested:** RE-B2 (C12 full registry scan strategy)
+
+### T100 — C12 Recursive Depth (L1→L2→L3 Chain)
+
+- **Workflow:** `spec.md` (§Updating → Sync — C12 Quarantine recursive scan)
+- **Synthetic State:**
+  - `engine/auth.md` — L1, Status: Stable → drops to RFC.
+  - `engine/auth-jwt.md` — L2, `Implements: auth.md`, Status: Stable.
+  - `engine/auth-jwt-refresh.md` — L3, `Implements: auth-jwt.md`, Status: Stable.
+- **Action:** Agent updates `auth.md` status to RFC
+- **Expected:**
+  - [ ] C12 scan finds `auth-jwt.md` (L2 of auth.md)
+  - [ ] Recursive scan finds `auth-jwt-refresh.md` (L3, `Implements: auth-jwt.md`)
+  - [ ] Both L2 and L3 dropped to RFC
+  - [ ] Report: "C12 Cascade: 2 dependents quarantined: [auth-jwt.md, auth-jwt-refresh.md]."
+  - [ ] No L3 silently missed due to fixed-depth scan
+- **Guards tested:** RE-B2 (C12 recursive depth — L1→L2→L3)
+
+### T101 — Analyze with Explicit Workspace Argument
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
+- **Action:** `/magic.analyze installers`
+- **Expected:**
+  - [ ] Agent resolves workspace to `installers` (explicit arg overrides default)
+  - [ ] Scan scope restricted to `installers/` paths as defined in `workspace.json`
+  - [ ] No prompt to user; prints: "Active workspace: installers" or similar
+  - [ ] `engine` workspace not scanned
+- **Guards tested:** Workspace Resolution Priority 1 (explicit arg)
+
+### T102 — Analyze Auto-Resolves Single Default Workspace
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + default)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
+- **Action:** `/magic.analyze` (no argument)
+- **Expected:**
+  - [ ] Agent resolves workspace to `engine` (default from `workspace.json`)
+  - [ ] No prompt to user; prints: "Active workspace: engine."
+  - [ ] Analysis scoped to `engine` workspace paths
+- **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces + default)
+
+### T103 — Analyze Asks When Multiple Workspaces and No Default
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + no default)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`. **No default field.**
+- **Action:** `/magic.analyze` (no argument)
+- **Expected:**
+  - [ ] Agent detects multiple workspaces with no default and no explicit arg
+  - [ ] Agent asks: "Which workspace to analyze? [engine, installers]"
+  - [ ] Does NOT auto-pick either workspace
+  - [ ] Does NOT start scanning before user responds
+- **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → ask)
+
+### T104 — Analyze with Invalid MAGIC_WORKSPACE Env Var
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 2 validation)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`.
+  - `MAGIC_WORKSPACE=frontend` (not in `workspace.json`).
+- **Action:** `/magic.analyze` (no explicit arg)
+- **Expected:**
+  - [ ] Agent reads `MAGIC_WORKSPACE=frontend` (Priority 2)
+  - [ ] Validates name against `workspace.json` — not found
+  - [ ] **HALT**: "Unknown workspace 'frontend'. Available: [engine, installers]."
+  - [ ] Does NOT silently fall through to Priority 3
+- **Guards tested:** RE-C1 (MAGIC_WORKSPACE unknown-name validation)
+
+### T105 — Explicit Arg Overrides MAGIC_WORKSPACE
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1 override)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
+  - `MAGIC_WORKSPACE=installers`.
+- **Action:** `/magic.analyze engine`
+- **Expected:**
+  - [ ] Agent uses explicit arg `engine` (Priority 1 overrides Priority 2)
+  - [ ] `MAGIC_WORKSPACE=installers` is ignored
+  - [ ] Analysis scoped to `engine` workspace
+  - [ ] No HALT or conflict warning
+- **Guards tested:** RE-C4 (explicit arg overrides env var)
+
+### T106 — Workspace Scope Auto-Applied from workspace.json
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Scope Auto-Apply)
+- **Synthetic State:**
+  - `workspace.json` registers `installers` with `scope: ["installers/", "package.json"]`.
+  - `MAGIC_WORKSPACE_SCOPE` not set.
+- **Action:** `/magic.analyze installers`
+- **Expected:**
+  - [ ] Workspace resolved to `installers`
+  - [ ] Scan boundary auto-set to `["installers/", "package.json"]` from `workspace.json` scope
+  - [ ] Files outside `installers/` and `package.json` are NOT scanned
+  - [ ] Agent does NOT require separate `MAGIC_WORKSPACE_SCOPE` env var to restrict scope
+- **Guards tested:** RE-C2 (workspace scope auto-apply)
+
+### T107 — Mode C Triggered with Workspace Arg via Natural Language
+
+- **Workflow:** `analyze.md` (§Mode C trigger + workspace arg)
+- **Synthetic State:**
+  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
+- **Action:** "Ventilate installers"
+- **Expected:**
+  - [ ] Agent parses `installers` as the workspace argument from natural language
+  - [ ] Mode C (Ventilation) triggered
+  - [ ] Analysis scoped to `installers` workspace (not default `engine`)
+  - [ ] Report covers `installers` scope only
+- **Guards tested:** RE-C3 (Mode C trigger + workspace arg in natural language)
+
 ```
-**Test Suite Finalized** — v1.9.18
+**Test Suite Finalized** — v1.9.23
 ```

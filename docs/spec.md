@@ -43,7 +43,21 @@ The engine automatically parses unstructured user chat ("I want a login page") a
 
 ### 4.2 Consistency Check (Pre-flight)
 
-Before any implementation plan is generated, the `magic.spec` workflow verifies that all paths and structures described in specifications actually match the current project state on disk.
+Before any implementation plan is generated, the `magic.spec` workflow verifies that all paths and structures described in specifications actually match the current project state on disk. The check includes:
+
+- **Path Validity**: Target spec file exists on disk.
+- **Layer Integrity**: L2 spec's L1 parent is Stable.
+- **Registry Sync**: Spec is registered in `INDEX.md`.
+- **Version Drift (RE-1)**: The spec's `Version:` header matches the version recorded in `INDEX.md`. If they differ, a `VERSION_DRIFT` flag is raised in the Consistency Report. This detects external edits made outside the amendment lifecycle.
+- **Engine Integrity**: `.magic/` checksums are valid.
+
+### 4.5 Version Drift Guard (RE-3)
+
+If a `VERSION_DRIFT` is detected for the **target spec of an active update**, the engine escalates from a warning to a **HALT** before writing any changes:
+
+> *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply the amendment rule to the external change, or (b) revert the file header."*
+
+This prevents the engine from silently absorbing untracked external edits into the next amendment, which would corrupt the audit trail. If the triggering input also contains a T4 rule capture ("remember that..."), the rule is **queued** and not written to `RULES.md` until the drift is resolved.
 
 ### 4.3 Periodic Audit
 

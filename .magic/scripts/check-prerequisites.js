@@ -11,36 +11,50 @@ const reqSpecs = args.includes('--require-specs');
 const missing = [];
 const warnings = [];
 
+/**
+ * Push a structured warning object.
+ * @param {string} type - Warning category (e.g., 'ENGINE_INTEGRITY', 'GHOST_REGISTRY').
+ * @param {string} message - Human-readable description.
+ * @param {string|null} fix - Suggested fix command or null if no automated fix.
+ */
+function warn(type, message, fix) {
+    warnings.push({ type, message, fix: fix || null });
+}
+
 // Engine Integrity Check
 const checksumsFile = path.join('.magic', '.checksums');
-let checksumsMessageAdded = false;
 
 if (fs.existsSync(checksumsFile)) {
     try {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
+        const mismatchedFiles = [];
         for (const [relPath, storedHash] of Object.entries(checksums)) {
             if (relPath === '.checksums') continue;
-            // Handle cross-platform paths
             const normalizedRelPath = relPath.replace(/\\/g, '/');
             const fullPath = path.join('.magic', relPath);
             if (fs.existsSync(fullPath)) {
                 const currentHash = crypto.createHash('sha256').update(fs.readFileSync(fullPath)).digest('hex');
                 if (currentHash !== storedHash) {
-                    // Do not fail immediately, add warning
-                    warnings.push(`Engine Integrity: '.magic/${normalizedRelPath}' has been modified locally.`);
+                    mismatchedFiles.push(normalizedRelPath);
                 }
             }
+        }
+        for (const f of mismatchedFiles) {
+            warn(
+                'ENGINE_INTEGRITY',
+                `'.magic/${f}' has been modified locally.`,
+                'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'
+            );
         }
     } catch (e) {
         // Ignore parse errors
     }
-    if (warnings.length > 0) {
-        // Appending the recovery hint to the last warning
-        const oldLastLog = warnings[warnings.length - 1];
-        warnings[warnings.length - 1] = oldLastLog + ` If changes were intentional, sync meta via: 'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'`;
-    }
 } else {
-    warnings.push("Engine Integrity: '.magic/.checksums' is missing.");
+    warn(
+        'ENGINE_INTEGRITY',
+        "'.magic/.checksums' is missing.",
+        'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'
+    );
 }
 
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
@@ -88,8 +102,8 @@ if (reqSpecs && stableCount === 0) {
     else missing.push('Stable specs (only Draft/RFC found)');
 }
 
-if (draftCount > 0) warnings.push(`${draftCount} specs are still in Draft status`);
-if (rfcCount > 0) warnings.push(`${rfcCount} specs are still in RFC status`);
+if (draftCount > 0) warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
+if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magic.spec');
 
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
@@ -99,10 +113,18 @@ if (planExists && indexExists) {
 
     for (const spec of indexSpecs) {
         if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
-            warnings.push(`Inconsistency: '${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/. 💡 Hint: run 'magic.spec --audit' or 'magic.analyze' to fix.`);
+            warn(
+                'GHOST_REGISTRY',
+                `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
+                'magic.analyze'
+            );
         }
         if (!planContent.includes(spec)) {
-            warnings.push(`Orphaned specification: '${spec}' is in INDEX.md but missing from PLAN.md`);
+            warn(
+                'ORPHANED_SPEC',
+                `'${spec}' is in INDEX.md but missing from PLAN.md.`,
+                'magic.task update'
+            );
         }
     }
 
@@ -111,7 +133,11 @@ if (planExists && indexExists) {
 
     for (const pSpec of planSpecs) {
         if (!indexSpecs.includes(pSpec)) {
-            warnings.push(`Registry Mismatch: '${pSpec}' is referenced in PLAN.md but missing from INDEX.md. 💡 Hint: run 'magic.spec --audit' to sync.`);
+            warn(
+                'REGISTRY_MISMATCH',
+                `'${pSpec}' is referenced in PLAN.md but missing from INDEX.md.`,
+                'magic.spec --audit'
+            );
         }
     }
 
@@ -122,7 +148,11 @@ if (planExists && indexExists) {
         const indexVersion = indexVersionMatch[1];
         const planBasedOn = planBasedOnMatch[1];
         if (indexVersion !== planBasedOn) {
-            warnings.push(`Sync Gap: PLAN.md is based on INDEX.md v${planBasedOn}, but registry is at v${indexVersion}. Run 'node .magic/scripts/executor.js generate-plan' (magic.task) to sync.`);
+            warn(
+                'SYNC_GAP',
+                `PLAN.md is based on INDEX.md v${planBasedOn}, but registry is at v${indexVersion}.`,
+                'magic.task update'
+            );
         }
     }
 
@@ -150,7 +180,11 @@ if (planExists && indexExists) {
                                     if (parentParts.length >= 5) {
                                         const parentStatus = parentParts[3];
                                         if (parentStatus && parentStatus !== 'Stable') {
-                                            warnings.push(`Rule 57 Violation: L2 spec '${specFile}' is ${status}, but its L1 parent '${parent}' is ${parentStatus} (Must be Stable).`);
+                                            warn(
+                                                'RULE_57_VIOLATION',
+                                                `L2 spec '${specFile}' is ${status}, but its L1 parent '${parent}' is ${parentStatus} (Must be Stable).`,
+                                                'magic.task update'
+                                            );
                                         }
                                     }
                                 }
@@ -163,7 +197,7 @@ if (planExists && indexExists) {
     }
 }
 
-const integrity_ok = !warnings.some(w => w.includes('Engine Integrity:'));
+const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY');
 const ok = missing.length === 0 && integrity_ok;
 
 if (jsonOutput) {
@@ -192,7 +226,14 @@ if (jsonOutput) {
         if (missing.includes('INDEX.md') && missing.includes('RULES.md')) {
             errorMsg += `. 💡 SDD structure missing. Run '/magic.onboard' for a tutorial or '/magic.init' to setup.`;
         }
-        console.error(errorMsg);
+        // For non-JSON mode, also print warnings as plain strings for backward compatibility
+        for (const w of warnings) {
+            const fixHint = w.fix ? ` 💡 Fix: ${w.fix}` : '';
+            console.error(`[${w.type}] ${w.message}${fixHint}`);
+        }
+        if (missing.length > 0) {
+            console.error(errorMsg);
+        }
         process.exit(1);
     }
 }

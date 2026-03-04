@@ -152,11 +152,17 @@ graph TD
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
     - **Version Drift Guard**: If VERSION_DRIFT detected for the target file (file header `Version:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: "Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply amendment rule to the external change, or (b) revert file header to registry version." Resume only after user resolves.
+      - **Resolution Validation**: Before resuming, confirm INDEX.md entry now matches the file header. If the user only bumped INDEX.md without reviewing the external change, flag: "Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed. Proceed? (a) Yes — continue, (b) No — revert file header first." After confirmed resolution, **re-evaluate all Sync guards from the top** (RE-3, Cross-Workspace Parity, Existence Guard) before writing.
       - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending drift resolution." Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
+    - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. If a name collision with a version mismatch is found → **HALT** before writing. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Resolve before proceeding: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore (document reason)."
     - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
       - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending file resolution." Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file is restored or remapped.
     - **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
-    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft), MUST drop status of all dependent L2/L3 specs to `RFC` or `Draft` to maintain Layer 2 stability requirements (§45, Step 52).
+    - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft):
+        1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
+        2. For each L2 found, recursively repeat: scan for `Implements: {L2-file}` to discover L3 dependents.
+        3. Drop status of all discovered dependents to match parent's new status (`RFC` or `Draft`).
+        4. Report: "C12 Cascade: {N} dependents quarantined: [{list}]."
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
         - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
         - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
@@ -182,7 +188,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 ### Periodic Registry Audit
 
-**Trigger**: *"Audit specs"* or every 5th update.
+**Trigger**: *"Audit specs"* or every 5th specification write operation (create, update, or status change — counted per workspace session).
 
 1. **Read**: All `INDEX.md` files + `RULES.md`.
 2. **Check**:
