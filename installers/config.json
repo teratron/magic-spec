@@ -33,7 +33,7 @@
         "scripts/init.js",
         "templates/plan.md",
         "templates/retrospective.md",
-        "templates/specification.md",
+        "templates/spec.md",
         "templates/tasks.md"
     ],
     "download": {

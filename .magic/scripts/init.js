@@ -206,9 +206,9 @@ When operating in a workspace with a defined scope (via \`.design/workspace.json
 For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
 
 ## Document History
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | INIT_DATE | Agent | Initial constitution |
+| Version | Date | Description |
+| :--- | :--- | :--- |
+| 1.0.0 | INIT_DATE | Initial constitution |
 `;
     rulesContent = rulesContent.replace(/INIT_DATE/g, date);
     fs.writeFileSync(rulesPath, rulesContent);

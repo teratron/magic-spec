@@ -76,7 +76,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Parse: 3 distinct topics identified
   - [ ] Map: JWT+Redis → `architecture.md`, REST → `architecture.md`, shadcn → new `ui-components.md`
   - [ ] Confirm: mapping shown to user before writing
-  - [ ] New file `ui-components.md` created from `.magic/templates/specification.md`
+  - [ ] New file `ui-components.md` created from `.magic/templates/spec.md`
   - [ ] INDEX.md updated with new entry
   - [ ] Post-Update Review runs on all modified files
 - **Guards tested:** Multi-topic dispatch, new file creation with template, registry sync
@@ -1325,7 +1325,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User expands logic; new content makes it 75 lines.
 - **Expected:**
   - [ ] Agent detects 50+ line threshold.
-  - [ ] Agent proposes converting to `specification.md` template (Standard).
+  - [ ] Agent proposes converting to `spec.md` template (Standard).
   - [ ] **HALT** if agent attempts to keep 75 lines in a legacy micro-template.
 
 ### T84 — Init Migration: Index Preservation

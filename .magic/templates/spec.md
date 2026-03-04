@@ -81,6 +81,6 @@ Potential issues and alternative approaches considered.
 
 ## Document History
 
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 0.1.0 | YYYY-MM-DD | User | Initial Draft |
+| Version | Date | Description |
+| :--- | :--- | :--- |
+| 0.1.0 | YYYY-MM-DD | Initial Draft |

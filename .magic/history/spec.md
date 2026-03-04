@@ -1,16 +1,16 @@
 # Specification Workflow History
 
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-02-23 | Antigravity | Initial migration from workflow-enhancements.md |
-| 1.1.0 | 2026-02-26 | Antigravity | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2_scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |
-| 1.3.1 | 2026-02-27 | Antigravity | AOP: Extracted Specification Template to templates/ |
-| 1.3.1 | 2026-02-27 | Antigravity | Stress-test fix: added intra-input self-contradiction edge case |
-| 1.3.1 | 2026-02-27 | Antigravity | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
-| 1.3.1 | 2026-02-27 | Antigravity | Project Analysis delegation: Explore Mode routes to `.magic/analyze.md` |
-| 1.3.2 | 2026-02-28 | Antigravity | AOP: Added explicit HALT guard, implemented Spec Renaming Protocol |
-| 1.4.0 | 2026-03-01 | Antigravity | Fix: Added Registry Integrity guard during Consistency Check |
-| 1.4.3 | 2026-03-01 | Antigravity | Fix: Extended Deprecation Cascade to include `Implements` references |
-| 1.4.3 | 2026-03-01 | Antigravity | Fix: Spec Renaming Protocol forbids modifying historical archives |
-| 1.4.4 | 2026-03-01 | Antigravity | Added C14 Engine Versioning Protocol to Post-Update Review checklist |
-| 1.4.9 - 1.4.114 | 2026-03-04 | Antigravity | Automated update via engine meta automation |
+| Version | Date | Description |
+| :--- | :--- | :--- |
+| 1.0.0 | 2026-02-23 | Initial migration from workflow-enhancements.md |
+| 1.1.0 | 2026-02-26 | Added Stable→RFC lifecycle transition, T4 sequencing rule, layer ambiguity guidance, audit T2_scope clarification, template numbering fix (3.1→5.1), Explore Mode proposal.md location |
+| 1.3.1 | 2026-02-27 | AOP: Extracted Specification Template to templates/ |
+| 1.3.1 | 2026-02-27 | Stress-test fix: added intra-input self-contradiction edge case |
+| 1.3.1 | 2026-02-27 | Stress-test R2: Deprecation Cascade — scan Related Specs for stale refs |
+| 1.3.1 | 2026-02-27 | Project Analysis delegation: Explore Mode routes to `.magic/analyze.md` |
+| 1.3.2 | 2026-02-28 | AOP: Added explicit HALT guard, implemented Spec Renaming Protocol |
+| 1.4.0 | 2026-03-01 | Fix: Added Registry Integrity guard during Consistency Check |
+| 1.4.3 | 2026-03-01 | Fix: Extended Deprecation Cascade to include `Implements` references |
+| 1.4.3 | 2026-03-01 | Fix: Spec Renaming Protocol forbids modifying historical archives |
+| 1.4.4 | 2026-03-01 | Added C14 Engine Versioning Protocol to Post-Update Review checklist |
+| 1.4.9 - 1.4.127 | 2026-03-04 | Automated update via engine meta automation |
