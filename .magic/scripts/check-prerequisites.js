@@ -197,7 +197,7 @@ if (planExists && indexExists) {
     }
 }
 
-const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY');
+const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY');
 const ok = missing.length === 0 && integrity_ok;
 
 if (jsonOutput) {

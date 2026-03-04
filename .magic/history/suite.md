@@ -30,3 +30,4 @@
 | 1.4.3 | 2026-03-01 | Added T54 to test History Immutability Guard during Spec Renaming Protocol |
 | 1.4.8 | 2026-03-02 | Added T58 to verify mandatory Code Quality & Engineering Standards enforcement |
 | 1.4.9 - 1.4.127 | 2026-03-04 | Automated update via engine meta automation |
+| 1.4.129 | 2026-03-04 | Upgraded Ghost Registry from warning to critical HALT barrier |

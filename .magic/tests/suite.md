@@ -1691,6 +1691,20 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report covers `installers` scope only
 - **Guards tested:** RE-C3 (Mode C trigger + workspace arg in natural language)
 
+### T108 — Ghost Registry Critical HALT Barrier
+
+- **Workflow:** `check-prerequisites.js`
+- **Synthetic State:**
+  - `cache-layer.md` registered in INDEX.md (Stable)
+  - `cache-layer.md` is manually deleted from the `.design/specifications/` folder.
+- **Action:** Any engine script/workflow triggered (e.g. `magic.task`)
+- **Expected:**
+  - [ ] `check-prerequisites.js` detects missing file while scanning `INDEX.md`.
+  - [ ] `GHOST_REGISTRY` violation recorded.
+  - [ ] **HALT** triggered: `ok: false` due to `GHOST_REGISTRY` failing `integrity_ok` check.
+  - [ ] Workflow does not proceed to `view_file` or plan generation, preventing cascading hallucinations.
+- **Guards tested:** Engine Integrity (Ghost Registry critical barrier)
+
 ```
 **Test Suite Finalized** — v1.9.23
 ```
