@@ -1,6 +1,6 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "cb1e133599a9a6f89905060de450eebb2a931bd5b4195e180a443fd58612a58d",
+  ".version": "6f590d0f225f0318d23b07994b0e6313159c802ebe91f5ef9f8a3b94203f2920",
   "analyze.md": "dad154f128a47d39ccca4966c81e2492cbe6e35e2b74b53ac6f348bdc2d924f2",
   "init.md": "1fda4aa1e9ce7e98f425147bb93c4f6f5e5986ec3b1afa88bbdd98e7bf4493a8",
   "onboard.md": "0d651de3fe0c6d9ee7d73c6294c085ff35f47b0d36d306a31c31f5ebbe76b186",
@@ -8,7 +8,7 @@
   "rule.md": "f9b14045a70566e7b19e8298bc863553acf4bfa667a8843974e3491d8d42af4f",
   "run.md": "1ef34b0a71af747514412bb7435f1f25af269f2e8c8b7296bc3cdb234cffd4cc",
   "scripts/check-prerequisites.js": "1a5617f6a126aca478449c02f165420322c81fd7011d03a93635770fe7aaccfa",
-  "scripts/executor.js": "3f26c0ee8e52de7f0ede7c5411821cd61a590cc8d9a53298e587f585699e7bd6",
+  "scripts/executor.js": "0a79afeb78fa94c183daca6101b5ab81c0368d7e1627f991d34c2396e87a23c3",
   "scripts/generate-checksums.js": "614877c943343757c032106597e3b292386cf262ebac205ef306ffb66bf89e8a",
   "scripts/generate-context.js": "c0f3bdb6abc7de69bf6576e9bb1f4bb823e9ff3a4e15972a3aeae09f718f2732",
   "scripts/init.js": "628595cb82f9392fed9d75f305555880358349ac9e9688eb1390c3061e6e670e",

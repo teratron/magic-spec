@@ -83,15 +83,20 @@ const childEnv = Object.assign({}, process.env, envVars);
 // Engine Meta Automation Command
 if (scriptName === 'update-engine-meta') {
     const workflowNames = [];
+    let author = 'Antigravity';
+
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--workflow' && args[i + 1]) {
             workflowNames.push(...args[i + 1].split(','));
+            i++;
+        } else if ((args[i] === '--ide' || args[i] === '--author') && args[i + 1]) {
+            author = args[i + 1];
             i++;
         }
     }
 
     if (workflowNames.length === 0) {
-        console.error('Usage: node executor.js update-engine-meta --workflow {run,rule,suite,...}');
+        console.error('Usage: node executor.js update-engine-meta --workflow {run,rule,suite,...} [--author <name>]');
         process.exit(1);
     }
 
@@ -128,28 +133,29 @@ if (scriptName === 'update-engine-meta') {
 
                     if (lastLine.includes(automatedMsg)) {
                         // Update existing automated entry with range
+                        // Schema: | Version | Date | Author | Description |
+                        // Index:     1          2     3        4
                         const parts = lastLine.split('|');
-                        // | Version | Date | Author | Description |
-                        // Index 1 is Version
                         const currentRange = parts[1].trim();
                         const firstVersion = currentRange.split('-')[0].trim();
                         const newRange = ` ${firstVersion} - ${newVersion} `;
                         parts[1] = newRange;
-                        // Also update date just in case
+                        // Update date and author
                         parts[2] = ` ${date} `;
+                        parts[3] = ` ${author} `;
 
                         lines[lastLineIndex] = parts.join('|');
                         fs.writeFileSync(historyFile, lines.join('\n') + '\n');
                         console.log(`History range updated for '${wf}': ${newRange.trim()}`);
                     } else {
-                        const entry = `| ${newVersion} | ${date} | Antigravity | ${automatedMsg} |\n`;
+                        const entry = `| ${newVersion} | ${date} | ${author} | ${automatedMsg} |\n`;
                         fs.appendFileSync(historyFile, entry);
                         console.log(`History updated: .magic/history/${wf}.md`);
                     }
                 } else {
                     // C1 Kernel Integrity: Auto-Heal missing history files
                     const wfTitle = wf.charAt(0).toUpperCase() + wf.slice(1);
-                    const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| ${newVersion} | ${date} | Antigravity | Automated reconstruction of missing history file |\n`;
+                    const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| ${newVersion} | ${date} | ${author} | Automated reconstruction of missing history file |\n`;
                     fs.writeFileSync(historyFile, initialContent);
                     console.log(`History file RESTORED (Auto-Heal): .magic/history/${wf}.md`);
                 }
