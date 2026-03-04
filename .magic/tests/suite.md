@@ -1705,6 +1705,38 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Workflow does not proceed to `view_file` or plan generation, preventing cascading hallucinations.
 - **Guards tested:** Engine Integrity (Ghost Registry critical barrier)
 
+### T110 — Mid-Run Spec Demotion Halts Track Before Done
+
+- **Workflow:** `run.md` (§Execution Step 4 — Mid-Run Stability Check)
+- **Synthetic State:**
+  - Parallel mode active. Two tracks running:
+    - Track A: executing `T-1A01` → target spec `auth.md` (L1, Stable at dispatch).
+    - Track B: mid-execution, triggers `/magic.spec` amendment on `auth.md` → status drops to RFC.
+  - Track A reaches Step 4 (Update) and attempts to commit `Done`.
+- **Action:** Track A sets `T-1A01` → `Done`
+- **Expected:**
+  - [ ] Before committing `Done`, Track A re-reads `INDEX.md`
+  - [ ] Detects `auth.md` is now RFC (demoted since dispatch)
+  - [ ] **HALT**: "Spec `auth.md` demoted to RFC during execution of `T-1A01`. Task output suspended — run `magic.task update` to re-evaluate."
+  - [ ] `T-1A01` NOT marked Done; left as In Progress
+  - [ ] Manager notified of suspension
+- **Guards tested:** RE-D1 (Mid-Run Stability Check before committing Done)
+
+### T111 — Manager Re-Reads INDEX.md Before Next Assignment
+
+- **Workflow:** `run.md` (§Execution Setup — Manager role)
+- **Synthetic State:**
+  - Parallel mode. Track A completes `T-1A01` (Done). Track B has demoted `auth.md` to RFC since Manager's last assignment.
+  - Manager is about to assign next task `T-1A02` (also targets `auth.md`).
+- **Action:** Manager proceeds to assign `T-1A02`
+- **Expected:**
+  - [ ] Manager re-reads `INDEX.md` before assigning `T-1A02`
+  - [ ] Detects `auth.md` is RFC — not Stable
+  - [ ] Does NOT assign `T-1A02`
+  - [ ] Reports: "Spec `auth.md` is no longer Stable. Halting new assignments for dependent tasks."
+  - [ ] Suggests: run `magic.task update` to re-evaluate the plan
+- **Guards tested:** RE-D2 (Manager INDEX.md re-read cadence between assignments)
+
 ```
-**Test Suite Finalized** — v1.9.23
+**Test Suite Finalized** — v1.9.25
 ```

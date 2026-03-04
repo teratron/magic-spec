@@ -22,7 +22,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 | Mode | Role | Process |
 | :--- | :--- | :--- |
 | **Sequential** | Mono-Agent | Picks next `Todo` → Executes → Updates `Done` → Repeats. |
-| **Parallel** | Manager | Reads `TASKS.md` → Reads associated spec sections for each task → Detects shared-file conflicts (including constraints only visible in spec body) → Assigns tracks → Syncs `PLAN.md`. |
+| **Parallel** | Manager | Reads `TASKS.md` → Reads associated spec sections for each task → Detects shared-file conflicts (including constraints only visible in spec body) → Assigns tracks → Syncs `PLAN.md`. Re-reads `INDEX.md` spec statuses before each new task assignment to detect mid-run spec demotions from other workflow contexts. |
 | **Parallel** | Developer | Track owner (mono or sub-agent) → Executes in order → Reports `Done/Blocked` → Wait for next assignment. |
 
 *Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions.
@@ -52,6 +52,7 @@ graph TD
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
 3. **Execute**: Implement per spec section. No scope creep.
 4. **Update**:
+    - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md`. If demoted since dispatch → **HALT** that track. Report: "Spec `{file}` demoted to `{status}` during execution of `{task}`. Task output suspended — run `magic.task update` to re-evaluate."
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason).
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update.
     - **Sync**: If spec/phase finished → Update `[x]` in `PLAN.md`.
