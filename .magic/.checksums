@@ -1,9 +1,9 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "2090cac48eda101e3c6afc5c2c2fff88a471fdbf3f250cb8bf0760a7ace1835d",
+  ".version": "b365c89d724292364947dc4a2d1097b5e73c00c8c4eebfc1ce7411dd2e03a1f5",
   "analyze.md": "e1ec5ded066e907d4d32b1c9afb6ecf97737ca932db0dac61bb26ffecd37587f",
-  "init.md": "1fda4aa1e9ce7e98f425147bb93c4f6f5e5986ec3b1afa88bbdd98e7bf4493a8",
-  "onboard.md": "0d651de3fe0c6d9ee7d73c6294c085ff35f47b0d36d306a31c31f5ebbe76b186",
+  "init.md": "9e3458df17747c7d142ce2e4cd0a9734c296aadb7f04bb779a148537836f63e6",
+  "onboard.md": "18095bbed53ef8c436d36efa850e26d86702770b9a684c79e0fdc6fa98e8a9ca",
   "retrospective.md": "835a75a1e9365f88b5c9decbede87298f982dce5eb518f3c6fb49f0b0b7ba609",
   "rule.md": "f9b14045a70566e7b19e8298bc863553acf4bfa667a8843974e3491d8d42af4f",
   "run.md": "1ef34b0a71af747514412bb7435f1f25af269f2e8c8b7296bc3cdb234cffd4cc",
