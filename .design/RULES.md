@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.0.0
+**Version:** 1.2.0
 **Status:** Active
 
 ## Overview
@@ -175,12 +175,23 @@ The command `/magic.analyze` (or `Analyze project`) triggers "Project Ventilatio
 
 - **Registry Drift**: Specs in INDEX but missing on disk.
 - **Coverage Gaps**: Code folders without corresponding specs.
-- **Rule Violations**: Code patterns that contradict `RULES.md §7`.
+- **Rule Violations**: Code patterns that contradict `RULES.md §7` (both global and workspace tiers).
 - **Integrity Issues**: Mismatched checksums in `.magic/`.
+
+### C22 — Workspace Rule Inheritance
+
+Each workspace may maintain a local `RULES.md` at `.design/{workspace}/RULES.md`. These files:
+
+1. Contain only workspace-specific §7 conventions, identified as `WC1`, `WC2`, … (workspace convention).
+2. Inherit all §1–6 universal rules and global §7 conventions from `.design/RULES.md` — no re-declaration needed.
+3. Must not contradict the global constitution (Constitutional Guard applies equally).
+4. Are created on demand by `magic.rule` when the first workspace-scoped rule is requested.
+5. Version independently from the global `RULES.md`.
 
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.2.0 | 2026-03-05 | Agent | Added C22: Workspace Rule Inheritance. |
 | 1.1.0 | 2026-03-03 | Antigravity | Added C17-C21: Installers, Security, Parity, and Ventilation. |
 | 1.0.0 | 2026-03-03 | Agent | Initial constitution |
