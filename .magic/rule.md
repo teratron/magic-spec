@@ -44,7 +44,6 @@ graph TD
 
 ### 5. Impact Analysis & Sync
 
-... (replaces previous section) ...
 After write, if `TASKS.md` exists:
 
 1. **Notify**: Inform user that `TASKS.md` version (`Based on RULES`) is now stale.

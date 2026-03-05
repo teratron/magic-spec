@@ -1737,6 +1737,108 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Suggests: run `magic.task update` to re-evaluate the plan
 - **Guards tested:** RE-D2 (Manager INDEX.md re-read cadence between assignments)
 
+### T112 — Analyze Dispatch Cross-Workspace Name Collision on Create
+
+- **Workflow:** `spec.md` (§Creating — Cross-Workspace Parity)
+- **Synthetic State:**
+  - `workspace.json`: `engine` (default), `app`.
+  - `engine/auth.md` — Stable, v2.0.0.
+  - `app/` INDEX.md: empty (0 specs).
+- **Action:** `/magic.analyze app` → Mode A proposes `auth.md` for `app/` workspace → user approves → dispatch calls `spec.md` §Creating for `auth.md`
+- **Expected:**
+  - [ ] spec.md §Creating Pre-flight fires Cross-Workspace Parity check
+  - [ ] Detects `auth.md` already exists in `engine` (v2.0.0)
+  - [ ] **HALT** before creating `app/auth.md`
+  - [ ] Report: "Name collision: `auth.md` already exists in `engine` (v2.0.0). Resolve before creating: (a) unique name, (b) promote existing as canonical, (c) force ignore."
+  - [ ] `app/auth.md` NOT created until user resolves
+- **Guards tested:** RE-E1 (Cross-Workspace Parity in spec.md §Creating)
+
+### T113 — Mode B Logic Evolution Triggers Amendment Cascade
+
+- **Workflow:** `analyze.md` (Mode B — Logic Evolution → dispatch)
+- **Synthetic State:**
+  - `app/auth.md` — L1, Stable, v1.0.0.
+  - `app/auth-jwt.md` — L2, Stable, `Implements: auth.md`.
+  - `app/src/auth/` — code has structurally drifted: 4 new sub-modules added (>30% threshold).
+- **Action:** `/magic.analyze app` → Mode B detects Logic Evolution in `auth.md` → user approves Reality Sync
+- **Expected:**
+  - [ ] Logic Evolution detected: >30% new sub-modules in `src/auth/`
+  - [ ] Reality Sync proposed: structured diff or "New Draft" of `auth.md`
+  - [ ] User approves Reality Sync
+  - [ ] Dispatch via `spec.md` Amendment Rule: `auth.md` status Stable → RFC
+  - [ ] C12 cascade: `auth-jwt.md` (L2 dependent) status dropped to RFC
+  - [ ] Report: "C12 Cascade: 1 dependent quarantined: [auth-jwt.md]."
+  - [ ] No silent spec update — Amendment Rule and C12 both explicitly triggered
+- **Guards tested:** RE-E2 (Logic Evolution amendment cascade + C12 in analyze.md Mode B)
+
+### T114 — Analyze Mode A Pre-flight Step 0 Enforcement
+
+- **Workflow:** `analyze.md` (Mode A — Step 0)
+- **Synthetic State:**
+  - `.design/` initialized, `INDEX.md` empty (0 specs)
+  - Project has 300 source files
+- **Action:** `/magic.analyze`
+- **Expected:**
+  - [ ] Mode C runs first (Mode Precedence), then user accepts Mode A
+  - [ ] Mode A Step 0 fires: `check-prerequisites` called
+  - [ ] Depth Control applied: 300 files → agent asks "Full or Focused?"
+  - [ ] Agent does NOT start "Build full project map" until user responds
+- **Guards tested:** Mode A Step 0 Pre-flight, Depth Control enforcement in operational steps
+
+### T115 — Analyze Mode B Pre-flight Step 0 Enforcement
+
+- **Workflow:** `analyze.md` (Mode B — Step 0)
+- **Synthetic State:**
+  - `INDEX.md` has 5 active specs
+  - Project has 800 source files
+- **Action:** "Re-analyze project"
+- **Expected:**
+  - [ ] Mode B Step 0 fires: `check-prerequisites` called
+  - [ ] Depth Control applied: 800 files → agent recommends Focused/Quick, HALTs for choice
+  - [ ] Agent does NOT start reading specs (Step 1) until user responds
+- **Guards tested:** Mode B Step 0 Pre-flight, Depth Control enforcement for large projects
+
+### T116 — Analyze Direct Trigger Auto-Init
+
+- **Workflow:** `analyze.md` (Auto-Init — Invariant 2)
+- **Synthetic State:**
+  - `.design/` does NOT exist
+  - Project has source code
+- **Action:** `/magic.analyze` (direct trigger, NOT via `spec.md` delegation)
+- **Expected:**
+  - [ ] `analyze.md` Invariant 2 fires: `.design/` missing detected
+  - [ ] Auto-trigger `.magic/init.md` before any scanning
+  - [ ] `.design/` created with all 5 artifacts
+  - [ ] Analysis resumes after init completes
+- **Guards tested:** Auto-Init (Invariant 2) on direct analyze trigger
+
+### T117 — Spec Delta-Editing Enforcement (>200 Lines)
+
+- **Workflow:** `spec.md` (Updating an Existing Specification)
+- **Synthetic State:**
+  - `auth.md` (Stable, 250 lines)
+  - User requests adding a new section
+- **Action:** Agent updates `auth.md`
+- **Expected:**
+  - [ ] Pre-flight detects >200 lines → delta-editing mode activated (Invariant 9)
+  - [ ] Agent uses search-replace operations instead of full file rewrite
+  - [ ] Changed sections marked with `[ADDED]`, `[MODIFIED]`, or `[REMOVED]`
+  - [ ] No content corruption from full-file replacement on large spec
+- **Guards tested:** Delta-Editing enforcement (Invariant 9) in operational step
+
+### T118 — Spec Ventilation Routing (No Phantom C21)
+
+- **Workflow:** `spec.md` (Ventilation invariant)
+- **Synthetic State:**
+  - `.design/` initialized, INDEX.md has 5 specs
+  - User says "Ventilate" or "Check specs deeply"
+- **Action:** Agent processes ventilation intent
+- **Expected:**
+  - [ ] Agent routes to `analyze.md` Mode C (not a phantom C21 convention)
+  - [ ] `analyze.md` is read and its workflow followed
+  - [ ] No reference to undefined convention ID in agent output
+- **Guards tested:** Ventilation routing without phantom convention reference
+
 ```
-**Test Suite Finalized** — v1.9.25
+**Test Suite Finalized** — v1.9.28
 ```

@@ -15,7 +15,6 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
-
 7. **Architectural Logic**:
     - **Circular Guard**: Deep scan `Related Specifications` across ALL levels. If ANY cycle (N-level) detected → **HALT**.
     - **Cycle Resolution**: Suggest breaking the chain by identifying the "weakest link" (Related Spec vs Implements).
@@ -45,7 +44,7 @@ graph TD
 2. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 3. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
 4. **Execution Mode**: If not in `RULES.md §7`, ask (Sequential/Parallel) and save to §7.
-5. **Decompose**: Split Phase 1 into 2-3 tasks per spec.
+5. **Decompose**: Split the active phase into 2-3 tasks per spec.
     - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
     - **Tracks**: Group tasks by file independence.
     - **Testing (Mandatory)**: Every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.

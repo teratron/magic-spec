@@ -10,17 +10,17 @@ Universal process for managing project specifications in `.design/specifications
 
 ## Core Invariants (MUST FOLLOW)
 
-- **Context**: flag > `MAGIC_WORKSPACE` > `.design/workspace.json` default > fallback root `.design/`. Never ask user.
-- **Prohibitions**: No implementation code in specs; use pseudo-code only. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
-- **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
-- **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
-- **linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
-- **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
-- **Dispatch**: Use "Raw Input" flow for unstructured ideas.
-- **Ventilation (C21)**: Use `magic analyze` to trigger a deep consistency check.
-- **Delta-Editing**: For files >200 lines, use search-replace. Mark with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
-- **Closure**: Every task ends with mandatory "Task Completion Checklist".
-- **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
+1. **Context**: flag > `MAGIC_WORKSPACE` > `.design/workspace.json` default > fallback root `.design/`. Never ask user.
+2. **Prohibitions**: No implementation code in specs; use pseudo-code only. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
+3. **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
+4. **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
+5. **Linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
+6. **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
+7. **Dispatch**: Use "Raw Input" flow for unstructured ideas.
+8. **Ventilation**: Use `magic.analyze` to trigger a deep consistency check. See `.magic/analyze.md` Mode C.
+9. **Delta-Editing**: For spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
+10. **Closure**: Every task ends with mandatory "Task Completion Checklist".
+11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
 
 ## Directory Structure
 
@@ -120,7 +120,7 @@ graph TD
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
     - Sync `INDEX.md`.
-    - Present **Actionable Outcome**: "I've ready the specs. Proceed to Plan/Run? (Yes/Details)".
+    - Present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run? (Yes/Details)".
 
 **Constraints**:
 
@@ -134,6 +134,7 @@ graph TD
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`
     - `checksums_mismatch` → **HALT**. Restore integrity.
     - Missing `.design/` → Auto-Run `.magic/init.md`.
+    - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → **HALT** before creating. Report: "Name collision: `{file}` already exists in `{ws}` (v{X}). Resolve before creating: (a) use a unique name per workspace, (b) promote the existing spec as canonical and sync, (c) force ignore (document reason)."
 2. **Creation**:
     - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec as per C16).
     - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}`.
@@ -142,7 +143,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `check-prerequisites` (Same as Creation).
+1. **Pre-flight**: `check-prerequisites` (Same as Creation). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
 2. **Versioning**:
     - `patch` (0.0.X) — typos, no logic change.
     - `minor` (0.X.0) — extensions.

@@ -9,4 +9,4 @@
 | 1.3.1 | 2026-02-27 | Stress-test R2: Circular Dependency Guard, Deprecated Done-task preservation |
 | 1.3.2 | 2026-02-28 | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight |
 | 1.3.2 | 2026-02-28 | AOP: Added Downgrade Policy to Selective Planning (C6) |
-| 1.4.9 - 1.4.107 | 2026-03-03 | Automated update via engine meta automation |
+| 1.4.9 - 1.4.144 | 2026-03-05 | Automated update via engine meta automation |

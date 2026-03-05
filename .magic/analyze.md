@@ -12,14 +12,15 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 ## Core Invariants (Mandatory)
 
 1. **Context**: Resolve target workspace via the priority chain below. Route all logic to `.design/{workspace}/`.
-2. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
-3. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
-4. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
-5. **Depth Control (Safety)**: Before scanning:
+2. **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
+3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
+4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
+5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
+6. **Depth Control (Safety)**: Before scanning:
     - **<50 files**: Auto-scan.
     - **50-500 files**: Ask: Full or Focused?
     - **>500 files**: Recommend Focused/Quick. HALT for user choice.
-6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze` (Smart History: redundant automated entries are skipped).
+7. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze` (Smart History: redundant automated entries are skipped).
 
 ## Workspace Resolution
 
@@ -38,7 +39,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 ### 1. Stack & Structure
 
-Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using `list_dir` (depth 2-3).
+Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using `list_dir` (depth 2 by default; extend to depth 3 only for monorepo root directories with nested `packages/` or `apps/`).
 **Isolation (C15)**: If `MAGIC_WORKSPACE_SCOPE` is defined, restrict scanning strictly to the specified directory paths.
 
 ### 2. Architecture Inference
@@ -62,6 +63,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 *Trigger: INDEX.md is empty.*
 
+0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`. If `.design/` missing → auto-run `.magic/init.md`. Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Build full project map.
 2. Inferred stack + architecture style.
 3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries.
@@ -71,6 +73,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 *Trigger: INDEX.md has active specs.*
 
+0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`. Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Read existing specs; extract currently described paths/logic.
 2. Scan actual project; build delta.
 3. **Gap Report**:
@@ -79,7 +82,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Orphaned**: Spec refers to deleted code.
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Name, title, or semantic similarity >80% → Propose rename/sync. If structural similarity <50% despite path correlation → Treat as **Uncovered** (New Spec) + **Orphaned** (Delete Old Spec).
-    - **Logic Evolution**: If code structure/logic inside covered directories has structurally drifted (e.g., >30% new sub-modules, API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation.
+    - **Logic Evolution**: If code structure/logic inside covered directories has structurally drifted (e.g., >30% new sub-modules, API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation. If approved: dispatch via `spec.md` Amendment Rule (Stable → RFC). C12 cascade applies to all L2 dependents of the affected spec.
 
 ### [Mode C] Project Ventilation
 

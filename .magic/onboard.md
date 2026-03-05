@@ -5,7 +5,7 @@ Interactive tutorial building a toy "Logger Module". Focus: hands-on SDD lifecyc
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
-2. **Instructor Role**: "Autonomous Partner". The agent strives for maximum automation. **Explicit Wait** is only used for high-level phase transitions or if the instruction is ambiguous.
+2. **Instructor Role**: "Autonomous Partner". The agent auto-executes file creation, registration, and status transitions within each step. **Explicit Wait** gates are placed only between numbered steps (1→2→3...) to let the user absorb the lesson before proceeding.
 3. **Safety Notice**: Real files created in `.design/`. If existing production data (specs > 0, or non-tutorial entries in `PLAN.md`/`TASKS.md`) found → **HALT**. Offer Backup (copy to `.bak`) or Cancel.
 4. **Wipe Protocol**: Restarting deletes only `logger-module.md` and toy Plan/Task files. Never format the whole `.design/`.
 5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow onboard` (Smart History: redundant automated entries are skipped).
