@@ -46,6 +46,7 @@ Both installers act as lightweight wrappers. They do not bundle the entire SDD e
 2. **Security Verification**: Validate the payload to prevent path traversal and ensure safe extraction.
 3. **Engine Deployment**: Extract `.magic/` (engine) and `.agent/` (workflows) into your project root.
 4. **Initialization**: Automatically run the project-level init script via `node .magic/scripts/executor.js init`.
+5. **`.gitignore` Management**: Append `.magic/` and the adapter directory (e.g., `.agent/`, `.cursor/rules/`) to your project's `.gitignore`. These are installed dependencies and should not be committed. To vendor them, remove the entries from `.gitignore`.
 
 ## 🕹️ CLI Commands & Arguments
 

@@ -178,6 +178,45 @@ function copyDir(src, dest) {
     fs.cpSync(src, dest, { recursive: true, force: true });
 }
 
+function appendToGitignore(entries) {
+    const gitignoreFile = path.join(cwd, '.gitignore');
+    let content = '';
+    if (fs.existsSync(gitignoreFile)) {
+        content = fs.readFileSync(gitignoreFile, 'utf8');
+    }
+
+    const added = [];
+    for (const entry of entries) {
+        // Normalize: ensure trailing slash for directories
+        const normalized = entry.endsWith('/') ? entry : entry + '/';
+        // Check if already present (with or without trailing slash)
+        const base = normalized.replace(/\/$/, '');
+        const alreadyPresent = content.split(/\r?\n/).some(line => {
+            const trimmed = line.trim();
+            return trimmed === base || trimmed === normalized;
+        });
+        if (!alreadyPresent) {
+            added.push(normalized);
+        }
+    }
+
+    if (added.length === 0) return;
+
+    // Append under a Magic Spec section header
+    const section = '\n# Magic Spec (engine & workflows — installed via npx/uvx)';
+    const hasSection = content.includes('# Magic Spec');
+    let appendBlock = '';
+    if (!hasSection) {
+        appendBlock = section + '\n';
+    }
+    appendBlock += added.join('\n');
+
+    content = content.trimEnd() + '\n' + appendBlock + '\n';
+    fs.writeFileSync(gitignoreFile, content, 'utf8');
+    console.log(`📝 Updated .gitignore: added ${added.join(', ')}`);
+    console.log(`   💡 To vendor engine files in your repo, remove these entries.`);
+}
+
 function convertToToml(content, description) {
     // Escape quotes and backslashes for TOML triple-quoted strings
     const escapedContent = content
@@ -733,6 +772,7 @@ async function main() {
     }
 
     try {
+        let selectedEnvResolved = null;
         if (!isLocal) {
             sourceRoot = await downloadPayload(versionToFetch);
         }
@@ -909,6 +949,21 @@ async function main() {
             console.warn(`⚠️  Failed to write .magic/.version: ${vErr.message}`);
         }
 
+        // 5. Auto-update .gitignore
+        const gitignoreEntries = [ENGINE_DIR];
+        if (envValues.length > 0) {
+            for (const env of envValues) {
+                const adapter = ADAPTERS[env];
+                if (adapter && adapter.dest) {
+                    gitignoreEntries.push(adapter.dest);
+                }
+            }
+        } else if (selectedEnvResolved && ADAPTERS[selectedEnvResolved]) {
+            gitignoreEntries.push(ADAPTERS[selectedEnvResolved].dest);
+        } else {
+            gitignoreEntries.push(AGENT_DIR);
+        }
+        appendToGitignore(gitignoreEntries);
 
         // 6. Save checksums - [T-2C03]
         try {

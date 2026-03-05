@@ -101,7 +101,30 @@ def test_installer(installer_type="python") -> bool:
                 all_passed = False
                 continue
 
-        print(f"✅ {env_name}: Successfully installed {len(files)} files.")
+        # .gitignore verification
+        gitignore_path = SANDBOX_PATH / ".gitignore"
+        if not gitignore_path.exists():
+            print(f"❌ {env_name}: .gitignore not created!")
+            all_passed = False
+        else:
+            gitignore_content = gitignore_path.read_text(encoding="utf-8")
+            engine_dir_entry = CONFIG.get("engineDir", ".magic") + "/"
+            dest_entry = config["dest"]
+            if not dest_entry.endswith("/"):
+                dest_entry += "/"
+
+            if engine_dir_entry not in gitignore_content:
+                print(
+                    f"❌ {env_name}: {engine_dir_entry} entry missing from .gitignore!"
+                )
+                all_passed = False
+            if dest_entry not in gitignore_content:
+                print(f"❌ {env_name}: {dest_entry} entry missing from .gitignore!")
+                all_passed = False
+
+        print(
+            f"✅ {env_name}: Successfully installed {len(files)} files & verified .gitignore."
+        )
 
     return all_passed
 

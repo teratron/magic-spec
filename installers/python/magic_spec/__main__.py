@@ -256,6 +256,37 @@ def _copy_dir(src: pathlib.Path, dst: pathlib.Path) -> None:
             shutil.copy2(item, dst / item.name)
 
 
+def _append_to_gitignore(dest: pathlib.Path, entries: list[str]) -> None:
+    gitignore_file = dest / ".gitignore"
+    content = ""
+    if gitignore_file.exists():
+        content = gitignore_file.read_text(encoding="utf-8")
+
+    lines = content.splitlines()
+    added = []
+    for entry in entries:
+        normalized = entry if entry.endswith("/") else entry + "/"
+        base = normalized.rstrip("/")
+        already_present = any(line.strip() in (base, normalized) for line in lines)
+        if not already_present:
+            added.append(normalized)
+
+    if not added:
+        return
+
+    section = "\n# Magic Spec (engine & workflows \u2014 installed via npx/uvx)"
+    has_section = "# Magic Spec" in content
+    append_block = ""
+    if not has_section:
+        append_block = section + "\n"
+    append_block += "\n".join(added)
+
+    content = content.rstrip() + "\n" + append_block + "\n"
+    gitignore_file.write_text(content, encoding="utf-8")
+    print(f"📝 Updated .gitignore: added {', '.join(added)}")
+    print("   💡 To vendor engine files in your repo, remove these entries.")
+
+
 def _convert_to_mdc(content: str, description: str) -> str:
     return f"---\ndescription: {description}\nglobs: \n---\n\n{content}"
 
@@ -635,6 +666,19 @@ def main() -> None:
             else version_to_fetch
         )
         (dest / ".magic" / ".version").write_text(real_version, encoding="utf-8")
+
+        # Auto-update .gitignore
+        gitignore_entries = [ENGINE_DIR]
+        if env_values:
+            for ev in env_values:
+                adapter = adapters.get(ev)
+                if adapter and adapter.get("dest"):
+                    gitignore_entries.append(adapter["dest"])
+        elif selected_env and selected_env in adapters:
+            gitignore_entries.append(adapters[selected_env]["dest"])
+        else:
+            gitignore_entries.append(AGENT_DIR)
+        _append_to_gitignore(dest, gitignore_entries)
 
         current_checksums = _get_directory_checksums(dest / ".magic")
 

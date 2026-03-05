@@ -239,6 +239,13 @@ npx magic-spec@latest --update
 > [!TIP]
 > The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agent/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
 
+### Post-Install: `.gitignore`
+
+The installer automatically adds `.magic/` and the adapter directory (e.g., `.agent/`, `.cursor/rules/`) to your project's `.gitignore`. These directories are **installed dependencies** — similar to `node_modules/` — and should be reinstalled via `npx magic-spec@latest` rather than committed to version control.
+
+> [!TIP]
+> **Vendoring**: If you prefer to commit the engine into your repository (so teammates get it without running the installer), simply remove the `.magic/` and `.agent/` entries from your `.gitignore`.
+
 ## 💬 Usage
 
 Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:

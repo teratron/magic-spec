@@ -73,6 +73,8 @@ your-project/
 
 > **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](./workspaces.md) for full configuration details.
 
+**`.gitignore`**: The installer automatically adds `.magic/` and the adapter directory to your `.gitignore`. These are installed dependencies (like `node_modules/`) and should not be committed. To vendor them instead, remove the entries from `.gitignore`.
+
 ## 🚀 Usage Guide
 
 Talk to your AI agent (Cursor, Windsurf, Claude, etc.) using the following natural language triggers:
