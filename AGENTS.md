@@ -27,13 +27,18 @@ The project is divided into three primary logical layers:
 
 - **Path**: `/.design/`
 - **Role**: This is the project's own implementation of the Magic SDD workflow.
-- **Content**: Contains the specifications, implementation plans, and tasks for `magic-spec` itself.
+- **Content**: Contains specifications, implementation plans, and tasks for `magic-spec` itself, organized into workspaces defined by `.design/workspace.json`.
+- **Structure**:
+  - `.design/INDEX.md` — Global aggregate registry linking all workspace indexes.
+  - `.design/RULES.md` — Global constitution (§1–6 universal rules + cross-workspace §7 conventions).
+  - `.design/{workspace}/INDEX.md` — Workspace-specific specification registry.
+  - `.design/{workspace}/RULES.md` — Workspace-specific §7 conventions (created on demand, inherits global rules; see C22).
 - **Note**: This acts as a "testing ground" and live documentation for the engine's capabilities.
 
 ## 2. Agent Operational Rules
 
 1. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
-2. **Context Awareness**: Always refer to `.design/INDEX.md` to understand the current state of specifications and `.design/RULES.md` for coding conventions.
+2. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
 3. **Engine Integrity**: Do not modify files in `.magic/` or `.agent/workflows/magic.*.md` unless the task specifically requires "Engine Improvement".
 4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
