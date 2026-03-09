@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.8.0
+**Version:** 1.9.29
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -1529,7 +1529,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Mode C completes and agent presents checklist
 - **Expected:**
   - [ ] Agent presents **Mode C: Ventilation** checklist (not Mode A/B checklist)
-  - [ ] All 6 Mode C items evaluated: self-check, registry audit, coverage, rule validation, report delivery, C14 not triggered
+  - [ ] All 8 Mode C checklist items evaluated: self-check, registry audit, structural integrity (if workspace), coverage, rule validation, report delivery, advisory report, C14 not triggered
   - [ ] C14 not triggered (Mode C is read-only — C1 §7 confirmed)
   - [ ] No Mode A/B items (Depth Control, Stack/Arch, Dispatch) appear as pending items
 - **Guards tested:** Mode C checklist separation (RE-A5), C14 exemption for read-only mode
@@ -1839,6 +1839,234 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No reference to undefined convention ID in agent output
 - **Guards tested:** Ventilation routing without phantom convention reference
 
+### T119 — Analyze Argument Routing: Workspace vs Focus Disambiguation
+
+- **Workflow:** `analyze.md` (§Argument Routing)
+- **Synthetic State:**
+  - `workspace.json` registers: `engine`, `installers`.
+- **Test A — Unquoted workspace name:**
+  - **Action:** `/magic.analyze engine`
+  - **Expected:**
+    - [ ] Argument matches workspace name → Workspace Analysis mode
+    - [ ] Mode C (with Structural Integrity) → A/B scoped to `engine`
+- **Test B — Quoted workspace name (force focus):**
+  - **Action:** `/magic.analyze "engine"`
+  - **Expected:**
+    - [ ] Argument is quoted → treated as focus text, NOT workspace
+    - [ ] Mode D triggered: focus directive = "engine"
+    - [ ] Agent searches for project areas matching keyword "engine"
+- **Test C — Workspace + focus:**
+  - **Action:** `/magic.analyze installers "проверь тесты"`
+  - **Expected:**
+    - [ ] First token `installers` matches workspace → workspace resolved
+    - [ ] Remaining `"проверь тесты"` → focus directive
+    - [ ] Mode D scoped to `installers` workspace
+- **Guards tested:** Argument Routing disambiguation, quote-wrapping override
+
+### T120 — Analyze Mode D: Focused Analysis on Specific Area
+
+- **Workflow:** `analyze.md` (Mode D — Focused Analysis)
+- **Synthetic State:**
+  - `workspace.json`: `app` workspace, scope: `src/`
+  - `INDEX.md` has 3 specs: `api.md` (covers `src/api/`), `auth.md` (covers `src/auth/`), `ui.md` (covers `src/components/`)
+  - `src/api/` has 5 files, `src/auth/` has 3 files, `src/components/` has 20 files
+  - `src/utils/` exists (no spec, 8 files)
+- **Action:** `/magic.analyze app "проверь покрытие API"`
+- **Expected:**
+  - [ ] Focus directive parsed: intent = API coverage check
+  - [ ] Targeted scan: only `src/api/` and related API areas examined (not full project)
+  - [ ] Focused Gap Report: `src/api/` → Covered by `api.md`
+  - [ ] `src/utils/` NOT reported (out of focus scope)
+  - [ ] Advisory Report included, scoped to API area
+  - [ ] Depth Control exempt (targeted scan)
+- **Guards tested:** Mode D focus parsing, targeted scan scope, Advisory inclusion
+
+### T121 — Analyze Mode D: Focus Matches Nothing
+
+- **Workflow:** `analyze.md` (Mode D — HALT on no match)
+- **Synthetic State:**
+  - `workspace.json`: `engine` workspace
+  - Project has `src/core/`, `src/scripts/`, `docs/`
+- **Action:** `/magic.analyze "blockchain интеграция"`
+- **Expected:**
+  - [ ] Focus directive parsed: intent = blockchain integration
+  - [ ] Targeted scan: no folders, spec titles, or modules match "blockchain"
+  - [ ] **HALT**: "Could not map focus 'blockchain интеграция' to any project area. Try narrowing with a workspace: `/magic.analyze {workspace} \"blockchain интеграция\"`, or rephrase the focus."
+  - [ ] No scan started, no report generated
+- **Guards tested:** Mode D HALT on empty match, improved HALT message
+
+### T122 — Analyze Mode C: Structural Integrity Violations
+
+- **Workflow:** `analyze.md` (Mode C — Structural Integrity step)
+- **Synthetic State:**
+  - `workspace.json` registers `api` workspace with scope `src/api/`, folder `.design/api/`
+  - `.design/api/` exists but:
+    - `INDEX.md` is missing
+    - `specifications/` contains `My Spec.md` (not kebab-case)
+    - `specifications/orphan-spec.md` exists but is NOT listed in workspace INDEX
+  - `workspace.json` scope entry `src/legacy/` does NOT exist on disk
+- **Action:** `/magic.analyze api`
+- **Expected:**
+  - [ ] Structural Integrity fires (workspace specified)
+  - [ ] STRUCTURE violation: `INDEX.md` missing (required)
+  - [ ] STRUCTURE violation: `My Spec.md` — not kebab-case
+  - [ ] STRUCTURE violation: `orphan-spec.md` — file exists but no INDEX entry (cross-reference mismatch)
+  - [ ] STRUCTURE violation: scope path `src/legacy/` does not exist on disk
+  - [ ] All violations reported under `STRUCTURE` category (separate from Drift/Gap/Orphan)
+  - [ ] Mode C continues to subsequent steps (coverage, rules) after structural report
+- **Guards tested:** Structural Integrity all 6 sub-checks, STRUCTURE category separation
+
+### T123 — Analyze Advisory Report Generation Across Modes
+
+- **Workflow:** `analyze.md` (§Advisory Report — all modes)
+- **Synthetic State:**
+  - `workspace.json`: `app` workspace
+  - `INDEX.md` has 2 specs:
+    - `core.md` — L1 Stable, 350 lines (oversized), no L2 children
+    - `utils.md` — L2 Stable, no L1 parent
+  - `src/tests/` directory: 15 files, no corresponding spec
+  - `app/RULES.md` §7 repeats 2 conventions already in global `RULES.md` §6
+- **Test A — Mode A generates Advisory:**
+  - **Action:** INDEX.md empty → Mode A runs → Advisory step fires
+  - **Expected:**
+    - [ ] Advisory Report appended to Mode A output
+- **Test B — Mode B generates Advisory:**
+  - **Action:** INDEX.md has specs → Mode B runs → Advisory step fires
+  - **Expected:**
+    - [ ] Spec Quality: `core.md` flagged as oversized (>300 lines), split suggested
+    - [ ] Spec Quality: `core.md` flagged as bare L1 (no L2 children)
+    - [ ] Spec Quality: `utils.md` flagged as orphan L2 (no parent L1)
+    - [ ] Coverage Strategy: `src/tests/` flagged (15 files, no spec) → suggest `test-suite.md`
+    - [ ] Structural Improvements: 2 rule duplicates flagged → suggest promoting to global
+    - [ ] Each finding has concrete Action Proposal (`→ /magic.spec ...` or `→ /magic.rule ...`)
+- **Test C — Mode C generates Advisory:**
+  - **Action:** `/magic.analyze app` → Mode C completes → Advisory step fires
+  - **Expected:**
+    - [ ] Advisory Report appended after Mode C report (step 9)
+    - [ ] Same findings as Test B (spec quality + coverage + structural)
+- **Guards tested:** Advisory generation in all modes (not just Mode D), Action Proposals format
+
+### T124 — Analyze Mode D: Depth Control Fallback on Wide Focus
+
+- **Workflow:** `analyze.md` (Mode D — Depth Control exemption + fallback)
+- **Synthetic State:**
+  - Large project: 800 source files
+  - No workspace specified
+- **Test A — Narrow focus:**
+  - **Action:** `/magic.analyze "авторизация"`
+  - **Expected:**
+    - [ ] Focus matches `src/auth/` (12 files) → Depth Control exempt
+    - [ ] Targeted scan proceeds without prompting
+- **Test B — Wide focus resolving to >500 files:**
+  - **Action:** `/magic.analyze "все компоненты"`
+  - **Expected:**
+    - [ ] Focus matches `src/` (600+ files)
+    - [ ] Depth Control fallback triggers: agent recommends Focused/Quick, HALTs for choice
+    - [ ] Agent does NOT auto-scan 600+ files
+- **Guards tested:** Mode D Depth Control exemption for narrow focus, fallback for wide focus (>500 files)
+
+### T125 — Analyze Mode C: Scope Blind-Spot Detection
+
+- **Workflow:** `analyze.md` (Mode C — Scope Blind-Spot Check)
+- **Synthetic State:**
+  - `workspace.json` registers: `api` (scope: `packages/api/`), `web` (scope: `packages/web/`)
+  - Project also has `packages/shared/`, `infra/`, `scripts/` at top level
+  - None of these extra directories are in any workspace scope
+- **Action:** `/magic.analyze api`
+- **Expected:**
+  - [ ] Mode C step 5 fires: union of all workspace scopes = `packages/api/` + `packages/web/`
+  - [ ] `packages/shared/`, `infra/`, `scripts/` detected as not in any scope
+  - [ ] Report includes `UNSCOPED` warnings for each: "Directory 'packages/shared/' is not in any workspace scope — invisible to scoped analysis."
+  - [ ] Warnings are non-halting (informational, included in consolidated report)
+- **Guards tested:** Scope Blind-Spot Check, UNSCOPED category
+
+### T126 — Analyze Registry Audit: Case Mismatch on Case-Insensitive FS
+
+- **Workflow:** `analyze.md` (Mode C — Registry Audit exact match)
+- **Synthetic State:**
+  - OS: Windows (case-insensitive filesystem)
+  - `INDEX.md` lists `api-routes.md`
+  - Disk file is `specifications/API-Routes.md`
+  - File is accessible via both names on Windows
+- **Action:** `/magic.analyze api`
+- **Expected:**
+  - [ ] Registry Audit uses exact string match (not OS file-exists)
+  - [ ] `api-routes.md` (INDEX) ≠ `API-Routes.md` (disk) → registry violation detected
+  - [ ] Structural Integrity also flags `API-Routes.md` as non-kebab-case
+  - [ ] Report includes both violations (registry mismatch + naming convention)
+  - [ ] Agent does NOT report "file not found" — it recognizes the case mismatch
+- **Guards tested:** Exact string match in Registry Audit, case-insensitive FS edge case
+
+### T127 — Analyze Mode D: Project-Wide Focus Bypasses C15
+
+- **Workflow:** `analyze.md` (Mode D — C15 exception)
+- **Synthetic State:**
+  - `workspace.json`: `api` (scope: `packages/api/`), `web` (scope: `packages/web/`)
+  - `packages/shared/utils.js` exists (not in any workspace scope)
+  - No workspace argument provided
+- **Test A — Focus without workspace:**
+  - **Action:** `/magic.analyze "utils"`
+  - **Expected:**
+    - [ ] Mode D triggered, no workspace → project-wide scan
+    - [ ] C15 scope NOT enforced (focus is the boundary)
+    - [ ] `packages/shared/utils.js` found and included in Focused Gap Report
+    - [ ] Directories outside all scopes are reachable
+- **Test B — Focus with workspace:**
+  - **Action:** `/magic.analyze api "utils"`
+  - **Expected:**
+    - [ ] Mode D triggered, workspace `api` → C15 applied (scope: `packages/api/`)
+    - [ ] `packages/shared/utils.js` NOT found (out of `api` scope)
+    - [ ] Only `packages/api/` searched for "utils" matches
+- **Guards tested:** Mode D C15 exception (project-wide), C15 enforcement (workspace-scoped)
+
+### T128 — Simulate C14 Enforcement Gate Blocks Report
+
+- **Workflow:** `simulate.md` (§Reporting & Fixes — C14 Enforcement Gate)
+- **Synthetic State:**
+  - Agent ran `/magic.simulate spec` and found 2 ROUGH EDGEs
+  - Agent applied surgical patches to `.magic/spec.md`
+  - Agent is about to report results
+- **Action:** Agent reaches Reporting step
+- **Expected:**
+  - [ ] C14 Enforcement Gate fires: "were any `.magic/` files modified during this `/magic.simulate` invocation?"
+  - [ ] Answer: yes (`spec.md` patched) → `update-engine-meta --workflow simulate` runs
+  - [ ] `.version` bumped, `.checksums` regenerated
+  - [ ] Only AFTER checksums match does the agent present results
+  - [ ] If agent skips Gate and reports first → **FAIL**
+- **Guards tested:** C14 Enforcement Gate blocking semantics
+
+### T129 — Simulate Succession Max 2-Round Guard
+
+- **Workflow:** `simulate.md` (§Succession — max iterations)
+- **Synthetic State:**
+  - Round 1: `/magic.simulate test` finds 1 FAIL → agent patches → C14 Gate → Succession
+  - Round 2: `/magic.simulate test` finds 1 new FAIL (introduced by Round 1 fix) → agent patches → C14 Gate → Succession
+  - Round 3 would start
+- **Action:** Agent reaches 3rd Succession attempt
+- **Expected:**
+  - [ ] Agent detects round >2
+  - [ ] Agent does NOT start a 3rd fix cycle
+  - [ ] Agent reports: "Max Succession rounds (2) reached. Remaining issues: [list]."
+  - [ ] Simulation completes with open issues documented
+- **Guards tested:** Succession max 2-round guard, infinite loop prevention
+
+### T130 — Simulate File-Path Argument Routing
+
+- **Workflow:** `simulate.md` (§Mode Selection — file-path support)
+- **Synthetic State:**
+  - All engine files present and valid
+- **Test A — Workflow name:**
+  - **Action:** `/magic.simulate spec`
+  - **Expected:**
+    - [ ] Direct mode: cognitive walkthrough of `spec.md`
+- **Test B — File path:**
+  - **Action:** `/magic.simulate @/path/to/magic.analyze.md`
+  - **Expected:**
+    - [ ] File path parsed: workflow name extracted as `analyze`
+    - [ ] Direct mode: cognitive walkthrough of `analyze.md`
+    - [ ] Same behavior as `/magic.simulate analyze`
+- **Guards tested:** File-path argument parsing, equivalence with workflow-name argument
+
 ```
-**Test Suite Finalized** — v1.9.28
+**Test Suite Finalized** — v1.9.31
 ```

@@ -12,3 +12,8 @@
 | 1.3.2 | 2026-02-28 | Enforced Regression Sweep sweep after fixes |
 | 1.3.2 | 2026-02-28 | Dynamic Default target: triggers Improv Mode automatically |
 | 1.4.9 - 1.4.146 | 2026-03-05 | Automated update via engine meta automation |
+| 1.4.149 | 2026-03-09 | Add Argument Routing, Mode D (Focused Analysis), Structural Integrity, Advisory Report, Scope Blind-Spot Check, exact string match in Registry Audit, C15 exception for Mode D |
+| 1.4.150 | 2026-03-09 | Add C14 Enforcement Gate as blocking step in Reporting & Fixes |
+| 1.4.151 | 2026-03-09 | Clarify session scope, update mermaid diagram with C14 Gate and Succession loop, add max 2-round guard, document file-path argument support, update checklist to blocking semantics |
+| 1.4.152 | 2026-03-09 | Add regression tests T128-T130 for C14 Gate, Succession guard, file-path routing |
+| 1.4.153 | 2026-03-09 | Formalize Improv Mode multi-workspace scope and Suite Integrity structural requirements |
