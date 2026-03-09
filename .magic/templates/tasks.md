@@ -15,7 +15,11 @@
 
 ## Phase {N} — {Phase Name}
 
-**Status:** {Active | Completed}
+### Checklist
+
+- [ ] [T-{ID}] {Task Title}
+
+### Details
 
 ## [T-N{Track}{Seq}] {Task Title}
 

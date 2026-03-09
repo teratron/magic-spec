@@ -10,8 +10,8 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
-    - **Atomic Tasks (C10)**: 1 task = 1 spec section. Use `[ ]`, `[/]`, `[x]`, `[~]`, `[!]`.
-    - **User Gate**: In **Trust Mode**, show a concise summary (Phases & Goals) and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
+    - **Atomic Tasks (C10)**: Every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
+    - **User Gate**: In **Trust Mode**, show the Plan & Checklist summary and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
@@ -57,8 +57,8 @@ graph TD
 ### Plan Write-back
 
 - Use `.magic/templates/plan.md` and `.magic/templates/tasks.md`.
-- PLAN.md: Summarize, don't copy.
-- TASKS.md: Master index with `Based on RULES:` version.
+- PLAN.md: Strategic overview (Phases & Specifications). No atomic checklist items.
+- TASKS.md: Tactical execution ledger. Contains the Master Phase Checklist (with IDs) and detailed tasks.
 
 ## Task Completion Checklist
 
@@ -69,6 +69,6 @@ Task Workflow Checklist — {operation}
   ☐ Selective Planning (C6) and Quarantine (C12) applied
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
-  ☐ PLAN.md / TASKS.md written; CONTEXT.md regenerated
+  ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
 ```

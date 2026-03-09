@@ -14,16 +14,7 @@
 *Abstract specifications — technology-agnostic contracts.*
 *Must reach Stable before Phase 1 can begin.*
 
-- **{Spec Name}** ([{spec.md}](specifications/{spec.md})) [L1]
-  - [ ] Define Core Invariants
-  - [ ] Review and approve concept
-
-## Phase 1 — {Name}
-
-- **{Spec Name}** ([{spec.md}](specifications/{spec.md}))
-  - [ ] {Task 1: Summary}
-  - [ ] {Task 2: Summary}
-  - [ ] {Task 3: (Optional)}
+- [ ] **{Spec Name}** ([{spec.md}](specifications/{spec.md})) [L{N}]
 
 ## Backlog
 

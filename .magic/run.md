@@ -53,11 +53,11 @@ graph TD
 3. **Execute**: Implement per spec section. No scope creep.
 4. **Update**:
     - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md`. If demoted since dispatch → **HALT** that track. Report: "Spec `{file}` demoted to `{status}` during execution of `{task}`. Task output suspended — run `magic.task update` to re-evaluate."
-    - Set `In Progress` → `Done` (or `Blocked [!]` with reason).
+    - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update.
-    - **Sync**: If spec/phase finished → Update `[x]` in `PLAN.md`.
+    - **Sync**: If spec/phase finished → Update high-level `[x]` in `PLAN.md`.
     - **Actionable Outcome**: After phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
-    - **Change Record**: Write 1-line summary in task `Changes` field.
+    - **Change Record**: Write 1-line summary in task `Changes` field in `TASKS.md`.
 5. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
     - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from **Done** task `Changes` fields) to `CHANGELOG.md`.
@@ -77,7 +77,7 @@ Checklist — {operation}
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
   ☐ Parallel: Manager role enforced; shared files serialized
-  ☐ Status: TASKS.md / phase files / PLAN.md [x] synced
+  ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, manifest bumped, CONTEXT.md updated
 ```

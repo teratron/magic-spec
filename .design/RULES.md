@@ -105,15 +105,14 @@ Once the user provides high-level intent (ideation), the agent is authorized to 
 2. **Destructive Actions** (deleting files or specifications).
 3. **Ambiguous Triggers** (where >1 architectural path exists).
 
-### C10 — Nested Phase Architecture
+### C10 — Task Architecture & Status Truth
 
-Implementation plans in `PLAN.md` must follow a nested hierarchy: **Phase → Specification → Atomic Tasks**. Each specification is decomposed into 2–3 atomic checklist items using standardized notation:
+Logic and progress tracking are distributed between two primary files to ensure clarity and automation:
 
-- `[ ]` Todo
-- `[/]` In Progress
-- `[x]` Done
-- `[~]` Cancelled
-- `[!]` Blocked
+1. **`PLAN.md` (Strategic)**: High-level overview of **Phase → Specification**. Each specification has a single checkbox representing its aggregate implementation status.
+2. **`TASKS.md` (Tactical)**: The master execution ledger. Contains a concise **Phase Checklist** (items prefixed with unique `[T-XXXX]` IDs) followed by detailed task blocks.
+
+All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` checklist first. `PLAN.md` is updated only when a specification or phase is fully completed.
 
 ### C11 — Simulation Workflow (C2 Exception)
 

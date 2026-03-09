@@ -2067,6 +2067,30 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Same behavior as `/magic.simulate analyze`
 - **Guards tested:** File-path argument parsing, equivalence with workflow-name argument
 
+### T131 — Checklist Consolidation Strategic/Tactical Split
+
+- **Workflow:** `task.md` + `run.md`
+- **Synthetic State:**
+  - 2 Stable specs: `auth.md`, `api.md`
+  - RULES.md v1.3.0 (contains C10 Checklist Consolidation)
+  - templates/plan.md and templates/tasks.md updated
+- **Action 1: Generate tasks (`task.md`)**
+- **Expected 1:**
+  - [ ] `PLAN.md` created: contains high-level entries for `auth.md` and `api.md` with single `[ ]` checkboxes. **No nested atomic tasks.**
+  - [ ] `TASKS.md` created: contains **Phase Checklist** with atomic items prefixed with `[T-XXXX]` (e.g., `[ ] [T-1A01] Implement auth login`).
+  - [ ] `TASKS.md` details section contains full task blocks.
+- **Action 2: Execute task T-1A01 (`run.md`)**
+- **Expected 2:**
+  - [ ] T-1A01 implementation complete.
+  - [ ] **`TASKS.md` Phase Checklist** updated: `[ ]` → `[x]` for T-1A01.
+  - [ ] **`PLAN.md` remains unchanged** (since only one task of two for `auth.md` is done).
+- **Action 3: Execute final task for auth.md**
+- **Expected 3:**
+  - [ ] All tasks for `auth.md` marked `[x]` in `TASKS.md`.
+  - [ ] Agent recognizes `auth.md` completion.
+  - [ ] **`PLAN.md` updated**: `[ ]` → `[x]` for `auth.md` specification.
+- **Guards tested:** C10 Strategic/Tactical split, status sync isolation (atomic in TASKS, spec-level in PLAN).
+
 ```
-**Test Suite Finalized** — v1.9.31
+**Test Suite Finalized** — v1.9.32
 ```
