@@ -365,7 +365,7 @@ class TestIntegration(unittest.TestCase):
         )
         self.assertCommand(result)
         self.assertIn("ejected successfully", result.stdout)
-        self.assertFalse(os.path.exists(".magic"))
+        self.assertFalse(os.path.exists(ENGINE_DIR))
 
 
 if __name__ == "__main__":

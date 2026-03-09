@@ -16,19 +16,13 @@ CONFIG_PATH = PROJECT_ROOT / "installers" / "config.json"
 with open(CONFIG_PATH, "r", encoding="utf-8") as f:
     CONFIG = json.load(f)
 
-TEST_CONFIG = CONFIG.get("tests", {})
-SANDBOX_PATH = PROJECT_ROOT / TEST_CONFIG.get("sandboxDir", "installers/tests/sandbox")
-ADAPTERS_JSON = PROJECT_ROOT / TEST_CONFIG.get(
-    "adaptersJson", "installers/adapters.json"
-)
-PYTHON_INSTALLER = PROJECT_ROOT / TEST_CONFIG.get(
-    "pythonInstaller", "installers/python/magic_spec/__main__.py"
-)
-NODE_INSTALLER = PROJECT_ROOT / TEST_CONFIG.get(
-    "nodeInstaller", "installers/node/index.js"
-)
-TEST_DIR = PROJECT_ROOT / TEST_CONFIG.get("testDir", "installers/tests")
-TEST_PATTERN = TEST_CONFIG.get("testPattern", "test_*.py")
+TEST_CONFIG = CONFIG["tests"]
+SANDBOX_PATH = PROJECT_ROOT / TEST_CONFIG["sandboxDir"]
+ADAPTERS_JSON = PROJECT_ROOT / TEST_CONFIG["adaptersJson"]
+PYTHON_INSTALLER = PROJECT_ROOT / TEST_CONFIG["pythonInstaller"]
+NODE_INSTALLER = PROJECT_ROOT / TEST_CONFIG["nodeInstaller"]
+TEST_DIR = PROJECT_ROOT / TEST_CONFIG["testDir"]
+TEST_PATTERN = TEST_CONFIG["testPattern"]
 
 
 def reset_sandbox():
@@ -108,7 +102,7 @@ def test_installer(installer_type="python") -> bool:
             all_passed = False
         else:
             gitignore_content = gitignore_path.read_text(encoding="utf-8")
-            engine_dir_entry = CONFIG.get("engineDir", ".magic") + "/"
+            engine_dir_entry = CONFIG["engineDir"] + "/"
             dest_entry = config["dest"]
             if not dest_entry.endswith("/"):
                 dest_entry += "/"

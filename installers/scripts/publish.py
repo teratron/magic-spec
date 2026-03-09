@@ -179,22 +179,15 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     print(f"\nCommitting changes and creating tag {tag}...")
 
     publish_cfg = CONFIG.get("publish", {})
-    files_to_add = publish_cfg.get(
-        "versionFiles",
-        [
-            "pyproject.toml",
-            "installers/python/magic_spec/__init__.py",
-            "package.json",
-            ".magic/.version",
-        ],
-    )
+    files_to_add = list(publish_cfg["versionFiles"])
     files_to_add.extend(docs_files)
 
     if dry_run:
         print(f"  [Dry Run] git add {' '.join(files_to_add)}")
         print(f"  [Dry Run] git commit -m 'Release {tag}'")
         print(f"  [Dry Run] git tag -a {tag} -m 'Release {tag}'")
-        print("  [Dry Run] git push origin master --tags")
+        default_branch = CONFIG.get("git", {}).get("defaultBranch", "master")
+        print(f"  [Dry Run] git push origin {default_branch} --tags")
         return
 
     # Assuming we want to stage the modified version files
@@ -222,8 +215,9 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
     )
 
     # Standard release scripts usually push.
-    run_command(["git", "push", "origin", "master", "--tags"], cwd=str(PROJECT_ROOT))
-    print(f"Successfully committed, tagged and pushed {tag} to origin master.")
+    default_branch = CONFIG.get("git", {}).get("defaultBranch", "master")
+    run_command(["git", "push", "origin", default_branch, "--tags"], cwd=str(PROJECT_ROOT))
+    print(f"Successfully committed, tagged and pushed {tag} to origin {default_branch}.")
 
 
 def publish_python(dry_run: bool) -> None:

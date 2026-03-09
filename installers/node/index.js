@@ -77,6 +77,11 @@ function loadInstallerConfig() {
         failConfig("field 'magicFiles' must be an array of strings");
     }
 
+    const designDir = requireNonEmptyString(parsed.designDir, 'designDir');
+    const versionFile = requireNonEmptyString(parsed.versionFile, 'versionFile');
+    const checksumsFile = requireNonEmptyString(parsed.checksumsFile, 'checksumsFile');
+    const historyDir = requireNonEmptyString(parsed.historyDir, 'historyDir');
+
     return {
         githubRepo,
         packageName,
@@ -84,6 +89,10 @@ function loadInstallerConfig() {
         engineDir,
         agentDir,
         workflowsDir,
+        designDir,
+        versionFile,
+        checksumsFile,
+        historyDir,
         defaultExt,
         workflows,
         magicFiles,
@@ -102,6 +111,10 @@ const WORKFLOWS_DIR = INSTALLER_CONFIG.workflowsDir;
 const DEFAULT_EXT = INSTALLER_CONFIG.defaultExt;
 const WORKFLOWS = INSTALLER_CONFIG.workflows;
 const MAGIC_FILES = INSTALLER_CONFIG.magicFiles;
+const DESIGN_DIR = INSTALLER_CONFIG.designDir;
+const VERSION_FILE = INSTALLER_CONFIG.versionFile;
+const CHECKSUMS_FILE = INSTALLER_CONFIG.checksumsFile;
+const HISTORY_DIR = INSTALLER_CONFIG.historyDir;
 const DEFAULT_REMOVE_PREFIX = INSTALLER_CONFIG.removePrefix;
 const DOWNLOAD_TIMEOUT_MS = INSTALLER_CONFIG.download.timeoutMs;
 const NODE_USER_AGENT = INSTALLER_CONFIG.userAgent.node;
@@ -366,7 +379,7 @@ function runDoctor() {
                 console.log(`✅ ${item.path || name} is present`);
             } else {
                 const hint = requiredHint ? ` (Hint: ${requiredHint})` : '';
-                console.log(`❌ .design/${name} is missing${hint}`);
+                console.log(`❌ ${DESIGN_DIR}/${name} is missing${hint}`);
             }
         };
 
@@ -402,12 +415,12 @@ function runInfo() {
     console.log('magic-spec installation status');
     console.log('────────────────────────────────');
 
-    const versionFile = path.join(cwd, '.magic', '.version');
+    const versionFilePath = path.join(cwd, ENGINE_DIR, VERSION_FILE);
     let installedVersion = 'none';
-    if (fs.existsSync(versionFile)) {
-        installedVersion = fs.readFileSync(versionFile, 'utf8').trim();
+    if (fs.existsSync(versionFilePath)) {
+        installedVersion = fs.readFileSync(versionFilePath, 'utf8').trim();
     }
-    console.log(`Installed version : ${installedVersion}  (.magic/.version)`);
+    console.log(`Installed version : ${installedVersion}  (${ENGINE_DIR}/${VERSION_FILE})`);
 
     const ADAPTERS_PATH = path.join(__dirname, '..', 'adapters.json');
     let activeEnvs = [];
@@ -426,8 +439,8 @@ function runInfo() {
     const enginePresent = fs.existsSync(path.join(cwd, ENGINE_DIR));
     console.log(`Engine            : ${ENGINE_DIR}/     ${enginePresent ? '✅ present' : '❌ missing'}`);
 
-    const designPresent = fs.existsSync(path.join(cwd, '.design'));
-    console.log(`Workspace         : .design/    ${designPresent ? '✅ present' : '❌ missing'}`);
+    const designPresent = fs.existsSync(path.join(cwd, DESIGN_DIR));
+    console.log(`Workspace         : ${DESIGN_DIR}/    ${designPresent ? '✅ present' : '❌ missing'}`);
 
     console.log('────────────────────────────────');
     console.log(`Run \`npx ${PACKAGE_NAME}@latest --update\` to refresh engine files.`);
@@ -435,9 +448,9 @@ function runInfo() {
 }
 
 function runCheck() {
-    const versionFile = path.join(cwd, ENGINE_DIR, '.version');
+    const versionFile = path.join(cwd, ENGINE_DIR, VERSION_FILE);
     if (!fs.existsSync(versionFile)) {
-        console.log(`⚠️  Not installed via magic-spec (no ${ENGINE_DIR}/.version file)`);
+        console.log(`⚠️  Not installed via magic-spec (no ${ENGINE_DIR}/${VERSION_FILE} file)`);
         process.exit(0);
     }
 
@@ -490,7 +503,7 @@ async function runEject() {
     console.log(`   -  ${ENGINE_DIR}/`);
     console.log(`   -  ${AGENT_DIR}/  (or active env adapter dir)`);
     console.log(`   -  ${ENGINE_DIR}.bak/  (if exists)`);
-    console.log('\n   Your .design/ workspace will NOT be affected.');
+    console.log(`\n   Your ${DESIGN_DIR}/ workspace will NOT be affected.`);
 
     let shouldRun = autoAccept;
     if (!shouldRun) {
@@ -539,10 +552,10 @@ function getDirectoryChecksums(dir, baseDir = dir) {
     for (const item of items) {
         const fullPath = path.join(dir, item.name);
         if (item.isDirectory()) {
-            if (item.name === '.checksums' || item.name === 'history') continue;
+            if (item.name === CHECKSUMS_FILE || item.name === HISTORY_DIR) continue;
             Object.assign(results, getDirectoryChecksums(fullPath, baseDir));
         } else {
-            if (item.name === '.checksums') continue;
+            if (item.name === CHECKSUMS_FILE) continue;
             const relPath = path.relative(baseDir, fullPath).replace(/\\/g, '/');
             results[relPath] = getFileChecksum(fullPath);
         }
@@ -551,22 +564,22 @@ function getDirectoryChecksums(dir, baseDir = dir) {
 }
 
 async function handleConflicts(cwd) {
-    const checksumsFile = path.join(cwd, '.magic', '.checksums');
-    if (!fs.existsSync(checksumsFile)) return;
+    const checksumsFilePath = path.join(cwd, ENGINE_DIR, CHECKSUMS_FILE);
+    if (!fs.existsSync(checksumsFilePath)) return;
 
     let storedChecksums = {};
     try {
-        storedChecksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
+        storedChecksums = JSON.parse(fs.readFileSync(checksumsFilePath, 'utf8'));
     } catch (e) {
         return;
     }
 
     const conflicts = [];
     for (const [relPath, storedHash] of Object.entries(storedChecksums)) {
-        if (relPath === '.checksums' || relPath === '.version') continue;
+        if (relPath === CHECKSUMS_FILE || relPath === VERSION_FILE) continue;
 
-        // Backward compatibility: try .magic first, then project root
-        let localPath = path.join(cwd, '.magic', relPath);
+        // Backward compatibility: try engine dir first, then project root
+        let localPath = path.join(cwd, ENGINE_DIR, relPath);
         if (!fs.existsSync(localPath)) {
             localPath = path.join(cwd, relPath);
         }
@@ -903,8 +916,8 @@ async function main() {
         if (!isUpdate) {
             const isWindows = process.platform === 'win32';
             const initScript = isWindows
-                ? path.join(cwd, '.magic', 'scripts', 'init.ps1')
-                : path.join(cwd, '.magic', 'scripts', 'init.sh');
+                ? path.join(cwd, ENGINE_DIR, 'scripts', 'init.ps1')
+                : path.join(cwd, ENGINE_DIR, 'scripts', 'init.sh');
 
             if (fs.existsSync(initScript)) {
                 let shouldRun = true;
@@ -941,12 +954,12 @@ async function main() {
             console.log(`✅ ${PACKAGE_NAME} updated successfully!`);
         }
 
-        // 4. Write version file (.magic/.version) - [T-2B01]
+        // 4. Write version file - [T-2B01]
         try {
-            const versionFile = path.join(cwd, '.magic', '.version');
-            fs.writeFileSync(versionFile, version, 'utf8');
+            const versionFileDest = path.join(cwd, ENGINE_DIR, VERSION_FILE);
+            fs.writeFileSync(versionFileDest, version, 'utf8');
         } catch (vErr) {
-            console.warn(`⚠️  Failed to write .magic/.version: ${vErr.message}`);
+            console.warn(`⚠️  Failed to write ${ENGINE_DIR}/${VERSION_FILE}: ${vErr.message}`);
         }
 
         // 5. Auto-update .gitignore
@@ -967,10 +980,10 @@ async function main() {
 
         // 6. Save checksums - [T-2C03]
         try {
-            const currentChecksums = getDirectoryChecksums(path.join(cwd, '.magic'));
+            const currentChecksums = getDirectoryChecksums(path.join(cwd, ENGINE_DIR));
 
             if (isUpdate) {
-                const checksumsFile = path.join(cwd, '.magic', '.checksums');
+                const checksumsFile = path.join(cwd, ENGINE_DIR, CHECKSUMS_FILE);
                 if (fs.existsSync(checksumsFile)) {
                     try {
                         const oldChecksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
@@ -985,7 +998,7 @@ async function main() {
 
             Object.assign(currentChecksums, adapterChecksums);
 
-            fs.writeFileSync(path.join(cwd, '.magic', '.checksums'), JSON.stringify(currentChecksums, null, 2), 'utf8');
+            fs.writeFileSync(path.join(cwd, ENGINE_DIR, CHECKSUMS_FILE), JSON.stringify(currentChecksums, null, 2), 'utf8');
         } catch (cErr) {
             console.warn(`⚠️  Failed to save checksums: ${cErr.message}`);
         }
