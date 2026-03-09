@@ -34,26 +34,26 @@ def _load_config() -> dict:
 
 _INSTALLER_CONFIG = _load_config()
 
-# Version and Repo info
-GITHUB_REPO = _INSTALLER_CONFIG.get("githubRepo", "teratron/magic-spec")
-PACKAGE_NAME = _INSTALLER_CONFIG.get("packageName", "magic-spec")
-ENGINE_DIR = _INSTALLER_CONFIG.get("engineDir", ".magic")
-AGENT_DIR = _INSTALLER_CONFIG.get("agentDir", ".agent")
-WORKFLOWS_DIR = _INSTALLER_CONFIG.get("workflowsDir", "workflows")
-DEFAULT_EXT = _INSTALLER_CONFIG.get("defaultExt", ".md")
+# Version and Repo info (no fallbacks — config.json is the single source of truth)
+GITHUB_REPO = _INSTALLER_CONFIG["githubRepo"]
+PACKAGE_NAME = _INSTALLER_CONFIG["packageName"]
+ENGINE_DIR = _INSTALLER_CONFIG["engineDir"]
+AGENT_DIR = _INSTALLER_CONFIG["agentDir"]
+WORKFLOWS_DIR = _INSTALLER_CONFIG["workflowsDir"]
+DEFAULT_EXT = _INSTALLER_CONFIG["defaultExt"]
+DESIGN_DIR = _INSTALLER_CONFIG["designDir"]
+VERSION_FILE = _INSTALLER_CONFIG["versionFile"]
+CHECKSUMS_FILE = _INSTALLER_CONFIG["checksumsFile"]
+HISTORY_DIR = _INSTALLER_CONFIG["historyDir"]
 
 # List of files to sync for the SDD engine (.magic)
-MAGIC_FILES = _INSTALLER_CONFIG.get("magicFiles", [])
+MAGIC_FILES = _INSTALLER_CONFIG["magicFiles"]
 
 # List of core workflows to sync for the AI agent (.agent)
-WORKFLOWS = _INSTALLER_CONFIG.get("workflows", [])
+WORKFLOWS = _INSTALLER_CONFIG["workflows"]
 
-PYTHON_USER_AGENT = _INSTALLER_CONFIG.get("userAgent", {}).get(
-    "python", "magic-spec-cli"
-)
-DOWNLOAD_TIMEOUT_SECONDS = (
-    _INSTALLER_CONFIG.get("download", {}).get("timeoutMs", 60000) // 1000
-)
+PYTHON_USER_AGENT = _INSTALLER_CONFIG["userAgent"]["python"]
+DOWNLOAD_TIMEOUT_SECONDS = _INSTALLER_CONFIG["download"]["timeoutMs"] // 1000
 
 
 def get_download_url(version: str) -> str:
@@ -159,8 +159,8 @@ def _get_directory_checksums(directory: pathlib.Path) -> dict[str, str]:
         return checksums
     for root, dirs, files in os.walk(directory):
         # Skip history directory
-        if "history" in dirs:
-            dirs.remove("history")
+        if HISTORY_DIR in dirs:
+            dirs.remove(HISTORY_DIR)
         for file in files:
             full_path = pathlib.Path(root) / file
             rel_path = full_path.relative_to(directory).as_posix()
@@ -169,7 +169,7 @@ def _get_directory_checksums(directory: pathlib.Path) -> dict[str, str]:
 
 
 def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict:
-    checksum_file = dest / ENGINE_DIR / ".checksums"
+    checksum_file = dest / ENGINE_DIR / CHECKSUMS_FILE
     if not checksum_file.exists():
         return {"choice": "o", "conflicts": []}
 
@@ -180,7 +180,7 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict:
 
     conflicts = []
     for rel_path, old_hash in old_checksums.items():
-        if rel_path in [".checksums", ".version"]:
+        if rel_path in [CHECKSUMS_FILE, VERSION_FILE]:
             continue
 
         # Try finding the file in .magic/ first (backward compatibility), then in project root
@@ -226,7 +226,7 @@ def _handle_conflicts(dest: pathlib.Path, auto_accept: bool = False) -> dict:
 
 
 def create_backup(dest: pathlib.Path) -> None:
-    backup_dir = dest / ".magic" / "backups" / f"backup_{int(time.time())}"
+    backup_dir = dest / ENGINE_DIR / "backups" / f"backup_{int(time.time())}"
     backup_dir.mkdir(parents=True, exist_ok=True)
 
     # Backup .magic
@@ -411,7 +411,7 @@ def run_doctor(dest: pathlib.Path) -> int:
 
 def run_check(dest: pathlib.Path) -> int:
     curr = "Unknown"
-    v_file = dest / ENGINE_DIR / ".version"
+    v_file = dest / ENGINE_DIR / VERSION_FILE
     if v_file.exists():
         curr = v_file.read_text(encoding="utf-8").strip()
     remote = _resolve_package_version()
@@ -429,10 +429,10 @@ def run_info(dest: pathlib.Path) -> int:
     print("" + "─" * 32)
 
     installed_version = "None"
-    version_file = dest / ".magic" / ".version"
+    version_file = dest / ENGINE_DIR / VERSION_FILE
     if version_file.exists():
         installed_version = version_file.read_text(encoding="utf-8").strip()
-    print(f"Installed version : {installed_version}  (.magic/.version)")
+    print(f"Installed version : {installed_version}  ({ENGINE_DIR}/{VERSION_FILE})")
 
     active_envs = []
     # Load adapters to detect environment
@@ -455,9 +455,9 @@ def run_info(dest: pathlib.Path) -> int:
         f"Engine            : {ENGINE_DIR}/     {'✅ present' if engine_present else '❌ missing'}"
     )
 
-    workspace_present = (dest / ".design").exists()
+    workspace_present = (dest / DESIGN_DIR).exists()
     print(
-        f"Workspace         : .design/    {'✅ present' if workspace_present else '❌ missing'}"
+        f"Workspace         : {DESIGN_DIR}/    {'✅ present' if workspace_present else '❌ missing'}"
     )
 
     print("" + "─" * 32)
@@ -665,7 +665,7 @@ def main() -> None:
             if version_to_fetch == "main"
             else version_to_fetch
         )
-        (dest / ".magic" / ".version").write_text(real_version, encoding="utf-8")
+        (dest / ENGINE_DIR / VERSION_FILE).write_text(real_version, encoding="utf-8")
 
         # Auto-update .gitignore
         gitignore_entries = [ENGINE_DIR]
@@ -680,11 +680,11 @@ def main() -> None:
             gitignore_entries.append(AGENT_DIR)
         _append_to_gitignore(dest, gitignore_entries)
 
-        current_checksums = _get_directory_checksums(dest / ".magic")
+        current_checksums = _get_directory_checksums(dest / ENGINE_DIR)
 
         # Preserve stored hash for files that were explicitly skipped during update
         if is_update:
-            checksum_file = dest / ENGINE_DIR / ".checksums"
+            checksum_file = dest / ENGINE_DIR / CHECKSUMS_FILE
             if checksum_file.exists():
                 try:
                     old_checksums = json.loads(
@@ -698,7 +698,7 @@ def main() -> None:
 
         current_checksums.update(adapter_checksums)
 
-        (dest / ".magic" / ".checksums").write_text(
+        (dest / ENGINE_DIR / CHECKSUMS_FILE).write_text(
             json.dumps(current_checksums, indent=2), encoding="utf-8"
         )
 

@@ -5,6 +5,10 @@
     "engineDir": ".magic",
     "agentDir": ".agent",
     "workflowsDir": "workflows",
+    "designDir": ".design",
+    "versionFile": ".version",
+    "checksumsFile": ".checksums",
+    "historyDir": "history",
     "defaultExt": ".md",
     "workflows": [
         "magic.analyze",
@@ -64,6 +68,9 @@
             "CHANGELOG.md"
         ],
         "docsDir": "docs"
+    },
+    "git": {
+        "defaultBranch": "master"
     },
     "tests": {
         "sandboxDir": "installers/tests/sandbox",

@@ -7,6 +7,7 @@ description: Workflow for testing, building, and publishing the Magic Spec engin
 This workflow handles the end-to-end process of validating, building, and publishing the `magic-spec` engine to package registries (NPM, PyPI). It ensures that the engine's documentation, versioning, and codebase remain synchronized.
 
 > **Scope**: Testing, build artifacts, documentation synchronization, and registry publishing.
+> **Automation**: The primary tool is `python installers/scripts/publish.py [old_version] [new_version] [--dry-run] [--skip-publish]`. It atomically bumps versions, updates docs, commits, tags, and publishes to both registries.
 
 ## Agent Guidelines
 
@@ -14,9 +15,10 @@ This workflow handles the end-to-end process of validating, building, and publis
 
 1. **Test First**: Never attempt a build or publish without running the full test suite first.
 2. **Docs Sync Check**: Always verify that the `README.md` and `docs/` reflect the current state of the engine (e.g., version numbers, feature list, directory structure) before publishing.
-3. **Version Discipline**: Ensure `.magic/.version` and project manifests (`package.json`, etc.) are in sync.
-4. **Dry Run**: Always perform a "dry run" publish (to a local folder or using `--dry-run` flags) and show the proposed changes/artifacts to the user before the final push.
+3. **Version Discipline**: `.magic/.version` is the **source of truth** for the engine version. All manifests (`package.json`, `pyproject.toml`, `installers/python/magic_spec/__init__.py`) are synchronized via `publish.py` using the list in `installers/config.json` → `publish.versionFiles`.
+4. **Dry Run**: Always perform a dry run first: `python installers/scripts/publish.py [old] [new] --dry-run` and show the proposed changes/artifacts to the user before the final push.
 5. **No Broken States**: If any test fails or a doc mismatch is found, **HALT** and report the discrepancy. Do not bypass errors.
+6. **C14 Enforcement**: Before publishing, ensure checksums are current. If any `.magic/` file was modified, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — this is a blocking gate.
 
 ## Workflow Steps
 
@@ -29,28 +31,32 @@ This workflow handles the end-to-end process of validating, building, and publis
    - If tests fail, report the failure and HALT.
 2. **Documentation & Script Audit**:
    - **Engine Sync**: Compare `.magic/` core logic and scripts (`.magic/scripts/`) with descriptions in `README.md` (root) and `docs/README.md`.
-   - **Manifests Sync**: Ensure the version in `package.json` (Node.js) and `pyproject.toml` (Python) matches the engine version and documentation.
-   - **Wrappers Sync**: Verify that each relevant `.magic/*.md` workflow has a corresponding entry point in `.agent/workflows/magic.*.md`.
-   - **Docs Completeness**: Verify that all new engine features and scripts are documented in `docs/`.
-   - **Patch & Checksums**:
-     - Check if `.magic/.version` has been bumped per C14 protocol.
-     - **Regenerate Checksums**: If any file in `.magic/` was modified, ensure `node .magic/scripts/generate-checksums.js` is run BEFORE building.
+   - **Manifests Sync**: Verify that all files listed in `installers/config.json` → `publish.versionFiles` contain the same version as `.magic/.version`.
+   - **Wrappers Sync**: Verify that each **user-facing** workflow listed in `installers/config.json` → `workflows` has a corresponding entry point in `.agent/workflows/magic.*.md`. Internal engine files (`init.md`, `retrospective.md`) do not require wrappers.
+   - **Docs Completeness**: Verify that all engine features and workflows documented in `.magic/` have corresponding entries in `docs/`. Check `docs/` files listed in `installers/config.json` → `publish.docsTargets` and `publish.docsDir`.
+   - **C14 Gate (Checksums)**:
+     - If any file in `.magic/` was modified, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` BEFORE building. This is a **blocking gate** — do not proceed until checksums match.
 3. **Report Status**: Show a summary of QA results:
 
    ```plaintext
    QA Status:
    - Tests: [PASS/FAIL]
-   - Version Sync: [Match/Mismatch] (e.g., Node: 1.4.3, Py: 1.4.3, Docs: 1.4.3)
+   - Version Sync: [Match/Mismatch] (Source: .magic/.version = X.Y.Z)
+     - package.json: [Match/Mismatch]
+     - pyproject.toml: [Match/Mismatch]
+     - __init__.py: [Match/Mismatch]
    - Docs Alignment: [OK/Stale]
+   - Checksums: [Current/Stale]
    ```
 
 ### 2. Building
 
 **Trigger phrase**: *"Build engine"*, *"Prepare artifacts"*
 
-1. **Run Build**: Execute `npm run build`.
-   - This creates the `dist/` directory and packs the package.
-2. **Verify Artifacts**: Check the contents of the generated `.tgz` file to ensure all required files (`installers/`, `package.json`, `pyproject.toml`, etc.) are included and no junk files are present.
+1. **Run Build**:
+   - **Node.js**: `npm run build` — creates `dist/` and packs `magic-spec-{version}.tgz`.
+   - **Python**: `uv build` (or `python -m build`) — creates `dist/*.whl` and `dist/*.tar.gz`.
+2. **Verify Artifacts**: Check the contents of the generated packages to ensure all required files (`installers/`, `package.json`, `pyproject.toml`, `config.json`, etc.) are included and no junk files are present.
 
 ### 3. Publishing
 
@@ -59,19 +65,19 @@ This workflow handles the end-to-end process of validating, building, and publis
 1. **Final Confirmation**: Present a release summary:
 
    ```plaintext
-   Ready to publish v1.4.x:
-   - Registry: NPM/PyPI
-   - Changes: {summarize from CHANGELOG.md}
+   Ready to publish v{version}:
+   - Registries: NPM + PyPI
+   - Changes: {summarize from CHANGELOG.md and .magic/history/}
    - Documentation: Synchronized
-   
+
    Confirm publish? (yes / cancel)
    ```
 
-2. **Dry Run (Optional but recommended)**: `npm run publish:dry`.
-3. **Execute Publish**: Perform the actual registry upload.
+2. **Dry Run**: `python installers/scripts/publish.py [old] [new] --dry-run`.
+3. **Execute Publish**: `python installers/scripts/publish.py [old] [new]` — performs the actual registry upload to both NPM and PyPI.
 4. **Post-publish**:
-   - Ensure `git tags` are created (if applicable).
-   - Verify the package is live on registries.
+   - Verify git tag `v{version}` was created by `publish.py`.
+   - Verify the package is live on both registries (`npm view magic-spec version`, `pip index versions magic-spec`).
 
 ## Publish Completion Checklist
 
@@ -83,18 +89,19 @@ Publish Workflow Checklist — {operation description}
 Validation & QA
   ☐ Full test suite passed (`npm test`)
   ☐ .magic/ structure and scripts match README.md and docs/
-  ☐ Agent entry points (.agent/workflows/magic.*.md) synced with core .magic/ workflows
-  ☐ Engine version (.magic/.version) bumped (C14)
-  ☐ **Checksums regenerated** (`.magic/.checksums` reflects current state)
-  ☐ Engine version consistent with manifests (package.json, pyproject.toml)
-  ☐ All README/Docs version references are updated
+  ☐ Wrappers synced: user-facing workflows (config.json → workflows) have .agent/ entry points
+  ☐ C14 Enforcement Gate: checksums current BEFORE build (blocking)
+  ☐ Version source of truth: .magic/.version = {version}
+  ☐ All manifests synced (config.json → publish.versionFiles)
+  ☐ All README/Docs version references updated (config.json → publish.docsTargets)
 
 Build & Artifacts
-  ☐ `npm run build` executed successfully
-  ☐ Artifacts in `dist/` verified for completeness
+  ☐ Node.js: `npm run build` → dist/*.tgz verified
+  ☐ Python: `uv build` → dist/*.whl + dist/*.tar.gz verified
 
 Registry & Release
-  ☐ Dry run performed and verified
-  ☐ Final publish command executed
-  ☐ Version bumped and documented in CHANGELOG.md
+  ☐ Dry run: `publish.py --dry-run` performed and verified
+  ☐ Final publish: `publish.py` executed (NPM + PyPI)
+  ☐ Git tag `v{version}` created
+  ☐ CHANGELOG.md updated
 ```

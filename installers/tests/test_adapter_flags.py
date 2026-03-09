@@ -6,7 +6,7 @@ import json
 import pathlib
 import sys
 
-PROJECT_ROOT = pathlib.Path(r"D:\Projects\src\github.com\teratron\magic-spec")
+PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
 
 
 class TestAdapterFlags(unittest.TestCase):
