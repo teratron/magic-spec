@@ -26,14 +26,18 @@ Universal process for managing project specifications in `.design/specifications
 
 ```plaintext
 .design/
-├── INDEX.md # Registry: what specs exist and their status
-├── RULES.md # Constitution: how spec work is governed
-├── PLAN.md # Implementation plan (managed by Plan Workflow)
-├── specifications/ # Spec files
-│   └── *.md
-├── TASKS.md # Master task index
-└── tasks/ # Task files (managed by Task Workflow)
-    └── phase-{n}.md # Per-phase task files
+├── INDEX.md # Global Registry: aggregates all workspaces
+├── RULES.md # Constitution: how project specification is governed
+├── workspace.json # Workspace configuration registry
+├── main/ # Primary/default workspace
+│   ├── INDEX.md # Workspace-specific registry
+│   ├── PLAN.md # Implementation plan for main
+│   ├── specifications/ # Spec files
+│   │   └── *.md
+│   ├── TASKS.md # Master task index
+│   └── tasks/ # Task files
+│       └── phase-{n}.md # Per-phase task files
+└── {other-workspaces}/ # Added as needed
 ```
 
 **System files and their roles:**

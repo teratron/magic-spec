@@ -1,71 +1,70 @@
 const fs = require('fs');
 const path = require('path');
 
-const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
+const designDirRaw = process.env.MAGIC_DESIGN_DIR || '.design';
+const designDir = path.resolve(designDirRaw);
+const isGlobalRegistry = path.basename(designDir) === '.design';
 
 if (!fs.existsSync('.git')) {
     console.log('Note: not a git repository. Proceeding with SDD initialization anyway.');
 }
 
-const dirsToCreate = [
-    path.join(designDir, 'specifications'),
-    path.join(designDir, 'tasks'),
-    path.join(designDir, 'archives', 'tasks')
-];
-
-dirsToCreate.forEach(dir => {
-    fs.mkdirSync(dir, { recursive: true });
-});
-
-const workspacePath = path.join(designDir, 'workspace.json');
-if (!fs.existsSync(workspacePath)) {
-    const workspaceContent = {
-        "default": "root",
-        "workspaces": {
-            "root": {
-                "description": "Primary project workspace"
-            }
-        }
-    };
-    fs.writeFileSync(workspacePath, JSON.stringify(workspaceContent, null, 2));
-    console.log(`Created ${workspacePath.replace(/\\/g, '/')}`);
-} else {
-    console.log(`Registry preservation: ${workspacePath.replace(/\\/g, '/')} already exists. Skipping.`);
-}
-
 const date = new Date().toISOString().split('T')[0];
 
-const indexPath = path.join(designDir, 'INDEX.md');
-if (!fs.existsSync(indexPath)) {
-    const indexContent = `# Specifications Registry
+function createGlobalFiles() {
+    if (!fs.existsSync(designDir)) {
+        fs.mkdirSync(designDir, { recursive: true });
+    }
+
+    const workspacePath = path.join(designDir, 'workspace.json');
+    if (!fs.existsSync(workspacePath)) {
+        const workspaceContent = {
+            "default": "main",
+            "workspaces": {
+                "main": {
+                    "description": "Primary project workspace"
+                }
+            }
+        };
+        fs.writeFileSync(workspacePath, JSON.stringify(workspaceContent, null, 2));
+        console.log(`Created ${workspacePath.replace(/\\/g, '/')}`);
+    } else {
+        console.log(`Registry preservation: ${workspacePath.replace(/\\/g, '/')} already exists. Skipping.`);
+    }
+
+    const indexPath = path.join(designDir, 'INDEX.md');
+    if (!fs.existsSync(indexPath)) {
+        const indexContent = `# Global Specifications Registry
 **Version:** 1.0.0
 **Status:** Active
 
 ## Overview
-Central registry of all project specifications and their current state.
+Global registry aggregating all project specifications across workspaces.
 
 ## System Files
 - [RULES.md](RULES.md) - Project constitution and standing conventions.
+- [workspace.json](workspace.json) - Workspace configuration registry.
 
-## Domain Specifications
-| File | Description | Status | Layer | Version |
-| :--- | :--- | :--- | :--- | :--- |
-<!-- Add your specifications here -->
+## Workspaces
+| Workspace | Description |
+| :--- | :--- |
+| [main](main/INDEX.md) | Primary project workspace |
+<!-- Add your workspaces here -->
 
 ## Meta Information
 - **Maintainer**: Core Team
 - **License**: MIT
 - **Last Updated**: ${date}
 `;
-    fs.writeFileSync(indexPath, indexContent);
-    console.log(`Created ${indexPath.replace(/\\/g, '/')}`);
-} else {
-    console.log(`Registry preservation: ${indexPath.replace(/\\/g, '/')} already exists. Skipping.`);
-}
+        fs.writeFileSync(indexPath, indexContent);
+        console.log(`Created ${indexPath.replace(/\\/g, '/')}`);
+    } else {
+        console.log(`Registry preservation: ${indexPath.replace(/\\/g, '/')} already exists. Skipping.`);
+    }
 
-const rulesPath = path.join(designDir, 'RULES.md');
-if (!fs.existsSync(rulesPath)) {
-    let rulesContent = `# Project Specification Rules
+    const rulesPath = path.join(designDir, 'RULES.md');
+    if (!fs.existsSync(rulesPath)) {
+        let rulesContent = `# Project Specification Rules
 **Version:** 1.0.0
 **Status:** Active
 
@@ -210,9 +209,60 @@ For minor features, simple bugfixes, or changes expected to be under 50 lines of
 | :--- | :--- | :--- |
 | 1.0.0 | INIT_DATE | Initial constitution |
 `;
-    rulesContent = rulesContent.replace(/INIT_DATE/g, date);
-    fs.writeFileSync(rulesPath, rulesContent);
-    console.log(`Created ${rulesPath.replace(/\\/g, '/')}`);
+        rulesContent = rulesContent.replace(/INIT_DATE/g, date);
+        fs.writeFileSync(rulesPath, rulesContent);
+        console.log(`Created ${rulesPath.replace(/\\/g, '/')}`);
+    } else {
+        console.log(`Registry preservation: ${rulesPath.replace(/\\/g, '/')} already exists. Skipping.`);
+    }
+}
+
+function initWorkspace(workspaceDir) {
+    if (!fs.existsSync(workspaceDir)) {
+        fs.mkdirSync(workspaceDir, { recursive: true });
+    }
+
+    const dirsToCreate = [
+        path.join(workspaceDir, 'specifications'),
+        path.join(workspaceDir, 'tasks'),
+        path.join(workspaceDir, 'archives', 'tasks')
+    ];
+
+    dirsToCreate.forEach(dir => {
+        if (!fs.existsSync(dir)) {
+            fs.mkdirSync(dir, { recursive: true });
+        }
+    });
+
+    const indexPath = path.join(workspaceDir, 'INDEX.md');
+    if (!fs.existsSync(indexPath)) {
+        const indexContent = `# Workspace Specifications Registry
+**Version:** 1.0.0
+**Status:** Active
+
+## Overview
+Local registry of specifications for this workspace.
+
+## Domain Specifications
+| File | Description | Status | Layer | Version |
+| :--- | :--- | :--- | :--- | :--- |
+<!-- Add your specifications here -->
+
+## Meta Information
+- **Maintainer**: Core Team
+- **Last Updated**: ${date}
+`;
+        fs.writeFileSync(indexPath, indexContent);
+        console.log(`Created ${indexPath.replace(/\\/g, '/')}`);
+    } else {
+        console.log(`Registry preservation: ${indexPath.replace(/\\/g, '/')} already exists. Skipping.`);
+    }
+}
+
+if (isGlobalRegistry) {
+    createGlobalFiles();
+    const mainWorkspaceDir = path.join(designDir, 'main');
+    initWorkspace(mainWorkspaceDir);
 } else {
-    console.log(`Registry preservation: ${rulesPath.replace(/\\/g, '/')} already exists. Skipping.`);
+    initWorkspace(designDir);
 }
