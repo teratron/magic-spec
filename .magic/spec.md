@@ -124,7 +124,7 @@ graph TD
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
     - Sync `INDEX.md`.
-    - Present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run? (Yes/Details)".
+    - Present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run? (Yes/Details)". **HARD STOP**: You MUST halt execution here. REFUSE to proceed to task generation or execution until the user explicitly replies.
 
 **Constraints**:
 

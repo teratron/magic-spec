@@ -156,6 +156,7 @@ On phase completion, the per-phase task file is moved from \`$DESIGN_DIR/tasks/\
 ### C9 — Zero-Prompt Automation
 
 Once the user approves the plan and task breakdown, the agent proceeds through execution and conclusion workflows without further confirmation prompts. Silent operations include: retrospective Level 1, changelog Level 1, CONTEXT.md regeneration, and status updates. The single exception is changelog Level 2 (external release artifact) which requires one explicit user approval before writing.
+**Phase Gates Exception**: C9 applies ONLY within a specific executing phase (e.g., executing atomic tasks within magic.run). Transitions across major workflow boundaries (Spec → Task → Run) constitute 'Phase Gates' and ALWAYS require explicit user approval (Hard Stop) before handing off.
 
 ### C10 — Nested Phase Architecture
 

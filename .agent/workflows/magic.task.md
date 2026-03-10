@@ -6,7 +6,7 @@ handoffs:
     prompt: "Generate or update the implementation plan and tasks based on ALL registered specifications."
   - label: "Execute tasks"
     workflow: magic.run
-    prompt: "Execute the unblocked tasks from the generated plan."
+    prompt: "MANDATORY HARD STOP: Ask the user 'Execute the unblocked tasks from the generated plan?' and WAIT for their explicit 'yes'."
     condition: "tasks_generated"
 ---
 

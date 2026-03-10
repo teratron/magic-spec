@@ -3,7 +3,7 @@ description: Workflow for creating and managing project specifications.
 handoffs:
   - label: "Generate tasks"
     workflow: magic.task
-    prompt: "Generate the implementation plan and tasks based on finalized specifications."
+    prompt: "MANDATORY HARD STOP: Ask the user 'Generate the implementation plan?' and WAIT for their explicit 'yes' before executing this handoff."
     condition: "registry_updated"
   - label: "Simulate engine change"
     workflow: magic.simulate
