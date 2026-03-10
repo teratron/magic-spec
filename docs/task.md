@@ -58,6 +58,14 @@ Tasks are organized into **Execution Tracks** (Track A, Track B, etc.).
 
 If the Task workflow needs to sub-delegate to `init.md` (cold start) or `analyze.md` (first-time analysis), the original user intent is memoized before delegation begins. After the sub-workflow resolves, the engine resumes explicitly: *"Resuming: '{original intent}'."* This prevents the user's initial goal from being silently lost across multi-workflow chains.
 
+## 3.5 Session Isolation (Phase Gates - C17)
+
+To ensure the implementation plan is executed with a clean context, the transition from **Task Planning** to **Execution (Run)** is protected by a **Hard Stop**.
+
+1. **Planning Focus**: All task decomposition and roadmap building should occur in a single chat session to preserve the agent's understanding of the full dependency graph.
+2. **Phase Completion**: Once the implementation plan (`PLAN.md`) and tasks (`TASKS.md`) are generated, the agent is mandated to halt.
+3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before running `/magic.run`. This forces the agent to read the newly generated tasks and the current code as the sole sources of truth, eliminating any "context bleed" from the planning phase.
+
 ## 6. Pre-flight Checks
 
 The Task workflow triggers a **Consistency Check** before running to ensure the plan is based on an accurate view of the project's current filesystem and specification registry.

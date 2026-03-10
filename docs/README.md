@@ -101,6 +101,7 @@ Magic Spec includes built-in "Pre-flight" checks:
 - **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration.
 - **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
 - **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
+- **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.
 - **Task Verification**: No task is marked complete without a confirmed completion checklist.
 
 ## 🔍 Self-Improving Engine (Retrospective)

@@ -94,6 +94,7 @@ This separation prevents a common failure mode in AI-assisted development: mixin
 The engine actively protects specification integrity throughout the project lifecycle:
 
 - **Quarantine Cascade**: If a Layer 1 spec is destabilized (demoted from `Stable`), all dependent Layer 2 specs are automatically flagged and their tasks are blocked. The plan cannot proceed on a broken foundation.
+- **Session Isolation (Phase Gates)**: To prevent AI "hallucinations" and context bleed-over, major workflow transitions enforce a **Hard Stop** (e.g., from Specification to Planning). You are required to physically open a "New Chat" in your IDE to proceed. Simply telling the AI to "forget" does not clear its context window reliably.
 - **Registry Parity**: Every spec that exists on disk must be registered in `INDEX.md`. Every registered spec must appear in the implementation plan or the backlog. Orphaned specs are treated as critical blockers.
 - **Rules Parity**: If project conventions change (`RULES.md`), any existing task plan is flagged as stale. The agent will not execute tasks generated under outdated rules without an explicit sync.
 - **Engine Integrity**: Core engine files are checksummed. Any untracked modification halts all workflows until the engine state is reconciled.

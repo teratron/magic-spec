@@ -17,4 +17,4 @@
 | 1.4.151 | 2026-03-09 | Clarify session scope, update mermaid diagram with C14 Gate and Succession loop, add max 2-round guard, document file-path argument support, update checklist to blocking semantics |
 | 1.4.152 | 2026-03-09 | Add regression tests T128-T130 for C14 Gate, Succession guard, file-path routing |
 | 1.4.153 | 2026-03-09 | Formalize Improv Mode multi-workspace scope and Suite Integrity structural requirements |
-| 1.4.156 | 2026-03-09 | Automated update via engine meta automation |
+| 1.4.156 - 1.4.160 | 2026-03-10 | Automated update via engine meta automation |

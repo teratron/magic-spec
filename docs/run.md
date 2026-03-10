@@ -48,6 +48,14 @@ Once a plan is approved, the engine is authorized to handle routine tasks (writi
 
 If a task encounters ambiguous instructions or missing details during execution, the agent marks the task as `Blocked` in `TASKS.md` and halts execution. The agent utilizes a delegated handoff to jump back into the **Spec Workflow** (Explore Mode), where the specifications are formally updated before resuming the tasks.
 
+### 3.5 Session Isolation (Phase Gates - C17)
+
+To prevent code corruption and architectural drift, major transitions within or out of the **Run Workflow** are protected by a **Hard Stop**.
+
+1. **Execution Focus**: All coding and task completion should occur in a single, continuous chat session to maintain the agent's understanding of the files currently being modified.
+2. **Phase Completion**: Once a phase is finished, the agent is mandated to halt.
+3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before starting a new phase or returning to **Specification/Planning** (e.g., if a task is Blocked). This ensures the agent reads the committed code as the sole source of truth, eliminating any "context bleed" from the previous execution session.
+
 ## 4. Lifecycle & Conclusion
 
 - **Phase Completion**: Triggers a **Level 1 (Auto-snapshot) Retrospective**.

@@ -59,6 +59,14 @@ If a `VERSION_DRIFT` is detected for the **target spec of an active update**, th
 
 This prevents the engine from silently absorbing untracked external edits into the next amendment, which would corrupt the audit trail. If the triggering input also contains a T4 rule capture ("remember that..."), the rule is **queued** and not written to `RULES.md` until the drift is resolved.
 
+### 4.6 Session Isolation (Phase Gates - C17)
+
+To maintain maximum architectural integrity, the transition from **Specification** to **Task Planning** is protected by a **Hard Stop**.
+
+1. **Brainstorming Focus**: All brainstorming and specification generation should occur in a single, continuous chat session to preserve the agent's understanding of the evolving idea.
+2. **Phase Completion**: Once specifications are marked **Stable**, the agent is mandated to halt.
+3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before running `/magic.task`. This ensures the agent reads the committed specifications as the sole source of truth, without any "context bleed" from the previous brainstorming session.
+
 ### 4.3 Periodic Audit
 
 The engine proactively suggests "Registry Audits" to identify dead links, duplicated requirements across files, or "stale" specs.

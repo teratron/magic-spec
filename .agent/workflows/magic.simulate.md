@@ -9,7 +9,7 @@ handoffs:
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
   - label: "Run regression tests"
     workflow: magic.simulate
-    prompt: "Run the full test suite (`test` target) to ensure engine modifications didn't introduce regressions."
+    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.simulate test` to ensure tests run against fresh files without context bleed (Rule C17)."
 ---
 
 # Simulation Workflow

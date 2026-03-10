@@ -205,6 +205,13 @@ When operating in a workspace with a defined scope (via \`.design/workspace.json
 
 For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
 
+### C17 — Session Isolation (Phase Gates)
+
+To prevent context bleed-over and hallucination loops, the SDD workflow strictly separates Brainstorming, Planning, and Execution phases into isolated context windows.
+1. **Brainstorming & Spec Generation (Phase 1)**: Must be completed within a single, continuous chat session so the agent retains the context of the evolving idea. Do not break the session until specs are marked \`Stable\`.
+2. **Phase Transition (Phase Gates)**: Once a major phase completes (e.g., Specs are \`Stable\`), the current chat MUST be closed. **Note**: giving a text command like "forget previous instructions" does NOT clear context memory reliably. You must physically click the "New Chat" (or equivalent) button in your IDE/interface.
+3. **Execution (Phases 2 & 3)**: Planning (\`/magic.task\`) and Coding (\`/magic.run\`) MUST each be started in a brand-new, clean chat session. This forces the agent to read the committed files as the singular source of truth, eliminating reliance on ephemeral chat memory.
+
 ## Document History
 | Version | Date | Description |
 | :--- | :--- | :--- |
