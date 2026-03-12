@@ -5,7 +5,26 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.4.77] - 2026-03-03
+## [1.4.162] - 2026-03-12
+
+### Added
+
+- **Session Isolation Rule (C17)**: Formalized the requirement for "New Chat" sessions between major workflow transitions (Spec → Task → Run) to prevent context bleed-over and hallucinations.
+- **Multi-Workspace Support (C22)**: Enhanced `check-prerequisites.js` and `init.js` to support nested workspaces with inherited root rules.
+- **Model-Aware History**: Updated engine history schema to include AI Model information, improving auditability of generated code.
+
+### Changed
+
+- **Task Checklist Logic**: Consolidated implementation checklists into `TASKS.md` for better execution tracking and status reporting.
+- **Gitignore Resilience**: Improved installers to automatically manage `.gitignore` entries for `.magic/` and `.agent/` directories with idempotent updates.
+- **Onboarding Safety**: Added production data collision guards to `onboard.md` to prevent accidental overwrites of existing project plans.
+
+### Fixed
+
+- **Error Reporting**: Enhanced `check-prerequisites.js` with structured, actionable JSON error suggestions.
+- **Path Handling**: Fixed Windows-specific path issues in installer scripts.
+
+## [1.4.162] - 2026-03-03
 
 ### Added
 
@@ -20,7 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Resilient Logic**: Improved `check-prerequisites.js` to distinguish between critical engine integrity (HALT) and project data drift (WARNING), preserving self-healing capabilities.
 
-## [1.4.77] - 2026-03-02
+## [1.4.162] - 2026-03-02
 
 ### Changed
 
