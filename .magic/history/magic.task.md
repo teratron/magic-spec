@@ -1,6 +1,6 @@
-# Check-prerequisites Workflow History
+# Magic.task Workflow History
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
-| 1.4.129 | 2026-03-04 | Upgraded Ghost Registry from warning to critical HALT barrier |
+| 1.4.165 | 2026-03-13 | Automated reconstruction of missing history file |
 | 1.4.166 | 2026-03-13 | Automated update via engine meta automation |

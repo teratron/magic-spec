@@ -8,3 +8,5 @@
 | 1.3.1 | 2026-02-27 | Existing codebase hint: suggest "Analyze project" post-init |
 | 1.4.9 - 1.4.126 | 2026-03-04 | Automated update via engine meta automation |
 | 1.4.130 | 2026-03-04 | Sync C1-C16 refs and Ghost Registry halt condition |
+| 1.4.166 | 2026-03-13 | Automated update via engine meta automation |
+| 1.5.0 | 2026-03-13 | Excluded simulation and optimized installation package; consolidated rules C1-C17 |

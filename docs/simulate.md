@@ -25,7 +25,6 @@ Simulate a specific workflow by name:
 /magic.simulate run
 /magic.simulate rule
 /magic.simulate retrospective
-/magic.simulate onboard
 /magic.simulate analyze
 /magic.simulate init
 ```
@@ -64,7 +63,6 @@ This reads `.magic/tests/suite.md` and executes all **76+** predefined test scen
 | task.md | 3 | New plan, circular dependency, phantom specs with Done tasks |
 | run.md | 3 | Sequential happy path, mode amnesia, full deadlock |
 | rule.md | 2 | Duplicate convention, remove with workflow dependency |
-| onboard.md | 1 | Production collision |
 | retrospective.md | 2 | Level 1 auto-snapshot, Level 2 full analysis |
 | simulate.md | 3 | Checksums mismatch, Improv fallback, regression sweep |
 | **Total** | **76+** | **Comprehensive coverage of all guards & AOP logic** |

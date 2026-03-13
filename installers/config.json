@@ -1,31 +1,27 @@
 {
     "githubRepo": "teratron/magic-spec",
     "packageName": "magic-spec",
-    "removePrefix": "magic.",
     "engineDir": ".magic",
     "agentDir": ".agent",
     "workflowsDir": "workflows",
+    "defaultExt": ".md",
     "designDir": ".design",
     "versionFile": ".version",
     "checksumsFile": ".checksums",
     "historyDir": "history",
-    "defaultExt": ".md",
     "workflows": [
         "magic.analyze",
-        "magic.onboard",
         "magic.rule",
         "magic.run",
-        "magic.simulate",
         "magic.spec",
         "magic.task"
     ],
     "magicFiles": [
         "analyze.md",
-        "onboard.md",
+        "init.md",
         "retrospective.md",
         "rule.md",
         "run.md",
-        "simulate.md",
         "spec.md",
         "task.md",
         ".version",
@@ -41,43 +37,23 @@
         "templates/tasks.md"
     ],
     "download": {
-        "timeoutMs": 60000,
-        "tempPrefix": "magic-spec-"
+        "timeoutMs": 10000,
+        "tempPrefix": "magic-spec-tmp-"
     },
     "userAgent": {
-        "node": "magic-spec-node",
-        "python": "magic-spec-cli"
+        "python": "magic-spec-python-installer/1.0",
+        "node": "magic-spec-node-installer/1.0"
     },
     "eject": {
         "targets": [
             ".magic",
             ".agent",
-            ".magic.bak",
-            ".agent.bak"
+            "installers"
         ]
     },
     "publish": {
-        "versionFiles": [
-            "pyproject.toml",
-            "installers/python/magic_spec/__init__.py",
-            "package.json",
-            ".magic/.version"
-        ],
         "docsTargets": [
-            "README.md",
             "CHANGELOG.md"
-        ],
-        "docsDir": "docs"
-    },
-    "git": {
-        "defaultBranch": "master"
-    },
-    "tests": {
-        "sandboxDir": "installers/tests/sandbox",
-        "adaptersJson": "installers/adapters.json",
-        "pythonInstaller": "installers/python/magic_spec/__main__.py",
-        "nodeInstaller": "installers/node/index.js",
-        "testDir": "installers/tests",
-        "testPattern": "test_*.py"
+        ]
     }
 }

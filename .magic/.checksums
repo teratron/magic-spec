@@ -1,17 +1,16 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "c2e63a56dfacf73291dce6b41d0e50c203e491571e30ec4ef693a0e96df1f115",
+  ".version": "1f4dc096d58f7d21e3875671aee6f29b120ab84218fa47db2cb53bc9eb5b4dac",
   "analyze.md": "dd5d72d0c7d76976e7085740447fca08d5890c61c41b144b98e843489ebe9f5c",
-  "init.md": "9e3458df17747c7d142ce2e4cd0a9734c296aadb7f04bb779a148537836f63e6",
-  "onboard.md": "0975c32e6d336977945e91c2afbc399b7d0a52ee2790e154daa953947532a584",
+  "init.md": "6c46de4a25c33f92e548bef7145e38e2681bfd7119a1538bdda6b063803d625e",
   "retrospective.md": "835a75a1e9365f88b5c9decbede87298f982dce5eb518f3c6fb49f0b0b7ba609",
   "rule.md": "61bc7ec68e4923160b51573f72cf0382fb69cb7e465228347e89356768ab44dc",
   "run.md": "486696bc4b0e2ccdde5e2a0ddfd44094c0cf9a2866e7f0fcb7c705a0752882d6",
-  "scripts/check-prerequisites.js": "71a6b2227a6d21baa639f47d940b642acb2fd3f86d56bd2cddd1099618ae3560",
+  "scripts/check-prerequisites.js": "96a4e5e462359c5f7064861874173faad6d81286cad6800ad34ff2f85f643e13",
   "scripts/executor.js": "730447a38ad1dea3a40c28893eadad1eb3d54f950dc192ee3bb86e973ef31d61",
   "scripts/generate-checksums.js": "614877c943343757c032106597e3b292386cf262ebac205ef306ffb66bf89e8a",
   "scripts/generate-context.js": "c0f3bdb6abc7de69bf6576e9bb1f4bb823e9ff3a4e15972a3aeae09f718f2732",
-  "scripts/init.js": "975246ae80fd8795c36ed76171bbfac48955b70ca2570fd4b50b7cdd69e98081",
+  "scripts/init.js": "959c030258371686d7d155fc202ae8ddf60c50a55a652e3f9fe0693ba9b9895d",
   "simulate.md": "48eca9943a2eb6778f7d921cf26d08d6d97864bbbf6893dbf99c1292e594deb2",
   "spec.md": "92d24c35cbb571df85a240e72d4e40b0045958d1e80a6fd15712f58ef93ed657",
   "task.md": "9f970772f04c6a09f1e64edeb7e952f08808416d4b2ec06f930550bd1523cb19",
@@ -20,5 +19,5 @@
   "templates/retrospective.md": "761a3b82665134187e6c6b33c47405abc687bd962d7e01d8695d953991a5f161",
   "templates/spec.md": "f326fba81173637c46ee7ac5055fda29bcec87ff144ab3776517daccf8725f56",
   "templates/tasks.md": "2ed1e6e9d6e66e645650462152f6c68465004164e6b36157bd5fcf4d4d14618e",
-  "tests/suite.md": "c6500b0c44c0d9117e7a24e905608bd2cef0334084518a23bf4bc0ebf5de5c2a"
+  "tests/suite.md": "1c1f4069c31199d16e9f4ab3b7a9ddc8799bb92d056c2fee1ade538a2dbb6cd6"
 }

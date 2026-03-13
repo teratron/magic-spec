@@ -14,3 +14,5 @@
 | 1.4.3 | 2026-03-01 | Fix: Spec Renaming Protocol forbids modifying historical archives |
 | 1.4.4 | 2026-03-01 | Added C14 Engine Versioning Protocol to Post-Update Review checklist |
 | 1.4.9 - 1.4.162 | 2026-03-10 | Automated update via engine meta automation |
+| 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
+| 1.4.166 | 2026-03-13 | Automated update via engine meta automation |

@@ -10,3 +10,5 @@
 | 1.3.2 | 2026-02-28 | AOP: Added explicit `checksums_mismatch` HALT guard to pre-flight |
 | 1.3.2 | 2026-02-28 | AOP: Added Downgrade Policy to Selective Planning (C6) |
 | 1.4.9 - 1.4.154 | 2026-03-09 | Automated update via engine meta automation |
+| 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
+| 1.4.166 | 2026-03-13 | Automated update via engine meta automation |

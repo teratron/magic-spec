@@ -42,7 +42,7 @@ graph TD
 ```
 .design/
 ├── INDEX.md (Registry)
-├── RULES.md (Conventions C1-C16)
+├── RULES.md (Conventions C1-C17)
 ├── workspace.json (Context)
 ├── specifications/
 ├── tasks/
@@ -55,6 +55,6 @@ graph TD
 Init Checklist
   ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
-  ☐ RULES.md (C1-C16) & INDEX.md headers present; Smart History verified
+  ☐ RULES.md (C1-C17) & INDEX.md headers present; Smart History verified
   ☐ Existing codebase check performed; analyzer suggested if applicable
 ```

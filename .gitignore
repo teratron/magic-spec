@@ -43,6 +43,7 @@ temp/
 magic.*.md*
 magic.*.toml
 !.agent/workflows/magic.*.md
+!.magic/history/magic.*.md
 .*/rules/
 !.agent/rules/
 .*/skills/

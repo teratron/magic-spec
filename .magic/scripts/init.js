@@ -116,7 +116,7 @@ Read by the agent before every operation. Updated only via explicit triggers.
 4. **Never edit blindly** — if the scope of impact is unclear, stop and ask before proceeding.
 5. **Document the change** — record modifications in the relevant spec and commit message.
 6. **Atomic Update** — apply changes simultaneously across all related files (scripts, workflows, and documentation) to maintain full engine consistency.
-7. **No-Change, No-Bump** — NEVER trigger a version bump (C14) if no physical files in \`.magic/\` were modified (e.g., during simulations, dry runs, or purely cognitive tasks).
+7. **No-Change, No-Bump** — NEVER trigger a version bump (C14) if no physical files in \`.magic/\` were modified (e.g., during dry runs or purely cognitive tasks).
 
 ### C2 — Workflow Minimalism
 
@@ -130,9 +130,6 @@ Task execution defaults to **Parallel mode**. A Manager Agent coordinates execut
 
 Skip the user story priority prompt. The agent must automatically assign default priorities (P2) to User Stories during task generation to maximize automation and avoid interrupting the user.
 
-### C5 — Standardized Onboarding Tutorial (C2 Exception)
-
-\`magic.onboard\` is explicitly authorized as a standardized, interactive entry point for new developers. This is a one-time, intentional exception to C2 to facilitate rapid team scaling and engine adoption.
 
 ### C6 — Selective Planning
 
@@ -167,9 +164,9 @@ Implementation plans in \`PLAN.md\` must follow a nested hierarchy: **Phase → 
 - \`[~]\` Cancelled
 - \`[!]\` Blocked
 
-### C11 — Simulation Workflow (C2 Exception)
+### C11 — [RESERVED]
 
-\`magic.simulate\` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
+This rule ID is reserved for future extensions.
 
 ### C12 — Quarantine Cascade (Каскад Карантина)
 
@@ -195,7 +192,7 @@ To ensure accurate engine state tracking and reliable updates, any modification 
 2. **Automation**: This command automatically increments the patch version in \`.magic/.version\`, updates the relevant history file in \`.magic/history/\`, and regenerates \`.magic/.checksums\`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
 3. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
-5. **Simulation Exemption**: Purely cognitive simulations, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
+5. **Cognitive Exemption**: Purely cognitive tasks, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
 
 ### C15 — Workspace Scope Isolation
 

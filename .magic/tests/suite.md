@@ -232,21 +232,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Impact Analysis includes TASKS.md version staleness note
 - **Guards tested:** Workflow Dependency Check, Impact Analysis
 
-### T14 — Onboard Production Collision
-
-- **Workflow:** `onboard.md`
-- **Synthetic State:**
-  - `.design/` exists with 5 production specs (auth.md, api.md, etc.)
-  - PLAN.md contains 3 phases of production tasks
-  - TASKS.md with active tasks
-- **Action:** User says: "Start onboarding"
-- **Expected:**
-  - [ ] Pre-flight: `.design/` exists, specs count = 5 > 0
-  - [ ] **HALT** — production collision detected
-  - [ ] Options presented: (A) Backup PLAN.md + TASKS.md first, (B) Cancel
-  - [ ] Agent does NOT proceed without explicit user choice
-  - [ ] If (A): PLAN.md → PLAN.md.bak, TASKS.md → TASKS.md.bak before tutorial
-- **Guards tested:** Production collision HALT, backup/cancel guard
 
 ### T15 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
 
@@ -429,23 +414,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If approved: §2 updated, RULES.md major version bump
 - **Guards tested:** Convention-not-found handler, core section amendment gate
 
-### T26 — Onboard Abandoned Re-entry with Production Data
-
-- **Workflow:** `onboard.md` (Re-entry)
-- **Synthetic State:**
-  - `.design/specifications/logger-module.md` exists (from previous abandoned tutorial)
-  - `PLAN.md` contains 3 phases of PRODUCTION tasks (not tutorial)
-  - `TASKS.md` with 12 active production tasks
-  - INDEX.md has both `logger-module.md` and 5 production specs
-- **Action:** User says: "Start onboarding"
-- **Expected:**
-  - [ ] Re-entry detected: `logger-module.md` found
-  - [ ] Agent offers: resume or clean up
-  - [ ] Before resuming: PLAN.md checked → contains non-tutorial data (>1 spec in phases)
-  - [ ] **Production collision guard** triggered (backup/cancel)
-  - [ ] Agent does NOT resume and overwrite production PLAN.md
-  - [ ] Options: (A) Backup, (B) Cancel, (C) Clean up tutorial artifacts and keep production
-- **Guards tested:** Re-entry + production collision guard, data preservation
 
 ### T27 — Spec Full Consistency Audit
 
@@ -751,18 +719,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent performs a single final version bump.
 - **Guards tested:** Batch operations spam prevention, Dynamic ID assignment.
 
-### T44 — Onboard Cleanup Protocol Identity
-
-- **Workflow:** `onboard.md`
-- **Synthetic State:**
-  - Abandoned tutorial session. `.design/specifications/logger-module.md` exists.
-  - User added their own `PRODUCTION-SPEC.md` to INDEX and PLAN.
-- **Action:** User prompts `"/magic.onboard"`, agent attempts Re-entry wipe protocol.
-- **Expected:**
-  - [ ] Agent detects `PLAN.md` contains non-tutorial production data.
-  - [ ] Agent triggers HALT and applies backup/cancel guard.
-  - [ ] Agent does not wipe `.design/` blindly.
-- **Guards tested:** Safe Cleanup Protocol, Wipe Identity Guard.
 
 ### T45 — Run Version Bleed Guard
 

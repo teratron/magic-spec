@@ -18,3 +18,5 @@
 | 1.4.152 | 2026-03-09 | Add regression tests T128-T130 for C14 Gate, Succession guard, file-path routing |
 | 1.4.153 | 2026-03-09 | Formalize Improv Mode multi-workspace scope and Suite Integrity structural requirements |
 | 1.4.156 - 1.4.160 | 2026-03-10 | Automated update via engine meta automation |
+| 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
+| 1.4.166 | 2026-03-13 | Automated update via engine meta automation |
