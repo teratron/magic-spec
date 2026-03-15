@@ -72,10 +72,6 @@ Task execution defaults to **Parallel mode**. A Manager Agent coordinates execut
 
 Skip the user story priority prompt. The agent must automatically assign default priorities (P2) to User Stories during task generation to maximize automation and avoid interrupting the user.
 
-### C5 — Standardized Onboarding Tutorial (C2 Exception)
-
-`magic.onboard` is explicitly authorized as a standardized, interactive entry point for new developers. This is a one-time, intentional exception to C2 to facilitate rapid team scaling and engine adoption.
-
 ### C6 — Autonomous Selective Planning
 
 During plan updates, specifications are automatically handled by their status to minimize user friction:

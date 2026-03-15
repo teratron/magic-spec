@@ -63,7 +63,7 @@ graph TD
 | **List** | Display all §7 entries from global RULES.md; if workspace RULES.md exists, display its conventions separately. | N/A |
 | **Init** | Create `.design/{workspace}/RULES.md` from template if absent. Called automatically before first workspace-tier Add. | N/A |
 
-**Remove — Dependency Scan**: Before deleting a convention, scan all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → Report: "Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance." Require explicit user confirmation before proceeding. If the user confirms, the references become the user's responsibility to update (the rule workflow does not auto-edit workflow files or specs).
+**Remove — Dependency Scan**: Before proposing deletion, scan all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → include in the Propose step (§5): "Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance." The user sees this in the single "Current vs Proposed" approval — no additional confirmation gate. After removal, references become the user's responsibility to update.
 
 **Workspace RULES.md template** (used by Init action):
 

@@ -581,7 +581,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 1:** User runs `/magic.simulate test`
 - **Expected 1:**
   - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
-  - [ ] Agent alerts user that test suite is missing, provides hint to restore file or use `/magic.onboard`, and falls back to **Improv Mode**.
+  - [ ] Agent alerts user that test suite is missing, provides hint to restore file from origin, and falls back to **Improv Mode**.
   - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
   - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
   - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
@@ -1057,31 +1057,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Archival (C8)** executed: `phase-3.md` moved to `.design/api-v2/archives/tasks/phase-3.md`.
   - [ ] `TASKS.md` link updated to: `[Phase 3](archives/tasks/phase-3.md)`.
 - **Guards tested:** C8 Archival, Workspace-relative pathing logic.
-
-### T64 — Onboard: Multi-step Wait Gate (Enforcement)
-
-- **Workflow:** `onboard.md`
-- **Synthetic State:** Fresh repository, `.design/` (missing).
-- **Action:** User runs `/magic.onboard`.
-- **Expected:**
-  - [ ] Agent performs Step 1 (Intro) and **HALTs**.
-  - [ ] Agent asks: "Ready to start?" (or equiv).
-  - [ ] Agent does **NOT** create `logger-module.md` until user says "ready" or "continue".
-  - [ ] Each subsequent step follows the same gate (Execute → Wait).
-- **Guards tested:** Instructor Role (Wait Gate Enforcement), Pacing Integrity.
-
-### T65 — Onboard: Production Data Safety Halt
-
-- **Workflow:** `onboard.md`
-- **Synthetic State:**
-  - `.design/specifications/` exists and contains `auth-system.md` (active spec).
-- **Action:** User runs `/magic.onboard`.
-- **Expected:**
-  - [ ] Agent scans for existing specifications (>0).
-  - [ ] Agent identifies `auth-system.md`.
-  - [ ] **Safety Halt (Step 3)**: Agent refuses to start the tutorial over production data.
-  - [ ] Agent offers to Backup or Cancel.
-- **Guards tested:** Safety Protocol (C6 Bypass Prevention), Production Data Guard.
 
 ### T66 — Spec Registry-Filesystem Desync
 
@@ -2257,14 +2232,14 @@ If any test fails, document the failure reason and propose a fix.
   - `auth-concept.md` (Stable L1), `auth-impl.md` (Stable L2, Implements: auth-concept.md), `auth-tests.md` (Stable L2, Related Specifications: auth-concept.md)
 - **Action:** User says "Deprecate auth-concept.md"
 - **Expected:**
-  - [ ] `auth-concept.md` status → Deprecated, INDEX.md updated
+  - [ ] `auth-concept.md` status → Deprecated, INDEX.md updated — deprecation proceeds without blocking
   - [ ] Deprecation Cascade scans INDEX.md for `Implements: auth-concept.md` → finds `auth-impl.md`
   - [ ] Report: "L2 `auth-impl.md` has no valid L1 parent — `auth-concept.md` is Deprecated."
   - [ ] Deprecation Cascade scans for `Related Specifications` referencing `auth-concept.md` → finds `auth-tests.md`
   - [ ] Report: "`auth-tests.md` references Deprecated spec `auth-concept.md` in Related Specifications."
-  - [ ] Findings presented with options: (a) update dependent, (b) deprecate dependent, (c) defer
-  - [ ] No auto-modification of dependents — user decides
-- **Guards tested:** Deprecation Cascade (Implements + Related), user-decision gate
+  - [ ] Post-Update Review surfaces findings as actionable warnings with suggested commands (`→ /magic.spec amend` or `→ /magic.spec deprecate`)
+  - [ ] Deprecation is NOT blocked by dependent specs — non-blocking cascade
+- **Guards tested:** Deprecation Cascade (Implements + Related), non-blocking report via Post-Update Review
 
 ### T146 — Rule Remove Dependency Scan Warns on Referenced Convention
 
@@ -2274,12 +2249,12 @@ If any test fails, document the failure reason and propose a fix.
   - `analyze.md` Mode C step 3 references "kebab-case convention" with C5 check
 - **Input:** `"Remove rule C5"`
 - **Expected:**
-  - [ ] Before deletion, agent scans `.magic/*.md` and `.design/` for `C5` references
+  - [ ] Before proposing, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
-  - [ ] Report: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
-  - [ ] User confirmation required before proceeding
-  - [ ] If confirmed → C5 deleted, Major version bump
-- **Guards tested:** Remove Dependency Scan, user confirmation gate
+  - [ ] Propose step includes dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
+  - [ ] Single "Current vs Proposed" approval — no additional confirmation gate
+  - [ ] If approved → C5 deleted, Major version bump
+- **Guards tested:** Remove Dependency Scan integrated into Propose step (no extra gate)
 
 ### T147 — Run Handoff Succession Returns to Task Update
 

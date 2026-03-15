@@ -172,7 +172,7 @@ graph TD
     - **Deprecation Cascade**: If a spec transitions to `Deprecated`:
         1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` — flag each as having an **invalid L1 parent** (layer integrity violation). Report: "L2 `{file}` has no valid L1 parent — `{target}` is Deprecated."
         2. Scan `INDEX.md` for ALL specs with `Related Specifications` referencing `{target-file}` — flag each as containing a **stale reference**. Report: "`{file}` references Deprecated spec `{target}` in Related Specifications."
-        3. Post-Update Review must surface all flagged specs. Do NOT auto-modify dependents — present findings for user decision: (a) update the dependent spec to remove/replace the reference, (b) deprecate the dependent spec as well, (c) defer (acknowledge and continue).
+        3. Proceed with the deprecation — do NOT block. Findings are surfaced automatically in the mandatory Post-Update Review as actionable warnings with suggested next steps: `→ /magic.spec amend {file}` (remove stale ref) or `→ /magic.spec deprecate {file}` (cascade further).
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
         - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
         - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.

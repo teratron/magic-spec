@@ -1,23 +1,23 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "cd0dc25ee5a6ee58a32b4b4070af45e42c40aabae236e477fa1180246f8cb47c",
+  ".version": "367090f1feeaf2c66b1bfaea234fab92cf4a81205394a595c63f2a540c40e8bf",
   "analyze.md": "6bd2cc4f282fe624c0cd8062da82fd4e11404a54d76de04a9acc3d82dae05a57",
   "init.md": "e41ef95c6643357073f0aef0306ca1844251ae7be5888611a6f366410619c072",
   "retrospective.md": "835a75a1e9365f88b5c9decbede87298f982dce5eb518f3c6fb49f0b0b7ba609",
-  "rule.md": "245daecf79b196de67fe1238f71739e56847f7789d99839c2f9558ce97de4c52",
+  "rule.md": "f2cf349aa92b092dc036e4e9ab642973e7eca3c0a8b8d6e4a0b313f68cb75c04",
   "run.md": "ef393dd0350834c3f5b0e4bfbbc79a423125d4bc9905e10f47b64e7c6a192a05",
   "scripts/check-prerequisites.js": "96a4e5e462359c5f7064861874173faad6d81286cad6800ad34ff2f85f643e13",
   "scripts/executor.js": "730447a38ad1dea3a40c28893eadad1eb3d54f950dc192ee3bb86e973ef31d61",
   "scripts/generate-checksums.js": "614877c943343757c032106597e3b292386cf262ebac205ef306ffb66bf89e8a",
   "scripts/generate-context.js": "c0f3bdb6abc7de69bf6576e9bb1f4bb823e9ff3a4e15972a3aeae09f718f2732",
   "scripts/init.js": "959c030258371686d7d155fc202ae8ddf60c50a55a652e3f9fe0693ba9b9895d",
-  "simulate.md": "3f6447294fbe078477f282c34cc60c5285be04e88c1b94f2e56630b6964c77fb",
-  "spec.md": "c5eb2f1b7bcfcb6baacc34c77d365425ca1913597a79180a3c82abece6b3eca5",
+  "simulate.md": "68b80adefbcb4592d360a4b0df9a5f2509a1f49cd1d01a84f2a346a25a95a507",
+  "spec.md": "5143e72d43d849edb125f3370b669452f58499c382a4cf6ad183f9495baf486c",
   "task.md": "f0fed2b7bf5da1486d9c49c938e2185996462210a3ab6ed5fbf3a8e7666b6fe7",
   "templates/micro-spec.md": "608a9c9534dd83d89e9a8efd39b8fa287bf4df4bd0df4de908d801fa2ad99340",
   "templates/plan.md": "d3328458e5cf50e9758910471fcd215e954c692a8dfbaa01505551c1a6f4aa22",
   "templates/retrospective.md": "761a3b82665134187e6c6b33c47405abc687bd962d7e01d8695d953991a5f161",
   "templates/spec.md": "f326fba81173637c46ee7ac5055fda29bcec87ff144ab3776517daccf8725f56",
   "templates/tasks.md": "2ed1e6e9d6e66e645650462152f6c68465004164e6b36157bd5fcf4d4d14618e",
-  "tests/suite.md": "16ee8e78c650df135d42040d57060c97cb9e28caf69751a1a6d1aad1036e1377"
+  "tests/suite.md": "9cc12ffc75c139e6e45298336d6075f4ab07374d180195dae1fd2fa27539a941"
 }

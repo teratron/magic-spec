@@ -21,7 +21,6 @@ The engine consists of Markdown-based workflows (`.magic/*.md`) and a supporting
 - **simulate**: Verification and regression testing.
 - **analyze**: Project ventilation, gap detection, and registry repair.
 - **rule**: Convention management in `RULES.md §7`.
-- **onboard**: Interactive tutorial entry point.
 - **retrospective**: Phase and plan-level analysis and snapshots.
 
 ### Templates Subsystem

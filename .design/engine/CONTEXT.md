@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-03-04
+**Generated:** 2026-03-15
 
 ## Active Technologies
 
@@ -19,6 +19,7 @@
 │   ├── rules/
 │   └── settings.local.json
 ├── .design/
+│   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
 │   ├── installers/
@@ -32,7 +33,6 @@
 │   ├── analyze.md
 │   ├── history/
 │   ├── init.md
-│   ├── onboard.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── run.md
@@ -56,7 +56,6 @@
 │   ├── conception.md
 │   ├── contributing.md
 │   ├── init.md
-│   ├── onboard.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── run.md
@@ -78,3 +77,4 @@
 ## Recent Changes
 
 No recent changelog found.
+

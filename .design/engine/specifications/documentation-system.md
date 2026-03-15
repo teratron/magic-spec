@@ -22,7 +22,7 @@ Documents in `docs/` must stay synchronized with the active workflows in `.magic
 
 Each `.magic/{workflow}.md` has a corresponding `docs/{workflow}.md` counterpart that describes the same workflow for human readers. When a guard, invariant, or behavioral rule is added to a `.magic/` workflow, the matching `docs/` file must be updated in the same repair cycle.
 
-Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md`, `analyze.md`, `init.md`, `onboard.md`, `rule.md`, `retrospective.md`.
+Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md`, `analyze.md`, `init.md`, `rule.md`, `retrospective.md`.
 
 ## Document History
 
