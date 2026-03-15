@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.29
+**Version:** 1.9.43
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -75,11 +75,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Parse: 3 distinct topics identified
   - [ ] Map: JWT+Redis → `architecture.md`, REST → `architecture.md`, shadcn → new `ui-components.md`
-  - [ ] Confirm: mapping shown to user before writing
+  - [ ] Trust Mode (C9): No objective conflicts → mapping shown as "Notice of Intent", dispatch proceeds immediately
   - [ ] New file `ui-components.md` created from `.magic/templates/spec.md`
   - [ ] INDEX.md updated with new entry
   - [ ] Post-Update Review runs on all modified files
-- **Guards tested:** Multi-topic dispatch, new file creation with template, registry sync
+  - [ ] Actionable Outcome shown: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
+- **Guards tested:** Multi-topic dispatch, Trust Mode auto-confirm, new file creation with template, registry sync
 
 ### T04 — Spec Intra-Input Self-Contradiction
 
@@ -232,7 +233,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Impact Analysis includes TASKS.md version staleness note
 - **Guards tested:** Workflow Dependency Check, Impact Analysis
 
-
 ### T15 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
 
 - **Workflow:** `retrospective.md` (Level 1: Auto-Snapshot)
@@ -292,13 +292,13 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/` initialized, no existing specs
 - **Input:** `"Let's brainstorm about authentication approaches"` → then `"OK, let's formalize the OAuth2 approach"`
 - **Expected:**
-  - [ ] Phase 1 (explore): agent creates `.design/proposals/auth-exploration.md`
+  - [ ] Phase 1 (explore): agent outputs thoughts to chat or creates a temporary proposal in the agent's artifacts directory (never in `.design/`)
   - [ ] No INDEX.md entry during explore (safety)
   - [ ] No status lifecycle applied during explore
+  - [ ] No `.design/specifications/`, `INDEX.md`, `PLAN.md`, or `TASKS.md` modifications during explore
   - [ ] Phase 2 (formalize): agent creates `.design/specifications/auth.md` from template
   - [ ] INDEX.md updated with auth.md (Draft)
-  - [ ] Proposal file remains as historical record
-- **Guards tested:** Explore Mode isolation, transition to formal, template usage
+- **Guards tested:** Explore Mode isolation (no `.design/` writes), transition to formal, template usage
 
 ### T19 — Spec Update Stable → RFC (Amendment Rule)
 
@@ -413,7 +413,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User must explicitly confirm core amendment
   - [ ] If approved: §2 updated, RULES.md major version bump
 - **Guards tested:** Convention-not-found handler, core section amendment gate
-
 
 ### T27 — Spec Full Consistency Audit
 
@@ -719,7 +718,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent performs a single final version bump.
 - **Guards tested:** Batch operations spam prevention, Dynamic ID assignment.
 
-
 ### T45 — Run Version Bleed Guard
 
 - **Workflow:** `run.md`
@@ -911,20 +909,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
 
-### T58 — Run Code Quality & Engineering Standards Enforcement
+### T58 — Run Rules-First Convention Enforcement
 
 - **Workflow:** `run.md` (Executing Tasks)
 - **Synthetic State:**
   - `TASKS.md` Phase 1 has 1 active task.
-  - `RULES.md` Guidelines include the new Guideline 8 (Code Quality).
+  - `RULES.md` §7 contains project-specific conventions (e.g., code quality guidelines, testing mandates).
 - **Action:** Agent begins task execution.
 - **Expected:**
-  - [ ] Agent acknowledges Guideline 8 (Code Quality & Engineering Standards) during pre-flight or task start.
-  - [ ] Agent applies stack-appropriate lints and conventions.
-  - [ ] Agent explicitly mentions following SOLID, DRY, KISS, YAGNI, and FSD during implementation.
-  - [ ] **MANDATORY**: Agent includes unit or integration tests as part of the task output.
-  - [ ] Documentation updates are in English per Guideline 8.
-- **Guards tested:** Mandatory Code Quality & Testing guideline enforcement.
+  - [ ] Agent reads `RULES.md` before any code edit (Invariant 2: Rules First)
+  - [ ] Agent applies all §7 conventions relevant to the task's technology stack
+  - [ ] If `RULES.md` version > `TASKS.md` base version → Warn user of drift before executing
+  - [ ] Task output adheres to conventions found in RULES.md (engine enforces reading, not specific convention content)
+- **Guards tested:** Rules First invariant, convention sync guard.
 
 ### T59 — Engine Meta Automation Enforcement
 
@@ -1115,17 +1112,17 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent visualizes the full cycle chain and asks user to break the link.
 - **Guards tested:** N-Level Circular Dependency (C7).
 
-### T68 — Simulation Cold Start Guard
+### T68 — Simulation Cold Start Auto-Init
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:** Fresh repository, `.design/` (missing).
 - **Action:** User runs `/magic.simulate`.
 - **Expected:**
-  - [ ] `check-prerequisites` fails (no INDEX.md or RULES.md).
-  - [ ] Agent catches failure and identifies **"The Cold Start"**.
-  - [ ] **Hint Provided**: Agent suggests `/magic.onboard` for tutorial or `/magic.init` for setup.
-  - [ ] **HALT** — Simulation does not proceed until initialized.
-- **Guards tested:** Cold Start Prompt, Init Handoff Logic.
+  - [ ] `check-prerequisites` returns `ok: false` (missing `.design/`).
+  - [ ] No `ENGINE_INTEGRITY` or `checksums_mismatch` warnings (checksums are valid).
+  - [ ] Auto-run `.magic/init.md` to create `.design/` structure.
+  - [ ] After init completes, simulation resumes from Mode Selection.
+- **Guards tested:** Auto-Init on missing `.design/`, resume after init.
 
 ### T69 — Quarantine Cascade Enforcement
 
@@ -2047,6 +2044,325 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **`PLAN.md` updated**: `[ ]` → `[x]` for `auth.md` specification.
 - **Guards tested:** C10 Strategic/Tactical split, status sync isolation (atomic in TASKS, spec-level in PLAN).
 
+### T132 — Run File-Header Parity Catches Manual Demotion
+
+- **Workflow:** `run.md`
+- **Synthetic State:**
+  - `installer-architecture.md` (L1): file header `Status: Draft`, `Version: 2.0.0`
+  - `INDEX.md` entry for `installer-architecture.md`: `Status: Stable`, `Version: 1.0.0`
+  - Active phase-1 tasks reference `installer-node.md` (L2, Implements: installer-architecture.md)
+- **Action:** `/magic.run` triggered to execute phase-1 tasks
+- **Expected:**
+  - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `installer-architecture.md` (file=Draft ≠ INDEX=Stable)
+  - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
+  - [ ] **HALT** before any task execution with drift report
+  - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
+  - [ ] User directed to resolve via `magic.spec` or `magic.analyze`
+- **Guards tested:** File-Header Parity (run.md), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
+
+### T133 — Task Pre-flight File-Header Parity Scan
+
+- **Workflow:** `task.md`
+- **Synthetic State:**
+  - `engine/INDEX.md` lists `engine-core.md` as Stable v1.1.0
+  - Actual file `engine-core.md` header: `Status: RFC`, `Version: 1.2.0` (manual edit)
+  - `engine-automation.md` (L2, Implements: engine-core.md) listed as Stable
+- **Action:** `/magic.task` triggered to generate plan
+- **Expected:**
+  - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `engine-core.md` (file=RFC ≠ INDEX=Stable)
+  - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `engine-core.md` (file=1.2.0 ≠ INDEX=1.1.0)
+  - [ ] **HALT** before plan generation
+  - [ ] `engine-automation.md` is NOT moved to Backlog yet (drift must be resolved before C12 evaluates)
+- **Guards tested:** File-Header Parity (task.md), STATUS_DRIFT blocks C6/C12 evaluation
+
+### T134 — Spec Version Drift Guard Scans Dependency Chain
+
+- **Workflow:** `spec.md`
+- **Synthetic State:**
+  - Target: `installer-node.md` (L2, Implements: installer-architecture.md)
+  - `installer-node.md` header matches INDEX.md (no drift)
+  - `installer-architecture.md` (L1 parent): file header `Version: 2.0.0`, INDEX.md says `Version: 1.0.0`
+- **Action:** `/magic.spec` update `installer-node.md` with "add plugin hooks"
+- **Expected:**
+  - [ ] Version Drift Guard scans dependency chain: `installer-node.md` → `installer-architecture.md`
+  - [ ] Detects VERSION_DRIFT on parent `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
+  - [ ] **HALT** before writing updates to `installer-node.md`
+  - [ ] Report names the drifted dependency (not just the target)
+  - [ ] User directed to resolve parent drift first
+- **Guards tested:** Version Drift Guard (dependency chain scan), Related Specifications traversal
+
+### T135 — Simulate Pre-flight Blocks on Engine Integrity Failure
+
+- **Workflow:** `simulate.md` (§0 Pre-flight)
+- **Synthetic State:**
+  - `.magic/.checksums` has been manually altered (hash mismatch)
+  - `check-prerequisites --json` returns `checksums_mismatch: true`
+- **Action:** `/magic.simulate test` triggered
+- **Expected:**
+  - [ ] Pre-flight Step 0 runs `check-prerequisites --json`
+  - [ ] Agent detects `checksums_mismatch` in output
+  - [ ] **HALT** with report: "Engine integrity failure — resolve before simulating."
+  - [ ] Agent does NOT fall through to Mode Selection or execute any test scenarios
+  - [ ] No suite.md tests are evaluated
+- **Guards tested:** Pre-flight engine integrity gate (Step 0), HALT-before-mode-selection enforcement
+
+### T136 — Improv Mode Crisis Template Structural Validation
+
+- **Workflow:** `simulate.md` (§1a Crisis Template)
+- **Synthetic State:**
+  - `workspace.json` has 2 workspaces: `engine`, `installers`
+  - All engine files valid
+- **Action:** `/magic.simulate` (no args — Improv mode)
+- **Expected:**
+  - [ ] Agent synthesizes a crisis with a named scenario (CR-6)
+  - [ ] Crisis header block presented before walkthrough with all CR-1 through CR-6 fields
+  - [ ] CR-1: ≥2 workflows affected (listed explicitly)
+  - [ ] CR-2: Full Spec→Task→Run chain traced (no link skipped)
+  - [ ] CR-3: ≥2 workspaces involved (since `workspace.json` has >1)
+  - [ ] CR-4: ≥3 distinct C{N} guards targeted (listed by ID)
+  - [ ] CR-5: ≥1 out-of-band mutation described
+  - [ ] If any CR requirement is not met and not documented as skipped → **FAIL**
+- **Guards tested:** Crisis Template completeness, CR-1 through CR-6 enforcement
+
+### T137 — Simulate Guard Resilience Reports Mechanical vs Instructional
+
+- **Workflow:** `simulate.md` (§3 Cognitive Coverage Report — Guard Resilience)
+- **Synthetic State:**
+  - Target: `run.md`
+  - Guards applicable: C12 (mechanical — INDEX.md check), C7 (instructional — no HALT keyword), C14 (mechanical — checksums), C3 (instructional — RULES.md §7 with HALT)
+- **Action:** Agent evaluates Guard Resilience metric for `run.md`
+- **Expected:**
+  - [ ] Each guard classified as **Mechanical** or **Instructional** before testing
+  - [ ] Mechanical guards tested against script output behavior (PASS/FAIL)
+  - [ ] Instructional guards tested for explicit HALT keyword presence (PASS/PARTIAL)
+  - [ ] C7 scored as PARTIAL (instruction exists, no HALT keyword, relies on LLM compliance)
+  - [ ] C3 scored as PASS (explicit HALT in run.md: "If missing → **HALT**")
+  - [ ] Final report uses format: `"Mechanical: X/Y, Instructional: A/B (C partial)"`
+  - [ ] Single combined score calculated but breakdown visible
+- **Guards tested:** Guard Resilience metric decomposition, Mechanical vs Instructional classification
+
+### T138 — Simulate Context Bleed Warning in Succession Report
+
+- **Workflow:** `simulate.md` (§3 Succession — Context Bleed Warning)
+- **Synthetic State:**
+  - Agent ran `/magic.simulate spec`, found 1 ROUGH EDGE, applied fix
+  - C14 gate passed
+  - Succession round 1: 0 regressions
+- **Action:** Agent produces final simulation report
+- **Expected:**
+  - [ ] Report includes context bleed warning: `"⚠ Succession ran in-context. For unbiased verification, run /magic.simulate test in a fresh session."`
+  - [ ] Warning appears in final report text (not buried in checklist)
+  - [ ] If warning is missing → **FAIL**
+- **Guards tested:** Context Bleed Warning enforcement, wrapper-implementation sync
+
+### T139 — Suite Integrity Timing: Test Mode Validates Before Execution
+
+- **Workflow:** `simulate.md` (§2 Suite Integrity — timing rule)
+- **Synthetic State:**
+  - `.magic/tests/suite.md` exists but T15 has a malformed header: `### T15: Missing Dash` (colon instead of dash)
+  - suite.md has 20 valid tests + 1 malformed
+- **Action:** `/magic.simulate test` triggered
+- **Expected:**
+  - [ ] Suite Integrity check runs **before** scenario execution (timing: `test` mode)
+  - [ ] Malformed T15 detected: header uses `:` instead of `—` (dash)
+  - [ ] Agent reports structural violation before PASS/FAIL table
+  - [ ] Agent either skips T15 with a note or halts for repair
+  - [ ] Remaining 20 valid tests proceed normally
+- **Guards tested:** Suite Integrity timing (pre-execution in test mode), structural format enforcement
+
+### T140 — Context Resolution Consistency Across Workflows
+
+- **Workflow:** All workflows (`spec.md`, `task.md`, `run.md`, `analyze.md`, `init.md`, `rule.md`, `simulate.md`)
+- **Synthetic State:**
+  - `workspace.json` has 2 workspaces: `engine` (default), `installers`
+  - `MAGIC_WORKSPACE` env var is set to `installers`
+  - User runs `/magic.spec` (no explicit workspace arg)
+- **Expected:**
+  - [ ] Agent resolves workspace using priority chain: explicit arg (none) > `MAGIC_WORKSPACE` (`installers`) → uses `installers`
+  - [ ] Same resolution logic produces same result in `task.md`, `run.md`, `rule.md`, `simulate.md`, `init.md`
+  - [ ] `analyze.md` full Workspace Resolution table produces identical result for same inputs
+  - [ ] No workflow falls back to `workspace.json` default when `MAGIC_WORKSPACE` is set
+- **Guards tested:** Context Resolution parity across all workflows, priority chain consistency
+
+### T141 — Trust Mode Terminology Consistency
+
+- **Workflow:** `spec.md` (Status Lifecycle, Dispatching, Actionable Outcome)
+- **Synthetic State:**
+  - Input: "Add JWT auth to the API"
+  - No RULES.md conflicts, no circular dependencies, no VERSION_DRIFT
+  - `auth.md` exists (Stable)
+- **Action:** Agent processes raw input dispatch in Trust Mode
+- **Expected:**
+  - [ ] All references to autonomous operation cite "Trust Mode (C9)" — not "Autonomous Mode"
+  - [ ] Auto-promotion to Stable requires all 4 conditions: (a) no RULES.md conflicts, (b) no circular deps, (c) layer constraints satisfied, (d) spec content complete per template
+  - [ ] No vague qualifiers ("crystal clear", "high-confidence") used in decision logic
+  - [ ] Summary appended: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
+- **Guards tested:** Trust Mode (C9) terminology consistency, quantified promotion criteria
+
+### T142 — C12 Cascade: Spec Workflow Modifies INDEX, Task Workflow Does Not
+
+- **Workflow:** `spec.md` + `task.md` (C12 interaction)
+- **Synthetic State:**
+  - `installer-architecture.md` (L1, Stable) demoted to RFC via `spec.md`
+  - `installer-node.md` (L2, Implements: installer-architecture.md, Stable)
+  - `TASKS.md` has active tasks for `installer-node.md`
+- **Test 1 — spec.md C12 cascade:**
+  - **Action:** Agent completes L1 status change in `spec.md`
+  - **Expected:**
+    - [ ] `INDEX.md` updated: `installer-node.md` status set to `RFC`
+    - [ ] File header of `installer-node.md` updated to match
+    - [ ] Report: "C12 Cascade: 1 dependent quarantined: [installer-node.md]."
+- **Test 2 — task.md reacts to INDEX.md state:**
+  - **Action:** `/magic.task update` triggered after C12 cascade
+  - **Expected:**
+    - [ ] `task.md` reads `INDEX.md`, sees `installer-node.md` = RFC
+    - [ ] Tasks for `installer-node.md` marked `Blocked [!]` with reason: "L1 parent `installer-architecture.md` is `RFC` (C12)"
+    - [ ] `installer-node.md` moved to `## Backlog` in `PLAN.md`
+    - [ ] `task.md` does **NOT** modify `INDEX.md` (read-only for status)
+- **Guards tested:** C12 ownership (spec.md writes INDEX, task.md reads only), cascade behavioral contract
+
+### T143 — Rule Workflow Pre-flight HALT on Checksum Mismatch
+
+- **Workflow:** `rule.md` (§Operational Logic — Pre-flight)
+- **Synthetic State:**
+  - `.magic/.checksums` has been manually altered (hash mismatch)
+  - `check-prerequisites --json` returns `checksums_mismatch: true`
+- **Action:** `/magic.rule add "New convention"` triggered
+- **Expected:**
+  - [ ] Pre-flight runs `check-prerequisites --json`
+  - [ ] Agent detects `checksums_mismatch`
+  - [ ] **HALT** with report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+  - [ ] No rule proposal is shown
+  - [ ] No RULES.md modification occurs
+- **Guards tested:** Rule pre-flight HALT condition, engine integrity gate
+
+### T144 — Init Handles Unrecognized Pre-flight Failure
+
+- **Workflow:** `init.md` (Step 1 — unrecognized failure branch)
+- **Synthetic State:**
+  - `check-prerequisites --json` returns `ok: false` with an unknown field: `{"ok": false, "unknown_error": "disk_full"}`
+  - No `ENGINE_INTEGRITY`, no `GHOST_REGISTRY`, no missing system files
+- **Action:** Calling workflow triggers init
+- **Expected:**
+  - [ ] Agent recognizes `ok: false` without matching any known failure category
+  - [ ] **HALT** with report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
+  - [ ] Agent does NOT proceed to Step 2 (Init)
+  - [ ] Agent does NOT silently ignore the failure
+- **Guards tested:** Init else-branch for unrecognized failures, fail-safe HALT
+
+### T145 — Spec Deprecation Cascade Flags Stale Implements Link
+
+- **Workflow:** `spec.md` (Updating — Deprecation Cascade)
+- **Synthetic State:**
+  - `auth-concept.md` (Stable L1), `auth-impl.md` (Stable L2, Implements: auth-concept.md), `auth-tests.md` (Stable L2, Related Specifications: auth-concept.md)
+- **Action:** User says "Deprecate auth-concept.md"
+- **Expected:**
+  - [ ] `auth-concept.md` status → Deprecated, INDEX.md updated
+  - [ ] Deprecation Cascade scans INDEX.md for `Implements: auth-concept.md` → finds `auth-impl.md`
+  - [ ] Report: "L2 `auth-impl.md` has no valid L1 parent — `auth-concept.md` is Deprecated."
+  - [ ] Deprecation Cascade scans for `Related Specifications` referencing `auth-concept.md` → finds `auth-tests.md`
+  - [ ] Report: "`auth-tests.md` references Deprecated spec `auth-concept.md` in Related Specifications."
+  - [ ] Findings presented with options: (a) update dependent, (b) deprecate dependent, (c) defer
+  - [ ] No auto-modification of dependents — user decides
+- **Guards tested:** Deprecation Cascade (Implements + Related), user-decision gate
+
+### T146 — Rule Remove Dependency Scan Warns on Referenced Convention
+
+- **Workflow:** `rule.md` (Remove — Dependency Scan)
+- **Synthetic State:**
+  - RULES.md §7 C5: "All specs must use kebab-case filenames"
+  - `analyze.md` Mode C step 3 references "kebab-case convention" with C5 check
+- **Input:** `"Remove rule C5"`
+- **Expected:**
+  - [ ] Before deletion, agent scans `.magic/*.md` and `.design/` for `C5` references
+  - [ ] Reference found in `analyze.md`
+  - [ ] Report: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
+  - [ ] User confirmation required before proceeding
+  - [ ] If confirmed → C5 deleted, Major version bump
+- **Guards tested:** Remove Dependency Scan, user confirmation gate
+
+### T147 — Run Handoff Succession Returns to Task Update
+
+- **Workflow:** `run.md` (Step 4 — Handoff)
+- **Synthetic State:**
+  - `TASKS.md` Phase 1 task `T-1A01` mapped to `auth.md`
+  - During execution, spec is ambiguous → HALT triggered
+- **Action:** Agent halts and triggers `magic.spec` update. Spec is updated successfully.
+- **Expected:**
+  - [ ] Agent records Blocked status with reason in TASKS.md
+  - [ ] Agent triggers `magic.spec` update for `auth.md`
+  - [ ] After spec update completes, agent returns to `magic.task update` to rebuild dependencies
+  - [ ] Task validity re-verified before resuming execution
+- **Guards tested:** Handoff succession chain (run → spec → task → run)
+
+### T148 — Simulate HALT Includes Recovery Hint
+
+- **Workflow:** `simulate.md` (Step 0: Pre-flight)
+- **Synthetic State:**
+  - `.magic/.checksums` exists but `run.md` checksum mismatches (file was modified)
+- **Action:** `/magic.simulate run`
+- **Expected:**
+  - [ ] `check-prerequisites` reports `checksums_mismatch` for `run.md`
+  - [ ] **HALT** — no simulation proceeds
+  - [ ] Report includes recovery hint: `update-engine-meta --workflow {mismatched_workflow}` or restore from origin
+  - [ ] Agent does NOT fall through to any mode
+- **Guards tested:** Simulate pre-flight HALT with actionable recovery hint
+
+### T149 — Rule Core-Amendment Routing Gate
+
+- **Workflow:** `rule.md` (Guards — Core-Amendment Routing)
+- **Synthetic State:**
+  - RULES.md: §3 Layer Rules contain "L2 cannot enter RFC until L1 is Stable"
+- **Input:** `"Change rule: L2 can enter RFC regardless of L1 status"`
+- **Expected:**
+  - [ ] Agent identifies target: §3 (core section)
+  - [ ] Core-Amendment Routing activates: "This targets core section §3. Core amendments require explicit approval and trigger a Major version bump."
+  - [ ] User must explicitly confirm
+  - [ ] If denied → abort, no changes
+  - [ ] If confirmed → §3 updated, RULES.md Major version bump
+- **Guards tested:** Core-Amendment Routing gate, explicit approval requirement
+
+### T150 — Analyze Mode A Proposal Shows Explicit Options
+
+- **Workflow:** `analyze.md` (Mode A — Proposal step)
+- **Synthetic State:**
+  - `.design/INDEX.md` empty, project has `src/` with 30 files
+- **Action:** `/magic.analyze` → Mode A generates proposal with 4 L1 specs and 3 RULES.md entries
+- **Expected:**
+  - [ ] Proposal presented with explicit option set: (a) Approve all, (b) Select, (c) Adjust, (d) Cancel
+  - [ ] Agent waits for user choice — does NOT auto-dispatch
+  - [ ] If user picks (b) Select → individual items shown for approval
+  - [ ] If user picks (d) Cancel → no files created, no INDEX.md changes
+- **Guards tested:** Defined approval option set, wait-for-choice gate
+
+### T151 — Analyze Priority 1 Prints Workspace Confirmation
+
+- **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
+- **Synthetic State:**
+  - `workspace.json`: `engine` (default), `installers`. Both valid.
+- **Action:** `/magic.analyze installers`
+- **Expected:**
+  - [ ] Workspace resolved to `installers` via Priority 1 (explicit arg)
+  - [ ] Agent prints: "Active workspace: installers."
+  - [ ] Default `engine` workspace is NOT used despite being set as default
+  - [ ] Analysis scoped to `installers` workspace paths
+- **Guards tested:** Priority 1 override, confirmation print
+
+### T152 — Run Mid-Run HALT Notifies Manager in Parallel Mode
+
+- **Workflow:** `run.md` (Step 4 — Mid-Run Stability Check, Parallel mode)
+- **Synthetic State:**
+  - Parallel mode. Track A executing `T-1A01` for `auth.md` (Stable at dispatch).
+  - Track B triggers spec amendment → `auth.md` drops to RFC mid-execution.
+  - Track A reaches Step 4 and attempts to commit Done.
+- **Expected:**
+  - [ ] Track A re-reads INDEX.md, detects `auth.md` is now RFC
+  - [ ] **HALT** on Track A: "Spec `auth.md` demoted to RFC during execution of `T-1A01`."
+  - [ ] `T-1A01` left as In Progress (NOT Done)
+  - [ ] Developer Track A notifies Manager role of suspension
+  - [ ] Manager halts further assignments for specs affected by `auth.md` demotion
+- **Guards tested:** Mid-Run HALT, Manager notification in Parallel mode
+
 ```
-**Test Suite Finalized** — v1.9.32
+**Test Suite Finalized** — v1.9.43
 ```

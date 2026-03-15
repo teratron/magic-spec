@@ -7,7 +7,7 @@ Manages project conventions across a two-tier rules system:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Load global RULES.md first, then workspace RULES.md if it exists. Never ask for workspace unless ambiguous.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise. After resolution, load global `RULES.md` first, then workspace `RULES.md` if it exists.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
 4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
@@ -41,10 +41,14 @@ graph TD
 ### Operational Logic
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+    - `ok: true` → proceed.
+    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
 2. **Read**: Load global `.design/RULES.md`. If workspace is active and `.design/{workspace}/RULES.md` exists, load it too. Parse user intent into a declarative statement.
 3. **Tier Routing**: Apply Rule Tier Routing logic to determine target file.
 4. **Guards**:
-    - **Constitutional**: If new rule contradicts §1-6 core → **HALT** & report.
+    - **Core-Amendment Routing**: If the user's target matches a section in §1–6 (not §7) → route as a **core amendment**. Inform: "This targets core section §{N}. Core amendments require explicit approval and trigger a Major version bump." Require user confirmation before proceeding. If confirmed → apply change to the target core section. If denied → abort.
+    - **Constitutional**: If a new §7 rule contradicts §1-6 core → **HALT** & report.
     - **Duplication**: If semantically overlaps with any C{N} in EITHER global or workspace RULES.md → Propose merge/replace.
 5. **Propose**: Show "Current vs Proposed" side-by-side. State target tier and version impact (e.g., workspace RULES.md 1.0.0 → 1.1.0).
     - **Batch**: When the user requests multiple rule changes (add + amend, or multiple adds), group all changes into a single proposal with one "Apply all?" confirmation and one version bump.
@@ -55,9 +59,11 @@ graph TD
 | :--- | :--- | :--- |
 | **Add** | Global: find highest C{N} → append after it in §7. Workspace: find highest WC{N} in `## Workspace Conventions` → append there; if none exist yet, start at WC1. | Minor |
 | **Amend** | Match ID/Keyword in target tier → Replace in place. | Minor |
-| **Remove** | Match ID/Keyword in target tier → Delete entry. | Major |
+| **Remove** | Match ID/Keyword in target tier → **Dependency Scan** (see below) → Delete entry. | Major |
 | **List** | Display all §7 entries from global RULES.md; if workspace RULES.md exists, display its conventions separately. | N/A |
 | **Init** | Create `.design/{workspace}/RULES.md` from template if absent. Called automatically before first workspace-tier Add. | N/A |
+
+**Remove — Dependency Scan**: Before deleting a convention, scan all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → Report: "Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance." Require explicit user confirmation before proceeding. If the user confirms, the references become the user's responsibility to update (the rule workflow does not auto-edit workflow files or specs).
 
 **Workspace RULES.md template** (used by Init action):
 

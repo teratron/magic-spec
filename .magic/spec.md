@@ -8,11 +8,11 @@ Universal process for managing project specifications in `.design/specifications
 
 > **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
 
-## Core Invariants (MUST FOLLOW)
+## Core Invariants (Mandatory)
 
-1. **Context**: flag > `MAGIC_WORKSPACE` > `.design/workspace.json` default > fallback root `.design/`. Never ask user.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise. (Full resolution table: see `analyze.md` §Workspace Resolution.)
 2. **Prohibitions**: No implementation code in specs; use pseudo-code only. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
-3. **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
+3. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
 4. **Integrity (C14)**: If engine files (`.magic/`) modified, MUST run: `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
 5. **Linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 6. **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
@@ -74,7 +74,7 @@ graph LR
     Stable --> RFC
 ```
 
-> **Autonomous Mode**: In high-confidence scenarios (Trust Mode), the agent may auto-promote statuses (Draft -> Stable) silently to minimize user friction.
+> **Trust Mode (C9)**: When no objective conflicts exist (no RULES.md contradiction, no circular dependency, no VERSION_DRIFT), the agent may auto-promote statuses (Draft → Stable) silently to minimize user friction.
 >
 > **Amendment rule:** When a Stable spec receives substantive new requirements
 > (minor or major version bump), its status reverts to `RFC` for re-review.
@@ -84,7 +84,7 @@ graph LR
 
 ### Explore Mode (Brainstorming)
 
-Use this workflow for safe exploration. In **Autonomous Mode**, the agent strives for maximum speed from idea to execution.
+Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strives for maximum speed from idea to execution.
 
 **Blank Trigger (Creative Spark)**: If triggered without specific input or arguments → Become a **Proactive Architect**.
 
@@ -98,7 +98,7 @@ Use this workflow for safe exploration. In **Autonomous Mode**, the agent strive
 
 > **Delegation Rule**: If the user's intent is to analyze the *existing codebase* — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow.
 
-1. **Act as a thinking partner**: Use codebase reasoning tools (`Sequential Thinking`, `grep_search`) to deeply analyze the user's request.
+1. **Act as a thinking partner**: Use available codebase reasoning tools (file search, content search, directory listing) to deeply analyze the user's request.
 2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
 3. **Strict Prohibition**: You MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents.
 4. **Transition**: Only update live specs when the user explicitly approves transitioning the brainstorm into a formal spec update (triggering *Dispatching from Raw Input* or *Updating an Existing Specification*).
@@ -118,8 +118,8 @@ graph TD
 ```
 
 1. **Parse & Map**: Identify distinct topics and match to domains.
-2. **Auto-Confirm (Trust Mode)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md, Circular Dependencies) are found, proceed to **Dispatch** immediately.
-3. **Dispatch**: Write to correct spec files (Auto-promoting directly to `Stable` if logic is crystal clear).
+2. **Auto-Confirm (Trust Mode, C9)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, proceed to **Dispatch** immediately.
+3. **Dispatch**: Write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content is complete per template. Otherwise keep as `Draft`.
 4. **Post-Update**:
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
@@ -131,13 +131,14 @@ graph TD
 - **Ambiguity**: Ask one clarifying question; do not guess.
 - **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
-- **Actionable Outcome**: In Trust Mode, after silent status promotion, append a summary: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
+- **Actionable Outcome**: In Trust Mode (C9), after silent status promotion, append a summary: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 
 ### Creating a New Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`
-    - `checksums_mismatch` → **HALT**. Restore integrity.
-    - Missing `.design/` → Auto-Run `.magic/init.md`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
+    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → **HALT** before creating. Report: "Name collision: `{file}` already exists in `{ws}` (v{X}). Resolve before creating: (a) use a unique name per workspace, (b) promote the existing spec as canonical and sync, (c) force ignore (document reason)."
 2. **Creation**:
     - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec as per C16).
@@ -147,7 +148,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `check-prerequisites` (Same as Creation). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json` (same as Creation). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
 2. **Versioning**:
     - `patch` (0.0.X) — typos, no logic change.
     - `minor` (0.X.0) — extensions.
@@ -156,7 +157,7 @@ graph TD
     - **Template Promotion (C16)**: If a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
     - Update `Version`, `Status`, `Layer` in `INDEX.md`.
-    - **Version Drift Guard**: If VERSION_DRIFT detected for the target file (file header `Version:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: "Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply amendment rule to the external change, or (b) revert file header to registry version." Resume only after user resolves.
+    - **Version Drift Guard**: If VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: "Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply amendment rule to the external change, or (b) revert file header to registry version." Resume only after user resolves.
       - **Resolution Validation**: Before resuming, confirm INDEX.md entry now matches the file header. If the user only bumped INDEX.md without reviewing the external change, flag: "Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed. Proceed? (a) Yes — continue, (b) No — revert file header first." After confirmed resolution, **re-evaluate all Sync guards from the top** (RE-3, Cross-Workspace Parity, Existence Guard) before writing.
       - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending drift resolution." Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. If a name collision with a version mismatch is found → **HALT** before writing. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Resolve before proceeding: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore (document reason)."
@@ -166,8 +167,12 @@ graph TD
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft):
         1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
         2. For each L2 found, recursively repeat: scan for `Implements: {L2-file}` to discover L3 dependents.
-        3. Drop status of all discovered dependents to match parent's new status (`RFC` or `Draft`).
+        3. **Update INDEX.md**: Set status of all discovered dependents to match parent's new status (`RFC` or `Draft`). Update the file headers to match. This is the authoritative status change — `task.md` and `run.md` react to INDEX.md state, they do not modify it.
         4. Report: "C12 Cascade: {N} dependents quarantined: [{list}]."
+    - **Deprecation Cascade**: If a spec transitions to `Deprecated`:
+        1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` — flag each as having an **invalid L1 parent** (layer integrity violation). Report: "L2 `{file}` has no valid L1 parent — `{target}` is Deprecated."
+        2. Scan `INDEX.md` for ALL specs with `Related Specifications` referencing `{target-file}` — flag each as containing a **stale reference**. Report: "`{file}` references Deprecated spec `{target}` in Related Specifications."
+        3. Post-Update Review must surface all flagged specs. Do NOT auto-modify dependents — present findings for user decision: (a) update the dependent spec to remove/replace the reference, (b) deprecate the dependent spec as well, (c) defer (acknowledge and continue).
     - **Renaming/Merging/Splitting**: If file name or internal section structure changes:
         - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
         - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
@@ -193,7 +198,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 ### Periodic Registry Audit
 
-**Trigger**: *"Audit specs"* or every 5th specification write operation (create, update, or status change — counted per workspace session).
+**Trigger**: *"Audit specs"* or every 5th specification write operation (create, update, or status change — counted per conversation; counter resets when the chat session ends).
 
 1. **Read**: All `INDEX.md` files + `RULES.md`.
 2. **Check**:

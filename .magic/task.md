@@ -4,14 +4,14 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
     - **Atomic Tasks (C10)**: Every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-    - **User Gate**: In **Trust Mode**, show the Plan & Checklist summary and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
+    - **User Gate**: In **Trust Mode (C9)**, show the Plan & Checklist summary and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
@@ -40,6 +40,7 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs`.
     - `checksums_mismatch` → **HALT**. Restore engine first.
+    - **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before planning." This catches manual edits that bypassed the spec workflow.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
 2. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 3. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
@@ -49,7 +50,7 @@ graph TD
     - **Tracks**: Group tasks by file independence.
     - **Testing (Mandatory)**: Every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
 6. **Sync (Update Mode)**:
-    - **C12 Quarantine**: If L1 parent drops `Stable` → Move L2 children to Backlog; mark tasks `Blocked [!]` with specific reason. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
+    - **C12 Quarantine**: If L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → Move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: "L1 parent `{file}` is `{status}` (C12)". **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
     - **Phantom Specs**: If spec in PLAN/INDEX but missing from disk → Cancel `Todo` / `Pending`; archive `Done`. Block active tasks.
     - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: Keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
     - **Renames**: Global search-and-replace on filename changes (exclude archives).

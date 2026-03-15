@@ -11,8 +11,8 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 ## Core Invariants (Mandatory)
 
-1. **Context**: Resolve target workspace via the priority chain below. Route all logic to `.design/{workspace}/`.
-2. **Auto-Init**: If `.design/` or system files missing, auto-trigger `.magic/init.md`.
+1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
+2. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
 3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
 5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
@@ -39,7 +39,7 @@ Parse the `[arg]` to determine the analysis mode:
 
 | Priority | Source | Condition | Action |
 | :---: | :--- | :--- | :--- |
-| 1 | **Explicit arg** | `/magic.analyze {workspace}` | Use it. Overrides `MAGIC_WORKSPACE` if both set. If name not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
+| 1 | **Explicit arg** | `/magic.analyze {workspace}` | Use it. Print: "Active workspace: {workspace}." Overrides `MAGIC_WORKSPACE` if both set. If name not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
 | 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. If value not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
 | 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: "Active workspace: {default}." |
@@ -52,7 +52,7 @@ Parse the `[arg]` to determine the analysis mode:
 
 ### 1. Stack & Structure
 
-Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using `list_dir` (depth 2 by default; extend to depth 3 only for monorepo root directories with nested `packages/` or `apps/`).
+Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using directory listing (depth 2 by default; extend to depth 3 only for monorepo root directories with nested `packages/` or `apps/`).
 **Isolation (C15)**: If `MAGIC_WORKSPACE_SCOPE` is defined, restrict scanning strictly to the specified directory paths.
 
 ### 2. Architecture Inference
@@ -76,10 +76,14 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 *Trigger: INDEX.md is empty.*
 
-0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`. If `.design/` missing → auto-run `.magic/init.md`. Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
+0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+    - `ok: true` → proceed.
+    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Build full project map.
 2. Inferred stack + architecture style.
-3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries.
+3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries. Present with explicit options: **(a) Approve all** — dispatch all proposed specs and rules, **(b) Select** — user picks individual items to approve, **(c) Adjust** — user requests modifications to the proposal, **(d) Cancel** — discard the proposal entirely. Wait for user choice before proceeding.
 4. **Registry Healing Guard**: If `INDEX.md` is blank/corrupted or mismatches the content of `specifications/` (Ghost/Zombie entries) → Prioritize **Registry Healing**: automatically re-map disk files to the registry and fix orphan paths before proposing new content.
 5. **Advisory**: Generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
@@ -87,7 +91,11 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 *Trigger: INDEX.md has active specs.*
 
-0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`. Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
+0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+    - `ok: true` → proceed.
+    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Read existing specs; extract currently described paths/logic.
 2. Scan actual project; build delta.
 3. **Gap Report**:
@@ -155,7 +163,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Specs with empty or stub sections → flag as incomplete.
 
 2. **Coverage Strategy**
-    - High-churn directories (many recent commits) without specs → prioritize coverage.
+    - High-churn directories (≥10 commits in the last 30 days) without specs → prioritize coverage.
     - Test directories without corresponding test-suite spec → suggest `test-suite.md`.
     - Config-heavy areas (CI/CD, infra) without operational specs → suggest ops specs.
 

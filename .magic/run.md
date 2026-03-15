@@ -4,7 +4,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace via `.design/workspace.json`. Route all logic to `.design/{workspace}/`. Never ask.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
 4. **Logic Guards**:
@@ -48,13 +48,14 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`.
     - **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
+    - **File-Header Parity**: For each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before execution." This catches manual edits that bypassed the spec workflow.
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
 3. **Execute**: Implement per spec section. No scope creep.
 4. **Update**:
-    - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md`. If demoted since dispatch → **HALT** that track. Report: "Spec `{file}` demoted to `{status}` during execution of `{task}`. Task output suspended — run `magic.task update` to re-evaluate."
+    - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. If either source shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` demoted to `{status}` during execution of `{task}`. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Developer track must notify the Manager role of the suspension so the Manager can halt further assignments for the affected spec.
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
-    - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update.
+    - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update. After the spec is updated, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
     - **Sync**: If spec/phase finished → Update high-level `[x]` in `PLAN.md`.
     - **Actionable Outcome**: After phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
     - **Change Record**: Write 1-line summary in task `Changes` field in `TASKS.md`.
