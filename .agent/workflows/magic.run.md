@@ -18,6 +18,17 @@ handoffs:
 
 **Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*
 
+Trigger: `/magic.run [arg]`
+
+Arguments:
+
+- *(empty)* — full execution across all workspaces
+- `{workspace}` — scoped execution within a workspace
+- `"text"` — directed execution (task ID, phase, or focus)
+- `{workspace} "text"` — scoped + directed execution
+
+Examples: `/magic.run`, `/magic.run engine`, `/magic.run "T-1A01"`, `/magic.run "phase-2"`, `/magic.run installers "только валидационные задачи"`
+
 - **Rules Parity**: Always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
 **Scope:** Code execution, task state management, and changelog generation.
 Task generation and orchestration are handled by `magic.task`.

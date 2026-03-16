@@ -13,6 +13,18 @@ handoffs:
 # Task Workflow
 
 **Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
+
+Trigger: `/magic.task [arg]`
+
+Arguments:
+
+- *(empty)* — full planning across all workspaces
+- `{workspace}` — scoped planning for a specific workspace
+- `"text"` — guided planning with focus or instructions
+- `{workspace} "text"` — scoped + guided planning
+
+Examples: `/magic.task`, `/magic.task engine`, `/magic.task "декомпозируй phase-2 детальнее"`, `/magic.task installers "только новые спеки"`
+
 **Scope:**
 
 - **Rules Parity**: Version of `RULES.md` must be recorded in `TASKS.md` header.

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.43
+**Version:** 1.9.44
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2338,6 +2338,97 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Manager halts further assignments for specs affected by `auth.md` demotion
 - **Guards tested:** Mid-Run HALT, Manager notification in Parallel mode
 
+### T153 — Task Argument Routing: Scoped Planning (Mode B)
+
+- **Workflow:** `task.md` (Argument Routing)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `engine/INDEX.md`: 3 Stable specs.
+  - `installers/INDEX.md`: 2 Stable specs.
+- **Action:** User runs `/magic.task installers`
+- **Expected:**
+  - [ ] Argument parsed: `installers` matches workspace name → **Scoped Planning** (Mode B)
+  - [ ] Only `installers/INDEX.md` is read for planning (not engine)
+  - [ ] PLAN.md and TASKS.md written to `.design/installers/`
+  - [ ] Engine workspace specs are NOT included in the plan
+  - [ ] Handoff recommends `/magic.run installers` (workspace propagated)
+- **Guards tested:** Argument Routing (Mode B), Workspace Scope Isolation (C15), Handoff Propagation
+
+### T154 — Task Argument Routing: Guided Planning with Workspace Fallback (Mode C)
+
+- **Workflow:** `task.md` (Argument Routing)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `engine/INDEX.md`: 3 Stable specs (2 API-related, 1 unrelated).
+  - No `MAGIC_WORKSPACE` env var set.
+- **Action:** User runs `/magic.task "только API спеки"`
+- **Expected:**
+  - [ ] Argument parsed: text does not match any workspace → **Guided Planning** (Mode C)
+  - [ ] **Workspace Fallback**: No workspace in arg, no env var → `workspace.json` default = `engine` used
+  - [ ] Workspace resolved silently via Core Invariant #1 (Zero-Prompt)
+  - [ ] Planning directive "только API спеки" applied as filter within `engine` workspace
+  - [ ] User is NOT prompted to select a workspace
+- **Guards tested:** Argument Routing (Mode C), Workspace Fallback, Zero-Prompt Resolution
+
+### T155 — Task Argument Routing: Disambiguation (Quoted Workspace Name)
+
+- **Workflow:** `task.md` (Argument Routing)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+- **Action:** User runs `/magic.task "engine"`
+- **Expected:**
+  - [ ] Argument parsed: quoted text → forced directive interpretation (NOT workspace selection)
+  - [ ] Workspace resolved via default (`engine`) from `workspace.json`
+  - [ ] Text "engine" treated as planning directive, not workspace selector
+  - [ ] Agent interprets "engine" as focus/filter term for planning
+- **Guards tested:** Disambiguation Rule (quotes override workspace match)
+
+### T156 — Run Argument Routing: Targeted Task by ID (Mode C — T-XXXX)
+
+- **Workflow:** `run.md` (Argument Routing)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}}}`
+  - `engine/TASKS.md`: Phase 1 with T-1A01 (Todo), T-1A02 (Todo, dep: T-1A01), T-1B01 (Todo).
+  - RULES.md §7 C3: Sequential mode.
+- **Action:** User runs `/magic.run T-1A01` (unquoted, not a workspace name)
+- **Expected:**
+  - [ ] Argument parsed: `T-1A01` does not match any workspace → non-workspace token
+  - [ ] Pattern matches `T-XXXX` → **Targeted Task** execution
+  - [ ] Workspace resolved via default (`engine`) — Workspace Fallback applied
+  - [ ] Only T-1A01 is executed (not the full phase)
+  - [ ] Dependency check: T-1A01 has no deps → proceeds
+- **Guards tested:** Argument Routing (Targeted Task), Non-workspace token detection, Workspace Fallback
+
+### T157 — Run Argument Routing: Scoped + Directed Phase (Mode D)
+
+- **Workflow:** `run.md` (Argument Routing)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `installers/TASKS.md`: Phase 1 (all Done), Phase 2 (3 Todo tasks).
+  - RULES.md §7 C3: Parallel mode.
+- **Action:** User runs `/magic.run installers "phase-2"`
+- **Expected:**
+  - [ ] Argument parsed: `installers` = workspace, `"phase-2"` = directed text → **Scoped + Directed** (Mode D)
+  - [ ] Only `installers/TASKS.md` is read
+  - [ ] Only Phase 2 tasks are targeted (Phase 1 skipped — already Done)
+  - [ ] Manager Agent activated (Parallel mode) for Phase 2 tasks
+  - [ ] Handoff (if re-planning needed) recommends `/magic.task installers`
+- **Guards tested:** Argument Routing (Mode D), Phase targeting, Workspace scoping, Handoff Propagation
+
+### T158 — Cross-Workflow Handoff Propagation with Scoped Argument
+
+- **Workflow:** `task.md` → `run.md` (Handoff chain)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - User completed `/magic.task installers` (Mode B — scoped planning).
+  - Planning is done, handoff to run triggered.
+- **Expected:**
+  - [ ] task.md MANDATORY HARD STOP fires
+  - [ ] Handoff message recommends: `/magic.run installers` (NOT `/magic.run`)
+  - [ ] Workspace `installers` is explicitly included in the recommended command
+  - [ ] If user follows recommendation and runs `/magic.run installers`, execution scopes correctly
+- **Guards tested:** Handoff Propagation (task→run), Workspace context preservation across workflow boundary
+
 ```
-**Test Suite Finalized** — v1.9.43
+**Test Suite Finalized** — v1.9.44
 ```
