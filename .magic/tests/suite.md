@@ -2479,6 +2479,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Neither rule nor spec change written
 - **Guards tested:** T4 Inline Constitutional Guard, §1–6 protection
 
+### T162 — Spec T4 Atomic Intent with Drift Resolution
+
+- **Workflow:** `spec.md` (T4 + Version Drift Guard)
+- **Synthetic State:** `INDEX.md` (v1.0), File Header (v1.1). VERSION_DRIFT active.
+- **Input:** "Update spec X. Remember that Y."
+- **Expected:**
+  - [ ] T4 detected; RE-3 detected.
+  - [ ] **HALT** before any write.
+  - [ ] Intent "Remember that Y" is queued.
+  - [ ] Rule is NOT written to RULES.md until drift is resolved.
+  - [ ] After drift fix: rule and spec update applied atomically.
+- **Guards tested:** T4 Queuing, RE-3 Atomicity.
+
 ```
-**Test Suite Finalized** — v1.9.46 (Last: T161)
+**Test Suite Finalized** — v1.9.47 (Last: T162)
 ```

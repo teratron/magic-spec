@@ -1,6 +1,6 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "491762f1d904101628e5f0bec1b33b36b0cc8a490a8cb9ca1b5ceb047dbe2a78",
+  ".version": "bb5d543d136ab310de42de6fa199a8ccc5ff9d0dae554ffa2aab2fb440a9825a",
   "analyze.md": "02578f1e64c5a02b003d009ef5eeed84a20f7698e82b6df551fcb8195ffec96e",
   "init.md": "4e39d6b072b3a5d9297cbf4fb0e3079a16680cd707d696d95b298b6e783586ac",
   "retrospective.md": "aa710b711304ad2f02cc9feef82eb41fc15211aa07ef66ccbb4de01f8fce5893",
@@ -12,7 +12,7 @@
   "scripts/generate-context.js": "c0f3bdb6abc7de69bf6576e9bb1f4bb823e9ff3a4e15972a3aeae09f718f2732",
   "scripts/init.js": "959c030258371686d7d155fc202ae8ddf60c50a55a652e3f9fe0693ba9b9895d",
   "simulate.md": "f67237763c9f02b6d2a600d1eeff75b8b14d79f7a0299888965adb7626a6918d",
-  "spec.md": "75d9e385eb974818fb4bf702454466fb901a46f16a1e47b8d18bc582c7a6173a",
+  "spec.md": "593291ac0979b3e158116ed2f25e87be3a1b15cd69c1707b4c912bb3a58557ba",
   "task.md": "4adc542023d886d5c13e11819a6164b1e390aa83cdce31570973b9d8cbc0b025",
   "templates/micro-spec.md": "608a9c9534dd83d89e9a8efd39b8fa287bf4df4bd0df4de908d801fa2ad99340",
   "templates/plan.md": "d3328458e5cf50e9758910471fcd215e954c692a8dfbaa01505551c1a6f4aa22",

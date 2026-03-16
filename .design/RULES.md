@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Active
 
 ## Overview
@@ -183,10 +183,20 @@ Each workspace may maintain a local `RULES.md` at `.design/{workspace}/RULES.md`
 4. Are created on demand by `magic.rule` when the first workspace-scoped rule is requested.
 5. Version independently from the global `RULES.md`.
 
+### C23 — Context Economy & Validation Caching
+
+To minimize redundant resource usage and improve performance, the agent may optimize `check-prerequisites` calls within a single task lifecycle:
+
+1. **Turn-Aware Caching**: If `check-prerequisites` returned `ok: true` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in `.magic/` or `.design/` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
+2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
+3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
+4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.3.0 | 2026-03-16 | Antigravity | Added C23: Context Economy & Validation Caching. |
 | 1.2.0 | 2026-03-05 | Agent | Added C22: Workspace Rule Inheritance. |
 | 1.1.0 | 2026-03-03 | Antigravity | Added C17-C21: Installers, Security, Parity, and Ventilation. |
 | 1.0.0 | 2026-03-03 | Agent | Initial constitution |
