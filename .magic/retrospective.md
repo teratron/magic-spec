@@ -9,7 +9,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
-6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective` (Smart History: redundant automated entries are skipped).
+6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective` (Smart History: redundant automated entries are skipped).
 
 ## Workflow: Feedback & Metrics
 

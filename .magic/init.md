@@ -9,7 +9,7 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skips existing files. Never mutates user state.
 5. **Versioning (C14)**:
-    - **Engine**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow init` (Smart History: redundant automated entries are skipped).
+    - **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow init` (Smart History: redundant automated entries are skipped).
     - **Rules**: Initial `RULES.md` is versioned at 1.0.0.
 
 ## Workflow: Setup & Verification

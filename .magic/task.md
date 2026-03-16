@@ -14,7 +14,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
     - **User Gate**: In **Trust Mode (C9)**, show the Plan & Checklist summary and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
     - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
-6. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
+6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
 7. **Architectural Logic**:
     - **Circular Guard**: Deep scan `Related Specifications` across ALL levels. If ANY cycle (N-level) detected → **HALT**.
     - **Cycle Resolution**: Suggest breaking the chain by identifying the "weakest link" (Related Spec vs Implements).

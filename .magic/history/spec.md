@@ -15,4 +15,4 @@
 | 1.4.4 | 2026-03-01 | Added C14 Engine Versioning Protocol to Post-Update Review checklist |
 | 1.4.9 - 1.4.162 | 2026-03-10 | Automated update via engine meta automation |
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
-| 1.4.166 - 1.5.22 | 2026-03-15 | Automated update via engine meta automation |
+| 1.4.166 - 1.5.26 | 2026-03-16 | Automated update via engine meta automation |
