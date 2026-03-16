@@ -3,7 +3,7 @@
 .vscode/
 
 # Claude
-#.claude/settings.json
+.claude/settings.json
 
 # Node.js
 node_modules/
