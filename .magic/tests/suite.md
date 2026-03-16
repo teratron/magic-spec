@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.44
+**Version:** 1.9.45
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2429,6 +2429,52 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If user follows recommendation and runs `/magic.run installers`, execution scopes correctly
 - **Guards tested:** Handoff Propagation (task→run), Workspace context preservation across workflow boundary
 
+### T159 — Spec T4 Tier Routing: Workspace Signal Detected
+
+- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Synthetic State:**
+  - Active workspace: `installers` (resolved via Zero-Prompt).
+  - `.design/RULES.md`: §7 has C1–C10.
+  - `.design/installers/RULES.md`: exists with WC1.
+- **Input:** `"Add OAuth2 to auth spec. Remember that all installer packages must use semantic versioning."`
+- **Expected:**
+  - [ ] T4 trigger detected: "Remember that..."
+  - [ ] **Tier Routing**: "installer packages" matches workspace signal → target = `.design/installers/RULES.md`
+  - [ ] **Duplication Check**: scans both global C1–C10 and workspace WC1 for overlap → none found
+  - [ ] Rule written to `.design/installers/RULES.md` as WC2 (NOT to global RULES.md)
+  - [ ] Spec update and rule write grouped in single atomic proposal
+- **Guards tested:** T4 Inline Tier Routing, workspace signal detection, atomic proposal
+
+### T160 — Spec T4 Duplication Check Catches Overlap
+
+- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Synthetic State:**
+  - Active workspace: `engine`.
+  - `.design/RULES.md` §7 has C7: "Universal Script Executor — all automation via `executor.js`."
+- **Input:** `"Update engine-core spec. Remember that all scripts must go through executor.js."`
+- **Expected:**
+  - [ ] T4 trigger detected: "Remember that..."
+  - [ ] **Tier Routing**: rule is universal (no workspace signal) → target = `.design/RULES.md`
+  - [ ] **Duplication Check**: proposed rule semantically overlaps with existing C7
+  - [ ] Agent surfaces overlap: "This overlaps with C7 (Universal Script Executor). Merge, replace, or add separately?"
+  - [ ] No write to RULES.md until user decides
+  - [ ] Spec update proceeds independently (rule and spec are separate approval tracks)
+- **Guards tested:** T4 Inline Duplication Check, semantic overlap detection
+
+### T161 — Spec T4 Constitutional Guard Blocks Contradicting Rule
+
+- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Synthetic State:**
+  - `.design/RULES.md` §5: "No implementation code — pseudo-code only."
+- **Input:** `"Add Python examples to database spec. Remember that all specs must include runnable code samples."`
+- **Expected:**
+  - [ ] T4 trigger detected: "Remember that..."
+  - [ ] **Constitutional Guard**: proposed rule ("runnable code samples") contradicts §5 ("No implementation code")
+  - [ ] **HALT** on rule write: "Proposed rule contradicts §5 (Content Rules). Cannot apply."
+  - [ ] Spec update (adding Python examples) also flagged as §5 violation
+  - [ ] Neither rule nor spec change written
+- **Guards tested:** T4 Inline Constitutional Guard, §1–6 protection
+
 ```
-**Test Suite Finalized** — v1.9.44
+**Test Suite Finalized** — v1.9.45
 ```

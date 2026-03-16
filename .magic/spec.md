@@ -130,7 +130,7 @@ graph TD
 
 - **Ambiguity**: Ask one clarifying question; do not guess.
 - **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
-- **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
+- **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: In Trust Mode (C9), after silent status promotion, append a summary: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 
 ### Creating a New Specification
@@ -195,6 +195,12 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 | :--- | :--- | :--- |
 | T1-T3 | "Always/never", repeated pattern, or audit find | Propose & Wait |
 | T4 | User rule: "remember that...", "project rule:" | Apply Immediately |
+
+**T4 Inline Guards** (applied before writing, preserving "Apply Immediately" semantics):
+
+1. **Tier Routing**: Determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for installers", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. If ambiguous → ask user.
+2. **Duplication Check**: Read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → surface the overlap and ask: merge, replace, or add separately. Do NOT silently duplicate.
+3. **Constitutional Guard**: If proposed rule contradicts §1–6 → **HALT**. Same as `rule.md`.
 
 ### Periodic Registry Audit
 

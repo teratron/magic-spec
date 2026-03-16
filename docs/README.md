@@ -48,7 +48,7 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
-| **Simulate** | `simulate.md` | Validates engine logic via 76+ regression tests or Improv Mode stress-testing. | [Detailed Guide](simulate.md) |
+| **Simulate** | `simulate.md` | Validates engine logic via 155+ regression tests or Improv Mode stress-testing. | [Detailed Guide](simulate.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 
 ## 🏗️ Architecture & Directory Structure
@@ -87,6 +87,15 @@ The agent will run the **Specification** workflow, creating a file in `.design/s
 >
 > *"Build an implementation plan for the stable specs."*
 The agent will run the **Task** workflow, generating a phased `PLAN.md` and decomposing it into atomic units in `TASKS.md`.
+
+All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
+
+```
+/magic.task engine                        # Plan only for the "engine" workspace
+/magic.task "декомпозируй phase-2"        # Guided planning with focus
+/magic.run installers "phase-1"           # Execute phase 1 in "installers" workspace
+/magic.analyze "проверь API покрытие"     # Focused analysis on a specific area
+```
 
 ### 3. Executing Tasks
 >

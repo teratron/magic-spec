@@ -39,7 +39,26 @@ Rules are added when the engine identifies:
 - **T2**: Recurring patterns found across multiple specifications.
 - **T4**: Explicit user declarations ("From now on, use...").
 
-## 4. Impact Analysis & Sync
+## 4. Two-Tier Workspace Routing
+
+The Rule Workflow supports a two-tier rules system for multi-workspace projects:
+
+- **Global tier** → `.design/RULES.md`: Universal Constitution (§1–6) + cross-workspace §7 conventions (C1, C2, …).
+- **Workspace tier** → `.design/{workspace}/RULES.md`: Workspace-local §7 conventions only (WC1, WC2, …). Inherits all global rules; never overrides §1–6.
+
+When a rule is added or amended, the engine determines the target tier by analyzing signal words in the request:
+
+| Signal | Target |
+| :--- | :--- |
+| "in engine", "for installers", "this workspace" | Workspace `RULES.md` |
+| Universal rule, no workspace context | Global `RULES.md` |
+| Ambiguous | Engine asks: "Global or workspace-scoped?" |
+
+Workspace `RULES.md` files are created on demand when the first workspace-scoped rule is requested. Duplication checks scan **both tiers** to prevent redundancy.
+
+This same tier routing is also applied by the **Spec Workflow** when capturing T4 rules inline (see [spec.md §4.7](spec.md#47-t4-rule-capture-with-tier-routing)).
+
+## 5. Impact Analysis & Sync
 
 After a rule is written to disk:
 
@@ -47,7 +66,7 @@ After a rule is written to disk:
 2. **Offer Sync**: The user is offered to run `magic.task update` to propagate the new standards into the implementation plan.
 3. **Audit**: If the rule is critical, the engine may suggest a `magic.spec audit` to ensure existing specs comply.
 
-## 5. Maintenance
+## 6. Maintenance
 
 - **Version Bumping**: Rules use Semantic Versioning (Major for removals, Minor for additions/amendments, Patch for typos).
 - **Document History**: Every change is logged in the Document History table.

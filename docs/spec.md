@@ -67,6 +67,16 @@ To maintain maximum architectural integrity, the transition from **Specification
 2. **Phase Completion**: Once specifications are marked **Stable**, the agent is mandated to halt.
 3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before running `/magic.task`. This ensures the agent reads the committed specifications as the sole source of truth, without any "context bleed" from the previous brainstorming session.
 
+### 4.7 T4 Rule Capture with Tier Routing
+
+When user input during spec work contains a standing-rule signal ("remember that...", "project rule:", "from now on..."), the Spec workflow captures it as a T4 trigger and writes a new convention to `RULES.md`. Before writing, the engine applies three inline guards:
+
+1. **Tier Routing**: Determines the correct target file — if the rule text contains workspace signal words ("in engine", "for installers") or the current workspace context is specific, the rule is written to `.design/{workspace}/RULES.md`. Universal rules go to `.design/RULES.md`. If ambiguous, the engine asks.
+2. **Duplication Check**: Reads both global and workspace `RULES.md` files. If the proposed rule semantically overlaps with any existing convention, the engine surfaces the overlap and asks: merge, replace, or add separately.
+3. **Constitutional Guard**: If the proposed rule contradicts §1–6 of the Constitution → **HALT**.
+
+These guards match the safety level of the dedicated [Rule Workflow](rule.md) while preserving T4's "Apply Immediately" semantics — the rule and spec update are grouped in a single atomic proposal.
+
 ### 4.3 Periodic Audit
 
 The engine proactively suggests "Registry Audits" to identify dead links, duplicated requirements across files, or "stale" specs.

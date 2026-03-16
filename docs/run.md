@@ -56,17 +56,40 @@ To prevent code corruption and architectural drift, major transitions within or 
 2. **Phase Completion**: Once a phase is finished, the agent is mandated to halt.
 3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before starting a new phase or returning to **Specification/Planning** (e.g., if a task is Blocked). This ensures the agent reads the committed code as the sole source of truth, eliminating any "context bleed" from the previous execution session.
 
-## 4. Lifecycle & Conclusion
+## 4. Argument Routing
+
+The Run workflow accepts optional arguments to control execution scope:
+
+```
+/magic.run                                  # Full execution across all workspaces
+/magic.run engine                           # Scoped execution within a workspace
+/magic.run "T-1A01"                         # Execute a specific task by ID
+/magic.run "phase-2"                        # Execute all Todo tasks in a specific phase
+/magic.run installers "только валидацию"    # Scoped + directed execution
+```
+
+| Input | Mode | Behavior |
+| :--- | :--- | :--- |
+| *(empty)* | Full | Resolve workspace automatically, execute next available task(s) |
+| `{workspace}` | Scoped | Execute tasks only from that workspace's `TASKS.md` |
+| `"text"` | Directed | Interpret text as execution directive (task ID, phase, or focus) |
+| `{workspace} "text"` | Scoped + Directed | Directive applied within workspace scope |
+
+When no workspace is specified, the engine resolves it via the standard priority chain (same as [Analyze §5.1](analyze.md#51-workspace-targeting)). Disambiguation: if an unquoted word matches a workspace name, workspace takes priority; wrap in quotes to force directive interpretation.
+
+When re-planning is needed (e.g., blocked tasks), the handoff to `/magic.task` automatically propagates the workspace context.
+
+## 5. Lifecycle & Conclusion
 
 - **Phase Completion**: Triggers a **Level 1 (Auto-snapshot) Retrospective**.
 - **Plan Completion**: Triggers a **Level 2 (Full) Retrospective** and a final version bump across the project's manifests (e.g., `package.json`).
 - **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, etc.) during execution.
 
-## 5. Maintenance
+## 6. Maintenance
 
 - **Archival**: Completed tasks are moved to the archive directory to keep the workspace lightweight.
 - **Context Synthesis**: After any significant execution, the `CONTEXT.md` file is regenerated to summarize the latest architectural and design changes for the agent.
 
-## 6. Run Completion Checklist
+## 7. Run Completion Checklist
 
 Every execution cycle ends with a mandatory checklist to verify that `TASKS.md` is updated, dependencies are respected, and no out-of-scope work was performed.

@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.29] - 2026-03-16
+
+### Added
+
+- **Argument Routing (A–D)** for `task.md` and `run.md`: Both workflows now accept optional arguments — workspace name, directive text, or both. Consistent with `analyze.md` pattern. Includes Workspace Fallback, Disambiguation, and Handoff Propagation rules.
+- **T4 Inline Guards** in `spec.md`: When spec workflow captures a standing rule via T4 trigger ("remember that..."), it now applies Tier Routing (global vs workspace RULES.md), Duplication Check (across both tiers), and Constitutional Guard (§1–6 protection) — matching `rule.md` safety guarantees without breaking T4's "Apply Immediately" semantics.
+- **Regression Tests (T153–T161)**: 9 new scenarios covering argument routing (scoped planning, workspace fallback, disambiguation, targeted task/phase execution, cross-workflow handoff propagation) and T4 inline guards (tier routing, duplication detection, constitutional block).
+
+### Changed
+
+- **AGENTS.md**: Clarified C14 Enforcement scope — explicitly covers all `.magic/` content (workflows, scripts, templates, tests, config), not just workflow files. Added description of what `update-engine-meta` does (bumps `.version`, regenerates `.checksums`).
+- **`run.md` Argument Routing**: Detection column harmonized with `analyze.md` — accepts both quoted text and non-workspace tokens (e.g., unquoted `T-1A01` or `phase-2`).
+
 ## [1.4.162] - 2026-03-12
 
 ### Added
