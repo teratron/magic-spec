@@ -743,37 +743,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Existing tasks in `TASKS.md` retain progress but point to the new spec name.
 - **Guards tested:** Spec Renaming Protocol, Task Continuity.
 
-### T54 — Spec Rename History Immutability
-
-- **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
-- **Synthetic State:**
-  - `RETROSPECTIVE.md` exists and contains mentions of `old-api.md`.
-  - `.design/archives/tasks/phase-1.md` exists and contains mentions of `old-api.md`.
-- **Action:** User renames `old-api.md` to `new-api.md`.
-- **Expected:**
-  - [ ] Status/Renaming applied: Agent updates active files (`INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements`).
-  - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
-  - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
-- **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
-
-### T57 — Parallel Mode Shared-Constraint Detection (Deep Scan)
-
-- **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
-- **Synthetic State:**
-  - Track A: T-1A01 "Update user module" (refs `user-module.md` §2).
-  - Track B: T-1B01 "Add logging" (refs `logger.md` §4).
-  - `user-module.md` §2 says "Modifies `src/lib/manager.js`".
-  - `logger.md` §4 says "Updates logger middleware in `src/lib/manager.js`".
-  - Task descriptions DO NOT mention `src/lib/manager.js`.
-  - RULES.md §7 C3: Parallel mode.
-- **Action:** Run `/magic.run`
-- **Expected:**
-  - [ ] Manager Agent reads both associated spec sections (§2 and §4).
-  - [ ] **Shared-Constraint Detection**: Manager detects that BOTH tasks modify `src/lib/manager.js`.
-  - [ ] Manager serializes the tasks (schedules T-1A01, then T-1B01 in sequence or same track).
-  - [ ] Log entry recorded: "Serialization decision: T-1A01 and T-1B01 both modify `src/lib/manager.js`".
-- **Guards tested:** Deep Shared-Constraint Detection (Spec Scan), Conflict Prevention.
-
 ### T47 — Stability Downgrade Tracking
 
 - **Workflow:** `task.md`
@@ -785,6 +754,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent moves `api.md` to Backlog in `PLAN.md`.
   - [ ] Agent does NOT delete active tasks.
   - [ ] Pending tasks are marked `Blocked [!]` with "Awaiting spec stabilization".
+- **Guards tested:** Stability Downgrade Guard, Backlog Placement, Active Task Preservation.
 
 ### T48 — Automation Handoff Validation (Init)
 
@@ -877,6 +847,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Post-Update Review surfaces layer isolation logic (L2 has no valid L1 parent).
 - **Guards tested:** Deprecation Cascade on Implements clause, Layer Integrity.
 
+### T54 — Spec Rename History Immutability
+
+- **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
+- **Synthetic State:**
+  - `RETROSPECTIVE.md` exists and contains mentions of `old-api.md`.
+  - `.design/archives/tasks/phase-1.md` exists and contains mentions of `old-api.md`.
+- **Action:** User renames `old-api.md` to `new-api.md`.
+- **Expected:**
+  - [ ] Status/Renaming applied: Agent updates active files (`INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements`).
+  - [ ] Agent explicitly excludes `RETROSPECTIVE.md` and `.design/archives/` from the search-and-replace sweep.
+  - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
+- **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
+
 ### T55 — Spec Quarantine Cascade Enforcement (C12)
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
@@ -909,6 +892,24 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
 
+### T57 — Parallel Mode Shared-Constraint Detection (Deep Scan)
+
+- **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
+- **Synthetic State:**
+  - Track A: T-1A01 "Update user module" (refs `user-module.md` §2).
+  - Track B: T-1B01 "Add logging" (refs `logger.md` §4).
+  - `user-module.md` §2 says "Modifies `src/lib/manager.js`".
+  - `logger.md` §4 says "Updates logger middleware in `src/lib/manager.js`".
+  - Task descriptions DO NOT mention `src/lib/manager.js`.
+  - RULES.md §7 C3: Parallel mode.
+- **Action:** Run `/magic.run`
+- **Expected:**
+  - [ ] Manager Agent reads both associated spec sections (§2 and §4).
+  - [ ] **Shared-Constraint Detection**: Manager detects that BOTH tasks modify `src/lib/manager.js`.
+  - [ ] Manager serializes the tasks (schedules T-1A01, then T-1B01 in sequence or same track).
+  - [ ] Log entry recorded: "Serialization decision: T-1A01 and T-1B01 both modify `src/lib/manager.js`".
+- **Guards tested:** Deep Shared-Constraint Detection (Spec Scan), Conflict Prevention.
+
 ### T58 — Run Rules-First Convention Enforcement
 
 - **Workflow:** `run.md` (Executing Tasks)
@@ -925,21 +926,21 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T59 — Engine Meta Automation Enforcement
 
-- **Workflow**: `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
-- **Synthetic State**:
+- **Workflow:** `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
+- **Synthetic State:**
   - Agent modifies `.magic/simulate.md` to add a new guideline.
   - `.magic/.version` is `1.4.11`.
   - `.magic/history/simulate.md` exists.
-- **Action**: Agent performs the edit.
-- **Expected**:
+- **Action:** Agent performs the edit.
+- **Expected:**
   - [ ] Agent identifies that a core engine file was modified.
   - [ ] Agent executes: `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
-  - [ ] **Automated Verifications**:
+  - [ ] **Automated Verifications:**
     - [ ] `.magic/.version` bumped to `1.4.12`.
     - [ ] `.magic/history/simulate.md` contains a new row for `1.4.12`.
     - [ ] `.magic/.checksums` is recalculated.
   - [ ] Results documented in the task completion checklist.
-- **Guards tested**: C1, C14, Engine Integrity Guard (via meta automation).
+- **Guards tested:** C1, C14, Engine Integrity Guard (via meta automation).
 
 ### T60 — Run Convention Sync Guard (Version Mismatch)
 
@@ -955,65 +956,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent alerts user: "Project conventions have changed since these tasks were generated. Proceed or run `magic.task update` to synchronize?".
   - [ ] No execution begins until user chooses to proceed.
 - **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.
-
-### T77 — Spec Merge Refactor (Section Re-mapping)
-
-- **Workflow:** `spec.md` + `task.md` (Structural Refactor)
-- **Synthetic State:**
-  - `INDEX.md`: `auth.md` (Stable), `session.md` (Stable)
-  - `TASKS.md`: `T-1A01` (auth.md §2), `T-2B01` (session.md §5)
-- **Action:** User merges `auth.md` and `session.md` into `security.md`. §2 moves to §security.md §3.
-- **Expected:**
-  - [ ] **Structural Refactor detected**: Merge action recognized.
-  - [ ] **Refactoring Guard**: Agent updates `T-1A01` in `TASKS.md` to point to `security.md §3`.
-  - [ ] Agent updates `T-2B01` mapping if necessary.
-  - [ ] `INDEX.md` synced: `auth.md`, `session.md` removed; `security.md` added.
-  - [ ] `PLAN.md` synced with new spec name.
-- **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
-- **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
-
-### T78 — Simulation: Suite Integrity Failure
-
-- **Workflow:** `simulate.md`
-- **Synthetic State:**
-  - `.magic/tests/suite.md` exists but lacks H3 headers for tests (uses only H2 or plain text).
-- **Action:** Run `/magic.simulate test`
-- **Expected:**
-  - [ ] Agent reads `suite.md`.
-  - [ ] **Structural Issue Detected**: "Suite integrity failure: missing H3 test headers".
-  - [ ] Agent alerts user and proposes a fix for `suite.md` formatting.
-  - [ ] Agent falls back to **Improv Mode** until fixed.
-- **Guards tested:** Suite Integrity (Structural requirements), Fallback logic.
-
-### T79 — Run: Changelog Precision (Filter Blocked)
-
-- **Workflow:** `run.md`
-- **Synthetic State:**
-  - Phase 1: `T-101` (Done, Changes: "Added A"), `T-102` (Blocked, Changes: "Started B"), `T-103` (Done, Changes: "Added C").
-- **Action:** Phase 1 completes. Agent triggers Changelog L1.
-- **Expected:**
-  - [ ] Agent reads Phase 1 tasks.
-  - [ ] **Filtering applied**: Only `T-101` and `T-103` selected.
-  - [ ] `CHANGELOG.md` updated with:
-    - Added A
-    - Added C
-  - [ ] "Started B" is **NOT** present in the changelog.
-- **Guards tested:** Changelog Filtering (Precision), Reporting Integrity.
-
-### T80 — Rule: Rules Parity Sync Offer
-
-- **Workflow:** `rule.md`
-- **Synthetic State:**
-  - `RULES.md` version 1.4.0.
-  - `TASKS.md` header contains `Based on RULES: 1.4.0`.
-- **Action:** User adds a new rule.
-- **Expected:**
-  - [ ] Agent proposes `RULES.md` update (version bump to 1.5.0).
-  - [ ] Agent writes `RULES.md`.
-  - [ ] **Rules Parity Check**: Agent detects `TASKS.md` is now stale.
-  - [ ] Agent alerts user: "`TASKS.md` is based on rules v1.4.0 but project is now v1.5.0."
-  - [ ] Agent offers to run `magic.task update` to synchronize the plan.
-- **Guards tested:** Rules Parity (Stale check), Sync Offer.
 
 ### T61 — Init: Workspace Initialized
 
@@ -1127,22 +1069,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Proposal only includes modules found within the scoped paths.
 - **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.
 
-### T81 — Spec T4 Rule with Missing Target File (HALT Persistence)
-
-- **Workflow:** `spec.md` (T4 + Existence Guard)
-- **Synthetic State:**
-  - `INDEX.md` contains `auth.md` (Stable).
-  - `auth.md` is missing from disk.
-  - `RULES.md` v1.0.0.
-- **Input:** `"Add MFA to auth.md and remember that all MFA must use TOTP."`
-- **Expected:**
-  - [ ] T4 detected ("remember that...").
-  - [ ] Existence Guard fails for `auth.md` -> **HALT**.
-  - [ ] Agent reports missing file.
-  - [ ] **Crucial**: Agent acknowledges the T4 rule and confirms it is "queued" pending the resolution of the missing file issue.
-  - [ ] Rule `C15 — MFA TOTP Standard` is NOT written to `RULES.md` until the target spec is restored or remapped.
-- **Guards tested:** T4 persistence during HALT, Atomic Write Integrity.
-
 ### T71 — Task Primary Intent Propagation (Cold Start Memory)
 
 - **Workflow:** `task.md` -> `init.md` -> `analyze.md`
@@ -1234,6 +1160,81 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** if the user tries to add NEW features to `core-l2.md` while it's in quarantine.
 - **Guards tested:** C12.1 Stabilization Exception, Context-Aware Planning.
 
+### T77 — Spec Merge Refactor (Section Re-mapping)
+
+- **Workflow:** `spec.md` + `task.md` (Structural Refactor)
+- **Synthetic State:**
+  - `INDEX.md`: `auth.md` (Stable), `session.md` (Stable)
+  - `TASKS.md`: `T-1A01` (auth.md §2), `T-2B01` (session.md §5)
+- **Action:** User merges `auth.md` and `session.md` into `security.md`. §2 moves to §security.md §3.
+- **Expected:**
+  - [ ] **Structural Refactor detected**: Merge action recognized.
+  - [ ] **Refactoring Guard**: Agent updates `T-1A01` in `TASKS.md` to point to `security.md §3`.
+  - [ ] Agent updates `T-2B01` mapping if necessary.
+  - [ ] `INDEX.md` synced: `auth.md`, `session.md` removed; `security.md` added.
+  - [ ] `PLAN.md` synced with new spec name.
+- **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
+- **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
+
+### T78 — Simulation: Suite Integrity Failure
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - `.magic/tests/suite.md` exists but lacks H3 headers for tests (uses only H2 or plain text).
+- **Action:** Run `/magic.simulate test`
+- **Expected:**
+  - [ ] Agent reads `suite.md`.
+  - [ ] **Structural Issue Detected**: "Suite integrity failure: missing H3 test headers".
+  - [ ] Agent alerts user and proposes a fix for `suite.md` formatting.
+  - [ ] Agent falls back to **Improv Mode** until fixed.
+- **Guards tested:** Suite Integrity (Structural requirements), Fallback logic.
+
+### T79 — Run: Changelog Precision (Filter Blocked)
+
+- **Workflow:** `run.md`
+- **Synthetic State:**
+  - Phase 1: `T-101` (Done, Changes: "Added A"), `T-102` (Blocked, Changes: "Started B"), `T-103` (Done, Changes: "Added C").
+- **Action:** Phase 1 completes. Agent triggers Changelog L1.
+- **Expected:**
+  - [ ] Agent reads Phase 1 tasks.
+  - [ ] **Filtering applied**: Only `T-101` and `T-103` selected.
+  - [ ] `CHANGELOG.md` updated with:
+    - Added A
+    - Added C
+  - [ ] "Started B" is **NOT** present in the changelog.
+- **Guards tested:** Changelog Filtering (Precision), Reporting Integrity.
+
+### T80 — Rule: Rules Parity Sync Offer
+
+- **Workflow:** `rule.md`
+- **Synthetic State:**
+  - `RULES.md` version 1.4.0.
+  - `TASKS.md` header contains `Based on RULES: 1.4.0`.
+- **Action:** User adds a new rule.
+- **Expected:**
+  - [ ] Agent proposes `RULES.md` update (version bump to 1.5.0).
+  - [ ] Agent writes `RULES.md`.
+  - [ ] **Rules Parity Check**: Agent detects `TASKS.md` is now stale.
+  - [ ] Agent alerts user: "`TASKS.md` is based on rules v1.4.0 but project is now v1.5.0."
+  - [ ] Agent offers to run `magic.task update` to synchronize the plan.
+- **Guards tested:** Rules Parity (Stale check), Sync Offer.
+
+### T81 — Spec T4 Rule with Missing Target File (HALT Persistence)
+
+- **Workflow:** `spec.md` (T4 + Existence Guard)
+- **Synthetic State:**
+  - `INDEX.md` contains `auth.md` (Stable).
+  - `auth.md` is missing from disk.
+  - `RULES.md` v1.0.0.
+- **Input:** `"Add MFA to auth.md and remember that all MFA must use TOTP."`
+- **Expected:**
+  - [ ] T4 detected ("remember that...").
+  - [ ] Existence Guard fails for `auth.md` -> **HALT**.
+  - [ ] Agent reports missing file.
+  - [ ] **Crucial**: Agent acknowledges the T4 rule and confirms it is "queued" pending the resolution of the missing file issue.
+  - [ ] Rule `C15 — MFA TOTP Standard` is NOT written to `RULES.md` until the target spec is restored or remapped.
+- **Guards tested:** T4 persistence during HALT, Atomic Write Integrity.
+
 ### T82 — Init Migration: Existing Project Fallback
 
 - **Workflow:** `init.md` + `run.md`
@@ -1245,6 +1246,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent falls back to root `.design/`.
   - [ ] Agent does not trigger an infinite loop of `init`.
   - [ ] `executor.js` identifies that `workspace.json` is missing and proceeds with root directory.
+- **Guards tested:** Workspace Fallback (missing workspace.json), Init Loop Prevention.
 
 ### T83 — Micro-spec Promotion Guard
 
@@ -1255,6 +1257,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent detects 50+ line threshold.
   - [ ] Agent proposes converting to `spec.md` template (Standard).
   - [ ] **HALT** if agent attempts to keep 75 lines in a legacy micro-template.
+- **Guards tested:** Micro-spec Promotion Guard (C16), Template Threshold (50 lines).
 
 ### T84 — Init Migration: Index Preservation
 
@@ -1265,6 +1268,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent creates `workspace.json`.
   - [ ] **Guard**: Agent DOES NOT overwrite existing `INDEX.md` with default template.
   - [ ] Existing specifications remain registered.
+- **Guards tested:** Non-Overwriting Invariant, Index Preservation (Migration).
 
 ### T85 — Engine Integrity Mandatory HALT
 
@@ -2476,5 +2480,5 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** T4 Inline Constitutional Guard, §1–6 protection
 
 ```
-**Test Suite Finalized** — v1.9.45
+**Test Suite Finalized** — v1.9.46 (Last: T161)
 ```
