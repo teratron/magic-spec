@@ -2,6 +2,9 @@
 .idea/
 .vscode/
 
+# Claude
+#.claude/settings.json
+
 # Node.js
 node_modules/
 npm-debug.log*
