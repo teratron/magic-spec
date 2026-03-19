@@ -78,7 +78,7 @@ class TestAdapterFlags(unittest.TestCase):
 
         # We can't easily run main() because it downloads,
         # but we can test the internal logic if we mock download_and_extract
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import patch
         import magic_spec.__main__ as mp
 
         # Mock sys.argv to simulate: magic-spec --cursor

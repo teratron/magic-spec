@@ -19,7 +19,7 @@ magic-spec = "magic_spec.__main__:main"
 dev = [
     "pyrefly>=0.57.1",
     "pytest>=9.0.2",
-    "ruff>=0.15.6",
+    "ruff>=0.15.7",
 ]
 
 [tool.uv]

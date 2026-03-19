@@ -4,9 +4,9 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-# Add scripts directory to path to import publish
-sys.path.append(str(Path(__file__).parent.parent / "scripts"))
-import publish  # noqa: E402
+# Add project root to path to import from installers.scripts
+sys.path.append(str(Path(__file__).parent.parent.parent))
+from installers.scripts import publish  # noqa: E402
 
 
 class TestPublish(unittest.TestCase):

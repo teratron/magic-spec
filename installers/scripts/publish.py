@@ -216,8 +216,12 @@ def commit_and_tag(version: str, docs_files: list[str], dry_run: bool) -> None:
 
     # Standard release scripts usually push.
     default_branch = CONFIG.get("git", {}).get("defaultBranch", "master")
-    run_command(["git", "push", "origin", default_branch, "--tags"], cwd=str(PROJECT_ROOT))
-    print(f"Successfully committed, tagged and pushed {tag} to origin {default_branch}.")
+    run_command(
+        ["git", "push", "origin", default_branch, "--tags"], cwd=str(PROJECT_ROOT)
+    )
+    print(
+        f"Successfully committed, tagged and pushed {tag} to origin {default_branch}."
+    )
 
 
 def publish_python(dry_run: bool) -> None:

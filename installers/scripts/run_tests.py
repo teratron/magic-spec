@@ -1,3 +1,4 @@
+import io
 import sys
 import json
 import shutil
@@ -5,11 +6,13 @@ import pathlib
 import subprocess
 import unittest
 
-if sys.stdout.encoding != "utf-8":
+if sys.stdout.encoding != "utf-8" and isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
 
 
-# Config
+# ═══════════════════════════════════════════════════════════════════════════
+# CONFIGURATION
+# ═══════════════════════════════════════════════════════════════════════════
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parents[2]
 CONFIG_PATH = PROJECT_ROOT / "installers" / "config.json"
 
@@ -25,7 +28,16 @@ TEST_DIR = PROJECT_ROOT / TEST_CONFIG["testDir"]
 TEST_PATTERN = TEST_CONFIG["testPattern"]
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# UTILITIES
+# ═══════════════════════════════════════════════════════════════════════════
+
+
 def reset_sandbox():
+    """Resets the sandbox directory for clean testing.
+
+    Deletes the existing sandbox directory and creates a new one.
+    """
     if SANDBOX_PATH.exists():
         shutil.rmtree(SANDBOX_PATH)
     SANDBOX_PATH.mkdir(parents=True, exist_ok=True)
@@ -33,6 +45,15 @@ def reset_sandbox():
 
 
 def run_cmd(cmd, cwd=None):
+    """Runs a shell command and captures output.
+
+    Args:
+        cmd: List of command arguments.
+        cwd: Working directory for the command.
+
+    Returns:
+        tuple: (success (bool), output (str))
+    """
     print(f"🚀 Running: {' '.join([str(c) for c in cmd])}")
     result = subprocess.run(
         cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8"
@@ -43,7 +64,20 @@ def run_cmd(cmd, cwd=None):
     return True, result.stdout
 
 
+# ═══════════════════════════════════════════════════════════════════════════
+# TEST RUNNERS
+# ═══════════════════════════════════════════════════════════════════════════
+
+
 def test_installer(installer_type="python") -> bool:
+    """Tests the specified installer against all defined adapters.
+
+    Args:
+        installer_type: The type of installer to test ('python' or 'node').
+
+    Returns:
+        bool: True if all tests passed, False otherwise.
+    """
     print(f"\n--- Testing {installer_type.upper()} Installer ---")
 
     with open(ADAPTERS_JSON, "r", encoding="utf-8") as f:
@@ -124,6 +158,11 @@ def test_installer(installer_type="python") -> bool:
 
 
 def run_all_tests():
+    """Discovers and runs all unit tests in the tests directory.
+
+    Returns:
+        bool: True if all tests passed, False otherwise.
+    """
     # Discover and run all tests in the tests directory
     loader = unittest.TestLoader()
     start_dir = TEST_DIR
