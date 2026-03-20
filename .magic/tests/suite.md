@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.48
+**Version:** 1.9.49
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2273,8 +2273,8 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** `"Remove rule C5"`
 - **Expected:**
   1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
-  - `ok: true` → proceed to Mode Selection.
-  - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
+  - `ok: true` → proceed.
+  - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
   - Missing `.design/` → auto-run `.magic/init.md`, then resume.
   - [ ] Before proposing, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
