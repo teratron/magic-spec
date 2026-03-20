@@ -40,9 +40,9 @@ graph TD
 
 ### Operational Logic
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - `ok: true` → proceed.
-    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
     - Missing `.design/` → auto-run `.magic/init.md`, then resume.
 2. **Read**: Load global `.design/RULES.md`. If workspace is active and `.design/{workspace}/RULES.md` exists, load it too. Parse user intent into a declarative statement.
 3. **Tier Routing**: Apply Rule Tier Routing logic to determine target file.

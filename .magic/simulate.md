@@ -30,9 +30,9 @@ graph TD
 
 ### 0. Pre-flight (Mandatory — All Modes)
 
-1. Run `node .magic/scripts/executor.js check-prerequisites --json`.
+1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - `ok: true` → proceed to Mode Selection.
-    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **HALT**. Report: "Engine integrity failure — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
+    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
     - Missing `.design/` → auto-run `.magic/init.md`, then resume.
 2. Read `.design/workspace.json` → resolve active workspace(s) per Context invariant.
 3. Read target workflow file(s) that will be evaluated (determined by mode in Step 1).

@@ -1310,6 +1310,9 @@ If any test fails, document the failure reason and propose a fix.
   - No C12 violation (L1 parent `auth.md` is still Stable — this is NOT a parent-layer issue)
 - **Action:** User runs `/magic.run`
 - **Expected:**
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace {active-workspace}`.
+    - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
+    - [ ] **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
   - [ ] Pre-flight: `check-prerequisites` passes (no engine mismatch)
   - [ ] **Spec Stability Spot-Check**: Agent reads `INDEX.md` for all Todo-task specs in current phase
   - [ ] `auth-impl.md` found with status `RFC` (not Stable)
@@ -2008,6 +2011,10 @@ If any test fails, document the failure reason and propose a fix.
   - templates/plan.md and templates/tasks.md updated
 - **Action 1: Generate tasks (`task.md`)**
 - **Expected 1:**
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace {active-workspace}`.
+    - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
+    - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before planning." This catches manual edits that bypassed the spec workflow.
+    - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
   - [ ] `PLAN.md` created: contains high-level entries for `auth.md` and `api.md` with single `[ ]` checkboxes. **No nested atomic tasks.**
   - [ ] `TASKS.md` created: contains **Phase Checklist** with atomic items prefixed with `[T-XXXX]` (e.g., `[ ] [T-1A01] Implement auth login`).
   - [ ] `TASKS.md` details section contains full task blocks.
@@ -2188,6 +2195,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Test 1 — spec.md C12 cascade:**
   - **Action:** Agent completes L1 status change in `spec.md`
   - **Expected:**
+    1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+    - `ok: true` → proceed.
+    - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
     - [ ] `INDEX.md` updated: `installer-node.md` status set to `RFC`
     - [ ] File header of `installer-node.md` updated to match
     - [ ] Report: "C12 Cascade: 1 dependent quarantined: [installer-node.md]."
@@ -2208,6 +2219,14 @@ If any test fails, document the failure reason and propose a fix.
   - `check-prerequisites --json` returns `checksums_mismatch: true`
 - **Action:** `/magic.rule add "New convention"` triggered
 - **Expected:**
+  1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+    - If `ok: true` → Skip silently. Return control to calling workflow.
+    - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
+        - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
+        - If all mismatches are **out-of-scope** → **Proceed** silently (Log: "Integrity drift detected in out-of-scope files; ignoring per C15").
+        - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
+    - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
+    - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
   - [ ] Pre-flight runs `check-prerequisites --json`
   - [ ] Agent detects `checksums_mismatch`
   - [ ] **HALT** with report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
@@ -2253,6 +2272,10 @@ If any test fails, document the failure reason and propose a fix.
   - `analyze.md` Mode C step 3 references "kebab-case convention" with C5 check
 - **Input:** `"Remove rule C5"`
 - **Expected:**
+  1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+    - `ok: true` → proceed to Mode Selection.
+    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
+    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
   - [ ] Before proposing, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
   - [ ] Propose step includes dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
@@ -2492,6 +2515,22 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After drift fix: rule and spec update applied atomically.
 - **Guards tested:** T4 Queuing, RE-3 Atomicity.
 
+### T163 — Simulate Scope-Isolated Integrity Check (C15 Filter)
+
+- **Workflow:** `simulate.md`, `init.md`
+- **Synthetic State:**
+  - Workspace `engine` active (`Scope: .magic, .agents, ...`).
+  - Manual drift in `installers/config.json` (OUT OF SCOPE).
+  - `.magic/` files are clean and match checksums.
+- **Action:** Run `/magic.simulate`
+- **Expected:**
+  - [ ] check-prerequisites called with `--workspace engine`.
+  - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `installers/config.json`.
+  - [ ] **C15 Filter** applied: agent recognizes mismatch is out-of-scope.
+  - [ ] Agent logs drift but does NOT HALT.
+  - [ ] Simulation proceeds to Mode Selection.
+- **Guards tested:** C15 (Workspace Scope Isolation) in Pre-flight, out-of-scope drift bypass.
+
 ```
-**Test Suite Finalized** — v1.9.47 (Last: T162)
+**Test Suite Finalized** — v1.9.48 (Last: T163)
 ```

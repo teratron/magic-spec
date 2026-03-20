@@ -135,9 +135,9 @@ graph TD
 
 ### Creating a New Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
-    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
     - Missing `.design/` → auto-run `.magic/init.md`, then resume.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → **HALT** before creating. Report: "Name collision: `{file}` already exists in `{ws}` (v{X}). Resolve before creating: (a) use a unique name per workspace, (b) promote the existing spec as canonical and sync, (c) force ignore (document reason)."
 2. **Creation**:
@@ -148,7 +148,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json` (same as Creation). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. If `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
 2. **Versioning**:
     - `patch` (0.0.X) — typos, no logic change.
     - `minor` (0.X.0) — extensions.

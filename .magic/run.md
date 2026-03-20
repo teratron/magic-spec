@@ -63,7 +63,8 @@ graph TD
 
 ### Steps
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace {active-workspace}`.
+    - **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
     - **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
     - **File-Header Parity**: For each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before execution." This catches manual edits that bypassed the spec workflow.
 2. **Select**: Locate `Todo` task with fulfilled dependencies.

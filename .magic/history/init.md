@@ -10,4 +10,4 @@
 | 1.4.130 | 2026-03-04 | Sync C1-C16 refs and Ghost Registry halt condition |
 | 1.4.166 | 2026-03-13 | Automated update via engine meta automation |
 | 1.5.0 | 2026-03-13 | Excluded simulation and optimized installation package; consolidated rules C1-C17 |
-| 1.5.13 | 2026-03-15 | Automated update via engine meta automation |
+| 1.5.13 - 1.5.36 | 2026-03-20 | Automated update via engine meta automation |

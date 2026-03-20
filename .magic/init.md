@@ -28,9 +28,12 @@ graph TD
 
 ### Steps
 
-1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json`.
+1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - If `ok: true` → Skip silently. Return control to calling workflow.
-    - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → **HALT**. Report: "Engine integrity failure: {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
+    - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
+        - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
+        - If all mismatches are **out-of-scope** → **Proceed** silently (Log: "Integrity drift detected in out-of-scope files; ignoring per C15").
+        - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
     - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
     - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
 2. **Init**: `node .magic/scripts/executor.js init`.
