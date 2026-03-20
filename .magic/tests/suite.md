@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.45
+**Version:** 1.9.48
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -71,7 +71,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/` initialized with 2 existing specs: `architecture.md` (Stable), `api.md` (Draft)
   - `RULES.md` v1.2.0 with C1–C6
-- **Input:** `"We need JWT auth with Redis sessions. Also, the API must use REST only. And we should use shadcn for the UI."`
+- **Action:** `"We need JWT auth with Redis sessions. Also, the API must use REST only. And we should use shadcn for the UI."`
 - **Expected:**
   - [ ] Parse: 3 distinct topics identified
   - [ ] Map: JWT+Redis → `architecture.md`, REST → `architecture.md`, shadcn → new `ui-components.md`
@@ -87,7 +87,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `spec.md` (Dispatching from Raw Input)
 - **Synthetic State:**
   - `.design/` initialized, `api.md` (Stable)
-- **Input:** `"All APIs must use GraphQL. Also, REST is mandatory for mobile. And we plan to remove REST entirely in 2 months."`
+- **Action:** `"All APIs must use GraphQL. Also, REST is mandatory for mobile. And we plan to remove REST entirely in 2 months."`
 - **Expected:**
   - [ ] Parse: 3 topics, all mapped to `api.md`
   - [ ] **Self-contradiction detected** before dispatch (GraphQL mandatory + REST mandatory + REST removal)
@@ -208,7 +208,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `rule.md` (Adding a Convention)
 - **Synthetic State:**
   - RULES.md §7 contains C5: "All dates use ISO 8601 format."
-- **Input:** `"Add rule: dates must follow ISO 8601."`
+- **Action:** `"Add rule: dates must follow ISO 8601."`
 - **Expected:**
   - [ ] Pre-flight passes
   - [ ] RULES.md read in full
@@ -223,7 +223,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - RULES.md §7 C3: "Parallel Task Execution Mode"
   - `run.md` references C3 via Mode Guard
-- **Input:** `"Remove rule C3"`
+- **Action:** `"Remove rule C3"`
 - **Expected:**
   - [ ] Pre-flight passes
   - [ ] Target identified: C3 — Parallel Task Execution Mode
@@ -275,7 +275,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/` initialized, `api.md` (Stable)
   - RULES.md §7: C1–C6, no API convention
-- **Input:** `"From now on, all APIs must use gRPC. Add this to the API spec."`
+- **Action:** `"From now on, all APIs must use gRPC. Add this to the API spec."`
 - **Expected:**
   - [ ] T4 trigger detected: "from now on" is a standing-rule signal
   - [ ] Agent writes spec changes AND proposes new §7 convention
@@ -290,7 +290,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `spec.md` (Explore Mode → Formal Spec)
 - **Synthetic State:**
   - `.design/` initialized, no existing specs
-- **Input:** `"Let's brainstorm about authentication approaches"` → then `"OK, let's formalize the OAuth2 approach"`
+- **Action:** `"Let's brainstorm about authentication approaches"` → then `"OK, let's formalize the OAuth2 approach"`
 - **Expected:**
   - [ ] Phase 1 (explore): agent outputs thoughts to chat or creates a temporary proposal in the agent's artifacts directory (never in `.design/`)
   - [ ] No INDEX.md entry during explore (safety)
@@ -306,7 +306,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `auth.md` (Stable, v2.0.0) with existing implementation tasks
   - User wants to add a major new section (2FA support)
-- **Input:** `"Add two-factor authentication support to auth spec"`
+- **Action:** `"Add two-factor authentication support to auth spec"`
 - **Expected:**
   - [ ] Change scope assessed: new section → minor bump (v2.1.0)
   - [ ] Status reverts: Stable → RFC (amendment rule triggered)
@@ -404,7 +404,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `rule.md` (Amending a Convention)
 - **Synthetic State:**
   - RULES.md: §2 Status Rules contain `RFC → Stable: reviewed, approved, no open questions.`
-- **Input:** `"Change rule: RFC specs can go Stable with one approval instead of full review"`
+- **Action:** `"Change rule: RFC specs can go Stable with one approval instead of full review"`
 - **Expected:**
   - [ ] Agent identifies target: §2 (core section, not §7)
   - [ ] Convention-not-found in §7 handler triggers
@@ -512,13 +512,13 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/` initialized, INDEX.md has 2 specs registered
   - Project has existing code
 - **Test A — Analysis trigger:**
-  - **Input:** `"Scan the project for uncovered modules"`
+  - **Action:** `"Scan the project for uncovered modules"`
   - **Expected:**
     - [ ] `spec.md` Explore Mode entered
     - [ ] Delegation rule matches: "Scan ... modules" → `analyze.md`
     - [ ] `analyze.md` read and Re-Analysis flow executed
 - **Test B — Generic brainstorm (no delegation):**
-  - **Input:** `"Let's brainstorm about caching strategies"`
+  - **Action:** `"Let's brainstorm about caching strategies"`
   - **Expected:**
     - [ ] `spec.md` Explore Mode entered
     - [ ] Delegation rule does NOT match (no project analysis intent)
@@ -1226,7 +1226,7 @@ If any test fails, document the failure reason and propose a fix.
   - `INDEX.md` contains `auth.md` (Stable).
   - `auth.md` is missing from disk.
   - `RULES.md` v1.0.0.
-- **Input:** `"Add MFA to auth.md and remember that all MFA must use TOTP."`
+- **Action:** `"Add MFA to auth.md and remember that all MFA must use TOTP."`
 - **Expected:**
   - [ ] T4 detected ("remember that...").
   - [ ] Existence Guard fails for `auth.md` -> **HALT**.
@@ -1344,7 +1344,7 @@ If any test fails, document the failure reason and propose a fix.
   - `INDEX.md`: `api-core.md` v1.2.0 (Stable)
   - `api-core.md` file header: `Version: 1.3.0` (VERSION_DRIFT)
   - `RULES.md` v2.1.0, no rate-limiting rule
-- **Input:** `"Update api-core.md to add a rate-limiting section, and remember that all API endpoints must include rate-limiting headers."`
+- **Action:** `"Update api-core.md to add a rate-limiting section, and remember that all API endpoints must include rate-limiting headers."`
 - **Expected:**
   - [ ] T4 detected: "remember that all API endpoints must include rate-limiting headers"
   - [ ] Pre-flight Consistency Check: VERSION_DRIFT on `api-core.md` detected
@@ -1360,7 +1360,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/` missing
   - Project has existing source code
-- **Input:** User says "Plan the payment gateway feature" (starting `magic.task`)
+- **Action:** User says "Plan the payment gateway feature" (starting `magic.task`)
 - **Expected:**
   - [ ] `task.md` detects missing `.design/` → memos intent: "Plan the payment gateway feature"
   - [ ] Delegates to `init.md` → `.design/` created
@@ -2270,7 +2270,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - RULES.md §7 C5: "All specs must use kebab-case filenames"
   - `analyze.md` Mode C step 3 references "kebab-case convention" with C5 check
-- **Input:** `"Remove rule C5"`
+- **Action:** `"Remove rule C5"`
 - **Expected:**
   1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
   - `ok: true` → proceed to Mode Selection.
@@ -2315,7 +2315,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `rule.md` (Guards — Core-Amendment Routing)
 - **Synthetic State:**
   - RULES.md: §3 Layer Rules contain "L2 cannot enter RFC until L1 is Stable"
-- **Input:** `"Change rule: L2 can enter RFC regardless of L1 status"`
+- **Action:** `"Change rule: L2 can enter RFC regardless of L1 status"`
 - **Expected:**
   - [ ] Agent identifies target: §3 (core section)
   - [ ] Core-Amendment Routing activates: "This targets core section §3. Core amendments require explicit approval and trigger a Major version bump."
@@ -2463,7 +2463,7 @@ If any test fails, document the failure reason and propose a fix.
   - Active workspace: `installers` (resolved via Zero-Prompt).
   - `.design/RULES.md`: §7 has C1–C10.
   - `.design/installers/RULES.md`: exists with WC1.
-- **Input:** `"Add OAuth2 to auth spec. Remember that all installer packages must use semantic versioning."`
+- **Action:** `"Add OAuth2 to auth spec. Remember that all installer packages must use semantic versioning."`
 - **Expected:**
   - [ ] T4 trigger detected: "Remember that..."
   - [ ] **Tier Routing**: "installer packages" matches workspace signal → target = `.design/installers/RULES.md`
@@ -2478,7 +2478,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - Active workspace: `engine`.
   - `.design/RULES.md` §7 has C7: "Universal Script Executor — all automation via `executor.js`."
-- **Input:** `"Update engine-core spec. Remember that all scripts must go through executor.js."`
+- **Action:** `"Update engine-core spec. Remember that all scripts must go through executor.js."`
 - **Expected:**
   - [ ] T4 trigger detected: "Remember that..."
   - [ ] **Tier Routing**: rule is universal (no workspace signal) → target = `.design/RULES.md`
@@ -2493,7 +2493,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
 - **Synthetic State:**
   - `.design/RULES.md` §5: "No implementation code — pseudo-code only."
-- **Input:** `"Add Python examples to database spec. Remember that all specs must include runnable code samples."`
+- **Action:** `"Add Python examples to database spec. Remember that all specs must include runnable code samples."`
 - **Expected:**
   - [ ] T4 trigger detected: "Remember that..."
   - [ ] **Constitutional Guard**: proposed rule ("runnable code samples") contradicts §5 ("No implementation code")
@@ -2506,7 +2506,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `spec.md` (T4 + Version Drift Guard)
 - **Synthetic State:** `INDEX.md` (v1.0), File Header (v1.1). VERSION_DRIFT active.
-- **Input:** "Update spec X. Remember that Y."
+- **Action:** "Update spec X. Remember that Y."
 - **Expected:**
   - [ ] T4 detected; RE-3 detected.
   - [ ] **HALT** before any write.

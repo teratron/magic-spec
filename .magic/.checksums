@@ -1,6 +1,6 @@
 {
   ".checksums": "908ad55938f14b4f32a99fe0e8ef6a48e2312e492eb2b02cc05afbc644d8efe7",
-  ".version": "a8f1db7ff9fce3cc4cd3eb910d9bfc902488e11b7cf37a423ea7db628511515c",
+  ".version": "b053af51c1513f6c4a462ee7b736c5aac5fb486c4ba116f1194ef40fc2838459",
   "analyze.md": "5e43fb9c5e282c55ddaea2119020b0a8af5eade8c9c19e3e618bfac9f996f563",
   "init.md": "41d014a5b5d49279caa9eec70652c087fbae8f7405180c6d453aa6a70adbe93a",
   "retrospective.md": "aa710b711304ad2f02cc9feef82eb41fc15211aa07ef66ccbb4de01f8fce5893",
@@ -19,5 +19,5 @@
   "templates/retrospective.md": "761a3b82665134187e6c6b33c47405abc687bd962d7e01d8695d953991a5f161",
   "templates/spec.md": "f326fba81173637c46ee7ac5055fda29bcec87ff144ab3776517daccf8725f56",
   "templates/tasks.md": "2ed1e6e9d6e66e645650462152f6c68465004164e6b36157bd5fcf4d4d14618e",
-  "tests/suite.md": "84a917a6aead442ea2863b1736df9a217ff58222330817485c7716b46776d0cc"
+  "tests/suite.md": "c11d53a8dae1436fcd9f76f747b906eaafae1e1ecdb9f41262ae80f055c4f54a"
 }
