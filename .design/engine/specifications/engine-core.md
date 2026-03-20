@@ -27,7 +27,7 @@ The engine consists of Markdown-based workflows (`.magic/*.md`) and a supporting
 
 `.magic/templates/` contains the canonical file scaffolds used when creating new artifacts:
 
-- **specification.md**: Standard full-spec template (required for specs ≥50 lines).
+- **spec.md**: Standard full-spec template (required for specs ≥50 lines).
 - **micro-spec.md**: Lightweight template for simple features or bugfixes (<50 lines). Promoted to standard template when the 50-line threshold is exceeded (C16).
 - **plan.md**: PLAN.md scaffold.
 - **tasks.md**: TASKS.md scaffold.
@@ -55,5 +55,6 @@ The following guards were added to the core workflows as part of the first relia
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.1.1 | 2026-03-20 | Agent | Fixed template naming: specification.md → spec.md to match disk. |
 | 1.1.0 | 2026-03-04 | Agent | Added Templates subsystem, analyze/rule/onboard/retrospective workflow list, and Runtime Guards (RE-1 – RE-T74). |
 | 1.0.0 | 2026-03-03 | Antigravity | Initial stable version (captured from existing core). |
