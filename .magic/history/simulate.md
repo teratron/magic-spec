@@ -20,3 +20,4 @@
 | 1.4.156 - 1.4.160 | 2026-03-10 | Automated update via engine meta automation |
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
 | 1.4.166 - 1.5.38 | 2026-03-20 | Automated update via engine meta automation |
+| 1.5.40 | 2026-03-20 | Add regression tests T164-T166 for spec.md audit fixes (dispatch conflict HALT, delta-editing enforcement, RESCUE Levenshtein) |

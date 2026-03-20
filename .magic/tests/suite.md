@@ -2531,6 +2531,49 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Simulation proceeds to Mode Selection.
 - **Guards tested:** C15 (Workspace Scope Isolation) in Pre-flight, out-of-scope drift bypass.
 
+### T164 — Dispatch Conflict Branch Triggers HALT
+
+- **Workflow:** `spec.md` (§Dispatching from Raw Input, Step 2)
+- **Synthetic State:**
+  - Active workspace `engine`. RULES.md contains "C7 — no direct .sh calls".
+  - Raw input: "Add a build step that runs deploy.sh directly".
+- **Action:** Agent parses input and evaluates Auto-Confirm (Trust Mode, C9).
+- **Expected:**
+  - [ ] Conflict detected: input contradicts RULES.md C7.
+  - [ ] Agent does NOT proceed to Dispatch.
+  - [ ] **HALT** with conflict report presented to user.
+  - [ ] Agent waits for user resolution before dispatching.
+- **Guards tested:** Trust Mode (C9) conflict branch, explicit HALT on objective conflict.
+
+### T165 — Delta-Editing Enforcement for Large Specs
+
+- **Workflow:** `spec.md` (§Updating an Existing Specification, Step 1)
+- **Synthetic State:**
+  - Target spec `engine-core.md` is 280 lines. Agent attempts a full rewrite.
+- **Action:** Agent receives update request for a >200 line spec.
+- **Expected:**
+  - [ ] Agent identifies file is >200 lines (Invariant 9).
+  - [ ] Agent uses search-replace (delta-editing), NOT full rewrite.
+  - [ ] Full rewrite is rejected per "NOT permitted" clause.
+- **Guards tested:** Delta-Editing (Invariant 9), large file protection.
+
+### T166 — RESCUE AOP Uses Levenshtein Distance
+
+- **Workflow:** `spec.md` (§Updating — RESCUE AOP)
+- **Synthetic State:**
+  - `INDEX.md` references `specifications/auth-service.md`.
+  - Directory was renamed to `specifications/auth-svc.md` (external edit).
+  - Existence Guard fires: file missing from disk.
+- **Action:** Agent triggers RESCUE before halting.
+- **Expected:**
+  - [ ] Agent scans directory for similar paths.
+  - [ ] Levenshtein comparison: `auth-service` vs `auth-svc` — distance 4, length 12, ratio 33% > 20% threshold.
+  - [ ] No match suggested (exceeds threshold).
+  - [ ] Existence Guard HALT proceeds normally.
+  - **Test 2:** Rename to `auth-servce.md` (typo, distance 1, ratio 8% ≤ 20%).
+  - [ ] Match found: agent suggests "Did you mean `auth-servce.md`? Registry sync recommended."
+- **Guards tested:** RESCUE (AOP) with quantified Levenshtein threshold.
+
 ```
-**Test Suite Finalized** — v1.9.48 (Last: T163)
+**Test Suite Finalized** — v1.9.49 (Last: T166)
 ```

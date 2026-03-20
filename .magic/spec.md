@@ -118,7 +118,7 @@ graph TD
 ```
 
 1. **Parse & Map**: Identify distinct topics and match to domains.
-2. **Auto-Confirm (Trust Mode, C9)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, proceed to **Dispatch** immediately.
+2. **Auto-Confirm (Trust Mode, C9)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, proceed to **Dispatch** immediately. If conflicts detected → **HALT**. Present conflicts to user and wait for resolution before dispatching.
 3. **Dispatch**: Write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content is complete per template. Otherwise keep as `Draft`.
 4. **Post-Update**:
     - Run **Post-Update Review**.
@@ -148,7 +148,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. If `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9).
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. If `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
 2. **Versioning**:
     - `patch` (0.0.X) — typos, no logic change.
     - `minor` (0.X.0) — extensions.
@@ -163,7 +163,7 @@ graph TD
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. If a name collision with a version mismatch is found → **HALT** before writing. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Resolve before proceeding: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore (document reason)."
     - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
       - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending file resolution." Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file is restored or remapped.
-    - **RESCUE (AOP)**: proactively check for renamed directories using similarity scan (>80%) and suggest a registry sync before halting.
+    - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft):
         1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
         2. For each L2 found, recursively repeat: scan for `Implements: {L2-file}` to discover L3 dependents.
