@@ -84,7 +84,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 1. Build full project map.
 2. Inferred stack + architecture style.
 3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries. Present with explicit options: **(a) Approve all** — dispatch all proposed specs and rules, **(b) Select** — user picks individual items to approve, **(c) Adjust** — user requests modifications to the proposal, **(d) Cancel** — discard the proposal entirely. Wait for user choice before proceeding.
-4. **Registry Healing Guard**: If `INDEX.md` is blank/corrupted or mismatches the content of `specifications/` (Ghost/Zombie entries) → Prioritize **Registry Healing**: automatically re-map disk files to the registry and fix orphan paths before proposing new content.
+4. **Registry Healing Proposal**: If `INDEX.md` is blank/corrupted or mismatches `specifications/` (Ghost/Zombie entries) → Include **Registry Healing** (re-mapping disk files) as a mandatory part of the unified proposal in Step 3. Do NOT execute healing until the full proposal is approved.
 5. **Advisory**: Generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
 ### [Mode B] Re-Analysis (Delta Mode)

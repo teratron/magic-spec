@@ -5,6 +5,7 @@
       "description": "Magic SDD core engine logic, workflows, and history.",
       "scope": [
         ".magic",
+        ".agents",
         "docs",
         "README.md",
         "CHANGELOG.md"
