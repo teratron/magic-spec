@@ -614,7 +614,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User executes `/magic.run`
 - **Expected:**
   - [ ] Agent records `Blocked` status and the specific reason in `TASKS.md` Notes.
-  - [ ] Agent utilizes the newly added `magic.spec` handoff in `.agent/workflows/magic.run.md`.
+  - [ ] Agent utilizes the newly added `magic.spec` handoff in `.agents/workflows/magic.run.md`.
   - [ ] Agent delegates resolution to `magic.spec` workflow (Explore/Update Mode).
   - [ ] Once the specification is formally updated and unblocked, agent proceeds to `magic.task` to rebuild task dependencies.
 - **Guards tested:** Cross-workflow handoff routing, blocked task escalation.
@@ -629,7 +629,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User explicitly approves the "Corrective Proposal" changes.
 - **Expected:**
   - [ ] Agent performs a spot-check of the modified lines in `init.md`.
-  - [ ] Agent explicitly utilizes the *Run regression tests* handoff from `.agent/workflows/magic.simulate.md` or directly triggers the `/magic.simulate test` suite.
+  - [ ] Agent explicitly utilizes the *Run regression tests* handoff from `.agents/workflows/magic.simulate.md` or directly triggers the `/magic.simulate test` suite.
   - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
 - **Guards tested:** Post-fix regression sweep enforcement.
 
@@ -699,7 +699,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:** Fresh design session, all files present.
 - **Action:** User prompts `"/magic.simulate"` without arguments.
 - **Expected:**
-  - [ ] Agent reads `.agent/workflows/magic.simulate.md`.
+  - [ ] Agent reads `.agents/workflows/magic.simulate.md`.
   - [ ] Agent does NOT ask the user to "pick a workflow".
   - [ ] Agent explicitly engages Step 1.5 "Improv Mode (Live Simulation)".
   - [ ] Agent invents a crisis scenario and proceeds autonomously.
@@ -1060,11 +1060,11 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:**
-  - `workspace.json`: `engine` workspace with `scope: [".magic/", ".agent/"]`.
-  - Project has `src/`, `lib/`, `.magic/`, and `.agent/`.
+  - `workspace.json`: `engine` workspace with `scope: [".magic/", ".agents/"]`.
+  - Project has `src/`, `lib/`, `.magic/`, and `.agents/`.
 - **Action:** User runs `/magic.analyze`.
 - **Expected:**
-  - [ ] `executor.js` exports `MAGIC_WORKSPACE_SCOPE=".magic/,.agent/"`.
+  - [ ] `executor.js` exports `MAGIC_WORKSPACE_SCOPE=".magic/,.agents/"`.
   - [ ] **Scoping Rule (C15)**: Agent ignores `src/` and `lib/` during structure scan.
   - [ ] Proposal only includes modules found within the scoped paths.
 - **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.

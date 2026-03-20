@@ -29,7 +29,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Task Checklist Logic**: Consolidated implementation checklists into `TASKS.md` for better execution tracking and status reporting.
-- **Gitignore Resilience**: Improved installers to automatically manage `.gitignore` entries for `.magic/` and `.agent/` directories with idempotent updates.
+- **Gitignore Resilience**: Improved installers to automatically manage `.gitignore` entries for `.magic/` and `.agents/` directories with idempotent updates.
 - **Onboarding Safety**: Added production data collision guards to `onboard.md` to prevent accidental overwrites of existing project plans.
 
 ### Fixed
@@ -177,8 +177,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **System Automation Hooks:** Added `generate-context` script hooks into `task.md` and `run.md` post-write triggers.
 - **Context Automation Script:** Created `generate-context.sh` and `generate-context.ps1` to assemble `CONTEXT.md` from PLAN, workspace trees, and changelogs.
 - **Spec Engine Protections:** Added strict Explore Mode Safety rules and Delta Editing constraints for spec updates over 200 lines to `.magic/spec.md`.
-- **Explore Hints:** Updated `.agent/workflows/magic.spec.md` UI wrapper with tips to use Delta Constraints and strict read-only explore mode.
+- **Explore Hints:** Updated `.agents/workflows/magic.spec.md` UI wrapper with tips to use Delta Constraints and strict read-only explore mode.
 - **CLI Doctor Command (Node/Python):** Implemented `--doctor` and `--check` parsing in installers, executing the prerequisite script and outputting a formatted terminal validation report.
 - **Interactive Onboarding Script:** Created `.magic/onboard.md` to guide new developers through building a toy "console logger" specification.
-- **Onboarding Wrapper:** Added `.agent/workflows/magic.onboard.md` to trigger the interactive onboarding tutorial seamlessly.
+- **Onboarding Wrapper:** Added `.agents/workflows/magic.onboard.md` to trigger the interactive onboarding tutorial seamlessly.
 - **Prerequisite Validation:** Created `check-prerequisites.sh` and `check-prerequisites.ps1` parsing `INDEX.md` and returning valid JSON results.

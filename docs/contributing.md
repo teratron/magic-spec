@@ -8,7 +8,7 @@ This guide describes how to contribute to `magic-spec`, work with scripts, build
 magic-spec/                         # Repository Root
 │
 ├── .magic/                         # 🔧 Template Engine (Source of Truth)
-├── .agent/                         # 🎯 Template Workflows
+├── .agents/                         # 🎯 Template Workflows
 │
 ├── installers/
 │   ├── node/                       # 📦 Node.js Installer (Thin Client)

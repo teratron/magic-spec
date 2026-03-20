@@ -36,13 +36,13 @@ After running the installer, your project directory will be augmented with the f
 
 ```plaintext
 root-project/
-├── .agent/workflows/         # Slash commands wrapper (e.g., magic.spec, magic.task)
+├── .agents/workflows/         # Slash commands wrapper (e.g., magic.spec, magic.task)
 ├── .magic/                   # The SDD Engine (workflow logic and scripts - read-only)
 └── .design/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
 
 1. **`.magic/`**: Deploys the core SDD engine.
-2. **`.agent/`**: Sets up workflows for your AI.
+2. **`.agents/`**: Sets up workflows for your AI.
 3. **`.design/`**: Initializes your project's workspace for Specifications, Rules, and Plans.
 
 > [!TIP]
@@ -171,7 +171,7 @@ Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or a
 **Stable Release:**
 
 ```bash
-# Basic installation (defaults to .agent/ folder)
+# Basic installation (defaults to .agents/ folder)
 npx magic-spec@latest
 
 # Targeted installation for Cursor
@@ -221,7 +221,7 @@ npx magic-spec@latest --cursor --copilot --windsurf
 If automated installers do not fit your environment:
 
 1. **Engine**: Download the `.magic/` folder from the [GitHub repository](https://github.com/teratron/magic-spec).
-2. **Workflows**: Download command wrappers from [`.agent/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agent/workflows).
+2. **Workflows**: Download command wrappers from [`.agents/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agents/workflows).
 3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
 ## 🔄 Updating
@@ -237,14 +237,14 @@ npx magic-spec@latest --update
 ```
 
 > [!TIP]
-> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agent/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
+> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agents/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
 
 ### Post-Install: `.gitignore`
 
-The installer automatically adds `.magic/` and the adapter directory (e.g., `.agent/`, `.cursor/rules/`) to your project's `.gitignore`. These directories are **installed dependencies** — similar to `node_modules/` — and should be reinstalled via `npx magic-spec@latest` rather than committed to version control.
+The installer automatically adds `.magic/` and the adapter directory (e.g., `.agents/`, `.cursor/rules/`) to your project's `.gitignore`. These directories are **installed dependencies** — similar to `node_modules/` — and should be reinstalled via `npx magic-spec@latest` rather than committed to version control.
 
 > [!TIP]
-> **Vendoring**: If you prefer to commit the engine into your repository (so teammates get it without running the installer), simply remove the `.magic/` and `.agent/` entries from your `.gitignore`.
+> **Vendoring**: If you prefer to commit the engine into your repository (so teammates get it without running the installer), simply remove the `.magic/` and `.agents/` entries from your `.gitignore`.
 
 ## 💬 Usage
 

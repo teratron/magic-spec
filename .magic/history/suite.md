@@ -8,7 +8,7 @@
 | 1.3.1 | 2026-02-27 | Updated T29 and T30 to assert 2-layer (L1/L2) analysis generation |
 | 1.3.2 | 2026-02-28 | Added T34 for missing test suite fallback and Improv Mode (Live Simulation) |
 | 1.3.2 | 2026-02-28 | Added T35 to track Plan Sync mechanism (fix for Plan Amnesia) |
-| 1.3.2 | 2026-02-28 | Added T36 to verify `.agent/workflows/magic.run.md` handoff pointing to `magic.spec` |
+| 1.3.2 | 2026-02-28 | Added T36 to verify `.agents/workflows/magic.run.md` handoff pointing to `magic.spec` |
 | 1.3.2 | 2026-02-28 | Added T37 to test regression suite sweep is triggered after any workflow fixes |
 | 1.3.2 | 2026-02-28 | Added T38 to verify Workspace Context Resolution (Zero-Prompt priority chain) |
 | 1.3.2 | 2026-02-28 | Added T39 to test Retrospective path safety inside workspaces and Level 1 template copy |

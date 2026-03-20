@@ -297,7 +297,7 @@ function installAdapter(sourceRoot, env, adapters, conflictsToSkip = []) {
         installedChecksums[relTarget] = crypto.createHash('sha256').update(finalContent).digest('hex');
     }
 
-    // Copy other files in .agent if any
+    // Copy other files in .agents if any
     const srcEng = path.join(sourceRoot, AGENT_DIR);
     if (fs.existsSync(srcEng)) {
         const items = fs.readdirSync(srcEng, { withFileTypes: true });
@@ -893,7 +893,7 @@ async function main() {
                 }
             }
 
-            // Copy other files in .agent if any (not workflows subfolder which we handled selectively)
+            // Copy other files in .agents if any (not workflows subfolder which we handled selectively)
             if (fs.existsSync(srcEng)) {
                 const items = fs.readdirSync(srcEng, { withFileTypes: true });
                 for (const item of items) {

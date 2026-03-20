@@ -34,7 +34,7 @@ class TestAdapterFlags(unittest.TestCase):
                     "packageName": "magic-spec",
                     "removePrefix": "magic.",
                     "engineDir": ".magic",
-                    "agentDir": ".agent",
+                    "agentDir": ".agents",
                     "workflowsDir": "workflows",
                     "defaultExt": ".md",
                     "workflows": ["magic.spec"],
@@ -63,8 +63,8 @@ class TestAdapterFlags(unittest.TestCase):
         # 3. Create mock engine and agent files in source
         (self.source_dir / ".magic").mkdir()
         (self.source_dir / ".magic" / ".version").write_text("1.3.0")
-        (self.source_dir / ".agent" / "workflows").mkdir(parents=True)
-        (self.source_dir / ".agent" / "workflows" / "magic.spec.md").write_text(
+        (self.source_dir / ".agents" / "workflows").mkdir(parents=True)
+        (self.source_dir / ".agents" / "workflows" / "magic.spec.md").write_text(
             "spec content"
         )
 

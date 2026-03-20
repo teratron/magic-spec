@@ -12,6 +12,7 @@ yarn-debug.log*
 
 # Python build/env
 __pycache__/
+.*_cache/
 *.py[cod]
 *$py.class
 *.so
@@ -45,16 +46,15 @@ temp/
 # .design/ is intentionally committed here
 magic.*.md*
 magic.*.toml
-!.agent/workflows/magic.*.md
+!.agents/workflows/magic.*.md
 !.magic/history/magic.*.md
 .*/rules/
-!.agent/rules/
+!.agents/rules/
 .*/skills/
-!.agent/skills/
+!.agents/skills/
 
 # Sandbox for local testing
-.sandbox/
-installers/tests/sandbox/
+*sandbox/
 
 # Local settings (never commit)
 settings.local.json

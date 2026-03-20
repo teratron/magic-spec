@@ -59,7 +59,7 @@ In line with the "Maximum Automation" principle, retrospective reports are saved
 The output of this workflow is used to:
 
 1. **Refine `.magic/` workflows**: Removing high-friction steps.
-2. **Optimize `.agent/` instructions**: Improving prompt clarity.
+2. **Optimize `.agents/` instructions**: Improving prompt clarity.
 3. **Evolve `.design/RULES.md`**: Formalizing patterns that work well into standing rules.
 
 ## 6. Safety & Scope

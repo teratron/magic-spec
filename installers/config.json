@@ -2,7 +2,7 @@
     "githubRepo": "teratron/magic-spec",
     "packageName": "magic-spec",
     "engineDir": ".magic",
-    "agentDir": ".agent",
+    "agentDir": ".agents",
     "workflowsDir": "workflows",
     "defaultExt": ".md",
     "designDir": ".design",
@@ -47,7 +47,7 @@
     "eject": {
         "targets": [
             ".magic",
-            ".agent",
+            ".agents",
             "installers"
         ]
     },

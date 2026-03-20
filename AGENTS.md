@@ -6,9 +6,9 @@ This document defines the core principles and structural hierarchy for AI agents
 
 The project is divided into three primary logical layers:
 
-### 1.1. Core Engine (`.magic/` & `.agent/workflows/magic.*.md`)
+### 1.1. Core Engine (`.magic/` & `.agents/workflows/magic.*.md`)
 
-- **Path**: `/.magic/` (Internal Logic) and `/.agent/workflows/magic.*.md` (External Triggers)
+- **Path**: `/.magic/` (Internal Logic) and `/.agents/workflows/magic.*.md` (External Triggers)
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
@@ -39,7 +39,7 @@ The project is divided into three primary logical layers:
 
 1. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
 2. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
-3. **Engine Integrity**: Do not modify files in `.magic/` or `.agent/workflows/magic.*.md` unless the task specifically requires "Engine Improvement".
+3. **Engine Integrity**: Do not modify files in `.magic/` or `.agents/workflows/magic.*.md` unless the task specifically requires "Engine Improvement".
    - **C14 Enforcement**: After ANY modification to content inside `.magic/` (workflows, scripts, templates, tests, or config), run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version in `.magic/.version` and regenerates `.magic/.checksums`. This is a blocking gate, not a deferred task.
 4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.

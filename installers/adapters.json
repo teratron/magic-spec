@@ -109,8 +109,8 @@
         "description": "Auggie CLI"
     },
     "antigravity": {
-        "marker": ".agent",
-        "dest": ".agent/workflows",
+        "marker": ".agents",
+        "dest": ".agents/workflows",
         "ext": ".md",
         "description": "Antigravity IDE"
     },

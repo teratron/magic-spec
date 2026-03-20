@@ -11,7 +11,7 @@
 
 ```plaintext
 .
-├── .agent/
+├── .agents/
 │   ├── rules/
 │   └── workflows/
 ├── .claude/
@@ -77,4 +77,3 @@
 ## Recent Changes
 
 No recent changelog found.
-

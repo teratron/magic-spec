@@ -57,7 +57,7 @@ Once installed, Magic Spec sets up a clear separation of concerns in your projec
 
 ```plaintext
 your-project/
-├── .agent/workflows/       # 🎯 Agent Entry Points (Slash Commands)
+├── .agents/workflows/       # 🎯 Agent Entry Points (Slash Commands)
 │   └── magic.spec.md       #    → (Note: Adapters like Cursor use .cursor/rules/)
 ├── .magic/                 # ⚙️ SDD Engine (Workflow logic & Scripts)
 │   ├── spec.md, task.md    #    Core logic definitions

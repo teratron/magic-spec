@@ -9,7 +9,7 @@ authors = [{ name = "Oleg Alexandrov", email = "alexandrovoleg.ru@gmail.com" }]
 dependencies = []
 
 [project.urls]
-homepage = "https://github.com/teratron/magic-spec"
+homepage = "https://teratron.github.io/magic-spec"
 repository = "https://github.com/teratron/magic-spec"
 
 [project.scripts]
@@ -30,7 +30,10 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [tool.hatch.build]
-exclude = ["**/__pycache__", "**/*.pyc"]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["installers/python/magic_spec"]

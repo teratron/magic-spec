@@ -32,7 +32,7 @@ This workflow handles the end-to-end process of validating, building, and publis
 2. **Documentation & Script Audit**:
    - **Engine Sync**: Compare `.magic/` core logic and scripts (`.magic/scripts/`) with descriptions in `README.md` (root) and `docs/README.md`.
    - **Manifests Sync**: Verify that all files listed in `installers/config.json` → `publish.versionFiles` contain the same version as `.magic/.version`.
-   - **Wrappers Sync**: Verify that each **user-facing** workflow listed in `installers/config.json` → `workflows` has a corresponding entry point in `.agent/workflows/magic.*.md`. Internal engine files (`init.md`, `retrospective.md`) do not require wrappers.
+   - **Wrappers Sync**: Verify that each **user-facing** workflow listed in `installers/config.json` → `workflows` has a corresponding entry point in `.agents/workflows/magic.*.md`. Internal engine files (`init.md`, `retrospective.md`) do not require wrappers.
    - **Docs Completeness**: Verify that all engine features and workflows documented in `.magic/` have corresponding entries in `docs/`. Check `docs/` files listed in `installers/config.json` → `publish.docsTargets` and `publish.docsDir`.
    - **C14 Gate (Checksums)**:
      - If any file in `.magic/` was modified, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` BEFORE building. This is a **blocking gate** — do not proceed until checksums match.
@@ -89,7 +89,7 @@ Publish Workflow Checklist — {operation description}
 Validation & QA
   ☐ Full test suite passed (`npm test`)
   ☐ .magic/ structure and scripts match README.md and docs/
-  ☐ Wrappers synced: user-facing workflows (config.json → workflows) have .agent/ entry points
+  ☐ Wrappers synced: user-facing workflows (config.json → workflows) have .agents/ entry points
   ☐ C14 Enforcement Gate: checksums current BEFORE build (blocking)
   ☐ Version source of truth: .magic/.version = {version}
   ☐ All manifests synced (config.json → publish.versionFiles)

@@ -92,7 +92,7 @@ Once approved, the engine triggers a **Regression Sweep** — automatically exec
 
 ## 4. Maintenance
 
-- **Post-Change Verification**: A simulation is mandatory after any significant modification to `.magic/` or `.agent/workflows/`.
+- **Post-Change Verification**: A simulation is mandatory after any significant modification to `.magic/` or `.agents/workflows/`.
 - **Cross-Platform Check**: Every simulation verifies that script calls use the universal `node executor.js` wrapper to maintain Windows/Unix compatibility.
 - **Regression Suite**: After major engine changes (or post-fix), run `/magic.simulate test` to verify all scenarios still pass.
 - **Engine Meta Automation (C14)**: Any manual modification to the engine logic (`.magic/*.md`) or history files triggers the `update-engine-meta` command. This automatically bumps the engine version, updates histories, and regenerates SHA256 checksums to maintain system integrity.

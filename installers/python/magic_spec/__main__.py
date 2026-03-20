@@ -49,7 +49,7 @@ HISTORY_DIR = _INSTALLER_CONFIG["historyDir"]
 # List of files to sync for the SDD engine (.magic)
 MAGIC_FILES = _INSTALLER_CONFIG["magicFiles"]
 
-# List of core workflows to sync for the AI agent (.agent)
+# List of core workflows to sync for the AI agent (.agents)
 WORKFLOWS = _INSTALLER_CONFIG["workflows"]
 
 PYTHON_USER_AGENT = _INSTALLER_CONFIG["userAgent"]["python"]
@@ -238,7 +238,7 @@ def create_backup(dest: pathlib.Path) -> None:
             ignore=shutil.ignore_patterns("backups"),
         )
 
-    # Backup .agent
+    # Backup .agents
     agent_src = dest / AGENT_DIR
     if agent_src.exists():
         shutil.copytree(agent_src, backup_dir / AGENT_DIR)
@@ -352,7 +352,7 @@ def install_adapter(
         target_file.write_text(content, encoding="utf-8")
         installed_checksums[rel_target] = _get_file_checksum(target_file)
 
-    # Copy other files from .agent
+    # Copy other files from .agents
     for item in src_agent.iterdir():
         if item.name == WORKFLOWS_DIR:
             continue
@@ -402,7 +402,7 @@ def run_doctor(dest: pathlib.Path) -> int:
     checks = {
         "Python": sys.version.split()[0],
         ".magic engine": "Present" if (dest / ENGINE_DIR).exists() else "Missing",
-        ".agent workflows": "Present" if (dest / AGENT_DIR).exists() else "Missing",
+        ".agents workflows": "Present" if (dest / AGENT_DIR).exists() else "Missing",
     }
     for k, v in checks.items():
         print(f"  [{'✅' if 'Missing' not in v else '❌'}] {k}: {v}")
@@ -478,7 +478,7 @@ def run_eject(dest: pathlib.Path, auto_accept: bool = False) -> int:
     print("🗑️  Ejecting magic-spec from project...")
     if not auto_accept:
         ans = (
-            input("   Are you sure? This will remove .magic and .agent. (y/N): ")
+            input("   Are you sure? This will remove .magic and .agents. (y/N): ")
             .strip()
             .lower()
         )
