@@ -2,9 +2,6 @@
 .idea/
 .vscode/
 
-# Claude
-.claude/settings.json
-
 # Node.js
 node_modules/
 npm-debug.log*
@@ -55,6 +52,12 @@ magic.*.toml
 
 # Sandbox for local testing
 *sandbox/
+
+# Claude
+.claude/commands/
+.claude/rules/
+.claude/skills/
+.claude/settings.json
 
 # Local settings (never commit)
 settings.local.json
