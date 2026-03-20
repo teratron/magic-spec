@@ -2220,13 +2220,13 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** `/magic.rule add "New convention"` triggered
 - **Expected:**
   1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
-    - If `ok: true` → Skip silently. Return control to calling workflow.
-    - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
-        - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
-        - If all mismatches are **out-of-scope** → **Proceed** silently (Log: "Integrity drift detected in out-of-scope files; ignoring per C15").
-        - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
-    - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
-    - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
+  - If `ok: true` → Skip silently. Return control to calling workflow.
+  - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
+    - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
+    - If all mismatches are **out-of-scope** → **Proceed** silently (Log: "Integrity drift detected in out-of-scope files; ignoring per C15").
+    - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
+  - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
+  - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
   - [ ] Pre-flight runs `check-prerequisites --json`
   - [ ] Agent detects `checksums_mismatch`
   - [ ] **HALT** with report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
@@ -2273,9 +2273,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Input:** `"Remove rule C5"`
 - **Expected:**
   1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
-    - `ok: true` → proceed to Mode Selection.
-    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+  - `ok: true` → proceed to Mode Selection.
+  - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
+  - Missing `.design/` → auto-run `.magic/init.md`, then resume.
   - [ ] Before proposing, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
   - [ ] Propose step includes dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
