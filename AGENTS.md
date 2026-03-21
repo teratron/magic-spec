@@ -126,3 +126,69 @@ Use consistent Unicode-based separators to improve code readablity:
     ```
 
 - Avoid standard standard PEP8 horizontal lines or excessive whitespace. Use Unicode box characters to create a clean, modern look.
+
+## 6. JavaScript/Node.js Coding Style
+
+Common guidelines for Node.js scripts and installers.
+
+### 6.1 Documentation (JSDoc)
+
+- Use JSDoc for all functions, methods, and classes.
+- Include `@param`, `@returns`, and `@throws` tags where applicable.
+
+### 6.2 Navigation & Section Blocks
+
+Use consistent Unicode-based separators to improve code readability:
+
+- **Major Sections** (Modules, Main logic):
+
+    ```javascript
+    // ═══════════════════════════════════════════════════════════════════════════
+    // SECTION NAME (ALL CAPS)
+    // ═══════════════════════════════════════════════════════════════════════════
+    ```
+
+- **Minor Sections** (Internal logic groups, Utility functions):
+
+    ```javascript
+    // ───────────────────────────────────────────────────────────────────────────
+    // Sub-section Name (Title Case)
+    // ───────────────────────────────────────────────────────────────────────────
+    ```
+
+## 7. File Interaction Protocol
+
+To prevent accidental data loss or corruption in large documents, the agent MUST follow this protocol:
+
+### 6.1 Pre-read Requirement
+
+- **Mandatory**: Always call `view_file` on the target file BEFORE making any edits.
+- **Scope**: Read the entire file if it's within tool limits (800 lines) to ensure full context.
+- **Anti-Pattern**: DO NOT rely on cached or partial information from previous steps.
+
+### 6.2 Post-verify Requirement
+
+- **Verification**: Immediately after an edit, use `view_file` or `run_command` (grep/dir) to verify the result.
+- **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
+- **Recovery**: If data was lost, restore it immediately before proceeding.
+
+## 8. Completion Protocol
+
+Follow this checklist before declaring a task finished:
+
+- [ ] **Validated**: All quality checks pass with zero warnings:
+  - `uv run ruff check --fix` & `uv run ruff format`
+  - `uv run pyrefly check`
+  - `uv run pytest`
+- [ ] **Versioned**: Increment the patch version (e.g., `1.4.1` → `1.4.2`) in:
+  - `pyproject.toml`
+  - `package.json`
+  - `installers/python/magic_spec/__init__.py`
+  - `CHANGELOG.md`
+  - **Engine**: If content in `.magic/` or `.agents/workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
+- [ ] **Documented**:
+  - Update `CHANGELOG.md` with a summary of changes.
+  - Update `README.md` if public API or features were changed.
+  - Update relevant `.design/` workspace index/specifications to reflect task completion.
+- [ ] **Synchronized**: Run `uv sync` to ensure `uv.lock` is up to date after `pyproject.toml` changes.
+- [ ] **Preserved**: Verify that structural documents (like diagrams or `.design/INDEX.md`) haven't lost data during edits.
