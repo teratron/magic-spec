@@ -31,7 +31,6 @@ magic-spec/                         # github.com/teratron/magic-spec
 │   ├── rules/                      #    Internal dev constraints
 │   ├── skills/                     #    Dev skills (skill-creator, etc.)
 │   └── workflows/
-│       ├── magic.dev.init.md       #    Env setup (junctions/hardlinks)
 │       ├── magic.dev.simulate.md   #    Engine simulation & debugging
 │       └── magic.*.md              #    Hardlinks -> workflows/magic.*.md
 │
