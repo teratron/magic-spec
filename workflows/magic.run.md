@@ -9,9 +9,6 @@ handoffs:
     workflow: magic.spec
     prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.spec` to architect solutions for Blocked tasks (Rule C17)."
     condition: null
-  - label: "Simulate engine"
-    workflow: magic.simulate
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.simulate` to validate engine logic cleanly (Rule C17)."
 ---
 
 # Run Workflow

@@ -44,31 +44,33 @@ The project is divided into three primary logical layers:
 4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
-## 3. Language Preferences
+## 3. Language Policy
 
-### Brief overview
+Consistency in communication and code is paramount.
 
-This set of guidelines outlines language preferences for the project, ensuring consistency in code and communication.
+### 3.1 Technical Content (English ONLY)
 
-### Code and documentation language
+- **Codebase**: All identifiers (variables, functions, classes), comments, and docstrings.
+- **Documentation**: Technical guides, READMEs, and implementation notes.
+- **Process**: Commit messages, PR descriptions, and issue titles.
+- **Environment**: Error messages, logs, and API definitions.
 
-- All code, comments, documentation, variable names, function names, class names, method names, attribute names, and technical terms must be in English
-- Maintain English as the primary language for all technical elements including error messages, log entries, configuration keys, and API responses to ensure readability and maintainability
-- Technical documentation, inline comments, docstrings, and README files must be written in English
-- All commit messages, pull request descriptions, and issue titles related to code changes should be in English
+### 3.2 Communication (Russian)
 
-### Communication style
+- **Chat Interaction**: Discussions, explanations, and project planning.
+- **Decision Making**: Strategic choices and high-level feature discussions.
+- **Reviews**: Conversational feedback during pair programming.
 
-- Explanations and discussions in the chat interface should be in Russian
-- Use Russian for conversational responses, clarifications, project planning, and non-technical interactions
-- Project management communications, feature discussions, and strategic decisions should be conducted in Russian
-- Code review comments and technical discussions during development can be in Russian unless collaborating with English-speaking developers
+## 4. Markdown Guidelines
 
-## 4. Development Toolchain
+- **Separators**: Avoid horizontal rules (`---`). Use them only in the footer if absolutely necessary.
+- **Links**: No hardcoded absolute links (e.g., `file:///C:/...`). Use relative paths or just backticks for filenames (e.g., `pyproject.toml`).
+
+## 5. Development Toolchain
 
 The project strictly adheres to **uv-first** philosophy.
 
-### 4.1 Virtual Environment
+### 5.1 Virtual Environment
 
 Always initialize and activate the environment before execution:
 
@@ -95,17 +97,17 @@ uv run pyrefly check
 uv run pytest
 ```
 
-## 5. Python Coding Style
+## 6. Python Coding Style
 
 All Python source files must adhere to a premium and uniform visual style.
 
-### 5.1 Documentation (Google Style)
+### 6.1 Documentation (Google Style)
 
 - Use Google-style docstrings for all functions, methods, and classes.
 - Include `Args:`, `Returns:`, and `Raises:` sections where applicable.
 - Maintain `from __future__ import annotations` at the top of every file.
 
-### 5.2 Navigation & Section Blocks
+### 6.2 Navigation & Section Blocks
 
 Use consistent Unicode-based separators to improve code readablity:
 
@@ -127,16 +129,16 @@ Use consistent Unicode-based separators to improve code readablity:
 
 - Avoid standard standard PEP8 horizontal lines or excessive whitespace. Use Unicode box characters to create a clean, modern look.
 
-## 6. JavaScript/Node.js Coding Style
+## 7. JavaScript/Node.js Coding Style
 
 Common guidelines for Node.js scripts and installers.
 
-### 6.1 Documentation (JSDoc)
+### 7.1 Documentation (JSDoc)
 
 - Use JSDoc for all functions, methods, and classes.
 - Include `@param`, `@returns`, and `@throws` tags where applicable.
 
-### 6.2 Navigation & Section Blocks
+### 7.2 Navigation & Section Blocks
 
 Use consistent Unicode-based separators to improve code readability:
 
@@ -156,23 +158,48 @@ Use consistent Unicode-based separators to improve code readability:
     // ───────────────────────────────────────────────────────────────────────────
     ```
 
-## 7. File Interaction Protocol
+## 8. Windows Junction Safety
+
+When managing Windows junctions (`mklink /J`) and git index, follow this strict order to prevent data loss:
+
+### 8.1 The Problem
+
+`git rm -r --cached <path>` on Windows **follows junctions** and physically deletes files in the junction target, even with `--cached`. Example: `git rm -r --cached .claude/commands` where `.claude/commands` is a junction to `.agents/workflows/` will **delete all files in `.agents/workflows/` from disk**.
+
+### 8.2 Safe Procedure
+
+Always run `git rm --cached` **before** creating junctions, while the paths are empty or nonexistent:
+
+1. `git rm --cached`   ← first, while no junctions exist yet
+2. `mklink /J ...`     ← then create junctions
+
+When removing from git index, list **specific file paths** rather than directories:
+
+```bash
+# Safe — specific files only
+git rm --cached --ignore-unmatch .agents/workflows/magic.analyze.md
+
+# Dangerous — git will traverse the junction into parent/source directories
+git rm -r --cached .claude/commands
+```
+
+## 9. File Interaction Protocol
 
 To prevent accidental data loss or corruption in large documents, the agent MUST follow this protocol:
 
-### 6.1 Pre-read Requirement
+### 9.1 Pre-read Requirement
 
 - **Mandatory**: Always call `view_file` on the target file BEFORE making any edits.
 - **Scope**: Read the entire file if it's within tool limits (800 lines) to ensure full context.
 - **Anti-Pattern**: DO NOT rely on cached or partial information from previous steps.
 
-### 6.2 Post-verify Requirement
+### 9.2 Post-verify Requirement
 
 - **Verification**: Immediately after an edit, use `view_file` or `run_command` (grep/dir) to verify the result.
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
-## 8. Completion Protocol
+## 10. Completion Protocol
 
 Follow this checklist before declaring a task finished:
 
@@ -191,4 +218,5 @@ Follow this checklist before declaring a task finished:
   - Update `README.md` if public API or features were changed.
   - Update relevant `.design/` workspace index/specifications to reflect task completion.
 - [ ] **Synchronized**: Run `uv sync` to ensure `uv.lock` is up to date after `pyproject.toml` changes.
+  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 3 files). If broken, run `/magic.dev.init` to restore.
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.design/INDEX.md`) haven't lost data during edits.

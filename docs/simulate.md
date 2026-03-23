@@ -20,17 +20,17 @@ Key Goals:
 Simulate a specific workflow by name:
 
 ```powershell
-/magic.simulate spec
-/magic.simulate task
-/magic.simulate run
-/magic.simulate rule
-/magic.simulate retrospective
-/magic.simulate analyze
-/magic.simulate init
+/magic.dev.simulate spec
+/magic.dev.simulate task
+/magic.dev.simulate run
+/magic.dev.simulate rule
+/magic.dev.simulate retrospective
+/magic.dev.simulate analyze
+/magic.dev.simulate init
 ```
 
 **Drag-and-Drop (AOP):**
-If your IDE supports drag-and-drop, you can simply drag a workflow file (e.g., `.magic/task.md`) directly into the chat alongside the `/magic.simulate` command. The agent will automatically recognize the target file and trigger the simulation for it. This is the fastest way to verify specific workflow logic after making changes.
+If your IDE supports drag-and-drop, you can simply drag a workflow file (e.g., `.magic/task.md`) directly into the chat alongside the `/magic.dev.simulate` command. The agent will automatically recognize the target file and trigger the simulation for it. This is the fastest way to verify specific workflow logic after making changes.
 
 The agent creates a synthetic scenario, "executes" the workflow logic step-by-step, and identifies "rough edges."
 
@@ -39,7 +39,7 @@ The agent creates a synthetic scenario, "executes" the workflow logic step-by-st
 Run an unpredictable, end-to-end stress test across all workflows:
 
 ```
-/magic.simulate
+/magic.dev.simulate
 ```
 
 This is the **default behavior** when no arguments are provided. The agent generates hostile synthetic states (e.g., deleted files, contradictory changes, registry corruption) and attempts to resolve them in a single pass across `spec` → `task` → `run` → `retro`, verifying that guards catch every edge case.
@@ -49,7 +49,7 @@ This is the **default behavior** when no arguments are provided. The agent gener
 Run the full predefined regression test suite:
 
 ```
-/magic.simulate test
+/magic.dev.simulate test
 ```
 
 This reads `.magic/tests/suite.md` and executes all **76+** predefined test scenarios covering all workflows. Results are reported as a PASS/FAIL table.
@@ -86,7 +86,7 @@ Simulation analyzes the **AI-readability** of instructions: token density, promp
 If simulation reveals a logical flaw, the engine proposes a "surgical fix" (a precise search-and-replace) for the affected `.magic/` workflow file.
 **Crucially, the engine must also write a new regression test** for this specific edge case into `.magic/tests/suite.md` to ensure the flaw is permanently caught in future test runs. Changes are applied only after user approval.
 
-Once approved, the engine triggers a **Regression Sweep** — automatically executing the full test suite (`/magic.simulate test`) to ensure the surgical fix hasn't introduced regressions into adjacent workflows.
+Once approved, the engine triggers a **Regression Sweep** — automatically executing the full test suite (`/magic.dev.simulate test`) to ensure the surgical fix hasn't introduced regressions into adjacent workflows.
 
 > **Checksum Rule**: `generate-checksums` is run only AFTER the user approves and changes are written. Regenerating before approval creates a mismatch between stored hashes and the actual files.
 
@@ -94,7 +94,7 @@ Once approved, the engine triggers a **Regression Sweep** — automatically exec
 
 - **Post-Change Verification**: A simulation is mandatory after any significant modification to `.magic/` or `.agents/workflows/`.
 - **Cross-Platform Check**: Every simulation verifies that script calls use the universal `node executor.js` wrapper to maintain Windows/Unix compatibility.
-- **Regression Suite**: After major engine changes (or post-fix), run `/magic.simulate test` to verify all scenarios still pass.
+- **Regression Suite**: After major engine changes (or post-fix), run `/magic.dev.simulate test` to verify all scenarios still pass.
 - **Engine Meta Automation (C14)**: Any manual modification to the engine logic (`.magic/*.md`) or history files triggers the `update-engine-meta` command. This automatically bumps the engine version, updates histories, and regenerates SHA256 checksums to maintain system integrity.
 
 ## 5. Security & Scope

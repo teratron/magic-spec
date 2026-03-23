@@ -48,7 +48,6 @@ graph TD
 | :--- | :--- | :--- | :--- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
-| **Simulate** | `simulate.md` | Validates engine logic via 155+ regression tests or Improv Mode stress-testing. | [Detailed Guide](simulate.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 
 ## 🏗️ Architecture & Directory Structure

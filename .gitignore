@@ -37,28 +37,20 @@ uv.lock
 dist/
 temp/
 *tmp/
-
-# Magic files
-# SDD workspace — tracked as part of the engine project
-# .design/ is intentionally committed here
-magic.*.md*
-magic.*.toml
-!.agents/workflows/magic.*.md
-!.magic/history/magic.*.md
-.*/rules/
-!.agents/rules/
-.*/skills/
-!.agents/skills/
-
-# Sandbox for local testing
 *sandbox/
 
-# Claude
+# Agents
 CLAUDE.md
-.claude/commands/
-.claude/rules/
-.claude/skills/
-.claude/settings.json
+QWEN.md
+.*/workflows/
+.*/commands/
+.*/prompts/
+.*/skills/
+.*/rules/
+!.agents/workflows/magic.dev.*.md
+!.agents/skills
+!.agents/rules/
 
 # Local settings (never commit)
-settings.*.json
+*/settings.json
+*/settings.*.json

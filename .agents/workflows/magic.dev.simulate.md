@@ -2,14 +2,14 @@
 description: Workflow for simulating and validating Magic SDD engine logic.
 handoffs:
   - label: "Simulate workflow"
-    workflow: magic.simulate
+    workflow: magic.dev.simulate
     prompt: "Run the specified workflow simulation. If no target is provided, auto-trigger Improv Mode (Live Stress-Test) by default."
   - label: "Apply fixes"
     workflow: magic.rule
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
   - label: "Run regression tests"
-    workflow: magic.simulate
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.simulate test` to ensure tests run against fresh files without context bleed (Rule C17)."
+    workflow: magic.dev.simulate
+    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.dev.simulate test` to ensure tests run against fresh files without context bleed (Rule C17)."
 ---
 
 # Simulation Workflow

@@ -5,9 +5,6 @@ handoffs:
     workflow: magic.task
     prompt: "MANDATORY HARD STOP: Inform the user that the Specification phase is complete. Recommend starting a NEW chat session and running `/magic.task` to ensure clean context (Rule C17). REFUSE to execute the handoff autonomously."
     condition: "registry_updated"
-  - label: "Simulate engine change"
-    workflow: magic.simulate
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.simulate` to cleanly validate engine modifications (Rule C17)."
   - label: "Add a rule"
     workflow: magic.rule
     prompt: "Add a project-wide convention discovered during spec work."

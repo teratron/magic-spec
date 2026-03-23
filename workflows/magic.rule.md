@@ -13,9 +13,6 @@ handoffs:
     workflow: magic.spec
     prompt: "Audit specifications to ensure compliance with updated rules."
     condition: null
-  - label: "Simulate changes"
-    workflow: magic.simulate
-    prompt: "Simulate and validate the new rule logic to ensure no system friction."
 ---
 
 # Rule Workflow
