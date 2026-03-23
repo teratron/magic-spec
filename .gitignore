@@ -54,10 +54,11 @@ magic.*.toml
 *sandbox/
 
 # Claude
+CLAUDE.md
 .claude/commands/
 .claude/rules/
 .claude/skills/
 .claude/settings.json
 
 # Local settings (never commit)
-settings.local.json
+settings.*.json
