@@ -1,111 +1,167 @@
-# 🛠️ Contributing Guide / Developer Manual
+# Contributing to MAGIC-SPEC
 
-This guide describes how to contribute to `magic-spec`, work with scripts, build, and publish packages to npm and PyPI.
+Thank you for your interest in contributing to MAGIC-SPEC.  
+This document covers repository structure, naming conventions, and contribution guidelines for the SDD engine and its installers.
 
-## 📂 Repository Structure
+## 📂 Repository Structure (This Project)
 
 ```plaintext
-magic-spec/                         # Repository Root
+magic-spec/                         # github.com/teratron/magic-spec
 │
-├── .magic/                         # 🔧 Template Engine (Source of Truth)
-├── .agents/                         # 🎯 Template Workflows
+├── .magic/                         # 🔧 SDD ENGINE (Source of Truth)
+│   ├── scripts/                    #    Engine logic: execution, checksums, etc.
+│   ├── templates/                  #    Core blueprints: specs, plans, tasks.
+│   ├── .version                    #    Version source of truth
+│   └── .checksums                  #    Engine integrity hashes
 │
-├── installers/
-│   ├── node/                       # 📦 Node.js Installer (Thin Client)
-│   ├── python/                     # 📦 Python Installer (Thin Client)
-│   ├── scripts/                    # 🚀 Automation & Release scripts
-│   ├── tests/                      # 🧪 Integration & Unit tests
-│   ├── adapters.json               # 🔌 IDE Adapter definitions
-│   └── config.json                 # ⚙️ Installer configuration
+├── workflows/                      # 🎯 TEMPLATE WORKFLOWS (User-facing)
+│   ├── magic.spec.md               #    Specification workflow
+│   ├── magic.task.md               #    Task & Plan workflow
+│   ├── magic.run.md                #    Execution workflow
+│   └── ...
+│
+├── installers/                     # 🚀 INSTALLERS (Distribution)
+│   ├── node/                       #    Node.js (npx) thin client
+│   ├── python/                     #    Python (uvx/pipx) thin client
+│   ├── scripts/                    #    Build, Publish & Test automation
+│   ├── adapters.json               #    IDE/Agent path mapping
+│   └── config.json                 #    Logic for packaging & updates
+│
+├── .agents/                        # 🛠️ INTERNAL DEV WORKFLOWS & SKILLS
+│   ├── rules/                      #    Internal dev constraints
+│   ├── skills/                     #    Dev skills (skill-creator, etc.)
+│   └── workflows/
+│       ├── magic.dev.init.md       #    Env setup (junctions/hardlinks)
+│       ├── magic.dev.simulate.md   #    Engine simulation & debugging
+│       └── magic.*.md              #    Hardlinks -> workflows/magic.*.md
+│
+├── .claude/                        # 🤖 Claude Desktop internal config
+│   ├── commands/                   #    Junction -> .agents/workflows/
+│   ├── skills/                     #    Junction -> .agents/skills/
+│   └── rules/                      #    Junction -> .agents/rules/
 │
 ├── .design/                        # 🏠 Self-referential SDD State
-└── docs/                           # 📄 Documentation
-    ├── README.md                   #    Main Guide
-    └── contributing.md             #    Developer Guide (This file)
+│
+├── docs/                           # 📄 Documentation
+│   ├── README.md                   #    Technical guides
+│   └── simulate.md                 #    Engine testing manual
+│
+├── pyproject.toml                  # Build config & Python dependencies
+├── package.json                    # Build config & Node.js dependencies
+├── AGENTS.md                       # Agent rules (Canonical Source)
+├── CLAUDE.md                       # Hardlink -> AGENTS.md
+├── QWEN.md                         # Hardlink -> AGENTS.md
+├── README.md                       # Quick Start (User-facing)
+├── CONTRIBUTING.md                 # This file
+├── CHANGELOG.md                    # Version history
+└── LICENSE                         # MIT
 ```
 
-### Build Process
+## 🏗️ User Project Structure
 
-The Node.js installer is a **Thin Client**. It doesn't bundle the engine; instead, it downloads the current version from the GitHub repository during installation.
+When a user runs `magic-spec init` in their project, the following is created:
 
-To test the installer locally:
+```plaintext
+my-project/                        # Any existing user project
+│
+├── .magic/                        # ⚙️ SDD ENGINE (Read-only dependency)
+│   ├── scripts/
+│   ├── templates/
+│   ├── .version
+│   └── .checksums
+│
+├── .agents/                       # 🎯 AGENT WORKFLOWS (Active interface)
+│   └── workflows/                 #    (Default location for non-MDC agents)
+│       ├── magic.spec.md
+│       ├── magic.task.md
+│       ├── magic.run.md
+│       ├── magic.rule.md
+│       └── magic.analyze.md
+│
+├── .design/                       # 📦 DESIGN WORKSPACE (User artifacts)
+│   ├── specifications/            #    Project-specific Specs
+│   ├── INDEX.md                   #    Spec Registry
+│   ├── RULES.md                   #    Project Constitution (The Rules)
+│   ├── PLAN.md                    #    Phased Development Plan
+│   └── TASKS.md                   #    Atomic Task List
+│
+├── .cursor/rules/                 # 🔗 (If Cursor) MDC Rules
+│   └── magic.*.mdc                #    Linked from workflows
+│
+└── .gitignore                     # Automatically updated by installer:
+                                   # + .magic/
+                                   # + .agents/
+```
 
-1. Ensure `installers/config.json` is present.
-2. Run the commands from the project root.
+### Flow via Adapters
 
-### Script Reference
+The specific location of workflows in a user project is determined by the IDE/Agent adapter (defined in `installers/adapters.json`).
 
-| Script | Command | Description |
-| :--- | :--- | :--- |
-| `npm test` | `python installers/scripts/run_tests.py` | Runs all integration tests. |
-| `npm run build` | `npm pack --pack-destination dist` | Creates an npm package archive in `dist/`. |
-| `npm run publish:dry` | `npm publish --dry-run` | Simulation of npm publication. |
+- **Cursor**: Uses `.cursor/rules/*.mdc`
+- **Windsurf**: Uses `.windsurf/rules/*.md`
+- **Claude Code**: Uses `.claude/commands/*.md`
+- **Standard**: Defaults to `.agents/workflows/*.md`
 
-### Local Testing
+## 🏷️ Naming Conventions
 
-**Method A: Direct Execution** (Instant feedback):
+### File Naming
+
+- Workflows: `magic.<workflow_name>.md` (kebab-case).
+- Scripts: `snake_case.js` or `snake_case.py`.
+- Documentation: `kebab-case.md`.
+
+### Metadata numbering
+
+- **C-series** (Constraints): `C10`, `C11`, etc. (e.g., C14 Enforcement).
+- **R-series** (Rules): Used in `.design/RULES.md`.
+- **T-series** (Tests): Used in test suites.
+
+## 📝 Workflow Checklist
+
+Before submitting a change to any engine workflow in `.magic/` or `workflows/`:
+
+- [ ] **Checksummed**: Run `node .magic/scripts/executor.js update-engine-meta --workflow {name}`.
+- [ ] **Simulated**: Run `/magic.dev.simulate` to ensure engine logic integrity.
+- [ ] **Validated**: `uv run ruff check --fix && uv run ruff format`.
+- [ ] **Linked**: Ensure the workflow is present in `installers/config.json`.
+- [ ] **Documented**: Update relevant `.md` file in `docs/` if logic changed.
+
+## 🤝 Contribution Types
+
+| Type | Branch | Notes |
+| --- | --- | --- |
+| **Engine fix** | `fix/engine-<name>` | Must update `.checksums` and `.version` |
+| **New Adapter** | `feat/adapter-<name>` | Update `installers/adapters.json` |
+| **Installer fix** | `fix/installer-<name>` | Test both Node and Python versions |
+| **Documentation** | `docs/<page>` | Keep `README.md` and `docs/README.md` in sync |
+
+## 🌐 Language Policy
+
+- **Code, identifiers, technical docs**: English ONLY.
+- **Commit messages, PR descriptions**: English ONLY.
+- **Discussions, planning, chat**: Russian.
+
+## 📦 Build & Release
+
+### Distribution Layers
+
+1. **Core**: The raw `.magic/` and `workflows/` content.
+2. **Installer**: CLI tools that download and deploy the Core.
+
+### Testing Installers
 
 ```bash
+# Test Node installer
 node installers/node/index.js --info
+
+# Test Python installer
+python -m installers.python --info
 ```
 
-## 🔵 Python Installer (`installers/python/`)
+### Release Process
 
-### Build Process
+1. Update `pyproject.toml`, `package.json`, and `.magic/.version`.
+2. run `python installers/scripts/publish.py <old> <new>`.
 
-Run this from the project root:
-
-```bash
-uv build
-```
-
-This generates both `.whl` and `.tar.gz` files in the `dist/` directory using `hatchling` as the backend.
-
-### Script Reference
-
-| Command | Description |
-| :--- | :--- |
-| `uv build` | Build the package into `dist/`. |
-| `uv publish` | Publish to PyPI (interactive token entry). |
-
-### editable install (Recommended for dev)
-
-```bash
-pip install -e .
-```
-
-This installs `magic-spec` command pointing to your local source.
-
-### Run via Module
-
-```bash
-python -m magic_spec --info
-```
-
-(Requires `PYTHONPATH` to include `installers/python`)
-
-## 🚀 Release Process
-
-We use a unified release script located in `installers/scripts/publish.py`. This script handles version bumping, documentation updates, and registry publication.
-
-**Usage:**
-
-```bash
-python installers/scripts/publish.py <old_version> <new_version>
-```
-
-### Release Checklist
-
-Before every release, ensure:
-
-1. [ ] Changes are committed and pushed to git.
-2. [ ] Tests pass: `npm test`.
-3. [ ] Checksums/Version updated: `node .magic/scripts/executor.js update-engine-meta --workflow {names}`.
-4. [ ] Version is set in `.magic/.version` (The Source of Truth).
-5. [ ] `python installers/scripts/publish.py` executed successfully.
-
-## ❓ Common Issues
-
-- **"No such file or directory"**: Ensure you are in the correct directory. Developers should work from the root or `installers/` subfolders.
-- **"Payload not found"**: Ensure the version in `package.json` or `.magic/.version` has been tagged and pushed to GitHub.
-- **Version Collision**: npm and PyPI do not allow overwriting versions. Increment the version number in `.magic/.version` before running `publish.py`.
+---
+*MAGIC-SPEC v1.4.2* — "Thought → Spec → Task → Run → Code"

@@ -221,7 +221,7 @@ npx magic-spec@latest --cursor --copilot --windsurf
 If automated installers do not fit your environment:
 
 1. **Engine**: Download the `.magic/` folder from the [GitHub repository](https://github.com/teratron/magic-spec).
-2. **Workflows**: Download command wrappers from [`.agents/workflows/`](https://github.com/teratron/magic-spec/tree/main/.agents/workflows).
+2. **Workflows**: Download command wrappers from [`workflows/`](https://github.com/teratron/magic-spec/tree/main/workflows).
 3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
 ## 🔄 Updating
@@ -288,7 +288,7 @@ You can install support for a specific adapter using the shortcut flag (e.g., `-
 
 - [**Main Documentation**](./docs/README.md) — Detailed guide on workflows, architecture, and advanced features.
 - [**Installers Guide**](./installers/README.md) — Advanced CLI options and platform specifics.
-- [**Contributing**](./docs/contributing.md) — How to develop, test, and extend the engine.
+- [**Contributing**](./CONTRIBUTING.md) — How to develop, test, and extend the engine.
 
 ## 🛟 Support
 
@@ -307,7 +307,7 @@ If you encounter issues or have questions:
 ## 🏗️ Contributing
 
 We welcome contributions! Whether it's a bug fix, a new adapter, or an improvement to the workflow logic.
-Please see [**Contributing Guide**](./docs/contributing.md) for details.
+Please see [**Contributing Guide**](./CONTRIBUTING.md) for details.
 
 ## 👥 Authors and Acknowledgments
 

@@ -48,7 +48,7 @@ QWEN.md
 .*/skills/
 .*/rules/
 !.agents/workflows/magic.dev.*.md
-!.agents/skills
+!.agents/skills/
 !.agents/rules/
 
 # Local settings (never commit)
