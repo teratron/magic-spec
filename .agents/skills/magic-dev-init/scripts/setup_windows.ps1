@@ -11,7 +11,7 @@
 # ───────────────────────────────────────────────────────────────────────────────
 
 $workflows = @("analyze", "rule", "run", "spec", "task")
-$agentFiles = @("CLAUDE.md", "QWEN.md")
+$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md")
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Cleanup function

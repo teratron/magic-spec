@@ -41,6 +41,7 @@ temp/
 
 # Agents
 CLAUDE.md
+GEMINI.md
 QWEN.md
 .*/workflows/
 .*/commands/

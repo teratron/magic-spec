@@ -10,7 +10,7 @@ echo ">>> Initializing Unix/macOS Agent Environment..."
 
 # 1. Git Index Maintenance (MUST run BEFORE creating symlinks — see AGENTS.md §6)
 echo "Synchronizing git index (pre-link)..."
-agentFiles="CLAUDE.md QWEN.md"
+agentFiles="CLAUDE.md GEMINI.md QWEN.md"
 links=".claude/commands .claude/skills .claude/rules"
 for f in analyze rule run spec task; do
   links="$links .agents/workflows/magic.$f.md"
