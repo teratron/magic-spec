@@ -49,6 +49,7 @@ QWEN.md
 .*/skills/
 .*/rules/
 !.agents/workflows/magic.dev.*.md
+#!.agents/workflows/magic.dev.publish.md
 !.agents/skills/
 !.agents/rules/
 
