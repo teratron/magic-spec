@@ -5,14 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.31] - 2026-03-24
+## [1.5.48] - 2026-03-24
+
+### Added
+
+- **Publish Workflow**: Restored `.agents/workflows/publish.md` for engine maintenance and registry publishing.
+- **History Tracking**: Initialized history for `magic.analyze` and `magic.dev.simulate` wrappers to ensure full auditability.
+
+### Changed
+
+- **Version Synchronization**: Unified project version to `1.5.47` across all manifests (`package.json`, `pyproject.toml`, `__init__.py`) and the `.magic/.version` engine core.
+- **Instruction Density**: Refined `.magic/simulate.md` (Context Bleed Warning) to remove vague qualifiers ("high-confidence" -> "strictly unbiased"), reaching a density score of 10/10.
+- **Engine Integrity**: Optimized `generate-checksums.js` to exclude the `.checksums` file from its own mapping, preventing confusion and unstable hash values.
 
 ### Fixed
 
-- **Sandbox Cleanup**: Removed dev-only `simulate.md` from installer test sandbox (2 files).
-- **RULES Template**: Added missing conventions C18-C23 to `init.js` RULES.md generator. New user projects now receive the complete constitution.
-- **Python Installer**: Fixed `_resolve_package_version()` — was hardcoded to `"1.4.2"`, now reads actual package version (C19 parity).
-- **Engine Scripts**: Deduplicated `workspace.json` reads in `executor.js` (was parsed twice per invocation).
+- **Testing Logic**: Corrected `run_tests.py` to properly set `PYTHONPATH` for Python installer subprocesses and fixed an `os.environ` access bug.
+- **Sandbox Cleanup**: Removed dev-only `simulate.md` from installer test sandbox.
+- **RULES Template**: Added missing conventions C18-C23 to `init.js` RULES.md generator.
+- **Python Installer**: Fixed `_resolve_package_version()` to read actual package version.
+- **Engine Scripts**: Deduplicated `workspace.json` reads in `executor.js`.
+- **History Cleanup**: Removed legacy `audit.md` and `docs.md` files from `.magic/history/`.
 
 ## [1.5.30] - 2026-03-24
 

@@ -52,6 +52,11 @@
         ]
     },
     "publish": {
+        "versionFiles": [
+            "package.json",
+            "pyproject.toml",
+            "installers/python/magic_spec/__init__.py"
+        ],
         "docsTargets": [
             "CHANGELOG.md"
         ]

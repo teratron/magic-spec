@@ -5,6 +5,7 @@ import shutil
 import pathlib
 import subprocess
 import unittest
+import os
 
 if sys.stdout.encoding != "utf-8" and isinstance(sys.stdout, io.TextIOWrapper):
     sys.stdout.reconfigure(encoding="utf-8")
@@ -43,20 +44,24 @@ def reset_sandbox():
     SANDBOX_PATH.mkdir(parents=True, exist_ok=True)
     print(f"🧹 Sandbox reset: {SANDBOX_PATH}")
 
-
-def run_cmd(cmd, cwd=None):
+def run_cmd(cmd, cwd=None, env=None):
     """Runs a shell command and captures output.
 
     Args:
         cmd: List of command arguments.
         cwd: Working directory for the command.
+        env: Optional environment variables dictionary.
 
     Returns:
         tuple: (success (bool), output (str))
     """
+    cmd_env = dict(os.environ)
+    if env:
+        cmd_env.update(env)
+
     print(f"🚀 Running: {' '.join([str(c) for c in cmd])}")
     result = subprocess.run(
-        cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8"
+        cmd, cwd=cwd, capture_output=True, text=True, encoding="utf-8", env=cmd_env
     )
     if result.returncode != 0:
         print(f"❌ Error: {result.stderr}")
@@ -89,7 +94,10 @@ def test_installer(installer_type="python") -> bool:
         reset_sandbox()
         print(f"📦 Testing adapter: {env_name}")
 
+        env = None
         if installer_type == "python":
+            python_path = str(PROJECT_ROOT / "installers" / "python")
+            env = {"PYTHONPATH": python_path}
             cmd = [
                 sys.executable,
                 str(PYTHON_INSTALLER),
@@ -101,7 +109,7 @@ def test_installer(installer_type="python") -> bool:
         else:
             cmd = ["node", str(NODE_INSTALLER), "--local", "--env", env_name, "--yes"]
 
-        success, output = run_cmd(cmd, cwd=str(SANDBOX_PATH))
+        success, output = run_cmd(cmd, cwd=str(SANDBOX_PATH), env=env)
 
         if not success:
             print(f"❌ {env_name} installation failed!")
