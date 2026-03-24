@@ -39,8 +39,8 @@ graph TD
 
 ### 1. Mode Selection
 
-- **Test Suite**: `/magic.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user with hint to restore the file from origin.
-- **Direct**: `/magic.simulate {workflow}` or `/magic.simulate {workflow} {mode}` (e.g., `/magic.simulate spec analyze`). Targets specific logic or sub-modes. Also accepts file paths (e.g., `@/path/to/workflow.md`) — extract the workflow name from the filename.
+- **Test Suite**: `/magic.dev.simulate test`. Runs all scenarios in `.magic/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user with hint to restore the file from origin.
+- **Direct**: `/magic.dev.simulate {workflow}` or `/magic.dev.simulate {workflow} {mode}` (e.g., `/magic.dev.simulate spec analyze`). Targets specific logic or sub-modes. Also accepts file paths (e.g., `@/path/to/workflow.md`) — extract the workflow name from the filename.
 - **Improv**: Default if 0 args. Synthesize a crisis scenario following the **Crisis Template** (see below) and perform a **Cognitive Walkthrough** of the full SDD chain (Spec→Task→Run) on this imaginary state to find leaks.
 
 ### 1a. Crisis Template (Improv Mode Only)
@@ -95,9 +95,9 @@ Scan the target workflow(s) for:
   - **Invariant Compliance** (1-10): Score = `Rules_Followed / Rules_Applicable × 10`. Cross-check workflow steps against all applicable Core Invariants from the target `.md` file.
 - **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
-- **C14 Enforcement Gate**: After all patches are applied, verify: were any `.magic/` files modified during this `/magic.simulate` invocation? If yes → run `node .magic/scripts/executor.js update-engine-meta --workflow {modified_workflows}` **immediately**, before reporting results. Do NOT defer to end-of-conversation. This is a blocking step — simulation is not complete until checksums match.
-- **Succession**: Run `/magic.simulate test` post-fix to ensure 0 regressions. **Max 2 rounds**: if a second Succession pass still finds new failures, report remaining issues and stop — do not loop indefinitely.
-  - **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For high-confidence results, recommend the user start a **new chat session** and run `/magic.simulate test` independently. Always append this note to the final report: `"⚠ Succession ran in-context. For unbiased verification, run /magic.simulate test in a fresh session."`
+- **C14 Enforcement Gate**: After all patches are applied, verify: were any `.magic/` files modified during this `/magic.dev.simulate` invocation? If yes → run `node .magic/scripts/executor.js update-engine-meta --workflow {modified_workflows}` **immediately**, before reporting results. Do NOT defer to end-of-conversation. This is a blocking step — simulation is not complete until checksums match.
+- **Succession**: Run `/magic.dev.simulate test` post-fix to ensure 0 regressions. **Max 2 rounds**: if a second Succession pass still finds new failures, report remaining issues and stop — do not loop indefinitely.
+  - **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For strictly unbiased results, recommend the user start a **new chat session** and run `/magic.dev.simulate test` independently. Always append this note to the final report: `"⚠ Succession ran in-context. For unbiased verification, run /magic.dev.simulate test in a fresh session."`
 
 ## Simulation Completion Checklist
 

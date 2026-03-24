@@ -7,7 +7,7 @@ description: Workflow for analyzing existing projects and generating initial spe
 Audits project health, syncs registries, and reverse-engineers code into `.design/` spec proposals.
 
 **Triggers**: `/magic.analyze [arg]`, "Ventilate", "Analyze project", "Scan project", "Re-analyze"
-**Examples**: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "проверь покрытие API"`, `/magic.analyze installers "фокус на тестах"`
+**Examples**: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "check API coverage"`, `/magic.analyze installers "focus on tests"`
 
 ## Core Invariants (Mandatory)
 
@@ -30,8 +30,8 @@ Parse the `[arg]` to determine the analysis mode:
 | :--- | :--- | :--- |
 | *(empty)* | No argument | **Full Analysis**: Resolve workspace via §Workspace Resolution, then Mode C → A/B |
 | `engine` | Matches a workspace name in `workspace.json` | **Workspace Analysis**: Mode C (with Structural Integrity) → A/B scoped to that workspace |
-| `"проверь API"` | Quoted text or text that does NOT match any workspace name | **Focused Analysis**: Mode D — interpret text as focus directive |
-| `engine "фокус на тестах"` | First token is workspace + remaining is quoted text | **Workspace + Focus**: Mode D scoped to workspace |
+| `"check API"` | Quoted text or text that does NOT match any workspace name | **Focused Analysis**: Mode D — interpret text as focus directive |
+| `engine "focus on tests"` | First token is workspace + remaining is quoted text | **Workspace + Focus**: Mode D scoped to workspace |
 
 > **Disambiguation**: If the argument is a single unquoted word that matches both a workspace name and could be a focus keyword, workspace takes priority. To force focus interpretation, wrap in quotes: `/magic.analyze "engine"`.
 
@@ -104,7 +104,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Orphaned**: Spec refers to deleted code.
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Name, title, or semantic similarity >80% → Propose rename/sync. If structural similarity <50% despite path correlation → Treat as **Uncovered** (New Spec) + **Orphaned** (Delete Old Spec).
-    - **Logic Evolution**: If code structure/logic inside covered directories has structurally drifted (e.g., >30% new sub-modules, API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation. If approved: dispatch via `spec.md` Amendment Rule (Stable → RFC). C12 cascade applies to all L2 dependents of the affected spec.
+    - **Logic Evolution**: If code structure/logic inside covered directories has structurally drifted (e.g., >30% new sub-modules — defined as new directories or files containing logic exports; or API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation. If approved: dispatch via `spec.md` Amendment Rule (Stable → RFC). C12 cascade applies to all L2 dependents of the affected spec.
 4. **Advisory**: Generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
 ### [Mode C] Project Ventilation
@@ -129,7 +129,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **RESCUE (AOP)**: For each orphaned spec + uncovered directory pair, check name, path, title, or semantic similarity. If overall similarity >80%, classify as `RESCUE` (rename opportunity) instead of separate Gap + Orphan entries.
 5. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings: "Directory '{dir}' is not in any workspace scope — invisible to scoped analysis. Consider adding a workspace or extending an existing scope."
 6. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-7. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered).
+7. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered). If repairs involve modifying `.magic/` files, C14 meta-sync applies.
 8. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 9. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 

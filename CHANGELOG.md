@@ -142,7 +142,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.3.1] - 2026-02-27### Added
 
-- **Workflow Test Suite** (`.magic/tests/suite.md`): 16 predefined regression test scenarios covering all 8 engine workflows. Run via `/magic.simulate test`.
+- **Workflow Test Suite** (`.magic/tests/suite.md`): 16 predefined regression test scenarios covering all 8 engine workflows. Run via `/magic.dev.simulate test`.
 - **Test Suite mode** in `simulate.md`: reads `suite.md` and reports PASS/FAIL for each scenario.
 - **Template directory** (`.magic/templates/`): extracted inline templates from core workflow files:
   - `specification.md` — Specification Template (from `spec.md`)

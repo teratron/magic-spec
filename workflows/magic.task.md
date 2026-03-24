@@ -23,7 +23,7 @@ Arguments:
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magic.task`, `/magic.task engine`, `/magic.task "декомпозируй phase-2 детальнее"`, `/magic.task installers "только новые спеки"`
+Examples: `/magic.task`, `/magic.task engine`, `/magic.task "decompose phase-2 in more detail"`, `/magic.task installers "only new specs"`
 
 **Scope:**
 

@@ -11,4 +11,4 @@
 | 1.4.9 - 1.4.140 | 2026-03-05 | Automated update via engine meta automation |
 | 1.4.149 | 2026-03-09 | Add Argument Routing, Mode D (Focused Analysis), Structural Integrity, Advisory Report, Scope Blind-Spot Check, exact string match in Registry Audit, C15 exception for Mode D |
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
-| 1.4.166 - 1.5.35 | 2026-03-20 | Automated update via engine meta automation |
+| 1.4.166 - 1.5.45 | 2026-03-24 | Automated update via engine meta automation |

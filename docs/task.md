@@ -56,8 +56,8 @@ The Task workflow accepts optional arguments to control scope and behavior:
 ```
 /magic.task                              # Full planning across all workspaces
 /magic.task engine                       # Scoped planning for a specific workspace
-/magic.task "декомпозируй phase-2"       # Guided planning with focus or instructions
-/magic.task installers "только новые"    # Scoped + guided planning
+/magic.task "decompose phase-2"       # Guided planning with focus or instructions
+/magic.task installers "only new ones"    # Scoped + guided planning
 ```
 
 | Input | Mode | Behavior |

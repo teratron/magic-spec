@@ -91,9 +91,9 @@ All three core workflows support **argument routing** to scope operations to a s
 
 ```
 /magic.task engine                        # Plan only for the "engine" workspace
-/magic.task "декомпозируй phase-2"        # Guided planning with focus
+/magic.task "decompose phase-2"        # Guided planning with focus
 /magic.run installers "phase-1"           # Execute phase 1 in "installers" workspace
-/magic.analyze "проверь API покрытие"     # Focused analysis on a specific area
+/magic.analyze "check API coverage"     # Focused analysis on a specific area
 ```
 
 ### 3. Executing Tasks

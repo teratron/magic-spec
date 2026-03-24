@@ -6,7 +6,7 @@ This document defines the core principles and structural hierarchy for AI agents
 
 The project is divided into three primary logical layers:
 
-### 1.1. Core Engine (`.magic/`, `workflows/`, & `.agents/workflows/`)
+### 1.1. Core Engine (`.magic/`, `workflows/`, `.agents/workflows/`)
 
 - **Path**: `/.magic/` (Internal Logic), `/workflows/magic.*.md` (User Workflows), and `/.agents/workflows/` (Dev Workflows)
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
@@ -75,14 +75,14 @@ The project strictly adheres to **uv-first** philosophy.
 Always initialize and activate the environment before execution:
 
 ```bash
-# Initialization
-uv sync
-
 # Activation (Windows)
 .venv\Scripts\activate
 
 # Activation (Linux)
 source .venv/bin/activate
+
+# Initialization
+uv sync
 ```
 
 ```bash

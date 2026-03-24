@@ -48,17 +48,7 @@ function run() {
         const relativePath = path.relative(MAGIC_DIR, fullPath).replace(/\\/g, '/');
 
         // Skip the checksums file itself to avoid recursive hash changes
-        if (relativePath === CHECKSUMS_FILE) {
-            // Keep the existing hash if it exists, or use a placeholder
-            // In this version, we'll just preserve the old value if present to maintain structure
-            try {
-                const current = JSON.parse(fs.readFileSync(CHECKSUMS_PATH, 'utf8'));
-                checksums[CHECKSUMS_FILE] = current[CHECKSUMS_FILE] || 'meta-checksum-placeholder';
-            } catch (e) {
-                checksums[CHECKSUMS_FILE] = 'meta-checksum-placeholder';
-            }
-            return;
-        }
+        if (relativePath === CHECKSUMS_FILE) return;
 
         checksums[relativePath] = getFileHash(fullPath);
     });

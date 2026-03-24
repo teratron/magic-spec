@@ -65,7 +65,7 @@ The Run workflow accepts optional arguments to control execution scope:
 /magic.run engine                           # Scoped execution within a workspace
 /magic.run "T-1A01"                         # Execute a specific task by ID
 /magic.run "phase-2"                        # Execute all Todo tasks in a specific phase
-/magic.run installers "только валидацию"    # Scoped + directed execution
+/magic.run installers "validation only"    # Scoped + directed execution
 ```
 
 | Input | Mode | Behavior |

@@ -18,5 +18,5 @@ Arguments:
 - `"text"` — focused analysis on a specific area/concern
 - `{workspace} "text"` — focused analysis within a workspace
 
-Examples: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "проверь API"`, `/magic.analyze installers "фокус на тестах"`
+Examples: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "check API"`, `/magic.analyze installers "focus on tests"`
 // turbo-all
