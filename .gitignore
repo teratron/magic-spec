@@ -44,12 +44,13 @@ CLAUDE.md
 GEMINI.md
 QWEN.md
 .*/workflows/
+!.agents/workflows/
+.agents/workflows/*
+!.agents/workflows/magic.dev.*.md
 .*/commands/
 .*/prompts/
 .*/skills/
 .*/rules/
-!.agents/workflows/magic.dev.*.md
-#!.agents/workflows/magic.dev.publish.md
 !.agents/skills/
 !.agents/rules/
 
