@@ -10,7 +10,7 @@ Universal process for managing project specifications in `.design/specifications
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise. (Full resolution table: see `analyze.md` §Workspace Resolution.)
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code only. If implementation code is detected during any update or creation → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
@@ -162,7 +162,8 @@ graph TD
       - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending drift resolution." Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. If a name collision with a version mismatch is found → **HALT** before writing. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Resolve before proceeding: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore (document reason)."
     - **Existence Guard**: If target file is in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
-      - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending file resolution." Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file is restored or remapped.
+    - **Parent Existence Guard**: If target is a Layer 2 spec, verify its Layer 1 parent (defined in `Implements:`) exists on disk in the specified (or resolved) workspace. If parent is missing → **HALT**. Report: "L2 Orphan: Parent spec `{parent-file}` is missing from disk. Restore parent before updating L2."
+      - **T4 Queue**: If the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: "T4 rule detected — queued pending file resolution." Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file (and parent) is restored or remapped.
     - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
     - **C12 (Quarantine)**: If L1 status drops (Stable → RFC/Draft):
         1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).

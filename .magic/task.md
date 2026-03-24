@@ -55,7 +55,6 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace {active-workspace}`.
     - **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
-    - `checksums_mismatch` → **HALT**. Restore engine first.
     - **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before planning." This catches manual edits that bypassed the spec workflow.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
 2. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
@@ -66,8 +65,9 @@ graph TD
     - **Tracks**: Group tasks by file independence.
     - **Testing (Mandatory)**: Every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
 6. **Sync (Update Mode)**:
-    - **C12 Quarantine**: If L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → Move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: "L1 parent `{file}` is `{status}` (C12)". **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
+    - **C12 Quarantine**: If L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → Move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: "L1 parent `{file}` is `{status}` (C12)". **Cross-Workspace C12**: If the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
     - **Phantom Specs**: If spec in PLAN/INDEX but missing from disk → Cancel `Todo` / `Pending`; archive `Done`. Block active tasks.
+    - **Phantom Parent Guard**: If an L2 spec's parent is missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: "Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2)." Move L2 to `## Backlog` with reason: "Missing L1 Parent (Phantom)."
     - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: Keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
     - **Renames**: Global search-and-replace on filename changes (exclude archives).
 

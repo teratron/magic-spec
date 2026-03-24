@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.49
+**Version:** 1.9.50
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2574,6 +2574,21 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Match found: agent suggests "Did you mean `auth-servce.md`? Registry sync recommended."
 - **Guards tested:** RESCUE (AOP) with quantified Levenshtein threshold.
 
+### T167 — Task Cross-Workspace C12 Quarantine
+
+- **Workflow:** `task.md` (C12 Quarantine)
+- **Synthetic State:**
+  - Active workspace `installers`. `installers/INDEX.md` references `cli.md` (L2).
+  - `cli.md` has `Implements: ../engine/core.md`.
+  - `engine/INDEX.md` lists `core.md` (L1) as `Draft`.
+- **Action:** Agent runs `magic.task` for `installers` workspace.
+- **Expected:**
+  - [ ] Agent reads `installers/INDEX.md` AND cross-references `engine/INDEX.md` for the parent.
+  - [ ] Agent detects `core.md` is NOT `Stable` in `engine/INDEX.md`.
+  - [ ] C12 Quarantine triggered: `cli.md` tasks moved to Backlog.
+  - [ ] `cli.md` tasks marked `Blocked [!]` with C12 reason.
+- **Guards tested:** Cross-Workspace C12 Quarantine, multi-INDEX lookup.
+
 ```
-**Test Suite Finalized** — v1.9.49 (Last: T166)
+**Test Suite Finalized** — v1.9.50 (Last: T167)
 ```
