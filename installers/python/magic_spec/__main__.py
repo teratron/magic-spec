@@ -392,9 +392,10 @@ def _detect_environments(dest: pathlib.Path, adapters: dict) -> list[str]:
 
 
 def _resolve_package_version() -> str:
-    # In a real tool, this would call PyPI/NPM API.
-    # For now, we return a hardcoded version.
-    return "1.4.2"
+    """Returns the installed package version from __init__.py."""
+    from magic_spec import __version__
+
+    return __version__
 
 
 def run_doctor(dest: pathlib.Path) -> int:

@@ -31,8 +31,8 @@ magic-spec/                         # github.com/teratron/magic-spec
 │   ├── rules/                      #    Internal dev constraints
 │   ├── skills/                     #    Dev skills (skill-creator, etc.)
 │   └── workflows/
-│       ├── magic.dev.simulate.md   #    Engine simulation & debugging
-│       └── magic.*.md              #    Hardlinks -> workflows/magic.*.md
+│       ├── magic.dev.simulate.md   #    Engine simulation & debugging (dev-only)
+│       └── magic.*.md              #    Hardlinks (Win) / Symlinks (Unix) -> workflows/
 │
 ├── .claude/                        # 🤖 Claude Desktop internal config
 │   ├── commands/                   #    Junction -> .agents/workflows/

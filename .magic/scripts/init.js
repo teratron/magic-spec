@@ -209,6 +209,46 @@ To prevent context bleed-over and hallucination loops, the SDD workflow strictly
 2. **Phase Transition (Phase Gates)**: Once a major phase completes (e.g., Specs are \`Stable\`), the current chat MUST be closed. **Note**: giving a text command like "forget previous instructions" does NOT clear context memory reliably. You must physically click the "New Chat" (or equivalent) button in your IDE/interface.
 3. **Execution (Phases 2 & 3)**: Planning (\`/magic.task\`) and Coding (\`/magic.run\`) MUST each be started in a brand-new, clean chat session. This forces the agent to read the committed files as the singular source of truth, eliminating reliance on ephemeral chat memory.
 
+### C18 — Payload Security
+
+The installers (Node/Python) must verify payload integrity (checksums) and prevent Path Traversal attacks during extraction. Deployment must be atomic to prevent partial engine states.
+
+### C19 — Cross-Env CLI Parity
+
+Node and Python installers must maintain strict CLI parity. Every command-line flag (e.g., \`--yes\`, \`--update\`, \`--check\`) must behave identically across both implementations to ensure a consistent user experience.
+
+### C20 — Auto-Heal Recovery
+
+The engine must proactively identify and repair its own metadata. If \`executor.js\` detects missing history files or corrupted checksums during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
+
+### C21 — Project Ventilation (Analyze)
+
+The command \`/magic.analyze\` (or \`Analyze project\`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against \`INDEX.md\` and \`RULES.md\`. It must identify:
+
+- **Registry Drift**: Specs in INDEX but missing on disk.
+- **Coverage Gaps**: Code folders without corresponding specs.
+- **Rule Violations**: Code patterns that contradict \`RULES.md §7\` (both global and workspace tiers).
+- **Integrity Issues**: Mismatched checksums in \`.magic/\`.
+
+### C22 — Workspace Rule Inheritance
+
+Each workspace may maintain a local \`RULES.md\` at \`.design/{workspace}/RULES.md\`. These files:
+
+1. Contain only workspace-specific §7 conventions, identified as \`WC1\`, \`WC2\`, … (workspace convention).
+2. Inherit all §1–6 universal rules and global §7 conventions from \`.design/RULES.md\` — no re-declaration needed.
+3. Must not contradict the global constitution (Constitutional Guard applies equally).
+4. Are created on demand by \`magic.rule\` when the first workspace-scoped rule is requested.
+5. Version independently from the global \`RULES.md\`.
+
+### C23 — Context Economy & Validation Caching
+
+To minimize redundant resource usage and improve performance, the agent may optimize \`check-prerequisites\` calls within a single task lifecycle:
+
+1. **Turn-Aware Caching**: If \`check-prerequisites\` returned \`ok: true\` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in \`.magic/\` or \`.design/\` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
+2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. \`git pull\`, manual edits in terminal), the agent MUST perform a fresh \`check-prerequisites\` call.
+3. **Halt Persistence**: If the previous check returned an error or warning (e.g. \`checksums_mismatch\`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
+4. **Audit Exemption**: In \`/magic.analyze\` (Ventilation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
+
 ## Document History
 | Version | Date | Description |
 | :--- | :--- | :--- |

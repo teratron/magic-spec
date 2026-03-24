@@ -29,10 +29,11 @@ args = finalArgs;
 
 let magicDesignDir = '.design';
 const workspaceJsonPath = path.join(process.cwd(), '.design', 'workspace.json');
+let workspaceData = null;
 
 if (fs.existsSync(workspaceJsonPath)) {
     try {
-        const workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
+        workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
         if (!workspaceName && workspaceData.default) {
             workspaceName = workspaceData.default;
         }
@@ -65,17 +66,12 @@ if (fs.existsSync(workspaceJsonPath)) {
     process.exit(1);
 }
 
-// Expose MAGIC_DESIGN_DIR and optional MAGIC_WORKSPACE_SCOPE to child completely
+// Expose MAGIC_DESIGN_DIR and optional MAGIC_WORKSPACE_SCOPE to child
 const envVars = { MAGIC_DESIGN_DIR: magicDesignDir };
-if (fs.existsSync(workspaceJsonPath)) {
-    try {
-        const workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
-        const workspace = workspaceData.workspaces && workspaceData.workspaces[workspaceName];
-        if (workspace && Array.isArray(workspace.scope)) {
-            envVars.MAGIC_WORKSPACE_SCOPE = workspace.scope.join(',');
-        }
-    } catch (e) {
-        // Silent fail as we're just injecting metadata
+if (workspaceData) {
+    const workspace = workspaceData.workspaces && workspaceData.workspaces[workspaceName];
+    if (workspace && Array.isArray(workspace.scope)) {
+        envVars.MAGIC_WORKSPACE_SCOPE = workspace.scope.join(',');
     }
 }
 const childEnv = Object.assign({}, process.env, envVars);

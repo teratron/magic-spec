@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-03-15
+**Generated:** 2026-03-24
 
 ## Active Technologies
 
@@ -13,11 +13,14 @@
 .
 ├── .agents/
 │   ├── rules/
+│   ├── skills/
 │   └── workflows/
 ├── .claude/
 │   ├── commands/
 │   ├── rules/
-│   └── settings.local.json
+│   ├── settings.json
+│   ├── settings.local.json
+│   └── skills/
 ├── .design/
 │   ├── INDEX.md
 │   ├── RULES.md
@@ -44,17 +47,27 @@
 │   └── tests/
 ├── .markdownlint.json
 ├── .npmrc
+├── .pytest_cache/
+│   ├── .gitignore
+│   ├── CACHEDIR.TAG
+│   ├── README.md
+│   └── v/
+├── .ruff_cache/
+│   ├── .gitignore
+│   ├── 0.15.7/
+│   └── CACHEDIR.TAG
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
+├── CONTRIBUTING.md
 ├── LICENSE
+├── QWEN.md
 ├── README.md
 ├── docs/
 │   ├── README.md
 │   ├── analyze.md
 │   ├── checksums.md
 │   ├── conception.md
-│   ├── contributing.md
 │   ├── init.md
 │   ├── retrospective.md
 │   ├── rule.md
@@ -64,6 +77,7 @@
 │   └── task.md
 ├── installers/
 │   ├── README.md
+│   ├── __init__.py
 │   ├── adapters.json
 │   ├── config.json
 │   ├── node/
@@ -71,9 +85,17 @@
 │   ├── scripts/
 │   └── tests/
 ├── package.json
-└── pyproject.toml
+├── pyproject.toml
+├── uv.lock
+└── workflows/
+    ├── magic.analyze.md
+    ├── magic.rule.md
+    ├── magic.run.md
+    ├── magic.spec.md
+    └── magic.task.md
 ```
 
 ## Recent Changes
 
 No recent changelog found.
+

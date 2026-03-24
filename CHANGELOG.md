@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.31] - 2026-03-24
+
+### Fixed
+
+- **Sandbox Cleanup**: Removed dev-only `simulate.md` from installer test sandbox (2 files).
+- **RULES Template**: Added missing conventions C18-C23 to `init.js` RULES.md generator. New user projects now receive the complete constitution.
+- **Python Installer**: Fixed `_resolve_package_version()` — was hardcoded to `"1.4.2"`, now reads actual package version (C19 parity).
+- **Engine Scripts**: Deduplicated `workspace.json` reads in `executor.js` (was parsed twice per invocation).
+
+## [1.5.30] - 2026-03-24
+
+### Fixed
+
+- **Version Synchronization**: Unified project version across `package.json` (was 1.5.0), `pyproject.toml` (was 1.4.162), and `__init__.py` (was 1.4.162) to a single `1.5.30`. Previously 5 different versions existed across 5 sources.
+- **CONTEXT.md**: Regenerated stale context file (was 9 days old).
+
 ## [1.5.29] - 2026-03-16
 
 ### Added
