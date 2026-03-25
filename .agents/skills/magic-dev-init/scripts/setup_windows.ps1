@@ -46,7 +46,7 @@ $linksToRemove = @(
     ".qwen\skills",
     ".qwen\rules"
 )
-foreach ($f in $workflows) { $linksToRemove += ".agents\workflows\magic.$f.md" }
+foreach ($f in $workflows) { $link\sToRemove += ".agents\workflows\magic.$f.md" }
 foreach ($f in $agentFiles) { $linksToRemove += "$f" }
 git rm -r --cached --ignore-unmatch $linksToRemove 2>$null
 
