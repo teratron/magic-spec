@@ -11,7 +11,7 @@ echo ">>> Initializing Unix/macOS Agent Environment..."
 # 1. Git Index Maintenance (MUST run BEFORE creating symlinks — see AGENTS.md §6)
 echo "Synchronizing git index (pre-link)..."
 agentFiles="CLAUDE.md GEMINI.md QWEN.md"
-links=".claude/commands .claude/skills .claude/rules .qwen/commands .qwen/skills .qwen/rules"
+links=".claude/commands .claude/skills .claude/rules .qwen/commands .qwen/skills .qwen/rules .gemini/commands .gemini/skills .gemini/rules"
 for f in analyze rule run spec task; do
   links="$links .agents/workflows/magic.$f.md"
 done
@@ -20,20 +20,14 @@ for f in $agentFiles; do
 done
 git rm -r --cached --ignore-unmatch $links 2>/dev/null || true
 
-# 2. Create agent symlinks (.claude, .qwen)
-mkdir -p .claude .qwen
-
-# .claude
-rm -rf .claude/commands .claude/skills .claude/rules
-ln -s ../.agents/workflows .claude/commands
-ln -s ../.agents/skills .claude/skills
-ln -s ../.agents/rules .claude/rules
-
-# .qwen
-rm -rf .qwen/commands .qwen/skills .qwen/rules
-ln -s ../.agents/workflows .qwen/commands
-ln -s ../.agents/skills .qwen/skills
-ln -s ../.agents/rules .qwen/rules
+# 2. Create agent symlinks (.claude, .qwen, .gemini)
+for agent in .claude .qwen .gemini; do
+  mkdir -p $agent
+  rm -rf $agent/commands $agent/skills $agent/rules
+  ln -s ../.agents/workflows $agent/commands
+  ln -s ../.agents/skills $agent/skills
+  ln -s ../.agents/rules $agent/rules
+done
 
 # 3. Global Agent Instructions (Linking to AGENTS.md)
 echo "Linking agent instruction files..."
@@ -53,7 +47,7 @@ for f in analyze rule run spec task; do
 done
 
 echo -e "\n>>> Verification:"
-verifyLinks=".claude/commands .claude/skills .claude/rules .qwen/commands .qwen/skills .qwen/rules"
+verifyLinks=".claude/commands .claude/skills .claude/rules .qwen/commands .qwen/skills .qwen/rules .gemini/commands .gemini/skills .gemini/rules"
 for f in $agentFiles; do
   verifyLinks="$verifyLinks $f"
 done
