@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.49] - 2026-03-25
+
+### Added
+
+- **Config Drift Guard**: `check-prerequisites` now detects uncommitted manual changes to `RULES.md` via `git diff` and emits a non-blocking `CONFIG_DRIFT` advisory warning. Supports workspace-specific `RULES.md` per C22. Gracefully skips when git is unavailable.
+- **Init Workflow**: Added Config Drift Advisory sub-step to pre-flight check (show diff / proceed / restore options).
+- **Test Suite**: Added cognitive tests T168-T170 for config drift detection (drift present, no git, workspace C22). Suite version bumped to 1.9.51.
+- **Engine Spec**: New `config-drift-guard.md` specification (Stable, L1) in engine workspace.
+
 ## [1.5.48] - 2026-03-24
 
 ### Added

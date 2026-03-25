@@ -36,6 +36,7 @@ graph TD
         - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
     - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
     - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
+    - **Config Drift Advisory**: If output contains `CONFIG_DRIFT` warnings → display non-blocking warning: "RULES.md was modified outside workflow. (a) Show diff, (b) Proceed, (c) Restore from HEAD." This is advisory only — do NOT halt. User may proceed without action.
 2. **Init**: `node .magic/scripts/executor.js init`.
     - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
 3. **Verify**: Ensure all 5 artifacts exist. HALT on failure.

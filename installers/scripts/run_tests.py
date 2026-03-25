@@ -44,6 +44,7 @@ def reset_sandbox():
     SANDBOX_PATH.mkdir(parents=True, exist_ok=True)
     print(f"🧹 Sandbox reset: {SANDBOX_PATH}")
 
+
 def run_cmd(cmd, cwd=None, env=None):
     """Runs a shell command and captures output.
 

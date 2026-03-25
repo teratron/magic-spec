@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.50
+**Version:** 1.9.51
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2589,6 +2589,47 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `cli.md` tasks marked `Blocked [!]` with C12 reason.
 - **Guards tested:** Cross-Workspace C12 Quarantine, multi-INDEX lookup.
 
+### T168 — Config Drift Detection (Git Available, Drift Present)
+
+- **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
+- **Synthetic State:**
+  - `.design/RULES.md` exists and is tracked by git.
+  - Git repo is initialized. `git diff HEAD -- .design/RULES.md` returns non-empty output (§7 C3 was manually deleted).
+- **Action:** `check-prerequisites --json --workspace engine`
+- **Expected:**
+  - [ ] `CONFIG_DRIFT` warning present in JSON output for `.design/RULES.md`.
+  - [ ] Warning message includes file path and "modified outside workflow".
+  - [ ] Warning is non-blocking: `ok` field is NOT affected by CONFIG_DRIFT alone.
+  - [ ] Agent displays advisory with options: show diff / proceed / restore.
+- **Guards tested:** Config Drift Guard, non-blocking advisory pattern.
+
+### T169 — Config Drift Detection (No Git)
+
+- **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
+- **Synthetic State:**
+  - `.design/RULES.md` exists.
+  - No git repository (`.git/` missing or `git` not in PATH).
+- **Action:** `check-prerequisites --json --workspace engine`
+- **Expected:**
+  - [ ] No `CONFIG_DRIFT` warning in output.
+  - [ ] No error or crash from git absence.
+  - [ ] All other checks (ENGINE_INTEGRITY, specs) function normally.
+- **Guards tested:** Config Drift Guard graceful degradation.
+
+### T170 — Config Drift Detection (Workspace-Specific RULES.md, C22)
+
+- **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
+- **Synthetic State:**
+  - `.design/RULES.md` (global) exists, no uncommitted changes.
+  - `.design/engine/RULES.md` (workspace-specific) exists with uncommitted changes.
+  - Git repo is initialized.
+- **Action:** `check-prerequisites --json --workspace engine`
+- **Expected:**
+  - [ ] `CONFIG_DRIFT` warning present for `.design/engine/RULES.md` only.
+  - [ ] No warning for `.design/RULES.md` (unchanged).
+  - [ ] C22 workspace rule inheritance respected in drift check scope.
+- **Guards tested:** Config Drift Guard, C22 Workspace Rule Inheritance.
+
 ```
-**Test Suite Finalized** — v1.9.50 (Last: T167)
+**Test Suite Finalized** — v1.9.51 (Last: T170)
 ```

@@ -97,5 +97,4 @@
 
 ## Recent Changes
 
-No recent changelog found.
-
+- **v1.5.49** (2026-03-25): Config Drift Guard — added `CONFIG_DRIFT` detection to `check-prerequisites`, documented in `init.md`, tested via T168-T170. Phase 1 complete (3/3 tasks done).

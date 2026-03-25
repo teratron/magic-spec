@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { execSync } = require('child_process');
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
@@ -196,6 +197,53 @@ if (planExists && indexExists) {
         }
     }
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Config Drift Detection (C22-aware)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Check if RULES.md files have uncommitted changes (manual edits outside workflow).
+ * Uses git diff when available; skips silently if git is not installed or not a repo.
+ */
+function checkConfigDrift() {
+    try {
+        // Verify git is available and we're in a repo
+        execSync('git rev-parse --is-inside-work-tree', { stdio: 'pipe' });
+    } catch {
+        return; // No git or not a repo — skip silently
+    }
+
+    const rulesToCheck = [rulesPath];
+
+    // C22: Also check workspace-specific RULES.md if it exists
+    if (designDir !== '.design') {
+        const wsRulesPath = path.join(designDir, 'RULES.md');
+        if (fs.existsSync(wsRulesPath) && !rulesToCheck.includes(wsRulesPath)) {
+            rulesToCheck.push(wsRulesPath);
+        }
+    }
+
+    for (const rPath of rulesToCheck) {
+        try {
+            const diff = execSync(`git diff HEAD -- "${rPath.replace(/\\/g, '/')}"`, {
+                encoding: 'utf8',
+                stdio: ['pipe', 'pipe', 'pipe']
+            });
+            if (diff.trim().length > 0) {
+                warn(
+                    'CONFIG_DRIFT',
+                    `'${rPath.replace(/\\/g, '/')}' has uncommitted changes (modified outside workflow).`,
+                    'Review changes: git diff HEAD -- ' + rPath.replace(/\\/g, '/')
+                );
+            }
+        } catch {
+            // git diff failed for this path — skip silently
+        }
+    }
+}
+
+checkConfigDrift();
 
 const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY');
 const ok = missing.length === 0 && integrity_ok;
