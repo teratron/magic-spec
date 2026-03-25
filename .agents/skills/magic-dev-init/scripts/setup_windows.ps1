@@ -41,7 +41,10 @@ Write-Host "Synchronizing git index (pre-link)..." -ForegroundColor Cyan
 $linksToRemove = @(
     ".claude\commands",
     ".claude\skills",
-    ".claude\rules"
+    ".claude\rules",
+    ".qwen\commands",
+    ".qwen\skills",
+    ".qwen\rules"
 )
 foreach ($f in $workflows) { $linksToRemove += ".agents\workflows\magic.$f.md" }
 foreach ($f in $agentFiles) { $linksToRemove += "$f" }
@@ -56,19 +59,28 @@ cmd /c "mklink /J .claude\commands .agents\workflows"
 cmd /c "mklink /J .claude\skills .agents\skills"
 cmd /c "mklink /J .claude\rules .agents\rules"
 
-# 3.3. Global Agent Instructions (Linking to AGENTS.md)
+# 3.3. .qwen junctions
+if (-not (Test-Path ".qwen")) { New-Item -ItemType Directory -Path ".qwen" -Force }
+Remove-Existing ".qwen\commands"
+Remove-Existing ".qwen\skills"
+Remove-Existing ".qwen\rules"
+cmd /c "mklink /J .qwen\commands .agents\workflows"
+cmd /c "mklink /J .qwen\skills .agents\skills"
+cmd /c "mklink /J .qwen\rules .agents\rules"
+
+# 3.4. Global Agent Instructions (Linking to AGENTS.md)
 Write-Host "Linking agent instruction files..." -ForegroundColor Cyan
 foreach ($f in $agentFiles) { 
     Remove-Existing $f
     cmd /c "mklink /H $f AGENTS.md"
 }
 
-# 3.4. .agents junctions
+# 3.5. .agents junctions
 if (-not (Test-Path ".agents\workflows")) { New-Item -ItemType Directory -Path ".agents\workflows" -Force }
 if (-not (Test-Path ".agents\skills")) { New-Item -ItemType Directory -Path ".agents\skills" -Force }
 if (-not (Test-Path ".agents\rules")) { New-Item -ItemType Directory -Path ".agents\rules" -Force }
 
-# 3.5. Workflow hardlinks
+# 3.6. Workflow hardlinks
 Write-Host "Creating workflow hardlinks..." -ForegroundColor Cyan
 foreach ($f in $workflows) {
     $name = "magic.$f.md"
@@ -80,6 +92,7 @@ foreach ($f in $workflows) {
 
 Write-Host "`n>>> Verification:" -ForegroundColor Green
 cmd /c "dir .claude\commands .claude\skills .claude\rules /AL"
+cmd /c "dir .qwen\commands .qwen\skills .qwen\rules /AL"
 
 Write-Host "`n>>> Hardlink Integrity Check (AGENTS.md):" -ForegroundColor Cyan
 cmd /c "fsutil hardlink list AGENTS.md"
