@@ -20,7 +20,8 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
     - **<50 files**: Auto-scan.
     - **50-500 files**: Ask: Full or Focused?
     - **>500 files**: Recommend Focused/Quick. HALT for user choice.
-7. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze` (Smart History: redundant automated entries are skipped).
+7. **Gitignore Safety (Invariant 8)**: If `.gitignore` exists in the project root or active workspace, the agent MUST read and apply its patterns before any scan. Files and directories matching these patterns (e.g., `node_modules/`, `.venv/`, `dist/`) are strictly out-of-scope for all analysis modes (A-D) and Project Ventilation (Mode C).
+8. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow analyze` (Smart History: redundant automated entries are skipped).
 
 ## Argument Routing
 
@@ -53,6 +54,7 @@ Parse the `[arg]` to determine the analysis mode:
 ### 1. Stack & Structure
 
 Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.toml`, `go.mod`, `pom.xml`, etc.). Build a high-level map using directory listing (depth 2 by default; extend to depth 3 only for monorepo root directories with nested `packages/` or `apps/`).
+**Gitignore Filtering**: Apply Invariant 8 filters *before* building the map to ensure build artifacts and ignored dependencies do not leak into the architecture inference or coverage check.
 **Isolation (C15)**: If `MAGIC_WORKSPACE_SCOPE` is defined, restrict scanning strictly to the specified directory paths.
 
 ### 2. Architecture Inference

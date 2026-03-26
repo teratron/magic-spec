@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.51] - 2026-03-26
+
+### Added
+
+- **Gitignore Safety (Invariant 8)** in `analyze.md`: The agent now MUST scan and apply `.gitignore` patterns before any project scan or architecture inference. This prevents `node_modules`, `dist`, `.venv`, and other build artifacts from leaking into the analysis reports or coverage checks.
+
+### Changed
+
+- **Stack & Structure**: Refined the initial scan step to build the high-level project map only *after* applying gitignore filters.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.51`, history updated, and checksums regenerated (C14).
+
 ## [1.5.50] - 2026-03-26
 
 ### Added
@@ -40,7 +54,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Version Synchronization**: Unified project version to `1.5.47` across all manifests (`package.json`, `pyproject.toml`, `__init__.py`) and the `.magic/.version` engine core.
+- **Version Synchronization**: Unified project version to `1.5.51` across all manifests (`package.json`, `pyproject.toml`, `__init__.py`) and the `.magic/.version` engine core.
 - **Instruction Density**: Refined `.magic/simulate.md` (Context Bleed Warning) to remove vague qualifiers ("high-confidence" -> "strictly unbiased"), reaching a density score of 10/10.
 - **Engine Integrity**: Optimized `generate-checksums.js` to exclude the `.checksums` file from its own mapping, preventing confusion and unstable hash values.
 
