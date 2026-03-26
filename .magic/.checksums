@@ -1,5 +1,5 @@
 {
-  ".version": "6a4838e1d4d7821913cf92d5db960497ebb7518973f686069249e033114e6039",
+  ".version": "cdebc4a0b5a1136600910b8e872a96f7aecf54aabb05715277b18b89f2570714",
   "analyze.md": "647d01baf7cbff57eb39fcbb3b9f5a525ae9c939bed4399e568d9995d6d97299",
   "init.md": "fd19cc5f6bf018835af66a86b32d3bedf86b15083cc0af1bd963494dd3b0664b",
   "retrospective.md": "aa710b711304ad2f02cc9feef82eb41fc15211aa07ef66ccbb4de01f8fce5893",
@@ -11,7 +11,7 @@
   "scripts/generate-context.js": "c0f3bdb6abc7de69bf6576e9bb1f4bb823e9ff3a4e15972a3aeae09f718f2732",
   "scripts/init.js": "4dc28ce08a34d5f29e82fc032afb3fc7847e737823943e67e562e1a456d77bcb",
   "simulate.md": "82d2d67bd56c3cd4623df44c66f1917ff1959ce7e29c966b17dbc89fe865c268",
-  "spec.md": "d21baa40986c5f3e638fdde0ac9a262285bca1c265286e26b84c9d4cd72eb3b0",
+  "spec.md": "674be7397eb5b06e16fe17cc09e8aeaf1120178569760d2a7113f693688b8f7f",
   "task.md": "39153b3c324f106cbf0ab69ed04932cd8198108de1c04ee60a18309e27f6dedb",
   "templates/micro-spec.md": "608a9c9534dd83d89e9a8efd39b8fa287bf4df4bd0df4de908d801fa2ad99340",
   "templates/plan.md": "d3328458e5cf50e9758910471fcd215e954c692a8dfbaa01505551c1a6f4aa22",

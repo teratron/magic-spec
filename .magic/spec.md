@@ -21,6 +21,7 @@ Universal process for managing project specifications in `.design/specifications
 9. **Delta-Editing**: For spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 10. **Closure**: Every task ends with mandatory "Task Completion Checklist".
 11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
+12. **Anti-Stall (Invariant 12)**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity.
 
 ## Directory Structure
 
@@ -92,6 +93,13 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 2. Identify "Uncovered" modules or logical next steps in the architecture.
 3. Propose 3 specific "Creative Sparks" (topics for new specs or refinement) and ask the user for direction or their own idea.
 
+### Mode Transition: Explore → Dispatch
+
+Explore Mode ends automatically, and the agent MUST transition to Dispatching/Writing when:
+1. User provides specific logic, features, or architectural constraints.
+2. User uses confirmation words ("go ahead", "do it", "looks good", "save").
+3. **Auto-Transfer**: If Trust Mode (C9) is active, the agent transitions after the 2nd idea exchange (1 prompt/1 reply cycle) to avoid stalling.
+
 ### Project Analysis Delegation
 
 **Trigger intent**: "/magic.analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate"
@@ -100,7 +108,7 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 
 1. **Act as a thinking partner**: Use available codebase reasoning tools (file search, content search, directory listing) to deeply analyze the user's request.
 2. **Draft safely**: Output thoughts directly to the chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
-3. **Strict Prohibition**: You MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents.
+3. **Actionable Guard (Analysis Mode ONLY)**: While in this delegated analysis mode, you MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents. This restriction is lifted immediately upon transition to Spec/Dispatch modes.
 4. **Transition**: Only update live specs when the user explicitly approves transitioning the brainstorm into a formal spec update (triggering *Dispatching from Raw Input* or *Updating an Existing Specification*).
 
 ### Dispatching from Raw Input
@@ -118,7 +126,7 @@ graph TD
 ```
 
 1. **Parse & Map**: Identify distinct topics and match to domains.
-2. **Auto-Confirm (Trust Mode, C9)**: Show the mapping as a "Notice of Intent". If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, proceed to **Dispatch** immediately. If conflicts detected → **HALT**. Present conflicts to user and wait for resolution before dispatching.
+2. **Dispatch Notice (Non-Blocking)**: Show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question.
 3. **Dispatch**: Write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content is complete per template. Otherwise keep as `Draft`.
 4. **Post-Update**:
     - Run **Post-Update Review**.

@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.50] - 2026-03-26
+
+### Added
+
+- **Anti-Stall Mechanism (Invariant 12)**: Solved the "AI holds specs in mind" issue (reported by user). The agent is now forced to write a `Draft` spec if it asks more than one clarifying question without file creation. Added `<!-- TBD -->` inline markers for ambiguous sections.
+- **Mode Transition Protocol**: Defined explicit triggers to exit `Explore Mode` and enter `Dispatch Mode` automatically (3+ topics, confirmation words, or 2nd idea exchange in Trust Mode).
+- **Non-Blocking Dispatch Notice**: Reframed "Notice of Intent" as a statement of action rather than a question to prevent infinite loops.
+
+### Changed
+
+- **Analysis Mode Scope**: Strictly limited the "do not modify specs/registry" prohibition to `Project Analysis Delegation` mode, allowing normal `Dispatch` to proceed without friction.
+- **Workflow Wrapper**: Updated `.agents/workflows/magic.spec.md` to align with the new non-blocking exploration logic.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.50`, history updated, and checksums regenerated (C14).
+
 ## [1.5.49] - 2026-03-25
 
 ### Added

@@ -42,4 +42,3 @@ Confirm that all links are active and point to correct targets inside the projec
 
 - [scripts/setup_windows.ps1](scripts/setup_windows.ps1) - Exact PowerShell/CMD command sequence for Windows.
 - [scripts/setup_unix.sh](scripts/setup_unix.sh) - Exact Bash command sequence for Linux/macOS.
-
