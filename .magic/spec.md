@@ -96,6 +96,7 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 ### Mode Transition: Explore → Dispatch
 
 Explore Mode ends automatically, and the agent MUST transition to Dispatching/Writing when:
+
 1. User provides specific logic, features, or architectural constraints.
 2. User uses confirmation words ("go ahead", "do it", "looks good", "save").
 3. **Auto-Transfer**: If Trust Mode (C9) is active, the agent transitions after the 2nd idea exchange (1 prompt/1 reply cycle) to avoid stalling.
