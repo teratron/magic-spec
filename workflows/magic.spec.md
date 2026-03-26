@@ -17,7 +17,7 @@ handoffs:
 **Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
 **Hints:**
 
-- **Explore Mode**: Do not modify live files during brainstorming until explicitly approved.
+- **Explore Mode**: Used for safe brainstorming. Transition to writing AUTOMATICALLY upon specific input or if Anti-Stall triggers (≥1 question asked without file creation). Do not stall.
 - **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
 - **T4 Rule Capture**: When input contains "remember that..." / "project rule:", spec workflow applies Tier Routing (global vs workspace RULES.md) and Duplication Check before writing — see §T4 Inline Guards in full implementation.
 Orchestration and execution are handled by `magic.task` and `magic.run`.
