@@ -11,7 +11,7 @@
 # ───────────────────────────────────────────────────────────────────────────────
 
 $workflows = @("analyze", "rule", "run", "spec", "task")
-$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md")
+$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md", "CODEX.md")
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Cleanup function
@@ -47,21 +47,28 @@ $linksToRemove = @(
     ".qwen\rules",
     ".gemini\commands",
     ".gemini\skills",
-    ".gemini\rules"
+    ".gemini\rules",
+    ".codex\prompts",
+    ".codex\skills",
+    ".codex\rules"
 )
 foreach ($f in $workflows) { $linksToRemove += ".agents\workflows\magic.$f.md" }
 foreach ($f in $agentFiles) { $linksToRemove += "$f" }
 git rm -r --cached --ignore-unmatch $linksToRemove 2>$null
 
-# 3.2. Agent junctions (.claude, .qwen, .gemini)
-$agentDirs = @(".claude", ".qwen", ".gemini")
+# 3.2. Agent junctions (.claude, .qwen, .gemini, .codex)
+$agentDirs = @(".claude", ".qwen", ".gemini", ".codex")
 
 foreach ($dir in $agentDirs) {
     if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
-    Remove-Existing "$dir\commands"
-    Remove-Existing "$dir\skills"
     Remove-Existing "$dir\rules"
-    cmd /c "mklink /J $dir\commands .agents\workflows"
+    if ($dir -eq ".codex") {
+        Remove-Existing "$dir\prompts"
+        cmd /c "mklink /J $dir\prompts .agents\workflows"
+    } else {
+        Remove-Existing "$dir\commands"
+        cmd /c "mklink /J $dir\commands .agents\workflows"
+    }
     cmd /c "mklink /J $dir\skills .agents\skills"
     cmd /c "mklink /J $dir\rules .agents\rules"
 }
@@ -92,6 +99,7 @@ Write-Host "`n>>> Verification:" -ForegroundColor Green
 cmd /c "dir .claude\commands .claude\skills .claude\rules /AL"
 cmd /c "dir .qwen\commands .qwen\skills .qwen\rules /AL"
 cmd /c "dir .gemini\commands .gemini\skills .gemini\rules /AL"
+cmd /c "dir .codex\prompts .codex\skills .codex\rules /AL"
 
 Write-Host "`n>>> Hardlink Integrity Check (AGENTS.md):" -ForegroundColor Cyan
 cmd /c "fsutil hardlink list AGENTS.md"

@@ -43,6 +43,7 @@ temp/
 CLAUDE.md
 GEMINI.md
 QWEN.md
+CODEX.md
 .*/workflows/
 .*/commands/
 .*/prompts/

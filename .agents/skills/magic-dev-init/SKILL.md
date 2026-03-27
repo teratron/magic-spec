@@ -17,8 +17,8 @@ Identify the operating system (Windows vs. Unix/macOS).
 
 Establish all links using the platform-specific script. Key tasks include:
 
-- Linking `.claude/`, `.qwen/`, and `.gemini/` commands, skills, and rules to `.agents/`.
-- Linking root `CLAUDE.md`, `QWEN.md`, and `GEMINI.md` to `AGENTS.md` for agent instructions.
+- Linking `.claude/`, `.qwen/`, `.gemini/`, and `.codex/` commands, skills, and rules to `.agents/`.
+- Linking root `CLAUDE.md`, `QWEN.md`, `GEMINI.md`, and `CODEX.md` to `AGENTS.md` for agent instructions.
 - Linking user-facing workflows from `workflows/` to `.agents/workflows/` so development agents can access them safely.
 - Maintaining the git index by removing linked paths.
 
