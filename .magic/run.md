@@ -21,7 +21,7 @@ Parse the `[arg]` to determine the execution mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. 
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
     - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of current `Todo` tasks or specified Phase. Propose the most likely workspace and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
