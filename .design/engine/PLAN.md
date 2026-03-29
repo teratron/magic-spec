@@ -2,7 +2,7 @@
 
 **Version:** 1.0.0
 **Generated:** 2026-03-25
-**Based on:** .design/engine/INDEX.md v1.2.0
+**Based on:** .design/engine/INDEX.md v1.3.0
 **Status:** Active
 
 ## Overview
@@ -23,3 +23,5 @@ Implementation plan for the Magic SDD engine workspace. Existing core specificat
 - [x] **Engine Automation** ([l2-engine-automation.md](specifications/l2-engine-automation.md)) [L2]
 - [x] **Test Suite** ([l2-test-suite.md](specifications/l2-test-suite.md)) [L2]
 - [x] **Documentation System** ([l1-documentation-system.md](specifications/l1-documentation-system.md)) [L1]
+- [x] **Workflow Wrappers** ([l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md)) [L2]
+- [x] **Engine Templates** ([l2-engine-templates.md](specifications/l2-engine-templates.md)) [L2]

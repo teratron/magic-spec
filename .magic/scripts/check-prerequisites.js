@@ -153,7 +153,7 @@ if (planExists && indexExists) {
     }
 
     const indexVersionMatch = indexContent.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
-    const planBasedOnMatch = planContent.match(/^\*\*Based on:\*\*\s+v?([0-9.]+)/m);
+    const planBasedOnMatch = planContent.match(/^\*\*Based on:\*\*\s+.*?v([0-9.]+)/m);
 
     if (indexVersionMatch && planBasedOnMatch) {
         const indexVersion = indexVersionMatch[1];

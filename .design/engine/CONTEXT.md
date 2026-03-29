@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-03-24
+**Generated:** 2026-03-29
 
 ## Active Technologies
 
@@ -56,6 +56,8 @@
 │   ├── .gitignore
 │   ├── 0.15.7/
 │   └── CACHEDIR.TAG
+├── .tmp/
+│   └── .design/
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CLAUDE.md
@@ -97,4 +99,5 @@
 
 ## Recent Changes
 
-- **v1.5.49** (2026-03-25): Config Drift Guard — added `CONFIG_DRIFT` detection to `check-prerequisites`, documented in `init.md`, tested via T168-T170. Phase 1 complete (3/3 tasks done).
+No recent changelog found.
+

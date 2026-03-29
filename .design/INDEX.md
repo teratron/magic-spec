@@ -12,7 +12,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | :--- | :--- | :--- | :--- |
-| engine | Magic SDD core engine logic, workflows, and history. | 4 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, and history. | 7 | [engine/INDEX.md](engine/INDEX.md) |
 | installers | Thin-client installers (Node/Python), IDE adapters, and release scripts. | 6 | [installers/INDEX.md](installers/INDEX.md) |
 
 ## System Files
