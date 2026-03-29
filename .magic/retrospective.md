@@ -4,7 +4,8 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. 
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the completed phase context. Propose the most likely workspace and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Write ONLY to `RETROSPECTIVE.md`.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
@@ -23,7 +24,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
 2. **Collect**:
     - **Inventory**: INDEX.md status counts (D/R/S) & spec count.
-    - **Health**: TASKS.md Done/Blocked/Cancelled summary per phase.
+    - **Health**: PLAN.md phase completion status & TASKS.md metrics (Done/Blocked/Cancelled).
     - **Growth**: RULES.md §7 entry count & history scan.
     - **Drift**: Cross-reference INDEX ↔ PLAN ↔ TASKS for orphans/phantoms.
 3. **Analyze (L2 Only)**:

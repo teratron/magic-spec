@@ -19,7 +19,8 @@ Parse the `[arg]` to determine the planning mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. 
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target/context. Propose the most likely workspace based on pending tasks or spec dependencies and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
 3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
@@ -84,7 +85,7 @@ graph TD
     - **Phantom Specs**: If spec in PLAN/INDEX but missing from disk → Cancel `Todo` / `Pending`; archive `Done`. Block active tasks.
     - **Phantom Parent Guard**: If an L2 spec's parent is missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: "Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2)." Move L2 to `## Backlog` with reason: "Missing L1 Parent (Phantom)."
     - **Structural Refactor**: If sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: Keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
-    - **Renames**: Global search-and-replace on filename changes (exclude archives).
+    - **Renames**: Global search-and-replace on filename changes (exclude archives). Ensure new names follow the `l1-`/`l2-` prefix convention.
 
 ### Plan Write-back
 

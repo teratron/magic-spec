@@ -7,7 +7,9 @@ Manages project conventions across a two-tier rules system:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise. After resolution, load global `RULES.md` first, then workspace `RULES.md` if it exists.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. 
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the rule's context. Propose the most likely workspace (e.g., if rule mentions "npm" → `node` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    After resolution, load global `RULES.md` first, then workspace `RULES.md` if it exists.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
 4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.

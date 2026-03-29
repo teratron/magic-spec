@@ -120,6 +120,16 @@ if (planExists && indexExists) {
                 'magic.analyze'
             );
         }
+
+        // §1 Naming Convention Check
+        if (!spec.startsWith('l1-') && !spec.startsWith('l2-')) {
+            warn(
+                'NAMING_VIOLATION',
+                `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
+                'Rename file and update INDEX.md references'
+            );
+        }
+
         if (!planContent.includes(spec)) {
             warn(
                 'ORPHANED_SPEC',

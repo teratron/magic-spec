@@ -4,7 +4,8 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
+1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). Propose the most likely workspace based on path matches or project markers (e.g., `installers/` folder → `installers` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums/Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skips existing files. Never mutates user state.

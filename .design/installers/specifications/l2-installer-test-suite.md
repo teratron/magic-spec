@@ -3,7 +3,7 @@
 **Version:** 1.0.0
 **Status:** Stable
 **Layer:** implementation
-**Implements:** installer-architecture.md
+**Implements:** l1-installer-architecture.md
 
 ## Overview
 
@@ -11,11 +11,11 @@ Testing architecture for the Magic Spec thin-client installers. Validates instal
 
 ## Related Specifications
 
-- [installer-architecture.md](installer-architecture.md) — Parent L1: delivery principles under test.
-- [installer-node.md](installer-node.md) — Node.js installer implementation.
-- [installer-python.md](installer-python.md) — Python installer implementation.
-- [adapter-interop.md](adapter-interop.md) — Adapter integration standards verified by flag tests.
-- [release-workflow.md](release-workflow.md) — Publish flow validated by publish tests.
+- [l1-installer-architecture.md](l1-installer-architecture.md) — Parent L1: delivery principles under test.
+- [l2-installer-node.md](l2-installer-node.md) — Node.js installer implementation.
+- [l2-installer-python.md](l2-installer-python.md) — Python installer implementation.
+- [l1-adapter-interop.md](l1-adapter-interop.md) — Adapter integration standards verified by flag tests.
+- [l2-release-workflow.md](l2-release-workflow.md) — Publish flow validated by publish tests.
 
 ## 1. Motivation
 

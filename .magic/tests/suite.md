@@ -2764,3 +2764,25 @@ If any test fails, document the failure reason and propose a fix.
 ```
 **Test Suite Finalized** — v1.9.55 (Last: T181)
 ```
+
+### T182 — Cross-Workspace Manual Renamed Parent (Ref: The Phantom Cascade)
+
+- **Workflow:** `spec.md` (Update Mode)
+- **Synthetic State:**
+  - `workspace.json` registers `engine` and `installers`.
+  - `engine` has `l1-identity.md` (Stable) — file physically renamed to `l1-auth-core.md` (Drift).
+  - `installers` has `l2-auth.md` (RFC, Implements: l1-identity.md).
+- **Action:** `/magic.spec update installers/l2-auth.md`
+- **Expected:**
+  - [ ] Parent Existence Guard triggers during pre-flight.
+  - [ ] **HALT** — report "L2 Orphan: Parent spec engine/l1-identity.md is missing from disk."
+  - [ ] Suggested resolution: sync engine/INDEX.md or restore parent.
+### T183: Workspace Disambiguation (Quick-scan)
+- **Scenario:** Multiple workspaces exist, no `default` in `workspace.json`, current directory contains `installers/`.
+- **Expected Outcome:** Agent MUST NOT immediately halt to ask. Instead, it must scan context, identify `installers/` as a marker, and propose: "Found `installers/` directory — propose using `installers` workspace. Confirm or select: [engine, installers]."
+- **Guards tested:** Core Invariant #1 (Quick-scan heuristic).
+
+```
+**Test Suite Finalized** - v1.9.57 (Last: T183)
+```
+

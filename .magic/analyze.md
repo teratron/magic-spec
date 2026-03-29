@@ -44,7 +44,7 @@ Parse the `[arg]` to determine the analysis mode:
 | 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. If value not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
 | 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: "Active workspace: {default}." |
-| 3 | **`workspace.json`** | Multiple + no `default` | **Ask**: "Which workspace to analyze? [{list}]" |
+| 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation**: Quick-scan context (current folder, recent edits). **Ask** with recommendation: "Found {marker} — propose analyzing {workspace}. Confirm or select: [{list}]." |
 | 4 | **No `workspace.json`** | — | Use root `.design/`. Log: "No workspace config found — scanning root .design/." |
 
 > **Scope Auto-Apply**: After workspace is resolved, apply its `scope` array from `workspace.json` as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). If the workspace has no `scope` field, scan the full project.

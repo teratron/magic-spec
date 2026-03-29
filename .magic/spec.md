@@ -10,7 +10,8 @@ Universal process for managing project specifications in `.design/specifications
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. If multiple workspaces and no default → ask user. Never ask otherwise.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback. 
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). Propose the most likely workspace based on path matches or project markers (e.g., `src/` folder → `main` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code only. If implementation code is detected during any update or creation → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
@@ -130,7 +131,7 @@ graph TD
 
 1. **Parse & Map**: Identify distinct topics and match to domains.
 2. **Dispatch Notice (Non-Blocking)**: Show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question.
-3. **Dispatch**: Write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content is complete per template. Otherwise keep as `Draft`.
+3. **Dispatch**: Write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content satisfies MVC criteria (Overview + design section). Otherwise keep as `Draft`.
 4. **Post-Update**:
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
@@ -153,7 +154,8 @@ graph TD
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → **HALT** before creating. Report: "Name collision: `{file}` already exists in `{ws}` (v{X}). Resolve before creating: (a) use a unique name per workspace, (b) promote the existing spec as canonical and sync, (c) force ignore (document reason)."
 2. **Creation**:
     - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec as per C16).
-    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}`.
+    - **Naming**: Apply layer prefix (`l1-` for Concept, `l2-` for Impl) to the filename (e.g., `l1-api.md`).
+    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}` using the prefixed name.
     - Register in `INDEX.md` (Name, Status, Layer, Version).
 3. **Closure**: Post-Update Review → Checklist.
 

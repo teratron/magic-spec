@@ -3,7 +3,7 @@
 **Version:** 1.0.0
 **Status:** Stable
 **Layer:** implementation
-**Implements:** installer-architecture.md
+**Implements:** l1-installer-architecture.md
 
 ## Overview
 
@@ -11,8 +11,8 @@ Specification for the unified release process of the Magic Spec engine across No
 
 ## Related Specifications
 
-- [installer-architecture.md](installer-architecture.md) - Parent architecture for thin-client delivery.
-- [engine-automation.md](engine-automation.md) - Context for script execution.
+- [l1-installer-architecture.md](l1-installer-architecture.md) - Parent architecture for thin-client delivery.
+- [l2-engine-automation.md](../../engine/specifications/l2-engine-automation.md) - Context for script execution.
 
 ## 1. Motivation
 

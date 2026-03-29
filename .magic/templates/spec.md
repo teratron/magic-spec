@@ -3,7 +3,7 @@
 **Version:** {X.Y.Z}
 **Status:** {Draft | RFC | Stable | Deprecated}
 **Layer:** {concept | implementation}
-**Implements:** {layer-1-file.md} <!-- Only if Layer is implementation -->
+**Implements:** {l1-layer-1-file.md} <!-- Only if Layer is implementation -->
 
 ## Overview
 

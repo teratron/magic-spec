@@ -73,7 +73,7 @@ Constitution of the specification system for this project.
 Read by the agent before every operation. Updated only via explicit triggers.
 
 ## 1. Naming Conventions
-- Spec files use lowercase kebab-case: \`api.md\`, \`database-schema.md\`.
+- Spec files must include a layer prefix (e.g., \`l1-\`, \`l2-\`), followed by lowercase kebab-case: \`l1-api.md\`, \`l2-database-schema.md\`.
 - System files use uppercase: \`INDEX.md\`, \`RULES.md\`.
 - Section names within specs are title-cased.
 

@@ -13,13 +13,13 @@ Implementation plan for the Magic SDD engine workspace. Existing core specificat
 
 *Add drift detection for manual RULES.md changes to the pre-flight check pipeline.*
 
-- [x] **Config Drift Guard** ([config-drift-guard.md](specifications/config-drift-guard.md)) [L1]
+- [x] **Config Drift Guard** ([l1-config-drift-guard.md](specifications/l1-config-drift-guard.md)) [L1]
 
 ## Completed (Baseline)
 
 *Specifications already implemented before this plan was created.*
 
-- [x] **Engine Core** ([engine-core.md](specifications/engine-core.md)) [L1]
-- [x] **Engine Automation** ([engine-automation.md](specifications/engine-automation.md)) [L2]
-- [x] **Test Suite** ([test-suite.md](specifications/test-suite.md)) [L2]
-- [x] **Documentation System** ([documentation-system.md](specifications/documentation-system.md)) [L1]
+- [x] **Engine Core** ([l1-engine-core.md](specifications/l1-engine-core.md)) [L1]
+- [x] **Engine Automation** ([l2-engine-automation.md](specifications/l2-engine-automation.md)) [L2]
+- [x] **Test Suite** ([l2-test-suite.md](specifications/l2-test-suite.md)) [L2]
+- [x] **Documentation System** ([l1-documentation-system.md](specifications/l1-documentation-system.md)) [L1]

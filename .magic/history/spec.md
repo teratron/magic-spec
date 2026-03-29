@@ -17,3 +17,4 @@
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
 | 1.4.166 - 1.5.54 | 2026-03-29 | Automated update via engine meta automation |
 | 1.5.57 | 2026-03-29 | Align TASKS.md and tasks/ structure; added phase.md template |
+| 1.5.60 | 2026-03-29 | Automated update via engine meta automation |
