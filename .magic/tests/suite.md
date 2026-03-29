@@ -2630,6 +2630,137 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] C22 workspace rule inheritance respected in drift check scope.
 - **Guards tested:** Config Drift Guard, C22 Workspace Rule Inheritance.
 
+### T171 — Circular Guard Semantic Split: Soft References Non-Blocking
+
+- **Workflow:** `task.md` (Step 2, Circular Guard)
+- **Synthetic State:**
+  - Two L1 specs: `world-system.md` and `entity-system.md`, each listing the other in `Related Specifications`.
+  - No `Implements:` chains between them.
+- **Expected:**
+  - [ ] No HALT produced — mutual `Related Specifications` references are soft references.
+  - [ ] Log contains: `[Cycle-Info] {N} mutual references detected in Related Specifications (non-blocking).`
+  - [ ] Planning proceeds to Step 3 (Analyze).
+- **Guards tested:** Circular Guard Semantic Split.
+
+### T172 — Circular Guard Semantic Split: Hard Dependency Cycle HALT
+
+- **Workflow:** `task.md` (Step 2, Circular Guard)
+- **Synthetic State:**
+  - L2 spec `a-go.md` with `Implements: b.md`.
+  - L2 spec `b-go.md` with `Implements: a.md` (erroneous cycle).
+- **Expected:**
+  - [ ] HALT produced — hard-dependency cycle detected in `Implements:` chain.
+  - [ ] Cycle Resolution suggestion identifies the "weakest link" edge.
+- **Guards tested:** Circular Guard Semantic Split (Hard Dependencies).
+
+### T173 — Pre-Planning Stabilization: L1 Before L2 Order
+
+- **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization)
+- **Synthetic State:**
+  - L1 `world-system.md` (Draft, has Overview + Core Invariants).
+  - L2 `world-system-go.md` (Draft, `Implements: world-system.md`, has Overview + design content).
+- **Expected:**
+  - [ ] L1 `world-system.md` promoted to Stable first.
+  - [ ] L2 `world-system-go.md` promoted to Stable after L1 parent is Stable.
+  - [ ] Report: `[Pre-Plan] 2 specs promoted to Stable, 0 remain Draft.`
+- **Guards tested:** Pre-Planning Stabilization, MVC, Layer Order.
+
+### T174 — Pre-Planning Stabilization: MVC Failure Keeps Draft
+
+- **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization)
+- **Synthetic State:**
+  - L1 `empty-spec.md` (Draft, has only title — no Overview, no design sections).
+- **Expected:**
+  - [ ] Spec remains Draft.
+  - [ ] Report: `[Batch-Skip] empty-spec.md: MVC failed — missing Overview.`
+- **Guards tested:** MVC.
+
+### T175 — Pre-Planning Stabilization: Non-Standard Layer MVC
+
+- **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization) + `spec.md` (MVC definition)
+- **Synthetic State:**
+  - `benchmark-spec.md` (Layer: test, Draft, has Overview + `## 1. Benchmark Categories` with content).
+- **Expected:**
+  - [ ] Spec promoted to Stable — non-standard layer MVC satisfied (Overview + one numbered section).
+  - [ ] No error about missing `Core Invariants` or `Invariant Compliance`.
+- **Guards tested:** MVC (non-standard layer handling).
+
+### T176 — C6 Bootstrap Exception Activation
+
+- **Workflow:** `task.md` (C6 Bootstrap Exception)
+- **Synthetic State:**
+  - All specs Draft, Pre-Planning Stabilization promoted 0 (all fail MVC).
+  - No prior `PLAN.md` exists.
+  - 5 specs pass MVC (Overview + design section) but remain Draft due to RULES conflict.
+- **Expected:**
+  - [ ] Bootstrap Mode activated.
+  - [ ] Draft specs passing MVC are planned with `[Bootstrap]` marker.
+  - [ ] Report: `[Bootstrap Plan] 5 Draft specs planned tentatively.`
+- **Guards tested:** C6 Bootstrap Exception.
+
+### T177 — C6 Bootstrap Exception Not Triggered When Stable Exists
+
+- **Workflow:** `task.md` (C6 Bootstrap Exception)
+- **Synthetic State:**
+  - 1 spec Stable (promoted by Pre-Planning Stabilization), 10 Draft.
+  - Prior `PLAN.md` exists.
+- **Expected:**
+  - [ ] Bootstrap Mode NOT activated (≥1 spec is Stable).
+  - [ ] Normal C6 flow: 1 Stable → active plan, 10 Draft → Backlog.
+- **Guards tested:** C6, Bootstrap Exception deactivation.
+
+### T178 — Field Normalization: L1 Reference to Implements
+
+- **Workflow:** `task.md` (Step 2, Field Normalization)
+- **Synthetic State:**
+  - L2 `example-go.md` with header field `**L1 Reference:** example.md` instead of `**Implements:**`.
+- **Expected:**
+  - [ ] Field auto-renamed to `**Implements:** example.md`.
+  - [ ] Log: `[Normalize] example-go.md: 'L1 Reference' → 'Implements'.`
+- **Guards tested:** Field Normalization.
+
+### T179 — Cross-Workspace Batch Stabilization Order
+
+- **Workflow:** `task.md` (Step 2, workspace order)
+- **Synthetic State:**
+  - `workspace.json` with default=`main`, second workspace=`editor`.
+  - Editor L1 spec references main L1 spec via `Related Specifications` (soft — non-blocking).
+  - Both specs are Draft, both pass MVC.
+- **Expected:**
+  - [ ] `main` workspace processed first (default).
+  - [ ] `editor` workspace processed second.
+  - [ ] Both promoted — soft cross-workspace references don't block.
+- **Guards tested:** Workspace processing order, cross-workspace soft references.
+
+### T180 — Bootstrap Detection in run.md
+
+- **Workflow:** `run.md` (Pre-flight, Bootstrap Detection)
+- **Synthetic State:**
+  - `PLAN.md` contains entries with `[Bootstrap]` markers.
+  - `TASKS.md` has tasks from Bootstrap plan.
+  - Target spec status = Draft.
+- **Expected:**
+  - [ ] Warning emitted: `"⚠ Bootstrap Plan detected — specs are not yet Stable."`
+  - [ ] Execution proceeds (no HALT for Draft specs with Bootstrap marker).
+  - [ ] Generated artifacts include `[Bootstrap]` suffix.
+- **Guards tested:** Bootstrap Detection in run.md, Spec Stability Bootstrap Exception.
+
+### T181 — Retrospective Context Resolution Full Priority Chain
+
+- **Workflow:** `retrospective.md` (Core Invariant #1)
+- **Synthetic State:**
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `MAGIC_WORKSPACE=installers` env var set
+  - Phase 1 just completed in `installers` workspace
+- **Action:** Retrospective Level 1 triggered (no explicit workspace arg)
+- **Expected:**
+  - [ ] Agent reads `MAGIC_WORKSPACE=installers` (Priority 2 in chain)
+  - [ ] Agent uses `.design/installers/` for RETROSPECTIVE.md operations
+  - [ ] Agent does NOT fall back to `workspace.json` default (`engine`) when env var is set
+  - [ ] Snapshot appended to `.design/installers/RETROSPECTIVE.md`
+  - [ ] Same behavior as all other workflows under identical inputs (T140 parity)
+- **Guards tested:** Context Resolution full priority chain in retrospective.md, env var override of default workspace
+
 ```
-**Test Suite Finalized** — v1.9.51 (Last: T170)
+**Test Suite Finalized** — v1.9.55 (Last: T181)
 ```
