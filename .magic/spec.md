@@ -75,7 +75,9 @@ graph LR
     Stable --> RFC
 ```
 
-> **Trust Mode (C9)**: When no objective conflicts exist (no RULES.md contradiction, no circular dependency, no VERSION_DRIFT), the agent may auto-promote statuses (Draft → Stable) silently to minimize user friction.
+> **Trust Mode (C9)**: When no objective conflicts exist (no RULES.md contradiction, no hard-dependency circular dependency, no VERSION_DRIFT), the agent may auto-promote statuses (Draft → Stable) silently to minimize user friction. Soft reference cycles (`Related Specifications` mutual links) do NOT block promotion.
+>
+> **Minimum Viable Completeness (MVC)**: For Trust Mode auto-promotion, a spec is considered complete enough if it has: `Overview` + at least one substantive design section (`Core Invariants` for L1, `Invariant Compliance` for L2, or `Detailed Design`). For non-standard layers (`test`, `tool`, etc.), MVC requires `Overview` + at least one numbered section with substantive content. Missing optional sections (`Drawbacks & Alternatives`, `Implementation Notes`) do not block promotion. This allows early-stage specs with solid design content to advance without requiring every template section to be filled.
 >
 > **Amendment rule:** When a Stable spec receives substantive new requirements
 > (minor or major version bump), its status reverts to `RFC` for re-review.
@@ -188,6 +190,25 @@ graph TD
         - **Refactoring Guard**: If moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
         - Exclude `RETROSPECTIVE.md` and `archives/` — historical logs are immutable.
 
+### Batch Stabilization
+
+**Trigger**: Called from `task.md` Pre-Planning Stabilization (Step 2), or `/magic.spec stabilize [workspace]`.
+
+Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mode (C9) criteria consistently.
+
+1. **Resolve Scope**: If workspace specified, iterate only that workspace's `INDEX.md`. Otherwise, iterate all workspaces.
+2. **Layer-Ordered Iteration**: Process all **L1 (concept)** specs first, then **L2 (implementation)** specs. This ensures L1 parents are `Stable` before their L2 children are evaluated.
+3. **Per-Spec Evaluation**:
+    - (a) No `RULES.md` contradictions.
+    - (b) No hard-dependency cycles (`Implements:` chains only — soft `Related Specifications` cycles are non-blocking).
+    - (c) Layer constraints: L2 has valid `Implements:` field pointing to a `Stable` L1 parent.
+    - (d) MVC satisfied: `Overview` + at least one substantive design section.
+    - **Pass** → Promote `Draft → Stable`. Update file header `Status:` and `INDEX.md` entry atomically.
+    - **Fail** → Skip. Log reason: `[Batch-Skip] {file}: {criterion} failed — {details}.`
+4. **Field Normalization**: If an L2 spec uses a non-standard parent reference field (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to the canonical `Implements:` field.
+5. **Report**: `[Batch-Stabilize] {N} promoted, {M} skipped. Skipped: [{file}: {reason}, ...].`
+6. **Post-Update Review**: Run on all promoted specs (batch — not individually).
+
 ### Post-Update Review (Mandatory)
 
 Check for:
@@ -249,6 +270,7 @@ Checklist — {task description}
   ☐ No implementation code in specs (pseudo-code only)
   ☐ Registry: INDEX.md updated (Status, Layer, Version)
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
+  ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Defensive: RULES.md triggers (T1-T4) checked/applied
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed (Coherence, Duplication)
