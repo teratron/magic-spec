@@ -1,4 +1,4 @@
-# Task Index
+# Master Task Index (Registry)
 
 **Version:** {X.Y.Z}
 **Generated:** {YYYY-MM-DD}
@@ -7,26 +7,17 @@
 **Execution Mode:** {Sequential | Parallel}
 **Status:** Active
 
-## Summary
+## Overview
 
-| Phase | Total | Todo | In Progress | Done | Blocked | Cancelled |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Phase {N} | {0} | {0} | {0} | {0} | {0} | {0} |
+Tactical registry of all phases and their statuses. Check individual phase files in `tasks/` for atomic checklists.
 
-## Phase {N} — {Phase Name}
+## Active Phases
 
-### Checklist
+| Phase | Description | Status |
+| :--- | :--- | :--- |
+| [Phase {N}](tasks/phase-{N}.md) | {Detailed phase goal} | `Todo` \| `In Progress` \| `Blocked` |
 
-- [ ] [T-{ID}] {Task Title}
+## Meta Information
 
-### Details
-
-## [T-N{Track}{Seq}] {Task Title}
-
-- **Spec:** {spec.md} §{section}
-- **Status:** {Todo | In Progress | Done | Blocked | Cancelled}
-- **Changes:**
-  - Created: {files}
-  - Modified: {files}
-- **Assignee:** {Agent | User}
-- **Notes:** (optional)
+- **Last Updated**: {YYYY-MM-DD}
+- **Maintainer**: {Name}

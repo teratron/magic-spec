@@ -88,9 +88,10 @@ graph TD
 
 ### Plan Write-back
 
-- Use `.magic/templates/plan.md` and `.magic/templates/tasks.md`.
+- Use `.magic/templates/plan.md`, `.magic/templates/tasks.md` and `.magic/templates/phase.md`.
 - PLAN.md: Strategic overview (Phases & Specifications). No atomic checklist items.
-- TASKS.md: Tactical execution ledger. Contains the Master Phase Checklist (with IDs) and detailed tasks.
+- TASKS.md: Master Phase Index. Contains phase registry and status tracking.
+- tasks/phase-{n}.md: Tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
 
 ## Task Completion Checklist
 

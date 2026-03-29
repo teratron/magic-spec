@@ -84,6 +84,7 @@ Used when `.design/INDEX.md` already contains registered specifications. Compare
 | ⚠️ **Uncovered** | Code modules with no corresponding spec |
 | 🔴 **Orphaned** | Specs referencing code that no longer exists |
 | 🔄 **Drifted** | Specs whose described structure doesn't match current code |
+| 📉 **Logic Evolution** | API or internal logic has structurally drifted (>30%) from the spec |
 
 ### 4.1 Smart Sync (AOP)
 
@@ -96,7 +97,37 @@ During Re-Analysis, the engine uses content-similarity algorithms to detect **Ma
 - New team member wants to understand current state
 - Periodic audit of spec-to-code coverage
 
-## 5. Depth Control
+## 5. Project Ventilation (Deep Audit)
+
+Project Ventilation (Mode C) is a specialized "deep audit" mode that treats the current codebase as the source of truth and compares it against the entire SDD registry.
+
+### What It Audits
+
+- **Registry Integrity**: Exact string matches for filenames vs `INDEX.md` (detects case-sensitivity issues).
+- **Structural Integrity**: Validates that workspace folders, `specifications/` directories, and `workspace.json` scopes exist and match.
+- **Coverage Check**: Scans project directories within the active workspace scope and identifies folders with NO corresponding spec file.
+- **Rule Validation**: Checks whether the code complies with project-wide or workspace-specific conventions defined in `RULES.md §7`.
+- **Engine Integrity**: Compares the `.magic/` folder against `.checksums` to detect unauthorized or corrupted engine changes.
+
+### Use Cases
+
+- Periodic health checks of the SDD system.
+- Verifying that manual code edits didn't break spec-to-code mapping.
+- Ensuring that all team members are following defined project rules.
+- Pre-flight check before major planning or releases.
+
+## 6. Advisory Report
+
+Appended to every analysis report (A–D), the **Advisory Report** provides actionable recommendations beyond simple fixes. It is a chat-only output designed to improve the quality of the project's documentation.
+
+### Categories
+
+- **Spec Quality**: Identifies oversized specs (>300 lines) for splitting, or incomplete stubs.
+- **Coverage Strategy**: Prioritizes coverage based on churn (git history) and complexity.
+- **Structural Improvements**: Suggests workspace candidates or rule promotions.
+- **Action Proposals**: Provides direct commands (e.g., `→ /magic.spec create {name}`) for immediate execution.
+
+## 7. Depth Control
 
 For large projects, the workflow offers scan depth options to balance thoroughness with speed:
 
@@ -130,7 +161,7 @@ If no argument is given, the workflow resolves the workspace automatically using
 
 In multi-workspace environments, the Analysis workflow respects the `scope` defined in `workspace.json`. It will strictly ignore files and directories outside the defined scope, allowing for isolated analysis of specific project modules (e.g., only analyzing the `api` or `frontend` folders).
 
-## 6. Relationship to Other Workflows
+## 8. Relationship to Other Workflows
 
 | Workflow | Relationship |
 | :--- | :--- |
