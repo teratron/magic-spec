@@ -19,6 +19,7 @@ This workflow handles the end-to-end process of validating, building, and publis
 4. **Dry Run**: Always perform a dry run first: `python installers/scripts/publish.py [old] [new] --dry-run` and show the proposed changes/artifacts to the user before the final push.
 5. **No Broken States**: If any test fails or a doc mismatch is found, **HALT** and report the discrepancy. Do not bypass errors.
 6. **C14 Enforcement**: Before publishing, ensure checksums are current. If any `.magic/` file was modified, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — this is a blocking gate.
+7. **Clean State Protocol**: Ensure any non-versioning changes (e.g., specific README edits, manually updated documentation) are committed **BEFORE** running `publish.py`. The script is responsible for bumping versions and adding those specific modified files; all other changes must be in a clean git state to avoid drift.
 
 ## Workflow Steps
 
@@ -36,6 +37,7 @@ This workflow handles the end-to-end process of validating, building, and publis
    - **Docs Completeness**: Verify that all engine features and workflows documented in `.magic/` have corresponding entries in `docs/`. Check `docs/` files listed in `installers/config.json` → `publish.docsTargets` and `publish.docsDir`.
    - **C14 Gate (Checksums)**:
      - If any file in `.magic/` was modified, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` BEFORE building. This is a **blocking gate** — do not proceed until checksums match.
+   - **Git Cleanliness**: Run `git status` to ensure all non-manifest changes are committed. If any custom edits or metadata updates exist, stage and commit them now: `git add . && git commit -m "docs: pre-release synchronization"`.
 3. **Report Status**: Show a summary of QA results:
 
    ```plaintext

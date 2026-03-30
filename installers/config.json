@@ -55,10 +55,14 @@
         "versionFiles": [
             "package.json",
             "pyproject.toml",
-            "installers/python/magic_spec/__init__.py"
+            "installers/python/magic_spec/__init__.py",
+            ".magic/.version",
+            ".magic/.checksums"
         ],
         "docsTargets": [
-            "CHANGELOG.md"
+            "CHANGELOG.md",
+            "README.md",
+            "docs/README.md"
         ]
     },
     "tests": {
