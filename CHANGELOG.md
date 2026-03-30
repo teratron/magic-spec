@@ -5,7 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [1.5.51] - 2026-03-26
+## [1.5.70] - 2026-03-30
+
+### Changed
+
+- **Documentation**: Updated `README.md` and `docs/README.md` to include a mandatory recommendation to run `/magic.analyze` after updating the Magic Spec engine. This ensures that specifications and engine metadata remain synchronized after a core logic update.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.70`, history updated, and checksums regenerated (C14).
+
+## [1.5.71] - 2026-03-26
 
 ### Added
 
@@ -17,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Meta
 
-- **Automated Update**: Engine version bumped to `1.5.51`, history updated, and checksums regenerated (C14).
+- **Automated Update**: Engine version bumped to `1.5.71`, history updated, and checksums regenerated (C14).
 
 ## [1.5.50] - 2026-03-26
 
@@ -54,7 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Version Synchronization**: Unified project version to `1.5.51` across all manifests (`package.json`, `pyproject.toml`, `__init__.py`) and the `.magic/.version` engine core.
+- **Version Synchronization**: Unified project version to `1.5.71` across all manifests (`package.json`, `pyproject.toml`, `__init__.py`) and the `.magic/.version` engine core.
 - **Instruction Density**: Refined `.magic/simulate.md` (Context Bleed Warning) to remove vague qualifiers ("high-confidence" -> "strictly unbiased"), reaching a density score of 10/10.
 - **Engine Integrity**: Optimized `generate-checksums.js` to exclude the `.checksums` file from its own mapping, preventing confusion and unstable hash values.
 
