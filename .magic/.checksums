@@ -1,5 +1,5 @@
 {
-  ".version": "62deb3ad2d60439eabf4c347bdb0069fce8323db7cdfa129d6f56f51907e212b",
+  ".version": "e176e77f2ba91529a1ece90ad0d9814b39f9cedc32941263d209b7e32c038299",
   "analyze.md": "da772409d4a159f67660b15880b015aa26399c82acae5841eee2fd236cc23283",
   "init.md": "f1919d4d9515230b126783ea138b5d723965712a23af1d853ffae77b232868bb",
   "retrospective.md": "2986db38c68613ba8085ed6ca66e4cb8a299fd6d6e8de43264f80ef9d987468e",
@@ -19,5 +19,5 @@
   "templates/retrospective.md": "761a3b82665134187e6c6b33c47405abc687bd962d7e01d8695d953991a5f161",
   "templates/spec.md": "c37516bce5f6a02cb02b29d8f541ae6517ed736824a8cba5e1e9ca58958440ac",
   "templates/tasks.md": "e150495f9dad3a67f7a1ddfe024df1ec58faa6fab769d4d74bfc7c00d24374f6",
-  "tests/suite.md": "caa8846556782176a863c72b29cce92ff14156ac9b7c2939c66acb1caa57c820"
+  "tests/suite.md": "6af0cf808216955beca62dd2fabeca7ba3fb6422e39a7801064f67eabb06352b"
 }

@@ -237,7 +237,7 @@ npx magic-spec@latest --update
 ```
 
 > [!TIP]
-> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agents/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort).
+> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agents/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort). **After updating Magic Spec, it is highly recommended to run the `/magic.analyze` command to ensure your project's specifications and engine metadata are fully synchronized.**
 
 ### Post-Install: `.gitignore`
 
