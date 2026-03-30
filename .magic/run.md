@@ -22,12 +22,12 @@ Parse the `[arg]` to determine the execution mode:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of current `Todo` tasks or specified Phase. Propose the most likely workspace and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
-3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Logic Guards**:
     - **Dependency**: Never start a task if parents are not `Done`.
-    - **Mode**: Sequential or Parallel must be in `RULES.md §7`. If missing → **HALT**.
+    - **Mode**: Per C3, task execution defaults to **Parallel mode**. If mode is absent from `RULES.md §7`, assume Parallel (do not HALT).
     - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
     - **Quarantine (C12)**: If any active task belongs to a specification whose L1 parent is not Stable (C12 Quarantine) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog.
     - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: "Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.

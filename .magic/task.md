@@ -20,15 +20,15 @@ Parse the `[arg]` to determine the planning mode:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target/context. Propose the most likely workspace based on pending tasks or spec dependencies and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select** the most likely workspace based on path matches or project markers (e.g., `src/` folder → `main` workspace) and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
-3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
     - **Atomic Tasks (C10)**: Every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-    - **User Gate**: In **Trust Mode (C9)**, show the Plan & Checklist summary and ask for a single "Go" confirm. Full details remain in `.design/` for inspection but aren't forced on the user.
-    - **Zero-Prompt handoff**: After approval, authorize skip-confirm for `magic.run`.
+    - **User Gate**: In **Trust Mode (C9)**, automatically generate and write the Plan & Checklist without asking for a "Go" confirm. Show a summary of the generated plan to the user.
+    - **Zero-Prompt handoff**: After writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
 7. **Architectural Logic**:
@@ -51,8 +51,8 @@ graph TD
     C --> D[Apply Mode Choice §7]
     D --> E[Selective Selection C6 + Bootstrap]
     E --> F[Decompose Phase 1 Tasks]
-    F --> G[Propose Plan & Breakdown]
-    G -->|Approve| H[Write PLAN, TASKS, phase-*.md]
+    F --> G[Log Plan & Breakdown Summary]
+    G --> H[Write PLAN, TASKS, phase-*.md]
     H --> I[Generate CONTEXT.md]
 ```
 
@@ -75,7 +75,7 @@ graph TD
     - **Field Normalization**: During iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to the canonical `Implements:` field. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
 3. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 4. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
-5. **Execution Mode**: If not in `RULES.md §7`, ask (Sequential/Parallel) and save to §7.
+5. **Execution Mode**: Default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
 6. **Decompose**: Split the active phase into 2-3 tasks per spec.
     - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
     - **Tracks**: Group tasks by file independence.

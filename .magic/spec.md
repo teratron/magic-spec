@@ -11,9 +11,9 @@ Universal process for managing project specifications in `.design/specifications
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). Propose the most likely workspace based on path matches or project markers (e.g., `src/` folder → `main` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code only. If implementation code is detected during any update or creation → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
-3. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
+3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
 5. **Linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 6. **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
@@ -136,7 +136,7 @@ graph TD
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
     - Sync `INDEX.md`.
-    - Present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run? (Yes/Details)". **HARD STOP**: You MUST halt execution here. REFUSE to proceed to task generation or execution until the user explicitly replies.
+    - **Zero-Prompt Handoff (C9)**: If logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run?" and wait for reply.
 
 **Constraints**:
 
@@ -150,7 +150,7 @@ graph TD
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
     - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → **HALT** before creating. Report: "Name collision: `{file}` already exists in `{ws}` (v{X}). Resolve before creating: (a) use a unique name per workspace, (b) promote the existing spec as canonical and sync, (c) force ignore (document reason)."
 2. **Creation**:
     - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec as per C16).

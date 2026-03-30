@@ -5,7 +5,7 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). Propose the most likely workspace based on path matches or project markers (e.g., `installers/` folder → `installers` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select and NOTIFY** the user of the selection (Zero-Prompt): "Found {marker} — selecting {workspace}. Proceeding...".
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums/Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skips existing files. Never mutates user state.
@@ -37,7 +37,7 @@ graph TD
         - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
     - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
     - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
-    - **Config Drift Advisory**: If output contains `CONFIG_DRIFT` warnings → display non-blocking warning: "RULES.md was modified outside workflow. (a) Show diff, (b) Proceed, (c) Restore from HEAD." This is advisory only — do NOT halt. User may proceed without action.
+    - **Config Drift Advisory**: If output contains `CONFIG_DRIFT` warnings → log a non-blocking warning: "RULES.md was modified outside workflow." This is advisory only — do NOT halt or prompt the user. Auto-proceed.
 2. **Init**: `node .magic/scripts/executor.js init`.
     - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
 3. **Verify**: Ensure all 5 artifacts exist. HALT on failure.

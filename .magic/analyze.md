@@ -12,7 +12,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
-2. **Auto-Init**: If `.design/` or system files missing, auto-run `.magic/init.md`.
+2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
 5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
@@ -44,7 +44,7 @@ Parse the `[arg]` to determine the analysis mode:
 | 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. If value not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
 | 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: "Active workspace: {default}." |
-| 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation**: Quick-scan context (current folder, recent edits). **Ask** with recommendation: "Found {marker} — propose analyzing {workspace}. Confirm or select: [{list}]." |
+| 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation**: Quick-scan context (current folder, recent edits). **Select and NOTIFY** (Zero-Prompt): "Found {marker} — selecting {workspace}. Proceeding...". |
 | 4 | **No `workspace.json`** | — | Use root `.design/`. Log: "No workspace config found — scanning root .design/." |
 
 > **Scope Auto-Apply**: After workspace is resolved, apply its `scope` array from `workspace.json` as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). If the workspace has no `scope` field, scan the full project.
@@ -81,7 +81,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
     - `ok: true` → proceed.
     - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Build full project map.
 2. Inferred stack + architecture style.
@@ -96,7 +96,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
     - `ok: true` → proceed.
     - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Read existing specs; extract currently described paths/logic.
 2. Scan actual project; build delta.
@@ -221,7 +221,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Registry Sync: Update `INDEX.md`. Bump Registry version.
     - Post-Update Review: Run on all created specs before closing.
     - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
-    - **Actionable Outcome**: After silent dispatch, show: `[Auto-Analyze] {N} specs proposed and created as Stable.`
+    - **Zero-Prompt Handoff (C9)**: If logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: "[Auto-Analyze] {N} specs proposed and created as Stable. Proceed to Plan/Run?" and wait for reply.
 
 ## Task Completion Checklist
 

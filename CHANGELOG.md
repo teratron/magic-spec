@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.72] - 2026-03-30
+
+### Fixed
+
+- **AI Hallucinations**: Rephrased the directive `auto-run .magic/init.md` to `silently execute .magic/init.md (do not prompt user)` across all engine workflows. This prevents intelligent agents from incorrectly proposing the internal `.magic/init.md` script as a user-facing `/magic.init` slash command.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.72`, history updated, and checksums regenerated (C14).
+
 ## [1.5.70] - 2026-03-30
 
 ### Changed

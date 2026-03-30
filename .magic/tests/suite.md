@@ -75,12 +75,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Parse: 3 distinct topics identified
   - [ ] Map: JWT+Redis → `architecture.md`, REST → `architecture.md`, shadcn → new `ui-components.md`
-  - [ ] Trust Mode (C9): No objective conflicts → mapping shown as "Notice of Intent", dispatch proceeds immediately
+  - [ ] Trust Mode (C9): No objective conflicts → mapping performed as "Notice of Intent", dispatch proceeds automatically without halt
   - [ ] New file `ui-components.md` created from `.magic/templates/spec.md`
   - [ ] INDEX.md updated with new entry
   - [ ] Post-Update Review runs on all modified files
-  - [ ] Actionable Outcome shown: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
-- **Guards tested:** Multi-topic dispatch, Trust Mode auto-confirm, new file creation with template, registry sync
+  - [ ] Actionable Outcome shown: `[Batch-Stabilize] {Spec} promoted to Stable; updated registry.`
+- **Guards tested:** Multi-topic dispatch, Trust Mode (C9) auto-confirm, new file creation with template, registry sync
 
 ### T04 — Spec Intra-Input Self-Contradiction
 
@@ -122,8 +122,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] All 3 specs read, dependency graph built
   - [ ] Phases proposed: auth.md (L1) → Phase 0/1, auth-impl.md (L2) → Phase 1/2, api.md (L1) → Phase 0/1
   - [ ] L2 spec scheduled AFTER its L1 parent
-  - [ ] Execution mode asked (since not in RULES.md §7)
-  - [ ] Mode saved to RULES.md §7 on user answer
+  - [ ] Execution mode defaults to Parallel (C3)
+  - [ ] Mode saved to RULES.md §7 without prompt
   - [ ] PLAN.md created from `.magic/templates/plan.md`
   - [ ] TASKS.md + phase-1.md created from `.magic/templates/tasks.md`
 - **Guards tested:** Dependency ordering, layer respect, template usage, mode persistence
@@ -183,10 +183,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight: check-prerequisites → ok
   - [ ] Mode Guard: execution mode NOT found in RULES.md §7
-  - [ ] **HALT** — agent does NOT assume Sequential or Parallel
-  - [ ] Message: "Execution mode is not defined. Please run `magic.task` first."
-  - [ ] No task execution begins
-- **Guards tested:** Mode Guard (HALT on missing mode)
+  - [ ] **Auto-recover (C3)**: Parallel mode assumed as default; proceeded without halt
+  - [ ] Warning logged: "Execution mode was not defined. Parallel mode applied by default (C3)."
+  - [ ] Task execution begins autonomously
+- **Guards tested:** Mode Guard Auto-Recovery (C3)
 
 ### T11 — Run Full Deadlock (100% Blocked)
 
@@ -213,9 +213,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight passes
   - [ ] RULES.md read in full
   - [ ] **Duplication Guard**: semantic overlap with C5 detected
-  - [ ] Agent shows existing C5 and asks: "This overlaps with C5. Merge, replace, or add separately?"
-  - [ ] No write occurs until user decides
-- **Guards tested:** Duplication Guard
+  - [ ] Trust Mode (C9) → Overlap reported as advisory; duplicates merged or ignored without halt
+  - [ ] Actionable Outcome: summary of rule consolidation shown
+- **Guards tested:** Duplication Guard (Non-blocking)
 
 ### T13 — Rule Remove with Workflow Dependency
 
@@ -343,10 +343,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase 2 completion detected → Level 1 retro auto-snapshot
   - [ ] **Full plan completion** detected → Level 2 retrospective triggered
   - [ ] Level 2 retro: structured analysis with metrics across all phases
-  - [ ] Changelog Level 2 compiled (requires user approval before writing)
+  - [ ] Changelog Level 2 compiled (written automatically in Trust Mode)
   - [ ] CONTEXT.md regenerated
   - [ ] TASKS.md summary updated
-- **Guards tested:** Plan completion detection, Level 2 retro trigger, changelog approval gate
+- **Guards tested:** Plan completion detection, Level 2 retro trigger, Zero-Prompt changelog (C9)
 
 ### T22 — Run Phase 1→2 Transition
 
@@ -441,7 +441,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] **init**: `.design/` created, INDEX.md + RULES.md initialized
   - [ ] **spec**: `user-management-api.md` created from template, registered in INDEX.md (Draft)
-  - [ ] **spec update**: Status promoted Draft → RFC → Stable (with user confirmations)
+  - [ ] **spec update**: Status promoted Draft → RFC → Stable (Auto-Promotion via Trust Mode C9)
   - [ ] **task**: Dependency graph built (1 spec), PLAN.md created (1 phase), TASKS.md created
   - [ ] **task**: Execution mode asked and saved to RULES.md §7
   - [ ] **run**: Mode Guard passes, tasks executed sequentially
@@ -712,8 +712,7 @@ If any test fails, document the failure reason and propose a fix.
   - `RULES.md` §7 currently has rules up to C3.
 - **Action:** User prompts *"Amend C2 to say X, and add two new rules: Y and Z"*.
 - **Expected:**
-  - [ ] Agent groups the amendment and two additions into a SINGLE proposal block.
-  - [ ] Agent asks for a single "Apply all?" confirmation.
+  - [ ] **Batch**: When the user requests multiple rule changes (add + amend, or multiple adds) in §7, group all changes into a single atomic update. In **Trust Mode (C9)**, notify the user and apply immediately without additional confirmation. Only core amendments (§1–6) or conflicting §7 rules require explicit approval.
   - [ ] New rules are accurately assigned sequential IDs by calculating highest existing (`C4` and `C5`).
   - [ ] Agent performs a single final version bump.
 - **Guards tested:** Batch operations spam prevention, Dynamic ID assignment.
@@ -1180,14 +1179,19 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
-  - `.magic/tests/suite.md` exists but lacks H3 headers for tests (uses only H2 or plain text).
-- **Action:** Run `/magic.simulate test`
-- **Expected:**
-  - [ ] Agent reads `suite.md`.
-  - [ ] **Structural Issue Detected**: "Suite integrity failure: missing H3 test headers".
-  - [ ] Agent alerts user and proposes a fix for `suite.md` formatting.
-  - [ ] Agent falls back to **Improv Mode** until fixed.
-- **Guards tested:** Suite Integrity (Structural requirements), Fallback logic.
+  - `.magic/tests/suite.md` file is missing or inaccessible.
+- **Action 1:** User runs `/magic.simulate test`
+- **Expected 1:**
+  - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
+  - [ ] Agent alerts user that test suite is missing, provides hint to restore file from origin, and falls back to **Improv Mode**.
+  - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
+  - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
+  - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
+- **Action 2:** User runs `/magic.simulate` (without target), user requests generic "live simulation"
+- **Expected 2:**
+  - [ ] Agent defaults to **Improv Mode**.
+  - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
+- **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
 
 ### T79 — Run: Changelog Precision (Filter Blocked)
 
@@ -1759,7 +1763,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent uses search-replace operations instead of full file rewrite
   - [ ] Changed sections marked with `[ADDED]`, `[MODIFIED]`, or `[REMOVED]`
   - [ ] No content corruption from full-file replacement on large spec
-- **Guards tested:** Delta-Editing enforcement (Invariant 9) in operational step
+- **Guards tested:** Delta-Editing (Invariant 9) in operational step
 
 ### T118 — Spec Ventilation Routing (No Phantom C21)
 
@@ -2450,11 +2454,10 @@ If any test fails, document the failure reason and propose a fix.
   - User completed `/magic.task installers` (Mode B — scoped planning).
   - Planning is done, handoff to run triggered.
 - **Expected:**
-  - [ ] task.md MANDATORY HARD STOP fires
-  - [ ] Handoff message recommends: `/magic.run installers` (NOT `/magic.run`)
-  - [ ] Workspace `installers` is explicitly included in the recommended command
-  - [ ] If user follows recommendation and runs `/magic.run installers`, execution scopes correctly
-- **Guards tested:** Handoff Propagation (task→run), Workspace context preservation across workflow boundary
+  - [ ] task.md Zero-Prompt Transition (C9) fires
+  - [ ] Handoff message: `/magic.run installers` is invoked automatically
+  - [ ] Workspace `installers` context preserved across workflow boundary
+- **Guards tested:** Handoff Propagation (task→run), Workspace context preservation, Zero-Prompt automation
 
 ### T159 — Spec T4 Tier Routing: Workspace Signal Detected
 
@@ -2483,10 +2486,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] T4 trigger detected: "Remember that..."
   - [ ] **Tier Routing**: rule is universal (no workspace signal) → target = `.design/RULES.md`
   - [ ] **Duplication Check**: proposed rule semantically overlaps with existing C7
-  - [ ] Agent surfaces overlap: "This overlaps with C7 (Universal Script Executor). Merge, replace, or add separately?"
-  - [ ] No write to RULES.md until user decides
-  - [ ] Spec update proceeds independently (rule and spec are separate approval tracks)
-- **Guards tested:** T4 Inline Duplication Check, semantic overlap detection
+  - [ ] Trust Mode (C9) → Overlap reported as non-blocking advisory; write proceeds via merge
+  - [ ] Spec update proceeds atomically with rule synchronization
+- **Guards tested:** T4 Inline Duplication Check, Zero-Prompt rule sync
 
 ### T161 — Spec T4 Constitutional Guard Blocks Contradicting Rule
 

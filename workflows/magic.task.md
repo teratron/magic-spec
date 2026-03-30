@@ -6,7 +6,7 @@ handoffs:
     prompt: "Generate or update the implementation plan and tasks based on ALL registered specifications."
   - label: "Execute tasks"
     workflow: magic.run
-    prompt: "MANDATORY HARD STOP: Inform the user that the Planning phase is complete. Recommend starting a NEW chat session and running `/magic.run` to ensure clean context (Rule C17). REFUSE to execute the handoff autonomously."
+    prompt: "Proceed to task execution without interruption to maintain Zero-Prompt workflows (Rule C9)."
     condition: "tasks_generated"
 ---
 

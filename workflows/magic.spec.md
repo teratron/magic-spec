@@ -3,7 +3,7 @@ description: Workflow for creating and managing project specifications.
 handoffs:
   - label: "Generate tasks"
     workflow: magic.task
-    prompt: "MANDATORY HARD STOP: Inform the user that the Specification phase is complete. Recommend starting a NEW chat session and running `/magic.task` to ensure clean context (Rule C17). REFUSE to execute the handoff autonomously."
+    prompt: "Proceed to task generation without interruption to maintain Zero-Prompt workflows (Rule C9)."
     condition: "registry_updated"
   - label: "Add a rule"
     workflow: magic.rule

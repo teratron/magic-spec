@@ -5,9 +5,9 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the completed phase context. Propose the most likely workspace and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select** the most likely workspace based on path matches or project markers (e.g., `installers/` folder → `installers` workspace) and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Write ONLY to `RETROSPECTIVE.md`.
-3. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`.
+3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
 6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective` (Smart History: redundant automated entries are skipped).

@@ -8,11 +8,11 @@ Manages project conventions across a two-tier rules system:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the rule's context. Propose the most likely workspace (e.g., if rule mentions "npm" → `node` workspace) and ASK for confirmation. Never ask to "pick from a list" without a prioritized recommendation.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the completed phase context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
     After resolution, load global `RULES.md` first, then workspace `RULES.md` if it exists.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
-4. **Auto-Init**: If `.design/` missing, auto-run `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
+4. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user). If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
 5. **Versioning (C14)**:
     - **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule` (Smart History: redundant automated entries are skipped).
     - **Rules**: Bump Minor (add/amend), Major (remove), or Patch (typos). Update Document History in the target file (global or workspace). Modifying `.design/{workspace}/RULES.md` does NOT trigger a C14 engine bump (per C14§3 — `.design/` modifications are project manifest bumps, not engine bumps).
@@ -45,7 +45,7 @@ graph TD
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
     - `ok: true` → proceed.
     - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
 2. **Read**: Load global `.design/RULES.md`. If workspace is active and `.design/{workspace}/RULES.md` exists, load it too. Parse user intent into a declarative statement.
 3. **Tier Routing**: Apply Rule Tier Routing logic to determine target file.
 4. **Guards**:
@@ -53,7 +53,7 @@ graph TD
     - **Constitutional**: If a new §7 rule contradicts §1-6 core → **HALT** & report.
     - **Duplication**: If semantically overlaps with any C{N} in EITHER global or workspace RULES.md → Propose merge/replace.
 5. **Propose**: Show "Current vs Proposed" side-by-side. State target tier and version impact (e.g., workspace RULES.md 1.0.0 → 1.1.0).
-    - **Batch**: When the user requests multiple rule changes (add + amend, or multiple adds), group all changes into a single proposal with one "Apply all?" confirmation and one version bump.
+    - **Batch**: When the user requests multiple rule changes (add + amend, or multiple adds) in §7, group all changes into a single atomic update. In **Trust Mode (C9)**, notify the user and apply immediately without additional confirmation. Only core amendments (§1–6) or conflicting §7 rules require explicit approval.
 
 ### Actions
 

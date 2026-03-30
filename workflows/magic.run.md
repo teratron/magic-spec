@@ -3,11 +3,11 @@ description: Workflow for executing tasks from the project plan.
 handoffs:
   - label: "Generate tasks"
     workflow: magic.task
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.task` to rebuild deps without context bleed (Rule C17)."
+    prompt: "Proceed to rebuild dependencies and tasks seamlessly."
     condition: null
   - label: "Update specifications"
     workflow: magic.spec
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.spec` to architect solutions for Blocked tasks (Rule C17)."
+    prompt: "Transition to architecting solutions for Blocked tasks seamlessly."
     condition: null
 ---
 

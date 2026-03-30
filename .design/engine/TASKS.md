@@ -1,26 +1,23 @@
-# Task Index
+# Master Task Index (Registry)
 
 **Version:** 1.0.0
-**Generated:** 2026-03-25
-**Based on:** .design/engine/PLAN.md v1.0.0
+**Generated:** 2026-03-30
+**Based on PLAN:** .design/engine/PLAN.md v1.1.0
 **Based on RULES:** .design/RULES.md v1.3.0
 **Execution Mode:** Parallel
 **Status:** Active
 
-## Summary
+## Overview
 
-| Phase | Total | Todo | In Progress | Done | Blocked | Cancelled |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| Phase 1 | 3 | 0 | 0 | 3 | 0 | 0 |
+Tactical registry of all phases and their statuses. Currently, all specifications in the Engine workspace have been implemented and are part of the Baseline. There are no active phases required at this moment.
 
-## Phase 1 — Config Drift Detection
+## Active Phases
 
-### Checklist
+| Phase | Description | Status |
+| :--- | :--- | :--- |
+| *No active phases* | All baseline specifications completed | `Done` |
 
-- [x] [T-1A01] Add git diff drift check to executor check-prerequisites
-- [x] [T-1A02] Document Config Drift Guard in init.md
-- [x] [T-1T01] Add cognitive tests T168-T170 for config drift detection
+## Meta Information
 
-### Details
-
-> Per-task details in [tasks/phase-1.md](tasks/phase-1.md)
+- **Last Updated**: 2026-03-30
+- **Maintainer**: Core Team
