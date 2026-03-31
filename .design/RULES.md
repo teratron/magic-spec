@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Active
 
 ## Overview
@@ -80,7 +80,7 @@ During plan updates, specifications are automatically handled by their status to
 - **Stable specs**: Automatically pulled into the active plan.
 - **Orphaned specs** (in INDEX.md but absent from both plan and backlog): Flagged as critical blockers.
 
-**Note**: Safety is maintained through **Structural Validation** (check-prerequisites) rather than status gates. If the model is from a "Strong Tier", guards are optimized for speed; "Weak Tier" models trigger more explicit consistency checks.
+**Note**: Safety is maintained through **Structural Validation** (check-prerequisites) rather than status gates.
 
 ### C7 — Universal Script Executor
 
@@ -196,6 +196,7 @@ To minimize redundant resource usage and improve performance, the agent may opti
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.4.0 | 2026-03-31 | Agent | C6: Removed undefined "Strong/Weak Tier" qualifier (RE-3 simulation fix). |
 | 1.3.0 | 2026-03-16 | Antigravity | Added C23: Context Economy & Validation Caching. |
 | 1.2.0 | 2026-03-05 | Agent | Added C22: Workspace Rule Inheritance. |
 | 1.1.0 | 2026-03-03 | Antigravity | Added C17-C21: Installers, Security, Parity, and Ventilation. |

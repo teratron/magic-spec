@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.51
+**Version:** 1.9.60
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -128,19 +128,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md + phase-1.md created from `.magic/templates/tasks.md`
 - **Guards tested:** Dependency ordering, layer respect, template usage, mode persistence
 
-### T07 — Task Circular Dependency
+### T07 — Task Hard Dependency Cycle (Implements Chain)
 
 - **Workflow:** `task.md` (Generating Tasks & Plan)
 - **Synthetic State:**
-  - `auth.md` (Stable, Related: api.md)
-  - `api.md` (Stable, Related: auth.md)
-  - Circular dependency: auth → api → auth
+  - `auth.md` (Stable L2, Implements: api.md)
+  - `api.md` (Stable L2, Implements: auth.md)
+  - Hard circular dependency via Implements chain: auth → api → auth
 - **Expected:**
-  - [ ] Dependency graph construction detects cycle
+  - [ ] Dependency graph construction detects hard-dependency cycle in `Implements:` chain
   - [ ] **HALT** — cycle flagged to user
-  - [ ] Proposal: break cycle by removing one Related Specifications link or splitting spec
+  - [ ] Proposal: break cycle by downgrading one `Implements` link to `Related Specifications` or splitting spec
   - [ ] No PLAN.md written until cycle resolved
-- **Guards tested:** Circular Dependency Guard
+- **Guards tested:** Circular Guard (Semantic Split — hard dependency HALT)
 
 ### T08 — Task Phantom Specs with Done Tasks
 
@@ -1013,20 +1013,21 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Message: "Specification `auth.md` is registered in INDEX but missing from disk. Please restore or unregister before updating."
 - **Guards tested:** Existence Guard (C1, Registry Drift).
 
-### T62 — N-Level Circular Dependency
+### T62 — N-Level Hard Dependency Cycle (Implements Chain)
 
 - **Workflow:** `task.md`
 - **Synthetic State:**
-  - `auth.md` (Stable, Related: api.md)
-  - `api.md` (Stable, Related: database.md)
-  - `database.md` (Stable, Related: auth.md)
+  - `auth.md` (Stable L2, Implements: api.md)
+  - `api.md` (Stable L2, Implements: database.md)
+  - `database.md` (Stable L2, Implements: auth.md)
+  - Hard circular dependency via Implements chain at level 3: auth → api → database → auth
 - **Action:** Call `/magic.task` to generate a plan.
 - **Expected:**
-  - [ ] Dependency matrix construction (auth -> api -> database -> auth).
+  - [ ] Dependency matrix construction detects hard-dependency cycle (auth -> api -> database -> auth) in `Implements:` chain.
   - [ ] **Circular Guard** detects cycle at level 3.
   - [ ] **HALT** — No PLAN.md is written.
-  - [ ] Agent visualizes the full cycle chain and asks user to break the link.
-- **Guards tested:** N-Level Circular Dependency (C7).
+  - [ ] Cycle Resolution: agent identifies the "weakest link" and suggests downgrading one `Implements` to `Related Specifications`.
+- **Guards tested:** N-Level Circular Dependency (Semantic Split — hard dependency HALT).
 
 ### T63 — Simulation Cold Start Auto-Init
 
@@ -1175,23 +1176,20 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
 - **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
 
-### T73 — Simulation: Suite Integrity Failure
+### T73 — Simulation: Corrupted Suite (Partial Content)
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
-  - `.magic/tests/suite.md` file is missing or inaccessible.
-- **Action 1:** User runs `/magic.simulate test`
-- **Expected 1:**
-  - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
-  - [ ] Agent alerts user that test suite is missing, provides hint to restore file from origin, and falls back to **Improv Mode**.
-  - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
-  - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
-  - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
-- **Action 2:** User runs `/magic.simulate` (without target), user requests generic "live simulation"
-- **Expected 2:**
-  - [ ] Agent defaults to **Improv Mode**.
-  - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
-- **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
+  - `.magic/tests/suite.md` exists but contains only the header block (no `### T{N}` test scenarios).
+  - File is readable but has zero parseable test cases.
+- **Action:** User runs `/magic.simulate test`
+- **Expected:**
+  - [ ] Agent reads `.magic/tests/suite.md` successfully (file exists).
+  - [ ] Suite Integrity check detects 0 valid test scenarios (no `### T{N} —` headers found).
+  - [ ] Agent reports: "Suite contains 0 valid tests. Hint: restore file from origin."
+  - [ ] Agent falls back to **Improv Mode** (same as missing suite — T32).
+  - [ ] Crisis scenario synthesized and walkthrough executed.
+- **Guards tested:** Suite Integrity (zero-test edge case), Improv Mode fallback on corrupted suite
 
 ### T74 — Run: Changelog Precision (Filter Blocked)
 
@@ -2791,6 +2789,119 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** with report: "Header parity failure on parent spec `engine/l1-core.md`... Resolve via `magic.spec` or `magic.analyze` before planning."
 - **Guards tested:** Cross-Workspace Header Parity, multi-workspace pre-flight integrity.
 
+### T178 — Task Soft-Reference Cycle Does Not Block Planning (RE-4 Regression)
+
+- **Workflow:** `task.md` (Generating Tasks & Plan)
+- **Synthetic State:**
+  - `auth.md` (Stable L1, Related Specifications: api.md)
+  - `api.md` (Stable L1, Related Specifications: auth.md)
+  - Mutual soft reference cycle: auth ↔ api (via `Related Specifications` only, no `Implements:` chain)
+- **Action:** Call `/magic.task` to generate a plan.
+- **Expected:**
+  - [ ] Dependency graph construction detects mutual references in `Related Specifications`
+  - [ ] **No HALT** — soft reference cycles are non-blocking per Semantic Split
+  - [ ] Log contains: `[Cycle-Info] 1 mutual references detected in Related Specifications (non-blocking).`
+  - [ ] Planning proceeds normally: both specs placed into active phases
+  - [ ] PLAN.md written successfully
+- **Guards tested:** Circular Guard Semantic Split — soft references non-blocking (regression for T07/T62 fix)
+
+### T179 — Simulate Suite Corruption Fallback (RE-5 Regression)
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - `.magic/tests/suite.md` exists but contains only metadata header (no test scenarios).
+  - File size > 0 bytes, readable.
+- **Action:** User runs `/magic.simulate test`
+- **Expected:**
+  - [ ] Agent opens and reads `suite.md` — file access succeeds (no "missing" error)
+  - [ ] Suite Integrity detects 0 valid `### T{N} —` headers
+  - [ ] Agent does NOT attempt to execute 0 tests and report "all passed"
+  - [ ] Agent falls back to Improv Mode with notification
+  - [ ] Improv Mode produces a Crisis scenario and walkthrough
+- **Guards tested:** Suite Integrity zero-test detection, distinct from missing-file fallback (T32)
+
+### T180 — Analyze Mode A GHOST_REGISTRY Triggers C15 Filter (RE-1 Regression)
+
+- **Workflow:** `analyze.md` (Mode A — Step 0 Pre-flight)
+- **Synthetic State:**
+  - `.design/INDEX.md` empty (0 specs) → Mode A eligible
+  - `INDEX.md` in another workspace references `phantom.md` which is missing from disk
+  - `check-prerequisites --json` returns `ok: false` with `GHOST_REGISTRY` warning for `phantom.md`
+  - Active workspace: `engine` (in-scope)
+- **Action:** `/magic.analyze`
+- **Expected:**
+  - [ ] Pre-flight Step 0 runs `check-prerequisites --json`
+  - [ ] `GHOST_REGISTRY` warning detected in output
+  - [ ] **C15 Filter** applied: agent checks if `phantom.md` is in active workspace scope
+  - [ ] If in-scope → **HALT**: "Registry/engine integrity failure. Run `magic.spec --audit` or `update-engine-meta` to resolve."
+  - [ ] Agent does NOT proceed to "Build full project map" (Step 1)
+  - [ ] Agent does NOT attempt to read `phantom.md` from disk
+- **Guards tested:** GHOST_REGISTRY in analyze.md Mode A (RE-1 fix), C15 Filter application, anti-hallucination
+
+### T181 — Analyze Mode A Unrecognized Pre-flight Failure (RE-1 Regression)
+
+- **Workflow:** `analyze.md` (Mode A — Step 0 Pre-flight)
+- **Synthetic State:**
+  - `check-prerequisites --json` returns `ok: false` with unknown field `{"ok": false, "unknown_error": "permission_denied"}`
+  - No `ENGINE_INTEGRITY`, no `GHOST_REGISTRY`, no missing `.design/`
+- **Action:** `/magic.analyze`
+- **Expected:**
+  - [ ] Pre-flight Step 0 detects `ok: false` with no matching category
+  - [ ] **HALT**: "Unexpected pre-flight failure: {raw output}. Investigate manually."
+  - [ ] Agent does NOT silently proceed to scanning
+  - [ ] Agent does NOT fall through to Depth Control
+- **Guards tested:** Unrecognized failure HALT in analyze.md (RE-1 fix), fail-safe branch
+
+### T182 — Task CONTEXT.md Regeneration Step Executed (RE-2 Regression)
+
+- **Workflow:** `task.md` (Context Regeneration step)
+- **Synthetic State:**
+  - 2 Stable specs in `engine` workspace
+  - No existing PLAN.md or TASKS.md
+- **Action:** `/magic.task engine`
+- **Expected:**
+  - [ ] Plan Write-back: PLAN.md, TASKS.md, and phase file written
+  - [ ] **Context Regeneration**: `node .magic/scripts/executor.js generate-context --workspace engine` executed
+  - [ ] CONTEXT.md file created or updated in `.design/engine/`
+  - [ ] Completion Checklist item "CONTEXT.md regenerated" verifiable
+- **Guards tested:** Context Regeneration as explicit workflow step (RE-2 fix), diagram-text parity
+
+### T183 — C6 No Tier-Based Behavior Divergence (RE-3 Regression)
+
+- **Workflow:** `task.md` (C6 — Autonomous Selective Planning)
+- **Synthetic State:**
+  - `RULES.md` v1.4.0+ (C6 without "Strong/Weak Tier" qualifier)
+  - 3 Stable specs, 2 Draft specs
+- **Action:** `/magic.task`
+- **Expected:**
+  - [ ] C6 applied: 3 Stable → active plan, 2 Draft → Backlog
+  - [ ] Agent does NOT reference "Strong Tier" or "Weak Tier" in its reasoning
+  - [ ] Agent does NOT modify guard behavior based on self-assessed model capability
+  - [ ] All structural validation guards (check-prerequisites, File-Header Parity) run identically
+- **Guards tested:** C6 deterministic behavior (RE-3 fix), no tier-based divergence
+
+### T184 — Workspace Disambiguation Uses Quantified Threshold (RE-6 Regression)
+
+- **Workflow:** Any (task.md used as example)
+- **Synthetic State:**
+  - `workspace.json`: two workspaces, NO default field
+    - `api` with scope: `["packages/api/", "packages/shared/"]`
+    - `web` with scope: `["packages/web/", "packages/shared/"]`
+  - Current directory contains 10 files: 6 in `packages/api/`, 2 in `packages/web/`, 2 in `packages/shared/`
+- **Action:** `/magic.task` (no workspace argument, no env var)
+- **Expected:**
+  - [ ] Quick-scan runs: checks file overlap with each workspace's `scope` array
+  - [ ] `api` scope covers 8/10 files (80%) — meets ≥50% threshold
+  - [ ] `web` scope covers 4/10 files (40%) — below threshold
+  - [ ] Agent selects `api` workspace and NOTIFIES user: "Found api scope match — selecting api. Proceeding..."
+  - [ ] Agent does NOT halt to ask (quantified threshold met)
+- **Test B — No workspace meets threshold:**
+  - **Synthetic State:** Current directory has 10 files, 3 in `packages/api/` scope, 3 in `packages/web/` scope, 4 outside both
+  - **Expected:**
+    - [ ] `api` covers 30%, `web` covers 30% — both below ≥50%
+    - [ ] Agent **halts** and asks: "Multiple workspaces found: [api, web]. Which one?"
+- **Guards tested:** Quantified disambiguation threshold (RE-6 fix), deterministic halt vs auto-select
+
 ```
-**Test Suite Finalized** - v1.9.58 (Last: T177)
+**Test Suite Finalized** - v1.9.60 (Last: T184)
 ```

@@ -80,8 +80,9 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
     - `ok: true` → proceed.
-    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**: "Registry/engine integrity failure. Run `magic.spec --audit` or `update-engine-meta` to resolve." If out-of-scope → proceed silently.
     - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
+    - Unrecognized failure (`ok: false` with no matching category above) → **HALT**: "Unexpected pre-flight failure: {raw output}. Investigate manually."
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Build full project map.
 2. Inferred stack + architecture style.
@@ -95,8 +96,9 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 0. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
     - `ok: true` → proceed.
-    - `checksums_mismatch` → **HALT**. Report: "Engine integrity failure. Run `update-engine-meta` or restore from origin."
+    - `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**: "Registry/engine integrity failure. Run `magic.spec --audit` or `update-engine-meta` to resolve." If out-of-scope → proceed silently.
     - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
+    - Unrecognized failure (`ok: false` with no matching category above) → **HALT**: "Unexpected pre-flight failure: {raw output}. Investigate manually."
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Read existing specs; extract currently described paths/logic.
 2. Scan actual project; build delta.

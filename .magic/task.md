@@ -20,7 +20,7 @@ Parse the `[arg]` to determine the planning mode:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select** the most likely workspace based on path matches or project markers (e.g., `src/` folder → `main` workspace) and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select** the most likely workspace based on path matches or project markers (e.g., `src/` folder → `main` workspace) and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
 3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
@@ -94,6 +94,11 @@ graph TD
 - PLAN.md: Strategic overview (Phases & Specifications). No atomic checklist items.
 - TASKS.md: Master Phase Index. Contains phase registry and status tracking.
 - tasks/phase-{n}.md: Tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
+
+### Context Regeneration
+
+After writing PLAN.md, TASKS.md, and phase files, regenerate the workspace context file:
+`node .magic/scripts/executor.js generate-context --workspace {active-workspace}`
 
 ## Task Completion Checklist
 

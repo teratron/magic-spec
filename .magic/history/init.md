@@ -12,4 +12,4 @@
 | 1.5.0 | 2026-03-13 | Excluded simulation and optimized installation package; consolidated rules C1-C17 |
 | 1.5.13 - 1.5.36 | 2026-03-20 | Automated update via engine meta automation |
 | 1.5.44 | 2026-03-24 | Add C18-C23 to RULES template; deduplicate workspace.json reads |
-| 1.5.62 | 2026-03-29 | Automated update via engine meta automation |
+| 1.5.62 - 1.5.81 | 2026-03-31 | Automated update via engine meta automation |

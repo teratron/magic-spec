@@ -11,7 +11,7 @@ Universal process for managing project specifications in `.design/specifications
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no high-confidence match is found.
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code only. If implementation code is detected during any update or creation → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
