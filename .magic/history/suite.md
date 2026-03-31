@@ -32,3 +32,4 @@
 | 1.4.9 - 1.4.127 | 2026-03-04 | Automated update via engine meta automation |
 | 1.4.129 | 2026-03-04 | Upgraded Ghost Registry from warning to critical HALT barrier |
 | 1.4.166 - 1.5.67 | 2026-03-29 | Automated update via engine meta automation |
+| 1.5.79 | 2026-03-31 | Cross-workspace parent header parity guards and T177 test case |

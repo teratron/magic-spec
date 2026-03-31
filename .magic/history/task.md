@@ -14,3 +14,4 @@
 | 1.4.166 - 1.5.54 | 2026-03-29 | Automated update via engine meta automation |
 | 1.5.57 | 2026-03-29 | Align TASKS.md and tasks/ structure; added phase.md template |
 | 1.5.69 - 1.5.74 | 2026-03-30 | Automated update via engine meta automation |
+| 1.5.79 | 2026-03-31 | Cross-workspace parent header parity guards and T177 test case |

@@ -233,7 +233,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Impact Analysis includes TASKS.md version staleness note
 - **Guards tested:** Workflow Dependency Check, Impact Analysis
 
-### T15 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
+### T14 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
 
 - **Workflow:** `retrospective.md` (Level 1: Auto-Snapshot)
 - **Synthetic State:**
@@ -253,7 +253,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase file archived to `archives/tasks/`
 - **Guards tested:** Template creation on missing file, signal calculation, archival
 
-### T16 — Simulate Checksums Mismatch HALT
+### T15 — Simulate Checksums Mismatch HALT
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:**
@@ -269,7 +269,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Simulation resumes only after user response
 - **Guards tested:** Checksums mismatch HALT (Step 0)
 
-### T17 — Spec T4 Trigger (Auto Rule Capture)
+### T16 — Spec T4 Trigger (Auto Rule Capture)
 
 - **Workflow:** `spec.md` (T4: Rule Extraction)
 - **Synthetic State:**
@@ -285,7 +285,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `api.md` updated with gRPC requirement
 - **Guards tested:** T4 standing-rule detection, dual write (spec + rule)
 
-### T18 — Spec Explore Mode to Formal Spec
+### T17 — Spec Explore Mode to Formal Spec
 
 - **Workflow:** `spec.md` (Explore Mode → Formal Spec)
 - **Synthetic State:**
@@ -300,7 +300,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] INDEX.md updated with auth.md (Draft)
 - **Guards tested:** Explore Mode isolation (no `.design/` writes), transition to formal, template usage
 
-### T19 — Spec Update Stable → RFC (Amendment Rule)
+### T18 — Spec Update Stable → RFC (Amendment Rule)
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
 - **Synthetic State:**
@@ -316,7 +316,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] RULES.md triggers evaluated
 - **Guards tested:** Amendment rule (Stable→RFC on substantive change), version bump
 
-### T20 — Run Parallel Mode (2 Tracks, Shared Conflict)
+### T19 — Run Parallel Mode (2 Tracks, Shared Conflict)
 
 - **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
 - **Synthetic State:**
@@ -332,7 +332,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No data loss or race condition
 - **Guards tested:** Parallel execution, shared-constraint detection, Manager serialization
 
-### T21 — Run Full Plan Complete (Conclusion Cascade)
+### T20 — Run Full Plan Complete (Conclusion Cascade)
 
 - **Workflow:** `run.md` + `retrospective.md` (Plan Completion)
 - **Synthetic State:**
@@ -348,7 +348,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md summary updated
 - **Guards tested:** Plan completion detection, Level 2 retro trigger, Zero-Prompt changelog (C9)
 
-### T22 — Run Phase 1→2 Transition
+### T21 — Run Phase 1→2 Transition
 
 - **Workflow:** `run.md` (Phase Transition)
 - **Synthetic State:**
@@ -365,7 +365,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No user prompt between phases (C9: Zero-Prompt Automation)
 - **Guards tested:** Phase archival (C8), seamless transition, Zero-Prompt (C9)
 
-### T23 — Retrospective Level 2 Full Analysis
+### T22 — Retrospective Level 2 Full Analysis
 
 - **Workflow:** `retrospective.md` (Level 2: Full Retrospective)
 - **Synthetic State:**
@@ -383,7 +383,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User asked: "Generate external changelog?" (Level 2 approval gate)
 - **Guards tested:** Multi-phase analysis, trend detection, approval gate for Level 2 changelog
 
-### T24 — Task Selective Planning (C6) with Mixed Statuses
+### T23 — Task Selective Planning (C6) with Mixed Statuses
 
 - **Workflow:** `task.md` (Updating Tasks & Plan)
 - **Synthetic State:**
@@ -399,7 +399,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No Draft/RFC spec enters active phases without explicit pull
 - **Guards tested:** Selective Planning (C6), mixed status handling, zero-prompt automation
 
-### T25 — Rule Amend Core Section (§1–6)
+### T24 — Rule Amend Core Section (§1–6)
 
 - **Workflow:** `rule.md` (Amending a Convention)
 - **Synthetic State:**
@@ -414,7 +414,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If approved: §2 updated, RULES.md major version bump
 - **Guards tested:** Convention-not-found handler, core section amendment gate
 
-### T27 — Spec Full Consistency Audit
+### T25 — Spec Full Consistency Audit
 
 - **Workflow:** `spec.md` (Consistency Check & Audit Report)
 - **Synthetic State:**
@@ -432,7 +432,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No automatic fixes — all surfaced for user decision
 - **Guards tested:** Orphan detection, stale refs, layer integrity, version sync
 
-### T28 — End-to-End Lifecycle (Cross-Workflow Chain)
+### T26 — End-to-End Lifecycle (Cross-Workflow Chain)
 
 - **Workflow:** `init.md` → `spec.md` → `task.md` → `run.md` → `retrospective.md`
 - **Synthetic State:**
@@ -452,7 +452,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No orphaned specs, no stale references, no version mismatches
 - **Guards tested:** Full chain integrity, all workflow handoffs, all guards in sequence
 
-### T29 — Analyze First-Time on Existing Project
+### T27 — Analyze First-Time on Existing Project
 
 - **Workflow:** `analyze.md` (First-Time Analysis, delegated from `spec.md`)
 - **Synthetic State:**
@@ -474,7 +474,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No `.design/specifications/` files created until approval
 - **Guards tested:** Delegation routing, First-Time detection, read-only scan, Explore Mode safety (no live writes)
 
-### T30 — Analyze Re-Analysis Gap Detection
+### T28 — Analyze Re-Analysis Gap Detection
 
 - **Workflow:** `analyze.md` (Re-Analysis Mode, delegated from `spec.md`)
 - **Synthetic State:**
@@ -505,7 +505,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User prompted before any live modifications
 - **Guards tested:** Re-Analysis mode detection, delta comparison, drift detection, uncovered module detection
 
-### T31 — Analyze Delegation Routing from spec.md
+### T29 — Analyze Delegation Routing from spec.md
 
 - **Workflow:** `spec.md` → `analyze.md` (Delegation)
 - **Synthetic State:**
@@ -525,7 +525,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Standard Explore Mode proceeds (thinking partner, no live writes)
 - **Guards tested:** Delegation trigger accuracy, non-matching triggers stay in Explore Mode
 
-### T32 — Init Existing Codebase Hint
+### T30 — Init Existing Codebase Hint
 
 - **Workflow:** `init.md` (Existing Codebase Hint)
 - **Test A — Project with code:**
@@ -550,7 +550,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Calling workflow continues
 - **Guards tested:** Codebase detection heuristic, hint presence/absence
 
-### T33 — Analyze Depth Control for Large Projects
+### T31 — Analyze Depth Control for Large Projects
 
 - **Workflow:** `analyze.md` (Depth Control)
 - **Test A — Small project (<50 files):**
@@ -573,7 +573,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Agent does NOT auto-start full scan on large projects
 - **Guards tested:** Depth Control thresholds (<50, 50–500, >500), auto-scan vs prompt
 
-### T34 — Simulate Missing Test Suite (Improv Mode Fallback)
+### T32 — Simulate Missing Test Suite (Improv Mode Fallback)
 
 - **Workflow:** `simulate.md` (Improv Mode)
 - **Synthetic State:**
@@ -591,7 +591,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
 - **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
 
-### T35 — Run Sequence Syncs to PLAN.md
+### T33 — Run Sequence Syncs to PLAN.md
 
 - **Workflow:** `run.md` (Executing Tasks)
 - **Synthetic State:**
@@ -605,7 +605,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md updated with `Done`.
 - **Guards tested:** Plan Sync mechanism (Plan Amnesia fix)
 
-### T36 — Run Task Blocked Handoff to spec.md
+### T34 — Run Task Blocked Handoff to spec.md
 
 - **Workflow:** `run.md` (Executing Tasks)
 - **Synthetic State:**
@@ -619,7 +619,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Once the specification is formally updated and unblocked, agent proceeds to `magic.task` to rebuild task dependencies.
 - **Guards tested:** Cross-workflow handoff routing, blocked task escalation.
 
-### T37 — Simulate Regression Sweep Post-Fix
+### T35 — Simulate Regression Sweep Post-Fix
 
 - **Workflow:** `simulate.md` (Verification Step)
 - **Synthetic State:**
@@ -633,7 +633,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
 - **Guards tested:** Post-fix regression sweep enforcement.
 
-### T38 — Workspace Context Resolution (Zero-Prompt)
+### T36 — Workspace Context Resolution (Zero-Prompt)
 
 - **Workflow:** Any (`task.md` used as example)
 - **Synthetic State:**
@@ -654,7 +654,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent uses root `.design/` for all operations.
 - **Guards tested:** Context Resolution Priority, Zero-Prompt Enforcement, Graceful Fallback.
 
-### T39 — Retrospective Path and Template Resilience
+### T37 — Retrospective Path and Template Resilience
 
 - **Workflow:** `retrospective.md`
 - **Synthetic State:**
@@ -669,7 +669,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT write anything to `.design/` root.
 - **Guards tested:** Workspace path adherence, Level 1 template fidelity.
 
-### T40 — Analyze Auto-Init Guard and Markdown List Integrity
+### T38 — Analyze Auto-Init Guard and Markdown List Integrity
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:** Fresh repository without `.design/` directory.
@@ -679,7 +679,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent processes all 7 Re-Analysis steps linearly without sequence restart.
 - **Guards tested:** Auto-Init Delegation, Markdown List Continuity.
 
-### T41 — Run Phase Completion with Cancelled Tasks Guard
+### T39 — Run Phase Completion with Cancelled Tasks Guard
 
 - **Workflow:** `run.md` + `retrospective.md`
 - **Synthetic State:**
@@ -693,7 +693,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Retrospective and summary extract `Cancelled` metric successfully.
 - **Guards tested:** Phase completion on Cancelled, Missing Cancelled Metric.
 
-### T42 — Simulate Improv Mode Zero-Prompt Fallback
+### T40 — Simulate Improv Mode Zero-Prompt Fallback
 
 - **Workflow:** `simulate.md` (Wrapper & Engine)
 - **Synthetic State:** Fresh design session, all files present.
@@ -705,7 +705,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent invents a crisis scenario and proceeds autonomously.
 - **Guards tested:** Zero-prompt fallback rule, prompt ambiguity block.
 
-### T43 — Rule Batch Operations and ID Assignment
+### T41 — Rule Batch Operations and ID Assignment
 
 - **Workflow:** `rule.md`
 - **Synthetic State:**
@@ -717,7 +717,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent performs a single final version bump.
 - **Guards tested:** Batch operations spam prevention, Dynamic ID assignment.
 
-### T45 — Run Version Bleed Guard
+### T42 — Run Version Bleed Guard
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
@@ -730,7 +730,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT attempt to modify `.magic/.version` in any way.
 - **Guards tested:** Version Bleed Prevention.
 
-### T46 — Spec Rename Retention
+### T43 — Spec Rename Retention
 
 - **Workflow:** `spec.md` & `task.md`
 - **Synthetic State:**
@@ -742,7 +742,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Existing tasks in `TASKS.md` retain progress but point to the new spec name.
 - **Guards tested:** Spec Renaming Protocol, Task Continuity.
 
-### T47 — Stability Downgrade Tracking
+### T44 — Stability Downgrade Tracking
 
 - **Workflow:** `task.md`
 - **Synthetic State:**
@@ -755,7 +755,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pending tasks are marked `Blocked [!]` with "Awaiting spec stabilization".
 - **Guards tested:** Stability Downgrade Guard, Backlog Placement, Active Task Preservation.
 
-### T48 — Automation Handoff Validation (Init)
+### T45 — Automation Handoff Validation (Init)
 
 - **Workflow:** `init.md`
 - **Synthetic State:**
@@ -770,7 +770,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent HALTs initialization immediately and reports the mismatch.
 - **Guards tested:** AOP Automation Delegation, Engine Integrity Guard.
 
-### T49 — Analysis Depth Control (Prioritization)
+### T46 — Analysis Depth Control (Prioritization)
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:**
@@ -784,7 +784,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does not proceed to deep scan until scope is clarified.
 - **Guards tested:** Depth Control (Scan Protection).
 
-### T50 — Manual Rename Rescue (Improv Mode)
+### T47 — Manual Rename Rescue (Improv Mode)
 
 - **Workflow:** `spec.md`
 - **Synthetic State:**
@@ -800,7 +800,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent successfully cascades the rename in `INDEX.md`, `PLAN.md`, and `TASKS.md` via the Spec Renaming Protocol without deleting tasks.
 - **Guards tested:** Manual Rename Rescue (AOP), Spec Renaming Protocol.
 
-### T51 — Analyze Smart Sync (AOP)
+### T48 — Analyze Smart Sync (AOP)
 
 - **Workflow:** `analyze.md` (Re-Analysis Mode)
 - **Synthetic State:**
@@ -817,7 +817,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Gap Report status for `src/identity/` marked as `Manual Rename (Synced)`.
 - **Guards tested:** Smart Sync (AOP) Rename detection, Gap Report RESCUE action.
 
-### T52 — Spec Consistency Registry Integrity Missing File
+### T49 — Spec Consistency Registry Integrity Missing File
 
 - **Workflow:** `spec.md` (Consistency Check & Audit Report)
 - **Synthetic State:**
@@ -833,7 +833,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Consistency Report generated proposing to remove the orphaned entry from `INDEX.md` or restoring the file.
 - **Guards tested:** Registry Integrity Guard, Missing File Exception Handling.
 
-### T53 — Spec Deprecation Cascade with Implements Hierarchy
+### T50 — Spec Deprecation Cascade with Implements Hierarchy
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
 - **Synthetic State:**
@@ -846,7 +846,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Post-Update Review surfaces layer isolation logic (L2 has no valid L1 parent).
 - **Guards tested:** Deprecation Cascade on Implements clause, Layer Integrity.
 
-### T54 — Spec Rename History Immutability
+### T51 — Spec Rename History Immutability
 
 - **Workflow:** `spec.md` (Updating an Existing Specification -> Spec Renaming Protocol)
 - **Synthetic State:**
@@ -859,7 +859,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Mentions of `old-api.md` in historical logs are left completely intact.
 - **Guards tested:** Historical Immutability Guard, Spec Renaming Protocol scoping.
 
-### T55 — Spec Quarantine Cascade Enforcement (C12)
+### T52 — Spec Quarantine Cascade Enforcement (C12)
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
 - **Synthetic State:**
@@ -874,7 +874,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) status dropped to maintain invariant §52."
 - **Guards tested:** Quarantine Cascade (C12) surfacing, Layer Integrity.
 
-### T56 — Task Quarantine Cascade (C12)
+### T53 — Task Quarantine Cascade (C12)
 
 - **Workflow:** `task.md` (Updating Tasks & Plan)
 - **Synthetic State:**
@@ -891,7 +891,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
 
-### T57 — Parallel Mode Shared-Constraint Detection (Deep Scan)
+### T54 — Parallel Mode Shared-Constraint Detection (Deep Scan)
 
 - **Workflow:** `run.md` (Executing Tasks — Parallel Mode)
 - **Synthetic State:**
@@ -909,7 +909,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Log entry recorded: "Serialization decision: T-1A01 and T-1B01 both modify `src/lib/manager.js`".
 - **Guards tested:** Deep Shared-Constraint Detection (Spec Scan), Conflict Prevention.
 
-### T58 — Run Rules-First Convention Enforcement
+### T55 — Run Rules-First Convention Enforcement
 
 - **Workflow:** `run.md` (Executing Tasks)
 - **Synthetic State:**
@@ -923,7 +923,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Task output adheres to conventions found in RULES.md (engine enforces reading, not specific convention content)
 - **Guards tested:** Rules First invariant, convention sync guard.
 
-### T59 — Engine Meta Automation Enforcement
+### T56 — Engine Meta Automation Enforcement
 
 - **Workflow:** `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
 - **Synthetic State:**
@@ -941,7 +941,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Results documented in the task completion checklist.
 - **Guards tested:** C1, C14, Engine Integrity Guard (via meta automation).
 
-### T60 — Run Convention Sync Guard (Version Mismatch)
+### T57 — Run Convention Sync Guard (Version Mismatch)
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
@@ -956,7 +956,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No execution begins until user chooses to proceed.
 - **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.
 
-### T61 — Init: Workspace Initialized
+### T58 — Init: Workspace Initialized
 
 - **Workflow:** `init.md`
 - **Synthetic State:**
@@ -969,7 +969,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `.design/RULES.md` and `INDEX.md` created.
 - **Guards tested:** Core Artifact Initialization, Zero-Prompt baseline.
 
-### T62 — Analyze: Depth Control (Threshold Enforcement)
+### T59 — Analyze: Depth Control (Threshold Enforcement)
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:**
@@ -983,7 +983,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Project C**: Agent recommends "Focused/Quick" and HALTs for choice.
 - **Guards tested:** Depth Control (Safety) thresholds.
 
-### T63 — Retro: Snapshot Archival (C8)
+### T60 — Retro: Snapshot Archival (C8)
 
 - **Workflow:** `retrospective.md` (Level 1 Snapshot)
 - **Synthetic State:**
@@ -999,7 +999,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `TASKS.md` link updated to: `[Phase 3](archives/tasks/phase-3.md)`.
 - **Guards tested:** C8 Archival, Workspace-relative pathing logic.
 
-### T66 — Spec Registry-Filesystem Desync
+### T61 — Spec Registry-Filesystem Desync
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
 - **Synthetic State:**
@@ -1013,7 +1013,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Message: "Specification `auth.md` is registered in INDEX but missing from disk. Please restore or unregister before updating."
 - **Guards tested:** Existence Guard (C1, Registry Drift).
 
-### T67 — N-Level Circular Dependency
+### T62 — N-Level Circular Dependency
 
 - **Workflow:** `task.md`
 - **Synthetic State:**
@@ -1028,7 +1028,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent visualizes the full cycle chain and asks user to break the link.
 - **Guards tested:** N-Level Circular Dependency (C7).
 
-### T68 — Simulation Cold Start Auto-Init
+### T63 — Simulation Cold Start Auto-Init
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:** Fresh repository, `.design/` (missing).
@@ -1040,7 +1040,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After init completes, simulation resumes from Mode Selection.
 - **Guards tested:** Auto-Init on missing `.design/`, resume after init.
 
-### T69 — Quarantine Cascade Enforcement
+### T64 — Quarantine Cascade Enforcement
 
 - **Workflow:** `run.md` (Step 0: Pre-flight)
 - **Synthetic State:**
@@ -1055,7 +1055,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Message: "Quarantine Triggered: Specification `api-impl.md` has a non-Stable parent. Please run `magic.task` to update your plan."
 - **Guards tested:** Rule 57 Enforcement (C12), Runtime Quarantine Check.
 
-### T70 — Scoped Analysis Guard (C15)
+### T65 — Scoped Analysis Guard (C15)
 
 - **Workflow:** `analyze.md`
 - **Synthetic State:**
@@ -1068,7 +1068,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Proposal only includes modules found within the scoped paths.
 - **Guards tested:** Scoped Scanning (C15), Multi-Workspace Isolation.
 
-### T71 — Task Primary Intent Propagation (Cold Start Memory)
+### T66 — Task Primary Intent Propagation (Cold Start Memory)
 
 - **Workflow:** `task.md` -> `init.md` -> `analyze.md`
 - **Synthetic State:**
@@ -1082,7 +1082,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Intent "Feature X" is NOT lost during the mapping/bootstrapping of existing code.
 - **Guards tested:** Context Continuity, Intent Preservation.
 
-### T72 — Engine Meta Auto-Heal (History Resilience)
+### T67 — Engine Meta Auto-Heal (History Resilience)
 
 - **Workflow:** `executor.js` (update-engine-meta)
 - **Synthetic State:**
@@ -1097,7 +1097,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report confirms restoration: "History file RESTORED (Auto-Heal)".
 - **Guards tested:** Automated Restoration, Kernel Integrity (C1).
 
-### T73 — Ghost Registry Repair Priority (Non-Destructive Boot)
+### T68 — Ghost Registry Repair Priority (Non-Destructive Boot)
 
 - **Workflow:** `analyze.md` (Mode: Registry Repair)
 - **Synthetic State:**
@@ -1112,7 +1112,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: "Registry inconsistency found — repairing before analysis".
 - **Guards tested:** Ghost Registry Guard, Intent Block (Safety).
 
-### T74 — Cross-Workspace Name Collision (Source of Truth Guard)
+### T69 — Cross-Workspace Name Collision (Source of Truth Guard)
 
 - **Workflow:** `task.md` / `spec.md`
 - **Synthetic State:**
@@ -1128,7 +1128,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Options: (A) Sync from engine, (B) Unique rename, (C) Force ignore.
 - **Guards tested:** Cross-Workspace Parity Guard.
 
-### T75 — Local Rule Constitutional Conflict (Hierarchy Guard)
+### T70 — Local Rule Constitutional Conflict (Hierarchy Guard)
 
 - **Workflow:** `rule.md`
 - **Synthetic State:**
@@ -1143,7 +1143,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Message: "Proposed local rule contradicts Global Constitution (§1 C1). Local conventions cannot override universal invariants."
 - **Guards tested:** Cross-Workspace Constitutional Guard, Hierarchy Integrity.
 
-### T76 — Quarantine Deadlock (Stabilization Exception)
+### T71 — Quarantine Deadlock (Stabilization Exception)
 
 - **Workflow:** `task.md` / `run.md` (C12 Enforcement)
 - **Synthetic State:**
@@ -1159,7 +1159,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** if the user tries to add NEW features to `core-l2.md` while it's in quarantine.
 - **Guards tested:** C12.1 Stabilization Exception, Context-Aware Planning.
 
-### T77 — Spec Merge Refactor (Section Re-mapping)
+### T72 — Spec Merge Refactor (Section Re-mapping)
 
 - **Workflow:** `spec.md` + `task.md` (Structural Refactor)
 - **Synthetic State:**
@@ -1175,7 +1175,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Structural Refactor (Section Re-mapping), Refactoring Guard.
 - **Outcome:** Agent identifies the merge, updates T-1A01 to point to `security.md §3`, and syncs registry.
 
-### T78 — Simulation: Suite Integrity Failure
+### T73 — Simulation: Suite Integrity Failure
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
@@ -1193,7 +1193,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
 - **Guards tested:** Fallback trigger on missing tests, Improv Mode end-to-end execution, ambiguity handling
 
-### T79 — Run: Changelog Precision (Filter Blocked)
+### T74 — Run: Changelog Precision (Filter Blocked)
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
@@ -1208,7 +1208,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] "Started B" is **NOT** present in the changelog.
 - **Guards tested:** Changelog Filtering (Precision), Reporting Integrity.
 
-### T80 — Rule: Rules Parity Sync Offer
+### T75 — Rule: Rules Parity Sync Offer
 
 - **Workflow:** `rule.md`
 - **Synthetic State:**
@@ -1223,7 +1223,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent offers to run `magic.task update` to synchronize the plan.
 - **Guards tested:** Rules Parity (Stale check), Sync Offer.
 
-### T81 — Spec T4 Rule with Missing Target File (HALT Persistence)
+### T76 — Spec T4 Rule with Missing Target File (HALT Persistence)
 
 - **Workflow:** `spec.md` (T4 + Existence Guard)
 - **Synthetic State:**
@@ -1239,7 +1239,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Rule `C15 — MFA TOTP Standard` is NOT written to `RULES.md` until the target spec is restored or remapped.
 - **Guards tested:** T4 persistence during HALT, Atomic Write Integrity.
 
-### T82 — Init Migration: Existing Project Fallback
+### T77 — Init Migration: Existing Project Fallback
 
 - **Workflow:** `init.md` + `run.md`
 - **Synthetic State:**
@@ -1252,7 +1252,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `executor.js` identifies that `workspace.json` is missing and proceeds with root directory.
 - **Guards tested:** Workspace Fallback (missing workspace.json), Init Loop Prevention.
 
-### T83 — Micro-spec Promotion Guard
+### T78 — Micro-spec Promotion Guard
 
 - **Workflow:** `spec.md` (Update flow)
 - **Synthetic State:** Spec `bug-x.md` using `micro-spec.md` template, currently 45 lines.
@@ -1263,7 +1263,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** if agent attempts to keep 75 lines in a legacy micro-template.
 - **Guards tested:** Micro-spec Promotion Guard (C16), Template Threshold (50 lines).
 
-### T84 — Init Migration: Index Preservation
+### T79 — Init Migration: Index Preservation
 
 - **Workflow:** `init.md` (Migration Mode)
 - **Synthetic State:** Project with old `.design/INDEX.md` but no `workspace.json`.
@@ -1274,7 +1274,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Existing specifications remain registered.
 - **Guards tested:** Non-Overwriting Invariant, Index Preservation (Migration).
 
-### T85 — Engine Integrity Mandatory HALT
+### T80 — Engine Integrity Mandatory HALT
 
 - **Workflow:** `check-prerequisites.js`
 - **Synthetic State:**
@@ -1286,7 +1286,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Workflow (e.g., `run.md`) triggers HALT and does NOT begin execution.
 - **Guards tested:** Engine Integrity Mandatory HALT (C1).
 
-### T86 — Spec Consistency Audit: Version Drift Detection
+### T81 — Spec Consistency Audit: Version Drift Detection
 
 - **Workflow:** `spec.md` (Consistency Check & Audit Report)
 - **Synthetic State:**
@@ -1303,7 +1303,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Consistency Report includes `VERSION_DRIFT` category alongside existing checks
 - **Guards tested:** Version Drift detection (RE-1), header-vs-registry mismatch, Consistency Check extension
 
-### T87 — Run Spec Stability Spot-Check (RE-2)
+### T82 — Run Spec Stability Spot-Check (RE-2)
 
 - **Workflow:** `run.md` (Pre-flight — Spec Stability Guard)
 - **Synthetic State:**
@@ -1325,7 +1325,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] C12 Quarantine guard does NOT fire (L1 parent is Stable — this is a different, complementary guard)
 - **Guards tested:** Spec Stability Spot-Check (RE-2), direct spec demotion detection, guard independence from C12
 
-### T88 — Version Drift Guard During Active Spec Update
+### T83 — Version Drift Guard During Active Spec Update
 
 - **Workflow:** `spec.md` (Updating an Existing Specification — Sync)
 - **Synthetic State:**
@@ -1341,7 +1341,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Execution resumes only after user resolves the drift
 - **Guards tested:** Version Drift Guard (RE-3), update atomicity, HALT before write
 
-### T89 — T4 Rule Queued on Version Drift HALT
+### T84 — T4 Rule Queued on Version Drift HALT
 
 - **Workflow:** `spec.md` (T4 + Version Drift Guard)
 - **Synthetic State:**
@@ -1358,7 +1358,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After user resolves drift: T4 rule applied to `RULES.md`, spec update proceeds
 - **Guards tested:** T4 queuing on VERSION_DRIFT HALT (RE-3 + RE-4), atomic write integrity, HALT persistence
 
-### T90 — Intent Preservation Through Cold-Start Delegation Chain
+### T85 — Intent Preservation Through Cold-Start Delegation Chain
 
 - **Workflow:** `task.md` → `init.md` → `analyze.md` (Intent Preservation)
 - **Synthetic State:**
@@ -1372,9 +1372,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After delegation chain resolves: agent resumes explicitly: "Resuming: 'Plan the payment gateway feature'"
   - [ ] Agent generates tasks scoped to payment-related specs (intent NOT lost)
   - [ ] Intent "payment gateway feature" is visible in the final plan output
-- **Guards tested:** Intent Preservation (RE-T71), cross-workflow context continuity
+- **Guards tested:** Intent Preservation (RE-T66), cross-workflow context continuity
 
-### T91 — Cross-Workspace Name Collision Parity Guard
+### T86 — Cross-Workspace Name Collision Parity Guard
 
 - **Workflow:** `task.md` (Pre-flight — Cross-Workspace Parity)
 - **Synthetic State:**
@@ -1391,9 +1391,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: "Source of Truth Drift: `core.md` exists in `engine` (v2.0.0) and `app` (v1.5.0)."
   - [ ] Options presented: (a) Sync from engine, (b) Rename unique per workspace, (c) Force ignore
   - [ ] No plan generated until user resolves
-- **Guards tested:** Cross-Workspace Parity Guard (RE-T74), multi-workspace collision detection, HALT before planning
+- **Guards tested:** Cross-Workspace Parity Guard (RE-T69), multi-workspace collision detection, HALT before planning
 
-### T92 — Analyze Mode C with Empty INDEX.md (Precedence Guard)
+### T87 — Analyze Mode C with Empty INDEX.md (Precedence Guard)
 
 - **Workflow:** `analyze.md` (Mode C — Mode Precedence)
 - **Synthetic State:**
@@ -1410,7 +1410,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Mode A starts only if user says yes
 - **Guards tested:** Mode Precedence (RE-A1), Mode C completeness before Mode A offer
 
-### T93 — Analyze Mode C Bypasses All Intermediate HALTs
+### T88 — Analyze Mode C Bypasses All Intermediate HALTs
 
 - **Workflow:** `analyze.md` (Mode C — Audit Policy)
 - **Synthetic State:**
@@ -1428,7 +1428,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent halts ONLY at report delivery (presents findings, awaits user action)
 - **Guards tested:** Audit Policy HALT bypass (RE-A2), all 4 bypass categories
 
-### T94 — Analyze Mode C Coverage Check with RESCUE AOP
+### T89 — Analyze Mode C Coverage Check with RESCUE AOP
 
 - **Workflow:** `analyze.md` (Mode C — Coverage Check + RESCUE)
 - **Synthetic State:**
@@ -1445,7 +1445,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: "RESCUE: `auth.md` likely renamed to `src/authentication/` — propose registry sync"
 - **Guards tested:** RESCUE AOP in Mode C (RE-A3), rename detection, correct classification
 
-### T95 — Analyze Mode C Scope Isolation (C15)
+### T90 — Analyze Mode C Scope Isolation (C15)
 
 - **Workflow:** `analyze.md` (Mode C — Coverage Check Scope)
 - **Synthetic State:**
@@ -1460,7 +1460,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Only gaps within `.magic/` or `docs/` are reported
 - **Guards tested:** C15 scope enforcement in Mode C Coverage Check (RE-A4)
 
-### T96 — Analyze Mode C Checklist Completeness
+### T91 — Analyze Mode C Checklist Completeness
 
 - **Workflow:** `analyze.md` (Mode C — Task Completion)
 - **Synthetic State:**
@@ -1473,7 +1473,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No Mode A/B items (Depth Control, Stack/Arch, Dispatch) appear as pending items
 - **Guards tested:** Mode C checklist separation (RE-A5), C14 exemption for read-only mode
 
-### T97 — Spec Update Source of Truth Drift (Cross-Workspace Parity)
+### T92 — Spec Update Source of Truth Drift (Cross-Workspace Parity)
 
 - **Workflow:** `spec.md` (§Updating → Sync — Cross-Workspace Parity)
 - **Synthetic State:**
@@ -1490,7 +1490,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No spec content written until user selects a resolution option
 - **Guards tested:** RE-A6 (Cross-Workspace Parity in `spec.md` Pre-flight)
 
-### T98 — RE-3 Drift Resolution Validation (Registry-Only Bump Without Review)
+### T93 — RE-3 Drift Resolution Validation (Registry-Only Bump Without Review)
 
 - **Workflow:** `spec.md` (§Updating → Sync — Version Drift Guard → Resolution Validation)
 - **Synthetic State:**
@@ -1505,7 +1505,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No spec content written until re-evaluation completes
 - **Guards tested:** RE-B1 (Resolution Validation sub-rule of Version Drift Guard)
 
-### T99 — C12 Full Registry Scan (Dependents Not Currently Open)
+### T94 — C12 Full Registry Scan (Dependents Not Currently Open)
 
 - **Workflow:** `spec.md` (§Updating → Sync — C12 Quarantine)
 - **Synthetic State:**
@@ -1521,7 +1521,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: "C12 Cascade: 2 dependents quarantined: [auth-jwt.md, auth-oauth.md]."
 - **Guards tested:** RE-B2 (C12 full registry scan strategy)
 
-### T100 — C12 Recursive Depth (L1→L2→L3 Chain)
+### T95 — C12 Recursive Depth (L1→L2→L3 Chain)
 
 - **Workflow:** `spec.md` (§Updating → Sync — C12 Quarantine recursive scan)
 - **Synthetic State:**
@@ -1537,7 +1537,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No L3 silently missed due to fixed-depth scan
 - **Guards tested:** RE-B2 (C12 recursive depth — L1→L2→L3)
 
-### T101 — Analyze with Explicit Workspace Argument
+### T96 — Analyze with Explicit Workspace Argument
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
 - **Synthetic State:**
@@ -1550,7 +1550,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `engine` workspace not scanned
 - **Guards tested:** Workspace Resolution Priority 1 (explicit arg)
 
-### T102 — Analyze Auto-Resolves Single Default Workspace
+### T97 — Analyze Auto-Resolves Single Default Workspace
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + default)
 - **Synthetic State:**
@@ -1562,7 +1562,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Analysis scoped to `engine` workspace paths
 - **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces + default)
 
-### T103 — Analyze Asks When Multiple Workspaces and No Default
+### T98 — Analyze Asks When Multiple Workspaces and No Default
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + no default)
 - **Synthetic State:**
@@ -1575,7 +1575,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Does NOT start scanning before user responds
 - **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → ask)
 
-### T104 — Analyze with Invalid MAGIC_WORKSPACE Env Var
+### T99 — Analyze with Invalid MAGIC_WORKSPACE Env Var
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 2 validation)
 - **Synthetic State:**
@@ -1589,7 +1589,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Does NOT silently fall through to Priority 3
 - **Guards tested:** RE-C1 (MAGIC_WORKSPACE unknown-name validation)
 
-### T105 — Explicit Arg Overrides MAGIC_WORKSPACE
+### T100 — Explicit Arg Overrides MAGIC_WORKSPACE
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1 override)
 - **Synthetic State:**
@@ -1603,7 +1603,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No HALT or conflict warning
 - **Guards tested:** RE-C4 (explicit arg overrides env var)
 
-### T106 — Workspace Scope Auto-Applied from workspace.json
+### T101 — Workspace Scope Auto-Applied from workspace.json
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Scope Auto-Apply)
 - **Synthetic State:**
@@ -1617,7 +1617,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT require separate `MAGIC_WORKSPACE_SCOPE` env var to restrict scope
 - **Guards tested:** RE-C2 (workspace scope auto-apply)
 
-### T107 — Mode C Triggered with Workspace Arg via Natural Language
+### T102 — Mode C Triggered with Workspace Arg via Natural Language
 
 - **Workflow:** `analyze.md` (§Mode C trigger + workspace arg)
 - **Synthetic State:**
@@ -1630,7 +1630,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report covers `installers` scope only
 - **Guards tested:** RE-C3 (Mode C trigger + workspace arg in natural language)
 
-### T108 — Ghost Registry Critical HALT Barrier
+### T103 — Ghost Registry Critical HALT Barrier
 
 - **Workflow:** `check-prerequisites.js`
 - **Synthetic State:**
@@ -1644,7 +1644,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Workflow does not proceed to `view_file` or plan generation, preventing cascading hallucinations.
 - **Guards tested:** Engine Integrity (Ghost Registry critical barrier)
 
-### T110 — Mid-Run Spec Demotion Halts Track Before Done
+### T104 — Mid-Run Spec Demotion Halts Track Before Done
 
 - **Workflow:** `run.md` (§Execution Step 4 — Mid-Run Stability Check)
 - **Synthetic State:**
@@ -1661,7 +1661,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Manager notified of suspension
 - **Guards tested:** RE-D1 (Mid-Run Stability Check before committing Done)
 
-### T111 — Manager Re-Reads INDEX.md Before Next Assignment
+### T105 — Manager Re-Reads INDEX.md Before Next Assignment
 
 - **Workflow:** `run.md` (§Execution Setup — Manager role)
 - **Synthetic State:**
@@ -1676,7 +1676,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Suggests: run `magic.task update` to re-evaluate the plan
 - **Guards tested:** RE-D2 (Manager INDEX.md re-read cadence between assignments)
 
-### T112 — Analyze Dispatch Cross-Workspace Name Collision on Create
+### T106 — Analyze Dispatch Cross-Workspace Name Collision on Create
 
 - **Workflow:** `spec.md` (§Creating — Cross-Workspace Parity)
 - **Synthetic State:**
@@ -1692,7 +1692,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `app/auth.md` NOT created until user resolves
 - **Guards tested:** RE-E1 (Cross-Workspace Parity in spec.md §Creating)
 
-### T113 — Mode B Logic Evolution Triggers Amendment Cascade
+### T107 — Mode B Logic Evolution Triggers Amendment Cascade
 
 - **Workflow:** `analyze.md` (Mode B — Logic Evolution → dispatch)
 - **Synthetic State:**
@@ -1710,7 +1710,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No silent spec update — Amendment Rule and C12 both explicitly triggered
 - **Guards tested:** RE-E2 (Logic Evolution amendment cascade + C12 in analyze.md Mode B)
 
-### T114 — Analyze Mode A Pre-flight Step 0 Enforcement
+### T108 — Analyze Mode A Pre-flight Step 0 Enforcement
 
 - **Workflow:** `analyze.md` (Mode A — Step 0)
 - **Synthetic State:**
@@ -1724,7 +1724,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT start "Build full project map" until user responds
 - **Guards tested:** Mode A Step 0 Pre-flight, Depth Control enforcement in operational steps
 
-### T115 — Analyze Mode B Pre-flight Step 0 Enforcement
+### T109 — Analyze Mode B Pre-flight Step 0 Enforcement
 
 - **Workflow:** `analyze.md` (Mode B — Step 0)
 - **Synthetic State:**
@@ -1737,7 +1737,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT start reading specs (Step 1) until user responds
 - **Guards tested:** Mode B Step 0 Pre-flight, Depth Control enforcement for large projects
 
-### T116 — Analyze Direct Trigger Auto-Init
+### T110 — Analyze Direct Trigger Auto-Init
 
 - **Workflow:** `analyze.md` (Auto-Init — Invariant 2)
 - **Synthetic State:**
@@ -1751,7 +1751,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Analysis resumes after init completes
 - **Guards tested:** Auto-Init (Invariant 2) on direct analyze trigger
 
-### T117 — Spec Delta-Editing Enforcement (>200 Lines)
+### T111 — Spec Delta-Editing Enforcement (>200 Lines)
 
 - **Workflow:** `spec.md` (Updating an Existing Specification)
 - **Synthetic State:**
@@ -1765,7 +1765,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No content corruption from full-file replacement on large spec
 - **Guards tested:** Delta-Editing (Invariant 9) in operational step
 
-### T118 — Spec Ventilation Routing (No Phantom C21)
+### T112 — Spec Ventilation Routing (No Phantom C21)
 
 - **Workflow:** `spec.md` (Ventilation invariant)
 - **Synthetic State:**
@@ -1778,7 +1778,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No reference to undefined convention ID in agent output
 - **Guards tested:** Ventilation routing without phantom convention reference
 
-### T119 — Analyze Argument Routing: Workspace vs Focus Disambiguation
+### T113 — Analyze Argument Routing: Workspace vs Focus Disambiguation
 
 - **Workflow:** `analyze.md` (§Argument Routing)
 - **Synthetic State:**
@@ -1802,7 +1802,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Mode D scoped to `installers` workspace
 - **Guards tested:** Argument Routing disambiguation, quote-wrapping override
 
-### T120 — Analyze Mode D: Focused Analysis on Specific Area
+### T114 — Analyze Mode D: Focused Analysis on Specific Area
 
 - **Workflow:** `analyze.md` (Mode D — Focused Analysis)
 - **Synthetic State:**
@@ -1820,7 +1820,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Depth Control exempt (targeted scan)
 - **Guards tested:** Mode D focus parsing, targeted scan scope, Advisory inclusion
 
-### T121 — Analyze Mode D: Focus Matches Nothing
+### T115 — Analyze Mode D: Focus Matches Nothing
 
 - **Workflow:** `analyze.md` (Mode D — HALT on no match)
 - **Synthetic State:**
@@ -1834,7 +1834,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No scan started, no report generated
 - **Guards tested:** Mode D HALT on empty match, improved HALT message
 
-### T122 — Analyze Mode C: Structural Integrity Violations
+### T116 — Analyze Mode C: Structural Integrity Violations
 
 - **Workflow:** `analyze.md` (Mode C — Structural Integrity step)
 - **Synthetic State:**
@@ -1855,7 +1855,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Mode C continues to subsequent steps (coverage, rules) after structural report
 - **Guards tested:** Structural Integrity all 6 sub-checks, STRUCTURE category separation
 
-### T123 — Analyze Advisory Report Generation Across Modes
+### T117 — Analyze Advisory Report Generation Across Modes
 
 - **Workflow:** `analyze.md` (§Advisory Report — all modes)
 - **Synthetic State:**
@@ -1885,7 +1885,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Same findings as Test B (spec quality + coverage + structural)
 - **Guards tested:** Advisory generation in all modes (not just Mode D), Action Proposals format
 
-### T124 — Analyze Mode D: Depth Control Fallback on Wide Focus
+### T118 — Analyze Mode D: Depth Control Fallback on Wide Focus
 
 - **Workflow:** `analyze.md` (Mode D — Depth Control exemption + fallback)
 - **Synthetic State:**
@@ -1904,7 +1904,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Agent does NOT auto-scan 600+ files
 - **Guards tested:** Mode D Depth Control exemption for narrow focus, fallback for wide focus (>500 files)
 
-### T125 — Analyze Mode C: Scope Blind-Spot Detection
+### T119 — Analyze Mode C: Scope Blind-Spot Detection
 
 - **Workflow:** `analyze.md` (Mode C — Scope Blind-Spot Check)
 - **Synthetic State:**
@@ -1919,7 +1919,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Warnings are non-halting (informational, included in consolidated report)
 - **Guards tested:** Scope Blind-Spot Check, UNSCOPED category
 
-### T126 — Analyze Registry Audit: Case Mismatch on Case-Insensitive FS
+### T120 — Analyze Registry Audit: Case Mismatch on Case-Insensitive FS
 
 - **Workflow:** `analyze.md` (Mode C — Registry Audit exact match)
 - **Synthetic State:**
@@ -1936,7 +1936,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT report "file not found" — it recognizes the case mismatch
 - **Guards tested:** Exact string match in Registry Audit, case-insensitive FS edge case
 
-### T127 — Analyze Mode D: Project-Wide Focus Bypasses C15
+### T121 — Analyze Mode D: Project-Wide Focus Bypasses C15
 
 - **Workflow:** `analyze.md` (Mode D — C15 exception)
 - **Synthetic State:**
@@ -1958,7 +1958,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Only `packages/api/` searched for "utils" matches
 - **Guards tested:** Mode D C15 exception (project-wide), C15 enforcement (workspace-scoped)
 
-### T128 — Simulate C14 Enforcement Gate Blocks Report
+### T122 — Simulate C14 Enforcement Gate Blocks Report
 
 - **Workflow:** `simulate.md` (§Reporting & Fixes — C14 Enforcement Gate)
 - **Synthetic State:**
@@ -1974,7 +1974,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If agent skips Gate and reports first → **FAIL**
 - **Guards tested:** C14 Enforcement Gate blocking semantics
 
-### T129 — Simulate Succession Max 2-Round Guard
+### T123 — Simulate Succession Max 2-Round Guard
 
 - **Workflow:** `simulate.md` (§Succession — max iterations)
 - **Synthetic State:**
@@ -1989,7 +1989,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Simulation completes with open issues documented
 - **Guards tested:** Succession max 2-round guard, infinite loop prevention
 
-### T130 — Simulate File-Path Argument Routing
+### T124 — Simulate File-Path Argument Routing
 
 - **Workflow:** `simulate.md` (§Mode Selection — file-path support)
 - **Synthetic State:**
@@ -2006,7 +2006,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Same behavior as `/magic.simulate analyze`
 - **Guards tested:** File-path argument parsing, equivalence with workflow-name argument
 
-### T131 — Checklist Consolidation Strategic/Tactical Split
+### T125 — Checklist Consolidation Strategic/Tactical Split
 
 - **Workflow:** `task.md` + `run.md`
 - **Synthetic State:**
@@ -2034,7 +2034,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **`PLAN.md` updated**: `[ ]` → `[x]` for `auth.md` specification.
 - **Guards tested:** C10 Strategic/Tactical split, status sync isolation (atomic in TASKS, spec-level in PLAN).
 
-### T132 — Run File-Header Parity Catches Manual Demotion
+### T126 — Run File-Header Parity Catches Manual Demotion
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
@@ -2050,7 +2050,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User directed to resolve via `magic.spec` or `magic.analyze`
 - **Guards tested:** File-Header Parity (run.md), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
 
-### T133 — Task Pre-flight File-Header Parity Scan
+### T127 — Task Pre-flight File-Header Parity Scan
 
 - **Workflow:** `task.md`
 - **Synthetic State:**
@@ -2065,7 +2065,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `engine-automation.md` is NOT moved to Backlog yet (drift must be resolved before C12 evaluates)
 - **Guards tested:** File-Header Parity (task.md), STATUS_DRIFT blocks C6/C12 evaluation
 
-### T134 — Spec Version Drift Guard Scans Dependency Chain
+### T128 — Spec Version Drift Guard Scans Dependency Chain
 
 - **Workflow:** `spec.md`
 - **Synthetic State:**
@@ -2081,7 +2081,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User directed to resolve parent drift first
 - **Guards tested:** Version Drift Guard (dependency chain scan), Related Specifications traversal
 
-### T135 — Simulate Pre-flight Blocks on Engine Integrity Failure
+### T129 — Simulate Pre-flight Blocks on Engine Integrity Failure
 
 - **Workflow:** `simulate.md` (§0 Pre-flight)
 - **Synthetic State:**
@@ -2096,7 +2096,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No suite.md tests are evaluated
 - **Guards tested:** Pre-flight engine integrity gate (Step 0), HALT-before-mode-selection enforcement
 
-### T136 — Improv Mode Crisis Template Structural Validation
+### T130 — Improv Mode Crisis Template Structural Validation
 
 - **Workflow:** `simulate.md` (§1a Crisis Template)
 - **Synthetic State:**
@@ -2114,7 +2114,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If any CR requirement is not met and not documented as skipped → **FAIL**
 - **Guards tested:** Crisis Template completeness, CR-1 through CR-6 enforcement
 
-### T137 — Simulate Guard Resilience Reports Mechanical vs Instructional
+### T131 — Simulate Guard Resilience Reports Mechanical vs Instructional
 
 - **Workflow:** `simulate.md` (§3 Cognitive Coverage Report — Guard Resilience)
 - **Synthetic State:**
@@ -2131,7 +2131,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Single combined score calculated but breakdown visible
 - **Guards tested:** Guard Resilience metric decomposition, Mechanical vs Instructional classification
 
-### T138 — Simulate Context Bleed Warning in Succession Report
+### T132 — Simulate Context Bleed Warning in Succession Report
 
 - **Workflow:** `simulate.md` (§3 Succession — Context Bleed Warning)
 - **Synthetic State:**
@@ -2145,22 +2145,22 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If warning is missing → **FAIL**
 - **Guards tested:** Context Bleed Warning enforcement, wrapper-implementation sync
 
-### T139 — Suite Integrity Timing: Test Mode Validates Before Execution
+### T133 — Suite Integrity Timing: Test Mode Validates Before Execution
 
 - **Workflow:** `simulate.md` (§2 Suite Integrity — timing rule)
 - **Synthetic State:**
-  - `.magic/tests/suite.md` exists but T15 has a malformed header: `### T15: Missing Dash` (colon instead of dash)
+  - `.magic/tests/suite.md` exists but T14 has a malformed header: `### T14: Missing Dash` (colon instead of dash)
   - suite.md has 20 valid tests + 1 malformed
 - **Action:** `/magic.simulate test` triggered
 - **Expected:**
   - [ ] Suite Integrity check runs **before** scenario execution (timing: `test` mode)
-  - [ ] Malformed T15 detected: header uses `:` instead of `—` (dash)
+  - [ ] Malformed T14 detected: header uses `:` instead of `—` (dash)
   - [ ] Agent reports structural violation before PASS/FAIL table
-  - [ ] Agent either skips T15 with a note or halts for repair
+  - [ ] Agent either skips T14 with a note or halts for repair
   - [ ] Remaining 20 valid tests proceed normally
 - **Guards tested:** Suite Integrity timing (pre-execution in test mode), structural format enforcement
 
-### T140 — Context Resolution Consistency Across Workflows
+### T134 — Context Resolution Consistency Across Workflows
 
 - **Workflow:** All workflows (`spec.md`, `task.md`, `run.md`, `analyze.md`, `init.md`, `rule.md`, `simulate.md`)
 - **Synthetic State:**
@@ -2174,7 +2174,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No workflow falls back to `workspace.json` default when `MAGIC_WORKSPACE` is set
 - **Guards tested:** Context Resolution parity across all workflows, priority chain consistency
 
-### T141 — Trust Mode Terminology Consistency
+### T135 — Trust Mode Terminology Consistency
 
 - **Workflow:** `spec.md` (Status Lifecycle, Dispatching, Actionable Outcome)
 - **Synthetic State:**
@@ -2189,7 +2189,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Summary appended: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 - **Guards tested:** Trust Mode (C9) terminology consistency, quantified promotion criteria
 
-### T142 — C12 Cascade: Spec Workflow Modifies INDEX, Task Workflow Does Not
+### T136 — C12 Cascade: Spec Workflow Modifies INDEX, Task Workflow Does Not
 
 - **Workflow:** `spec.md` + `task.md` (C12 interaction)
 - **Synthetic State:**
@@ -2215,7 +2215,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] `task.md` does **NOT** modify `INDEX.md` (read-only for status)
 - **Guards tested:** C12 ownership (spec.md writes INDEX, task.md reads only), cascade behavioral contract
 
-### T143 — Rule Workflow Pre-flight HALT on Checksum Mismatch
+### T137 — Rule Workflow Pre-flight HALT on Checksum Mismatch
 
 - **Workflow:** `rule.md` (§Operational Logic — Pre-flight)
 - **Synthetic State:**
@@ -2238,7 +2238,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No RULES.md modification occurs
 - **Guards tested:** Rule pre-flight HALT condition, engine integrity gate
 
-### T144 — Init Handles Unrecognized Pre-flight Failure
+### T138 — Init Handles Unrecognized Pre-flight Failure
 
 - **Workflow:** `init.md` (Step 1 — unrecognized failure branch)
 - **Synthetic State:**
@@ -2252,7 +2252,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT silently ignore the failure
 - **Guards tested:** Init else-branch for unrecognized failures, fail-safe HALT
 
-### T145 — Spec Deprecation Cascade Flags Stale Implements Link
+### T139 — Spec Deprecation Cascade Flags Stale Implements Link
 
 - **Workflow:** `spec.md` (Updating — Deprecation Cascade)
 - **Synthetic State:**
@@ -2268,7 +2268,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Deprecation is NOT blocked by dependent specs — non-blocking cascade
 - **Guards tested:** Deprecation Cascade (Implements + Related), non-blocking report via Post-Update Review
 
-### T146 — Rule Remove Dependency Scan Warns on Referenced Convention
+### T140 — Rule Remove Dependency Scan Warns on Referenced Convention
 
 - **Workflow:** `rule.md` (Remove — Dependency Scan)
 - **Synthetic State:**
@@ -2287,7 +2287,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If approved → C5 deleted, Major version bump
 - **Guards tested:** Remove Dependency Scan integrated into Propose step (no extra gate)
 
-### T147 — Run Handoff Succession Returns to Task Update
+### T141 — Run Handoff Succession Returns to Task Update
 
 - **Workflow:** `run.md` (Step 4 — Handoff)
 - **Synthetic State:**
@@ -2301,7 +2301,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Task validity re-verified before resuming execution
 - **Guards tested:** Handoff succession chain (run → spec → task → run)
 
-### T148 — Simulate HALT Includes Recovery Hint
+### T142 — Simulate HALT Includes Recovery Hint
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:**
@@ -2314,7 +2314,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent does NOT fall through to any mode
 - **Guards tested:** Simulate pre-flight HALT with actionable recovery hint
 
-### T149 — Rule Core-Amendment Routing Gate
+### T143 — Rule Core-Amendment Routing Gate
 
 - **Workflow:** `rule.md` (Guards — Core-Amendment Routing)
 - **Synthetic State:**
@@ -2328,7 +2328,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If confirmed → §3 updated, RULES.md Major version bump
 - **Guards tested:** Core-Amendment Routing gate, explicit approval requirement
 
-### T150 — Analyze Mode A Proposal Shows Explicit Options
+### T144 — Analyze Mode A Proposal Shows Explicit Options
 
 - **Workflow:** `analyze.md` (Mode A — Proposal step)
 - **Synthetic State:**
@@ -2341,7 +2341,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If user picks (d) Cancel → no files created, no INDEX.md changes
 - **Guards tested:** Defined approval option set, wait-for-choice gate
 
-### T151 — Analyze Priority 1 Prints Workspace Confirmation
+### T145 — Analyze Priority 1 Prints Workspace Confirmation
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
 - **Synthetic State:**
@@ -2354,7 +2354,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Analysis scoped to `installers` workspace paths
 - **Guards tested:** Priority 1 override, confirmation print
 
-### T152 — Run Mid-Run HALT Notifies Manager in Parallel Mode
+### T146 — Run Mid-Run HALT Notifies Manager in Parallel Mode
 
 - **Workflow:** `run.md` (Step 4 — Mid-Run Stability Check, Parallel mode)
 - **Synthetic State:**
@@ -2369,7 +2369,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Manager halts further assignments for specs affected by `auth.md` demotion
 - **Guards tested:** Mid-Run HALT, Manager notification in Parallel mode
 
-### T153 — Task Argument Routing: Scoped Planning (Mode B)
+### T147 — Task Argument Routing: Scoped Planning (Mode B)
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
@@ -2385,7 +2385,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Handoff recommends `/magic.run installers` (workspace propagated)
 - **Guards tested:** Argument Routing (Mode B), Workspace Scope Isolation (C15), Handoff Propagation
 
-### T154 — Task Argument Routing: Guided Planning with Workspace Fallback (Mode C)
+### T148 — Task Argument Routing: Guided Planning with Workspace Fallback (Mode C)
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
@@ -2401,7 +2401,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] User is NOT prompted to select a workspace
 - **Guards tested:** Argument Routing (Mode C), Workspace Fallback, Zero-Prompt Resolution
 
-### T155 — Task Argument Routing: Disambiguation (Quoted Workspace Name)
+### T149 — Task Argument Routing: Disambiguation (Quoted Workspace Name)
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
@@ -2414,7 +2414,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent interprets "engine" as focus/filter term for planning
 - **Guards tested:** Disambiguation Rule (quotes override workspace match)
 
-### T156 — Run Argument Routing: Targeted Task by ID (Mode C — T-XXXX)
+### T150 — Run Argument Routing: Targeted Task by ID (Mode C — T-XXXX)
 
 - **Workflow:** `run.md` (Argument Routing)
 - **Synthetic State:**
@@ -2430,7 +2430,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Dependency check: T-1A01 has no deps → proceeds
 - **Guards tested:** Argument Routing (Targeted Task), Non-workspace token detection, Workspace Fallback
 
-### T157 — Run Argument Routing: Scoped + Directed Phase (Mode D)
+### T151 — Run Argument Routing: Scoped + Directed Phase (Mode D)
 
 - **Workflow:** `run.md` (Argument Routing)
 - **Synthetic State:**
@@ -2446,7 +2446,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Handoff (if re-planning needed) recommends `/magic.task installers`
 - **Guards tested:** Argument Routing (Mode D), Phase targeting, Workspace scoping, Handoff Propagation
 
-### T158 — Cross-Workflow Handoff Propagation with Scoped Argument
+### T152 — Cross-Workflow Handoff Propagation with Scoped Argument
 
 - **Workflow:** `task.md` → `run.md` (Handoff chain)
 - **Synthetic State:**
@@ -2459,7 +2459,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Workspace `installers` context preserved across workflow boundary
 - **Guards tested:** Handoff Propagation (task→run), Workspace context preservation, Zero-Prompt automation
 
-### T159 — Spec T4 Tier Routing: Workspace Signal Detected
+### T153 — Spec T4 Tier Routing: Workspace Signal Detected
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
 - **Synthetic State:**
@@ -2475,7 +2475,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Spec update and rule write grouped in single atomic proposal
 - **Guards tested:** T4 Inline Tier Routing, workspace signal detection, atomic proposal
 
-### T160 — Spec T4 Duplication Check Catches Overlap
+### T154 — Spec T4 Duplication Check Catches Overlap
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
 - **Synthetic State:**
@@ -2490,7 +2490,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Spec update proceeds atomically with rule synchronization
 - **Guards tested:** T4 Inline Duplication Check, Zero-Prompt rule sync
 
-### T161 — Spec T4 Constitutional Guard Blocks Contradicting Rule
+### T155 — Spec T4 Constitutional Guard Blocks Contradicting Rule
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
 - **Synthetic State:**
@@ -2504,7 +2504,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Neither rule nor spec change written
 - **Guards tested:** T4 Inline Constitutional Guard, §1–6 protection
 
-### T162 — Spec T4 Atomic Intent with Drift Resolution
+### T156 — Spec T4 Atomic Intent with Drift Resolution
 
 - **Workflow:** `spec.md` (T4 + Version Drift Guard)
 - **Synthetic State:** `INDEX.md` (v1.0), File Header (v1.1). VERSION_DRIFT active.
@@ -2517,7 +2517,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After drift fix: rule and spec update applied atomically.
 - **Guards tested:** T4 Queuing, RE-3 Atomicity.
 
-### T163 — Simulate Scope-Isolated Integrity Check (C15 Filter)
+### T157 — Simulate Scope-Isolated Integrity Check (C15 Filter)
 
 - **Workflow:** `simulate.md`, `init.md`
 - **Synthetic State:**
@@ -2533,7 +2533,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Simulation proceeds to Mode Selection.
 - **Guards tested:** C15 (Workspace Scope Isolation) in Pre-flight, out-of-scope drift bypass.
 
-### T164 — Dispatch Conflict Branch Triggers HALT
+### T158 — Dispatch Conflict Branch Triggers HALT
 
 - **Workflow:** `spec.md` (§Dispatching from Raw Input, Step 2)
 - **Synthetic State:**
@@ -2547,7 +2547,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent waits for user resolution before dispatching.
 - **Guards tested:** Trust Mode (C9) conflict branch, explicit HALT on objective conflict.
 
-### T165 — Delta-Editing Enforcement for Large Specs
+### T159 — Delta-Editing Enforcement for Large Specs
 
 - **Workflow:** `spec.md` (§Updating an Existing Specification, Step 1)
 - **Synthetic State:**
@@ -2559,7 +2559,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Full rewrite is rejected per "NOT permitted" clause.
 - **Guards tested:** Delta-Editing (Invariant 9), large file protection.
 
-### T166 — RESCUE AOP Uses Levenshtein Distance
+### T160 — RESCUE AOP Uses Levenshtein Distance
 
 - **Workflow:** `spec.md` (§Updating — RESCUE AOP)
 - **Synthetic State:**
@@ -2576,7 +2576,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Match found: agent suggests "Did you mean `auth-servce.md`? Registry sync recommended."
 - **Guards tested:** RESCUE (AOP) with quantified Levenshtein threshold.
 
-### T167 — Task Cross-Workspace C12 Quarantine
+### T161 — Task Cross-Workspace C12 Quarantine
 
 - **Workflow:** `task.md` (C12 Quarantine)
 - **Synthetic State:**
@@ -2591,7 +2591,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `cli.md` tasks marked `Blocked [!]` with C12 reason.
 - **Guards tested:** Cross-Workspace C12 Quarantine, multi-INDEX lookup.
 
-### T168 — Config Drift Detection (Git Available, Drift Present)
+### T162 — Config Drift Detection (Git Available, Drift Present)
 
 - **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
 - **Synthetic State:**
@@ -2605,7 +2605,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent displays advisory with options: show diff / proceed / restore.
 - **Guards tested:** Config Drift Guard, non-blocking advisory pattern.
 
-### T169 — Config Drift Detection (No Git)
+### T163 — Config Drift Detection (No Git)
 
 - **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
 - **Synthetic State:**
@@ -2618,7 +2618,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] All other checks (ENGINE_INTEGRITY, specs) function normally.
 - **Guards tested:** Config Drift Guard graceful degradation.
 
-### T170 — Config Drift Detection (Workspace-Specific RULES.md, C22)
+### T164 — Config Drift Detection (Workspace-Specific RULES.md, C22)
 
 - **Workflow:** `init.md` (Pre-flight, Config Drift Advisory)
 - **Synthetic State:**
@@ -2632,7 +2632,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] C22 workspace rule inheritance respected in drift check scope.
 - **Guards tested:** Config Drift Guard, C22 Workspace Rule Inheritance.
 
-### T171 — Circular Guard Semantic Split: Soft References Non-Blocking
+### T165 — Circular Guard Semantic Split: Soft References Non-Blocking
 
 - **Workflow:** `task.md` (Step 2, Circular Guard)
 - **Synthetic State:**
@@ -2644,7 +2644,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Planning proceeds to Step 3 (Analyze).
 - **Guards tested:** Circular Guard Semantic Split.
 
-### T172 — Circular Guard Semantic Split: Hard Dependency Cycle HALT
+### T166 — Circular Guard Semantic Split: Hard Dependency Cycle HALT
 
 - **Workflow:** `task.md` (Step 2, Circular Guard)
 - **Synthetic State:**
@@ -2655,7 +2655,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Cycle Resolution suggestion identifies the "weakest link" edge.
 - **Guards tested:** Circular Guard Semantic Split (Hard Dependencies).
 
-### T173 — Pre-Planning Stabilization: L1 Before L2 Order
+### T167 — Pre-Planning Stabilization: L1 Before L2 Order
 
 - **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization)
 - **Synthetic State:**
@@ -2667,7 +2667,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: `[Pre-Plan] 2 specs promoted to Stable, 0 remain Draft.`
 - **Guards tested:** Pre-Planning Stabilization, MVC, Layer Order.
 
-### T174 — Pre-Planning Stabilization: MVC Failure Keeps Draft
+### T168 — Pre-Planning Stabilization: MVC Failure Keeps Draft
 
 - **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization)
 - **Synthetic State:**
@@ -2677,7 +2677,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: `[Batch-Skip] empty-spec.md: MVC failed — missing Overview.`
 - **Guards tested:** MVC.
 
-### T175 — Pre-Planning Stabilization: Non-Standard Layer MVC
+### T169 — Pre-Planning Stabilization: Non-Standard Layer MVC
 
 - **Workflow:** `task.md` (Step 2, Pre-Planning Stabilization) + `spec.md` (MVC definition)
 - **Synthetic State:**
@@ -2687,7 +2687,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No error about missing `Core Invariants` or `Invariant Compliance`.
 - **Guards tested:** MVC (non-standard layer handling).
 
-### T176 — C6 Bootstrap Exception Activation
+### T170 — C6 Bootstrap Exception Activation
 
 - **Workflow:** `task.md` (C6 Bootstrap Exception)
 - **Synthetic State:**
@@ -2700,7 +2700,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Report: `[Bootstrap Plan] 5 Draft specs planned tentatively.`
 - **Guards tested:** C6 Bootstrap Exception.
 
-### T177 — C6 Bootstrap Exception Not Triggered When Stable Exists
+### T171 — C6 Bootstrap Exception Not Triggered When Stable Exists
 
 - **Workflow:** `task.md` (C6 Bootstrap Exception)
 - **Synthetic State:**
@@ -2711,7 +2711,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Normal C6 flow: 1 Stable → active plan, 10 Draft → Backlog.
 - **Guards tested:** C6, Bootstrap Exception deactivation.
 
-### T178 — Field Normalization: L1 Reference to Implements
+### T172 — Field Normalization: L1 Reference to Implements
 
 - **Workflow:** `task.md` (Step 2, Field Normalization)
 - **Synthetic State:**
@@ -2721,7 +2721,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Log: `[Normalize] example-go.md: 'L1 Reference' → 'Implements'.`
 - **Guards tested:** Field Normalization.
 
-### T179 — Cross-Workspace Batch Stabilization Order
+### T173 — Cross-Workspace Batch Stabilization Order
 
 - **Workflow:** `task.md` (Step 2, workspace order)
 - **Synthetic State:**
@@ -2734,7 +2734,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Both promoted — soft cross-workspace references don't block.
 - **Guards tested:** Workspace processing order, cross-workspace soft references.
 
-### T180 — Bootstrap Detection in run.md
+### T174 — Bootstrap Detection in run.md
 
 - **Workflow:** `run.md` (Pre-flight, Bootstrap Detection)
 - **Synthetic State:**
@@ -2747,7 +2747,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Generated artifacts include `[Bootstrap]` suffix.
 - **Guards tested:** Bootstrap Detection in run.md, Spec Stability Bootstrap Exception.
 
-### T181 — Retrospective Context Resolution Full Priority Chain
+### T175 — Retrospective Context Resolution Full Priority Chain
 
 - **Workflow:** `retrospective.md` (Core Invariant #1)
 - **Synthetic State:**
@@ -2760,14 +2760,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent uses `.design/installers/` for RETROSPECTIVE.md operations
   - [ ] Agent does NOT fall back to `workspace.json` default (`engine`) when env var is set
   - [ ] Snapshot appended to `.design/installers/RETROSPECTIVE.md`
-  - [ ] Same behavior as all other workflows under identical inputs (T140 parity)
+  - [ ] Same behavior as all other workflows under identical inputs (T134 parity)
 - **Guards tested:** Context Resolution full priority chain in retrospective.md, env var override of default workspace
 
-```
-**Test Suite Finalized** — v1.9.55 (Last: T181)
-```
-
-### T182 — Cross-Workspace Manual Renamed Parent (Ref: The Phantom Cascade)
+### T176 — Cross-Workspace Manual Renamed Parent (Ref: The Phantom Cascade)
 
 - **Workflow:** `spec.md` (Update Mode)
 - **Synthetic State:**
@@ -2779,12 +2775,22 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Parent Existence Guard triggers during pre-flight.
   - [ ] **HALT** — report "L2 Orphan: Parent spec engine/l1-identity.md is missing from disk."
   - [ ] Suggested resolution: sync engine/INDEX.md or restore parent.
-### T183: Workspace Disambiguation (Quick-scan)
-- **Scenario:** Multiple workspaces exist, no `default` in `workspace.json`, current directory contains `installers/`.
-- **Expected Outcome:** Agent MUST NOT immediately halt to ask. Instead, it must scan context, identify `installers/` as a marker, and propose: "Found `installers/` directory — propose using `installers` workspace. Confirm or select: [engine, installers]."
-- **Guards tested:** Core Invariant #1 (Quick-scan heuristic).
+
+### T177 — Task Cross-Workspace Parent Header Parity
+
+- **Workflow:** `task.md` (Step 1 — Pre-flight, Cross-Workspace parity)
+- **Synthetic State:**
+  - Workspace `installers` active. `installers/INDEX.md` has `cli.md` (L2, Implements: engine/l1-core.md).
+  - `engine/INDEX.md` says `l1-core.md` is `Stable` (v1.0.0).
+  - File `engine/specifications/l1-core.md` has header `Status: Draft` or `Version: v1.1.0` (Local Drift).
+- **Action:** `/magic.task installers`
+- **Expected:**
+  - [ ] Agent builds dependency graph, identifies `engine/l1-core.md` as parent.
+  - [ ] Agent reads `engine/INDEX.md` AND `engine/specifications/l1-core.md` header.
+  - [ ] Agent detects `STATUS_DRIFT` or `VERSION_DRIFT` in the parent spec.
+  - [ ] **HALT** with report: "Header parity failure on parent spec `engine/l1-core.md`... Resolve via `magic.spec` or `magic.analyze` before planning."
+- **Guards tested:** Cross-Workspace Header Parity, multi-workspace pre-flight integrity.
 
 ```
-**Test Suite Finalized** - v1.9.57 (Last: T183)
+**Test Suite Finalized** - v1.9.58 (Last: T177)
 ```
-

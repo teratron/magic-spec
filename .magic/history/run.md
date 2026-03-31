@@ -15,3 +15,4 @@
 | 1.4.9 - 1.4.155 | 2026-03-09 | Automated update via engine meta automation |
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
 | 1.4.166 - 1.5.74 | 2026-03-30 | Automated update via engine meta automation |
+| 1.5.79 | 2026-03-31 | Cross-workspace parent header parity guards and T177 test case |

@@ -78,12 +78,12 @@ const childEnv = Object.assign({}, process.env, envVars);
 
 // Engine Meta Automation Command
 if (scriptName === 'update-engine-meta') {
-    const workflowNames = [];
+    const workflowNames = new Set();
     let customMessage = null;
 
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--workflow' && args[i + 1]) {
-            workflowNames.push(...args[i + 1].split(','));
+            args[i + 1].split(',').forEach(wf => workflowNames.add(wf));
             i++;
         } else if ((args[i] === '--message' || args[i] === '-m') && args[i + 1]) {
             customMessage = args[i + 1];
@@ -91,20 +91,68 @@ if (scriptName === 'update-engine-meta') {
         }
     }
 
-    if (workflowNames.length === 0) {
-        console.error('Usage: node executor.js update-engine-meta --workflow {run,rule,suite,...} [--message "Your description"]');
-        process.exit(1);
-    }
-
     const magicDir = path.join(__dirname, '..');
     const versionPath = path.join(magicDir, '.version');
     const historyDir = path.join(magicDir, 'history');
+    const checksumsPath = path.join(magicDir, '.checksums');
     const date = new Date().toISOString().split('T')[0];
 
     // C1 Kernel Integrity: Ensure history directory exists
     if (!fs.existsSync(historyDir)) {
         fs.mkdirSync(historyDir, { recursive: true });
         console.log('History directory RESTORED (Auto-Heal)');
+    }
+
+    // SHA256 helper for auto-detection
+    const crypto = require('crypto');
+    function getFileHash(filePath) {
+        if (!fs.existsSync(filePath)) return null;
+        const fileBuffer = fs.readFileSync(filePath);
+        const hashSum = crypto.createHash('sha256');
+        hashSum.update(fileBuffer);
+        return hashSum.digest('hex');
+    }
+
+    // Workflow Auto-Detection Logic
+    if (fs.existsSync(checksumsPath)) {
+        try {
+            const oldChecksums = JSON.parse(fs.readFileSync(checksumsPath, 'utf8'));
+            const scanFiles = (dir, files = []) => {
+                fs.readdirSync(dir).forEach(f => {
+                    const p = path.join(dir, f);
+                    if (fs.statSync(p).isDirectory()) {
+                        if (f !== 'history') scanFiles(p, files);
+                    } else {
+                        files.push(p);
+                    }
+                });
+                return files;
+            };
+
+            const allFiles = scanFiles(magicDir);
+            allFiles.forEach(fullPath => {
+                const rel = path.relative(magicDir, fullPath).replace(/\\/g, '/');
+                if (rel === '.checksums' || rel.startsWith('history/')) return;
+                
+                const currentHash = getFileHash(fullPath);
+                if (oldChecksums[rel] !== currentHash) {
+                    const ext = path.extname(rel);
+                    const base = path.basename(rel, ext);
+                    // Special case: suite.md is in tests/
+                    if (!workflowNames.has(base)) {
+                        workflowNames.add(base);
+                        console.log(`[Auto-Detect] Change detected in '${rel}' -> Updating history/${base}.md`);
+                    }
+                }
+            });
+        } catch (e) {
+            console.log(`Note: Checksum-based auto-detection skipped: ${e.message}`);
+        }
+    }
+
+    if (workflowNames.size === 0) {
+        console.error('HALT: No changes detected and no --workflow specified. Nothing to update.');
+        process.exit(0); // Exit gracefully if no work
     }
 
     // 1. Increment Version (patch)
@@ -117,7 +165,7 @@ if (scriptName === 'update-engine-meta') {
             fs.writeFileSync(versionPath, newVersion);
             console.log(`Engine version bumped: ${currentVersion} -> ${newVersion}`);
 
-            // 2. Update History
+            // 2. Update History for each detected/specified workflow
             for (const wf of workflowNames) {
                 const historyFile = path.join(historyDir, `${wf}.md`);
                 if (fs.existsSync(historyFile)) {
@@ -129,20 +177,21 @@ if (scriptName === 'update-engine-meta') {
                     const activeMessage = customMessage || automatedMsg;
 
                     if (!customMessage && lastLine.includes(automatedMsg)) {
-                        // Update existing automated entry with range
-                        // Schema: | Version | Date | Description |
-                        // Index:     1          2         3
-                        const parts = lastLine.split('|');
-                        const currentRange = parts[1].trim();
-                        const firstVersion = currentRange.split('-')[0].trim();
-                        const newRange = ` ${firstVersion} - ${newVersion} `;
-                        parts[1] = newRange;
-                        // Update date
-                        parts[2] = ` ${date} `;
-
-                        lines[lastLineIndex] = parts.join('|');
-                        fs.writeFileSync(historyFile, lines.join('\n') + '\n');
-                        console.log(`History range updated for '${wf}': ${newRange.trim()}`);
+                        const hParts = lastLine.split('|');
+                        if (hParts.length >= 4) {
+                            const currentRange = hParts[1].trim();
+                            const firstVersion = currentRange.split('-')[0].trim();
+                            const newRange = ` ${firstVersion} - ${newVersion} `;
+                            hParts[1] = newRange;
+                            hParts[2] = ` ${date} `;
+                            lines[lastLineIndex] = hParts.join('|');
+                            fs.writeFileSync(historyFile, lines.join('\n') + '\n');
+                            console.log(`History range updated for '${wf}': ${newRange.trim()}`);
+                        } else {
+                            // Malformed last line fallback
+                            const entry = `| ${newVersion} | ${date} | ${activeMessage} |\n`;
+                            fs.appendFileSync(historyFile, entry);
+                        }
                     } else {
                         const entry = `| ${newVersion} | ${date} | ${activeMessage} |\n`;
                         fs.appendFileSync(historyFile, entry);

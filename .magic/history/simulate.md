@@ -23,4 +23,5 @@
 | 1.5.40 | 2026-03-20 | Add regression tests T164-T166 for spec.md audit fixes (dispatch conflict HALT, delta-editing enforcement, RESCUE Levenshtein) |
 | 1.5.41 - 1.5.47 | 2026-03-24 | Automated update via engine meta automation |
 | 1.5.48 | 2026-03-24 | Finalizing engine refinement and version sync to 1.5.47 |
-| 1.5.55 - 1.5.72 | 2026-03-30 | Automated update via engine meta automation |
+| 1.5.55 - 1.5.78 | 2026-03-31 | Automated update via engine meta automation |
+| 1.5.79 | 2026-03-31 | Cross-workspace parent header parity guards and T177 test case |
