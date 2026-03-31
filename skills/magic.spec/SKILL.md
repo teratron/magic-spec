@@ -1,15 +1,6 @@
 ---
 name: magic:spec
 description: Workflow for creating and managing project specifications.
-handoffs:
-  - label: "Generate tasks"
-    workflow: magic.task
-    prompt: "Proceed to task generation without interruption to maintain Zero-Prompt workflows (Rule C9)."
-    condition: "registry_updated"
-  - label: "Add a rule"
-    workflow: magic.rule
-    prompt: "Add a project-wide convention discovered during spec work."
-    condition: null
 ---
 
 # Specification Workflow

@@ -954,6 +954,18 @@ async function main() {
             console.log(`✅ ${PACKAGE_NAME} updated successfully!`);
         }
 
+        // 3.5. Sync Skill Wrappers
+        const syncScript = path.join(cwd, ENGINE_DIR, 'scripts', 'sync-skills.js');
+        if (fs.existsSync(syncScript)) {
+            console.log('🔄 Projecting Workflows to Skill Wrappers...');
+            const syncResult = spawnSync('node', [syncScript], { cwd });
+            if (syncResult.error || syncResult.status !== 0) {
+                console.warn(`⚠️  Skill synchronization failed: ${syncResult.stderr || syncResult.error?.message}`);
+            } else {
+                console.log('✅ Skills synchronized.');
+            }
+        }
+
         // 4. Write version file - [T-2B01]
         try {
             const versionFileDest = path.join(cwd, ENGINE_DIR, VERSION_FILE);
@@ -963,7 +975,7 @@ async function main() {
         }
 
         // 5. Auto-update .gitignore
-        const gitignoreEntries = [ENGINE_DIR];
+        const gitignoreEntries = [ENGINE_DIR, 'skills'];
         if (envValues.length > 0) {
             for (const env of envValues) {
                 const adapter = ADAPTERS[env];

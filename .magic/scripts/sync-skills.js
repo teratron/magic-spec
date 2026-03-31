@@ -1,0 +1,102 @@
+const fs = require('fs');
+const path = require('path');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SCRIPT: SYNC-SKILLS
+// ═══════════════════════════════════════════════════════════════════════════
+// This script projects Magic SDD workflows into native Skill wrappers
+// to ensure cross-agent compatibility (Claude Code, Gemini, etc).
+
+const ROOT_DIR = path.resolve(__dirname, '../../');
+const CONFIG = {
+    sources: [
+        {
+            path: path.join(ROOT_DIR, 'workflows'),
+            target: path.join(ROOT_DIR, 'skills')
+        },
+        {
+            path: path.join(ROOT_DIR, '.agents/workflows'),
+            target: path.join(ROOT_DIR, '.agents/skills')
+        }
+    ]
+};
+
+// ───────────────────────────────────────────────────────────────────────────
+// Core Logic
+// ───────────────────────────────────────────────────────────────────────────
+
+function extractMetadata(content, fileName) {
+    const metadata = {
+        name: fileName.replace(/\.(?=[^.]*$)/, ':'),
+        description: 'Magic Spec Workflow'
+    };
+
+    const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (frontmatterMatch) {
+        const lines = frontmatterMatch[1].split('\n');
+        for (const line of lines) {
+            const [key, ...parts] = line.split(':');
+            if (key && parts.length > 0) {
+                const value = parts.join(':').trim();
+                if (key.trim() === 'name') metadata.name = value;
+                if (key.trim() === 'description') metadata.description = value;
+            }
+        }
+    } else {
+        // Fallback for description if no frontmatter
+        const bodyLines = content.replace(/^#+\s*/, '').trim().split('\n');
+        metadata.description = bodyLines[0].trim() || metadata.description;
+    }
+
+    return metadata;
+}
+
+function sync() {
+    console.log('🔄 Projecting Workflows to Skill Wrappers...');
+
+    CONFIG.sources.forEach(source => {
+        if (!fs.existsSync(source.path)) return;
+
+        const files = fs.readdirSync(source.path).filter(f => f.endsWith('.md'));
+
+        files.forEach(file => {
+            const name = path.basename(file, '.md');
+            const sourcePath = path.join(source.path, file);
+            const targetDir = path.join(source.target, name);
+            const targetFile = path.join(targetDir, 'SKILL.md');
+
+            const content = fs.readFileSync(sourcePath, 'utf8');
+            const metadata = extractMetadata(content, name);
+            const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+            const body = frontmatterMatch 
+                ? content.replace(frontmatterMatch[0], '').trim() 
+                : content.trim();
+
+            if (!fs.existsSync(targetDir)) {
+                fs.mkdirSync(targetDir, { recursive: true });
+            }
+
+            const skillContent = `---
+name: ${metadata.name}
+description: ${metadata.description}
+---
+
+${body}`;
+
+            fs.writeFileSync(targetFile, skillContent, 'utf8');
+            console.log(` ✅ Skill generated: ${name}`);
+        });
+    });
+
+    console.log('✨ Sync complete.');
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Execution
+// ───────────────────────────────────────────────────────────────────────────
+
+if (require.main === module) {
+    sync();
+}
+
+module.exports = sync;

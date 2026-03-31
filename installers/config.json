@@ -31,6 +31,7 @@
         "scripts/generate-checksums.js",
         "scripts/generate-context.js",
         "scripts/init.js",
+        "scripts/sync-skills.js",
         "templates/plan.md",
         "templates/retrospective.md",
         "templates/spec.md",
@@ -48,6 +49,7 @@
         "targets": [
             ".magic",
             ".agents",
+            "skills",
             "installers"
         ]
     },

@@ -1,19 +1,6 @@
 ---
 name: magic:analyze
 description: Project Ventilation — audits health, registry, and rule compliance
-handoffs:
-  - label: "Create specifications"
-    workflow: magic.spec
-    prompt: "Proceed to create suggested specifications for uncovered areas."
-    condition: "gaps_detected"
-  - label: "Generate tasks"
-    workflow: magic.task
-    prompt: "Plan repairs and task synchronization for discovered issues."
-    condition: "repairs_needed"
-  - label: "Sync project"
-    workflow: magic.dev.sync
-    prompt: "Perform hygiene sync to resolve documentation or version drift."
-    condition: "drift_detected"
 ---
 
 # Analyze Workflow

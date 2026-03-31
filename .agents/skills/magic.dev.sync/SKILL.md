@@ -2,6 +2,7 @@
 name: magic.dev:sync
 description: Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata
 ---
+
 # Sync Workflow
 
 Maintain project hygiene by synchronizing all metadata, documentation, and versioning across the repository.

@@ -9,6 +9,7 @@ import urllib.error
 import tempfile
 import hashlib
 import time
+import subprocess
 from typing import Optional
 
 if sys.stdout.encoding != "utf-8":
@@ -668,8 +669,26 @@ def main() -> None:
         )
         (dest / ENGINE_DIR / VERSION_FILE).write_text(real_version, encoding="utf-8")
 
+        # 3.5. Sync Skill Wrappers
+        sync_script = dest / ENGINE_DIR / "scripts" / "sync-skills.js"
+        if sync_script.exists():
+            print("🔄 Projecting Workflows to Skill Wrappers...")
+            try:
+                result = subprocess.run(
+                    ["node", str(sync_script)],
+                    cwd=dest,
+                    capture_output=True,
+                    text=True
+                )
+                if result.returncode != 0:
+                    print(f"⚠️  Skill synchronization failed: {result.stderr}")
+                else:
+                    print("✅ Skills synchronized.")
+            except Exception as e:
+                print(f"⚠️  Skill synchronization failed (Node.js might be missing): {e}")
+
         # Auto-update .gitignore
-        gitignore_entries = [ENGINE_DIR]
+        gitignore_entries = [ENGINE_DIR, "skills"]
         if env_values:
             for ev in env_values:
                 adapter = adapters.get(ev)

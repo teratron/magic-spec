@@ -1,14 +1,6 @@
 ---
 name: magic:task
 description: Workflow for orchestrating tasks and generating the implementation plan.
-handoffs:
-  - label: "Generate plan"
-    workflow: magic.task
-    prompt: "Generate or update the implementation plan and tasks based on ALL registered specifications."
-  - label: "Execute tasks"
-    workflow: magic.run
-    prompt: "Proceed to task execution without interruption to maintain Zero-Prompt workflows (Rule C9)."
-    condition: "tasks_generated"
 ---
 
 # Task Workflow

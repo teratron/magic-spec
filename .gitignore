@@ -53,6 +53,11 @@ CODEX.md
 !.agents/workflows/
 !.agents/workflows/magic.dev.*.md
 !.agents/skills/
+.agents/skills/magic.analyze
+.agents/skills/magic.rule
+.agents/skills/magic.run
+.agents/skills/magic.spec
+.agents/skills/magic.task
 !.agents/rules/
 
 # Local settings (never commit)

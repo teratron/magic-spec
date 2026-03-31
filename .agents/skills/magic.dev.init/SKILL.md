@@ -1,5 +1,5 @@
 ---
-name: magic-dev-init
+name: magic.dev:init
 description: Initialize MAGIC-SPEC development environment with junctions and symlinks.
 ---
 
@@ -25,13 +25,13 @@ Establish all links using the platform-specific script. Key tasks include:
 **On Windows (PowerShell):**
 
 ```powershell
-pwsh -NoProfile -File .agents/skills/magic-dev-init/scripts/setup_windows.ps1
+pwsh -NoProfile -File .agents/skills/magic.dev.init/scripts/setup_windows.ps1
 ```
 
 **On Unix (Bash):**
 
 ```bash
-bash .agents/skills/magic-dev-init/scripts/setup_unix.sh
+bash .agents/skills/magic.dev.init/scripts/setup_unix.sh
 ```
 
 ### 3. Verification

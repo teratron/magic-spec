@@ -218,5 +218,5 @@ Follow this checklist before declaring a task finished:
   - Update `README.md` if public API or features were changed.
   - Update relevant `.design/` workspace index/specifications to reflect task completion.
 - [ ] **Synchronized**: Run `uv sync` to ensure `uv.lock` is up to date after `pyproject.toml` changes.
-  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 3 files). If broken, run `/magic-dev-init` to restore.
+  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 3 files). If broken, run `/magic.dev:init` to restore.
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.design/INDEX.md`) haven't lost data during edits.
