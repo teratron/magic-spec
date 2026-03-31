@@ -102,3 +102,7 @@ Once approved, the engine triggers a **Regression Sweep** — automatically exec
 - **Isolated from Reality**: Simulation does not modify live specs, plans, or project code.
 - **Verification Loop**: After a fix is applied, the simulation is re-run to ensure the fix resolved the identified issue without introducing new ones.
 - **Checksums HALT**: If `.magic/.checksums` mismatch is detected, simulation refuses to proceed until integrity is restored.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

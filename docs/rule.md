@@ -71,3 +71,7 @@ After a rule is written to disk:
 - **Version Bumping**: Rules use Semantic Versioning (Major for removals, Minor for additions/amendments, Patch for typos).
 - **Document History**: Every change is logged in the Document History table.
 - **Engine Meta**: Any modification to the rule engine logic triggers an automatic C14 version bump.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

@@ -6,6 +6,7 @@
       "scope": [
         ".magic",
         ".agents",
+        ".design",
         "docs",
         "workflows",
         "README.md",

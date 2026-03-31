@@ -93,3 +93,7 @@ When re-planning is needed (e.g., blocked tasks), the handoff to `/magic.task` a
 ## 7. Run Completion Checklist
 
 Every execution cycle ends with a mandatory checklist to verify that `TASKS.md` is updated, dependencies are respected, and no out-of-scope work was performed.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

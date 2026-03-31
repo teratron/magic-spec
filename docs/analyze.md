@@ -169,3 +169,7 @@ In multi-workspace environments, the Analysis workflow respects the `scope` defi
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created from analysis, tasks can be planned |
 | **Rule** (`rule.md`) | Consumer — detected conventions are proposed for RULES.md |
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

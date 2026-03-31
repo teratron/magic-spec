@@ -13,4 +13,4 @@
 | 1.5.13 - 1.5.36 | 2026-03-20 | Automated update via engine meta automation |
 | 1.5.44 | 2026-03-24 | Add C18-C23 to RULES template; deduplicate workspace.json reads |
 | 1.5.62 - 1.5.86 | 2026-03-31 | Automated update via engine meta automation |
-| 1.5.97 - 1.5.104 | 2026-03-31 | Doc-Sync and Version Parity enforced |
+| 1.5.97 - 1.5.109 | 2026-03-31 | Doc-Sync and Version Parity enforced |

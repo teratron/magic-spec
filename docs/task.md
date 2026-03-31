@@ -99,3 +99,7 @@ If `workspace.json` registers more than one workspace, the pre-flight scan check
 ### 8. Rules Parity
 
 Tasks are generated based on the current set of project conventions. Every `TASKS.md` file records the version of `RULES.md` used during generation. If the project rules are updated, the engine will warn the user of a "Rules Drift" and offer to synchronize the plan to ensure compliance with the latest standards.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

@@ -58,3 +58,7 @@ Initialization is triggered via the universal `node .magic/scripts/executor.js i
 ## 5. Security Note
 
 Initialization involves writing systemic files to the local directory. While the process is safe, it is managed by the core engine logic to prevent accidental corruption of the project's design artifacts.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

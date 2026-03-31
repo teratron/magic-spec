@@ -100,3 +100,7 @@ This is a critical safety mechanism:
 - **Document History**: Every change must be recorded in the file's internal history table.
 - **Delta Edits**: Large specs are updated surgically to minimize context overhead.
 - **Structural Refactor**: When merging or splitting specifications, the agent performs a **Refactoring Sweep**, updating all task mappings (T-IDs) in `TASKS.md` to ensure no work is lost.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).

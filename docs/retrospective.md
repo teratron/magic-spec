@@ -67,3 +67,7 @@ The output of this workflow is used to:
 - **Read-Only**: The retrospective analyzes data but does NOT modify specs, plans, or code.
 - **Evidence-Based**: Every observation must reference a specific file, timestamp, or event in the project history.
 - **Archival (C8)**: As part of the retrospective process at the end of a plan, the agent ensures that all completed task files are moved to the `archives/` directory and that `TASKS.md` is updated with historical links.
+
+## Sync Note
+
+Synchronized with engine workflows on 2026-03-31 (v1.5.109).
