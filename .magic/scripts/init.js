@@ -1,9 +1,18 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
+
+// ═══════════════════════════════════════════════════════════════════════════
+// SDD INITIALIZER (Project Bootstrapper)
+// ═══════════════════════════════════════════════════════════════════════════
 
 const designDirRaw = process.env.MAGIC_DESIGN_DIR || '.design';
 const designDir = path.resolve(designDirRaw);
 const isGlobalRegistry = path.basename(designDir) === '.design';
+
+// ───────────────────────────────────────────────────────────────────────────
+// Helpers & Logic
+// ───────────────────────────────────────────────────────────────────────────
 
 if (!fs.existsSync('.git')) {
     console.log('Note: not a git repository. Proceeding with SDD initialization anyway.');
@@ -162,26 +171,26 @@ Once the user provides high-level intent (ideation), the agent is authorized to 
 
 Logic and progress tracking are distributed between two primary files to ensure clarity and automation:
 
-1. **`PLAN.md` (Strategic)**: High-level overview of **Phase → Specification**. Each specification has a single checkbox representing its aggregate implementation status.
-2. **`TASKS.md` (Tactical)**: The master execution ledger. Contains a concise **Phase Checklist** (items prefixed with unique `[T-XXXX]` IDs) followed by detailed task blocks.
+1. **\`PLAN.md\` (Strategic)**: High-level overview of **Phase → Specification**. Each specification has a single checkbox representing its aggregate implementation status.
+2. **\`TASKS.md\` (Tactical)**: The master execution ledger. Contains a concise **Phase Checklist** (items prefixed with unique \`[T-XXXX]\` IDs) followed by detailed task blocks.
 
-All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` checklist first. `PLAN.md` is updated only when a specification or phase is fully completed.
+All execution progress (\`[x]\`, \`[/]\`, etc.) must be recorded in the \`TASKS.md\` checklist first. \`PLAN.md\` is updated only when a specification or phase is fully completed.
 
 ### C11 — Simulation Workflow (C2 Exception)
 
-`magic.simulate` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
+\`magic.simulate\` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
 
 ### C12 — Quarantine Cascade (Каскад Карантина)
 
-If a Layer 1 (Concept) specification loses its `Stable` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to `RFC` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in `INDEX.md`.
+If a Layer 1 (Concept) specification loses its \`Stable\` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to \`RFC\` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in \`INDEX.md\`.
 
-**C12.1 — Stabilization Exception**: Tasks explicitly intended to stabilize or fix mismatches to regain `Stable` status for the parent may bypass this quarantine.
+**C12.1 — Stabilization Exception**: Tasks explicitly intended to stabilize or fix mismatches to regain \`Stable\` status for the parent may bypass this quarantine.
 
 ### C13 — Agent Cognitive Discipline
 
 All AI agents operating within the Magic SDD framework must adhere to strict cognitive discipline to prevent hallucinations and silent failures:
 
-1. **Primary Source Principle**: Always read original `.magic/` and `.design/` files. Never rely on cached memory or interpretive assumptions.
+1. **Primary Source Principle**: Always read original \`.magic/\` and \`.design/\` files. Never rely on cached memory or interpretive assumptions.
 2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
 3. **Zero Assumptions**: If an instruction is absent or ambiguous, halt and ask for clarification. Do not invent missing steps or scripts.
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
@@ -189,25 +198,25 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 ### C14 — Engine Versioning Protocol
 
-To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the `.magic/` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: `node .magic/scripts/executor.js update-engine-meta --workflow {workflow}`.
+To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the \`.magic/\` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: \`node .magic/scripts/executor.js update-engine-meta --workflow {workflow}\`.
 
-1. **Scope**: Applies to all `.md` workflows, `scripts/`, `templates/`, and `config.json` inside the engine directory.
-2. **Automation**: This command automatically increments the patch version in `.magic/.version`, updates the relevant history file in `.magic/history/`, and regenerates `.magic/.checksums`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
-3. **Exclusion**: Modifications to `.design/` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
-4. **Synchronization**: The version in `.magic/.version` should stay aligned with the latest meaningful change to the engine's functional logic.
+1. **Scope**: Applies to all \`.md\` workflows, \`scripts/\`, \`templates/\`, and \`config.json\` inside the engine directory.
+2. **Automation**: This command automatically increments the patch version in \`.magic/.version\`, updates the relevant history file in \`.magic/history/\`, and regenerates \`.magic/.checksums\`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
+3. **Exclusion**: Modifications to \`.design/\` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
+4. **Synchronization**: The version in \`.magic/.version\` should stay aligned with the latest meaningful change to the engine's functional logic.
 5. **Simulation Exemption**: Purely cognitive simulations, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
 
 ### C15 — Workspace Scope Isolation
 
-When operating in a workspace with a defined scope (via `.design/workspace.json`), the agent MUST restrict all analysis and file operations to the directories specified in the scope. All other project directories are treated as out-of-scope to ensure logical isolation and prevent context leakage or accidental modification of unrelated modules.
+When operating in a workspace with a defined scope (via \`.design/workspace.json\`), the agent MUST restrict all analysis and file operations to the directories specified in the scope. All other project directories are treated as out-of-scope to ensure logical isolation and prevent context leakage or accidental modification of unrelated modules.
 
 ### C16 — Micro-spec Convention
 
-For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight `.magic/templates/micro-spec.md` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
+For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight \`.magic/templates/micro-spec.md\` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
 
 ### C17 — Adapter Registry
 
-All new IDE/Agent adapters must be registered in `installers/adapters.json`. This registry is the single source of truth for installer deployment paths and marker files.
+All new IDE/Agent adapters must be registered in \`installers/adapters.json\`. This registry is the single source of truth for installer deployment paths and marker files.
 
 ### C18 — Payload Security
 
@@ -215,39 +224,39 @@ The installers (Node/Python) must verify payload integrity (checksums) and preve
 
 ### C19 — Cross-Env CLI Parity
 
-Node and Python installers must maintain strict CLI parity. Every command-line flag (e.g., `--yes`, `--update`, `--check`) must behave identically across both implementations to ensure a consistent user experience.
+Node and Python installers must maintain strict CLI parity. Every command-line flag (e.g., \`--yes\`, \`--update\`, \`--check\`) must behave identically across both implementations to ensure a consistent user experience.
 
 ### C20 — Auto-Heal Recovery
 
-The engine must proactively identify and repair its own metadata. If `executor.js` detects missing history files or corrupted checksums during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
+The engine must proactively identify and repair its own metadata. If \`executor.js\` detects missing history files or corrupted checksums during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
 
 ### C21 — Project Ventilation (Analyze)
 
-The command `/magic.analyze` (or `Analyze project`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against `INDEX.md` and `RULES.md`. It must identify:
+The command \`/magic.analyze\` (or \`Analyze project\`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against \`INDEX.md\` and \`RULES.md\`. It must identify:
 
 - **Registry Drift**: Specs in INDEX but missing on disk.
 - **Coverage Gaps**: Code folders without corresponding specs.
-- **Rule Violations**: Code patterns that contradict `RULES.md §7` (both global and workspace tiers).
-- **Integrity Issues**: Mismatched checksums in `.magic/`.
+- **Rule Violations**: Code patterns that contradict \`RULES.md §7\` (both global and workspace tiers).
+- **Integrity Issues**: Mismatched checksums in \`.magic/\`.
 
 ### C22 — Workspace Rule Inheritance
 
-Each workspace may maintain a local `RULES.md` at `.design/{workspace}/RULES.md`. These files:
+Each workspace may maintain a local \`RULES.md\` at \`.design/{workspace}/RULES.md\`. These files:
 
-1. Contain only workspace-specific §7 conventions, identified as `WC1`, `WC2`, … (workspace convention).
-2. Inherit all §1–6 universal rules and global §7 conventions from `.design/RULES.md` — no re-declaration needed.
+1. Contain only workspace-specific §7 conventions, identified as \`WC1\`, \`WC2\`, … (workspace convention).
+2. Inherit all §1–6 universal rules and global §7 conventions from \`.design/RULES.md\` — no re-declaration needed.
 3. Must not contradict the global constitution (Constitutional Guard applies equally).
-4. Are created on demand by `magic.rule` when the first workspace-scoped rule is requested.
-5. Version independently from the global `RULES.md`.
+4. Are created on demand by \`magic.rule\` when the first workspace-scoped rule is requested.
+5. Version independently from the global \`RULES.md\`.
 
 ### C23 — Context Economy & Validation Caching
 
-To minimize redundant resource usage and improve performance, the agent may optimize `check-prerequisites` calls within a single task lifecycle:
+To minimize redundant resource usage and improve performance, the agent may optimize \`check-prerequisites\` calls within a single task lifecycle:
 
-1. **Turn-Aware Caching**: If `check-prerequisites` returned `ok: true` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in `.magic/` or `.design/` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
-2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
-3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
-4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
+1. **Turn-Aware Caching**: If \`check-prerequisites\` returned \`ok: true\` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in \`.magic/\` or \`.design/\` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
+2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. \`git pull\`, manual edits in terminal), the agent MUST perform a fresh \`check-prerequisites\` call.
+3. **Halt Persistence**: If the previous check returned an error or warning (e.g. \`checksums_mismatch\`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
+4. **Audit/Simulate Exemption**: In \`/magic.analyze\` (Ventilation) or \`/magic.simulate\` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
 ## Document History
 | Version | Date | Description |
@@ -310,4 +319,15 @@ if (isGlobalRegistry) {
     initWorkspace(mainWorkspaceDir);
 } else {
     initWorkspace(designDir);
+}
+
+// Auto-install Git hooks if in a git repo
+if (fs.existsSync('.git')) {
+    try {
+        console.log('🔗 Installing Magic Git hooks...');
+        const executorPath = path.join(__dirname, 'executor.js');
+        execSync(`node "${executorPath}" install-hooks`, { stdio: 'inherit' });
+    } catch (e) {
+        console.warn('Note: Could not automatically install Git hooks.');
+    }
 }

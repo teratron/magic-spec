@@ -3,6 +3,10 @@ const path = require('path');
 const crypto = require('crypto');
 const { execSync } = require('child_process');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION & ARGUMENTS
+// ═══════════════════════════════════════════════════════════════════════════
+
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
 const reqPlan = args.includes('--require-plan');
@@ -11,6 +15,10 @@ const reqSpecs = args.includes('--require-specs');
 
 const missing = [];
 const warnings = [];
+
+// ───────────────────────────────────────────────────────────────────────────
+// Helpers
+// ───────────────────────────────────────────────────────────────────────────
 
 /**
  * Push a structured warning object.
@@ -22,7 +30,10 @@ function warn(type, message, fix) {
     warnings.push({ type, message, fix: fix || null });
 }
 
-// Engine Integrity Check
+// ═══════════════════════════════════════════════════════════════════════════
+// INTERNAL INTEGRITY (Kernel Check)
+// ═══════════════════════════════════════════════════════════════════════════
+
 const checksumsFile = path.join('.magic', '.checksums');
 
 if (fs.existsSync(checksumsFile)) {
@@ -57,6 +68,10 @@ if (fs.existsSync(checksumsFile)) {
         'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'
     );
 }
+
+// ═══════════════════════════════════════════════════════════════════════════
+// PROJECT INTEGRITY (Artifact Scan)
+// ═══════════════════════════════════════════════════════════════════════════
 
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 const indexPath = path.join(designDir, 'INDEX.md');
@@ -208,9 +223,9 @@ if (planExists && indexExists) {
     }
 }
 
-// ───────────────────────────────────────────────────────────────────────────
-// Config Drift Detection (C22-aware)
-// ───────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIG DRIFT DETECTION (Kernel Safety)
+// ═══════════════════════════════════════════════════════════════════════════
 
 /**
  * Check if RULES.md files have uncommitted changes (manual edits outside workflow).
@@ -257,6 +272,10 @@ checkConfigDrift();
 
 const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY');
 const ok = missing.length === 0 && integrity_ok;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// EXECUTION & OUTPUT
+// ═══════════════════════════════════════════════════════════════════════════
 
 if (jsonOutput) {
     const date = new Date().toISOString().split('T')[0];

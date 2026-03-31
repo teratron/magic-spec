@@ -2,9 +2,17 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CHECKSUM GENERATOR (Kernel Integrity)
+// ═══════════════════════════════════════════════════════════════════════════
+
 const MAGIC_DIR = path.join(__dirname, '..');
 const CHECKSUMS_FILE = '.checksums';
 const CHECKSUMS_PATH = path.join(MAGIC_DIR, CHECKSUMS_FILE);
+
+// ───────────────────────────────────────────────────────────────────────────
+// Core Logic
+// ───────────────────────────────────────────────────────────────────────────
 
 /**
  * Calculates SHA256 hash of a file.

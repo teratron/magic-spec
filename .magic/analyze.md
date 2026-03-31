@@ -131,11 +131,16 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Report violations as `STRUCTURE` category** (separate from Drift/Gap/Orphan).
 4. **Coverage Check**: Scan project directories *within the active workspace scope (C15)*. Identify folders with NO corresponding spec file (Gap Report).
     - **RESCUE (AOP)**: For each orphaned spec + uncovered directory pair, check name, path, title, or semantic similarity. If overall similarity >80%, classify as `RESCUE` (rename opportunity) instead of separate Gap + Orphan entries.
-5. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings: "Directory '{dir}' is not in any workspace scope — invisible to scoped analysis. Consider adding a workspace or extending an existing scope."
-6. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-7. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered). If repairs involve modifying `.magic/` files, C14 meta-sync applies.
-8. **Report**: Consolidated list of errors, warnings, and suggested repairs.
-9. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
+5. **Documentation & Version Audit**:
+    - Check if `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
+    - Verify `README.md` version badge matches `.magic/.version`.
+    - Check for version parity across `package.json`, `pyproject.toml`, and installer init files.
+    - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
+6. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings: "Directory '{dir}' is not in any workspace scope — invisible to scoped analysis. Consider adding a workspace or extending an existing scope."
+7. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+8. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered). If repairs involve modifying `.magic/` files, C14 meta-sync applies.
+9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
+10. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 
 ### [Mode D] Focused Analysis
 

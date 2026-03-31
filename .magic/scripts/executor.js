@@ -2,6 +2,10 @@ const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// UNIVERSAL EXECUTOR (Engine Kernel Proxy)
+// ═══════════════════════════════════════════════════════════════════════════
+
 /**
  * Universal script executor for Magic SDD.
  * Detects OS and runs the appropriate .sh or .ps1 script.
@@ -15,7 +19,10 @@ if (!scriptName) {
     process.exit(1);
 }
 
-// Workspace Resolution Priority (Zero-Prompt)
+// ───────────────────────────────────────────────────────────────────────────
+// Workspace Resolution (Zero-Prompt)
+// ───────────────────────────────────────────────────────────────────────────
+
 let workspaceName = process.env.MAGIC_WORKSPACE || null;
 const finalArgs = [];
 for (const arg of args) {
@@ -76,10 +83,14 @@ if (workspaceData) {
 }
 const childEnv = Object.assign({}, process.env, envVars);
 
-// Engine Meta Automation Command
+// ═══════════════════════════════════════════════════════════════════════════
+// ENGINE META AUTOMATION (C14 Implementation)
+// ═══════════════════════════════════════════════════════════════════════════
+
 if (scriptName === 'update-engine-meta') {
-    const workflowNames = new Set();
     let customMessage = null;
+    let checkOnly = false;
+    const workflowNames = new Set();
 
     for (let i = 0; i < args.length; i++) {
         if (args[i] === '--workflow' && args[i + 1]) {
@@ -88,6 +99,8 @@ if (scriptName === 'update-engine-meta') {
         } else if ((args[i] === '--message' || args[i] === '-m') && args[i + 1]) {
             customMessage = args[i + 1];
             i++;
+        } else if (args[i] === '--check') {
+            checkOnly = true;
         }
     }
 
@@ -99,18 +112,36 @@ if (scriptName === 'update-engine-meta') {
 
     // C1 Kernel Integrity: Ensure history directory exists
     if (!fs.existsSync(historyDir)) {
+        if (checkOnly) {
+            console.error('HALT (Check Mode): History directory missing!');
+            process.exit(1);
+        }
         fs.mkdirSync(historyDir, { recursive: true });
         console.log('History directory RESTORED (Auto-Heal)');
     }
 
-    // SHA256 helper for auto-detection
+    // SHA256 helper with retry safety (prevents race conditions during write)
     const crypto = require('crypto');
-    function getFileHash(filePath) {
+    function getFileHash(filePath, retry = 5) {
         if (!fs.existsSync(filePath)) return null;
-        const fileBuffer = fs.readFileSync(filePath);
-        const hashSum = crypto.createHash('sha256');
-        hashSum.update(fileBuffer);
-        return hashSum.digest('hex');
+        try {
+            // Read file. If empty but exists, or if locked, retry after small delay.
+            const fileBuffer = fs.readFileSync(filePath);
+            const hashSum = crypto.createHash('sha256');
+            hashSum.update(fileBuffer);
+            return hashSum.digest('hex');
+        } catch (e) {
+            if (retry > 0) {
+                // Sleep sync-ly for 200ms
+                const Atomics = require('atomics');
+                const SharedArrayBuffer = require('sharedarraybuffer');
+                const sab = new SharedArrayBuffer(4);
+                const int32 = new Int32Array(sab);
+                Atomics.wait(int32, 0, 0, 200);
+                return getFileHash(filePath, retry - 1);
+            }
+            throw e;
+        }
     }
 
     // Workflow Auto-Detection Logic
@@ -138,6 +169,12 @@ if (scriptName === 'update-engine-meta') {
                 if (oldChecksums[rel] !== currentHash) {
                     const ext = path.extname(rel);
                     const base = path.basename(rel, ext);
+                    
+                    if (checkOnly) {
+                        console.error(`HALT (Check Mode): Drift detected in '${rel}'.`);
+                        process.exit(1);
+                    }
+                    
                     // Special case: suite.md is in tests/
                     if (!workflowNames.has(base)) {
                         workflowNames.add(base);
