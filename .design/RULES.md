@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Status:** Active
 
 ## Overview
@@ -17,7 +17,7 @@ Read by the agent before every operation. Updated only via explicit triggers.
 ## 2. Status Rules
 
 - **Draft → RFC**: all required sections filled, ready for review.
-- **RFC → Stable**: reviewed and approved (Human Signal) **OR** Auto-Stabilized by a high-confidence agent if logic fits the architecture perfectly.
+- **RFC → Stable**: reviewed and approved (Human Signal) **OR** Auto-Stabilized via Trust Mode (C9) if logic fits the architecture and satisfies MVC criteria.
 - **RFC → Draft**: needs rework or significant revision.
 - **Stable → RFC**: substantive amendment (minor/major bump) requires re-review.
 - **Any → Deprecated**: explicitly superseded; replacement must be named.
@@ -196,6 +196,7 @@ To minimize redundant resource usage and improve performance, the agent may opti
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.4.1 | 2026-03-31 | Antigravity | RE-6: Quantified Workspace Disambiguation (≥50%) and removed "high-confidence" term (simulation fix). |
 | 1.4.0 | 2026-03-31 | Agent | C6: Removed undefined "Strong/Weak Tier" qualifier (RE-3 simulation fix). |
 | 1.3.0 | 2026-03-16 | Antigravity | Added C23: Context Economy & Validation Caching. |
 | 1.2.0 | 2026-03-05 | Agent | Added C22: Workspace Rule Inheritance. |

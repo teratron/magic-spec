@@ -60,7 +60,7 @@ graph TD
 ### Steps
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace {active-workspace}`.
-    - **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
+    - **C15 Filter**: `checksums_mismatch` or `GHOST_REGISTRY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. If out-of-scope → proceed silently.
     - **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before planning." This catches manual edits that bypassed the spec workflow.
     - **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason). Also verify header parity for any cross-workspace L1 parents (see Architecture Logic above).
 2. **Pre-Planning Stabilization (Trust Mode Batch)**:

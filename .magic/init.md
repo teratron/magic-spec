@@ -5,7 +5,7 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select and NOTIFY** the user of the selection (Zero-Prompt): "Found {marker} — selecting {workspace}. Proceeding...".
+    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select and NOTIFY** (Zero-Prompt): "Found {marker} — selecting {workspace}. Proceeding...". Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums/Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skips existing files. Never mutates user state.
