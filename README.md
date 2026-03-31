@@ -36,7 +36,7 @@ After running the installer, your project directory will be augmented with the f
 
 ```plaintext
 root-project/
-├── .agents/workflows/         # Slash commands wrapper (e.g., magic.spec, magic.task)
+├── .agents/workflows/        # Slash commands wrapper (e.g., magic.spec, magic.task)
 ├── .magic/                   # The SDD Engine (workflow logic and scripts - read-only)
 └── .design/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
