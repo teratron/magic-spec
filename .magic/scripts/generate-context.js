@@ -1,17 +1,33 @@
 const fs = require('fs');
 const path = require('path');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION AND PATHS
+// ═══════════════════════════════════════════════════════════════════════════
+
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 const changelogPath = path.join(designDir, 'CHANGELOG.md');
 const contextPath = path.join(designDir, 'CONTEXT.md');
+
+// ───────────────────────────────────────────────────────────────────────────
+// Directory Check
+// ───────────────────────────────────────────────────────────────────────────
 
 if (!fs.existsSync(designDir) || !fs.statSync(designDir).isDirectory()) {
     console.error(`Error: ${designDir} directory not found`);
     process.exit(1);
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTEXT DOCUMENT GENERATION
+// ═══════════════════════════════════════════════════════════════════════════
+
 const date = new Date().toISOString().split('T')[0];
 let contextContent = `# Project Context\n\n**Generated:** ${date}\n\n## Active Technologies\n\n`;
+
+// ───────────────────────────────────────────────────────────────────────────
+// 1. Technology Discovery
+// ───────────────────────────────────────────────────────────────────────────
 
 let techList = '';
 if (fs.existsSync('package.json')) techList += '- Node.js\n';
@@ -27,8 +43,22 @@ if (!techList) {
     contextContent += techList;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// 2. Project Tree Generation
+// ───────────────────────────────────────────────────────────────────────────
+
 contextContent += '\n## Core Project Structure\n\n```plaintext\n';
 
+/**
+ * Recursively builds a directory tree representation.
+ * 
+ * @param {string} dir Source directory path.
+ * @param {string} prefix Line prefix for indentation.
+ * @param {number} currentDepth Current recursion level.
+ * @param {number} maxDepth Maximum depth to traverse.
+ * @param {string[]} ignores List of folder/file names to skip.
+ * @returns {string} Markdown-formatted directory tree.
+ */
 function buildTree(dir, prefix, currentDepth, maxDepth, ignores) {
     if (currentDepth > maxDepth) return '';
     let result = '';
@@ -67,6 +97,11 @@ try {
 } catch (err) {
     contextContent += `- Project root\n  - ${designDir}/\n  - .magic/\n`;
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// 3. Changelog Integration
+// ───────────────────────────────────────────────────────────────────────────
+
 contextContent += '```\n\n## Recent Changes\n\n';
 
 if (fs.existsSync(changelogPath)) {
@@ -80,4 +115,13 @@ if (fs.existsSync(changelogPath)) {
 
 contextContent += '\n';
 
-fs.writeFileSync(contextPath, contextContent);
+// ═══════════════════════════════════════════════════════════════════════════
+// PERSISTENCE
+// ═══════════════════════════════════════════════════════════════════════════
+
+try {
+    fs.writeFileSync(contextPath, contextContent);
+    console.log(`Context document updated: ${contextPath}`);
+} catch (e) {
+    console.error(`Failed to write context document: ${e.message}`);
+}

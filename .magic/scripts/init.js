@@ -244,7 +244,7 @@ The command \`/magic.analyze\` (or \`Analyze project\`) triggers "Project Ventil
 Each workspace may maintain a local \`RULES.md\` at \`.design/{workspace}/RULES.md\`. These files:
 
 1. Contain only workspace-specific §7 conventions, identified as \`WC1\`, \`WC2\`, … (workspace convention).
-2. Inherit all §1–6 universal rules and global §7 conventions from \`.design/RULES.md\` — no re-declaration needed.
+2. Inherit all §1-6 universal rules and global §7 conventions from \`.design/RULES.md\` — no re-declaration needed.
 3. Must not contradict the global constitution (Constitutional Guard applies equally).
 4. Are created on demand by \`magic.rule\` when the first workspace-scoped rule is requested.
 5. Version independently from the global \`RULES.md\`.

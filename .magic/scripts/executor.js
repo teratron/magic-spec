@@ -164,17 +164,17 @@ if (scriptName === 'update-engine-meta') {
             allFiles.forEach(fullPath => {
                 const rel = path.relative(magicDir, fullPath).replace(/\\/g, '/');
                 if (rel === '.checksums' || rel.startsWith('history/')) return;
-                
+
                 const currentHash = getFileHash(fullPath);
                 if (oldChecksums[rel] !== currentHash) {
                     const ext = path.extname(rel);
                     const base = path.basename(rel, ext);
-                    
+
                     if (checkOnly) {
                         console.error(`HALT (Check Mode): Drift detected in '${rel}'.`);
                         process.exit(1);
                     }
-                    
+
                     // Special case: suite.md is in tests/
                     if (!workflowNames.has(base)) {
                         workflowNames.add(base);
@@ -212,23 +212,18 @@ if (scriptName === 'update-engine-meta') {
                     const lastLine = lines[lastLineIndex] || '';
                     const automatedMsg = 'Automated update via engine meta automation';
                     const activeMessage = customMessage || automatedMsg;
+                    const hParts = lastLine.split('|');
+                    const isSameMessage = lastLine.includes(`| ${activeMessage} |`);
 
-                    if (!customMessage && lastLine.includes(automatedMsg)) {
-                        const hParts = lastLine.split('|');
-                        if (hParts.length >= 4) {
-                            const currentRange = hParts[1].trim();
-                            const firstVersion = currentRange.split('-')[0].trim();
-                            const newRange = ` ${firstVersion} - ${newVersion} `;
-                            hParts[1] = newRange;
-                            hParts[2] = ` ${date} `;
-                            lines[lastLineIndex] = hParts.join('|');
-                            fs.writeFileSync(historyFile, lines.join('\n') + '\n');
-                            console.log(`History range updated for '${wf}': ${newRange.trim()}`);
-                        } else {
-                            // Malformed last line fallback
-                            const entry = `| ${newVersion} | ${date} | ${activeMessage} |\n`;
-                            fs.appendFileSync(historyFile, entry);
-                        }
+                    if (isSameMessage && hParts.length >= 4) {
+                        const currentRange = hParts[1].trim();
+                        const firstVersion = currentRange.split('-')[0].trim();
+                        const newRange = ` ${firstVersion} - ${newVersion} `;
+                        hParts[1] = newRange;
+                        hParts[2] = ` ${date} `;
+                        lines[lastLineIndex] = hParts.join('|');
+                        fs.writeFileSync(historyFile, lines.join('\n') + '\n');
+                        console.log(`History range updated for '${wf}': ${newRange.trim()}`);
                     } else {
                         const entry = `| ${newVersion} | ${date} | ${activeMessage} |\n`;
                         fs.appendFileSync(historyFile, entry);

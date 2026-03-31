@@ -1,9 +1,16 @@
 const fs = require('fs');
 const path = require('path');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CONFIGURATION
+// ═══════════════════════════════════════════════════════════════════════════
+
 const projectRoot = process.cwd();
 const gitHooksDir = path.join(projectRoot, '.git', 'hooks');
 
+/**
+ * Validates that the current directory is a Git repository.
+ */
 if (!fs.existsSync(gitHooksDir)) {
     console.error('Error: .git directory not found. Are you in a Git repository?');
     process.exit(1);
@@ -11,21 +18,29 @@ if (!fs.existsSync(gitHooksDir)) {
 
 const preCommitPath = path.join(gitHooksDir, 'pre-commit');
 
+// ═══════════════════════════════════════════════════════════════════════════
+// HOOK CONTENT DEFINITION
+// ═══════════════════════════════════════════════════════════════════════════
+
 const hookContent = `#!/bin/sh
 # Magic Spec Pre-commit Hook
 # Ensures engine integrity and metadata sync before commit.
 
-echo "🔍 Magic Sync: Checking engine integrity..."
+echo "[Magic Sync] Checking engine integrity..."
 node .magic/scripts/executor.js update-engine-meta --check
 
 if [ $? -ne 0 ]; then
-  echo "❌ Engine drift detected! Run '/magic.dev.sync' or 'update-engine-meta' to fix metadata before committing."
+  echo "[Magic Sync] Engine drift detected! Run '/magic.dev.sync' or 'update-engine-meta' to fix metadata before committing."
   exit 1
 fi
 
-echo "✅ Engine in sync. Proceeding to commit..."
+echo "[Magic Sync] Engine in sync. Proceeding to commit..."
 exit 0
 `;
+
+// ═══════════════════════════════════════════════════════════════════════════
+// INSTALLATION LOGIC
+// ═══════════════════════════════════════════════════════════════════════════
 
 try {
     // Write the hook file and make it executable (on Unix)
@@ -39,7 +54,7 @@ try {
         // Ignore chmod errors on some Windows setups if they occur
     }
 
-    console.log('✅ Git pre-commit hook installed successfully.');
+    console.log('Git pre-commit hook installed successfully.');
 } catch (e) {
     console.error('Failed to install Git hook:', e.message);
 }
