@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.4.0
+**Version:** 1.4.3
 **Status:** Active
 
 ## Overview
@@ -29,4 +29,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-03-30
+- **Last Updated**: 2026-04-02

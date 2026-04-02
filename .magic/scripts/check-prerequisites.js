@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
+const { hashFile } = require('./utils');
 const { execSync } = require('child_process');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -45,7 +45,7 @@ if (fs.existsSync(checksumsFile)) {
             const normalizedRelPath = relPath.replace(/\\/g, '/');
             const fullPath = path.join('.magic', relPath);
             if (fs.existsSync(fullPath)) {
-                const currentHash = crypto.createHash('sha256').update(fs.readFileSync(fullPath)).digest('hex');
+                const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
                     mismatchedFiles.push(normalizedRelPath);
                 }

@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { hashFileSafe, getAllFiles } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIVERSAL EXECUTOR (Engine Kernel Proxy)
@@ -83,204 +84,35 @@ if (workspaceData) {
 }
 const childEnv = Object.assign({}, process.env, envVars);
 
-// ═══════════════════════════════════════════════════════════════════════════
-// ENGINE META AUTOMATION (C14 Implementation)
-// ═══════════════════════════════════════════════════════════════════════════
+// Generic script execution logic follows...
+const isWindows = process.platform === 'win32';
+const jsPath = path.join(__dirname, `${scriptName}.js`);
+const shellExtension = isWindows ? '.ps1' : '.sh';
+const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
 
-if (scriptName === 'update-engine-meta') {
-    let customMessage = null;
-    let checkOnly = false;
-    const workflowNames = new Set();
+let command, cmdArgs;
 
-    for (let i = 0; i < args.length; i++) {
-        if (args[i] === '--workflow' && args[i + 1]) {
-            args[i + 1].split(',').forEach(wf => workflowNames.add(wf));
-            i++;
-        } else if ((args[i] === '--message' || args[i] === '-m') && args[i + 1]) {
-            customMessage = args[i + 1];
-            i++;
-        } else if (args[i] === '--check') {
-            checkOnly = true;
-        }
-    }
-
-    const magicDir = path.join(__dirname, '..');
-    const versionPath = path.join(magicDir, '.version');
-    const historyDir = path.join(magicDir, 'history');
-    const checksumsPath = path.join(magicDir, '.checksums');
-    const date = new Date().toISOString().split('T')[0];
-
-    // C1 Kernel Integrity: Ensure history directory exists
-    if (!fs.existsSync(historyDir)) {
-        if (checkOnly) {
-            console.error('HALT (Check Mode): History directory missing!');
-            process.exit(1);
-        }
-        fs.mkdirSync(historyDir, { recursive: true });
-        console.log('History directory RESTORED (Auto-Heal)');
-    }
-
-    // SHA256 helper with retry safety (prevents race conditions during write)
-    const crypto = require('crypto');
-    function getFileHash(filePath, retry = 5) {
-        if (!fs.existsSync(filePath)) return null;
-        try {
-            // Read file. If empty but exists, or if locked, retry after small delay.
-            const fileBuffer = fs.readFileSync(filePath);
-            const hashSum = crypto.createHash('sha256');
-            hashSum.update(fileBuffer);
-            return hashSum.digest('hex');
-        } catch (e) {
-            if (retry > 0) {
-                // Sleep sync-ly for 200ms
-                const Atomics = require('atomics');
-                const SharedArrayBuffer = require('sharedarraybuffer');
-                const sab = new SharedArrayBuffer(4);
-                const int32 = new Int32Array(sab);
-                Atomics.wait(int32, 0, 0, 200);
-                return getFileHash(filePath, retry - 1);
-            }
-            throw e;
-        }
-    }
-
-    // Workflow Auto-Detection Logic
-    if (fs.existsSync(checksumsPath)) {
-        try {
-            const oldChecksums = JSON.parse(fs.readFileSync(checksumsPath, 'utf8'));
-            const scanFiles = (dir, files = []) => {
-                fs.readdirSync(dir).forEach(f => {
-                    const p = path.join(dir, f);
-                    if (fs.statSync(p).isDirectory()) {
-                        if (f !== 'history') scanFiles(p, files);
-                    } else {
-                        files.push(p);
-                    }
-                });
-                return files;
-            };
-
-            const allFiles = scanFiles(magicDir);
-            allFiles.forEach(fullPath => {
-                const rel = path.relative(magicDir, fullPath).replace(/\\/g, '/');
-                if (rel === '.checksums' || rel.startsWith('history/')) return;
-
-                const currentHash = getFileHash(fullPath);
-                if (oldChecksums[rel] !== currentHash) {
-                    const ext = path.extname(rel);
-                    const base = path.basename(rel, ext);
-
-                    if (checkOnly) {
-                        console.error(`HALT (Check Mode): Drift detected in '${rel}'.`);
-                        process.exit(1);
-                    }
-
-                    // Special case: suite.md is in tests/
-                    // Skip scripts/ — they are implementation details, not workflows.
-                    // Their changes are tracked via checksums but don't get
-                    // standalone history files (they inherit the --workflow flag).
-                    if (rel.startsWith('scripts/')) {
-                        console.log(`[Auto-Detect] Script change detected in '${rel}' (tracked via --workflow flag)`);
-                    } else if (!workflowNames.has(base)) {
-                        workflowNames.add(base);
-                        console.log(`[Auto-Detect] Change detected in '${rel}' -> Updating history/${base}.md`);
-                    }
-                }
-            });
-        } catch (e) {
-            console.log(`Note: Checksum-based auto-detection skipped: ${e.message}`);
-        }
-    }
-
-    if (workflowNames.size === 0) {
-        console.error('HALT: No changes detected and no --workflow specified. Nothing to update.');
-        process.exit(0); // Exit gracefully if no work
-    }
-
-    // 1. Increment Version (patch)
-    if (fs.existsSync(versionPath)) {
-        const currentVersion = fs.readFileSync(versionPath, 'utf8').trim();
-        const parts = currentVersion.split('.');
-        if (parts.length === 3) {
-            parts[2] = parseInt(parts[2], 10) + 1;
-            const newVersion = parts.join('.');
-            fs.writeFileSync(versionPath, newVersion);
-            console.log(`Engine version bumped: ${currentVersion} -> ${newVersion}`);
-
-            // 2. Update History for each detected/specified workflow
-            for (const wf of workflowNames) {
-                const historyFile = path.join(historyDir, `${wf}.md`);
-                if (fs.existsSync(historyFile)) {
-                    let content = fs.readFileSync(historyFile, 'utf8');
-                    const lines = content.trimEnd().split('\n');
-                    const lastLineIndex = lines.length - 1;
-                    const lastLine = lines[lastLineIndex] || '';
-                    const automatedMsg = 'Automated update via engine meta automation';
-                    const activeMessage = customMessage || automatedMsg;
-                    const hParts = lastLine.split('|');
-                    const isSameMessage = lastLine.includes(`| ${activeMessage} |`);
-
-                    if (isSameMessage && hParts.length >= 4) {
-                        const currentRange = hParts[1].trim();
-                        const firstVersion = currentRange.split('-')[0].trim();
-                        const newRange = ` ${firstVersion} - ${newVersion} `;
-                        hParts[1] = newRange;
-                        hParts[2] = ` ${date} `;
-                        lines[lastLineIndex] = hParts.join('|');
-                        fs.writeFileSync(historyFile, lines.join('\n') + '\n');
-                        console.log(`History range updated for '${wf}': ${newRange.trim()}`);
-                    } else {
-                        const entry = `| ${newVersion} | ${date} | ${activeMessage} |\n`;
-                        fs.appendFileSync(historyFile, entry);
-                        console.log(`History updated: .magic/history/${wf}.md`);
-                    }
-                } else {
-                    // C1 Kernel Integrity: Auto-Heal missing history files
-                    const wfTitle = wf.charAt(0).toUpperCase() + wf.slice(1);
-                    const activeMessage = customMessage || 'Automated reconstruction of missing history file';
-                    const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Description |\n| :--- | :--- | :--- |\n| ${newVersion} | ${date} | ${activeMessage} |\n`;
-                    fs.writeFileSync(historyFile, initialContent);
-                    console.log(`History file RESTORED (Auto-Heal): .magic/history/${wf}.md`);
-                }
-            }
-        }
-    }
-
-    // 3. Regenerate Checksums
-    console.log('Regenerating engine checksums...');
-    const checksumScript = path.join(__dirname, 'generate-checksums.js');
-    const child = spawn('node', [checksumScript], { stdio: 'inherit', env: childEnv });
-    child.on('exit', (code) => process.exit(code || 0));
+if (fs.existsSync(jsPath)) {
+    command = 'node';
+    cmdArgs = [jsPath, ...args];
 } else {
-    const isWindows = process.platform === 'win32';
-    const jsPath = path.join(__dirname, `${scriptName}.js`);
-    const shellExtension = isWindows ? '.ps1' : '.sh';
-    const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
-
-    let command, cmdArgs;
-
-    if (fs.existsSync(jsPath)) {
-        command = 'node';
-        cmdArgs = [jsPath, ...args];
+    const scriptPath = shellPath;
+    if (isWindows) {
+        command = 'powershell.exe';
+        cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
     } else {
-        const scriptPath = shellPath;
-        if (isWindows) {
-            command = 'powershell.exe';
-            cmdArgs = ['-ExecutionPolicy', 'Bypass', '-File', scriptPath, ...args];
-        } else {
-            command = 'bash';
-            cmdArgs = [scriptPath, ...args];
-        }
+        command = 'bash';
+        cmdArgs = [scriptPath, ...args];
     }
-
-    const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: false, env: childEnv });
-
-    child.on('exit', (code) => {
-        process.exit(code || 0);
-    });
-
-    child.on('error', (err) => {
-        console.error(`Failed to start script: ${err.message}`);
-        process.exit(1);
-    });
 }
+
+const child = spawn(command, cmdArgs, { stdio: 'inherit', shell: false, env: childEnv });
+
+child.on('exit', (code) => {
+    process.exit(code || 0);
+});
+
+child.on('error', (err) => {
+    console.error(`Failed to start script: ${err.message}`);
+    process.exit(1);
+});
