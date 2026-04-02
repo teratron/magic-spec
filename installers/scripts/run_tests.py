@@ -166,6 +166,60 @@ def test_installer(installer_type="python") -> bool:
     return all_passed
 
 
+def test_dev_mode(installer_type="python") -> bool:
+    """Verifies that --dev flag installs development-specific files.
+
+    Args:
+        installer_type: The type of installer to test ('python' or 'node').
+
+    Returns:
+        bool: True if dev-mode check passed, False otherwise.
+    """
+    print(f"\n--- Testing {installer_type.upper()} DEV MODE ---")
+    reset_sandbox()
+
+    env = None
+    if installer_type == "python":
+        python_path = str(PROJECT_ROOT / "installers" / "python")
+        env = {"PYTHONPATH": python_path}
+        cmd = [
+            sys.executable,
+            str(PYTHON_INSTALLER),
+            "--local",
+            "--dev",
+            "--yes",
+        ]
+    else:
+        cmd = ["node", str(NODE_INSTALLER), "--local", "--dev", "--yes"]
+
+    success, output = run_cmd(cmd, cwd=str(SANDBOX_PATH), env=env)
+
+    if not success:
+        print(f"❌ {installer_type} dev-mode installation failed!")
+        return False
+
+    # Check for a dev workflow (e.g., magic.dev.simulate)
+    dev_wf = SANDBOX_PATH / ".agents" / "workflows" / f"magic.dev.simulate{CONFIG['defaultExt']}"
+    if not dev_wf.exists():
+        print(f"❌ Dev workflow missing: {dev_wf}")
+        return False
+
+    # Check for a dev engine file (e.g., simulate.md)
+    dev_magic = SANDBOX_PATH / CONFIG["engineDir"] / "simulate.md"
+    if not dev_magic.exists():
+        print(f"❌ Dev engine file missing: {dev_magic}")
+        return False
+
+    # Check for a dev skill (e.g., magic.dev.init), which is a directory
+    dev_skill = SANDBOX_PATH / ".agents" / "skills" / "magic.dev.init"
+    if not dev_skill.exists() or not dev_skill.is_dir():
+        print(f"❌ Dev skill missing or not a directory: {dev_skill}")
+        return False
+
+    print(f"✅ {installer_type} dev-mode: Verified presence of development instruments (workflows, skills, engine files).")
+    return True
+
+
 def run_all_tests():
     """Discovers and runs all unit tests in the tests directory.
 
@@ -206,7 +260,18 @@ if __name__ == "__main__":
     python_success = test_installer("python")
     node_success = test_installer("node")
 
-    if unit_success and python_success and node_success:
+    # 3. Run Dev Mode tests
+    print("\n--- Running Dev Mode Validation ---")
+    python_dev_success = test_dev_mode("python")
+    node_dev_success = test_dev_mode("node")
+
+    if (
+        unit_success
+        and python_success
+        and node_success
+        and python_dev_success
+        and node_dev_success
+    ):
         print("\n🎉 All tests completed successfully!")
     else:
         print("\n⚠️  Tests completed, but there were FAILURES.")

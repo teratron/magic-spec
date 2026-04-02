@@ -56,6 +56,7 @@ Manage your Magic Spec installation with these flags:
 | :--- | :--- |
 | `info` | Displays version info, installation paths, and detected environment. |
 | `--update` | Pulls the latest engine and adapter components while preserving your `.design/` folder with smart conflict resolution. |
+| `--dev` | **New!** Installs development-specific instruments (simulation workflows, testing suites, engine maintenance scripts). |
 | `--check` | Checks GitHub/PyPI for available updates. |
 | `--env <id>` | Specify adapter explicitly by ID (e.g. `cursor`, `copilot`). |
 | `--<adapter>` | **New!** Shortcut flag for any adapter (e.g. `--cursor`, `--windsurf`). |

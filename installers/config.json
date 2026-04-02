@@ -16,6 +16,17 @@
         "magic.spec",
         "magic.task"
     ],
+    "devWorkflows": [
+        "magic.dev.publish",
+        "magic.dev.simulate",
+        "magic.dev.sync"
+    ],
+    "devSkills": [
+        "magic.dev.init",
+        "magic.dev.publish",
+        "magic.dev.simulate",
+        "magic.dev.sync"
+    ],
     "magicFiles": [
         "analyze.md",
         "init.md",
@@ -36,6 +47,13 @@
         "templates/retrospective.md",
         "templates/spec.md",
         "templates/tasks.md"
+    ],
+    "devMagicFiles": [
+        "simulate.md",
+        "scripts/install-hooks.js",
+        "scripts/sync.js",
+        "tests/engine.js",
+        "tests/suite.md"
     ],
     "download": {
         "timeoutMs": 10000,

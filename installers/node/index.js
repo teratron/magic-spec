@@ -70,12 +70,16 @@ function loadInstallerConfig() {
     const defaultExt = requireNonEmptyString(parsed.defaultExt, 'defaultExt');
     const workflows = Array.isArray(parsed.workflows) ? parsed.workflows : null;
     if (!workflows) {
-        failConfig("field 'workflows' must be an array of strings");
+        failConfig("field 'workflows' must be a non-empty array");
     }
+    const devWorkflows = Array.isArray(parsed.devWorkflows) ? parsed.devWorkflows : [];
+    
     const magicFiles = Array.isArray(parsed.magicFiles) ? parsed.magicFiles : null;
     if (!magicFiles) {
-        failConfig("field 'magicFiles' must be an array of strings");
+        failConfig("field 'magicFiles' must be a non-empty array");
     }
+    const devMagicFiles = Array.isArray(parsed.devMagicFiles) ? parsed.devMagicFiles : [];
+    const devSkills = Array.isArray(parsed.devSkills) ? parsed.devSkills : [];
 
     const designDir = requireNonEmptyString(parsed.designDir, 'designDir');
     const versionFile = requireNonEmptyString(parsed.versionFile, 'versionFile');
@@ -95,7 +99,10 @@ function loadInstallerConfig() {
         historyDir,
         defaultExt,
         workflows,
+        devWorkflows,
         magicFiles,
+        devMagicFiles,
+        devSkills,
         download: { timeoutMs, tempPrefix },
         userAgent: { node: nodeUserAgent },
         ejectTargets: parsed.eject.targets
@@ -109,8 +116,11 @@ const ENGINE_DIR = INSTALLER_CONFIG.engineDir;
 const AGENT_DIR = INSTALLER_CONFIG.agentDir;
 const WORKFLOWS_DIR = INSTALLER_CONFIG.workflowsDir;
 const DEFAULT_EXT = INSTALLER_CONFIG.defaultExt;
-const WORKFLOWS = INSTALLER_CONFIG.workflows;
-const MAGIC_FILES = INSTALLER_CONFIG.magicFiles;
+let WORKFLOWS = [...INSTALLER_CONFIG.workflows];
+let MAGIC_FILES = [...INSTALLER_CONFIG.magicFiles];
+const DEV_WORKFLOWS = INSTALLER_CONFIG.devWorkflows;
+const DEV_MAGIC_FILES = INSTALLER_CONFIG.devMagicFiles;
+const DEV_SKILLS = INSTALLER_CONFIG.devSkills;
 const DESIGN_DIR = INSTALLER_CONFIG.designDir;
 const VERSION_FILE = INSTALLER_CONFIG.versionFile;
 const CHECKSUMS_FILE = INSTALLER_CONFIG.checksumsFile;
@@ -130,6 +140,7 @@ const isListEnvs = args.includes('--list-envs');
 const isEject = args.includes('--eject');
 const isFallbackMain = args.includes('--fallback-main');
 const isLocal = args.includes('--local');
+const isDev = args.includes('--dev');
 const autoAccept = args.includes('--yes') || args.includes('-y');
 
 function parseCsvValues(raw) {
@@ -331,24 +342,16 @@ function installAdapter(sourceRoot, env, adapters, conflictsToSkip = []) {
 }
 
 function runDoctor() {
-    const isWindows = process.platform === 'win32';
-    const checkScript = isWindows
-        ? path.join(cwd, ENGINE_DIR, 'scripts', 'check-prerequisites.ps1')
-        : path.join(cwd, ENGINE_DIR, 'scripts', 'check-prerequisites.sh');
+    const checkScript = path.join(cwd, ENGINE_DIR, 'scripts', 'check-prerequisites.js');
 
     if (!fs.existsSync(checkScript)) {
-        console.error('❌ Error: SDD engine not initialized. Run magic-spec first.');
+        console.error('❌ Error: SDD engine not initialized or check-prerequisites.js missing. Run magic-spec first.');
         process.exit(1);
     }
 
     console.log(`🔍 ${PACKAGE_NAME} Doctor:`);
     try {
-        let result;
-        if (isWindows) {
-            result = spawnSync('powershell.exe', ['-ExecutionPolicy', 'Bypass', '-File', checkScript, '-json'], { encoding: 'utf-8' });
-        } else {
-            result = spawnSync('bash', [checkScript, '--json'], { encoding: 'utf-8' });
-        }
+        const result = spawnSync('node', [checkScript, '--json'], { encoding: 'utf-8' });
 
         if (result.error) {
             console.error('❌ Failed to run doctor prerequisite check:', result.error.message);
@@ -763,6 +766,7 @@ async function main() {
         console.log("  --env <adapter>      Specify environment adapter");
         console.log("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)");
         console.log("  --update             Update engine and adapter files");
+        console.log("  --dev                Install development instruments (simulation, testing)");
         console.log("  --local              Use local project files instead of GitHub");
         console.log("  --fallback-main      Pull payload from main branch");
         console.log("  --yes, -y            Auto-accept prompts");
@@ -773,6 +777,13 @@ async function main() {
 
     if (isUpdate) {
         createBackup();
+    }
+
+    if (isDev) {
+        console.log("🛠️  Development instruments enabled.");
+        // Append dev workflows and engine files to the active set
+        WORKFLOWS = [...WORKFLOWS, ...DEV_WORKFLOWS];
+        MAGIC_FILES = [...MAGIC_FILES, ...DEV_MAGIC_FILES];
     }
 
     const versionToFetch = isFallbackMain ? 'main' : version;
@@ -907,6 +918,39 @@ async function main() {
                         fs.copyFileSync(srcItem, destItem);
                         const relTarget = path.relative(cwd, destItem).replace(/\\/g, '/');
                         adapterChecksums[relTarget] = getFileChecksum(destItem);
+                    }
+                }
+            }
+        }
+
+        // If `--dev` is specified during update, ensure dev tools are present
+        if (isUpdate && isDev) {
+            const srcEng = path.join(sourceRoot, AGENT_DIR);
+            const destEng = path.join(cwd, AGENT_DIR);
+            
+            // Sync dev workflows
+            const srcWfDir = path.join(srcEng, WORKFLOWS_DIR);
+            const destWfDir = path.join(destEng, WORKFLOWS_DIR);
+            if (fs.existsSync(srcWfDir)) {
+                fs.mkdirSync(destWfDir, { recursive: true });
+                for (const wf of DEV_WORKFLOWS) {
+                    const file = wf + DEFAULT_EXT;
+                    const sf = path.join(srcWfDir, file);
+                    if (fs.existsSync(sf)) {
+                        fs.copyFileSync(sf, path.join(destWfDir, file));
+                    }
+                }
+            }
+
+            // Sync dev skills
+            const srcSkillsDir = path.join(srcEng, 'skills');
+            const destSkillsDir = path.join(destEng, 'skills');
+            if (fs.existsSync(srcSkillsDir)) {
+                fs.mkdirSync(destSkillsDir, { recursive: true });
+                for (const sk of DEV_SKILLS) {
+                    const ss = path.join(srcSkillsDir, sk);
+                    if (fs.existsSync(ss) && fs.statSync(ss).isDirectory()) {
+                        copyDir(ss, path.join(destSkillsDir, sk));
                     }
                 }
             }

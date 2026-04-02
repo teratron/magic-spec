@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.115] - 2026-04-02
+
+### Added
+
+- **Installer `--dev` Flag**: Implemented a comprehensive development mode across Node.js and Python installers.
+  - Enabled installation/synchronization of development-specific instruments (simulation workflows, testing suites, engine scripts).
+  - Added `devSkills` registry to `installers/config.json` for canonical tracking of dev agent skills.
+  - Hardened update logic to ensure dev instruments are correctly synchronized when `--dev` is provided during an update.
+
 ## [1.5.114] - 2026-04-02
 
 ### Changed

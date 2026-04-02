@@ -55,15 +55,12 @@ class TestIntegration(unittest.TestCase):
         os.makedirs(f"{ENGINE_DIR}/scripts", exist_ok=True)
 
         # Create a mock check-prerequisites script
-        if os.name == "nt":
-            check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.ps1")
-            check_script.write_text('Write-Output \'{"status":"ok","artifacts":{}}\'')
-        else:
-            check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.sh")
-            check_script.write_text(
-                '#!/bin/bash\necho \'{"status":"ok","artifacts":{}}\''
-            )
-            check_script.chmod(0o755)
+        check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.js")
+        check_script.parent.mkdir(parents=True, exist_ok=True)
+        check_script.write_text(
+            "const out = process.argv.includes('--json') ? JSON.stringify({ok: true, artifacts: {}}) : 'Mock OK';"
+            "console.log(out); process.exit(0);"
+        )
 
         installer = (
             PROJECT_ROOT / "installers" / "python" / "magic_spec" / "__main__.py"
@@ -92,15 +89,12 @@ class TestIntegration(unittest.TestCase):
         os.makedirs(f"{ENGINE_DIR}/scripts", exist_ok=True)
 
         # Create a mock check-prerequisites script
-        if os.name == "nt":
-            check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.ps1")
-            check_script.write_text('Write-Output \'{"status":"ok","artifacts":{}}\'')
-        else:
-            check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.sh")
-            check_script.write_text(
-                '#!/bin/bash\necho \'{"status":"ok","artifacts":{}}\''
-            )
-            check_script.chmod(0o755)
+        check_script = Path(f"{ENGINE_DIR}/scripts/check-prerequisites.js")
+        check_script.parent.mkdir(parents=True, exist_ok=True)
+        check_script.write_text(
+            "const out = process.argv.includes('--json') ? JSON.stringify({ok: true, artifacts: {}}) : 'Mock OK';"
+            "console.log(out); process.exit(0);"
+        )
 
         installer = PROJECT_ROOT / "installers" / "node" / "index.js"
 

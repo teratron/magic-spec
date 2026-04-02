@@ -48,10 +48,13 @@ CHECKSUMS_FILE = _INSTALLER_CONFIG["checksumsFile"]
 HISTORY_DIR = _INSTALLER_CONFIG["historyDir"]
 
 # List of files to sync for the SDD engine (.magic)
-MAGIC_FILES = _INSTALLER_CONFIG["magicFiles"]
+MAGIC_FILES = list(_INSTALLER_CONFIG["magicFiles"])
+DEV_MAGIC_FILES = list(_INSTALLER_CONFIG.get("devMagicFiles", []))
 
 # List of core workflows to sync for the AI agent (.agents)
-WORKFLOWS = _INSTALLER_CONFIG["workflows"]
+WORKFLOWS = list(_INSTALLER_CONFIG["workflows"])
+DEV_WORKFLOWS = list(_INSTALLER_CONFIG.get("devWorkflows", []))
+DEV_SKILLS = list(_INSTALLER_CONFIG.get("devSkills", []))
 
 PYTHON_USER_AGENT = _INSTALLER_CONFIG["userAgent"]["python"]
 DOWNLOAD_TIMEOUT_SECONDS = _INSTALLER_CONFIG["download"]["timeoutMs"] // 1000
@@ -408,6 +411,28 @@ def run_doctor(dest: pathlib.Path) -> int:
     }
     for k, v in checks.items():
         print(f"  [{'✅' if 'Missing' not in v else '❌'}] {k}: {v}")
+
+    # Pre-requisites check using engine script
+    prereq_script = dest / ENGINE_DIR / "scripts" / "check-prerequisites.js"
+    if prereq_script.exists():
+        print("\n🔍 Checking system prerequisites...")
+        try:
+            # We assume node is available as it's a requirement for Magic Spec engine
+            result = subprocess.run(
+                ["node", str(prereq_script)],
+                cwd=dest,
+            )
+            if result.returncode != 0:
+                print("❌ Prerequisite check failed.")
+                return 1
+        except Exception as e:
+            print(f"⚠️  Failed to run prerequisite check: {e}")
+    else:
+        if (dest / ENGINE_DIR).exists():
+            print(
+                f"\n⚠️  Prerequisite check script not found in {ENGINE_DIR}/scripts/check-prerequisites.js"
+            )
+
     return 0
 
 
@@ -505,6 +530,7 @@ def main() -> None:
     env_values = _parse_env_values(args)
     fallback_main = "--fallback-main" in args
     is_local = "--local" in args
+    is_dev = "--dev" in args
     auto_accept = "--yes" in args or "-y" in args
 
     if "--help" in args or "-h" in args:
@@ -519,6 +545,7 @@ def main() -> None:
         print("  --env <adapter>      Specify environment adapter")
         print("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)")
         print("  --update             Update engine and adapter files")
+        print("  --dev                Install development instruments (simulation, testing)")
         print("  --local              Use local project files instead of GitHub")
         print("  --fallback-main      Pull payload from main branch")
         print("  --yes                Auto-accept prompts")
@@ -551,6 +578,12 @@ def main() -> None:
             print("Initializing magic-spec from local files...")
         else:
             print("Initializing magic-spec...")
+
+    if is_dev:
+        print("🛠️  Development instruments enabled.")
+        # Extend active lists with dev components
+        WORKFLOWS.extend(DEV_WORKFLOWS)
+        MAGIC_FILES.extend(DEV_MAGIC_FILES)
 
     version_to_fetch = "main" if fallback_main else _resolve_package_version()
 
@@ -655,6 +688,28 @@ def main() -> None:
                     adapter_checksums[str(dest_item.relative_to(dest).as_posix())] = (
                         _get_file_checksum(dest_item)
                     )
+        
+        # If `--dev` is specified during update, ensure dev tools are present
+        if is_update and is_dev:
+            src_agents = source_root / AGENT_DIR
+            dest_agents = dest / AGENT_DIR
+            # Ensure dev workflows are synced
+            src_wf_dir = src_agents / WORKFLOWS_DIR
+            dest_wf_dir = dest_agents / WORKFLOWS_DIR
+            dest_wf_dir.mkdir(parents=True, exist_ok=True)
+            for wf in DEV_WORKFLOWS:
+                sf = src_wf_dir / (wf + DEFAULT_EXT)
+                if sf.exists():
+                    shutil.copy2(sf, dest_wf_dir / sf.name)
+            
+            # Ensure dev skills are synced
+            src_skills_dir = src_agents / "skills"
+            dest_skills_dir = dest_agents / "skills"
+            dest_skills_dir.mkdir(parents=True, exist_ok=True)
+            for sk in DEV_SKILLS:
+                ss = src_skills_dir / sk
+                if ss.exists() and ss.is_dir():
+                    _copy_dir(ss, dest_skills_dir / sk)
 
         if not is_update:
             run_init(dest, auto_accept=auto_accept)
