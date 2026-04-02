@@ -215,8 +215,8 @@ def test_dev_mode(installer_type="python") -> bool:
         print(f"❌ Dev engine file missing: {dev_magic}")
         return False
 
-    # Check for a dev skill (e.g., magic.dev.init), which is a directory
-    dev_skill = SANDBOX_PATH / ".agents" / "skills" / "magic.dev.init"
+    # Check for a dev skill (e.g., magic.dev.simulate), which is a directory
+    dev_skill = SANDBOX_PATH / ".agents" / "skills" / "magic.dev.simulate"
     if not dev_skill.exists() or not dev_skill.is_dir():
         print(f"❌ Dev skill missing or not a directory: {dev_skill}")
         return False

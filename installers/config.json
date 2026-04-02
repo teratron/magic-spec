@@ -17,15 +17,10 @@
         "magic.task"
     ],
     "devWorkflows": [
-        "magic.dev.publish",
-        "magic.dev.simulate",
-        "magic.dev.sync"
+        "magic.dev.simulate"
     ],
     "devSkills": [
-        "magic.dev.init",
-        "magic.dev.publish",
-        "magic.dev.simulate",
-        "magic.dev.sync"
+        "magic.dev.simulate"
     ],
     "magicFiles": [
         "analyze.md",
@@ -50,8 +45,6 @@
     ],
     "devMagicFiles": [
         "simulate.md",
-        "scripts/install-hooks.js",
-        "scripts/sync.js",
         "tests/engine.js",
         "tests/suite.md"
     ],
