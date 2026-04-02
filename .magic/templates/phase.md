@@ -8,6 +8,7 @@
 
 - [ ] [T-{ID}] {Task Title}
 - [ ] [T-{ID}] {Task Title}
+- [ ] [T-{ID}.1] {Split Sub-task Title} <!-- ID Splitting: .N suffix for decomposed tasks -->
 
 ## Detailed Tracking
 

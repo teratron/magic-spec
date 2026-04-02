@@ -4,8 +4,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
 3. **Surgical Fix & Test**: If friction found → Propose fix (exact lines) + write new regression test in `.magic/tests/suite.md`. Show to user for Yes/No (C1).
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate` (Smart History: redundant automated entries are skipped).

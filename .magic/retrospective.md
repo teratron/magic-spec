@@ -4,8 +4,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the current directory/context (one-turn logic). **Select** the most likely workspace based on path matches or project markers (e.g., `installers/` folder → `installers` workspace) and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Write ONLY to `RETROSPECTIVE.md`.
 3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.

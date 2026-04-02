@@ -11,3 +11,4 @@
 | 1.4.9 - 1.4.148 | 2026-03-05 | Automated update via engine meta automation |
 | 1.4.163 | 2026-03-13 | Removed onboard workflow and all related traces |
 | 1.4.166 - 1.5.83 | 2026-03-31 | Automated update via engine meta automation |
+| 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |

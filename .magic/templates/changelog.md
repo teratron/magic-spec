@@ -1,4 +1,4 @@
-## [{{ version }}] - {{ date }}
+## [{{version}}] - {{date}}
 
 ### Added
 
@@ -7,4 +7,4 @@
 
 ### Meta
 
-- **Automated Update**: Engine version bumped to `{{ version }}`, history updated, and checksums regenerated (C14).
+- **Automated Update**: Engine version bumped to `{{version}}`, history updated, and checksums regenerated (C14).

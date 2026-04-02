@@ -81,18 +81,31 @@ function updateEngineMeta() {
 
 /**
  * Updates history files for changed workflows.
+ * Smart History (C14 §2): skips redundant entries if the last row
+ * has the same date and message (only version differs).
  */
 function updateHistory(workflows, version, customMessage = null) {
     if (workflows.size === 0) return;
-    
+
     const date = new Date().toISOString().split('T')[0];
     if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true });
 
     for (const wf of workflows) {
         const historyFile = path.join(historyDir, `${wf}.md`);
         const message = customMessage || 'Automated update via engine meta automation';
-        
+
         if (fs.existsSync(historyFile)) {
+            const existing = fs.readFileSync(historyFile, 'utf8');
+            const lines = existing.trimEnd().split(/\r?\n/);
+
+            // Smart History: check if last table row has same date + message
+            const lastLine = lines[lines.length - 1] || '';
+            const lastCols = lastLine.split('|').map(c => c.trim()).filter(Boolean);
+            if (lastCols.length >= 3 && lastCols[1] === date && lastCols[2] === message) {
+                console.log(`⏭️ History skipped (duplicate): ${wf}.md`);
+                continue;
+            }
+
             const entry = `| ${version} | ${date} | ${message} |\n`;
             fs.appendFileSync(historyFile, entry);
             console.log(`📝 History updated: ${wf}.md`);

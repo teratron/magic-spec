@@ -21,8 +21,7 @@ Parse the `[arg]` to determine the execution mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
-    - **Workspace Disambiguation**: If multiple workspaces exist and no default is set, the agent MUST perform a **Quick-scan** of the target workflow's context. **Select** the most likely workspace and **NOTIFY** the user of the selection, proceeding immediately (Zero-Prompt). Only halt if no workspace `scope` array covers ≥50% of the current directory's files.
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Logic Guards**:

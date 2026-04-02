@@ -11,7 +11,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
@@ -38,16 +38,8 @@ Parse the `[arg]` to determine the analysis mode:
 
 ## Workspace Resolution
 
-| Priority | Source | Condition | Action |
-| :---: | :--- | :--- | :--- |
-| 1 | **Explicit arg** | `/magic.analyze {workspace}` | Use it. Print: "Active workspace: {workspace}." Overrides `MAGIC_WORKSPACE` if both set. If name not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
-| 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. If value not in `workspace.json` → **HALT**: "Unknown workspace '{x}'. Available: [{list}]." |
-| 3 | **`workspace.json`** | Single workspace | Use it silently. |
-| 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: "Active workspace: {default}." |
-| 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation**: Quick-scan context (current folder, recent edits). **Select and NOTIFY** (Zero-Prompt): "Found {marker} — selecting {workspace}. Proceeding...". Only halt if no workspace `scope` array covers ≥50% of the current directory's files. |
-| 4 | **No `workspace.json`** | — | Use root `.design/`. Log: "No workspace config found — scanning root .design/." |
-
-> **Scope Auto-Apply**: After workspace is resolved, apply its `scope` array from `workspace.json` as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). If the workspace has no `scope` field, scan the full project.
+> See [context-resolution.md](context-resolution.md) for the full resolution chain (Priority 1-4, Disambiguation, Scope Auto-Apply).
+> After resolution, the workspace's `scope` array from `workspace.json` is applied as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). If the workspace has no `scope` field, scan the full project.
 
 ## Operational Logic: Scan & Infer
 

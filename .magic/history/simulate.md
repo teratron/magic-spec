@@ -26,3 +26,4 @@
 | 1.5.55 - 1.5.78 | 2026-03-31 | Automated update via engine meta automation |
 | 1.5.79 | 2026-03-31 | Cross-workspace parent header parity guards and T177 test case |
 | 1.5.81 - 1.5.112 | 2026-04-02 | Automated update via engine meta automation |
+| 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |

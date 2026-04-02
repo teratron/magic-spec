@@ -7,6 +7,9 @@ const path = require('path');
 
 /**
  * Updates project metadata: indices, versions, and last updated dates.
+ *
+ * Environment variables:
+ *   MAGIC_AUTHOR — Author name for history table entries (default: 'Agent').
  */
 
 const designDir = path.join(__dirname, '..', '..', '.design');

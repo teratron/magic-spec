@@ -91,6 +91,23 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores) {
 }
 
 const ignoreList = ['node_modules', 'target', '.git', '.venv', '__pycache__'];
+
+// Extend ignoreList from .gitignore (Invariant 8: Gitignore Safety)
+if (fs.existsSync('.gitignore')) {
+    const gitignoreContent = fs.readFileSync('.gitignore', 'utf8');
+    gitignoreContent.split(/\r?\n/).forEach(line => {
+        const trimmed = line.trim();
+        // Skip comments, empty lines, and negation patterns
+        if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) return;
+        // Extract simple directory/file names (strip trailing slashes and leading slashes)
+        const clean = trimmed.replace(/^\/+/, '').replace(/\/+$/, '');
+        // Only add top-level directory/file names (no glob wildcards, no nested paths)
+        if (clean && !clean.includes('/') && !clean.includes('*') && !ignoreList.includes(clean)) {
+            ignoreList.push(clean);
+        }
+    });
+}
+
 try {
     contextContent += '.\n';
     contextContent += buildTree('.', '', 1, 2, ignoreList);
