@@ -10,6 +10,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 3. **Surgical Fix & Test**: If friction found → Propose fix (exact lines) + write new regression test in `.magic/tests/suite.md`. Show to user for Yes/No (C1).
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate` (Smart History: redundant automated entries are skipped).
 5. **No Metrics**: Real-world history/logs are for `retrospective.md`.
+6. **Anti-Fabrication Rule**: `0 rough edges` is a VALID and expected outcome. If the Logic Audit finds no vague terms, no divergent duplicates, and all guards pass — report it as a clean result. DO NOT invent findings to fill the report structure. Every finding MUST include: `file` (exact filename), `line` (exact line number), `evidence` (verbatim quote copy-pasted from the file), and `verification` (the grep/read command used to confirm). Findings without evidence are INVALID and must be rejected by any reviewer.
 
 ## Workflow: Validation & Stress-Testing
 
@@ -31,12 +32,16 @@ graph TD
 
 ### 0. Pre-flight (Mandatory — All Modes)
 
+> **HALT**: Do NOT proceed past Pre-flight until `check-prerequisites` output is recorded in the report. If the command fails, is skipped, or its output is not included verbatim — the entire simulation is INVALID. This is a non-negotiable blocking gate.
+
 1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
-    - `ok: true` → proceed to Mode Selection.
+    - `ok: true` → proceed to Step 2.
     - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
     - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
 2. Read `.design/workspace.json` → resolve active workspace(s) per Context invariant.
-3. Read target workflow file(s) that will be evaluated (determined by mode in Step 1).
+3. **Read-Before-Claim Gate** (Grounding Phase): Read ALL workflow files that will be evaluated in the Logic Audit. Record a checklist of files read with their line counts. This phase MUST complete before any analysis begins. Any claim about a file NOT read in this step is automatically INVALID.
+    - `test` / `improv` mode: read ALL `.magic/*.md` files + `.magic/tests/suite.md`.
+    - `direct` mode: read only the target workflow file(s).
 
 ### 1. Mode Selection
 

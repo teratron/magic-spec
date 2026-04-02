@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.112] - 2026-04-02
+
+### Added
+
+- **Anti-Fabrication Rule (Invariant 6)** in `simulate.md`: New Core Invariant that legitimizes `0 rough edges` as a valid outcome and mandates evidence-linked claims (file, line, verbatim quote, verification command) for every finding. Findings without evidence are automatically INVALID.
+- **Pre-flight Hard Gate** in `simulate.md`: Upgraded Pre-flight from "recommended" to a non-negotiable blocking HALT. Simulations without recorded `check-prerequisites` output are INVALID.
+- **Read-Before-Claim Gate** in `simulate.md`: New mandatory Grounding Phase requiring all target workflow files to be read (with line counts recorded) before any analysis begins. Claims about unread files are automatically INVALID.
+- **Regression Tests (T185–T189)**: 5 new scenarios covering Explore Mode write isolation (T185), Pre-flight Hard Gate enforcement (T186), Evidence-Linked Claims validation (T187), Null-Result Acceptance (T188), and Read-Before-Claim Gate (T189).
+
+### Fixed
+
+- **Zero-Prompt Parity**: Aligned `init.md` and `analyze.md` Core Invariant #1 with the canonical cascade formula used by all other workflow files, eliminating sync risk from divergent wording.
+- **Script History Leak**: Fixed `executor.js` Auto-Detect creating spurious history files for scripts in `scripts/` directory (e.g., `sync-skills.md`). Scripts are now tracked via checksums but inherit the `--workflow` flag instead of getting standalone history entries.
+- **Orphan Cleanup**: Removed `history/sync-skills.md` — a phantom artifact created by the above bug.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.112`, history updated, and checksums regenerated (C14).
+
 ## [1.5.105] - 2026-03-31
 
 ### Fixed

@@ -11,7 +11,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Resolve target workspace via the priority chain below (§Workspace Resolution). Route all logic to `.design/{workspace}/`.
+1. **Context (Zero-Prompt)**: Auto-resolve workspace: explicit CLI arg > `MAGIC_WORKSPACE` env var > `.design/workspace.json` `default` field > single-workspace auto-select > root `.design/` fallback.
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.

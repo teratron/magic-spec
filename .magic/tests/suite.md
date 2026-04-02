@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.60
+**Version:** 1.9.62
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2902,6 +2902,87 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Agent **halts** and asks: "Multiple workspaces found: [api, web]. Which one?"
 - **Guards tested:** Quantified disambiguation threshold (RE-6 fix), deterministic halt vs auto-select
 
+### T185 — Spec Explore Mode Write Isolation Enforcement
+
+- **Workflow:** `spec.md`
+- **Synthetic State:**
+  - `.design/` initialized, 3 specs registered in INDEX.md
+  - PLAN.md and TASKS.md exist with active tasks
+- **Test 1 — During explore:**
+  - **Action:** User says: "Let's think about adding WebSocket support"
+  - **Expected:**
+    - [ ] Agent provides analysis in chat or agent artifacts
+    - [ ] Agent does NOT create any file in `.design/specifications/`
+    - [ ] Agent does NOT modify `INDEX.md`, `PLAN.md`, or `TASKS.md`
+    - [ ] No status lifecycle applied
+- **Test 2 — Transition trigger:**
+  - **Action:** User says: "OK, create the spec"
+  - **Expected:**
+    - [ ] Agent transitions to Dispatch mode
+    - [ ] `websocket-support.md` created from template
+    - [ ] INDEX.md updated
+- **Guards tested:** Explore Mode write isolation (instructional-only guard)
+
+### T186 — Simulate Pre-flight Hard Gate Enforcement
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - `.design/` initialized, engine checksums valid
+  - Agent begins simulation without running `check-prerequisites`
+- **Action:** Agent attempts to skip Pre-flight and jump to Mode Selection
+- **Expected:**
+  - [ ] Simulation is flagged as INVALID by any reviewer
+  - [ ] No findings from the skipped simulation are accepted
+  - [ ] Agent MUST re-run with Pre-flight output recorded verbatim in report
+- **Guards tested:** Pre-flight Hard Gate (HALT), simulate.md §0
+
+### T187 — Simulate Evidence-Linked Claims Validation
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - Agent produces a simulation report with 3 findings:
+    - Finding A: includes `file`, `line`, `evidence` (verbatim quote), `verification` (grep command)
+    - Finding B: includes `file` and `line` but no `evidence` (paraphrased instead of quoted)
+    - Finding C: no `file` or `line` reference at all
+- **Action:** Reviewer evaluates the report against Anti-Fabrication Rule (Invariant 6)
+- **Expected:**
+  - [ ] Finding A: VALID — all required fields present
+  - [ ] Finding B: INVALID — missing verbatim evidence
+  - [ ] Finding C: INVALID — missing file and line references
+  - [ ] Report is returned for correction with specific rejection reasons
+- **Guards tested:** Anti-Fabrication Rule (Invariant 6), Evidence-Linked Claims
+
+### T188 — Simulate Null-Result Acceptance
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - All workflow files have 0 vague terms (grep confirms)
+  - No divergent duplicates (all C14/Zero-Prompt text identical across files)
+  - All guards have explicit HALT conditions
+  - Suite Integrity passes
+- **Action:** Agent runs Improv Mode simulation
+- **Expected:**
+  - [ ] Agent reports `0 rough edges found` as the result
+  - [ ] Agent does NOT fabricate findings to fill the report structure
+  - [ ] Cognitive Coverage scores: Density 10/10, Guard Resilience max, Compliance max
+  - [ ] Report explicitly states: "No rough edges found — engine is clean"
+- **Guards tested:** Anti-Fabrication Rule (Invariant 6), Null-Result Acceptance
+
+### T189 — Simulate Read-Before-Claim Gate
+
+- **Workflow:** `simulate.md`
+- **Synthetic State:**
+  - Agent runs Improv Mode simulation
+  - Agent reads 5 of 8 workflow files in Grounding Phase (skips `rule.md`, `retrospective.md`, `simulate.md`)
+  - Agent then claims a rough edge in `rule.md` Line 42
+- **Action:** Reviewer cross-references the claim against the Grounding Phase file checklist
+- **Expected:**
+  - [ ] Grounding Phase checklist shows `rule.md` was NOT read
+  - [ ] Claim about `rule.md` is automatically INVALID per Read-Before-Claim Gate
+  - [ ] Agent must re-read `rule.md` and re-evaluate the claim before it can be accepted
+  - [ ] Only claims about files listed in the Grounding Phase checklist are valid
+- **Guards tested:** Read-Before-Claim Gate (simulate.md §0 Step 3)
+
 ```
-**Test Suite Finalized** - v1.9.60 (Last: T184)
+**Test Suite Finalized** - v1.9.62 (Last: T189)
 ```

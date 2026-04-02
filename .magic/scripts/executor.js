@@ -176,7 +176,12 @@ if (scriptName === 'update-engine-meta') {
                     }
 
                     // Special case: suite.md is in tests/
-                    if (!workflowNames.has(base)) {
+                    // Skip scripts/ — they are implementation details, not workflows.
+                    // Their changes are tracked via checksums but don't get
+                    // standalone history files (they inherit the --workflow flag).
+                    if (rel.startsWith('scripts/')) {
+                        console.log(`[Auto-Detect] Script change detected in '${rel}' (tracked via --workflow flag)`);
+                    } else if (!workflowNames.has(base)) {
                         workflowNames.add(base);
                         console.log(`[Auto-Detect] Change detected in '${rel}' -> Updating history/${base}.md`);
                     }
