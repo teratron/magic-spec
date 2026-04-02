@@ -1,5 +1,5 @@
 {
-  ".version": "806f07811d81b4b9cb2c44b24c59b8e66c31188a16abd97a304e3bef378b7761",
+  ".version": "93dacfa089d4d99797321a843f468d9a02de862dea228f48333161e6d7c233f0",
   "analyze.md": "cd9cbf76b55cab76dcea9af11817a270796402ddea764a016d030343be9d7f32",
   "init.md": "6495ef71279402064a5c12775966f4e5c22b8af88d466daa87cfedc77f268734",
   "retrospective.md": "4fe9e0bbd15690c8e7a490ff6c835821f22ea9ac0306600da3f2820660f0e519",
@@ -14,7 +14,7 @@
   "scripts/sync-skills.js": "b66138c25f8879e474e14aed483a190eebcdf4f29a86465b094a6a11f73a07ee",
   "scripts/sync.js": "0f4b887d4cf510dd7bf40ae4f3b3763d60eb0f888ca4fe3030b6aa4f8dd1f0eb",
   "simulate.md": "c64ccd7ff14d2b4754b9bae092847ef0514b153fe1dce46ae1f5b483f9b324c4",
-  "spec.md": "d5bc31a06e96fd9dfe1e45b0df3b7691720e8ff02915a1ccfe9ff4605c4e0057",
+  "spec.md": "d5473b72a070e7805c9171ab2877982c182fa6c9b7b8da1b282de0c3b5741872",
   "task.md": "27b76276280c08b87cf87161949b89d4e97a433fb4ac00098601ff84da72a9d6",
   "templates/changelog.md": "fa2f95fb5c5cec30fc78d130b9a4d1badfe4dcbfec7f34d179c779d59aadd949",
   "templates/contributing.md": "b1fd1e7bec8b0016bcb1cfa5522088cae3745a8de07b62b9bb36550f495f10c1",

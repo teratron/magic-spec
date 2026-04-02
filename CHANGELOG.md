@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.114] - 2026-04-02
+
+### Changed
+
+- **Core Invariant #2 (Prohibitions)** in `spec.md`: Refined the "No code in specs" rule to explicitly permit **Technical Contracts** (interfaces, types, API schemas) and **Reference Snippets** (marked as `[REFERENCE]`). This ensures architectural precision while maintaining the prohibition on functional implementation code before the `run` phase.
+- **Task Completion Checklist**: Updated to reflect the permission of contracts and references in specifications.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.114`, history updated, and checksums regenerated (C14).
+
 ## [1.5.112] - 2026-04-02
 
 ### Added
