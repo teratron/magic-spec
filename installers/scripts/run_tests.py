@@ -199,7 +199,12 @@ def test_dev_mode(installer_type="python") -> bool:
         return False
 
     # Check for a dev workflow (e.g., magic.dev.simulate)
-    dev_wf = SANDBOX_PATH / ".agents" / "workflows" / f"magic.dev.simulate{CONFIG['defaultExt']}"
+    dev_wf = (
+        SANDBOX_PATH
+        / ".agents"
+        / "workflows"
+        / f"magic.dev.simulate{CONFIG['defaultExt']}"
+    )
     if not dev_wf.exists():
         print(f"❌ Dev workflow missing: {dev_wf}")
         return False
@@ -216,7 +221,9 @@ def test_dev_mode(installer_type="python") -> bool:
         print(f"❌ Dev skill missing or not a directory: {dev_skill}")
         return False
 
-    print(f"✅ {installer_type} dev-mode: Verified presence of development instruments (workflows, skills, engine files).")
+    print(
+        f"✅ {installer_type} dev-mode: Verified presence of development instruments (workflows, skills, engine files)."
+    )
     return True
 
 

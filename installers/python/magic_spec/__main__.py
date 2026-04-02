@@ -545,7 +545,9 @@ def main() -> None:
         print("  --env <adapter>      Specify environment adapter")
         print("  --<adapter>          Shortcut for --env <adapter> (e.g. --cursor)")
         print("  --update             Update engine and adapter files")
-        print("  --dev                Install development instruments (simulation, testing)")
+        print(
+            "  --dev                Install development instruments (simulation, testing)"
+        )
         print("  --local              Use local project files instead of GitHub")
         print("  --fallback-main      Pull payload from main branch")
         print("  --yes                Auto-accept prompts")
@@ -688,7 +690,7 @@ def main() -> None:
                     adapter_checksums[str(dest_item.relative_to(dest).as_posix())] = (
                         _get_file_checksum(dest_item)
                     )
-        
+
         # If `--dev` is specified during update, ensure dev tools are present
         if is_update and is_dev:
             src_agents = source_root / AGENT_DIR
@@ -701,7 +703,7 @@ def main() -> None:
                 sf = src_wf_dir / (wf + DEFAULT_EXT)
                 if sf.exists():
                     shutil.copy2(sf, dest_wf_dir / sf.name)
-            
+
             # Ensure dev skills are synced
             src_skills_dir = src_agents / "skills"
             dest_skills_dir = dest_agents / "skills"
@@ -730,17 +732,16 @@ def main() -> None:
             print("🔄 Projecting Workflows to Skill Wrappers...")
             try:
                 result = subprocess.run(
-                    ["node", str(sync_script)],
-                    cwd=dest,
-                    capture_output=True,
-                    text=True
+                    ["node", str(sync_script)], cwd=dest, capture_output=True, text=True
                 )
                 if result.returncode != 0:
                     print(f"⚠️  Skill synchronization failed: {result.stderr}")
                 else:
                     print("✅ Skills synchronized.")
             except Exception as e:
-                print(f"⚠️  Skill synchronization failed (Node.js might be missing): {e}")
+                print(
+                    f"⚠️  Skill synchronization failed (Node.js might be missing): {e}"
+                )
 
         # Auto-update .gitignore
         gitignore_entries = [ENGINE_DIR, "skills"]
