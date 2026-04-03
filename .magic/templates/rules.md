@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Active
 
 ## Overview
@@ -75,6 +75,7 @@ Skip the user story priority prompt. The agent must automatically assign default
 ### C6 — Selective Planning
 
 During plan updates, specs are handled by their status:
+
 - **Draft specs**: automatically moved to `## Backlog` in `PLAN.md` without user input.
 - **RFC specs**: surfaced to user with a recommendation to backlog until Stable.
 - **Stable specs**: agent asks which ones to pull into the active plan. All others go to Backlog.
@@ -190,8 +191,22 @@ To minimize redundant resource usage and improve performance, the agent may opti
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
 4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
+### C24 — Role-Switching Gate (Named Checkpoints)
+
+To eliminate "blind spots" and cognitive bias during the SDD lifecycle, the agent MUST perform a mandatory mental context switch (persona shift) before finalizing any major artifact or task. This is a unified constitutional gate across three key workflows:
+
+1. **Spec Workflow (magic:spec) → Persona: Project Critic**
+   - **Audit**: Identify technology-specific bias in L1 (should be abstract), check for missing edge cases/error states, and verify that L2 compliance tables are substantive.
+2. **Task Workflow (magic:task) → Persona: Planning Skeptic**
+   - **Audit**: Identify "optimism bias" (underestimated task size), hidden dependencies between parallel tracks, and potential cascade failures.
+3. **Run Workflow (magic:run) → Persona: QA Tester**
+   - **Audit**: Verify code against ALL spec invariants, check for unhandled boundary conditions, and ensure strict compliance with project style/linting standards.
+
+**Outcome**: If gaps are found, the agent must switch back to the "Builder" role to fix them, then repeat the relevant checkpoint.
+
 ## Document History
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
+| 1.1.0 | 2026-04-03 | Added C24: Role-Switching Gate (Critic/Skeptic/QA). |
 | 1.0.0 | {{DATE}} | Initial constitution |

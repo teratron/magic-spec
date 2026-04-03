@@ -71,14 +71,18 @@ graph TD
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
 3. **Execute**: Implement per spec section. No scope creep.
-4. **Update**:
+4. **QA Persona Audit (C24)**: Adopt a **QA Tester** persona to review the implementation BEFORE commit. Audit for:
+    - **Invariant Compliance**: Does the code strictly adhere to EVERY invariant and logic block in the source specification?
+    - **Boundary Verification**: Are off-by-one errors, empty states, and error propagation handled, or just "happy path"?
+    - **Contract/Lint Parity**: Does the code pass project-specific linting, typing, and architectural style checks?
+5. **Update**:
     - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. This check must also recursively include the spec's L1 parent (if applicable). If either the target or its parent shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Developer track must notify the Manager role of the suspension so the Manager can halt further assignments for the affected spec.
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update. After the spec is updated, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
     - **Sync**: If spec/phase finished → Update high-level `[x]` in `PLAN.md`.
     - **Actionable Outcome**: After phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
     - **Change Record**: Write 1-line summary in task `Changes` field in `TASKS.md`.
-5. **Phase Completion**:
+6. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
     - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from **Done** task `Changes` fields) to `CHANGELOG.md`.
 
