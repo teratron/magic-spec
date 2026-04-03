@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.126] - 2026-04-03
+
+### Added
+
+- **C24 — Unified Role-Switching Gate**: Expanded the mandatory internal review system into a unified constitutional rule across all key SDD workflows (Spec, Task, Run, Retro, Analyze, Rule, Simulate).
+- **Workflow Personas**: Integrated 7 specialized personas (Critic, Skeptic, QA, Analyst, Auditor, Reviewer) to eliminate cognitive bias and ensure rigorous evidence-based verification before any artifact is finalized.
+- **Structural Harmonization**: Refactored workflow steps in `analyze.md`, `rule.md`, and `simulate.md` to use header-based logic, resolving deep-seated markdown lint errors caused by intervening non-list elements.
+
 ## [1.5.120] - 2026-04-03
 
 ### Added
@@ -14,7 +22,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - **Task Workflow**: Persona **Planning Skeptic** (Optimism bias detection, dependency risk analysis).
   - **Run Workflow**: Persona **QA Tester** (Invariant verification, boundary condition audit).
 - **Workflow Integration**: Hardened `.magic/spec.md`, `.magic/task.md`, and `.magic/run.md` with explicit role-based checkpoints and updated completion checklists.
-- **Rules Versioning**: Updated `RULES.md` to version 1.5.1 with the expanded C24 definition.
+- **Rules Versioning**: Updated `RULES.md` to version 1.5.126 with the expanded C24 definition.
 
 ## [1.5.115] - 2026-04-02
 

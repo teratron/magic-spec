@@ -147,7 +147,46 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Match focus keywords against folder names, spec titles, module names, config sections.
     - If no matches found → **HALT**: "Could not map focus '{text}' to any project area. Try narrowing with a workspace: `/magic.analyze {workspace} \"{text}\"`, or rephrase the focus."
 3. **Focused Gap Report**: Same categories as Mode B (Covered/Uncovered/Orphaned/Drifted) but only for the matched area.
-4. **Advisory**: Always include the Advisory Report (see below) scoped to the focus area.
+
+### Pre-Advisory Audit (C24)
+
+Before generating recommendations, adopt an **Auditor** persona. Review all findings collected in Modes A/B/C/D and ask:
+
+- **Severity Calibration**: Is each finding classified at the correct severity, or has familiarity with the project lowered the bar?
+- **Systemic Pattern**: Do multiple Gap/Drift/Orphan findings point to a single root cause (e.g., a workspace scope misconfiguration, a naming convention drift) rather than isolated issues?
+- **Blind Spots**: Are there directories or specs that were NOT flagged but should have been — e.g., high-churn paths with suspiciously clean coverage?
+
+Only after this pass, proceed to generate the Advisory Report categories below.
+
+## Advisory Report
+| Category | Logic |
+| :--- | :--- |
+| **Covered** | Files explicitly mapped to a `Stable` spec. |
+| **Uncovered** | Orphan files without spec mapping. |
+| **Gaps** | `RFC` or `Draft` specs with no corresponding implementation. |
+| **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
+
+### Advisory Report Criteria
+- **Signal**: Final report starts with 🟢/🟡/🔴 icon. 🟢 = <5% uncovered/drift. 🔴 = any core engine drift or >25% project drift.
+- **Actionable**: Each Uncovered/Drift item must have a "Sync Path" (e.g. `magic:spec auto-spec`).
+- **Engine Bias**: If engine files (`.magic/`) are drifting → priority = `BLOCKER`.
+
+## Analysis Completion Checklist
+
+```
+Mode A/B Checklist — {scope}
+  ☐ Pre-flight check passed (no invalid registry/meta drift)
+  ☐ Multi-Pass Scan complete (Mode A meta -> Mode B structure)
+  ☐ Coverage: all files mapped to spec status; Drift detection run
+  ☐ Advisory Report generated with Signal and Sync Paths
+
+Mode C Checklist — {workspace} "{text}"
+  ☐ Mode B Full scan completed for baseline
+  ☐ Focus resolution: text "{text}" mapped to specific area
+  ☐ Gap report: Focus area reviewed for orphans/drift
+  ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
+  ☐ Advisory Report filtered to match focused scope
+```
 
 ## Advisory Report
 
@@ -155,11 +194,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 > **Purpose**: Actionable recommendations beyond fix/repair. Helps the user improve spec quality, coverage strategy, and project structure.
 
-### Auditor Persona (C24)
-
-Before generation of the Advisory Report, adopt an **Auditor** role. Review all results from Mode A/B/C/D. Ask: *"What is the systemic risk? Are these individual drift/gap findings symptoms of a larger architectural misalignment?"* Prioritize the advisory items based on this criticality assessment.
-
-### Categories
+### Advisory Report Categories
 
 1. **Spec Quality**
     - Oversized specs (>300 lines) → suggest splitting into L1 + L2s.

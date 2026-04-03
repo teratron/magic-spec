@@ -32,13 +32,17 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
     - **Deep Registry Audit**:
         - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
         - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
-    - **Independent Analyst Persona (C24)**: Before calculating the final Signal, adopt an **Independent Analyst** role. Review the `Blocked` tasks, `Shadow Logic` findings, and `Drift` reports not as isolated statistics, but as systemic symptoms. Ask: *"What do these failures reveal about the quality and stability of the underlying specifications, rather than just the efficiency of the implementation?"*
-    - **Signal**: Calculate from phase metrics:
+- **Independent Analyst Review (C24)**: Before calculating Signal, adopt an **Independent Analyst** persona. Re-examine the collected data from a spec-quality lens, not an execution lens:
+    - Do the Blocked tasks cluster around specific specs? → Spec is likely underspecified.
+    - Does Shadow Logic exist? → Implementation outpaced specification; spec debt is accumulating.
+    - Is the Blocked/Total ratio low but Retro L2 sessions increasing? → False green — team is compensating, not fixing root cause.
+  Signal must reflect the **health of the specification system**, not just the delivery throughput.
+4. **Score & Signal**: Calculate from phase metrics:
       - 🟢 **Green**: `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic findings.
       - 🟡 **Yellow**: `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches).
       - 🔴 **Red**: `Blocked / Total > 0.2` OR any shadow logic detected OR any critical registry inconsistency.
-    - **DORA Metrics**: Collect `Deployment Frequency` and `Change Failure Rate` (Manual Input / External Hook required).
-4. **Report**: Append to `RETROSPECTIVE.md` (Create from `.magic/templates/retrospective.md` if missing).
+      - **DORA Metrics**: Collect `Deployment Frequency` and `Change Failure Rate` (Manual Input / External Hook required).
+5. **Report**: Append to `RETROSPECTIVE.md` (Create from `.magic/templates/retrospective.md` if missing).
 
 ### Snapshot (L1) Execution
 
@@ -53,6 +57,7 @@ Retro Checklist — {Level}
   ☐ Data: INDEX (statuses), PLAN (coverage), TASKS (metrics) analyzed
   ☐ DORA Metrics: Delivery performance (DF/CFR) recorded for L2
   ☐ Deep Audit: Shadow logic and Logic-to-Spec parity verified
+  ☐ Independent Analyst (C24): Signal reviewed through spec-quality lens before final report
   ☐ L1: Snapshot row appended; Phase N archived to archives/tasks/ (C8)
   ☐ L2: Actionable recommendations mapped to evidence; trends calculated
   ☐ Integrity: No speculative claims; all findings reference specific files

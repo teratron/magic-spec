@@ -88,14 +88,29 @@ Workspace-local conventions for `{workspace}`. Supplements (never overrides) the
 | 1.0.0 | {date} | Agent | Initial workspace rules file. |
 ```
 
-### Post-Write: Impact Analysis & Sync
+### 5. Constitutional Reviewer Persona Audit (C24)
 
-After writing, check for TASKS.md in the active workspace (`.design/{workspace}/TASKS.md`) or globally (`.design/TASKS.md`). If found:
+Adopt the **Constitutional Reviewer** persona to review the proposed rule before commitment. Analyze the convention with these interrogative hooks:
+- **Core Conflict**: Does this rule create a practical conflict with any existing core logic (C1-C23)? (e.g. C2 Minimalism vs. a rule that adds mandatory manual steps).
+- **Cognitive Consistency**: Is the phrasing unquantified (hallucination risk) or redundant with a global rule?
+- **Operational Friction**: Will this rule cause a "Cascade Failure" or excessive HALT points if applied in a standard Parallel workflow (C3)?
 
-- **Constitutional Reviewer Persona (C24)**: Adopt the **Constitutional Reviewer** role. Review the new rule against all existing C1–C23 guards in the global constitution. Ask: *"Does this new rule create a practical, unresolvable conflict with core logic (e.g., C2 Minimalism or C13 Cognitive Discipline) in a real-world workflow run?"*
-- **Notify**: Inform user that `TASKS.md` version (`Based on RULES`) is now stale.
-- **Offer Sync**: Propose running `magic.task update` to propagate the rule changes into the active plan.
-- **Audit**: If rule is critical (L1/C1-C10 or WC1), suggest `magic.spec audit` for compliance.
+### 6. Write & Sync
+
+Write target `RULES.md` and update history and version as per step 5 approval.
+
+### 7. Post-Write Impact
+
+**Constitutional Review (C24)**: Before notifying the user, adopt a **Constitutional Reviewer** persona. Ask:
+- Does the new rule create a **practical conflict** with any C1–C23 in currently running workflows — not just a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
+- Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
+- If this rule were applied retroactively to the last 3 completed tasks, would any of them have halted or produced different output?
+
+If a practical conflict is found → **HALT** before notifying user. Report: "C24 Constitutional Review: Rule `C{N}` creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Resolve before writing."
+
+- **Notify**: Inform user if `TASKS.md` is now stale.
+- **Offer Sync**: Propose `magic.task update` to propagate the rule change.
+- **Compliance**: For critical rules, suggest `magic.spec audit`.
 
 ## Rule Completion Checklist
 
@@ -105,6 +120,7 @@ Rule Checklist — {operation}
   ☐ Tier routing: target file confirmed (global RULES.md or workspace RULES.md)
   ☐ Scope: only §7 target (unless core amendment requested)
   ☐ Guards: no semantic duplication across both tiers; no core contradiction
+  ☐ Constitutional Review (C24): Practical conflicts with C1–C23 checked before Impact Analysis
   ☐ Version bumped (Major/Minor/Patch); Document History updated in target file
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Engine Meta: C14 bump ONLY if .magic/ files modified (not for .design/ changes)

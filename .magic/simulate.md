@@ -75,19 +75,25 @@ Crisis: "{CR-6 name}"
 ### 2. Logic Audit & AOP
 
 Scan the target workflow(s) for:
-
-- **Instruction Density**: Bloat vs Precision (see metric definition in §3).
-- **Ambiguity**: Instructions that different LLMs would interpret differently. Flag any conditional without an explicit outcome for both branches (e.g., "if X → HALT" but no "else → proceed").
-- **Context Economy**: Token waste in redundant `read_file` calls or repeated context loading.
+- **Logical Invariants**: Do the rules in §1-6 contradict any workflow steps in `.magic/*.md`?
+- **Ambiguity (C13)**: Does the workflow text rely on agent "judgment" rather than explicit data triggers?
+- **Convergence**: Does every logic path lead to a defined `Status` or `Next Step`?
+- **Confirmation Bias Check (C24)**: Adopt a **Skeptic** persona for the final pass of the Logic Audit. For each `PASS` result, ask: *"Would this guard actually fire if an agent were rushing to complete a task in Trust Mode (C9)?"* A guard that exists in text but has no HALT keyword and relies solely on LLM compliance is a PARTIAL at best — re-classify if needed.
+- **Context Economy**: Token waste in redundant calls or repeated loading.
 - **Broken Loops**: Checklists that don't cover the work; steps referenced in diagrams but missing from text.
-- **Skeptic Persona (C24)**: During Logic Audit, adopt the **Skeptic** persona. Investigate every `PASS` result to confirm it's not a hallucination caused by "Context Bleed" (knowing the desired outcome beforehand). Ask: *"If I were trying to intentionally bypass this guard while following these specific instructions, could I still succeed?"* Report findings that suggest a weak guard despite a formal pass.
-- **Suite Integrity** (**trigger: `test` and `improv` modes only; skip in `direct` mode**): Verify `.magic/tests/suite.md` follows structural requirements:
-  - Each test uses `### T{N} — {Title}` (H3, sequential ID, dash-separated title).
-  - Required fields: `- **Workflow:**`, `- **Synthetic State:**`, `- **Action:**` or `- **Test {X}:**`, `- **Expected:**` (with `[ ]` checkboxes), `- **Guards tested:**`.
-  - No duplicate test IDs. Finalization footer matches actual last ID.
-  - **Timing**: In `test` mode — run Suite Integrity **before** executing scenarios (malformed tests produce unreliable results). In `improv` mode — run **after** appending new tests (validate own output).
+- **Suite Integrity**: Validated (test/improv modes) or skipped (direct mode).
 
-### 3. Reporting & Fixes
+### 3. Skeptic Persona Audit (C24)
+
+- **C24 Gate (Skeptic Persona)**: Challenge `PASS` results for "Context Bleed" bias; prove that guards are robust even against intentional bypass attempts.
+- **System Signal**: Return 🟢/🟡/🔴 based on finding severity.
+
+### 4. Next Steps
+
+- Propose fixes if failing.
+- If logic is sound, explicitly state: "Simulation confirms core guards are robust (Skeptic Persona approved)."
+
+### 5. Reporting & Fixes
 
 - **Individual Audit**: Table with `Dimension | Finding | Outcome (PASS/FAIL/ROUGH EDGE)`.
 - **Cognitive Coverage Report**:
@@ -110,8 +116,11 @@ Scan the target workflow(s) for:
 ```
 Simulation Checklist — {target}
   ☐ Pre-flight: check-prerequisites passed (engine integrity, workspace resolved)
-  ☐ Cognitive-only guard: No physical scripts written or executed
-  ☐ Logic walkthrough: Rough edges or logical gaps identified
+  ☐ Inventory: Instruction density and context economy mapped
+  ☐ Consistency: Rules-to-Workflow logical invariants strictly verified
+  ☐ Step coverage: All diagrams matched to text; zero undocumented outcomes
+  ☐ Confirmation Bias (C24): Skeptic persona applied to re-verify all PASS results
+  ☐ Cog-only: Only logic report; no scripts written or executed
   ☐ Cognitive Coverage: Density, Resilience (Mechanical + Instructional), and Compliance metrics reported
   ☐ Suite Integrity: validated (test/improv modes); or skipped (direct mode)
   ☐ C14 Enforcement Gate: checksums regenerated BEFORE reporting (blocking)

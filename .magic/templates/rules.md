@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Active
 
 ## Overview
@@ -191,39 +191,20 @@ To minimize redundant resource usage and improve performance, the agent may opti
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
 4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
-### C24 — Role-Switching Gate (Named Checkpoints)
+### C24 — Role-Switching Gates
 
-To eliminate "blind spots" and cognitive bias during the SDD lifecycle, the agent MUST perform a mandatory mental context switch (persona shift) before finalizing any major artifact or task. This is a unified constitutional gate across core workflows:
+At critical decision points, the agent MUST adopt a specific adversarial persona before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
 
-1. **Spec Workflow (magic:spec) → Persona: Project Critic**
-   - **Trigger**: During `Post-Update Review`.
-   - **Audit**: Identify tech-specific bias in L1, check for missing edge cases, and verify substantive L2 compliance.
+| Workflow | Gate | Persona | Key Questions |
+| :--- | :--- | :--- | :--- |
+| `spec.md` | Before `Post-Update Review` | **Project Critic** | L1 purity? Invariant completeness? L2 compliance substantive? |
+| `task.md` | Before `Plan Write-back` | **Planning Skeptic** | Optimism bias? Hidden dependencies? Cascade risk? |
+| `run.md` | Before marking task `Done` | **Tester** | Spec boundary? Edge cases? Side effects? Regression risk? |
+| `retrospective.md` | Before Signal calculation | **Independent Analyst** | Does Signal reflect spec quality, not just execution stats? |
+| `analyze.md` | Before Advisory Report | **Auditor** | Severity correct? Systemic pattern behind findings? |
+| `rule.md` | Before Impact Analysis | **Constitutional Reviewer** | Practical conflict with C1–C23 in running workflows? |
 
-2. **Task Workflow (magic:task) → Persona: Planning Skeptic**
-   - **Trigger**: After drafting plan, BEFORE generating tasks.
-   - **Audit**: Identify "optimism bias", hidden dependencies between parallel tracks, and potential cascade failures if a phase is blocked.
-
-3. **Run Workflow (magic:run) → Persona: QA Tester**
-   - **Trigger**: After implementation, BEFORE commit.
-   - **Audit**: Verify code against ALL spec invariants, check boundary conditions, and ensure strict project style/lint parity.
-
-4. **Retrospective (magic:retro) → Persona: Independent Analyst**
-   - **Trigger**: Before calculating high-level Signal (🟢/🟡/🔴).
-   - **Audit**: Review errors not as stats, but as symptoms of spec quality vs. execution efficiency.
-
-5. **Analysis (magic:analyze) → Persona: Auditor**
-   - **Trigger**: Before generation of Advisory Report.
-   - **Audit**: Assess systemic risk and prioritize findings based on architectural criticality rather than just gap counts.
-
-6. **Rule Update (magic:rule) → Persona: Constitutional Reviewer**
-   - **Trigger**: After recording a new rule.
-   - **Audit**: Identify practical conflicts between the new convention and existing C1-C23 core logic.
-
-7. **Simulation (magic:simulate) → Persona: Skeptic**
-   - **Trigger**: During Logic Audit.
-   - **Audit**: Challenge `PASS` results for "Context Bleed" bias; prove that guards are robust even against intentional bypass attempts.
-
-**Outcome**: If gaps are found, the agent must switch back to the "Builder" role to fix them, then repeat the checkpoint. Only when the role-audit passes can the phase/task be transitioned.
+Switching is mandatory — it is not skipped in Trust Mode (C9). The persona switch takes one internal reasoning pass; it does not require user interaction.
 
 ## Document History
 
