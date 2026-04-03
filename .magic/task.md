@@ -75,12 +75,16 @@ graph TD
     - **Field Normalization**: During iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to the canonical `Implements:` field. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
 3. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 4. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
-5. **Execution Mode**: Default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
-6. **Decompose**: Split the active phase into 2-3 tasks per spec.
+5. **Planning Audit (C24)**: Adopt a **Planning Skeptic** persona to review the draft `PLAN.md`. Audit for:
+    - **Optimism Bias**: Have task sizes been underestimated?
+    - **Hidden Dependencies**: Are parallel tracks truly independent, or is there a shared resource/config bottleneck?
+    - **Cascade Risk**: If a critical spec fails to implement in Phase 1, how many Phase 2 tasks are instantly blocked?
+6. **Execution Mode**: Default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
+7. **Decompose**: Split the active phase into 2-3 tasks per spec.
     - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
     - **Tracks**: Group tasks by file independence.
     - **Testing (Mandatory)**: Every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
-7. **Sync (Update Mode)**:
+8. **Sync (Update Mode)**:
     - **C12 Quarantine**: If L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → Move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: "L1 parent `{file}` is `{status}` (C12)". **Cross-Workspace C12**: If the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: Tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
     - **Phantom Specs**: If spec in PLAN/INDEX but missing from disk → Cancel `Todo` / `Pending`; archive `Done`. Block active tasks.
     - **Phantom Parent Guard**: If an L2 spec's parent is missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: "Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2)." Move L2 to `## Backlog` with reason: "Missing L1 Parent (Phantom)."
@@ -109,6 +113,7 @@ Task Workflow Checklist — {operation}
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
+  ☐ Role-Switching (C24): Draft Plan audited in **Skeptic Persona** (Optimism, Dependencies, Risk)
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
 ```

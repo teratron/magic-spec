@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.4.1
+**Version:** 1.5.1
 **Status:** Active
 
 ## Overview
@@ -192,10 +192,30 @@ To minimize redundant resource usage and improve performance, the agent may opti
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
 4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
+### C24 — Role-Switching Gate (Named Checkpoints)
+
+To eliminate "blind spots" and cognitive bias during the SDD lifecycle, the agent MUST perform a mandatory mental context switch (persona shift) before finalizing any major artifact or task. This is a unified constitutional gate across three key workflows:
+
+1. **Spec Workflow (magic:spec) → Persona: Project Critic**
+   - **Trigger**: During `Post-Update Review`, BEFORE finalizing the specification.
+   - **Audit**: Identify technology-specific bias in L1 (should be abstract), check for missing edge cases/error states, and verify that L2 compliance tables are substantive, not formal placeholders.
+
+2. **Task Workflow (magic:task) → Persona: Planning Skeptic**
+   - **Trigger**: After drafting the `PLAN.md`, BEFORE writing to disk or summarizing for the user.
+   - **Audit**: Identify "optimism bias" (underestimated task size), hidden dependencies between parallel tracks, and potential cascade failures if a specific phase is blocked.
+
+3. **Run Workflow (magic:run) → Persona: QA Tester**
+   - **Trigger**: After implementation is finished, BEFORE marking a task as `Done` or finalizing the phase workbook.
+   - **Audit**: Verify code against ALL spec invariants, check for unhandled boundary conditions, and ensure strict compliance with project style/linting standards.
+
+**Outcome**: If gaps are found, the agent must switch back to the "Builder" role (Architect/Planner/Developer) to fix them, then repeat the relevant checkpoint. Only when the role-specific audit passes can the phase/task be transitioned.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.5.1 | 2026-04-03 | Antigravity | Expanded C24 to a unified Role-Switching Gate across Spec/Task/Run. |
+| 1.5.0 | 2026-04-03 | Antigravity | Added C24: Role-Switching Gate (QA verification). |
 | 1.4.1 | 2026-03-31 | Antigravity | RE-6: Quantified Workspace Disambiguation (≥50%) and removed "high-confidence" term (simulation fix). |
 | 1.4.0 | 2026-03-31 | Agent | C6: Removed undefined "Strong/Weak Tier" qualifier (RE-3 simulation fix). |
 | 1.3.0 | 2026-03-16 | Antigravity | Added C23: Context Economy & Validation Caching. |

@@ -212,12 +212,15 @@ Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mod
 
 ### Post-Update Review (Mandatory)
 
-Check for:
+Adopt a **Project Critic** persona to audit the changes. Check for:
 
-1. **Coherence**: Does it read consistently after edits?
-2. **Links**: `Related Specifications` and `Implements` accurate?
-3. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
-4. **Sync Check**: `check-prerequisites` status.
+1. **Layer 1 Purity (L1 only)**: Are invariants strictly technology-neutral? Remove any implicit implementation assumptions or specific stack references.
+2. **Invariant Completeness**: Are all edge cases, error states, and boundary conditions covered by the specification invariants?
+3. **Substantive Compliance (L2 only)**: Does the `Invariant Compliance` table provide meaningful verification details for each L1 point, or is it just a formal placeholder?
+4. **Coherence**: Does the document read consistently after edits?
+5. **Links**: `Related Specifications` and `Implements` accurate?
+6. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
+7. **Sync Check**: `check-prerequisites` status.
 
 ### Updating RULES.md (Constitution)
 
@@ -272,9 +275,9 @@ Checklist — {task description}
   ☐ Registry: INDEX.md updated (Status, Layer, Version)
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
-  ☐ Defensive: RULES.md triggers (T1-T4) checked/applied
+  ☐ Rules: RULES.md triggers (T1-T4) checked/applied
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
-  ☐ Review: Post-Update Review performed (Coherence, Duplication)
+  ☐ Review: Post-Update Review performed in **Critic Persona** (Purity, Completeness, Compliance)
 ```
 
 ## Templates

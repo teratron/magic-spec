@@ -96,6 +96,7 @@ Checklist — {operation}
   ☐ Spec Stability: All active-phase specs confirmed Stable in INDEX.md before execution
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
+  ☐ C24 QA Review: Internal 'Tester' audit performed before marking tasks as Done
   ☐ Parallel: Manager role enforced; shared files serialized
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
