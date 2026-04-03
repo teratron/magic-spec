@@ -1,24 +1,25 @@
 # Implementation Plan
 
-**Version:** 1.1.0
-**Generated:** 2026-03-30
-**Based on:** .design/engine/INDEX.md v1.4.0
+**Version:** 1.2.0
+**Generated:** 2026-04-03
+**Based on:** .design/engine/INDEX.md v1.4.3
 **Status:** Active
 
 ## Overview
 
-Implementation plan for the Magic SDD engine workspace. Existing core specifications (engine-core, engine-automation, test-suite, documentation-system) are already implemented and stable. This plan covers new feature work only.
+Implementation plan for the Magic SDD engine workspace. Covers new feature work and optimization of the automation subsystem.
 
-## Phase 1 — Config Drift Detection (Layer 1: Concept)
+## Phase 2 — Skill Projection & Agent Surface (Layer 2: Implementation)
 
-*Add drift detection for manual RULES.md changes to the pre-flight check pipeline.*
+*Project workflows into universal agent skills and formalize the `.agents/` directory structure.*
 
-- [x] **Config Drift Guard** ([l1-config-drift-guard.md](specifications/l1-config-drift-guard.md)) [L1]
+- [ ] **Universal Skill Wrappers** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md)) [L2]
 
 ## Completed (Baseline)
 
-*Specifications already implemented before this plan was created.*
+*Specifications already implemented and validated.*
 
+- [x] **Config Drift Guard** ([l1-config-drift-guard.md](specifications/l1-config-drift-guard.md)) [L1]
 - [x] **Engine Core** ([l1-engine-core.md](specifications/l1-engine-core.md)) [L1]
 - [x] **Engine Automation** ([l2-engine-automation.md](specifications/l2-engine-automation.md)) [L2]
 - [x] **Test Suite** ([l2-test-suite.md](specifications/l2-test-suite.md)) [L2]

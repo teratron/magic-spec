@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-03-29
+**Generated:** 2026-04-03
 
 ## Active Technologies
 
@@ -18,22 +18,35 @@
 ├── .claude/
 │   ├── commands/
 │   ├── rules/
-│   ├── settings.json
-│   ├── settings.local.json
+│   └── skills/
+├── .codex/
+│   ├── prompts/
+│   ├── rules/
 │   └── skills/
 ├── .design/
+│   ├── CONTEXT.md
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
 │   ├── installers/
 │   └── workspace.json
+├── .env
 ├── .env.example
+├── .gemini/
+│   ├── commands/
+│   ├── rules/
+│   └── skills/
 ├── .gitattributes
 ├── .gitignore
+├── .kilocode/
+│   └── workflows/
+├── .lingma/
+│   └── commands/
 ├── .magic/
 │   ├── .checksums
 │   ├── .version
 │   ├── analyze.md
+│   ├── context-resolution.md
 │   ├── history/
 │   ├── init.md
 │   ├── retrospective.md
@@ -52,18 +65,19 @@
 │   ├── CACHEDIR.TAG
 │   ├── README.md
 │   └── v/
+├── .qwen/
+│   ├── commands/
+│   ├── rules/
+│   └── skills/
 ├── .ruff_cache/
 │   ├── .gitignore
 │   ├── 0.15.7/
+│   ├── 0.15.8/
 │   └── CACHEDIR.TAG
-├── .tmp/
-│   └── .design/
 ├── AGENTS.md
 ├── CHANGELOG.md
-├── CLAUDE.md
 ├── CONTRIBUTING.md
 ├── LICENSE
-├── QWEN.md
 ├── README.md
 ├── docs/
 │   ├── README.md
@@ -88,7 +102,12 @@
 │   └── tests/
 ├── package.json
 ├── pyproject.toml
-├── uv.lock
+├── skills/
+│   ├── magic.analyze/
+│   ├── magic.rule/
+│   ├── magic.run/
+│   ├── magic.spec/
+│   └── magic.task/
 └── workflows/
     ├── magic.analyze.md
     ├── magic.rule.md

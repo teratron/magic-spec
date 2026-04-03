@@ -1,7 +1,7 @@
 # L2 Specification: Universal Skill Wrappers
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 
 ## 1. Objective
 

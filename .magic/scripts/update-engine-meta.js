@@ -57,13 +57,18 @@ function updateEngineMeta() {
         if (oldChecksums[rel] !== currentHash) {
             console.log(`✨ Detected change in: ${rel}`);
             
-            const ext = path.extname(rel);
-            const base = path.basename(rel, ext);
-            
             // If it's a script, it's core engine logic
             if (rel.startsWith('scripts/')) {
                 engineLogicChanged = true;
-            } else {
+            } 
+            // Templates change defaults but not the workflow logic itself
+            else if (rel.startsWith('templates/')) {
+                // We bump version but don't force history on random workflows
+                engineLogicChanged = true; 
+            }
+            // Root .md files in .magic/ are the actual workflow logic
+            else if (rel.endsWith('.md') && !rel.includes('/')) {
+                const base = path.basename(rel, '.md');
                 changedWorkflows.add(base);
             }
         }
