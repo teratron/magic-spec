@@ -47,17 +47,24 @@ When the engine logic is intentionally modified (e.g., during development or whe
 
 ### How to update checksums (C14)
 
-Run the following command in the project root to automatically bump the version, update history files, and regenerate checksums:
+Для **полной синхронизации** (включая автоматический подъем версии в `.magic/.version` и обновление файлов истории):
 
 ```bash
 node .magic/scripts/executor.js update-engine-meta --workflow {current_workflow}
+```
+
+Для **ручного обновления только контрольных сумм** (без изменения версии и истории):
+
+```bash
+node .magic/scripts/generate-checksums.js
 ```
 
 ### When to update
 
 - Whenever an engine file (`.magic/*.md`) or history file is intentionally modified.
 - Before committing changes to the project repository.
-- After manually editing `.magic/` artifacts to resolve integrity errors.
+- After manually editing `.magic/` artifacts to resolve integrity errors or `MD012` lint warnings.
+- After a global project synchronization (`/magic.dev:sync`).
 
 ## 5. Security Note
 
