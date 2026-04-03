@@ -105,4 +105,4 @@ Once approved, the engine triggers a **Regression Sweep** — automatically exec
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.116).
+Synchronized with engine workflows on 2026-03-31 (v1.5.129).

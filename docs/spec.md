@@ -103,4 +103,4 @@ This is a critical safety mechanism:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.116).
+Synchronized with engine workflows on 2026-03-31 (v1.5.129).

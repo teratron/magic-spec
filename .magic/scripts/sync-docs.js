@@ -99,7 +99,7 @@ function generateContributing(targetVersion) {
         .replace(/{{project_name}}/g, projectName)
         .replace(/{{VERSION}}/g, targetVersion)
         .replace(/{{engine_version}}/g, targetVersion)
-        .replace(/{{workflows_table}}/g, workflowsTable)
+        .replace(/{{workflows_table}}/g, workflowsTable.trim())
         .replace(/{{DATE}}/g, date)
         .replace(/{{rules_block}}/g, rulesBlock)
         .replace(/{{registry_block}}/g, registryBlock)

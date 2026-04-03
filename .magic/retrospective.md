@@ -18,36 +18,59 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 | **L1** | Mini-snapshot | Phase Complete (All Tasks Done) | Snapshots Table Row + Archival (C8) |
 | **L2** | Full Audit | Plan Complete or Manual Command | Deep Analysis + Recommendations |
 
-### Operational Logic (L1 & L2)
+## Operational Logic (L1 & L2)
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json`.
-2. **Collect**:
-    - **Inventory**: INDEX.md status counts (D/R/S) & spec count.
-    - **Health**: PLAN.md phase completion status & TASKS.md metrics (Done/Blocked/Cancelled).
-    - **Growth**: RULES.md §7 entry count & history scan.
-    - **Drift**: Cross-reference INDEX ↔ PLAN ↔ TASKS for orphans/phantoms.
-3. **Analyze (L2 Only)**:
-    - **Efficiency**: Spec revisions-to-Stable ratio.
-    - **Friction**: Recurrent blocking reasons in phase notes.
-    - **Deep Registry Audit**:
-        - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
-        - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
-- **Independent Analyst Review (C24)**: Before calculating Signal, adopt an **Independent Analyst** persona. Re-examine the collected data from a spec-quality lens, not an execution lens:
-    - Do the Blocked tasks cluster around specific specs? → Spec is likely underspecified.
-    - Does Shadow Logic exist? → Implementation outpaced specification; spec debt is accumulating.
-    - Is the Blocked/Total ratio low but Retro L2 sessions increasing? → False green — team is compensating, not fixing root cause.
-  Signal must reflect the **health of the specification system**, not just the delivery throughput.
-4. **Score & Signal**: Calculate from phase metrics:
-      - 🟢 **Green**: `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic findings.
-      - 🟡 **Yellow**: `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches).
-      - 🔴 **Red**: `Blocked / Total > 0.2` OR any shadow logic detected OR any critical registry inconsistency.
-      - **DORA Metrics**: Collect `Deployment Frequency` and `Change Failure Rate` (Manual Input / External Hook required).
-5. **Report**: Append to `RETROSPECTIVE.md` (Create from `.magic/templates/retrospective.md` if missing).
+### 1. Pre-flight
 
-### Snapshot (L1) Execution
+`node .magic/scripts/executor.js check-prerequisites --json`.
 
-- **Step**: Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`.
-- **Archival (C8)**: Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use **relative** path.
+### 2. Collect
+
+- **Inventory**: INDEX.md status counts (D/R/S) & spec count.
+- **Health**: PLAN.md phase completion status & TASKS.md metrics (Done/Blocked/Cancelled).
+- **Growth**: RULES.md §7 entry count & history scan.
+- **Drift**: Cross-reference INDEX ↔ PLAN ↔ TASKS for orphans/phantoms.
+
+### 3. Analyze (L2 Only)
+
+- **Efficiency**: Spec revisions-to-Stable ratio.
+- **Friction**: Recurrent blocking reasons in phase notes.
+- **Deep Registry Audit**:
+  - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
+  - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
+
+#### Independent Analyst Review (C24)
+
+Before calculating Signal, adopt an **Independent Analyst** persona. Re-examine the collected data from a spec-quality lens, not an execution lens:
+
+- Do the Blocked tasks cluster around specific specs? → Spec is likely underspecified.
+- Does Shadow Logic exist? → Implementation outpaced specification; spec debt is accumulating.
+- Is the Blocked/Total ratio low but Retro L2 sessions increasing? → False green — team is compensating, not fixing root cause.
+
+Signal must reflect the **health of the specification system**, not just the delivery throughput.
+
+### 4. Score & Signal
+
+Calculate from phase metrics:
+
+- 🟢 **Green**: `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic findings.
+- 🟡 **Yellow**: `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches).
+- 🔴 **Red**: `Blocked / Total > 0.2` OR any shadow logic detected OR any critical registry inconsistency.
+- **DORA Metrics**: Collect `Deployment Frequency` and `Change Failure Rate` (Manual Input / External Hook required).
+
+### 5. Report
+
+Append to `RETROSPECTIVE.md` (Create from `.magic/templates/retrospective.md` if missing).
+
+## Snapshot (L1) Execution
+
+### 6. Step
+
+Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`.
+
+### 7. Archival (C8)
+
+Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use **relative** path.
 
 ## Retrospective Completion Checklist
 

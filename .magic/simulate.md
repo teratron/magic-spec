@@ -75,6 +75,7 @@ Crisis: "{CR-6 name}"
 ### 2. Logic Audit & AOP
 
 Scan the target workflow(s) for:
+
 - **Logical Invariants**: Do the rules in §1-6 contradict any workflow steps in `.magic/*.md`?
 - **Ambiguity (C13)**: Does the workflow text rely on agent "judgment" rather than explicit data triggers?
 - **Convergence**: Does every logic path lead to a defined `Status` or `Next Step`?

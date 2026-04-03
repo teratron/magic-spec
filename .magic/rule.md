@@ -91,6 +91,7 @@ Workspace-local conventions for `{workspace}`. Supplements (never overrides) the
 ### 5. Constitutional Reviewer Persona Audit (C24)
 
 Adopt the **Constitutional Reviewer** persona to review the proposed rule before commitment. Analyze the convention with these interrogative hooks:
+
 - **Core Conflict**: Does this rule create a practical conflict with any existing core logic (C1-C23)? (e.g. C2 Minimalism vs. a rule that adds mandatory manual steps).
 - **Cognitive Consistency**: Is the phrasing unquantified (hallucination risk) or redundant with a global rule?
 - **Operational Friction**: Will this rule cause a "Cascade Failure" or excessive HALT points if applied in a standard Parallel workflow (C3)?
@@ -102,6 +103,7 @@ Write target `RULES.md` and update history and version as per step 5 approval.
 ### 7. Post-Write Impact
 
 **Constitutional Review (C24)**: Before notifying the user, adopt a **Constitutional Reviewer** persona. Ask:
+
 - Does the new rule create a **practical conflict** with any C1–C23 in currently running workflows — not just a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
 - Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
 - If this rule were applied retroactively to the last 3 completed tasks, would any of them have halted or produced different output?

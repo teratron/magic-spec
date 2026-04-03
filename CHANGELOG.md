@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.129] - 2026-04-03
+
+### Changed
+
+- **Structural Harmonization**: Refactored `retrospective.md` to use header-based logic. This resolves `MD029` (ordered list prefix) and `MD007` (list indentation) warnings caused by complex content and personification blocks (C24) breaking list continuity. Fixed sequential numbering (1, 2, 3, 4, 5, 2 -> 1, 2, 3, 4, 5, 6, 7).
+- **C24 Independent Analyst**: Upgraded the persona block in `retrospective.md` to a dedicated sub-heading for better visibility and structural compliance.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.129`, history updated, and checksums regenerated (C14).
+
+## [1.5.128] - 2026-04-03
+
+### Fixed
+
+- **Markdown Lint (MD012)**: Fixed a recurring issue where `CONTRIBUTING.md` would be regenerated with multiple consecutive blank lines. Added `.trim()` to `{{workflows_table}}` placeholder in `sync-docs.js` to ensure proper spacing between the table and the following section.
+- **Engine Versioning**: Synchronized engine version across all manifests and documentation (C14).
+
 ## [1.5.126] - 2026-04-03
 
 ### Added

@@ -159,6 +159,7 @@ Before generating recommendations, adopt an **Auditor** persona. Review all find
 Only after this pass, proceed to generate the Advisory Report categories below.
 
 ## Advisory Report
+
 | Category | Logic |
 | :--- | :--- |
 | **Covered** | Files explicitly mapped to a `Stable` spec. |
@@ -167,6 +168,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 | **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
 
 ### Advisory Report Criteria
+
 - **Signal**: Final report starts with 🟢/🟡/🔴 icon. 🟢 = <5% uncovered/drift. 🔴 = any core engine drift or >25% project drift.
 - **Actionable**: Each Uncovered/Drift item must have a "Sync Path" (e.g. `magic:spec auto-spec`).
 - **Engine Bias**: If engine files (`.magic/`) are drifting → priority = `BLOCKER`.
