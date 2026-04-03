@@ -32,6 +32,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
     - **Deep Registry Audit**:
         - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
         - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
+    - **Independent Analyst Persona (C24)**: Before calculating the final Signal, adopt an **Independent Analyst** role. Review the `Blocked` tasks, `Shadow Logic` findings, and `Drift` reports not as isolated statistics, but as systemic symptoms. Ask: *"What do these failures reveal about the quality and stability of the underlying specifications, rather than just the efficiency of the implementation?"*
     - **Signal**: Calculate from phase metrics:
       - 🟢 **Green**: `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic findings.
       - 🟡 **Yellow**: `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches).

@@ -92,6 +92,7 @@ Workspace-local conventions for `{workspace}`. Supplements (never overrides) the
 
 After writing, check for TASKS.md in the active workspace (`.design/{workspace}/TASKS.md`) or globally (`.design/TASKS.md`). If found:
 
+- **Constitutional Reviewer Persona (C24)**: Adopt the **Constitutional Reviewer** role. Review the new rule against all existing C1–C23 guards in the global constitution. Ask: *"Does this new rule create a practical, unresolvable conflict with core logic (e.g., C2 Minimalism or C13 Cognitive Discipline) in a real-world workflow run?"*
 - **Notify**: Inform user that `TASKS.md` version (`Based on RULES`) is now stale.
 - **Offer Sync**: Propose running `magic.task update` to propagate the rule changes into the active plan.
 - **Audit**: If rule is critical (L1/C1-C10 or WC1), suggest `magic.spec audit` for compliance.

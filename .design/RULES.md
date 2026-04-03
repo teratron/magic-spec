@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.5.1
+**Version:** 1.5.2
 **Status:** Active
 
 ## Overview
@@ -194,21 +194,37 @@ To minimize redundant resource usage and improve performance, the agent may opti
 
 ### C24 — Role-Switching Gate (Named Checkpoints)
 
-To eliminate "blind spots" and cognitive bias during the SDD lifecycle, the agent MUST perform a mandatory mental context switch (persona shift) before finalizing any major artifact or task. This is a unified constitutional gate across three key workflows:
+To eliminate "blind spots" and cognitive bias during the SDD lifecycle, the agent MUST perform a mandatory mental context switch (persona shift) before finalizing any major artifact or task. This is a unified constitutional gate across core workflows:
 
 1. **Spec Workflow (magic:spec) → Persona: Project Critic**
-   - **Trigger**: During `Post-Update Review`, BEFORE finalizing the specification.
-   - **Audit**: Identify technology-specific bias in L1 (should be abstract), check for missing edge cases/error states, and verify that L2 compliance tables are substantive, not formal placeholders.
+   - **Trigger**: During `Post-Update Review`.
+   - **Audit**: Identify tech-specific bias in L1, check for missing edge cases, and verify substantive L2 compliance.
 
 2. **Task Workflow (magic:task) → Persona: Planning Skeptic**
-   - **Trigger**: After drafting the `PLAN.md`, BEFORE writing to disk or summarizing for the user.
-   - **Audit**: Identify "optimism bias" (underestimated task size), hidden dependencies between parallel tracks, and potential cascade failures if a specific phase is blocked.
+   - **Trigger**: After drafting plan, BEFORE generating tasks.
+   - **Audit**: Identify "optimism bias", hidden dependencies between parallel tracks, and potential cascade failures if a phase is blocked.
 
 3. **Run Workflow (magic:run) → Persona: QA Tester**
-   - **Trigger**: After implementation is finished, BEFORE marking a task as `Done` or finalizing the phase workbook.
-   - **Audit**: Verify code against ALL spec invariants, check for unhandled boundary conditions, and ensure strict compliance with project style/linting standards.
+   - **Trigger**: After implementation, BEFORE commit.
+   - **Audit**: Verify code against ALL spec invariants, check boundary conditions, and ensure strict project style/lint parity.
 
-**Outcome**: If gaps are found, the agent must switch back to the "Builder" role (Architect/Planner/Developer) to fix them, then repeat the relevant checkpoint. Only when the role-specific audit passes can the phase/task be transitioned.
+4. **Retrospective (magic:retro) → Persona: Independent Analyst**
+   - **Trigger**: Before calculating high-level Signal (🟢/🟡/🔴).
+   - **Audit**: Review errors not as stats, but as symptoms of spec quality vs. execution efficiency.
+
+5. **Analysis (magic:analyze) → Persona: Auditor**
+   - **Trigger**: Before generation of Advisory Report.
+   - **Audit**: Assess systemic risk and prioritize findings based on architectural criticality rather than just gap counts.
+
+6. **Rule Update (magic:rule) → Persona: Constitutional Reviewer**
+   - **Trigger**: After recording a new rule.
+   - **Audit**: Identify practical conflicts between the new convention and existing C1-C23 core logic.
+
+7. **Simulation (magic:simulate) → Persona: Skeptic**
+   - **Trigger**: During Logic Audit.
+   - **Audit**: Challenge `PASS` results for "Context Bleed" bias; prove that guards are robust even against intentional bypass attempts.
+
+**Outcome**: If gaps are found, the agent must switch back to the "Builder" role to fix them, then repeat the checkpoint. Only when the role-audit passes can the phase/task be transitioned.
 
 ## Document History
 

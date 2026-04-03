@@ -80,6 +80,7 @@ Scan the target workflow(s) for:
 - **Ambiguity**: Instructions that different LLMs would interpret differently. Flag any conditional without an explicit outcome for both branches (e.g., "if X → HALT" but no "else → proceed").
 - **Context Economy**: Token waste in redundant `read_file` calls or repeated context loading.
 - **Broken Loops**: Checklists that don't cover the work; steps referenced in diagrams but missing from text.
+- **Skeptic Persona (C24)**: During Logic Audit, adopt the **Skeptic** persona. Investigate every `PASS` result to confirm it's not a hallucination caused by "Context Bleed" (knowing the desired outcome beforehand). Ask: *"If I were trying to intentionally bypass this guard while following these specific instructions, could I still succeed?"* Report findings that suggest a weak guard despite a formal pass.
 - **Suite Integrity** (**trigger: `test` and `improv` modes only; skip in `direct` mode**): Verify `.magic/tests/suite.md` follows structural requirements:
   - Each test uses `### T{N} — {Title}` (H3, sequential ID, dash-separated title).
   - Required fields: `- **Workflow:**`, `- **Synthetic State:**`, `- **Action:**` or `- **Test {X}:**`, `- **Expected:**` (with `[ ]` checkboxes), `- **Guards tested:**`.

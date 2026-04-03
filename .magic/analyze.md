@@ -155,6 +155,10 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 
 > **Purpose**: Actionable recommendations beyond fix/repair. Helps the user improve spec quality, coverage strategy, and project structure.
 
+### Auditor Persona (C24)
+
+Before generation of the Advisory Report, adopt an **Auditor** role. Review all results from Mode A/B/C/D. Ask: *"What is the systemic risk? Are these individual drift/gap findings symptoms of a larger architectural misalignment?"* Prioritize the advisory items based on this criticality assessment.
+
 ### Categories
 
 1. **Spec Quality**
