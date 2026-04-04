@@ -24,7 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - **Internationalization (En-En)**: Translated all remaining Russian examples and rule titles to English across the engine core (`.magic/`) to ensure a consistent, professional English-only codebase (Rule 3.1).
-  - Translated focus and planning directives (e.g., `"проверь тесты"` → `"check tests"`, `"только новые спеки"` → `"only new specs"`).
   - Translated constitutional rule titles in `RULES.md` (e.g., `C12 — Quarantine Cascade`).
   - Updated simulation test suite (`suite.md`) to reflect translated inputs and expected output strings.
 
