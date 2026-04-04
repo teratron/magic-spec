@@ -5,6 +5,33 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.132] - 2026-04-04
+
+### Changed
+
+- **Internationalization (En-En)**: Translated remaining Russian instructions in `docs/checksums.md` to English.
+- **Engine Versioning**: Synchronized all manifest files with the base version `1.5.132` (C14).
+
+## [1.5.131] - 2026-04-04
+
+### Changed
+
+- **Internationalization (En-En)**: Fixed remaining Russian examples in `.magic/analyze.md` that were missed in the previous version sync.
+- **Engine Versioning**: Synchronized all manifest files with the base version `1.5.131` (C14).
+
+## [1.5.130] - 2026-04-04
+
+### Changed
+
+- **Internationalization (En-En)**: Translated all remaining Russian examples and rule titles to English across the engine core (`.magic/`) to ensure a consistent, professional English-only codebase (Rule 3.1).
+  - Translated focus and planning directives (e.g., `"проверь тесты"` → `"check tests"`, `"только новые спеки"` → `"only new specs"`).
+  - Translated constitutional rule titles in `RULES.md` (e.g., `C12 — Quarantine Cascade`).
+  - Updated simulation test suite (`suite.md`) to reflect translated inputs and expected output strings.
+
+### Meta
+
+- **Automated Update**: Engine version bumped to `1.5.130`, history updated, and checksums regenerated (C14).
+
 ## [1.5.129] - 2026-04-03
 
 ### Changed

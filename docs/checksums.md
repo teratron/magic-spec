@@ -47,13 +47,13 @@ When the engine logic is intentionally modified (e.g., during development or whe
 
 ### How to update checksums (C14)
 
-Для **полной синхронизации** (включая автоматический подъем версии в `.magic/.version` и обновление файлов истории):
+For **full synchronization** (including automatic version bump in `.magic/.version` and updates to history files):
 
 ```bash
 node .magic/scripts/executor.js update-engine-meta --workflow {current_workflow}
 ```
 
-Для **ручного обновления только контрольных сумм** (без изменения версии и истории):
+For **manual checksum update only** (without version or history changes):
 
 ```bash
 node .magic/scripts/generate-checksums.js
