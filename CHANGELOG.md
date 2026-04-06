@@ -138,7 +138,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Automated Update**: Engine version bumped to `1.5.70`, history updated, and checksums regenerated (C14).
 
-## [1.5.71] - 2026-03-26
+## [1.5.132] - 2026-03-26
 
 ### Added
 
@@ -150,7 +150,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Meta
 
-- **Automated Update**: Engine version bumped to `1.5.71`, history updated, and checksums regenerated (C14).
+- **Automated Update**: Engine version bumped to `1.5.132`, history updated, and checksums regenerated (C14).
 
 ## [1.5.50] - 2026-03-26
 
@@ -187,7 +187,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Version Synchronization**: Unified project version to `1.5.71` across all manifests (`package.json`, `pyproject.toml`, and installer init files) and the `.magic/.version` engine core.
+- **Version Synchronization**: Unified project version to `1.5.132` across all manifests (`package.json`, `pyproject.toml`, and installer init files) and the `.magic/.version` engine core.
 - **Instruction Density**: Refined `.magic/simulate.md` (Context Bleed Warning) to remove vague qualifiers ("high-confidence" -> "strictly unbiased"), reaching a density score of 10/10.
 - **Engine Integrity**: Optimized `generate-checksums.js` to exclude the `.checksums` file from its own mapping, preventing confusion and unstable hash values.
 
