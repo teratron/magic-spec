@@ -96,4 +96,4 @@ Every execution cycle ends with a mandatory checklist to verify that `TASKS.md` 
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.129).
+Synchronized with engine workflows on 2026-03-31 (v1.5.134).

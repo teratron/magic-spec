@@ -1,5 +1,5 @@
 {
-  ".version": "2cca3737c75035e48e1c7dfc55ef3e19ece1a6acf842a16d6d378cf3cc140bb5",
+  ".version": "b5325316c4d395e10592ef0805b86b2b5d03e7d423f10b467e7498ba3a27d756",
   "analyze.md": "c34a5d57e5c04103b0b1fb5db38a6fc6c03cf73474a9dcde5b0eb8f1c44a656c",
   "context-resolution.md": "b4cb35f2850ae4ec74c5f78cb3ed407a75eea2a5955378a47d3b26b1629fb5a8",
   "init.md": "514893b9f4508c7298cd5f2f266b34763b52ee3f6df6d6c91ee11ad3d0991f6e",
@@ -16,7 +16,7 @@
   "scripts/sync-manifests.js": "97c7e6c922b58ac0f6712abb37a4040b854f62aaffd17f57ae793de93c84344d",
   "scripts/sync-skills.js": "b66138c25f8879e474e14aed483a190eebcdf4f29a86465b094a6a11f73a07ee",
   "scripts/sync.js": "e464e3743392d6aee5bcafc1b2fbb575ee91c2a62732818e5bbbcde06483de54",
-  "scripts/update-engine-meta.js": "f4cb8d9269c671a9652b94ed89ce684cc1758fa09728de19d1c145d5a85b6dde",
+  "scripts/update-engine-meta.js": "ce2d4747a6009356233c7747bcb109d25819018b31e2ccf2145923e41d4702c4",
   "scripts/update-project-meta.js": "6540c8220bbc209e89a6a49273ec350c68b3fd15c673e69e2d275ce74ba2f729",
   "scripts/utils.js": "4579c77b6e1e2acefaad5f4b2bf2575dd1efd5ebcd0bcf62a6368de65c38ab0e",
   "simulate.md": "2a1e9c2f44f0845107bec1d21134d6a571158d4164f39b83f0a570745c5da2f0",
@@ -51,5 +51,6 @@
   "history/run.md": "692105e1c42c6de53b10b9fff9f15c2677e511bd0d91bf45140e3839c50f881f",
   "history/simulate.md": "1c81a70ea1e44361c319a5c027d81b27272a6beb7c2ecd906e4dd95b83d1074b",
   "history/spec.md": "3f7c1ad9403184b4f5b1d87406dfb588afb00176c7bd0802279ac4f9fe1d0a1f",
+  "history/sync.md": "983e9b7b8c58cd3a40048194be633f7a98b8edbe7330b76b5709fb504b6b2032",
   "history/task.md": "4da736983be37b670b4069a9d467e2c90ee1d3444635376736d547beabf8d66b"
 }

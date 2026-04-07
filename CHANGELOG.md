@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.135] - 2026-04-07
+
+### Meta
+
+- **Engine Sync**: Performed project hygiene sync, updated documentation, and validated hardlink integrity (C14).
+
+## [1.5.134] - 2026-04-07
+
+
+### Added
+
+- **Skill Projection Automation**: Integrated `sync-skills.js` directly into `update-engine-meta.js`. Engine core changes now automatically regenerate Skill wrappers for Claude and Gemini (C14).
+- **Distribution Guide**: Created `docs/distribution.md` documenting the separation between User Bundle, Dev Instruments, and Internal Engine files.
+
+### Changed
+
+- **History Reorganization**: Cleaned up and organized the `history/` directory. History files now follow a standardized naming convention and are updated with a smart condensing logic for version ranges.
+- **Agent Rules (AGENTS.md)**: Updated Project Anatomy to include the `skills/` compatibility layer and corrected the hardlink integrity check (now 5 files).
+
 ## [1.5.132] - 2026-04-04
 
 ### Changed

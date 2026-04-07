@@ -77,6 +77,15 @@ function updateEngineMeta() {
     if (engineLogicChanged || changedWorkflows.size > 0) {
         const newVersion = bumpVersion();
         updateHistory(changedWorkflows, newVersion, manualMessage);
+
+        // Ensure Skill wrappers are also in sync (C14 §3 Compatibility)
+        try {
+            const syncSkills = require('./sync-skills');
+            syncSkills();
+        } catch (err) {
+            console.warn('⚠️  Skill projection failed, skipping: ', err.message);
+        }
+
         runGenerateChecksums();
         console.log('✅ Engine metadata and version updated.');
     } else {
