@@ -1,24 +1,19 @@
 # Implementation Plan
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Generated:** 2026-04-03
-**Based on:** .design/engine/INDEX.md v1.4.3
+**Based on:** .design/engine/INDEX.md v1.5.0
 **Status:** Active
 
 ## Overview
 
 Implementation plan for the Magic SDD engine workspace. Covers new feature work and optimization of the automation subsystem.
 
-## Phase 2 — Skill Projection & Agent Surface (Layer 2: Implementation)
-
-*Project workflows into universal agent skills and formalize the `.agents/` directory structure.*
-
-- [ ] **Universal Skill Wrappers** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md)) [L2]
-
 ## Completed (Baseline)
 
 *Specifications already implemented and validated.*
 
+- [x] **Universal Skill Wrappers** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md)) [L2]
 - [x] **Config Drift Guard** ([l1-config-drift-guard.md](specifications/l1-config-drift-guard.md)) [L1]
 - [x] **Engine Core** ([l1-engine-core.md](specifications/l1-engine-core.md)) [L1]
 - [x] **Engine Automation** ([l2-engine-automation.md](specifications/l2-engine-automation.md)) [L2]

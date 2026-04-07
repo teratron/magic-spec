@@ -3,6 +3,8 @@ name: magic:task
 description: Workflow for orchestrating tasks and generating the implementation plan.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.task.md -->
+
 # Task Workflow
 
 **Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*

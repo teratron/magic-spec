@@ -15,6 +15,7 @@ const path = require('path');
 const designDir = path.join(__dirname, '..', '..', '.design');
 const globalIndexPath = path.join(designDir, 'INDEX.md');
 const workspaceJsonPath = path.join(designDir, 'workspace.json');
+const rulesPath = path.join(designDir, 'RULES.md');
 
 // Arguments parsing
 const args = process.argv.slice(2);
@@ -125,9 +126,42 @@ function updateFileMeta(filePath, date, msg) {
     fs.writeFileSync(filePath, content);
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Hygiene Pass (MD012 Fix)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Fixes MD012 (Multiple consecutive blank lines) in a file.
+ */
+function runHygiene(targetFiles) {
+    console.log('🧹 Running documentation hygiene (MD012)...');
+    for (const file of targetFiles) {
+        if (fs.existsSync(file)) {
+            const content = fs.readFileSync(file, 'utf8');
+            // Replace 3 or more newlines with 2 (leaving exactly one blank line)
+            const cleaned = content.replace(/\n{3,}/g, '\n\n');
+            if (content !== cleaned) {
+                fs.writeFileSync(file, cleaned);
+                console.log(`  ✨ Cleaned: ${path.relative(process.cwd(), file)}`);
+            }
+        }
+    }
+}
+
 // Execute
 try {
     updateProjectMeta();
+    
+    // Project-wide documentation hygiene
+    const docsToClean = [
+        path.join(process.cwd(), 'CHANGELOG.md'),
+        path.join(process.cwd(), 'README.md'),
+        path.join(process.cwd(), 'CONTRIBUTING.md'),
+        globalIndexPath, // INDEX.md
+        rulesPath        // RULES.md
+    ];
+    runHygiene(docsToClean);
+
 } catch (error) {
     console.error(`❌ Metadata update failed: ${error.message}`);
     process.exit(1);

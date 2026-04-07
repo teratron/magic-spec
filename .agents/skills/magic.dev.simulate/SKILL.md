@@ -3,6 +3,8 @@ name: magic.dev:simulate
 description: Workflow for simulating and validating Magic SDD engine logic.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.dev.simulate.md -->
+
 # Simulation Workflow
 
 **Triggers:** *"Simulate"*, *"Dry run"*, *"Test workflow"*, *"Check engine logic"*, *"Find rough edges"*, *"Run tests"*, *"test"*, *"improvise"*

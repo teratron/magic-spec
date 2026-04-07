@@ -3,7 +3,7 @@
 ## [T-2A01] Create sync-skills.js automation script
 
 - **Spec:** l2-skill-wrappers.md §3.1
-- **Status:** Todo
+- **Status:** Done
 - **Changes:**
   - New File: `.magic/scripts/sync-skills.js`
 - **Assignee:** Agent
@@ -12,7 +12,7 @@
 ## [T-2A02] Integrate skills into dev initialization
 
 - **Spec:** l2-skill-wrappers.md §4.1
-- **Status:** Todo
+- **Status:** Done
 - **Changes:**
   - Modified: `.magic/scripts/init.js`
 - **Assignee:** Agent

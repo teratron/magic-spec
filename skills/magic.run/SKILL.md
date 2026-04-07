@@ -3,6 +3,8 @@ name: magic:run
 description: Workflow for executing tasks from the project plan.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.run.md -->
+
 # Run Workflow
 
 **Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*

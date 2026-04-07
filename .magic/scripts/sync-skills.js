@@ -38,8 +38,9 @@ function extractMetadata(content, fileName) {
             const [key, ...parts] = line.split(':');
             if (key && parts.length > 0) {
                 const value = parts.join(':').trim();
-                if (key.trim() === 'name') metadata.name = value;
-                if (key.trim() === 'description') metadata.description = value;
+                const cleanKey = key.trim();
+                if (cleanKey === 'name') metadata.name = value;
+                if (cleanKey === 'description') metadata.description = value;
             }
         }
     } else {
@@ -57,16 +58,21 @@ function sync() {
     CONFIG.sources.forEach(source => {
         if (!fs.existsSync(source.path)) return;
 
-        const files = fs.readdirSync(source.path).filter(f => f.endsWith('.md'));
+        const workflowFiles = fs.readdirSync(source.path).filter(f => f.endsWith('.md'));
+        const activeSkills = new Set();
 
-        files.forEach(file => {
+        workflowFiles.forEach(file => {
             const name = path.basename(file, '.md');
+            activeSkills.add(name);
+
             const sourcePath = path.join(source.path, file);
             const targetDir = path.join(source.target, name);
             const targetFile = path.join(targetDir, 'SKILL.md');
 
             const content = fs.readFileSync(sourcePath, 'utf8');
             const metadata = extractMetadata(content, name);
+            
+            // Extract body (strip original frontmatter if exists)
             const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
             const body = frontmatterMatch 
                 ? content.replace(frontmatterMatch[0], '').trim() 
@@ -81,11 +87,45 @@ name: ${metadata.name}
 description: ${metadata.description}
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath)} -->
+
 ${body}`;
 
             fs.writeFileSync(targetFile, skillContent, 'utf8');
             console.log(` ✅ Skill generated: ${name}`);
         });
+
+        // ───────────────────────────────────────────────────────────────────────────
+        // Orphan Cleanup
+        // ───────────────────────────────────────────────────────────────────────────
+        if (fs.existsSync(source.target)) {
+            const existingSkillDirs = fs.readdirSync(source.target, { withFileTypes: true })
+                .filter(dirent => dirent.isDirectory())
+                .map(dirent => dirent.name);
+
+            existingSkillDirs.forEach(dir => {
+                if (!activeSkills.has(dir)) {
+                    const orphanPath = path.join(source.target, dir);
+                    const orphanSkillMdPath = path.join(orphanPath, 'SKILL.md');
+                    
+                    // Only delete if it's actually a generated wrapper
+                    let isGenerated = false;
+                    if (fs.existsSync(orphanSkillMdPath)) {
+                        const content = fs.readFileSync(orphanSkillMdPath, 'utf8');
+                        if (content.includes('⚠️ GENERATED FILE - DO NOT EDIT MANUALLY')) {
+                            isGenerated = true;
+                        }
+                    }
+
+                    if (isGenerated) {
+                        console.log(` 🗑️  Removing orphaned generated skill: ${dir}`);
+                        fs.rmSync(orphanPath, { recursive: true, force: true });
+                    } else {
+                        console.log(` ⏭️  Skipping hand-crafted skill: ${dir}`);
+                    }
+                }
+            });
+        }
     });
 
     console.log('✨ Sync complete.');
@@ -100,3 +140,4 @@ if (require.main === module) {
 }
 
 module.exports = sync;
+

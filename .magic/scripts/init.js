@@ -104,3 +104,15 @@ if (fs.existsSync('.git')) {
         console.warn('Note: Could not automatically install Git hooks.');
     }
 }
+
+// ───────────────────────────────────────────────────────────────────────────
+// Skill Synchronization (Agent Surface)
+// ───────────────────────────────────────────────────────────────────────────
+
+try {
+    const syncSkills = require('./sync-skills');
+    syncSkills();
+} catch (e) {
+    console.warn(`Note: Could not automatically sync skills: ${e.message}`);
+}
+

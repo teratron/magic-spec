@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.62
+**Version:** 1.9.63
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2983,6 +2983,20 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Only claims about files listed in the Grounding Phase checklist are valid
 - **Guards tested:** Read-Before-Claim Gate (simulate.md §0 Step 3)
 
+### T190 — Skill Projection Parity
+
+- **Workflow:** `sync-skills.js`
+- **Synthetic State:**
+  - `workflows/magic.test.md` exists with frontmatter and body.
+  - Body contains instructions.
+  - `skills/magic.test/SKILL.md` exists (generated).
+- **Expected:**
+  - [ ] `SKILL.md` frontmatter `name` = `magic:test` (filename-based default).
+  - [ ] `SKILL.md` body contains the verbatim body of `magic.test.md`.
+  - [ ] `SKILL.md` includes the read-only warning comment with correct source path.
+  - [ ] If `magic.test.md` is deleted, `skills/magic.test/` directory is removed (Orphan Cleanup).
+- **Guards tested:** Parity (exact match), Orphan cleanup, Metadata extraction.
+
 ```
-**Test Suite Finalized** - v1.9.62 (Last: T189)
+**Test Suite Finalized** - v1.9.63 (Last: T190)
 ```

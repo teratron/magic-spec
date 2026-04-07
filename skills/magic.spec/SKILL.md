@@ -3,6 +3,8 @@ name: magic:spec
 description: Workflow for creating and managing project specifications.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.spec.md -->
+
 # Specification Workflow
 
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*

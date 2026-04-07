@@ -3,6 +3,8 @@ name: magic:rule
 description: Workflow for manually adding or amending project conventions in RULES.md.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.rule.md -->
+
 # Rule Workflow
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*

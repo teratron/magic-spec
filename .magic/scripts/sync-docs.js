@@ -64,11 +64,15 @@ function generateContributing(targetVersion) {
         const start = indexContent.indexOf('## Workspaces');
         if (start !== -1) {
             const tableStart = indexContent.indexOf('|', start);
-            const tableEnd = indexContent.indexOf('## Meta', tableStart);
-            if (tableStart !== -1 && tableEnd !== -1) {
-                registryBlock = indexContent.substring(tableStart, tableEnd).trim();
-            } else if (tableStart !== -1) {
-                registryBlock = indexContent.substring(tableStart).trim();
+            // End of table can be the next header or end of file
+            let tableEnd = indexContent.indexOf('\n##', tableStart);
+            
+            if (tableStart !== -1) {
+                if (tableEnd !== -1) {
+                    registryBlock = indexContent.substring(tableStart, tableEnd).trim();
+                } else {
+                    registryBlock = indexContent.substring(tableStart).trim();
+                }
             }
         }
     }

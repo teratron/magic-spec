@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.0.8
+**Version:** 1.0.13
 **Status:** Active
 
 ## Overview
@@ -24,6 +24,11 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.0.13 | 2026-04-07 | Agent | Automated metadata update |
+| 1.0.12 | 2026-04-07 | Agent | Automated metadata update |
+| 1.0.11 | 2026-04-07 | Agent | Automated metadata update |
+| 1.0.10 | 2026-04-07 | Agent | Automated metadata update |
+| 1.0.9 | 2026-04-07 | Agent | Automated metadata update |
 | 1.0.8 | 2026-04-03 | Agent | Automated metadata update |
 | 1.0.7 | 2026-04-03 | Agent | Automated metadata update |
 | 1.0.6 | 2026-04-03 | Agent | Automated metadata update |

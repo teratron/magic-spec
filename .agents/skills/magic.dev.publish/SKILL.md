@@ -3,6 +3,8 @@ name: magic.dev:publish
 description: Workflow for testing, building, and publishing the Magic Spec engine.
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.dev.publish.md -->
+
 # Publish Workflow
 
 This workflow handles the end-to-end process of validating, building, and publishing the `magic-spec` engine to package registries (NPM, PyPI). It ensures that the engine's documentation, versioning, and codebase remain synchronized.

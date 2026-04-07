@@ -106,21 +106,25 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 ### [Mode C] Project Ventilation
 
 *Trigger*: `/magic.analyze`, `/magic.analyze {workspace}`, "Ventilate", "Ventilate {workspace}"
-*Examples*: `/magic.analyze`, `/magic.analyze installers`, "Ventilate installers"
+*Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate installers"
 
 > **Mode Precedence**: When `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, offer to continue with Mode A (first-time analysis) to generate initial spec proposals. Do NOT auto-start Mode A — the user may only want the audit.
 > **Audit Policy**: This mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine. Report-delivery is the only HALT point.
 
 1. **Self-Check**: Compare `.magic/` vs `.checksums`. (Non-halting audit).
-2. **Registry Audit**: Cross-reference `INDEX.md` list vs actual files in `specifications/`. Use **exact string match** for filenames (not OS file-exists resolution) — a case mismatch (e.g., `API-Routes.md` on disk vs `api-routes.md` in INDEX) is a registry violation even on case-insensitive filesystems.
+2. **Design Registry Audit**:
+    - **Registry Health**: Cross-reference `INDEX.md` list vs actual files in `specifications/`.
+    - **Ghost/Zombie Check**: Identify files on disk not in registry (Orphans) and registry entries with no file (Gaps).
+    - **Case Sensitivity**: Flag case mismatches (e.g. `API-Routes.md` vs `api-routes.md`) as structural violations.
+    - **Metadata Audit**: Verify `Version`, `Status`, and `Last Updated` parity between `INDEX.md` and document footers.
 3. **Structural Integrity** (when workspace is specified):
     - Verify workspace folder exists at `.design/{workspace}/`.
     - Required contents: `INDEX.md`, `specifications/` directory.
     - Optional contents: `RULES.md` (workspace-scoped rules).
     - Cross-check `workspace.json` entry: `scope` paths exist on disk, `name` matches folder.
     - File naming: all spec files in `specifications/` follow kebab-case convention.
-    - Cross-references: every spec listed in workspace `INDEX.md` has a corresponding file and vice versa.
-    - **Report violations as `STRUCTURE` category** (separate from Drift/Gap/Orphan).
+    - **Link Integrity**: Scan `.design/` files for broken relative links (404 targets).
+    - **Report violations as `STRUCTURE` category**.
 4. **Coverage Check**: Scan project directories *within the active workspace scope (C15)*. Identify folders with NO corresponding spec file (Gap Report).
     - **RESCUE (AOP)**: For each orphaned spec + uncovered directory pair, check name, path, title, or semantic similarity. If overall similarity >80%, classify as `RESCUE` (rename opportunity) instead of separate Gap + Orphan entries.
 5. **Documentation & Version Audit**:
@@ -128,9 +132,10 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Verify `README.md` version badge matches `.magic/.version`.
     - Check for version parity across `package.json`, `pyproject.toml`, and installer init files.
     - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
-6. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings: "Directory '{dir}' is not in any workspace scope — invisible to scoped analysis. Consider adding a workspace or extending an existing scope."
+6. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 7. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-8. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync** (if C12 quarantine is triggered). If repairs involve modifying `.magic/` files, C14 meta-sync applies.
+8. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
+    - If registry healing is needed (Registry Gaps/Orphans) → Propose `magic.spec --audit --fix`.
 9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 10. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 

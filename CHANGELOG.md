@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.139] - 2026-04-07
+
+### Added
+
+- **Universal Skill Wrappers**: Implemented `sync-skills.js` to automatically project workflows into universal agent skills (`SKILL.md`).
+- **Engine Integration**: Integrated skill synchronization into `init.js` and `update-engine-meta.js` (C14). All workflow changes now automatically update the agent's tool surface.
+- **Regression Testing**: Added `T190 — Skill Projection Parity` to the test suite.
+
+## [1.5.136] - 2026-04-07
+
+### Added
+
+- **Documentation Hygiene Pass**: Added a project-wide hygiene pass to `update-project-meta.js` that automatically fixes MD012 (multiple consecutive blank lines) in all core documentation files.
+- **Robust Registry Logic**: Fixed a bug in `sync-docs.js` where the workspace registry extraction would grab trailing content (Document History) if the `## Meta` section was missing.
+
 ## [1.5.135] - 2026-04-07
 
 ### Meta
@@ -12,7 +27,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Engine Sync**: Performed project hygiene sync, updated documentation, and validated hardlink integrity (C14).
 
 ## [1.5.134] - 2026-04-07
-
 
 ### Added
 
