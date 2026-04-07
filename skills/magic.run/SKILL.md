@@ -1,9 +1,18 @@
 ---
 name: magic:run
 description: Workflow for executing tasks from the project plan.
+handoffs:
+  - label: "Generate tasks"
+    workflow: magic.task
+    prompt: "Proceed to rebuild dependencies and tasks seamlessly."
+    condition: null
+  - label: "Update specifications"
+    workflow: magic.spec
+    prompt: "Transition to architecting solutions for Blocked tasks seamlessly."
+    condition: null
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents\workflows\magic.run.md -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.run.md -->
 
 # Run Workflow
 

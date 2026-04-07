@@ -78,16 +78,19 @@ function sync() {
                 ? content.replace(frontmatterMatch[0], '').trim() 
                 : content.trim();
 
+            const frontmatterContent = frontmatterMatch 
+                ? frontmatterMatch[1].trim() 
+                : `name: ${metadata.name}\ndescription: ${metadata.description}`;
+
             if (!fs.existsSync(targetDir)) {
                 fs.mkdirSync(targetDir, { recursive: true });
             }
 
             const skillContent = `---
-name: ${metadata.name}
-description: ${metadata.description}
+${frontmatterContent}
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath)} -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath).replace(/\\/g, '/')} -->
 
 ${body}`;
 
