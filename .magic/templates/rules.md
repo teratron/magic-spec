@@ -18,7 +18,7 @@ Read by the agent before every operation. Updated only via explicit triggers.
 
 - **Draft → RFC**: all required sections filled, ready for review.
 - **RFC → Stable**: reviewed, approved, no open questions.
-- **RFC → Draft**: needs rework or significant revision.
+- **RFC → Draft**: needs rework or revision affecting ≥1 core section.
 - **Stable → RFC**: substantive amendment (minor/major bump) requires re-review.
 - **Any → Deprecated**: explicitly superseded; replacement must be named.
 
@@ -86,7 +86,7 @@ During plan updates, specs are handled by their status:
 All automation scripts must be invoked via the cross-platform executor:
 `node .magic/scripts/executor.js <script-name> [args]`
 
-Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructions. The executor detects the OS and delegates to the appropriate implementation.
+Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructions. The executor detects the OS and delegates to the platform-matching implementation.
 
 ### C8 — Phase Archival
 
@@ -187,7 +187,7 @@ Each workspace may maintain a local `RULES.md` at `.design/{workspace}/RULES.md`
 To minimize redundant resource usage and improve performance, the agent may optimize `check-prerequisites` calls within a single task lifecycle:
 
 1. **Turn-Aware Caching**: If `check-prerequisites` returned `ok: true` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in `.magic/` or `.design/` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
-2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
+2. **External Drift Guard**: If >5 minutes have passed since the last check, the context window has been compacted, or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
 4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 

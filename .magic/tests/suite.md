@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.63
+**Version:** 1.9.64
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -2997,6 +2997,35 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If `magic.test.md` is deleted, `skills/magic.test/` directory is removed (Orphan Cleanup).
 - **Guards tested:** Parity (exact match), Orphan cleanup, Metadata extraction.
 
+### T191 — Mechanical File-Header Parity (--verify-headers)
+
+- **Workflow:** `check-prerequisites.js` + `task.md` / `run.md`
+- **Synthetic State:**
+  - `INDEX.md`: `auth.md` — Status: Stable, Version: 1.0.0
+  - `auth.md` file header: `**Version:** 1.1.0`, `**Status:** Stable`
+  - Engine checksums valid (no ENGINE_INTEGRITY warning)
+- **Action:** Run `node .magic/scripts/executor.js check-prerequisites --json --verify-headers`
+- **Expected:**
+  - [ ] Script reads each spec file header and compares `Version:` / `Status:` against INDEX.md
+  - [ ] `VERSION_DRIFT` warning emitted: `'auth.md' file header Version (1.1.0) ≠ INDEX.md (1.0.0)`
+  - [ ] `ok: false` due to `VERSION_DRIFT` in `integrity_ok` check
+  - [ ] Workflow (task.md / run.md) HALTs mechanically — no LLM compliance required
+  - [ ] Without `--verify-headers` flag, no header check is performed (backward compatibility)
+- **Guards tested:** Mechanical File-Header Parity (RE-2 simulation fix), VERSION_DRIFT/STATUS_DRIFT blocking
+
+### T192 — Vague Term Elimination in rules.md Template
+
+- **Workflow:** `simulate.md` (Logic Audit — Ambiguity C13)
+- **Synthetic State:**
+  - `templates/rules.md` contains quantified terms replacing former vague qualifiers
+- **Action:** Scan `templates/rules.md` for vague terms from the closed list
+- **Expected:**
+  - [ ] "significant revision" replaced with "revision affecting ≥1 core section" (line 21)
+  - [ ] "appropriate implementation" replaced with "platform-matching implementation" (line 89)
+  - [ ] "significant time" replaced with ">5 minutes" quantified threshold (line 190)
+  - [ ] Zero vague terms from the closed list remain in `templates/rules.md`
+- **Guards tested:** C13 Ambiguity elimination, Instruction Density improvement
+
 ```
-**Test Suite Finalized** - v1.9.63 (Last: T190)
+**Test Suite Finalized** - v1.9.64 (Last: T192)
 ```

@@ -12,6 +12,7 @@ const jsonOutput = args.includes('--json');
 const reqPlan = args.includes('--require-plan');
 const reqTasks = args.includes('--require-tasks');
 const reqSpecs = args.includes('--require-specs');
+const verifyHeaders = args.includes('--verify-headers');
 
 const missing = [];
 const warnings = [];
@@ -224,6 +225,56 @@ if (planExists && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// FILE-HEADER PARITY (Spec Drift Detection)
+// ═══════════════════════════════════════════════════════════════════════════
+
+if (verifyHeaders && indexExists) {
+    const lines = indexContent.split(/\r?\n/);
+    for (const line of lines) {
+        const specMatch = line.match(/specifications\/([^)]*\.md)/);
+        if (!specMatch) continue;
+
+        const specFile = specMatch[1];
+        const specPath = path.join(designDir, 'specifications', specFile);
+        if (!fs.existsSync(specPath)) continue; // GHOST_REGISTRY handles missing files
+
+        // Extract INDEX.md values from table row: | [Name](path) | Status | Layer | Version |
+        const parts = line.split('|').map(s => s.trim());
+        if (parts.length < 5) continue;
+
+        const indexStatus = parts[3];
+        const indexVersion = parts[parts.length - 2]; // Version is second-to-last column
+
+        // Read file header fields
+        const specContent = fs.readFileSync(specPath, 'utf8');
+        const fileVersionMatch = specContent.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
+        const fileStatusMatch = specContent.match(/^\*\*Status:\*\*\s+(\w+)/m);
+
+        if (fileVersionMatch && indexVersion) {
+            const fileVersion = fileVersionMatch[1];
+            if (fileVersion !== indexVersion && /^\d+\.\d+\.\d+$/.test(indexVersion)) {
+                warn(
+                    'VERSION_DRIFT',
+                    `'${specFile}' file header Version (${fileVersion}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
+                    `magic.spec or magic.analyze`
+                );
+            }
+        }
+
+        if (fileStatusMatch && indexStatus) {
+            const fileStatus = fileStatusMatch[1];
+            if (fileStatus !== indexStatus && ['Draft', 'RFC', 'Stable', 'Deprecated'].includes(indexStatus)) {
+                warn(
+                    'STATUS_DRIFT',
+                    `'${specFile}' file header Status (${fileStatus}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
+                    `magic.spec or magic.analyze`
+                );
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CONFIG DRIFT DETECTION (Kernel Safety)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -270,7 +321,10 @@ function checkConfigDrift() {
 
 checkConfigDrift();
 
-const integrity_ok = !warnings.some(w => w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY');
+const integrity_ok = !warnings.some(w =>
+    w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY' ||
+    w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'
+);
 const ok = missing.length === 0 && integrity_ok;
 
 // ═══════════════════════════════════════════════════════════════════════════
