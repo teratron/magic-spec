@@ -103,17 +103,25 @@ function updateHistory(workflows, version, customMessage = null) {
             const existing = fs.readFileSync(historyFile, 'utf8');
             const lines = existing.trimEnd().split(/\r?\n/);
 
-            // Smart History: check if last table row has same date + message
+            // Smart History: check if last table row has same message
             const lastLine = lines[lines.length - 1] || '';
             const lastCols = lastLine.split('|').map(c => c.trim()).filter(Boolean);
-            if (lastCols.length >= 3 && lastCols[1] === date && lastCols[2] === message) {
-                console.log(`⏭️ History skipped (duplicate): ${wf}.md`);
-                continue;
-            }
 
-            const entry = `| ${version} | ${date} | ${message} |\n`;
-            fs.appendFileSync(historyFile, entry);
-            console.log(`📝 History updated: ${wf}.md`);
+            if (lastCols.length >= 3 && lastCols[2] === message) {
+                // Same message, extend the version range and update date
+                if (lastCols[1] === date && lastCols[0].includes(version)) {
+                    console.log(`⏭️ History skipped (duplicate): ${wf}.md`);
+                    continue;
+                }
+                const startVersion = lastCols[0].split(' - ')[0];
+                lines[lines.length - 1] = `| ${startVersion} - ${version} | ${date} | ${message} |`;
+                fs.writeFileSync(historyFile, lines.join('\n') + '\n');
+                console.log(`📝 History updated (range condensed): ${wf}.md`);
+            } else {
+                const entry = `| ${version} | ${date} | ${message} |\n`;
+                fs.appendFileSync(historyFile, entry);
+                console.log(`📝 History updated: ${wf}.md`);
+            }
         } else {
             const wfTitle = wf.charAt(0).toUpperCase() + wf.slice(1);
             const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Description |\n| :--- | :--- | :--- |\n| ${version} | ${date} | ${message} |\n`;
