@@ -6,7 +6,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Write ONLY to `RETROSPECTIVE.md`.
-3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
+3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
 6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow retrospective` (Smart History: redundant automated entries are skipped).

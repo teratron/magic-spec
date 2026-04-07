@@ -21,7 +21,7 @@ Parse the `[arg]` to determine the planning mode:
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
-3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
+3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
     - **Intent Preservation**: If `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: "Resuming: '{original intent}'." Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.64
+**Version:** 1.9.65
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -122,11 +122,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] All 3 specs read, dependency graph built
   - [ ] Phases proposed: auth.md (L1) → Phase 0/1, auth-impl.md (L2) → Phase 1/2, api.md (L1) → Phase 0/1
   - [ ] L2 spec scheduled AFTER its L1 parent
-  - [ ] Execution mode defaults to Parallel (C3)
-  - [ ] Mode saved to RULES.md §7 without prompt
+  - [ ] Execution mode defaults to Parallel (C3) — assumed silently, not saved to RULES.md
   - [ ] PLAN.md created from `.magic/templates/plan.md`
   - [ ] TASKS.md + phase-1.md created from `.magic/templates/tasks.md`
-- **Guards tested:** Dependency ordering, layer respect, template usage, mode persistence
+- **Guards tested:** Dependency ordering, layer respect, template usage, mode default assumption
 
 ### T07 — Task Hard Dependency Cycle (Implements Chain)
 
@@ -343,10 +342,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase 2 completion detected → Level 1 retro auto-snapshot
   - [ ] **Full plan completion** detected → Level 2 retrospective triggered
   - [ ] Level 2 retro: structured analysis with metrics across all phases
-  - [ ] Changelog Level 2 compiled (written automatically in Trust Mode)
+  - [ ] Changelog Level 2 presented for Yes/No approval (only manual step in completion cascade)
   - [ ] CONTEXT.md regenerated
   - [ ] TASKS.md summary updated
-- **Guards tested:** Plan completion detection, Level 2 retro trigger, Zero-Prompt changelog (C9)
+- **Guards tested:** Plan completion detection, Level 2 retro trigger, Changelog L2 approval gate
 
 ### T21 — Run Phase 1→2 Transition
 
@@ -3026,6 +3025,43 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Zero vague terms from the closed list remain in `templates/rules.md`
 - **Guards tested:** C13 Ambiguity elimination, Instruction Density improvement
 
+### T193 — Auto-Init Trigger Condition Parity (Regression)
+
+- **Workflow:** All workflows with Auto-Init invariant
+- **Synthetic State:**
+  - 6 workflow files: `spec.md`, `analyze.md`, `run.md`, `task.md`, `retrospective.md`, `rule.md`
+  - All contain Auto-Init as a Core Invariant
+- **Action:** Scan all 6 files for Auto-Init trigger wording
+- **Expected:**
+  - [ ] All 6 files use identical trigger: `"If .design/ or system files missing"`
+  - [ ] No file uses the shorter `"If .design/ missing"` formulation (pre-fix divergence)
+  - [ ] `rule.md` additionally includes workspace RULES.md auto-create clause (acceptable extension, not divergence)
+- **Guards tested:** Auto-Init trigger parity across all workflows (simulate fix v1.5.146)
+
+### T194 — Suite Test T06 Expects Mode Assumed Not Saved (Regression)
+
+- **Workflow:** `task.md` (Generating Tasks & Plan)
+- **Synthetic State:**
+  - Same as T06: 3 Stable specs, no PLAN.md, RULES.md without execution mode
+- **Action:** `/magic.task`
+- **Expected:**
+  - [ ] Execution mode defaults to Parallel (C3) — assumed silently per `task.md` §6
+  - [ ] Agent does NOT write mode to RULES.md §7 (no "mode persistence" behavior)
+  - [ ] Planning proceeds without prompting about mode
+- **Guards tested:** Mode assumption semantics (simulate fix v1.5.146), task.md §6 compliance
+
+### T195 — Suite Test T20 Expects Changelog L2 Approval Gate (Regression)
+
+- **Workflow:** `run.md` (Plan Completion — Conclusion Cascade)
+- **Synthetic State:**
+  - Same as T20: all phases Done, full plan complete
+- **Action:** Plan completion detected
+- **Expected:**
+  - [ ] Changelog Level 2 compiled and presented for user approval (Yes/No)
+  - [ ] Agent does NOT auto-write Changelog L2 silently in Trust Mode
+  - [ ] This is the only manual step in the Plan Completion cascade per `run.md` §94
+- **Guards tested:** Changelog L2 approval gate (simulate fix v1.5.146), run.md §Plan Completion compliance
+
 ```
-**Test Suite Finalized** - v1.9.64 (Last: T192)
+**Test Suite Finalized** - v1.9.65 (Last: T195)
 ```

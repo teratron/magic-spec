@@ -23,7 +23,7 @@ Parse the `[arg]` to determine the execution mode:
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
-3. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user).
+3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Logic Guards**:
     - **Dependency**: Never start a task if parents are not `Done`.
     - **Mode**: Per C3, task execution defaults to **Parallel mode**. If mode is absent from `RULES.md §7`, assume Parallel (do not HALT).

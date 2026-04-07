@@ -10,7 +10,7 @@ Manages project conventions across a two-tier rules system:
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply, Post-Resolution).
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **No Silent Writes**: Always show proposed diff/statement before committing.
-4. **Auto-Init**: If `.design/` missing, silently execute `.magic/init.md` (do not prompt user). If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
+4. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user). If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
 5. **Versioning (C14)**:
     - **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow rule` (Smart History: redundant automated entries are skipped).
     - **Rules**: Bump Minor (add/amend), Major (remove), or Patch (typos). Update Document History in the target file (global or workspace). Modifying `.design/{workspace}/RULES.md` does NOT trigger a C14 engine bump (per C14§3 — `.design/` modifications are project manifest bumps, not engine bumps).
