@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.141] - 2026-04-08
+
+### Removed
+
+- **CODEX.toml**: Completely removed `CODEX.toml` from the engine initialization scripts and placeholders as it is not required by any supported agent.
+
+## [1.5.140] - 2026-04-08
+
+### Fixed
+
+- **Engine Init Portability**: Refactored `setup_unix.sh` to use relative symlinks and removed `realpath -m` dependency, improving compatibility with macOS and older Linux/Unix systems.
+- **Git Index Integrity**: Fixed a bug in `magic.dev:init` where development workflows (`magic.dev.*`) were incorrectly removed from the git index during setup.
+
 ## [1.5.139] - 2026-04-07
 
 ### Added

@@ -13,7 +13,7 @@
 # Dynamically discover workflows from source directories
 $userWorkflows = Get-ChildItem "workflows\*.md" | Select-Object -ExpandProperty Name
 $devWorkflows = Get-ChildItem ".agents\workflows\*.md" | Select-Object -ExpandProperty Name
-$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md", "CODEX.md", "CODEX.toml")
+$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md", "CODEX.md")
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Cleanup function
@@ -53,7 +53,6 @@ $linksToRemove = @(
     ".codex\prompts", ".codex\skills", ".codex\rules"
 )
 foreach ($f in $userWorkflows) { $linksToRemove += ".agents\workflows\$f" }
-foreach ($f in $devWorkflows) { $linksToRemove += ".agents\workflows\$f" }
 foreach ($f in $userWorkflows) { 
     $name = $f -replace '\.md$', ''
     $linksToRemove += ".agents\skills\$name"
@@ -83,12 +82,7 @@ foreach ($dir in $agentDirs) {
 Write-Host "Linking agent instruction files..." -ForegroundColor Cyan
 foreach ($f in $agentFiles) { 
     Remove-Existing $f
-    if ($f.EndsWith(".toml")) {
-        # Optional: generate TOML if needed, or link to a base one.
-        # For now, only MD files are linked to AGENTS.md.
-    } else {
-        cmd /c "mklink /H $f AGENTS.md"
-    }
+    cmd /c "mklink /H $f AGENTS.md"
 }
 
 # 3.4. .agents directories

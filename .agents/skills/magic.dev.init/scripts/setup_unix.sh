@@ -12,7 +12,7 @@ echo ">>> Initializing Unix/macOS Agent Environment..."
 echo ">>> Discovering workflows..."
 userWorkflows=$(ls workflows/*.md 2>/dev/null | xargs -n 1 basename || true)
 devWorkflows=$(ls .agents/workflows/*.md 2>/dev/null | xargs -n 1 basename || true)
-agentFiles="CLAUDE.md GEMINI.md QWEN.md CODEX.md CODEX.toml"
+agentFiles="CLAUDE.md GEMINI.md QWEN.md CODEX.md"
 
 # 2. Cleanup Function
 remove_existing() {
@@ -38,9 +38,6 @@ for f in $userWorkflows; do
   links="$links .agents/skills/$name"
 done
 
-for f in $devWorkflows; do
-  links="$links .agents/workflows/$f"
-done
 
 for f in $agentFiles; do
   links="$links $f"
@@ -69,11 +66,7 @@ done
 echo "Linking agent instructions..."
 for f in $agentFiles; do
   remove_existing "$f"
-  if [[ "$f" == *.toml ]]; then
-    touch "$f"
-  else
-    ln -s AGENTS.md "$f"
-  fi
+  ln -s AGENTS.md "$f"
 done
 
 # 7. Setup .agents directories
@@ -94,10 +87,8 @@ for f in $userWorkflows; do
   link=".agents/skills/$name"
   if [ -d "$target" ]; then
     remove_existing "$link"
-    targetFull=$(realpath "$target")
-    linkFull=$(realpath -m "$link")
-    echo "  Linking: $link -> $target"
-    ln -s "$targetFull" "$linkFull"
+    echo "  Linking: $link -> ../../$target"
+    ln -s "../../$target" "$link"
   fi
 done
 
