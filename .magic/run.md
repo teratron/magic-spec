@@ -63,7 +63,7 @@ graph TD
 
 ### Steps
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace {active-workspace}`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --verify-headers --workspace {active-workspace}`.
     - **C15 Filter**: `checksums_mismatch` or `GHOST_REGISTRY` → **C15 Filter** (see `init.md` §1). If in-scope → **HALT**. If out-of-scope → proceed silently.
     - **Bootstrap Detection**: If `PLAN.md` contains `[Bootstrap]` markers, warn: `"⚠ Bootstrap Plan detected — specs are not yet Stable. Execution results may need revision when specs are finalized."` Continue execution but append `[Bootstrap]` suffix to all generated artifacts (task outputs, changelogs). Bootstrap artifacts are not considered final deliverables.
     - **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. **Bootstrap Exception**: If task has a `[Bootstrap]` marker, `Draft` status is acceptable — skip this check for that task. Any other non-Stable spec → **HALT** before execution begins (see Logic Guard above).

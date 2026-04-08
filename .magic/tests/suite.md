@@ -2042,10 +2042,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `installer-architecture.md` (file=Draft ≠ INDEX=Stable)
   - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
-  - [ ] **HALT** before any task execution with drift report
+  - [ ] **HALT** before any task execution with drift report (Cognitive Guard)
   - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
   - [ ] User directed to resolve via `magic.spec` or `magic.analyze`
-- **Guards tested:** File-Header Parity (run.md), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
+- **Guards tested:** File-Header Parity (run.md, Cognitive Guard), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
 
 ### T127 — Task Pre-flight File-Header Parity Scan
 
@@ -2058,9 +2058,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `engine-core.md` (file=RFC ≠ INDEX=Stable)
   - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `engine-core.md` (file=1.2.0 ≠ INDEX=1.1.0)
-  - [ ] **HALT** before plan generation
+  - [ ] **HALT** before plan generation (Cognitive Guard)
   - [ ] `engine-automation.md` is NOT moved to Backlog yet (drift must be resolved before C12 evaluates)
-- **Guards tested:** File-Header Parity (task.md), STATUS_DRIFT blocks C6/C12 evaluation
+- **Guards tested:** File-Header Parity (task.md, Cognitive Guard), STATUS_DRIFT blocks C6/C12 evaluation
 
 ### T128 — Spec Version Drift Guard Scans Dependency Chain
 
@@ -2073,10 +2073,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Version Drift Guard scans dependency chain: `installer-node.md` → `installer-architecture.md`
   - [ ] Detects VERSION_DRIFT on parent `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
-  - [ ] **HALT** before writing updates to `installer-node.md`
+  - [ ] **HALT** before writing updates to `installer-node.md` (Cognitive Guard)
   - [ ] Report names the drifted dependency (not just the target)
   - [ ] User directed to resolve parent drift first
-- **Guards tested:** Version Drift Guard (dependency chain scan), Related Specifications traversal
+- **Guards tested:** Version Drift Guard (dependency chain scan, Cognitive Guard), Related Specifications traversal
 
 ### T129 — Simulate Pre-flight Blocks on Engine Integrity Failure
 
@@ -3010,7 +3010,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `ok: false` due to `VERSION_DRIFT` in `integrity_ok` check
   - [ ] Workflow (task.md / run.md) HALTs mechanically — no LLM compliance required
   - [ ] Without `--verify-headers` flag, no header check is performed (backward compatibility)
-- **Guards tested:** Mechanical File-Header Parity (RE-2 simulation fix), VERSION_DRIFT/STATUS_DRIFT blocking
+- **Guards tested:** Mechanical File-Header Parity (Mechanical Guard, RE-2 simulation fix), VERSION_DRIFT/STATUS_DRIFT blocking
 
 ### T192 — Vague Term Elimination in rules.md Template
 
@@ -3062,6 +3062,53 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] This is the only manual step in the Plan Completion cascade per `run.md` §94
 - **Guards tested:** Changelog L2 approval gate (simulate fix v1.5.146), run.md §Plan Completion compliance
 
+### T196 — Pre-Advisory Audit Execution (C24)
+
+- **Workflow:** `analyze.md`
+- **Synthetic State:**
+  - Workspace contains minor unused dependencies and an outdated architectural pattern.
+- **Action:** `/magic.analyze` (Mode C)
+- **Expected:**
+  - [ ] Agent pauses to perform Pre-Advisory Audit (Auditor Persona) before outputting the Advisory Report.
+  - [ ] Agent limits severity inflation; trivial issues are mapped to Low severity or discarded.
+  - [ ] Agent cross-correlates findings to prevent duplicate issue generation.
+- **Guards tested:** C24 Independent Analyst Objectivity, Advisory Filter.
+
+### T197 — Retrospective Executes Level 2 Deep State
+
+- **Workflow:** `retrospective.md`
+- **Synthetic State:**
+  - A sprint has concluded with several task files closed.
+- **Action:** `/magic.retrospective`
+- **Expected:**
+  - [ ] Agent executes Level 2 (Deep State) retrospective, analyzing SDD integrity.
+  - [ ] Agent analyzes `RULES.md` drifts and spec modifications, not just mechanical file diffs.
+- **Guards tested:** Retrospective Level 2 (Deep State) methodology adherence.
+
+### T198 — Shadow Logic Detection (L2)
+
+- **Workflow:** `retrospective.md`
+- **Synthetic State:**
+  - Source code contains a newly added authentication handler that is NOT documented in `auth.md` or any spec in `INDEX.md`.
+- **Action:** `/magic.retrospective`
+- **Expected:**
+  - [ ] Agent identifies the undocumented authentication handler as "Shadow Logic".
+  - [ ] Agent highlights the specific file and logic block as an SDD invariant violation.
+  - [ ] Agent suggests creating a specification update task to document the shadow logic.
+- **Guards tested:** Shadow Logic detection (Retrospective L2), SDD invariant.
+
+### T199 — Spec-to-Code Drift Identification (L2)
+
+- **Workflow:** `retrospective.md`
+- **Synthetic State:**
+  - A component implemented recently has drifted from its `Stable` spec due to a bypassed code edit.
+- **Action:** `/magic.retrospective`
+- **Expected:**
+  - [ ] Agent spots the gap between the implemented code and the canonical spec.
+  - [ ] Anomaly is registered in the retrospective structural analysis.
+  - [ ] Output recommends a sync task (either update spec or revert code).
+- **Guards tested:** Spec-to-Code parity evaluation, Anomaly escalation.
+
 ```
-**Test Suite Finalized** - v1.9.65 (Last: T195)
+**Test Suite Finalized** - v1.9.69 (Last: T199)
 ```

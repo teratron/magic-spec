@@ -52,7 +52,11 @@ function updateProjectMeta() {
         process.exit(1);
     }
 
-    // 2. Resolve Workspace from workspace.json or arguments
+    // 2. Resolve Workspace from environment, arguments, or workspace.json
+    if (!workspaceName && process.env.MAGIC_WORKSPACE) {
+        workspaceName = process.env.MAGIC_WORKSPACE;
+    }
+
     if (!workspaceName && fs.existsSync(workspaceJsonPath)) {
         try {
             const workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));

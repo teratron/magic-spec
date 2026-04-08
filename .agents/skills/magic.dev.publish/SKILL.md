@@ -3,7 +3,7 @@ name: magic.dev:publish
 description: Workflow for testing, building, and publishing the Magic Spec engine.
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.publish.md -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.publish.md (relative to workspace root) -->
 
 # Publish Workflow
 

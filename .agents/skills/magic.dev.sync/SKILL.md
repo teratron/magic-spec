@@ -3,7 +3,7 @@ name: magic.dev:sync
 description: Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.sync.md -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.sync.md (relative to workspace root) -->
 
 # Sync Workflow
 

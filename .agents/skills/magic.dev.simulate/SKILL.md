@@ -13,7 +13,7 @@ handoffs:
     prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic.dev.simulate test` to ensure tests run against fresh files without context bleed (Rule C17)."
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.simulate.md -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.simulate.md (relative to workspace root) -->
 
 # Simulation Workflow
 

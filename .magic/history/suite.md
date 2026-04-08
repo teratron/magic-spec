@@ -1,6 +1,5 @@
-# Magic.analyze Workflow History
+# Suite Workflow History
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
-| 1.5.47 | 2026-03-24 | Initial version tracking: Project Analysis and Ventilation wrapper |
 | 1.5.148 - 1.5.149 | 2026-04-08 | Automated update via engine meta automation |

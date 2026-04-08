@@ -59,12 +59,20 @@ contextContent += '\n## Core Project Structure\n\n```plaintext\n';
  * @param {string[]} ignores List of folder/file names to skip.
  * @returns {string} Markdown-formatted directory tree.
  */
-function buildTree(dir, prefix, currentDepth, maxDepth, ignores) {
+function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = null) {
     if (currentDepth > maxDepth) return '';
     let result = '';
     let files;
     try {
         files = fs.readdirSync(dir).filter(f => !ignores.includes(f)).sort();
+        // If at root and validScopes is provided, filter allowed top-level directories
+        if (currentDepth === 1 && validScopes && validScopes.length > 0) {
+            files = files.filter(f => {
+                // Ensure design directory is always visible
+                if (f === '.design' || f === '.magic') return true;
+                return validScopes.includes(f) || validScopes.some(s => s.startsWith(f + '/') || s.startsWith(f + '\\'));
+            });
+        }
     } catch (e) {
         return '';
     }
@@ -84,7 +92,7 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores) {
 
         if (stat.isDirectory()) {
             const nextPrefix = prefix + (isLast ? '    ' : '│   ');
-            result += buildTree(fullPath, nextPrefix, currentDepth + 1, maxDepth, ignores);
+            result += buildTree(fullPath, nextPrefix, currentDepth + 1, maxDepth, ignores, validScopes);
         }
     }
     return result;
@@ -108,9 +116,19 @@ if (fs.existsSync('.gitignore')) {
     });
 }
 
+let scopes = null;
+if (process.env.MAGIC_WORKSPACE_SCOPE) {
+    try {
+        scopes = JSON.parse(process.env.MAGIC_WORKSPACE_SCOPE);
+    } catch (e) {
+        scopes = process.env.MAGIC_WORKSPACE_SCOPE.split(',').map(s => s.trim());
+    }
+    if (!Array.isArray(scopes)) scopes = [scopes];
+}
+
 try {
     contextContent += '.\n';
-    contextContent += buildTree('.', '', 1, 2, ignoreList);
+    contextContent += buildTree('.', '', 1, 2, ignoreList, scopes);
 } catch (err) {
     contextContent += `- Project root\n  - ${designDir}/\n  - .magic/\n`;
 }

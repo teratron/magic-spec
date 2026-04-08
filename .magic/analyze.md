@@ -285,6 +285,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Structural Integrity checked (if workspace specified)
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Rule validation: RULES.md §7 compliance checked
+  ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
   ☐ Report delivered: all findings consolidated before any HALT
   ☐ Advisory Report appended to output
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)

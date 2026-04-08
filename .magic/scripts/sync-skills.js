@@ -71,15 +71,15 @@ function sync() {
 
             const content = fs.readFileSync(sourcePath, 'utf8');
             const metadata = extractMetadata(content, name);
-            
+
             // Extract body (strip original frontmatter if exists)
             const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-            const body = frontmatterMatch 
-                ? content.replace(frontmatterMatch[0], '').trim() 
+            const body = frontmatterMatch
+                ? content.replace(frontmatterMatch[0], '').trim()
                 : content.trim();
 
-            const frontmatterContent = frontmatterMatch 
-                ? frontmatterMatch[1].trim() 
+            const frontmatterContent = frontmatterMatch
+                ? frontmatterMatch[1].trim()
                 : `name: ${metadata.name}\ndescription: ${metadata.description}`;
 
             if (!fs.existsSync(targetDir)) {
@@ -90,7 +90,7 @@ function sync() {
 ${frontmatterContent}
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath).replace(/\\/g, '/')} -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath).replace(/\\/g, '/')} (relative to workspace root) -->
 
 ${body}`;
 
@@ -110,7 +110,7 @@ ${body}`;
                 if (!activeSkills.has(dir)) {
                     const orphanPath = path.join(source.target, dir);
                     const orphanSkillMdPath = path.join(orphanPath, 'SKILL.md');
-                    
+
                     // Only delete if it's actually a generated wrapper
                     let isGenerated = false;
                     if (fs.existsSync(orphanSkillMdPath)) {
