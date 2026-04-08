@@ -14,7 +14,7 @@
   "scripts/install-hooks.js": "a416aafcc5affc324df9b06d137c62a615698d1375ea6de4d3928c81429d4f3e",
   "scripts/sync-docs.js": "113c79cf432896fbdcaf7767ac84d685d37cbcbd1088acecfb32780dfe829bb9",
   "scripts/sync-manifests.js": "97c7e6c922b58ac0f6712abb37a4040b854f62aaffd17f57ae793de93c84344d",
-  "scripts/sync-skills.js": "aba4ff9999c16b2653b7c8089ac9cab51c9c575fd8f6a469c0851de28eae700a",
+  "scripts/sync-skills.js": "1fd75914fd86049bdb1725a19d22db71e7e996cf7900b56b13c55584579c4862",
   "scripts/sync.js": "e464e3743392d6aee5bcafc1b2fbb575ee91c2a62732818e5bbbcde06483de54",
   "scripts/update-engine-meta.js": "ce2d4747a6009356233c7747bcb109d25819018b31e2ccf2145923e41d4702c4",
   "scripts/update-project-meta.js": "99c8bb9e1ce8ace1683198519c88131734bee70eeb538e3264ba222c8a429cf8",
