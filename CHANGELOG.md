@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.143] - 2026-04-09
+
+### Added
+
+- **Agent Memory (STATE.md)**: New live memory system — a ≤100-line project state digest read first in every workflow session. Tracks current position, recent decisions, blockers, and blocking constraints. Template: `.magic/templates/state.md`. Utility: `.magic/scripts/update-state.js`.
+- **Session Continuity (HANDOFF.json)**: Structured cross-session handoff mechanism. Template: `.magic/templates/handoff.json`. Enables zero-prompt resume from exact position with required reading lists and constraint acknowledgment.
+- **Pause Workflow (`pause.md`)**: New `/magic.pause` workflow that snapshots session state into `HANDOFF.json` and sets `STATE.md` status to `Paused`. Supports automatic trigger at POOR context tier.
+- **Phase Frontmatter**: YAML dependency metadata block in `phase.md` template (`requires`, `provides`, `key_files`, `patterns_established`, `subsystem`, `duration_minutes`). Enables machine-readable inter-phase dependency tracking.
+- **Canonical References**: New mandatory `## Canonical References` section in `spec.md` template. Forces downstream agents to bind to specific stable file paths instead of relying on memory. Audit checks added to `analyze.md` and `spec.md` checklists.
+- **Context Quality Tiers**: Adaptive agent behaviour guidance (PEAK/GOOD/DEGRADING/POOR) based on context window utilization. Added to `task.md` workflow header.
+- **Resume Detection**: Integrated into `context-resolution.md` Post-Resolution chain (Priority 3-4). Automatically detects paused sessions and resumes from recorded position.
+- **Pause Propagation**: `run.md` Logic Guard that auto-saves state when all phase tasks are blocked.
+
+### Changed
+
+- **`context-resolution.md`**: Extended Post-Resolution chain with STATE.md loading (Priority 3) and Resume Detection (Priority 4).
+- **`init.md`**: STATE.md creation added to init steps, structure map, and completion checklist.
+- **`run.md`**: Added Live Memory invariant (2.5), STATE Sync in Update step, Frontmatter Update in Phase Completion, and Pause Propagation guard.
+- **`task.md`**: Added Context Quality Guidance, Phase Frontmatter generation instructions, State Init/Update step, and Dependency Read from frontmatter.
+- **`analyze.md`**: Added `CANONICAL_MISSING` audit check for Stable specs without Canonical References section.
+- **`spec.md`**: Added Canonical References validation to Task Completion Checklist — blocks Stable promotion if section is empty.
+
 ## [1.5.142] - 2026-04-09
 
 ### Changed

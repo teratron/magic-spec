@@ -23,6 +23,15 @@ Parse the `[arg]` to determine the execution mode:
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
+2.5. **Live Memory (STATE.md)**: Before any execution, read `.design/{workspace}/STATE.md`.
+     - If `Blockers` section is non-empty → display blockers before proceeding.
+     - If `Blocking Constraints` is non-empty → list each `[C-NNN]` and confirm acknowledgment.
+     - If `**Status:** Paused` → Resume Detection applies (see `context-resolution.md` §4).
+     - After each task transitions to `Done` or `Blocked` → update STATE.md via:
+       `node .magic/scripts/executor.js update-state --workspace={active-workspace-dir}
+       --task="{T-ID} {Task Title}" --status={Done|Blocked} --next-action="{next task title}"`
+     - After Phase Complete → update `--phase="{N+1} — {Phase Name}"` and `--status=Active`.
+     - STATE.md update is part of Step 4 (Update) — never skip.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Logic Guards**:
     - **Dependency**: Never start a task if parents are not `Done`.
@@ -31,6 +40,9 @@ Parse the `[arg]` to determine the execution mode:
     - **Quarantine (C12)**: If any active task belongs to a specification whose L1 parent is not Stable (C12 Quarantine) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog.
     - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: "Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.
     - **Phantom Spec**: If a specification referenced by `TASKS.md` is missing from `INDEX.md` or the physical filesystem → **HALT**. Report: "Phantom Spec `{file}` detected. 💡 Hint: run `magic.spec --audit` or `magic.analyze` to resolve the discrepancy."
+    - **Pause Propagation**: When a task transitions to `Blocked [!]` AND no `Todo` tasks remain in the current phase → automatically call:
+      `node .magic/scripts/executor.js update-state --workspace={dir} --status=Blocked`
+      Inform user: "⚠ Phase blocked. Session state saved. Run /magic.pause to create full handoff, or fix blockers and run /magic.run to continue."
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow run` (Smart History: redundant automated entries are skipped).
 
@@ -78,6 +90,8 @@ graph TD
      - **Regression Risk**: Could this break any already-`Done` tasks in the current phase?
      If any check fails → set status to `Blocked [!]` with specific reason. Do NOT proceed to Update.
 4. **Update**:
+    - **STATE Sync**: Before touching TASKS.md, call `node .magic/scripts/executor.js update-state` with
+      current task result. Ensures STATE reflects reality even if execution is interrupted mid-step.
     - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. This check must also recursively include the spec's L1 parent (if applicable). If either the target or its parent shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Developer track must notify the Manager role of the suspension so the Manager can halt further assignments for the affected spec.
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update. After the spec is updated, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
@@ -87,6 +101,14 @@ graph TD
 5. **Phase Completion**:
     - **Retro L1**: Auto-run Level 1 (snapshot). HALT on failure.
     - **Changelog L1**: Append `## Phase {N} — {date}` + bullet list (extracted from **Done** task `Changes` fields) to `CHANGELOG.md`.
+    - **Frontmatter Update**: Update `tasks/phase-{N}.md` YAML frontmatter:
+      - Set `status: Done`.
+      - Fill `provides` based on actual deliverables (from Done task `Changes` fields).
+      - Fill `key_files.created` and `key_files.modified` from Done task implementations.
+      - Fill `patterns_established` from any architectural decisions made during execution.
+      - Set `duration_minutes` = elapsed time from first In Progress → last Done (if trackable).
+      - `node .magic/scripts/executor.js update-state --workspace={dir}
+         --decision="Phase {N} complete. Provides: {summary of provides}"`
 
 ### Plan Completion (Succession Loop)
 

@@ -276,6 +276,8 @@ Checklist — {task description}
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Rules: RULES.md triggers (T1-T4) checked/applied
+  ☐ Canonical References: If promoting to `Stable` → `## Canonical References` section MUST be filled.
+     Non-empty placeholder rows required. Empty or stub rows → block promotion. Flag `CANONICAL_MISSING`.
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed in **Critic Persona** (Purity, Completeness, Compliance)
 ```

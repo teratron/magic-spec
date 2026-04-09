@@ -20,4 +20,4 @@
 | 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |
 | 1.5.118 | 2026-04-03 | Automated update via engine meta automation |
 | 1.5.130 | 2026-04-04 | Translate Russian examples and rule titles to English for global consistency |
-| 1.5.146 - 1.5.148 | 2026-04-08 | Automated update via engine meta automation |
+| 1.5.146 - 1.5.154 | 2026-04-09 | Automated update via engine meta automation |

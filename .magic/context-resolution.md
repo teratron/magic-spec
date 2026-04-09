@@ -39,3 +39,15 @@ After resolution, load:
 
 1. Global `.design/RULES.md` (always).
 2. Workspace `.design/{workspace}/RULES.md` (if it exists).
+3. Workspace `.design/{workspace}/STATE.md` (if it exists) — load as **live memory**.
+   - Read **before** any operation. This is the project's current position digest.
+   - Fields `Current Position`, `Blockers`, `Blocking Constraints` take precedence over
+     inferences from TASKS.md or PLAN.md when determining next action.
+   - If `Blocking Constraints` section is non-empty, the agent MUST acknowledge each
+     `[C-NNN]` entry explicitly before proceeding.
+4. **Resume Detection**: If STATE.md `**Status:** Paused` or `HANDOFF.json` exists in workspace:
+   - Display: `⚠ Paused session detected. Last action: {next_action from STATE/HANDOFF}.`
+   - Zero-Prompt (Trust Mode): automatically resume from recorded position.
+   - On resume: read `required_reading` from HANDOFF.json and load those files.
+   - Acknowledge all `blocking_constraints` from HANDOFF.json before first action.
+   - After successful resume → update STATE.md: set `**Status:** Active`, clear handoff field.

@@ -2,6 +2,20 @@
 
 Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/specifications/`.
 
+## Context Quality Guidance
+
+Agent adapts operation depth based on context window utilization:
+
+| Tier | Context Used | Behaviour |
+| :--- | :--- | :--- |
+| **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
+| **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
+| **DEGRADING** | 50–70% | Read only relevant spec §sections; use frontmatter summaries |
+| **POOR** | 70%+ | Read STATE.md + phase frontmatter only; skip full spec reads |
+
+> At DEGRADING/POOR tier: prioritize STATE.md `Next Action` and phase `provides` fields
+> over broad file scans. Trigger `/magic.pause` if POOR tier reached mid-phase.
+
 ## Argument Routing
 
 Parse the `[arg]` to determine the planning mode:
@@ -97,6 +111,27 @@ graph TD
 - PLAN.md: Strategic overview (Phases & Specifications). No atomic checklist items.
 - TASKS.md: Master Phase Index. Contains phase registry and status tracking.
 - tasks/phase-{n}.md: Tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
+- **Phase Frontmatter**: When creating `tasks/phase-{N}.md`, populate the YAML frontmatter
+  from the draft PLAN.md. At minimum fill: `phase`, `name`, `status: Todo`,
+  `subsystem` (inferred from touched directories/specs), `requires` (from dependency graph
+  built in Step 3). Leave `provides`, `key_files`, `patterns_established`, `duration_minutes`
+  as empty — filled by `run.md` on phase completion.
+- **Dependency Read**: When building the dependency matrix (Step 3), also read existing
+  `phase-*.md` frontmatter `provides` fields to understand what prior phases deliver.
+  This supplements reading PLAN.md prose descriptions with machine-readable data.
+
+### State Init/Update
+
+After PLAN.md, TASKS.md, and phase files are written:
+
+- If `STATE.md` does not exist → it will be created by `init.md` automatically (always called first).
+- Update STATE.md to reflect new plan:
+  `node .magic/scripts/executor.js update-state
+   --workspace={active-workspace-dir}
+   --phase="1 — {Phase-1 Name}"
+   --status=Active
+   --next-action="Run /magic.run to execute Phase 1"`
+- If plan update mode (C12, update, sync) → patch `--phase` and `--next-action` to reflect the re-planned state.
 
 ### Context Regeneration
 
@@ -114,6 +149,8 @@ Task Workflow Checklist — {operation}
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ Role-Switching (C24): Draft Plan audited in **Skeptic Persona** (Optimism, Dependencies, Risk)
+  ☐ Phase Frontmatter: YAML block populated in phase-*.md files (phase, name, status, subsystem, requires)
+  ☐ STATE.md updated with new phase and next action after plan write-back
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
 ```

@@ -39,15 +39,20 @@ graph TD
     - **Config Drift Advisory**: If output contains `CONFIG_DRIFT` warnings → log a non-blocking warning: "RULES.md was modified outside workflow." This is advisory only — do NOT halt or prompt the user. Auto-proceed.
 2. **Init**: `node .magic/scripts/executor.js init`.
     - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
-3. **Verify**: Ensure all 5 artifacts exist. HALT on failure.
+    - **STATE.md**: Copy `.magic/templates/state.md` → `.design/{workspace}/STATE.md`.
+      Replace `{workspace-name}` with resolved workspace name, `{YYYY-MM-DD HH:MM}` with current time.
+      Set `**Status:** Active`, `**Phase:** 0 — Not Started`, `**Next Action:** Run /magic.task`.
+      Skip if `STATE.md` already exists (never overwrite existing live memory).
+3. **Verify**: Ensure all 6 artifacts exist (including STATE.md). HALT on failure.
 4. **Hint**: If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → Suggest: *"Analyze project"*.
 
 ### Structure Created
 
 ```
 .design/
-├── INDEX.md (Registry)
-├── RULES.md (Conventions C1-C22)
+├── INDEX.md    (Registry)
+├── RULES.md    (Conventions C1-C22)
+├── STATE.md    (Live memory — session continuity)
 ├── workspace.json (Context)
 ├── specifications/
 ├── tasks/
@@ -61,5 +66,6 @@ Init Checklist
   ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
   ☐ RULES.md (C1-C22) & INDEX.md headers present; Smart History verified
+  ☐ STATE.md created from template (or skipped if already exists)
   ☐ Existing codebase check performed; analyzer suggested if applicable
 ```

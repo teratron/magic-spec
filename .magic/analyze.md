@@ -191,6 +191,8 @@ Mode C Checklist — {workspace} "{text}"
   ☐ Focus resolution: text "{text}" mapped to specific area
   ☐ Gap report: Focus area reviewed for orphans/drift
   ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
+  ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
+     Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
   ☐ Advisory Report filtered to match focused scope
 ```
 

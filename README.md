@@ -95,7 +95,9 @@ The engine actively protects specification integrity throughout the project life
 - **Quarantine Cascade**: If a Layer 1 spec is destabilized (demoted from `Stable`), all dependent Layer 2 specs are automatically flagged and their tasks are blocked. The plan cannot proceed on a broken foundation.
 - **Session Isolation (Phase Gates)**: To prevent AI "hallucinations" and context bleed-over, major workflow transitions enforce a **Hard Stop** (e.g., from Specification to Planning). You are required to physically open a "New Chat" in your IDE to proceed. Simply telling the AI to "forget" does not clear its context window reliably.
 - **Registry Parity**: Every spec that exists on disk must be registered in `INDEX.md`. Every registered spec must appear in the implementation plan or the backlog. Orphaned specs are treated as critical blockers.
+- **Canonical References**: Stable specifications must declare authoritative source files that downstream agents are required to read before implementation. This eliminates hallucinated API contracts and stale-memory errors.
 - **Rules Parity**: If project conventions change (`RULES.md`), any existing task plan is flagged as stale. The agent will not execute tasks generated under outdated rules without an explicit sync.
+- **Agent Memory (STATE.md)**: A live project state digest (≤100 lines) that tracks current position, recent decisions, blockers, and constraints. Read first in every workflow session. Supports structured cross-session handoff via `HANDOFF.json` for zero-prompt resume.
 - **Engine Integrity**: Core engine files are checksummed. Any untracked modification halts all workflows until the engine state is reconciled.
 
 ### Self-Improving Feedback Loop
@@ -255,6 +257,7 @@ Just talk to your AI agent naturally in your prompt interface. No complex comman
 - *"Create an implementation plan"* → Triggers **Task & Plan** workflow.
 - *"Execute the next task"* → Triggers **Run** workflow.
 - *"Add a rule: always use Inter font"* → Triggers **Rule** workflow.
+- *"Pause session"*, *"magic.pause"* → Triggers **Pause** workflow (saves state for cross-session resume).
 
 ### 🤝 Compatibility
 
@@ -320,4 +323,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v1.5.136). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v1.5.143). We are constantly refining the SDD engine based on real-world usage.

@@ -79,6 +79,20 @@ graph TD;
 
 Potential issues and alternative approaches considered.
 
+## Canonical References
+
+<!-- MANDATORY for Stable status. List the authoritative source files that downstream agents
+     MUST read before implementing this spec. Use relative paths from project root.
+     This section is the agent's contract — do not delete or leave empty on Stable specs. -->
+
+| Alias | Path | Purpose |
+| :--- | :--- | :--- |
+| `[CONFIG]` | `{path/to/config.file}` | {Why this file is the source of truth} |
+| `[SCHEMA]` | `{path/to/schema.file}` | {Why this file defines the data contract} |
+
+<!-- Downstream agent instruction: Load ALL files listed above BEFORE writing any code.
+     Do not rely on memory or inference for content from these files. -->
+
 ## Document History
 
 | Version | Date | Description |

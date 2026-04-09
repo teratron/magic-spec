@@ -47,6 +47,7 @@ graph TD
 | Workflow | Primary File | Purpose | Documentation |
 | :--- | :--- | :--- | :--- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
+| **Pause** | `pause.md` | Saves session state to `HANDOFF.json` for cross-session resume. Supports zero-prompt continuity. | — |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 
@@ -65,6 +66,7 @@ your-project/
     ├── workspace.json      #    (Optional) Multi-workspace routing config
     ├── INDEX.md            #    Specification registry
     ├── RULES.md            #    Project constitution (The Rules)
+    ├── STATE.md            #    Live memory (session continuity)
     ├── PLAN.md             #    The implementation roadmap
     └── specifications/     #    Directory for all .md spec files
 ```
@@ -109,6 +111,7 @@ Magic Spec includes built-in "Pre-flight" checks:
 - **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
 - **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
 - **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.
+- **Agent Memory (STATE.md)**: A live project state digest read first in every session. Tracks position, decisions, blockers, and constraints. Supports structured cross-session handoff via `HANDOFF.json`.
 - **Task Verification**: No task is marked complete without a confirmed completion checklist.
 
 ## 🔍 Self-Improving Engine (Retrospective)

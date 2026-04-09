@@ -1,3 +1,17 @@
+---
+phase: {N}
+name: "{Phase Name}"
+status: Todo
+subsystem: "{primary-directory or module}"
+requires: []
+provides: []
+key_files:
+  created: []
+  modified: []
+patterns_established: []
+duration_minutes: ~
+---
+
 # Stage {N} Tasks — {Phase Name}
 
 **Phase:** {N}
