@@ -38,6 +38,7 @@ dist/
 temp/
 *tmp/
 *sandbox/
+*references/
 
 # Agents
 CLAUDE.md

@@ -1,10 +1,10 @@
 [project]
 name = "magic-spec"
-version = "1.5.141"
+version = "1.5.142"
 description = "Magic Specification-Driven Development (SDD) Workflow"
 readme = "README.md"
 requires-python = ">=3.10"
-license = { text = "MIT License" }
+license = { text = "Apache License 2.0" }
 authors = [{ name = "Oleg Alexandrov", email = "alexandrovoleg.ru@gmail.com" }]
 dependencies = []
 

@@ -2,7 +2,7 @@
 
 [![NPM version](https://img.shields.io/npm/v/magic-spec?color=green&label=npm)](https://www.npmjs.com/package/magic-spec)
 [![PyPI version](https://img.shields.io/pypi/v/magic-spec?color=blue&label=pypi)](https://pypi.org/project/magic-spec/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](./LICENSE)
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
 ## 📖 Description
 
@@ -316,7 +316,7 @@ Please see [**Contributing Guide**](./CONTRIBUTING.md) for details.
 
 ## 📄 License
 
-Distributed under the [MIT License](./LICENSE).
+Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
