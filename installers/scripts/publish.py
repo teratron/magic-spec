@@ -156,6 +156,10 @@ def update_docs_versions(old_version: str, new_version: str) -> list[str]:
 
         try:
             content = file_path.read_text(encoding="utf-8")
+            # Skip CHANGELOG.md as it should maintain its historical versions
+            if file_path.name == "CHANGELOG.md":
+                continue
+
             if old_version in content:
                 new_content = content.replace(old_version, new_version)
                 file_path.write_text(new_content, encoding="utf-8")
