@@ -11,7 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **Engine Sync**: Performed project hygiene sync, updated documentation, and validated engine metadata (C14 parity).
 
-## [1.5.143] - 2026-04-09
+## [1.5.159] - 2026-04-09
 
 
 ### Added
