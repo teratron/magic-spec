@@ -8,154 +8,25 @@
 
 **The Specification-Driven Development (SDD) Operating System for AI Coding Agents.**
 
-Stop your AI from writing fragile code before it fully understands the problem. `magic-spec` installs a high-performance, structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack.
-
-Whether you are a **coding novice** building your first application or a **senior engineer** architecting enterprise systems, Magic Spec brings **maximum automation** and professional rigor to your development process. It enforces a deterministic workflow that ensures your AI agent perfectly aligns with your vision before writing a single line of code.
-
-### The Core Concept
-
-`magic-spec` is a set of **markdown-based workflow instructions** specifically designed for AI coding agents like Cursor, Windsurf, Claude, and Gemini. It acts as a project-level operating system that orchestrates agentic development.
-
-Instead of chaotic prompt-engineering, Magic Spec provides a rigorous pipeline:
+`magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack. It acts as a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude Code, Gemini CLI, and others), enforcing a deterministic process that ensures the AI fully understands the problem before writing code.
 
 ```plaintext
 💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
 ```
 
-Once initialized, your AI agent will automatically:
-
-- Formulate a strong conceptual and technical specification.
-- Build a phased implementation plan with hierarchical dependencies.
-- Decompose the plan into prioritized, atomic, trackable tasks.
-- Facilitate safe architectural brainstorming via **Explore Mode**.
-- Analyze its own workflow and suggest improvements via Auto-Retrospectives.
-
 ### What Gets Installed
 
-After running the installer, your project directory will be augmented with the following structure:
-
 ```plaintext
-root-project/
-├── .agents/workflows/        # Slash commands wrapper (e.g., magic.spec, magic.task)
-├── .magic/                   # The SDD Engine (workflow logic and scripts - read-only)
-└── .design/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)
+your-project/
+├── .agents/workflows/   # Slash commands (magic.spec, magic.task, magic.run, ...)
+├── .magic/              # SDD Engine (workflow logic and scripts — read-only)
+└── .design/             # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
-
-1. **`.magic/`**: Deploys the core SDD engine.
-2. **`.agents/`**: Sets up workflows for your AI.
-3. **`.design/`**: Initializes your project's workspace for Specifications, Rules, and Plans.
 
 > [!TIP]
-> **Magic Workspaces**: Magic Spec supports multiple, isolated design environments within a single repository (e.g., `.design/engine/`, `.design/installers/`). This allows you to manage fundamentally different project domains without specification overlap, while sharing a single core engine. See [workspaces.md](./workspaces.md) for details.
-
-## 🧠 The SDD Philosophy
-
-> *"No code without a spec. No spec without a plan."*
-
-Magic Spec is built around a single conviction: **AI agents write better code when they are forced to think before they act.** Left unconstrained, they jump straight to implementation — producing code that is fragile, misaligned, and expensive to refactor. Magic Spec installs a structured pipeline that makes this impossible.
-
-### Human-Minimal Engineering (Autonomous Partner)
-
-The core design goal is to **keep humans out of the loop as much as possible** — without sacrificing control over what actually matters. Magic Spec moves from manual "Status Gates" to an **Autonomous Partner** model.
-
-#### Trust Mode: Encapsulated Logic
-
-Once you describe what you want, the engine takes over:
-
-- **Type A — "AI Trust"**: You provide intent, the agent handles the rest (`Draft -> RFC -> Stable -> Plan -> Run`). The internal SDD ceremony is **encapsulated** — you only see the result and a final "Go" gate.
-- **Type B — "Expert Audit"**: You maintain full control. Inspect `.design/` at any time to review specifications and plans. The rigor is there for when you need it.
-
-#### Silent Orchestration
-
-- **Auto-Stabilization**: Specifications are drafted, reviewed, and promoted to `Stable` automatically if the logic is clear.
-- **Zero-Prompt Planning**: Tasks are decomposed, prioritized, and scheduled without interrupting your flow.
-- **Silent Operations**: Phases execute end-to-end: retrospectives, changelogs, and context regeneration happen silently.
-- **Single Execution Gate**: The only mandatory prompt is the final sign-off before implementation begins.
-
-Everything else is automated. The agent does the engineering. You approve the direction.
-
-### Two-Layer Specification Model
-
-Every specification in Magic Spec belongs to one of two layers, and this separation is strictly enforced:
-
-**Layer 1 — Concept** (`layer: concept`)
-Technology-agnostic. Describes *what* the system must do: business rules, domain invariants, data contracts, and behavioral requirements. A Layer 1 spec can be ported to any tech stack without modification. It is the source of truth for the entire implementation.
-
-**Layer 2 — Implementation** (`layer: implementation`)
-Stack-specific. Describes *how* a Layer 1 concept is realized in a concrete technology (e.g., a Node.js REST API, a PostgreSQL schema, a React component). Every Layer 2 spec must declare its parent via `Implements: {l1-file.md}` and cannot reach `RFC` or `Stable` status until its parent is `Stable`.
-
-This separation prevents a common failure mode in AI-assisted development: mixing "what we want" with "how we build it" in a single document, which leads to specs that are impossible to reuse, validate, or evolve independently.
-
-> **Why this matters in practice:** Imagine you built your backend on Node.js + PostgreSQL. Six months later, performance demands require a migration to Go + ScyllaDB. With a two-layer model, your Layer 1 specs — authentication rules, data contracts, business logic — remain completely intact. Only the Layer 2 specs are rewritten to reflect the new stack. Your AI agent gets a clean, unambiguous brief for the migration without you having to re-explain the entire domain from scratch.
-
-### Integrity by Design
-
-The engine actively protects specification integrity throughout the project lifecycle:
-
-- **Quarantine Cascade**: If a Layer 1 spec is destabilized (demoted from `Stable`), all dependent Layer 2 specs are automatically flagged and their tasks are blocked. The plan cannot proceed on a broken foundation.
-- **Session Isolation (Phase Gates)**: To prevent AI "hallucinations" and context bleed-over, major workflow transitions enforce a **Hard Stop** (e.g., from Specification to Planning). You are required to physically open a "New Chat" in your IDE to proceed. Simply telling the AI to "forget" does not clear its context window reliably.
-- **Registry Parity**: Every spec that exists on disk must be registered in `INDEX.md`. Every registered spec must appear in the implementation plan or the backlog. Orphaned specs are treated as critical blockers.
-- **Canonical References**: Stable specifications must declare authoritative source files that downstream agents are required to read before implementation. This eliminates hallucinated API contracts and stale-memory errors.
-- **Rules Parity**: If project conventions change (`RULES.md`), any existing task plan is flagged as stale. The agent will not execute tasks generated under outdated rules without an explicit sync.
-- **Agent Memory (STATE.md)**: A live project state digest (≤100 lines) that tracks current position, recent decisions, blockers, and constraints. Read first in every workflow session. Supports structured cross-session handoff via `HANDOFF.json` for zero-prompt resume.
-- **Engine Integrity**: Core engine files are checksummed. Any untracked modification halts all workflows until the engine state is reconciled.
-
-### Self-Improving Feedback Loop
-
-Magic Spec includes a built-in retrospective engine that runs automatically at two levels:
-
-- **Level 1** fires after every phase completes: captures a lightweight snapshot of spec health, task metrics, and signal status.
-- **Level 2** fires when the full plan is complete: performs a deep audit — identifying spec drift, blocked-task patterns, shadow logic, and workflow friction — then produces actionable recommendations.
-
-These retrospectives feed back into the specification layer, closing the loop between what was planned and what was actually built.
-
-## 🖼️ Visuals
-
-The engine enforces a rigorous, unskippable pipeline: **Idea → Specification → Task & Plan → Code**. AI agents are prevented from jumping straight to coding. They must first formally specify the solution, then break it down into a concrete plan and tasks, and only then proceed to execution.
-
-```mermaid
-flowchart TB
-    IDEA(["💡 Idea"])
-
-    subgraph BOX ["Magic Spec"]
-        direction TB
-
-        SPEC["📋 Spec"]
-
-        subgraph TASK ["🗺️ Task"]
-            direction TB
-            PLAN["📐 Plan"]
-            TASKS["📌 Tasks"]
-            PLAN --> TASKS
-        end
-
-        RUN["⚡ Run"]
-
-        SPEC  --> PLAN
-        TASKS --> RUN
-    end
-
-    CODE(["🚀 Code"])
-
-    IDEA --> SPEC
-    RUN  --> CODE
-
-    style IDEA  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
-    style CODE  fill:#1e1e2e,stroke:#a6e3a1,color:#cdd6f4
-
-    style BOX   fill:#181825,stroke:#fab387,stroke-width:3px,color:#fab387
-
-    style SPEC  fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
-    style RUN   fill:#1e1e2e,stroke:#89b4fa,color:#cdd6f4
-
-    style TASK  fill:#11111b,stroke:#89b4fa,stroke-dasharray:5 5,color:#89b4fa
-    style PLAN  fill:#1e1e2e,stroke:#45475a,stroke-dasharray:4 4,color:#cdd6f4
-    style TASKS fill:#1e1e2e,stroke:#45475a,stroke-dasharray:4 4,color:#cdd6f4
-```
+> **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [workspaces.md](./workspaces.md) for details.
 
 ## ⚙️ Requirements
-
-Before installing Magic Spec, ensure you have one of the following available on your system:
 
 | Requirement | Details |
 | :--- | :--- |
@@ -166,7 +37,7 @@ Before installing Magic Spec, ensure you have one of the following available on 
 
 ## 📦 Installation
 
-Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
+Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
 
 ### Option A: Node.js (`npx`)
 
@@ -176,8 +47,10 @@ Works perfectly with **any project** — Rust, Go, Python, JavaScript, C++, or a
 # Basic installation (defaults to .agents/ folder)
 npx magic-spec@latest
 
-# Targeted installation for Cursor
+# Targeted installation for a specific AI agent
 npx magic-spec@latest --cursor
+npx magic-spec@latest --claude
+npx magic-spec@latest --windsurf
 ```
 
 **Edge Version (GitHub):**
@@ -194,7 +67,7 @@ npx --yes github:teratron/magic-spec
 # Basic installation
 uvx magic-spec
 
-# Targeted installation for Windsurf
+# Targeted installation
 uvx magic-spec --windsurf
 ```
 
@@ -212,7 +85,7 @@ pipx run magic-spec
 
 ### Option D: Multi-Adapter Installation
 
-You can install support for multiple adapters at once:
+Install support for multiple adapters at once:
 
 ```bash
 npx magic-spec@latest --cursor --copilot --windsurf
@@ -220,15 +93,17 @@ npx magic-spec@latest --cursor --copilot --windsurf
 
 ### Option E: Manual Installation
 
-If automated installers do not fit your environment:
+1. Download `.magic/` and [`workflows/`](https://github.com/teratron/magic-spec/tree/main/workflows) from the [GitHub repository](https://github.com/teratron/magic-spec).
+2. Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
-1. **Engine**: Download the `.magic/` folder from the [GitHub repository](https://github.com/teratron/magic-spec).
-2. **Workflows**: Download command wrappers from [`workflows/`](https://github.com/teratron/magic-spec/tree/main/workflows).
-3. **Deploy**: Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
+### Post-Install: `.gitignore`
+
+The installer automatically adds `.magic/` and the adapter directory (e.g., `.agents/`) to `.gitignore`. These are **installed dependencies** (like `node_modules/`) — reinstall via `npx magic-spec@latest` rather than committing.
+
+> [!TIP]
+> **Vendoring**: To commit the engine into your repo (so teammates get it without running the installer), remove the `.magic/` and `.agents/` entries from `.gitignore`.
 
 ## 🔄 Updating
-
-Keep your SDD engine up to date with the latest logic and features:
 
 ```bash
 # Check if update is available
@@ -239,31 +114,66 @@ npx magic-spec@latest --update
 ```
 
 > [!TIP]
-> The update process preserves your `.design/` workspace and automatically creates backups of `.magic/` and `.agents/` folders. If you have modified core engine files, the installer will detect conflicts and ask for your preference (overwrite, skip, or abort). **After updating Magic Spec, it is highly recommended to run the `/magic.analyze` command to ensure your project's specifications and engine metadata are fully synchronized.**
-
-### Post-Install: `.gitignore`
-
-The installer automatically adds `.magic/` and the adapter directory (e.g., `.agents/`, `.cursor/rules/`) to your project's `.gitignore`. These directories are **installed dependencies** — similar to `node_modules/` — and should be reinstalled via `npx magic-spec@latest` rather than committed to version control.
-
-> [!TIP]
-> **Vendoring**: If you prefer to commit the engine into your repository (so teammates get it without running the installer), simply remove the `.magic/` and `.agents/` entries from your `.gitignore`.
+> The update preserves your `.design/` workspace and creates backups of `.magic/` and `.agents/`. After updating, run `/magic.analyze` to ensure synchronization.
 
 ## 💬 Usage
 
-Just talk to your AI agent naturally in your prompt interface. No complex commands to learn:
+### Natural Language
 
-- *"Dispatch this thought into specs..."* → Triggers **Specification** workflow.
-- *"Run a project audit"*, *"magic.analyze"* → Triggers **Analyze** (Ventilation) workflow.
-- *"Create an implementation plan"* → Triggers **Task & Plan** workflow.
-- *"Execute the next task"* → Triggers **Run** workflow.
-- *"Add a rule: always use Inter font"* → Triggers **Rule** workflow.
-- *"Pause session"*, *"magic.pause"* → Triggers **Pause** workflow (saves state for cross-session resume).
+Talk to your AI agent naturally — it will route to the correct workflow:
 
-### 🤝 Compatibility
+- *"Create a spec for user authentication"* → **Specification** workflow
+- *"Build an implementation plan"* → **Task & Plan** workflow
+- *"Execute the next task"* → **Run** workflow
+- *"Add a rule: always use Inter font"* → **Rule** workflow
+- *"Run a project audit"* → **Analyze** workflow
 
-Magic Spec is heavily optimized and provides native workflow generation for the world's most powerful AI development environments.
+### Slash Commands
 
-You can install support for a specific adapter using the shortcut flag (e.g., `--cursor`) or the environment flag (e.g., `--env cursor`).
+All core workflows are available as slash commands with optional arguments:
+
+| Command | Purpose |
+| :--- | :--- |
+| `/magic.spec` | Create or update specifications |
+| `/magic.task` | Generate implementation plan and tasks |
+| `/magic.run` | Execute tasks from the plan |
+| `/magic.rule` | Add or amend project conventions |
+| `/magic.analyze` | Audit project health and detect drift |
+
+#### Commands with Arguments
+
+Each command accepts optional arguments to scope the operation to a specific **workspace** or provide a **directive**:
+
+```bash
+# No arguments — operates across all workspaces
+/magic.spec
+/magic.task
+/magic.run
+
+# Workspace-scoped
+/magic.task engine                     # Plan only for the "engine" workspace
+/magic.run installers                  # Execute tasks in "installers" workspace
+/magic.analyze engine                  # Analyze only the "engine" workspace
+
+# With directive (quoted text)
+/magic.task "decompose phase-2"        # Guided planning with focus
+/magic.run "T-1A01"                    # Execute a specific task by ID
+/magic.run "phase-2"                   # Execute all tasks in a phase
+/magic.analyze "check API coverage"    # Focused analysis on a specific area
+
+# Workspace + directive
+/magic.run installers "phase-1"        # Execute phase 1 in "installers" workspace
+/magic.task engine "only new specs"    # Plan only new specs in "engine" workspace
+```
+
+> [!NOTE]
+> **For AI IDE users (Cursor, Windsurf, Claude Code, etc.):** When you type `/` in the chat, a dropdown list of available commands appears and selecting one immediately executes it **without arguments**. If you need to pass arguments (workspace name, task ID, directive), **type the full command manually** instead of selecting from the dropdown. For example, type `/magic.run "phase-2"` directly rather than clicking `/magic.run` from the list.
+
+## 🤝 Compatibility
+
+Magic Spec provides native workflow generation for all major AI development environments.
+
+Install with a shortcut flag (e.g., `--cursor`) or the environment flag (e.g., `--env cursor`).
 
 | AI Agent / IDE | Shortcut Flag | Env Flag |
 | :--- | :--- | :--- |
@@ -289,15 +199,16 @@ You can install support for a specific adapter using the shortcut flag (e.g., `-
 
 ## 📚 Documentation
 
-- [**Main Documentation**](./docs/README.md) — Detailed guide on workflows, architecture, and advanced features.
-- [**Installers Guide**](./installers/README.md) — Advanced CLI options and platform specifics.
-- [**Contributing**](./CONTRIBUTING.md) — How to develop, test, and extend the engine.
+| Document | Description |
+| :--- | :--- |
+| [**Main Documentation**](./docs/README.md) | Workflows, architecture, and advanced features |
+| [**SDD Philosophy**](./docs/conception.md) | Two-Layer Model, Integrity by Design, Self-Improving Feedback Loop |
+| [**Installers Guide**](./installers/README.md) | Advanced CLI options and platform specifics |
+| [**Contributing**](./CONTRIBUTING.md) | How to develop, test, and extend the engine |
 
 ## 🛟 Support
 
-If you encounter issues or have questions:
-
-- Open an [Issue](https://github.com/teratron/magic-spec/issues) on GitHub.
+If you encounter issues or have questions — open an [Issue](https://github.com/teratron/magic-spec/issues) on GitHub.
 
 ## 🗺️ Roadmap
 
@@ -309,8 +220,7 @@ If you encounter issues or have questions:
 
 ## 🏗️ Contributing
 
-We welcome contributions! Whether it's a bug fix, a new adapter, or an improvement to the workflow logic.
-Please see [**Contributing Guide**](./CONTRIBUTING.md) for details.
+We welcome contributions! See the [**Contributing Guide**](./CONTRIBUTING.md) for details.
 
 ## 👥 Authors and Acknowledgments
 

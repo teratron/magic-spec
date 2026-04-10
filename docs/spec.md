@@ -4,103 +4,136 @@ This document explains the lifecycle, structure, and management of project speci
 
 ## 1. Overview
 
-The Specification Workflow is the entry point of the Magic SDD process. It converts raw ideas, requirements, and feedback into structured, versions, and immutable documents located in `.design/specifications/`.
+The Specification Workflow is the entry point of the Magic SDD process. It converts raw ideas, requirements, and feedback into structured, versioned documents located in `.design/specifications/`.
+
+**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
+
+**Slash command:** `/magic.spec`
+
+> **Full implementation:** `.magic/spec.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
-- **No Code in Specs**: Ensuring technical requirements are defined before implementation begins.
-- **Traceability**: Linking every requirement to its implementation layer.
-- **Agreement**: Providing a formal "contract" for AI agents and developers to follow.
+- **No Code in Specs**: Technical requirements are defined before implementation begins. Technical contracts (interfaces, types, API schemas) marked as `[REFERENCE]` are permitted.
+- **Traceability**: Every requirement links to its implementation layer.
+- **Agreement**: A formal "contract" for AI agents and developers to follow.
 
-## 2. Specification Layers
+## 2. Core Invariants
 
-To bridge the gap between abstract ideas and concrete implementation, Magic uses a two-level layering system:
+The engine enforces 12 mandatory invariants during every spec operation:
+
+| # | Invariant | Summary |
+| ---: | :--- | :--- |
+| 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain (no user prompting needed) |
+| 2 | **Prohibitions** | No implementation code in specs; technical contracts are permitted |
+| 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
+| 4 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 5 | **Linking** | Every spec must be registered in `INDEX.md` |
+| 6 | **Status** | Enforce Draft → RFC → Stable → Deprecated lifecycle |
+| 7 | **Dispatch** | Use "Raw Input" flow for unstructured ideas |
+| 8 | **Ventilation** | Delegate deep analysis to `.magic/analyze.md` |
+| 9 | **Delta-Editing** | Files >200 lines use search-replace, not full rewrites |
+| 10 | **Closure** | Every session ends with a mandatory Task Completion Checklist |
+| 11 | **Rules** | `RULES.md` is the project constitution; check before every operation |
+| 12 | **Anti-Stall** | If intent captured and >=1 question asked without writing a file, the agent must write a Draft spec on the next turn |
+
+## 3. Specification Layers
+
+Magic uses a two-level layering system:
 
 - **Layer 1 (Concept)**: Abstract, technology-agnostic requirements and business logic.
-- **Layer 2 (Implementation)**: Concrete realization of a Layer 1 concept in a specific technology stack (e.g., Node.js, Python). Layer 2 specs must reference their parent via the `Implements:` field.
+- **Layer 2 (Implementation)**: Concrete realization of a Layer 1 concept in a specific technology stack (e.g., Node.js, Python). Must reference its parent via the `Implements:` field.
 
-> **Layer Respect**: To maintain logical integrity, a Layer 2 (Implementation) specification cannot transition to **Stable** status unless its parent Layer 1 (Concept) specification is also **Stable**.
+> **Layer Respect**: A Layer 2 spec cannot transition to **Stable** unless its Layer 1 parent is also **Stable**.
 
-## 3. Status Lifecycle (Encapsulated)
+## 4. Status Lifecycle (Encapsulated)
 
-Specifications move through a lifecycle to ensure logical maturity, but in **Trust Mode**, these transitions are hidden from the user to minimize friction:
+Specifications move through a lifecycle. In **Trust Mode (C9)**, transitions are hidden from the user:
 
 1. **Draft**: Initial exploration and mapping.
-2. **RFC (Request for Comments)**: Completed design, open for feedback. In Trust Mode, this is a transient state.
-3. **Stable**: Approved/Finalized design. **Auto-Stabilization** occurs if the logic is high-confidence and non-conflicting.
+2. **RFC (Request for Comments)**: Completed design, open for feedback. Transient in Trust Mode.
+3. **Stable**: Approved/finalized design. **Auto-Stabilization** occurs if no conflicts detected.
 4. **Deprecated**: Superseded or removed functionality.
 
-> **Autonomous Mode**: The engine may auto-promote statuses (`Draft -> Stable`) silently if it identifies no architectural risks or contradictions with `RULES.md`.
+> **Autonomous Mode**: The engine may auto-promote statuses (`Draft -> Stable`) silently if no architectural risks or `RULES.md` contradictions exist.
+>
+> **Minimum Viable Completeness (MVC)**: For auto-promotion, a spec needs `Overview` + at least one substantive design section. Missing optional sections do not block promotion.
+>
+> **Amendment Rule**: When a Stable spec receives substantive new requirements (minor or major version bump), its status reverts to `RFC`. Typo-only patches (0.0.X) do not require a status change.
 
-## 4. Automation & Workflows
+## 5. Key Workflow Modes
 
-### 4.1 Dispatching from Raw Input
+### 5.1 Explore Mode (Brainstorming)
 
-The engine automatically parses unstructured user chat ("I want a login page") and maps it to specific domains (UI, API, Architecture).
+A safe exploration phase. The agent scans `INDEX.md` and project structure, then proposes "Creative Sparks" (topics for new specs or refinement).
 
-- **Multi-topic Dispatch**: A single user prompt can trigger the creation or update of multiple specifications across different domains simultaneously.
-- **Conflict Guard**: If a user input contains internally contradictory requirements (e.g., "All APIs must be GraphQL" vs "Mobile must use REST"), the agent is mandated to **HALT** and ask for clarification before writing any files.
+**Transition to Dispatch** happens automatically when:
 
-### 4.2 Consistency Check (Pre-flight)
+- User provides specific logic or architectural constraints.
+- User uses confirmation words ("go ahead", "do it", "looks good").
+- **Auto-Transfer (C9)**: After the 2nd idea exchange in Trust Mode.
 
-Before any implementation plan is generated, the `magic.spec` workflow verifies that all paths and structures described in specifications actually match the current project state on disk. The check includes:
+### 5.2 Dispatching from Raw Input
+
+The engine parses unstructured user chat and maps it to specification domains.
+
+- **Multi-topic Dispatch**: A single user prompt can trigger multiple spec operations simultaneously.
+- **Conflict Guard**: Contradictory requirements cause a **HALT** for clarification.
+- **Auto-Stabilization**: Specs that pass all checks (no RULES.md conflicts, no circular dependencies, MVC satisfied) are auto-promoted to Stable.
+
+### 5.3 Post-Update Review (C24 — Critic Persona)
+
+After every spec update, the engine switches to a **Critic Persona** and re-reads the spec for:
+
+- Internal contradictions and logical gaps.
+- Compliance with `RULES.md` conventions.
+- Missing or broken cross-references.
+
+### 5.4 Batch Stabilization
+
+Multiple specs can be promoted to Stable in a single pass (L1 specs first, then their L2 dependents), preserving layer dependency order.
+
+## 6. Safety & Integrity
+
+### 6.1 Consistency Check (Pre-flight)
+
+Before any plan is generated, the workflow verifies:
 
 - **Path Validity**: Target spec file exists on disk.
 - **Layer Integrity**: L2 spec's L1 parent is Stable.
 - **Registry Sync**: Spec is registered in `INDEX.md`.
-- **Version Drift (RE-1)**: The spec's `Version:` header matches the version recorded in `INDEX.md`. If they differ, a `VERSION_DRIFT` flag is raised in the Consistency Report. This detects external edits made outside the amendment lifecycle.
-- **Engine Integrity**: `.magic/` checksums are valid.
+- **Version Drift (RE-1)**: Spec `Version:` header matches `INDEX.md` record.
+- **Engine Integrity**: `.magic/` checksums are valid (C15 Filter).
+- **Cross-Workspace Parity**: Detects spec name collisions across workspaces.
+- **File-Header Parity**: Status and version in file header match `INDEX.md`.
 
-### 4.5 Version Drift Guard (RE-3)
+### 6.2 Version Drift Guard (RE-3)
 
-If a `VERSION_DRIFT` is detected for the **target spec of an active update**, the engine escalates from a warning to a **HALT** before writing any changes:
+If `VERSION_DRIFT` is detected on the target spec, the engine **HALTs** before writing changes, preventing corruption of the audit trail from untracked external edits.
 
-> *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply the amendment rule to the external change, or (b) revert the file header."*
+### 6.3 Quarantine Cascade (C12)
 
-This prevents the engine from silently absorbing untracked external edits into the next amendment, which would corrupt the audit trail. If the triggering input also contains a T4 rule capture ("remember that..."), the rule is **queued** and not written to `RULES.md` until the drift is resolved.
+If a Layer 1 spec drops status (e.g., Stable → RFC), all dependent Layer 2 specs are automatically quarantined and their tasks blocked.
 
-### 4.6 Session Isolation (Phase Gates - C17)
+### 6.4 Session Isolation (Phase Gates — C17)
 
-To maintain maximum architectural integrity, the transition from **Specification** to **Task Planning** is protected by a **Hard Stop**.
+The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magic.task` to prevent context bleed-over.
 
-1. **Brainstorming Focus**: All brainstorming and specification generation should occur in a single, continuous chat session to preserve the agent's understanding of the evolving idea.
-2. **Phase Completion**: Once specifications are marked **Stable**, the agent is mandated to halt.
-3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before running `/magic.task`. This ensures the agent reads the committed specifications as the sole source of truth, without any "context bleed" from the previous brainstorming session.
+### 6.5 T4 Rule Capture with Tier Routing
 
-### 4.7 T4 Rule Capture with Tier Routing
+When user input contains a standing-rule signal ("remember that...", "project rule:"), the Spec workflow captures it as a T4 trigger and applies three inline guards before writing to `RULES.md`:
 
-When user input during spec work contains a standing-rule signal ("remember that...", "project rule:", "from now on..."), the Spec workflow captures it as a T4 trigger and writes a new convention to `RULES.md`. Before writing, the engine applies three inline guards:
+1. **Tier Routing**: Global vs. workspace-scoped target file selection.
+2. **Duplication Check**: Semantic overlap detection with existing conventions.
+3. **Constitutional Guard**: Contradictions with §1–6 → **HALT**.
 
-1. **Tier Routing**: Determines the correct target file — if the rule text contains workspace signal words ("in engine", "for installers") or the current workspace context is specific, the rule is written to `.design/{workspace}/RULES.md`. Universal rules go to `.design/RULES.md`. If ambiguous, the engine asks.
-2. **Duplication Check**: Reads both global and workspace `RULES.md` files. If the proposed rule semantically overlaps with any existing convention, the engine surfaces the overlap and asks: merge, replace, or add separately.
-3. **Constitutional Guard**: If the proposed rule contradicts §1–6 of the Constitution → **HALT**.
+## 7. Maintenance
 
-These guards match the safety level of the dedicated [Rule Workflow](rule.md) while preserving T4's "Apply Immediately" semantics — the rule and spec update are grouped in a single atomic proposal.
-
-### 4.3 Periodic Audit
-
-The engine proactively suggests "Registry Audits" to identify dead links, duplicated requirements across files, or "stale" specs.
-
-### 4.4 Quarantine Cascade (C12)
-
-This is a critical safety mechanism:
-
-- If a **Layer 1 (Concept)** specification drops its status (e.g., from *Stable* to *RFC*), all dependent **Layer 2 (Implementation)** specifications are automatically **Quarantined** (downgraded).
-- This ensures that implementation plans are never built on top of shifting conceptual foundations.
-
-## 5. Directory Structure & Registries
-
-- `.design/specifications/*.md`: The individual specification files.
-- `.design/INDEX.md`: The central registry tracking versions, statuses, and layers of all specs.
-- `.design/RULES.md`: The project constitution that governs how specifications are written and updated.
-
-## 6. Maintenance
-
-- **Version Bumping**: Specs use Semantic Versioning (Major.Minor.Patch). Minor bumps for requirement additions; Major for breaking architectural changes; Patch for typos.
-- **Document History**: Every change must be recorded in the file's internal history table.
-- **Delta Edits**: Large specs are updated surgically to minimize context overhead.
-- **Structural Refactor**: When merging or splitting specifications, the agent performs a **Refactoring Sweep**, updating all task mappings (T-IDs) in `TASKS.md` to ensure no work is lost.
+- **Version Bumping**: Semantic Versioning (Major.Minor.Patch). Minor for additions; Major for breaking changes; Patch for typos.
+- **Document History**: Every change recorded in the file's internal history table.
+- **Delta Edits**: Large specs updated surgically to minimize context overhead.
+- **Structural Refactor**: When merging or splitting specs, the agent performs a Refactoring Sweep updating all T-IDs in `TASKS.md`.
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.136).
+Synchronized with engine workflows on 2026-04-10 (v1.5.159).

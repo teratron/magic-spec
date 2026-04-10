@@ -6,59 +6,19 @@ This document explains how Magic SDD converts stable specifications into actiona
 
 The Task Workflow is the bridge between *Design* (what to build) and *Execution* (how to build it). It analyzes the dependency graph of all stable specifications and produces an optimized execution roadmap.
 
+**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
+
+**Slash command:** `/magic.task [arg]`
+
+> **Full implementation:** `.magic/task.md` — the engine reads this file before executing any steps.
+
 Key Goals:
 
-- **Dependency Awareness**: Ensuring components are built in the correct logical order.
-- **Phased Execution**: Breaking down large projects into manageable implementation phases.
-- **Atomicity**: Decomposing features into individual tasks that can be completed in a single agent session.
+- **Dependency Awareness**: Components built in the correct logical order.
+- **Phased Execution**: Large projects broken into manageable implementation phases.
+- **Atomicity**: Features decomposed into individual tasks completable in a single session.
 
-## 2. The Planning System
-
-Magic uses two primary files to manage project state:
-
-- **`.design/PLAN.md`**: The high-level roadmap showing Phases, assigned Specifications, and their current status.
-- **`.design/TASKS.md`**: The master index of all atomic implementation tasks across all phases.
-
-## 3. Automation & Workflows
-
-### 3.1 Dependency Analysis
-
-When running `magic.task`, the engine reads all files in `.design/INDEX.md`, builds a directed acyclic graph (DAG) of dependencies, and identifies the "Critical Path."
-
-- **Circular Dependency Guard**: The engine performs an N-level deep scan of `Related Specifications`. If a circular dependency is detected (e.g., A → B → C → A), the planning process will **HALT** until the cycle is resolved.
-
-### 3.2 Task Decomposition
-
-The engine automatically breaks down each specification into 2-3 atomic tasks. Each task is assigned a unique ID (e.g., `[T-1A01]`) and mapped to a specific section of a spec file.
-
-### 3.3 Autonomous Selective Planning (C6)
-
-The engine automatically handles specification selection based on their status:
-
-- **Stable Specs**: Automatically pulled into the active implementation plan.
-- **Draft/RFC Specs**: Automatically moved to the Backlog.
-
-This removes the need for manual selection prompts, ensuring that the plan always reflects the latest stable design without user intervention.
-
-- **Quarantine Cascade (C12)**: If an active task's parent specification is no longer **Stable** (due to a downgrade or quarantine), the task is automatically marked as `Blocked [!]` and moved back to the Backlog.
-
-## 4. Orchestration & Tracks
-
-Tasks are organized into **Execution Tracks** (Track A, Track B, etc.).
-
-- **Sequential Mode**: One agent works through tracks in order.
-- **Parallel Mode**: Multiple agents work on independent tracks simultaneously, coordinated by a Manager Agent.
-
-## 5. Argument Routing
-
-The Task workflow accepts optional arguments to control scope and behavior:
-
-```
-/magic.task                              # Full planning across all workspaces
-/magic.task engine                       # Scoped planning for a specific workspace
-/magic.task "decompose phase-2"       # Guided planning with focus or instructions
-/magic.task installers "only new ones"    # Scoped + guided planning
-```
+## 2. Argument Routing
 
 | Input | Mode | Behavior |
 | :--- | :--- | :--- |
@@ -67,39 +27,134 @@ The Task workflow accepts optional arguments to control scope and behavior:
 | `"text"` | Guided | Interpret text as planning directive (focus, instruction, filter) |
 | `{workspace} "text"` | Scoped + Guided | Directive applied within workspace scope |
 
-When no workspace is specified, the engine resolves it via the standard priority chain (same as [Analyze §5.1](analyze.md#51-workspace-targeting)). Disambiguation: if an unquoted word matches a workspace name, workspace takes priority; wrap in quotes to force directive interpretation.
+```
+/magic.task                              # Full planning across all workspaces
+/magic.task engine                       # Scoped planning for "engine" workspace
+/magic.task "decompose phase-2"          # Guided planning with focus
+/magic.task installers "only new specs"  # Scoped + guided planning
+```
 
-After planning, the handoff to `/magic.run` automatically propagates the workspace context (e.g., recommends `/magic.run engine` instead of `/magic.run`).
+> **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
+> **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope.
 
-## 6. Maintenance
+## 3. Core Invariants
 
-- **Plan Synchronization**: If specifications change, the plan and tasks must be updated via the "Sync tasks" command.
-- **Archival (C8)**: Once a phase is completed, its detailed task file is moved to `.design/archives/tasks/` to keep the working area clean and efficient.
+The engine enforces 7 mandatory invariants during every task operation:
 
-## 3.4 Intent Preservation
+| # | Invariant | Summary |
+| ---: | :--- | :--- |
+| 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
+| 2 | **Registry Integrity** | Read ALL specs in `INDEX.md` before planning — no exceptions |
+| 3 | **Auto-Init** | Silently creates `.design/` structure if missing; preserves user intent across sub-delegation |
+| 4 | **Logic Guards** | No Orphans, Atomic Tasks (C10), User Gate (C9), Zero-Prompt handoff |
+| 5 | **Rules Parity** | Record current `RULES.md` version in `TASKS.md`; detect and notify on drift |
+| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 7 | **Architectural Logic** | Circular Guard, Layer Respect, Autonomous Selection (C6), Bootstrap Exception, Parent Header Parity |
 
-If the Task workflow needs to sub-delegate to `init.md` (cold start) or `analyze.md` (first-time analysis), the original user intent is memoized before delegation begins. After the sub-workflow resolves, the engine resumes explicitly: *"Resuming: '{original intent}'."* This prevents the user's initial goal from being silently lost across multi-workflow chains.
+## 4. Context Quality Guidance
 
-## 3.5 Session Isolation (Phase Gates - C17)
+The agent adapts operation depth based on context window utilization:
 
-To ensure the implementation plan is executed with a clean context, the transition from **Task Planning** to **Execution (Run)** is protected by a **Hard Stop**.
+| Tier | Context Used | Behavior |
+| :--- | :--- | :--- |
+| **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
+| **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
+| **DEGRADING** | 50–70% | Read only relevant spec sections; use frontmatter summaries |
+| **POOR** | 70%+ | Read STATE.md + phase frontmatter only; trigger `/magic.pause` if needed |
 
-1. **Planning Focus**: All task decomposition and roadmap building should occur in a single chat session to preserve the agent's understanding of the full dependency graph.
-2. **Phase Completion**: Once the implementation plan (`PLAN.md`) and tasks (`TASKS.md`) are generated, the agent is mandated to halt.
-3. **Session Reset**: You must physically open a **New Chat** (using the IDE's "New Chat" button) before running `/magic.run`. This forces the agent to read the newly generated tasks and the current code as the sole sources of truth, eliminating any "context bleed" from the planning phase.
+## 5. The Planning System
 
-## 7. Pre-flight Checks
+Magic uses three file levels to manage project state:
 
-The Task workflow triggers a **Consistency Check** before running to ensure the plan is based on an accurate view of the project's current filesystem and specification registry.
+- **`PLAN.md`**: Strategic overview — Phases, assigned Specifications, and their current status.
+- **`TASKS.md`**: Master Phase Index — phase registry and status tracking.
+- **`tasks/phase-{N}.md`**: Tactical execution workbooks — atomic checklists with `T-XXXX` IDs.
 
-### 6.1 Cross-Workspace Parity
+### Task ID Format
 
-If `workspace.json` registers more than one workspace, the pre-flight scan checks for identically-named spec files across workspaces. A version mismatch between copies constitutes a **Source of Truth Drift** and causes a **HALT** before any planning begins. The user is offered three resolution paths: sync from the canonical workspace, rename to a unique name per workspace, or force-ignore with a documented reason.
+Each task receives a unique ID: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
 
-### 8. Rules Parity
+- **Phase**: Numeric (1, 2, 3...).
+- **Track**: Alphabetic (A, B...) — groups tasks by file independence.
+- **Seq**: Sequential number within the track.
 
-Tasks are generated based on the current set of project conventions. Every `TASKS.md` file records the version of `RULES.md` used during generation. If the project rules are updated, the engine will warn the user of a "Rules Drift" and offer to synchronize the plan to ensure compliance with the latest standards.
+When specs are split, the original ID is preserved for the first sub-task; others receive `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`).
+
+### Phase Frontmatter
+
+Each `phase-{N}.md` includes YAML frontmatter with: `phase`, `name`, `status`, `subsystem`, `requires`. Fields `provides`, `key_files`, `patterns_established`, and `duration_minutes` are filled by `run.md` upon phase completion.
+
+## 6. Key Workflow Steps
+
+### 6.1 Pre-flight
+
+Validates project state before planning:
+
+- **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
+- **File-Header Parity**: Spec file headers must match `INDEX.md` entries (status, version).
+- **Cross-Workspace Parity**: Detects identically-named spec files across workspaces with version mismatches → **HALT**.
+
+### 6.2 Pre-Planning Stabilization (Trust Mode Batch)
+
+Before planning, the engine iterates all Draft specs and attempts auto-promotion to Stable:
+
+- **L1 specs first**, then L2 specs (layer order is mandatory).
+- Evaluates Trust Mode criteria: no RULES.md conflicts, no hard-dependency cycles, layer constraints satisfied, MVC (Minimum Viable Completeness) met.
+- Reports: `[Pre-Plan] {N} specs promoted to Stable, {M} remain Draft.`
+- **Field Normalization**: Auto-renames non-standard parent reference fields (e.g., `L1 Reference:` → `Implements:`).
+
+### 6.3 Planning Audit (C24 — Skeptic Persona)
+
+After drafting the plan, the engine adopts a **Planning Skeptic** persona to review for:
+
+- **Optimism Bias**: Have task sizes been underestimated?
+- **Hidden Dependencies**: Are parallel tracks truly independent?
+- **Cascade Risk**: If a critical Phase 1 spec fails, how many Phase 2 tasks are blocked?
+
+### 6.4 Autonomous Selection & Quarantine
+
+- **C6 Selection**: All `Stable` specs auto-pulled into `PLAN.md`. `Draft`/`RFC` moved to Backlog.
+- **C6 Bootstrap Exception**: If zero specs are Stable and no prior plan exists, Draft specs passing MVC are treated as plannable with a `[Bootstrap]` marker.
+- **C12 Quarantine**: If an L1 parent drops from Stable, dependent L2 tasks are marked `Blocked [!]` and moved to Backlog.
+- **Phantom Guards**: Missing-from-disk specs cause task cancellation; missing L1 parents cause **HALT**.
+
+### 6.5 Decomposition
+
+The engine splits each spec into 2–3 atomic tasks per track. Every feature track includes at least one **Validation Task** (e.g., `T-1T01`) to verify implementation against the spec.
+
+## 7. Orchestration & Tracks
+
+Tasks are organized into Execution Tracks (Track A, Track B, etc.):
+
+- **Sequential Mode**: One agent works through tracks in order.
+- **Parallel Mode** (default per C3): Multiple agents work on independent tracks simultaneously, coordinated by a Manager Agent.
+
+## 8. Maintenance
+
+- **Plan Synchronization**: When specifications change, the plan and tasks are updated via the "Sync tasks" command.
+- **Archival (C8)**: Completed phases are moved to `.design/archives/tasks/`.
+- **STATE.md Update**: After plan write-back, STATE.md is updated with the new phase and next action.
+- **Context Regeneration**: `CONTEXT.md` is regenerated after every plan write.
+
+## 9. Session Isolation (Phase Gates — C17)
+
+The transition from Task Planning to Execution is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magic.run` to ensure the agent reads generated tasks as the sole source of truth.
+
+## 10. Task Completion Checklist
+
+After every task planning session, the engine verifies:
+
+- All registered specs read; no orphans/phantoms unaddressed
+- Pre-Planning Stabilization applied (L1 → L2 order); field normalization done
+- Circular Guard checked (hard-dependency cycles); soft reference cycles logged
+- Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated
+- Validation tasks included for all new features
+- Rules Parity: current RULES.md version recorded in TASKS.md
+- Role-Switching (C24): draft plan audited in Skeptic Persona
+- Phase Frontmatter populated in `phase-*.md` files
+- STATE.md updated with new phase and next action
+- PLAN.md / TASKS.md written; CONTEXT.md regenerated
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.136).
+Synchronized with engine workflows on 2026-04-10 (v1.5.159).

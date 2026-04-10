@@ -1,67 +1,67 @@
-# Дистрибуция Magic Spec: Пользователь vs Разработчик
+# Magic Spec Distribution: User vs Developer
 
-Этот документ описывает, какие файлы и инструменты входят в состав Magic Spec для обычных пользователей и для разработчиков движка.
+This document describes which files and tools are included in Magic Spec for regular users versus engine developers.
 
-## 1. Пакет обычного пользователя (User Bundle)
+## 1. User Bundle
 
-Эти файлы устанавливаются при обычном запуске: `npx magic-spec@latest` или `uvx magic-spec`. Они предназначены для использования рабочего процесса SDD в проектах.
+These files are installed by running `npx magic-spec@latest` or `uvx magic-spec`. They provide the full SDD workflow for use in any project.
 
-### 1.1. Ядро движка (`.magic/`)
+### 1.1. Engine Core (`.magic/`)
 
-| Файл | Описание |
+| File | Description |
 | :--- | :--- |
-| `analyze.md` | Инструкции для агента по анализу состояния проекта. |
-| `init.md` | Процедура первичной инициализации проекта. |
-| `rule.md` | Логика управления правилами и конвенциями проекта. |
-| `run.md` | Основной исполнитель задач из плана внедрения. |
-| `spec.md` | Управление спецификациями и их жизненным циклом. |
-| `task.md` | Оркестратор задач и генератор планов реализации. |
-| `.version`, `.checksums` | Служебные файлы для контроля целостности версии и файлов. |
-| `scripts/executor.js` | Прокси-скрипт для запуска инструментов в разных ОС. |
-| `scripts/check-prerequisites.js` | Проверка окружения перед работой. |
-| `scripts/init.js` | Скрипт инициализации файловой структуры. |
+| `analyze.md` | Agent instructions for project health analysis. |
+| `init.md` | Initial project initialization procedure. |
+| `rule.md` | Logic for managing project rules and conventions. |
+| `run.md` | Primary task executor from the implementation plan. |
+| `spec.md` | Specification management and lifecycle control. |
+| `task.md` | Task orchestrator and implementation plan generator. |
+| `.version`, `.checksums` | Service files for version and file integrity control. |
+| `scripts/executor.js` | Proxy script for running tools across different OS environments. |
+| `scripts/check-prerequisites.js` | Environment verification before workflow execution. |
+| `scripts/init.js` | File structure initialization script. |
 
-### 1.2. Рабочие процессы (`.agents/workflows/` -> в корень проекта)
+### 1.2. Workflows (`.agents/workflows/` → deployed to project root)
 
-Это инструкции («воркфлоу»), которые пользователь вызывает через `/magic:*` в чате с ИИ-агентом.
+These are instructions ("workflows") that users invoke via `/magic:*` in the AI agent chat.
 
-- `magic.analyze.md` — запуск аудита проекта.
-- `magic.rule.md` — добавление новых правил.
-- `magic.run.md` — выполнение текущей задачи.
-- `magic.spec.md` — создание новой спецификации.
-- `magic.task.md` — декомпозиция спецификации на задачи.
+- `magic.analyze.md` — launch a project audit.
+- `magic.rule.md` — add or amend project rules.
+- `magic.run.md` — execute the current task.
+- `magic.spec.md` — create a new specification.
+- `magic.task.md` — decompose specifications into tasks.
 
-### 1.3. Слой совместимости (Skills) (`skills/` и `.agents/skills/`)
+### 1.3. Compatibility Layer — Skills (`skills/` and `.agents/skills/`)
 
-Эти директории содержат обертки для воркфлоу в формате **Skills** (каждая команда в отдельной папке с `SKILL.md`).
+These directories contain workflow wrappers in the **Skills** format (each command in its own folder with a `SKILL.md`).
 
-- Служат для обеспечения совместимости с различными ИИ-агентами (например, Claude Code или Gemini).
-- Генерируются автоматически на основе `.md` файлов из папок `workflows`.
-- Позволяют агентам «понимать» доступные инструменты без необходимости парсить сырые файлы.
+- Provide compatibility with various AI agents (e.g., Claude Code or Gemini CLI).
+- Auto-generated from `.md` files in the `workflows` directories.
+- Allow agents to discover available tools without parsing raw workflow files.
 
-## 2. Инструменты разработчика (Dev Instruments)
+## 2. Dev Instruments
 
-Эти файлы устанавливаются только при использовании флага `--dev`: `npx magic-spec --dev`. Они нужны для тестирования и модификации самого движка Magic Spec.
+These files are only installed when using the `--dev` flag: `npx magic-spec --dev`. They are intended for testing and modifying the Magic Spec engine itself.
 
-### 2.1. Дополнительно в `.magic/`
+### 2.1. Additional files in `.magic/`
 
-- `simulate.md` — инструкция для «симуляции» работы движка (режим отладки логики).
-- `tests/suite.md` — набор тестовых сценариев для проверки регрессий.
+- `simulate.md` — instructions for engine logic "simulation" (debug mode).
+- `tests/suite.md` — test scenario suite for regression checking.
 
-### 2.2. Сервисные воркфлоу
+### 2.2. Service Workflows
 
-- `magic.dev.simulate.md` — команда для запуска симуляций или тестов.
+- `magic.dev.simulate.md` — command to launch simulations or tests.
 
-## 3. Внутренние файлы репозитория (Engine Core / Maintainer)
+## 3. Internal Repository Files (Engine Core / Maintainer)
 
-Эти файлы **не попадают** к конечному пользователю. Они живут только в основном репозитории `magic-spec` и используются мейнтейнерами для сборки, публикации и синхронизации.
+These files are **never distributed** to end users. They exist only in the main `magic-spec` repository and are used by maintainers for building, publishing, and synchronization.
 
-- `history/` — архивы изменений всех воркфлоу (теперь аккуратно разложены по папкам).
-- `installers/` — код установщиков (Node.js/Python), которые скачивают ядро.
-- `scripts/update-engine-meta.js` — автоматизация обновления версий и хешей (C14).
-- `scripts/sync-docs.js` — синхронизация документации.
-- `scripts/utils.js` — внутренние инструменты разработчика.
-- `workflows/` — исходные шаблоны воркфлоу перед их конвертацией установщиком.
+- `history/` — change archives for all workflows (organized by folder).
+- `installers/` — installer code (Node.js/Python) that downloads the engine core.
+- `scripts/update-engine-meta.js` — automation for version and checksum updates (C14).
+- `scripts/sync-docs.js` — documentation synchronization.
+- `scripts/utils.js` — internal developer utilities.
+- `workflows/` — source workflow templates before conversion by the installer.
 
 > [!TIP]
-> Такое разделение позволяет держать проект пользователя чистым от «мета-логики» самого движка, предоставляя только необходимые инструменты для разработки.
+> This separation keeps user projects clean from the engine's "meta-logic", providing only the tools necessary for development.

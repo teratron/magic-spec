@@ -4,70 +4,98 @@ This document explains the system's self-improvement mechanism and metrics colle
 
 ## 1. Overview
 
-The Retrospective Workflow is the "heartbeat" of Magic SDD. It analyzes the usage history of the system (logs, metrics, task performance) and generates actionable recommendations for improving workflows, templates, and project rules.
+The Retrospective Workflow is the "heartbeat" of Magic SDD. It analyzes usage history, task metrics, and registry health to generate actionable recommendations for improving workflows and project rules.
+
+> **Full implementation:** `.magic/retrospective.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
-- **Continuous Improvement**: Identifying recurring bottlenecks and proposing fixes.
-- **Data-Driven Governance**: Using actual metrics to decide when to add or remove project rules.
-- **Transparency**: Providing a clear audit trail of development efficiency and "signal" quality.
+- **Continuous Improvement**: Identifying recurring bottlenecks and proposing concrete fixes.
+- **Data-Driven Governance**: Using actual metrics to inform rule and workflow changes.
+- **Transparency**: A clear audit trail of development efficiency and "signal" quality.
 
-## 2. The Two-Level System
+## 2. Core Invariants
 
-To balance thoroughness with execution speed, retrospectives are divided into two levels:
+The engine enforces 6 mandatory invariants:
+
+| # | Invariant | Summary |
+| ---: | :--- | :--- |
+| 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
+| 2 | **Read-Only Analysis** | Gather data from `.design/`; write ONLY to `RETROSPECTIVE.md` |
+| 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
+| 4 | **Actionable Output** | Recommendations must be concrete (e.g., "Add guard X", "Remove step Y") |
+| 5 | **Level Separation** | L1 (Snapshot) is silent and fast; L2 (Full) is deep and analytical |
+| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+
+## 3. The Two-Level System
 
 | Level | Name | Trigger | Action |
 | :--- | :--- | :--- | :--- |
-| **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table. |
-| **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, identification of "rough edges," and actionable recommendations. |
+| **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table |
+| **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, recommendations, and actionable advice |
 
-> **Context Economy**: Retrospectives are designed to be "read-often, write-once" records. The Level 1 snapshots are strictly restricted to metadata updates to minimize context window consumption for the agent during later phases.
+> **Context Economy**: Retrospectives are "read-often, write-once" records. L1 snapshots are strictly metadata updates to minimize context window consumption.
 
-## 3. Metrics Collected
+## 4. Metrics Collected
 
-The system tracks several categories of data to assess project health:
+Data is organized into four categories:
 
-- **Workflow Efficiency**: Transition counts (e.g., how many specs returned from RFC to Draft).
-- **Dispatch Accuracy**: Orphaned vs. Planned specifications.
-- **Task Execution Health**: Completion velocity and frequency of "Blocked" tasks.
-- **Engineering Performance**: DORA metrics (Deployment Frequency and Change Failure Rate).
-- **Constitution Health**: Stability of `.design/RULES.md` and rule accumulation rate.
-- **Traceability (Shadow Logic)**: Detects code logic that hasn't been defined in a Stable specification.
+| Category | What It Tracks |
+| :--- | :--- |
+| **Inventory** | INDEX.md status counts (Draft/RFC/Stable) and spec count |
+| **Health** | PLAN.md phase completion and TASKS.md metrics (Done/Blocked/Cancelled) |
+| **Growth** | RULES.md §7 entry count and history scan |
+| **Drift** | Cross-reference INDEX ↔ PLAN ↔ TASKS for orphans/phantoms |
 
-## 4. Automation & Workflows
+**L2 additionally tracks:**
 
-### 4.1 Signal Calculation
+- **Efficiency**: Spec revisions-to-Stable ratio.
+- **Friction**: Recurrent blocking reasons in phase notes.
+- **Shadow Logic**: Cross-reference specifications with actual codebase — detect implemented logic without a Stable spec.
+- **DORA Metrics**: Deployment Frequency and Change Failure Rate (manual input / external hook).
 
-The engine assigns a "Signal" (🟢, 🟡, 🔴) to each phase based on:
+## 5. Independent Analyst Review (C24)
 
-- **Planning Health**: Are all specs covered by tasks?
-- **Execution Health**: Percentage of `Blocked` vs. `Done` tasks.
-- **Convention Adherence**: Did the agent follow the latest `RULES.md`?
+Before calculating the Signal, the engine adopts an **Independent Analyst** persona and re-examines collected data from a spec-quality lens:
 
-This provides an immediate visual health check for the project.
+- Do Blocked tasks cluster around specific specs? → Spec is likely underspecified.
+- Does Shadow Logic exist? → Implementation outpaced specification; spec debt accumulating.
+- Is Blocked/Total ratio low but Retro L2 sessions increasing? → False green — team compensating, not fixing root cause.
 
-### 4.2 Recommendation Engine
+Signal must reflect the **health of the specification system**, not just delivery throughput.
 
-During a Level 2 retrospective, the engine generates concrete, implementable advice (e.g., "Add a 'Definition of Done' to the spec template to reduce RFC regressions").
+## 6. Signal Calculation
 
-### 4.3 Zero-Prompt Reporting
+The engine assigns a Signal based on quantified thresholds:
 
-In line with the "Maximum Automation" principle, retrospective reports are saved silently to `.design/RETROSPECTIVE.md`, allowing the developer to review them when convenient without interrupting the flow of work.
+| Signal | Condition |
+| :--- | :--- |
+| 🟢 **Green** | `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic |
+| 🟡 **Yellow** | `0.1 ≤ Blocked / Total ≤ 0.2` OR 1–2 non-critical drift items |
+| 🔴 **Red** | `Blocked / Total > 0.2` OR any shadow logic OR critical registry inconsistency |
 
-## 5. The Feedback Loop
+## 7. Snapshot (L1) Execution
 
-The output of this workflow is used to:
+Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`
 
-1. **Refine `.magic/` workflows**: Removing high-friction steps.
-2. **Optimize `.agents/` instructions**: Improving prompt clarity.
-3. **Evolve `.design/RULES.md`**: Formalizing patterns that work well into standing rules.
+### Archival (C8)
 
-## 6. Safety & Scope
+As part of L1 completion, move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use relative path.
 
-- **Read-Only**: The retrospective analyzes data but does NOT modify specs, plans, or code.
-- **Evidence-Based**: Every observation must reference a specific file, timestamp, or event in the project history.
-- **Archival (C8)**: As part of the retrospective process at the end of a plan, the agent ensures that all completed task files are moved to the `archives/` directory and that `TASKS.md` is updated with historical links.
+## 8. The Feedback Loop
+
+Retrospective output feeds back into the system:
+
+1. **Refine `.magic/` workflows**: Remove high-friction steps.
+2. **Optimize `.agents/` instructions**: Improve prompt clarity.
+3. **Evolve `.design/RULES.md`**: Formalize patterns that work well into standing rules.
+
+## 9. Safety & Scope
+
+- **Read-Only**: Analyzes data but does NOT modify specs, plans, or code.
+- **Evidence-Based**: Every observation must reference a specific file, timestamp, or event.
+- **Zero-Prompt Reporting**: Reports are saved silently to `.design/RETROSPECTIVE.md`.
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-03-31 (v1.5.136).
+Synchronized with engine workflows on 2026-04-10 (v1.5.159).
