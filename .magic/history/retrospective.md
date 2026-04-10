@@ -9,4 +9,4 @@
 | 1.3.2 | 2026-02-28 | Bugfix: Missing Cancelled Metric added to tables |
 | 1.4.9 - 1.5.83 | 2026-03-31 | Automated update via engine meta automation |
 | 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |
-| 1.5.125 - 1.5.146 | 2026-04-07 | Automated update via engine meta automation |
+| 1.5.125 - 1.5.159 | 2026-04-10 | Automated update via engine meta automation |

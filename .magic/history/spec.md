@@ -19,4 +19,4 @@
 | 1.5.57 | 2026-03-29 | Align TASKS.md and tasks/ structure; added phase.md template |
 | 1.5.60 - 1.5.114 | 2026-04-02 | Automated update via engine meta automation |
 | 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |
-| 1.5.119 - 1.5.158 | 2026-04-09 | Automated update via engine meta automation |
+| 1.5.119 - 1.5.159 | 2026-04-10 | Automated update via engine meta automation |
