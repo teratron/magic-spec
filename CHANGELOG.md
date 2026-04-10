@@ -13,7 +13,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.143] - 2026-04-09
 
-
 ### Added
 
 - **Agent Memory (STATE.md)**: New live memory system — a ≤100-line project state digest read first in every workflow session. Tracks current position, recent decisions, blockers, and blocking constraints. Template: `.magic/templates/state.md`. Utility: `.magic/scripts/update-state.js`.
