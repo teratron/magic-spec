@@ -8,10 +8,9 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
 3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
 4. **Resilience & Integrity**: Continuous validation via SHA256 checksums and automated versioning (C14).
+5. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data after every phase.
 
 > For a deep dive into the SDD philosophy — Two-Layer Specification Model, Integrity by Design, Silent Orchestration, and the Self-Improving Feedback Loop — see [**SDD Philosophy**](conception.md).
-
-1. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data after every phase.
 
 ## 🔗 The Workflow Pipeline
 
@@ -92,19 +91,20 @@ The agent will run the **Specification** workflow, creating a file in `.design/s
 > *"Build an implementation plan for the stable specs."*
 The agent will run the **Task** workflow, generating a phased `PLAN.md` and decomposing it into atomic units in `TASKS.md`.
 
-All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
-
-```
-/magic.task engine                        # Plan only for the "engine" workspace
-/magic.task "decompose phase-2"        # Guided planning with focus
-/magic.run installers "phase-1"           # Execute phase 1 in "installers" workspace
-/magic.analyze "check API coverage"     # Focused analysis on a specific area
-```
-
 ### 3. Executing Tasks
 >
 > *"Start the implementation from the next task."*
 The agent will run the **Run** workflow, picking the most prioritized task and implementing it.
+
+All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
+
+```bash
+/magic.spec engine "new features"       # Author specs in "engine" workspace
+/magic.task engine                       # Plan only for the "engine" workspace
+/magic.task "decompose phase-2"       # Guided planning with focus
+/magic.run installers "phase-1"          # Execute phase 1 in "installers" workspace
+/magic.analyze "check API coverage"    # Focused analysis on a specific area
+```
 
 ## ⚖️ Consistency & Safety
 
