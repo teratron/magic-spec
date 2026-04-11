@@ -5,6 +5,18 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.160] - 2026-04-11
+
+### Added
+
+- **Hierarchical History**: Organized `.magic/history` into logical subfolders (`workflows`, `scripts`, `tests`, `skills`, `.agents/workflows`).
+- **Engine Core Expansion**: Updated `update-engine-meta.js` and `generate-checksums.js` to scan and track all core engine directories, including root `workflows/` and `.agents/workflows/` (C14 parity).
+- **Comprehensive Tracking**: All `.md` files and scripts within engine directories now have automated hierarchical history tracking.
+
+### Meta
+
+- **Engine Sync**: Performed project hygiene sync, organized history, and validated engine metadata (C14 parity).
+
 ## [1.5.159] - 2026-04-10
 
 ### Meta

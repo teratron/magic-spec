@@ -12,7 +12,7 @@ handoffs:
     condition: null
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.spec.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.spec.md (relative to workspace root) -->
 
 # Specification Workflow
 

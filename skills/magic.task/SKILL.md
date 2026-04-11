@@ -11,7 +11,7 @@ handoffs:
     condition: "tasks_generated"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.task.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.task.md (relative to workspace root) -->
 
 # Task Workflow
 

@@ -17,10 +17,14 @@
         "magic.task"
     ],
     "devWorkflows": [
-        "magic.dev.simulate"
+        "magic.dev.publish",
+        "magic.dev.simulate",
+        "magic.dev.sync"
     ],
     "devSkills": [
-        "magic.dev.simulate"
+        "magic.dev.publish",
+        "magic.dev.simulate",
+        "magic.dev.sync"
     ],
     "magicFiles": [
         "analyze.md",

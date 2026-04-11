@@ -6,10 +6,10 @@ This document defines the core principles and structural hierarchy for AI agents
 
 The project is divided into three primary logical layers:
 
-### 1.1. Core Engine (`.magic/`, `workflows/`, `.agents/workflows/`)
+### 1.1. Core Engine (`.magic/`, `workflows/`, `skills/`)
 
-- **Path**: `/.magic/` (Internal Logic), `/workflows/` (User Workflows), and `/.agents/workflows/` (Dev Workflows).
-- **Derived**: `skills/` and `.agents/skills/` are generated compatibility layers (Skills API).
+- **Path**: `/.magic/` (Logic), `/workflows/` (Standard Workflows), and `/skills/` (Compatibility API).
+- **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
@@ -40,8 +40,8 @@ The project is divided into three primary logical layers:
 
 1. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
 2. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
-3. **Engine Integrity**: Do not modify files in `.magic/`, `workflows/`, or `.agents/workflows/` unless the task specifically requires "Engine Improvement".
-   - **C14 Enforcement**: After ANY modification to content inside `.magic/` or workflow directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
+3. **Engine Integrity**: Do not modify files in `.magic/` or `workflows/` unless the task specifically requires "Engine Improvement".
+   - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
 4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
@@ -165,7 +165,7 @@ When managing Windows junctions (`mklink /J`) and git index, follow this strict 
 
 ### 8.1 The Problem
 
-`git rm -r --cached <path>` on Windows **follows junctions** and physically deletes files in the junction target, even with `--cached`. Example: `git rm -r --cached .claude/commands` where `.claude/commands` is a junction to `.agents/workflows/` will **delete all files in `.agents/workflows/` from disk**.
+`git rm -r --cached <path>` on Windows **follows junctions** and physically deletes files in the junction target, even with `--cached`. Example: `git rm -r --cached .claude/commands` where `.claude/commands` is a junction to `workflows/` will **delete all files in `workflows/` from disk**.
 
 ### 8.2 Safe Procedure
 
@@ -178,7 +178,7 @@ When removing from git index, list **specific file paths** rather than directori
 
 ```bash
 # Safe — specific files only
-git rm --cached --ignore-unmatch .agents/workflows/magic.analyze.md
+git rm --cached --ignore-unmatch workflows/magic.analyze.md
 
 # Dangerous — git will traverse the junction into parent/source directories
 git rm -r --cached .claude/commands
@@ -213,7 +213,7 @@ Follow this checklist before declaring a task finished:
   - `package.json`
   - `installers/python/magic_spec/__init__.py`
   - `CHANGELOG.md`
-  - **Engine**: If content in `.magic/`, `workflows/`, or `.agents/workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
+  - **Engine**: If content in `.magic/` or `workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
 - [ ] **Documented**:
   - Update `CHANGELOG.md` with a summary of changes.
   - Update `README.md` if public API or features were changed.

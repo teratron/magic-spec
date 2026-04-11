@@ -18,26 +18,29 @@ const historyDir = path.join(MAGIC_DIR, 'history');
 function run() {
     console.log('Generating checksums for .magic/ content...');
 
-    const allFiles = getAllFiles(MAGIC_DIR);
+    const projectRoot = path.join(MAGIC_DIR, '..');
+    const scanZones = [
+        { dir: MAGIC_DIR, relBase: MAGIC_DIR },
+        { dir: path.join(projectRoot, 'workflows'), relBase: projectRoot },
+        { dir: path.join(projectRoot, 'skills'), relBase: projectRoot }
+    ];
+
     const checksums = {};
 
-    // For reproducibility, we sort the files
-    allFiles.sort().forEach((fullPath) => {
-        const relativePath = path.relative(MAGIC_DIR, fullPath).replace(/\\/g, '/');
+    const entries = [];
+    scanZones.forEach(zone => {
+        if (!fs.existsSync(zone.dir)) return;
 
-        // Skip the checksums file itself to avoid recursive hash changes
-        if (relativePath === CHECKSUMS_FILE) return;
-
-        checksums[relativePath] = hashFile(fullPath);
+        getAllFiles(zone.dir, []).forEach(fullPath => {
+            const rel = path.relative(zone.relBase, fullPath).replace(/\\/g, '/');
+            if (rel === CHECKSUMS_FILE) return;
+            entries.push({ rel, fullPath });
+        });
     });
 
-    const historyFiles = fs.existsSync(historyDir)
-        ? fs.readdirSync(historyDir).filter(f => f.endsWith('.md'))
-        : [];
-
-    historyFiles.forEach(file => {
-        const fullPath = path.join(historyDir, file);
-        checksums[`history/${file}`] = hashFileSafe(fullPath);
+    // Sort entries by relative path for reproducibility
+    entries.sort((a, b) => a.rel.localeCompare(b.rel)).forEach(entry => {
+        checksums[entry.rel] = hashFileSafe(entry.fullPath);
     });
 
     // Write to .checksums

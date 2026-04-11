@@ -16,7 +16,7 @@ handoffs:
     condition: null
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.rule.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.rule.md (relative to workspace root) -->
 
 # Rule Workflow
 

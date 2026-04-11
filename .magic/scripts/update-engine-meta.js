@@ -45,33 +45,47 @@ function updateEngineMeta() {
     }
 
     const oldChecksums = JSON.parse(fs.readFileSync(checksumsPath, 'utf8'));
-    const allFiles = getAllFiles(magicDir);
+    const projectRoot = path.join(magicDir, '..');
+    const scanZones = [
+        { dir: magicDir, relBase: magicDir },
+        { dir: path.join(projectRoot, 'workflows'), relBase: projectRoot },
+        { dir: path.join(projectRoot, 'skills'), relBase: projectRoot }
+    ];
+
     const changedWorkflows = new Set(manualWorkflows);
     let engineLogicChanged = false;
 
-    allFiles.forEach(fullPath => {
-        const rel = path.relative(magicDir, fullPath).replace(/\\/g, '/');
-        if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
+    scanZones.forEach(zone => {
+        if (!fs.existsSync(zone.dir)) return;
 
-        const currentHash = hashFileSafe(fullPath);
-        if (oldChecksums[rel] !== currentHash) {
-            console.log(`✨ Detected change in: ${rel}`);
+        getAllFiles(zone.dir).forEach(fullPath => {
+            const rel = path.relative(zone.relBase, fullPath).replace(/\\/g, '/');
+            if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
 
-            // If it's a script, it's core engine logic
-            if (rel.startsWith('scripts/')) {
-                engineLogicChanged = true;
+            const currentHash = hashFileSafe(fullPath);
+            if (oldChecksums[rel] !== currentHash) {
+                console.log(`✨ Detected change in: ${rel}`);
+
+                // Track history for all .md files (hierarchical)
+                if (rel.endsWith('.md')) {
+                    let base = rel.replace(/\.md$/, '');
+                    // For history mapping, we want to strip .agents/ if it ever appears in core
+                    if (base.startsWith('.agents/')) base = base.replace('.agents/', '');
+                    changedWorkflows.add(base);
+                }
+
+                // Logic changes in scripts or templates
+                if (rel.startsWith('scripts/') || rel.startsWith('templates/')) {
+                    engineLogicChanged = true;
+                    // Also track history for scripts
+                    if (rel.endsWith('.js') || rel.endsWith('.ps1') || rel.endsWith('.sh')) {
+                        let base = rel.replace(/\.(js|ps1|sh)$/, '');
+                        if (base.startsWith('.agents/')) base = base.replace('.agents/', '');
+                        changedWorkflows.add(base);
+                    }
+                }
             }
-            // Templates change defaults but not the workflow logic itself
-            else if (rel.startsWith('templates/')) {
-                // We bump version but don't force history on random workflows
-                engineLogicChanged = true;
-            }
-            // Root .md files in .magic/ are the actual workflow logic
-            else if (rel.endsWith('.md') && !rel.includes('/')) {
-                const base = path.basename(rel, '.md');
-                changedWorkflows.add(base);
-            }
-        }
+        });
     });
 
     if (engineLogicChanged || changedWorkflows.size > 0) {
@@ -91,6 +105,24 @@ function updateEngineMeta() {
     } else {
         console.log('ℹ️ No changes detected in engine core.');
     }
+
+    // Cleanup: remove empty directories in history
+    if (fs.existsSync(historyDir)) {
+        const cleanup = (dir) => {
+            const files = fs.readdirSync(dir);
+            files.forEach(file => {
+                const fullPath = path.join(dir, file);
+                if (fs.statSync(fullPath).isDirectory()) {
+                    cleanup(fullPath);
+                    if (fs.readdirSync(fullPath).length === 0) {
+                        fs.rmdirSync(fullPath);
+                        console.log(`🧹 Removed empty history directory: ${path.relative(historyDir, fullPath)}`);
+                    }
+                }
+            });
+        };
+        cleanup(historyDir);
+    }
 }
 
 /**
@@ -105,8 +137,15 @@ function updateHistory(workflows, version, customMessage = null) {
     if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true });
 
     for (const wf of workflows) {
+        // Support hierarchical paths (e.g., 'scripts/executor')
         const historyFile = path.join(historyDir, `${wf}.md`);
         const message = customMessage || 'Automated update via engine meta automation';
+
+        // Ensure target directory exists for hierarchical history
+        const targetSubdir = path.dirname(historyFile);
+        if (!fs.existsSync(targetSubdir)) {
+            fs.mkdirSync(targetSubdir, { recursive: true });
+        }
 
         if (fs.existsSync(historyFile)) {
             const existing = fs.readFileSync(historyFile, 'utf8');
