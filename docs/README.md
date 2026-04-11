@@ -59,7 +59,7 @@ Once installed, Magic Spec sets up a clear separation of concerns in your projec
 
 ```plaintext
 your-project/
-├── .agents/workflows/       # 🎯 Agent Entry Points (Slash Commands)
+├── .agents/workflows/      # 🎯 Agent Entry Points (Slash Commands)
 │   └── magic.spec.md       #    → (Note: Adapters like Cursor use .cursor/rules/)
 ├── .magic/                 # ⚙️ SDD Engine (Workflow logic & Scripts)
 │   ├── spec.md, task.md    #    Core logic definitions
@@ -99,10 +99,10 @@ The agent will run the **Run** workflow, picking the most prioritized task and i
 All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
 
 ```bash
-/magic.spec engine "new features"       # Author specs in "engine" workspace
-/magic.task engine                       # Plan only for the "engine" workspace
-/magic.task "decompose phase-2"       # Guided planning with focus
-/magic.run installers "phase-1"          # Execute phase 1 in "installers" workspace
+/magic.spec engine "new features"      # Author specs in "engine" workspace
+/magic.task engine                     # Plan only for the "engine" workspace
+/magic.task "decompose phase-2"        # Guided planning with focus
+/magic.run installers "phase-1"        # Execute phase 1 in "installers" workspace
 /magic.analyze "check API coverage"    # Focused analysis on a specific area
 ```
 

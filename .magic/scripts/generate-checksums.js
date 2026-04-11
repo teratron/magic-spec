@@ -31,10 +31,10 @@ function run() {
         checksums[relativePath] = hashFile(fullPath);
     });
 
-    const historyFiles = fs.existsSync(historyDir) 
+    const historyFiles = fs.existsSync(historyDir)
         ? fs.readdirSync(historyDir).filter(f => f.endsWith('.md'))
         : [];
-    
+
     historyFiles.forEach(file => {
         const fullPath = path.join(historyDir, file);
         checksums[`history/${file}`] = hashFileSafe(fullPath);

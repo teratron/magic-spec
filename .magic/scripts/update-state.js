@@ -58,15 +58,15 @@ function updateState(designDir, patch, options = {}) {
     // Apply simple field patches (regex-based line replacement)
     // ───────────────────────────────────────────────────────────────────────
     const fieldMap = {
-        workspace:  { re: /\*\*Workspace:\*\* .*/, prefix: '**Workspace:** ' },
-        updated:    { re: /\*\*Updated:\*\* .*/,   prefix: '**Updated:** ' },
-        phase:      { re: /\*\*Phase:\*\* .*/,     prefix: '**Phase:** ' },
-        status:     { re: /\*\*Status:\*\* .*/,    prefix: '**Status:** ' },
-        task:       { re: /- \*\*Task:\*\* .*/,    prefix: '- **Task:** ' },
-        spec:       { re: /- \*\*Spec:\*\* .*/,    prefix: '- **Spec:** ' },
+        workspace: { re: /\*\*Workspace:\*\* .*/, prefix: '**Workspace:** ' },
+        updated: { re: /\*\*Updated:\*\* .*/, prefix: '**Updated:** ' },
+        phase: { re: /\*\*Phase:\*\* .*/, prefix: '**Phase:** ' },
+        status: { re: /\*\*Status:\*\* .*/, prefix: '**Status:** ' },
+        task: { re: /- \*\*Task:\*\* .*/, prefix: '- **Task:** ' },
+        spec: { re: /- \*\*Spec:\*\* .*/, prefix: '- **Spec:** ' },
         nextAction: { re: /- \*\*Next Action:\*\* .*/, prefix: '- **Next Action:** ' },
-        handoff:    { re: /\*\*Handoff File:\*\* .*/, prefix: '**Handoff File:** ' },
-        bootstrap:  { re: /\*\*Bootstrap Mode:\*\* .*/, prefix: '**Bootstrap Mode:** ' },
+        handoff: { re: /\*\*Handoff File:\*\* .*/, prefix: '**Handoff File:** ' },
+        bootstrap: { re: /\*\*Bootstrap Mode:\*\* .*/, prefix: '**Bootstrap Mode:** ' },
     };
 
     // Always update timestamp
@@ -184,13 +184,13 @@ for (const arg of args) {
     const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : '';
 
     switch (key) {
-        case '--workspace':       parsed.workspace = val; break;
-        case '--task':            parsed.task = val; break;
-        case '--status':          parsed.status = val; break;
-        case '--phase':           parsed.phase = val; break;
-        case '--next-action':     parsed.nextAction = val; break;
-        case '--handoff':         parsed.handoff = val; break;
-        case '--bootstrap':       parsed.bootstrap = val; break;
+        case '--workspace': parsed.workspace = val; break;
+        case '--task': parsed.task = val; break;
+        case '--status': parsed.status = val; break;
+        case '--phase': parsed.phase = val; break;
+        case '--next-action': parsed.nextAction = val; break;
+        case '--handoff': parsed.handoff = val; break;
+        case '--bootstrap': parsed.bootstrap = val; break;
         case '--decision':
             parsed.decision = val;
             opts.addDecision = true;

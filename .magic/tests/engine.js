@@ -18,7 +18,7 @@ describe('Magic Engine Scripts', () => {
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'history'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'templates'), { recursive: true });
-        
+
         fs.readdirSync(scriptsDir).forEach(script => {
             const src = path.join(scriptsDir, script);
             if (fs.statSync(src).isFile()) {
@@ -60,11 +60,11 @@ describe('Magic Engine Scripts', () => {
         try {
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
-            
+
             const checksumsPath = path.join(tempDir, '.magic', '.checksums');
             assert.ok(fs.existsSync(checksumsPath), '.checksums should exist');
             const checksums = JSON.parse(fs.readFileSync(checksumsPath, 'utf8'));
-            
+
             // Check if scripts are included
             assert.ok(checksums['scripts/init.js'], 'init.js should be tracked');
             // Check if history is ignored
@@ -81,18 +81,18 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'init.js');
-            
+
             // 1. Standard init
             execSync(`node "${scriptPath}"`, { cwd: tempDir, env: { ...process.env, MAGIC_DESIGN_DIR: '.design' } });
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'RULES.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'main', 'INDEX.md')));
-            
+
             // 2. Workspace init via MAGIC_DESIGN_DIR (as executor.js would do)
             const wsPath = path.join('.design', 'test-ws');
-            execSync(`node "${scriptPath}"`, { 
-                cwd: tempDir, 
-                env: { ...process.env, MAGIC_DESIGN_DIR: wsPath } 
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                env: { ...process.env, MAGIC_DESIGN_DIR: wsPath }
             });
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'specifications')));
@@ -110,7 +110,7 @@ describe('Magic Engine Scripts', () => {
             // Setup manifests
             const pkgPath = path.join(tempDir, 'package.json');
             fs.writeFileSync(pkgPath, JSON.stringify({ name: 'test', version: '0.0.1' }, null, 2));
-            
+
             const pyPath = path.join(tempDir, 'pyproject.toml');
             fs.writeFileSync(pyPath, '[project]\nversion = "0.0.1"\n');
 
@@ -128,7 +128,7 @@ describe('Magic Engine Scripts', () => {
             const docsDir = path.join(tempDir, 'docs');
             fs.mkdirSync(docsDir);
             fs.writeFileSync(path.join(docsDir, 'test-wf.md'), '# Test Workflow v0.0.1\n\n### Triggers\n- Old Trigger\n');
-            
+
             const workflowsDir = path.join(tempDir, 'workflows');
             fs.mkdirSync(workflowsDir);
             fs.writeFileSync(path.join(workflowsDir, 'magic.test-wf.md'), '---\ndescription: test\n---\n**Triggers**: `new-trigger`, `another-trigger`');
@@ -166,10 +166,10 @@ describe('Magic Engine Scripts', () => {
         try {
             fs.mkdirSync(path.join(tempDir, '.design'));
             fs.writeFileSync(path.join(tempDir, 'package.json'), JSON.stringify({ name: "test" }));
-            
+
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
-            
+
             const contextContent = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'CONTEXT.md')));
             assert.ok(contextContent.includes('Node.js'), 'Should detect Node.js technology');
@@ -190,11 +190,11 @@ describe('Magic Engine Scripts', () => {
 
             const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
             execSync(`node "${executorPath}" update-engine-meta --workflow init --message "Bumped"`, { cwd: tempDir });
-            
+
             const versionFile = path.join(tempDir, '.magic', '.version');
             const newVersion = fs.readFileSync(versionFile, 'utf8').trim();
             assert.strictEqual(newVersion, '1.0.1');
-            
+
             const updatedHistory = fs.readFileSync(historyFile, 'utf8');
             assert.ok(updatedHistory.includes('1.0.1'));
             assert.ok(updatedHistory.includes('Bumped'));
@@ -213,11 +213,11 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(path.join(tempDir, '.design'));
             fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Index');
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules');
-            
+
             // Need checksums to pass integrity check
             const checksumScript = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
             execSync(`node "${checksumScript}"`, { cwd: tempDir });
-            
+
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
             const output = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
             const result = JSON.parse(output);
@@ -234,7 +234,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Index Restored');
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Modified Rules');
             execSync('git add . && git commit -m "Fixed"', { cwd: tempDir, stdio: 'ignore' });
-            
+
             // Manual edit outside workflow
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Drifted Rules');
             const outputDrift = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
@@ -253,10 +253,10 @@ describe('Magic Engine Scripts', () => {
         try {
             const gitHooksDir = path.join(tempDir, '.git', 'hooks');
             fs.mkdirSync(gitHooksDir, { recursive: true });
-            
+
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'install-hooks.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
-            
+
             const hookPath = path.join(gitHooksDir, 'pre-commit');
             assert.ok(fs.existsSync(hookPath), 'pre-commit hook should be created');
             const hookContent = fs.readFileSync(hookPath, 'utf8');

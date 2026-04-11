@@ -122,8 +122,8 @@ function updateFileMeta(filePath, date, msg) {
         // Simple history fallback
         const simpleHistoryHeader = /\| Version \| Date \| Description \|\n\| :--- \| :--- \| :--- \|/;
         if (content.match(simpleHistoryHeader)) {
-             const entry = `| ${newVersion || '?.?.?'} | ${date} | ${msg} |`;
-             content = content.replace(simpleHistoryHeader, `$&\n${entry}`);
+            const entry = `| ${newVersion || '?.?.?'} | ${date} | ${msg} |`;
+            content = content.replace(simpleHistoryHeader, `$&\n${entry}`);
         }
     }
 
@@ -155,7 +155,7 @@ function runHygiene(targetFiles) {
 // Execute
 try {
     updateProjectMeta();
-    
+
     // Project-wide documentation hygiene
     const docsToClean = [
         path.join(process.cwd(), 'CHANGELOG.md'),

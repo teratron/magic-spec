@@ -22,6 +22,7 @@ Read STATE.md — required. If STATE.md missing → run `init.md` first.
 ### Step 2: Snapshot Current Position
 
 From STATE.md, extract:
+
 - `**Task:**` → `current_position.task_id` + `current_position.task_title`
 - `**Phase:**` → `current_position.phase` + `current_position.phase_name`
 - `**Spec:**` → `current_position.spec_file` + `current_position.spec_section`
@@ -30,11 +31,13 @@ From STATE.md, extract:
 - All `Recent Decisions` entries → `context_snapshot.active_decisions[]`
 
 From `tasks/phase-{N}.md` YAML frontmatter, extract:
+
 - `patterns_established` → `context_snapshot.patterns_established[]`
 
 ### Step 3: Build Required Reading List
 
 Minimum always includes:
+
 - `.design/{workspace}/STATE.md`
 - `.design/{workspace}/tasks/phase-{N}.md`
 
@@ -47,6 +50,7 @@ If phase has `requires` frontmatter → add those phase files too.
    extracted values. Write to `.design/{workspace}/HANDOFF.json`.
 
 2. **STATE.md update**:
+
    ```
    node .magic/scripts/executor.js update-state
      --workspace={active-workspace-dir}

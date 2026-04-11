@@ -66,7 +66,7 @@ function generateContributing(targetVersion) {
             const tableStart = indexContent.indexOf('|', start);
             // End of table can be the next header or end of file
             let tableEnd = indexContent.indexOf('\n##', tableStart);
-            
+
             if (tableStart !== -1) {
                 if (tableEnd !== -1) {
                     registryBlock = indexContent.substring(tableStart, tableEnd).trim();
