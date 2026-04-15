@@ -10,7 +10,6 @@ The project is divided into three primary logical layers:
 
 - **Path**: `/.magic/` (Logic), `/workflows/` (Standard Workflows), and `/skills/` (Compatibility API).
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
-- **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
   - Any changes here modify the workflow engine itself.
@@ -110,7 +109,7 @@ All Python source files must adhere to a premium and uniform visual style.
 
 ### 6.2 Navigation & Section Blocks
 
-Use consistent Unicode-based separators to improve code readablity:
+Use consistent Unicode-based separators to improve code readability:
 
 - **Major Sections** (File-level, Classes, Public API):
 
@@ -190,13 +189,13 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 
 ### 9.1 Pre-read Requirement
 
-- **Mandatory**: Always call `view_file` on the target file BEFORE making any edits.
+- **Mandatory**: Always call `read` on the target file BEFORE making any edits.
 - **Scope**: Read the entire file if it's within tool limits (800 lines) to ensure full context.
 - **Anti-Pattern**: DO NOT rely on cached or partial information from previous steps.
 
 ### 9.2 Post-verify Requirement
 
-- **Verification**: Immediately after an edit, use `view_file` or `run_command` (grep/dir) to verify the result.
+- **Verification**: Immediately after an edit, use `read` or `bash` (grep/dir) to verify the result.
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
