@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCRIPT: SYNC-SKILLS
@@ -90,7 +91,7 @@ function sync() {
 ${frontmatterContent}
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${path.relative(ROOT_DIR, sourcePath).replace(/\\/g, '/')} (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${normalizePath(path.relative(ROOT_DIR, sourcePath))} (relative to workspace root) -->
 
 ${body}`;
 

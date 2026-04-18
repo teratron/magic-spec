@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { hashFileSafe, getAllFiles } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGINE META UPDATER (C14 Compliance)
@@ -16,6 +16,7 @@ const historyDir = path.join(magicDir, 'history');
 const args = process.argv.slice(2);
 let manualMessage = null;
 const manualWorkflows = new Set();
+let checkOnly = false;
 
 for (let i = 0; i < args.length; i++) {
     if (args[i] === '--workflow' && args[i + 1]) {
@@ -24,6 +25,8 @@ for (let i = 0; i < args.length; i++) {
     } else if ((args[i] === '--message' || args[i] === '-m') && args[i + 1]) {
         manualMessage = args[i + 1];
         i++;
+    } else if (args[i] === '--check') {
+        checkOnly = true;
     }
 }
 
@@ -59,7 +62,7 @@ function updateEngineMeta() {
         if (!fs.existsSync(zone.dir)) return;
 
         getAllFiles(zone.dir).forEach(fullPath => {
-            const rel = path.relative(zone.relBase, fullPath).replace(/\\/g, '/');
+            const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
 
             const currentHash = hashFileSafe(fullPath);
@@ -89,16 +92,20 @@ function updateEngineMeta() {
     });
 
     if (engineLogicChanged || changedWorkflows.size > 0) {
+        if (checkOnly) {
+            console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta --workflow <name>` to resolve.');
+            for (const wf of changedWorkflows) console.error(`  • ${wf}`);
+            process.exit(1);
+        }
+
         const newVersion = bumpVersion();
         updateHistory(changedWorkflows, newVersion, manualMessage);
 
-        // Ensure Skill wrappers are also in sync (C14 §3 Compatibility)
-        try {
-            const syncSkills = require('./sync-skills');
-            syncSkills();
-        } catch (err) {
-            console.warn('⚠️  Skill projection failed, skipping: ', err.message);
-        }
+        // Ensure Skill wrappers are also in sync (C14 §3 Compatibility).
+        // Fail-fast: if projection breaks, the engine state is inconsistent —
+        // surface the error to the caller instead of silently bumping checksums.
+        const syncSkills = require('./sync-skills');
+        syncSkills();
 
         runGenerateChecksums();
         console.log('✅ Engine metadata and version updated.');

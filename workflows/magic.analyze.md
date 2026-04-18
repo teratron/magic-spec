@@ -10,10 +10,6 @@ handoffs:
     workflow: magic.task
     prompt: "Plan repairs and task synchronization for discovered issues."
     condition: "repairs_needed"
-  - label: "Sync project"
-    workflow: magic.dev.sync
-    prompt: "Perform hygiene sync to resolve documentation or version drift."
-    condition: "drift_detected"
 ---
 
 # Analyze Workflow

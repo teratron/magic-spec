@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
+const { normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SDD INITIALIZER (Project Bootstrapper)
@@ -48,21 +49,21 @@ function createGlobalFiles() {
     if (!fs.existsSync(workspacePath)) {
         const content = getTemplate('workspace.json');
         fs.writeFileSync(workspacePath, content);
-        console.log(`✅ Created ${workspacePath.replace(/\\/g, '/')}`);
+        console.log(`✅ Created ${normalizePath(workspacePath)}`);
     }
 
     const indexPath = path.join(designDir, 'INDEX.md');
     if (!fs.existsSync(indexPath)) {
         const content = getTemplate('global-index.md', { DATE: date });
         fs.writeFileSync(indexPath, content);
-        console.log(`✅ Created ${indexPath.replace(/\\/g, '/')}`);
+        console.log(`✅ Created ${normalizePath(indexPath)}`);
     }
 
     const rulesPath = path.join(designDir, 'RULES.md');
     if (!fs.existsSync(rulesPath)) {
         const content = getTemplate('rules.md', { DATE: date });
         fs.writeFileSync(rulesPath, content);
-        console.log(`✅ Created ${rulesPath.replace(/\\/g, '/')}`);
+        console.log(`✅ Created ${normalizePath(rulesPath)}`);
     }
 }
 
@@ -83,7 +84,7 @@ function initWorkspace(workspaceDir) {
     if (!fs.existsSync(indexPath)) {
         const content = getTemplate('workspace-index.md', { DATE: date });
         fs.writeFileSync(indexPath, content);
-        console.log(`✅ Created ${indexPath.replace(/\\/g, '/')}`);
+        console.log(`✅ Created ${normalizePath(indexPath)}`);
     }
 }
 

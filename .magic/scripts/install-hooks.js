@@ -30,7 +30,7 @@ echo "[Magic Sync] Checking engine integrity..."
 node .magic/scripts/executor.js update-engine-meta --check
 
 if [ $? -ne 0 ]; then
-  echo "[Magic Sync] Engine drift detected! Run '/magic.dev.sync' or 'update-engine-meta' to fix metadata before committing."
+  echo "[Magic Sync] Engine drift detected! Run 'node .magic/scripts/executor.js update-engine-meta --workflow <name>' to bump version and refresh checksums before committing."
   exit 1
 fi
 

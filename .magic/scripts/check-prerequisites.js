@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { hashFile } = require('./utils');
+const { hashFile, normalizePath } = require('./utils');
 const { execSync } = require('child_process');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -43,7 +43,7 @@ if (fs.existsSync(checksumsFile)) {
         const mismatchedFiles = [];
         for (const [relPath, storedHash] of Object.entries(checksums)) {
             if (relPath === '.checksums') continue;
-            const normalizedRelPath = relPath.replace(/\\/g, '/');
+            const normalizedRelPath = normalizePath(relPath);
             const fullPath = path.join('.magic', relPath);
             if (fs.existsSync(fullPath)) {
                 const currentHash = hashFile(fullPath);
@@ -301,16 +301,17 @@ function checkConfigDrift() {
     }
 
     for (const rPath of rulesToCheck) {
+        const posixPath = normalizePath(rPath);
         try {
-            const diff = execSync(`git diff HEAD -- "${rPath.replace(/\\/g, '/')}"`, {
+            const diff = execSync(`git diff HEAD -- "${posixPath}"`, {
                 encoding: 'utf8',
                 stdio: ['pipe', 'pipe', 'pipe']
             });
             if (diff.trim().length > 0) {
                 warn(
                     'CONFIG_DRIFT',
-                    `'${rPath.replace(/\\/g, '/')}' has uncommitted changes (modified outside workflow).`,
-                    'Review changes: git diff HEAD -- ' + rPath.replace(/\\/g, '/')
+                    `'${posixPath}' has uncommitted changes (modified outside workflow).`,
+                    `Review changes: git diff HEAD -- ${posixPath}`
                 );
             }
         } catch {
@@ -338,10 +339,10 @@ if (jsonOutput) {
         checked_at: date,
         design_dir: designDir,
         artifacts: {
-            "INDEX.md": { exists: indexExists, path: indexPath.replace(/\\/g, '/') },
-            "RULES.md": { exists: rulesExists, path: rulesPath.replace(/\\/g, '/') },
-            "PLAN.md": { exists: planExists, path: planPath.replace(/\\/g, '/') },
-            "TASKS.md": { exists: tasksExists, path: tasksPath.replace(/\\/g, '/') },
+            "INDEX.md": { exists: indexExists, path: normalizePath(indexPath) },
+            "RULES.md": { exists: rulesExists, path: normalizePath(rulesPath) },
+            "PLAN.md": { exists: planExists, path: normalizePath(planPath) },
+            "TASKS.md": { exists: tasksExists, path: normalizePath(tasksPath) },
             "specs": { count: specCount, stable: stableCount, draft: draftCount }
         },
         missing_required: missing,

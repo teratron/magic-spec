@@ -22,10 +22,11 @@ function syncManifests() {
     const targetVersion = fs.readFileSync(versionFile, 'utf8').trim();
     console.log(`🔄 Syncing project ecosystem to version ${targetVersion}...`);
 
+    // Installer versions are managed by installers/scripts/publish.py,
+    // which reads .magic/.version directly. Engine core stays isolated.
     const manifests = [
         { name: 'package.json', file: 'package.json', regex: /"version":\s*"[^"]*"/, replace: `"version": "${targetVersion}"` },
         { name: 'pyproject.toml', file: 'pyproject.toml', regex: /(^version\s*=\s*"|(?:"version"\s*=\s*"))[^"]*"/m, replace: `$1${targetVersion}"` },
-        { name: 'Python __init__', file: 'installers/python/magic_spec/__init__.py', regex: /__version__\s*=\s*"[^"]*"/, replace: `__version__ = "${targetVersion}"` },
         { name: 'README.md', file: 'README.md', regex: /(\(v?\d+\.\d+\.\d+\))/g, replace: `(v${targetVersion})` }
     ];
 

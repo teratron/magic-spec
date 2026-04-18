@@ -117,7 +117,7 @@ describe('Magic Engine Scripts', () => {
             // Setup template
             const templatesDir = path.join(tempDir, '.magic', 'templates');
             if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
-            fs.writeFileSync(path.join(templatesDir, 'contributing.md'), '# Contributing v{{VERSION}}\n\n## Rules\n{{RULES_BLOCK}}\n\n## Registry\n{{REGISTRY_BLOCK}}');
+            fs.writeFileSync(path.join(templatesDir, 'contributing.md'), '# Contributing v{{VERSION}}\n\n## Rules\n{{rules_block}}\n\n## Registry\n{{registry_block}}');
 
             // Setup .design content
             fs.mkdirSync(path.join(tempDir, '.design'));
@@ -188,6 +188,14 @@ describe('Magic Engine Scripts', () => {
             const historyFile = path.join(tempDir, '.magic', 'history', 'init.md');
             fs.writeFileSync(historyFile, '# Hist\n| Version | Date | Desc |\n| :--- | :--- | :--- |\n| 1.0.0 | 2024-01-01 | Old |\n');
 
+            // update-engine-meta bails early when .checksums is missing (initializes and returns).
+            // Seed checksums so the bump branch is exercised.
+            const checksumScript = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
+            execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+
+            // Trigger drift: modify a file so update-engine-meta detects change and bumps version
+            fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), '\n// drift\n');
+
             const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
             execSync(`node "${executorPath}" update-engine-meta --workflow init --message "Bumped"`, { cwd: tempDir });
 
@@ -246,7 +254,96 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
-    // 7. install-hooks.js
+    // 7. update-state.js
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-state.js should bootstrap, patch fields and append decision/constraint', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            // Copy real state template so bootstrap path exercises template branch
+            const realTemplate = path.resolve(__dirname, '..', 'templates', 'state.md');
+            if (fs.existsSync(realTemplate)) {
+                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
+            }
+
+            const wsDir = path.join(tempDir, '.design', 'main');
+            fs.mkdirSync(wsDir, { recursive: true });
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-state.js');
+
+            // 1. Bootstrap — STATE.md should be created from template
+            execSync(
+                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --status=Active --phase=1 --next-action="Run /magic.spec"`,
+                { cwd: tempDir }
+            );
+            const statePath = path.join(wsDir, 'STATE.md');
+            assert.ok(fs.existsSync(statePath), 'STATE.md should be created from template');
+            const initialState = fs.readFileSync(statePath, 'utf8');
+            assert.ok(/\*\*Status:\*\*\s+Active/.test(initialState), 'Status should be patched');
+            assert.ok(/\*\*Phase:\*\*\s+1/.test(initialState), 'Phase should be patched');
+
+            // 2. Add decision — should appear under Recent Decisions with today's date
+            execSync(
+                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --decision="Adopt SDD workflow"`,
+                { cwd: tempDir }
+            );
+            const afterDecision = fs.readFileSync(statePath, 'utf8');
+            assert.ok(
+                /## Recent Decisions[\s\S]*Adopt SDD workflow/.test(afterDecision),
+                'Decision entry should be inserted under Recent Decisions'
+            );
+
+            // 3. Add constraint — should be auto-numbered [C-001]
+            execSync(
+                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --constraint-title="No Mocks" --constraint-desc="Integration tests only"`,
+                { cwd: tempDir }
+            );
+            const afterConstraint = fs.readFileSync(statePath, 'utf8');
+            // Template state.md already contains a [C-001] placeholder, so auto-numbering produces C-002
+            assert.ok(
+                /\[C-002\].*No Mocks.*Integration tests only/.test(afterConstraint),
+                'Constraint entry should be auto-numbered (C-002 given template placeholder)'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 8. executor.js — input validation
+    // ───────────────────────────────────────────────────────────────────────────
+    test('executor.js should reject path-traversal in script and workspace names', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
+
+            // Path traversal in script name
+            assert.throws(
+                () => execSync(`node "${executorPath}" "../../../etc/passwd"`, { cwd: tempDir, stdio: 'pipe' }),
+                /Invalid script name/,
+                'Should reject script name with path separators'
+            );
+
+            // Path traversal in workspace name
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'workspace.json'),
+                JSON.stringify({ default: 'main', workspaces: { main: {} } })
+            );
+            assert.throws(
+                () => execSync(
+                    `node "${executorPath}" init --workspace=../../../etc`,
+                    { cwd: tempDir, stdio: 'pipe' }
+                ),
+                /Invalid workspace name/,
+                'Should reject workspace name with path separators'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 9. install-hooks.js
     // ───────────────────────────────────────────────────────────────────────────
     test('install-hooks.js should install functional hooks', () => {
         const tempDir = createTempWorkspace();

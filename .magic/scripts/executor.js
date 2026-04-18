@@ -1,7 +1,6 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
-const { hashFileSafe, getAllFiles } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIVERSAL EXECUTOR (Engine Kernel Proxy)
@@ -12,11 +11,23 @@ const { hashFileSafe, getAllFiles } = require('./utils');
  * Detects OS and runs the appropriate .sh or .ps1 script.
  */
 
+// ───────────────────────────────────────────────────────────────────────────
+// Input Validation (Path-Traversal Guard)
+// ───────────────────────────────────────────────────────────────────────────
+
+const SCRIPT_NAME_RE = /^[a-z][a-z0-9-]*$/;
+const WORKSPACE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+
 const scriptName = process.argv[2];
 let args = process.argv.slice(3);
 
 if (!scriptName) {
-    console.error('Usage: node magic-executor.js <script-name> [args...]');
+    console.error('Usage: node executor.js <script-name> [args...]');
+    process.exit(1);
+}
+
+if (!SCRIPT_NAME_RE.test(scriptName)) {
+    console.error(`HALT: Invalid script name '${scriptName}'. Must match ${SCRIPT_NAME_RE}.`);
     process.exit(1);
 }
 
@@ -34,6 +45,11 @@ for (const arg of args) {
     }
 }
 args = finalArgs;
+
+if (workspaceName && !WORKSPACE_NAME_RE.test(workspaceName)) {
+    console.error(`HALT: Invalid workspace name '${workspaceName}'. Must match ${WORKSPACE_NAME_RE}.`);
+    process.exit(1);
+}
 
 let magicDesignDir = '.design';
 const workspaceJsonPath = path.join(process.cwd(), '.design', 'workspace.json');

@@ -6,6 +6,17 @@ const crypto = require('crypto');
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * Converts Windows-style backslashes to POSIX forward slashes.
+ * Use when emitting paths into JSON, logs, or any cross-platform surface.
+ *
+ * @param {string} p - Path with any separator mix.
+ * @returns {string} Path using forward slashes only.
+ */
+function normalizePath(p) {
+    return String(p).replace(/\\/g, '/');
+}
+
+/**
  * Calculates SHA256 hash of a file.
  *
  * @param {string} filePath - Absolute or relative path to the file.
@@ -66,4 +77,4 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
     return arrayOfFiles;
 }
 
-module.exports = { hashFile, hashFileSafe, getAllFiles };
+module.exports = { hashFile, hashFileSafe, getAllFiles, normalizePath };

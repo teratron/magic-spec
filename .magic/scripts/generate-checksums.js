@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { hashFile, hashFileSafe, getAllFiles } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
@@ -32,7 +32,7 @@ function run() {
         if (!fs.existsSync(zone.dir)) return;
 
         getAllFiles(zone.dir, []).forEach(fullPath => {
-            const rel = path.relative(zone.relBase, fullPath).replace(/\\/g, '/');
+            const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === CHECKSUMS_FILE) return;
             entries.push({ rel, fullPath });
         });
