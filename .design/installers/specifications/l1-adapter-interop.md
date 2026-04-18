@@ -21,6 +21,13 @@ Enable seamless workflow support across different tools (Cursor, Copilot, etc.) 
 - **C15**: All new adapters must be registered in the JSON registry.
 - **Atomic Deployment**: Adapters are deployed during initial installation or update.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/adapters.json` | IDE adapter registry (single source of truth) |
+| `installers/node/index.js` | Adapter detection and deployment logic |
+
 ## Document History
 
 | Version | Date | Author | Description |

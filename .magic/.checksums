@@ -1,5 +1,5 @@
 {
-  ".version": "bd6f0111077eb57759b6fdbbf45ef05753e25c2af799c5edc63f41a470824548",
+  ".version": "9713a2659028336ef9a147b870c7bd4865af8494770294a12925374b58dfa8b3",
   "analyze.md": "8104155db92de46edecb189a61c30cd71e8e93d3dbc8ca1804ce1e546a186ed9",
   "context-resolution.md": "422dac4d5fba64f8714e9d2ba82a6e7e093612409a92234a1142159523e0585d",
   "history/analyze.md": "f282e2797adfb03100534d0113f3a88163f9f00d793e3cd47a9b9ac669b88374",
@@ -32,6 +32,7 @@
   "history/skills/magic.task/SKILL.md": "578fe9cdc5c96fc28015ba1d578feb1d11893da4b18427146f25b4e538bb0ef7",
   "history/spec.md": "0c9d314ad7e32941af64b2d0d91a2ee6dcdbe1a3b2200a41ce6c8439258db2e0",
   "history/sync-manifests.md": "c9c539cbf9c0f52437810eda923c70630abf2fc49edaadc8d04e06fb04b95149",
+  "history/sync.md": "0a9a13904b92c7c24bf118037bb2aeeeb6018264309c555d220531676ca1d2c4",
   "history/task.md": "0b97f04781a53cb5d06318eaee234d979c38a24f633857a87bcee9c8acee5e69",
   "history/templates/changelog.md": "d4b87bebbe8efd57f835f4f39277f04b932a738c97c94dd35199a7465d7c562f",
   "history/templates/contributing.md": "a3f5a3c4b536a84ffc55f4d8f556b55b7d1b11f281fda9f7434ae83ce9e699df",

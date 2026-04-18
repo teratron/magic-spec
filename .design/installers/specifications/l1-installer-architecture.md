@@ -21,6 +21,16 @@ Keep the core engine decoupled from installer logic and ensure secure, versioned
 - Checksum verification of the downloaded tarball.
 - Path traversal prevention during extraction.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/` | Root installer directory |
+| `installers/config.json` | Engine path configuration (single source of truth) |
+| `installers/node/index.js` | Node.js installer entry point |
+| `installers/python/magic_spec/__main__.py` | Python installer entry point |
+| `installers/adapters.json` | IDE adapter registry |
+
 ## Document History
 
 | Version | Date | Author | Description |

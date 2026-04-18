@@ -53,6 +53,17 @@ Each template guarantees:
 - Required sections per RULES.md §5 (Overview, Motivation, Document History).
 - Placeholder markers for automation substitution.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.magic/templates/spec.md` | Full specification scaffold |
+| `.magic/templates/micro-spec.md` | Lightweight spec scaffold |
+| `.magic/templates/plan.md` | Implementation plan scaffold |
+| `.magic/templates/tasks.md` | Task ledger scaffold |
+| `.magic/templates/phase.md` | Phase definition scaffold |
+| `.magic/templates/retrospective.md` | Phase retrospective scaffold |
+
 ## Document History
 
 | Version | Date | Description |

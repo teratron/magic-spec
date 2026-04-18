@@ -28,6 +28,16 @@ Maintain high reliability of the engine core and installers through automated re
 
 Automated installer tests are triggered via `python installers/scripts/run_tests.py` or `npm test`. Cognitive engine tests are run via `/magic.simulate test`.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.magic/tests/suite.md` | Cognitive regression test suite (157 tests, v1.9.45) |
+| `.magic/simulate.md` | Simulation workflow that runs cognitive tests |
+| `installers/tests/test_integration.py` | Integration tests for installer pipeline |
+| `installers/tests/test_adapter_flags.py` | Adapter flag detection tests |
+| `installers/scripts/run_tests.py` | Unified test runner |
+
 ## Document History
 
 | Version | Date | Author | Description |

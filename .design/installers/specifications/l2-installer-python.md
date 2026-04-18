@@ -14,6 +14,14 @@ Provide a native installation path for Python/Data Science environments via `pip
 - **Build System**: Hatchling.
 - **Distribution**: PyPI.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/python/magic_spec/__main__.py` | Python installer entry point |
+| `installers/python/magic_spec/__init__.py` | Package version declaration |
+| `pyproject.toml` | Build configuration and version |
+
 ## Document History
 
 | Version | Date | Author | Description |

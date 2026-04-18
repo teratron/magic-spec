@@ -51,6 +51,22 @@ The following guards were added to the core workflows as part of the first relia
 - **RE-T71 — Intent Preservation** (`task.md`): When `task.md` sub-delegates to `init.md` or `analyze.md`, the original user intent is memoized and restored after delegation resolves.
 - **RE-T74 — Cross-Workspace Parity** (`task.md`): Pre-flight scans all registered workspaces for identically-named spec files. Version mismatch between copies triggers HALT with three resolution options.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.magic/analyze.md` | Ventilation workflow |
+| `.magic/spec.md` | Specification lifecycle workflow |
+| `.magic/task.md` | Task orchestration workflow |
+| `.magic/run.md` | Implementation execution workflow |
+| `.magic/rule.md` | Convention management workflow |
+| `.magic/init.md` | Bootstrap workflow |
+| `.magic/context-resolution.md` | Workspace resolution logic |
+| `.magic/scripts/executor.js` | Cross-platform script executor |
+| `.magic/templates/` | Canonical artifact scaffolds |
+| `.magic/.version` | Engine version pin |
+| `.magic/.checksums` | Kernel integrity manifest |
+
 ## Document History
 
 | Version | Date | Author | Description |

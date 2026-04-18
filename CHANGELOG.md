@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.169] - 2026-04-18
+
+### Added
+
+- **Core Workflow Documentation**: Added documentation and metadata files to `.magic/` for all core workflows.
+- **Engine Hardening**: Improved engine integrity checks and metadata synchronization robustness.
+
+### Changed
+
+- **Agent References**: Fixed typos and updated tool references in `.agents/` documentation.
+- **Gitignore**: Added `.kilocode` to project ignore list.
+
+### Meta
+
+- **Engine Sync**: Full project hygiene sync; validated engine metadata (C14 parity).
+
 ## [1.5.160] - 2026-04-11
 
 ### Added

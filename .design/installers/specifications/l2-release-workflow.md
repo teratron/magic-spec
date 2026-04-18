@@ -64,6 +64,16 @@ The following files are updated during the release:
 - `package.json`
 - `.magic/.version`
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/scripts/publish.py` | Unified release script |
+| `package.json` | npm version file |
+| `pyproject.toml` | Python version file |
+| `installers/python/magic_spec/__init__.py` | Python package version |
+| `.magic/.version` | Engine version pin |
+
 ## Document History
 
 | Version | Date | Author | Description |

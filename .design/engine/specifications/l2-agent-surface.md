@@ -51,6 +51,16 @@ Reserved domain for agent-specific operational rules or prompts.
 | **VIO-1 Compliance** | `.agents/` is fully covered by this specification. Any new agent component MUST align with this defined structure. |
 | **Universal Support** | Features in `.agents/` must avoid vendor lock-in (e.g., specific editor APIs) when possible, focusing on generic Markdown and shell invocations. |
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.agents/workflows/` | Agent-optimized workflow wrappers |
+| `.agents/skills/` | Agent toolkit and localized capabilities |
+| `AGENTS.md` | Root-level agent instructions (hardlinked) |
+| `CLAUDE.md` | Claude Code adapter instructions |
+| `QWEN.md` | Qwen adapter instructions |
+
 ## Document History
 
 | Version | Date | Description |

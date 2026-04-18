@@ -54,6 +54,16 @@ Each wrapper file contains:
 2. **Argument routing** — parsing and forwarding to engine logic.
 3. **User guidance** — brief descriptions visible in IDE command palettes.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `workflows/magic.analyze.md` | Analyze workflow entry point |
+| `workflows/magic.rule.md` | Rule workflow entry point |
+| `workflows/magic.run.md` | Run workflow entry point |
+| `workflows/magic.spec.md` | Spec workflow entry point |
+| `workflows/magic.task.md` | Task workflow entry point |
+
 ## Document History
 
 | Version | Date | Description |

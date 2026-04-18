@@ -53,6 +53,17 @@ A new automation script in `.magic/scripts/sync-skills.js` will:
 
 Installers (Node.js/Python) will run the synchronization logic upon deployment, ensuring that all available workflows are also exposed as skills.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `skills/magic.analyze/SKILL.md` | Generated skill wrapper for analyze |
+| `skills/magic.rule/SKILL.md` | Generated skill wrapper for rule |
+| `skills/magic.run/SKILL.md` | Generated skill wrapper for run |
+| `skills/magic.spec/SKILL.md` | Generated skill wrapper for spec |
+| `skills/magic.task/SKILL.md` | Generated skill wrapper for task |
+| `.magic/scripts/sync-skills.js` | Projection automation script |
+
 ## 5. Invariants
 
 - **Parity**: Content of `SKILL.md` (excluding frontmatter) must exactly match the source workflow.

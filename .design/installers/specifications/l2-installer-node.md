@@ -14,6 +14,13 @@ Provide a native installation path for JS/TS environments via `npm`/`npx`.
 - **Package Manager**: npm.
 - **Payload Handling**: Uses native `tar` or `node-tar` to extract the engine.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/node/index.js` | Node.js installer implementation |
+| `package.json` | npm package manifest and version |
+
 ## Document History
 
 | Version | Date | Author | Description |

@@ -9,8 +9,13 @@
         ".design",
         "docs",
         "workflows",
+        "skills",
         "README.md",
-        "CHANGELOG.md"
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "AGENTS.md",
+        "CLAUDE.md",
+        "QWEN.md"
       ]
     },
     "installers": {

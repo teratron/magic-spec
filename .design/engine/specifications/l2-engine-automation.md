@@ -41,6 +41,21 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 3. Append row to `.magic/history/{workflow}.md` (Smart History dedup).
 4. Regenerate `.magic/.checksums` across all tracked engine files.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.magic/scripts/executor.js` | Cross-platform entry point for all automation |
+| `.magic/scripts/check-prerequisites.js` | Pre-flight validation |
+| `.magic/scripts/generate-checksums.js` | Checksum regeneration |
+| `.magic/scripts/generate-context.js` | CONTEXT.md regeneration |
+| `.magic/scripts/init.js` | `.design/` scaffold setup |
+| `.magic/scripts/update-engine-meta.js` | Engine versioning and history update |
+| `.magic/scripts/update-project-meta.js` | Project metadata hygiene |
+| `.magic/.checksums` | Checksum manifest |
+| `.magic/.version` | Current engine version |
+| `.magic/history/` | Per-workflow change history |
+
 ## Document History
 
 | Version | Date | Author | Description |

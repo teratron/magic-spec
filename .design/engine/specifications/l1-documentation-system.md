@@ -28,6 +28,16 @@ Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md`, `analyz
 
 The following `docs/` files are reference material not tied to a specific `.magic/` workflow and are exempt from VIO-2 sync checks: `README.md`, `conception.md`, `contributing.md`, `checksums.md`.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `README.md` | Project entry point and overview |
+| `CHANGELOG.md` | Version history |
+| `CONTRIBUTING.md` | Developer guide |
+| `docs/` | Workflow-specific human-readable guides |
+| `docs/README.md` | Docs index |
+
 ## Document History
 
 | Version | Date | Author | Description |

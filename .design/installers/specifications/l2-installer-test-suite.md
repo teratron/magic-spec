@@ -57,6 +57,15 @@ The installers are the primary distribution mechanism for the Magic SDD engine. 
 
 `installers/scripts/run_tests.py` — unified entry point. Also reachable via `npm test` (C19 parity).
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `installers/tests/test_integration.py` | 14 integration tests for installer pipeline |
+| `installers/tests/test_adapter_flags.py` | 2 adapter flag detection tests |
+| `installers/tests/test_publish.py` | 2 release publishing tests |
+| `installers/scripts/run_tests.py` | Unified test runner entry point |
+
 ## Document History
 
 | Version | Date | Description |

@@ -32,6 +32,14 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 - [engine-core.md](engine-core.md) — defines `check-prerequisites` and init workflow.
 - [engine-automation.md](engine-automation.md) — defines executor scripts.
 
+## Canonical References
+
+| Path | Role |
+| :--- | :--- |
+| `.design/RULES.md` | Global project constitution monitored for drift |
+| `.magic/scripts/check-prerequisites.js` | Implementation of drift detection logic |
+| `.magic/context-resolution.md` | Calls check-prerequisites at startup |
+
 ## Document History
 
 | Version | Date | Description |
