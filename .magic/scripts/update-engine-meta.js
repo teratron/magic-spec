@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGINE META UPDATER (C14 Compliance)
@@ -141,7 +141,7 @@ function updateHistory(workflows, version, customMessage = null) {
     if (workflows.size === 0) return;
 
     const date = new Date().toISOString().split('T')[0];
-    if (!fs.existsSync(historyDir)) fs.mkdirSync(historyDir, { recursive: true });
+    mkdirSafe(historyDir);
 
     for (const wf of workflows) {
         // Support hierarchical paths (e.g., 'scripts/executor')
@@ -149,10 +149,7 @@ function updateHistory(workflows, version, customMessage = null) {
         const message = customMessage || 'Automated update via engine meta automation';
 
         // Ensure target directory exists for hierarchical history
-        const targetSubdir = path.dirname(historyFile);
-        if (!fs.existsSync(targetSubdir)) {
-            fs.mkdirSync(targetSubdir, { recursive: true });
-        }
+        mkdirSafe(path.dirname(historyFile));
 
         if (fs.existsSync(historyFile)) {
             const existing = fs.readFileSync(historyFile, 'utf8');
@@ -170,18 +167,21 @@ function updateHistory(workflows, version, customMessage = null) {
                 }
                 const startVersion = lastCols[0].split(' - ')[0];
                 lines[lines.length - 1] = `| ${startVersion} - ${version} | ${date} | ${message} |`;
-                fs.writeFileSync(historyFile, lines.join('\n') + '\n');
-                console.log(`📝 History updated (range condensed): ${wf}.md`);
+                if (writeFileSafe(historyFile, lines.join('\n') + '\n')) {
+                    console.log(`📝 History updated (range condensed): ${wf}.md`);
+                }
             } else {
                 const entry = `| ${version} | ${date} | ${message} |\n`;
-                fs.appendFileSync(historyFile, entry);
-                console.log(`📝 History updated: ${wf}.md`);
+                if (appendFileSafe(historyFile, entry)) {
+                    console.log(`📝 History updated: ${wf}.md`);
+                }
             }
         } else {
             const wfTitle = wf.charAt(0).toUpperCase() + wf.slice(1);
             const initialContent = `# ${wfTitle} Workflow History\n\n| Version | Date | Description |\n| :--- | :--- | :--- |\n| ${version} | ${date} | ${message} |\n`;
-            fs.writeFileSync(historyFile, initialContent);
-            console.log(`📝 History file created: ${wf}.md`);
+            if (writeFileSafe(historyFile, initialContent)) {
+                console.log(`📝 History file created: ${wf}.md`);
+            }
         }
     }
 }
@@ -192,7 +192,7 @@ function updateHistory(workflows, version, customMessage = null) {
  */
 function bumpVersion() {
     if (!fs.existsSync(versionPath)) {
-        fs.writeFileSync(versionPath, '1.0.0');
+        writeFileSafe(versionPath, '1.0.0');
         return '1.0.0';
     }
 
@@ -201,8 +201,11 @@ function bumpVersion() {
     if (parts.length === 3) {
         parts[2] = parseInt(parts[2]) + 1;
         const newVersion = parts.join('.');
-        fs.writeFileSync(versionPath, newVersion);
-        console.log(`📈 Version bumped: ${currentVersion} -> ${newVersion}`);
+        if (writeFileSafe(versionPath, newVersion)) {
+            console.log(`📈 Version bumped: ${currentVersion} -> ${newVersion}`);
+        } else {
+            console.log(`🧪 [dry-run] would bump version: ${currentVersion} -> ${newVersion}`);
+        }
         return newVersion;
     }
     return currentVersion;

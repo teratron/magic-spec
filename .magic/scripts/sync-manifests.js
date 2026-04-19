@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeFileSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MANIFEST SYNC (Version Parity across ecosystems)
@@ -39,8 +40,9 @@ function syncManifests() {
             if (m.regex.test(content)) {
                 const newContent = content.replace(m.regex, m.replace);
                 if (content !== newContent) {
-                    fs.writeFileSync(fullPath, newContent);
-                    console.log(`✅ Updated ${m.name}`);
+                    if (writeFileSafe(fullPath, newContent)) {
+                        console.log(`✅ Updated ${m.name}`);
+                    }
                     changes++;
                 } else {
                     console.log(`ℹ️ ${m.name} is already current.`);

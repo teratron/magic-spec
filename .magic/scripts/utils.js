@@ -1,9 +1,82 @@
 const fs = require('fs');
+const path = require('path');
 const crypto = require('crypto');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SHARED UTILITIES (Engine Kernel)
 // ═══════════════════════════════════════════════════════════════════════════
+
+// ───────────────────────────────────────────────────────────────────────────
+// Dry-Run Guard (Read-Only Invariant)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Indicates whether the current process is running under dry-run semantics.
+ * Set by orchestrators (e.g. sync.js) via MAGIC_DRY_RUN=1. All filesystem
+ * mutation helpers below honor this flag — callers should prefer them over
+ * raw fs.* write calls to preserve the read-only invariant.
+ *
+ * @returns {boolean} True when MAGIC_DRY_RUN is set to a truthy value.
+ */
+function isDryRun() {
+    const v = process.env.MAGIC_DRY_RUN;
+    return v === '1' || v === 'true';
+}
+
+/**
+ * Writes a file, honoring MAGIC_DRY_RUN. In dry-run mode, logs the intended
+ * mutation (path + whether content would actually change) and skips the write.
+ *
+ * @param {string} filePath - Absolute or relative target path.
+ * @param {string|Buffer} content - Data to write.
+ * @returns {boolean} True when a physical write occurred; false under dry-run.
+ */
+function writeFileSafe(filePath, content) {
+    if (isDryRun()) {
+        const existed = fs.existsSync(filePath);
+        const changed = !existed || fs.readFileSync(filePath, 'utf8') !== String(content);
+        const rel = path.relative(process.cwd(), filePath);
+        const tag = existed ? (changed ? 'would modify' : 'unchanged') : 'would create';
+        console.log(`  🧪 [dry-run] ${tag}: ${rel}`);
+        return false;
+    }
+    fs.writeFileSync(filePath, content);
+    return true;
+}
+
+/**
+ * Appends to a file, honoring MAGIC_DRY_RUN.
+ *
+ * @param {string} filePath - Absolute or relative target path.
+ * @param {string|Buffer} content - Data to append.
+ * @returns {boolean} True when a physical append occurred; false under dry-run.
+ */
+function appendFileSafe(filePath, content) {
+    if (isDryRun()) {
+        const rel = path.relative(process.cwd(), filePath);
+        console.log(`  🧪 [dry-run] would append to: ${rel}`);
+        return false;
+    }
+    fs.appendFileSync(filePath, content);
+    return true;
+}
+
+/**
+ * Creates a directory (recursive), honoring MAGIC_DRY_RUN.
+ *
+ * @param {string} dirPath - Absolute or relative directory path.
+ * @returns {boolean} True when a physical mkdir occurred; false under dry-run.
+ */
+function mkdirSafe(dirPath) {
+    if (fs.existsSync(dirPath)) return false;
+    if (isDryRun()) {
+        const rel = path.relative(process.cwd(), dirPath);
+        console.log(`  🧪 [dry-run] would create dir: ${rel}`);
+        return false;
+    }
+    fs.mkdirSync(dirPath, { recursive: true });
+    return true;
+}
 
 /**
  * Converts Windows-style backslashes to POSIX forward slashes.
@@ -77,4 +150,13 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
     return arrayOfFiles;
 }
 
-module.exports = { hashFile, hashFileSafe, getAllFiles, normalizePath };
+module.exports = {
+    hashFile,
+    hashFileSafe,
+    getAllFiles,
+    normalizePath,
+    isDryRun,
+    writeFileSafe,
+    appendFileSafe,
+    mkdirSafe,
+};

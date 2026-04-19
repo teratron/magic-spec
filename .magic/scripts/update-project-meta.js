@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeFileSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROJECT META UPDATER (C14.3 Extension)
@@ -127,7 +128,7 @@ function updateFileMeta(filePath, date, msg) {
         }
     }
 
-    fs.writeFileSync(filePath, content);
+    writeFileSafe(filePath, content);
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -144,8 +145,7 @@ function runHygiene(targetFiles) {
             const content = fs.readFileSync(file, 'utf8');
             // Replace 3 or more newlines with 2 (leaving exactly one blank line)
             const cleaned = content.replace(/\n{3,}/g, '\n\n');
-            if (content !== cleaned) {
-                fs.writeFileSync(file, cleaned);
+            if (content !== cleaned && writeFileSafe(file, cleaned)) {
                 console.log(`  ✨ Cleaned: ${path.relative(process.cwd(), file)}`);
             }
         }

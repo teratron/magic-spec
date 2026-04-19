@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { normalizePath } = require('./utils');
+const { normalizePath, writeFileSafe, mkdirSafe, isDryRun } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCRIPT: SYNC-SKILLS
@@ -83,9 +83,7 @@ function sync() {
                 ? frontmatterMatch[1].trim()
                 : `name: ${metadata.name}\ndescription: ${metadata.description}`;
 
-            if (!fs.existsSync(targetDir)) {
-                fs.mkdirSync(targetDir, { recursive: true });
-            }
+            mkdirSafe(targetDir);
 
             const skillContent = `---
 ${frontmatterContent}
@@ -95,8 +93,9 @@ ${frontmatterContent}
 
 ${body}`;
 
-            fs.writeFileSync(targetFile, skillContent, 'utf8');
-            console.log(` ✅ Skill generated: ${name}`);
+            if (writeFileSafe(targetFile, skillContent)) {
+                console.log(` ✅ Skill generated: ${name}`);
+            }
         });
 
         // ───────────────────────────────────────────────────────────────────────────
@@ -122,8 +121,12 @@ ${body}`;
                     }
 
                     if (isGenerated) {
-                        console.log(` 🗑️  Removing orphaned generated skill: ${dir}`);
-                        fs.rmSync(orphanPath, { recursive: true, force: true });
+                        if (isDryRun()) {
+                            console.log(` 🧪 [dry-run] would remove orphaned generated skill: ${dir}`);
+                        } else {
+                            console.log(` 🗑️  Removing orphaned generated skill: ${dir}`);
+                            fs.rmSync(orphanPath, { recursive: true, force: true });
+                        }
                     } else {
                         console.log(` ⏭️  Skipping hand-crafted skill: ${dir}`);
                     }

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { hashFileSafe, getAllFiles, normalizePath } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
@@ -45,9 +45,9 @@ function run() {
 
     // Write to .checksums
     const output = JSON.stringify(checksums, null, 2);
-    fs.writeFileSync(CHECKSUMS_PATH, output + '\n');
-
-    console.log(`Successfully updated ${CHECKSUMS_PATH}`);
+    if (writeFileSafe(CHECKSUMS_PATH, output + '\n')) {
+        console.log(`Successfully updated ${CHECKSUMS_PATH}`);
+    }
     console.log(`Files processed: ${Object.keys(checksums).length}`);
 }
 

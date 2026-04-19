@@ -7,10 +7,46 @@ const fs = require('fs');
 // ═══════════════════════════════════════════════════════════════════════════
 
 const magicDir = path.join(__dirname);
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
+
+// ───────────────────────────────────────────────────────────────────────────
+// Argument Parsing (Strict Contract)
+// ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Executes a sub-sync script.
+ * Whitelist of flags accepted by sync.js. Silent-ignore of unknown flags
+ * previously caused a read-only invariant violation (callers passed
+ * `--dry-run`, received no error, writes happened anyway). Keep this list
+ * explicit: add new flags here before wiring them into main().
+ */
+const KNOWN_FLAGS = new Set(['--skip-meta', '--skip-docs', '--dry-run']);
+
+const unknown = rawArgs.filter(a => a.startsWith('-') && !KNOWN_FLAGS.has(a));
+if (unknown.length > 0) {
+    // TODO: user choice — policy for unknown flags.
+    // Currently: strict fail (Option A). Switch to warn-only (Option B) or
+    // whitelist-with-suggestion (Option C) by editing the block below.
+    console.error(`❌ sync.js: unknown flag(s): ${unknown.join(', ')}`);
+    console.error(`   Accepted: ${[...KNOWN_FLAGS].join(', ')}`);
+    process.exit(2);
+}
+
+const dryRun = rawArgs.includes('--dry-run');
+if (dryRun) {
+    process.env.MAGIC_DRY_RUN = '1';
+    console.log('🧪 Dry-run mode enabled — no files will be written.');
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Sub-script Executor
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Executes a sub-sync script. The dry-run flag is propagated via the
+ * MAGIC_DRY_RUN environment variable (inherited by child processes),
+ * which each sub-script honors through utils.writeFileSafe.
+ *
+ * @param {string} name - Sub-script filename (relative to magicDir).
  */
 function runSubscript(name) {
     const scriptPath = path.join(magicDir, name);
@@ -28,7 +64,7 @@ function main() {
     console.log('🚀 Starting lifecycle synchronization...');
 
     // 1. Update Engine Meta & Version (C14)
-    if (!args.includes('--skip-meta')) {
+    if (!rawArgs.includes('--skip-meta')) {
         runSubscript('update-engine-meta.js');
     }
 
@@ -39,11 +75,12 @@ function main() {
     runSubscript('update-project-meta.js');
 
     // 4. Sync Documentation
-    if (!args.includes('--skip-docs')) {
+    if (!rawArgs.includes('--skip-docs')) {
         runSubscript('sync-docs.js');
     }
 
-    console.log('✨ Lifecycle Sync: COMPLETED.');
+    const tail = dryRun ? '(dry-run — no files modified)' : 'COMPLETED.';
+    console.log(`✨ Lifecycle Sync: ${tail}`);
 }
 
 main();

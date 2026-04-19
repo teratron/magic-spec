@@ -5,6 +5,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.170] - 2026-04-19
+
+### Fixed
+
+- **Read-Only Invariant (sync orchestrator)**: `node .magic/scripts/executor.js sync --dry-run` previously performed real writes because `sync.js` silently ignored unknown flags and sub-scripts had no dry-run support. All sync sub-scripts (`sync-manifests`, `sync-docs`, `update-project-meta`, `update-engine-meta`, `generate-checksums`, `sync-skills`) now honor `MAGIC_DRY_RUN=1` via shared helpers in `utils.js` (`writeFileSafe`, `appendFileSafe`, `mkdirSafe`).
+- **Strict CLI Contract**: `sync.js` now rejects unknown flags with exit code `2` and an explicit accepted-flags list, preventing silent-ignore regressions.
+
+### Added
+
+- **`utils.js` safe-writer helpers**: `isDryRun()`, `writeFileSafe()`, `appendFileSafe()`, `mkdirSafe()` — centralize the filesystem mutation gate so future scripts inherit dry-run support by default.
+
 ## [1.5.169] - 2026-04-18
 
 ### Added

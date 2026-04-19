@@ -1,5 +1,6 @@
 const fs = require('fs');
 const path = require('path');
+const { writeFileSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOCUMENTATION SYNC (CONTRIBUTING.md & docs/)
@@ -110,8 +111,9 @@ function generateContributing(targetVersion) {
         .replace(/{{directory_tree}}/g, directoryTree)
         .replace(/{{setup_command}}/g, 'uv sync');
 
-    fs.writeFileSync(contributingPath, rendered);
-    console.log(`✅ Regenerated CONTRIBUTING.md (from template)`);
+    if (writeFileSafe(contributingPath, rendered)) {
+        console.log(`✅ Regenerated CONTRIBUTING.md (from template)`);
+    }
 }
 
 /**
@@ -156,8 +158,7 @@ function syncDocsFolder(targetVersion) {
                 }
             }
 
-            if (changed) {
-                fs.writeFileSync(fullPath, content);
+            if (changed && writeFileSafe(fullPath, content)) {
                 console.log(`✅ Synced docs/${file}`);
             }
         });
