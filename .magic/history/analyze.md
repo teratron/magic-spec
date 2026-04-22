@@ -17,3 +17,4 @@
 | 1.5.130 | 2026-04-04 | Translate Russian examples and rule titles to English for global consistency |
 | 1.5.131 | 2026-04-04 | Translate remaining Russian examples in analyze.md |
 | 1.5.140 - 1.5.159 | 2026-04-10 | Automated update via engine meta automation |
+| 1.5.171 | 2026-04-22 | P0: Confidence Taxonomy + Rationale Extraction |

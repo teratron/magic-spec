@@ -15,6 +15,8 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **generate-checksums.js**: Maintains `.magic/.checksums`.
 - **generate-context.js**: Regenerates `CONTEXT.md` from current project state.
 - **init.js**: Scripted setup of the `.design/` directory.
+- **analyze-coverage.js**: Confidence Taxonomy engine — classifies project files by spec coverage confidence (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED) using Canonical References from specifications.
+- **extract-rationale.js**: Rationale Extraction engine — scans source code for design rationale markers (NOTE/WHY/HACK/etc.) and identifies Shadow Logic (uncovered design decisions).
 
 ## Logical Flows
 
@@ -52,6 +54,8 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 | `.magic/scripts/init.js` | `.design/` scaffold setup |
 | `.magic/scripts/update-engine-meta.js` | Engine versioning and history update |
 | `.magic/scripts/update-project-meta.js` | Project metadata hygiene |
+| `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
+| `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
 | `.magic/.checksums` | Checksum manifest |
 | `.magic/.version` | Current engine version |
 | `.magic/history/` | Per-workflow change history |
@@ -60,6 +64,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.3.0 | 2026-04-22 | Agent | Added analyze-coverage.js (Confidence Taxonomy) and extract-rationale.js (Rationale Extraction) to Components and Canonical References. |
 | 1.2.0 | 2026-03-20 | Agent | Added generate-context.js to Components; fixed engine file count reference. |
 | 1.1.0 | 2026-03-04 | Agent | Added History Subsystem and Engine Meta Update Flow sections. |
 | 1.0.0 | 2026-03-03 | Antigravity | Initial stable version (captured from existing scripts). |

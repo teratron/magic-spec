@@ -64,6 +64,43 @@ Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.t
 
 Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfig.json`, `ruff`, etc.) for `RULES.md §7`.
 
+## Confidence Taxonomy
+
+Coverage classification uses a four-level confidence taxonomy (inspired by knowledge-graph confidence scoring) to provide a nuanced view of spec-to-code traceability:
+
+| Level | Meaning | Source |
+| :--- | :--- | :--- |
+| **EXTRACTED** | File path is explicitly listed in a spec's `Canonical References` table | Direct reference |
+| **INFERRED** | File is a sibling of explicitly referenced paths (same parent directory) | Structural proximity |
+| **AMBIGUOUS** | File is in a scope-adjacent directory (same grandparent) but has no direct reference | Weak association |
+| **UNCOVERED** | No specification references this file or its containing directory | No coverage |
+
+**Usage**: Run `node .magic/scripts/executor.js analyze-coverage --json` for structured output. The agent should use this data to enrich Gap Report entries in Modes B/C with confidence labels instead of binary Covered/Uncovered classification.
+
+**Coverage metric**: `coverage_percent = (EXTRACTED + INFERRED) / total * 100`. AMBIGUOUS files are explicitly excluded — they require human review to determine if a spec should cover them.
+
+## Rationale Extraction
+
+Source code often contains design rationale in structured comments that may not be captured in formal specifications. The Rationale Extraction system scans for these patterns and identifies "Shadow Logic" — design decisions documented only in code.
+
+### Supported Markers
+
+| Marker | Purpose |
+| :--- | :--- |
+| `NOTE` | General design notes |
+| `WHY` | Explanation of a design choice |
+| `HACK` | Known workaround or compromise |
+| `IMPORTANT` | Critical implementation detail |
+| `TODO` | Planned future work |
+| `FIXME` | Known issue requiring attention |
+| `SAFETY` | Security or safety consideration |
+| `WARN` | Warning about side effects |
+| `PERF` | Performance-related decision |
+
+**Usage**: Run `node .magic/scripts/executor.js extract-rationale --json` for structured output. Comments are matched in Python (`# MARKER:`), JS/TS/Go/Rust/C (`// MARKER:`), Shell, and PowerShell files.
+
+**Shadow Logic**: Rationale comments found in files NOT covered by any spec's Canonical References. These represent design decisions that should be formalized into specifications.
+
 ## Modes: Analysis vs. Re-Analysis
 
 ### [Mode A] First-Time Analysis
@@ -94,10 +131,14 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Read existing specs; extract currently described paths/logic.
 2. Scan actual project; build delta.
-3. **Gap Report**:
-    - **Covered**: Specs match code.
-    - **Uncovered**: Code found without spec coverage.
-    - **Orphaned**: Spec refers to deleted code.
+3. **Gap Report** (enhanced with Confidence Taxonomy):
+    - **Pre-scan**: Run `node .magic/scripts/executor.js analyze-coverage --json` to obtain per-file confidence data.
+    - **Covered** (sub-classified by confidence):
+      - *EXTRACTED*: File explicitly listed in spec's Canonical References — highest confidence.
+      - *INFERRED*: File is a sibling of explicitly referenced paths — reasonable coverage.
+      - *AMBIGUOUS*: File is scope-adjacent — needs human review to confirm coverage.
+    - **Uncovered**: Code found without spec coverage (confidence = UNCOVERED).
+    - **Orphaned**: Spec refers to deleted code (detected via `shadow_specs` in coverage output).
     - **Drifted**: Spec structure differs from code.
     - **RESCUE (AOP)**: Name, title, or semantic similarity >80% → Propose rename/sync. If structural similarity <50% despite path correlation → Treat as **Uncovered** (New Spec) + **Orphaned** (Delete Old Spec).
     - **Logic Evolution**: If code structure/logic inside covered directories has structurally drifted (e.g., >30% new sub-modules — defined as new directories or files containing logic exports; or API schema shift) → **Propose Reality Sync**: Generate a structured diff or a "New Draft" version of the specification that reflects the actual codebase implementation. If approved: dispatch via `spec.md` Amendment Rule (Stable → RFC). C12 cascade applies to all L2 dependents of the affected spec.
@@ -127,17 +168,23 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
     - **Report violations as `STRUCTURE` category**.
 4. **Coverage Check**: Scan project directories *within the active workspace scope (C15)*. Identify folders with NO corresponding spec file (Gap Report).
     - **RESCUE (AOP)**: For each orphaned spec + uncovered directory pair, check name, path, title, or semantic similarity. If overall similarity >80%, classify as `RESCUE` (rename opportunity) instead of separate Gap + Orphan entries.
-5. **Documentation & Version Audit**:
+    - **Enhanced Coverage (Confidence Taxonomy)**: Run `node .magic/scripts/executor.js analyze-coverage --json`. Sub-classify all files by confidence level (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED). Include confidence breakdown in the Coverage Check report section. Flag files with AMBIGUOUS confidence for human review.
+5. **Rationale Audit**: Run `node .magic/scripts/executor.js extract-rationale --json`. Identify Shadow Logic — design rationale in code not captured by any specification.
+    - For each Shadow Logic file: report the count of rationale markers, their types, and the uncovered file path.
+    - If `shadow_files > 0`: Include a `SHADOW_LOGIC` advisory section recommending spec creation for files with ≥3 rationale comments.
+    - Report marker distribution (NOTE/WHY/HACK/etc.) as a project health indicator. High HACK/FIXME counts signal technical debt.
+6. **Documentation & Version Audit**:
     - Check if `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
     - Check for version parity across `package.json`, `pyproject.toml`, and installer init files.
     - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
-6. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
-7. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-8. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
+7. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
+8. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+9. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
     - If registry healing is needed (Registry Gaps/Orphans) → Propose `magic.spec --audit --fix`.
-9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
-10. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
+    - If Shadow Logic detected → Suggest `magic.spec create {module}` for files with ≥3 uncovered rationale comments.
+10. **Report**: Consolidated list of errors, warnings, and suggested repairs.
+11. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 
 ### [Mode D] Focused Analysis
 
@@ -166,16 +213,18 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 
 | Category | Logic |
 | :--- | :--- |
-| **Covered** | Files explicitly mapped to a `Stable` spec. |
-| **Uncovered** | Orphan files without spec mapping. |
+| **Covered** | Files explicitly mapped to a `Stable` spec (sub-classified: EXTRACTED / INFERRED / AMBIGUOUS). |
+| **Uncovered** | Orphan files without spec mapping (confidence = UNCOVERED). |
 | **Gaps** | `RFC` or `Draft` specs with no corresponding implementation. |
 | **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
+| **Shadow Logic** | Files containing rationale comments (NOTE/WHY/HACK/etc.) not captured by any specification. |
 
 ### Advisory Report Criteria
 
-- **Signal**: Final report starts with 🟢/🟡/🔴 icon. 🟢 = <5% uncovered/drift. 🔴 = any core engine drift or >25% project drift.
-- **Actionable**: Each Uncovered/Drift item must have a "Sync Path" (e.g. `magic:spec auto-spec`).
+- **Signal**: Final report starts with 🟢/🟡/🔴 icon. 🟢 = <5% uncovered/drift AND <3 shadow logic files. 🟡 = AMBIGUOUS files >15% of total OR shadow files with ≥3 HACK/FIXME markers. 🔴 = any core engine drift or >25% project drift.
+- **Actionable**: Each Uncovered/Drift item must have a "Sync Path" (e.g. `magic:spec auto-spec`). Shadow Logic items get `→ /magic.spec create {module}`.
 - **Engine Bias**: If engine files (`.magic/`) are drifting → priority = `BLOCKER`.
+- **Confidence Breakdown**: Include a summary line: `Coverage: {extracted}% EXTRACTED, {inferred}% INFERRED, {ambiguous}% AMBIGUOUS, {uncovered}% UNCOVERED`.
 
 ## Analysis Completion Checklist
 
@@ -186,14 +235,14 @@ Mode A/B Checklist — {scope}
   ☐ Coverage: all files mapped to spec status; Drift detection run
   ☐ Advisory Report generated with Signal and Sync Paths
 
-Mode C Checklist — {workspace} "{text}"
-  ☐ Mode B Full scan completed for baseline
-  ☐ Focus resolution: text "{text}" mapped to specific area
-  ☐ Gap report: Focus area reviewed for orphans/drift
+Mode C Checklist — Ventilation
+  ☐ Self-check + Registry audit completed
+  ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
+  ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
   ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
      Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
-  ☐ Advisory Report filtered to match focused scope
+  ☐ Advisory Report includes Confidence Breakdown and Shadow Logic advisory
 ```
 
 ## Advisory Report
@@ -286,10 +335,12 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Registry audit: orphans and unregistered files identified
   ☐ Structural Integrity checked (if workspace specified)
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
+  ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
+  ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
   ☐ Rule validation: RULES.md §7 compliance checked
   ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
   ☐ Report delivered: all findings consolidated before any HALT
-  ☐ Advisory Report appended to output
+  ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)
 
 Analysis Checklist — Mode D: Focused
