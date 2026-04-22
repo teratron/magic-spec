@@ -64,11 +64,11 @@ const DEFAULT_HTML_PATH = path.join(designDir, 'spec-graph.html');
 
 /** @type {Record<string, {color: string, shape: string}>} */
 const NODE_TYPES = {
-    workspace:  { color: '#4A90D9', shape: 'diamond' },
-    spec:       { color: '#50C878', shape: 'dot' },
-    file:       { color: '#A0A0A0', shape: 'square' },
+    workspace: { color: '#4A90D9', shape: 'diamond' },
+    spec: { color: '#50C878', shape: 'dot' },
+    file: { color: '#A0A0A0', shape: 'square' },
     convention: { color: '#F5A623', shape: 'triangle' },
-    phase:      { color: '#9B59B6', shape: 'star' },
+    phase: { color: '#9B59B6', shape: 'star' },
 };
 
 /** @type {string[]} Valid edge relation types. */
@@ -1116,7 +1116,7 @@ function printSummary(analysis) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Main entry point. Orchestrates the full graphify pipeline.
+ * Main entry point. Orchestrates the full pipeline.
  */
 function main() {
     // 1. Extract workspaces
