@@ -62,6 +62,10 @@ CODEX.md
 .agents/skills/magic.spec
 .agents/skills/magic.task
 
+# Generated graph artifacts
+.design/spec-graph.html
+.design/spec-graph.json
+
 # Local settings (never commit)
 */settings.json
 */settings.*.json
