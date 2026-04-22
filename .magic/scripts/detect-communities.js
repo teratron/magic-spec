@@ -38,12 +38,12 @@ function numArg(flag, def) {
 }
 
 const OVERSIZED_THRESHOLD_PCT = numArg('--threshold', 25);
-const MAX_ITERATIONS          = numArg('--max-iter', 50);
-const MIN_COMMUNITY_NODES     = numArg('--min-nodes', 2);
-const JSON_OUTPUT             = args.includes('--json');
-const INCLUDE_MD              = args.includes('--include-md');
+const MAX_ITERATIONS = numArg('--max-iter', 50);
+const MIN_COMMUNITY_NODES = numArg('--min-nodes', 2);
+const JSON_OUTPUT = args.includes('--json');
+const INCLUDE_MD = args.includes('--include-md');
 
-const rootDir   = process.cwd();
+const rootDir = process.cwd();
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 
 /** Absolute path to the root design directory. */
@@ -128,8 +128,8 @@ function scanDir(dir, result = []) {
 // JavaScript — require() / import ... from
 // ───────────────────────────────────────────────────────────────────────────
 
-const JS_REQUIRE_RE   = /require\(\s*['"](\.[^'"]+)['"]\s*\)/g;
-const JS_IMPORT_RE    = /(?:^|\n)\s*import\s+(?:[^'"]*\s+from\s+)?['"](\.[^'"]+)['"]/g;
+const JS_REQUIRE_RE = /require\(\s*['"](\.[^'"]+)['"]\s*\)/g;
+const JS_IMPORT_RE = /(?:^|\n)\s*import\s+(?:[^'"]*\s+from\s+)?['"](\.[^'"]+)['"]/g;
 
 /**
  * Extracts project-relative dependency paths from a JS file.
@@ -142,7 +142,7 @@ function extractJsDeps(absPath) {
     try { content = fs.readFileSync(absPath, 'utf8'); }
     catch (_) { return []; }
 
-    const dir  = path.dirname(absPath);
+    const dir = path.dirname(absPath);
     const deps = new Set();
     const exts = ['.js', ''];
 
@@ -177,7 +177,7 @@ const PY_STDLIB = new Set([
     'logging', 'argparse', 'inspect', 'ast', '__future__',
 ]);
 
-const PY_IMPORT_RE      = /^(?:import|from)\s+([a-zA-Z0-9_.]+)/gm;
+const PY_IMPORT_RE = /^(?:import|from)\s+([a-zA-Z0-9_.]+)/gm;
 const PY_PACKAGE_PREFIX = 'magic_spec';
 
 /**
@@ -241,7 +241,7 @@ function extractMdDeps(absPath) {
     try { content = fs.readFileSync(absPath, 'utf8'); }
     catch (_) { return []; }
 
-    const dir  = path.dirname(absPath);
+    const dir = path.dirname(absPath);
     const deps = new Set();
     MD_LINK_RE.lastIndex = 0;
     let m;
@@ -695,9 +695,9 @@ function main() {
         const ext = path.extname(absPath);
         let deps = [];
 
-        if (ext === '.js')  deps = extractJsDeps(absPath);
-        if (ext === '.py')  deps = extractPyDeps(absPath);
-        if (ext === '.md')  deps = extractMdDeps(absPath);
+        if (ext === '.js') deps = extractJsDeps(absPath);
+        if (ext === '.py') deps = extractPyDeps(absPath);
+        if (ext === '.md') deps = extractMdDeps(absPath);
 
         for (const dep of deps) {
             ensureNode(dep);
