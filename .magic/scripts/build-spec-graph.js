@@ -437,41 +437,6 @@ function extractPhases(wsName) {
     return phases;
 }
 
-/**
- * Parses PLAN.md for a workspace and creates plans edges from phases to specs.
- * Looks for spec links: [name](specifications/l2-xxx.md)
- *
- * @param {string} wsName - Workspace name.
- */
-function extractPlanLinks(wsName) {
-    const planPath = path.join(designAbs, wsName, 'PLAN.md');
-    if (!fs.existsSync(planPath)) return;
-
-    const content = fs.readFileSync(planPath, 'utf8');
-    const lines = content.split(/\r?\n/);
-
-    // Collect spec links associated with phases/sections
-    const specLinkRe = /\[([^\]]+)\]\(specifications\/([\w-]+\.md)\)/g;
-
-    let match;
-    while ((match = specLinkRe.exec(content)) !== null) {
-        const specFile = match[2];
-        const specId = `spec:${wsName}/${specFile.replace(/\.md$/, '')}`;
-
-        // Link from any phase in this workspace
-        // Since PLAN.md doesn't always have explicit phase groupings,
-        // link to the workspace itself as a planning relationship
-        if (nodes.has(specId)) {
-            // Find relevant phase nodes for this workspace
-            for (const [nodeId, node] of nodes) {
-                if (node.type === 'phase' && node.workspace === wsName) {
-                    addEdge(nodeId, specId, 'plans');
-                }
-            }
-        }
-    }
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // GRAPH ANALYSIS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1131,7 +1096,6 @@ function main() {
         const registrySpecs = extractSpecRegistry(wsName);
         extractSpecDetails(wsName, registrySpecs);
         extractPhases(wsName);
-        extractPlanLinks(wsName);
     }
 
     // 4. Compute degrees and run analysis

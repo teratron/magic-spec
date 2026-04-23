@@ -35,13 +35,13 @@ The server bootstraps by running `build-spec-graph --json` internally, then expo
 
 | Tool | Description |
 | :--- | :--- |
-| `get_graph_summary` | Node/edge counts, top god nodes, orphaned files |
+| `query_graph` | Search nodes by label/id substring with optional type filter |
 | `get_node` | Full metadata for a single node by ID |
-| `get_neighbors` | Direct neighbors of a node with edge relations |
-| `bfs_subgraph` | BFS traversal from a seed node up to depth N |
-| `find_path` | Shortest path between two nodes |
-| `get_workspace_coverage` | Coverage stats per workspace |
-| `search_nodes` | Keyword search across node IDs and labels |
+| `get_neighbors` | Adjacent nodes with their edge relation types |
+| `find_gaps` | Orphaned files, missing Implements links, convention orphans |
+| `shortest_path` | BFS shortest path between two node IDs |
+| `get_coverage` | Per-workspace coverage statistics |
+| `god_nodes` | Top-N nodes by degree (architectural hotspots) |
 
 **Integration:** Register as an MCP server in Claude Code settings:
 
