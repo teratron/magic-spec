@@ -30,6 +30,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 - **Health**: PLAN.md phase completion status & TASKS.md metrics (Done/Blocked/Cancelled).
 - **Growth**: RULES.md §7 entry count & history scan.
 - **Drift**: Cross-reference INDEX ↔ PLAN ↔ TASKS for orphans/phantoms.
+- **Graph Snapshot** (L1 & L2): Run `node .magic/scripts/executor.js build-spec-graph --json > .design/graph-snapshot.json`. If a previous snapshot exists, run `node .magic/scripts/executor.js diff-spec-graph .design/graph-before.json .design/graph-snapshot.json` to surface structural deltas: new/removed nodes, coverage shifts, god node evolution. Rename the snapshot to `graph-before.json` after use (rolling baseline).
 
 ### 3. Analyze (L2 Only)
 
@@ -78,6 +79,8 @@ Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use 
 Retro Checklist — {Level}
   ☐ Context: Zero-Prompt resolution; only RETROSPECTIVE.md modified
   ☐ Data: INDEX (statuses), PLAN (coverage), TASKS (metrics) analyzed
+  ☐ Graph Snapshot: build-spec-graph --json saved to .design/graph-snapshot.json
+  ☐ Graph Diff: diff-spec-graph executed if graph-before.json exists; structural deltas noted
   ☐ DORA Metrics: Delivery performance (DF/CFR) recorded for L2
   ☐ Deep Audit: Shadow logic and Logic-to-Spec parity verified
   ☐ Independent Analyst (C24): Signal reviewed through spec-quality lens before final report

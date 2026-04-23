@@ -5,6 +5,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.176] - 2026-04-23
+
+### Added
+
+- **Specification Knowledge Graph** (`build-spec-graph.js`): Full `extract → build → analyze → export` pipeline over `.design/` SDD artifacts. Produces workspace/spec/file/convention/phase nodes with edges. Outputs human-readable summary (default), `--json` for machine-readable, `--html` for interactive vis.js visualization. Includes God Nodes, orphaned files, missing Implements, bridge specs, and per-workspace coverage stats.
+- **Community Detection** (`detect-communities.js`): Label Propagation algorithm (pure JS, no deps) on a multi-layer dependency graph (JS `require()`, Python imports, Markdown cross-references). Computes cohesion, modularity, and Jaccard alignment against `workspace.json`. Flags oversized communities with BFS-based split suggestions. Use `--include-md` for richer 8-community structure.
+- **Incremental SHA256 Cache** (`cache-utils.js`): Shared cache module with atomic writes, frontmatter-stripped hashing for `.md` files, dead-entry pruning, and OS-agnostic path keys. Ready for use by any analyze script via `require('./cache-utils')`.
+- **Graph Diff** (`diff-spec-graph.js`): Retrospective structural diff between two `build-spec-graph --json` snapshots. Surfaces node/edge additions and removals, degree changes, god node evolution, per-workspace coverage deltas, and orphan/convention drift.
+- **MCP Server** (`serve-spec-graph.js`): stdio MCP server (JSON-RPC 2.0) exposing the SDD graph as 7 AI-agent tools: `query_graph`, `get_node`, `get_neighbors`, `find_gaps`, `shortest_path`, `get_coverage`, `god_nodes`. Builds the graph on startup via `build-spec-graph --json`.
+- **Token Benchmark** (`benchmark.js`): Quantitative token efficiency measurement — raw corpus (238K tokens), spec layer (16K, 14.5× cheaper), BFS graph query (2.2K avg, 107.9× cheaper). Provides evidence of SDD's context economy.
+- **Confidence Taxonomy** (`analyze-coverage.js`): Four-level file coverage classification (EXTRACTED / INFERRED / AMBIGUOUS / UNCOVERED) integrated into Mode B/C of `magic.analyze`.
+- **Rationale Extraction** (`extract-rationale.js`): Scans source files for structured design markers (`NOTE`, `WHY`, `HACK`, `IMPORTANT`, `TODO`, etc.) and identifies Shadow Logic — design decisions not captured in any spec.
+
+### Changed
+
+- **`magic.analyze` Mode C** (Ventilation): Added steps 6 (Specification Knowledge Graph via `build-spec-graph`) and 7 (Workspace Boundary Analysis via `detect-communities --include-md`). Updated completion checklist with two new items.
+- **`magic.retrospective`**: Added Graph Snapshot (`build-spec-graph --json`) and Graph Diff (`diff-spec-graph`) to the Collect step. Updated Retrospective Completion Checklist with two new items.
+
+### Meta
+
+- **Engine version**: bumped to `1.5.176` (eight new scripts auto-detected and checksummed by C14).
+
 ## [1.5.170] - 2026-04-19
 
 ### Fixed

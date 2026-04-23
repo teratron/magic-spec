@@ -173,18 +173,27 @@ Source code often contains design rationale in structured comments that may not 
     - For each Shadow Logic file: report the count of rationale markers, their types, and the uncovered file path.
     - If `shadow_files > 0`: Include a `SHADOW_LOGIC` advisory section recommending spec creation for files with ≥3 rationale comments.
     - Report marker distribution (NOTE/WHY/HACK/etc.) as a project health indicator. High HACK/FIXME counts signal technical debt.
-6. **Documentation & Version Audit**:
+6. **Specification Knowledge Graph**: Run `node .magic/scripts/executor.js build-spec-graph`.
+    - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
+    - Report Orphaned files (workspace-scoped but uncovered) and Missing Implements (L2 specs without parent link).
+    - Report Bridge Specs (specs referencing files across multiple workspaces) as candidates for cross-workspace spec or workspace boundary adjustment.
+    - **Optional HTML**: If user requests a visual map, run with `--html` flag → outputs `.design/spec-graph.html` (self-contained vis.js visualization).
+7. **Workspace Boundary Analysis**: Run `node .magic/scripts/executor.js detect-communities --include-md`.
+    - Compare detected communities against `workspace.json` boundaries (Jaccard alignment score).
+    - If any community Jaccard score < 0.3 → include `BOUNDARY_DRIFT` warning: community members are misaligned with their declared workspace.
+    - If any community exceeds the oversized threshold (>25% of graph) and BFS partitioning reveals sub-clusters → suggest workspace split with proposed names.
+8. **Documentation & Version Audit**:
     - Check if `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
     - Check for version parity across `package.json`, `pyproject.toml`, and installer init files.
     - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
-7. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
-8. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-9. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
+9. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
+10. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+11. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
     - If registry healing is needed (Registry Gaps/Orphans) → Propose `magic.spec --audit --fix`.
     - If Shadow Logic detected → Suggest `magic.spec create {module}` for files with ≥3 uncovered rationale comments.
-10. **Report**: Consolidated list of errors, warnings, and suggested repairs.
-11. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
+12. **Report**: Consolidated list of errors, warnings, and suggested repairs.
+13. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 
 ### [Mode D] Focused Analysis
 
@@ -337,10 +346,12 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
   ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
+  ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
+  ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
   ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
   ☐ Report delivered: all findings consolidated before any HALT
-  ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic)
+  ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)
 
 Analysis Checklist — Mode D: Focused
