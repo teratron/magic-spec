@@ -38,7 +38,7 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 | :--- | :--- |
 | `.design/RULES.md` | Global project constitution monitored for drift |
 | `.magic/scripts/check-prerequisites.js` | Implementation of drift detection logic |
-| `.magic/context-resolution.md` | Calls check-prerequisites at startup |
+| `.magic/context.md` | Calls check-prerequisites at startup |
 
 ## Document History
 

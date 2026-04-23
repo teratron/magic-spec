@@ -82,12 +82,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Phase Frontmatter**: YAML dependency metadata block in `phase.md` template (`requires`, `provides`, `key_files`, `patterns_established`, `subsystem`, `duration_minutes`). Enables machine-readable inter-phase dependency tracking.
 - **Canonical References**: New mandatory `## Canonical References` section in `spec.md` template. Forces downstream agents to bind to specific stable file paths instead of relying on memory. Audit checks added to `analyze.md` and `spec.md` checklists.
 - **Context Quality Tiers**: Adaptive agent behaviour guidance (PEAK/GOOD/DEGRADING/POOR) based on context window utilization. Added to `task.md` workflow header.
-- **Resume Detection**: Integrated into `context-resolution.md` Post-Resolution chain (Priority 3-4). Automatically detects paused sessions and resumes from recorded position.
+- **Resume Detection**: Integrated into `context.md` Post-Resolution chain (Priority 3-4). Automatically detects paused sessions and resumes from recorded position.
 - **Pause Propagation**: `run.md` Logic Guard that auto-saves state when all phase tasks are blocked.
 
 ### Changed
 
-- **`context-resolution.md`**: Extended Post-Resolution chain with STATE.md loading (Priority 3) and Resume Detection (Priority 4).
+- **`context.md`**: Extended Post-Resolution chain with STATE.md loading (Priority 3) and Resume Detection (Priority 4).
 - **`init.md`**: STATE.md creation added to init steps, structure map, and completion checklist.
 - **`run.md`**: Added Live Memory invariant (2.5), STATE Sync in Update step, Frontmatter Update in Phase Completion, and Pause Propagation guard.
 - **`task.md`**: Added Context Quality Guidance, Phase Frontmatter generation instructions, State Init/Update step, and Dependency Read from frontmatter.

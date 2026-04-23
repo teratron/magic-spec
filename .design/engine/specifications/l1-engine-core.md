@@ -61,7 +61,7 @@ The following guards were added to the core workflows as part of the first relia
 | `.magic/run.md` | Implementation execution workflow |
 | `.magic/rule.md` | Convention management workflow |
 | `.magic/init.md` | Bootstrap workflow |
-| `.magic/context-resolution.md` | Workspace resolution logic |
+| `.magic/context.md` | Workspace resolution logic |
 | `.magic/scripts/executor.js` | Cross-platform script executor |
 | `.magic/templates/` | Canonical artifact scaffolds |
 | `.magic/.version` | Engine version pin |

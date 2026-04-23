@@ -21,12 +21,12 @@ Parse the `[arg]` to determine the execution mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 2.5. **Live Memory (STATE.md)**: Before any execution, read `.design/{workspace}/STATE.md`.
      - If `Blockers` section is non-empty → display blockers before proceeding.
      - If `Blocking Constraints` is non-empty → list each `[C-NNN]` and confirm acknowledgment.
-     - If `**Status:** Paused` → Resume Detection applies (see `context-resolution.md` §4).
+     - If `**Status:** Paused` → Resume Detection applies (see `context.md` §4).
      - After each task transitions to `Done` or `Blocked` → update STATE.md via:
        `node .magic/scripts/executor.js update-state --workspace={active-workspace-dir}
        --task="{T-ID} {Task Title}" --status={Done|Blocked} --next-action="{next task title}"`

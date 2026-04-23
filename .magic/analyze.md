@@ -11,7 +11,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context-resolution.md](context-resolution.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
@@ -38,7 +38,7 @@ Parse the `[arg]` to determine the analysis mode:
 
 ## Workspace Resolution
 
-> See [context-resolution.md](context-resolution.md) for the full resolution chain (Priority 1-4, Disambiguation, Scope Auto-Apply).
+> See [context.md](context.md) for the full resolution chain (Priority 1-4, Disambiguation, Scope Auto-Apply).
 > After resolution, the workspace's `scope` array from `workspace.json` is applied as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). If the workspace has no `scope` field, scan the full project.
 
 ## Operational Logic: Scan & Infer

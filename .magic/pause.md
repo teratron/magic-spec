@@ -16,7 +16,7 @@ Trigger: User runs `/magic.pause` OR agent detects POOR context tier mid-phase.
 
 ### Step 1: Context Resolution
 
-Apply full workspace resolution chain from [context-resolution.md](context-resolution.md).
+Apply full workspace resolution chain from [context.md](context.md).
 Read STATE.md — required. If STATE.md missing → run `init.md` first.
 
 ### Step 2: Snapshot Current Position
@@ -75,7 +75,7 @@ Resume by running /magic.run in a new session.
 
 ## Resume Protocol (for reference)
 
-When `/magic.run` is called in a new session, Resume Detection fires (context-resolution.md §4):
+When `/magic.run` is called in a new session, Resume Detection fires (context.md §4):
 
 1. Detect `**Status:** Paused` in STATE.md OR presence of `HANDOFF.json`.
 2. Read `required_reading` list from HANDOFF.json and load those files.

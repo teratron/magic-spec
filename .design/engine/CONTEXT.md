@@ -46,7 +46,7 @@
 │   ├── .checksums
 │   ├── .version
 │   ├── analyze.md
-│   ├── context-resolution.md
+│   ├── context.md
 │   ├── history/
 │   ├── init.md
 │   ├── retrospective.md
