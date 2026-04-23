@@ -92,9 +92,3 @@ Potential issues and alternative approaches considered.
 
 <!-- Downstream agent instruction: Load ALL files listed above BEFORE writing any code.
      Do not rely on memory or inference for content from these files. -->
-
-## Document History
-
-| Version | Date | Description |
-| :--- | :--- | :--- |
-| 0.1.0 | YYYY-MM-DD | Initial Draft |

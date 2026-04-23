@@ -208,9 +208,9 @@ Source code often contains design rationale in structured comments that may not 
     - If no matches found → **HALT**: "Could not map focus '{text}' to any project area. Try narrowing with a workspace: `/magic.analyze {workspace} \"{text}\"`, or rephrase the focus."
 3. **Focused Gap Report**: Same categories as Mode B (Covered/Uncovered/Orphaned/Drifted) but only for the matched area.
 
-### Pre-Advisory Audit (C24)
+### Pre-Advisory Audit
 
-Before generating recommendations, adopt an **Auditor** persona. Review all findings collected in Modes A/B/C/D and ask:
+Before generating recommendations, activate `@role:project-auditor`. Review all findings collected in Modes A/B/C/D and ask:
 
 - **Severity Calibration**: Is each finding classified at the correct severity, or has familiarity with the project lowered the bar?
 - **Systemic Pattern**: Do multiple Gap/Drift/Orphan findings point to a single root cause (e.g., a workspace scope misconfiguration, a naming convention drift) rather than isolated issues?
@@ -248,7 +248,7 @@ Mode C Checklist — Ventilation
   ☐ Self-check + Registry audit completed
   ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
   ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
-  ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
+  ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
      Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
   ☐ Advisory Report includes Confidence Breakdown and Shadow Logic advisory
@@ -349,7 +349,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
-  ☐ Pre-Advisory Audit (C24): Auditor persona applied; severity and patterns reviewed
+  ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Report delivered: all findings consolidated before any HALT
   ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)

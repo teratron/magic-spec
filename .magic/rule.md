@@ -81,16 +81,11 @@ Workspace-local conventions for `{workspace}`. Supplements (never overrides) the
 
 ## Workspace Conventions
 
-## Document History
-
-| Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
-| 1.0.0 | {date} | Agent | Initial workspace rules file. |
 ```
 
-### 5. Constitutional Reviewer Persona Audit (C24)
+### 5. Constitutional Review
 
-Adopt the **Constitutional Reviewer** persona to review the proposed rule before commitment. Analyze the convention with these interrogative hooks:
+Activate `@role:constitutional-reviewer` to review the proposed rule before commitment. Analyze the convention with these interrogative hooks:
 
 - **Core Conflict**: Does this rule create a practical conflict with any existing core logic (C1-C23)? (e.g. C2 Minimalism vs. a rule that adds mandatory manual steps).
 - **Cognitive Consistency**: Is the phrasing unquantified (hallucination risk) or redundant with a global rule?
@@ -102,7 +97,7 @@ Write target `RULES.md` and update history and version as per step 5 approval.
 
 ### 7. Post-Write Impact
 
-**Constitutional Review (C24)**: Before notifying the user, adopt a **Constitutional Reviewer** persona. Ask:
+**Constitutional Review**: Before notifying the user, activate `@role:constitutional-reviewer`. Ask:
 
 - Does the new rule create a **practical conflict** with any C1–C23 in currently running workflows — not just a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
 - Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
@@ -122,7 +117,7 @@ Rule Checklist — {operation}
   ☐ Tier routing: target file confirmed (global RULES.md or workspace RULES.md)
   ☐ Scope: only §7 target (unless core amendment requested)
   ☐ Guards: no semantic duplication across both tiers; no core contradiction
-  ☐ Constitutional Review (C24): Practical conflicts with C1–C23 checked before Impact Analysis
+  ☐ Constitutional Review: `@role:constitutional-reviewer` activated; practical conflicts with C1–C23 checked
   ☐ Version bumped (Major/Minor/Patch); Document History updated in target file
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Engine Meta: C14 bump ONLY if .magic/ files modified (not for .design/ changes)

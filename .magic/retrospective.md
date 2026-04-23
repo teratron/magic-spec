@@ -40,9 +40,9 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
   - **Shadow Logic**: Cross-reference `.design/specifications/` with actual codebase. Trace any implemented logic back to a `Stable` spec.
   - **Integrity**: Check if `INDEX.md` statuses truly reflect file content (e.g., if a file says `Draft` but is fully implemented).
 
-#### Independent Analyst Review (C24)
+#### Signal Calculation
 
-Before calculating Signal, adopt an **Independent Analyst** persona. Re-examine the collected data from a spec-quality lens, not an execution lens:
+Before calculating Signal, activate `@role:retrospective-analyst`. Re-examine the collected data from a spec-quality lens, not an execution lens:
 
 - Do the Blocked tasks cluster around specific specs? → Spec is likely underspecified.
 - Does Shadow Logic exist? → Implementation outpaced specification; spec debt is accumulating.
@@ -83,7 +83,7 @@ Retro Checklist — {Level}
   ☐ Graph Diff: diff-spec-graph executed if graph-before.json exists; structural deltas noted
   ☐ DORA Metrics: Delivery performance (DF/CFR) recorded for L2
   ☐ Deep Audit: Shadow logic and Logic-to-Spec parity verified
-  ☐ Independent Analyst (C24): Signal reviewed through spec-quality lens before final report
+  ☐ Signal Calculation: `@role:retrospective-analyst` activated; Signal reviewed through spec-quality lens
   ☐ L1: Snapshot row appended; Phase N archived to archives/tasks/ (C8)
   ☐ L2: Actionable recommendations mapped to evidence; trends calculated
   ☐ Integrity: No speculative claims; all findings reference specific files

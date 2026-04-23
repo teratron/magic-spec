@@ -11,4 +11,4 @@
 | 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |
 | 1.5.125 - 1.5.159 | 2026-04-10 | Automated update via engine meta automation |
 | 1.5.177 | 2026-04-23 | integrate graph scripts into analyze and retrospective workflows |
-| 1.5.182 | 2026-04-23 | Automated update via engine meta automation |
+| 1.5.182 - 1.5.184 | 2026-04-23 | Automated update via engine meta automation |

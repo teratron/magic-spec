@@ -275,6 +275,107 @@ if (verifyHeaders && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ROLE REGISTRY INTEGRITY (R9 / l2-role-integration.md §5)
+// ═══════════════════════════════════════════════════════════════════════════
+
+const rolesDir = path.join('.magic', 'roles');
+const workflowsRoot = '.magic';
+const templatesRoot = path.join('.magic', 'templates');
+const roleRefPattern = /@role:([a-z][a-z0-9-]*)/g;
+
+const roleRegistry = {
+    total: 0,
+    referenced: 0,
+    dormant: 0,
+    missing: [],
+    dangling_handoffs: []
+};
+
+if (fs.existsSync(rolesDir)) {
+    const cards = {};
+    const roleIds = new Set();
+
+    fs.readdirSync(rolesDir).filter(f => f.endsWith('.md')).forEach(cardFile => {
+        const content = fs.readFileSync(path.join(rolesDir, cardFile), 'utf8');
+        const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+        if (!fmMatch) return;
+
+        const fm = fmMatch[1];
+        const idMatch = fm.match(/^id:\s*(\S+)/m);
+        if (!idMatch) return;
+
+        const id = idMatch[1];
+        roleIds.add(id);
+        cards[id] = {
+            file: cardFile,
+            handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map(m => m[1]),
+            triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map(m => m[1])
+        };
+    });
+
+    roleRegistry.total = roleIds.size;
+
+    const referencedIds = new Set();
+    const scanRoots = [workflowsRoot, templatesRoot].filter(d => fs.existsSync(d));
+
+    for (const root of scanRoots) {
+        fs.readdirSync(root).filter(f => f.endsWith('.md')).forEach(file => {
+            const content = fs.readFileSync(path.join(root, file), 'utf8');
+            for (const match of content.matchAll(roleRefPattern)) {
+                const refId = match[1];
+                referencedIds.add(refId);
+                if (!roleIds.has(refId)) {
+                    const rel = normalizePath(path.join(root, file));
+                    warn(
+                        'ROLE_MISSING',
+                        `'${rel}' references @role:${refId} but card is not in .magic/roles/.`,
+                        'Create role card or correct reference'
+                    );
+                    if (!roleRegistry.missing.some(m => m.location === rel && m.id === refId)) {
+                        roleRegistry.missing.push({ location: rel, id: refId });
+                    }
+                }
+            }
+        });
+    }
+
+    roleRegistry.referenced = referencedIds.size;
+
+    for (const id of roleIds) {
+        if (!referencedIds.has(id)) {
+            warn(
+                'ROLE_DORMANT',
+                `Role card '${id}' exists but no workflow or template references @role:${id}.`,
+                'Remove card or add workflow trigger reference'
+            );
+            roleRegistry.dormant++;
+        }
+    }
+
+    for (const [id, info] of Object.entries(cards)) {
+        for (const target of info.handoffTargets) {
+            if (!roleIds.has(target)) {
+                warn(
+                    'ROLE_HANDOFF_DANGLING',
+                    `Role '${id}' declares handoff to '${target}' but target card is missing.`,
+                    'Create target role card or fix handoff reference'
+                );
+                roleRegistry.dangling_handoffs.push({ from: id, to: target });
+            }
+        }
+        for (const wf of info.triggerWorkflows) {
+            if (!fs.existsSync(path.join(workflowsRoot, wf))) {
+                warn(
+                    'ROLE_TRIGGER_UNRESOLVED',
+                    `Role '${id}' triggers on workflow '${wf}' which does not exist in .magic/.`,
+                    'Create workflow or fix trigger'
+                );
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // CONFIG DRIFT DETECTION (Kernel Safety)
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -324,7 +425,8 @@ checkConfigDrift();
 
 const integrity_ok = !warnings.some(w =>
     w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY' ||
-    w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'
+    w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT' ||
+    w.type === 'ROLE_MISSING' || w.type === 'ROLE_HANDOFF_DANGLING'
 );
 const ok = missing.length === 0 && integrity_ok;
 
@@ -345,6 +447,7 @@ if (jsonOutput) {
             "TASKS.md": { exists: tasksExists, path: normalizePath(tasksPath) },
             "specs": { count: specCount, stable: stableCount, draft: draftCount }
         },
+        role_registry: roleRegistry,
         missing_required: missing,
         warnings
     };

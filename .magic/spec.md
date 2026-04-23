@@ -212,7 +212,7 @@ Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mod
 
 ### Post-Update Review (Mandatory)
 
-Adopt a **Project Critic** persona to audit the changes. Check for:
+Activate `@role:spec-critic` to audit the changes. Check for:
 
 1. **Layer 1 Purity (L1 only)**: Are invariants strictly technology-neutral? Remove any implicit implementation assumptions or specific stack references.
 2. **Invariant Completeness**: Are all edge cases, error states, and boundary conditions covered by the specification invariants?
@@ -279,7 +279,7 @@ Checklist — {task description}
   ☐ Canonical References: If promoting to `Stable` → `## Canonical References` section MUST be filled.
      Non-empty placeholder rows required. Empty or stub rows → block promotion. Flag `CANONICAL_MISSING`.
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
-  ☐ Review: Post-Update Review performed in **Critic Persona** (Purity, Completeness, Compliance)
+  ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
 ```
 
 ## Templates

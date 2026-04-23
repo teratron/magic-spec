@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Active
 
 ## Overview
@@ -193,23 +193,17 @@ To minimize redundant resource usage and improve performance, the agent may opti
 
 ### C24 — Role-Switching Gates
 
-At critical decision points, the agent MUST adopt a specific adversarial persona before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
+At critical decision points, the agent MUST activate the designated role card from `.magic/roles/` before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
 
-| Workflow | Gate | Persona | Key Questions |
+| Workflow | Gate | Role | Card |
 | :--- | :--- | :--- | :--- |
-| `spec.md` | Before `Post-Update Review` | **Project Critic** | L1 purity? Invariant completeness? L2 compliance substantive? |
-| `task.md` | Before `Plan Write-back` | **Planning Skeptic** | Optimism bias? Hidden dependencies? Cascade risk? |
-| `run.md` | Before marking task `Done` | **Tester** | Spec boundary? Edge cases? Side effects? Regression risk? |
-| `retrospective.md` | Before Signal calculation | **Independent Analyst** | Does Signal reflect spec quality, not just execution stats? |
-| `analyze.md` | Before Advisory Report | **Auditor** | Severity correct? Systemic pattern behind findings? |
-| `rule.md` | Before Impact Analysis | **Constitutional Reviewer** | Practical conflict with C1–C23 in running workflows? |
+| `spec.md` | Before `Post-Update Review` | `@role:spec-critic` | `.magic/roles/spec-critic.md` |
+| `task.md` | Before `Plan Write-back` | `@role:planner` | `.magic/roles/planner.md` |
+| `run.md` | Before marking task `Done` | `@role:test-engineer` | `.magic/roles/test-engineer.md` |
+| `retrospective.md` | Before Signal calculation | `@role:retrospective-analyst` | `.magic/roles/retrospective-analyst.md` |
+| `analyze.md` | Before Advisory Report | `@role:project-auditor` | `.magic/roles/project-auditor.md` |
+| `rule.md` | Before Impact Analysis | `@role:constitutional-reviewer` | `.magic/roles/constitutional-reviewer.md` |
 
-Switching is mandatory — it is not skipped in Trust Mode (C9). The persona switch takes one internal reasoning pass; it does not require user interaction.
+Role activation is mandatory — it is not skipped in Trust Mode (C9). Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
-## Document History
-
-| Version | Date | Description |
-| :--- | :--- | :--- |
-| 1.2.0 | 2026-04-03 | Fully expanded C24 to cover 7 core personas across all workflows. |
-| 1.1.0 | 2026-04-03 | Added C24: Role-Switching Gate (Critic/Skeptic/QA). |
-| 1.0.0 | {{DATE}} | Initial constitution |
+Full registry: `.magic/roles/` — 13 registered role cards (see `l1-role-system.md` for invariants).

@@ -90,7 +90,7 @@ graph TD
     - **Field Normalization**: During iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to the canonical `Implements:` field. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
 3. **Analyze**: Extract `Related Specifications` and `Implementation Notes`.
 4. **Draft Plan**: Group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
-5. **Planning Audit (C24)**: Adopt a **Planning Skeptic** persona to review the draft `PLAN.md`. Audit for:
+5. **Planning Audit**: Activate `@role:planner` to review the draft `PLAN.md`. Audit for:
     - **Optimism Bias**: Have task sizes been underestimated?
     - **Hidden Dependencies**: Are parallel tracks truly independent, or is there a shared resource/config bottleneck?
     - **Cascade Risk**: If a critical spec fails to implement in Phase 1, how many Phase 2 tasks are instantly blocked?
@@ -149,7 +149,7 @@ Task Workflow Checklist — {operation}
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
-  ☐ Role-Switching (C24): Draft Plan audited in **Skeptic Persona** (Optimism, Dependencies, Risk)
+  ☐ Planning Audit: Draft Plan reviewed by `@role:planner` (Optimism, Dependencies, Risk)
   ☐ Phase Frontmatter: YAML block populated in phase-*.md files (phase, name, status, subsystem, requires)
   ☐ STATE.md updated with new phase and next action after plan write-back
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated

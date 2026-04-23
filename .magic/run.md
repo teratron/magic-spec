@@ -48,11 +48,12 @@ Parse the `[arg]` to determine the execution mode:
 
 ## Execution Setup
 
-| Mode | Role | Process |
+| Mode | Orchestration | Active Role(s) |
 | :--- | :--- | :--- |
-| **Sequential** | Mono-Agent | Picks next `Todo` → Executes → Updates `Done` → Repeats. |
-| **Parallel** | Manager | Reads `TASKS.md` → Reads associated spec sections for each task → Detects shared-file conflicts (including constraints only visible in spec body) → Assigns tracks → Syncs `PLAN.md`. Re-reads `INDEX.md` spec statuses before each new task assignment to detect mid-run spec demotions from other workflow contexts. |
-| **Parallel** | Developer | Track owner (mono or sub-agent) → Executes in order → Reports `Done/Blocked` → Wait for next assignment. |
+| **Sequential** | No orchestrator | **Track Owner Context** → `@role:coder` → `@role:code-reviewer` → `@role:test-engineer` (sequence of hats within one agent) |
+| **Parallel** | `@role:orchestrator` dispatches tracks | Per track: **Track Owner Context** → same role sequence as Sequential |
+
+**Track Owner Context**: operational position of the agent owning a task — not itself a role. The owner adopts executor and reviewer roles in sequence. In Parallel mode, the `@role:orchestrator` assigns tracks, serializes shared-file conflicts, and re-reads `INDEX.md` between dispatches (full protocol in `.magic/roles/orchestrator.md`).
 
 *Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions.
 
@@ -82,17 +83,21 @@ graph TD
     - **File-Header Parity**: For each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before execution." This catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the header of their L1 parent (including cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
-3. **Execute**: Implement per spec section. No scope creep.
-3.5. **QA Review (C24)**: Adopt a **Tester** persona before marking work complete.
+3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
+3.3. **Decision Review (opt-in)** — Activate `@role:code-skeptic` when the task's spec flags `requires-decision-review: true` OR the Coder identifies non-trivial design choices. Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
+3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. On FAIL → return to Step 3. On PASS with complexity notes → proceed to 3.6 (opt-in). On clean PASS → proceed to 3.5.
+3.5. **QA Review** — Activate `@role:test-engineer` before marking work complete.
      - **Spec Boundary**: Does the implementation stay within the assigned spec section? No scope creep?
      - **Edge Cases**: Are error states, boundary inputs, and null/empty conditions handled?
      - **Side Effects**: Does the change affect any files or state outside the spec's declared scope?
      - **Regression Risk**: Could this break any already-`Done` tasks in the current phase?
-     If any check fails → set status to `Blocked [!]` with specific reason. Do NOT proceed to Update.
+     If any check fails → set status to `Blocked [!]` with specific reason and activate `@role:debugger` on the Blocked Branch. Do NOT proceed to Update.
+     If public API / docs-visible behavior changed → activate `@role:docs-specialist` (Post-Done Docs Sync) before final Done transition.
+3.6. **Simplify Pass (opt-in)** — Activate `@role:code-simplifier` when Code-reviewer emitted complexity notes OR user flagged `requires-simplify: true`. Propose revised diff; return to 3.4 on change, or proceed to 3.5 if no simplification needed.
 4. **Update**:
     - **STATE Sync**: Before touching TASKS.md, call `node .magic/scripts/executor.js update-state` with
       current task result. Ensures STATE reflects reality even if execution is interrupted mid-step.
-    - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. This check must also recursively include the spec's L1 parent (if applicable). If either the target or its parent shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Developer track must notify the Manager role of the suspension so the Manager can halt further assignments for the affected spec.
+    - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. This check must also recursively include the spec's L1 parent (if applicable). If either the target or its parent shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Track Owner notifies `@role:orchestrator` of the suspension so the Orchestrator can halt further assignments for the affected spec.
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
     - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update. After the spec is updated, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
     - **Sync**: If spec/phase finished → Update high-level `[x]` in `PLAN.md`.
@@ -124,8 +129,10 @@ Checklist — {operation}
   ☐ Spec Stability: All active-phase specs confirmed Stable in INDEX.md before execution
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
-  ☐ C24 QA Review: Internal 'Tester' audit performed before marking tasks as Done
-  ☐ Parallel: Manager role enforced; shared files serialized
+  ☐ QA Review: @role:test-engineer audit performed before marking tasks as Done
+  ☐ Parallel: @role:orchestrator enforced; shared files serialized
+  ☐ Role Registry: All referenced role IDs resolve to cards in .magic/roles/
+  ☐ Handoff Integrity: Handoff chains declared by card frontmatter respected
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, manifest bumped, CONTEXT.md updated

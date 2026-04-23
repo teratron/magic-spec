@@ -74,6 +74,8 @@ function updateEngineMeta() {
                     let base = rel.replace(/\.md$/, '');
                     // For history mapping, we want to strip .agents/ if it ever appears in core
                     if (base.startsWith('.agents/')) base = base.replace('.agents/', '');
+                    // Role cards collapse to single 'roles' category (l2-role-integration.md §6.2)
+                    if (base.startsWith('roles/')) base = 'roles';
                     changedWorkflows.add(base);
                 }
 
