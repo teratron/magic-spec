@@ -15,6 +15,6 @@ Maintain project hygiene by synchronizing all metadata, documentation, and versi
    - Verify `README.md` structure and update version-references.
 3. **Hardlink Validation**: Ensure `CLAUDE.md` and `QWEN.md` are correctly linked to `AGENTS.md`.
 // turbo
-4.  **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`. 
+4.  **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.
 
 Trigger: `/magic.dev.sync`, "Sync project", "Hygiene check"

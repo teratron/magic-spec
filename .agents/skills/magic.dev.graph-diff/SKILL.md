@@ -1,5 +1,5 @@
 ---
-name: magic.dev:graph.diff
+name: magic.dev:graph-diff
 description: Spec Graph Diff — compares two graph snapshots to surface structural drift between SDD states
 handoffs:
   - label: "Fix regressions"
@@ -15,6 +15,8 @@ handoffs:
     prompt: "Build fresh graph snapshot and run community detection to get current state."
     condition: "baseline_missing"
 ---
+
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.graph-diff.md (relative to workspace root) -->
 
 # Spec Graph Diff Workflow
 

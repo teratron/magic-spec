@@ -1,5 +1,5 @@
 ---
-name: magic.dev:graph.serve
+name: magic.dev:graph-serve
 description: Graph Infrastructure — starts the spec graph MCP server and runs token efficiency benchmarks
 handoffs:
   - label: "Build fresh graph"
@@ -12,7 +12,7 @@ handoffs:
     condition: "high_token_cost"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.graph.serve.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.graph-serve.md (relative to workspace root) -->
 
 # Graph Infrastructure Workflow
 

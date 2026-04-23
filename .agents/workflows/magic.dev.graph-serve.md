@@ -1,5 +1,5 @@
 ---
-name: magic.dev:graph.serve
+name: magic.dev:graph-serve
 description: Graph Infrastructure — starts the spec graph MCP server and runs token efficiency benchmarks
 handoffs:
   - label: "Build fresh graph"
