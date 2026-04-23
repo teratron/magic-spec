@@ -120,7 +120,7 @@ function diffNodes(before, after) {
  * @returns {string}
  */
 function edgeKey(edge) {
-    return `${edge.relation}|${[edge.from, edge.to].sort().join('|')}`;
+    return `${edge.relation}|${edge.from}|${edge.to}`;
 }
 
 /**

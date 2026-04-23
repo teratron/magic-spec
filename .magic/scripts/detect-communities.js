@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { normalizePath } = require('./utils');
+const { normalizePath, resolveDesignRoot } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMMUNITY DETECTION — Workspace Discovery via Label Propagation
@@ -44,18 +44,8 @@ const JSON_OUTPUT = args.includes('--json');
 const INCLUDE_MD = args.includes('--include-md');
 
 const rootDir = process.cwd();
-const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 
-/** Absolute path to the root design directory. */
-function resolveDesignRoot() {
-    let candidate = path.resolve(rootDir, designDir);
-    if (fs.existsSync(path.join(candidate, 'workspace.json'))) return candidate;
-    const parent = path.dirname(candidate);
-    if (parent !== candidate && fs.existsSync(path.join(parent, 'workspace.json'))) return parent;
-    return candidate;
-}
-
-const designAbs = resolveDesignRoot();
+const designAbs = resolveDesignRoot(rootDir).designAbs;
 
 // ───────────────────────────────────────────────────────────────────────────
 // Skip Patterns
@@ -296,21 +286,6 @@ function addEdge(a, b) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Fisher-Yates shuffle (in-place).
- *
- * @template T
- * @param {T[]} arr
- * @returns {T[]}
- */
-function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-}
-
-/**
  * Runs Label Propagation on the global adjacency graph.
  * Each node adopts the most frequent label among its neighbors each iteration.
  * Isolated nodes (no edges) form singleton communities.
@@ -323,7 +298,7 @@ function runLabelPropagation() {
 
     for (let iter = 0; iter < MAX_ITERATIONS; iter++) {
         let changed = false;
-        const order = shuffle([...adjacency.keys()]);
+        const order = [...adjacency.keys()].sort();
 
         for (const node of order) {
             const neighbors = [...(adjacency.get(node) || [])];

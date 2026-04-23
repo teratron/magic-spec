@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, writeFileSafe } = require('./utils');
+const { normalizePath, writeFileSafe, resolveDesignRoot } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPECIFICATION KNOWLEDGE GRAPH — BUILD & EXPORT
@@ -29,31 +29,7 @@ const htmlPath = (htmlFlag && args[htmlIdx + 1] && !args[htmlIdx + 1].startsWith
 
 const rootDir = process.cwd();
 
-/**
- * Resolves the root design directory containing workspace.json.
- * If MAGIC_DESIGN_DIR points to a workspace subdirectory, walks up to find the root.
- *
- * @returns {{designDir: string, designAbs: string}}
- */
-function resolveDesignRoot() {
-    const envDir = process.env.MAGIC_DESIGN_DIR || '.design';
-    let candidate = path.resolve(rootDir, envDir);
-
-    if (fs.existsSync(path.join(candidate, 'workspace.json'))) {
-        return { designDir: envDir, designAbs: candidate };
-    }
-
-    // Walk up one level (workspace subdir → design root)
-    const parent = path.dirname(candidate);
-    if (parent !== candidate && fs.existsSync(path.join(parent, 'workspace.json'))) {
-        const rel = path.relative(rootDir, parent);
-        return { designDir: rel, designAbs: parent };
-    }
-
-    return { designDir: envDir, designAbs: candidate };
-}
-
-const { designDir, designAbs } = resolveDesignRoot();
+const { designDir, designAbs } = resolveDesignRoot(rootDir);
 
 /** Default HTML output path relative to project root. */
 const DEFAULT_HTML_PATH = path.join(designDir, 'spec-graph.html');
@@ -218,96 +194,57 @@ function extractSpecRegistry(wsName) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Parses the Canonical References table from a spec file.
- * Table format: | Path | Role | — paths may or may not be backtick-wrapped.
+ * Reads a spec file once and extracts all graph-relevant fields.
  *
  * @param {string} specPath - Absolute path to the spec .md file.
- * @returns {string[]} Array of normalized path strings.
+ * @returns {{refs: string[], parent: string|null, conventions: number[]}}
  */
-function parseCanonicalRefs(specPath) {
-    const content = fs.readFileSync(specPath, 'utf8');
+function parseSpecBody(specPath) {
+    let content;
+    try { content = fs.readFileSync(specPath, 'utf8'); }
+    catch (_) { return { refs: [], parent: null, conventions: [] }; }
+
     const lines = content.split(/\r?\n/);
     const refs = [];
-
-    let inSection = false;
+    let inCanonical = false;
     let pathColIdx = -1;
 
     for (const line of lines) {
         if (/^##\s+Canonical References/i.test(line)) {
-            inSection = true;
+            inCanonical = true;
             pathColIdx = -1;
             continue;
         }
-
-        if (inSection && /^##\s+/.test(line)) break;
-        if (!inSection) continue;
+        if (inCanonical && /^##\s+/.test(line)) { inCanonical = false; continue; }
+        if (!inCanonical) continue;
 
         const cells = line.split('|').map(c => c.trim());
-
-        // Identify header row
         if (pathColIdx === -1) {
             const idx = cells.findIndex(c => /^Path$/i.test(c));
             if (idx !== -1) pathColIdx = idx;
             continue;
         }
-
-        // Skip separator rows
         if (/^[\s|:-]+$/.test(line)) continue;
-
         if (cells.length > pathColIdx) {
             const raw = cells[pathColIdx].replace(/`/g, '').trim();
             if (raw) refs.push(normalizePath(raw));
         }
     }
 
-    return refs;
-}
-
-/**
- * Extracts the Implements field from a spec file.
- * Formats: **Implements:** [name](specifications/l1-xxx.md)
- *          **Implements:** `l1-xxx.md`
- *          **Implements:** l1-xxx.md
- *
- * @param {string} specPath - Absolute path to the spec .md file.
- * @returns {string|null} Parent spec filename (e.g., "l1-engine-core.md") or null.
- */
-function parseImplementsField(specPath) {
-    const content = fs.readFileSync(specPath, 'utf8');
-
-    // Match markdown link format: **Implements:** [text](path/file.md)
     const linkMatch = content.match(/\*\*Implements:\*\*\s*\[([^\]]*)\]\(([^)]+)\)/);
-    if (linkMatch) {
-        const linkedPath = linkMatch[2];
-        return path.basename(linkedPath);
-    }
+    const parent = linkMatch
+        ? path.basename(linkMatch[2])
+        : (content.match(/\*\*Implements:\*\*\s*`?([a-z0-9][\w-]*\.md)`?/i) || [])[1] || null;
 
-    // Match backtick or plain format: **Implements:** `l1-xxx.md` or **Implements:** l1-xxx.md
-    const plainMatch = content.match(/\*\*Implements:\*\*\s*`?([a-z0-9][\w-]*\.md)`?/i);
-    if (plainMatch) return plainMatch[1];
-
-    return null;
-}
-
-/**
- * Extracts convention references (C1, C2, ..., C24) from spec text.
- * Scans both the Invariants section and the full document body.
- *
- * @param {string} specPath - Absolute path to the spec .md file.
- * @returns {number[]} Array of unique convention numbers found.
- */
-function parseConventionRefs(specPath) {
-    const content = fs.readFileSync(specPath, 'utf8');
     const found = new Set();
-
     const re = /\bC(\d+)\b/g;
-    let match;
-    while ((match = re.exec(content)) !== null) {
-        const num = parseInt(match[1], 10);
+    let m;
+    while ((m = re.exec(content)) !== null) {
+        const num = parseInt(m[1], 10);
         if (num >= 1 && num <= 99) found.add(num);
     }
 
-    return [...found].sort((a, b) => a - b);
+    return { refs, parent, conventions: [...found].sort((a, b) => a - b) };
 }
 
 /**
@@ -333,26 +270,21 @@ function extractSpecDetails(wsName, registrySpecs) {
             addEdge(`ws:${wsName}`, specId, 'contains');
         }
 
-        // Canonical References → file nodes + covers edges
-        const refs = parseCanonicalRefs(specPath);
+        const { refs, parent, conventions } = parseSpecBody(specPath);
+
         for (const ref of refs) {
             const fileId = `file:${ref}`;
             addNode(fileId, ref, 'file');
             addEdge(specId, fileId, 'covers');
         }
 
-        // Implements field → implements edge
-        const parent = parseImplementsField(specPath);
         if (parent) {
             const parentId = `spec:${wsName}/${parent.replace(/\.md$/, '')}`;
             addEdge(specId, parentId, 'implements');
         }
 
-        // Convention references → enforces edges
-        const conventions = parseConventionRefs(specPath);
         for (const num of conventions) {
-            const convId = `conv:C${num}`;
-            addEdge(specId, convId, 'enforces');
+            addEdge(specId, `conv:C${num}`, 'enforces');
         }
     }
 }
@@ -1105,7 +1037,7 @@ function main() {
     // 5. Export
     if (jsonFlag) {
         console.log(toJSON(analysis));
-        process.exit(0);
+        return;
     }
 
     if (htmlFlag) {
@@ -1116,12 +1048,10 @@ function main() {
         const relPath = path.relative(rootDir, absPath);
         console.log(`Spec graph written to: ${normalizePath(relPath)}`);
         console.log(`  ${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges`);
-        process.exit(0);
+        return;
     }
 
-    // Default: human-readable summary
     printSummary(analysis);
-    process.exit(0);
 }
 
 main();

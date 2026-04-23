@@ -1,4 +1,5 @@
 const { execFileSync } = require('child_process');
+const fs = require('fs');
 const path = require('path');
 const readline = require('readline');
 
@@ -28,7 +29,13 @@ const readline = require('readline');
 // SERVER METADATA
 // ═══════════════════════════════════════════════════════════════════════════
 
-const SERVER_INFO = { name: 'sdd-graph', version: '1.0.0' };
+const SERVER_INFO = {
+    name: 'sdd-graph',
+    version: (() => {
+        try { return fs.readFileSync(path.join(__dirname, '../.version'), 'utf8').trim(); }
+        catch (_) { return '0.0.0'; }
+    })(),
+};
 const PROTOCOL_VERSION = '2024-11-05';
 
 // ═══════════════════════════════════════════════════════════════════════════

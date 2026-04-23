@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { normalizePath } = require('./utils');
+const { normalizePath, resolveDesignRoot } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOKEN BENCHMARK — SDD Graph vs Raw Corpus
@@ -42,18 +42,8 @@ const BFS_DEPTH  = numArg('--depth', 2);
 const TOP_SEEDS  = numArg('--top', 5);
 const JSON_OUTPUT = args.includes('--json');
 
-const rootDir   = process.cwd();
-const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
-
-function resolveDesignRoot() {
-    let candidate = path.resolve(rootDir, designDir);
-    if (fs.existsSync(path.join(candidate, 'workspace.json'))) return candidate;
-    const parent = path.dirname(candidate);
-    if (parent !== candidate && fs.existsSync(path.join(parent, 'workspace.json'))) return parent;
-    return candidate;
-}
-
-const designAbs = resolveDesignRoot();
+const rootDir    = process.cwd();
+const { designAbs } = resolveDesignRoot(rootDir);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOKEN COUNTING
@@ -164,7 +154,9 @@ function loadGraph() {
  */
 function benchRawCorpus() {
     const allExts = new Set([...SOURCE_EXTENSIONS, ...DOC_EXTENSIONS]);
-    const files = scanDir(rootDir, allExts);
+    const designPrefix = designAbs + path.sep;
+    const files = scanDir(rootDir, allExts)
+        .filter(f => f !== designAbs && !f.startsWith(designPrefix));
     const tokens = files.reduce((sum, f) => sum + fileTokens(f), 0);
     return { files: files.length, tokens };
 }

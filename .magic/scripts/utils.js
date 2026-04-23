@@ -150,6 +150,26 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
     return arrayOfFiles;
 }
 
+/**
+ * Resolves the root .design/ directory that contains workspace.json.
+ * If MAGIC_DESIGN_DIR points to a workspace subdirectory, walks up one level.
+ *
+ * @param {string} rootDir - Project root (process.cwd()).
+ * @returns {{designDir: string, designAbs: string}}
+ */
+function resolveDesignRoot(rootDir) {
+    const envDir = process.env.MAGIC_DESIGN_DIR || '.design';
+    const candidate = path.resolve(rootDir, envDir);
+    if (fs.existsSync(path.join(candidate, 'workspace.json'))) {
+        return { designDir: envDir, designAbs: candidate };
+    }
+    const parent = path.dirname(candidate);
+    if (parent !== candidate && fs.existsSync(path.join(parent, 'workspace.json'))) {
+        return { designDir: path.relative(rootDir, parent), designAbs: parent };
+    }
+    return { designDir: envDir, designAbs: candidate };
+}
+
 module.exports = {
     hashFile,
     hashFileSafe,
@@ -159,4 +179,5 @@ module.exports = {
     writeFileSafe,
     appendFileSafe,
     mkdirSafe,
+    resolveDesignRoot,
 };
