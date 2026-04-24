@@ -1,13 +1,13 @@
 ---
-name: magic.dev:graph-serve
+name: magic-dev-graph-serve
 description: Graph Infrastructure — starts the spec graph MCP server and runs token efficiency benchmarks
 handoffs:
   - label: "Build fresh graph"
-    workflow: magic.dev.graph
+    workflow: magic-dev-graph
     prompt: "MCP server requires a valid graph. Run build-spec-graph first."
     condition: "graph_missing"
   - label: "Review architecture"
-    workflow: magic.analyze
+    workflow: magic-analyze
     prompt: "Benchmark shows high token cost per query. Run Mode C Ventilation to improve spec coverage and reduce corpus size."
     condition: "high_token_cost"
 ---

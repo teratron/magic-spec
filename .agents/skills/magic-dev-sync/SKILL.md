@@ -1,5 +1,5 @@
 ---
-name: magic.dev:sync
+name: magic-dev-sync
 description: Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata
 ---
 
@@ -17,4 +17,4 @@ Maintain project hygiene by synchronizing all metadata, documentation, and versi
 // turbo
 4.  **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.
 
-Trigger: `/magic.dev.sync`, "Sync project", "Hygiene check"
+Trigger: `/magic-dev-sync`, "Sync project", "Hygiene check"

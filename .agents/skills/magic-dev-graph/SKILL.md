@@ -1,17 +1,17 @@
 ---
-name: magic.dev:graph
+name: magic-dev-graph
 description: Specification Knowledge Graph — builds, analyzes, and visualizes the SDD artifact graph
 handoffs:
   - label: "Fix spec gaps"
-    workflow: magic.spec
+    workflow: magic-spec
     prompt: "Orphaned files or missing Implements links found. Proceed to create or amend specifications."
     condition: "gaps_detected"
   - label: "Adjust workspace boundaries"
-    workflow: magic.rule
+    workflow: magic-rule
     prompt: "Community detection found boundary drift or split suggestions. Update workspace.json or RULES.md conventions."
     condition: "boundary_drift"
   - label: "Run full ventilation"
-    workflow: magic.analyze
+    workflow: magic-analyze
     prompt: "Run full Mode C Ventilation to combine graph findings with registry, coverage, and rationale audit."
     condition: "deep_audit_needed"
 ---

@@ -28,7 +28,7 @@ const CONFIG = {
 
 function extractMetadata(content, fileName) {
     const metadata = {
-        name: fileName.replace(/\.(?=[^.]*$)/, ':'),
+        name: fileName.replace(/\./g, '-'),
         description: 'Magic Spec Workflow'
     };
 
@@ -63,7 +63,7 @@ function sync() {
         const activeSkills = new Set();
 
         workflowFiles.forEach(file => {
-            const name = path.basename(file, '.md');
+            const name = path.basename(file, '.md').replace(/\./g, '-');
             activeSkills.add(name);
 
             const sourcePath = path.join(source.path, file);
@@ -75,13 +75,24 @@ function sync() {
 
             // Extract body (strip original frontmatter if exists)
             const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-            const body = frontmatterMatch
+            const rawBody = frontmatterMatch
                 ? content.replace(frontmatterMatch[0], '').trim()
                 : content.trim();
 
-            const frontmatterContent = frontmatterMatch
+            // Normalize skill trigger references in body: /magic.a.b → /magic-a-b
+            const body = rawBody
+                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'))
+                .replace(/\bmagic(\.[a-z][a-z0-9-]*)+(?=\/)/gi, m => m.replace(/\./g, '-'));
+
+            const rawFrontmatter = frontmatterMatch
                 ? frontmatterMatch[1].trim()
                 : `name: ${metadata.name}\ndescription: ${metadata.description}`;
+
+            // Normalize skill name references: replace dots and colons with hyphens
+            const frontmatterContent = rawFrontmatter
+                .replace(/^(name:\s*)(.+)$/m, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
+                .replace(/^(\s+workflow:\s*)(.+)$/mg, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
+                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'));
 
             mkdirSafe(targetDir);
 

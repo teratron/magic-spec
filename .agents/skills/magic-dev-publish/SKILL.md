@@ -1,5 +1,5 @@
 ---
-name: magic.dev:publish
+name: magic-dev-publish
 description: Workflow for testing, building, and publishing the Magic Spec engine.
 ---
 

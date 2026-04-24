@@ -1,24 +1,24 @@
 ---
-name: magic:run
+name: magic-run
 description: Workflow for executing tasks from the project plan.
 handoffs:
   - label: "Generate tasks"
-    workflow: magic.task
+    workflow: magic-task
     prompt: "Proceed to rebuild dependencies and tasks seamlessly."
     condition: null
   - label: "Update specifications"
-    workflow: magic.spec
+    workflow: magic-spec
     prompt: "Transition to architecting solutions for Blocked tasks seamlessly."
     condition: null
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.run.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.run.md (relative to workspace root) -->
 
 # Run Workflow
 
 **Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*
 
-Trigger: `/magic.run [arg]`
+Trigger: `/magic-run [arg]`
 
 Arguments:
 
@@ -27,12 +27,11 @@ Arguments:
 - `"text"` — directed execution (task ID, phase, or focus)
 - `{workspace} "text"` — scoped + directed execution
 
-Examples: `/magic.run`, `/magic.run engine`, `/magic.run "T-1A01"`, `/magic.run "phase-2"`, `/magic.run installers "validation tasks only"`
+Examples: `/magic-run`, `/magic-run engine`, `/magic-run "T-1A01"`, `/magic-run "phase-2"`, `/magic-run installers "validation tasks only"`
 
 - **Rules Parity**: Always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
 **Scope:** Code execution, task state management, and changelog generation.
-Task generation and orchestration are handled by `magic.task`. Specification authoring is handled by `magic.spec`. Health auditing via `magic.analyze`.
-Pipeline: `magic.spec` → `magic.task` → `magic.run`
+Task generation and orchestration are handled by `magic.task`.
 
 > **Full implementation:** `.magic/run.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

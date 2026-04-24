@@ -1,17 +1,17 @@
 ---
-name: magic.dev:graph-diff
+name: magic-dev-graph-diff
 description: Spec Graph Diff — compares two graph snapshots to surface structural drift between SDD states
 handoffs:
   - label: "Fix regressions"
-    workflow: magic.spec
+    workflow: magic-spec
     prompt: "New orphaned files or removed specs detected. Proceed to create or amend specifications to restore coverage."
     condition: "coverage_regression"
   - label: "Review god node drift"
-    workflow: magic.analyze
+    workflow: magic-analyze
     prompt: "God node degree has grown significantly. Run Mode C Ventilation to reassess architectural hotspots."
     condition: "god_node_growth"
   - label: "Full graph analysis"
-    workflow: magic.dev.graph
+    workflow: magic-dev-graph
     prompt: "Build fresh graph snapshot and run community detection to get current state."
     condition: "baseline_missing"
 ---
