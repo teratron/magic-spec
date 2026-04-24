@@ -1,7 +1,7 @@
 # Graph Report - D:\Projects\src\github.com\teratron\magic-spec  (2026-04-24)
 
 ## Corpus Check
-- 8 files · ~31,617 words
+- 8 files · ~31,716 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary

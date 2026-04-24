@@ -98,4 +98,4 @@ Retrospective output feeds back into the system:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-10 (v1.5.159).
+Synchronized with engine workflows on 2026-04-10 (v1.5.198).

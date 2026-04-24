@@ -1,6 +1,6 @@
 [project]
 name = "magic-spec"
-version = "1.5.171"
+version = "1.5.198"
 description = "Magic Specification-Driven Development (SDD) Workflow"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -17,9 +17,9 @@ magic-spec = "magic_spec.__main__:main"
 
 [dependency-groups]
 dev = [
-    "pyrefly>=0.59.1",
-    "pytest>=9.0.2",
-    "ruff>=0.15.9",
+    "pyrefly>=0.62.0",
+    "pytest>=9.0.3",
+    "ruff>=0.15.12",
 ]
 
 [tool.uv]

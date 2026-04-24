@@ -25,7 +25,7 @@ The engine enforces 5 mandatory invariants:
 | 2 | **Engine Integrity** | HALT if `check-prerequisites` returns integrity warnings (checksums/ghost registry) |
 | 3 | **Silent Default** | Run autonomously; report only brief status or fatal failure |
 | 4 | **Non-Overwriting** | Skips existing files; never mutates user state |
-| 5 | **Versioning (C14)** | Engine checksums updated after `.magic/` modifications; initial `RULES.md` at v1.0.0 |
+| 5 | **Versioning (C14)** | Engine checksums updated after `.magic/` modifications; initial `RULES.md` at v1.5.198 |
 
 ## 3. Workflow Steps
 
@@ -53,7 +53,7 @@ Creates the following structure:
 ```plaintext
 .design/
 ├── INDEX.md          # Specification Registry
-├── RULES.md          # Project Constitution (v1.0.0)
+├── RULES.md          # Project Constitution (v1.5.198)
 ├── STATE.md          # Live memory — session continuity
 ├── workspace.json    # Workspace configuration
 ├── specifications/   # Directory for requirement documents
@@ -83,4 +83,4 @@ Initialization involves writing systemic files to the local directory. The proce
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-10 (v1.5.159).
+Synchronized with engine workflows on 2026-04-10 (v1.5.198).
