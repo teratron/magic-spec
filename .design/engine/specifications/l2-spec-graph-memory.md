@@ -7,7 +7,7 @@
 
 ## Overview
 
-Three adapters that reduce token cost and rebuild time for the Specification Knowledge Graph subsystem, ported from the external `graphify` reference project: per-file extraction cache with frontmatter-aware hashing, Wikipedia-style wiki export for agent navigation, and token-budget truncation on the MCP `query_graph` tool.
+Three adapters that reduce token cost and rebuild time for the Specification Knowledge Graph subsystem, ported from the external reference project: per-file extraction cache with frontmatter-aware hashing, Wikipedia-style wiki export for agent navigation, and token-budget truncation on the MCP `query_graph` tool.
 
 ## Related Specifications
 
@@ -104,7 +104,7 @@ node .magic/scripts/executor.js export-wiki --from-file .design/spec-graph.json
 node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out dir
 ```
 
-**Agent contract:** after this spec lands, `CLAUDE.md` and `magic.analyze` can recommend "read `.design/wiki/index.md` before scanning raw specs" — aligning with the existing graphify rule pattern.
+**Agent contract:** after this spec lands, `CLAUDE.md` and `magic.analyze` can recommend "read `.design/wiki/index.md` before scanning raw specs".
 
 ### 4.3 Token-Budget Truncation on `query_graph`
 
@@ -131,8 +131,8 @@ node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out
 
 ## 6. Drawbacks & Alternatives
 
-- **Cache storage under `$designDir`** — alternative was `/.graph-cache/` at repo root (aligning with `graphify-out/cache/`). Chose workspace-scope for parity with `.design/spec-graph.html` and to keep cache invalidation local to workspace resets.
-- **Obsidian-style `[[links]]`** — alternative was standard Markdown links. Chose Obsidian style because the external `graphify` reference (and its SKILL) uses the same convention, so agents that already know `graphify` generalize immediately.
+- **Cache storage under `$designDir`** — alternative was `/.graph-cache/` at repo root. Chose workspace-scope for parity with `.design/spec-graph.html` and to keep cache invalidation local to workspace resets.
+- **Obsidian-style `[[links]]`** — alternative was standard Markdown links.
 - **Token-budget as JSON truncation** — arguably produces invalid JSON. Alternative was structured pagination. Chose truncation because `query_graph` results are already agent-consumed prose-style; invalid JSON is still informative text for an LLM and the truncation sentinel is explicit.
 
 ## Canonical References
@@ -148,4 +148,4 @@ node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
-| 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts graphify mechanisms: extraction cache, wiki export, token-budget MCP. |
+| 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
