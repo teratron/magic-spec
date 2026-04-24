@@ -1,5 +1,5 @@
 # ═══════════════════════════════════════════════════════════════════════════════
-# MAGIC-SPEC DEV INIT (WINDOWS)
+# MAGIC SPEC DEV INIT (WINDOWS)
 # ═══════════════════════════════════════════════════════════════════════════════
 
 # Safe junction/hardlink creation for Windows environment.

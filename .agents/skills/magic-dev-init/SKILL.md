@@ -1,9 +1,10 @@
 ---
-name: magic.dev:init
-description: Initialize MAGIC-SPEC development environment with junctions and symlinks.
+name: magic-dev-init
+description: Initialize Magic Spec development environment with junctions and symlinks.
+handoffs:
 ---
 
-# MAGIC-SPEC Dev Init Skill
+# Magic Spec Dev Init Skill
 
 This skill provides the logic and commands to set up the mapping between project-level directories and agent-level interfaces. It ensures that hardlinks and symlinks correctly point to canonical workflows and skills.
 
@@ -25,13 +26,13 @@ Establish all links using the platform-specific script. Key tasks include:
 **On Windows (PowerShell):**
 
 ```powershell
-pwsh -NoProfile -File .agents/skills/magic.dev.init/scripts/setup_windows.ps1
+pwsh -NoProfile -File .agents/skills/magic-dev-init/scripts/setup_windows.ps1
 ```
 
 **On Unix (Bash):**
 
 ```bash
-bash .agents/skills/magic.dev.init/scripts/setup_unix.sh
+bash .agents/skills/magic-dev-init/scripts/setup_unix.sh
 ```
 
 ### 3. Verification
