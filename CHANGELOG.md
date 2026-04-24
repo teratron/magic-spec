@@ -14,7 +14,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.5.171] - 2026-04-24
 
-
 ### Added
 
 - **Spec Graph extraction cache** (`.magic/scripts/graph-cache.js`): Per-file SHA-256 cache of parsed spec metadata (refs, parent, conventions). Frontmatter-aware hashing for Markdown — metadata-only edits (`Version`, `Last Updated`, `Status`) do not invalidate cache. Cache lives at `$designDir/.graph-cache/` (gitignored). 100% hit rate on unchanged re-runs.
