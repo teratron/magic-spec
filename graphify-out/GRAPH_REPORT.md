@@ -1,11 +1,11 @@
-# Graph Report - D:\Projects\src\github.com\teratron\magic-spec  (2026-04-24)
+# Graph Report - magic-spec  (2026-04-24)
 
 ## Corpus Check
-- 8 files · ~38,611 words
+- 8 files · ~31,465 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 87 nodes · 94 edges · 27 communities detected
+- 87 nodes · 94 edges · 25 communities detected
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
@@ -18,8 +18,6 @@
 - [[_COMMUNITY_Community 5|Community 5]]
 - [[_COMMUNITY_Community 6|Community 6]]
 - [[_COMMUNITY_Community 7|Community 7]]
-- [[_COMMUNITY_Community 8|Community 8]]
-- [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
@@ -104,14 +102,6 @@ Nodes (4): Adapter Shortcuts, Installer CLI Commands, Magic Spec Installers, Thi
 Cohesion: 1.0
 Nodes (1): Rationale: config.json as single source of truth
 
-### Community 8 - "Community 8"
-Cohesion: 1.0
-Nodes (0): 
-
-### Community 9 - "Community 9"
-Cohesion: 1.0
-Nodes (0): 
-
 ### Community 10 - "Community 10"
 Cohesion: 1.0
 Nodes (1): magic-spec: Specification-Driven Development (SDD) Workflow Installer.
@@ -184,10 +174,6 @@ Nodes (1): CHANGELOG 1.5.170 (Read-Only Invariant)
 - **28 isolated node(s):** `magic_spec __version__ 1.5.170`, `Rationale: config.json as single source of truth`, `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `Returns the tarball URL for the given version tag.`, `Returns the installed package version from __init__.py.` (+23 more)
   These have ≤1 connection - possible missing edges or undocumented components.
 - **Thin community `Community 7`** (1 nodes): `Rationale: config.json as single source of truth`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 8`** (1 nodes): `run_tests.test_dev_mode()`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 9`** (1 nodes): `run_tests.run_all_tests()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 10`** (1 nodes): `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.

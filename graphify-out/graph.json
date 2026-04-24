@@ -676,7 +676,7 @@
     {
       "label": "magic-spec: Specification-Driven Development (SDD) Workflow Installer.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__init__.py",
+      "source_file": "installers\\python\\magic_spec\\__init__.py",
       "source_location": "L1",
       "community": 10,
       "norm_label": "magic-spec: specification-driven development (sdd) workflow installer.",
@@ -685,7 +685,7 @@
     {
       "label": "Returns the tarball URL for the given version tag.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__main__.py",
+      "source_file": "installers\\python\\magic_spec\\__main__.py",
       "source_location": "L64",
       "community": 11,
       "norm_label": "returns the tarball url for the given version tag.",
@@ -694,7 +694,7 @@
     {
       "label": "Returns the installed package version from __init__.py.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__main__.py",
+      "source_file": "installers\\python\\magic_spec\\__main__.py",
       "source_location": "L399",
       "community": 12,
       "norm_label": "returns the installed package version from __init__.py.",
@@ -703,7 +703,7 @@
     {
       "label": "Resets the sandbox directory for clean testing.      Deletes the existing sandbo",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\scripts\\run_tests.py",
+      "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L38",
       "community": 13,
       "norm_label": "resets the sandbox directory for clean testing.      deletes the existing sandbo",
@@ -712,7 +712,7 @@
     {
       "label": "Runs a shell command and captures output.      Args:         cmd: List of comman",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\scripts\\run_tests.py",
+      "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L49",
       "community": 14,
       "norm_label": "runs a shell command and captures output.      args:         cmd: list of comman",
@@ -721,7 +721,7 @@
     {
       "label": "Tests the specified installer against all defined adapters.      Args:         i",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\scripts\\run_tests.py",
+      "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L79",
       "community": 15,
       "norm_label": "tests the specified installer against all defined adapters.      args:         i",
@@ -730,7 +730,7 @@
     {
       "label": "Verifies that --dev flag installs development-specific files.      Args:",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\scripts\\run_tests.py",
+      "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L170",
       "community": 16,
       "norm_label": "verifies that --dev flag installs development-specific files.      args:",
@@ -739,7 +739,7 @@
     {
       "label": "Discovers and runs all unit tests in the tests directory.      Returns:",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\scripts\\run_tests.py",
+      "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L231",
       "community": 17,
       "norm_label": "discovers and runs all unit tests in the tests directory.      returns:",
@@ -748,7 +748,7 @@
     {
       "label": "Verify that the Python installer logic correctly identifies --cursor flag from s",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_adapter_flags.py",
+      "source_file": "installers\\tests\\test_adapter_flags.py",
       "source_location": "L76",
       "community": 18,
       "norm_label": "verify that the python installer logic correctly identifies --cursor flag from s",
@@ -757,7 +757,7 @@
     {
       "label": "Verify that the Node installer logic correctly identifies --cursor flag.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_adapter_flags.py",
+      "source_file": "installers\\tests\\test_adapter_flags.py",
       "source_location": "L108",
       "community": 19,
       "norm_label": "verify that the node installer logic correctly identifies --cursor flag.",
@@ -766,7 +766,7 @@
     {
       "label": "Test the --doctor flag in the python installer.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_integration.py",
+      "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L53",
       "community": 20,
       "norm_label": "test the --doctor flag in the python installer.",
@@ -775,7 +775,7 @@
     {
       "label": "Test the --doctor flag in the node installer.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_integration.py",
+      "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L87",
       "community": 21,
       "norm_label": "test the --doctor flag in the node installer.",
@@ -784,7 +784,7 @@
     {
       "label": "Test that installers correctly convert Markdown to TOML for Gemini adapter.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_integration.py",
+      "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L202",
       "community": 22,
       "norm_label": "test that installers correctly convert markdown to toml for gemini adapter.",
@@ -793,7 +793,7 @@
     {
       "label": "Test that installers correctly convert Markdown to MDC for Windsurf adapter.",
       "file_type": "rationale",
-      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\tests\\test_integration.py",
+      "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L272",
       "community": 23,
       "norm_label": "test that installers correctly convert markdown to mdc for windsurf adapter.",
@@ -1521,8 +1521,8 @@
       "source_file": "installers/python/magic_spec/__main__.py",
       "source_location": "L102-L111",
       "weight": 1.0,
-      "_src": "main_py_safe_extract_tar",
-      "_tgt": "rationale_tar_safety",
+      "_src": "rationale_tar_safety",
+      "_tgt": "main_py_safe_extract_tar",
       "source": "rationale_tar_safety",
       "target": "main_py_safe_extract_tar"
     },
