@@ -7,6 +7,8 @@ description: Workflow for creating and managing project specifications and the s
 Universal process for managing project specifications in `.design/specifications/`.
 
 > **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
+> **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic.spec/SKILL.md`](../skills/magic.spec/SKILL.md)
+> **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
 
 ## Core Invariants (Mandatory)
 
@@ -56,6 +58,11 @@ All specifications must declare their layer in the metadata header using `Layer:
 - **Layer 2 (implementation)**: Concrete realization of a Layer 1 concept in a specific technology stack.
   - Must include an `Implements: {layer-1-file.md}` metadata field pointing to its Layer 1 parent.
   - Cannot enter `RFC` or `Stable` status until its parent Layer 1 specification is `Stable`.
+
+> **Workflow tooling for both layers:** specs are created and managed via `workflows/magic.spec.md`
+> (skill wrapper: `skills/magic.spec/SKILL.md`). Orchestrated by `workflows/magic.task.md`,
+> executed by `workflows/magic.run.md`, rule governance by `workflows/magic.rule.md`,
+> health audited by `workflows/magic.analyze.md`.
 
 ## Status Lifecycle
 
@@ -117,6 +124,7 @@ Explore Mode ends automatically, and the agent MUST transition to Dispatching/Wr
 ### Dispatching from Raw Input
 
 Handle unstructured input (thoughts, notes) by mapping them to spec domains.
+*(Task analog: Decomposition with Validation Tasks in `task.md` — same input-to-units pattern.)*
 
 ```mermaid
 graph TD
@@ -212,7 +220,9 @@ Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mod
 
 ### Post-Update Review (Mandatory)
 
-Activate `@role:spec-critic` to audit the changes. Check for:
+Activate `@role:spec-critic` to audit the changes. *(C24 pattern analog: Planning Audit in `task.md` uses `@role:planner` — same adversarial review, different phase.)*
+
+Check for:
 
 1. **Layer 1 Purity (L1 only)**: Are invariants strictly technology-neutral? Remove any implicit implementation assumptions or specific stack references.
 2. **Invariant Completeness**: Are all edge cases, error states, and boundary conditions covered by the specification invariants?
@@ -253,6 +263,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 ### Consistency Check (Pre-flight)
 
 Compares specs vs. project filesystem and engine integrity.
+*(Pre-flight gate analog: Pre-Planning Stabilization in `task.md` — both block progression until invariants pass.)*
 
 **Trigger**: `magic.task` auto-run or *"Verify specs"*.
 

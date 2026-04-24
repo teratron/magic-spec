@@ -36,6 +36,7 @@ uv.lock
 
 # Node installer build artifacts
 dist/
+cache/
 temp/
 *tmp/
 *sandbox/

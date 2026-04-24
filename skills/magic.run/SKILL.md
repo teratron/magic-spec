@@ -31,7 +31,8 @@ Examples: `/magic.run`, `/magic.run engine`, `/magic.run "T-1A01"`, `/magic.run 
 
 - **Rules Parity**: Always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
 **Scope:** Code execution, task state management, and changelog generation.
-Task generation and orchestration are handled by `magic.task`.
+Task generation and orchestration are handled by `magic.task`. Specification authoring is handled by `magic.spec`. Health auditing via `magic.analyze`.
+Pipeline: `magic.spec` → `magic.task` → `magic.run`
 
 > **Full implementation:** `.magic/run.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

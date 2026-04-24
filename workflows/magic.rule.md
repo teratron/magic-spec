@@ -20,7 +20,8 @@ handoffs:
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*
 **Scope:** Direct management of RULES.md §7 Project Conventions.
-Automatic rule capture during spec work is handled by `magic.spec`.
+Automatic rule capture during spec work is handled by `magic.spec`. Rule changes feed into `magic.task` (plan updates) and `magic.run` (execution).
+Pipeline context: `magic.rule` governs conventions used across `magic.spec` → `magic.task` → `magic.run`.
 
 > **Full implementation:** `.magic/rule.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

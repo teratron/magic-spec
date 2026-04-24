@@ -31,7 +31,8 @@ Examples: `/magic.task`, `/magic.task engine`, `/magic.task "decompose phase-2 i
 - **Rules Parity**: Version of `RULES.md` must be recorded in `TASKS.md` header.
 - **Registry First**: Every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
 - Plan generation, task decomposition, and execution orchestration.
-Execution is handled by `magic.run`.
+Execution is handled by `magic.run`. Specification authoring is handled by `magic.spec`. Rule governance is handled by `magic.rule`.
+Pipeline: `magic.spec` → `magic.task` → `magic.run`
 
 > **Full implementation:** `.magic/task.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

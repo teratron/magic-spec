@@ -1,0 +1,6 @@
+# Outdated documentation — superseded by .magic/ workflow files
+docs/
+
+# Empty package markers — no semantic content
+installers/__init__.py
+installers/scripts/__init__.py
