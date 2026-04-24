@@ -1,7 +1,7 @@
 # Graph Report - magic-spec  (2026-04-24)
 
 ## Corpus Check
-- 8 files · ~31,465 words
+- 8 files · ~31,389 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
