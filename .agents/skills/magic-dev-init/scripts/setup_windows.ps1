@@ -1,124 +1,157 @@
 # ═══════════════════════════════════════════════════════════════════════════════
 # MAGIC SPEC DEV INIT (WINDOWS)
 # ═══════════════════════════════════════════════════════════════════════════════
+#
+# Creates junctions (/J) and hardlinks (/H) mapping agent-facing paths to the
+# canonical engine sources. Junctions and hardlinks work without admin rights.
+#
+# Usage (run from repo root):
+#   pwsh -NoProfile -File setup_windows.ps1              # full init
+#   pwsh -NoProfile -File setup_windows.ps1 claude       # only Claude
+#   pwsh -NoProfile -File setup_windows.ps1 claude qwen  # Claude + Qwen
 
-# Safe junction/hardlink creation for Windows environment.
-# Note: Junctions (/J) work without admin or Developer Mode.
-# Hardlinks (/H) also work without admin for files.
+param(
+    [string[]]$Agents = @()
+)
+
+$ErrorActionPreference = "Stop"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 1. Configuration
 # ───────────────────────────────────────────────────────────────────────────────
 
-# Dynamically discover workflows from source directories
-$userWorkflows = Get-ChildItem "workflows\*.md" | Select-Object -ExpandProperty Name
-$devWorkflows = Get-ChildItem ".agents\workflows\*.md" | Select-Object -ExpandProperty Name
-$agentFiles = @("CLAUDE.md", "GEMINI.md", "QWEN.md", "CODEX.md")
+if (-not (Test-Path "AGENTS.md") -or -not (Test-Path "workflows")) {
+    Write-Host "ERROR: Must run from repo root (AGENTS.md and workflows/ required)." -ForegroundColor Red
+    exit 1
+}
 
-# ───────────────────────────────────────────────────────────────────────────────
-# 2. Cleanup function
-# ───────────────────────────────────────────────────────────────────────────────
+$userWorkflows = @(Get-ChildItem "workflows\*.md" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
 
-function Remove-Existing($path) {
-    if (Test-Path $path) {
-        Write-Host "Removing: $path" -ForegroundColor Yellow
-        if ((Get-Item $path).Attributes -match "ReparsePoint") {
-            # It's a junction or symlink
-            if ((Get-Item $path).PSIsContainer) { cmd /c "rmdir $path" } else { cmd /c "del $path" }
-        } else {
-            # Regular file/directory
-            Remove-Item -Recurse -Force $path
-        }
+$allAgentConfig = @(
+    @{ name = "claude"; dir = ".claude"; file = "CLAUDE.md"; subdir = "commands" },
+    @{ name = "gemini"; dir = ".gemini"; file = "GEMINI.md"; subdir = "commands" },
+    @{ name = "qwen";   dir = ".qwen";   file = "QWEN.md";   subdir = "commands" },
+    @{ name = "codex";  dir = ".codex";  file = "CODEX.md";  subdir = "prompts"  }
+)
+
+if ($Agents.Count -gt 0) {
+    $normalized = $Agents | ForEach-Object { $_.ToLower() }
+    $activeAgents = @($allAgentConfig | Where-Object { $normalized -contains $_.name })
+    if ($activeAgents.Count -eq 0) {
+        Write-Host "ERROR: No matching agents for '$($Agents -join ', ')'. Valid: claude, gemini, qwen, codex" -ForegroundColor Red
+        exit 1
     }
+    $initMode = "targeted ($($activeAgents.name -join ', '))"
+} else {
+    $activeAgents = $allAgentConfig
+    $initMode = "full"
+}
+
+# All paths this script manages. Built once, used for cleanup + git index.
+$managedPaths = @()
+foreach ($ag in $activeAgents) {
+    $managedPaths += "$($ag.dir)\$($ag.subdir)", "$($ag.dir)\skills", "$($ag.dir)\rules", $ag.file
+}
+foreach ($f in $userWorkflows) {
+    $name = $f -replace '\.md$', ''
+    $managedPaths += ".agents\workflows\$f", ".agents\skills\$name"
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
-# 3. Main Execution
+# 2. Helpers
 # ───────────────────────────────────────────────────────────────────────────────
 
-Write-Host ">>> Initializing Windows Agent Environment..." -ForegroundColor Cyan
+function Remove-Link {
+    param([string]$Path)
+    if (-not (Test-Path $Path)) { return }
+    $item = Get-Item $Path -Force
+    if ($item.Attributes -band [IO.FileAttributes]::ReparsePoint) {
+        if ($item.PSIsContainer) { cmd /c "rmdir `"$Path`"" | Out-Null }
+        else { cmd /c "del /F /Q `"$Path`"" | Out-Null }
+    } else {
+        Remove-Item -Recurse -Force $Path
+    }
+}
 
-# 3.0. Sync Skill Wrappers (Source of Truth: Workflows)
+function New-Junction {
+    param([string]$Link, [string]$Target)
+    cmd /c "mklink /J `"$Link`" `"$Target`"" | Out-Null
+}
+
+function New-Hardlink {
+    param([string]$Link, [string]$Target)
+    cmd /c "mklink /H `"$Link`" `"$Target`"" | Out-Null
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
+# 3. Execution
+# ───────────────────────────────────────────────────────────────────────────────
+
+Write-Host ">>> Initializing Windows Agent Environment ($initMode)" -ForegroundColor Cyan
+
+# 3.1. Sync Skill wrappers (source of truth: workflows/)
 if (Test-Path ".magic\scripts\sync-skills.js") {
-    Write-Host "Synchronizing Skill Wrappers..." -ForegroundColor Cyan
+    Write-Host "Synchronizing Skill wrappers..." -ForegroundColor Cyan
     node .magic\scripts\sync-skills.js
 }
 
-# 3.1. Git Index Maintenance (MUST run BEFORE creating junctions — see AGENTS.md §6)
-Write-Host "Synchronizing git index (pre-link)..." -ForegroundColor Cyan
-$linksToRemove = @(
-    ".claude\commands", ".claude\skills", ".claude\rules",
-    ".qwen\commands", ".qwen\skills", ".qwen\rules",
-    ".gemini\commands", ".gemini\skills", ".gemini\rules",
-    ".codex\prompts", ".codex\skills", ".codex\rules"
-)
-foreach ($f in $userWorkflows) { $linksToRemove += ".agents\workflows\$f" }
-foreach ($f in $userWorkflows) { 
-    $name = $f -replace '\.md$', ''
-    $linksToRemove += ".agents\skills\$name"
-}
-foreach ($f in $agentFiles) { $linksToRemove += "$f" }
-git rm -r --cached --ignore-unmatch $linksToRemove 2>$null
+# 3.2. Cleanup — must happen BEFORE git rm so `git rm -r --cached` cannot
+#      traverse junctions and physically delete target files (see AGENTS.md §8).
+Write-Host "Removing existing managed links..." -ForegroundColor Cyan
+foreach ($p in $managedPaths) { Remove-Link $p }
 
-# 3.2. Agent junctions (.claude, .qwen, .gemini, .codex)
-$agentDirs = @(".claude", ".qwen", ".gemini", ".codex")
+# 3.3. Git index maintenance — safe now that junctions are gone.
+Write-Host "Synchronizing git index..." -ForegroundColor Cyan
+git rm -r --cached --ignore-unmatch $managedPaths 2>$null | Out-Null
 
-foreach ($dir in $agentDirs) {
-    if (-not (Test-Path $dir)) { New-Item -ItemType Directory -Path $dir -Force }
-    Remove-Existing "$dir\rules"
-    if ($dir -eq ".codex") {
-        Remove-Existing "$dir\prompts"
-        cmd /c "mklink /J $dir\prompts .agents\workflows"
-    } else {
-        Remove-Existing "$dir\commands"
-        cmd /c "mklink /J $dir\commands .agents\workflows"
-    }
-    Remove-Existing "$dir\skills"
-    cmd /c "mklink /J $dir\skills .agents\skills"
-    cmd /c "mklink /J $dir\rules .agents\rules"
+# 3.4. .agents/ infrastructure (must exist before agent junctions point to it)
+foreach ($d in @(".agents\workflows", ".agents\skills", ".agents\rules")) {
+    if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-# 3.3. Global Agent Instructions (Linking to AGENTS.md)
-Write-Host "Linking agent instruction files..." -ForegroundColor Cyan
-foreach ($f in $agentFiles) { 
-    Remove-Existing $f
-    cmd /c "mklink /H $f AGENTS.md"
-}
-
-# 3.4. .agents directories
-if (-not (Test-Path ".agents\workflows")) { New-Item -ItemType Directory -Path ".agents\workflows" -Force }
-if (-not (Test-Path ".agents\skills")) { New-Item -ItemType Directory -Path ".agents\skills" -Force }
-if (-not (Test-Path ".agents\rules")) { New-Item -ItemType Directory -Path ".agents\rules" -Force }
-
-# 3.5. Workflow hardlinks (User-facing)
+# 3.5. Workflow hardlinks: .agents/workflows/*.md → workflows/*.md
 Write-Host "Creating workflow hardlinks..." -ForegroundColor Cyan
 foreach ($f in $userWorkflows) {
-    $target = "workflows\$f"
-    $link = ".agents\workflows\$f"
-    Remove-Existing $link
-    cmd /c "mklink /H $link $target"
+    New-Hardlink ".agents\workflows\$f" "workflows\$f"
+    Write-Host "  .agents\workflows\$f" -ForegroundColor Gray
 }
 
-# 3.6. Skill junctions (User-facing)
-Write-Host "Creating skill junctions (User-facing)..." -ForegroundColor Cyan
+# 3.6. Skill junctions: .agents/skills/<name> → skills/<name>
+Write-Host "Creating skill junctions..." -ForegroundColor Cyan
 foreach ($f in $userWorkflows) {
     $name = $f -replace '\.md$', ''
-    $target = "skills\$name"
-    $link = ".agents\skills\$name"
-    if (Test-Path $target) {
-        $targetFull = (Resolve-Path $target).Path
-        $linkFull = (Join-Path (Get-Location) $link)
-        Remove-Existing $link
-        Write-Host "Linking: $link -> $target" -ForegroundColor Gray
-        cmd /c "mklink /J `"$linkFull`" `"$targetFull`"" | Out-Null
+    if (Test-Path "skills\$name") {
+        New-Junction ".agents\skills\$name" "skills\$name"
+        Write-Host "  .agents\skills\$name" -ForegroundColor Gray
     }
 }
 
-Write-Host "`n>>> Verification:" -ForegroundColor Green
-cmd /c "dir .claude\commands .claude\skills .claude\rules /AL"
-cmd /c "dir .qwen\commands .qwen\skills .qwen\rules /AL"
-cmd /c "dir .gemini\commands .gemini\skills .gemini\rules /AL"
-cmd /c "dir .codex\prompts .codex\skills .codex\rules /AL"
+# 3.7. Agent junctions: .{agent}/{subdir,skills,rules} → .agents/
+Write-Host "Creating agent junctions..." -ForegroundColor Cyan
+foreach ($ag in $activeAgents) {
+    if (-not (Test-Path $ag.dir)) { New-Item -ItemType Directory -Path $ag.dir -Force | Out-Null }
+    New-Junction "$($ag.dir)\$($ag.subdir)" ".agents\workflows"
+    New-Junction "$($ag.dir)\skills"         ".agents\skills"
+    New-Junction "$($ag.dir)\rules"          ".agents\rules"
+    Write-Host "  $($ag.dir) ($($ag.name))" -ForegroundColor Gray
+}
 
-Write-Host "`n>>> Hardlink Integrity Check (AGENTS.md):" -ForegroundColor Cyan
+# 3.8. Instruction hardlinks: {AGENT}.md → AGENTS.md
+Write-Host "Creating instruction hardlinks..." -ForegroundColor Cyan
+foreach ($ag in $activeAgents) {
+    New-Hardlink $ag.file "AGENTS.md"
+    Write-Host "  $($ag.file)" -ForegroundColor Gray
+}
+
+# ───────────────────────────────────────────────────────────────────────────────
+# 4. Verification
+# ───────────────────────────────────────────────────────────────────────────────
+
+Write-Host "`n>>> Verification:" -ForegroundColor Green
+foreach ($ag in $activeAgents) {
+    cmd /c "dir $($ag.dir)\$($ag.subdir) $($ag.dir)\skills $($ag.dir)\rules /AL" 2>$null
+}
+
+$expected = 1 + $activeAgents.Count
+Write-Host "`n>>> AGENTS.md hardlinks (expected: $expected):" -ForegroundColor Cyan
 cmd /c "fsutil hardlink list AGENTS.md"

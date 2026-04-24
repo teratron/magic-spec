@@ -299,9 +299,9 @@
     {
       "label": "__init__.py",
       "file_type": "code",
-      "source_file": "installers\\python\\magic_spec\\__init__.py",
+      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__init__.py",
       "source_location": "L1",
-      "id": "python_magic_spec_init_py",
+      "id": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
       "community": 8,
       "norm_label": "__init__.py"
     },
@@ -1525,12 +1525,12 @@
     {
       "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "source_file": "installers\\python\\magic_spec\\__init__.py",
+      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__init__.py",
       "source_location": "L1",
       "weight": 1.0,
       "_src": "init_rationale_1",
-      "_tgt": "python_magic_spec_init_py",
-      "source": "python_magic_spec_init_py",
+      "_tgt": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
+      "source": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
       "target": "init_rationale_1",
       "confidence_score": 1.0
     },

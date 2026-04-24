@@ -1,11 +1,11 @@
-# Graph Report - magic-spec  (2026-04-24)
+# Graph Report - D:\Projects\src\github.com\teratron\magic-spec  (2026-04-24)
 
 ## Corpus Check
-- 8 files · ~31,693 words
+- 8 files · ~31,617 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 87 nodes · 94 edges · 26 communities detected
+- 87 nodes · 94 edges · 28 communities detected
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
@@ -20,6 +20,8 @@
 - [[_COMMUNITY_Community 7|Community 7]]
 - [[_COMMUNITY_Community 8|Community 8]]
 - [[_COMMUNITY_Community 9|Community 9]]
+- [[_COMMUNITY_Community 10|Community 10]]
+- [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
 - [[_COMMUNITY_Community 13|Community 13]]
 - [[_COMMUNITY_Community 14|Community 14]]
@@ -111,6 +113,14 @@ Nodes (1): magic-spec: Specification-Driven Development (SDD) Workflow Installer
 Cohesion: 1.0
 Nodes (1): Rationale: config.json as single source of truth
 
+### Community 10 - "Community 10"
+Cohesion: 1.0
+Nodes (0): 
+
+### Community 11 - "Community 11"
+Cohesion: 1.0
+Nodes (0): 
+
 ### Community 12 - "Community 12"
 Cohesion: 1.0
 Nodes (1): Returns the tarball URL for the given version tag.
@@ -178,9 +188,13 @@ Nodes (1): CHANGELOG 1.5.170 (Read-Only Invariant)
 ## Knowledge Gaps
 - **27 isolated node(s):** `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `Rationale: config.json as single source of truth`, `Returns the tarball URL for the given version tag.`, `Returns the installed package version from __init__.py.`, `Resets the sandbox directory for clean testing.      Deletes the existing sandbo` (+22 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 8`** (2 nodes): `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `__init__.py`
+- **Thin community `Community 8`** (2 nodes): `__init__.py`, `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 9`** (1 nodes): `Rationale: config.json as single source of truth`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 10`** (1 nodes): `run_tests.test_dev_mode()`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 11`** (1 nodes): `run_tests.run_all_tests()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 12`** (1 nodes): `Returns the tarball URL for the given version tag.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
