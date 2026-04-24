@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.171] - 2026-04-24
+
+### Added
+
+- **Spec Graph extraction cache** (`.magic/scripts/graph-cache.js`): Per-file SHA-256 cache of parsed spec metadata (refs, parent, conventions). Frontmatter-aware hashing for Markdown — metadata-only edits (`Version`, `Last Updated`, `Status`) do not invalidate cache. Cache lives at `$designDir/.graph-cache/` (gitignored). 100% hit rate on unchanged re-runs.
+- **Spec Graph Wiki export** (`.magic/scripts/export-wiki.js`): Generates an agent-navigable Markdown wiki at `$designDir/wiki/` — `index.md` + one page per workspace + one article per spec, with Obsidian-style `[[wiki-links]]` between them. Surfaces god nodes, knowledge gaps, and implements chains. Usage: `node .magic/scripts/executor.js export-wiki [--from-file graph.json] [--out dir]`.
+- **Token-budget truncation on MCP `query_graph`**: The `query_graph` tool in `serve-spec-graph.js` now accepts a `token_budget` argument (default 2000). Output is truncated at `chars = budget × 4` with an explicit sentinel, preventing unbounded responses as the graph grows.
+- **Spec**: `.design/engine/specifications/l2-spec-graph-memory.md` — Layer 2 specification adapting three memory / token-economy mechanisms from the external `graphify` project.
+
+### Changed
+
+- **`build-spec-graph.js`**: Integrated extraction cache via `graph-cache.js`. Added `--no-cache` flag. Summary now reports cache hits/misses.
+- **`.design/engine/INDEX.md`**: Registered `l2-spec-graph-memory.md` (engine registry → v1.8.0).
+
+### Meta
+
+- **Engine version**: `1.5.195` → `1.5.197` (C14 auto-bump: initial scripts, then post-review fixes).
+- **Package version**: `1.5.170` → `1.5.171`.
+
 ## [1.5.176] - 2026-04-23
 
 ### Added

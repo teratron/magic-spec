@@ -111,7 +111,7 @@
       "author": null,
       "contributor": null,
       "id": "node_index_installer_cli",
-      "community": 2,
+      "community": 4,
       "norm_label": "node installer cli (index.js)"
     },
     {
@@ -137,7 +137,7 @@
       "author": null,
       "contributor": null,
       "id": "node_index_downloadPayload",
-      "community": 5,
+      "community": 6,
       "norm_label": "downloadpayload()"
     },
     {
@@ -150,7 +150,7 @@
       "author": null,
       "contributor": null,
       "id": "node_index_installAdapter",
-      "community": 2,
+      "community": 5,
       "norm_label": "installadapter() (node)"
     },
     {
@@ -254,7 +254,7 @@
       "author": null,
       "contributor": null,
       "id": "node_index_convertToToml",
-      "community": 2,
+      "community": 5,
       "norm_label": "converttotoml()"
     },
     {
@@ -267,7 +267,7 @@
       "author": null,
       "contributor": null,
       "id": "node_index_convertToMdc",
-      "community": 2,
+      "community": 5,
       "norm_label": "converttomdc() (node)"
     },
     {
@@ -292,22 +292,27 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 5,
+      "community": 6,
       "norm_label": "rationale: path traversal tar safety check",
       "id": "rationale_tar_safety"
     },
     {
-      "label": "magic_spec __version__ 1.5.170",
+      "label": "__init__.py",
       "file_type": "code",
-      "source_file": "installers/python/magic_spec/__init__.py",
-      "source_location": "L3",
-      "source_url": null,
-      "captured_at": null,
-      "author": null,
-      "contributor": null,
-      "id": "magic_spec_version",
-      "community": 3,
-      "norm_label": "magic_spec __version__ 1.5.170"
+      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__init__.py",
+      "source_location": "L1",
+      "id": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
+      "community": 8,
+      "norm_label": "__init__.py"
+    },
+    {
+      "label": "magic-spec: Specification-Driven Development (SDD) Workflow Installer.",
+      "file_type": "rationale",
+      "source_file": "installers\\python\\magic_spec\\__init__.py",
+      "source_location": "L1",
+      "community": 8,
+      "norm_label": "magic-spec: specification-driven development (sdd) workflow installer.",
+      "id": "init_rationale_1"
     },
     {
       "label": "Python Installer CLI (__main__.py)",
@@ -319,7 +324,7 @@
       "author": null,
       "contributor": null,
       "id": "main_py_installer_cli",
-      "community": 2,
+      "community": 4,
       "norm_label": "python installer cli (__main__.py)"
     },
     {
@@ -345,7 +350,7 @@
       "author": null,
       "contributor": null,
       "id": "main_py_download_and_extract",
-      "community": 5,
+      "community": 6,
       "norm_label": "download_and_extract()"
     },
     {
@@ -358,7 +363,7 @@
       "author": null,
       "contributor": null,
       "id": "main_py_safe_extract_tar",
-      "community": 5,
+      "community": 6,
       "norm_label": "_safe_extract_tar()"
     },
     {
@@ -371,7 +376,7 @@
       "author": null,
       "contributor": null,
       "id": "main_py_install_adapter",
-      "community": 2,
+      "community": 5,
       "norm_label": "install_adapter() (python)"
     },
     {
@@ -462,7 +467,7 @@
       "author": null,
       "contributor": null,
       "id": "main_py_convert_to_mdc",
-      "community": 2,
+      "community": 5,
       "norm_label": "_convert_to_mdc() (python)"
     },
     {
@@ -500,7 +505,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 7,
+      "community": 9,
       "norm_label": "rationale: config.json as single source of truth",
       "id": "rationale_single_source_of_truth_config"
     },
@@ -514,7 +519,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_main",
-      "community": 3,
+      "community": 2,
       "norm_label": "publish.py main()"
     },
     {
@@ -527,7 +532,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_update_python_version",
-      "community": 3,
+      "community": 2,
       "norm_label": "update_python_version()"
     },
     {
@@ -540,7 +545,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_update_node_version",
-      "community": 3,
+      "community": 2,
       "norm_label": "update_node_version()"
     },
     {
@@ -553,7 +558,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_update_magic_version",
-      "community": 3,
+      "community": 2,
       "norm_label": "update_magic_version()"
     },
     {
@@ -566,7 +571,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_commit_and_tag",
-      "community": 3,
+      "community": 2,
       "norm_label": "commit_and_tag()"
     },
     {
@@ -579,7 +584,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_publish_python",
-      "community": 3,
+      "community": 2,
       "norm_label": "publish_python()"
     },
     {
@@ -592,7 +597,7 @@
       "author": null,
       "contributor": null,
       "id": "publish_py_publish_node",
-      "community": 3,
+      "community": 2,
       "norm_label": "publish_node()"
     },
     {
@@ -618,7 +623,7 @@
       "author": null,
       "contributor": null,
       "id": "run_tests_py_test_dev_mode",
-      "community": 8,
+      "community": 10,
       "norm_label": "run_tests.test_dev_mode()"
     },
     {
@@ -631,7 +636,7 @@
       "author": null,
       "contributor": null,
       "id": "run_tests_py_run_all_tests",
-      "community": 9,
+      "community": 11,
       "norm_label": "run_tests.run_all_tests()"
     },
     {
@@ -644,7 +649,7 @@
       "author": null,
       "contributor": null,
       "id": "test_adapter_flags_module",
-      "community": 2,
+      "community": 4,
       "norm_label": "testadapterflags"
     },
     {
@@ -657,7 +662,7 @@
       "author": null,
       "contributor": null,
       "id": "test_integration_module",
-      "community": 2,
+      "community": 4,
       "norm_label": "testintegration"
     },
     {
@@ -670,24 +675,15 @@
       "author": null,
       "contributor": null,
       "id": "test_publish_module",
-      "community": 3,
+      "community": 2,
       "norm_label": "testpublish"
-    },
-    {
-      "label": "magic-spec: Specification-Driven Development (SDD) Workflow Installer.",
-      "file_type": "rationale",
-      "source_file": "installers\\python\\magic_spec\\__init__.py",
-      "source_location": "L1",
-      "community": 10,
-      "norm_label": "magic-spec: specification-driven development (sdd) workflow installer.",
-      "id": "init_rationale_1"
     },
     {
       "label": "Returns the tarball URL for the given version tag.",
       "file_type": "rationale",
       "source_file": "installers\\python\\magic_spec\\__main__.py",
       "source_location": "L64",
-      "community": 11,
+      "community": 12,
       "norm_label": "returns the tarball url for the given version tag.",
       "id": "main_rationale_64"
     },
@@ -696,7 +692,7 @@
       "file_type": "rationale",
       "source_file": "installers\\python\\magic_spec\\__main__.py",
       "source_location": "L399",
-      "community": 12,
+      "community": 13,
       "norm_label": "returns the installed package version from __init__.py.",
       "id": "main_rationale_399"
     },
@@ -705,7 +701,7 @@
       "file_type": "rationale",
       "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L38",
-      "community": 13,
+      "community": 14,
       "norm_label": "resets the sandbox directory for clean testing.      deletes the existing sandbo",
       "id": "run_tests_rationale_38"
     },
@@ -714,7 +710,7 @@
       "file_type": "rationale",
       "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L49",
-      "community": 14,
+      "community": 15,
       "norm_label": "runs a shell command and captures output.      args:         cmd: list of comman",
       "id": "run_tests_rationale_49"
     },
@@ -723,7 +719,7 @@
       "file_type": "rationale",
       "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L79",
-      "community": 15,
+      "community": 16,
       "norm_label": "tests the specified installer against all defined adapters.      args:         i",
       "id": "run_tests_rationale_79"
     },
@@ -732,7 +728,7 @@
       "file_type": "rationale",
       "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L170",
-      "community": 16,
+      "community": 17,
       "norm_label": "verifies that --dev flag installs development-specific files.      args:",
       "id": "run_tests_rationale_170"
     },
@@ -741,7 +737,7 @@
       "file_type": "rationale",
       "source_file": "installers\\scripts\\run_tests.py",
       "source_location": "L231",
-      "community": 17,
+      "community": 18,
       "norm_label": "discovers and runs all unit tests in the tests directory.      returns:",
       "id": "run_tests_rationale_231"
     },
@@ -750,7 +746,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_adapter_flags.py",
       "source_location": "L76",
-      "community": 18,
+      "community": 19,
       "norm_label": "verify that the python installer logic correctly identifies --cursor flag from s",
       "id": "test_adapter_flags_rationale_76"
     },
@@ -759,7 +755,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_adapter_flags.py",
       "source_location": "L108",
-      "community": 19,
+      "community": 20,
       "norm_label": "verify that the node installer logic correctly identifies --cursor flag.",
       "id": "test_adapter_flags_rationale_108"
     },
@@ -768,7 +764,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L53",
-      "community": 20,
+      "community": 21,
       "norm_label": "test the --doctor flag in the python installer.",
       "id": "test_integration_rationale_53"
     },
@@ -777,7 +773,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L87",
-      "community": 21,
+      "community": 22,
       "norm_label": "test the --doctor flag in the node installer.",
       "id": "test_integration_rationale_87"
     },
@@ -786,7 +782,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L202",
-      "community": 22,
+      "community": 23,
       "norm_label": "test that installers correctly convert markdown to toml for gemini adapter.",
       "id": "test_integration_rationale_202"
     },
@@ -795,7 +791,7 @@
       "file_type": "rationale",
       "source_file": "installers\\tests\\test_integration.py",
       "source_location": "L272",
-      "community": 23,
+      "community": 24,
       "norm_label": "test that installers correctly convert markdown to mdc for windsurf adapter.",
       "id": "test_integration_rationale_272"
     },
@@ -808,7 +804,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": "specification-driven development (sdd)",
       "id": "concept_sdd"
     },
@@ -821,7 +817,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": ".magic/ engine",
       "id": "concept_magic_engine"
     },
@@ -834,7 +830,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": ".agents/workflows/ slash commands",
       "id": "concept_agents_workflows"
     },
@@ -847,7 +843,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": ".design/ workspace",
       "id": "concept_design_workspace"
     },
@@ -860,7 +856,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 24,
+      "community": 25,
       "norm_label": "adapter pattern (cursor/windsurf/gemini/claude)",
       "id": "concept_adapter_pattern"
     },
@@ -873,7 +869,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": "pipeline: thought \u2192 spec \u2192 task \u2192 run \u2192 code",
       "id": "concept_pipeline_thought_code"
     },
@@ -886,7 +882,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 2,
+      "community": 4,
       "norm_label": "thin-client installer architecture",
       "id": "concept_thin_client_installers"
     },
@@ -899,7 +895,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 4,
+      "community": 3,
       "norm_label": "project anatomy: engine / installers / design",
       "id": "concept_project_anatomy"
     },
@@ -912,7 +908,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 25,
+      "community": 26,
       "norm_label": "changelog 1.5.176 (spec graph)",
       "id": "changelog_1_5_176"
     },
@@ -925,7 +921,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 26,
+      "community": 27,
       "norm_label": "changelog 1.5.170 (read-only invariant)",
       "id": "changelog_1_5_170"
     },
@@ -938,7 +934,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "magic spec installers",
       "id": "installers_readme"
     },
@@ -951,7 +947,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "thin client architecture",
       "id": "installers_thin_client"
     },
@@ -964,7 +960,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "installer cli commands",
       "id": "installers_cli"
     },
@@ -977,7 +973,7 @@
       "captured_at": null,
       "author": null,
       "contributor": null,
-      "community": 6,
+      "community": 7,
       "norm_label": "adapter shortcuts",
       "id": "installers_adapter_shortcuts"
     },
@@ -1527,16 +1523,16 @@
       "target": "main_py_safe_extract_tar"
     },
     {
-      "relation": "shares_data_with",
+      "relation": "rationale_for",
       "confidence": "EXTRACTED",
-      "confidence_score": 1.0,
-      "source_file": "installers/scripts/publish.py",
-      "source_location": "L96-L102",
+      "source_file": "D:\\Projects\\src\\github.com\\teratron\\magic-spec\\installers\\python\\magic_spec\\__init__.py",
+      "source_location": "L1",
       "weight": 1.0,
-      "_src": "publish_py_update_python_version",
-      "_tgt": "magic_spec_version",
-      "source": "magic_spec_version",
-      "target": "publish_py_update_python_version"
+      "_src": "init_rationale_1",
+      "_tgt": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
+      "source": "d_projects_src_github_com_teratron_magic_spec_installers_python_magic_spec_init_py",
+      "target": "init_rationale_1",
+      "confidence_score": 1.0
     },
     {
       "relation": "calls",

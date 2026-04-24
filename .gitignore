@@ -66,6 +66,8 @@ CODEX.md
 # Generated graph artifacts
 .design/spec-graph.html
 .design/spec-graph.json
+.design/.graph-cache/
+.design/wiki/
 
 # Local settings (never commit)
 */settings.json

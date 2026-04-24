@@ -1,11 +1,11 @@
-# Graph Report - magic-spec  (2026-04-24)
+# Graph Report - D:\Projects\src\github.com\teratron\magic-spec  (2026-04-24)
 
 ## Corpus Check
-- 8 files · ~31,389 words
+- 8 files · ~31,585 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 87 nodes · 94 edges · 25 communities detected
+- 87 nodes · 94 edges · 28 communities detected
 - Extraction: 82% EXTRACTED · 18% INFERRED · 0% AMBIGUOUS · INFERRED: 17 edges (avg confidence: 0.88)
 - Token cost: 0 input · 0 output
 
@@ -18,6 +18,8 @@
 - [[_COMMUNITY_Community 5|Community 5]]
 - [[_COMMUNITY_Community 6|Community 6]]
 - [[_COMMUNITY_Community 7|Community 7]]
+- [[_COMMUNITY_Community 8|Community 8]]
+- [[_COMMUNITY_Community 9|Community 9]]
 - [[_COMMUNITY_Community 10|Community 10]]
 - [[_COMMUNITY_Community 11|Community 11]]
 - [[_COMMUNITY_Community 12|Community 12]]
@@ -35,6 +37,7 @@
 - [[_COMMUNITY_Community 24|Community 24]]
 - [[_COMMUNITY_Community 25|Community 25]]
 - [[_COMMUNITY_Community 26|Community 26]]
+- [[_COMMUNITY_Community 27|Community 27]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `main() (Python entrypoint)` - 12 edges
@@ -79,143 +82,159 @@ Cohesion: 0.28
 Nodes (15): .magic/analyze.md Engine Implementation, .magic/rule.md Engine Implementation, .magic/run.md Engine Implementation, .magic/spec.md Engine Implementation, .magic/task.md Engine Implementation, Skill: magic.analyze, Skill: magic.rule, Skill: magic.run (+7 more)
 
 ### Community 2 - "Community 2"
-Cohesion: 0.27
-Nodes (9): Thin-Client Installer Architecture, _convert_to_mdc() (Python), install_adapter() (Python), Python Installer CLI (__main__.py), convertToMdc() (Node), installAdapter() (Node), Node Installer CLI (index.js), TestAdapterFlags (+1 more)
+Cohesion: 0.29
+Nodes (4): publish.py main(), update_node_version(), update_python_version(), TestPublish
 
 ### Community 3 - "Community 3"
-Cohesion: 0.25
-Nodes (5): magic_spec __version__ 1.5.170, publish.py main(), update_node_version(), update_python_version(), TestPublish
-
-### Community 4 - "Community 4"
 Cohesion: 0.4
 Nodes (6): .agents/workflows/ slash commands, .design/ Workspace, .magic/ Engine, Pipeline: Thought → Spec → Task → Run → Code, Project Anatomy: Engine / Installers / Design, Specification-Driven Development (SDD)
 
+### Community 4 - "Community 4"
+Cohesion: 0.6
+Nodes (5): Thin-Client Installer Architecture, Python Installer CLI (__main__.py), Node Installer CLI (index.js), TestAdapterFlags, TestIntegration
+
 ### Community 5 - "Community 5"
+Cohesion: 0.5
+Nodes (4): _convert_to_mdc() (Python), install_adapter() (Python), convertToMdc() (Node), installAdapter() (Node)
+
+### Community 6 - "Community 6"
 Cohesion: 0.67
 Nodes (4): download_and_extract(), _safe_extract_tar(), downloadPayload(), Rationale: path traversal tar safety check
 
-### Community 6 - "Community 6"
+### Community 7 - "Community 7"
 Cohesion: 0.5
 Nodes (4): Adapter Shortcuts, Installer CLI Commands, Magic Spec Installers, Thin Client Architecture
 
-### Community 7 - "Community 7"
+### Community 8 - "Community 8"
+Cohesion: 1.0
+Nodes (1): magic-spec: Specification-Driven Development (SDD) Workflow Installer.
+
+### Community 9 - "Community 9"
 Cohesion: 1.0
 Nodes (1): Rationale: config.json as single source of truth
 
 ### Community 10 - "Community 10"
 Cohesion: 1.0
-Nodes (1): magic-spec: Specification-Driven Development (SDD) Workflow Installer.
+Nodes (0): 
 
 ### Community 11 - "Community 11"
 Cohesion: 1.0
-Nodes (1): Returns the tarball URL for the given version tag.
+Nodes (0): 
 
 ### Community 12 - "Community 12"
 Cohesion: 1.0
-Nodes (1): Returns the installed package version from __init__.py.
+Nodes (1): Returns the tarball URL for the given version tag.
 
 ### Community 13 - "Community 13"
 Cohesion: 1.0
-Nodes (1): Resets the sandbox directory for clean testing.      Deletes the existing sandbo
+Nodes (1): Returns the installed package version from __init__.py.
 
 ### Community 14 - "Community 14"
 Cohesion: 1.0
-Nodes (1): Runs a shell command and captures output.      Args:         cmd: List of comman
+Nodes (1): Resets the sandbox directory for clean testing.      Deletes the existing sandbo
 
 ### Community 15 - "Community 15"
 Cohesion: 1.0
-Nodes (1): Tests the specified installer against all defined adapters.      Args:         i
+Nodes (1): Runs a shell command and captures output.      Args:         cmd: List of comman
 
 ### Community 16 - "Community 16"
 Cohesion: 1.0
-Nodes (1): Verifies that --dev flag installs development-specific files.      Args:
+Nodes (1): Tests the specified installer against all defined adapters.      Args:         i
 
 ### Community 17 - "Community 17"
 Cohesion: 1.0
-Nodes (1): Discovers and runs all unit tests in the tests directory.      Returns:
+Nodes (1): Verifies that --dev flag installs development-specific files.      Args:
 
 ### Community 18 - "Community 18"
 Cohesion: 1.0
-Nodes (1): Verify that the Python installer logic correctly identifies --cursor flag from s
+Nodes (1): Discovers and runs all unit tests in the tests directory.      Returns:
 
 ### Community 19 - "Community 19"
 Cohesion: 1.0
-Nodes (1): Verify that the Node installer logic correctly identifies --cursor flag.
+Nodes (1): Verify that the Python installer logic correctly identifies --cursor flag from s
 
 ### Community 20 - "Community 20"
 Cohesion: 1.0
-Nodes (1): Test the --doctor flag in the python installer.
+Nodes (1): Verify that the Node installer logic correctly identifies --cursor flag.
 
 ### Community 21 - "Community 21"
 Cohesion: 1.0
-Nodes (1): Test the --doctor flag in the node installer.
+Nodes (1): Test the --doctor flag in the python installer.
 
 ### Community 22 - "Community 22"
 Cohesion: 1.0
-Nodes (1): Test that installers correctly convert Markdown to TOML for Gemini adapter.
+Nodes (1): Test the --doctor flag in the node installer.
 
 ### Community 23 - "Community 23"
 Cohesion: 1.0
-Nodes (1): Test that installers correctly convert Markdown to MDC for Windsurf adapter.
+Nodes (1): Test that installers correctly convert Markdown to TOML for Gemini adapter.
 
 ### Community 24 - "Community 24"
 Cohesion: 1.0
-Nodes (1): Adapter Pattern (cursor/windsurf/gemini/claude)
+Nodes (1): Test that installers correctly convert Markdown to MDC for Windsurf adapter.
 
 ### Community 25 - "Community 25"
 Cohesion: 1.0
-Nodes (1): CHANGELOG 1.5.176 (Spec Graph)
+Nodes (1): Adapter Pattern (cursor/windsurf/gemini/claude)
 
 ### Community 26 - "Community 26"
+Cohesion: 1.0
+Nodes (1): CHANGELOG 1.5.176 (Spec Graph)
+
+### Community 27 - "Community 27"
 Cohesion: 1.0
 Nodes (1): CHANGELOG 1.5.170 (Read-Only Invariant)
 
 ## Knowledge Gaps
-- **28 isolated node(s):** `magic_spec __version__ 1.5.170`, `Rationale: config.json as single source of truth`, `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `Returns the tarball URL for the given version tag.`, `Returns the installed package version from __init__.py.` (+23 more)
+- **27 isolated node(s):** `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `Rationale: config.json as single source of truth`, `Returns the tarball URL for the given version tag.`, `Returns the installed package version from __init__.py.`, `Resets the sandbox directory for clean testing.      Deletes the existing sandbo` (+22 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 7`** (1 nodes): `Rationale: config.json as single source of truth`
+- **Thin community `Community 8`** (2 nodes): `__init__.py`, `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 10`** (1 nodes): `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`
+- **Thin community `Community 9`** (1 nodes): `Rationale: config.json as single source of truth`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 11`** (1 nodes): `Returns the tarball URL for the given version tag.`
+- **Thin community `Community 10`** (1 nodes): `run_tests.test_dev_mode()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 12`** (1 nodes): `Returns the installed package version from __init__.py.`
+- **Thin community `Community 11`** (1 nodes): `run_tests.run_all_tests()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 13`** (1 nodes): `Resets the sandbox directory for clean testing.      Deletes the existing sandbo`
+- **Thin community `Community 12`** (1 nodes): `Returns the tarball URL for the given version tag.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 14`** (1 nodes): `Runs a shell command and captures output.      Args:         cmd: List of comman`
+- **Thin community `Community 13`** (1 nodes): `Returns the installed package version from __init__.py.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 15`** (1 nodes): `Tests the specified installer against all defined adapters.      Args:         i`
+- **Thin community `Community 14`** (1 nodes): `Resets the sandbox directory for clean testing.      Deletes the existing sandbo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 16`** (1 nodes): `Verifies that --dev flag installs development-specific files.      Args:`
+- **Thin community `Community 15`** (1 nodes): `Runs a shell command and captures output.      Args:         cmd: List of comman`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 17`** (1 nodes): `Discovers and runs all unit tests in the tests directory.      Returns:`
+- **Thin community `Community 16`** (1 nodes): `Tests the specified installer against all defined adapters.      Args:         i`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 18`** (1 nodes): `Verify that the Python installer logic correctly identifies --cursor flag from s`
+- **Thin community `Community 17`** (1 nodes): `Verifies that --dev flag installs development-specific files.      Args:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 19`** (1 nodes): `Verify that the Node installer logic correctly identifies --cursor flag.`
+- **Thin community `Community 18`** (1 nodes): `Discovers and runs all unit tests in the tests directory.      Returns:`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 20`** (1 nodes): `Test the --doctor flag in the python installer.`
+- **Thin community `Community 19`** (1 nodes): `Verify that the Python installer logic correctly identifies --cursor flag from s`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 21`** (1 nodes): `Test the --doctor flag in the node installer.`
+- **Thin community `Community 20`** (1 nodes): `Verify that the Node installer logic correctly identifies --cursor flag.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 22`** (1 nodes): `Test that installers correctly convert Markdown to TOML for Gemini adapter.`
+- **Thin community `Community 21`** (1 nodes): `Test the --doctor flag in the python installer.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 23`** (1 nodes): `Test that installers correctly convert Markdown to MDC for Windsurf adapter.`
+- **Thin community `Community 22`** (1 nodes): `Test the --doctor flag in the node installer.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 24`** (1 nodes): `Adapter Pattern (cursor/windsurf/gemini/claude)`
+- **Thin community `Community 23`** (1 nodes): `Test that installers correctly convert Markdown to TOML for Gemini adapter.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 25`** (1 nodes): `CHANGELOG 1.5.176 (Spec Graph)`
+- **Thin community `Community 24`** (1 nodes): `Test that installers correctly convert Markdown to MDC for Windsurf adapter.`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 26`** (1 nodes): `CHANGELOG 1.5.170 (Read-Only Invariant)`
+- **Thin community `Community 25`** (1 nodes): `Adapter Pattern (cursor/windsurf/gemini/claude)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 26`** (1 nodes): `CHANGELOG 1.5.176 (Spec Graph)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 27`** (1 nodes): `CHANGELOG 1.5.170 (Read-Only Invariant)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
 _Questions this graph is uniquely positioned to answer:_
 
-- **Why does `main() (Python entrypoint)` connect `Community 0` to `Community 2`, `Community 5`?**
+- **Why does `main() (Python entrypoint)` connect `Community 0` to `Community 4`, `Community 5`, `Community 6`?**
   _High betweenness centrality (0.102) - this node is a cross-community bridge._
-- **Why does `Thin-Client Installer Architecture` connect `Community 2` to `Community 4`?**
+- **Why does `Thin-Client Installer Architecture` connect `Community 4` to `Community 3`?**
   _High betweenness centrality (0.053) - this node is a cross-community bridge._
-- **What connects `magic_spec __version__ 1.5.170`, `Rationale: config.json as single source of truth`, `magic-spec: Specification-Driven Development (SDD) Workflow Installer.` to the rest of the system?**
-  _28 weakly-connected nodes found - possible documentation gaps or missing edges._
+- **What connects `magic-spec: Specification-Driven Development (SDD) Workflow Installer.`, `Rationale: config.json as single source of truth`, `Returns the tarball URL for the given version tag.` to the rest of the system?**
+  _27 weakly-connected nodes found - possible documentation gaps or missing edges._

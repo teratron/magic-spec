@@ -1,6 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { normalizePath, writeFileSafe, resolveDesignRoot } = require('./utils');
+const graphCache = require('./graph-cache');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPECIFICATION KNOWLEDGE GRAPH — BUILD & EXPORT
@@ -10,7 +11,7 @@ const { normalizePath, writeFileSafe, resolveDesignRoot } = require('./utils');
 // Pipeline: extract → build → analyze → export (JSON / HTML / summary).
 //
 // Usage:
-//   node .magic/scripts/executor.js build-spec-graph [--json] [--html [path]]
+//   node .magic/scripts/executor.js build-spec-graph [--json] [--html [path]] [--no-cache]
 //
 // Environment:
 //   MAGIC_DESIGN_DIR — workspace design directory (default: .design)
@@ -27,9 +28,15 @@ const htmlPath = (htmlFlag && args[htmlIdx + 1] && !args[htmlIdx + 1].startsWith
     ? args[htmlIdx + 1]
     : null;
 
+/** When true, per-file extraction cache is bypassed (see l2-spec-graph-memory §4.1). */
+const noCacheFlag = args.includes('--no-cache');
+
 const rootDir = process.cwd();
 
 const { designDir, designAbs } = resolveDesignRoot(rootDir);
+
+/** Per-run cache hit/miss counter — surfaced in summary output on non-JSON runs. */
+const cacheStats = { hits: 0, misses: 0 };
 
 /** Default HTML output path relative to project root. */
 const DEFAULT_HTML_PATH = path.join(designDir, 'spec-graph.html');
@@ -270,7 +277,20 @@ function extractSpecDetails(wsName, registrySpecs) {
             addEdge(`ws:${wsName}`, specId, 'contains');
         }
 
-        const { refs, parent, conventions } = parseSpecBody(specPath);
+        let parsed = null;
+        if (!noCacheFlag) {
+            parsed = graphCache.loadCached(specPath, designAbs, rootDir);
+            if (parsed) cacheStats.hits += 1;
+        }
+        if (!parsed) {
+            parsed = parseSpecBody(specPath);
+            cacheStats.misses += 1;
+            if (!noCacheFlag) {
+                try { graphCache.saveCached(specPath, parsed, designAbs, rootDir); }
+                catch (_) { /* cache write failures must not break a build */ }
+            }
+        }
+        const { refs, parent, conventions } = parsed;
 
         for (const ref of refs) {
             const fileId = `file:${ref}`;
@@ -932,6 +952,11 @@ function printSummary(analysis) {
     console.log(`Design directory : ${designDir}`);
     console.log(`Total nodes      : ${s.total_nodes}`);
     console.log(`Total edges      : ${s.total_edges}`);
+    const cacheTotal = cacheStats.hits + cacheStats.misses;
+    if (cacheTotal > 0) {
+        const pct = Math.round((cacheStats.hits / cacheTotal) * 100);
+        console.log(`Extraction cache : ${cacheStats.hits}/${cacheTotal} hits (${pct}%)${noCacheFlag ? ' — bypassed via --no-cache' : ''}`);
+    }
     console.log('');
 
     console.log('  Type          Count');

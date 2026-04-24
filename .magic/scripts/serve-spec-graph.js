@@ -171,13 +171,14 @@ function godNodes(nodes, topN) {
 const TOOLS = [
     {
         name: 'query_graph',
-        description: 'Search the SDD graph nodes by label substring and optional type filter. Returns matching nodes with their metadata.',
+        description: 'Search the SDD graph nodes by label substring and optional type filter. Returns matching nodes with their metadata. Output is truncated at `token_budget` (approx chars = tokens × 4).',
         inputSchema: {
             type: 'object',
             properties: {
                 query: { type: 'string', description: 'Case-insensitive substring to match against node label or id. Empty string returns all.' },
                 type:  { type: 'string', enum: ['workspace', 'spec', 'file', 'convention', 'phase'], description: 'Filter by node type (optional).' },
                 limit: { type: 'number', description: 'Max results to return (default: 20).', default: 20 },
+                token_budget: { type: 'number', description: 'Approximate token budget for serialized output (default: 2000). Uses chars = tokens × 4 heuristic; output truncated with explicit sentinel.', default: 2000 },
             },
         },
     },
@@ -262,7 +263,15 @@ function dispatchTool(name, args, graph) {
         switch (name) {
             case 'query_graph': {
                 const results = queryGraph(nodes, args.query || '', args.type || null, args.limit || 20);
-                return { content: [{ type: 'text', text: JSON.stringify(results, null, 2) }] };
+                const budget = Number.isFinite(args.token_budget) && args.token_budget > 0
+                    ? Math.floor(args.token_budget)
+                    : 2000;
+                const charBudget = budget * 4;
+                let text = JSON.stringify(results, null, 2);
+                if (text.length > charBudget) {
+                    text = text.slice(0, charBudget) + `\n... (truncated to ~${budget} tokens; tighten \`query\`, lower \`limit\`, or raise \`token_budget\`)`;
+                }
+                return { content: [{ type: 'text', text }] };
             }
 
             case 'get_node': {
