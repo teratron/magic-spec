@@ -7,6 +7,26 @@ const crypto = require('crypto');
 // ═══════════════════════════════════════════════════════════════════════════
 
 // ───────────────────────────────────────────────────────────────────────────
+// Engine Integrity Surface (Single Source of Truth)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Volatile state caches written by sync sub-scripts during normal workflow
+ * use. They live inside `.magic/` for locality but are NOT part of the
+ * immutable engine surface — including them in `.checksums` produces
+ * spurious ENGINE_INTEGRITY warnings on every user run.
+ *
+ * Consumers:
+ *   - generate-checksums.js — must skip these when building the manifest.
+ *   - update-engine-meta.js — must skip these when detecting drift.
+ *   - check-prerequisites.js — relies on the manifest above being clean.
+ */
+const VOLATILE_STATE_FILES = new Set([
+    '.docs-state.json',
+    '.project-meta-state.json',
+]);
+
+// ───────────────────────────────────────────────────────────────────────────
 // Dry-Run Guard (Read-Only Invariant)
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -180,4 +200,5 @@ module.exports = {
     appendFileSafe,
     mkdirSafe,
     resolveDesignRoot,
+    VOLATILE_STATE_FILES,
 };

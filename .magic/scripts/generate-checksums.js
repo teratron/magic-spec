@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe, VOLATILE_STATE_FILES } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
@@ -14,6 +14,11 @@ const CHECKSUMS_PATH = path.join(MAGIC_DIR, CHECKSUMS_FILE);
 // and would pollute .checksums + cause spurious ENGINE_INTEGRITY warnings.
 // utils.getAllFiles() already excludes 'history' by default; we keep that.
 const IGNORE_DIRS = ['history'];
+
+// Volatile per-project caches (see utils.VOLATILE_STATE_FILES). These live
+// inside .magic/ but are written by sync sub-scripts during normal user
+// activity, so they must NOT be part of the integrity manifest.
+const IGNORE_REL_FILES = VOLATILE_STATE_FILES;
 
 // ───────────────────────────────────────────────────────────────────────────
 // Core Logic
@@ -38,6 +43,7 @@ function run() {
         getAllFiles(zone.dir, IGNORE_DIRS).forEach(fullPath => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === CHECKSUMS_FILE) return;
+            if (IGNORE_REL_FILES.has(rel)) return;
             entries.push({ rel, fullPath });
         });
     });

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGINE META UPDATER (C14 Compliance)
@@ -95,8 +95,9 @@ function updateEngineMeta() {
         getAllFiles(zone.dir).forEach(fullPath => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
-            // State caches written by sync sub-scripts (volatile, not engine logic)
-            if (rel === '.docs-state.json' || rel === '.project-meta-state.json') return;
+            // State caches written by sync sub-scripts (volatile, not engine logic).
+            // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
+            if (VOLATILE_STATE_FILES.has(rel)) return;
 
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {
