@@ -232,6 +232,18 @@ Check for:
 6. **Rules**: Any contradiction with `RULES.md`? (Flag, don't ignore).
 7. **Sync Check**: `check-prerequisites` status.
 
+### Graph Refresh (Post-Dispatch)
+
+Per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers), any mutation of `.design/specifications/` or `INDEX.md` invalidates the spec graph and wiki. After dispatch (Creating, Updating, Batch Stabilization, T4 RULES.md write) and before the Task Completion Checklist, run the canonical refresh **once per workflow invocation**:
+
+```bash
+node .magic/scripts/executor.js export-wiki
+```
+
+This single call rebuilds the graph (cached extraction, ~ms per warm spec) and regenerates `.design/wiki/`. Best-effort — if it fails, log a non-blocking warning (`[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.`) and continue.
+
+Skip the refresh in **Explore Mode** and **Project Analysis Delegation** — both are read-only.
+
 ### Updating RULES.md (Constitution)
 
 Update only via triggers. Never contradict §1-6 without explicit amendment.
@@ -291,6 +303,7 @@ Checklist — {task description}
      Non-empty placeholder rows required. Empty or stub rows → block promotion. Flag `CANONICAL_MISSING`.
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
+  ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
 ```
 
 ## Templates

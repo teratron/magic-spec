@@ -1,7 +1,7 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.0.0
-**Status:** Stable
+**Version:** 1.1.0
+**Status:** RFC
 **Layer:** 2
 **Implements:** l1-engine-core.md
 
@@ -120,6 +120,33 @@ node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out
 
 **Why not change all tools?** `query_graph` is the only tool with unbounded output variance (label-match returns vary wildly). `get_node`, `get_neighbors`, `shortest_path`, `god_nodes` are naturally bounded by their inputs. Keeping the change minimal reduces surface area.
 
+### 4.4 Workflow Integration Triggers
+
+The cache (§4.1), wiki (§4.2), and graph data are subsystems with no value unless workflows refresh them at the right moments. This section defines the trigger policy.
+
+**Canonical refresh command:** `node .magic/scripts/executor.js export-wiki`
+
+This single call internally invokes `build-spec-graph --json`, which transparently populates `.graph-cache/`. It then writes the refreshed wiki under `$designDir/wiki/`. One process spawn refreshes all three artifacts (cache, in-memory graph, wiki). Cost on a warm cache is dominated by I/O — typically <1s for `.design/` of <100 specs.
+
+**Trigger classes:**
+
+| Class | When | Workflows | Action |
+| :--- | :--- | :--- | :--- |
+| **Write-side** | After any mutation of `.design/` artifacts that contribute graph nodes/edges (specs, PLAN.md phases, RULES.md conventions, INDEX.md entries) | `spec.md` (Creating, Updating, Batch Stabilization), `task.md` (after writing PLAN/TASKS), `analyze.md` (Mode A/B/D after dispatch), `rule.md` (after RULES.md write) | Run canonical refresh **once per workflow invocation**, post-dispatch, before the Task Completion Checklist. |
+| **Read-side** | Before architectural reasoning (impact analysis, planning, audit) | `task.md` (planning), `run.md` (impact check), `analyze.md` (Mode C) | Prefer reading `$designDir/wiki/index.md` over scanning raw `.design/specifications/`. If the MCP graph server is running (see [`l2-spec-graph-memory.md` §4.3](#43-token-budget-truncation-on-query_graph)), use `query_graph` with a bounded `token_budget`. |
+| **Audit-side** | Periodic consistency checks | `analyze.md` Mode C step 6 | Already runs `build-spec-graph` (full mode). Additionally compares `wiki/index.md` mtime against `.design/specifications/**/*.md` and `.design/{ws}/PLAN.md` mtimes; if any source is newer → emit `WIKI_STALE` advisory. |
+| **Visual** | Explicit user request | `analyze.md` (`--html` flag), future `magic.dev.graph` skill | Run `build-spec-graph --html [path]`. Never auto-generated. |
+
+**Anti-trigger policy** (do NOT refresh on these):
+
+- `magic.run` task execution loops — code changes don't affect spec graph; refreshing per-task wastes process spawns.
+- Read-only modes (`analyze.md` Mode C without dispatch, `spec.md` Explore Mode) — no mutation occurred.
+- `magic.rule` patch-only edits (typo fixes that don't add/remove rule entries) — graph extracts rule **count**, not text content.
+
+**Failure handling:** the refresh call is best-effort. If `export-wiki` fails (e.g., malformed spec frontmatter), the workflow MUST log the failure as a non-blocking warning and continue. Stale wiki is a degraded but functional state — blocking the workflow on graph refresh would convert a warning into an outage.
+
+**Cache hygiene:** the per-file extraction cache accumulates orphaned entries when specs are renamed or deleted. `analyze.md` Mode C registry-healing path (`magic.spec --audit --fix`) calls `graphCache.clearCache()` after ghost/zombie removal to reclaim disk and prevent stale-hash false hits.
+
 ## 5. Implementation Notes
 
 1. `graph-cache.js` must be written first — both `build-spec-graph.js` (cache integration) and future callers depend on it.
@@ -149,3 +176,4 @@ node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
+| 1.1.0 | 2026-04-25 | Agent | §4.4 Workflow Integration Triggers: canonical refresh command, write/read/audit/visual classes, anti-trigger policy, failure handling, cache hygiene. |

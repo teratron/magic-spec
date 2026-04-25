@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.8.5
+**Version:** 1.8.6
 **Status:** Active
 
 ## Overview
@@ -27,7 +27,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-role-system.md](specifications/l1-role-system.md) | Unified role registry; supersedes scattered C24 persona mentions and adds code-writing stage roles. | Stable | 1 | 1.0.0 |
 | [l2-role-cards.md](specifications/l2-role-cards.md) | Role card registry — full content of 13 initial cards (9 new + 4 C24 migrations) and frontmatter schema. | Stable | 2 | 1.0.0 |
 | [l2-role-integration.md](specifications/l2-role-integration.md) | Workflow integration of the role system: run/task/spec/analyze/rule/retro amendments, §C24 rewrite, check-prerequisites addition. | Stable | 2 | 1.0.0 |
-| [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget. | Stable | 2 | 1.0.0 |
+| [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | RFC | 2 | 1.1.0 |
 
 ## Meta Information
 

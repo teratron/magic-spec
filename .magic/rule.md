@@ -97,6 +97,14 @@ Write target `RULES.md` and update history and version as per step 5 approval.
 
 ### 7. Post-Write Impact
 
+**Graph Refresh**: For Add/Amend/Remove actions (NOT for List, NOT for patch-only typo fixes), run once after RULES.md is written:
+
+```bash
+node .magic/scripts/executor.js export-wiki
+```
+
+Per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers) — convention nodes change when rule entries are added or removed. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue.
+
 **Constitutional Review**: Before notifying the user, activate `@role:constitutional-reviewer`. Ask:
 
 - Does the new rule create a **practical conflict** with any C1–C23 in currently running workflows — not just a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
@@ -120,5 +128,6 @@ Rule Checklist — {operation}
   ☐ Constitutional Review: `@role:constitutional-reviewer` activated; practical conflicts with C1–C23 checked
   ☐ Version bumped (Major/Minor/Patch); Document History updated in target file
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
+  ☐ Graph: export-wiki run after Add/Amend/Remove (skip for List and patch-only typo fixes)
   ☐ Engine Meta: C14 bump ONLY if .magic/ files modified (not for .design/ changes)
 ```

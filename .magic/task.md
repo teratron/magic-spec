@@ -140,6 +140,18 @@ After PLAN.md, TASKS.md, and phase files are written:
 After writing PLAN.md, TASKS.md, and phase files, regenerate the workspace context file:
 `node .magic/scripts/executor.js generate-context --workspace {active-workspace}`
 
+### Graph Refresh (Post-Write)
+
+Per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers), `PLAN.md` phases are graph nodes. After Plan Write-back and Context Regeneration, run **once per planning invocation**:
+
+```bash
+node .magic/scripts/executor.js export-wiki
+```
+
+Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in pure dependency-graph audit mode (no plan written).
+
+**Read-side tip (planning):** before building the dependency matrix in Step 3, prefer reading `.design/wiki/index.md` and per-spec wiki articles over scanning every raw spec file. The wiki gives layer/status/version/refs at ~10× lower token cost than full spec reads. Fall back to direct `.design/specifications/` reads only when wiki is absent or `WIKI_STALE` was reported by the most recent `analyze` Mode C run.
+
 ## Task Completion Checklist
 
 ```
@@ -154,5 +166,6 @@ Task Workflow Checklist — {operation}
   ☐ Phase Frontmatter: YAML block populated in phase-*.md files (phase, name, status, subsystem, requires)
   ☐ STATE.md updated with new phase and next action after plan write-back
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
+  ☐ Graph: export-wiki run after plan write-back (skip if no plan written)
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
 ```

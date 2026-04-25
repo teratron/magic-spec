@@ -177,7 +177,8 @@ Source code may contain design rationale in structured comments that are not cap
     - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
     - Report Orphaned files (workspace-scoped but uncovered) and Missing Implements (L2 specs without parent link).
     - Report Bridge Specs (specs referencing files across multiple workspaces) as candidates for cross-workspace spec or workspace boundary adjustment.
-    - **Optional HTML**: If user requests a visual map, run with `--html` flag → outputs `.design/spec-graph.html` (self-contained vis.js visualization).
+    - **Wiki Staleness (`WIKI_STALE`)**: Compare mtime of `.design/wiki/index.md` against the newest mtime among `.design/specifications/**/*.md`, `.design/{ws}/PLAN.md`, and `.design/RULES.md` (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). If wiki is missing or older → emit `WIKI_STALE` advisory with sync path `→ node .magic/scripts/executor.js export-wiki`.
+    - **Optional HTML**: If user requests a visual map, run with `--html` flag → outputs `.design/spec-graph.html` (self-contained vis.js visualization). Never auto-generated.
 7. **Workspace Boundary Analysis**: Run `node .magic/scripts/executor.js detect-communities --include-md`.
     - Compare detected communities against `workspace.json` boundaries (Jaccard alignment score).
     - If any community Jaccard score < 0.3 → include `BOUNDARY_DRIFT` warning: community members are misaligned with their declared workspace.
@@ -325,6 +326,7 @@ Mode C Checklist — Ventilation
     - Registry Sync: Update `INDEX.md`. Bump Registry version.
     - Post-Update Review: Run on all created specs before closing.
     - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
+    - **Graph Refresh**: Run `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
     - **Zero-Prompt Handoff (C9)**: If logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: "[Auto-Analyze] {N} specs proposed and created as Stable. Proceed to Plan/Run?" and wait for reply.
 
 ## Task Completion Checklist
@@ -336,6 +338,7 @@ Analysis Checklist — Mode A/B
   ☐ Mode correct (Analysis vs Re-Analysis Gap Report)
   ☐ RESCUE logic applied for renamed directories
   ☐ Dispatch: approved items created as Stable; RULES.md §7 updated
+  ☐ Graph: export-wiki run after dispatch (skip if no dispatch occurred)
   ☐ Advisory Report appended to output
   ☐ Engine Meta: C14 bump if .magic/ files modified
 
@@ -347,6 +350,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
   ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
+  ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
