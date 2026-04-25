@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.204] - 2026-04-25
+
+### Fixed
+
+- **`sync-docs.js`**: Removed greedy global `vX.Y.Z` regex that overwrote unrelated version mentions. Removed `today's date` from `CONTRIBUTING.md` footer (now uses latest source mtime). `## Sync Note` only refreshes when the matching workflow source hash changes or the engine version actually bumps. Adds `.magic/.docs-state.json` for per-workflow content tracking.
+- **`sync-manifests.js`**: Replaced greedy `(\(v?\d+\.\d+\.\d+\))/g` README sweep with anchored `**Active Development** (vX.Y.Z)` and an optional `<!-- engine-version -->...<!-- /engine-version -->` marker. Added `installers/python/magic_spec/__init__.py` to the manifest set.
+- **`update-project-meta.js`**: Made idempotent via SHA-256 structural digest stored in `.magic/.project-meta-state.json` (volatile fields stripped before hashing). Bump + history append now happen only on real change. Added Smart-History dedup (same-day same-message rows collapse into a version range). Fixed history insertion to honor newest-first table convention by anchoring to the matched header's slice instead of the file's first divider.
+
+### Added
+
+- **`validate-hardlinks.js`**: New script verifies `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Tolerant by default; pass `--strict` to fail on missing siblings.
+- **`sync.js`**: Hardlink validation wired in as a pipeline step. New flags: `--skip-links`, `--strict-links`.
+
+### Changed
+
+- **`magic.dev.sync.md` workflow**: Rewritten to describe the actual pipeline (was claiming a "Hardlink Validation" step that did not exist).
+- **`update-engine-meta.js`**: `.docs-state.json` and `.project-meta-state.json` now ignored by drift detection (volatile state caches, not engine logic).
+
 ## [1.5.198] - 2026-04-24
 
 ### Fixed

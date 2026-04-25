@@ -1,0 +1,12 @@
+{
+  "global": {
+    "digest": "7c67d3c642cf0d07056ad32eb0c4902efb99271c34ca4529adebc120bbc47b7e",
+    "version": "1.0.20",
+    "date": "2026-04-25"
+  },
+  "workspace:engine": {
+    "digest": "1e51e3ff0097dc410fbe31e452e4cc60e6b3911d2e1675c2cd4113ae2e3c101c",
+    "version": "1.8.5",
+    "date": "2026-04-25"
+  }
+}

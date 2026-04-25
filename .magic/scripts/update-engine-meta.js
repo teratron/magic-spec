@@ -95,6 +95,8 @@ function updateEngineMeta() {
         getAllFiles(zone.dir).forEach(fullPath => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
+            // State caches written by sync sub-scripts (volatile, not engine logic)
+            if (rel === '.docs-state.json' || rel === '.project-meta-state.json') return;
 
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {

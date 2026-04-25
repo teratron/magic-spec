@@ -7,14 +7,31 @@ description: Project Sync & Hygiene — synchronizes versions, documentation, an
 
 # Sync Workflow
 
-Maintain project hygiene by synchronizing all metadata, documentation, and versioning across the repository.
+Maintain project hygiene by synchronizing all metadata, documentation, and versioning across the repository. The pipeline is **idempotent** — re-running it without source changes produces no diff.
 
-1. **Version Parity**: Read `.magic/.version` and ensure it matches `package.json`, `pyproject.toml`, and installer init files.
-2. **Doc Sync**:
-   - Regenerate `CONTRIBUTING.md` from `.magic/templates/contributing.md` using current project state (workflows, rules).
-   - Verify `README.md` structure and update version-references.
-3. **Hardlink Validation**: Ensure `CLAUDE.md` and `QWEN.md` are correctly linked to `AGENTS.md`.
+Pipeline (orchestrated by `.magic/scripts/sync.js`):
+
+1. **Engine Meta (C14)**: Detects drift in `.magic/`, `workflows/`, `skills/`. Bumps `.magic/.version`, regenerates checksums, projects Skill wrappers, appends per-workflow history.
+2. **Manifest Parity**: Propagates the version into `package.json`, `pyproject.toml`, `installers/python/magic_spec/__init__.py`, and the anchored `**Active Development** (vX.Y.Z)` line in `README.md`. Other version mentions are not touched.
+3. **Hardlink Validation**: Verifies that `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Drift is reported (non-fatal by default; pass `--strict-links` to fail). Repair: `/magic-dev:init`.
+4. **Project Meta (idempotent)**: Computes a structural digest of `.design/INDEX.md` (with version/date/history fields stripped). Bumps the index version and appends a history row **only when the digest actually changed** — no more "Automated metadata update" floods.
+5. **Doc Sync (content, not stamps)**:
+   - Regenerates `CONTRIBUTING.md` from `.magic/templates/contributing.md` using current sources (RULES.md, INDEX.md, workflows/). Footer date reflects the latest source mtime, not "today".
+   - For each `docs/{name}.md` with a matching `workflows/magic.{name}.md`, propagates the `**Triggers:**` and `**Slash command:**` lines verbatim and refreshes the `## Sync Note` only when the workflow source hash changed or the engine version bumped.
+
+Flags (forwarded to `sync.js`):
+
+- `--dry-run` — no physical writes, log intended mutations.
+- `--skip-meta` / `--skip-docs` / `--skip-links` — skip individual stages.
+- `--strict-links` — fail when any agent rule sibling is missing.
+
+State files (do not edit by hand):
+
+- `.magic/.checksums` — engine drift baseline (Step 1).
+- `.magic/.project-meta-state.json` — last structural digest of `.design/INDEX.md` (Step 4).
+- `.magic/.docs-state.json` — last hash + version per workflow (Step 5).
+
 // turbo
-4.  **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.
+6. **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.
 
 Trigger: `/magic-dev-sync`, "Sync project", "Hygiene check"
