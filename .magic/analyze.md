@@ -81,7 +81,7 @@ Coverage classification uses a four-level confidence taxonomy (inspired by knowl
 
 ## Rationale Extraction
 
-Source code often contains design rationale in structured comments that may not be captured in formal specifications. The Rationale Extraction system scans for these patterns and identifies "Shadow Logic" — design decisions documented only in code.
+Source code may contain design rationale in structured comments that are not captured in formal specifications. The Rationale Extraction system scans for these patterns and identifies "Shadow Logic" — design decisions documented only in code.
 
 ### Supported Markers
 
@@ -135,7 +135,7 @@ Source code often contains design rationale in structured comments that may not 
     - **Pre-scan**: Run `node .magic/scripts/executor.js analyze-coverage --json` to obtain per-file confidence data.
     - **Covered** (sub-classified by confidence):
       - *EXTRACTED*: File explicitly listed in spec's Canonical References — highest confidence.
-      - *INFERRED*: File is a sibling of explicitly referenced paths — reasonable coverage.
+      - *INFERRED*: File is a sibling of explicitly referenced paths — treated as covered (sibling-path heuristic).
       - *AMBIGUOUS*: File is scope-adjacent — needs human review to confirm coverage.
     - **Uncovered**: Code found without spec coverage (confidence = UNCOVERED).
     - **Orphaned**: Spec refers to deleted code (detected via `shadow_specs` in coverage output).

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.65
+**Version:** 1.9.70
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -3109,6 +3109,24 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Output recommends a sync task (either update spec or revert code).
 - **Guards tested:** Spec-to-Code parity evaluation, Anomaly escalation.
 
+### T200 — Task T4 Queued on Cross-Workspace Pre-flight HALT
+
+- **Workflow:** `task.md` (Step 1 — Pre-flight, Cross-Workspace Parent Header Parity + T4 Queue)
+- **Synthetic State:**
+  - Active workspace: `installers`. `installers/INDEX.md` has `cli.md` (L2, `Implements: engine/l1-core.md`).
+  - `engine/INDEX.md` says `l1-core.md` is `Stable v1.0.0`.
+  - `engine/specifications/l1-core.md` file header: `Status: Draft`, `Version: 1.1.0` (manual external edit — STATUS_DRIFT + VERSION_DRIFT).
+  - `RULES.md` v1.4.0, no plugin lifecycle rule.
+- **Action:** `/magic.task installers "add plugin hooks. Remember that all installer plugins must register lifecycle via manifest."`
+- **Expected:**
+  - [ ] Pre-flight Cross-Workspace Parent Header Parity detects STATUS_DRIFT + VERSION_DRIFT on `engine/l1-core.md`
+  - [ ] **HALT** before plan generation
+  - [ ] T4 trigger detected in directive arg ("Remember that...")
+  - [ ] Agent acknowledges T4: "T4 rule detected — queued pending cross-workspace parent drift resolution. Will be applied via `spec.md` T4 Inline Guards after resolution."
+  - [ ] No write to `RULES.md`, no plan generation
+  - [ ] After user resolves drift via `/magic.spec`: rule applied, plan generation re-attempted on subsequent `/magic.task` invocation
+- **Guards tested:** T4 Queue (Cross-Workflow), Cross-Workspace Parent Header Parity, atomic HALT preserves embedded T4
+
 ```
-**Test Suite Finalized** - v1.9.69 (Last: T199)
+**Test Suite Finalized** - v1.9.70 (Last: T200)
 ```
