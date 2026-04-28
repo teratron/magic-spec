@@ -199,7 +199,7 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
-## 10. Completion Protocol
+## Completion Protocol (Mandatory Checklist)
 
 Follow this checklist before declaring a task finished:
 
