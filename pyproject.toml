@@ -17,7 +17,7 @@ magic-spec = "magic_spec.__main__:main"
 
 [dependency-groups]
 dev = [
-    "pyrefly>=0.62.0",
+    "pyrefly>=0.63.0",
     "pytest>=9.0.3",
     "ruff>=0.15.12",
 ]
