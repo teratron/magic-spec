@@ -5,6 +5,39 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.0] - 2026-04-29
+
+### Breaking Changes
+
+- **Removed installer layer**: `installers/` directory deleted entirely. `npx magic-spec` (npm) and `uvx magic-spec` (PyPI) packages will no longer receive updates (last version: 1.5.207).
+- **Distribution model changed**: Engine is now distributed via GitHub Releases. Download `.magic/`, `workflows/`, `skills/`, and `rules/` directly from the [Releases page](https://github.com/teratron/magic-spec/releases/latest).
+- **`package.json` repurposed**: Removed `bin`, `main`, `files`, and all publish/build scripts. File is now a minimal dev descriptor with `sync` and `meta` scripts only.
+- **`pyproject.toml` repurposed**: Removed `[build-system]`, `[project.scripts]`, and all `[tool.hatch.*]` sections. File retains dev dependency groups only.
+- **RULES.md conventions removed**: C17 (Adapter Registry → `installers/adapters.json`), C18 (Payload Security), C19 (Cross-Env CLI Parity) deleted — installer-only concerns. C17 replaced with Adapter Distribution Reference pointing to `docs/distribution.md`.
+
+### Added
+
+- **`rules/` directory**: New top-level directory for AI agent rule documents distributed with the engine.
+- **`rules/version-check.md`**: AI agent rule that detects when a newer magic-spec version is available by comparing `.magic/.version` against GitHub master. Runs once per day at session start.
+- **`.agents/workflows/magic.dev.publish.md`**: Rewritten for GitHub Release creation workflow (QA → version bump → build zip → `gh release create`).
+
+### Changed
+
+- **README.md**: Complete rewrite. Installation section now describes GitHub Releases download and manual clone. New Adapter Paths table lists 19 AI agents with target directories and file extensions. Removed npm/PyPI badges and Requirements section.
+- **AGENTS.md** (+ CLAUDE.md, CODEX.md, GEMINI.md): Removed Section 1.2 "Installers", renumbered sections, removed Rule 2.4 "Installer Isolation". Distribution note updated to reference `rules/version-check.md`.
+- **`.design/workspace.json`**: Removed `installers` workspace. Added `rules/`, `package.json`, `pyproject.toml`, `uv.lock` to engine scope.
+- **`.magic/analyze.md`**: Updated installer references to engine examples.
+
+### Deprecated
+
+- **v1.5.x branch** (`v1.5`): Preserved as static archive of the last installer-based release. npm and PyPI packages frozen at v1.5.207.
+
+## [1.5.207] - 2026-04-29
+
+### Changed
+
+- **README.md**: Added deprecation notice for npm/PyPI installer packages (last version: 1.5.206).
+
 ## [1.5.206] - 2026-04-28
 
 ### Meta
