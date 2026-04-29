@@ -56,14 +56,6 @@ function buildTargets(targetVersion) {
             }],
         },
         {
-            name: 'installers/python/magic_spec/__init__.py',
-            file: 'installers/python/magic_spec/__init__.py',
-            edits: [{
-                regex: /^__version__\s*=\s*"[^"]*"/m,
-                replace: `__version__ = "${targetVersion}"`,
-            }],
-        },
-        {
             name: 'README.md',
             file: 'README.md',
             edits: [

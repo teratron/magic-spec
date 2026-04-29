@@ -13,17 +13,9 @@ The project is divided into three primary logical layers:
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
   - Any changes here modify the workflow engine itself.
-  - These files are distributed via `magic-spec` package updates.
+  - These files are distributed via GitHub Releases (see `rules/version-check.md`).
 
-### 1.2. Installers (`installers/`)
-
-- **Path**: `/installers/` (Node.js and Python)
-- **Role**: Responsible for distributing the Core Engine to user projects.
-- **Constraints**:
-  - Thin-client architecture: Installers primarily download the engine from GitHub.
-  - High reliability and minimal dependencies are required.
-
-### 1.3. Design Workspace (`.design/`)
+### 1.2. Design Workspace (`.design/`)
 
 - **Path**: `/.design/`
 - **Role**: This is the project's own implementation of the Magic SDD workflow.
@@ -41,8 +33,7 @@ The project is divided into three primary logical layers:
 2. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
 3. **Engine Integrity**: Do not modify files in `.magic/` or `workflows/` unless the task specifically requires "Engine Improvement".
    - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
-4. **Installer Isolation**: Python and Node.js installers should be kept as independent as possible. Shared logic (like `adapters.json`) lives in the `installers/` root.
-5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
+4. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
 ## 3. Language Policy
 
@@ -131,7 +122,7 @@ Use consistent Unicode-based separators to improve code readability:
 
 ## 7. JavaScript/Node.js Coding Style
 
-Common guidelines for Node.js scripts and installers.
+Common guidelines for Node.js scripts.
 
 ### 7.1 Documentation (JSDoc)
 
@@ -207,10 +198,9 @@ Follow this checklist before declaring a task finished:
   - `uv run ruff check --fix` & `uv run ruff format`
   - `uv run pyrefly check`
   - `uv run pytest`
-- [ ] **Versioned**: Increment the patch version (e.g., `1.4.1` → `1.4.2`) in:
+- [ ] **Versioned**: Increment the patch version (e.g., `2.0.1` → `2.0.2`) in:
   - `pyproject.toml`
   - `package.json`
-  - `installers/python/magic_spec/__init__.py`
   - `CHANGELOG.md`
   - **Engine**: If content in `.magic/` or `workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
 - [ ] **Documented**:

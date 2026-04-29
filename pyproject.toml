@@ -1,6 +1,6 @@
 [project]
 name = "magic-spec"
-version = "1.5.207"
+version = "2.0.0"
 description = "Magic Specification-Driven Development (SDD) Workflow"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -12,9 +12,6 @@ dependencies = []
 homepage = "https://teratron.github.io/magic-spec"
 repository = "https://github.com/teratron/magic-spec"
 
-[project.scripts]
-magic-spec = "magic_spec.__main__:main"
-
 [dependency-groups]
 dev = [
     "pyrefly>=0.63.0",
@@ -24,28 +21,3 @@ dev = [
 
 [tool.uv]
 link-mode = "copy"
-
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
-
-[tool.hatch.build]
-exclude = [
-    "**/__pycache__",
-    "**/*.pyc",
-]
-
-[tool.hatch.build.targets.wheel]
-packages = ["installers/python/magic_spec"]
-
-[tool.hatch.build.targets.wheel.force-include]
-"installers/config.json" = "magic_spec/config.json"
-
-[tool.hatch.build.targets.sdist]
-include = [
-    "/installers/python/magic_spec",
-    "/installers/config.json",
-    "/README.md",
-    "/LICENSE",
-    "/CHANGELOG.md",
-]
