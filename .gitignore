@@ -48,24 +48,30 @@ CLAUDE.md
 GEMINI.md
 QWEN.md
 CODEX.md
-.*/workflows/
+copilot-instructions.md
+
+## Workflows
 .*/commands/
 .*/prompts/
-.*/skills/
-.*/rules/
+.*/workflows/
 .agents/workflows/*
 !.agents/workflows/
 !.agents/workflows/magic.dev.*.md
 !.github/workflows/
+
+## Skills
+.*/skills/
 !.agents/skills/
-!.agents/rules/
 .agents/skills/magic-analyze/
 .agents/skills/magic-rule/
 .agents/skills/magic-run/
 .agents/skills/magic-spec/
 .agents/skills/magic-task/
-.agents/rules/
-!.github/workflows/
+
+## Rules
+.*/rules/
+!.agents/rules/
+.agents/rules/magic-*.md
 
 # Generated graph artifacts
 .design/spec-graph.html

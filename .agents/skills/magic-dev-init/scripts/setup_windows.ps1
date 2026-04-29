@@ -68,21 +68,20 @@ if ($Agents.Count -gt 0) {
 }
 
 # All paths this script manages. Built once, used for cleanup + git index.
-$managedPaths = @()
-foreach ($ag in $activeAgents) {
-    if ($ag.workflows) { $managedPaths += "$($ag.dir)\$($ag.workflows)" }
-    if ($ag.skills) { $managedPaths += "$($ag.dir)\$($ag.skills)" }
-    if ($ag.rules) { $managedPaths += "$($ag.dir)\$($ag.rules)" }
-    foreach ($f in $ag.files) { $managedPaths += $f }
+$cleanupPaths = @()
+foreach ($agKey in $ALL_AGENTS) {
+    $ag = $REGISTRY[$agKey]
+    if ($ag.workflows) { $cleanupPaths += "$($ag.dir)\$($ag.workflows)" }
+    if ($ag.skills) { $cleanupPaths += "$($ag.dir)\$($ag.skills)" }
+    if ($ag.rules) { $cleanupPaths += "$($ag.dir)\$($ag.rules)" }
+    foreach ($f in $ag.files) { $cleanupPaths += $f }
 }
 foreach ($f in $userWorkflows) {
     $name = $f -replace '\.md$', ''
     $skillName = $name -replace '\.', '-'
-    $managedPaths += ".agents\workflows\$f", ".agents\skills\$skillName"
+    $cleanupPaths += ".agents\workflows\$f", ".agents\skills\$skillName"
 }
-foreach ($r in $userRules) {
-    $managedPaths += ".agents\rules\$r"
-}
+$cleanupPaths += ".agents\rules"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Helpers
@@ -125,11 +124,11 @@ if (Test-Path ".magic\scripts\sync-skills.js") {
 # 3.2. Cleanup — must happen BEFORE git rm so `git rm -r --cached` cannot
 #      traverse junctions and physically delete target files (see AGENTS.md §8).
 Write-Host "Removing existing managed links..." -ForegroundColor Cyan
-foreach ($p in $managedPaths) { Remove-Link $p }
+foreach ($p in $cleanupPaths) { Remove-Link $p }
 
 # 3.3. Git index maintenance — safe now that junctions are gone.
 Write-Host "Synchronizing git index..." -ForegroundColor Cyan
-git rm -r --cached --ignore-unmatch $managedPaths 2>$null | Out-Null
+git rm -r --cached --ignore-unmatch $cleanupPaths 2>$null | Out-Null
 
 # 3.4. .agents/ infrastructure (must exist before agent junctions point to it)
 foreach ($d in @(".agents\workflows", ".agents\skills")) {

@@ -101,27 +101,25 @@ if [ -d "rules" ]; then
 fi
 
 # All paths this script manages. Built once, used for cleanup + git index.
-managed_paths=()
-for ag in "${ACTIVE_AGENTS[@]}"; do
+cleanup_paths=()
+for ag in "${ALL_AGENTS[@]}"; do
     ag_dir=$(get_agent_field "$ag" "dir")
     ag_workflows=$(get_agent_field "$ag" "workflows")
     ag_skills=$(get_agent_field "$ag" "skills")
     ag_rules=$(get_agent_field "$ag" "rules")
     ag_files=$(get_agent_field "$ag" "files")
     
-    if [ -n "$ag_workflows" ]; then managed_paths+=("$ag_dir/$ag_workflows"); fi
-    if [ -n "$ag_skills" ]; then managed_paths+=("$ag_dir/$ag_skills"); fi
-    if [ -n "$ag_rules" ]; then managed_paths+=("$ag_dir/$ag_rules"); fi
-    for f in $ag_files; do managed_paths+=("$f"); done
+    if [ -n "$ag_workflows" ]; then cleanup_paths+=("$ag_dir/$ag_workflows"); fi
+    if [ -n "$ag_skills" ]; then cleanup_paths+=("$ag_dir/$ag_skills"); fi
+    if [ -n "$ag_rules" ]; then cleanup_paths+=("$ag_dir/$ag_rules"); fi
+    for f in $ag_files; do cleanup_paths+=("$f"); done
 done
 for f in "${user_workflows[@]}"; do
     name="${f%.md}"
     skill_name="${name//./-}"
-    managed_paths+=(".agents/workflows/$f" ".agents/skills/$skill_name")
+    cleanup_paths+=(".agents/workflows/$f" ".agents/skills/$skill_name")
 done
-for f in "${user_rules[@]}"; do
-    managed_paths+=(".agents/rules/$f")
-done
+cleanup_paths+=(".agents/rules")
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Helpers
@@ -147,11 +145,11 @@ fi
 
 # 3.2. Cleanup (must precede git rm for parity with Windows; see AGENTS.md §8)
 echo "Removing existing managed links..."
-for p in "${managed_paths[@]}"; do remove_link "$p"; done
+for p in "${cleanup_paths[@]}"; do remove_link "$p"; done
 
 # 3.3. Git index maintenance
 echo "Synchronizing git index..."
-git rm -r --cached --ignore-unmatch "${managed_paths[@]}" >/dev/null 2>&1 || true
+git rm -r --cached --ignore-unmatch "${cleanup_paths[@]}" >/dev/null 2>&1 || true
 
 # 3.4. .agents/ infrastructure
 mkdir -p .agents/workflows .agents/skills .agents/rules
