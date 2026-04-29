@@ -17,7 +17,7 @@ Set up junctions, hardlinks, and symlinks so agent-facing directories mirror the
 
 | Mode | Effect |
 | :--- | :--- |
-| `/magic-dev-init` | Full init — all agents + `.agents/` infrastructure |
+| `/magic-dev-init` | Infrastructure only — no agents, only `.agents/` structure |
 | `/magic-dev-init claude` | Targeted — only `CLAUDE.md` + `.claude/` |
 | `/magic-dev-init claude qwen` | Targeted — only the named agents |
 
@@ -65,7 +65,7 @@ Phases executed by the script:
 5. **Workflow links** — `workflows/*.md` → `.agents/workflows/` (hardlinks on Windows, symlinks on Unix)
 6. **Skill links** — `skills/*` → `.agents/skills/` (junctions on Windows, symlinks on Unix)
 7. **Agent links** — `.{agent}/{subdir,skills,rules}` → `.agents/` (junctions on Windows, symlinks on Unix)
-8. **Rules link** — `.agents/rules` → `rules/` (junction on Windows, symlink on Unix)
+8. **Rules links** — `rules/*` → `.agents/rules/` (hardlinks on Windows, symlinks on Unix)
 9. **Instruction links** — `{AGENT}.md` → `AGENTS.md` (hardlinks on Windows, symlinks on Unix)
 
 ### 3. Verify

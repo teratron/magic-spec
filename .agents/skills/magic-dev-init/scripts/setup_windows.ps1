@@ -26,38 +26,63 @@ if (-not (Test-Path "AGENTS.md") -or -not (Test-Path "workflows")) {
 }
 
 $userWorkflows = @(Get-ChildItem "workflows\*.md" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+$userRules = @(Get-ChildItem "rules\*" -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
 
-$allAgentConfig = @(
-    @{ name = "claude"; dir = ".claude"; file = "CLAUDE.md"; subdir = "commands" },
-    @{ name = "gemini"; dir = ".gemini"; file = "GEMINI.md"; subdir = "commands" },
-    @{ name = "qwen";   dir = ".qwen";   file = "QWEN.md";   subdir = "commands" },
-    @{ name = "codex";  dir = ".codex";  file = "CODEX.md";  subdir = "prompts"  }
-)
+$ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RegistryFile = Join-Path (Split-Path -Parent $ScriptDir) "agents.json"
+
+if (-not (Test-Path $RegistryFile)) {
+    Write-Error "Registry not found: $RegistryFile"
+    exit 1
+}
+
+$json = Get-Content $RegistryFile -Raw | ConvertFrom-Json
+
+$REGISTRY = @{}
+foreach ($prop in $json.PSObject.Properties) {
+    $REGISTRY[$prop.Name] = @{
+        name      = $prop.Name
+        dir       = $prop.Value.dir
+        workflows = $prop.Value.workflows
+        skills    = $prop.Value.skills
+        rules     = $prop.Value.rules
+        files     = if ($prop.Value.files) { @($prop.Value.files) } else { @() }
+    }
+}
+$ALL_AGENTS = $REGISTRY.Keys | Sort-Object
 
 if ($Agents.Count -gt 0) {
     $normalized = $Agents | ForEach-Object { $_.ToLower() }
-    $activeAgents = @($allAgentConfig | Where-Object { $normalized -contains $_.name })
-    if ($activeAgents.Count -eq 0) {
-        Write-Host "ERROR: No matching agents for '$($Agents -join ', ')'. Valid: claude, gemini, qwen, codex" -ForegroundColor Red
-        exit 1
+    $activeAgents = @()
+    foreach ($t in $normalized) {
+        if (-not $REGISTRY.ContainsKey($t)) {
+            Write-Host "ERROR: Unknown agent '$t'. Supported: $($ALL_AGENTS -join ', ')" -ForegroundColor Red
+            exit 1
+        }
+        $activeAgents += $REGISTRY[$t]
     }
     $initMode = "targeted ($($activeAgents.name -join ', '))"
 } else {
-    $activeAgents = $allAgentConfig
-    $initMode = "full"
+    $activeAgents = @()
+    $initMode = "infrastructure only"
 }
 
 # All paths this script manages. Built once, used for cleanup + git index.
 $managedPaths = @()
 foreach ($ag in $activeAgents) {
-    $managedPaths += "$($ag.dir)\$($ag.subdir)", "$($ag.dir)\skills", "$($ag.dir)\rules", $ag.file
+    if ($ag.workflows) { $managedPaths += "$($ag.dir)\$($ag.workflows)" }
+    if ($ag.skills) { $managedPaths += "$($ag.dir)\$($ag.skills)" }
+    if ($ag.rules) { $managedPaths += "$($ag.dir)\$($ag.rules)" }
+    foreach ($f in $ag.files) { $managedPaths += $f }
 }
 foreach ($f in $userWorkflows) {
     $name = $f -replace '\.md$', ''
     $skillName = $name -replace '\.', '-'
     $managedPaths += ".agents\workflows\$f", ".agents\skills\$skillName"
 }
-$managedPaths += ".agents\rules"
+foreach ($r in $userRules) {
+    $managedPaths += ".agents\rules\$r"
+}
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Helpers
@@ -111,12 +136,12 @@ foreach ($d in @(".agents\workflows", ".agents\skills")) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
 }
 
-Write-Host "Creating rules junction..." -ForegroundColor Cyan
-if (Test-Path "rules") {
-    New-Junction ".agents\rules" "rules"
-    Write-Host "  .agents\rules -> rules" -ForegroundColor Gray
-} else {
-    if (-not (Test-Path ".agents\rules")) { New-Item -ItemType Directory -Path ".agents\rules" -Force | Out-Null }
+if (-not (Test-Path ".agents\rules")) { New-Item -ItemType Directory -Path ".agents\rules" -Force | Out-Null }
+
+Write-Host "Creating rules hardlinks..." -ForegroundColor Cyan
+foreach ($r in $userRules) {
+    New-Hardlink ".agents\rules\$r" "rules\$r"
+    Write-Host "  .agents\rules\$r" -ForegroundColor Gray
 }
 
 # 3.5. Workflow hardlinks: .agents/workflows/*.md → workflows/*.md
@@ -141,17 +166,19 @@ foreach ($f in $userWorkflows) {
 Write-Host "Creating agent junctions..." -ForegroundColor Cyan
 foreach ($ag in $activeAgents) {
     if (-not (Test-Path $ag.dir)) { New-Item -ItemType Directory -Path $ag.dir -Force | Out-Null }
-    New-Junction "$($ag.dir)\$($ag.subdir)" ".agents\workflows"
-    New-Junction "$($ag.dir)\skills"         ".agents\skills"
-    New-Junction "$($ag.dir)\rules"          ".agents\rules"
+    if ($ag.workflows) { New-Junction "$($ag.dir)\$($ag.workflows)" ".agents\workflows" }
+    if ($ag.skills)    { New-Junction "$($ag.dir)\$($ag.skills)"    ".agents\skills" }
+    if ($ag.rules)     { New-Junction "$($ag.dir)\$($ag.rules)"     ".agents\rules" }
     Write-Host "  $($ag.dir) ($($ag.name))" -ForegroundColor Gray
 }
 
 # 3.8. Instruction hardlinks: {AGENT}.md → AGENTS.md
 Write-Host "Creating instruction hardlinks..." -ForegroundColor Cyan
 foreach ($ag in $activeAgents) {
-    New-Hardlink $ag.file "AGENTS.md"
-    Write-Host "  $($ag.file)" -ForegroundColor Gray
+    foreach ($f in $ag.files) {
+        New-Hardlink $f "AGENTS.md"
+        Write-Host "  $f" -ForegroundColor Gray
+    }
 }
 
 # ───────────────────────────────────────────────────────────────────────────────
@@ -160,9 +187,13 @@ foreach ($ag in $activeAgents) {
 
 Write-Host "`n>>> Verification:" -ForegroundColor Green
 foreach ($ag in $activeAgents) {
-    cmd /c "dir $($ag.dir)\$($ag.subdir) $($ag.dir)\skills $($ag.dir)\rules /AL" 2>$null
+    $w = if ($ag.workflows) { """$($ag.dir)\$($ag.workflows)""" } else { "" }
+    $s = if ($ag.skills) { """$($ag.dir)\$($ag.skills)""" } else { "" }
+    $r = if ($ag.rules) { """$($ag.dir)\$($ag.rules)""" } else { "" }
+    if ($w -or $s -or $r) { cmd /c "dir $w $s $r /AL 2>nul" }
 }
 
-$expected = 1 + $activeAgents.Count
+$expected = 1
+foreach ($ag in $activeAgents) { $expected += $ag.files.Count }
 Write-Host "`n>>> AGENTS.md hardlinks (expected: $expected):" -ForegroundColor Cyan
 cmd /c "fsutil hardlink list AGENTS.md"
