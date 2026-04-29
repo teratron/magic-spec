@@ -10,14 +10,14 @@ const os = require('os');
 // ═══════════════════════════════════════════════════════════════════════════
 
 describe('Magic Engine Scripts', () => {
-    const scriptsDir = path.resolve(__dirname, '..', 'scripts');
+    const scriptsDir = path.resolve(__dirname, '..', '..', '.magic', 'scripts');
 
     const createTempWorkspace = (withGit = false) => {
         const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-test-'));
         fs.mkdirSync(path.join(tempDir, '.magic'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts'), { recursive: true });
-        fs.mkdirSync(path.join(tempDir, '.magic', 'history'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'templates'), { recursive: true });
+        fs.mkdirSync(path.join(tempDir, 'dev', 'history'), { recursive: true });
 
         fs.readdirSync(scriptsDir).forEach(script => {
             const src = path.join(scriptsDir, script);
@@ -261,7 +261,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             // Setup history
-            const historyFile = path.join(tempDir, '.magic', 'history', 'init.md');
+            const historyFile = path.join(tempDir, 'dev', 'history', 'init.md');
             fs.writeFileSync(historyFile, '# Hist\n| Version | Date | Desc |\n| :--- | :--- | :--- |\n| 1.0.0 | 2024-01-01 | Old |\n');
 
             // update-engine-meta bails early when .checksums is missing (initializes and returns).
@@ -336,7 +336,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             // Copy real state template so bootstrap path exercises template branch
-            const realTemplate = path.resolve(__dirname, '..', 'templates', 'state.md');
+            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
             if (fs.existsSync(realTemplate)) {
                 fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
             }

@@ -8,8 +8,8 @@ The Simulation Workflow acts as the "Debugger" for the Magic SDD engine itself. 
 
 **Slash command:** `/magic.dev.simulate [target]`
 
-> **Full implementation:** `.magic/simulate.md` — the engine reads this file before executing any steps.
-> **Dev-only**: This workflow is installed only with the `--dev` flag.
+> **Full implementation:** `.agents/workflows/magic.dev.simulate.md` — repository-only file, NOT shipped to end users.
+> **Dev-only**: This workflow is for engine maintainers; the runtime engine in `.magic/` does not contain it.
 
 Key Goals:
 
@@ -76,7 +76,7 @@ Run the full predefined regression test suite:
 /magic.dev.simulate test
 ```
 
-Reads `.magic/tests/suite.md` and executes all predefined scenarios. If missing, falls back to Improv Mode automatically.
+Reads `dev/tests/suite.md` and executes all predefined scenarios. If missing, falls back to Improv Mode automatically.
 
 ## 4. Pre-flight (Mandatory — All Modes)
 
@@ -120,7 +120,7 @@ Three quantified metrics are reported:
 If simulation reveals a logical flaw:
 
 1. Engine proposes a "surgical fix" (exact lines) for the affected `.magic/` file.
-2. A new regression test is written into `.magic/tests/suite.md`.
+2. A new regression test is written into `dev/tests/suite.md`.
 3. Changes applied only after user approval.
 4. **C14 Enforcement Gate**: Checksums must be regenerated **before** reporting (blocking step).
 5. **Succession**: Run `/magic.dev.simulate test` post-fix. Max 2 rounds — if second pass still finds new failures, report remaining issues and stop.

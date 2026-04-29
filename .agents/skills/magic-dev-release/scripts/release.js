@@ -40,7 +40,7 @@ if (fs.existsSync(CHANGELOG_FILE)) {
 // 3. Run Tests
 log('Running engine tests (QA Gate)...');
 try {
-    execSync('node .magic/tests/engine.js', { stdio: 'inherit', cwd: ROOT_DIR });
+    execSync('node dev/tests/engine.js', { stdio: 'inherit', cwd: ROOT_DIR });
 } catch (e) {
     error('Engine tests failed. Fix issues before releasing.');
 }

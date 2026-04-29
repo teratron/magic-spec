@@ -576,10 +576,10 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (Improv Mode)
 - **Synthetic State:**
-  - `.magic/tests/suite.md` file is missing or inaccessible.
+  - `dev/tests/suite.md` file is missing or inaccessible.
 - **Action 1:** User runs `/magic.simulate test`
 - **Expected 1:**
-  - [ ] Agent checks for `.magic/tests/suite.md` and fails to find it.
+  - [ ] Agent checks for `dev/tests/suite.md` and fails to find it.
   - [ ] Agent alerts user that test suite is missing, provides hint to restore file from origin, and falls back to **Improv Mode**.
   - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
   - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
@@ -926,16 +926,16 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
 - **Synthetic State:**
-  - Agent modifies `.magic/simulate.md` to add a new guideline.
+  - Agent modifies `.agents/workflows/magic.dev.simulate.md` to add a new guideline.
   - `.magic/.version` is `1.4.11`.
-  - `.magic/history/simulate.md` exists.
+  - `dev/history/simulate.md` exists.
 - **Action:** Agent performs the edit.
 - **Expected:**
   - [ ] Agent identifies that a core engine file was modified.
   - [ ] Agent executes: `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
   - [ ] **Automated Verifications:**
     - [ ] `.magic/.version` bumped to `1.4.12`.
-    - [ ] `.magic/history/simulate.md` contains a new row for `1.4.12`.
+    - [ ] `dev/history/simulate.md` contains a new row for `1.4.12`.
     - [ ] `.magic/.checksums` is recalculated.
   - [ ] Results documented in the task completion checklist.
 - **Guards tested:** C1, C14, Engine Integrity Guard (via meta automation).
@@ -1087,7 +1087,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `executor.js` (update-engine-meta)
 - **Synthetic State:**
   - `.magic/spec.md` modified (checksum mismatch).
-  - `.magic/history/spec.md` is MISSING from disk.
+  - `dev/history/spec.md` is MISSING from disk.
 - **Action:** Run `node .magic/scripts/executor.js update-engine-meta --workflow spec`.
 - **Expected:**
   - [ ] Executor detects missing history file.
@@ -1179,11 +1179,11 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
-  - `.magic/tests/suite.md` exists but contains only the header block (no `### T{N}` test scenarios).
+  - `dev/tests/suite.md` exists but contains only the header block (no `### T{N}` test scenarios).
   - File is readable but has zero parseable test cases.
 - **Action:** User runs `/magic.simulate test`
 - **Expected:**
-  - [ ] Agent reads `.magic/tests/suite.md` successfully (file exists).
+  - [ ] Agent reads `dev/tests/suite.md` successfully (file exists).
   - [ ] Suite Integrity check detects 0 valid test scenarios (no `### T{N} —` headers found).
   - [ ] Agent reports: "Suite contains 0 valid tests. Hint: restore file from origin."
   - [ ] Agent falls back to **Improv Mode** (same as missing suite — T32).
@@ -2146,7 +2146,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (§2 Suite Integrity — timing rule)
 - **Synthetic State:**
-  - `.magic/tests/suite.md` exists but T14 has a malformed header: `### T14: Missing Dash` (colon instead of dash)
+  - `dev/tests/suite.md` exists but T14 has a malformed header: `### T14: Missing Dash` (colon instead of dash)
   - suite.md has 20 valid tests + 1 malformed
 - **Action:** `/magic.simulate test` triggered
 - **Expected:**
@@ -2808,7 +2808,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md`
 - **Synthetic State:**
-  - `.magic/tests/suite.md` exists but contains only metadata header (no test scenarios).
+  - `dev/tests/suite.md` exists but contains only metadata header (no test scenarios).
   - File size > 0 bytes, readable.
 - **Action:** User runs `/magic.simulate test`
 - **Expected:**

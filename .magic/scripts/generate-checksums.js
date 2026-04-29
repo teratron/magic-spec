@@ -27,11 +27,11 @@ const IGNORE_REL_FILES = VOLATILE_STATE_FILES;
 function run() {
     console.log('Generating checksums for .magic/ content...');
 
-    const projectRoot = path.join(MAGIC_DIR, '..');
+    // Integrity scope: engine kernel only (.magic/). Surface artifacts in
+    // workflows/, skills/, rules/ are user-customizable wrappers — not
+    // protected by checksum so partial installations stay supported.
     const scanZones = [
-        { dir: MAGIC_DIR, relBase: MAGIC_DIR },
-        { dir: path.join(projectRoot, 'workflows'), relBase: projectRoot },
-        { dir: path.join(projectRoot, 'skills'), relBase: projectRoot }
+        { dir: MAGIC_DIR, relBase: MAGIC_DIR }
     ];
 
     const checksums = {};

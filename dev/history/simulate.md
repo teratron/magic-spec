@@ -29,4 +29,5 @@
 | 1.5.117 | 2026-04-02 | Engine optimization: Smart History dedup, gitignore parsing, context-resolution consolidation, template normalization |
 | 1.5.125 - 1.5.199 | 2026-04-25 | Automated update via engine meta automation |
 | 1.5.200 | 2026-04-25 | Refactor: exclude history/ from .checksums; restrict history to root workflow files only |
-| 2.0.6 - 2.0.7 | 2026-04-29 | Automated update via engine meta automation |
+| 2.0.6 - 2.0.11 | 2026-04-29 | Automated update via engine meta automation |
+| 2.0.12 | 2026-04-29 | Engine: removed `.magic/simulate.md` from shipped layer; full implementation lives only in `.agents/workflows/magic.dev.simulate.md` (dev-tier). |
