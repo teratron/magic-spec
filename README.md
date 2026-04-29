@@ -1,20 +1,6 @@
 # 🪄 Magic Spec
 
-[![NPM version](https://img.shields.io/npm/v/magic-spec?color=green&label=npm)](https://www.npmjs.com/package/magic-spec)
-[![PyPI version](https://img.shields.io/pypi/v/magic-spec?color=blue&label=pypi)](https://pypi.org/project/magic-spec/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-
-> [!WARNING]
-> **Legacy Installers Deprecated (v1.5.x)**
->
-> The `npx magic-spec` (npm) and `uvx magic-spec` (PyPI) packages will **no longer receive updates**
-> as of **v1.5.207**. Archived releases remain available for historical reference:
->
-> - npm: <https://www.npmjs.com/package/magic-spec> (last version: 1.5.207)
-> - PyPI: <https://pypi.org/project/magic-spec/> (last version: 1.5.207)
->
-> **New users:** See [Installation](#-installation) for the GitHub-based setup.
-> **Existing users:** See [Migrating from the legacy installer](docs/distribution.md).
 
 ## 📖 Description
 
@@ -36,97 +22,87 @@ your-project/
 ```
 
 > [!TIP]
-> **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [workspaces.md](./workspaces.md) for details.
-
-## ⚙️ Requirements
-
-| Requirement | Details |
-| :--- | :--- |
-| **Node.js** | Version `16.x` or higher (for `npx` method) |
-| **Python** | Version `3.8` or higher (for `uvx` or `pipx` methods) |
-| **Git** | Required for installing edge versions directly from GitHub |
-| **Terminal** | `tar` utility (pre-installed on Windows/Linux/macOS) |
+> **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [SDD Philosophy](./docs/conception.md) for details.
 
 ## 📦 Installation
 
 Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
 
-### Option A: Node.js (`npx`)
+### Option A: Download from GitHub Releases (Recommended)
 
-**Stable Release:**
+1. Go to [Releases](https://github.com/teratron/magic-spec/releases/latest).
+2. Download `magic-spec-vX.Y.Z.zip`.
+3. Extract and copy the following folders into your project root:
 
-```bash
-# Basic installation (defaults to .agents/ folder)
-npx magic-spec@latest
+   ```plaintext
+   your-project/
+   ├── .magic/       ← copy from the release archive
+   ├── workflows/    ← copy from the release archive
+   ├── skills/       ← copy from the release archive
+   └── rules/        ← copy from the release archive
+   ```
 
-# Targeted installation for a specific AI agent
-npx magic-spec@latest --cursor
-npx magic-spec@latest --claude
-npx magic-spec@latest --windsurf
-```
+4. Place the workflow files in your AI agent's commands directory (see [Adapter Paths](#️-adapter-paths)).
 
-**Edge Version (GitHub):**
-
-```bash
-npx --yes github:teratron/magic-spec
-```
-
-### Option B: Python (`uvx`)
-
-**Stable Release:**
+### Option B: Manual Clone
 
 ```bash
-# Basic installation
-uvx magic-spec
-
-# Targeted installation
-uvx magic-spec --windsurf
+# Clone just the needed folders
+git clone --depth 1 https://github.com/teratron/magic-spec.git _magic_tmp
+cp -r _magic_tmp/.magic _magic_tmp/workflows _magic_tmp/skills _magic_tmp/rules ./
+rm -rf _magic_tmp
 ```
-
-**Edge Version (GitHub):**
-
-```bash
-uvx --from git+https://github.com/teratron/magic-spec.git magic-spec
-```
-
-### Option C: Python (`pipx`)
-
-```bash
-pipx run magic-spec
-```
-
-### Option D: Multi-Adapter Installation
-
-Install support for multiple adapters at once:
-
-```bash
-npx magic-spec@latest --cursor --copilot --windsurf
-```
-
-### Option E: Manual Installation
-
-1. Download `.magic/` and [`workflows/`](https://github.com/teratron/magic-spec/tree/main/workflows) from the [GitHub repository](https://github.com/teratron/magic-spec).
-2. Place files into your AI agent's instruction directory (e.g., `.cursor/commands`).
 
 ### Post-Install: `.gitignore`
 
-The installer automatically adds `.magic/` and the adapter directory (e.g., `.agents/`) to `.gitignore`. These are **installed dependencies** (like `node_modules/`) — reinstall via `npx magic-spec@latest` rather than committing.
+Add these entries to your `.gitignore` — the engine files are installed dependencies, like `node_modules/`:
 
-> [!TIP]
-> **Vendoring**: To commit the engine into your repo (so teammates get it without running the installer), remove the `.magic/` and `.agents/` entries from `.gitignore`.
-
-## 🔄 Updating
-
-```bash
-# Check if update is available
-npx magic-spec@latest --check
-
-# Perform the update
-npx magic-spec@latest --update
+```
+.magic/
+skills/
+.agents/
 ```
 
 > [!TIP]
-> The update preserves your `.design/` workspace and creates backups of `.magic/` and `.agents/`. After updating, run `/magic.analyze` to ensure synchronization.
+> **Vendoring**: To commit the engine into your repo (so teammates get it without reinstalling), simply omit these entries from `.gitignore`.
+
+## 🔄 Updating
+
+Magic Spec includes a built-in version-check rule (`rules/version-check.md`). Your AI agent will automatically compare `.magic/.version` against the latest GitHub release at the start of each session and prompt you when an update is available.
+
+To update manually:
+
+1. Download the new release archive from [Releases](https://github.com/teratron/magic-spec/releases/latest).
+2. Replace `.magic/`, `workflows/`, `skills/`, and `rules/` in your project.
+3. Run `/magic.analyze` to verify synchronization.
+
+## 🗂️ Adapter Paths
+
+Copy the workflow files from `workflows/` to your AI agent's commands directory:
+
+| AI Agent / IDE | Target Directory | File Extension |
+| :--- | :--- | :--- |
+| [**Cursor**](https://cursor.com) | `.cursor/rules/` | `.mdc` |
+| [**Windsurf**](https://codeium.com/windsurf) | `.windsurf/rules/` | `.md` |
+| [**Claude Code**](https://claude.ai/code) | `.claude/commands/` | `.md` |
+| [**Gemini CLI**](https://gemini.google.com) | `.gemini/commands/` | `.toml` |
+| [**GitHub Copilot**](https://github.com/features/copilot) | `.github/prompts/` | `.prompt.md` |
+| **Roo Code** | `.roo/commands/` | `.mdc` |
+| **Amp** | `.agents/commands/` | `.md` |
+| **Amazon Q Developer** | `.amazonq/prompts/` | `.md` |
+| **Kilo Code** | `.kilocode/workflows/` | `.md` |
+| **Qwen Code** | `.qwen/commands/` | `.md` |
+| **OpenCode** | `.opencode/commands/` | `.md` |
+| **SHAI (OVHcloud)** | `.shai/commands/` | `.md` |
+| **IBM Bob** | `.bob/commands/` | `.md` |
+| **CodeBuddy** | `.codebuddy/commands/` | `.md` |
+| **Qoder IDE** | `.qoder/commands/` | `.md` |
+| **Codex CLI** | `.codex/prompts/` | `.md` |
+| **Auggie CLI** | `.augment/commands/` | `.md` |
+| **Antigravity IDE** | `.agents/workflows/` | `.md` |
+| **Lingma IDE** | `.lingma/commands/` | `.md` |
+
+For detailed adapter notes, see [docs/distribution.md](./docs/distribution.md).
 
 ## 💬 Usage
 
@@ -164,7 +140,6 @@ Each command accepts optional arguments to scope the operation to a specific **w
 
 # Workspace-scoped
 /magic.task engine                     # Plan only for the "engine" workspace
-/magic.run installers                  # Execute tasks in "installers" workspace
 /magic.analyze engine                  # Analyze only the "engine" workspace
 
 # With directive (quoted text)
@@ -174,40 +149,12 @@ Each command accepts optional arguments to scope the operation to a specific **w
 /magic.analyze "check API coverage"    # Focused analysis on a specific area
 
 # Workspace + directive
-/magic.run installers "phase-1"        # Execute phase 1 in "installers" workspace
+/magic.run engine "phase-1"            # Execute phase 1 in "engine" workspace
 /magic.task engine "only new specs"    # Plan only new specs in "engine" workspace
 ```
 
 > [!NOTE]
-> **For AI IDE users (Cursor, Windsurf, Claude Code, etc.):** When you type `/` in the chat, a dropdown list of available commands appears and selecting one immediately executes it **without arguments**. If you need to pass arguments (workspace name, task ID, directive), **type the full command manually** instead of selecting from the dropdown. For example, type `/magic.run "phase-2"` directly rather than clicking `/magic.run` from the list.
-
-## 🤝 Compatibility
-
-Magic Spec provides native workflow generation for all major AI development environments.
-
-Install with a shortcut flag (e.g., `--cursor`) or the environment flag (e.g., `--env cursor`).
-
-| AI Agent / IDE | Shortcut Flag | Env Flag |
-| :--- | :--- | :--- |
-| [**Cursor**](https://cursor.com) (Agent Mode) | `--cursor` | `--env cursor` |
-| [**Windsurf**](https://codeium.com/windsurf) (Cascade) | `--windsurf` | `--env windsurf` |
-| [**Claude Code**](https://claude.ai/code) | `--claude` | `--env claude` |
-| [**Gemini CLI**](https://gemini.google.com) | `--gemini` | `--env gemini` |
-| [**GitHub Copilot**](https://github.com/features/copilot) | `--copilot` | `--env copilot` |
-| **Roo Code** | `--roo` | `--env roo` |
-| **Amp** | `--amp` | `--env amp` |
-| **Amazon Q Developer** | `--q` | `--env q` |
-| **Kilo Code** | `--kilocode` | `--env kilocode` |
-| **Qwen Code** | `--qwen` | `--env qwen` |
-| **OpenCode** | `--opencode` | `--env opencode` |
-| **SHAI (OVHcloud)** | `--shai` | `--env shai` |
-| **IBM Bob** | `--bob` | `--env bob` |
-| **CodeBuddy** | `--codebuddy` | `--env codebuddy` |
-| **Qoder IDE** | `--qoder` | `--env qoder` |
-| **Codex CLI** | `--codex` | `--env codex` |
-| **Auggie CLI** | `--augment` | `--env augment` |
-| **Antigravity IDE** | `--antigravity` | `--env antigravity` |
-| **Lingma IDE** | `--lingma` | `--env lingma` |
+> **For AI IDE users (Cursor, Windsurf, Claude Code, etc.):** When you type `/` in the chat, a dropdown list of available commands appears and selecting one immediately executes it **without arguments**. If you need to pass arguments (workspace name, task ID, directive), **type the full command manually** instead of selecting from the dropdown.
 
 ## 📚 Documentation
 
@@ -215,7 +162,7 @@ Install with a shortcut flag (e.g., `--cursor`) or the environment flag (e.g., `
 | :--- | :--- |
 | [**Main Documentation**](./docs/README.md) | Workflows, architecture, and advanced features |
 | [**SDD Philosophy**](./docs/conception.md) | Two-Layer Model, Integrity by Design, Self-Improving Feedback Loop |
-| [**Installers Guide**](./installers/README.md) | Advanced CLI options and platform specifics |
+| [**Distribution Guide**](./docs/distribution.md) | Adapter paths, manual install, and update instructions |
 | [**Contributing**](./CONTRIBUTING.md) | How to develop, test, and extend the engine |
 
 ## 🛟 Support
@@ -226,6 +173,7 @@ If you encounter issues or have questions — open an [Issue](https://github.com
 
 - [x] Multi-agent adapter system.
 - [x] Phased implementation planning.
+- [x] GitHub-based manual distribution.
 - [ ] Extended support for local-first LLM agents.
 - [ ] Advanced visual dashboard for project health.
 - [ ] Integration with CI/CD for automated spec validation.
@@ -245,4 +193,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v1.5.207). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v2.0.2). We are constantly refining the SDD engine based on real-world usage.

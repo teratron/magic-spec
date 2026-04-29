@@ -1,3 +1,7 @@
+> [!WARNING]
+> **Status: Deprecated** — Superseded by GitHub manual distribution (v2.0.0).
+> This specification is preserved for historical reference only.
+
 # Python Installer Specification
 
 ## Overview

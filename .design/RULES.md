@@ -149,17 +149,9 @@ When operating in a workspace with a defined scope (via `.design/workspace.json`
 
 For minor features, simple bugfixes, or changes expected to be under 50 lines of documentation, the agent is authorized to use the lightweight `.magic/templates/micro-spec.md` instead of the full specification template. If a Micro-spec exceeds 50 lines or architectural complexity increases, it MUST be promoted to the full Standard template.
 
-### C17 — Adapter Registry
+### C17 — Adapter Distribution Reference
 
-All new IDE/Agent adapters must be registered in `installers/adapters.json`. This registry is the single source of truth for installer deployment paths and marker files.
-
-### C18 — Payload Security
-
-The installers (Node/Python) must verify payload integrity (checksums) and prevent Path Traversal attacks during extraction. Deployment must be atomic to prevent partial engine states.
-
-### C19 — Cross-Env CLI Parity
-
-Node and Python installers must maintain strict CLI parity. Every command-line flag (e.g., `--yes`, `--update`, `--check`) must behave identically across both implementations to ensure a consistent user experience.
+All supported IDE/Agent adapters and their target directories must be documented in `docs/distribution.md`. This file is the reference for users performing manual installation from GitHub Releases. (Replaces the `installers/adapters.json` registry removed in v2.0.0.)
 
 ### C20 — Auto-Heal Recovery
 

@@ -7,7 +7,7 @@ description: Workflow for analyzing existing projects and generating initial spe
 Audits project health, syncs registries, and reverse-engineers code into `.design/` spec proposals.
 
 **Triggers**: `/magic.analyze [arg]`, "Ventilate", "Analyze project", "Scan project", "Re-analyze"
-**Examples**: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "check API coverage"`, `/magic.analyze installers "focus on tests"`
+**Examples**: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "check API coverage"`, `/magic.analyze engine "focus on tests"`
 
 ## Core Invariants (Mandatory)
 
@@ -147,7 +147,7 @@ Source code may contain design rationale in structured comments that are not cap
 ### [Mode C] Project Ventilation
 
 *Trigger*: `/magic.analyze`, `/magic.analyze {workspace}`, "Ventilate", "Ventilate {workspace}"
-*Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate installers"
+*Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate engine"
 
 > **Mode Precedence**: When `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, offer to continue with Mode A (first-time analysis) to generate initial spec proposals. Do NOT auto-start Mode A — the user may only want the audit.
 > **Audit Policy**: This mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine. Report-delivery is the only HALT point.
@@ -186,7 +186,7 @@ Source code may contain design rationale in structured comments that are not cap
 8. **Documentation & Version Audit**:
     - Check if `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
-    - Check for version parity across `package.json`, `pyproject.toml`, and installer init files.
+    - Check for version parity across `package.json`, `pyproject.toml`, and `.magic/.version`.
     - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
 9. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 10. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).
@@ -302,7 +302,7 @@ Mode C Checklist — Ventilation
   → /magic.spec create engine-scripts
 
 ### Structural Improvements
-- 🔧 Workspace `installers` RULES.md repeats 3 rules from global §6
+- 🔧 Workspace `engine` RULES.md repeats 3 rules from global §6
   → /magic.rule promote "C15 scope isolation"
 
 ### No Action Needed

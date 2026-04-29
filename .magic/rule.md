@@ -19,7 +19,7 @@ Manages project conventions across a two-tier rules system:
 
 When processing an add/amend/remove request, determine the target tier:
 
-- **Workspace tier** → `.design/{workspace}/RULES.md`: rule explicitly names a workspace, references workspace-scoped paths/tools, or applies only to one workspace's domain. Signal words: *"in engine"*, *"for installers"*, *"this workspace"*.
+- **Workspace tier** → `.design/{workspace}/RULES.md`: rule explicitly names a workspace, references workspace-scoped paths/tools, or applies only to one workspace's domain. Signal words: *"in engine"*, *"for this workspace"*, *"this workspace"*.
 - **Global tier** → `.design/RULES.md`: rule applies uniformly regardless of which workspace is active, or no workspace is active.
 - **Ambiguous**: Ask user — "Should this rule be global (all workspaces) or scoped to `{workspace}` only?"
 

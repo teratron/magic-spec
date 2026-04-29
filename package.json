@@ -1,6 +1,6 @@
 {
   "name": "magic-spec",
-  "version": "2.0.0",
+  "version": "2.0.2",
   "description": "Magic Specification-Driven Development (SDD) Workflow",
   "author": "Oleg Alexandrov <alexandrovoleg.ru@gmail.com>",
   "license": "Apache-2.0",

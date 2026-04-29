@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.0.20
+**Version:** 1.1.1
 **Status:** Active
 
 ## Overview
@@ -12,8 +12,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | :--- | :--- | :--- | :--- |
-| engine | Magic SDD core engine logic, workflows, and history. | 9 | [engine/INDEX.md](engine/INDEX.md) |
-| installers | Thin-client installers (Node/Python), IDE adapters, and release scripts. | 6 | [installers/INDEX.md](installers/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 9 | [engine/INDEX.md](engine/INDEX.md) |
+| ~~installers~~ | ~~Archived (v2.0.0): superseded by GitHub distribution.~~ | 6 | [installers/INDEX.md](installers/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.1.1 | 2026-04-29 | Agent | Automated metadata update |
+| 1.1.0 | 2026-04-29 | Agent | Archive installers workspace; add rules/ to engine scope (v2.0.0) |
 | 1.0.18 - 1.0.20 | 2026-04-25 | Agent | Automated metadata update |
 | 1.0.16 | 2026-04-22 | Agent | Automated metadata update |
 | 1.0.15 | 2026-04-18 | Agent | Sync: engine count 8→9, version parity 1.5.169 |
