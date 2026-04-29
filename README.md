@@ -4,6 +4,18 @@
 [![PyPI version](https://img.shields.io/pypi/v/magic-spec?color=blue&label=pypi)](https://pypi.org/project/magic-spec/)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
 
+> [!WARNING]
+> **Legacy Installers Deprecated (v1.5.x)**
+>
+> The `npx magic-spec` (npm) and `uvx magic-spec` (PyPI) packages will **no longer receive updates**
+> as of **v1.5.207**. Archived releases remain available for historical reference:
+>
+> - npm: <https://www.npmjs.com/package/magic-spec> (last version: 1.5.207)
+> - PyPI: <https://pypi.org/project/magic-spec/> (last version: 1.5.207)
+>
+> **New users:** See [Installation](#-installation) for the GitHub-based setup.
+> **Existing users:** See [Migrating from the legacy installer](docs/distribution.md).
+
 ## 📖 Description
 
 **The Specification-Driven Development (SDD) Operating System for AI Coding Agents.**
@@ -233,4 +245,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v1.5.206). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v1.5.207). We are constantly refining the SDD engine based on real-world usage.

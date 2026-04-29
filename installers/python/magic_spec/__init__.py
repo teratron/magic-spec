@@ -1,4 +1,4 @@
 """magic-spec: Specification-Driven Development (SDD) Workflow Installer."""
-__version__ = "1.5.206"
+__version__ = "1.5.207"
 
 
