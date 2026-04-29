@@ -9,7 +9,7 @@ The `.magic/.checksums` file acts as the "integrity passport" for the Magic SDD 
 The primary goals of this system are:
 
 - **Tamper Detection**: Detecting unauthorized or accidental modifications to the core engine logic.
-- **Update Safety**: Ensuring that local customizations are not silently overwritten during engine updates via the CLI installers (`npx` or `uvx`).
+- **Update Safety**: Ensuring that local customizations are not silently overwritten during manual GitHub Release updates.
 - **Standardization**: Providing a consistent way to verify the engine state across different development environments.
 
 ## 2. The `.checksums` File
@@ -37,9 +37,9 @@ The `check-prerequisites.js` script (executed via the universal `node .magic/scr
 If a mismatch is detected, the workflow will **HALT** and surface an error:
 > `WARNING: Engine Integrity: '.magic/file.md' has been modified locally.`
 
-### 3.2 CLI Safety
+### 3.2 Update Safety
 
-Installer features like the **Conflict Detector** use these checksums to identify if a project has customized its engine. If local changes are detected during an `--update` or `--install`, the CLI will prompt the user to decide whether to overwrite, skip, or backup the affected files.
+Before replacing `.magic/` from a new release archive, compare local files against `.magic/.checksums`. If local changes are detected, back them up or intentionally vendor them before copying the new engine files.
 
 ## 4. Maintenance
 

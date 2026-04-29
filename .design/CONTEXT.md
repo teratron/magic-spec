@@ -27,7 +27,6 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
-│   ├── installers/
 │   └── workspace.json
 ├── .env
 ├── .env.example
@@ -57,7 +56,6 @@
 │   ├── templates/
 │   └── tests/
 ├── .markdownlint.json
-├── .npmrc
 ├── .pytest_cache/
 │   ├── .gitignore
 │   ├── CACHEDIR.TAG
@@ -98,17 +96,6 @@
 │   ├── simulate.md
 │   ├── spec.md
 │   └── task.md
-├── installers/
-│   ├── README.md
-│   ├── __init__.py
-│   ├── adapters.json
-│   ├── config.json
-│   ├── node/
-│   ├── python/
-│   ├── scripts/
-│   └── tests/
-├── package.json
-├── pyproject.toml
 ├── skills/
 │   ├── magic-analyze/
 │   ├── magic-rule/
@@ -117,7 +104,6 @@
 │   └── magic-task/
 ├── tmp/
 │   └── sandbox/
-├── uv.lock
 └── workflows/
     ├── magic.analyze.md
     ├── magic.rule.md
@@ -129,4 +115,3 @@
 ## Recent Changes
 
 No recent changelog found.
-

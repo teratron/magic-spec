@@ -58,8 +58,6 @@ const SKIP_DIRS = new Set([
 ]);
 
 const SKIP_PATH_FRAGMENTS = [
-    '/installers/tests/',
-    '/installers/node/tests/',
     '/.agents/',
 ];
 
@@ -168,7 +166,7 @@ const PY_STDLIB = new Set([
 ]);
 
 const PY_IMPORT_RE = /^(?:import|from)\s+([a-zA-Z0-9_.]+)/gm;
-const PY_PACKAGE_PREFIX = 'magic_spec';
+const PY_PACKAGE_PREFIXES = [];
 
 /**
  * Extracts project-relative dependency paths from a Python file.
@@ -183,6 +181,7 @@ function extractPyDeps(absPath) {
     catch (_) { return []; }
 
     const deps = new Set();
+    if (PY_PACKAGE_PREFIXES.length === 0) return [];
     PY_IMPORT_RE.lastIndex = 0;
     let m;
 
@@ -191,19 +190,19 @@ function extractPyDeps(absPath) {
         const top = mod.split('.')[0];
 
         if (PY_STDLIB.has(top)) continue;
-        if (!mod.startsWith(PY_PACKAGE_PREFIX)) continue;
-
-        // Resolve magic_spec.submodule → installers/python/magic_spec/submodule.py
-        const sub = mod.slice(PY_PACKAGE_PREFIX.length).replace(/^\./, '').replace(/\./g, '/');
-        const base = path.join(rootDir, 'installers', 'python', 'magic_spec');
-        const candidates = [
-            path.join(base, sub + '.py'),
-            path.join(base, sub, '__init__.py'),
-        ];
-        for (const c of candidates) {
-            if (fs.existsSync(c) && !shouldSkip(c)) {
-                deps.add(normalizePath(path.relative(rootDir, c)));
-                break;
+        for (const prefix of PY_PACKAGE_PREFIXES) {
+            if (!mod.startsWith(prefix)) continue;
+            const sub = mod.slice(prefix.length).replace(/^\./, '').replace(/\./g, '/');
+            const base = path.join(rootDir, prefix.replace(/\./g, '/'));
+            const candidates = [
+                path.join(base, sub + '.py'),
+                path.join(base, sub, '__init__.py'),
+            ];
+            for (const c of candidates) {
+                if (fs.existsSync(c) && !shouldSkip(c)) {
+                    deps.add(normalizePath(path.relative(rootDir, c)));
+                    break;
+                }
             }
         }
     }

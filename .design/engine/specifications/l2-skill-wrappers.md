@@ -1,6 +1,6 @@
 # L2 Specification: Universal Skill Wrappers
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 
 ## 1. Objective
@@ -51,7 +51,7 @@ A new automation script in `.magic/scripts/sync-skills.js` will:
 
 ### 4.2. End-User Installation
 
-Installers (Node.js/Python) will run the synchronization logic upon deployment, ensuring that all available workflows are also exposed as skills.
+GitHub Release archives include the generated `skills/` directory, ensuring that all available workflows are also exposed as skills for agents that support the Skills format.
 
 ## Canonical References
 
@@ -63,6 +63,12 @@ Installers (Node.js/Python) will run the synchronization logic upon deployment, 
 | `skills/magic.spec/SKILL.md` | Generated skill wrapper for spec |
 | `skills/magic.task/SKILL.md` | Generated skill wrapper for task |
 | `.magic/scripts/sync-skills.js` | Projection automation script |
+
+## Document History
+
+| Version | Date | Author | Description |
+| :--- | :--- | :--- | :--- |
+| 1.1.0 | 2026-04-29 | Agent | Replaced legacy package deployment with GitHub Release archive distribution. |
 
 ## 5. Invariants
 

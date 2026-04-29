@@ -11,14 +11,12 @@
         "workflows",
         "skills",
         "rules",
+        ".github",
         "README.md",
         "CHANGELOG.md",
         "CONTRIBUTING.md",
         "AGENTS.md",
-        "CLAUDE.md",
-        "package.json",
-        "pyproject.toml",
-        "uv.lock"
+        "CLAUDE.md"
       ]
     }
   }

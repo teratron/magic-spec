@@ -14,16 +14,16 @@
 - **Assignee:** Agent
 - **Notes:** Update `.agents/skills/magic-dev-init/scripts/setup_windows.ps1` to include `junction` creation for both `workflows/` and `skills/`. Ensure existing linked paths in `.claude/`, `.gemini/`, etc., include the new `skills` folder if the agent supports it.
 
-## [T-2I01] Update Node.js/Python installers
+## [T-2I01] Include skills in GitHub release archives
 
 - **Spec:** [l2-skill-wrappers.md](../specifications/l2-skill-wrappers.md) §4.2
 - **Status:** Done
 - **Assignee:** Agent
-- **Notes:** Modify `installers/node/installer.js` and `installers/python/magic_spec/cli.py` to trigger `sync-skills.js` (or inline logic) after engine extraction. Ensure the "Skill Wrappers" are deployed to user projects by default.
+- **Notes:** Ensure the release archive includes generated `skills/` output from `sync-skills.js`, alongside `workflows/` and `rules/`.
 
-## [T-2M01] Update `adapters.json` mapping
+## [T-2M01] Update adapter path documentation
 
 - **Spec:** [l2-skill-wrappers.md](../specifications/l2-skill-wrappers.md) §2
 - **Status:** Done
 - **Assignee:** Agent
-- **Notes:** Review `installers/adapters.json`. Ensure that each agent's `dest` path is correctly configured to receive both workflows and skills if they support them.
+- **Notes:** Keep adapter target paths documented in `docs/distribution.md` and mirrored in the README adapter table.

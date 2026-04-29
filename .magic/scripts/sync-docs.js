@@ -11,7 +11,7 @@ const { writeFileSafe } = require('./utils');
  * Brings documentation in sync with its actual sources of truth:
  *
  *   CONTRIBUTING.md  ←  templates/contributing.md + RULES.md + INDEX.md +
- *                       workflows/*.md + package.json
+ *                       workflows/*.md
  *   docs/{name}.md   ←  workflows/magic.{name}.md   (Triggers, Slash command,
  *                                                    and Sync Note version)
  *
@@ -41,7 +41,6 @@ const rulesPath = path.join(projectRoot, '.design', 'RULES.md');
 const indexPath = path.join(projectRoot, '.design', 'INDEX.md');
 const workflowsDir = path.join(projectRoot, 'workflows');
 const docsDir = path.join(projectRoot, 'docs');
-const pkgPath = path.join(projectRoot, 'package.json');
 
 // ───────────────────────────────────────────────────────────────────────────
 // State Management
@@ -80,7 +79,7 @@ function readIfExists(p) {
  * sources don't change — eliminates `today` thrash in the footer.
  */
 function lastSourceDate() {
-    const candidates = [templatePath, rulesPath, indexPath, pkgPath];
+    const candidates = [templatePath, rulesPath, indexPath];
     if (fs.existsSync(workflowsDir)) {
         for (const f of fs.readdirSync(workflowsDir)) {
             if (f.endsWith('.md')) candidates.push(path.join(workflowsDir, f));
@@ -105,14 +104,7 @@ function generateContributing(targetVersion, state) {
 
     const template = fs.readFileSync(templatePath, 'utf8');
 
-    // Project name from package.json
-    let projectName = 'Magic Spec Root';
-    if (fs.existsSync(pkgPath)) {
-        try {
-            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-            if (pkg.name) projectName = pkg.name;
-        } catch { /* keep default */ }
-    }
+    const projectName = 'Magic Spec';
 
     // Rules block — RULES.md sections §1–§6
     let rulesBlock = '> [!WARNING]\n> Project constitution (RULES.md) missing. No rules inferred.\n';
@@ -173,7 +165,7 @@ function generateContributing(targetVersion, state) {
         .replace(/{{rules_block}}/g, rulesBlock)
         .replace(/{{registry_block}}/g, registryBlock)
         .replace(/{{directory_tree}}/g, directoryTree)
-        .replace(/{{setup_command}}/g, 'uv sync');
+        .replace(/{{setup_command}}/g, 'node .magic/scripts/executor.js check-prerequisites --json');
 
     // Idempotency: skip write if content hasn't changed
     const existing = readIfExists(contributingPath);

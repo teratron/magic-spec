@@ -50,7 +50,7 @@ The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 
 | Signal | Target |
 | :--- | :--- |
-| *"in engine"*, *"for installers"*, *"this workspace"* | Workspace `RULES.md` |
+| *"in engine"*, *"for docs"*, *"this workspace"* | Workspace `RULES.md` |
 | Universal rule, no workspace context | Global `RULES.md` |
 | Ambiguous | Engine asks: "Global or workspace-scoped?" |
 
@@ -108,4 +108,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-29 (v2.0.4).
+Synchronized with engine workflows on 2026-04-29 (v2.0.8).

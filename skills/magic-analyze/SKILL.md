@@ -12,7 +12,7 @@ handoffs:
     condition: "repairs_needed"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.analyze.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.analyze.md (relative to workspace root) -->
 
 # Analyze Workflow
 
@@ -31,5 +31,5 @@ Arguments:
 - `"text"` — focused analysis on a specific area/concern
 - `{workspace} "text"` — focused analysis within a workspace
 
-Examples: `/magic-analyze`, `/magic-analyze engine`, `/magic-analyze "check API"`, `/magic-analyze installers "focus on tests"`
+Examples: `/magic-analyze`, `/magic-analyze engine`, `/magic-analyze "check API"`, `/magic-analyze docs "focus on examples"`
 // turbo-all

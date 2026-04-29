@@ -4,7 +4,7 @@ This document describes which files and tools are included in Magic Spec for reg
 
 ## 1. User Bundle
 
-These files are installed by running `npx magic-spec@latest` or `uvx magic-spec`. They provide the full SDD workflow for use in any project.
+These files are distributed through GitHub Releases. Download `magic-spec-vX.Y.Z.zip`, extract it, and copy the release folders into the target project. The legacy npm and PyPI packages are frozen at `1.5.207` and are no longer part of the current distribution model.
 
 ### 1.1. Engine Core (`.magic/`)
 
@@ -21,9 +21,9 @@ These files are installed by running `npx magic-spec@latest` or `uvx magic-spec`
 | `scripts/check-prerequisites.js` | Environment verification before workflow execution. |
 | `scripts/init.js` | File structure initialization script. |
 
-### 1.2. Workflows (`.agents/workflows/` → deployed to project root)
+### 1.2. Workflows (`workflows/`)
 
-These are instructions ("workflows") that users invoke via `/magic:*` in the AI agent chat.
+These are source workflow instructions that users copy into the target command directory for their AI agent.
 
 - `magic.analyze.md` — launch a project audit.
 - `magic.rule.md` — add or amend project rules.
@@ -31,17 +31,17 @@ These are instructions ("workflows") that users invoke via `/magic:*` in the AI 
 - `magic.spec.md` — create a new specification.
 - `magic.task.md` — decompose specifications into tasks.
 
-### 1.3. Compatibility Layer — Skills (`skills/` and `.agents/skills/`)
+### 1.3. Compatibility Layer — Skills (`skills/`)
 
-These directories contain workflow wrappers in the **Skills** format (each command in its own folder with a `SKILL.md`).
+This directory contains workflow wrappers in the **Skills** format (each command in its own folder with a `SKILL.md`).
 
 - Provide compatibility with various AI agents (e.g., Claude Code or Gemini CLI).
-- Auto-generated from `.md` files in the `workflows` directories.
+- Auto-generated from `.md` files in `workflows/`.
 - Allow agents to discover available tools without parsing raw workflow files.
 
 ## 2. Dev Instruments
 
-These files are only installed when using the `--dev` flag: `npx magic-spec --dev`. They are intended for testing and modifying the Magic Spec engine itself.
+These files are kept in the main repository for maintainers. They are not part of the regular user release archive unless the release workflow explicitly includes them.
 
 ### 2.1. Additional files in `.magic/`
 
@@ -57,11 +57,10 @@ These files are only installed when using the `--dev` flag: `npx magic-spec --de
 These files are **never distributed** to end users. They exist only in the main `magic-spec` repository and are used by maintainers for building, publishing, and synchronization.
 
 - `history/` — change archives for all workflows (organized by folder).
-- `installers/` — installer code (Node.js/Python) that downloads the engine core.
 - `scripts/update-engine-meta.js` — automation for version and checksum updates (C14).
 - `scripts/sync-docs.js` — documentation synchronization.
 - `scripts/utils.js` — internal developer utilities.
-- `workflows/` — source workflow templates before conversion by the installer.
+- `.agents/` — maintainer-facing development workflows and skills.
 
 > [!TIP]
 > This separation keeps user projects clean from the engine's "meta-logic", providing only the tools necessary for development.

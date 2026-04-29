@@ -11,7 +11,7 @@ handoffs:
     condition: "tasks_generated"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.task.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.task.md (relative to workspace root) -->
 
 # Task Workflow
 
@@ -26,7 +26,7 @@ Arguments:
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 in more detail"`, `/magic-task installers "only new specs"`
+Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 in more detail"`, `/magic-task docs "only new specs"`
 
 **Scope:**
 

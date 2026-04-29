@@ -6,12 +6,10 @@ Architecture and scenarios for validating the Magic SDD engine.
 
 ## Motivation
 
-Maintain high reliability of the engine core and installers through automated regression testing.
+Maintain high reliability of the engine core through automated and cognitive regression testing.
 
 ## Components
 
-- **installers/tests/test_integration.py**: End-to-end testing of installer logic.
-- **installers/tests/test_adapter_flags.py**: Verification of IDE adapter logic.
 - **magic.simulate (Cognitive)**: The primary engine validation tool. Runs all scenarios in `.magic/tests/suite.md` as a purely cognitive task — no physical scripts are created. The agent evaluates each test scenario internally against the engine workflow logic and reports PASS/FAIL/ROUGH EDGE.
 
 ## Cognitive Test Suite
@@ -26,7 +24,7 @@ Maintain high reliability of the engine core and installers through automated re
 
 ## CI/CD
 
-Automated installer tests are triggered via `python installers/scripts/run_tests.py` or `npm test`. Cognitive engine tests are run via `/magic.simulate test`.
+Cognitive engine tests are run via `/magic.simulate test`. Script-level checks are executed through `.magic/scripts/executor.js`.
 
 ## Canonical References
 
@@ -34,14 +32,12 @@ Automated installer tests are triggered via `python installers/scripts/run_tests
 | :--- | :--- |
 | `.magic/tests/suite.md` | Cognitive regression test suite (157 tests, v1.9.45) |
 | `.magic/simulate.md` | Simulation workflow that runs cognitive tests |
-| `installers/tests/test_integration.py` | Integration tests for installer pipeline |
-| `installers/tests/test_adapter_flags.py` | Adapter flag detection tests |
-| `installers/scripts/run_tests.py` | Unified test runner |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.3.0 | 2026-04-29 | Agent | Removed legacy distribution test-suite references after GitHub distribution migration. |
 | 1.2.0 | 2026-03-20 | Agent | Reality sync: 91→157 tests (T01–T163), suite version v1.9.18→v1.9.45, added post-sprint expansion coverage. |
 | 1.1.0 | 2026-03-04 | Agent | Clarified cognitive simulation as primary tool; documented suite state (91 tests, v1.9.18, RE-1–RE-T74 coverage). |
 | 1.0.0 | 2026-03-03 | Antigravity | Initial stable version. |

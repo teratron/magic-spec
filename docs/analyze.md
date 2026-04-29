@@ -48,7 +48,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 /magic.analyze                             # Full project audit
 /magic.analyze engine                      # Scoped to "engine" workspace
 /magic.analyze "check API coverage"        # Focused analysis on APIs
-/magic.analyze installers "focus on tests" # Focused analysis within workspace
+/magic.analyze docs "focus on examples"    # Focused analysis within workspace
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force focus interpretation.
@@ -154,4 +154,4 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-29 (v2.0.4).
+Synchronized with engine workflows on 2026-04-29 (v2.0.8).

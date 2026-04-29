@@ -31,7 +31,7 @@ Key Goals:
 /magic.task                              # Full planning across all workspaces
 /magic.task engine                       # Scoped planning for "engine" workspace
 /magic.task "decompose phase-2"          # Guided planning with focus
-/magic.task installers "only new specs"  # Scoped + guided planning
+/magic.task docs "only new specs"        # Scoped + guided planning
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
@@ -157,4 +157,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-29 (v2.0.4).
+Synchronized with engine workflows on 2026-04-29 (v2.0.8).

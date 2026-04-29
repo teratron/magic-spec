@@ -636,7 +636,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** Any (`task.md` used as example)
 - **Synthetic State:**
-  - `.design/workspace.json` exists with `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `.design/workspace.json` exists with `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
   - No prompt provided by user about workspaces.
 - **Action 1:** Workflow triggered with no environment variables or CLI flags.
 - **Expected 1:**
@@ -644,9 +644,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent silently identifies `default` = `engine`.
   - [ ] Agent uses `.design/engine/` for all file operations (reading `INDEX.md`, `RULES.md`, etc.).
   - [ ] User is NOT prompted to select a workspace.
-- **Action 2:** Workflow triggered with `MAGIC_WORKSPACE=installers`
+- **Action 2:** Workflow triggered with `MAGIC_WORKSPACE=docs`
 - **Expected 2:**
-  - [ ] Agent silently uses `.design/installers/` (overriding default).
+  - [ ] Agent silently uses `.design/docs/` (overriding default).
 - **Action 3:** `.design/workspace.json` is deleted. Workflow triggered.
 - **Expected 3:**
   - [ ] Fallback kicks in silently.
@@ -657,12 +657,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `retrospective.md`
 - **Synthetic State:**
-  - Workspace `installers` is active (`MAGIC_DESIGN_DIR=.design/installers/`).
-  - `.design/installers/` initialized and Phase 1 just completed.
-  - `RETROSPECTIVE.md` does NOT exist in `.design/installers/`.
+  - Workspace `docs` is active (`MAGIC_DESIGN_DIR=.design/docs/`).
+  - `.design/docs/` initialized and Phase 1 just completed.
+  - `RETROSPECTIVE.md` does NOT exist in `.design/docs/`.
 - **Action:** Retrospective Level 1 triggered
 - **Expected:**
-  - [ ] Agent creates `/installers/RETROSPECTIVE.md` from `.magic/templates/retrospective.md` exactly as is without removing the "Session" sections.
+  - [ ] Agent creates `/docs/RETROSPECTIVE.md` from `.magic/templates/retrospective.md` exactly as is without removing the "Session" sections.
   - [ ] Agent appends a row to the Snapshots table.
   - [ ] Agent archives the phase file purely relatively: `tasks/phase-1.md` → `archives/tasks/`
   - [ ] Agent does NOT write anything to `.design/` root.
@@ -1538,12 +1538,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
-- **Action:** `/magic.analyze installers`
+  - `workspace.json` registers two workspaces: `engine`, `docs`. Default: `engine`.
+- **Action:** `/magic.analyze docs`
 - **Expected:**
-  - [ ] Agent resolves workspace to `installers` (explicit arg overrides default)
-  - [ ] Scan scope restricted to `installers/` paths as defined in `workspace.json`
-  - [ ] No prompt to user; prints: "Active workspace: installers" or similar
+  - [ ] Agent resolves workspace to `docs` (explicit arg overrides default)
+  - [ ] Scan scope restricted to `docs/` paths as defined in `workspace.json`
+  - [ ] No prompt to user; prints: "Active workspace: docs" or similar
   - [ ] `engine` workspace not scanned
 - **Guards tested:** Workspace Resolution Priority 1 (explicit arg)
 
@@ -1551,7 +1551,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + default)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
+  - `workspace.json` registers two workspaces: `engine`, `docs`. Default: `engine`.
 - **Action:** `/magic.analyze` (no argument)
 - **Expected:**
   - [ ] Agent resolves workspace to `engine` (default from `workspace.json`)
@@ -1563,11 +1563,11 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + no default)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`. **No default field.**
+  - `workspace.json` registers two workspaces: `engine`, `docs`. **No default field.**
 - **Action:** `/magic.analyze` (no argument)
 - **Expected:**
   - [ ] Agent detects multiple workspaces with no default and no explicit arg
-  - [ ] Agent asks: "Which workspace to analyze? [engine, installers]"
+  - [ ] Agent asks: "Which workspace to analyze? [engine, docs]"
   - [ ] Does NOT auto-pick either workspace
   - [ ] Does NOT start scanning before user responds
 - **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → ask)
@@ -1576,13 +1576,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 2 validation)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`.
+  - `workspace.json` registers two workspaces: `engine`, `docs`.
   - `MAGIC_WORKSPACE=frontend` (not in `workspace.json`).
 - **Action:** `/magic.analyze` (no explicit arg)
 - **Expected:**
   - [ ] Agent reads `MAGIC_WORKSPACE=frontend` (Priority 2)
   - [ ] Validates name against `workspace.json` — not found
-  - [ ] **HALT**: "Unknown workspace 'frontend'. Available: [engine, installers]."
+  - [ ] **HALT**: "Unknown workspace 'frontend'. Available: [engine, docs]."
   - [ ] Does NOT silently fall through to Priority 3
 - **Guards tested:** RE-C1 (MAGIC_WORKSPACE unknown-name validation)
 
@@ -1590,12 +1590,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1 override)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
-  - `MAGIC_WORKSPACE=installers`.
+  - `workspace.json` registers two workspaces: `engine`, `docs`. Default: `engine`.
+  - `MAGIC_WORKSPACE=docs`.
 - **Action:** `/magic.analyze engine`
 - **Expected:**
   - [ ] Agent uses explicit arg `engine` (Priority 1 overrides Priority 2)
-  - [ ] `MAGIC_WORKSPACE=installers` is ignored
+  - [ ] `MAGIC_WORKSPACE=docs` is ignored
   - [ ] Analysis scoped to `engine` workspace
   - [ ] No HALT or conflict warning
 - **Guards tested:** RE-C4 (explicit arg overrides env var)
@@ -1604,13 +1604,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Scope Auto-Apply)
 - **Synthetic State:**
-  - `workspace.json` registers `installers` with `scope: ["installers/", "package.json"]`.
+  - `workspace.json` registers `docs` with `scope: ["docs/", "package.json"]`.
   - `MAGIC_WORKSPACE_SCOPE` not set.
-- **Action:** `/magic.analyze installers`
+- **Action:** `/magic.analyze docs`
 - **Expected:**
-  - [ ] Workspace resolved to `installers`
-  - [ ] Scan boundary auto-set to `["installers/", "package.json"]` from `workspace.json` scope
-  - [ ] Files outside `installers/` and `package.json` are NOT scanned
+  - [ ] Workspace resolved to `docs`
+  - [ ] Scan boundary auto-set to `["docs/", "package.json"]` from `workspace.json` scope
+  - [ ] Files outside `docs/` and `package.json` are NOT scanned
   - [ ] Agent does NOT require separate `MAGIC_WORKSPACE_SCOPE` env var to restrict scope
 - **Guards tested:** RE-C2 (workspace scope auto-apply)
 
@@ -1618,13 +1618,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Mode C trigger + workspace arg)
 - **Synthetic State:**
-  - `workspace.json` registers two workspaces: `engine`, `installers`. Default: `engine`.
-- **Action:** "Ventilate installers"
+  - `workspace.json` registers two workspaces: `engine`, `docs`. Default: `engine`.
+- **Action:** "Ventilate docs"
 - **Expected:**
-  - [ ] Agent parses `installers` as the workspace argument from natural language
+  - [ ] Agent parses `docs` as the workspace argument from natural language
   - [ ] Mode C (Ventilation) triggered
-  - [ ] Analysis scoped to `installers` workspace (not default `engine`)
-  - [ ] Report covers `installers` scope only
+  - [ ] Analysis scoped to `docs` workspace (not default `engine`)
+  - [ ] Report covers `docs` scope only
 - **Guards tested:** RE-C3 (Mode C trigger + workspace arg in natural language)
 
 ### T103 — Ghost Registry Critical HALT Barrier
@@ -1779,7 +1779,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Argument Routing)
 - **Synthetic State:**
-  - `workspace.json` registers: `engine`, `installers`.
+  - `workspace.json` registers: `engine`, `docs`.
 - **Test A — Unquoted workspace name:**
   - **Action:** `/magic.analyze engine`
   - **Expected:**
@@ -1792,11 +1792,11 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Mode D triggered: focus directive = "engine"
     - [ ] Agent searches for project areas matching keyword "engine"
 - **Test C — Workspace + focus:**
-  - **Action:** `/magic.analyze installers "check tests"`
+  - **Action:** `/magic.analyze docs "check tests"`
   - **Expected:**
-    - [ ] First token `installers` matches workspace → workspace resolved
+    - [ ] First token `docs` matches workspace → workspace resolved
     - [ ] Remaining `"check tests"` → focus directive
-    - [ ] Mode D scoped to `installers` workspace
+    - [ ] Mode D scoped to `docs` workspace
 - **Guards tested:** Argument Routing disambiguation, quote-wrapping override
 
 ### T114 — Analyze Mode D: Focused Analysis on Specific Area
@@ -2035,13 +2035,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `run.md`
 - **Synthetic State:**
-  - `installer-architecture.md` (L1): file header `Status: Draft`, `Version: 2.0.0`
-  - `INDEX.md` entry for `installer-architecture.md`: `Status: Stable`, `Version: 1.0.0`
-  - Active phase-1 tasks reference `installer-node.md` (L2, Implements: installer-architecture.md)
+  - `docs-architecture.md` (L1): file header `Status: Draft`, `Version: 2.0.0`
+  - `INDEX.md` entry for `docs-architecture.md`: `Status: Stable`, `Version: 1.0.0`
+  - Active phase-1 tasks reference `docs-node.md` (L2, Implements: docs-architecture.md)
 - **Action:** `/magic.run` triggered to execute phase-1 tasks
 - **Expected:**
-  - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `installer-architecture.md` (file=Draft ≠ INDEX=Stable)
-  - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
+  - [ ] Pre-flight File-Header Parity detects STATUS_DRIFT on `docs-architecture.md` (file=Draft ≠ INDEX=Stable)
+  - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `docs-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
   - [ ] **HALT** before any task execution with drift report (Cognitive Guard)
   - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
   - [ ] User directed to resolve via `magic.spec` or `magic.analyze`
@@ -2066,14 +2066,14 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `spec.md`
 - **Synthetic State:**
-  - Target: `installer-node.md` (L2, Implements: installer-architecture.md)
-  - `installer-node.md` header matches INDEX.md (no drift)
-  - `installer-architecture.md` (L1 parent): file header `Version: 2.0.0`, INDEX.md says `Version: 1.0.0`
-- **Action:** `/magic.spec` update `installer-node.md` with "add plugin hooks"
+  - Target: `docs-node.md` (L2, Implements: docs-architecture.md)
+  - `docs-node.md` header matches INDEX.md (no drift)
+  - `docs-architecture.md` (L1 parent): file header `Version: 2.0.0`, INDEX.md says `Version: 1.0.0`
+- **Action:** `/magic.spec` update `docs-node.md` with "add plugin hooks"
 - **Expected:**
-  - [ ] Version Drift Guard scans dependency chain: `installer-node.md` → `installer-architecture.md`
-  - [ ] Detects VERSION_DRIFT on parent `installer-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
-  - [ ] **HALT** before writing updates to `installer-node.md` (Cognitive Guard)
+  - [ ] Version Drift Guard scans dependency chain: `docs-node.md` → `docs-architecture.md`
+  - [ ] Detects VERSION_DRIFT on parent `docs-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
+  - [ ] **HALT** before writing updates to `docs-node.md` (Cognitive Guard)
   - [ ] Report names the drifted dependency (not just the target)
   - [ ] User directed to resolve parent drift first
 - **Guards tested:** Version Drift Guard (dependency chain scan, Cognitive Guard), Related Specifications traversal
@@ -2097,7 +2097,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (§1a Crisis Template)
 - **Synthetic State:**
-  - `workspace.json` has 2 workspaces: `engine`, `installers`
+  - `workspace.json` has 2 workspaces: `engine`, `docs`
   - All engine files valid
 - **Action:** `/magic.simulate` (no args — Improv mode)
 - **Expected:**
@@ -2161,11 +2161,11 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** All workflows (`spec.md`, `task.md`, `run.md`, `analyze.md`, `init.md`, `rule.md`, `simulate.md`)
 - **Synthetic State:**
-  - `workspace.json` has 2 workspaces: `engine` (default), `installers`
-  - `MAGIC_WORKSPACE` env var is set to `installers`
+  - `workspace.json` has 2 workspaces: `engine` (default), `docs`
+  - `MAGIC_WORKSPACE` env var is set to `docs`
   - User runs `/magic.spec` (no explicit workspace arg)
 - **Expected:**
-  - [ ] Agent resolves workspace using priority chain: explicit arg (none) > `MAGIC_WORKSPACE` (`installers`) → uses `installers`
+  - [ ] Agent resolves workspace using priority chain: explicit arg (none) > `MAGIC_WORKSPACE` (`docs`) → uses `docs`
   - [ ] Same resolution logic produces same result in `task.md`, `run.md`, `rule.md`, `simulate.md`, `init.md`
   - [ ] `analyze.md` full Workspace Resolution table produces identical result for same inputs
   - [ ] No workflow falls back to `workspace.json` default when `MAGIC_WORKSPACE` is set
@@ -2190,9 +2190,9 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `spec.md` + `task.md` (C12 interaction)
 - **Synthetic State:**
-  - `installer-architecture.md` (L1, Stable) demoted to RFC via `spec.md`
-  - `installer-node.md` (L2, Implements: installer-architecture.md, Stable)
-  - `TASKS.md` has active tasks for `installer-node.md`
+  - `docs-architecture.md` (L1, Stable) demoted to RFC via `spec.md`
+  - `docs-node.md` (L2, Implements: docs-architecture.md, Stable)
+  - `TASKS.md` has active tasks for `docs-node.md`
 - **Test 1 — spec.md C12 cascade:**
   - **Action:** Agent completes L1 status change in `spec.md`
   - **Expected:**
@@ -2200,15 +2200,15 @@ If any test fails, document the failure reason and propose a fix.
     - `ok: true` → proceed.
     - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
     - Missing `.design/` → auto-run `.magic/init.md`, then resume.
-    - [ ] `INDEX.md` updated: `installer-node.md` status set to `RFC`
-    - [ ] File header of `installer-node.md` updated to match
-    - [ ] Report: "C12 Cascade: 1 dependent quarantined: [installer-node.md]."
+    - [ ] `INDEX.md` updated: `docs-node.md` status set to `RFC`
+    - [ ] File header of `docs-node.md` updated to match
+    - [ ] Report: "C12 Cascade: 1 dependent quarantined: [docs-node.md]."
 - **Test 2 — task.md reacts to INDEX.md state:**
   - **Action:** `/magic.task update` triggered after C12 cascade
   - **Expected:**
-    - [ ] `task.md` reads `INDEX.md`, sees `installer-node.md` = RFC
-    - [ ] Tasks for `installer-node.md` marked `Blocked [!]` with reason: "L1 parent `installer-architecture.md` is `RFC` (C12)"
-    - [ ] `installer-node.md` moved to `## Backlog` in `PLAN.md`
+    - [ ] `task.md` reads `INDEX.md`, sees `docs-node.md` = RFC
+    - [ ] Tasks for `docs-node.md` marked `Blocked [!]` with reason: "L1 parent `docs-architecture.md` is `RFC` (C12)"
+    - [ ] `docs-node.md` moved to `## Backlog` in `PLAN.md`
     - [ ] `task.md` does **NOT** modify `INDEX.md` (read-only for status)
 - **Guards tested:** C12 ownership (spec.md writes INDEX, task.md reads only), cascade behavioral contract
 
@@ -2342,13 +2342,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 1)
 - **Synthetic State:**
-  - `workspace.json`: `engine` (default), `installers`. Both valid.
-- **Action:** `/magic.analyze installers`
+  - `workspace.json`: `engine` (default), `docs`. Both valid.
+- **Action:** `/magic.analyze docs`
 - **Expected:**
-  - [ ] Workspace resolved to `installers` via Priority 1 (explicit arg)
-  - [ ] Agent prints: "Active workspace: installers."
+  - [ ] Workspace resolved to `docs` via Priority 1 (explicit arg)
+  - [ ] Agent prints: "Active workspace: docs."
   - [ ] Default `engine` workspace is NOT used despite being set as default
-  - [ ] Analysis scoped to `installers` workspace paths
+  - [ ] Analysis scoped to `docs` workspace paths
 - **Guards tested:** Priority 1 override, confirmation print
 
 ### T146 — Run Mid-Run HALT Notifies Manager in Parallel Mode
@@ -2370,23 +2370,23 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
   - `engine/INDEX.md`: 3 Stable specs.
-  - `installers/INDEX.md`: 2 Stable specs.
-- **Action:** User runs `/magic.task installers`
+  - `docs/INDEX.md`: 2 Stable specs.
+- **Action:** User runs `/magic.task docs`
 - **Expected:**
-  - [ ] Argument parsed: `installers` matches workspace name → **Scoped Planning** (Mode B)
-  - [ ] Only `installers/INDEX.md` is read for planning (not engine)
-  - [ ] PLAN.md and TASKS.md written to `.design/installers/`
+  - [ ] Argument parsed: `docs` matches workspace name → **Scoped Planning** (Mode B)
+  - [ ] Only `docs/INDEX.md` is read for planning (not engine)
+  - [ ] PLAN.md and TASKS.md written to `.design/docs/`
   - [ ] Engine workspace specs are NOT included in the plan
-  - [ ] Handoff recommends `/magic.run installers` (workspace propagated)
+  - [ ] Handoff recommends `/magic.run docs` (workspace propagated)
 - **Guards tested:** Argument Routing (Mode B), Workspace Scope Isolation (C15), Handoff Propagation
 
 ### T148 — Task Argument Routing: Guided Planning with Workspace Fallback (Mode C)
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
   - `engine/INDEX.md`: 3 Stable specs (2 API-related, 1 unrelated).
   - No `MAGIC_WORKSPACE` env var set.
 - **Action:** User runs `/magic.task "only API specs"`
@@ -2402,7 +2402,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `task.md` (Argument Routing)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
 - **Action:** User runs `/magic.task "engine"`
 - **Expected:**
   - [ ] Argument parsed: quoted text → forced directive interpretation (NOT workspace selection)
@@ -2431,44 +2431,44 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `run.md` (Argument Routing)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
-  - `installers/TASKS.md`: Phase 1 (all Done), Phase 2 (3 Todo tasks).
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
+  - `docs/TASKS.md`: Phase 1 (all Done), Phase 2 (3 Todo tasks).
   - RULES.md §7 C3: Parallel mode.
-- **Action:** User runs `/magic.run installers "phase-2"`
+- **Action:** User runs `/magic.run docs "phase-2"`
 - **Expected:**
-  - [ ] Argument parsed: `installers` = workspace, `"phase-2"` = directed text → **Scoped + Directed** (Mode D)
-  - [ ] Only `installers/TASKS.md` is read
+  - [ ] Argument parsed: `docs` = workspace, `"phase-2"` = directed text → **Scoped + Directed** (Mode D)
+  - [ ] Only `docs/TASKS.md` is read
   - [ ] Only Phase 2 tasks are targeted (Phase 1 skipped — already Done)
   - [ ] Manager Agent activated (Parallel mode) for Phase 2 tasks
-  - [ ] Handoff (if re-planning needed) recommends `/magic.task installers`
+  - [ ] Handoff (if re-planning needed) recommends `/magic.task docs`
 - **Guards tested:** Argument Routing (Mode D), Phase targeting, Workspace scoping, Handoff Propagation
 
 ### T152 — Cross-Workflow Handoff Propagation with Scoped Argument
 
 - **Workflow:** `task.md` → `run.md` (Handoff chain)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
-  - User completed `/magic.task installers` (Mode B — scoped planning).
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
+  - User completed `/magic.task docs` (Mode B — scoped planning).
   - Planning is done, handoff to run triggered.
 - **Expected:**
   - [ ] task.md Zero-Prompt Transition (C9) fires
-  - [ ] Handoff message: `/magic.run installers` is invoked automatically
-  - [ ] Workspace `installers` context preserved across workflow boundary
+  - [ ] Handoff message: `/magic.run docs` is invoked automatically
+  - [ ] Workspace `docs` context preserved across workflow boundary
 - **Guards tested:** Handoff Propagation (task→run), Workspace context preservation, Zero-Prompt automation
 
 ### T153 — Spec T4 Tier Routing: Workspace Signal Detected
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
 - **Synthetic State:**
-  - Active workspace: `installers` (resolved via Zero-Prompt).
+  - Active workspace: `docs` (resolved via Zero-Prompt).
   - `.design/RULES.md`: §7 has C1–C10.
-  - `.design/installers/RULES.md`: exists with WC1.
-- **Action:** `"Add OAuth2 to auth spec. Remember that all installer packages must use semantic versioning."`
+  - `.design/docs/RULES.md`: exists with WC1.
+- **Action:** `"Add OAuth2 to auth spec. Remember that all docs packages must use semantic versioning."`
 - **Expected:**
   - [ ] T4 trigger detected: "Remember that..."
-  - [ ] **Tier Routing**: "installer packages" matches workspace signal → target = `.design/installers/RULES.md`
+  - [ ] **Tier Routing**: "docs packages" matches workspace signal → target = `.design/docs/RULES.md`
   - [ ] **Duplication Check**: scans both global C1–C10 and workspace WC1 for overlap → none found
-  - [ ] Rule written to `.design/installers/RULES.md` as WC2 (NOT to global RULES.md)
+  - [ ] Rule written to `.design/docs/RULES.md` as WC2 (NOT to global RULES.md)
   - [ ] Spec update and rule write grouped in single atomic proposal
 - **Guards tested:** T4 Inline Tier Routing, workspace signal detection, atomic proposal
 
@@ -2519,12 +2519,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `simulate.md`, `init.md`
 - **Synthetic State:**
   - Workspace `engine` active (`Scope: .magic, .agents, ...`).
-  - Manual drift in `installers/config.json` (OUT OF SCOPE).
+  - Manual drift in `docs/config.json` (OUT OF SCOPE).
   - `.magic/` files are clean and match checksums.
 - **Action:** Run `/magic.simulate`
 - **Expected:**
   - [ ] check-prerequisites called with `--workspace engine`.
-  - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `installers/config.json`.
+  - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `docs/config.json`.
   - [ ] **C15 Filter** applied: agent recognizes mismatch is out-of-scope.
   - [ ] Agent logs drift but does NOT HALT.
   - [ ] Simulation proceeds to Mode Selection.
@@ -2577,12 +2577,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `task.md` (C12 Quarantine)
 - **Synthetic State:**
-  - Active workspace `installers`. `installers/INDEX.md` references `cli.md` (L2).
+  - Active workspace `docs`. `docs/INDEX.md` references `cli.md` (L2).
   - `cli.md` has `Implements: ../engine/core.md`.
   - `engine/INDEX.md` lists `core.md` (L1) as `Draft`.
-- **Action:** Agent runs `magic.task` for `installers` workspace.
+- **Action:** Agent runs `magic.task` for `docs` workspace.
 - **Expected:**
-  - [ ] Agent reads `installers/INDEX.md` AND cross-references `engine/INDEX.md` for the parent.
+  - [ ] Agent reads `docs/INDEX.md` AND cross-references `engine/INDEX.md` for the parent.
   - [ ] Agent detects `core.md` is NOT `Stable` in `engine/INDEX.md`.
   - [ ] C12 Quarantine triggered: `cli.md` tasks moved to Backlog.
   - [ ] `cli.md` tasks marked `Blocked [!]` with C12 reason.
@@ -2748,15 +2748,15 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `retrospective.md` (Core Invariant #1)
 - **Synthetic State:**
-  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "installers": {}}}`
-  - `MAGIC_WORKSPACE=installers` env var set
-  - Phase 1 just completed in `installers` workspace
+  - `workspace.json`: `{"default": "engine", "workspaces": {"engine": {}, "docs": {}}}`
+  - `MAGIC_WORKSPACE=docs` env var set
+  - Phase 1 just completed in `docs` workspace
 - **Action:** Retrospective Level 1 triggered (no explicit workspace arg)
 - **Expected:**
-  - [ ] Agent reads `MAGIC_WORKSPACE=installers` (Priority 2 in chain)
-  - [ ] Agent uses `.design/installers/` for RETROSPECTIVE.md operations
+  - [ ] Agent reads `MAGIC_WORKSPACE=docs` (Priority 2 in chain)
+  - [ ] Agent uses `.design/docs/` for RETROSPECTIVE.md operations
   - [ ] Agent does NOT fall back to `workspace.json` default (`engine`) when env var is set
-  - [ ] Snapshot appended to `.design/installers/RETROSPECTIVE.md`
+  - [ ] Snapshot appended to `.design/docs/RETROSPECTIVE.md`
   - [ ] Same behavior as all other workflows under identical inputs (T134 parity)
 - **Guards tested:** Context Resolution full priority chain in retrospective.md, env var override of default workspace
 
@@ -2764,10 +2764,10 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `spec.md` (Update Mode)
 - **Synthetic State:**
-  - `workspace.json` registers `engine` and `installers`.
+  - `workspace.json` registers `engine` and `docs`.
   - `engine` has `l1-identity.md` (Stable) — file physically renamed to `l1-auth-core.md` (Drift).
-  - `installers` has `l2-auth.md` (RFC, Implements: l1-identity.md).
-- **Action:** `/magic.spec update installers/l2-auth.md`
+  - `docs` has `l2-auth.md` (RFC, Implements: l1-identity.md).
+- **Action:** `/magic.spec update docs/l2-auth.md`
 - **Expected:**
   - [ ] Parent Existence Guard triggers during pre-flight.
   - [ ] **HALT** — report "L2 Orphan: Parent spec engine/l1-identity.md is missing from disk."
@@ -2777,10 +2777,10 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `task.md` (Step 1 — Pre-flight, Cross-Workspace parity)
 - **Synthetic State:**
-  - Workspace `installers` active. `installers/INDEX.md` has `cli.md` (L2, Implements: engine/l1-core.md).
+  - Workspace `docs` active. `docs/INDEX.md` has `cli.md` (L2, Implements: engine/l1-core.md).
   - `engine/INDEX.md` says `l1-core.md` is `Stable` (v1.0.0).
   - File `engine/specifications/l1-core.md` has header `Status: Draft` or `Version: v1.1.0` (Local Drift).
-- **Action:** `/magic.task installers`
+- **Action:** `/magic.task docs`
 - **Expected:**
   - [ ] Agent builds dependency graph, identifies `engine/l1-core.md` as parent.
   - [ ] Agent reads `engine/INDEX.md` AND `engine/specifications/l1-core.md` header.
@@ -3113,11 +3113,11 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `task.md` (Step 1 — Pre-flight, Cross-Workspace Parent Header Parity + T4 Queue)
 - **Synthetic State:**
-  - Active workspace: `installers`. `installers/INDEX.md` has `cli.md` (L2, `Implements: engine/l1-core.md`).
+  - Active workspace: `docs`. `docs/INDEX.md` has `cli.md` (L2, `Implements: engine/l1-core.md`).
   - `engine/INDEX.md` says `l1-core.md` is `Stable v1.0.0`.
   - `engine/specifications/l1-core.md` file header: `Status: Draft`, `Version: 1.1.0` (manual external edit — STATUS_DRIFT + VERSION_DRIFT).
   - `RULES.md` v1.4.0, no plugin lifecycle rule.
-- **Action:** `/magic.task installers "add plugin hooks. Remember that all installer plugins must register lifecycle via manifest."`
+- **Action:** `/magic.task docs "add plugin hooks. Remember that all docs plugins must register lifecycle via manifest."`
 - **Expected:**
   - [ ] Pre-flight Cross-Workspace Parent Header Parity detects STATUS_DRIFT + VERSION_DRIFT on `engine/l1-core.md`
   - [ ] **HALT** before plan generation

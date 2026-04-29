@@ -20,7 +20,6 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
-│   ├── installers/
 │   ├── spec-graph.html
 │   └── workspace.json
 ├── .magic/
@@ -58,11 +57,11 @@
 │   ├── spec.md
 │   └── task.md
 ├── skills/
-│   ├── magic.analyze/
-│   ├── magic.rule/
-│   ├── magic.run/
-│   ├── magic.spec/
-│   └── magic.task/
+│   ├── magic-analyze/
+│   ├── magic-rule/
+│   ├── magic-run/
+│   ├── magic-spec/
+│   └── magic-task/
 └── workflows/
     ├── magic.analyze.md
     ├── magic.rule.md

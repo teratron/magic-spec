@@ -34,7 +34,7 @@ Key Goals:
 /magic.run engine                          # Scoped execution within a workspace
 /magic.run "T-1A01"                        # Execute a specific task by ID
 /magic.run "phase-2"                       # Execute all Todo tasks in a specific phase
-/magic.run installers "validation only"    # Scoped + directed execution
+/magic.run docs "validation only"          # Scoped + directed execution
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
@@ -130,7 +130,7 @@ If a task encounters ambiguous instructions or missing details, the agent marks 
 
 - **Retro L2**: Auto-run Level 2 (Full) retrospective.
 - **Changelog L2**: Present compiled release entry. **Only manual step: Yes/No approval.**
-- **Version Bump**: Bump manifests (`package.json`, `pyproject.toml`, etc.) per changelog (Major/Minor/Patch).
+- **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
 - **Finalize**: Regenerate `CONTEXT.md`.
 
 ## 7. Session Isolation (Phase Gates — C17)
@@ -152,4 +152,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-29 (v2.0.4).
+Synchronized with engine workflows on 2026-04-29 (v2.0.8).

@@ -1,12 +1,12 @@
 {
   "global": {
-    "digest": "13a80b1d83a40d666aa6611a043146437b4cd7f0eb3ea2ca0f526426eef99234",
-    "version": "1.1.1",
+    "digest": "da0da2becbbddd98f3a743beabc7c4155da0797e48c69d82ed379dbd258643ed",
+    "version": "1.2.1",
     "date": "2026-04-29"
   },
   "workspace:engine": {
-    "digest": "4850c90ff011e993c9ecc0c871fd830ca6f38a184dbafe5a7f5b5e7b63693334",
-    "version": "1.8.7",
-    "date": "2026-04-26"
+    "digest": "8b267ba1533589b693235198d8813e64c5b0788b22bd7fb1d5ac6d4473fb4e7c",
+    "version": "1.8.8",
+    "date": "2026-04-29"
   }
 }

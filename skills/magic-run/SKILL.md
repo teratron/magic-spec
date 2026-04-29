@@ -12,7 +12,7 @@ handoffs:
     condition: null
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.run.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.run.md (relative to workspace root) -->
 
 # Run Workflow
 
@@ -27,7 +27,7 @@ Arguments:
 - `"text"` — directed execution (task ID, phase, or focus)
 - `{workspace} "text"` — scoped + directed execution
 
-Examples: `/magic-run`, `/magic-run engine`, `/magic-run "T-1A01"`, `/magic-run "phase-2"`, `/magic-run installers "validation tasks only"`
+Examples: `/magic-run`, `/magic-run engine`, `/magic-run "T-1A01"`, `/magic-run "phase-2"`, `/magic-run docs "validation tasks only"`
 
 - **Rules Parity**: Always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
 **Scope:** Code execution, task state management, and changelog generation.

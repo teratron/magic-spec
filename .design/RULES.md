@@ -1,8 +1,8 @@
 # Project Specification Rules
 
-**Version:** 1.6.0
+**Version:** 1.6.1
 **Status:** Stable
-**Based on:** [.magic/spec.md](file:///d:/Projects/src/github.com/teratron/magic-spec/.magic/spec.md)
+**Based on:** `.magic/spec.md`
 
 ## Overview
 
@@ -151,7 +151,7 @@ For minor features, simple bugfixes, or changes expected to be under 50 lines of
 
 ### C17 — Adapter Distribution Reference
 
-All supported IDE/Agent adapters and their target directories must be documented in `docs/distribution.md`. This file is the reference for users performing manual installation from GitHub Releases. (Replaces the `installers/adapters.json` registry removed in v2.0.0.)
+All supported IDE/Agent adapters and their target directories must be documented in `docs/distribution.md`. This file is the reference for users performing manual installation from GitHub Releases. It replaces the legacy adapter registry removed in v2.0.0.
 
 ### C20 — Auto-Heal Recovery
 
@@ -205,6 +205,7 @@ Switching is mandatory — it is not skipped in Trust Mode (C9). The persona swi
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.6.1 | 2026-04-29 | Agent | Removed legacy distribution wording from active adapter conventions. |
 | 1.6.0 | 2026-04-03 | Agent | Baseline SDD role-switching constitution (C24) finalized across all core workflows. |
 | 1.5.2 | 2026-04-03 | Agent | Fully expanded C24 to cover 7 core personas across all workflows. |
 | 1.5.1 | 2026-04-03 | Agent | Integrated the Auditor persona (C24) into the operational logic. |
@@ -213,5 +214,5 @@ Switching is mandatory — it is not skipped in Trust Mode (C9). The persona swi
 | 1.4.0 | 2026-03-31 | Agent | C6: Removed undefined "Strong/Weak Tier" qualifier (RE-3 simulation fix). |
 | 1.3.0 | 2026-03-16 | Antigravity | Added C23: Context Economy & Validation Caching. |
 | 1.2.0 | 2026-03-05 | Agent | Added C22: Workspace Rule Inheritance. |
-| 1.1.0 | 2026-03-03 | Antigravity | Added C17-C21: Installers, Security, Parity, and Ventilation. |
+| 1.1.0 | 2026-03-03 | Antigravity | Added C17-C21: Adapter distribution, Security, Parity, and Ventilation. |
 | 1.0.0 | 2026-03-03 | Agent | Initial constitution |

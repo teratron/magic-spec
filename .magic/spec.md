@@ -255,7 +255,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 **T4 Inline Guards** (applied before writing, preserving "Apply Immediately" semantics):
 
-1. **Tier Routing**: Determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for installers", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. If ambiguous → ask user.
+1. **Tier Routing**: Determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for docs", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. If ambiguous → ask user.
 2. **Duplication Check**: Read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → surface the overlap and ask: merge, replace, or add separately. Do NOT silently duplicate.
 3. **Constitutional Guard**: If proposed rule contradicts §1–6 → **HALT**. Same as `rule.md`.
 
@@ -285,7 +285,7 @@ Compares specs vs. project filesystem and engine integrity.
 | Layer Integrity | L2 has valid L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
-| Config Sync | `package.json`/`pyproject.toml` fields match? |
+| Config Sync | Project configuration files match declared spec metadata? |
 | **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. Hint: use `init` or `update-engine-meta`. |
 
 ### Task Completion Checklist

@@ -75,7 +75,7 @@ your-project/
 
 > **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](./workspaces.md) for full configuration details.
 
-**`.gitignore`**: The installer automatically adds `.magic/` and the adapter directory to your `.gitignore`. These are installed dependencies (like `node_modules/`) and should not be committed. To vendor them instead, remove the entries from `.gitignore`.
+**`.gitignore`**: When Magic Spec is used as an installed dependency, add `.magic/`, `workflows/`, `skills/`, and `rules/` to your `.gitignore`. To vendor the engine instead, omit those entries.
 
 ## 🚀 Usage Guide
 
@@ -102,7 +102,7 @@ All three core workflows support **argument routing** to scope operations to a s
 /magic.spec engine "new features"      # Author specs in "engine" workspace
 /magic.task engine                     # Plan only for the "engine" workspace
 /magic.task "decompose phase-2"        # Guided planning with focus
-/magic.run installers "phase-1"        # Execute phase 1 in "installers" workspace
+/magic.run engine "phase-1"            # Execute phase 1 in "engine" workspace
 /magic.analyze "check API coverage"    # Focused analysis on a specific area
 ```
 
@@ -127,4 +127,4 @@ The Retrospective system is Magic's heartbeat. It detects:
 
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
-[Main Repository](https://github.com/teratron/magic-spec) | [Installer Guide](../installers/README.md) | [Engine Integrity (Checksums)](checksums.md)
+[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Engine Integrity (Checksums)](checksums.md)

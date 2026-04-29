@@ -28,10 +28,10 @@ jobs:
           version = open(".magic/.version").read().strip()
           zip_name = f"magic-spec-v{version}.zip"
           prefix   = f"magic-spec-v{version}/"
-          exclude  = {".magic/history", ".magic/tests"}
+          exclude  = {".magic/history", ".magic/tests", ".magic/.docs-state.json", ".magic/.project-meta-state.json"}
 
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
-              for f in ("AGENTS.md", "LICENSE"):
+              for f in ("AGENTS.md", "README.md", "LICENSE"):
                   if os.path.exists(f):
                       zf.write(f, prefix + f)
               for top in (".magic", "workflows", "skills", "rules"):

@@ -130,7 +130,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(docsState, JSON.stringify({ workflows: {} }) + '\n');
             fs.writeFileSync(projectState, JSON.stringify({ global: { digest: 'a' } }) + '\n');
 
-            // Generate checksums (as the installer/engine bootstrap would)
+            // Generate checksums as the engine bootstrap would.
             execSync(`node "${path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js')}"`, {
                 cwd: tempDir, stdio: 'pipe'
             });
@@ -189,9 +189,6 @@ describe('Magic Engine Scripts', () => {
     test('sync.js should propagate version and generate docs', () => {
         const tempDir = createTempWorkspace(true); // Need git for executor.js
         try {
-            // Setup manifests
-            // No longer using package.json or pyproject.toml
-
             // Setup template
             const templatesDir = path.join(tempDir, '.magic', 'templates');
             if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
@@ -205,11 +202,14 @@ describe('Magic Engine Scripts', () => {
             // Setup docs and workflows for trigger sync test
             const docsDir = path.join(tempDir, 'docs');
             fs.mkdirSync(docsDir);
-            fs.writeFileSync(path.join(docsDir, 'test-wf.md'), '# Test Workflow v0.0.1\n\n### Triggers\n- Old Trigger\n');
+            fs.writeFileSync(
+                path.join(docsDir, 'test-wf.md'),
+                '# Test Workflow\n\n**Triggers:** `old-trigger`\n\n**Slash command:** `/old-command`\n\n## Sync Note\n\nSynchronized with engine workflows on 2026-01-01 (v0.0.1).\n'
+            );
 
             const workflowsDir = path.join(tempDir, 'workflows');
             fs.mkdirSync(workflowsDir);
-            fs.writeFileSync(path.join(workflowsDir, 'magic.test-wf.md'), '---\ndescription: test\n---\n**Triggers**: `new-trigger`, `another-trigger`');
+            fs.writeFileSync(path.join(workflowsDir, 'magic.test-wf.md'), '---\ndescription: test\n---\n**Triggers:** `new-trigger`, `another-trigger`');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'sync.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
@@ -229,6 +229,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(docContent.includes('v1.0.0'), 'Doc version should be updated');
             assert.ok(docContent.includes('`new-trigger`'), 'Doc triggers should be updated');
             assert.ok(docContent.includes('`another-trigger`'), 'Doc triggers should be updated');
+            assert.ok(docContent.includes('**Slash command:** `/magic.test-wf`'), 'Doc slash command should be updated');
         } finally {
             cleanup(tempDir);
         }
@@ -241,8 +242,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             fs.mkdirSync(path.join(tempDir, '.design'));
-            // No package.json needed
-
+            fs.writeFileSync(path.join(tempDir, 'package.json'), '{"name":"fixture","version":"1.0.0"}\n');
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
 
@@ -439,4 +439,3 @@ describe('Magic Engine Scripts', () => {
         }
     });
 });
-

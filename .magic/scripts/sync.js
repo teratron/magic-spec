@@ -10,9 +10,8 @@ const fs = require('fs');
  * Pipeline order:
  *
  *   1. update-engine-meta     — bumps .magic/.version when engine drifted
- *   2. sync-manifests         — propagates version into package.json,
- *                                pyproject.toml, installer __init__.py,
- *                                anchored README markers
+ *   2. sync-manifests         — propagates version into anchored
+ *                                README markers
  *   3. validate-hardlinks     — ensures CLAUDE/GEMINI/QWEN/CODEX share
  *                                AGENTS.md inode (non-fatal by default;
  *                                use --strict-links to fail on missing)
@@ -97,7 +96,7 @@ function main() {
         runSubscript('update-engine-meta.js');
     }
 
-    // 2. Manifests (package.json, pyproject.toml, installer __init__, README anchors)
+    // 2. Release-facing version anchors (README markers)
     runSubscript('sync-manifests.js');
 
     // 3. Hardlink validation — tolerant unless --strict-links

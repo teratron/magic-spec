@@ -119,7 +119,7 @@ graph TD
 
 1. **Retro L2**: Auto-run Level 2 (Full).
 2. **Changelog L2**: Present compiled release entry. **Only manual step: Yes/No approval.**
-3. **Version Bump**: Bump manifests (`package.json`, `pyproject.toml`, etc.) per changelog (Major/Minor/Patch).
+3. **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
 4. **Finalize**: Regenerate `CONTEXT.md`.
 
 ## Run Completion Checklist
@@ -135,5 +135,5 @@ Checklist — {operation}
   ☐ Handoff Integrity: Handoff chains declared by card frontmatter respected
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
-  ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, manifest bumped, CONTEXT.md updated
+  ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, engine version bumped, CONTEXT.md updated
 ```
