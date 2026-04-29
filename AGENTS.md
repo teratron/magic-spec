@@ -35,33 +35,16 @@ The project is divided into three primary logical layers:
    - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
 4. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
-## 3. Language Policy
-
-Consistency in communication and code is paramount.
-
-### 3.1 Technical Content (English ONLY)
-
-- **Codebase**: All identifiers (variables, functions, classes), comments, and docstrings.
-- **Documentation**: Technical guides, READMEs, and implementation notes.
-- **Process**: Commit messages, PR descriptions, and issue titles.
-- **Environment**: Error messages, logs, and API definitions.
-
-### 3.2 Communication (Russian)
-
-- **Chat Interaction**: Discussions, explanations, and project planning.
-- **Decision Making**: Strategic choices and high-level feature discussions.
-- **Reviews**: Conversational feedback during pair programming.
-
-## 4. Markdown Guidelines
+## 3. Markdown Guidelines
 
 - **Separators**: Avoid horizontal rules (`---`). Use them only in the footer if absolutely necessary.
 - **Links**: No hardcoded absolute links (e.g., `file:///C:/...`). Use relative paths or just backticks for filenames (e.g., `README.md`).
 
-## 5. Development Toolchain
+## 4. Development Toolchain
 
 The project uses a script-based execution model.
 
-### 5.1 Script Execution
+### 4.1 Script Execution
 
 All development tasks (metadata sync, analysis, simulation) are handled via the engine's internal scripts:
 
@@ -73,17 +56,17 @@ node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows
 /magic.analyze
 ```
 
-## 6. Python Coding Style
+## 5. Python Coding Style
 
 All Python source files must adhere to a premium and uniform visual style.
 
-### 6.1 Documentation (Google Style)
+### 5.1 Documentation (Google Style)
 
 - Use Google-style docstrings for all functions, methods, and classes.
 - Include `Args:`, `Returns:`, and `Raises:` sections where applicable.
 - Maintain `from __future__ import annotations` at the top of every file.
 
-### 6.2 Navigation & Section Blocks
+### 5.2 Navigation & Section Blocks
 
 Use consistent Unicode-based separators to improve code readability:
 
@@ -105,16 +88,16 @@ Use consistent Unicode-based separators to improve code readability:
 
 - Avoid standard standard PEP8 horizontal lines or excessive whitespace. Use Unicode box characters to create a clean, modern look.
 
-## 7. JavaScript/Node.js Coding Style
+## 6. JavaScript/Node.js Coding Style
 
 Common guidelines for Node.js scripts.
 
-### 7.1 Documentation (JSDoc)
+### 6.1 Documentation (JSDoc)
 
 - Use JSDoc for all functions, methods, and classes.
 - Include `@param`, `@returns`, and `@throws` tags where applicable.
 
-### 7.2 Navigation & Section Blocks
+### 6.2 Navigation & Section Blocks
 
 Use consistent Unicode-based separators to improve code readability:
 
@@ -134,15 +117,15 @@ Use consistent Unicode-based separators to improve code readability:
     // ───────────────────────────────────────────────────────────────────────────
     ```
 
-## 8. Windows Junction Safety
+## 7. Windows Junction Safety
 
 When managing Windows junctions (`mklink /J`) and git index, follow this strict order to prevent data loss:
 
-### 8.1 The Problem
+### 7.1 The Problem
 
 `git rm -r --cached <path>` on Windows **follows junctions** and physically deletes files in the junction target, even with `--cached`. Example: `git rm -r --cached .claude/commands` where `.claude/commands` is a junction to `workflows/` will **delete all files in `workflows/` from disk**.
 
-### 8.2 Safe Procedure
+### 7.2 Safe Procedure
 
 Always run `git rm --cached` **before** creating junctions, while the paths are empty or nonexistent:
 
@@ -159,17 +142,17 @@ git rm --cached --ignore-unmatch workflows/magic.analyze.md
 git rm -r --cached .claude/commands
 ```
 
-## 9. File Interaction Protocol
+## 8. File Interaction Protocol
 
 To prevent accidental data loss or corruption in large documents, the agent MUST follow this protocol:
 
-### 9.1 Pre-read Requirement
+### 8.1 Pre-read Requirement
 
 - **Mandatory**: Always call `read` on the target file BEFORE making any edits.
 - **Scope**: Read the entire file if it's within tool limits (800 lines) to ensure full context.
 - **Anti-Pattern**: DO NOT rely on cached or partial information from previous steps.
 
-### 9.2 Post-verify Requirement
+### 8.2 Post-verify Requirement
 
 - **Verification**: Immediately after an edit, use `read` or `bash` (grep/dir) to verify the result.
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
