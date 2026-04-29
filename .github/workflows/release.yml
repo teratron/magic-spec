@@ -1,0 +1,75 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Read version
+        id: version
+        run: echo "value=$(cat .magic/.version)" >> "$GITHUB_OUTPUT"
+
+      - name: Build release archive
+        run: |
+          python3 - <<'EOF'
+          import zipfile, os
+
+          version = open(".magic/.version").read().strip()
+          zip_name = f"magic-spec-v{version}.zip"
+          prefix   = f"magic-spec-v{version}/"
+          exclude  = {".magic/history", ".magic/tests"}
+
+          with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
+              for top in (".magic", "workflows", "skills", "rules"):
+                  for root, dirs, files in os.walk(top):
+                      fwd = root.replace(os.sep, "/")
+                      if any(fwd.startswith(ex) for ex in exclude):
+                          dirs.clear()
+                          continue
+                      dirs[:] = [
+                          d for d in dirs
+                          if not any((fwd + "/" + d).startswith(ex) for ex in exclude)
+                      ]
+                      for f in files:
+                          arc = fwd + "/" + f
+                          zf.write(arc, prefix + arc)
+
+          names = zipfile.ZipFile(zip_name).namelist()
+          print(f"Created {zip_name}: {len(names)} files, {os.path.getsize(zip_name)/1024:.1f} KB")
+          EOF
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          ZIP="magic-spec-v${VERSION}.zip"
+
+          gh release create "v${VERSION}" "${ZIP}" \
+            --title "v${VERSION}" \
+            --notes "## Installation
+
+          Download \`${ZIP}\` and extract into your project root:
+
+          \`\`\`
+          your-project/
+          ├── .magic/
+          ├── workflows/
+          ├── skills/
+          └── rules/
+          \`\`\`
+
+          Then place the workflow files in your AI agent's commands directory — see [Adapter Paths](https://github.com/${{ github.repository }}#%EF%B8%8F-adapter-paths) in the README.
+
+          Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md)"

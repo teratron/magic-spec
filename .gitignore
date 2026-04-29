@@ -33,8 +33,9 @@ uv.lock
 *.txt
 *.log
 *.tgz
+*.zip
 
-# Node installer build artifacts
+# Build artifacts
 dist/
 cache/
 temp/
@@ -55,6 +56,7 @@ CODEX.md
 .agents/workflows/*
 !.agents/workflows/
 !.agents/workflows/magic.dev.*.md
+!.github/workflows/
 !.agents/skills/
 !.agents/rules/
 .agents/skills/magic.analyze
