@@ -65,8 +65,11 @@ for entry in "${ACTIVE_AGENTS[@]}"; do
     managed_paths+=("$ag_dir/$ag_sub" "$ag_dir/skills" "$ag_dir/rules" "$ag_file")
 done
 for f in "${user_workflows[@]}"; do
-    managed_paths+=(".agents/workflows/$f" ".agents/skills/${f%.md}")
+    name="${f%.md}"
+    skill_name="${name//./-}"
+    managed_paths+=(".agents/workflows/$f" ".agents/skills/$skill_name")
 done
+managed_paths+=(".agents/rules")
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Helpers
@@ -99,7 +102,15 @@ echo "Synchronizing git index..."
 git rm -r --cached --ignore-unmatch "${managed_paths[@]}" >/dev/null 2>&1 || true
 
 # 3.4. .agents/ infrastructure
-mkdir -p .agents/workflows .agents/skills .agents/rules
+mkdir -p .agents/workflows .agents/skills
+
+echo "Creating rules symlink..."
+if [ -d "rules" ]; then
+    ln -s "../rules" ".agents/rules"
+    echo "  .agents/rules -> rules"
+else
+    mkdir -p .agents/rules
+fi
 
 # 3.5. Workflow symlinks
 echo "Creating workflow symlinks..."
@@ -112,9 +123,10 @@ done
 echo "Creating skill symlinks..."
 for f in "${user_workflows[@]}"; do
     name="${f%.md}"
-    if [ -d "skills/$name" ]; then
-        ln -s "../../skills/$name" ".agents/skills/$name"
-        echo "  .agents/skills/$name"
+    skill_name="${name//./-}" # Handle magic.rule -> magic-rule
+    if [ -d "skills/$skill_name" ]; then
+        ln -s "../../skills/$skill_name" ".agents/skills/$skill_name"
+        echo "  .agents/skills/$skill_name"
     fi
 done
 

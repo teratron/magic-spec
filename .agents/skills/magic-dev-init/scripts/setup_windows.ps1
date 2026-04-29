@@ -54,8 +54,10 @@ foreach ($ag in $activeAgents) {
 }
 foreach ($f in $userWorkflows) {
     $name = $f -replace '\.md$', ''
-    $managedPaths += ".agents\workflows\$f", ".agents\skills\$name"
+    $skillName = $name -replace '\.', '-'
+    $managedPaths += ".agents\workflows\$f", ".agents\skills\$skillName"
 }
+$managedPaths += ".agents\rules"
 
 # ───────────────────────────────────────────────────────────────────────────────
 # 2. Helpers
@@ -105,8 +107,16 @@ Write-Host "Synchronizing git index..." -ForegroundColor Cyan
 git rm -r --cached --ignore-unmatch $managedPaths 2>$null | Out-Null
 
 # 3.4. .agents/ infrastructure (must exist before agent junctions point to it)
-foreach ($d in @(".agents\workflows", ".agents\skills", ".agents\rules")) {
+foreach ($d in @(".agents\workflows", ".agents\skills")) {
     if (-not (Test-Path $d)) { New-Item -ItemType Directory -Path $d -Force | Out-Null }
+}
+
+Write-Host "Creating rules junction..." -ForegroundColor Cyan
+if (Test-Path "rules") {
+    New-Junction ".agents\rules" "rules"
+    Write-Host "  .agents\rules -> rules" -ForegroundColor Gray
+} else {
+    if (-not (Test-Path ".agents\rules")) { New-Item -ItemType Directory -Path ".agents\rules" -Force | Out-Null }
 }
 
 # 3.5. Workflow hardlinks: .agents/workflows/*.md → workflows/*.md
@@ -120,9 +130,10 @@ foreach ($f in $userWorkflows) {
 Write-Host "Creating skill junctions..." -ForegroundColor Cyan
 foreach ($f in $userWorkflows) {
     $name = $f -replace '\.md$', ''
-    if (Test-Path "skills\$name") {
-        New-Junction ".agents\skills\$name" "skills\$name"
-        Write-Host "  .agents\skills\$name" -ForegroundColor Gray
+    $skillName = $name -replace '\.', '-' # Handle magic.rule -> magic-rule
+    if (Test-Path "skills\$skillName") {
+        New-Junction ".agents\skills\$skillName" "skills\$skillName"
+        Write-Host "  .agents\skills\$skillName" -ForegroundColor Gray
     }
 }
 

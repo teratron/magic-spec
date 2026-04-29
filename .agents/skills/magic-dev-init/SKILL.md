@@ -65,7 +65,8 @@ Phases executed by the script:
 5. **Workflow links** — `workflows/*.md` → `.agents/workflows/` (hardlinks on Windows, symlinks on Unix)
 6. **Skill links** — `skills/*` → `.agents/skills/` (junctions on Windows, symlinks on Unix)
 7. **Agent links** — `.{agent}/{subdir,skills,rules}` → `.agents/` (junctions on Windows, symlinks on Unix)
-8. **Instruction links** — `{AGENT}.md` → `AGENTS.md` (hardlinks on Windows, symlinks on Unix)
+8. **Rules link** — `.agents/rules` → `rules/` (junction on Windows, symlink on Unix)
+9. **Instruction links** — `{AGENT}.md` → `AGENTS.md` (hardlinks on Windows, symlinks on Unix)
 
 ### 3. Verify
 

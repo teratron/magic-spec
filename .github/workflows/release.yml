@@ -31,6 +31,9 @@ jobs:
           exclude  = {".magic/history", ".magic/tests"}
 
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
+              for f in ("AGENTS.md", "LICENSE"):
+                  if os.path.exists(f):
+                      zf.write(f, prefix + f)
               for top in (".magic", "workflows", "skills", "rules"):
                   for root, dirs, files in os.walk(top):
                       fwd = root.replace(os.sep, "/")

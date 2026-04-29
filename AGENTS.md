@@ -55,37 +55,22 @@ Consistency in communication and code is paramount.
 ## 4. Markdown Guidelines
 
 - **Separators**: Avoid horizontal rules (`---`). Use them only in the footer if absolutely necessary.
-- **Links**: No hardcoded absolute links (e.g., `file:///C:/...`). Use relative paths or just backticks for filenames (e.g., `pyproject.toml`).
+- **Links**: No hardcoded absolute links (e.g., `file:///C:/...`). Use relative paths or just backticks for filenames (e.g., `README.md`).
 
 ## 5. Development Toolchain
 
-The project strictly adheres to **uv-first** philosophy.
+The project uses a script-based execution model.
 
-### 5.1 Virtual Environment
+### 5.1 Script Execution
 
-Always initialize and activate the environment before execution:
-
-```bash
-# Activation (Windows)
-.venv\Scripts\activate
-
-# Activation (Linux)
-source .venv/bin/activate
-
-# Initialization
-uv sync
-```
+All development tasks (metadata sync, analysis, simulation) are handled via the engine's internal scripts:
 
 ```bash
-# Linting & Formatting
-uv run ruff check --fix
-uv run ruff format
+# Update engine metadata and version (C14)
+node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}
 
-# Static Analysis
-uv run pyrefly check
-
-# Verification
-uv run pytest
+# Run project analysis
+/magic.analyze
 ```
 
 ## 6. Python Coding Style
@@ -190,23 +175,17 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
-## Completion Protocol (Mandatory Checklist)
-
-Follow this checklist before declaring a task finished:
-
-- [ ] **Validated**: All quality checks pass with zero warnings:
-  - `uv run ruff check --fix` & `uv run ruff format`
-  - `uv run pyrefly check`
-  - `uv run pytest`
+- [ ] **Validated**: All logic changes verified via simulation:
+  - `/magic.dev:simulate`
 - [ ] **Versioned**: Increment the patch version (e.g., `2.0.1` → `2.0.2`) in:
-  - `pyproject.toml`
-  - `package.json`
+  - `.magic/.version`
   - `CHANGELOG.md`
   - **Engine**: If content in `.magic/` or `workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
 - [ ] **Documented**:
   - Update `CHANGELOG.md` with a summary of changes.
   - Update `README.md` if public API or features were changed.
   - Update relevant `.design/` workspace index/specifications to reflect task completion.
-- [ ] **Synchronized**: Run `uv sync` to ensure `uv.lock` is up to date after `pyproject.toml` changes.
+- [ ] **Synchronized**: Run metadata sync to ensure integrity:
+  - `node .magic/scripts/executor.js update-engine-meta`
   - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 5 files: AGENTS, GEMINI, CLAUDE, CODEX, QWEN). If broken, run `/magic.dev:init` to restore.
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.design/INDEX.md`) haven't lost data during edits.

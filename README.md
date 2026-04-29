@@ -193,4 +193,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v2.0.0). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v2.0.4). We are constantly refining the SDD engine based on real-world usage.

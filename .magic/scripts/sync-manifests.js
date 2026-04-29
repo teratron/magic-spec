@@ -39,23 +39,6 @@ const versionFile = path.join(magicDir, '.version');
 function buildTargets(targetVersion) {
     return [
         {
-            name: 'package.json',
-            file: 'package.json',
-            edits: [{
-                regex: /"version":\s*"[^"]*"/,
-                replace: `"version": "${targetVersion}"`,
-            }],
-        },
-        {
-            name: 'pyproject.toml',
-            file: 'pyproject.toml',
-            edits: [{
-                // Match `version = "x.y.z"` at line start (TOML top-level field)
-                regex: /^version\s*=\s*"[^"]*"/m,
-                replace: `version = "${targetVersion}"`,
-            }],
-        },
-        {
             name: 'README.md',
             file: 'README.md',
             edits: [

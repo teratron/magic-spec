@@ -59,11 +59,13 @@ CODEX.md
 !.github/workflows/
 !.agents/skills/
 !.agents/rules/
-.agents/skills/magic.analyze
-.agents/skills/magic.rule
-.agents/skills/magic.run
-.agents/skills/magic.spec
-.agents/skills/magic.task
+.agents/skills/magic-analyze/
+.agents/skills/magic-rule/
+.agents/skills/magic-run/
+.agents/skills/magic-spec/
+.agents/skills/magic-task/
+.agents/rules/
+!.github/workflows/
 
 # Generated graph artifacts
 .design/spec-graph.html

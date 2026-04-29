@@ -33,7 +33,7 @@ describe('Magic Engine Scripts', () => {
                 execSync('git config user.email "test@example.com"', { cwd: tempDir, stdio: 'ignore' });
                 execSync('git config user.name "Test User"', { cwd: tempDir, stdio: 'ignore' });
                 // Initial commit with a baseline file
-                fs.writeFileSync(path.join(tempDir, 'README.md'), '# Test Project');
+                fs.writeFileSync(path.join(tempDir, 'README.md'), '# Test Project\n**Active Development** (v0.0.1)\n');
                 execSync('git add .', { cwd: tempDir, stdio: 'ignore' });
                 execSync('git commit -m "Initial commit"', { cwd: tempDir, stdio: 'ignore' });
             } catch (e) {
@@ -190,11 +190,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true); // Need git for executor.js
         try {
             // Setup manifests
-            const pkgPath = path.join(tempDir, 'package.json');
-            fs.writeFileSync(pkgPath, JSON.stringify({ name: 'test', version: '0.0.1' }, null, 2));
-
-            const pyPath = path.join(tempDir, 'pyproject.toml');
-            fs.writeFileSync(pyPath, '[project]\nversion = "0.0.1"\n');
+            // No longer using package.json or pyproject.toml
 
             // Setup template
             const templatesDir = path.join(tempDir, '.magic', 'templates');
@@ -218,11 +214,9 @@ describe('Magic Engine Scripts', () => {
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'sync.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
 
-            // Verify manifests
-            const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-            assert.strictEqual(pkg.version, '1.0.0');
-            const py = fs.readFileSync(pyPath, 'utf8');
-            assert.ok(py.includes('version = "1.0.0"'));
+            // Verify README.md (Active Development line)
+            const readme = fs.readFileSync(path.join(tempDir, 'README.md'), 'utf8');
+            assert.ok(readme.includes('**Active Development** (v1.0.0)'));
 
             // Verify documentation (CONTRIBUTING.md)
             const contributing = fs.readFileSync(path.join(tempDir, 'CONTRIBUTING.md'), 'utf8');
@@ -247,7 +241,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             fs.mkdirSync(path.join(tempDir, '.design'));
-            fs.writeFileSync(path.join(tempDir, 'package.json'), JSON.stringify({ name: "test" }));
+            // No package.json needed
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
