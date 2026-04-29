@@ -1,5 +1,5 @@
 ---
-name: magic:analyze
+name: magic.analyze
 description: Project Ventilation — audits health, registry, and rule compliance
 handoffs:
   - label: "Create specifications"

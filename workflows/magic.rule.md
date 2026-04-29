@@ -1,5 +1,5 @@
 ---
-name: magic:rule
+name: magic.rule
 description: Workflow for manually adding or amending project conventions in RULES.md.
 handoffs:
   - label: "Create spec"

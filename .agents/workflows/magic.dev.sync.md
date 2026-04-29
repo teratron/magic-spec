@@ -1,5 +1,5 @@
 ---
-name: magic.dev:sync
+name: magic.dev.sync
 description: Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata
 ---
 # Sync Workflow

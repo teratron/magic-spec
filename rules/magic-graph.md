@@ -1,4 +1,4 @@
-# magic.graph
+# Magic Workflow Graph
 
 This project has a Specification Knowledge Graph managed by `magic.graph`.
 

@@ -1,5 +1,5 @@
 ---
-name: magic.dev:simulate
+name: magic.dev.simulate
 description: Workflow for simulating and validating Magic SDD engine logic.
 handoffs:
   - label: "Simulate workflow"

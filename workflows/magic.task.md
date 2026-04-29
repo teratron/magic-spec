@@ -1,5 +1,5 @@
 ---
-name: magic:task
+name: magic.task
 description: Workflow for orchestrating tasks and generating the implementation plan.
 handoffs:
   - label: "Generate plan"

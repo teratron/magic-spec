@@ -1,4 +1,4 @@
-# Magic.graph Workflow History
+# magic.graph Workflow History
 
 | Version | Date | Description |
 | :--- | :--- | :--- |

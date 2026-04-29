@@ -64,7 +64,7 @@ node .magic/scripts/generate-checksums.js
 - Whenever an engine file (`.magic/*.md`) or history file is intentionally modified.
 - Before committing changes to the project repository.
 - After manually editing `.magic/` artifacts to resolve integrity errors or `MD012` lint warnings.
-- After a global project synchronization (`/magic.dev:sync`).
+- After a global project synchronization (`/magic.dev.sync`).
 
 ## 5. Security Note
 

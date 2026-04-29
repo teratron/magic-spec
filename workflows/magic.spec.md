@@ -1,5 +1,5 @@
 ---
-name: magic:spec
+name: magic.spec
 description: Workflow for creating and managing project specifications.
 handoffs:
   - label: "Generate tasks"

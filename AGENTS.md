@@ -154,7 +154,7 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
 - [ ] **Validated**: All logic changes verified via simulation:
-  - `/magic.dev:simulate`
+  - `/magic.dev.simulate`
 - [ ] **Versioned**: Increment the patch version (e.g., `2.0.1` → `2.0.2`) in:
   - `.magic/.version`
   - `CHANGELOG.md`

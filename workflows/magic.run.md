@@ -1,5 +1,5 @@
 ---
-name: magic:run
+name: magic.run
 description: Workflow for executing tasks from the project plan.
 handoffs:
   - label: "Generate tasks"
