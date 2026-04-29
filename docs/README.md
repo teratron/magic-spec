@@ -60,7 +60,7 @@ Once installed, Magic Spec sets up a clear separation of concerns in your projec
 ```plaintext
 your-project/
 ├── .agents/workflows/      # 🎯 Agent Entry Points (Slash Commands)
-│   └── magic.spec.md       #    → (Note: Adapters like Cursor use .cursor/rules/)
+│   └── magic.spec.md       #    → (Link or copy to your agent's command path)
 ├── .magic/                 # ⚙️ SDD Engine (Workflow logic & Scripts)
 │   ├── spec.md, task.md    #    Core logic definitions
 │   └── scripts/            #    Initialization & health-check scripts

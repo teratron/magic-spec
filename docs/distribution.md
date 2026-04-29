@@ -31,28 +31,45 @@ These are source workflow instructions that users copy into the target command d
 - `magic.spec.md` — create a new specification.
 - `magic.task.md` — decompose specifications into tasks.
 
-### 1.3. Compatibility Layer — Skills (`skills/`)
+### 1.3. Skill-based Integration (`skills/`)
 
 This directory contains workflow wrappers in the **Skills** format (each command in its own folder with a `SKILL.md`).
 
-- Provide compatibility with various AI agents (e.g., Claude Code or Gemini CLI).
+- Provide compatibility with tool-oriented AI agents (e.g., Claude Code, Antigravity, or Gemini CLI).
 - Auto-generated from `.md` files in `workflows/`.
-- Allow agents to discover available tools without parsing raw workflow files.
+- Allow agents to discover available tools as structured "skills" without parsing raw markdown files.
 
-## 2. Dev Instruments
+## 2. Choosing Your Integration Path
+
+Magic Spec provides two primary ways to expose its logic to your AI agent. You can choose the one that matches your agent's capabilities, or use both simultaneously:
+
+1. **Option A: Slash Commands (via `workflows/`)**
+   - Best for: Cursor, Windsurf, Roo Code, GitHub Copilot.
+   - Setup: Link or copy `.md` files from `workflows/` to your agent's command path (e.g., `.cursor/rules/`).
+   - Usage: Trigger via `/magic.spec`, `/magic.task`, etc.
+
+2. **Option B: Modular Tools (via `skills/`)**
+   - Best for: Claude Code, Antigravity IDE, agents supporting the MCP-like Skill protocol.
+   - Setup: Link or copy folders from `skills/` to your agent's skill/tool path.
+   - Usage: The agent discovers these as built-in tools (e.g., `magic-spec`, `magic-task`).
+
+> [!NOTE]
+> Regardless of the integration path chosen, the underlying logic remains consistent as both `workflows/` and `skills/` are synchronized with the `.magic/` engine core.
+
+## 3. Dev Instruments
 
 These files are kept in the main repository for maintainers. They are not part of the regular user release archive unless the release workflow explicitly includes them.
 
-### 2.1. Additional files in `.magic/`
+### 3.1. Additional files in `.magic/`
 
 - `simulate.md` — instructions for engine logic "simulation" (debug mode).
 - `tests/suite.md` — test scenario suite for regression checking.
 
-### 2.2. Service Workflows
+### 3.2. Service Workflows
 
 - `magic.dev.simulate.md` — command to launch simulations or tests.
 
-## 3. Internal Repository Files (Engine Core / Maintainer)
+## 4. Internal Repository Files (Engine Core / Maintainer)
 
 These files are **never distributed** to end users. They exist only in the main `magic-spec` repository and are used by maintainers for building, publishing, and synchronization.
 

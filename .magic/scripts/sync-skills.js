@@ -53,6 +53,39 @@ function extractMetadata(content, fileName) {
     return metadata;
 }
 
+/**
+ * Returns the source path shown in generated Skill wrappers.
+ *
+ * User-facing workflows may also exist under `.agents/workflows/` as local
+ * hardlink projections for development adapters. In that case, the public
+ * `workflows/` path is the canonical source users should see. Dev-only
+ * workflows remain attributed to `.agents/workflows/`.
+ *
+ * @param {string} sourcePath - Absolute workflow source path.
+ * @param {string} file - Workflow filename.
+ * @returns {string} Project-relative POSIX path for the generated marker.
+ */
+function sourceMarkerPath(sourcePath, file) {
+    const publicWorkflowPath = path.join(ROOT_DIR, 'workflows', file);
+
+    if (
+        normalizePath(sourcePath).includes('/.agents/workflows/') &&
+        fs.existsSync(publicWorkflowPath)
+    ) {
+        try {
+            const sourceHash = fs.readFileSync(sourcePath, 'utf8');
+            const publicHash = fs.readFileSync(publicWorkflowPath, 'utf8');
+            if (sourceHash === publicHash) {
+                return normalizePath(path.relative(ROOT_DIR, publicWorkflowPath));
+            }
+        } catch {
+            // Fall through to the physical source path.
+        }
+    }
+
+    return normalizePath(path.relative(ROOT_DIR, sourcePath));
+}
+
 function sync() {
     console.log('🔄 Projecting Workflows to Skill Wrappers...');
 
@@ -96,11 +129,13 @@ function sync() {
 
             mkdirSafe(targetDir);
 
+            const sourceMarker = sourceMarkerPath(sourcePath, file);
+
             const skillContent = `---
 ${frontmatterContent}
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${normalizePath(path.relative(ROOT_DIR, sourcePath))} (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${sourceMarker} (relative to workspace root) -->
 
 ${body}`;
 
@@ -158,4 +193,3 @@ if (require.main === module) {
 }
 
 module.exports = sync;
-

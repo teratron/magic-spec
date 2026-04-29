@@ -1,16 +1,7 @@
 # 🪄 Magic Spec
 
+![GitHub Release](https://img.shields.io/github/v/release/teratron/magic-spec)
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
-
-> [!WARNING]
-> **Legacy npm and PyPI packages are frozen.**
->
-> `npx magic-spec`, `uvx magic-spec`, and `pipx run magic-spec` are kept only for the legacy `1.5.x` line and will not receive new Magic Spec updates.
->
-> - npm: <https://www.npmjs.com/package/magic-spec> (last version: `1.5.207`)
-> - PyPI: <https://pypi.org/project/magic-spec/> (last version: `1.5.207`)
->
-> For current versions, use this repository and the GitHub Releases installation flow below.
 
 ## 📖 Description
 
@@ -52,7 +43,7 @@ Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything el
    └── rules/        ← copy from the release archive
    ```
 
-4. Place the workflow files in your AI agent's commands directory (see [Adapter Paths](#️-adapter-paths)).
+4. Integrate workflows or skills into your AI agent's environment (see [Integration](#-integration)).
 
 ### Option B: Manual Clone
 
@@ -86,33 +77,15 @@ To update manually:
 2. Replace `.magic/`, `workflows/`, `skills/`, and `rules/` in your project.
 3. Run `/magic.analyze` to verify synchronization.
 
-## 🗂️ Adapter Paths
+## 🔗 Integration
 
-Copy the workflow files from `workflows/` to your AI agent's commands directory:
+Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/` or `skills/` to your agent's specific configuration directory.
 
-| AI Agent / IDE | Target Directory | File Extension |
-| :--- | :--- | :--- |
-| [**Cursor**](https://cursor.com) | `.cursor/rules/` | `.mdc` |
-| [**Windsurf**](https://codeium.com/windsurf) | `.windsurf/rules/` | `.md` |
-| [**Claude Code**](https://claude.ai/code) | `.claude/commands/` | `.md` |
-| [**Gemini CLI**](https://gemini.google.com) | `.gemini/commands/` | `.toml` |
-| [**GitHub Copilot**](https://github.com/features/copilot) | `.github/prompts/` | `.prompt.md` |
-| **Roo Code** | `.roo/commands/` | `.mdc` |
-| **Amp** | `.agents/commands/` | `.md` |
-| **Amazon Q Developer** | `.amazonq/prompts/` | `.md` |
-| **Kilo Code** | `.kilocode/workflows/` | `.md` |
-| **Qwen Code** | `.qwen/commands/` | `.md` |
-| **OpenCode** | `.opencode/commands/` | `.md` |
-| **SHAI (OVHcloud)** | `.shai/commands/` | `.md` |
-| **IBM Bob** | `.bob/commands/` | `.md` |
-| **CodeBuddy** | `.codebuddy/commands/` | `.md` |
-| **Qoder IDE** | `.qoder/commands/` | `.md` |
-| **Codex CLI** | `.codex/prompts/` | `.md` |
-| **Auggie CLI** | `.augment/commands/` | `.md` |
-| **Antigravity IDE** | `.agents/workflows/` | `.md` |
-| **Lingma IDE** | `.lingma/commands/` | `.md` |
+- **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor, Windsurf, GitHub Copilot).
+- **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code, Antigravity).
 
-For detailed adapter notes, see [docs/distribution.md](./docs/distribution.md).
+> [!TIP]
+> **Flexibility**: You can choose to use either directory or both, depending on your agent's requirements. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
 
 ## 💬 Usage
 
@@ -172,7 +145,7 @@ Each command accepts optional arguments to scope the operation to a specific **w
 | :--- | :--- |
 | [**Main Documentation**](./docs/README.md) | Workflows, architecture, and advanced features |
 | [**SDD Philosophy**](./docs/conception.md) | Two-Layer Model, Integrity by Design, Self-Improving Feedback Loop |
-| [**Distribution Guide**](./docs/distribution.md) | Adapter paths, manual install, and update instructions |
+| [**Distribution Guide**](./docs/distribution.md) | Integration patterns, manual install, and update instructions |
 | [**Contributing**](./CONTRIBUTING.md) | How to develop, test, and extend the engine |
 
 ## 🛟 Support
@@ -181,7 +154,7 @@ If you encounter issues or have questions — open an [Issue](https://github.com
 
 ## 🗺️ Roadmap
 
-- [x] Multi-agent adapter system.
+- [x] Multi-agent integration system.
 - [x] Phased implementation planning.
 - [x] GitHub-based manual distribution.
 - [ ] Extended support for local-first LLM agents.

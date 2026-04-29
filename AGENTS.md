@@ -6,9 +6,9 @@ This document defines the core principles and structural hierarchy for AI agents
 
 The project is divided into three primary logical layers:
 
-### 1.1. Core Engine (`.magic/`, `workflows/`, `skills/`)
+### 1.1. Core Engine (`.magic/`, `workflows/`, `skills/`, `rules/`)
 
-- **Path**: `/.magic/` (Logic), `/workflows/` (Standard Workflows), and `/skills/` (Compatibility API).
+- **Path**: `/.magic/` (Logic), `/workflows/` (Standard Workflows), `/skills/` (Compatibility API), `/rules/` (Rules).
 - **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
