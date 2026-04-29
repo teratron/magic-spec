@@ -1,24 +1,28 @@
 ---
-name: magic.dev:graph
+name: magic-graph
 description: Specification Knowledge Graph — builds, analyzes, and visualizes the SDD artifact graph
 handoffs:
   - label: "Fix spec gaps"
-    workflow: magic.spec
+    workflow: magic-spec
     prompt: "Orphaned files or missing Implements links found. Proceed to create or amend specifications."
     condition: "gaps_detected"
   - label: "Adjust workspace boundaries"
-    workflow: magic.rule
+    workflow: magic-rule
     prompt: "Community detection found boundary drift or split suggestions. Update workspace.json or RULES.md conventions."
     condition: "boundary_drift"
   - label: "Run full ventilation"
-    workflow: magic.analyze
+    workflow: magic-analyze
     prompt: "Run full Mode C Ventilation to combine graph findings with registry, coverage, and rationale audit."
     condition: "deep_audit_needed"
 ---
 
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.graph.md (relative to workspace root) -->
+
 # Specification Knowledge Graph Workflow
 
-**Triggers:** *"Build graph"*, *"Spec graph"*, *"Visualize specs"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*
+**Analysis triggers:** *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*
+
+**HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*
 
 > **Executor:** Use `node .magic/scripts/executor.js <script>` for all commands.
 > **Read-only:** This workflow does not modify `.design/` artifacts. Findings may trigger handoffs to `magic.spec` or `magic.rule`.
@@ -57,14 +61,17 @@ Report:
 - **Oversized communities** (>25% of graph): report BFS-derived sub-cluster suggestions with proposed workspace names.
 - If Jaccard < 0.3 for any community → raise `BOUNDARY_DRIFT` advisory.
 
-### 3. Optional Outputs (on user request)
+### 3. HTML Visualization (HTML triggers only)
 
-| Command | Output |
-| :--- | :--- |
-| `build-spec-graph --html` | `.design/spec-graph.html` — interactive vis.js visualization (community coloring, node inspector, search) |
-| `build-spec-graph --json` | stdout JSON snapshot — pipe to a file for use with `diff-spec-graph` |
-| `detect-communities --json` | machine-readable community data |
-| `detect-communities --threshold 20` | custom oversized threshold (default: 25%) |
+Generated **only** when invocation matches an HTML trigger phrase. Skip this step for analysis triggers.
+
+```bash
+node .magic/scripts/executor.js build-spec-graph --html
+```
+
+Output: `.design/spec-graph.html` — interactive vis.js visualization (community coloring, node inspector, search).
+
+Inform the user: "Graph visualization saved to `.design/spec-graph.html`. Open in a browser to explore."
 
 ### 4. Advisory
 
@@ -84,5 +91,5 @@ Graph Checklist
   ☐ BOUNDARY_DRIFT advisory issued for low-Jaccard communities (if any)
   ☐ Split suggestions reported for oversized communities (if any)
   ☐ Advisory Signal (🟢/🟡/🔴) issued
-  ☐ HTML visualization generated if requested
+  ☐ [HTML only] spec-graph.html generated at .design/spec-graph.html
 ```
