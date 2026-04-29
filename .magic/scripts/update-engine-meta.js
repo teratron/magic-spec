@@ -94,7 +94,7 @@ function updateEngineMeta() {
 
         getAllFiles(zone.dir).forEach(fullPath => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
-            if (rel === '.checksums' || rel.startsWith('history/') || rel === '.version') return;
+            if (rel === '.checksums' || rel.startsWith('history/')) return;
             // State caches written by sync sub-scripts (volatile, not engine logic).
             // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
             if (VOLATILE_STATE_FILES.has(rel)) return;

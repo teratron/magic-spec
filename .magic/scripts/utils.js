@@ -11,10 +11,11 @@ const crypto = require('crypto');
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Volatile state caches written by sync sub-scripts during normal workflow
- * use. They live inside `.magic/` for locality but are NOT part of the
- * immutable engine surface — including them in `.checksums` produces
- * spurious ENGINE_INTEGRITY warnings on every user run.
+ * Files that must NOT appear in `.checksums` because they change as part of
+ * normal engine operation and would produce spurious ENGINE_INTEGRITY warnings.
+ * Covers two categories:
+ *   - Volatile state caches written by sync sub-scripts during user activity.
+ *   - Engine meta files bumped automatically on every version update.
  *
  * Consumers:
  *   - generate-checksums.js — must skip these when building the manifest.
@@ -24,6 +25,7 @@ const crypto = require('crypto');
 const VOLATILE_STATE_FILES = new Set([
     '.docs-state.json',
     '.project-meta-state.json',
+    '.version',   // bumped on every engine update; drift-detector already skips it
 ]);
 
 // ───────────────────────────────────────────────────────────────────────────
