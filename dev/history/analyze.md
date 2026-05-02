@@ -19,4 +19,4 @@
 | 1.5.140 - 1.5.159 | 2026-04-10 | Automated update via engine meta automation |
 | 1.5.171 | 2026-04-22 | P0: Confidence Taxonomy + Rationale Extraction |
 | 1.5.177 | 2026-04-23 | integrate graph scripts into analyze and retrospective workflows |
-| 1.5.182 - 2.0.17 | 2026-05-02 | Automated update via engine meta automation |
+| 1.5.182 - 2.0.18 | 2026-05-02 | Automated update via engine meta automation |

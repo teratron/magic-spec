@@ -242,9 +242,9 @@ After every successful `/magic.analyze` run (Modes A, B, C, and D — including 
 audits), update the `**Engine Version:**` field in `.design/INDEX.md` to match the current
 value of `.magic/.version`. Add the field if missing.
 
-This is the contract consumed by [`rules/magic-engine-drift.md`](../rules/magic-engine-drift.md):
-the rule auto-runs `/magic.analyze` whenever `INDEX.md` snapshot diverges from
-`.magic/.version`. Skipping this step causes the drift alert to fire indefinitely.
+This is the contract consumed by [`rules/magic.md` §2](../rules/magic.md): the rule
+auto-runs `/magic.analyze` whenever `INDEX.md` snapshot diverges from `.magic/.version`.
+Skipping this step causes the drift alert to fire indefinitely.
 
 This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
@@ -338,7 +338,7 @@ Mode C Checklist — Ventilation
 2. **Rules**: Apply via T4 protocol to `RULES.md §7`.
 3. **Dispatch**:
     - Registry Sync: Update `INDEX.md`. Bump Registry version.
-    - **Engine Snapshot**: Update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`magic-engine-drift.md`](../rules/magic-engine-drift.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
+    - **Engine Snapshot**: Update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/magic.md` §2](../rules/magic.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
     - Post-Update Review: Run on all created specs before closing.
     - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
     - **Graph Refresh**: Run `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).

@@ -71,7 +71,7 @@ copilot-instructions.md
 ## Rules
 .*/rules/
 !.agents/rules/
-.agents/rules/magic-*.md
+.agents/rules/magic*.md
 
 # Generated graph artifacts
 .design/spec-graph.html
