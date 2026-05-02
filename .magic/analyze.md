@@ -236,6 +236,18 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 - **Engine Bias**: If engine files (`.magic/`) are drifting → priority = `BLOCKER`.
 - **Confidence Breakdown**: Include a summary line: `Coverage: {extracted}% EXTRACTED, {inferred}% INFERRED, {ambiguous}% AMBIGUOUS, {uncovered}% UNCOVERED`.
 
+## Engine Snapshot Update (Mandatory, All Modes)
+
+After every successful `/magic.analyze` run (Modes A, B, C, and D — including read-only
+audits), update the `**Engine Version:**` field in `.design/INDEX.md` to match the current
+value of `.magic/.version`. Add the field if missing.
+
+This is the contract consumed by [`rules/magic-engine-drift.md`](../rules/magic-engine-drift.md):
+the rule auto-runs `/magic.analyze` whenever `INDEX.md` snapshot diverges from
+`.magic/.version`. Skipping this step causes the drift alert to fire indefinitely.
+
+This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
+
 ## Analysis Completion Checklist
 
 ```
@@ -244,6 +256,7 @@ Mode A/B Checklist — {scope}
   ☐ Multi-Pass Scan complete (Mode A meta -> Mode B structure)
   ☐ Coverage: all files mapped to spec status; Drift detection run
   ☐ Advisory Report generated with Signal and Sync Paths
+  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
 
 Mode C Checklist — Ventilation
   ☐ Self-check + Registry audit completed
@@ -253,6 +266,7 @@ Mode C Checklist — Ventilation
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
      Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
   ☐ Advisory Report includes Confidence Breakdown and Shadow Logic advisory
+  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
 ```
 
 ## Advisory Report
@@ -324,6 +338,7 @@ Mode C Checklist — Ventilation
 2. **Rules**: Apply via T4 protocol to `RULES.md §7`.
 3. **Dispatch**:
     - Registry Sync: Update `INDEX.md`. Bump Registry version.
+    - **Engine Snapshot**: Update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`magic-engine-drift.md`](../rules/magic-engine-drift.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
     - Post-Update Review: Run on all created specs before closing.
     - Context Regeneration: Run `node .magic/scripts/executor.js generate-context`.
     - **Graph Refresh**: Run `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
@@ -341,6 +356,7 @@ Analysis Checklist — Mode A/B
   ☐ Graph: export-wiki run after dispatch (skip if no dispatch occurred)
   ☐ Advisory Report appended to output
   ☐ Engine Meta: C14 bump if .magic/ files modified
+  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
 
 Analysis Checklist — Mode C: Ventilation
   ☐ Self-check complete: engine integrity status noted (non-halting)
@@ -357,6 +373,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Report delivered: all findings consolidated before any HALT
   ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)
+  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
 
 Analysis Checklist — Mode D: Focused
   ☐ Focus directive parsed and matched to project area
@@ -364,6 +381,7 @@ Analysis Checklist — Mode D: Focused
   ☐ Focused Gap Report generated for matched area only
   ☐ Advisory Report scoped to focus area
   ☐ Engine Meta: C14 not triggered (Mode D is read-only)
+  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
 ```
 
 *Examples*: `/magic.analyze "check API coverage"`, `/magic.analyze engine "focus on tests"`
