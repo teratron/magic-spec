@@ -50,6 +50,7 @@ workflows/
 ### 5.2 Wrapper Responsibilities
 
 Each wrapper file contains:
+
 1. **Trigger definitions** — command names, aliases, examples.
 2. **Argument routing** — parsing and forwarding to engine logic.
 3. **User guidance** — brief descriptions visible in IDE command palettes.

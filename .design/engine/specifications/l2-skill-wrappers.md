@@ -38,6 +38,7 @@ The workflows remain the primary source of truth. Manual modifications to genera
 ### 3.1. Automation (`sync-skills.js`)
 
 A new automation script in `.magic/scripts/sync-skills.js` will:
+
 1. Scan `workflows/` and `.agents/workflows/` for `.md` files.
 2. Extract the description from the YAML header or the first paragraph of the workflow.
 3. Generate/update the corresponding skill directories and `SKILL.md` files.

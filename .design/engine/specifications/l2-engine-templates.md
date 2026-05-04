@@ -49,6 +49,7 @@ Templates are the structural DNA of every `.design/` artifact. Changes to templa
 ### 5.2 Template Contracts
 
 Each template guarantees:
+
 - Required metadata header (`Version`, `Status`, `Layer`).
 - Required sections per RULES.md §5 (Overview, Motivation, Document History).
 - Placeholder markers for automation substitution.
