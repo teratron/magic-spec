@@ -1,8 +1,8 @@
 {
   "global": {
-    "digest": "da0da2becbbddd98f3a743beabc7c4155da0797e48c69d82ed379dbd258643ed",
-    "version": "1.2.1",
-    "date": "2026-04-29"
+    "digest": "965542cdea8ada0cdc8308637c21cfd7a6eced903b2ae16a5337f0cd85db8459",
+    "version": "1.2.2",
+    "date": "2026-05-04"
   },
   "workspace:engine": {
     "digest": "8b267ba1533589b693235198d8813e64c5b0788b22bd7fb1d5ac6d4473fb4e7c",

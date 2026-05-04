@@ -136,4 +136,4 @@ When user input contains a standing-rule signal ("remember that...", "project ru
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-29 (v2.0.8).
+Synchronized with engine workflows on 2026-05-04 (v2.0.20).

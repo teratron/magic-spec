@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.2.1
+**Version:** 1.2.2
 **Status:** Active
 **Engine Version:** 2.0.18
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.2.2 | 2026-05-04 | Agent | Automated metadata update |
 | 1.2.1 | 2026-04-29 | Agent | Automated metadata update |
 | 1.2.0 | 2026-04-29 | Agent | Removed archived legacy distribution workspace after GitHub distribution migration |
 | 1.1.1 | 2026-04-29 | Agent | Automated metadata update |

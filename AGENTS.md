@@ -13,7 +13,7 @@ The project is divided into three primary logical layers:
 - **Constraints**:
   - These directories are **read-only** for standard tasks.
   - Any changes here modify the workflow engine itself.
-  - These files are distributed via GitHub Releases (see `rules/version-check.md`).
+  - These files are distributed via GitHub Releases (see `rules/magic.md`).
 
 ### 1.2. Design Workspace (`.design/`)
 

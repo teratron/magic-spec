@@ -186,7 +186,7 @@ Source code may contain design rationale in structured comments that are not cap
 8. **Documentation & Version Audit**:
     - Check if `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
-    - Verify `rules/version-check.md` points users to GitHub Releases and the current manual update folders.
+    - Verify `rules/magic.md` points users to GitHub Releases and the current manual update folders.
     - Report drift as `DOC_SYNC` warning: "Documentation/version drift detected. Recommend running `/magic.dev.sync`."
 9. **Scope Blind-Spot Check** (multi-workspace projects): Compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 10. **Rule Validation**: Check `RULES.md §7` compliance (e.g., C15 adapter registry check).

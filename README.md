@@ -69,7 +69,7 @@ skills/
 
 ## 🔄 Updating
 
-Magic Spec includes a built-in version-check rule (`rules/version-check.md`). Your AI agent will automatically compare `.magic/.version` against the latest GitHub release at the start of each session and prompt you when an update is available.
+Magic Spec includes a built-in version-check rule (`rules/magic.md`). Your AI agent will automatically compare `.magic/.version` against the latest GitHub release at the start of each session and prompt you when an update is available.
 
 To update manually:
 
@@ -176,4 +176,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v2.0.8). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v2.0.20). We are constantly refining the SDD engine based on real-world usage.
