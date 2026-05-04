@@ -5,6 +5,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.19] - 2026-05-04
+
+### Changed
+
+- **`rules/magic.md`**: Synchronized the **Completion Protocol (Mandatory Checklist)** with `AGENTS.md` and global rules. Added technical language policy (English), communication policy (Russian), formatting rules, and workflow-specific validation/versioning/synchronization steps.
+
 ## [2.0.18] - 2026-05-02
 
 ### Added
@@ -25,6 +31,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.8] - 2026-04-29
 
 ### Fixed
+
 - Completed the GitHub-only distribution cleanup by removing the archived `.design/installers` workspace.
 - Restored the README legacy package freeze notice for npm and PyPI users.
 - Removed active installer-era references from workflows, skills, docs, engine scripts, tests, and design metadata.
@@ -33,18 +40,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [2.0.3] - 2026-04-29
 
 ### Added
+
 - **Automated Release Workflow**: New `magic.dev.release` workflow and `.agents/skills/magic-dev-release/scripts/release.js` script to handle validation, tagging, and pushing in a single command.
 - **Universal Release Command**: `node .magic/scripts/executor.js release` now triggers the full release sequence.
 
 ## [2.0.2] - 2026-04-29
 
 ### Changed
+
 - **Testing Infrastructure**: Updated engine tests to align with manifest removal and script-based versioning.
 - **Project Sync**: Improved `sync-manifests.js` robustness and README anchoring.
 
 ## [2.0.1] - 2026-04-29
 
 ### Fixed
+
 - **Sync Logic**: Resolved syntax errors in `sync-manifests.js` and `update-engine-meta.js` following the v2.0.0 transition.
 
 ## [2.0.0] - 2026-04-29

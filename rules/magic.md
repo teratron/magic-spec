@@ -115,10 +115,12 @@ This project has a Specification Knowledge Graph managed by `magic.graph`.
 - `/magic.graph` + *"Visualize graph"* / *"Graph HTML"* — generates
   `.design/spec-graph.html` (interactive vis.js visualization).
 
-### Completion Protocol
+### Completion Protocol (Mandatory Checklist)
 
-Before declaring a task finished that involved spec or architecture changes:
+Before finishing any task, the agent MUST verify the following:
 
+- [ ] **Engine Version**: Verified local `.magic/.version` against remote release (once per day/first session).
+- [ ] **Engine Drift**: Checked for drift and ran `/magic.analyze` if local engine version differed from `.design/INDEX.md` snapshot.
 - [ ] **Graph**: verify the spec graph is current:
   - **Context**: ran `build-spec-graph` before answering architecture questions.
   - **Navigation**: used `wiki/index.md` (if exists) instead of raw spec files.
