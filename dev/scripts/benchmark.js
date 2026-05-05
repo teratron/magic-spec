@@ -38,11 +38,11 @@ function numArg(flag, def) {
     return Number.isFinite(v) && v > 0 ? v : def;
 }
 
-const BFS_DEPTH  = numArg('--depth', 2);
-const TOP_SEEDS  = numArg('--top', 5);
+const BFS_DEPTH = numArg('--depth', 2);
+const TOP_SEEDS = numArg('--top', 5);
 const JSON_OUTPUT = args.includes('--json');
 
-const rootDir    = process.cwd();
+const rootDir = process.cwd();
 const { designAbs } = resolveDesignRoot(rootDir);
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -85,7 +85,7 @@ const SKIP_DIRS = new Set([
 ]);
 
 const SOURCE_EXTENSIONS = new Set(['.js', '.py', '.ts', '.go', '.rs', '.java', '.c', '.cpp', '.h']);
-const DOC_EXTENSIONS    = new Set(['.md', '.txt', '.rst']);
+const DOC_EXTENSIONS = new Set(['.md', '.txt', '.rst']);
 
 /**
  * Recursively scans a directory for files matching a set of extensions.
@@ -137,7 +137,7 @@ function loadGraph() {
     for (const n of nodes.keys()) adjacency.set(n, []);
     for (const edge of raw.edges) {
         if (adjacency.has(edge.from)) adjacency.get(edge.from).push(edge.to);
-        if (adjacency.has(edge.to))   adjacency.get(edge.to).push(edge.from);
+        if (adjacency.has(edge.to)) adjacency.get(edge.to).push(edge.from);
     }
 
     return { nodes, edges: raw.edges, analysis: raw.analysis || {}, adjacency };
@@ -294,7 +294,7 @@ function main() {
 
     process.stderr.write('[benchmark] Scanning corpus...\n');
     const corpus = benchRawCorpus();
-    const specs  = benchSpecLayer();
+    const specs = benchSpecLayer();
 
     // Use top god-nodes as query seeds (most representative queries)
     const seeds = [...graph.nodes.values()]
