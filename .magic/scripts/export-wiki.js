@@ -168,7 +168,6 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- [[${specSlug(t)}|${t.label}]]`);
         }
-        lines.push('');
     }
 
     // Canonical references (covers)
@@ -178,7 +177,6 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- \`${t.label}\``);
         }
-        lines.push('');
     }
 
     // Enforced conventions
@@ -188,7 +186,7 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- ${t.label}`);
         }
-        lines.push('');
+
     }
 
     // Reverse: specs that implement this one
@@ -198,7 +196,6 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- [[${specSlug(t)}|${t.label}]]`);
         }
-        lines.push('');
     }
 
     lines.push('');
@@ -239,7 +236,6 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
             const tagStr = tags.length ? ` _(${tags.join(', ')})_` : '';
             lines.push(`- [[${specSlug(s)}|${s.label}]]${tagStr}`);
         }
-        lines.push('');
     }
 
     const bridges = bridgeSpecs.filter(b => (b.workspaces || []).includes(ws.label));
@@ -249,7 +245,6 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
         for (const b of bridges) {
             lines.push(`- ${b.label} → ${b.workspaces.join(', ')}`);
         }
-        lines.push('');
     }
 
     lines.push('');
@@ -277,7 +272,6 @@ function renderIndex(workspaces, specs, analysis, specsByWs) {
         const count = (specsByWs.get(ws.label) || []).length;
         lines.push(`- [[${workspaceSlug(ws)}|${ws.label}]] — ${count} specs`);
     }
-    lines.push('');
 
     if (analysis && Array.isArray(analysis.god_nodes) && analysis.god_nodes.length) {
         lines.push('## God Nodes', '');
@@ -289,7 +283,6 @@ function renderIndex(workspaces, specs, analysis, specsByWs) {
             }
             lines.push(`- ${g.label} — ${g.degree} edges (${g.type})`);
         }
-        lines.push('');
     }
 
     if (analysis && Array.isArray(analysis.orphaned_files) && analysis.orphaned_files.length) {
@@ -302,7 +295,6 @@ function renderIndex(workspaces, specs, analysis, specsByWs) {
         if (Array.isArray(orphanedConv) && orphanedConv.length) {
             lines.push(`- **${orphanedConv.length} convention(s)** not enforced by any spec.`);
         }
-        lines.push('');
     }
 
     lines.push('');
@@ -328,7 +320,7 @@ function writeAtomic(absPath, content) {
     catch (err) {
         if (err.code === 'EPERM' || err.code === 'EBUSY') {
             fs.copyFileSync(tmp, absPath);
-            try { fs.unlinkSync(tmp); } catch (_) {}
+            try { fs.unlinkSync(tmp); } catch (_) { }
         } else {
             throw err;
         }
@@ -344,7 +336,7 @@ function pruneWiki(dir) {
     if (!fs.existsSync(dir)) return;
     for (const name of fs.readdirSync(dir)) {
         if (name.endsWith('.md')) {
-            try { fs.unlinkSync(path.join(dir, name)); } catch (_) {}
+            try { fs.unlinkSync(path.join(dir, name)); } catch (_) { }
         }
     }
 }
