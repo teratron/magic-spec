@@ -18,7 +18,7 @@
 
 ```
 Phase {N}: [{filled}/{total}] ████░░░░ {pct}%
-Overall:   [{done}/{all}]    ██░░░░░░ {pct}%
+Overall:   [{done}/{all}]     ██░░░░░░ {pct}%
 ```
 
 ## Recent Decisions
