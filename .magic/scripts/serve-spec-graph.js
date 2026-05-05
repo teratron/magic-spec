@@ -71,8 +71,8 @@ function loadGraph() {
     for (const n of nodes.keys()) adjacency.set(n, []);
 
     for (const edge of edges) {
-        if (adjacency.has(edge.from)) adjacency.get(edge.from).push({ id: edge.to,   relation: edge.relation });
-        if (adjacency.has(edge.to))   adjacency.get(edge.to).push({ id: edge.from, relation: edge.relation });
+        if (adjacency.has(edge.from)) adjacency.get(edge.from).push({ id: edge.to, relation: edge.relation });
+        if (adjacency.has(edge.to)) adjacency.get(edge.to).push({ id: edge.from, relation: edge.relation });
     }
 
     return { nodes, edges, analysis: raw.analysis || {}, adjacency };
@@ -176,7 +176,7 @@ const TOOLS = [
             type: 'object',
             properties: {
                 query: { type: 'string', description: 'Case-insensitive substring to match against node label or id. Empty string returns all.' },
-                type:  { type: 'string', enum: ['workspace', 'spec', 'file', 'convention', 'phase'], description: 'Filter by node type (optional).' },
+                type: { type: 'string', enum: ['workspace', 'spec', 'file', 'convention', 'phase'], description: 'Filter by node type (optional).' },
                 limit: { type: 'number', description: 'Max results to return (default: 20).', default: 20 },
                 token_budget: { type: 'number', description: 'Approximate token budget for serialized output (default: 2000). Uses chars = tokens × 4 heuristic; output truncated with explicit sentinel.', default: 2000 },
             },
@@ -220,7 +220,7 @@ const TOOLS = [
             required: ['from', 'to'],
             properties: {
                 from: { type: 'string', description: 'Source node id.' },
-                to:   { type: 'string', description: 'Target node id.' },
+                to: { type: 'string', description: 'Target node id.' },
             },
         },
     },
@@ -288,10 +288,10 @@ function dispatchTool(name, args, graph) {
 
             case 'find_gaps': {
                 const gaps = {
-                    orphaned_files:       analysis.orphaned_files || [],
-                    missing_implements:   analysis.missing_implements || [],
+                    orphaned_files: analysis.orphaned_files || [],
+                    missing_implements: analysis.missing_implements || [],
                     orphaned_conventions: (analysis.convention_coverage && analysis.convention_coverage.orphaned) || [],
-                    bridge_specs:         analysis.bridge_specs || [],
+                    bridge_specs: analysis.bridge_specs || [],
                 };
                 return { content: [{ type: 'text', text: JSON.stringify(gaps, null, 2) }] };
             }
@@ -410,7 +410,7 @@ function main() {
 
     rl.on('close', () => process.exit(0));
 
-    process.on('SIGINT',  () => process.exit(0));
+    process.on('SIGINT', () => process.exit(0));
     process.on('SIGTERM', () => process.exit(0));
 }
 

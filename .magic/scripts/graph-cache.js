@@ -143,13 +143,13 @@ function saveCached(absPath, result, designAbs, rootDir = designAbs) {
             // Windows fallback: rename may fail (EPERM/EBUSY) on locked files.
             if (err.code === 'EPERM' || err.code === 'EBUSY') {
                 fs.copyFileSync(tmp, entry);
-                try { fs.unlinkSync(tmp); } catch (_) {}
+                try { fs.unlinkSync(tmp); } catch (_) { }
             } else {
                 throw err;
             }
         }
     } catch (err) {
-        try { fs.unlinkSync(tmp); } catch (_) {}
+        try { fs.unlinkSync(tmp); } catch (_) { }
         throw err;
     }
 }
@@ -169,7 +169,7 @@ function clearCache(designAbs) {
     let removed = 0;
     for (const f of fs.readdirSync(dir)) {
         if (!f.endsWith('.json')) continue;
-        try { fs.unlinkSync(path.join(dir, f)); removed += 1; } catch (_) {}
+        try { fs.unlinkSync(path.join(dir, f)); removed += 1; } catch (_) { }
     }
     return removed;
 }
