@@ -157,4 +157,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-04 (v2.0.20).
+Synchronized with engine workflows on 2026-05-05 (v2.0.23).

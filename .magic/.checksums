@@ -25,7 +25,7 @@
   "scripts/detect-communities.js": "406d5b7fcc519d648b2627cd3632f5b61f1ef9a25b00d9ee01d45e6e0f316976",
   "scripts/diff-spec-graph.js": "76007897e67abde0f1d44ce1c08cee7f11bc900fc0055d417201b2a2a09f996f",
   "scripts/executor.js": "95492ecec5d2533fb5789b28f82dfd642db898e0bd94465973431e7ec0738e1e",
-  "scripts/export-wiki.js": "0528abf59a71d4b0f2fd60311665482dd246dd6a71e80807d6e7974539e95885",
+  "scripts/export-wiki.js": "c05179f3b3c18bc11a3fc5597bca5b8664cfabb77ce6786454ad849aeaf46409",
   "scripts/extract-rationale.js": "39a84bfdd9e5f387f5ca5a7abc01fda694e0711bc2590ad3a0d387ba526022d1",
   "scripts/generate-checksums.js": "65281fb1cf4249d194c000eaad49304160a148d55acb57703ca729c1d3c743a8",
   "scripts/generate-context.js": "2f7618121c31f356b7fcb96ab4e16fac9f983e04a64c72ab83dbe5aedc5860b1",

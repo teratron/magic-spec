@@ -2,29 +2,29 @@
   "workflows": {
     "magic.analyze.md": {
       "hash": "c16b7e0390b6ff59472759ad28523b6346c48ab4b5be1db317b3ddf1b416c908",
-      "version": "2.0.20",
-      "syncedAt": "2026-05-04"
+      "version": "2.0.23",
+      "syncedAt": "2026-05-05"
     },
     "magic.rule.md": {
       "hash": "c9b503169e67a217c386f1ffba8e6ed3d9d74cd39ba6eaba1ccf295ad16fadf7",
-      "version": "2.0.20",
-      "syncedAt": "2026-05-04"
+      "version": "2.0.23",
+      "syncedAt": "2026-05-05"
     },
     "magic.run.md": {
       "hash": "d14b10f9e0d94879059861865b3e32691842401568734828b465da03a0ced3ed",
-      "version": "2.0.20",
-      "syncedAt": "2026-05-04"
+      "version": "2.0.23",
+      "syncedAt": "2026-05-05"
     },
     "magic.spec.md": {
       "hash": "81803e562a741f2925ee57b61d3c0cd1fb7ea4d5c52a5fa804d3360938e1c57b",
-      "version": "2.0.20",
-      "syncedAt": "2026-05-04"
+      "version": "2.0.23",
+      "syncedAt": "2026-05-05"
     },
     "magic.task.md": {
       "hash": "ba54d16775361ca97b8a085c4b28d01290ae88c3ff5d97c64cfa582fd175face",
-      "version": "2.0.20",
-      "syncedAt": "2026-05-04"
+      "version": "2.0.23",
+      "syncedAt": "2026-05-05"
     }
   },
-  "contributing": "0652ea733290d621e025f30af484a5ec1b3368c16041d8fe510ea0b26e161f86"
+  "contributing": "9362c64c82ee3760d91a801fe13f5342b563d107b9bbfca0497e3b1bbb99070c"
 }
