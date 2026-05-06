@@ -11,6 +11,7 @@
 #   pwsh -NoProfile -File setup_windows.ps1 claude qwen  # Claude + Qwen
 
 param(
+    [Parameter(ValueFromRemainingArguments = $true)]
     [string[]]$Agents = @()
 )
 

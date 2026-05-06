@@ -1,22 +1,20 @@
 # Magic Spec — Agent Rules
 
-Consolidated operational rules for AI agents working in a project that uses the
-magic-spec engine. This file replaces the previous per-concern rule files
-(`magic-version-check.md`, `magic-engine-drift.md`, `magic-graph.md`).
-
-Sections are independent; an agent should apply each one according to its own trigger.
+Consolidated operational rules for AI agents in projects using the magic-spec engine.
+Sections are independent — apply each by its own trigger.
 
 ## 1. Engine Version Check (Local ↔ Remote)
 
-When starting work in a project that uses magic-spec, verify the installed engine is
-current with the upstream release.
+Run once at the start of the first session per day. Compares the local engine to the
+upstream release.
 
 ### Procedure
 
 1. Read local version from `.magic/.version`.
-2. Fetch the remote version:
+2. Fetch the remote version from
    `https://raw.githubusercontent.com/teratron/magic-spec/master/.magic/.version`
-3. Compare. If `local < remote`, display:
+   (timeout ≤ 3 s; on failure proceed silently).
+3. If `local < remote`, display:
 
    > [!TIP]
    > A newer magic-spec version is available.
@@ -27,41 +25,25 @@ current with the upstream release.
    > Manual update: replace `.magic/`, `workflows/`, `skills/`, `rules/` in your project
    > with the corresponding folders from the new release archive.
 
-4. If versions match or the remote is unreachable, proceed silently.
-
-### Frequency
-
-Run once per day at the start of the first session in a project. Do not run this
-check on every command invocation.
-
-### Notes
-
-- The remote fetch should time out gracefully (≤ 3 s) to avoid blocking offline work.
-- Versions follow semantic versioning (`major.minor.patch`). A higher numeric value
-  in any segment (left to right) means a newer release.
+4. If versions match, proceed silently.
 
 ## 2. Engine Drift Auto-Analyze (Local ↔ Snapshot)
 
-When the SDD engine has been updated (any change in `.magic/.version`, including patch),
-the project must be re-analyzed before continuing work to detect drift introduced by
-the new engine semantics.
-
-This complements §1: §1 compares the **local** engine against the **remote** GitHub
-release; §2 compares the **local** engine against the **last analyzed** state of the
-project.
+Re-run `/magic.analyze` whenever the local engine differs from the project's last
+analyzed state. Complements §1: §1 compares local against the **remote** release;
+§2 compares local against the **last analyzed** snapshot in this project.
 
 ### Procedure
 
-Run this check at the start of **every** `/magic.*` workflow invocation, except
-`/magic.analyze` itself (avoid recursion).
+Run at the start of **every** `/magic.*` invocation except `/magic.analyze` (would
+recurse). Trigger on **any** segment difference — `major`, `minor`, **and `patch`**;
+patch releases routinely carry behavior-affecting changes.
 
 1. Read `local_engine` from `.magic/.version`.
-2. Read `snapshot_engine` from the `**Engine Version:**` field in `.design/INDEX.md`.
-   - If the field is missing → treat snapshot as `unknown` and trigger analysis.
-3. Compare:
-   - `local_engine == snapshot_engine` → proceed silently.
-   - `local_engine != snapshot_engine` (any segment differs) → **drift detected**.
-4. On drift, emit this notice **before** running anything else:
+2. Read `snapshot_engine` from the `**Engine Version:**` field in `.design/INDEX.md`
+   (missing field → treat as `unknown` and trigger analysis).
+3. If `local_engine == snapshot_engine` → proceed silently.
+4. On mismatch, emit this notice **before** running anything else:
 
    > [!WARNING]
    > SDD engine version changed: `{snapshot_engine}` → `{local_engine}`.
@@ -70,59 +52,43 @@ Run this check at the start of **every** `/magic.*` workflow invocation, except
    > workflow-affecting changes.
    > Interrupt now (Ctrl+C / cancel) if you must skip, then resume the original command.
 
-5. Auto-execute `/magic.analyze` (full scope, no arguments).
-6. After analysis completes successfully, the analyze workflow updates the
-   `**Engine Version:**` snapshot in `.design/INDEX.md` to `local_engine`.
-7. Resume the originally requested workflow with its original arguments.
-
-### Granularity
-
-Trigger on **any** version difference: `major`, `minor`, **and `patch`**. Patch
-releases in this engine routinely carry behavior-affecting changes; do not skip them.
+5. Auto-execute `/magic.analyze` (full scope, no arguments). On success it updates
+   the `**Engine Version:**` snapshot in `.design/INDEX.md` to `local_engine` —
+   this is the **only** path that updates the field; manual edits must not touch it.
+6. Resume the originally requested workflow with its original arguments.
 
 ### Exemptions
 
-- `/magic.analyze` — would recurse; the rule is bypassed when this is the entry workflow.
-- Engine bootstrap when `.design/` does not yet exist — `init.md` runs first; the
-  snapshot is written by the first `/magic.analyze` invocation.
+- `/magic.analyze` itself (would recurse).
+- Engine bootstrap before `.design/` exists — `init.md` runs first; the snapshot is
+  written by the first `/magic.analyze` invocation.
 - Offline / unreadable `.magic/.version` — skip silently, do not block work.
-
-### Notes
-
-- The snapshot is **only** updated by a successful `/magic.analyze` run. Manual edits
-  to `.design/INDEX.md` should not touch this field.
 
 ## 3. Specification Knowledge Graph
 
-This project has a Specification Knowledge Graph managed by `magic.graph`.
+The Specification Knowledge Graph is managed by `magic.graph`.
 
 ### Auto-Use
 
-- Before answering architecture, cross-module, or design questions, run
-  `node .magic/scripts/executor.js build-spec-graph` and read its output for god
-  nodes, community structure, and coverage stats.
-- If `.design/wiki/index.md` exists, navigate it instead of reading raw spec files.
-- For "how does X relate to Y" or "what covers Z" questions, prefer
-  `node .magic/scripts/executor.js build-spec-graph --json` over grep — it traverses
-  Implements links and canonical references.
-- After modifying or creating files in `.design/` in this session, run
-  `node .magic/scripts/executor.js export-wiki` to keep the graph current.
+- Before architectural / cross-module / "how does X relate to Y" / "what covers Z"
+  questions, run `node .magic/scripts/executor.js build-spec-graph` (add `--json`
+  for structured traversal). Read its god nodes, communities, coverage stats.
+- If `.design/wiki/index.md` exists, navigate it instead of raw spec files.
+- After creating or modifying any file in `.design/` during this session, run
+  `node .magic/scripts/executor.js export-wiki` to refresh the graph.
 
 ### On-Demand
 
-- `/magic.graph` — full analysis: god nodes, orphaned files, missing Implements,
+- `/magic.graph` — full analysis: god nodes, orphans, missing Implements,
   community detection, advisory signal.
-- `/magic.graph` + *"Visualize graph"* / *"Graph HTML"* — generates
-  `.design/spec-graph.html` (interactive vis.js visualization).
+- `/magic.graph` + *"Visualize graph"* / *"Graph HTML"* → renders
+  `.design/spec-graph.html` (interactive vis.js).
 
 ## 4. Finalization Protocol (Post-Workflow)
 
-After any `/magic.spec`, `/magic.task`, `/magic.run`, or `/magic.rule` workflow completes its main steps and before its Completion Checklist, the agent MUST run the Finalization Protocol.
-
-### Trigger Scope
-
-Run after: `/magic.spec`, `/magic.task`, `/magic.run`, `/magic.rule`.
-Do NOT run after: `/magic.analyze`, `/magic.graph`, `/magic.dev.*` (read-only or system workflows).
+After `/magic.spec`, `/magic.task`, `/magic.run`, or `/magic.rule` complete their
+main steps and **before** their Completion Checklist, run finalize. Skip for
+`/magic.analyze`, `/magic.graph`, `/magic.dev.*` (read-only / system workflows).
 
 ### Procedure
 
@@ -132,94 +98,84 @@ Do NOT run after: `/magic.analyze`, `/magic.graph`, `/magic.dev.*` (read-only or
    node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule>
    ```
 
-2. The script detects significant changes to whitelisted artifacts (specifications, PLAN.md, TASKS.md, RULES.md, task files, STATE.md). If changes are found:
-   - Bumps the project patch version in `.design/.version`.
-   - Appends an entry to the root `CHANGELOG.md` (Keep a Changelog format).
-   - Prints a suggested commit message in Conventional Commits format.
+2. The script detects significant changes to whitelisted artifacts. On hit, it
+   bumps `.design/.version`, appends a Keep-a-Changelog entry to root `CHANGELOG.md`,
+   and prints a Conventional Commits message. On no hit, prints
+   `⏭️ No significant changes detected` and exits 0.
 
 3. **Display the entire script stdout verbatim** to the user in a fenced block.
 
-4. **HARD RULE**: The agent MUST NOT call `git commit`, `git add`, or any write-side git operation. The commit is always the user's decision.
+4. **HARD RULE**: The agent MUST NOT call `git commit`, `git add`, or any write-side
+   git operation. The commit is always the user's decision.
 
 5. If the script exits non-zero → emit a WARNING but do not block the Completion Checklist.
 
 ### Opt-Out
 
-| Method | Effect |
-| :--- | :--- |
-| `MAGIC_FINALIZE=0` env var | Disables globally (highest precedence) |
-| `finalization.enabled = false` in `.design/workspace.json` | Disables for the project |
-| `--dry-run` flag | Preview without writing anything |
-| `--no-bump`, `--no-changelog`, `--no-commit-msg` | Disable individual sub-steps |
+`MAGIC_FINALIZE=0` (env, highest precedence) · `finalization.enabled = false` in
+`.design/workspace.json` (project-wide) · `--dry-run` (preview) · `--no-bump`,
+`--no-changelog`, `--no-commit-msg` (per-step disable).
 
 ### Significance Whitelist
 
-Only these artifact changes trigger a version bump:
-
-| Workflow | Whitelisted artifacts |
+| Workflow | Paths that count |
 | :--- | :--- |
 | `magic.spec` | `.design/{ws}/specifications/**/*.md`, `.design/{ws}/INDEX.md` |
-| `magic.task` | `.design/{ws}/PLAN.md`, `.design/{ws}/TASKS.md`, `.design/{ws}/tasks/**/*.md` |
-| `magic.run` | `.design/{ws}/TASKS.md` (status-line changes only), `.design/{ws}/STATE.md`, `.design/{ws}/archives/**`, `.design/{ws}/tasks/**/*.md` |
+| `magic.task` | `.design/{ws}/PLAN.md`, `TASKS.md`, `tasks/**/*.md` |
+| `magic.run` | `.design/{ws}/TASKS.md` (status-line changes only), `STATE.md`, `archives/**`, `tasks/**/*.md` |
 | `magic.rule` | `.design/RULES.md`, `.design/{ws}/RULES.md` |
 
-If no whitelisted artifacts changed → script prints `⏭️ No significant changes detected` and exits 0. No bump, no CHANGELOG entry.
+### Channels
 
-### Separation of Concerns
-
-- `.design/engine/CHANGELOG.md` — internal phase journal written by `magic.run` Phase Completion (`Changelog L1`). Not touched by this protocol.
-- Root `CHANGELOG.md` — user-facing release notes. Written by this protocol after any of the four triggering workflows.
+`.design/engine/CHANGELOG.md` is `magic.run`'s internal phase journal (not touched
+here). Root `CHANGELOG.md` is user-facing release notes — written by this protocol.
 
 ## 5. Phase Archival Automation
 
-Completed phase task files are automatically archived to reduce active context size.
-This prevents accumulating multi-hundred-line phase checklists in agent context across
-sessions.
+Completed phase files are auto-archived as part of `magic.run`'s finalize, to keep
+active context lean.
 
-### What triggers archival
+### How it triggers
 
-Archival runs **automatically** as part of the Finalization Protocol (`magic.run`):
-
-1. The user completes all tasks in a phase (all checkboxes `[x]` in `tasks/phase-{N}.md`).
-2. The workflow sets `status: Done` in the phase file's YAML frontmatter.
-3. `node .magic/scripts/executor.js finalize --workflow=run` runs (mandatory post-phase step).
-4. `finalize.js` calls `archive-phases` internally — no extra command needed.
-
-### What archival does
-
-1. Detects `tasks/phase-{N}.md` files where `status: Done` and no `- [ ]` remain.
-2. Moves them to `archives/tasks/phase-{N}.md` (rename, not copy — preserves full history).
-3. Updates link references in `TASKS.md` from `tasks/phase-{N}.md` to `archives/tasks/phase-{N}.md`
-   and marks the row as `Done (Archived)`.
-
-### On-demand (manual)
-
-```bash
-node .magic/scripts/executor.js archive-phases           # archive all eligible phases
-node .magic/scripts/executor.js archive-phases --dry-run  # preview without writing
-```
+Archival runs **automatically** when `finalize --workflow=run` invokes `archive-phases`
+internally — no extra command. Conditions: `tasks/phase-{N}.md` has `status: Done`
+in YAML frontmatter **and** no remaining `- [ ]` items. The phase file is then
+**moved** (rename, not copy) to `archives/tasks/phase-{N}.md`, and `TASKS.md`
+link references are rewritten with the row marked `Done (Archived)`.
 
 ### Exemptions
 
-- Phases with any remaining `- [ ]` items are never archived.
-- Phases with `status` ≠ `Done` in YAML frontmatter are never archived.
-- Already-archived files (present in `archives/tasks/`) are skipped silently.
-- Archive can be disabled project-wide: `archival.enabled = false` in `.design/workspace.json`.
+- Any remaining `- [ ]` items, or `status` ≠ `Done` → never archived.
+- Already-archived files (under `archives/tasks/`) are skipped silently.
+- Project-wide disable: `archival.enabled = false` in `.design/workspace.json`.
 
-### Notes
+### On-demand
 
-- The pre-commit hook issues a notice (non-blocking) if unarchived Done phases are detected,
-  reminding the user to run `/magic.run` or `executor.js archive-phases`.
-- Archived files retain full Markdown content — they are not deleted or truncated.
-- Token-economy impact: each archived phase removes ~150–250 lines from the active task context.
+```bash
+node .magic/scripts/executor.js archive-phases            # archive all eligible
+node .magic/scripts/executor.js archive-phases --dry-run  # preview only
+```
 
-### Completion Protocol (Mandatory Checklist)
+### Note
 
-Before finishing any task, the agent MUST verify the following:
+The pre-commit hook issues a non-blocking notice if unarchived Done phases are
+detected — reminds the user to run `/magic.run` or `archive-phases` directly.
 
-- [ ] **Engine Version**: Verified local `.magic/.version` against remote release (once per day/first session).
-- [ ] **Engine Drift**: Checked for drift and ran `/magic.analyze` if local engine version differed from `.design/INDEX.md` snapshot.
-- [ ] **Graph**: verify the spec graph is current:
-  - **Context**: ran `build-spec-graph` before answering architecture questions.
-  - **Navigation**: used `wiki/index.md` (if exists) instead of raw spec files.
-  - **Updated**: ran `export-wiki` if `.design/` files were modified.
+## 6. Completion Protocol (Mandatory Checklist)
+
+Before finishing any task that involved magic-spec workflows, verify §1–§5 were honored.
+
+- [ ] **§1 Version Check** — verified `.magic/.version` against the remote release
+      (once per day, first session); displayed the upgrade notice on `local < remote`.
+- [ ] **§2 Drift** — compared local `.magic/.version` to the `**Engine Version:**`
+      snapshot in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`);
+      auto-ran `/magic.analyze` on mismatch, then resumed the original workflow.
+- [ ] **§3 Spec Graph** — ran `build-spec-graph` before architectural questions;
+      navigated `.design/wiki/index.md` (if present) instead of raw spec files;
+      ran `export-wiki` after any `.design/` change this session.
+- [ ] **§4 Finalization** — after `/magic.spec|task|run|rule`, ran
+      `executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**;
+      did **not** invoke any write-side `git` operation (`add`, `commit`, etc.).
+- [ ] **§5 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
+      phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
+      references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.
