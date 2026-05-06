@@ -115,6 +115,61 @@ This project has a Specification Knowledge Graph managed by `magic.graph`.
 - `/magic.graph` + *"Visualize graph"* / *"Graph HTML"* — generates
   `.design/spec-graph.html` (interactive vis.js visualization).
 
+## 4. Finalization Protocol (Post-Workflow)
+
+After any `/magic.spec`, `/magic.task`, `/magic.run`, or `/magic.rule` workflow completes its main steps and before its Completion Checklist, the agent MUST run the Finalization Protocol.
+
+### Trigger Scope
+
+Run after: `/magic.spec`, `/magic.task`, `/magic.run`, `/magic.rule`.
+Do NOT run after: `/magic.analyze`, `/magic.graph`, `/magic.dev.*` (read-only or system workflows).
+
+### Procedure
+
+1. Execute:
+
+   ```bash
+   node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule>
+   ```
+
+2. The script detects significant changes to whitelisted artifacts (specifications, PLAN.md, TASKS.md, RULES.md, task files, STATE.md). If changes are found:
+   - Bumps the project patch version in `.design/.version`.
+   - Appends an entry to the root `CHANGELOG.md` (Keep a Changelog format).
+   - Prints a suggested commit message in Conventional Commits format.
+
+3. **Display the entire script stdout verbatim** to the user in a fenced block.
+
+4. **HARD RULE**: The agent MUST NOT call `git commit`, `git add`, or any write-side git operation. The commit is always the user's decision.
+
+5. If the script exits non-zero → emit a WARNING but do not block the Completion Checklist.
+
+### Opt-Out
+
+| Method | Effect |
+| :--- | :--- |
+| `MAGIC_FINALIZE=0` env var | Disables globally (highest precedence) |
+| `finalization.enabled = false` in `.design/workspace.json` | Disables for the project |
+| `--dry-run` flag | Preview without writing anything |
+| `--no-bump`, `--no-changelog`, `--no-commit-msg` | Disable individual sub-steps |
+
+### Significance Whitelist
+
+Only these artifact changes trigger a version bump:
+
+| Workflow | Whitelisted artifacts |
+| :--- | :--- |
+| `magic.spec` | `.design/{ws}/specifications/**/*.md`, `.design/{ws}/INDEX.md` |
+| `magic.task` | `.design/{ws}/PLAN.md`, `.design/{ws}/TASKS.md`, `.design/{ws}/tasks/**/*.md` |
+| `magic.run` | `.design/{ws}/TASKS.md` (status-line changes only), `.design/{ws}/STATE.md`, `.design/{ws}/archives/**`, `.design/{ws}/tasks/**/*.md` |
+| `magic.rule` | `.design/RULES.md`, `.design/{ws}/RULES.md` |
+
+If no whitelisted artifacts changed → script prints `⏭️ No significant changes detected` and exits 0. No bump, no CHANGELOG entry.
+
+### Separation of Concerns
+
+- `.design/engine/CHANGELOG.md` — internal phase journal written by `magic.run` Phase Completion (`Changelog L1`). Not touched by this protocol.
+- Root `CHANGELOG.md` — user-facing release notes. Written by this protocol after any of the four triggering workflows.
+
 ### Completion Protocol (Mandatory Checklist)
 
 Before finishing any task, the agent MUST verify the following:

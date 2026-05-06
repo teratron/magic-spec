@@ -69,7 +69,7 @@ function updateEngineMeta() {
 
     if (anyChanged) {
         if (checkOnly) {
-            console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+            console.error('❌ Engine drift detected. Run `node dev/scripts/executor.js update-engine-meta` to resolve.');
             process.exit(1);
         }
 
@@ -78,8 +78,13 @@ function updateEngineMeta() {
         // Ensure Skill wrappers are also in sync (C14 §3 Compatibility).
         // Fail-fast: if projection breaks, the engine state is inconsistent —
         // surface the error to the caller instead of silently bumping checksums.
-        const syncSkills = require('./sync-skills');
-        syncSkills();
+        const syncSkillsPath = path.join(__dirname, '../../dev/scripts/sync-skills.js');
+        if (fs.existsSync(syncSkillsPath)) {
+            const syncSkills = require(syncSkillsPath);
+            syncSkills();
+        } else {
+            console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
+        }
 
         runGenerateChecksums();
         console.log('✅ Engine metadata and version updated.');
@@ -117,7 +122,7 @@ function bumpVersion() {
  * Executes the checksum generation script.
  */
 function runGenerateChecksums() {
-    const scriptPath = path.join(__dirname, 'generate-checksums.js');
+    const scriptPath = path.join(__dirname, '../../dev/scripts/generate-checksums.js');
     execSync(`node "${scriptPath}"`, { stdio: 'inherit' });
 }
 

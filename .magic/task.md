@@ -152,6 +152,23 @@ Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stal
 
 **Read-side tip (planning):** before building the dependency matrix in Step 3, prefer reading `.design/wiki/index.md` and per-spec wiki articles over scanning every raw spec file. The wiki gives layer/status/version/refs at ~10× lower token cost than full spec reads. Fall back to direct `.design/specifications/` reads only when wiki is absent or `WIKI_STALE` was reported by the most recent `analyze` Mode C run.
 
+## Finalization Protocol (Mandatory)
+
+After all workflow steps (including Context Regeneration and Graph Refresh) and **before** the Completion Checklist:
+
+1. Run:
+
+   ```bash
+   node .magic/scripts/executor.js finalize --workflow=task
+   ```
+
+2. The script outputs either `✅ Finalization complete` (version bump, CHANGELOG entry, suggested commit message) or `⏭️ No significant changes detected`.
+3. **Display the entire output verbatim** to the user inside a fenced block.
+4. **Hard rule**: DO NOT call `git commit`, `git add`, or any write-side git command. The user reviews the suggested message and commits manually.
+5. Script exit non-zero → emit WARNING, **do not block** the Completion Checklist.
+
+**Opt-out:** `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
+
 ## Task Completion Checklist
 
 ```

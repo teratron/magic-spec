@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.0.26] - 2026-05-06
+
+### Added
+
+- **Finalization Protocol**: New post-workflow automation for `/magic.spec`, `/magic.task`, `/magic.run`, `/magic.rule`. After each significant workflow invocation the engine now automatically (a) bumps the user project's patch version in `.design/.version`, (b) appends an entry to the root `CHANGELOG.md` in Keep-a-Changelog format, and (c) prints a Conventional Commits suggested message to the agent for relay to the user. The agent never auto-commits — the commit is always the user's decision.
+- **`finalize.js`** — new executor script (`node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule>`). Supports `--dry-run`, `--no-bump`, `--no-changelog`, `--no-commit-msg`, `--force`. Kill-switch via `MAGIC_FINALIZE=0` env var.
+- **`lib/project-version.js`** — read/parse/bump/write `.design/.version` (SemVer patch, initial `0.1.0`).
+- **`lib/significance.js`** — hard-whitelist artifact detector: uses `git diff` (fallback: SHA snapshot) to determine whether changes are significant enough to trigger finalization. Per-workflow artifact whitelists; `magic.run` also checks TASKS.md status-line diffs.
+- **`lib/changelog-writer.js`** — idempotent Keep-a-Changelog mutator. Creates missing CHANGELOG, inserts bullets under `[Unreleased]`, renames to `[X.Y.Z] - YYYY-MM-DD` on version bump. Falls back to prepend-with-marker for non-standard CHANGELOG files.
+- **`lib/commit-suggester.js`** — template-based Conventional Commits generator from git diff context. Machine-readable body optimised for AI agent `git log` consumption.
+- **`lib/git-utils.js`** — read-only git wrappers (`changedPaths`, `fileNumstat`, `fileStatus`, `headSha`). Never calls write-side git commands.
+- **`rules/magic.md §4 Finalization Protocol`** — agent rules covering trigger scope, procedure, opt-out knobs, significance whitelist, and separation of concerns (root CHANGELOG vs internal phase journal).
+- **`finalization` config block in `.design/workspace.json`** — per-project opt-out and path overrides.
+
+### Changed
+
+- **`.magic/spec.md`, `.magic/task.md`, `.magic/run.md`, `.magic/rule.md`**: Added `## Finalization Protocol (Mandatory)` section before each workflow's Completion Checklist.
+- **`workflows/magic.{spec,task,run,rule}.md`**: Added `Finalization` hint bullet to wrapper files; skills auto-synced via C14.
+- **`scripts/utils.js`**: Added `.finalize-state.json` to `VOLATILE_STATE_FILES` so it is excluded from engine checksums.
+- **Engine version**: `2.0.25` → `2.0.26`.
+
 ## [2.0.19] - 2026-05-04
 
 ### Changed

@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { writeFileSafe } = require('./utils');
+const { writeFileSafe } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOCUMENTATION SYNC — Real Content Sync, Not Version Stamping

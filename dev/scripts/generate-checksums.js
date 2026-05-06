@@ -1,12 +1,12 @@
 const fs = require('fs');
 const path = require('path');
-const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe, VOLATILE_STATE_FILES } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe, VOLATILE_STATE_FILES } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
 // ═══════════════════════════════════════════════════════════════════════════
 
-const MAGIC_DIR = path.join(__dirname, '..');
+const MAGIC_DIR = path.join(__dirname, '../../.magic');
 const CHECKSUMS_FILE = '.checksums';
 const CHECKSUMS_PATH = path.join(MAGIC_DIR, CHECKSUMS_FILE);
 

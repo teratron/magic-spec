@@ -10,25 +10,31 @@ const fs = require('fs');
  * Pipeline order:
  *
  *   1. update-engine-meta     — bumps .magic/.version when engine drifted
- *   2. sync-manifests         — propagates version into anchored
- *                                README markers
+ *                                (.magic/scripts/ — also used by user hook)
+ *   2. sync-manifests         — propagates version into anchored README markers
+ *                                (dev/scripts/)
  *   3. validate-hardlinks     — ensures CLAUDE/GEMINI/QWEN/CODEX share
  *                                AGENTS.md inode (non-fatal by default;
  *                                use --strict-links to fail on missing)
+ *                                (dev/scripts/)
  *   4. update-project-meta    — idempotent: bumps INDEX version + appends
  *                                history row only when structural digest
  *                                actually changed
+ *                                (.magic/scripts/)
  *   5. sync-docs              — regenerates CONTRIBUTING from template,
  *                                propagates Triggers/Slash command into
  *                                docs/{name}.md, refreshes Sync Note only
  *                                on real workflow-source change
+ *                                (dev/scripts/)
  *
  * Skip flags: --skip-meta, --skip-docs, --skip-links
  * Strict mode: --strict-links (missing CLAUDE/GEMINI/etc. is fatal)
  * Dry run:    --dry-run (no physical writes; honored by writeFileSafe)
  */
 
-const magicDir = path.join(__dirname);
+const devScriptsDir = __dirname;
+const magicScriptsDir = path.join(__dirname, '../../.magic/scripts');
+
 const rawArgs = process.argv.slice(2);
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -63,27 +69,29 @@ const strictLinks = rawArgs.includes('--strict-links');
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Executes a sub-sync script. The dry-run flag is propagated via the
- * MAGIC_DRY_RUN environment variable (inherited by child processes).
+ * Executes a sub-sync script by absolute path. The dry-run flag is propagated
+ * via the MAGIC_DRY_RUN environment variable (inherited by child processes).
  *
- * @param {string} name - Sub-script filename (relative to magicDir).
+ * @param {string} scriptPath - Absolute path to the script.
  * @param {string[]} [extraArgs=[]] - Extra CLI args to forward.
  * @param {{ tolerant?: boolean }} [opts] - When tolerant, non-zero exit
  *        does not abort the pipeline (used for hardlink validation).
  */
-function runSubscript(name, extraArgs = [], opts = {}) {
-    const scriptPath = path.join(magicDir, name);
-    if (!fs.existsSync(scriptPath)) return;
+function runScript(scriptPath, extraArgs = [], opts = {}) {
+    if (!fs.existsSync(scriptPath)) {
+        console.warn(`⚠️  Script not found, skipping: ${scriptPath}`);
+        return;
+    }
 
     const argString = extraArgs.length ? ' ' + extraArgs.map(a => `"${a}"`).join(' ') : '';
     try {
         execSync(`node "${scriptPath}"${argString}`, { stdio: 'inherit' });
     } catch (e) {
         if (opts.tolerant) {
-            console.warn(`⚠️  Sub-script ${name} exited non-zero (tolerant).`);
+            console.warn(`⚠️  ${path.basename(scriptPath)} exited non-zero (tolerant).`);
             return;
         }
-        console.error(`❌ Sub-script ${name} failed.`);
+        console.error(`❌ ${path.basename(scriptPath)} failed.`);
         process.exit(1);
     }
 }
@@ -91,29 +99,29 @@ function runSubscript(name, extraArgs = [], opts = {}) {
 function main() {
     console.log('🚀 Starting lifecycle synchronization...');
 
-    // 1. Engine meta + version
+    // 1. Engine meta + version (stays in .magic/scripts/ — also used by user pre-commit hook)
     if (!rawArgs.includes('--skip-meta')) {
-        runSubscript('update-engine-meta.js');
+        runScript(path.join(magicScriptsDir, 'update-engine-meta.js'));
     }
 
     // 2. Release-facing version anchors (README markers)
-    runSubscript('sync-manifests.js');
+    runScript(path.join(devScriptsDir, 'sync-manifests.js'));
 
     // 3. Hardlink validation — tolerant unless --strict-links
     if (!rawArgs.includes('--skip-links')) {
-        runSubscript(
-            'validate-hardlinks.js',
+        runScript(
+            path.join(devScriptsDir, 'validate-hardlinks.js'),
             strictLinks ? ['--strict'] : [],
             { tolerant: !strictLinks }
         );
     }
 
     // 4. Project meta (idempotent: only bumps INDEX when structural digest changes)
-    runSubscript('update-project-meta.js');
+    runScript(path.join(magicScriptsDir, 'update-project-meta.js'));
 
     // 5. Docs (CONTRIBUTING + docs/*.md content sync)
     if (!rawArgs.includes('--skip-docs')) {
-        runSubscript('sync-docs.js');
+        runScript(path.join(devScriptsDir, 'sync-docs.js'));
     }
 
     const tail = dryRun ? '(dry-run — no files modified)' : 'COMPLETED.';

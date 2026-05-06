@@ -1,5 +1,13 @@
 {
   "default": "engine",
+  "finalization": {
+    "enabled": true,
+    "autoBump": true,
+    "autoChangelog": true,
+    "suggestCommit": true,
+    "changelogPath": "CHANGELOG.md",
+    "versionPath": ".design/.version"
+  },
   "workspaces": {
     "engine": {
       "description": "Magic SDD core engine logic, workflows, rules, and history.",

@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, writeFileSafe, mkdirSafe, isDryRun } = require('./utils');
+const { normalizePath, writeFileSafe, mkdirSafe, isDryRun } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SCRIPT: SYNC-SKILLS

@@ -35,6 +35,7 @@ Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 i
 - Plan generation, task decomposition, and execution orchestration.
 Execution is handled by `magic.run`. Specification authoring is handled by `magic.spec`. Rule governance is handled by `magic.rule`.
 Pipeline: `magic.spec` → `magic.task` → `magic.run`
+- **Finalization**: After plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/task.md`
 > Read that file before proceeding. Do not execute any steps until it is read.

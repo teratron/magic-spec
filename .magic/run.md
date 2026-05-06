@@ -122,6 +122,25 @@ graph TD
 3. **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
 4. **Finalize**: Regenerate `CONTEXT.md`.
 
+## Finalization Protocol (Mandatory)
+
+After all workflow steps (including Phase Completion or Plan Completion) and **before** the Completion Checklist:
+
+1. Run:
+
+   ```bash
+   node .magic/scripts/executor.js finalize --workflow=run
+   ```
+
+2. The script outputs either `✅ Finalization complete` (version bump, CHANGELOG entry, suggested commit message) or `⏭️ No significant changes detected`.
+3. **Display the entire output verbatim** to the user inside a fenced block.
+4. **Hard rule**: DO NOT call `git commit`, `git add`, or any write-side git command. The user reviews the suggested message and commits manually.
+5. Script exit non-zero → emit WARNING, **do not block** the Completion Checklist.
+
+**Opt-out:** `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
+
+> **Note**: `Changelog L1` (in Phase Completion) appends to `.design/engine/CHANGELOG.md` — the internal phase journal. This Finalization Protocol appends to the **root** `CHANGELOG.md` — the user-facing release notes. They serve different audiences and do not conflict.
+
 ## Run Completion Checklist
 
 ```

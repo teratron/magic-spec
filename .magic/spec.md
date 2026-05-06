@@ -288,6 +288,25 @@ Compares specs vs. project filesystem and engine integrity.
 | Config Sync | Project configuration files match declared spec metadata? |
 | **Engine Integrity** | `.magic/` match `.checksums`? → **HALT** if mismatch. Hint: use `init` or `update-engine-meta`. |
 
+### Finalization Protocol (Mandatory)
+
+After all workflow steps (including Graph Refresh) and **before** the Completion Checklist:
+
+1. Run:
+
+   ```bash
+   node .magic/scripts/executor.js finalize --workflow=spec
+   ```
+
+2. The script outputs either `✅ Finalization complete` (version bump, CHANGELOG entry, suggested commit message) or `⏭️ No significant changes detected`.
+3. **Display the entire output verbatim** to the user inside a fenced block.
+4. **Hard rule**: DO NOT call `git commit`, `git add`, or any write-side git command. The user reviews the suggested message and commits manually.
+5. Script exit non-zero → emit WARNING, **do not block** the Completion Checklist.
+
+**Opt-out:** `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
+
+> **Note for `magic.run` Phase Completion**: `Changelog L1` in run.md appends to `.design/engine/CHANGELOG.md` (internal phase journal). This protocol appends to the **root** `CHANGELOG.md` (user-facing release notes). They are separate documents and do not conflict.
+
 ### Task Completion Checklist
 
 **Must be shown after every spec task.**

@@ -25,6 +25,7 @@ const crypto = require('crypto');
 const VOLATILE_STATE_FILES = new Set([
     '.docs-state.json',
     '.project-meta-state.json',
+    '.finalize-state.json',   // post-workflow Finalization Protocol state
     '.version',   // bumped on every engine update; drift-detector already skips it
 ]);
 

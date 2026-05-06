@@ -25,6 +25,8 @@ handoffs:
 Automatic rule capture during spec work is handled by `magic.spec`. Rule changes feed into `magic.task` (plan updates) and `magic.run` (execution).
 Pipeline context: `magic.rule` governs conventions used across `magic.spec` → `magic.task` → `magic.run`.
 
+- **Finalization**: After writing RULES.md, run `node .magic/scripts/executor.js finalize --workflow=rule` and display output verbatim. Never auto-commit. See `.magic/rule.md §Finalization Protocol`.
+
 > **Full implementation:** `.magic/rule.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
 > **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.

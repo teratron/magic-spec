@@ -24,6 +24,7 @@ handoffs:
 - **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
 - **T4 Rule Capture**: When input contains "remember that..." / "project rule:", spec workflow applies Tier Routing (global vs workspace RULES.md) and Duplication Check before writing — see §T4 Inline Guards in full implementation.
 - **Pipeline:** `magic.spec` → `magic.task` → `magic.run` (orchestration by `magic.task`, execution by `magic.run`)
+- **Finalization**: After dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/spec.md` · Skill: `skills/magic-spec/SKILL.md`
 > Read that file before proceeding. Do not execute any steps until it is read.
