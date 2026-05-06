@@ -43,7 +43,7 @@ Parse the `[arg]` to determine the planning mode:
     - **User Gate**: In **Trust Mode (C9)**, automatically generate and write the Plan & Checklist without asking for a "Go" confirm. Show a summary of the generated plan to the user.
     - **Zero-Prompt handoff**: After writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
-6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow task` (Smart History: redundant automated entries are skipped).
+6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 7. **Architectural Logic**:
     - **Circular Guard (Semantic Split)**:
         - **Hard Dependencies** (`Implements:` chains, L2→L1): Deep scan across ALL levels. If ANY cycle detected → **HALT**. These are blocking dependencies that define build/planning order.

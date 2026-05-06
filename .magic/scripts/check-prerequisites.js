@@ -56,7 +56,7 @@ if (fs.existsSync(checksumsFile)) {
             warn(
                 'ENGINE_INTEGRITY',
                 `'.magic/${f}' has been modified locally.`,
-                'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'
+                'node .magic/scripts/executor.js update-engine-meta'
             );
         }
     } catch (e) {
@@ -66,7 +66,7 @@ if (fs.existsSync(checksumsFile)) {
     warn(
         'ENGINE_INTEGRITY',
         "'.magic/.checksums' is missing.",
-        'node .magic/scripts/executor.js update-engine-meta --workflow {workflow}'
+        'node .magic/scripts/executor.js update-engine-meta'
     );
 }
 

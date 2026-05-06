@@ -15,7 +15,7 @@ Universal process for managing project specifications in `.design/specifications
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. If unformatted/active implementation code is detected → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
-4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow spec` (Smart History: redundant automated entries are skipped).
+4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **Linking**: Every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 6. **Status**: Assign Draft/RFC/Stable/Deprecated. Follow transitions (D->R->S).
 7. **Dispatch**: Use "Raw Input" flow for unstructured ideas.

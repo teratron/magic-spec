@@ -263,7 +263,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] check-prerequisites reports `checksums_mismatch` for `spec.md`
   - [ ] **HALT** — do NOT proceed with simulation
   - [ ] Report mismatched files to user
-  - [ ] **Hint Provided**: Agent suggests `update-engine-meta --workflow {wf}` to restore integrity.
+  - [ ] **Hint Provided**: Agent suggests `update-engine-meta` to restore integrity.
   - [ ] Options: confirm changes were intentional (sync meta) OR restore from origin.
   - [ ] Simulation resumes only after user response
 - **Guards tested:** Checksums mismatch HALT (Step 0)
@@ -928,14 +928,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - Agent modifies `.agents/workflows/magic.dev.simulate.md` to add a new guideline.
   - `.magic/.version` is `1.4.11`.
-  - `dev/history/simulate.md` exists.
 - **Action:** Agent performs the edit.
 - **Expected:**
   - [ ] Agent identifies that a core engine file was modified.
-  - [ ] Agent executes: `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
+  - [ ] Agent executes: `node .magic/scripts/executor.js update-engine-meta`.
   - [ ] **Automated Verifications:**
     - [ ] `.magic/.version` bumped to `1.4.12`.
-    - [ ] `dev/history/simulate.md` contains a new row for `1.4.12`.
     - [ ] `.magic/.checksums` is recalculated.
   - [ ] Results documented in the task completion checklist.
 - **Guards tested:** C1, C14, Engine Integrity Guard (via meta automation).
@@ -1081,21 +1079,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Crucial**: After specs are approved, the agent automatically proposes a Plan/Task for "Feature X" using the newly generated specs.
   - [ ] Intent "Feature X" is NOT lost during the mapping/bootstrapping of existing code.
 - **Guards tested:** Context Continuity, Intent Preservation.
-
-### T67 — Engine Meta Auto-Heal (History Resilience)
-
-- **Workflow:** `executor.js` (update-engine-meta)
-- **Synthetic State:**
-  - `.magic/spec.md` modified (checksum mismatch).
-  - `dev/history/spec.md` is MISSING from disk.
-- **Action:** Run `node .magic/scripts/executor.js update-engine-meta --workflow spec`.
-- **Expected:**
-  - [ ] Executor detects missing history file.
-  - [ ] **Action**: Executor creates a new `history/spec.md` with proper Markdown headers.
-  - [ ] Version is bumped in `.version`.
-  - [ ] Checksums regenerated in `.checksums`.
-  - [ ] Report confirms restoration: "History file RESTORED (Auto-Heal)".
-- **Guards tested:** Automated Restoration, Kernel Integrity (C1).
 
 ### T68 — Ghost Registry Repair Priority (Non-Destructive Boot)
 
@@ -1965,7 +1948,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Agent reaches Reporting step
 - **Expected:**
   - [ ] C14 Enforcement Gate fires: "were any `.magic/` files modified during this `/magic.simulate` invocation?"
-  - [ ] Answer: yes (`spec.md` patched) → `update-engine-meta --workflow simulate` runs
+  - [ ] Answer: yes (`spec.md` patched) → `update-engine-meta` runs
   - [ ] `.version` bumped, `.checksums` regenerated
   - [ ] Only AFTER checksums match does the agent present results
   - [ ] If agent skips Gate and reports first → **FAIL**
@@ -2307,7 +2290,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `check-prerequisites` reports `checksums_mismatch` for `run.md`
   - [ ] **HALT** — no simulation proceeds
-  - [ ] Report includes recovery hint: `update-engine-meta --workflow {mismatched_workflow}` or restore from origin
+  - [ ] Report includes recovery hint: `update-engine-meta` or restore from origin
   - [ ] Agent does NOT fall through to any mode
 - **Guards tested:** Simulate pre-flight HALT with actionable recovery hint
 

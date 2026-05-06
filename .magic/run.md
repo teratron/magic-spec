@@ -44,7 +44,7 @@ Parse the `[arg]` to determine the execution mode:
       `node .magic/scripts/executor.js update-state --workspace={dir} --status=Blocked`
       Inform user: "⚠ Phase blocked. Session state saved. Run /magic.pause to create full handoff, or fix blockers and run /magic.run to continue."
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
-6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow run` (Smart History: redundant automated entries are skipped).
+6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 
 ## Execution Setup
 

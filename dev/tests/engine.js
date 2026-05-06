@@ -17,7 +17,7 @@ describe('Magic Engine Scripts', () => {
         fs.mkdirSync(path.join(tempDir, '.magic'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'templates'), { recursive: true });
-        fs.mkdirSync(path.join(tempDir, 'dev', 'history'), { recursive: true });
+        fs.mkdirSync(path.join(tempDir, 'dev'), { recursive: true });
 
         fs.readdirSync(scriptsDir).forEach(script => {
             const src = path.join(scriptsDir, script);
@@ -257,13 +257,9 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
     // 5. executor.js
     // ───────────────────────────────────────────────────────────────────────────
-    test('executor.js should bump version and update history', () => {
+    test('executor.js should bump version on engine change', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            // Setup history
-            const historyFile = path.join(tempDir, 'dev', 'history', 'init.md');
-            fs.writeFileSync(historyFile, '# Hist\n| Version | Date | Desc |\n| :--- | :--- | :--- |\n| 1.0.0 | 2024-01-01 | Old |\n');
-
             // update-engine-meta bails early when .checksums is missing (initializes and returns).
             // Seed checksums so the bump branch is exercised.
             const checksumScript = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
@@ -273,15 +269,11 @@ describe('Magic Engine Scripts', () => {
             fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), '\n// drift\n');
 
             const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
-            execSync(`node "${executorPath}" update-engine-meta --workflow init --message "Bumped"`, { cwd: tempDir });
+            execSync(`node "${executorPath}" update-engine-meta`, { cwd: tempDir });
 
             const versionFile = path.join(tempDir, '.magic', '.version');
             const newVersion = fs.readFileSync(versionFile, 'utf8').trim();
             assert.strictEqual(newVersion, '1.0.1');
-
-            const updatedHistory = fs.readFileSync(historyFile, 'utf8');
-            assert.ok(updatedHistory.includes('1.0.1'));
-            assert.ok(updatedHistory.includes('Bumped'));
         } finally {
             cleanup(tempDir);
         }
