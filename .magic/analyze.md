@@ -193,6 +193,12 @@ Source code may contain design rationale in structured comments that are not cap
 11. **Auto-Repair suggest**: Suggest commands for missing specs, registry cleanup, or **Task Sync**.
     - If registry healing is needed (Registry Gaps/Orphans) → Propose `magic.spec --audit --fix`.
     - If Shadow Logic detected → Suggest `magic.spec create {module}` for files with ≥3 uncovered rationale comments.
+    - **Bloat Advisory**: Run `node .magic/scripts/executor.js check-bloat --json`. Report any issues as advisory signals (non-halting, token-economy concern):
+      - `SPEC_BLOAT` — spec file > 300 lines → suggest splitting into focused L2 specs.
+      - `SPEC_DECOMPOSE` — spec file > 500 lines → recommend immediate decomposition.
+      - `TASK_BLOAT` — task phase file > 250 lines → suggest decomposing into sub-tasks.
+      - `TASK_DECOMPOSE` — task phase file > 400 lines → recommend splitting the phase.
+      Include bloat summary in the Advisory Report under **Spec Quality**.
 12. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 13. **Advisory**: Generate Advisory Report (see §Advisory Report) for the audited scope.
 
@@ -369,6 +375,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
+  ☐ Bloat Advisory: check-bloat.js executed; SPEC_BLOAT/TASK_BLOAT signals included in Advisory Report
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Report delivered: all findings consolidated before any HALT
   ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)

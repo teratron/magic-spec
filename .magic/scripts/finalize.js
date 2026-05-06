@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+'use strict';
+
 const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, isDryRun } = require('./utils');
@@ -5,6 +8,7 @@ const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-ve
 const { computeSignificance } = require('./lib/significance');
 const { createIfMissing, appendBullet, releaseUnreleased } = require('./lib/changelog-writer');
 const { buildCommitMessage, deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
+const { archiveCompletedPhases } = require('./lib/phase-archiver');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FINALIZATION PROTOCOL (Post-Workflow Orchestrator)
@@ -187,6 +191,7 @@ function emitSuccess(ctx) {
     const {
         workflow, workspace, previous, next,
         files, gitAvailable, changelogResult, commitMsg,
+        archivedPhases,
         opts,
     } = ctx;
 
@@ -218,6 +223,15 @@ function emitSuccess(ctx) {
     for (const f of files) {
         const numstat = (f.added || f.deleted) ? ` (+${f.added} -${f.deleted})` : '';
         lines.push(`- \`${f.path}\` [${f.status}]${numstat}`);
+    }
+
+    if (archivedPhases && archivedPhases.length > 0) {
+        lines.push(``);
+        lines.push(`### Archived phases`);
+        lines.push(``);
+        for (const { file, name } of archivedPhases) {
+            lines.push(`- \`${file}\`${name ? ` — ${name}` : ''} → \`archives/tasks/${file}\``);
+        }
     }
 
     if (!opts.noCommitMsg && commitMsg) {
@@ -327,6 +341,23 @@ function main() {
         }
     }
 
+    // ── Phase archival (magic.run only) ─────────────────────────────────────
+    let archivedPhases = [];
+    if (opts.workflow === 'run') {
+        try {
+            const wsDir = process.env.MAGIC_DESIGN_DIR
+                ? path.resolve(projectRoot, process.env.MAGIC_DESIGN_DIR)
+                : path.join(designAbs, workspace);
+            const archiveResult = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
+            archivedPhases = archiveResult.archived;
+            if (archiveResult.skipped.length > 0) {
+                console.warn(`⚠  Phase archival: skipped ${archiveResult.skipped.length} already-archived file(s).`);
+            }
+        } catch (e) {
+            console.warn(`⚠  Phase archival warning: ${e.message}`);
+        }
+    }
+
     // ── Commit message ──────────────────────────────────────────────────────
     let commitMsg = null;
     if (config.suggestCommit && !opts.noCommitMsg) {
@@ -348,6 +379,7 @@ function main() {
         gitAvailable: sig.gitAvailable,
         changelogResult,
         commitMsg,
+        archivedPhases,
         opts,
     });
 

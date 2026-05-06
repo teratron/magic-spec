@@ -4,5 +4,15 @@
     "main": {
       "description": "Primary project workspace"
     }
+  },
+  "finalization": {
+    "enabled": true,
+    "autoBump": true,
+    "autoChangelog": true,
+    "suggestCommit": true
+  },
+  "archival": {
+    "enabled": true,
+    "archiveDir": "archives/tasks"
   }
 }

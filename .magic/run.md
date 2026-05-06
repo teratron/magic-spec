@@ -114,6 +114,11 @@ graph TD
       - Set `duration_minutes` = elapsed time from first In Progress → last Done (if trackable).
       - `node .magic/scripts/executor.js update-state --workspace={dir}
          --decision="Phase {N} complete. Provides: {summary of provides}"`
+    - **Phase Archive**: Auto-archival runs automatically as part of the Finalization Protocol.
+      `finalize --workflow=run` detects `tasks/phase-{N}.md` files where `status: Done` and all
+      checklist items are checked, then moves them to `archives/tasks/` and updates `TASKS.md`
+      link references. No manual step required.
+    - **Actionable Outcome**: After archival, show: `[Archive] Phase {N} archived → archives/tasks/phase-{N}.md`.
 
 ### Plan Completion (Succession Loop)
 

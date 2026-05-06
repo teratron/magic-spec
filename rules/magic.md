@@ -170,6 +170,49 @@ If no whitelisted artifacts changed → script prints `⏭️ No significant cha
 - `.design/engine/CHANGELOG.md` — internal phase journal written by `magic.run` Phase Completion (`Changelog L1`). Not touched by this protocol.
 - Root `CHANGELOG.md` — user-facing release notes. Written by this protocol after any of the four triggering workflows.
 
+## 5. Phase Archival Automation
+
+Completed phase task files are automatically archived to reduce active context size.
+This prevents accumulating multi-hundred-line phase checklists in agent context across
+sessions.
+
+### What triggers archival
+
+Archival runs **automatically** as part of the Finalization Protocol (`magic.run`):
+
+1. The user completes all tasks in a phase (all checkboxes `[x]` in `tasks/phase-{N}.md`).
+2. The workflow sets `status: Done` in the phase file's YAML frontmatter.
+3. `node .magic/scripts/executor.js finalize --workflow=run` runs (mandatory post-phase step).
+4. `finalize.js` calls `archive-phases` internally — no extra command needed.
+
+### What archival does
+
+1. Detects `tasks/phase-{N}.md` files where `status: Done` and no `- [ ]` remain.
+2. Moves them to `archives/tasks/phase-{N}.md` (rename, not copy — preserves full history).
+3. Updates link references in `TASKS.md` from `tasks/phase-{N}.md` to `archives/tasks/phase-{N}.md`
+   and marks the row as `Done (Archived)`.
+
+### On-demand (manual)
+
+```bash
+node .magic/scripts/executor.js archive-phases           # archive all eligible phases
+node .magic/scripts/executor.js archive-phases --dry-run  # preview without writing
+```
+
+### Exemptions
+
+- Phases with any remaining `- [ ]` items are never archived.
+- Phases with `status` ≠ `Done` in YAML frontmatter are never archived.
+- Already-archived files (present in `archives/tasks/`) are skipped silently.
+- Archive can be disabled project-wide: `archival.enabled = false` in `.design/workspace.json`.
+
+### Notes
+
+- The pre-commit hook issues a notice (non-blocking) if unarchived Done phases are detected,
+  reminding the user to run `/magic.run` or `executor.js archive-phases`.
+- Archived files retain full Markdown content — they are not deleted or truncated.
+- Token-economy impact: each archived phase removes ~150–250 lines from the active task context.
+
 ### Completion Protocol (Mandatory Checklist)
 
 Before finishing any task, the agent MUST verify the following:

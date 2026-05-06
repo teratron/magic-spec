@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+'use strict';
+
 const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
