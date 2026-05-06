@@ -40,6 +40,7 @@ const contributingPath = path.join(projectRoot, 'CONTRIBUTING.md');
 const rulesPath = path.join(projectRoot, '.design', 'RULES.md');
 const indexPath = path.join(projectRoot, '.design', 'INDEX.md');
 const workflowsDir = path.join(projectRoot, 'workflows');
+const skillsDir = path.join(projectRoot, 'skills');
 const docsDir = path.join(projectRoot, 'docs');
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -47,13 +48,14 @@ const docsDir = path.join(projectRoot, 'docs');
 // ───────────────────────────────────────────────────────────────────────────
 
 function readState() {
-    if (!fs.existsSync(stateFile)) return { workflows: {}, contributing: null };
+    if (!fs.existsSync(stateFile)) return { workflows: {}, skills: {}, contributing: null };
     try {
         const raw = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
         if (!raw.workflows) raw.workflows = {};
+        if (!raw.skills) raw.skills = {};
         return raw;
     } catch {
-        return { workflows: {}, contributing: null };
+        return { workflows: {}, skills: {}, contributing: null };
     }
 }
 
@@ -83,6 +85,12 @@ function lastSourceDate() {
     if (fs.existsSync(workflowsDir)) {
         for (const f of fs.readdirSync(workflowsDir)) {
             if (f.endsWith('.md')) candidates.push(path.join(workflowsDir, f));
+        }
+    }
+    if (fs.existsSync(skillsDir)) {
+        for (const dir of fs.readdirSync(skillsDir)) {
+            const skillFile = path.join(skillsDir, dir, 'SKILL.md');
+            if (fs.existsSync(skillFile)) candidates.push(skillFile);
         }
     }
     let latest = 0;
@@ -212,7 +220,14 @@ function syncDocsFolder(targetVersion, state) {
         const wfHash = sha(wfContent);
         const prev = state.workflows[wfName] || {};
 
+        const skillKey = `magic-${file.replace('.md', '')}`;
+        const skillPath = path.join(skillsDir, skillKey, 'SKILL.md');
+        const skillContent = fs.existsSync(skillPath) ? fs.readFileSync(skillPath, 'utf8') : null;
+        const skillHash = skillContent ? sha(skillContent) : null;
+        const prevSkill = state.skills[skillKey] || {};
+
         const wfChanged = prev.hash !== wfHash;
+        const skillChanged = skillHash !== null && prevSkill.hash !== skillHash;
         const versionChanged = prev.version !== targetVersion;
 
         let content = fs.readFileSync(docPath, 'utf8');
@@ -238,7 +253,7 @@ function syncDocsFolder(targetVersion, state) {
         }
 
         // 3. Sync Note — refresh only on real change
-        if (wfChanged || versionChanged) {
+        if (wfChanged || skillChanged || versionChanged) {
             const syncNoteRegex = /(## Sync Note\s*\n\s*\n)(?:[^\n]*\n)?/;
             const replacement = `$1Synchronized with engine workflows on ${date} (v${targetVersion}).\n`;
             if (syncNoteRegex.test(content)) {
@@ -250,6 +265,7 @@ function syncDocsFolder(targetVersion, state) {
             if (writeFileSafe(docPath, content)) {
                 const reasons = [
                     wfChanged ? 'workflow-source' : null,
+                    skillChanged ? 'skill-source' : null,
                     versionChanged ? 'version-bump' : null,
                 ].filter(Boolean).join('+') || 'frontmatter';
                 console.log(`  ✅ docs/${file} synced (${reasons})`);
@@ -259,6 +275,9 @@ function syncDocsFolder(targetVersion, state) {
         }
 
         state.workflows[wfName] = { hash: wfHash, version: targetVersion, syncedAt: date };
+        if (skillHash !== null) {
+            state.skills[skillKey] = { hash: skillHash, version: targetVersion, syncedAt: date };
+        }
     }
 }
 

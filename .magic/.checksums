@@ -33,7 +33,7 @@
   "scripts/init.js": "25dbcc74680946822c3badd119044da94ea9e6c5e90f7ebf8dc5be61730d32ab",
   "scripts/install-hooks.js": "87990772cfa7772f1006d092d74c7f7c90a4fd5a18f5100486ff4f05033898e3",
   "scripts/serve-spec-graph.js": "2f2053abdfd2b9dba66d58c35f53791d26691c42c65af41e377a0821d4ba10b6",
-  "scripts/sync-docs.js": "1c94ebbbe38dfda7e3d5c5c969261b7149826d68dad7e22058b7c5a9828b6f2f",
+  "scripts/sync-docs.js": "8d29601d86cde5e4f7390abaf46812d4dce8659480d994dad44e159ce4b98e4b",
   "scripts/sync-manifests.js": "e06df4f90dc558f0266f99fa5ec544a108a3fd1e5ac340581e68fe9c7f15a530",
   "scripts/sync-skills.js": "d4320c6f180e2016d72dce23ba754b45a414f1aa9fd53714153aadf962461f3a",
   "scripts/sync.js": "63d1810557b9eaea773f29a488a6b81133fdb24821768583f7de656c6ebe72d1",

@@ -26,5 +26,37 @@
       "syncedAt": "2026-05-05"
     }
   },
+  "skills": {
+    "magic-analyze": {
+      "hash": "9069c35e0f880d73ba5d7d2dc80a8d85eb6242d6fba811b22aa494be0e6b348f",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    },
+    "magic-graph": {
+      "hash": "91bc011aec0fa14b8ee619370338eccbaec3ff88bac33b24fc4e127a9eb45847",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    },
+    "magic-rule": {
+      "hash": "f57e08efae14c72f1387c087c2f89f30c041d6a2a9a9f145f27ddfeb119c82d6",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    },
+    "magic-run": {
+      "hash": "e0a90f079721751cb40051a860129b61a8bc287fa9ea11cef3b0257d40e15586",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    },
+    "magic-spec": {
+      "hash": "3d39d9a6364b6874306bb74ec6a757cae9566a7eb5440c830644bc4138d64f95",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    },
+    "magic-task": {
+      "hash": "1d37c38d7ea41d133b30de2a891196671390baefb42b535fd2e6b66ef92c0562",
+      "version": "2.0.25",
+      "syncedAt": "2026-05-06"
+    }
+  },
   "contributing": "9362c64c82ee3760d91a801fe13f5342b563d107b9bbfca0497e3b1bbb99070c"
 }
