@@ -4,36 +4,45 @@ This document defines the core principles and structural hierarchy for AI agents
 
 ## 1. Project Anatomy
 
-The project is divided into three primary logical layers:
+The project creates an SDD (Specification-Driven Development) engine. The repository is strictly divided into two primary layers comprising the core engine, plus a secondary maintenance component.
 
-### 1.1. Core Engine (`.magic/`, `workflows/`, `skills/`, `rules/`)
+**AGENT DIRECTIVE**: AI agents must clearly understand this separation. Unless explicitly told to work with the secondary maintenance parts, you must work ONLY with the core layers (Layer 1 and Layer 2).
 
-- **Path**: `/.magic/` (Logic), `/workflows/` (Standard Workflows), `/skills/` (Compatibility API), `/rules/` (Rules).
-- **Role**: This is the "Brain" of the SDD (Specification-Driven Development) workflow.
-- **Constraints**:
-  - These directories are **read-only** for standard tasks.
-  - Any changes here modify the workflow engine itself.
-  - These files are distributed via GitHub Releases (see `rules/magic.md`).
+### 1.1. Layer 1: User Distribution (The Core Engine)
 
-### 1.2. Design Workspace (`.design/`)
+This layer contains ONLY the resources the end-user will download and install. Nothing extra must be placed here.
 
-- **Path**: `/.design/`
-- **Role**: This is the project's own implementation of the Magic SDD workflow.
-- **Content**: Contains specifications, implementation plans, and tasks for `magic-spec` itself, organized into workspaces defined by `.design/workspace.json`.
-- **Structure**:
+- `.magic/` — **The most important directory!** Contains the core logic and scripts of the SDD engine.
+- `workflows/` — Workflow wrappers.
+- `skills/` — Skill wrappers (Compatibility API).
+- `rules/` — Rules for watching-processes on the user side.
+
+**Constraints**:
+
+- These directories are distributed to the user (e.g., via GitHub Releases). Keep them strictly clean of dev-only artifacts.
+- Any changes here modify the workflow engine itself.
+
+### 1.2. Layer 2: Auxiliary Core (`dev/`)
+
+- **Path**: `/dev/`
+- **Role**: The auxiliary part of the core engine. It contains essential development, testing, and operational logic that **must not** be distributed to the user side.
+
+### 1.3. Secondary / Maintenance Components
+
+- **Role**: Everything else in the repository is secondary and serves solely to maintain, document, or test the core engine.
+- **Example (`.design/`)**: This is the project's own implementation of the Magic SDD workflow (a "testing ground"). It contains specifications and tasks for `magic-spec` itself.
   - `.design/INDEX.md` — Global aggregate registry linking all workspace indexes.
-  - `.design/RULES.md` — Global constitution (§1–6 universal rules + cross-workspace §7 conventions).
+  - `.design/RULES.md` — Global constitution.
   - `.design/{workspace}/INDEX.md` — Workspace-specific specification registry.
-  - `.design/{workspace}/RULES.md` — Workspace-specific §7 conventions (created on demand, inherits global rules; see C22).
-- **Note**: This acts as a "testing ground" and live documentation for the engine's capabilities.
 
 ## 2. Agent Operational Rules
 
-1. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
-2. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
-3. **Engine Integrity**: Do not modify files in `.magic/` or `workflows/` unless the task specifically requires "Engine Improvement".
+1. **Strict Layer Boundary**: Always respect the boundary between Layer 1 (User Distribution) and Layer 2 (Auxiliary Core). Never leak `dev/` dependencies or logic into `.magic/`, `workflows/`, `skills/`, or `rules/`.
+2. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
+3. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
+4. **Engine Integrity**: Do not modify files in `.magic/` or `workflows/` unless the task specifically requires "Engine Improvement".
    - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
-4. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
+5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
 ## 3. Development Toolchain
 
