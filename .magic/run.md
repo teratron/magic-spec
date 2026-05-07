@@ -99,7 +99,7 @@ graph TD
       current task result. Ensures STATE reflects reality even if execution is interrupted mid-step.
     - **Mid-Run Stability Check**: Before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. This check must also recursively include the spec's L1 parent (if applicable). If either the target or its parent shows demotion or drift since dispatch → **HALT** that track. Report: "Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `magic.task update` to re-evaluate." In Parallel mode, the Track Owner notifies `@role:orchestrator` of the suspension so the Orchestrator can halt further assignments for the affected spec.
     - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in **`TASKS.md` Phase Checklist**.
-    - **Handoff**: If spec is ambiguous → **HALT**. Trigger `magic.spec` update. After the spec is updated, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
+    - **Handoff**: If spec is ambiguous → **HALT**. Apply §7 Post-Task Drift Auto-Analyze (`rules/magic.md §7`): run `/magic.analyze` first to confirm gaps. If gaps confirmed → trigger `magic.spec` update. After any spec update, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
     - **Sync**: If spec/phase finished → Update high-level `[x]` in `PLAN.md`.
     - **Actionable Outcome**: After phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
     - **Change Record**: Write 1-line summary in task `Changes` field in `TASKS.md`.

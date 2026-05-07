@@ -171,7 +171,7 @@ detected — reminds the user to run `/magic.run` or `archive-phases` directly.
 
 ## 6. Completion Protocol (Mandatory Checklist)
 
-Before finishing any task that involved magic-spec workflows, verify §1–§5 were honored.
+Before finishing any task that involved magic-spec workflows, verify §1–§7 were honored.
 
 - [ ] **§1 Version Check** — verified `.magic/.version` against the remote release
       (once per day, first session); displayed the upgrade notice on `local < remote`.
@@ -187,3 +187,54 @@ Before finishing any task that involved magic-spec workflows, verify §1–§5 w
 - [ ] **§5 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
       references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.
+- [ ] **§7 Post-Task Drift** — on any drift signal during `/magic.run`, ran
+      `/magic.analyze` before branching to `magic.spec` or `magic.task update`;
+      never jumped directly to `magic.spec` without the analyze gate.
+
+## 7. Post-Task Drift Auto-Analyze
+
+After each task or phase completes in `/magic.run`, new implementation knowledge
+may invalidate or expand existing specs. This rule enforces a diagnostic gate
+before any spec update or replanning is triggered.
+
+### When it triggers
+
+Applies automatically on any of these signals during Step 4 (Update) or Phase Completion:
+
+- **Spec ambiguity** — agent identifies unclear, conflicting, or missing spec content
+- **Phase complete** — a full phase finishes (new scope or edge cases may have emerged)
+- **RULES drift** — `RULES.md` version > `TASKS.md` base detected during execution
+
+### Procedure
+
+1. Emit notice before branching to any spec or task workflow:
+
+   > [!NOTE]
+   > Post-task drift signal detected. Running `/magic.analyze` to confirm gaps
+   > before spec or plan updates.
+
+2. Auto-execute `/magic.analyze` (scoped to the active workspace).
+
+3. Route based on findings:
+   - **Gaps or drift confirmed** → proceed to `/magic.spec` (targeted update), then `/magic.task update`
+   - **No gaps, tasks stale** → proceed to `/magic.task update` (resync only)
+   - **Clean, no signal** → resume `/magic.run` next task without interruption
+
+4. After any spec update, always run `/magic.task update` before resuming
+   `/magic.run` — never skip the resync step.
+
+### Full chain
+
+```
+task Done
+  → drift signal?
+      yes → /magic.analyze → gaps confirmed? → yes → /magic.spec → /magic.task update → /magic.run
+                                             → no  → /magic.task update → /magic.run
+      no  → /magic.run (next task)
+```
+
+### Exemptions
+
+- Targeted task execution with no handoff signal → skip silently.
+- Engine improvement tasks (explicit directive) — engine and spec layers are separate.
+- `MAGIC_POST_TASK_ANALYZE=0` env var disables this rule entirely.

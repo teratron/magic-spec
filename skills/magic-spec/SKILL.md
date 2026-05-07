@@ -16,6 +16,13 @@ handoffs:
 
 # Specification Workflow
 
+## Write Permissions (Hard Limit)
+
+**Allowed write target — ONLY `.design/` subtree.**
+Everything outside `.design/` is FORBIDDEN. No exceptions.
+
+> **If you are about to write to any file outside `.design/` — STOP. This is out of scope for `magic.spec`.**
+
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
 **Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
 **Hints:**

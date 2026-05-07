@@ -6,10 +6,14 @@ handoffs:
     workflow: magic.task
     prompt: "Proceed to rebuild dependencies and tasks seamlessly."
     condition: null
+  - label: "Diagnose drift"
+    workflow: magic.analyze
+    prompt: "Run post-task drift diagnostics to detect spec gaps before replanning or spec updates."
+    condition: "drift_suspected"
   - label: "Update specifications"
     workflow: magic.spec
-    prompt: "Transition to architecting solutions for Blocked tasks seamlessly."
-    condition: null
+    prompt: "Transition to architecting solutions for confirmed spec gaps or Blocked tasks."
+    condition: "gaps_confirmed"
 ---
 
 # Run Workflow
