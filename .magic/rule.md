@@ -9,7 +9,7 @@ Manages project conventions across a two-tier rules system:
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply, Post-Resolution).
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
-3. **No Silent Writes**: Always show proposed diff/statement before committing.
+3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6) and Constitutional Guard. All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user). If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
 5. **Versioning (C14)**:
     - **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
@@ -33,8 +33,8 @@ graph TD
     D -->|workspace tier, file absent| D2[Init: Create workspace RULES.md]
     D2 --> E[Guard: DUP across both tiers & CONSTRUCT]
     D -->|global or workspace file exists| E
-    E --> F[Propose Change & Version Bump]
-    F -->|Approve| G[Write target RULES.md & History]
+    E --> F[Apply Change: Write target RULES.md, narrate diff inline]
+    F --> G[Update History & Version]
     G --> H[Impact Analysis: Audit/Plan-Sync]
 ```
 
@@ -50,8 +50,9 @@ graph TD
     - **Core-Amendment Routing**: If the user's target matches a section in §1–6 (not §7) → route as a **core amendment**. Inform: "This targets core section §{N}. Core amendments require explicit approval and trigger a Major version bump." Require user confirmation before proceeding. If confirmed → apply change to the target core section. If denied → abort.
     - **Constitutional**: If a new §7 rule contradicts §1-6 core → **HALT** & report.
     - **Duplication**: If semantically overlaps with any C{N} in EITHER global or workspace RULES.md → Propose merge/replace.
-5. **Propose**: Show "Current vs Proposed" side-by-side. State target tier and version impact (e.g., workspace RULES.md 1.0.0 → 1.1.0).
-    - **Batch**: When the user requests multiple rule changes (add + amend, or multiple adds) in §7, group all changes into a single atomic update. In **Trust Mode (C9)**, notify the user and apply immediately without additional confirmation. Only core amendments (§1–6) or conflicting §7 rules require explicit approval.
+5. **Apply (C9 default)**: Write the change to the target tier immediately. Output the diff inline. State target tier and version impact in past tense — e.g., `[Auto-Rule] Applied: WC1 → workspace RULES.md, 1.0.0 → 1.1.0. (Revert: git restore .design/{workspace}/RULES.md)`.
+    - **Batch**: When the user requests multiple §7 rule changes in one invocation, group them into a single atomic update and narrate as one summary line.
+    - **Approval-required exceptions** (per C9 objective gates): Core-Amendment to §1–6 (Step 4 Core-Amendment Routing) and Constitutional Guard conflicts (§7 rule contradicts §1–6) — these HALT until the user confirms.
 
 ### Actions
 
@@ -147,4 +148,5 @@ Rule Checklist — {operation}
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Graph: export-wiki run after Add/Amend/Remove (skip for List and patch-only typo fixes)
   ☐ Engine Meta: C14 bump ONLY if .magic/ files modified (not for .design/ changes)
+  ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates
 ```

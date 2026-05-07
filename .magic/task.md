@@ -40,7 +40,7 @@ Parse the `[arg]` to determine the planning mode:
 4. **Logic Guards**:
     - **No Orphans**: Every registered spec must be in `PLAN.md` or `## Backlog`.
     - **Atomic Tasks (C10)**: Every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-    - **User Gate**: In **Trust Mode (C9)**, automatically generate and write the Plan & Checklist without asking for a "Go" confirm. Show a summary of the generated plan to the user.
+    - **Auto-Plan (C9 default)**: Automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task amend | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu.
     - **Zero-Prompt handoff**: After writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
@@ -185,4 +185,5 @@ Task Workflow Checklist — {operation}
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Graph: export-wiki run after plan write-back (skip if no plan written)
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
+  ☐ Engineer Posture (C25): plan auto-written and narrated; no "Go" prompts
 ```

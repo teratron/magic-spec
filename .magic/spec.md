@@ -100,15 +100,14 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 
 1. Scan `INDEX.md` and actual project structure.
 2. Identify "Uncovered" modules or logical next steps in the architecture.
-3. Propose 3 specific "Creative Sparks" (topics for new specs or refinement) and ask the user for direction or their own idea.
+3. Propose 3 specific "Creative Sparks" (topics for new specs or refinement) declaratively. If the user does not provide a concrete direction in the next turn, auto-pick the highest-coverage gap and proceed to Dispatch (C9 default — do not stall on confirmation).
 
 ### Mode Transition: Explore → Dispatch
 
 Explore Mode ends automatically, and the agent MUST transition to Dispatching/Writing when:
 
-1. User provides specific logic, features, or architectural constraints.
-2. User uses confirmation words ("go ahead", "do it", "looks good", "save").
-3. **Auto-Transfer**: If Trust Mode (C9) is active, the agent transitions after the 2nd idea exchange (1 prompt/1 reply cycle) to avoid stalling.
+1. User provides specific logic, features, or architectural constraints — **transition on first concrete-input message**, do not wait for additional exchanges.
+2. **Auto-Transfer (C9 default)**: If the user's reply is ambiguous or restates intent without new content, write a Draft spec immediately with `<!-- TBD: {open question} -->` markers and proceed to Dispatch. Never stall on a 2nd "are you sure?" cycle.
 
 ### Project Analysis Delegation
 
@@ -143,11 +142,11 @@ graph TD
     - Run **Post-Update Review**.
     - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
     - Sync `INDEX.md`.
-    - **Zero-Prompt Handoff (C9)**: If logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: "Specs are ready. Proceed to Plan/Run?" and wait for reply.
+    - **Zero-Prompt Handoff (C9 default)**: After dispatch completes, automatically invoke `/magic.task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magic.task. (Interrupt: Ctrl+C)`. Hard-fork ambiguity (per C9 §3 — multiple incompatible architectural paths with no objective tiebreaker) is the only condition that pauses for user input.
 
 **Constraints**:
 
-- **Ambiguity**: Ask one clarifying question; do not guess.
+- **Ambiguity (C25)**: Do NOT ask clarifying questions. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
 - **Conflict**: Flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: If input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: Ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: In Trust Mode (C9), after silent status promotion, append a summary: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
@@ -323,6 +322,7 @@ Checklist — {task description}
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
   ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
+  ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates; ambiguity recorded as TBD-markers
 ```
 
 ## Templates

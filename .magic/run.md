@@ -123,7 +123,7 @@ graph TD
 ### Plan Completion (Succession Loop)
 
 1. **Retro L2**: Auto-run Level 2 (Full).
-2. **Changelog L2**: Present compiled release entry. **Only manual step: Yes/No approval.**
+2. **Changelog L2**: Compile and write the release entry, then display it verbatim. The user-facing approval gate for release artifacts is the standard git commit step (per Finalization Protocol) — not an inline Yes/No prompt. This preserves the C9 §9 release-artifact gate without re-introducing inline confirmation.
 3. **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
 4. **Finalize**: Regenerate `CONTEXT.md`.
 
@@ -160,4 +160,5 @@ Checklist — {operation}
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, engine version bumped, CONTEXT.md updated
+  ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (release gate is git commit)
 ```

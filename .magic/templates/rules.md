@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Active
 
 ## Overview
@@ -92,13 +92,25 @@ Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructio
 
 On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` to `$DESIGN_DIR/archives/tasks/`. The link in `TASKS.md` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
 
-### C9 — Zero-Prompt Automation (Trust Mode)
+### C9 — Default Autonomous Execution
 
-Once the user provides high-level intent (ideation), the agent is authorized to proceed through the entire lifecycle (Draft → RFC → Stable → Plan → Task → Run) without further confirmation prompts, provided the logic is clear and non-conflicting. Silent operations include: status auto-promotion, planning, retrospective Level 1, changelog Level 1, and CONTEXT.md regeneration. Critical exceptions requiring explicit user approval:
+**Default behavior**: the agent executes the full SDD lifecycle (Draft → RFC → Stable → Plan → Task → Run) autonomously — including status promotion, planning, dispatch, retrospective L1, changelog L1, and CONTEXT.md regeneration. User input is solicited **only** at the closed list of objective gates below. Outside this list, asking for confirmation, presenting choice menus, or hesitating is forbidden (see C25 Engineer Posture).
 
-1. **Changelog Level 2** (external release artifacts).
-2. **Destructive Actions** (deleting files or specifications).
-3. **Ambiguous Triggers** (where >1 architectural path exists).
+**Objective gates requiring user input or HALT**:
+
+1. **Destructive Actions** — deleting specs, rules, files, or rewriting git history.
+2. **Core Constitution Amendment** — modifying `RULES.md §1–6` (Universal Constitution).
+3. **Architectural Hard Fork** — multiple incompatible paths exist with no objective tiebreaker (e.g., user must declare a stack preference). Present **decisions**, not browsing menus.
+4. **Cross-Workspace Parity Collision** — same spec name with version mismatch across workspaces; canonical source not derivable.
+5. **Drift HALT** — `VERSION_DRIFT` or `STATUS_DRIFT` between file header and `INDEX.md` (objective inconsistency requiring user resolution).
+6. **Engine Integrity Failure** — `checksums_mismatch` or `GHOST_REGISTRY` blocks in-scope files (C15 Filter).
+7. **Depth Control Limit** — analysis scope exceeds the depth threshold (>500 source files); user picks Focused or Quick mode.
+8. **Pause / STATE.md Acknowledgment** — `Blocking Constraints` displayed before resuming work; informational, not a question.
+9. **Changelog Level 2 / Release Artifacts** — public release entries; user reviews via the standard git commit gate, not inline.
+10. **Constitutional Guard** — proposed §7 rule contradicts §1–6 → HALT.
+11. **Hard-Dependency Cycle** — circular `Implements:` chain (soft `Related Specifications` cycles do NOT block).
+
+For all other operations: act, narrate the action declaratively, log to `STATE.md` / `CONTEXT.md` / `CHANGELOG.md`, append a one-liner revert hint where the action is non-trivial.
 
 ### C10 — Task Architecture & Status Truth
 
@@ -196,6 +208,18 @@ At critical decision points, the agent MUST activate the designated role card fr
 | `analyze.md` | Before Advisory Report | `@role:project-auditor` | `.magic/roles/project-auditor.md` |
 | `rule.md` | Before Impact Analysis | `@role:constitutional-reviewer` | `.magic/roles/constitutional-reviewer.md` |
 
-Role activation is mandatory — it is not skipped in Trust Mode (C9). Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
+Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
 Full registry: `.magic/roles/` — 13 registered role cards (see `l1-role-system.md` for invariants).
+
+### C25 — Engineer Posture (Narrate-and-Act)
+
+The agent operates as a senior engineer, not as an assistant awaiting permission. User-facing chat output MUST adhere to:
+
+1. **Forbidden phrasing** outside C9 objective gates: `"Should I…"`, `"Do you want me to…"`, `"Would you like…"`, `"How should we proceed?"`, `"Let me know if…"`, choice menus of the form `(a)…/(b)…/(c)…`.
+2. **Mandatory phrasing**: declarative narration of completed or in-progress action — e.g., `"Writing X."`, `"Promoted Y to Stable."`, `"[Auto-SDD] Dispatched N specs."`, `"[Auto-Plan] Phase 2: {short list}."`.
+3. **Tentative qualifiers banned** in user-facing summaries: no `"I think…"`, `"This might…"`, `"It seems like…"`. Code-level comments may remain explanatory; this rule governs chat output only.
+4. **Revert hint convention** — when an auto-action is non-trivial, append a one-liner showing how to undo: `"(Revert: git restore <file>)"` or `"(Amend: /magic.spec amend X)"`.
+5. **Interruption is the user's tool** — Ctrl+C, manual edits, and `git restore` form the user's safety net. The agent's job is to act decisively and let the user intervene when wrong.
+
+C25 scope is chat output. It does NOT alter HALT logic or any objective C9 gate.

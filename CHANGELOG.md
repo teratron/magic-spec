@@ -5,6 +5,32 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.1.0] - 2026-05-07
+
+### Changed
+
+- **C9 redefined as Default Autonomous Execution** (`.magic/templates/rules.md`): the agent now executes the full SDD lifecycle (Draft → RFC → Stable → Plan → Task → Run) autonomously by default. User input is solicited **only** at a closed list of 11 objective gates (Destructive Actions, Core-Amendment §1–6, Architectural Hard Fork, Cross-Workspace Parity Collision, VERSION_DRIFT/STATUS_DRIFT, Engine Integrity Failure, Depth Control >500 files, Pause/STATE.md ack, Changelog L2 release artifacts, Constitutional Guard, Hard-Dependency Cycle). Outside these gates, asking for confirmation, presenting choice menus, or hesitating is forbidden.
+- **`.magic/rule.md`**: replaced **No Silent Writes** invariant with **Narrate Writes (C25)** — changes are applied immediately and the diff is shown inline as the write happens. Approval gate now applies ONLY to Core-Amendment (§1–6) and Constitutional Guard. Mermaid graph updated: `Apply Change → Update History` replaces `Propose → Approve → Write`. Trust Mode is no longer batch-only — it is the universal §7 default.
+- **`.magic/spec.md`**: Explore Mode now auto-picks highest-coverage gap if user does not provide concrete direction next turn. Mode Transition triggers on first concrete-input message (no 2nd-exchange wait). Zero-Prompt Handoff invokes `/magic.task` automatically post-dispatch. **Ambiguity** constraint replaced — open questions are recorded as `<!-- TBD: {question} -->` inline, agent never asks clarifying questions.
+- **`.magic/analyze.md`**: Mode A Step 3 — replaced the `(a) Approve all / (b) Select / (c) Adjust / (d) Cancel` menu with auto-dispatch + action log. Mode B Step 3 — per-item approval replaced with batch auto-dispatch; advisory items surfaced as actionable `→` next-step links rather than approval prompts.
+- **`.magic/task.md`**: User Gate wording updated — Auto-Plan narrates inline as the work happens; no "Go" confirm.
+- **`.magic/run.md`**: Changelog L2 — release-artifact gate is now the standard git commit step (per Finalization Protocol), not an inline Yes/No prompt.
+
+### Added
+
+- **§C25 — Engineer Posture (Narrate-and-Act)** (`.magic/templates/rules.md`): forbids tentative phrasing (`"Should I…"`, `"Do you want me to…"`, `"Would you like…"`, `"How should we proceed?"`, choice menus of the form `(a)…/(b)…/(c)…`) outside C9 objective gates. Mandates declarative narration (`"Writing X."`, `"Promoted Y to Stable."`, `"[Auto-SDD] …"`). Includes a revert-hint convention for non-trivial auto-actions.
+- **Completion Checklist line** added to `.magic/{rule,spec,task,run,analyze}.md`: `☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates`.
+
+### Removed
+
+- **8 SOFT prompts**: 4-option menu in `magic.analyze` Mode A Step 3 · "ask user for direction" in `magic.spec` Explore Mode · 2nd-exchange Auto-Transfer gate in Mode Transition · "Proceed to Plan/Run?" wait in Zero-Prompt Handoff · "Ask one clarifying question" constraint · batch-only Trust Mode caveat in `magic.rule` · Propose/Approve gate in `magic.rule` mermaid + Step 5 · per-item approval in `magic.analyze` Mode B advisory.
+
+### Notes
+
+- **Engine version**: `2.0.29` → `2.1.0` (minor — behaviorally additive automation; HARD gates and HALT conditions are preserved verbatim).
+- **User projects** pick up new C9 semantics on their next `/magic.analyze` engine drift check (per `.agents/rules/magic.md §2 Engine Drift Auto-Analyze`).
+- **Worst-case revert**: `git restore .design/INDEX.md` (or any single file) — engine writes are narrated inline (not silent), so all auto-actions are visible and reversible via standard git.
+
 ## [2.0.26] - 2026-05-06
 
 ### Added

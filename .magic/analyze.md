@@ -115,7 +115,7 @@ Source code may contain design rationale in structured comments that are not cap
     - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
 1. Build full project map.
 2. Inferred stack + architecture style.
-3. **Proposal**: Table of paired L1/L2 specs + RULES.md entries. Present with explicit options: **(a) Approve all** — dispatch all proposed specs and rules, **(b) Select** — user picks individual items to approve, **(c) Adjust** — user requests modifications to the proposal, **(d) Cancel** — discard the proposal entirely. Wait for user choice before proceeding.
+3. **Auto-Dispatch (C9 default)**: Generate the table of paired L1/L2 specs + RULES.md entries, narrate it as an action log, and dispatch all proposed items immediately as `Draft` (or `Stable` if MVC criteria pass per `spec.md` Trust Mode). Output: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y) + M rules. (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`. The user reviews the action log and amends as needed — no inline approval gate.
 4. **Registry Healing Proposal**: If `INDEX.md` is blank/corrupted or mismatches `specifications/` (Ghost/Zombie entries) → Include **Registry Healing** (re-mapping disk files) as a mandatory part of the unified proposal in Step 3. Do NOT execute healing until the full proposal is approved.
 5. **Advisory**: Generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
@@ -305,7 +305,7 @@ Mode C Checklist — Ventilation
       - `→ /magic.spec amend {name}` for outdated specs.
       - `→ /magic.rule add "{convention}"` for uncodified patterns.
       - `→ /magic.analyze {workspace}` for deeper focused checks.
-    - User approves/rejects each proposal individually. Approved items dispatch immediately.
+    - **Auto-Dispatch (C9 default)**: All advisory items are surfaced as a single action log in the Advisory Report. The agent does NOT prompt for per-item approval — items requiring action are batch-dispatched immediately where applicable, or surfaced as `→` next-step links the user can run on demand. Hard-fork ambiguities and Core-Amendment proposals (per C9 gates) are the only exceptions that pause for explicit user input.
 
 ### Output Format (Chat)
 
@@ -358,11 +358,12 @@ Analysis Checklist — Mode A/B
   ☐ Stack/Arch inferred; modules identified
   ☐ Mode correct (Analysis vs Re-Analysis Gap Report)
   ☐ RESCUE logic applied for renamed directories
-  ☐ Dispatch: approved items created as Stable; RULES.md §7 updated
+  ☐ Auto-Dispatch (C9): proposed items created as Draft/Stable per MVC; RULES.md §7 updated; action log surfaced
   ☐ Graph: export-wiki run after dispatch (skip if no dispatch occurred)
   ☐ Advisory Report appended to output
   ☐ Engine Meta: C14 bump if .magic/ files modified
   ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
+  ☐ Engineer Posture (C25): no inline approval menu; user adjusts via /magic.spec amend or git restore
 
 Analysis Checklist — Mode C: Ventilation
   ☐ Self-check complete: engine integrity status noted (non-halting)
@@ -381,6 +382,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)
   ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
+  ☐ Engineer Posture (C25): findings narrated declaratively; advisory items as actionable links, not approval prompts
 
 Analysis Checklist — Mode D: Focused
   ☐ Focus directive parsed and matched to project area
@@ -389,6 +391,7 @@ Analysis Checklist — Mode D: Focused
   ☐ Advisory Report scoped to focus area
   ☐ Engine Meta: C14 not triggered (Mode D is read-only)
   ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
+  ☐ Engineer Posture (C25): focus area findings narrated; no approval menus
 ```
 
 *Examples*: `/magic.analyze "check API coverage"`, `/magic.analyze engine "focus on tests"`
