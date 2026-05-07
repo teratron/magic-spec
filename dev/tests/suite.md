@@ -46,7 +46,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Calling workflow triggers init via `check-prerequisites → ok: false`
 - **Expected:**
   - [ ] `node .magic/scripts/executor.js init` is called
-  - [ ] Post-init verification checks all 5 artifacts: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`
+  - [ ] Post-init verification checks all 6 artifacts: `INDEX.md`, `RULES.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`
   - [ ] Brief report: "SDD initialized — {date}"
   - [ ] Calling workflow continues after init
 - **Guards tested:** Engine Integrity check, post-init verification (5 artifacts)
@@ -62,7 +62,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Init script runs and creates only missing artifacts (INDEX.md, tasks/)
   - [ ] Existing RULES.md is NOT overwritten (idempotency)
-  - [ ] Post-init verification confirms all 5 artifacts present
+  - [ ] Post-init verification confirms all 6 artifacts present (including `STATE.md`)
 - **Guards tested:** Safe to Re-Run (idempotency), full verification
 
 ### T03 — Spec Dispatch Multi-Topic
@@ -151,7 +151,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `secrets.md` flagged as Phantom Spec
   - [ ] T-1A01 (Done) → preserved as Archived Orphan (history intact)
-  - [ ] T-1A02 (In Progress) → marked Cancelled (Reason: Phantom Spec)
+  - [ ] T-1A02 (In Progress, active) → marked `Blocked [!]` with reason: "Phantom Spec `secrets.md`"
   - [ ] T-1B01 (auth.md, Todo) → unaffected
   - [ ] Done work is NOT cancelled
 - **Guards tested:** Phantom spec Done-task preservation
@@ -279,10 +279,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] T4 trigger detected: "from now on" is a standing-rule signal
   - [ ] Agent writes spec changes AND proposes new §7 convention
   - [ ] Convention proposed: `C7 — gRPC-Only API Standard`
-  - [ ] User asked to approve the rule before writing to RULES.md
-  - [ ] If approved: RULES.md §7 updated, version bumped
+  - [ ] Trust Mode (C9) + T4 "Apply Immediately": T4 Inline Guards run (duplication check, constitutional guard, tier routing); if all pass — RULES.md §7 updated and version bumped without a separate approval gate
   - [ ] `api.md` updated with gRPC requirement
-- **Guards tested:** T4 standing-rule detection, dual write (spec + rule)
+  - [ ] Summary narrated: `[Auto-Rule] Applied: C7 → RULES.md §7 (via T4).`
+- **Guards tested:** T4 standing-rule detection, dual write (spec + rule), C9 Apply-Immediately (no approval gate)
 
 ### T17 — Spec Explore Mode to Formal Spec
 
@@ -342,10 +342,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase 2 completion detected → Level 1 retro auto-snapshot
   - [ ] **Full plan completion** detected → Level 2 retrospective triggered
   - [ ] Level 2 retro: structured analysis with metrics across all phases
-  - [ ] Changelog Level 2 presented for Yes/No approval (only manual step in completion cascade)
+  - [ ] Changelog Level 2 compiled and displayed verbatim; approval gate is the git commit step (Finalization Protocol) — no inline Yes/No prompt
   - [ ] CONTEXT.md regenerated
   - [ ] TASKS.md summary updated
-- **Guards tested:** Plan completion detection, Level 2 retro trigger, Changelog L2 approval gate
+- **Guards tested:** Plan completion detection, Level 2 retro trigger, Changelog L2 git-commit gate (C9)
 
 ### T21 — Run Phase 1→2 Transition
 
@@ -379,8 +379,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Trends: improving velocity Phase 1→3
   - [ ] Recommendations section generated
   - [ ] Session entry appended to RETROSPECTIVE.md (not snapshot)
-  - [ ] User asked: "Generate external changelog?" (Level 2 approval gate)
-- **Guards tested:** Multi-phase analysis, trend detection, approval gate for Level 2 changelog
+  - [ ] External changelog compiled and displayed; approval is via git commit step — no inline "Generate external changelog?" prompt
+- **Guards tested:** Multi-phase analysis, trend detection, git-commit gate for Level 2 changelog (C9)
 
 ### T23 — Task Selective Planning (C6) with Mixed Statuses
 
@@ -442,7 +442,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **spec**: `user-management-api.md` created from template, registered in INDEX.md (Draft)
   - [ ] **spec update**: Status promoted Draft → RFC → Stable (Auto-Promotion via Trust Mode C9)
   - [ ] **task**: Dependency graph built (1 spec), PLAN.md created (1 phase), TASKS.md created
-  - [ ] **task**: Execution mode asked and saved to RULES.md §7
+  - [ ] **task**: Execution mode assumed Parallel (C3 default) — NOT prompted or saved to RULES.md §7
   - [ ] **run**: Mode Guard passes, tasks executed sequentially
   - [ ] **run**: Phase completed, Level 1 retro fires
   - [ ] **run**: Plan completed, Level 2 retro fires
@@ -469,9 +469,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Step 4: Conventions detected from `.eslintrc.json`, `tsconfig.json`
   - [ ] Step 5: Proposal generated to **agent artifacts** (NOT `.design/`)
   - [ ] Proposal contains: ≥3 proposed L1 specs, ≥3 proposed L2 specs, ≥1 RULES.md §7 convention
-  - [ ] Step 6: User prompted with options (Approve all / Select / Adjust / Cancel)
-  - [ ] No `.design/specifications/` files created until approval
-- **Guards tested:** Delegation routing, First-Time detection, read-only scan, Explore Mode safety (no live writes)
+  - [ ] Step 6: C9 Trust Mode → auto-dispatch "Apply Immediately": spec stubs created without a separate approval prompt; agent narrates: "[Auto-Analyze] 3 L1 specs + 3 L2 specs registered."
+  - [ ] Hard-fork exception: if agent flags architectural uncertainty → explicit options presented before write
+- **Guards tested:** Delegation routing, First-Time detection, read-only scan, C9 auto-dispatch (Apply Immediately), hard-fork exception
 
 ### T28 — Analyze Re-Analysis Gap Detection
 
@@ -2315,11 +2315,11 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/INDEX.md` empty, project has `src/` with 30 files
 - **Action:** `/magic.analyze` → Mode A generates proposal with 4 L1 specs and 3 RULES.md entries
 - **Expected:**
-  - [ ] Proposal presented with explicit option set: (a) Approve all, (b) Select, (c) Adjust, (d) Cancel
-  - [ ] Agent waits for user choice — does NOT auto-dispatch
-  - [ ] If user picks (b) Select → individual items shown for approval
-  - [ ] If user picks (d) Cancel → no files created, no INDEX.md changes
-- **Guards tested:** Defined approval option set, wait-for-choice gate
+  - [ ] C9 Trust Mode → auto-dispatch "Apply Immediately": 4 L1 spec stubs + 3 RULES.md entries written without inline approval prompt
+  - [ ] Agent narrates action log: "[Auto-Analyze] Applied: 4 L1 specs registered, 3 RULES.md §7 entries added."
+  - [ ] Hard-fork exception: if agent flags structural ambiguity → explicit options (a) Approve / (b) Adjust / (c) Cancel presented before write
+  - [ ] If hard-fork cancelled → no files created, no INDEX.md changes
+- **Guards tested:** C9 auto-dispatch (Apply Immediately), hard-fork exception gate, no spurious approval prompts
 
 ### T145 — Analyze Priority 1 Prints Workspace Confirmation
 

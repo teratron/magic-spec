@@ -36,7 +36,7 @@ Parse the `[arg]` to determine the execution mode:
 4. **Logic Guards**:
     - **Dependency**: Never start a task if parents are not `Done`.
     - **Mode**: Per C3, task execution defaults to **Parallel mode**. If mode is absent from `RULES.md §7`, assume Parallel (do not HALT).
-    - **Sync**: If `RULES.md` version > `TASKS.md` base → Warn user of drift. Hint: run `magic.task update` to sync and re-verify tasks.
+    - **Sync**: If `RULES.md` version > `TASKS.md` base → **HALT**. Report: "Project conventions have changed since these tasks were generated (RULES: `{v}` > TASKS base: `{v}`). Run `magic.task update` to synchronize, or confirm you want to proceed with current tasks." Wait for user response before executing.
     - **Quarantine (C12)**: If any active task belongs to a specification whose L1 parent is not Stable in `INDEX.md` (C12 Quarantine) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog. **Source-of-truth priority**: C12 reads `INDEX.md`; File-Header Parity (Pre-flight Step 1) reads the actual file headers and is the definitive check. If `STATUS_DRIFT` or `VERSION_DRIFT` is detected in Pre-flight, that HALT takes precedence — a File-Header mismatch must be resolved before C12 logic is reached.
     - **Spec Stability**: Before executing each task, verify its target spec is still `Stable` in `INDEX.md`. If demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: "Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan." This catches external status changes that C12 pre-flight alone cannot detect.
     - **Phantom Spec**: If a specification referenced by `TASKS.md` is missing from `INDEX.md` or the physical filesystem → **HALT**. Report: "Phantom Spec `{file}` detected. 💡 Hint: run `magic.spec --audit` or `magic.analyze` to resolve the discrepancy."
@@ -83,6 +83,7 @@ graph TD
     - **File-Header Parity**: For each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before execution." This catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the header of their L1 parent (including cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
     - *Stalled*: If 0 `Todo` but `Blocked` exist → **HALT** & report.
+    - *Complete*: If 0 `Todo` AND 0 `In Progress` tasks remain (all are `Done`, `Blocked`, or `Cancelled`) → proceed to Phase Completion (Step 5). `Cancelled` tasks count as terminal — they do not block phase completion.
 3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
 3.3. **Decision Review (opt-in)** — Activate `@role:code-skeptic` when the task's spec flags `requires-decision-review: true` OR the Coder identifies non-trivial design choices. Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
 3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. On FAIL → return to Step 3. On PASS with complexity notes → proceed to 3.6 (opt-in). On clean PASS → proceed to 3.5.
@@ -124,7 +125,7 @@ graph TD
 
 1. **Retro L2**: Auto-run Level 2 (Full).
 2. **Changelog L2**: Compile and write the release entry, then display it verbatim. The user-facing approval gate for release artifacts is the standard git commit step (per Finalization Protocol) — not an inline Yes/No prompt. This preserves the C9 §9 release-artifact gate without re-introducing inline confirmation.
-3. **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
+3. **Version Bump**: Bump the **project's** release version file (`package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent) per the changelog (Major/Minor/Patch). Do NOT modify `.magic/.version` — engine version is managed by `update-engine-meta` (C14) and is not a per-plan artifact.
 4. **Finalize**: Regenerate `CONTEXT.md`.
 
 ## Finalization Protocol (Mandatory)

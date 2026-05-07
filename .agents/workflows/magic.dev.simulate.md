@@ -71,7 +71,7 @@ graph TD
 
 ### 1. Mode Selection
 
-- **Test Suite**: `/magic.dev.simulate test`. Runs all scenarios in `dev/tests/suite.md`. If missing: fallback to Improv Mode automatically; notify user with hint to restore the file from origin.
+- **Test Suite**: `/magic.dev.simulate test`. Runs all scenarios in `dev/tests/suite.md`. If missing **OR** if the file contains 0 parseable `### T{N} —` scenario headers (corrupted/empty): fallback to Improv Mode automatically; notify user with hint to restore the file from origin. Before executing any scenario, run **Suite Integrity** (pre-execution): validate all scenario blocks follow `### T{N} — {name}` format. Report malformed headers (e.g., `:` instead of `—`) and skip the offending entry with a note; remaining valid scenarios proceed normally.
 - **Direct**: `/magic.dev.simulate {workflow}` or `/magic.dev.simulate {workflow} {mode}` (e.g., `/magic.dev.simulate spec analyze`). Targets specific logic or sub-modes. Also accepts file paths (e.g., `@/path/to/workflow.md`) — extract the workflow name from the filename.
 - **Improv**: Default if 0 args. Synthesize a crisis scenario following the **Crisis Template** (see below) and perform a **Cognitive Walkthrough** of the full SDD chain (Spec→Task→Run) on this imaginary state to find leaks.
 
@@ -109,7 +109,7 @@ Scan the target workflow(s) for:
 - **Confirmation Bias Check (C24)**: Adopt a **Skeptic** persona for the final pass of the Logic Audit. For each `PASS` result, ask: *"Would this guard actually fire if an agent were rushing to complete a task in Trust Mode (C9)?"* A guard that exists in text but has no HALT keyword and relies solely on LLM compliance is a PARTIAL at best — re-classify if needed.
 - **Context Economy**: Token waste in redundant calls or repeated loading.
 - **Broken Loops**: Checklists that don't cover the work; steps referenced in diagrams but missing from text.
-- **Suite Integrity**: Validated (test/improv modes) or skipped (direct mode).
+- **Suite Integrity** (pre-execution in `test` mode, post-synthesis in `improv` mode): Validate all scenario blocks follow `### T{N} — {name}` format **before** executing any scenario (in `test` mode). In `improv` mode: validate after synthesis. In `direct` mode: skipped.
 
 ### 3. Skeptic Persona Audit (C24)
 

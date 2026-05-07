@@ -18,7 +18,7 @@
   "roles/spec-critic.md": "9c7f5b36d9ceafe6b9bf246af3798a318775761b96d6287b81fce3935ecb7429",
   "roles/test-engineer.md": "5874f25f746b1e652eabdbeb3c190e1d3c30c06e958d792dd80d67e6a849413d",
   "rule.md": "fd509c3d350687a89ed4e1044ed5ebc29f806aa50959298874317e186dcc5623",
-  "run.md": "e4e6d6022545bb9f65ff7077fdb404fbaa4fb43af9268222d03269e14fc4a82e",
+  "run.md": "9b12ca8f0fd2b66ae8db8d922653b4dcaafe853441c9b621404ac99902e471b4",
   "scripts/analyze-coverage.js": "5820839ade2a6d1561e62bd512057ad64a03d2dafc1112c0583cc1ee5b92b4d8",
   "scripts/archive-phases.js": "ec425f5a4e73c909f1a368ab2544e7c8ff9e386a778ba2a7dcee18f37194f639",
   "scripts/build-spec-graph.js": "bfbbf48b514d94b0580603ca9664aa0e857dc4ef71b03f64838c5512bb348a6a",
