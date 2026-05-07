@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** {workspace-name}
-**Updated:** 2026-04-23 17:46
-**Phase:** 3 — Unified Role System
-**Status:** Done
+**Updated:** 2026-05-07 10:21
+**Phase:** Backlog — awaiting l2-spec-graph-memory promotion
+**Status:** Active
 
 ## Current Position
 
 - **Task:** T-3T02 Validation — role_registry_integrity
 - **Spec:** {spec-file.md} §{section}
-- **Next Action:** Phase 3 complete. Run /magic.run to begin next planning cycle.
+- **Next Action:** Promote l2-spec-graph-memory to Stable, then /magic.run
 
 ## Progress
 

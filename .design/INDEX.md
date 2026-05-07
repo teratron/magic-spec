@@ -2,7 +2,7 @@
 
 **Version:** 1.2.2
 **Status:** Active
-**Engine Version:** 2.0.18
+**Engine Version:** 2.1.0
 
 ## Overview
 
@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | :--- | :--- | :--- | :--- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 13 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 14 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 

@@ -1,7 +1,9 @@
 # L2 Specification: Universal Skill Wrappers
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
+**Layer:** implementation
+**Implements:** l1-engine-core.md
 
 ## 1. Objective
 
@@ -35,9 +37,9 @@ description: {short_description_from_workflow}
 
 The workflows remain the primary source of truth. Manual modifications to generated `SKILL.md` files are prohibited.
 
-### 3.1. Automation (`sync-skills.js`)
+### 3.1. Automation
 
-A new automation script in `.magic/scripts/sync-skills.js` will:
+The `executor.js update-engine-meta` command handles skill synchronization as part of engine meta updates:
 
 1. Scan `workflows/` and `.agents/workflows/` for `.md` files.
 2. Extract the description from the YAML header or the first paragraph of the workflow.
@@ -58,17 +60,18 @@ GitHub Release archives include the generated `skills/` directory, ensuring that
 
 | Path | Role |
 | :--- | :--- |
-| `skills/magic.analyze/SKILL.md` | Generated skill wrapper for analyze |
-| `skills/magic.rule/SKILL.md` | Generated skill wrapper for rule |
-| `skills/magic.run/SKILL.md` | Generated skill wrapper for run |
-| `skills/magic.spec/SKILL.md` | Generated skill wrapper for spec |
-| `skills/magic.task/SKILL.md` | Generated skill wrapper for task |
-| `.magic/scripts/sync-skills.js` | Projection automation script |
+| `skills/magic-analyze/SKILL.md` | Generated skill wrapper for analyze |
+| `skills/magic-graph/SKILL.md` | Generated skill wrapper for graph |
+| `skills/magic-rule/SKILL.md` | Generated skill wrapper for rule |
+| `skills/magic-run/SKILL.md` | Generated skill wrapper for run |
+| `skills/magic-spec/SKILL.md` | Generated skill wrapper for spec |
+| `skills/magic-task/SKILL.md` | Generated skill wrapper for task |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.2.0 | 2026-05-07 | Agent | Added Layer/Implements header fields. Updated skill dir names (magic.analyze → magic-analyze format). Added magic-graph. Removed stale sync-skills.js reference. |
 | 1.1.0 | 2026-04-29 | Agent | Replaced legacy package deployment with GitHub Release archive distribution. |
 
 ## 5. Invariants

@@ -1,5 +1,10 @@
 # Engine Automation Specification
 
+**Version:** 1.4.0
+**Status:** Stable
+**Layer:** implementation
+**Implements:** l1-engine-core.md
+
 ## Overview
 
 Implementation details of the Magic SDD automation scripts.
@@ -49,21 +54,21 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 | :--- | :--- |
 | `.magic/scripts/executor.js` | Cross-platform entry point for all automation |
 | `.magic/scripts/check-prerequisites.js` | Pre-flight validation |
-| `.magic/scripts/generate-checksums.js` | Checksum regeneration |
 | `.magic/scripts/generate-context.js` | CONTEXT.md regeneration |
 | `.magic/scripts/init.js` | `.design/` scaffold setup |
 | `.magic/scripts/update-engine-meta.js` | Engine versioning and history update |
 | `.magic/scripts/update-project-meta.js` | Project metadata hygiene |
 | `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
 | `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
+| `.magic/scripts/lib/` | Finalization helpers: changelog-writer, commit-suggester, git-utils, phase-archiver, project-version, significance |
 | `.magic/.checksums` | Checksum manifest |
 | `.magic/.version` | Current engine version |
-| `.magic/history/` | Per-workflow change history |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Removed stale generate-checksums.js and .magic/history/ refs; replaced with .magic/scripts/lib/ coverage. |
 | 1.3.0 | 2026-04-22 | Agent | Added analyze-coverage.js (Confidence Taxonomy) and extract-rationale.js (Rationale Extraction) to Components and Canonical References. |
 | 1.2.0 | 2026-03-20 | Agent | Added generate-context.js to Components; fixed engine file count reference. |
 | 1.1.0 | 2026-03-04 | Agent | Added History Subsystem and Engine Meta Update Flow sections. |

@@ -1,6 +1,6 @@
 # Agent Surface Architecture
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -59,10 +59,10 @@ Reserved domain for agent-specific operational rules or prompts.
 | `.agents/skills/` | Agent toolkit and localized capabilities |
 | `AGENTS.md` | Root-level agent instructions (hardlinked) |
 | `CLAUDE.md` | Claude Code adapter instructions |
-| `QWEN.md` | Qwen adapter instructions |
 
 ## Document History
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
+| 1.0.1 | 2026-05-07 | Removed stale QWEN.md canonical reference (file no longer exists in project). |
 | 1.0.0 | 2026-03-30 | Initial Stable version; formalizes .agents/ to resolve VIO-1 missing coverage. |

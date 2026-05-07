@@ -19,6 +19,8 @@ You can trigger these workflows via your AI agent (Claude, Cursor, Windsurf, etc
 | `/magic.run` | Workflow for executing tasks from the project plan. |
 | `/magic.spec` | Workflow for creating and managing project specifications. |
 | `/magic.task` | Workflow for orchestrating tasks and generating the implementation plan. |
+| `/magic.dev.simulate` | Cognitive stress-test of engine logic — runs synthetic crisis scenarios against all workflows. |
+| `/magic.dev.sync` | Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata. |
 
 ### Development Cycle
 
