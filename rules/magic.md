@@ -3,6 +3,14 @@
 Consolidated operational rules for AI agents in projects using the magic-spec engine.
 Sections are independent — apply each by its own trigger.
 
+> [!CAUTION]
+> **Engine directories are READ-ONLY for all standard workflows.**
+> Never write to `.magic/`, `workflows/`, `skills/`, or `rules/` unless the task
+> explicitly states **"Engine Improvement"**. These directories form the distributed
+> SDD engine — unauthorized changes corrupt it for every user of this project.
+> If you are about to edit any file in these directories: **STOP** and ask the user
+> to confirm the task is an engine improvement.
+
 ## 1. Engine Version Check (Local ↔ Remote)
 
 Run once at the start of the first session per day. Compares the local engine to the

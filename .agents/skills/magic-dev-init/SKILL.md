@@ -59,7 +59,7 @@ bash .agents/skills/magic-dev-init/scripts/setup_unix.sh [agents...]
 Phases executed by the script:
 
 1. **Sync wrappers** — `node .magic/scripts/sync-skills.js` (if present)
-2. **Cleanup** — remove existing managed links (safe pre-condition for git index ops, see AGENTS.md §8)
+2. **Cleanup** — remove existing managed links (safe pre-condition for git index ops, see [Windows Junction Safety](#windows-junction-safety) below)
 3. **Git index** — `git rm --cached --ignore-unmatch` on all managed paths
 4. **Infrastructure** — create `.agents/{workflows,skills,rules}/`
 5. **Workflow links** — `workflows/*.md` → `.agents/workflows/` (hardlinks on Windows, symlinks on Unix)
@@ -79,3 +79,28 @@ The script prints link targets and runs a per-platform integrity check:
 
 - [scripts/setup_windows.ps1](scripts/setup_windows.ps1)
 - [scripts/setup_unix.sh](scripts/setup_unix.sh)
+
+## Windows Junction Safety
+
+When managing Windows junctions (`mklink /J`) and git index, follow this strict order to prevent data loss:
+
+### The Problem
+
+`git rm -r --cached <path>` on Windows **follows junctions** and physically deletes files in the junction target, even with `--cached`. Example: `git rm -r --cached .claude/commands` where `.claude/commands` is a junction to `workflows/` will **delete all files in `workflows/` from disk**.
+
+### Safe Procedure
+
+Always run `git rm --cached` **before** creating junctions, while the paths are empty or nonexistent:
+
+1. `git rm --cached`   ← first, while no junctions exist yet
+2. `mklink /J ...`     ← then create junctions
+
+When removing from git index, list **specific file paths** rather than directories:
+
+```bash
+# Safe — specific files only
+git rm --cached --ignore-unmatch workflows/magic.analyze.md
+
+# Dangerous — git will traverse the junction into parent/source directories
+git rm -r --cached .claude/commands
+```
