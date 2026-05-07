@@ -92,6 +92,30 @@ graph LR
 
 ## Workflow Steps
 
+### Step 0: Workspace Intent Detection (Mandatory Pre-Step)
+
+> Governed by `l1-workspace-intent-routing.md`. Run for every spec
+> create / update / dispatch operation BEFORE any other step.
+
+Apply `context.md` §Step 0 Workspace Intent Detection:
+
+1. Scan the user's most recent input + the workflow argument for signal
+   classes (creation token, stack delta, domain delta).
+2. Resolve to one of `existing:{name}` · `create:{name}` · `ambiguous`.
+3. On `create:{name}` → invoke `create-workspace` BEFORE any spec authoring.
+   Narrate the action with this template:
+   `[Workspace] Created '{name}' for {reason} (mentioned: {signal-token}). Dispatching new specs to .design/{name}/. (Revert: git restore .design/workspace.json && rm -rf .design/{name})`
+4. On `ambiguous` → ask the WI-4 three-option question. User picks 1, 2,
+   or 3. Option 3 cancels the entire spec operation; the agent does NOT
+   propose alternatives — it waits for the user's next message.
+5. On `existing:{name}` → proceed to the rest of the workflow with
+   `{name}` resolved. Apply WI-7 Workspace Fit Validation just before
+   the actual file write (Step Creating / Updating below).
+
+The detection result is recorded in the agent's working state for the
+remainder of the workflow invocation. No subsequent step re-runs Step 0
+within the same invocation.
+
 ### Explore Mode (Brainstorming)
 
 Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strives for maximum speed from idea to execution.

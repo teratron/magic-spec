@@ -223,3 +223,53 @@ The agent operates as a senior engineer, not as an assistant awaiting permission
 5. **Interruption is the user's tool** — Ctrl+C, manual edits, and `git restore` form the user's safety net. The agent's job is to act decisively and let the user intervene when wrong.
 
 C25 scope is chat output. It does NOT alter HALT logic or any objective C9 gate.
+
+### C26 — Workspace Intent Routing
+
+Workspace dispatch is the **single** specification-authoring exception to
+C25 Engineer Posture: a multiple-choice question is permitted when intent
+and existing workspace lexicons are demonstrably inconsistent. The cost of
+silent mis-routing (specs accumulating in the wrong workspace, registry
+fragmentation) outweighs the cost of one prompt.
+
+Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
+
+1. **Pre-Resolution Detection (WI-1, WI-2)**: Every workflow that creates
+   or amends specs / tasks / rules MUST run Workspace Intent Detection
+   (per `.magic/context.md` §Step 0) BEFORE the existing Workspace
+   Resolution Chain. Read-only workflows (`magic.analyze`, `magic.graph`)
+   are exempt.
+
+2. **Auto-Create on Clear Signal (WI-2, WI-6)**: When detection emits
+   `create:{name}` (explicit creation token, or unambiguous stack/domain
+   delta with no overlap against existing workspaces), the agent invokes
+   `node .magic/scripts/executor.js create-workspace --name={name}`
+   without prompting. The new workspace becomes the dispatch target for
+   the current operation.
+
+3. **Question Only at Ambiguity Gate (WI-4)**: A multiple-choice question
+   is asked only when all three hold: (a) a creation signal is present,
+   (b) ≥1 existing workspace lexicon overlaps the signal token by ≥30%,
+   (c) no explicit creation token was used. The question is a fixed
+   three-option menu — no free-text follow-up.
+
+4. **Second Contour at Dispatch (WI-7)**: After resolution returns
+   `existing:{Y}`, validate fit before writing files. Match score below
+   0.30 in a multi-workspace project triggers re-entry of the WI-4
+   question; in a single-workspace project the warning is informational
+   only.
+
+5. **Atomic Creation (WI-6)**: `create-workspace` mutates `workspace.json`
+   and provisions `.design/{name}/{specifications,tasks,archives/tasks,
+   INDEX.md}` atomically; rollback on any failure. The new workspace does
+   NOT auto-promote to `default` unless `--default` is passed.
+
+6. **Doc/Code Parity (WI-10)**: `.magic/init.md` "Structure Created"
+   diagram MUST match the layout produced by `init.js` and
+   `create-workspace.js`. Divergence is a release blocker.
+
+7. **Executor Auto-mkdir (WI-9)**: When `executor.js` encounters a
+   workspace registered in `workspace.json` whose directory is missing,
+   it provisions the standard subtree before dispatching the script —
+   replacing the legacy silent fallback to `.design/` root that caused
+   field-observed routing defects.

@@ -1,10 +1,9 @@
 {
-  "lastVersion": "0.1.2",
-  "lastBumpAt": "2026-05-07T10:22:20.211Z",
-  "lastWorkflow": "magic.task",
+  "lastVersion": "0.1.3",
+  "lastBumpAt": "2026-05-07T19:08:43.624Z",
+  "lastWorkflow": "magic.spec",
   "lastWorkspace": "engine",
   "lastSnapshot": {
-    ".design/engine/PLAN.md": "e42bba80156ad7960e284143f7cc3a2fca928a3108f23555e03d18875666e142",
-    ".design/engine/TASKS.md": "c832e4de7205c1e610451583d4b98763c73e2f094ba3e4e3d77d1cd83fbcc2f5"
+    ".design/engine/INDEX.md": "6e2c54bae001287f5e7cc2ecb29f8aa8cd6aa02a6e69e9d0d56cf1806bcb78ee"
   }
 }

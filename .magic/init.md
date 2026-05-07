@@ -48,16 +48,49 @@ graph TD
 
 ### Structure Created
 
-```
+`init` provisions a per-workspace layout, never a flat root. The first run
+also creates the global aggregate registry alongside the default workspace
+directory.
+
+```plaintext
 .design/
-├── INDEX.md    (Registry)
-├── RULES.md    (Conventions C1-C22)
-├── STATE.md    (Live memory — session continuity)
-├── workspace.json (Context)
-├── specifications/
-├── tasks/
-└── archives/tasks/
+├── INDEX.md            (Global aggregate registry — lists workspaces)
+├── RULES.md            (Global constitution — universal conventions)
+├── workspace.json      (Workspace config registry)
+└── {workspace}/        (Per-workspace artifacts; default name: main)
+    ├── INDEX.md        (Workspace-local spec registry)
+    ├── STATE.md        (Live memory — session continuity)
+    ├── specifications/
+    ├── tasks/
+    └── archives/tasks/
 ```
+
+> **WI-10 (l1-workspace-intent-routing.md)**: This diagram is authoritative.
+> Any deviation from the per-workspace layout is a release blocker. New
+> projects bootstrapped via `init` always land their first workspace under
+> `.design/{default}/` — never directly under `.design/`. Additional
+> workspaces are added later via `create-workspace` (see §Workspace Creation
+> below) — not by re-running `init`.
+
+### Workspace Creation (Post-Bootstrap)
+
+To add a workspace to a project that already has `.design/`:
+
+```bash
+node .magic/scripts/executor.js create-workspace --name={name} [--description="..."] [--default]
+```
+
+The script (per `l1-workspace-intent-routing.md` WI-6) atomically:
+
+1. Validates `{name}` against the workspace name regex.
+2. Adds an entry under `workspace.json#workspaces.{name}`.
+3. Provisions `.design/{name}/` with the standard subtree above.
+4. Leaves `default` unchanged unless `--default` was passed.
+
+`magic.spec` invokes this script automatically when `context.md` Step 0
+Workspace Intent Detection emits `create:{name}` (see WI-2 signal classes).
+Manual invocation is reserved for users who prefer to author the workspace
+config explicitly before authoring specs.
 
 ## Init Completion Checklist
 

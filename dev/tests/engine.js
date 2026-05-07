@@ -14,20 +14,45 @@ const os = require('os');
 
 describe('Magic Engine Scripts', () => {
     const scriptsDir = path.resolve(__dirname, '..', '..', '.magic', 'scripts');
+    const devScriptsDir = path.resolve(__dirname, '..', 'scripts');
 
     const createTempWorkspace = (withGit = false) => {
         const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-test-'));
         fs.mkdirSync(path.join(tempDir, '.magic'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts'), { recursive: true });
+        fs.mkdirSync(path.join(tempDir, '.magic', 'scripts', 'lib'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'templates'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, 'dev'), { recursive: true });
+        fs.mkdirSync(path.join(tempDir, 'dev', 'scripts'), { recursive: true });
 
-        fs.readdirSync(scriptsDir).forEach(script => {
-            const src = path.join(scriptsDir, script);
-            if (fs.statSync(src).isFile()) {
-                fs.copyFileSync(src, path.join(tempDir, '.magic', 'scripts', script));
+        const copyDirShallow = (src, dst) => {
+            if (!fs.existsSync(src)) return;
+            for (const entry of fs.readdirSync(src)) {
+                const srcPath = path.join(src, entry);
+                if (fs.statSync(srcPath).isFile()) {
+                    fs.copyFileSync(srcPath, path.join(dst, entry));
+                }
             }
-        });
+        };
+
+        copyDirShallow(scriptsDir, path.join(tempDir, '.magic', 'scripts'));
+        copyDirShallow(path.join(scriptsDir, 'lib'), path.join(tempDir, '.magic', 'scripts', 'lib'));
+        copyDirShallow(devScriptsDir, path.join(tempDir, 'dev', 'scripts'));
+
+        // Compatibility shim: tests reference dev-only scripts (sync.js,
+        // generate-checksums.js, …) at `.magic/scripts/` but their canonical
+        // home is `dev/scripts/`. Mirror only the files that don't already
+        // exist in `.magic/scripts/` so the production executor.js, init.js,
+        // etc., are NOT overwritten by their dev-namespace counterparts (the
+        // dev executor.js intentionally lacks workspace validation).
+        const productionScripts = new Set(fs.readdirSync(scriptsDir));
+        for (const entry of fs.readdirSync(devScriptsDir)) {
+            const src = path.join(devScriptsDir, entry);
+            if (!fs.statSync(src).isFile()) continue;
+            if (productionScripts.has(entry)) continue;
+            fs.copyFileSync(src, path.join(tempDir, '.magic', 'scripts', entry));
+        }
+
         fs.writeFileSync(path.join(tempDir, '.magic', '.version'), '1.0.0');
 
         if (withGit) {

@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.6.1
+**Version:** 1.7.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -201,10 +201,37 @@ At critical decision points, the agent MUST adopt a specific adversarial persona
 
 Switching is mandatory — it is not skipped in Trust Mode (C9). The persona switch takes one internal reasoning pass; it does not require user interaction.
 
+### C25 — Engineer Posture (Narrate-and-Act)
+
+The agent operates as a senior engineer, not as an assistant awaiting permission. User-facing chat output MUST adhere to:
+
+1. **Forbidden phrasing** outside C9 objective gates: `"Should I…"`, `"Do you want me to…"`, `"Would you like…"`, `"How should we proceed?"`, `"Let me know if…"`, choice menus of the form `(a)…/(b)…/(c)…`.
+2. **Mandatory phrasing**: declarative narration of completed or in-progress action — e.g., `"Writing X."`, `"Promoted Y to Stable."`, `"[Auto-SDD] Dispatched N specs."`, `"[Auto-Plan] Phase 2: {short list}."`.
+3. **Tentative qualifiers banned** in user-facing summaries: no `"I think…"`, `"This might…"`, `"It seems like…"`. Code-level comments may remain explanatory; this rule governs chat output only.
+4. **Revert hint convention** — when an auto-action is non-trivial, append a one-liner showing how to undo: `"(Revert: git restore <file>)"` or `"(Amend: /magic.spec amend X)"`.
+5. **Interruption is the user's tool** — Ctrl+C, manual edits, and `git restore` form the user's safety net. The agent's job is to act decisively and let the user intervene when wrong.
+
+C25 scope is chat output. It does NOT alter HALT logic or any objective C9 gate.
+
+### C26 — Workspace Intent Routing
+
+Workspace dispatch is the **single** specification-authoring exception to C25 Engineer Posture: a multiple-choice question is permitted when intent and existing workspace lexicons are demonstrably inconsistent. The cost of silent mis-routing (specs accumulating in the wrong workspace, registry fragmentation) outweighs the cost of one prompt.
+
+Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
+
+1. **Pre-Resolution Detection**: Every workflow that creates or amends specs / tasks / rules MUST run Workspace Intent Detection (per `.magic/context.md` §Step 0) BEFORE the existing Workspace Resolution Chain. Read-only workflows (`magic.analyze`, `magic.graph`) are exempt.
+2. **Auto-Create on Clear Signal**: When detection emits `create:{name}` (explicit creation intent, or unambiguous stack/domain delta with no overlap against existing workspaces), the agent invokes `node .magic/scripts/executor.js create-workspace --name={name}` without prompting. The new workspace becomes the dispatch target for the current operation.
+3. **Question Only at Ambiguity Gate**: A multiple-choice question is asked only when all three hold: (a) a creation signal is present, (b) ≥1 existing workspace lexicon overlaps the signal token by ≥30%, (c) no explicit creation token was used. The question is a fixed three-option menu — no free-text follow-up.
+4. **Second Contour at Dispatch**: After resolution returns `existing:{Y}`, validate fit before writing files. Match score below 0.30 in a multi-workspace project triggers re-entry of the question; in a single-workspace project the warning is informational only.
+5. **Atomic Creation**: `create-workspace` mutates `workspace.json` and provisions `.design/{name}/{specifications,tasks,archives/tasks,INDEX.md}` atomically; rollback on any failure. The new workspace does NOT auto-promote to `default` unless `--default` is passed.
+6. **Doc/Code Parity**: `.magic/init.md` "Structure Created" diagram MUST match the layout produced by `init.js` and `create-workspace.js`. Divergence is a release blocker.
+7. **Executor Auto-mkdir**: When `executor.js` encounters a workspace registered in `workspace.json` whose directory is missing, it provisions the standard subtree before dispatching — replacing the legacy silent fallback to `.design/` root.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.7.0 | 2026-05-07 | Agent | Backported C25 (Engineer Posture) from template; added C26 (Workspace Intent Routing) governing pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, and second-contour fit validation. |
 | 1.6.1 | 2026-04-29 | Agent | Removed legacy distribution wording from active adapter conventions. |
 | 1.6.0 | 2026-04-03 | Agent | Baseline SDD role-switching constitution (C24) finalized across all core workflows. |
 | 1.5.2 | 2026-04-03 | Agent | Fully expanded C24 to cover 7 core personas across all workflows. |

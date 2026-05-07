@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Active
 
 ## Overview
@@ -29,9 +29,10 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-role-cards.md](specifications/l2-role-cards.md) | Role card registry — full content of 13 initial cards (9 new + 4 C24 migrations) and frontmatter schema. | Stable | 2 | 1.0.0 |
 | [l2-role-integration.md](specifications/l2-role-integration.md) | Workflow integration of the role system: run/task/spec/analyze/rule/retro amendments, §C24 rewrite, check-prerequisites addition. | Stable | 2 | 1.0.0 |
 | [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | RFC | 2 | 1.1.0 |
+| [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-05-07
+- **Last Updated**: 2026-05-07 (Workspace Intent Routing engine improvement)

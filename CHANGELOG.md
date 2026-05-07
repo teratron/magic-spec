@@ -9,9 +9,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-
 - Updated 5 specifications (engine)
 - Updated task plan and task index (engine)
+- Added 2 specifications (engine)
+
+## [2.1.3] - 2026-05-07
+
+### Changed
+
+- **Internationalisation pass**: removed all Cyrillic tokens from engine and spec files (`.magic/context.md`, `l1-workspace-intent-routing.md`, simulation matrix). Detection of creation intent is now declared as **semantic** — the agent recognises equivalent phrasings in any natural language it understands without a hardcoded language token table. The English exemplars in WI-2.1 are reference anchors, not an exhaustive list. The project codebase, specifications, and technical documentation are English-only; non-English content is reserved for chat with the maintainer or explicit user request.
+- **`.design/RULES.md` (1.6.1 → 1.7.0)**: backported §C25 Engineer Posture from `.magic/templates/rules.md` (was missing in the project constitution despite being referenced by every workflow checklist), and added §C26 Workspace Intent Routing covering pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, second-contour fit validation, atomic creation, doc/code parity invariant, and executor auto-mkdir.
+
+### Fixed
+
+- **`dev/tests/engine.js` test harness**: previous `createTempWorkspace()` only mirrored `.magic/scripts/` into the temp dir, but tests reference dev-only scripts (`generate-checksums.js`, `sync.js`) at `.magic/scripts/` paths — their canonical home is `dev/scripts/`. Test harness now mirrors both directories and applies a non-overwriting compatibility shim: dev scripts are copied to `tempDir/.magic/scripts/` only when no production counterpart exists, preventing the dev `executor.js` (which intentionally lacks workspace validation) from overwriting the production one. Result: **11/11 tests pass** (was 0/11 — every test failed at setup).
+
+### Notes
+
+- **Engine version**: `2.1.2` → `2.1.3` (patch — internationalisation + test harness fix; no logic changes to the routing chain itself).
+- **Engineer Posture parity**: project `.design/RULES.md` now contains C25 and C26 inline, matching the template (`.magic/templates/rules.md`). The pre-existing template/project drift around C25 is closed; future projects bootstrapped from the template are unchanged.
+
+## [2.1.2] - 2026-05-07
+
+### Added
+
+- **`l1-workspace-intent-routing.md`** (new L1 spec, `.design/engine/specifications/`): formalises Workspace Intent Detection (WI-1 through WI-10) — a pre-resolution stage that classifies user input into `existing:{name}` / `create:{name}` / `ambiguous` before the existing Workspace Resolution Chain. Defines signal classes (creation token, stack/platform delta, domain delta), lexicon definition, ambiguity gate (overlap ≥30% threshold), atomic creation contract, and second-contour fit validation. Twelve canonical interaction outcomes (A1–F2) constitute the simulation matrix.
+- **`.magic/scripts/create-workspace.js`** (new executor script): atomically registers a workspace in `workspace.json` and provisions `.design/{name}/{specifications,tasks,archives/tasks,INDEX.md}`. Validates name regex, halts on duplicate registration or existing-but-unregistered directory, rolls back on partial failure. Supports `--name=`, `--description="..."`, `--default`, `--dry-run`. Invoked automatically by `magic.spec` Step 0 on `create:{name}` outcome.
+- **`.magic/context.md` §Workspace Fit Validation**: second contour after resolution — match score below 0.30 in multi-workspace projects re-enters the WI-4 menu; single-workspace projects emit informational narration only.
+- **`.magic/spec.md` §Step 0 Workspace Intent Detection (Mandatory Pre-Step)**: integration point between the workflow and the new chain. Detection result is recorded for the duration of the invocation.
+- **§C26 Workspace Intent Routing** (`.magic/templates/rules.md`): new convention codifying the routing protocol, auto-create contract, ambiguity gate, fit validation, atomic creation, doc/code parity invariant, and executor auto-mkdir.
+
+### Changed
+
+- **`.magic/scripts/executor.js`**: replaced silent fallback to `.design/` root with WI-9 auto-mkdir. When a workspace registered in `workspace.json` has no directory on disk, the executor now provisions the standard subtree (`specifications/`, `tasks/`, `archives/tasks/`) before dispatching the script — preventing field-observed accumulation of artifacts at the global registry level.
+- **`.magic/init.md` §Structure Created**: corrected diagram now shows the per-workspace layout that `init.js` actually produces (with `INDEX.md`, `RULES.md`, `workspace.json` at root and the `{workspace}/` subtree containing `INDEX.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`). The previous diagram showed a flat root layout that contradicted the code, causing agents to write spec files into `.design/` root.
+- **`.magic/init.md`**: added §Workspace Creation (Post-Bootstrap) documenting the `create-workspace` executor script for adding workspaces to existing projects.
+- **`.design/engine/INDEX.md`**: registered `l1-workspace-intent-routing.md` as Stable v1.0.0; spec count 14 → 15; registry version 1.9.0 → 1.10.0.
+- **`.design/INDEX.md`**: project version 1.2.2 → 1.3.0; engine version snapshot 2.1.0 → 2.1.2.
+
+### Fixed
+
+- **Field-bug-1 (spec files in `.design/` root)**: doc/code divergence in `init.md` plus silent fallback in `executor.js` jointly caused spec writes to land at `.design/` root in single-workspace projects when the workspace directory was missing on disk. Both root causes addressed (WI-9, WI-10).
+- **Field-bug-2 (new-workspace intent ignored)**: the resolution chain had no detection stage — Priority 3 silently picked the default workspace even when user input clearly named a new domain or stack. New §Step 0 detects intent before resolution and either auto-creates or asks a single multi-choice question (WI-1, WI-2, WI-4).
+
+### Notes
+
+- **Engine version**: `2.1.1` → `2.1.2` (patch — additive automation; no HALT logic or HARD gates altered).
+- **C25 scope adjustment**: the WI-4 ambiguity question is the single Engineer Posture exception during specification authoring. Justified in C26 by the high cost of silent mis-routing relative to one prompt.
+- **Backwards compatibility**: existing workflows continue to function unchanged when no creation signal is present (outcomes A2/A3/A4 preserve current behaviour). Projects that never trigger the new detection paths see no behavioural difference.
 
 ## [2.1.0] - 2026-05-07
 
@@ -64,7 +109,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **`rules/magic.md`**: Synchronized the **Completion Protocol (Mandatory Checklist)** with `AGENTS.md` and global rules. Added technical language policy (English), communication policy (Russian), formatting rules, and workflow-specific validation/versioning/synchronization steps.
+- **`rules/magic.md`**: Synchronized the **Completion Protocol (Mandatory Checklist)** with `AGENTS.md` and global rules.
 
 ## [2.0.18] - 2026-05-02
 

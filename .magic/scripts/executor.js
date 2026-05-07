@@ -72,12 +72,27 @@ if (fs.existsSync(workspaceJsonPath)) {
 
             if (workspaceEntry) {
                 const targetPath = path.join(process.cwd(), '.design', workspaceName);
-                if (fs.existsSync(targetPath)) {
-                    magicDesignDir = `.design/${workspaceName}`;
-                } else {
-                    // Fallback to ROOT if directory is missing (for fresh or drifted projects)
-                    console.log(`Note: Workspace directory '.design/${workspaceName}' missing. Falling back to root '.design/'.`);
+                if (!fs.existsSync(targetPath)) {
+                    // WI-9 (l1-workspace-intent-routing.md): Auto-mkdir the standard
+                    // subtree instead of silently falling back to .design/ root.
+                    // The previous fallback caused spec/task artifacts to accumulate
+                    // at the global registry level, breaking per-workspace isolation.
+                    try {
+                        const subtree = [
+                            path.join(targetPath, 'specifications'),
+                            path.join(targetPath, 'tasks'),
+                            path.join(targetPath, 'archives', 'tasks')
+                        ];
+                        for (const dir of subtree) {
+                            fs.mkdirSync(dir, { recursive: true });
+                        }
+                        console.log(`Note: Provisioned missing workspace directory '.design/${workspaceName}/' (WI-9 auto-mkdir).`);
+                    } catch (err) {
+                        console.error(`HALT: Failed to auto-provision workspace '${workspaceName}': ${err.message}`);
+                        process.exit(1);
+                    }
                 }
+                magicDesignDir = `.design/${workspaceName}`;
             } else {
                 console.error(`HALT: Unknown workspace name '${workspaceName}'. Fix and retry.`);
                 process.exit(1);
