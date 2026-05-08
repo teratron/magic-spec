@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Engine token optimization — `.magic/pause.md`** (90 → 64 lines, ~29% reduction): rewrote the workflow under uniform compaction rules — STATE.md → HANDOFF.json field mappings tabularized, prose explanations tightened, decorative scaffolding removed. All invariants preserved verbatim: 4 Core Invariants, 5 Steps, both `update-state` executor invocations, all 6 STATE.md field extractions, `patterns_established` extraction from phase frontmatter, 5-step Resume Protocol, 3 error-handling cases. Pre-flight `ok: true` post-edit; engine version `2.1.3` → `2.1.4`.
 - Updated 5 specifications (engine)
 - Updated task plan and task index (engine)
 - Added 2 specifications (engine)
