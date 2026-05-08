@@ -4,13 +4,11 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
-2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums/Ghost Registry).
+1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums / Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
-4. **Non-Overwriting**: Skips existing files. Never mutates user state.
-5. **Versioning (C14)**:
-    - **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
-    - **Rules**: Initial `RULES.md` is versioned at 1.0.0.
+4. **Non-Overwriting**: Skip existing files. Never mutate user state.
+5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`. Initial `RULES.md` is versioned at 1.0.0.
 
 ## Workflow: Setup & Verification
 
@@ -28,29 +26,37 @@ graph TD
 
 ### Steps
 
-1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
-    - If `ok: true` → Skip silently. Return control to calling workflow.
-    - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
-        - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
-        - If all mismatches are **out-of-scope** → **Proceed** silently (Log: "Integrity drift detected in out-of-scope files; ignoring per C15").
-        - If any mismatch is **in-scope** → **HALT**. Report: "Engine integrity failure (In-Scope): {warning_type}. Run `node .magic/scripts/executor.js update-engine-meta` or restore from origin."
-    - If `ok: false` & missing system files (no integrity warnings) → proceed to Step 2 (Init).
-    - If `ok: false` & reason is unrecognized → **HALT**. Report: "Unexpected pre-flight failure: {raw output}. Investigate manually."
-    - **Config Drift Advisory**: If output contains `CONFIG_DRIFT` warnings → log a non-blocking warning: "RULES.md was modified outside workflow." This is advisory only — do NOT halt or prompt the user. Auto-proceed.
-2. **Init**: `node .magic/scripts/executor.js init`.
-    - Creates: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`.
-    - **STATE.md**: Copy `.magic/templates/state.md` → `.design/{workspace}/STATE.md`.
-      Replace `{workspace-name}` with resolved workspace name, `{YYYY-MM-DD HH:MM}` with current time.
-      Set `**Status:** Active`, `**Phase:** 0 — Not Started`, `**Next Action:** Run /magic.task`.
-      Skip if `STATE.md` already exists (never overwrite existing live memory).
-3. **Verify**: Ensure all 6 artifacts exist (including STATE.md). HALT on failure.
-4. **Hint**: If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → Suggest: *"Analyze project"*.
+#### 1. Check — Pre-flight + C15 Filter
+
+Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. Branch on result:
+
+- `ok: true` → skip silently; return control to caller.
+- `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below).
+- `ok: false` + missing system files (no integrity warnings) → proceed to Step 2 (Init).
+- `ok: false` + unrecognized reason → **HALT**. Report: `"Unexpected pre-flight failure: {raw output}. Investigate manually."`
+- Output contains `CONFIG_DRIFT` (any branch) → log non-blocking advisory `"RULES.md was modified outside workflow."` Auto-proceed; do NOT halt or prompt.
+
+**C15 Filter** (canonical — referenced as `init.md §1` by every other workflow):
+
+1. Cross-reference each mismatched file against `workspace.json` `scope` for `{active-workspace}`.
+2. **All** mismatches out-of-scope → proceed silently. Log: `"Integrity drift detected in out-of-scope files; ignoring per C15"`.
+3. **Any** mismatch in-scope → **HALT**. Report: `"Engine integrity failure (In-Scope): {warning_type}. Run \`node .magic/scripts/executor.js update-engine-meta\` or restore from origin."`
+
+#### 2. Init
+
+Run `node .magic/scripts/executor.js init`. Provisions: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`. Plus **STATE.md**: copy `.magic/templates/state.md` → `.design/{workspace}/STATE.md`; replace `{workspace-name}` and `{YYYY-MM-DD HH:MM}` placeholders; set `**Status:** Active`, `**Phase:** 0 — Not Started`, `**Next Action:** Run /magic.task`. **Skip** STATE.md if it already exists (never overwrite live memory).
+
+#### 3. Verify
+
+Ensure all 6 artifacts exist (including STATE.md). HALT on failure.
+
+#### 4. Hint
+
+If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*.
 
 ### Structure Created
 
-`init` provisions a per-workspace layout, never a flat root. The first run
-also creates the global aggregate registry alongside the default workspace
-directory.
+`init` provisions a per-workspace layout, never a flat root. The first run also creates the global aggregate registry alongside the default workspace directory.
 
 ```plaintext
 .design/
@@ -65,32 +71,19 @@ directory.
     └── archives/tasks/
 ```
 
-> **WI-10 (l1-workspace-intent-routing.md)**: This diagram is authoritative.
-> Any deviation from the per-workspace layout is a release blocker. New
-> projects bootstrapped via `init` always land their first workspace under
-> `.design/{default}/` — never directly under `.design/`. Additional
-> workspaces are added later via `create-workspace` (see §Workspace Creation
-> below) — not by re-running `init`.
+> **WI-10 (l1-workspace-intent-routing.md)**: this diagram is authoritative; any deviation is a release blocker. New projects always bootstrap into `.design/{default}/`, never directly under `.design/`. Additional workspaces are added via `create-workspace` (below), not by re-running `init`.
 
 ### Workspace Creation (Post-Bootstrap)
 
-To add a workspace to a project that already has `.design/`:
+For projects that already have `.design/`:
 
 ```bash
 node .magic/scripts/executor.js create-workspace --name={name} [--description="..."] [--default]
 ```
 
-The script (per `l1-workspace-intent-routing.md` WI-6) atomically:
+Per `l1-workspace-intent-routing.md` WI-6 the script atomically: (1) validates `{name}` against the workspace name regex; (2) adds an entry under `workspace.json#workspaces.{name}`; (3) provisions `.design/{name}/` with the standard subtree above; (4) leaves `default` unchanged unless `--default` is passed.
 
-1. Validates `{name}` against the workspace name regex.
-2. Adds an entry under `workspace.json#workspaces.{name}`.
-3. Provisions `.design/{name}/` with the standard subtree above.
-4. Leaves `default` unchanged unless `--default` was passed.
-
-`magic.spec` invokes this script automatically when `context.md` Step 0
-Workspace Intent Detection emits `create:{name}` (see WI-2 signal classes).
-Manual invocation is reserved for users who prefer to author the workspace
-config explicitly before authoring specs.
+`magic.spec` invokes this automatically when `context.md` Step 0 emits `create:{name}` (per WI-2 signal classes). Manual invocation is reserved for users who prefer to author the workspace config explicitly before authoring specs.
 
 ## Init Completion Checklist
 
