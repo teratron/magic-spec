@@ -148,7 +148,7 @@ if (fs.existsSync(changelogPath)) {
     const last15 = lines.slice(-15).join('\n');
     contextContent += last15 + '\n';
 } else {
-    contextContent += 'No recent changelog found.\n';
+    contextContent += 'No recent changelog found.';
 }
 
 contextContent += '\n';

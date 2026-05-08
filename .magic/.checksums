@@ -31,7 +31,7 @@
   "scripts/export-wiki.js": "b964b799e04500bbee295ff5a83b4c569030f9f1b42b87934f0a4ac2be8e79ed",
   "scripts/extract-rationale.js": "64e79d6baffd65ce782295092c92bc084b9710c4e24daf65791fafd5c261faea",
   "scripts/finalize.js": "79d2d6290d6dae89a789c20e65f388bee8b3df92a59d82c38ae7ce7d87597457",
-  "scripts/generate-context.js": "0afecb2bbdbac150386eeacb86fa906c009b9e0f8b3a54da98f7287ab9d096ef",
+  "scripts/generate-context.js": "6a11daf2b36ce797f2b4372c2a7475fd05193729fd8bb4ff91320817621ca07b",
   "scripts/graph-cache.js": "154d101b59a82ee822999b89b89bf6a149c021d0c4f0a62e816319b5a3022967",
   "scripts/init.js": "ba5f56f019c781fbbdd934cbd298a74b7c4eec06eb287a27a4dfd380d7b7c803",
   "scripts/install-hooks.js": "945920eddd663d60a9702a52cb79e8646b891f4f58ffbdcd44fc79c9e10cc98a",
