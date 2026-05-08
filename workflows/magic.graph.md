@@ -18,12 +18,12 @@ handoffs:
 
 # Specification Knowledge Graph Workflow
 
-**Analysis triggers:** *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*
+**Analysis triggers:** *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*.
 
-**HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*
+**HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*.
 
-> **Executor:** Use `node .magic/scripts/executor.js <script>` for all commands.
-> **Read-only:** This workflow does not modify `.design/` artifacts. Findings may trigger handoffs to `magic.spec` or `magic.rule`.
+> **Executor:** `node .magic/scripts/executor.js <script>` for all commands.
+> **Read-only:** this workflow does not modify `.design/` artifacts. Findings may trigger handoffs to `magic.spec` or `magic.rule`.
 
 ## Steps
 
@@ -35,9 +35,9 @@ Run the full extract → build → analyze → export pipeline over `.design/` S
 node .magic/scripts/executor.js build-spec-graph
 ```
 
-Report the summary to the user:
+Report to the user:
 
-- **Graph size**: total nodes and edges
+- **Graph size**: total nodes and edges.
 - **God Nodes** (top 5 by degree): architectural hotspots. Flag any god node with `status ≠ Stable` as `PRIORITY_SPEC`.
 - **Coverage stats** per workspace (specs, files covered, coverage %).
 - **Orphaned files**: scoped in `workspace.json` but not covered by any spec's Canonical References. Each orphan is a gap candidate.
@@ -55,13 +55,13 @@ node .magic/scripts/executor.js detect-communities --include-md
 Report:
 
 - **Community listing**: each community with node count, cohesion score, and best-matching workspace (Jaccard score).
-- **Workspace alignment**: for each workspace, avg Jaccard and `LOW ALIGNMENT` / `WELL ALIGNED` signal.
+- **Workspace alignment**: per workspace, avg Jaccard and `LOW ALIGNMENT` / `WELL ALIGNED` signal.
 - **Oversized communities** (>25% of graph): report BFS-derived sub-cluster suggestions with proposed workspace names.
-- If Jaccard < 0.3 for any community → raise `BOUNDARY_DRIFT` advisory.
+- Any community Jaccard < 0.3 → raise `BOUNDARY_DRIFT` advisory.
 
 ### 3. HTML Visualization (HTML triggers only)
 
-Generated **only** when invocation matches an HTML trigger phrase. Skip this step for analysis triggers.
+Generated **only** when invocation matches an HTML trigger phrase. Skip for analysis triggers.
 
 ```bash
 node .magic/scripts/executor.js build-spec-graph --html
@@ -69,7 +69,7 @@ node .magic/scripts/executor.js build-spec-graph --html
 
 Output: `.design/spec-graph.html` — interactive vis.js visualization (community coloring, node inspector, search).
 
-Inform the user: "Graph visualization saved to `.design/spec-graph.html`. Open in a browser to explore."
+Inform user: *"Graph visualization saved to `.design/spec-graph.html`. Open in a browser to explore."*
 
 ### 4. Advisory
 

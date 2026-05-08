@@ -16,7 +16,7 @@ handoffs:
     condition: "gaps_confirmed"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.run.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.run.md (relative to workspace root) -->
 
 # Run Workflow
 

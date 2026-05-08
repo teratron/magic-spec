@@ -12,7 +12,7 @@ handoffs:
     condition: "repairs_needed"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.analyze.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.analyze.md (relative to workspace root) -->
 
 # Analyze Workflow
 

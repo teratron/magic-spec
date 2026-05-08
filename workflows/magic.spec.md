@@ -14,24 +14,18 @@ handoffs:
 
 # Specification Workflow
 
-## Write Permissions (Hard Limit)
+**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*.
 
-**Allowed write target — ONLY `.design/` subtree.**
-Everything outside `.design/` is FORBIDDEN. No exceptions.
+**Write Permissions (Hard Limit)**: ONLY `.design/` subtree. Everything outside `.design/` is FORBIDDEN. About to write outside? **STOP.**
 
-> **If you are about to write to any file outside `.design/` — STOP. This is out of scope for `magic.spec`.**
-
-**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
-**Scope:** Architectural exploration and specification authoring — what exists and how it is structured.
 **Hints:**
 
-- **Explore Mode**: Used for safe brainstorming. Transition to writing AUTOMATICALLY upon specific input or if Anti-Stall triggers (≥1 question asked without file creation). Do not stall.
-- **Delta Edits**: Use surgical search-and-replace tools for specs >200 lines to prevent corruption.
-- **T4 Rule Capture**: When input contains "remember that..." / "project rule:", spec workflow applies Tier Routing (global vs workspace RULES.md) and Duplication Check before writing — see §T4 Inline Guards in full implementation.
-- **Pipeline:** `magic.spec` → `magic.task` → `magic.run` (orchestration by `magic.task`, execution by `magic.run`)
-- **Finalization**: After dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
+- **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation).
+- **Delta Edits**: use surgical search-and-replace for specs >200 lines.
+- **T4 Capture**: input contains "remember that..." / "project rule:" → spec workflow applies Tier Routing + Duplication Check before writing (see `.magic/spec.md §T4 Inline Guards`).
+- **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
+- **Finalization**: after dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
 
-> **Full implementation:** `.magic/spec.md` · Skill: `skills/magic.spec/SKILL.md`
-> Read that file before proceeding. Do not execute any steps until it is read.
-> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.
-> **Anti-Hallucination Guard:** Do not invent or execute any ad-hoc physical scripts (e.g., custom `.js`, `.sh` test runners) for internal engine operations. Magic SDD workflow steps are intended to be evaluated cognitively by the LLM unless an executor script is explicitly provided.
+> **Full implementation:** `.magic/spec.md` · Skill: `skills/magic.spec/SKILL.md`. Read `.magic/spec.md` before proceeding.
+> **Executor:** `node .magic/scripts/executor.js <script>` for all automation.
+> **Anti-Hallucination Guard:** do not invent ad-hoc scripts (`.js`, `.sh`, etc.) for internal engine operations. Magic SDD steps are evaluated cognitively unless an executor script is explicitly provided.

@@ -16,7 +16,7 @@ handoffs:
     condition: "deep_audit_needed"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.graph.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.graph.md (relative to workspace root) -->
 
 # Specification Knowledge Graph Workflow
 

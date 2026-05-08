@@ -13,29 +13,25 @@ handoffs:
 
 # Task Workflow
 
-**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
+**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*.
 
-Trigger: `/magic.task [arg]`
-
-Arguments:
+**Trigger:** `/magic.task [arg]`. Arguments:
 
 - *(empty)* — full planning across all workspaces
 - `{workspace}` — scoped planning for a specific workspace
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magic.task`, `/magic.task engine`, `/magic.task "decompose phase-2 in more detail"`, `/magic.task docs "only new specs"`
+Examples: `/magic.task`, `/magic.task engine`, `/magic.task "decompose phase-2 in more detail"`, `/magic.task docs "only new specs"`.
 
 **Scope:**
 
-- **Rules Parity**: Version of `RULES.md` must be recorded in `TASKS.md` header.
-- **Registry First**: Every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
-- Plan generation, task decomposition, and execution orchestration.
-Execution is handled by `magic.run`. Specification authoring is handled by `magic.spec`. Rule governance is handled by `magic.rule`.
-Pipeline: `magic.spec` → `magic.task` → `magic.run`
-- **Finalization**: After plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
+- **Rules Parity**: `RULES.md` version must be recorded in `TASKS.md` header.
+- **Registry First**: every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
+- Plan generation, task decomposition, and execution orchestration. Execution is handled by `magic.run`. Specification authoring by `magic.spec`. Rule governance by `magic.rule`.
+- **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
+- **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
 
-> **Full implementation:** `.magic/task.md`
-> Read that file before proceeding. Do not execute any steps until it is read.
-> **Executor:** Use `node .magic/scripts/executor.js <script>` for all automation.
-> **Anti-Hallucination Guard:** Do not invent or execute any ad-hoc physical scripts (e.g., custom `.js`, `.sh` test runners) for internal engine operations. Magic SDD workflow steps are intended to be evaluated cognitively by the LLM unless an executor script is explicitly provided.
+> **Full implementation:** `.magic/task.md`. Read it before proceeding.
+> **Executor:** `node .magic/scripts/executor.js <script>` for all automation.
+> **Anti-Hallucination Guard:** do not invent ad-hoc scripts (`.js`, `.sh`, etc.) for internal engine operations. Magic SDD steps are evaluated cognitively unless an executor script is explicitly provided.
