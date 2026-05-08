@@ -46,7 +46,7 @@
   "scripts/update-project-meta.js": "3e5e3fe528cc879a240288b223840fa6ca40b5e085c806cf596b2e78519b4725",
   "scripts/update-state.js": "a9f15d42ccfeba0c1545373d660934895405012a56a20c351360e6af5ab1b022",
   "scripts/utils.js": "0c612bacbdbacb510072349c6ad0efa9a2017c6ed4befb0e84a91133364e8ea2",
-  "spec.md": "769935d8f09607fbf9eafe9c8f85a561c77309f7ade6968e63b5e4976c657235",
+  "spec.md": "2dab92f09ba7a26b31f514fcc0f5dea73dfac92dcea6aff2a7e88883abb11fdc",
   "task.md": "5051d777817c56ed61f008a3004c6aa6344370b87b3036f5193cf4d4a6e7bb61",
   "templates/changelog.md": "5e83d67073c1153a621bead8e832c6817b2195e7551d47ee9292b2eec41783ad",
   "templates/contributing.md": "e4e597d9f5eb7d16d85343187c2f838212547a57be04562c1b7a358a05f832e3",

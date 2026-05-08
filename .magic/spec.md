@@ -182,7 +182,7 @@ graph TD
 3. **Sync**:
    - Update `Version`, `Status`, `Layer` in `INDEX.md`.
    - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Resolve drift first: (a) sync INDEX.md and apply amendment rule to the external change, or (b) revert file header to registry version."* Resume only after user resolves.
-     - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the user only bumped INDEX.md without reviewing the external change, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed. Proceed? (a) Yes — continue, (b) No — revert file header first."* After confirmed resolution, **re-evaluate all Sync guards from the top** (RE-3, Cross-Workspace Parity, Existence Guard) before writing.
+     - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the user only bumped INDEX.md without reviewing the external change, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed. Proceed? (a) Yes — continue, (b) No — revert file header first."* After confirmed resolution, **re-evaluate all Sync guards from the top** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine) before writing.
      - **T4 Queue**: if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: *"T4 rule detected — queued pending drift resolution."* Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Resolve before proceeding: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore (document reason)."*
    - **Existence Guard**: target file in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
@@ -235,6 +235,8 @@ Check for:
 5. **Links**: `Related Specifications` and `Implements` accurate?
 6. **Rules**: any contradiction with `RULES.md`? (Flag, don't ignore.)
 7. **Sync Check**: `check-prerequisites` status.
+
+Any check fails → report as `[Spec-Review] {file} §{section}: {issue}` and block status promotion. Retain current status (`Draft` or `RFC`); do not advance to `Stable` until all critic findings are resolved.
 
 ### Graph Refresh (Post-Dispatch)
 
