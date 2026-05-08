@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { normalizePath, resolveDesignRoot } = require('./utils');
+const { normalizePath, resolveDesignRoot } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOKEN BENCHMARK — SDD Graph vs Raw Corpus
@@ -20,7 +20,7 @@ const { normalizePath, resolveDesignRoot } = require('./utils');
 // Token approximation: ceil(char_count / 4)  (industry-standard heuristic).
 //
 // Usage:
-//   node .magic/scripts/executor.js benchmark [options]
+//   node dev/scripts/executor.js benchmark [options]
 //
 // Options:
 //   --depth <n>    BFS depth for graph queries (default: 2)
@@ -126,7 +126,7 @@ function scanDir(dir, extensions, result = []) {
  * @returns {{nodes: Map<string, object>, edges: object[], analysis: object, adjacency: Map<string, string[]>}}
  */
 function loadGraph() {
-    const executorPath = path.join(__dirname, 'executor.js');
+    const executorPath = path.join(__dirname, '../../.magic/scripts/executor.js');
     const stdout = execFileSync(process.execPath, [executorPath, 'build-spec-graph', '--json'], {
         cwd: rootDir,
         env: process.env,

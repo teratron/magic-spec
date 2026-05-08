@@ -110,12 +110,36 @@ function lastSourceDate() {
 // CONTRIBUTING.md REGENERATION
 // ═══════════════════════════════════════════════════════════════════════════
 
+// ───────────────────────────────────────────────────────────────────────────
+// Project Name Resolution
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resolves the project display name for generated documentation.
+ * Resolution order:
+ *   1. workspace.json → meta.name  (explicit project config)
+ *   2. MAGIC_PROJECT_NAME env var  (CI/runtime override)
+ *   3. basename of cwd             (zero-config fallback)
+ *
+ * @returns {string}
+ */
+function getProjectName() {
+    const wsJsonPath = path.join(projectRoot, '.design', 'workspace.json');
+    if (fs.existsSync(wsJsonPath)) {
+        try {
+            const ws = JSON.parse(fs.readFileSync(wsJsonPath, 'utf8'));
+            if (ws.meta?.name) return ws.meta.name;
+        } catch { /* ignore parse errors */ }
+    }
+    return process.env.MAGIC_PROJECT_NAME || path.basename(projectRoot);
+}
+
 function generateContributing(targetVersion, state) {
     if (!fs.existsSync(templatePath)) return false;
 
     const template = fs.readFileSync(templatePath, 'utf8');
 
-    const projectName = 'Magic Spec';
+    const projectName = getProjectName();
 
     // Rules block — RULES.md sections §1–§6
     let rulesBlock = '> [!WARNING]\n> Project constitution (RULES.md) missing. No rules inferred.\n';
