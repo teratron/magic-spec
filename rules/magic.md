@@ -13,16 +13,34 @@ Sections are independent — apply each by its own trigger.
 
 ## 1. Engine Version Check (Local ↔ Remote)
 
-Run once at the start of the first session per day. Compares the local engine to the
-upstream release.
+Run at most once per project per 7 days. Compares the local engine to the upstream
+release without repeatedly contacting GitHub from every agent session.
+
+### Cache State
+
+Persist the last successful remote check in `.design/.cache/magic-version-check.json`
+when `.design/` exists. Minimum schema:
+
+```json
+{
+  "checked_at": "YYYY-MM-DD",
+  "local_version": "X.Y.Z",
+  "remote_version": "X.Y.Z",
+  "source": "raw.githubusercontent.com"
+}
+```
 
 ### Procedure
 
 1. Read local version from `.magic/.version`.
-2. Fetch the remote version from
+2. If `GITHUB_ACTIONS=true`, `CI=true`, or `MAGIC_VERSION_CHECK=0`, skip silently.
+3. Read `.design/.cache/magic-version-check.json` if present. If `checked_at` is
+   less than 7 calendar days old, use `remote_version` from cache and do not fetch.
+4. On cache miss or stale cache, fetch the remote version from
    `https://raw.githubusercontent.com/teratron/magic-spec/master/.magic/.version`
-   (timeout ≤ 3 s; on failure proceed silently).
-3. If `local < remote`, display:
+   (timeout ≤ 3 s). On success, update the cache. On failure, use cached
+   `remote_version` if available; otherwise proceed silently.
+5. If `local < remote`, display:
 
    > [!TIP]
    > A newer magic-spec version is available.
@@ -33,7 +51,7 @@ upstream release.
    > Manual update: replace `.magic/`, `workflows/`, `skills/`, `rules/` in your project
    > with the corresponding folders from the new release archive.
 
-4. If versions match, proceed silently.
+6. If versions match, proceed silently.
 
 ## 2. Engine Drift Auto-Analyze (Local ↔ Snapshot)
 
@@ -174,7 +192,7 @@ detected — reminds the user to run `/magic.run` or `archive-phases` directly.
 Before finishing any task that involved magic-spec workflows, verify §1–§7 were honored.
 
 - [ ] **§1 Version Check** — verified `.magic/.version` against the remote release
-      (once per day, first session); displayed the upgrade notice on `local < remote`.
+      (at most once per project per 7 days); displayed the upgrade notice on `local < remote`.
 - [ ] **§2 Drift** — compared local `.magic/.version` to the `**Engine Version:**`
       snapshot in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`);
       auto-ran `/magic.analyze` on mismatch, then resumed the original workflow.

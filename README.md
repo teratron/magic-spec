@@ -69,7 +69,7 @@ skills/
 
 ## 🔄 Updating
 
-Magic Spec includes a built-in version-check rule (`rules/magic.md`). Your AI agent will automatically compare `.magic/.version` against the latest GitHub release at the start of each session and prompt you when an update is available.
+Magic Spec includes a built-in version-check rule (`rules/magic.md`). Your AI agent compares `.magic/.version` against the upstream engine version at most once per project per 7 days, stores the result in `.design/.cache/magic-version-check.json`, skips the remote check in CI, and prompts you when an update is available.
 
 To update manually:
 

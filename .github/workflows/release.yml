@@ -8,13 +8,21 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: release-${{ github.ref_name }}
+  cancel-in-progress: true
+
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 90
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
 
       - name: Read version
         id: version
@@ -55,13 +63,15 @@ jobs:
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          GH_PROMPT_DISABLED: 1
         run: |
           VERSION="${{ steps.version.outputs.value }}"
           ZIP="magic-spec-v${VERSION}.zip"
+          TAG="v${VERSION}"
 
-          gh release create "v${VERSION}" "${ZIP}" \
-            --title "v${VERSION}" \
-            --notes "## Installation
+          cat > release-notes.md <<EOF
+          ## Installation
 
           Download \`${ZIP}\` and extract into your project root:
 
@@ -75,4 +85,27 @@ jobs:
 
           Then place the workflow files in your AI agent's commands directory — see [Adapter Paths](https://github.com/${{ github.repository }}#%EF%B8%8F-adapter-paths) in the README.
 
-          Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md)"
+          Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md)
+          EOF
+
+          for attempt in 1 2 3 4; do
+            if gh release create "${TAG}" "${ZIP}" --title "${TAG}" --notes-file release-notes.md 2>release-error.log; then
+              exit 0
+            fi
+
+            status=$?
+            cat release-error.log
+
+            if grep -qi "already exists" release-error.log; then
+              gh release upload "${TAG}" "${ZIP}" --clobber
+              exit $?
+            fi
+
+            if ! grep -qi "rate limit" release-error.log || [ "${attempt}" -eq 4 ]; then
+              exit "${status}"
+            fi
+
+            sleep_seconds=$((attempt * 900))
+            echo "GitHub API rate limit hit; retrying in ${sleep_seconds}s."
+            sleep "${sleep_seconds}"
+          done
