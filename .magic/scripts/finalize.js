@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { writeFileSafe, isDryRun } = require('./utils');
+const { writeFileSafe, isDryRun, mkdirSafe } = require('./utils');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
 const { computeSignificance } = require('./lib/significance');
 const { createIfMissing, appendBullet, releaseUnreleased } = require('./lib/changelog-writer');
@@ -30,8 +30,8 @@ const { archiveCompletedPhases } = require('./lib/phase-archiver');
 // ───────────────────────────────────────────────────────────────────────────
 
 const projectRoot = path.resolve(__dirname, '..', '..');
-const magicDir = path.join(projectRoot, '.magic');
-const stateFile = path.join(magicDir, '.finalize-state.json');
+const designCacheDir = path.join(projectRoot, '.design', '.cache');
+const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
 const VALID_WORKFLOWS = new Set(['spec', 'task', 'run', 'rule']);
 
@@ -158,6 +158,7 @@ function readState() {
  * @param {Object} state
  */
 function writeState(state) {
+    mkdirSafe(path.dirname(stateFile));
     writeFileSafe(stateFile, JSON.stringify(state, null, 2) + '\n');
 }
 

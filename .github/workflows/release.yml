@@ -36,7 +36,7 @@ jobs:
           version = open(".magic/.version").read().strip()
           zip_name = f"magic-spec-v{version}.zip"
           prefix   = f"magic-spec-v{version}/"
-          exclude  = {".magic/history", ".magic/tests", ".magic/.docs-state.json", ".magic/.project-meta-state.json"}
+          exclude  = {".magic/history", ".magic/tests", ".magic/.docs-state.json"}
 
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
               for f in ("AGENTS.md", "README.md", "LICENSE"):

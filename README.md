@@ -69,13 +69,13 @@ skills/
 
 ## 🔄 Updating
 
-Magic Spec includes a built-in version-check rule (`rules/magic.md`). Your AI agent compares `.magic/.version` against the upstream engine version at most once per project per 7 days, stores the result in `.design/.cache/magic-version-check.json`, skips the remote check in CI, and prompts you when an update is available.
+Magic Spec includes a built-in upgrade-detection rule (`rules/magic.md §1`). After you manually replace the engine folders with a newer release, the next `/magic.*` invocation compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md` and asks **[y/n]** whether to re-run `/magic.analyze`. No network calls, no hidden cache — purely local.
 
-To update manually:
+To update:
 
 1. Download the new release archive from [Releases](https://github.com/teratron/magic-spec/releases/latest).
 2. Replace `.magic/`, `workflows/`, `skills/`, and `rules/` in your project.
-3. Run `/magic.analyze` to verify synchronization.
+3. Run any `/magic.*` workflow — the agent will prompt you to run `/magic.analyze` to ratify the upgrade.
 
 ## 🔗 Integration
 

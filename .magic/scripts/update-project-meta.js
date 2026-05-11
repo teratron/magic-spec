@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { writeFileSafe } = require('./utils');
+const { writeFileSafe, mkdirSafe } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROJECT META UPDATER (C14.3 Extension — Idempotent)
@@ -40,7 +40,7 @@ const designDir = path.join(projectRoot, '.design');
 const globalIndexPath = path.join(designDir, 'INDEX.md');
 const workspaceJsonPath = path.join(designDir, 'workspace.json');
 const rulesPath = path.join(designDir, 'RULES.md');
-const stateFile = path.join(magicDir, '.project-meta-state.json');
+const stateFile = path.join(designDir, '.cache', 'project-meta-state.json');
 
 // ───────────────────────────────────────────────────────────────────────────
 // Argument Parsing
@@ -95,6 +95,7 @@ function readState() {
 }
 
 function writeState(state) {
+    mkdirSafe(path.dirname(stateFile));
     writeFileSafe(stateFile, JSON.stringify(state, null, 2) + '\n');
 }
 

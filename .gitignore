@@ -74,6 +74,10 @@ copilot-instructions.md
 !.agents/rules/
 .agents/rules/magic*.md
 
+# Engine runtime state (written to .design/.cache/ by scripts)
+.magic/.finalize-state.json
+.magic/.project-meta-state.json
+
 # Generated graph artifacts
 .design/spec-graph.html
 .design/spec-graph.json

@@ -16,7 +16,7 @@ Internal helper library (`scripts/lib/`) that implements the finalization protoc
 
 ## 1. Motivation
 
-The finalization protocol (§4 of `rules/magic.md`) requires several coordinated writes across version files, CHANGELOG, and phase archives. Rather than embedding this logic in `executor.js`, it is decomposed into focused single-responsibility modules in `scripts/lib/`.
+The finalization protocol (§3 of `rules/magic.md`) requires several coordinated writes across version files, CHANGELOG, and phase archives. Rather than embedding this logic in `executor.js`, it is decomposed into focused single-responsibility modules in `scripts/lib/`.
 
 ## 2. Library Modules
 
