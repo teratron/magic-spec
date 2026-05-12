@@ -1,13 +1,13 @@
 # Engine Templates
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
 ## Overview
 
-Template files in `.magic/templates/` that define the structural blueprints for specifications, plans, tasks, phases, and retrospectives. These templates are consumed by engine workflows during artifact creation.
+Template files in `.magic/templates/` that define the structural blueprints for specifications, plans, tasks, phases, and retrospectives. These templates are consumed by engine workflows during artifact creation. Phase task entries include an explicit `Verify` line so execution has a concrete completion criterion before `Done`.
 
 ## Related Specifications
 
@@ -31,6 +31,7 @@ Templates are the structural DNA of every `.design/` artifact. Changes to templa
 | Engine Safety (C1) | Templates are engine files — C14 meta-sync applies on modification |
 | Content Rules (RULES.md §5) | Templates enforce required sections (Overview, Motivation, Document History) |
 | Micro-spec Convention (C16) | `micro-spec.md` template provides lightweight alternative under 50 lines |
+| Verifiable Execution | `phase.md` requires a `Verify` field for every atomic task; vague success criteria are rejected by `task.md` decomposition |
 
 ## 5. Detailed Design
 
@@ -53,6 +54,7 @@ Each template guarantees:
 - Required metadata header (`Version`, `Status`, `Layer`).
 - Required sections per RULES.md §5 (Overview, Motivation, Document History).
 - Placeholder markers for automation substitution.
+- For `phase.md`, each atomic task block includes `Verify:` with a concrete command, check, or evidence source required before `Done`.
 
 ## Canonical References
 
@@ -69,4 +71,5 @@ Each template guarantees:
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
+| 1.1.0 | 2026-05-12 | Added mandatory `Verify` field to phase task entries and documented verifiable execution contract. |
 | 1.0.0 | 2026-03-29 | Initial Stable (bootstrapped from existing code) |

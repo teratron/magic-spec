@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.3.1
+**Version:** 1.3.3
 **Status:** Active
-**Engine Version:** 2.1.3
+**Engine Version:** 2.1.16
 
 ## Overview
 
@@ -24,6 +24,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | :--- | :--- | :--- | :--- |
+| 1.3.3 | 2026-05-12 | Agent | Added explicit Run QA `Verify Criterion` guard to align execution workflow with task verify lines and Test-engineer role card. Engine 2.1.15 → 2.1.16. |
+| 1.3.2 | 2026-05-12 | Agent | Integrated coding discipline into engine role cards and phase task template: material assumptions, diff traceability, minimal implementation, and mandatory `Verify` criteria. Engine 2.1.14 → 2.1.15. |
 | 1.3.1 | 2026-05-07 | Agent | Internationalisation: removed all Cyrillic tokens from engine/spec files; backported C25 + added C26 to project RULES.md (1.6.1 → 1.7.0); fixed dev/tests/engine.js harness (11/11 tests now pass). Engine 2.1.2 → 2.1.3. |
 | 1.3.0 | 2026-05-07 | Agent | Engine improvement: Workspace Intent Routing (l1-workspace-intent-routing.md). Engine 2.1.1 → 2.1.2. |
 | 1.2.2 | 2026-05-04 | Agent | Automated metadata update |

@@ -87,6 +87,7 @@ graph TD
 3.3. **Decision Review (opt-in)** — Activate `@role:code-skeptic` when the task's spec flags `requires-decision-review: true` OR the Coder identifies non-trivial design choices. Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
 3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. FAIL → return to Step 3. PASS with complexity notes → proceed to 3.6 (opt-in). Clean PASS → proceed to 3.5.
 3.5. **QA Review** — Activate `@role:test-engineer` before marking work complete.
+   - **Verify Criterion**: the task's `Verify` command/check/evidence is satisfied?
    - **Spec Boundary**: stays within the assigned spec section? No scope creep?
    - **Edge Cases**: error states, boundary inputs, null/empty handled?
    - **Side Effects**: changes affect any files or state outside the spec's declared scope?
@@ -142,6 +143,7 @@ Checklist — {operation}
   ☐ Spec Stability: All active-phase specs confirmed Stable in INDEX.md before execution
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section
+  ☐ Verify Criterion: task-specific command/check/evidence satisfied before Done
   ☐ QA Review: @role:test-engineer audit performed before marking tasks as Done
   ☐ Parallel: @role:orchestrator enforced; shared files serialized
   ☐ Role Registry: All referenced role IDs resolve to cards in .magic/roles/

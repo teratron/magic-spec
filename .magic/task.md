@@ -98,6 +98,7 @@ graph TD
 7. **Decompose**: split the active phase into 2-3 tasks per spec.
    - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
    - **Tracks**: group tasks by file independence.
+   - **Verify Line (Mandatory)**: every atomic task MUST include a `Verify` line with a concrete command, check, or evidence source. Vague criteria such as "works", "verify manually", or "covered by tests" are invalid unless the specific test/check is named.
    - **Testing (Mandatory)**: every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
 8. **Sync (Update Mode)**:
    - **C12 Quarantine**: if L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
@@ -160,6 +161,7 @@ Task Workflow Checklist — {operation}
   ☐ Pre-Planning Stabilization: Trust Mode batch applied (L1→L2 order); field normalization done
   ☐ Circular Guard: hard-dependency cycles checked (Implements chains); soft reference cycles logged
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
+  ☐ Verify Lines: Every atomic task has a concrete command/check/evidence criterion
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ Planning Audit: Draft Plan reviewed by `@role:planner` (Optimism, Dependencies, Risk)

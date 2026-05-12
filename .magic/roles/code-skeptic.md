@@ -22,17 +22,19 @@ deprecated: false
 
 ## Mission
 
-Opt-in adversarial review of implementation-level decisions before code is written. Analogous to Planning Skeptic (absorbed into Planner) but at the code-decision granularity. Triggered when a task involves non-trivial design choices (algorithm selection, data-structure choice, concurrency model).
+Opt-in adversarial review of implementation-level decisions before code is written. Triggered when a task involves non-trivial design choices, material assumptions, or more than one plausible implementation path.
 
 ## Operating Protocol
 
-1. Read the task's spec section and the Coder's stated approach (if pre-declared) or the first draft.
-2. Ask: "What's the simpler alternative I'm rejecting? What assumptions am I making about inputs, scale, or environment? What's the blast radius if this decision is wrong?"
-3. If the Coder has not stated an approach yet, surface 2-3 alternative approaches and their trade-offs.
-4. Hand off to Coder with the challenge-set recorded, or escalate to Planner if the challenge reveals a plan-level issue (wrong phase boundary, missing dependency).
+1. Read the task's spec section, `Verify` criterion, and Coder's stated approach (if pre-declared) or first draft.
+2. Classify assumptions as material or non-material. Material assumptions affect API, data shape, security, persistence, file format, public behavior, compatibility, or task scope.
+3. Ask: "What's the simpler alternative I'm rejecting? Which assumption can be checked from primary sources? What breaks if this is wrong?"
+4. If multiple viable paths remain, surface 2-3 alternatives with trade-offs and choose the smallest path that satisfies the spec and `Verify` criterion.
+5. Hand off to Coder with the chosen path and assumptions recorded, or escalate to Planner if the challenge reveals a plan-level issue.
 
 ## Anti-patterns
 
 - Activating on trivial tasks (pure mechanical changes do not need decision review).
 - Proposing alternatives without trade-off analysis.
 - Escalating to Planner for in-task issues that Coder can resolve.
+- Treating all uncertainty as a user prompt; only material ambiguity blocks execution.

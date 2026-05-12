@@ -1,13 +1,13 @@
 # Role System Workflow Integration
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
 
 ## Overview
 
-Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is wired into existing engine workflows (`run.md`, `task.md`, `spec.md`, `analyze.md`, `rule.md`, `retrospective.md`) and the `RULES.md` constitution. Also defines the `role_registry_integrity` addition to `check-prerequisites`, the role-template file, and the `update-engine-meta` treatment of role cards.
+Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is wired into existing engine workflows (`run.md`, `task.md`, `spec.md`, `analyze.md`, `rule.md`, `retrospective.md`) and the `RULES.md` constitution. Also defines the `role_registry_integrity` addition to `check-prerequisites`, the role-template file, the `Verify` guard in Run QA, and the `update-engine-meta` treatment of role cards.
 
 ## Related Specifications
 
@@ -93,9 +93,9 @@ Activates `@role:code-skeptic`. Proceeds to Step 3.4 on PASS, returns to Step 3 
 
 Inserted between Step 3 (or 3.3 if active) and Step 3.5. Activates `@role:code-reviewer`. On FAIL, returns to Step 3. On PASS with simplification notes, proceeds to Step 3.6 (opt-in). On clean PASS, proceeds to Step 3.5.
 
-### 2.5 Step 3.5 Amendment (rename Tester → Test-engineer)
+### 2.5 Step 3.5 Amendment (rename Tester → Test-engineer) [MODIFIED]
 
-Current `run.md` Step 3.5 "QA Review (C24)" prose is amended to begin with `Activate @role:test-engineer`. The four checks (Spec Boundary, Edge Cases, Side Effects, Regression Risk) are preserved verbatim, now referenced from the Test-engineer card's Operating Protocol.
+Current `run.md` Step 3.5 "QA Review (C24)" prose is amended to begin with `Activate @role:test-engineer`. The gate includes five explicit checks: Verify Criterion, Spec Boundary, Edge Cases, Side Effects, and Regression Risk. The Test-engineer card owns the detailed protocol; the workflow keeps the checklist visible so agents cannot mark `Done` without task-specific evidence.
 
 ### 2.6 New Gate: Step 3.6 — Simplify Pass (opt-in)
 
@@ -334,4 +334,5 @@ Automatically invoking `skills_recommended` when a role activates. Rejected: vio
 
 | Version | Date | Description |
 | :--- | :--- | :--- |
+| 1.1.0 | 2026-05-12 | Added explicit Run QA `Verify Criterion` guard aligned with task `Verify` lines and Test-engineer role card. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines workflow amendments, RULES.md §C24 rewrite, check-prerequisites addition, update-engine-meta treatment, and template file. |

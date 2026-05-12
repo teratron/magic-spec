@@ -31,6 +31,7 @@ duration_minutes: ~
 - **Spec:** {spec.md} §{section}
 - **Status:** {Todo | In Progress | Done | Blocked | Cancelled}
 - **Assignment:** {Agent | User}
+- **Verify:** {specific command, check, or evidence required before Done}
 - **Handoff:** {Next step / requirement}
 - **Notes:** {Initial context or constraints}
 
