@@ -8,7 +8,7 @@ The project creates an SDD (Specification-Driven Development) engine. The reposi
 
 **AGENT DIRECTIVE**: AI agents must clearly understand this separation. Unless explicitly told to work with the secondary maintenance parts, you must work ONLY with the core layers (Layer 1 and Layer 2).
 
-### 1.1. Layer 1: User Distribution (The Core Engine)
+### 1.1. Layer 1: User Distribution (The Release Kernel)
 
 This layer contains ONLY the resources the end-user will download and install. Nothing extra must be placed here.
 
@@ -17,17 +17,52 @@ This layer contains ONLY the resources the end-user will download and install. N
 - `skills/` — Skill wrappers (Compatibility API).
 - `rules/` — Rules for watching-processes on the user side.
 
+**User contract — what the end user does with the release kernel**:
+
+- **Consumes** workflows / skills / rules (read-only — the user invokes them via `/magic.*`, never edits them).
+- **Verifies** engine integrity through `update-engine-meta --check` (called by the pre-commit hook installed by `init.js`).
+- **Never regenerates** the integrity manifest (`.magic/.checksums`), never bumps `.magic/.version`, never modifies `.magic/` content. Drift is resolved by **restoring `.magic/` from the release archive**, not by overwriting checksums (which would mask the corruption that triggered the drift).
+
 **Constraints**:
 
-- These directories are distributed to the user (e.g., via GitHub Releases). Keep them strictly clean of dev-only artifacts.
-- Any changes here modify the workflow engine itself.
+- These directories ship to the user via GitHub Releases. Keep them strictly clean of dev-only artifacts.
+- L1 code **must not `require`** anything from `dev/`. The single tolerated exception is a **graceful-fallback `fs.existsSync` guard** (e.g., `update-engine-meta` → `dev/scripts/sync-skills.js` and `dev/scripts/generate-checksums.js`): if the dev tree is absent (user installation), warn and continue, never crash.
+- Any change in this layer modifies the workflow engine itself and triggers **C14** (version bump + checksum regeneration + skill-wrapper sync).
 
 ### 1.2. Layer 2: Auxiliary Core (`dev/`)
 
 - **Path**: `/dev/`
-- **Role**: The auxiliary part of the core engine. It contains essential development, testing, and operational logic that **must not** be distributed to the user side.
+- **Role**: The auxiliary part of the core engine. It contains development, testing, and operational logic that **must not** be distributed to the user side.
+- **Developer contract — what lives here**:
+  - **Manifest builders** that write to L1 artifacts (e.g., `dev/scripts/generate-checksums.js` writes `.magic/.checksums`).
+  - **Project-meta updaters** (e.g., `dev/scripts/update-project-meta.js` writes `.design/INDEX.md`).
+  - **Sync orchestrators** that coordinate cross-layer state (`dev/scripts/sync.js`, `sync-docs.js`, `sync-skills.js`, `sync-manifests.js`, `validate-hardlinks.js`).
+  - **Tests** (`dev/tests/`).
+- **Constraint**: anything that exists solely to **produce or maintain** L1 artifacts belongs here, even if the artifact it produces ships to users. The output is L1; the producer is L2.
 
-### 1.3. Secondary / Maintenance Components
+### 1.3. Layer Classification Algorithm (mandatory before relocating any script)
+
+When in doubt whether a script belongs in `.magic/scripts/` (L1) or `dev/scripts/` (L2), apply this algorithm. This is the same trace that uncovered the `generate-checksums.js` and `update-project-meta.js` mis-placements in v2.1.21–v2.1.22.
+
+1. **Enumerate user-facing entry points** — every place where an end user (not a magic-spec developer) can invoke a script:
+   - `workflows/*.md`
+   - `skills/**/*.md`
+   - `rules/*.md`
+   - `.magic/*.md` (workflow bodies referenced by the shims above)
+   - The hardcoded pre-commit hook content in `.magic/scripts/install-hooks.js`
+2. **Grep these entry points** for `executor.js <name>` and `.magic/scripts/<name>.js`. The union is the **L1 root set** of subcommands.
+3. **Compute transitive closure** — for each root script, follow its `require('./...')` and `require('../.../...')` chain. Every dependency that stays inside `.magic/` is L1; any cross to `dev/` is a **violation** to fix (move the consumer or extract a shim).
+4. **Distinguish read paths from write paths**. A script is not «L1 because something in L1 calls it» — check **which branch** is reached. Example: `update-engine-meta.js` is L1 because its `--check` branch (verify) is invoked by the user's pre-commit hook. Its write branch (`runGenerateChecksums` → bump version → regenerate manifest) is reached only in **developer engine-improvement work**; that branch may reach into `dev/` via a graceful-fallback guard. The classification of the script is set by its **mandatory** user-reachable code path, not by all code paths.
+5. **Anything not in the closure is L2**. Move it to `dev/scripts/`. If a `docs/` page or test references the old path, update those references in the same commit.
+
+### 1.4. Canonical case studies (do not regress these)
+
+- **`generate-checksums.js` → `dev/scripts/`** (v2.1.21 → v2.1.22). It is a manifest **builder**. The user contract is verify-only; users never regenerate `.checksums`. Caller `update-engine-meta.js` reaches it **only on the write branch**, which is itself reachable only by developer engine-improvement tasks. Placing the builder in L1 would force `update-engine-meta` to either (a) violate L1→L2 isolation or (b) crash on user installs where `dev/` is absent. Both are wrong; relocation is the fix.
+- **`update-project-meta.js` → `dev/scripts/`** (v2.1.20 → v2.1.21). Writes `.design/INDEX.md` for the magic-spec repo itself. Called only from `dev/scripts/sync.js`. Zero references from L1 entry points. Pure L2.
+- **`update-engine-meta.js` stays in `.magic/scripts/`**. Its `--check` mode is in the user's pre-commit hook (hardcoded in `install-hooks.js`); that is a direct L1 entry point. The write mode falls through to a graceful warning when `dev/scripts/generate-checksums.js` is absent — this is the **only** sanctioned L1→L2 fallback pattern.
+- **`install-hooks.js` stays in `.magic/scripts/`**. Called from L1 `init.js` during user project bootstrap. Its output (the pre-commit hook content) is itself a piece of the L1 contract.
+
+### 1.5. Secondary / Maintenance Components
 
 - **Role**: Everything else in the repository is secondary and serves solely to maintain, document, or test the core engine.
 - **Example (`.design/`)**: This is the project's own implementation of the Magic SDD workflow (a "testing ground"). It contains specifications and tasks for `magic-spec` itself.
@@ -37,7 +72,10 @@ This layer contains ONLY the resources the end-user will download and install. N
 
 ## 2. Agent Operational Rules
 
-1. **Strict Layer Boundary**: Always respect the boundary between Layer 1 (User Distribution) and Layer 2 (Auxiliary Core). Never leak `dev/` dependencies or logic into `.magic/`, `workflows/`, `skills/`, or `rules/`.
+1. **Strict Layer Boundary**: Always respect the boundary between Layer 1 (Release Kernel) and Layer 2 (Auxiliary Core). Concrete rules:
+   - **No `require` from L1 into L2** at module top level — L1 must load and run on a user install with no `dev/` directory present.
+   - **The one sanctioned exception**: a runtime `fs.existsSync` guard around an `execFileSync` / lazy `require` of a dev script, with a graceful warning on absence (pattern in `update-engine-meta.js` → `sync-skills.js` / `generate-checksums.js`). The L1 caller must complete its mandatory user-reachable code path **before** reaching the guard.
+   - **Before relocating any script** between layers, run the §1.3 Classification Algorithm and document the result (read vs. write path, user entry points, transitive closure). Do not relocate on intuition.
 2. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
 3. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
 4. **Engine Integrity**: Do not modify files in `.magic/` or `workflows/` unless the task specifically requires "Engine Improvement".
