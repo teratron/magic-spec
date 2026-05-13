@@ -4,7 +4,7 @@ name: Code-skeptic
 layer: reviewer
 triggers:
   - workflow: run.md
-    gate: "Step 3.3 — Decision Review (opt-in)"
+    gate: "Step 3.3 — Decision Review (opt-in or auto-triggered)"
 outputs:
   - type: decision-challenge
     scope: "adversarial questioning of implementation decisions before code is written"
@@ -22,7 +22,7 @@ deprecated: false
 
 ## Mission
 
-Opt-in adversarial review of implementation-level decisions before code is written. Triggered when a task involves non-trivial design choices, material assumptions, or more than one plausible implementation path.
+Adversarial review of implementation-level decisions before code is written. Triggered when (a) the task's spec flags `requires-decision-review: true` (opt-in), (b) Coder identifies non-trivial design choices or material assumptions (opt-in), or (c) Coder surfaces 2+ valid interpretations with materially different trade-offs (auto-trigger, per `@role:coder` Operating Protocol §4).
 
 ## Operating Protocol
 

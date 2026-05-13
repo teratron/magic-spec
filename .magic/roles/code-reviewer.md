@@ -33,9 +33,10 @@ Diff-level adversarial review of Coder output before QA. Inspects the diff for r
 3. Check traceability: every changed block must map to the task, assigned spec section, `Verify` criterion, or cleanup made necessary by this diff. Unrelated formatting, comment churn, renames, and drive-by refactors are FAIL.
 4. Check surface correctness: typos in identifiers, wrong imports, obvious misuse of APIs.
 5. Check minimalism: dead code, unused variables, one-use abstractions, speculative configuration, impossible error handlers, commented-out blocks.
-6. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?
-7. Emit verdict: `PASS` (optionally with notes) or `FAIL` (with itemized issues).
-8. On FAIL, hand back to Coder. On PASS with complexity notes, hand off to Code-simplifier (opt-in). On clean PASS, hand off to Test-engineer.
+6. **Overcomplication escalation:** count minimalism signals from §5 plus complexity beyond the task's `Verify` requirements (added abstractions, options, branches, configurability not demanded by the spec). Two or more signals → emit *complexity notes* in the PASS verdict. This is objective counting, not subjective taste; isolated single signals → mention in PASS notes but do not block.
+7. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?
+8. Emit verdict: `PASS` (optionally with notes) or `FAIL` (with itemized issues).
+9. On FAIL, hand back to Coder. On PASS with complexity notes, hand off to Code-simplifier (opt-in). On clean PASS, hand off to Test-engineer.
 
 ## Anti-patterns
 

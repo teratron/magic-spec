@@ -84,7 +84,7 @@ graph TD
    - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT** & report.
    - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Blocked`/`Cancelled`) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
 3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
-3.3. **Decision Review (opt-in)** — Activate `@role:code-skeptic` when the task's spec flags `requires-decision-review: true` OR the Coder identifies non-trivial design choices. Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
+3.3. **Decision Review (opt-in or auto-triggered)** — Activate `@role:code-skeptic` when (a) the task's spec flags `requires-decision-review: true`, (b) the Coder identifies non-trivial design choices, OR (c) the Coder surfaces 2+ valid interpretations with materially different trade-offs (auto-trigger, see `@role:coder` Operating Protocol §4). Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
 3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. FAIL → return to Step 3. PASS with complexity notes → proceed to 3.6 (opt-in). Clean PASS → proceed to 3.5.
 3.5. **QA Review** — Activate `@role:test-engineer` before marking work complete.
    - **Verify Criterion**: the task's `Verify` command/check/evidence is satisfied?

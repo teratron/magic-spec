@@ -29,10 +29,11 @@ Write the smallest diff that satisfies the current `Todo` task, its `Verify` cri
 1. Read `RULES.md` sections relevant to the task area (per C2 Rules First).
 2. Read the assigned spec section and task `Verify` line in full — not just the task title.
 3. Before editing, name any material assumption about API, data shape, security, persistence, file format, public behavior, or compatibility. If the assumption changes behavior or scope, stop and route to Code-skeptic or Debugger; otherwise record it in task notes.
-4. Implement only the minimal diff needed for the spec section and `Verify` criterion. Do not add speculative options, abstractions, configuration, or future-proofing.
-5. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
-6. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
-7. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
+4. **Surface multiple interpretations:** if the task / spec admits 2+ valid implementations with materially different trade-offs (e.g. response time vs throughput vs perceived latency; in-memory vs persistent; per-request vs batched), enumerate them as a one-line trade-off list in task notes and **mandatorily** hand off to Code-skeptic **before** editing. This is an auto-trigger, not opt-in.
+5. Implement only the minimal diff needed for the spec section and `Verify` criterion. Do not add speculative options, abstractions, configuration, or future-proofing.
+6. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
+7. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
+8. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
 
 ## Anti-patterns
 
