@@ -15,7 +15,7 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
 
     steps:
       - name: Checkout
@@ -36,24 +36,21 @@ jobs:
           version = open(".magic/.version").read().strip()
           zip_name = f"magic-spec-v{version}.zip"
           prefix   = f"magic-spec-v{version}/"
-          exclude  = {".magic/history", ".magic/tests", ".magic/.docs-state.json"}
+
+          # Distribution rule: .magic/, workflows/, skills/, rules/ are kept
+          # clean — volatile state and dev-only artifacts live under
+          # dev/.cache/ and .design/.cache/, which we never walk here. No
+          # per-path exclusions are needed at build time.
 
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
               for f in ("AGENTS.md", "README.md", "LICENSE"):
                   if os.path.exists(f):
                       zf.write(f, prefix + f)
               for top in (".magic", "workflows", "skills", "rules"):
-                  for root, dirs, files in os.walk(top):
-                      fwd = root.replace(os.sep, "/")
-                      if any(fwd.startswith(ex) for ex in exclude):
-                          dirs.clear()
-                          continue
-                      dirs[:] = [
-                          d for d in dirs
-                          if not any((fwd + "/" + d).startswith(ex) for ex in exclude)
-                      ]
+                  for root, _, files in os.walk(top):
+                      arc_root = root.replace(os.sep, "/")
                       for f in files:
-                          arc = fwd + "/" + f
+                          arc = f"{arc_root}/{f}"
                           zf.write(arc, prefix + arc)
 
           names = zipfile.ZipFile(zip_name).namelist()

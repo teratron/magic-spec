@@ -28,8 +28,8 @@ Flags (forwarded to `sync.js`):
 State files (do not edit by hand):
 
 - `.magic/.checksums` — engine drift baseline (Step 1).
-- `.magic/.project-meta-state.json` — last structural digest of `.design/INDEX.md` (Step 4).
-- `.magic/.docs-state.json` — last hash + version per workflow (Step 5).
+- `.design/.cache/project-meta-state.json` — last structural digest of `.design/INDEX.md` (Step 4).
+- `dev/.cache/.docs-state.json` — last hash + version per workflow (Step 5, dev-only).
 
 // turbo
 6. **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.

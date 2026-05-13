@@ -26,7 +26,7 @@ const { writeFileSafe } = require('../../.magic/scripts/utils');
  *   2. docs/*.md no longer get a global `vX.Y.Z` regex sweep. Each doc has
  *      a single anchored "Sync Note" line that holds the engine version.
  *   3. Sync Notes are only refreshed when the corresponding workflow source
- *      was modified (per stored hash in `.magic/.docs-state.json`) or when
+ *      was modified (per stored hash in `dev/.cache/.docs-state.json`) or when
  *      the engine version itself bumped — whichever applies.
  *   4. Triggers / Slash command lines are propagated from workflow frontmatter
  *      using anchored line patterns; if a doc lacks the line, we leave it
@@ -37,7 +37,10 @@ const projectRoot = process.cwd();
 const magicDir = path.join(projectRoot, '.magic');
 const versionFile = path.join(magicDir, '.version');
 const templatePath = path.join(magicDir, 'templates', 'contributing.md');
-const stateFile = path.join(magicDir, '.docs-state.json');
+// State cache lives under dev/.cache/ — it's a dev-only artifact owned by this
+// script, must not ship with the distributable engine (.magic/).
+const stateCacheDir = path.join(projectRoot, 'dev', '.cache');
+const stateFile = path.join(stateCacheDir, '.docs-state.json');
 
 const contributingPath = path.join(projectRoot, 'CONTRIBUTING.md');
 const rulesPath = path.join(projectRoot, '.design', 'RULES.md');
@@ -63,6 +66,7 @@ function readState() {
 }
 
 function writeState(state) {
+    if (!fs.existsSync(stateCacheDir)) fs.mkdirSync(stateCacheDir, { recursive: true });
     writeFileSafe(stateFile, JSON.stringify(state, null, 2) + '\n');
 }
 

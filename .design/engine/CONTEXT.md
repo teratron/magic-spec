@@ -28,9 +28,6 @@
 │   └── workflows/
 ├── .magic/
 │   ├── .checksums
-│   ├── .docs-state.json
-│   ├── .finalize-state.json
-│   ├── .project-meta-state.json
 │   ├── .version
 │   ├── analyze.md
 │   ├── context.md
@@ -96,4 +93,3 @@
 - Extended `.magic/scripts/update-engine-meta.js` with role-card history collapsing (`roles/*` → `roles` category)
 - Engine version bumped: 1.5.182 → 1.5.183; all 13 role cards registered in `.checksums`
 - `check-prerequisites` validation: `role_registry.total=13`, `missing=[]`, `dangling_handoffs=[]` ✓
-

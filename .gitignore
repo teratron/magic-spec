@@ -77,6 +77,10 @@ copilot-instructions.md
 # Engine runtime state (written to .design/.cache/ by scripts)
 .magic/.finalize-state.json
 .magic/.project-meta-state.json
+.magic/.docs-state.json
+
+# Dev-only state cache (sync-docs.js)
+dev/.cache/
 
 # Generated graph artifacts
 .design/spec-graph.html

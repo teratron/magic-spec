@@ -16,9 +16,10 @@ const crypto = require('crypto');
 /**
  * Files that must NOT appear in `.checksums` because they change as part of
  * normal engine operation and would produce spurious ENGINE_INTEGRITY warnings.
- * Covers two categories:
- *   - Volatile state caches written by sync sub-scripts during user activity.
- *   - Engine meta files bumped automatically on every version update.
+ *
+ * Per-project state caches (sync-docs, finalize, project-meta) live outside
+ * `.magic/` (in `dev/.cache/` or `.design/.cache/`) and never reach this set.
+ * What remains is the engine version file, which is bumped on every release.
  *
  * Consumers:
  *   - generate-checksums.js — must skip these when building the manifest.
@@ -26,7 +27,6 @@ const crypto = require('crypto');
  *   - check-prerequisites.js — relies on the manifest above being clean.
  */
 const VOLATILE_STATE_FILES = new Set([
-    '.docs-state.json',
     '.version',   // bumped on every engine update; drift-detector already skips it
 ]);
 

@@ -45,7 +45,7 @@
   "scripts/update-engine-meta.js": "9348b04a29cf34ce19b90a525b2995d2e1fb59bff7e9fcb04c6eff7992c4d732",
   "scripts/update-project-meta.js": "32553c202987c06083586fa0fd2225115fe66bd71a0a93a17ba0382019ff70f0",
   "scripts/update-state.js": "a9f15d42ccfeba0c1545373d660934895405012a56a20c351360e6af5ab1b022",
-  "scripts/utils.js": "b21a2cb1e6c9aef4d5fe4adb4f735e81d7ed70eddcab21a3efa2e817712d68c5",
+  "scripts/utils.js": "7c5dd0515fa0df0a90e0a0641cd450198fd80197f1e0a178f1db849e81f7b024",
   "spec.md": "2dab92f09ba7a26b31f514fcc0f5dea73dfac92dcea6aff2a7e88883abb11fdc",
   "task.md": "c66199f839ddfcd1f1ce91855bcb955d05cf167ff830165d863cee6eb17834ba",
   "templates/changelog.md": "5e83d67073c1153a621bead8e832c6817b2195e7551d47ee9292b2eec41783ad",

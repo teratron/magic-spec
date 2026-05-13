@@ -103,84 +103,19 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
-    // 1a. Regression — volatile state caches must NOT be in .checksums
-    //     (Field report: analyze warned ENGINE_INTEGRITY for .docs-state.json
-    //      and .project-meta-state.json after normal user workflows mutated them.)
+    // 1a. Architecture invariant — no volatile state caches inside .magic/
+    //     (Historical: regressions used to flag ENGINE_INTEGRITY when sync sub-
+    //      scripts wrote state caches into .magic/. State files now live in
+    //      .design/.cache/ and dev/.cache/; .magic/ stays a clean engine kernel.)
     // ───────────────────────────────────────────────────────────────────────────
-    test('generate-checksums.js should ignore volatile per-project state caches', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            // Pre-seed the volatile caches as a real user environment would have
-            // them after running any sync/meta-update workflow.
-            fs.writeFileSync(
-                path.join(tempDir, '.magic', '.docs-state.json'),
-                JSON.stringify({ workflows: {}, contributing: null }) + '\n'
-            );
-            fs.writeFileSync(
-                path.join(tempDir, '.magic', '.project-meta-state.json'),
-                JSON.stringify({ global: { digest: 'x', version: '1.0.0', date: '2026-01-01' } }) + '\n'
-            );
-
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
-            execSync(`node "${scriptPath}"`, { cwd: tempDir });
-
-            const checksums = JSON.parse(
-                fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8')
-            );
+    test('engine kernel must not ship volatile state caches in .magic/', () => {
+        const magicRoot = path.join(__dirname, '..', '..', '.magic');
+        const forbidden = ['.docs-state.json', '.project-meta-state.json', '.finalize-state.json'];
+        for (const name of forbidden) {
             assert.ok(
-                !('.docs-state.json' in checksums),
-                '.docs-state.json must NOT be included in checksums (volatile)'
+                !fs.existsSync(path.join(magicRoot, name)),
+                `${name} must not exist inside .magic/ — relocate to dev/.cache/ or .design/.cache/`
             );
-            assert.ok(
-                !('.project-meta-state.json' in checksums),
-                '.project-meta-state.json must NOT be included in checksums (volatile)'
-            );
-        } finally {
-            cleanup(tempDir);
-        }
-    });
-
-    // ───────────────────────────────────────────────────────────────────────────
-    // 1b. Regression — analyze must NOT raise ENGINE_INTEGRITY when volatile
-    //     state caches mutate after install (the user's exact field report).
-    // ───────────────────────────────────────────────────────────────────────────
-    test('check-prerequisites.js stays clean after volatile state caches mutate', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            // Minimum surface check-prerequisites needs to not bail on missing artifacts
-            fs.mkdirSync(path.join(tempDir, '.design'));
-            fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Index');
-            fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules');
-
-            // Simulate fresh install: state caches exist with initial content
-            const docsState = path.join(tempDir, '.magic', '.docs-state.json');
-            const projectState = path.join(tempDir, '.magic', '.project-meta-state.json');
-            fs.writeFileSync(docsState, JSON.stringify({ workflows: {} }) + '\n');
-            fs.writeFileSync(projectState, JSON.stringify({ global: { digest: 'a' } }) + '\n');
-
-            // Generate checksums as the engine bootstrap would.
-            execSync(`node "${path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js')}"`, {
-                cwd: tempDir, stdio: 'pipe'
-            });
-
-            // User now runs a workflow that mutates the state caches (sync-docs,
-            // update-project-meta) — this is the realistic post-install drift.
-            fs.writeFileSync(docsState, JSON.stringify({ workflows: { 'magic.spec.md': { hash: 'new', version: '1.0.0', syncedAt: '2026-04-25' } } }) + '\n');
-            fs.writeFileSync(projectState, JSON.stringify({ global: { digest: 'mutated', version: '1.0.1', date: '2026-04-25' } }) + '\n');
-
-            // Run analyze's prerequisite check — must not flag ENGINE_INTEGRITY.
-            const out = execSync(
-                `node "${path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js')}" --json`,
-                { cwd: tempDir, encoding: 'utf8' }
-            );
-            const result = JSON.parse(out);
-            const integrityWarnings = result.warnings.filter(w => w.type === 'ENGINE_INTEGRITY');
-            assert.deepStrictEqual(
-                integrityWarnings, [],
-                'Volatile state caches must not trigger ENGINE_INTEGRITY warnings'
-            );
-        } finally {
-            cleanup(tempDir);
         }
     });
 
