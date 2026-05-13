@@ -1,5 +1,5 @@
 {
-  "schema_version": "1.0",
+  "schema_version": "1.1",
   "project": "{project-name}",
   "workspace": "{workspace-name}",
   "paused_at": "{YYYY-MM-DDTHH:MM:SSZ}",
@@ -31,7 +31,19 @@
     ],
     "open_questions": [
       "{question 1}"
+    ],
+    "progress": {
+      "done_in_phase": [
+        "[T-ID] {Task Title}"
+      ],
+      "in_progress": "[T-ID] {Task Title}",
+      "blocked": [
+        "[T-ID] {reason}"
+      ]
+    },
+    "relevant_files": [
+      "{path}: {one-line note}"
     ]
   },
-  "resume_instructions": "Load STATE.md first. Acknowledge blocking_constraints. Load required_reading. Then execute next_action without prompting."
+  "resume_instructions": "Load STATE.md first. Acknowledge blocking_constraints. Load required_reading. Then execute next_action without prompting. Backwards-compat: legacy 1.0 handoffs (no progress / relevant_files) — treat absent fields as empty arrays."
 }

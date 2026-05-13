@@ -18,18 +18,25 @@ Apply the workspace resolution chain from [context.md](context.md). Read STATE.m
 
 ### Step 2: Snapshot Current Position
 
-Extract from STATE.md → HANDOFF.json:
+Extract from STATE.md → HANDOFF.json (`schema_version: 1.1`):
 
-| STATE.md field | HANDOFF.json target |
+| Source field | HANDOFF.json target |
 | :--- | :--- |
-| `**Task:**` | `current_position.task_id`, `task_title` |
-| `**Phase:**` | `current_position.phase`, `phase_name` |
-| `**Spec:**` | `current_position.spec_file`, `spec_section` |
-| `**Next Action:**` | `next_action` |
-| `Blocking Constraints [C-NNN]` | `blocking_constraints[]` |
-| `Recent Decisions` | `context_snapshot.active_decisions[]` |
+| STATE.md `**Task:**` | `current_position.task_id`, `task_title` |
+| STATE.md `**Phase:**` | `current_position.phase`, `phase_name` |
+| STATE.md `**Spec:**` | `current_position.spec_file`, `spec_section` |
+| STATE.md `**Next Action:**` | `next_action` |
+| STATE.md `Blocking Constraints [C-NNN]` | `blocking_constraints[]` |
+| STATE.md `Recent Decisions` | `context_snapshot.active_decisions[]` |
+| TASKS.md phase checklist `[x]` items (active phase) | `context_snapshot.progress.done_in_phase[]` |
+| TASKS.md `In Progress` task (active phase) | `context_snapshot.progress.in_progress` |
+| TASKS.md `Blocked [!]` tasks (active phase) | `context_snapshot.progress.blocked[]` |
+| `tasks/phase-{N}.md` frontmatter `patterns_established` | `context_snapshot.patterns_established[]` |
+| `tasks/phase-{N}.md` frontmatter `key_files.{created,modified}` | `context_snapshot.relevant_files[]` (one entry per path) |
 
-From `tasks/phase-{N}.md` YAML frontmatter: `patterns_established` → `context_snapshot.patterns_established[]`.
+### Pre-Compress Snapshot
+
+The extracted fields form the structured summary loaded on resume — Goal (from `current_position`) / Done / InProgress / Blocked / Decisions / Patterns / Files / NextStep. Capture only what survives across sessions; transient tool output is filtered through the Evidence Capsule (`context.md §Read Hygiene`) before any `relevant_files` note is written.
 
 ### Step 3: Build Required Reading List
 
@@ -38,7 +45,15 @@ Conditional: task's `spec_file` (if known); phase `requires` frontmatter (if pre
 
 ### Step 4: Write Handoff Artifacts
 
-1. **HANDOFF.json**: copy `.magic/templates/handoff.json`, fill `{}` placeholders, write to `.design/{workspace}/HANDOFF.json`.
+1. **HANDOFF.json**:
+   - **Iterative Merge** — if `.design/{workspace}/HANDOFF.json` already exists from a prior pause, read it **before** templating. Merge with newly extracted values (dedupe by string equality):
+     - `context_snapshot.active_decisions` ← union (old + new)
+     - `context_snapshot.patterns_established` ← union (old + new)
+     - `context_snapshot.progress.done_in_phase` ← union; any entry whose task is now `Done` is **promoted** from `in_progress` / `blocked` into `done_in_phase` (graduation rule)
+     - `context_snapshot.relevant_files` ← union, last-write wins on duplicate path
+     - All other fields → **replace** with current values (no merge: position, next_action, blocking_constraints reflect *now*, not history)
+   - **Schema fallback** — prior HANDOFF with `schema_version: 1.0` lacks `progress` / `relevant_files`: treat missing fields as empty arrays, then write 1.1 schema atomically.
+   - Copy `.magic/templates/handoff.json`, fill `{}` placeholders with merged values, write to `.design/{workspace}/HANDOFF.json`.
 2. **STATE.md update**:
 
    ```

@@ -103,7 +103,7 @@ If the argument is a single unquoted word that matches both a workspace name and
 
 ## Post-Resolution
 
-After resolution, load:
+After resolution, load **in this exact order** — the sequence forms the session prompt-cache prefix (see `§Context Budget Guard → Read Hygiene → Cache-Prefix Invariant`). Reordering or interleaving wide reads ahead of this load invalidates cache hits across the rest of the workflow.
 
 1. Global `.design/RULES.md` (always).
 2. Workspace `.design/{workspace}/RULES.md` (if exists).
@@ -115,5 +115,33 @@ After resolution, load:
    - Display: `⚠ Paused session detected. Last action: {next_action from STATE/HANDOFF}.`
    - Zero-Prompt (Trust Mode): automatically resume from recorded position.
    - Read `required_reading` from HANDOFF.json and load those files.
+   - **Memory Fence**: Loaded HANDOFF / STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with `next_action` or any `blocking_constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
    - Acknowledge all `blocking_constraints` from HANDOFF.json before first action.
    - After successful resume → update STATE.md: set `**Status:** Active`, clear handoff field.
+
+## Context Budget Guard
+
+Applies to every workflow. Track context-window usage; shift read behavior by tier. Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`). Thresholds are guidance, not contractual cutoffs.
+
+| Tier | Usage | Allowed reads |
+| :---: | :---: | :--- |
+| **PEAK** | 0–40% | Full files, parallel spec scans, inline diff bodies. |
+| **NORMAL** | 40–60% | Prefer `INDEX.md` / wiki / `STATE.md`; full read only for the active spec section. |
+| **DEGRADED** | 60–75% | Frontmatter / headings only. Cite line ranges, never full bodies. Warn user once. |
+| **POOR** | 75%+ | Halt new reads. Finish current atomic step; auto-call `/magic.pause`. No new tool spawns. |
+
+### Read Hygiene
+
+- **Stale tool output** — results from workflow steps older than N-2 of the active workflow: refer by step number or one-line summary; do **not** re-cite verbatim.
+- **Evidence Capsule** — when persisting a tool result into `STATE.md` / `HANDOFF.json` / phase frontmatter, store only: `command`, `exit_code`, `key_findings` (≤3 lines), `errors`, `next_action`. Never full stdout.
+- **Cache-Prefix Invariant** — the Post-Resolution load order (global `RULES.md` → workspace `RULES.md` → `STATE.md`) is fixed; it forms the session prompt-cache prefix. Reordering or interleaving wide reads ahead of it invalidates cache hits — preserve the order.
+
+### POOR Auto-Halt
+
+When usage crosses **75%**:
+
+1. Complete only the current atomic step — no new task, role activation, or tool spawn.
+2. Auto-invoke `/magic.pause` so `STATE.md` and `HANDOFF.json` capture position.
+3. Surface to user: `⚠ Context budget POOR ({pct}%). Session paused; resume in a fresh session.`
+
+Opt-out: set `MAGIC_CONTEXT_GUARD=0` to disable the auto-halt (warnings still emitted).

@@ -94,6 +94,7 @@ graph TD
    - **Regression Risk**: could break any already-`Done` tasks in the current phase?
    Any check fails → set status to `Blocked [!]` with specific reason and activate `@role:debugger` on the Blocked Branch. Do NOT proceed to Update.
    Public API / docs-visible behavior changed → activate `@role:docs-specialist` (Post-Done Docs Sync) before final Done transition.
+   **Evidence Format**: tool output cited as verification must follow the Evidence Capsule shape (`context.md §Read Hygiene`) — `command`, `exit_code`, `key_findings` (≤3 lines), `errors`. Full stdout in `Changes` / `Notes` / phase frontmatter is forbidden.
 3.6. **Simplify Pass (opt-in)** — Activate `@role:code-simplifier` when Code-reviewer emitted complexity notes OR user flagged `requires-simplify: true`. Propose revised diff; return to 3.4 on change, proceed to 3.5 if no simplification needed.
 4. **Update**:
    - **STATE Sync**: before touching TASKS.md, call `node .magic/scripts/executor.js update-state` with the current task result. Ensures STATE reflects reality even if execution is interrupted mid-step.
@@ -102,7 +103,7 @@ graph TD
    - **Handoff**: spec ambiguous → **HALT**. Apply Post-Task Drift Auto-Analyze (`rules/magic.md §5`): run `/magic.analyze` first to confirm gaps. Gaps confirmed → trigger `magic.spec` update. After any spec update, return to `magic.task update` to rebuild dependencies and re-verify task validity before resuming execution.
    - **Sync**: spec/phase finished → update high-level `[x]` in `PLAN.md`.
    - **Actionable Outcome**: after phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
-   - **Change Record**: write a 1-line summary in the task `Changes` field in `TASKS.md`.
+   - **Change Record**: write a 1-line summary in the task `Changes` field in `TASKS.md`. Embedded tool evidence (if cited) follows Evidence Capsule (`context.md §Read Hygiene`) — never raw stdout.
 5. **Phase Completion**:
    - **Retro L1**: auto-run Level 1 (snapshot). HALT on failure.
    - **Changelog L1**: append `## Phase {N} — {date}` + bullet list (extracted from **Done** task `Changes` fields) to `CHANGELOG.md`.
