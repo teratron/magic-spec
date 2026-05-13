@@ -33,7 +33,9 @@ echo "[Magic Sync] Checking engine integrity..."
 node .magic/scripts/executor.js update-engine-meta --check
 
 if [ $? -ne 0 ]; then
-  echo "[Magic Sync] Engine drift detected! Run 'node .magic/scripts/executor.js update-engine-meta' to bump version and refresh checksums before committing."
+  echo "[Magic Sync] Engine drift detected in .magic/."
+  echo "[Magic Sync] If this is unintended: restore .magic/ from the magic-spec release archive."
+  echo "[Magic Sync] If this is an engine-improvement task: run 'node .magic/scripts/executor.js update-engine-meta' (developer install only)."
   exit 1
 fi
 

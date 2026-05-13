@@ -23,7 +23,7 @@ const fs = require('fs');
  *   4. update-project-meta    — idempotent: bumps INDEX version + appends
  *                                history row only when structural digest
  *                                actually changed
- *                                (.magic/scripts/)
+ *                                (dev/scripts/)
  *   5. sync-docs              — regenerates CONTRIBUTING from template,
  *                                propagates Triggers/Slash command into
  *                                docs/{name}.md, refreshes Sync Note only
@@ -120,7 +120,7 @@ function main() {
     }
 
     // 4. Project meta (idempotent: only bumps INDEX when structural digest changes)
-    runScript(path.join(magicScriptsDir, 'update-project-meta.js'));
+    runScript(path.join(devScriptsDir, 'update-project-meta.js'));
 
     // 5. Docs (CONTRIBUTING + docs/*.md content sync)
     if (!rawArgs.includes('--skip-docs')) {

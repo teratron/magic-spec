@@ -53,11 +53,13 @@ For **full synchronization** (including automatic version bump in `.magic/.versi
 node .magic/scripts/executor.js update-engine-meta --workflow {current_workflow}
 ```
 
-For **manual checksum update only** (without version or history changes):
+For **manual checksum update only** (without version or history changes, developer install only):
 
 ```bash
-node .magic/scripts/generate-checksums.js
+node dev/scripts/generate-checksums.js
 ```
+
+> The manifest builder lives in `dev/scripts/` — it is a developer tool that ships pre-generated `.magic/.checksums` to end users. User installations only verify the manifest via `update-engine-meta --check` (pre-commit hook) and never regenerate it.
 
 ### When to update
 

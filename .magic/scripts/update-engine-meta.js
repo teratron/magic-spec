@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -37,6 +37,17 @@ function updateEngineMeta() {
     console.log('🔍 Checking engine integrity (C14)...');
 
     if (!fs.existsSync(checksumsPath)) {
+        // The release archive ships .magic/.checksums pre-generated. A missing
+        // manifest indicates either an incomplete install or accidental
+        // deletion — neither is fixable by silently regenerating (that would
+        // mask drift introduced by the same incident).
+        if (checkOnly) {
+            console.error('❌ .magic/.checksums missing. Restore .magic/ from origin.');
+            process.exit(1);
+        }
+        // Developer bootstrap path: generate-checksums.js lives in dev/scripts/
+        // (manifest-builder is a developer tool, not user-facing). Falls
+        // through to graceful warning if dev/ is absent (user installation).
         console.log('⚠️ Checksums missing. Initializing...');
         runGenerateChecksums();
         return;
@@ -72,7 +83,7 @@ function updateEngineMeta() {
 
     if (anyChanged) {
         if (checkOnly) {
-            console.error('❌ Engine drift detected. Run `node dev/scripts/executor.js update-engine-meta` to resolve.');
+            console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
             process.exit(1);
         }
 
@@ -122,11 +133,21 @@ function bumpVersion() {
 }
 
 /**
- * Executes the checksum generation script.
+ * Executes the checksum generation script. The manifest builder lives in
+ * dev/scripts/ (developer-only tool); user installations ship .checksums
+ * pre-generated and never regenerate. Falls back to a graceful warning if
+ * dev/ is absent so a user-side accidental drift surfaces a clear message
+ * instead of a missing-file crash.
  */
 function runGenerateChecksums() {
     const scriptPath = path.join(__dirname, '../../dev/scripts/generate-checksums.js');
-    execSync(`node "${scriptPath}"`, { stdio: 'inherit' });
+    if (!fs.existsSync(scriptPath)) {
+        console.warn('⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.');
+        console.warn('   Engine writes (checksums regeneration) are a developer operation.');
+        console.warn('   To clear drift: restore .magic/ from the release archive.');
+        return;
+    }
+    execFileSync(process.execPath, [scriptPath], { stdio: 'inherit' });
 }
 
 // Execute

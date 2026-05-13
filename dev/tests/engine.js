@@ -40,16 +40,25 @@ describe('Magic Engine Scripts', () => {
         copyDirShallow(devScriptsDir, path.join(tempDir, 'dev', 'scripts'));
 
         // Compatibility shim: tests reference dev-only scripts (sync.js,
-        // generate-checksums.js, …) at `.magic/scripts/` but their canonical
-        // home is `dev/scripts/`. Mirror only the files that don't already
-        // exist in `.magic/scripts/` so the production executor.js, init.js,
-        // etc., are NOT overwritten by their dev-namespace counterparts (the
-        // dev executor.js intentionally lacks workspace validation).
+        // sync-docs.js, validate-hardlinks.js, …) at `.magic/scripts/` even
+        // though their canonical home is `dev/scripts/`. Mirror only files
+        // that don't already exist in `.magic/scripts/` so the production
+        // executor.js, init.js, etc., are NOT overwritten by their
+        // dev-namespace counterparts (the dev executor.js intentionally
+        // lacks workspace validation).
+        //
+        // Skip `generate-checksums.js` explicitly — it's a developer-only
+        // manifest builder. Keeping it out of `tempDir/.magic/scripts/`
+        // makes the fixture match the actual user-install layout, so
+        // update-engine-meta's user-side fallback path is exercised
+        // honestly when dev/ scripts are absent.
+        const DEV_ONLY_NEVER_MIRROR = new Set(['generate-checksums.js']);
         const productionScripts = new Set(fs.readdirSync(scriptsDir));
         for (const entry of fs.readdirSync(devScriptsDir)) {
             const src = path.join(devScriptsDir, entry);
             if (!fs.statSync(src).isFile()) continue;
             if (productionScripts.has(entry)) continue;
+            if (DEV_ONLY_NEVER_MIRROR.has(entry)) continue;
             fs.copyFileSync(src, path.join(tempDir, '.magic', 'scripts', entry));
         }
 
@@ -86,7 +95,7 @@ describe('Magic Engine Scripts', () => {
     test('generate-checksums.js should create .checksums file correctly', () => {
         const tempDir = createTempWorkspace();
         try {
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
+            const scriptPath = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
 
             const checksumsPath = path.join(tempDir, '.magic', '.checksums');
@@ -224,8 +233,9 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             // update-engine-meta bails early when .checksums is missing (initializes and returns).
-            // Seed checksums so the bump branch is exercised.
-            const checksumScript = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
+            // Seed checksums so the bump branch is exercised. The manifest builder lives in
+            // dev/scripts/ (developer-only); tempDir has dev/scripts/ wired up by createTempWorkspace.
+            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
             execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
 
             // Trigger drift: modify a file so update-engine-meta detects change and bumps version
@@ -253,8 +263,8 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Index');
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules');
 
-            // Need checksums to pass integrity check
-            const checksumScript = path.join(tempDir, '.magic', 'scripts', 'generate-checksums.js');
+            // Need checksums to pass integrity check (developer-only manifest builder in dev/scripts/)
+            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
             execSync(`node "${checksumScript}"`, { cwd: tempDir });
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');

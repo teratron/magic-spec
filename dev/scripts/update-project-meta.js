@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { writeFileSafe, mkdirSafe } = require('./utils');
+const { writeFileSafe, mkdirSafe } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROJECT META UPDATER (C14.3 Extension — Idempotent)

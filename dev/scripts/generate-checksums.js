@@ -8,6 +8,12 @@ const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe, VOLATILE_STATE_
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
 // ═══════════════════════════════════════════════════════════════════════════
+//
+// Developer-side tool: builds .magic/.checksums by hashing the engine kernel.
+// The release archive ships .checksums pre-generated; end users only VERIFY
+// it via `update-engine-meta --check` (pre-commit hook). Users never need
+// to (and should not) regenerate the manifest — drift is resolved by
+// restoring .magic/ from origin, not by overwriting checksums.
 
 const MAGIC_DIR = path.join(__dirname, '../../.magic');
 const CHECKSUMS_FILE = '.checksums';
