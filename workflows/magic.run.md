@@ -2,18 +2,10 @@
 name: magic.run
 description: Workflow for executing tasks from the project plan.
 handoffs:
-  - label: "Generate tasks"
+  - label: "Replan"
     workflow: magic.task
-    prompt: "Proceed to rebuild dependencies and tasks seamlessly."
+    prompt: "Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magic.spec recommendation only on substantive design gaps. Per `rules/magic.md §5`, this is the SOLE user-visible next step after a phase — never propose /magic.analyze or /magic.spec proactively."
     condition: null
-  - label: "Diagnose drift"
-    workflow: magic.analyze
-    prompt: "Run post-task drift diagnostics to detect spec gaps before replanning or spec updates."
-    condition: "drift_suspected"
-  - label: "Update specifications"
-    workflow: magic.spec
-    prompt: "Transition to architecting solutions for confirmed spec gaps or Blocked tasks."
-    condition: "gaps_confirmed"
 ---
 
 # Run Workflow

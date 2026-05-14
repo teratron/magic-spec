@@ -1997,7 +1997,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected 1:**
   - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace {active-workspace}`.
     - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
-    - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Resolve via `magic.spec` or `magic.analyze` before planning." This catches manual edits that bypassed the spec workflow.
+    - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`." This catches manual edits that bypassed the spec workflow.
     - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
   - [ ] `PLAN.md` created: contains high-level entries for `auth.md` and `api.md` with single `[ ]` checkboxes. **No nested atomic tasks.**
   - [ ] `TASKS.md` created: contains **Phase Checklist** with atomic items prefixed with `[T-XXXX]` (e.g., `[ ] [T-1A01] Implement auth login`).
@@ -2027,7 +2027,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `docs-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
   - [ ] **HALT** before any task execution with drift report (Cognitive Guard)
   - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
-  - [ ] User directed to resolve via `magic.spec` or `magic.analyze`
+  - [ ] User directed to resolve via `/magic.spec`, then re-run `/magic.task` (per `rules/magic.md §5` Post-Task Replan — single user-facing recommendation, no `/magic.analyze` step)
 - **Guards tested:** File-Header Parity (run.md, Cognitive Guard), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
 
 ### T127 — Task Pre-flight File-Header Parity Scan
@@ -2267,19 +2267,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If approved → C5 deleted, Major version bump
 - **Guards tested:** Remove Dependency Scan integrated into Propose step (no extra gate)
 
-### T141 — Run Handoff Succession Returns to Task Update
+### T141 — Run Handoff Collapses to /magic.task (Post-Task Replan)
 
 - **Workflow:** `run.md` (Step 4 — Handoff)
 - **Synthetic State:**
   - `TASKS.md` Phase 1 task `T-1A01` mapped to `auth.md`
   - During execution, spec is ambiguous → HALT triggered
-- **Action:** Agent halts and triggers `magic.spec` update. Spec is updated successfully.
+- **Action:** Agent halts and recommends exactly ONE command — `/magic.task {workspace}` — per `rules/magic.md §5` Post-Task Replan. Inside `/magic.task`, Pre-flight HALTs with a single `/magic.spec` recommendation; user runs `/magic.spec`, then re-runs `/magic.task`.
 - **Expected:**
   - [ ] Agent records Blocked status with reason in TASKS.md
-  - [ ] Agent triggers `magic.spec` update for `auth.md`
-  - [ ] After spec update completes, agent returns to `magic.task update` to rebuild dependencies
-  - [ ] Task validity re-verified before resuming execution
-- **Guards tested:** Handoff succession chain (run → spec → task → run)
+  - [ ] Agent recommends `/magic.task` (with workspace context); does NOT proactively propose `/magic.analyze` or `/magic.spec`
+  - [ ] `/magic.task` Pre-flight surfaces the `/magic.spec` recommendation on substantive spec gap
+  - [ ] After spec update + re-run of `/magic.task`, dependencies rebuilt and task validity re-verified before resuming execution
+- **Guards tested:** Post-Task Replan collapse (run → task → optional HALT → spec → task → run); never two user-facing commands in sequence
 
 ### T142 — Simulate HALT Includes Recovery Hint
 
@@ -2768,7 +2768,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent builds dependency graph, identifies `engine/l1-core.md` as parent.
   - [ ] Agent reads `engine/INDEX.md` AND `engine/specifications/l1-core.md` header.
   - [ ] Agent detects `STATUS_DRIFT` or `VERSION_DRIFT` in the parent spec.
-  - [ ] **HALT** with report: "Header parity failure on parent spec `engine/l1-core.md`... Resolve via `magic.spec` or `magic.analyze` before planning."
+  - [ ] **HALT** with report: "Header parity failure on parent spec `engine/l1-core.md`... Run `/magic.spec` to reconcile, then re-run `/magic.task`."
 - **Guards tested:** Cross-Workspace Header Parity, multi-workspace pre-flight integrity.
 
 ### T178 — Task Soft-Reference Cycle Does Not Block Planning (RE-4 Regression)

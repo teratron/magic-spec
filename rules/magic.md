@@ -150,51 +150,62 @@ node .magic/scripts/executor.js archive-phases --dry-run  # preview only
 The pre-commit hook issues a non-blocking notice if unarchived Done phases are
 detected — reminds the user to run `/magic.run` or `archive-phases` directly.
 
-## 5. Post-Task Drift Auto-Analyze
+## 5. Post-Task Replan
 
-After each task or phase completes in `/magic.run`, new implementation knowledge
-may invalidate or expand existing specs. This rule enforces a diagnostic gate
-before any spec update or replanning is triggered.
+After `/magic.run` finishes a task or phase, drift signals may have surfaced new
+gaps. The user-visible next step collapses to ONE command — `/magic.task`
+(workspace propagated). Its Pre-Planning Stabilization auto-fixes mechanical
+drift; Pre-flight HALTs once with a single `/magic.spec` recommendation only
+when specs need substantive design work. `/magic.analyze` and `/magic.spec` are
+NEVER proactively offered after `/magic.run`.
 
-### When it triggers
+### Triggers (any one)
 
-Applies automatically on any of these signals during Step 4 (Update) or Phase Completion:
-
-- **Spec ambiguity** — agent identifies unclear, conflicting, or missing spec content
-- **Phase complete** — a full phase finishes (new scope or edge cases may have emerged)
-- **RULES drift** — `RULES.md` version > `TASKS.md` base detected during execution
+- **Spec ambiguity** — agent surfaced unclear / conflicting / missing spec content during execution
+- **Phase complete** — full phase finished (new scope or edge cases may have emerged)
+- **RULES drift** — `RULES.md` version > `TASKS.md` base detected mid-run
+- **Header drift** — `STATUS_DRIFT` / `VERSION_DRIFT` reported by Pre-flight
 
 ### Procedure
 
-1. Emit notice before branching to any spec or task workflow:
+1. Emit exactly one line:
 
    > [!NOTE]
-   > Post-task drift signal detected. Running `/magic.analyze` to confirm gaps
-   > before spec or plan updates.
+   > Post-task drift detected. Run `/magic.task` to revalidate the plan.
 
-2. Auto-execute `/magic.analyze` (scoped to the active workspace).
-3. Route based on findings:
-   - **Gaps or drift confirmed** → `/magic.spec` (targeted update) → `/magic.task update`
-   - **No gaps, tasks stale** → `/magic.task update` (resync only)
-   - **Clean, no signal** → resume `/magic.run` next task without interruption
-4. After any spec update, always run `/magic.task update` before resuming
-   `/magic.run` — never skip the resync step.
+2. Inside `/magic.task`, Pre-Planning Stabilization auto-fixes mechanical drift
+   (promote `Draft → Stable`, normalize field names, move phantoms to Backlog).
+   Pre-flight HALTs with one user-facing recommendation only on hard drift that
+   needs human intent (header parity violations, missing L1 parents, structural
+   conflicts):
 
-### Full chain
+   > Spec `{file}` requires design input: `{reason}`. Run `/magic.spec`, then
+   > re-run `/magic.task`.
+
+3. Clean `/magic.task` completion → handoff to `/magic.run`.
+
+### Hard rules for the agent
+
+- NEVER recommend `/magic.analyze` proactively after `/magic.run` — it stays on-demand.
+- NEVER recommend `/magic.spec` proactively after `/magic.run` — it surfaces ONLY inside `/magic.task` on a real HALT.
+- The user sees exactly ONE next step after a phase: `/magic.task` (on drift) or `/magic.run` (clean).
+
+### Chain
 
 ```
 task Done
   → drift signal?
-      yes → /magic.analyze → gaps confirmed? → yes → /magic.spec → /magic.task update → /magic.run
-                                             → no  → /magic.task update → /magic.run
+      yes → /magic.task
+              → auto-fix? → yes → replan → /magic.run
+                          → no  → HALT: /magic.spec, then /magic.task
       no  → /magic.run (next task)
 ```
 
 ### Exemptions
 
-- Targeted task execution with no handoff signal → skip silently.
+- Targeted task execution with no drift → `/magic.run` next, no replan.
 - Engine improvement tasks (explicit directive) — engine and spec layers are separate.
-- `MAGIC_POST_TASK_ANALYZE=0` env var disables this rule entirely.
+- `MAGIC_POST_TASK_REPLAN=0` env var disables this rule entirely.
 
 ## 6. Completion Protocol (Mandatory Checklist)
 
@@ -212,6 +223,8 @@ Before finishing any task that involved magic-spec workflows, verify §1–§5 w
 - [ ] **§4 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
       references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.
-- [ ] **§5 Post-Task Drift** — on any drift signal during `/magic.run`, ran
-      `/magic.analyze` before branching to `magic.spec` or `magic.task update`;
-      never jumped directly to `magic.spec` without the analyze gate.
+- [ ] **§5 Post-Task Replan** — on any drift signal during `/magic.run`, the
+      user-visible next step was exactly ONE command: `/magic.task` (with
+      workspace context). NEVER proactively offered `/magic.spec` or
+      `/magic.analyze` as a separate user-visible step — `/magic.spec` surfaces
+      only inside `/magic.task` on a real HALT.

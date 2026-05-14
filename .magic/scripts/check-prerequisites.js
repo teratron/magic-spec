@@ -259,7 +259,7 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version (${fileVersion}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
-                    `magic.spec or magic.analyze`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`
                 );
             }
         }
@@ -270,7 +270,7 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status (${fileStatus}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
-                    `magic.spec or magic.analyze`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`
                 );
             }
         }
