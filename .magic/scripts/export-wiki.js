@@ -201,7 +201,6 @@ function renderSpecArticle(spec, edges, byId) {
         }
     }
 
-    lines.push('');
     if (spec.workspace) {
         lines.push(`> Part of [[${workspaceSlug({ label: spec.workspace })}|${spec.workspace}]] · See [[index]] to navigate.`);
     } else {
