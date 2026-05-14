@@ -604,19 +604,20 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] TASKS.md updated with `Done`.
 - **Guards tested:** Plan Sync mechanism (Plan Amnesia fix)
 
-### T34 — Run Task Blocked Handoff to spec.md
+### T34 — Run Task Blocked Handoff Collapses to /magic.task (Post-Task Replan)
 
-- **Workflow:** `run.md` (Executing Tasks)
+- **Workflow:** `run.md` (Executing Tasks → Step 4 Handoff)
 - **Synthetic State:**
   - `TASKS.md` Phase 2 has 1 active task mapped to `auth.md`.
   - Task execution encounters ambiguous or missing details in the specification.
 - **Action:** User executes `/magic.run`
 - **Expected:**
-  - [ ] Agent records `Blocked` status and the specific reason in `TASKS.md` Notes.
-  - [ ] Agent utilizes the newly added `magic.spec` handoff in `.agents/workflows/magic.run.md`.
-  - [ ] Agent delegates resolution to `magic.spec` workflow (Explore/Update Mode).
-  - [ ] Once the specification is formally updated and unblocked, agent proceeds to `magic.task` to rebuild task dependencies.
-- **Guards tested:** Cross-workflow handoff routing, blocked task escalation.
+  - [ ] Agent records `Blocked [!]` status and the specific reason in `TASKS.md` Notes.
+  - [ ] Per `rules/magic.md §5` Post-Task Replan, agent recommends **exactly ONE** command: `/magic.task {workspace}`.
+  - [ ] Agent does NOT proactively propose `/magic.analyze` or `/magic.spec` from `run.md` (per `run.md` Step 4 Handoff explicit prohibition).
+  - [ ] `/magic.spec` recommendation surfaces ONLY inside `/magic.task` Pre-flight HALT when mechanical auto-fix cannot resolve the gap.
+  - [ ] After spec resolution + re-run of `/magic.task`, dependencies are rebuilt before resuming execution.
+- **Guards tested:** Post-Task Replan §5 collapse (run → task → optional HALT → spec → task → run); single user-facing command per HALT.
 
 ### T35 — Simulate Regression Sweep Post-Fix
 
@@ -962,9 +963,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `check-prerequisites` fails (missing artifacts).
   - [ ] `init` workflow executes `init.js`.
-  - [ ] `.design/workspace.json` is created with `default: root`.
+  - [ ] `.design/workspace.json` is created with `default: main` (per WI-10 in `l1-workspace-intent-routing.md` — new projects bootstrap into `.design/{default}/`, never directly under `.design/`).
   - [ ] `.design/RULES.md` and `INDEX.md` created.
-- **Guards tested:** Core Artifact Initialization, Zero-Prompt baseline.
+  - [ ] `.design/main/` directory created with `INDEX.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`.
+- **Guards tested:** Core Artifact Initialization (WI-10 layout), Zero-Prompt baseline, default workspace naming.
 
 ### T59 — Analyze: Depth Control (Threshold Enforcement)
 
@@ -3033,17 +3035,18 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Planning proceeds without prompting about mode
 - **Guards tested:** Mode assumption semantics (simulate fix v1.5.146), task.md §6 compliance
 
-### T195 — Suite Test T20 Expects Changelog L2 Approval Gate (Regression)
+### T195 — Run Changelog L2 Gate Is Git Commit, Not Inline Yes/No (C25)
 
 - **Workflow:** `run.md` (Plan Completion — Conclusion Cascade)
 - **Synthetic State:**
   - Same as T20: all phases Done, full plan complete
 - **Action:** Plan completion detected
 - **Expected:**
-  - [ ] Changelog Level 2 compiled and presented for user approval (Yes/No)
-  - [ ] Agent does NOT auto-write Changelog L2 silently in Trust Mode
-  - [ ] This is the only manual step in the Plan Completion cascade per `run.md` §94
-- **Guards tested:** Changelog L2 approval gate (simulate fix v1.5.146), run.md §Plan Completion compliance
+  - [ ] Changelog Level 2 compiled and **displayed verbatim** in the agent's output.
+  - [ ] Agent does NOT issue an inline Yes/No approval prompt for the changelog (per C25 Engineer Posture in `run.md` Run Completion Checklist: *"no Yes/No approval prompts inline (release gate is git commit)"*).
+  - [ ] The user-facing approval gate for release artifacts is the standard git commit step (Finalization Protocol), not the agent.
+  - [ ] Trust Mode (C9) §9 release-artifact gate preserved via git commit deferral, not via inline interaction.
+- **Guards tested:** C25 Engineer Posture (no inline release prompts), Finalization Protocol as the sole release gate, `run.md` Plan Completion §2 compliance.
 
 ### T196 — Pre-Advisory Audit Execution (C24)
 
@@ -3110,6 +3113,55 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After user resolves drift via `/magic.spec`: rule applied, plan generation re-attempted on subsequent `/magic.task` invocation
 - **Guards tested:** T4 Queue (Cross-Workflow), Cross-Workspace Parent Header Parity, atomic HALT preserves embedded T4
 
+### T201 — Run Backlog-Only State Guard
+
+- **Workflow:** `run.md` (Step 2 — Select)
+- **Synthetic State:**
+  - `.design/engine/TASKS.md` has `## Backlog` section with 5 spec entries.
+  - No active phase checklist (task.md generated 0 active phase tasks; all specs are RFC).
+  - TASKS.md active phase section: empty (no Todo, InProgress, Done, Blocked entries).
+  - STATE.md: `**Status:** Active`, `**Phase:** 1 — Pending`.
+- **Action:** `/magic.run` invoked; Pre-flight passes (`ok: true`); Select step finds 0 Todo tasks.
+- **Expected:**
+  - [ ] Select: 0 Todo AND 0 InProgress AND 0 Done AND 0 Blocked detected.
+  - [ ] *Backlog-Only* guard fires before *Complete* check.
+  - [ ] **HALT** emitted: "Active phase has no started tasks — all work is in `## Backlog`. Run `/magic.task` to activate a phase, then re-run `/magic.run`."
+  - [ ] Phase Completion (Retro L1 + Changelog + Archive) is **NOT** triggered.
+  - [ ] Agent does NOT archive any phases or write a Changelog entry.
+- **Guards tested:** Backlog-Only guard (run.md Step 2 Select, added Fix 1)
+- **Regression for:** "The Split Amendment" crisis (Improv Mode 2026-05-14); prevents false Phase Completion on empty active phase.
+
+### T202 — Spec RE-3 Re-evaluation Scoped to Amendment Target
+
+- **Workflow:** `spec.md` (Updating — Resolution Validation, RE-3)
+- **Synthetic State:**
+  - `l1-engine-core.md` (Stable, v1.5.0 in INDEX.md and file header) — amendment target.
+  - `l2-role-cards.md` (Implements: l1-engine-core.md): file header `v1.4.0`, INDEX.md `v1.3.0` → VERSION_DRIFT.
+  - No other workspaces.
+- **Action:** `/magic.spec amend l1-engine-core.md` → Version Drift Guard fires on `l2-role-cards.md` (in dependency chain) → HALT. User resolves by updating INDEX.md to `v1.4.0`. User selects "Yes, continue." → RE-3 re-evaluation triggered.
+- **Expected:**
+  - [ ] RE-3 re-evaluation scoped to amendment target (`l1-engine-core.md`): checks RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine for `l1-engine-core.md`'s own chain.
+  - [ ] C12 Quarantine check targets `l1-engine-core.md`'s L1 parent (if any) — NOT `l2-role-cards.md` (the drift-resolved file).
+  - [ ] `l2-role-cards.md` is NOT incorrectly quarantined during RE-3 re-evaluation.
+  - [ ] Amendment to `l1-engine-core.md` proceeds after RE-3 passes.
+  - [ ] C12 Cascade fires correctly AFTER the amendment (l1-engine-core.md → RFC → quarantine all Implements children including l2-role-cards.md).
+- **Guards tested:** RE-3 scope isolation (spec.md Resolution Validation, clarified by Fix 2); C12 ordering vs. RE-3 re-evaluation.
+- **Regression for:** "The Split Amendment" crisis — incorrect C12 on drift-resolved file during RE-3.
+
+### T203 — Source-of-Truth Contract: §5 Replan, WI-10 Bootstrap, C25 Posture (Regression Trinity)
+
+- **Workflow:** `run.md` + `init.md` + `run.md` Run Completion Checklist (cross-workflow)
+- **Synthetic State:**
+  - Active engine version ≥ 2.1.25.
+  - Three known suite drifts previously corrected (T34, T58, T195) must not re-regress.
+- **Action:** Static scan of `dev/tests/suite.md` against workflow source of truth.
+- **Expected:**
+  - [ ] T34 expectation cites `rules/magic.md §5` Post-Task Replan collapse to `/magic.task` — does NOT claim direct `run.md → /magic.spec` handoff.
+  - [ ] T58 expectation reads `default: main` — does NOT contain the literal string `default: root` (WI-10 contract).
+  - [ ] T195 expectation requires verbatim changelog display + git-commit gate — does NOT contain the phrase `Yes/No` as an inline approval gate.
+  - [ ] All three corrected expectations cite their workflow source-of-truth lines (e.g., `run.md` line 104, `init.md` WI-10, `run.md` C25 checklist).
+- **Guards tested:** Suite-to-workflow contract integrity (post-correction); guards that the simulation harness itself does not silently re-introduce outdated assertions.
+
 ```
-**Test Suite Finalized** - v1.9.70 (Last: T200)
+**Test Suite Finalized** - v1.9.72 (Last: T203)
 ```
