@@ -35,13 +35,13 @@ Parse `[arg]` to determine execution mode:
 4. **Logic Guards**:
    - **Dependency**: never start a task if parents are not `Done`.
    - **Mode**: per C3, default execution is **Parallel mode**. If mode absent from `RULES.md §7`, assume Parallel (do not HALT).
-   - **Sync**: `RULES.md` version > `TASKS.md` base → **HALT**. Report: *"Project conventions have changed since these tasks were generated (RULES: `{v}` > TASKS base: `{v}`). Run `magic.task update` to synchronize, or confirm you want to proceed with current tasks."* Wait for user response before executing.
+   - **Sync**: `RULES.md` version > `TASKS.md` base → auto-run `magic.task update` to synchronize; narrate `[Auto-Sync] RULES drift resolved: TASKS.md updated to RULES v{v}. Proceeding with execution. (Revert: git restore .design/{ws}/TASKS.md)`.
    - **Quarantine (C12)**: any active task whose L1 parent is not Stable in `INDEX.md` (C12 Quarantine) → **HALT**. Force re-run of `magic.task` to move tasks to quarantine/backlog. **Source-of-truth priority**: C12 reads `INDEX.md`; File-Header Parity (Pre-flight Step 1) reads file headers and is the definitive check. If `STATUS_DRIFT` or `VERSION_DRIFT` is detected in Pre-flight, that HALT takes precedence — a File-Header mismatch must be resolved before C12 logic is reached.
    - **Spec Stability**: before executing each task, verify its target spec is still `Stable` in `INDEX.md`. Demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: *"Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan."* Catches external status changes that C12 pre-flight alone cannot detect.
    - **Phantom Spec**: spec referenced by `TASKS.md` missing from `INDEX.md` or filesystem → **HALT**. Report: *"Phantom Spec `{file}` detected. Run `/magic.task` to revalidate the plan; it will surface a `/magic.spec` recommendation if the spec must be re-authored."*
    - **Pause Propagation**: task transitions to `Blocked [!]` AND no `Todo` tasks remain in the current phase → automatically call:
      `node .magic/scripts/executor.js update-state --workspace={dir} --status=Blocked`
-     Inform: *"⚠ Phase blocked. Session state saved. Run /magic.pause to create full handoff, or fix blockers and run /magic.run to continue."*
+     Inform: *"⚠ Phase blocked. Run `/magic.task {workspace}` to revalidate the plan. (Pause: /magic.pause)"* **Hard rule**: never name `/magic.spec` or `/magic.analyze` as the next step — they surface inside `/magic.task` Pre-flight only.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 
@@ -81,7 +81,7 @@ graph TD
    - **Spec Stability Spot-Check**: read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. **Bootstrap Exception**: task with `[Bootstrap]` marker → `Draft` is acceptable; skip this check for that task. Any other non-Stable spec → **HALT** before execution begins (per Logic Guard above).
    - **File-Header Parity**: for each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. Either mismatches `INDEX.md` → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`."* Catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the L1 parent header (incl. cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
 2. **Select**: Locate `Todo` task with fulfilled dependencies.
-   - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT** & report.
+   - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT**. List each `Blocked [!]` task with its recorded reason from `TASKS.md`. Recommend exactly ONE next step: `/magic.task {workspace}` (per `rules/magic.md §5`). **Hard rule**: do NOT recommend `/magic.spec` or `/magic.analyze` — blocked specs and drift surface inside `/magic.task` Pre-flight only.
    - *Backlog-Only*: 0 `Todo` AND 0 `In Progress` AND 0 `Done` AND 0 `Blocked` → **HALT**: "Active phase has no started tasks — all work is in `## Backlog`. Run `/magic.task` to activate a phase, then re-run `/magic.run`."
    - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Blocked`/`Cancelled`) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
 3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
@@ -151,7 +151,7 @@ Checklist — {operation}
   ☐ Role Registry: All referenced role IDs resolve to cards in .magic/roles/
   ☐ Handoff Integrity: Handoff chains declared by card frontmatter respected
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
-  ☐ Blockers: All Blocked tasks have Notes explaining [!] handoff
+  ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magic.task` only — `/magic.spec` never named directly
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, engine version bumped, CONTEXT.md updated
   ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (release gate is git commit)
 ```

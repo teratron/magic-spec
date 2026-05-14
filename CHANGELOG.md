@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Blocked-track next-step hardened** (engine v2.1.26 → v2.1.27): eliminated `/magic.spec` leaking into post-run blocked-track narration. Three changes in `run.md`:
+  1. **Step 2 Stalled** — "HALT & report" replaced with explicit rule: list blocked tasks + their `[!]` reasons, recommend `/magic.task {workspace}` as the ONE next step; hard-forbids naming `/magic.spec` or `/magic.analyze` directly.
+  2. **Logic Guards — Pause Propagation** — inform message rewritten: removed "fix blockers and run /magic.run" (which invited `/magic.spec` improvisation); now says "Run `/magic.task {workspace}` to revalidate"; same hard-forbid inline.
+  3. **Run Completion Checklist** — "Blockers" item extended: next-step recommendation must be `/magic.task` only; `/magic.spec` never named directly.
+  Root cause: the pattern `"HALT & report"` without specifying WHAT to recommend caused the AI to improvise `/magic.spec review` when a blocked track's reason referenced a spec-not-ready condition. All three insertion points now explicitly enforce `rules/magic.md §5` Post-Task Replan constraint.
+
+- **Full automation enforcement** (engine v2.1.25 → v2.1.26): eliminated all option-menu patterns (A/B/C choices) from workflow prompts — replaced with deterministic auto-apply or single-path recommendations across four workflows:
+  1. **`analyze.md` §Invariant 3** — scope of "read-only" clarified: spec content and project code remain protected; engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may now be auto-repaired for deterministic mechanical drift with a narration + `(Revert: git restore {file})` note.
+  2. **`analyze.md` §Step 11** — renamed from "Auto-Repair suggest" → "Auto-Repair"; added explicit auto-apply rules for: workspace layout drift (update `workspace.json` to match actual spec location on disk), registry healing (auto-execute repair), wiki staleness (auto-run `export-wiki`). Shadow Logic and Task Sync emit one `→ /cmd` line each. Explicitly forbids option menus.
+  3. **`spec.md` §Creating — Cross-Workspace Parity** — removed HALT + 3-option menu; auto-applies workspace-prefix naming (`{active-workspace}-{file}`) and proceeds with narration.
+  4. **`spec.md` §Updating — Version Drift Guard** — removed 2-option menu `(a)/(b)`; states one resolution path: run `/magic.spec` to reconcile `INDEX.md` to file-header version.
+  5. **`task.md` §Pre-flight — Cross-Workspace Parity** — removed 3-option menu `(a)/(b)/(c)`; single recommendation: run `/magic.spec` in the higher-version workspace, then re-run `/magic.task`.
+  6. **`run.md` §Logic Guards — Sync** — removed "or confirm you want to proceed" gate; RULES/TASKS drift now auto-resolves via `magic.task update` with narration.
+  Mode C Ventilation checklist updated: added "Auto-Repair applied; zero option menus" item. Engineer Posture (C25) annotation extended to explicitly forbid option menus.
+
 ### Added
 
 - **Role-protocol tighten** (engine v2.1.18 → v2.1.19): three behavioral gaps closed via surgical role-card edits — no new roles, no new files. Five files touched:

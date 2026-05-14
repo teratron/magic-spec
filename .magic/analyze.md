@@ -13,7 +13,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
-3. **Read-Only**: Proposals only. Never modify project code or `.design/` without user approval.
+3. **Read-Only for user specs and project code**: never modify spec content (`.design/specifications/**/*.md`, `PLAN.md`, `TASKS.md`, `RULES.md`) or project source code without explicit user approval. Engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may be auto-repaired for deterministic mechanical drift — narrate each fix with a `(Revert: git restore {file})` note.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
 5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
 6. **Depth Control (Safety)**: Before scanning:
@@ -192,9 +192,12 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 9. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 10. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-11. **Auto-Repair suggest**: suggest commands for missing specs, registry cleanup, or **Task Sync**.
-    - Registry healing needed (Registry Gaps/Orphans) → propose `magic.spec --audit --fix`.
-    - Shadow Logic detected → suggest `magic.spec create {module}` for files with ≥3 uncovered rationale comments.
+11. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
+    - **Workspace layout drift** (specs on disk differ from configured workspace path in `workspace.json`) → update `workspace.json` to reflect the actual spec location on disk; narrate `[Auto-Repair] Workspace layout fixed: '{ws}' path updated to {actual-path}. (Revert: git restore .design/workspace.json)`. Do NOT present A/B/C variant options.
+    - **Registry healing** (Ghost/Zombie entries in `INDEX.md`) → auto-execute registry repair; narrate `[Auto-Repair] Registry healed: {N} Ghost/Zombie entries resolved. (Revert: git restore .design/{ws}/INDEX.md)`.
+    - **Wiki stale** → auto-run `node .magic/scripts/executor.js export-wiki`; narrate `[Auto-Repair] Wiki refreshed.`.
+    - **Shadow Logic** (files with ≥3 rationale markers, no spec) → emit `→ /magic.spec create {module}` once per file (no menu).
+    - **Task Sync needed** → emit `→ /magic.task` (no option menu).
     - **Bloat Advisory**: run `node .magic/scripts/executor.js check-bloat --json`. Report any issues as advisory signals (non-halting, token-economy concern):
       - `SPEC_BLOAT` — spec file > 300 lines → suggest splitting into focused L2 specs.
       - `SPEC_DECOMPOSE` — spec file > 500 lines → recommend immediate decomposition.
@@ -376,11 +379,12 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Rule validation: RULES.md §7 compliance checked
   ☐ Bloat Advisory: check-bloat.js executed; SPEC_BLOAT/TASK_BLOAT signals included in Advisory Report
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
+  ☐ Auto-Repair: deterministic fixes applied (workspace layout, registry, wiki); single `→ /cmd` for ambiguous issues; zero option menus presented
   ☐ Report delivered: all findings consolidated before any HALT
   ☐ Advisory Report appended to output (with Confidence Breakdown + Shadow Logic + Graph Insights)
   ☐ Engine Meta: C14 not triggered (Mode C is read-only — C1 §7)
   ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
-  ☐ Engineer Posture (C25): findings narrated declaratively; advisory items as actionable links, not approval prompts
+  ☐ Engineer Posture (C25): findings narrated declaratively; advisory items as actionable links, not approval prompts; no option menus
 
 Analysis Checklist — Mode D: Focused
   ☐ Focus directive parsed and matched to project area
