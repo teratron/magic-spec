@@ -188,7 +188,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 8. **Documentation & Version Audit**:
    - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
    - Verify `README.md` version badge matches `.magic/.version`.
-   - Verify `rules/magic.md` points users to GitHub Releases and the current manual update folders.
+   - Verify `rules/MAGIC.md` points users to GitHub Releases and the current manual update folders.
    - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 9. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 10. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
@@ -251,7 +251,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 
 After every successful `/magic.analyze` run (Modes A, B, C, and D — including read-only audits), update the `**Engine Version:**` field in `.design/INDEX.md` to match the current value of `.magic/.version`. Add the field if missing.
 
-This is the contract consumed by [`rules/magic.md` §1](../rules/magic.md): the rule prompts the user to run `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version`. Skipping this step causes the drift prompt to fire on every session.
+This is the contract consumed by [`rules/MAGIC.md` §1](../rules/MAGIC.md): the rule prompts the user to run `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version`. Skipping this step causes the drift prompt to fire on every session.
 
 This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
@@ -345,7 +345,7 @@ Mode C Checklist — Ventilation
 2. **Rules**: apply via T4 protocol to `RULES.md §7`.
 3. **Dispatch**:
    - Registry Sync: update `INDEX.md`. Bump Registry version.
-   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/magic.md` §1](../rules/magic.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
+   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/MAGIC.md` §1](../rules/MAGIC.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node .magic/scripts/executor.js generate-context`.
    - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).

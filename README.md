@@ -69,7 +69,7 @@ skills/
 
 ## 🔄 Updating
 
-Magic Spec includes a built-in upgrade-detection rule (`rules/magic.md §1`). After you manually replace the engine folders with a newer release, the next `/magic.*` invocation compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md` and asks **[y/n]** whether to re-run `/magic.analyze`. No network calls, no hidden cache — purely local.
+Magic Spec includes a built-in upgrade-detection rule (`rules/MAGIC.md §1`). After you manually replace the engine folders with a newer release, the next `/magic.*` invocation compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md` and asks **[y/n]** whether to re-run `/magic.analyze`. No network calls, no hidden cache — purely local.
 
 To update:
 

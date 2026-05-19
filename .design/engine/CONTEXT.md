@@ -59,7 +59,7 @@
 │   ├── spec.md
 │   └── task.md
 ├── rules/
-│   └── magic.md
+│   └── MAGIC.md
 ├── skills/
 │   ├── magic-analyze/
 │   ├── magic-graph/

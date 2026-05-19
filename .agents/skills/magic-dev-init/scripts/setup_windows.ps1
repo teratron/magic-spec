@@ -27,10 +27,12 @@ if (-not (Test-Path "AGENTS.md") -or -not (Test-Path "workflows")) {
 }
 
 $userWorkflows = @(Get-ChildItem "workflows\*.md" -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
-$userRules = @(Get-ChildItem "rules\*" -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
+$userRules     = @(Get-ChildItem "rules\*" -File -ErrorAction SilentlyContinue | Select-Object -ExpandProperty Name)
 
-$ScriptDir  = Split-Path -Parent $MyInvocation.MyCommand.Path
-$RegistryFile = Join-Path (Split-Path -Parent $ScriptDir) "agents.json"
+$ScriptDir    = Split-Path -Parent $MyInvocation.MyCommand.Path
+$RepoRoot     = (Get-Item $ScriptDir).Parent.Parent.Parent.Parent.FullName
+$RegistryFile = Join-Path $ScriptDir "agents.json"
+
 
 if (-not (Test-Path $RegistryFile)) {
     Write-Error "Registry not found: $RegistryFile"
@@ -73,8 +75,8 @@ $cleanupPaths = @()
 foreach ($agKey in $ALL_AGENTS) {
     $ag = $REGISTRY[$agKey]
     if ($ag.workflows) { $cleanupPaths += "$($ag.dir)\$($ag.workflows)" }
-    if ($ag.skills) { $cleanupPaths += "$($ag.dir)\$($ag.skills)" }
-    if ($ag.rules) { $cleanupPaths += "$($ag.dir)\$($ag.rules)" }
+    if ($ag.skills)    { $cleanupPaths += "$($ag.dir)\$($ag.skills)" }
+    if ($ag.rules)     { $cleanupPaths += "$($ag.dir)\$($ag.rules)" }
     foreach ($f in $ag.files) { $cleanupPaths += $f }
 }
 foreach ($f in $userWorkflows) {
@@ -188,9 +190,9 @@ foreach ($ag in $activeAgents) {
 Write-Host "`n>>> Verification:" -ForegroundColor Green
 foreach ($ag in $activeAgents) {
     $w = if ($ag.workflows) { """$($ag.dir)\$($ag.workflows)""" } else { "" }
-    $s = if ($ag.skills) { """$($ag.dir)\$($ag.skills)""" } else { "" }
-    $r = if ($ag.rules) { """$($ag.dir)\$($ag.rules)""" } else { "" }
-    if ($w -or $s -or $r) { cmd /c "dir $w $s $r /AL 2>nul" }
+    $s = if ($ag.skills)    { """$($ag.dir)\$($ag.skills)""" } else { "" }
+    $r = if ($ag.rules)     { """$($ag.dir)\$($ag.rules)""" } else { "" }
+    if ($w -or $s -or $r)   { cmd /c "dir $w $s $r /AL 2>nul" }
 }
 
 $expected = 1

@@ -613,7 +613,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User executes `/magic.run`
 - **Expected:**
   - [ ] Agent records `Blocked [!]` status and the specific reason in `TASKS.md` Notes.
-  - [ ] Per `rules/magic.md §5` Post-Task Replan, agent recommends **exactly ONE** command: `/magic.task {workspace}`.
+  - [ ] Per `rules/MAGIC.md §5` Post-Task Replan, agent recommends **exactly ONE** command: `/magic.task {workspace}`.
   - [ ] Agent does NOT proactively propose `/magic.analyze` or `/magic.spec` from `run.md` (per `run.md` Step 4 Handoff explicit prohibition).
   - [ ] `/magic.spec` recommendation surfaces ONLY inside `/magic.task` Pre-flight HALT when mechanical auto-fix cannot resolve the gap.
   - [ ] After spec resolution + re-run of `/magic.task`, dependencies are rebuilt before resuming execution.
@@ -2029,7 +2029,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `docs-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
   - [ ] **HALT** before any task execution with drift report (Cognitive Guard)
   - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
-  - [ ] User directed to resolve via `/magic.spec`, then re-run `/magic.task` (per `rules/magic.md §5` Post-Task Replan — single user-facing recommendation, no `/magic.analyze` step)
+  - [ ] User directed to resolve via `/magic.spec`, then re-run `/magic.task` (per `rules/MAGIC.md §5` Post-Task Replan — single user-facing recommendation, no `/magic.analyze` step)
 - **Guards tested:** File-Header Parity (run.md, Cognitive Guard), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
 
 ### T127 — Task Pre-flight File-Header Parity Scan
@@ -2275,7 +2275,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `TASKS.md` Phase 1 task `T-1A01` mapped to `auth.md`
   - During execution, spec is ambiguous → HALT triggered
-- **Action:** Agent halts and recommends exactly ONE command — `/magic.task {workspace}` — per `rules/magic.md §5` Post-Task Replan. Inside `/magic.task`, Pre-flight HALTs with a single `/magic.spec` recommendation; user runs `/magic.spec`, then re-runs `/magic.task`.
+- **Action:** Agent halts and recommends exactly ONE command — `/magic.task {workspace}` — per `rules/MAGIC.md §5` Post-Task Replan. Inside `/magic.task`, Pre-flight HALTs with a single `/magic.spec` recommendation; user runs `/magic.spec`, then re-runs `/magic.task`.
 - **Expected:**
   - [ ] Agent records Blocked status with reason in TASKS.md
   - [ ] Agent recommends `/magic.task` (with workspace context); does NOT proactively propose `/magic.analyze` or `/magic.spec`
@@ -3156,7 +3156,7 @@ If any test fails, document the failure reason and propose a fix.
   - Three known suite drifts previously corrected (T34, T58, T195) must not re-regress.
 - **Action:** Static scan of `dev/tests/suite.md` against workflow source of truth.
 - **Expected:**
-  - [ ] T34 expectation cites `rules/magic.md §5` Post-Task Replan collapse to `/magic.task` — does NOT claim direct `run.md → /magic.spec` handoff.
+  - [ ] T34 expectation cites `rules/MAGIC.md §5` Post-Task Replan collapse to `/magic.task` — does NOT claim direct `run.md → /magic.spec` handoff.
   - [ ] T58 expectation reads `default: main` — does NOT contain the literal string `default: root` (WI-10 contract).
   - [ ] T195 expectation requires verbatim changelog display + git-commit gate — does NOT contain the phrase `Yes/No` as an inline approval gate.
   - [ ] All three corrected expectations cite their workflow source-of-truth lines (e.g., `run.md` line 104, `init.md` WI-10, `run.md` C25 checklist).
