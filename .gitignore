@@ -73,6 +73,7 @@ copilot-instructions.md
 .*/rules/
 !.agents/rules/
 .agents/rules/magic*.md
+.agents/rules/MAGIC.md
 
 # Engine runtime state (written to .design/.cache/ by scripts)
 .magic/.finalize-state.json
