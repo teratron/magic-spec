@@ -35,7 +35,7 @@
   "scripts/graph-cache.js": "154d101b59a82ee822999b89b89bf6a149c021d0c4f0a62e816319b5a3022967",
   "scripts/init.js": "ba5f56f019c781fbbdd934cbd298a74b7c4eec06eb287a27a4dfd380d7b7c803",
   "scripts/install-hooks.js": "1139e0a6c00d6c77bdc5a66d1f99fc4da9968f0002de63bb884b8a47de608802",
-  "scripts/lib/changelog-writer.js": "9c91f444a92fe0e460cb3d65b1c3c84964a9dff0b65bc44661ebab9e1900ce41",
+  "scripts/lib/changelog-writer.js": "586d022ae503d013a7f21f104f6ec06deb1379adcf0940651534f10ec77a9754",
   "scripts/lib/commit-suggester.js": "9f7d1ac4d6ecaa6c957f4bebf16d4c1c0e405ea7eb859eef7483976675fe249f",
   "scripts/lib/git-utils.js": "c759f24fba6d00911dc9ba6da325a7ccbd40ed25f9d8a40838f7ee37ff86dc5c",
   "scripts/lib/phase-archiver.js": "4bfc09b98a35f17b6625105220f765e721fbc6c19c111981d2fee63d510b6bc7",

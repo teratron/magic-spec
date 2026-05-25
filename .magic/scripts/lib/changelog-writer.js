@@ -161,16 +161,16 @@ function insertIntoUnreleased(content, category, bullet) {
             return content;  // idempotent dedup
         }
 
-        const trimmedBody = catBody.replace(/\s+$/, '');
-        const newBody = (trimmedBody ? trimmedBody + '\n' : '\n') + `- ${bullet}\n`;
+        const trimmedBody = catBody.trim();
+        const newBody = (trimmedBody ? '\n' + trimmedBody + '\n' : '\n') + `- ${bullet}\n`;
         updatedBlock =
             unrBlock.slice(0, catBodyStart) +
-            '\n' + newBody +
+            newBody +
             (unrBlock.slice(catEnd).startsWith('\n') ? '' : '\n') +
             unrBlock.slice(catEnd);
     } else {
         // Category missing: append at end of Unreleased block.
-        const trimmed = unrBlock.replace(/\s+$/, '');
+        const trimmed = unrBlock.trim();
         updatedBlock = trimmed + '\n\n' + `### ${category}\n\n- ${bullet}\n\n`;
     }
 
