@@ -25,7 +25,7 @@ handoffs:
 **HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*.
 
 > **Executor:** `node .magic/scripts/executor.js <script>` for all commands.
-> **Read-only:** this workflow does not modify `.design/` artifacts. Findings may trigger handoffs to `magic.spec` or `magic.rule`.
+> **Read-only:** this workflow does not modify `.design/` artifacts. Findings may trigger handoffs to `magic-spec` or `magic-rule`.
 
 ## Steps
 

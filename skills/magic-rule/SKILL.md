@@ -22,9 +22,9 @@ handoffs:
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*.
 
-**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `magic.spec`. Rule changes feed into `magic.task` (plan updates) and `magic.run` (execution).
+**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `magic-spec`. Rule changes feed into `magic-task` (plan updates) and `magic-run` (execution).
 
-**Pipeline context:** `magic.rule` governs conventions used across `magic.spec` → `magic.task` → `magic.run`.
+**Pipeline context:** `magic-rule` governs conventions used across `magic-spec` → `magic-task` → `magic-run`.
 
 - **Finalization**: after writing RULES.md, run `node .magic/scripts/executor.js finalize --workflow=rule` and display output verbatim. Never auto-commit. See `.magic/rule.md §Finalization Protocol`.
 

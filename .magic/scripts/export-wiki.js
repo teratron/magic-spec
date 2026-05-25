@@ -171,6 +171,7 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- [[${specSlug(t)}|${t.label}]]`);
         }
+        lines.push('');
     }
 
     // Canonical references (covers)
@@ -180,6 +181,7 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- \`${t.label}\``);
         }
+        lines.push('');
     }
 
     // Enforced conventions
@@ -189,7 +191,7 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- ${t.label}`);
         }
-
+        lines.push('');
     }
 
     // Reverse: specs that implement this one
@@ -199,12 +201,13 @@ function renderSpecArticle(spec, edges, byId) {
             if (!t) continue;
             lines.push(`- [[${specSlug(t)}|${t.label}]]`);
         }
+        lines.push('');
     }
 
     if (spec.workspace) {
         lines.push(`> Part of [[${workspaceSlug({ label: spec.workspace })}|${spec.workspace}]] · See [[index]] to navigate.`);
     } else {
-        lines.push('> See [[index]] to navigate.');
+        lines.push(`> See [[index]] to navigate.`);
     }
     return lines.join('\n') + '\n';
 }

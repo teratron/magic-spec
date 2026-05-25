@@ -4,7 +4,7 @@ description: Workflow for executing tasks from the project plan.
 handoffs:
   - label: "Replan"
     workflow: magic-task
-    prompt: "Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magic-spec recommendation only on substantive design gaps. Per `rules/magic-md §5`, this is the SOLE user-visible next step after a phase — never propose /magic-analyze or /magic-spec proactively."
+    prompt: "Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magic-spec recommendation only on substantive design gaps. Per `rules/MAGIC-md §5`, this is the SOLE user-visible next step after a phase — never propose /magic-analyze or /magic-spec proactively."
     condition: null
 ---
 
@@ -23,10 +23,10 @@ handoffs:
 
 Examples: `/magic-run`, `/magic-run engine`, `/magic-run "T-1A01"`, `/magic-run "phase-2"`, `/magic-run docs "validation tasks only"`.
 
-**Scope:** code execution, task state management, and changelog generation. Task generation/orchestration is handled by `magic.task`. Specification authoring by `magic.spec`. Health auditing by `magic.analyze`.
+**Scope:** code execution, task state management, and changelog generation. Task generation/orchestration is handled by `magic-task`. Specification authoring by `magic-spec`. Health auditing by `magic-analyze`.
 
 - **Rules Parity**: always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
-- **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
+- **Pipeline**: `magic-spec` → `magic-task` → `magic-run`.
 - **Finalization**: after task/phase completion, run `node .magic/scripts/executor.js finalize --workflow=run` and display output verbatim. Never auto-commit. See `.magic/run.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/run.md`. Read it before proceeding.

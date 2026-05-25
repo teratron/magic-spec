@@ -116,19 +116,28 @@ function sync() {
                 : content.trim();
 
             // Normalize skill trigger references in body: /magic.a.b → /magic-a-b
+            // Only replace dots that are part of /magic.* commands, avoiding file names like MAGIC.md
             const body = rawBody
                 .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'))
-                .replace(/\bmagic(\.[a-z][a-z0-9-]*)+(?=\/)/gi, m => m.replace(/\./g, '-'));
+                .replace(/\bmagic(\.[a-z][a-z0-9-]*)+(?=\b)/gi, m => m.replace(/\./g, '-'));
 
             const rawFrontmatter = frontmatterMatch
                 ? frontmatterMatch[1].trim()
                 : `name: ${metadata.name}\ndescription: ${metadata.description}`;
 
-            // Normalize skill name references: replace dots and colons with hyphens
+            // Normalize skill name references: replace dots and colons with hyphens, but preserve extension dots in file names (e.g. MAGIC.md)
             const frontmatterContent = rawFrontmatter
                 .replace(/^(name:\s*)(.+)$/m, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
                 .replace(/^(\s+workflow:\s*)(.+)$/mg, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
-                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'));
+                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'))
+                .replace(/\bmagic\.[a-z0-9.-]+\b/gi, m => {
+                    // If it is a filename like magic.run.md, replace dots inside the command name but keep .md
+                    if (m.endsWith('.md')) {
+                        const cmdPart = m.slice(0, -3);
+                        return cmdPart.replace(/\./g, '-') + '.md';
+                    }
+                    return m.replace(/\./g, '-');
+                });
 
             mkdirSafe(targetDir);
 
