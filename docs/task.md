@@ -6,7 +6,7 @@ This document explains how Magic SDD converts stable specifications into actiona
 
 The Task Workflow is the bridge between *Design* (what to build) and *Execution* (how to build it). It analyzes the dependency graph of all stable specifications and produces an optimized execution roadmap.
 
-**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*
+**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*.
 
 **Slash command:** `/magic.task [arg]`
 
@@ -157,4 +157,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-05 (v2.0.23).
+Synchronized with engine workflows on 2026-06-03 (v2.1.28).

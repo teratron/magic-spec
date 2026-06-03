@@ -6,7 +6,7 @@ This document explains the process of carrying out implementation tasks within t
 
 The Run Workflow is the execution engine of Magic SDD. It reads the atomic tasks defined in `.design/TASKS.md` and coordinates their implementation while maintaining project state and a high-fidelity audit trail.
 
-**Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*
+**Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*.
 
 **Slash command:** `/magic.run [arg]`
 
@@ -152,4 +152,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-05 (v2.0.23).
+Synchronized with engine workflows on 2026-06-03 (v2.1.28).

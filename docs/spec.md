@@ -6,7 +6,7 @@ This document explains the lifecycle, structure, and management of project speci
 
 The Specification Workflow is the entry point of the Magic SDD process. It converts raw ideas, requirements, and feedback into structured, versioned documents located in `.design/specifications/`.
 
-**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*
+**Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*.
 
 **Slash command:** `/magic.spec`
 
@@ -136,4 +136,4 @@ When user input contains a standing-rule signal ("remember that...", "project ru
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-05 (v2.0.23).
+Synchronized with engine workflows on 2026-06-03 (v2.1.28).

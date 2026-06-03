@@ -6,7 +6,7 @@ This document explains the management of the project's central constitution and 
 
 The Rule Workflow manages the `.design/RULES.md` file, which acts as the project's "Living Constitution." It governs all development decisions, architectural constraints, and workflow preferences.
 
-**Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*
+**Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*.
 
 **Slash command:** `/magic.rule`
 
@@ -108,4 +108,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-05 (v2.0.23).
+Synchronized with engine workflows on 2026-06-03 (v2.1.28).

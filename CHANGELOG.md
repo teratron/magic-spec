@@ -26,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Fallow configuration integration** (v2.1.28): created `.fallowrc.json` in the workspace root to define dev scripts and test runner as explicit entry points. Resolves IDE static reachability warnings ("File is not reachable from any entry point") for `dev/scripts/*.js` and `dev/tests/engine.js`.
+
 - **Role-protocol tighten** (engine v2.1.18 → v2.1.19): three behavioral gaps closed via surgical role-card edits — no new roles, no new files. Five files touched:
   1. **Bug Reproduction First — `.magic/roles/test-engineer.md`** (new §2 in Operating Protocol, renumbered §3-§9; new anti-pattern bullet): tasks whose title / spec describes a bug, defect, or regression now require a reproducing test that FAILED on baseline (pre-Coder code) and PASSES post-fix; missing reproduction evidence → `Blocked [!]` with reason `reproduction missing`. Skipped for pure feature, refactor, or scaffolding tasks where no broken behavior is claimed. Symmetric anti-pattern added: «approving bug-fix `Done` without seeing reproducing test FAIL on baseline».
   2. **Overcomplication escalation — `.magic/roles/code-reviewer.md`** (new §6 in Operating Protocol, renumbered §7-§9): objective counting rule — two or more complexity signals (one-use abstractions, speculative configuration, branches / options not demanded by the task's `Verify` criterion) → emit *complexity notes* in PASS verdict, which routes to Code-simplifier via `run.md §3.4` PASS-with-notes branch. Isolated single signals → mention in notes but do not block. Phrased as counting, not subjective taste — avoids conflict with the existing «no style nitpicking» anti-pattern.

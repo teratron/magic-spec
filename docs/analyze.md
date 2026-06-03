@@ -6,7 +6,7 @@ This document explains the Project Analysis workflow for auditing project health
 
 The Analyze workflow bridges the gap between an existing project and the SDD system. It scans the codebase, generates specification proposals, and performs deep audits of registry integrity and spec-to-code coverage.
 
-**Triggers:** *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*, *"What does this project do?"*, *"Generate specs from code"*
+**Triggers:** `/magic.analyze [arg]`, *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*.
 
 **Slash command:** `/magic.analyze [arg]`
 
@@ -154,4 +154,4 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-05-05 (v2.0.23).
+Synchronized with engine workflows on 2026-06-03 (v2.1.28).
