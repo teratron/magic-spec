@@ -104,7 +104,7 @@ Talk to your AI agent naturally — it will route to the correct workflow:
 All core workflows are available as slash commands with optional arguments:
 
 | Command | Purpose |
-| :--- | :--- |
+| --- | --- |
 | `/magic.spec` | Create or update specifications |
 | `/magic.task` | Generate implementation plan and tasks |
 | `/magic.run` | Execute tasks from the plan |
@@ -142,7 +142,7 @@ Each command accepts optional arguments to scope the operation to a specific **w
 ## 📚 Documentation
 
 | Document | Description |
-| :--- | :--- |
+| --- | --- |
 | [**Main Documentation**](./docs/README.md) | Workflows, architecture, and advanced features |
 | [**SDD Philosophy**](./docs/conception.md) | Two-Layer Model, Integrity by Design, Self-Improving Feedback Loop |
 | [**Distribution Guide**](./docs/distribution.md) | Integration patterns, manual install, and update instructions |

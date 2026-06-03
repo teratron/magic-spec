@@ -14,7 +14,7 @@ Tactical registry of all phases and their statuses. Check individual phase files
 ## Active Phases
 
 | Phase | Description | Status |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | [Phase {N}](tasks/phase-{N}.md) | {Detailed phase goal} | `Todo` \| `In Progress` \| `Blocked` |
 
 ## Meta Information

@@ -16,7 +16,7 @@ Set up junctions, hardlinks, and symlinks so agent-facing directories mirror the
 ```
 
 | Mode | Effect |
-| :--- | :--- |
+| --- | --- |
 | `/magic-dev-init` | Infrastructure only — no agents, only `.agents/` structure |
 | `/magic-dev-init claude` | Targeted — only `CLAUDE.md` + `.claude/` |
 | `/magic-dev-init claude qwen` | Targeted — only the named agents |
@@ -28,7 +28,7 @@ Valid agent names: `claude`, `gemini`, `qwen`, `codex`
 ## Agent Map
 
 | Agent | Instruction File | Directory | Workflow Subdir |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `claude` | `CLAUDE.md` | `.claude/` | `commands/` |
 | `gemini` | `GEMINI.md` | `.gemini/` | `commands/` |
 | `qwen` | `QWEN.md` | `.qwen/` | `commands/` |

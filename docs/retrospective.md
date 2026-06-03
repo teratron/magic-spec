@@ -19,7 +19,7 @@ Key Goals:
 The engine enforces 6 mandatory invariants:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Read-Only Analysis** | Gather data from `.design/`; write ONLY to `RETROSPECTIVE.md` |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
@@ -30,7 +30,7 @@ The engine enforces 6 mandatory invariants:
 ## 3. The Two-Level System
 
 | Level | Name | Trigger | Action |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table |
 | **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, recommendations, and actionable advice |
 
@@ -41,7 +41,7 @@ The engine enforces 6 mandatory invariants:
 Data is organized into four categories:
 
 | Category | What It Tracks |
-| :--- | :--- |
+| --- | --- |
 | **Inventory** | INDEX.md status counts (Draft/RFC/Stable) and spec count |
 | **Health** | PLAN.md phase completion and TASKS.md metrics (Done/Blocked/Cancelled) |
 | **Growth** | RULES.md §7 entry count and history scan |
@@ -69,7 +69,7 @@ Signal must reflect the **health of the specification system**, not just deliver
 The engine assigns a Signal based on quantified thresholds:
 
 | Signal | Condition |
-| :--- | :--- |
+| --- | --- |
 | 🟢 **Green** | `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic |
 | 🟡 **Yellow** | `0.1 ≤ Blocked / Total ≤ 0.2` OR 1–2 non-critical drift items |
 | 🔴 **Red** | `Blocked / Total > 0.2` OR any shadow logic OR critical registry inconsistency |

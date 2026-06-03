@@ -54,7 +54,7 @@ The following guards were added to the core workflows as part of the first relia
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `.magic/analyze.md` | Ventilation workflow |
 | `.magic/spec.md` | Specification lifecycle workflow |
 | `.magic/task.md` | Task orchestration workflow |
@@ -70,7 +70,7 @@ The following guards were added to the core workflows as part of the first relia
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.1.1 | 2026-03-20 | Agent | Fixed template naming: specification.md → spec.md to match disk. |
 | 1.1.0 | 2026-03-04 | Agent | Added Templates subsystem, analyze/rule/onboard/retrospective workflow list, and Runtime Guards (RE-1 – RE-T74). |
 | 1.0.0 | 2026-03-03 | Antigravity | Initial stable version (captured from existing core). |

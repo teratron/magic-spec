@@ -19,7 +19,7 @@ Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is
 ## Invariant Compliance
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | **R1 — Flat Registry** | Integration respects flat layout; no workflow assumes subdirectory structure. |
 | **R2 — Declarative Handoffs** | Workflow bodies reference roles by `id`; handoff chains defined in cards, not in workflow bodies. |
 | **R3 — Explicit Triggers** | Every trigger listed in card frontmatter maps to a named gate in this spec's §2 workflow amendments. |
@@ -36,7 +36,7 @@ Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is
 Full workflow-to-role mapping after integration:
 
 | Workflow | Gate | Role(s) | Change Type |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `run.md` | Parallel Mode Dispatch | `orchestrator` | Rename Manager → Orchestrator |
 | `run.md` | Step 3 — Execute | `coder` | Name the previously-unnamed role |
 | `run.md` | Step 3.3 — Decision Review (new, opt-in) | `code-skeptic` | New gate |
@@ -59,7 +59,7 @@ Full workflow-to-role mapping after integration:
 
 ```markdown
 | Mode | Role | Process |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | Sequential | Mono-Agent | Picks next Todo → Executes → Updates Done → Repeats. |
 | Parallel | Manager | Reads TASKS.md → Detects shared-file conflicts → Assigns tracks → Syncs PLAN.md. |
 | Parallel | Developer | Track owner → Executes in order → Reports Done/Blocked. |
@@ -69,7 +69,7 @@ Full workflow-to-role mapping after integration:
 
 ```markdown
 | Mode | Orchestration | Active Role(s) |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | Sequential | No orchestrator | Track Owner Context → @role:coder → @role:code-reviewer → @role:test-engineer (sequence of hats within one agent) |
 | Parallel | @role:orchestrator dispatches tracks | Per track: Track Owner Context → same role sequence as Sequential |
 
@@ -164,7 +164,7 @@ A 6-row inline table describing each persona. To be replaced.
 The engine maintains a unified role registry at `.magic/roles/`. At critical workflow gates, agents activate named roles from this registry. The registry is the authoritative source for persona protocols; workflow bodies reference roles by `id` rather than inlining persona content.
 
 | Workflow | Gate | Role | Card |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `spec.md` | Post-Update Review | `spec-critic` | `.magic/roles/spec-critic.md` |
 | `task.md` | Plan Write-back | `planner` | `.magic/roles/planner.md` |
 | `run.md` | Step 3 Execute | `coder` | `.magic/roles/coder.md` |
@@ -225,7 +225,7 @@ Added to the pre-flight script (`.magic/scripts/check-prerequisites.js` via `exe
 ### 5.2 Failure Modes
 
 | Code | Severity | Meaning |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `ROLE_MISSING` | HALT | Workflow references `@role:{id}` but card file does not exist. |
 | `ROLE_HANDOFF_DANGLING` | HALT | Card's `handoff.to` points at an id not present in the registry. |
 | `ROLE_DORMANT` | WARN | Card exists but no workflow references it. |
@@ -318,7 +318,7 @@ Automatically invoking `skills_recommended` when a role activates. Rejected: vio
 ## Canonical References
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[RUN]` | `.magic/run.md` | Host of 6 role integration points. |
 | `[TASK]` | `.magic/task.md` | Host of planner integration. |
 | `[SPEC]` | `.magic/spec.md` | Host of spec-critic integration. |
@@ -333,6 +333,6 @@ Automatically invoking `skills_recommended` when a role activates. Rejected: vio
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1.1.0 | 2026-05-12 | Added explicit Run QA `Verify Criterion` guard aligned with task `Verify` lines and Test-engineer role card. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines workflow amendments, RULES.md §C24 rewrite, check-prerequisites addition, update-engine-meta treatment, and template file. |

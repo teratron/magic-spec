@@ -7,7 +7,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
 The agent adapts operation depth based on context window utilization:
 
 | Tier | Context Used | Behaviour |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
 | **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
 | **DEGRADING** | 50–70% | Read only relevant spec §sections; use frontmatter summaries |
@@ -20,7 +20,7 @@ The agent adapts operation depth based on context window utilization:
 Parse `[arg]` to determine planning mode:
 
 | Input | Detection | Result |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | No argument | **Full Planning**: resolve workspace via §Workspace Resolution, then plan all specs |
 | `engine` | Matches a workspace name in `workspace.json` | **Scoped Planning**: plan only specs registered in that workspace's `INDEX.md` |
 | `"decompose phase-2"` | Quoted text or text that does NOT match any workspace name | **Guided Planning**: interpret text as planning directive (focus, instruction, filter) |

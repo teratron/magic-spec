@@ -20,7 +20,7 @@ Key Goals:
 The engine enforces 5 mandatory invariants:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Engine Integrity** | HALT if `check-prerequisites` returns integrity warnings (checksums/ghost registry) |
 | 3 | **Silent Default** | Run autonomously; report only brief status or fatal failure |
@@ -34,7 +34,7 @@ The engine enforces 5 mandatory invariants:
 `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`
 
 | Result | Action |
-| :--- | :--- |
+| --- | --- |
 | `ok: true` | Skip silently; return control to calling workflow |
 | `ENGINE_INTEGRITY` / `GHOST_REGISTRY` (in-scope) | **HALT** — engine integrity failure |
 | `ENGINE_INTEGRITY` / `GHOST_REGISTRY` (out-of-scope) | Proceed silently (C15 Filter) |

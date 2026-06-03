@@ -51,7 +51,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `.magic/scripts/executor.js` | Cross-platform entry point for all automation |
 | `.magic/scripts/check-prerequisites.js` | Pre-flight validation |
 | `.magic/scripts/generate-context.js` | CONTEXT.md regeneration |
@@ -67,7 +67,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Removed stale generate-checksums.js and .magic/history/ refs; replaced with .magic/scripts/lib/ coverage. |
 | 1.3.0 | 2026-04-22 | Agent | Added analyze-coverage.js (Confidence Taxonomy) and extract-rationale.js (Rationale Extraction) to Components and Canonical References. |
 | 1.2.0 | 2026-03-20 | Agent | Added generate-context.js to Components; fixed engine file count reference. |

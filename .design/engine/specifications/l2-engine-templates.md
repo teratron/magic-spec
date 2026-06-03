@@ -27,7 +27,7 @@ Templates are the structural DNA of every `.design/` artifact. Changes to templa
 ## 4. Invariant Compliance
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | Engine Safety (C1) | Templates are engine files — C14 meta-sync applies on modification |
 | Content Rules (RULES.md §5) | Templates enforce required sections (Overview, Motivation, Document History) |
 | Micro-spec Convention (C16) | `micro-spec.md` template provides lightweight alternative under 50 lines |
@@ -59,7 +59,7 @@ Each template guarantees:
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `.magic/templates/spec.md` | Full specification scaffold |
 | `.magic/templates/micro-spec.md` | Lightweight spec scaffold |
 | `.magic/templates/plan.md` | Implementation plan scaffold |
@@ -70,6 +70,6 @@ Each template guarantees:
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1.1.0 | 2026-05-12 | Added mandatory `Verify` field to phase task entries and documented verifiable execution contract. |
 | 1.0.0 | 2026-03-29 | Initial Stable (bootstrapped from existing code) |

@@ -55,7 +55,7 @@ graph TD
 ### Actions
 
 | Action | Logic | Version |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Add** | Global: highest C{N} → append after it in §7. Workspace: highest WC{N} in `## Workspace Conventions` → append; if none yet, start at WC1. | Minor |
 | **Amend** | Match ID/keyword in target tier → replace in place. | Minor |
 | **Remove** | Match ID/keyword in target tier → **Dependency Scan** (below) → delete entry. | Major |

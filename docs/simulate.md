@@ -23,7 +23,7 @@ Key Goals:
 The engine enforces 6 mandatory invariants:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Cognitive Execution ONLY** | Never write/run physical simulation scripts; evaluate logic internally (LLM task) |
 | 3 | **Surgical Fix & Test** | If friction found → propose exact fix + write new regression test in `suite.md` |
@@ -60,7 +60,7 @@ The agent synthesizes a crisis scenario following the **Crisis Template** and pe
 Every synthesized crisis must satisfy all structural requirements:
 
 | # | Requirement | Minimum |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | CR-1 | **Workflows affected** | >=2 distinct workflows |
 | CR-2 | **Full chain walkthrough** | Trace through Spec → Task → Run in sequence |
 | CR-3 | **Cross-workspace scope** | If >1 workspace, crisis must span >=2 |
@@ -108,7 +108,7 @@ After the Logic Audit, the engine adopts a **Skeptic** persona for a final pass:
 Three quantified metrics are reported:
 
 | Metric | Formula | What It Measures |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Instruction Density** (1–10) | `10 - (vague_count + dup_count)` | Unquantified qualifiers and divergent duplicates |
 | **Guard Resilience** (1–10) | `Guards_Triggered / Guards_Expected × 10` | Mechanical (script-enforced) vs Instructional (LLM-text) guards |
 | **Invariant Compliance** (1–10) | `Rules_Followed / Rules_Applicable × 10` | Workflow steps vs applicable Core Invariants |

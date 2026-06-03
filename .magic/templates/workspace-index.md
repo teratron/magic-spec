@@ -10,7 +10,7 @@ Local registry of specifications for this workspace.
 ## Domain Specifications
 
 | File | Description | Status | Layer | Version |
-| :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- |
 
 <!-- Add your specifications here -->
 

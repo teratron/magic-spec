@@ -21,7 +21,7 @@ The finalization protocol (§3 of `rules/MAGIC.md`) requires several coordinated
 ## 2. Library Modules
 
 | Module | Responsibility |
-| :--- | :--- |
+| --- | --- |
 | `changelog-writer.js` | Appends Keep-a-Changelog entries to root `CHANGELOG.md`. |
 | `commit-suggester.js` | Generates Conventional Commits message from finalization context. |
 | `git-utils.js` | Read-only git helpers: diff detection, staged-file enumeration, mtime queries. |
@@ -44,7 +44,7 @@ Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `work
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `.magic/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
 | `.magic/scripts/lib/commit-suggester.js` | Commit message generation |
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
@@ -55,5 +55,5 @@ Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `work
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.0.0 | 2026-05-07 | Agent | Initial Stable version. Covers the scripts/lib/ finalization helper library introduced in v2.1.0. |

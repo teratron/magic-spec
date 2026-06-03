@@ -16,7 +16,7 @@ Magic Spec primarily uses Markdown-based workflows for task execution. However, 
 ### 2.1. File System Projection
 
 | Source Path (Workflow) | Target Path (Skill Wrapper) | Agent Interface |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `workflows/*.md` | `skills/*/SKILL.md` | User-facing tools |
 | `.agents/workflows/*.md` | `.agents/skills/*/SKILL.md` | Dev-facing tools |
 
@@ -59,7 +59,7 @@ GitHub Release archives include the generated `skills/` directory, ensuring that
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `skills/magic-analyze/SKILL.md` | Generated skill wrapper for analyze |
 | `skills/magic-graph/SKILL.md` | Generated skill wrapper for graph |
 | `skills/magic-rule/SKILL.md` | Generated skill wrapper for rule |
@@ -70,7 +70,7 @@ GitHub Release archives include the generated `skills/` directory, ensuring that
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.2.0 | 2026-05-07 | Agent | Added Layer/Implements header fields. Updated skill dir names (magic.analyze → magic-analyze format). Added magic-graph. Removed stale sync-skills.js reference. |
 | 1.1.0 | 2026-04-29 | Agent | Replaced legacy package deployment with GitHub Release archive distribution. |
 

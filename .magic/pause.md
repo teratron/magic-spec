@@ -21,7 +21,7 @@ Apply the workspace resolution chain from [context.md](context.md). Read STATE.m
 Extract from STATE.md → HANDOFF.json (`schema_version: 1.1`):
 
 | Source field | HANDOFF.json target |
-| :--- | :--- |
+| --- | --- |
 | STATE.md `**Task:**` | `current_position.task_id`, `task_title` |
 | STATE.md `**Phase:**` | `current_position.phase`, `phase_name` |
 | STATE.md `**Spec:**` | `current_position.spec_file`, `spec_section` |

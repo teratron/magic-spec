@@ -21,7 +21,7 @@ Key Goals:
 ## 2. Argument Routing
 
 | Input | Mode | Behavior |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | Full | Resolve workspace automatically, plan all specs |
 | `{workspace}` | Scoped | Plan only specs registered in that workspace's `INDEX.md` |
 | `"text"` | Guided | Interpret text as planning directive (focus, instruction, filter) |
@@ -42,7 +42,7 @@ Key Goals:
 The engine enforces 7 mandatory invariants during every task operation:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Registry Integrity** | Read ALL specs in `INDEX.md` before planning — no exceptions |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing; preserves user intent across sub-delegation |
@@ -56,7 +56,7 @@ The engine enforces 7 mandatory invariants during every task operation:
 The agent adapts operation depth based on context window utilization:
 
 | Tier | Context Used | Behavior |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
 | **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
 | **DEGRADING** | 50–70% | Read only relevant spec sections; use frontmatter summaries |

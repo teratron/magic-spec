@@ -28,7 +28,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 Parse `[arg]` to determine analysis mode:
 
 | Input | Detection | Result |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | No argument | **Full Analysis**: resolve workspace via §Workspace Resolution, then Mode C → A/B |
 | `engine` | Matches a workspace name in `workspace.json` | **Workspace Analysis**: Mode C (with Structural Integrity) → A/B scoped to that workspace |
 | `"check API coverage"` | Quoted text or text that does NOT match any workspace name | **Focused Analysis**: Mode D — interpret text as focus directive |
@@ -52,7 +52,7 @@ Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.t
 ### 2. Architecture Inference
 
 | Pattern | Indicators |
-| :--- | :--- |
+| --- | --- |
 | **MVC** | `controllers/`, `models/`, `views/` |
 | **Clean** | `domain/`, `application/`, `infrastructure/` |
 | **Feature** | `features/`, `modules/` |
@@ -69,7 +69,7 @@ Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfi
 Coverage classification uses a four-level confidence taxonomy (inspired by knowledge-graph confidence scoring) for nuanced spec-to-code traceability:
 
 | Level | Meaning | Source |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **EXTRACTED** | File path explicitly listed in a spec's `Canonical References` table | Direct reference |
 | **INFERRED** | File is a sibling of explicitly referenced paths (same parent directory) | Structural proximity |
 | **AMBIGUOUS** | File is in a scope-adjacent directory (same grandparent) but has no direct reference | Weak association |
@@ -86,7 +86,7 @@ Source code may contain design rationale in structured comments not captured in 
 ### Supported Markers
 
 | Marker | Purpose |
-| :--- | :--- |
+| --- | --- |
 | `NOTE` | General design notes |
 | `WHY` | Explanation of a design choice |
 | `HACK` | Known workaround or compromise |
@@ -233,7 +233,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 ## Advisory Report — Findings Schema
 
 | Category | Logic |
-| :--- | :--- |
+| --- | --- |
 | **Covered** | Files explicitly mapped to a `Stable` spec (sub-classified: EXTRACTED / INFERRED / AMBIGUOUS). |
 | **Uncovered** | Orphan files without spec mapping (confidence = UNCOVERED). |
 | **Gaps** | `RFC` or `Draft` specs with no corresponding implementation. |

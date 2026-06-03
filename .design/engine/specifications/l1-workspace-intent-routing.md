@@ -180,7 +180,7 @@ existing artifact.
 For deterministic simulation, the chain produces exactly these outcomes:
 
 | Code | User input shape | Existing workspaces | Outcome |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | **A1** | Generic spec text | 0 (no `workspace.json`) | Use `.design/` root (Priority 4 unchanged). |
 | **A2** | Generic spec text | 1, no signal | Use sole workspace (Priority 3 unchanged). |
 | **A3** | Generic spec text | N, default set | Use default (Priority 3 unchanged). |
@@ -226,7 +226,7 @@ overlap gate is a cheap insurance policy against fragmentation.
 ## Canonical References
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[CONTEXT]` | `.magic/context.md` | Hosts the new Step 0 Workspace Intent Detection block. |
 | `[INIT-DOC]` | `.magic/init.md` | Hosts the corrected Structure Created diagram (WI-10). |
 | `[INIT-SCRIPT]` | `.magic/scripts/init.js` | Hosts the standalone `--workspace={name}` CLI mode. |
@@ -238,5 +238,5 @@ overlap gate is a cheap insurance policy against fragmentation.
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.0.0 | 2026-05-07 | Agent | Initial stable specification — addresses workspace dispatch defects observed in field reports. |

@@ -35,7 +35,7 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `.design/RULES.md` | Global project constitution monitored for drift |
 | `.magic/scripts/check-prerequisites.js` | Implementation of drift detection logic |
 | `.magic/context.md` | Calls check-prerequisites at startup |
@@ -43,6 +43,6 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 0.1.0 | 2026-03-25 | Initial Micro-spec from simulation RE-1 |
 | 1.0.0 | 2026-03-25 | Auto-promoted to Stable (C9 Trust Mode) |

@@ -34,14 +34,14 @@ Cognitive engine tests are run via `/magic.simulate test`. Script-level checks a
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `dev/tests/suite.md` | Cognitive regression test suite (157 tests, v1.9.45) |
 | `.agents/skills/magic-dev-simulate/SKILL.md` | Simulation skill that runs cognitive tests |
 
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Updated canonical paths: .magic/tests/suite.md → dev/tests/suite.md; .magic/simulate.md → .agents/skills/magic-dev-simulate/SKILL.md. |
 | 1.3.0 | 2026-04-29 | Agent | Removed legacy distribution test-suite references after GitHub distribution migration. |
 | 1.2.0 | 2026-03-20 | Agent | Reality sync: 91→157 tests (T01–T163), suite version v1.9.18→v1.9.45, added post-sprint expansion coverage. |

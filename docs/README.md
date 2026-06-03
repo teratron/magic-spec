@@ -39,7 +39,7 @@ graph TD
 ### Core Workflows
 
 | # | Workflow | Primary File | Purpose | Documentation |
-| ---: | :--- | :--- | :--- | :--- |
+| ---: | --- | --- | --- | --- |
 | **1** | **Specification** | `spec.md` | Converts thoughts into structured specs. Manages lifecycle (Draft → RFC → Stable). | [Detailed Guide](spec.md) |
 | **2** | **Task** | `task.md` | Reads Stable specs, builds dependency graphs, and decomposes them into atomic tasks in `PLAN.md` and `TASKS.md`. | [Detailed Guide](task.md) |
 | **3** | **Run** | `run.md` | Executes tasks sequentially or in parallel. Triggers automatic retrospectives at phase completion. | [Detailed Guide](run.md) |
@@ -47,7 +47,7 @@ graph TD
 ### Auxiliary Workflows
 
 | Workflow | Primary File | Purpose | Documentation |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Pause** | `pause.md` | Saves session state to `HANDOFF.json` for cross-session resume. Supports zero-prompt continuity. | — |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |

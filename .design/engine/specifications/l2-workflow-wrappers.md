@@ -27,7 +27,7 @@ The `workflows/` directory is the public interface of the SDD engine. Unlike `.m
 ## 4. Invariant Compliance
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | Engine Safety (C1) | Wrappers are read-only proxies; modifications flow through `.magic/` |
 | Workflow Minimalism (C2) | Wrapper set matches core command set exactly |
 | Universal Script Executor (C7) | Wrappers invoke scripts via `executor.js`, not directly |
@@ -58,7 +58,7 @@ Each wrapper file contains:
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `workflows/magic.analyze.md` | Analyze workflow entry point |
 | `workflows/magic.rule.md` | Rule workflow entry point |
 | `workflows/magic.run.md` | Run workflow entry point |
@@ -68,5 +68,5 @@ Each wrapper file contains:
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1.0.0 | 2026-03-29 | Initial Stable (bootstrapped from existing code) |

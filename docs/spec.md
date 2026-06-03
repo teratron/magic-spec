@@ -23,7 +23,7 @@ Key Goals:
 The engine enforces 12 mandatory invariants during every spec operation:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain (no user prompting needed) |
 | 2 | **Prohibitions** | No implementation code in specs; technical contracts are permitted |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing |

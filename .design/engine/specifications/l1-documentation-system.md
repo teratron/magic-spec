@@ -31,7 +31,7 @@ The following `docs/` files are reference material not tied to a specific `.magi
 ## Canonical References
 
 | Path | Role |
-| :--- | :--- |
+| --- | --- |
 | `README.md` | Project entry point and overview |
 | `CHANGELOG.md` | Version history |
 | `CONTRIBUTING.md` | Developer guide |
@@ -41,7 +41,7 @@ The following `docs/` files are reference material not tied to a specific `.magi
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.2.1 | 2026-03-30 | Agent | Moved checksums.md to Static Documentation since it lacks a .magic/ counterpart. |
 | 1.2.0 | 2026-03-20 | Agent | Added checksums.md to sync scope; introduced Static Documentation section for VIO-2-exempt files. |
 | 1.1.0 | 2026-03-04 | Agent | Added sync enforcement rule (C21 VIO-2), sync scope table, and docs/ governance detail. |

@@ -190,7 +190,7 @@ To minimize redundant resource usage and improve performance, the agent may opti
 At critical decision points, the agent MUST adopt a specific adversarial persona before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
 
 | Workflow | Gate | Persona | Key Questions |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `spec.md` | Before `Post-Update Review` | **Project Critic** | L1 purity? Invariant completeness? L2 compliance substantive? |
 | `task.md` | Before `Plan Write-back` | **Planning Skeptic** | Optimism bias? Hidden dependencies? Cascade risk? |
 | `run.md` | Before marking task `Done` | **Tester** | Spec boundary? Edge cases? Side effects? Regression risk? |
@@ -230,7 +230,7 @@ Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.7.0 | 2026-05-07 | Agent | Backported C25 (Engineer Posture) from template; added C26 (Workspace Intent Routing) governing pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, and second-contour fit validation. |
 | 1.6.1 | 2026-04-29 | Agent | Removed legacy distribution wording from active adapter conventions. |
 | 1.6.0 | 2026-04-03 | Agent | Baseline SDD role-switching constitution (C24) finalized across all core workflows. |

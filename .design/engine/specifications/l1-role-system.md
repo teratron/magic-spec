@@ -123,7 +123,7 @@ This spec defines *which roles exist* at the concept level. Concrete card conten
 ### 4.1 New Roles (Code-Writing Coverage)
 
 | id | layer | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `orchestrator` | manager | Parallel-mode task dispatch and shared-resource serialization. Replaces `run.md` "Manager" row. |
 | `planner` | advisor | Owns plan construction and planning-time skeptical review. Consolidates existing Planning Skeptic semantics in `task.md`. |
 | `coder` | executor | Active role during the write-code step of task execution. Currently unnamed in `run.md` Step 3. |
@@ -137,7 +137,7 @@ This spec defines *which roles exist* at the concept level. Concrete card conten
 ### 4.2 Migrated Roles (C24 → Registry)
 
 | id | layer | Migrated From |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `spec-critic` | reviewer | C24 `Project Critic` (spec.md Post-Update Review) |
 | `project-auditor` | reviewer | C24 `Auditor` (analyze.md Pre-Advisory) |
 | `constitutional-reviewer` | reviewer | C24 `Constitutional Reviewer` (rule.md Impact Analysis) |
@@ -189,7 +189,7 @@ Placing roles in `.magic/roles/{layer}/` (e.g., `.magic/roles/executor/coder.md`
 ## Canonical References
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[RULES]` | `.magic/templates/rules.md` | Source of C24 table to be rewritten as pointer-table after migration. |
 | `[RUN]` | `.magic/run.md` | Host of Orchestrator / Coder / Code-reviewer / Test-engineer / Debugger triggers. |
 | `[TASK]` | `.magic/task.md` | Host of Planner trigger. |
@@ -202,6 +202,6 @@ Placing roles in `.magic/roles/{layer}/` (e.g., `.magic/roles/executor/coder.md`
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1.0.0 | 2026-04-23 | Promoted to Stable. MVC satisfied (Overview + Core Invariants); no RULES.md conflicts; no circular dependencies. |
 | 0.1.0 | 2026-04-23 | Initial Draft. Defines R1–R10 invariants, 13-role initial inventory (9 new + 4 C24 migrations), and lifecycle rules. Frontend-specialist and further domain roles deferred to backlog. |

@@ -110,7 +110,7 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 ### Significance Whitelist
 
 | Workflow | Paths that count |
-| :--- | :--- |
+| --- | --- |
 | `magic.spec` | `.design/{ws}/specifications/**/*.md`, `.design/{ws}/INDEX.md` |
 | `magic.task` | `.design/{ws}/PLAN.md`, `TASKS.md`, `tasks/**/*.md` |
 | `magic.run` | `.design/{ws}/TASKS.md` (status-line changes only), `STATE.md`, `archives/**`, `tasks/**/*.md` |

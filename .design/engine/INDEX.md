@@ -14,7 +14,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 ## Domain Specifications
 
 | File | Description | Status | Layer | Version |
-| :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- |
 | [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants, and runtime guards. | Stable | 1 | 1.1.1 |
 | [l2-engine-automation.md](specifications/l2-engine-automation.md) | Automation scripts, history subsystem, and execution logic. | Stable | 2 | 1.4.0 |
 | [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival, git-utils, versioning. | Stable | 2 | 1.0.0 |

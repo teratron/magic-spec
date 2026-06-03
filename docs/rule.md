@@ -23,7 +23,7 @@ Key Goals:
 The engine enforces 5 mandatory invariants during every rule operation:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Scope Guard** | Only modify §7; sections §1–6 are the Universal Constitution (amend only if explicitly targeted) |
 | 3 | **No Silent Writes** | Always show proposed diff/statement before committing |
@@ -49,7 +49,7 @@ The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 - **Workspace tier** → `.design/{workspace}/RULES.md`: Workspace-local §7 conventions only (WC1, WC2, ...). Inherits all global rules; never overrides §1–6.
 
 | Signal | Target |
-| :--- | :--- |
+| --- | --- |
 | *"in engine"*, *"for docs"*, *"this workspace"* | Workspace `RULES.md` |
 | Universal rule, no workspace context | Global `RULES.md` |
 | Ambiguous | Engine asks: "Global or workspace-scoped?" |
@@ -59,7 +59,7 @@ Workspace `RULES.md` files are created on demand. Duplication checks scan **both
 ## 5. Rule Actions
 
 | Action | Logic | Version |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Add** | Global: append after highest C{N} in §7. Workspace: append after highest WC{N}. | Minor |
 | **Amend** | Match ID/keyword in target tier → replace in place. | Minor |
 | **Remove** | Match ID/keyword → Dependency Scan → delete entry. | Major |

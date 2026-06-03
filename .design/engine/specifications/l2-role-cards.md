@@ -18,7 +18,7 @@ Concrete implementation of the role system defined by [l1-role-system.md](l1-rol
 ## Invariant Compliance
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | **R1 — Flat Registry with Layer Attribute** | All role cards placed under `.magic/roles/{id}.md`. No subdirectories. Each card declares `layer:` in frontmatter from closed set `{manager, executor, reviewer, advisor}`. |
 | **R2 — Role ≠ Agent; Declarative Handoffs** | Each card has a `handoff:` list of `{to, condition}` entries. Engine does not automate transitions — agents read handoff as contract documentation. |
 | **R3 — Explicit Triggers** | Each card has a `triggers:` list of `{workflow, gate}` entries referencing `.magic/*.md` files and named gates. Cards without triggers are rejected by `check-prerequisites` role audit (see l2-role-integration.md §4). |
@@ -76,7 +76,7 @@ Cards MAY include additional sections after these four (e.g., `## Examples`, `##
 ## 2. Role Inventory (Card Index)
 
 | id | layer | Triggers (workflow → gate) |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `orchestrator` | manager | `run.md` → Parallel Mode Dispatch |
 | `planner` | advisor | `task.md` → Plan Write-back |
 | `coder` | executor | `run.md` → Step 3 Execute |
@@ -635,7 +635,7 @@ Packing all 13 cards into one file. Rejected: violates R1 (flat registry) cannot
 ## Canonical References
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[ROLES-DIR]` | `.magic/roles/` | Registry location; each card is a file `{id}.md`. |
 | `[ROLE-TEMPLATE]` | `.magic/templates/role.md` | Template for new role cards; created by integration task. |
 | `[RULES-C24]` | `.magic/templates/rules.md` | Source of C24 pointer-table to be regenerated with role IDs. |
@@ -650,6 +650,6 @@ Packing all 13 cards into one file. Rejected: violates R1 (flat registry) cannot
 ## Document History
 
 | Version | Date | Description |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | 1.1.0 | 2026-05-12 | Integrated coding discipline into executor/reviewer cards: material assumptions, diff traceability, minimal implementation, and verify-line enforcement. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines file format, frontmatter schema, body structure, and full content for all 13 initial role cards. |

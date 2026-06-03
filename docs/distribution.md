@@ -9,7 +9,7 @@ These files are distributed through GitHub Releases. Download `magic-spec-vX.Y.Z
 ### 1.1. Engine Core (`.magic/`)
 
 | File | Description |
-| :--- | :--- |
+| --- | --- |
 | `analyze.md` | Agent instructions for project health analysis. |
 | `init.md` | Initial project initialization procedure. |
 | `rule.md` | Logic for managing project rules and conventions. |

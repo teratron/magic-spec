@@ -14,7 +14,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 ## Levels
 
 | Level | Goal | Trigger | Output |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | **L1** | Mini-snapshot | Phase Complete (all tasks Done) | Snapshots table row + Archival (C8) |
 | **L2** | Full audit | Plan Complete or manual command | Deep analysis + recommendations |
 
@@ -53,7 +53,7 @@ Signal must reflect the **health of the specification system**, not just deliver
 ### 4. Score & Signal
 
 | Signal | Condition |
-| :--- | :--- |
+| --- | --- |
 | 🟢 **Green** | `Blocked / Total < 0.1` AND 0 orphans/phantoms AND 0 shadow logic |
 | 🟡 **Yellow** | `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches) |
 | 🔴 **Red** | `Blocked / Total > 0.2` OR any shadow logic OR any critical registry inconsistency |

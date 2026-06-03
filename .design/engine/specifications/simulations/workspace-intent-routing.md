@@ -20,7 +20,7 @@ when every row's resolved outcome matches the spec §5 expectation column.
 Three baseline configurations are referenced below:
 
 | ID | `workspace.json` state | `.design/` shape |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Baseline-Z** | absent (fresh project) | absent |
 | **Baseline-S** | single workspace `web` (description: "Web frontend"; scope: `["src/web"]`); spec: `l1-auth.md` | `.design/web/` populated |
 | **Baseline-M** | two workspaces: `engine` (default), `docs`; both with scope arrays and stable specs | `.design/engine/`, `.design/docs/` populated |
@@ -28,7 +28,7 @@ Three baseline configurations are referenced below:
 ## Canonical Outcomes (Spec §5)
 
 | # | Setup | User input | Signal class | Lexicon overlap | Outcome | Question? | Final dispatch |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- | --- | --- | --- |
 | **A1** | Baseline-Z | "Specify a payments module." | none | n/a (no `workspace.json`) | A1 | no | Write to `.design/specifications/` (Priority 4 root). Init bootstrap may run first. |
 | **A2** | Baseline-S | "Add an audit-log spec." | none | n/a | A2 | no | Resolve `web` silently (sole workspace). Dispatch to `.design/web/specifications/`. |
 | **A3** | Baseline-M | "Add a metrics spec." | none | n/a | A3 | no | Resolve `engine` (default). Dispatch to `.design/engine/specifications/`. |
@@ -52,7 +52,7 @@ in any natural language follow the same outcome — these rows are the
 canonical English form.
 
 | # | Setup | User input | Detected signal | Outcome | Resulting action |
-| :--- | :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- | --- |
 | **R1** | Baseline-S (sole workspace `web`) | "Make a spec for the mobile version." | class 2 (`mobile`) | C1 | Auto-create workspace `mobile`. Narrate: `[Workspace] Created 'mobile' for stack delta (mentioned: 'mobile'). Dispatching new specs to .design/mobile/.` |
 | **R2** | Baseline-Z (no `workspace.json`) | "Write the authentication spec." | none (Priority 4) | A1 | Init runs, bootstraps `.design/main/`. Spec lands in `.design/main/specifications/`. **Field-bug-1 fixed: not in `.design/` root.** |
 | **R3** | Baseline-M (default `engine`, also `docs`) | "Create a new workspace for the Go backend and describe RPC there." | class 1 (creation intent + inferred name `go-backend`) | B1 | Auto-create `go-backend`, dispatch new RPC spec to `.design/go-backend/specifications/`. **Field-bug-2 fixed: respects new-workspace intent.** |
@@ -61,7 +61,7 @@ canonical English form.
 ## Edge Cases (Adversarial)
 
 | # | Setup | Input | Detected | Outcome | Why this is correct |
-| :--- | :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- | --- |
 | **X1** | Baseline-S | "I want to add a separate workspace for testing — let's call it `qa`." | class 1 (token + name `qa`) | B1 | Single creation signal → no question, auto-create. |
 | **X2** | Baseline-M | "Refactor the engine for performance." | none (`engine` already in lexicon) | E1 | Term `engine` matches existing workspace lexicon → fit OK → dispatch to `engine`. No spurious creation. |
 | **X3** | Baseline-Z | "/magic.spec add an iOS auth spec." | n/a (no `workspace.json`) | A1 + Init | Init bootstrap creates `.design/{default}/`, then dispatch. iOS detection deferred until next invocation when `workspace.json` exists. |
@@ -74,7 +74,7 @@ canonical English form.
 ## Anti-Patterns (Must NOT Trigger)
 
 | # | Setup | Input | Wrong outcome (must NOT happen) | Why the chain prevents it |
-| :--- | :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- | --- |
 | **N1** | Baseline-S | "Add a payment processor spec." | Auto-create `payment` workspace | Term `payment` is a domain feature, not a stack/platform/surface; class 2/3 would not fire because the spec scope-fits `web` at ≥0.30 by any reasonable lexicon (web has auth/payment-like terms typical of a frontend). E1 path. |
 | **N2** | Baseline-M | "Let me think about how the docs workspace is organized." | Question about workspace selection | Read-only / brainstorming intent — no spec write yet. Step 0 only triggers on actual create/amend. |
 | **N3** | Baseline-S, after C1 created `mobile` workspace | "Add another auth spec for mobile." | Re-create `mobile` workspace or ask question | `mobile` now in workspace.json with at least one spec → lexicon match ≥0.30 → E1 silent dispatch. |
@@ -85,7 +85,7 @@ canonical English form.
 Three classes of failure are handled atomically by `create-workspace.js`:
 
 | Class | Trigger | Behaviour | Result |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | Validation | Invalid name / duplicate | Halt before any mutation | Project state unchanged. |
 | Provision | `mkdir` fails on subtree | Roll back created dirs / files via reverse-order delete | Project state unchanged. |
 | Registration | `workspace.json` write fails | Roll back created dirs / files | Project state unchanged. |
@@ -105,5 +105,5 @@ Total: 28 simulation rows, all matching their expected resolution path.
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.0.0 | 2026-05-07 | Agent | Initial simulation matrix for Workspace Intent Routing v1.0.0. |

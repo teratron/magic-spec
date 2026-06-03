@@ -52,7 +52,7 @@ Skip Step 0 entirely on any of:
 ### Outcome Routing
 
 | Outcome | Action |
-| :--- | :--- |
+| --- | --- |
 | `existing:{name}` | Enter Resolution Chain. After resolution, run Workspace Fit Validation (WI-7) before dispatching artifacts. |
 | `create:{name}` | Invoke `node .magic/scripts/executor.js create-workspace --name={name}`. Narrate: `[Workspace] Created '{name}' for {reason}. Dispatching {artifact} now.` Then enter Resolution Chain with `{name}`. |
 | `ambiguous` | Ask the WI-4 question. User picks option 1, 2, or 3 — workflow follows the corresponding branch. |
@@ -62,7 +62,7 @@ Skip Step 0 entirely on any of:
 Auto-resolve workspace using priority order:
 
 | Priority | Source | Condition | Action |
-| :---: | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1 | **Explicit arg** | `/magic.{cmd} {workspace}` | Use it. Print: `"Active workspace: {workspace}."` Overrides `MAGIC_WORKSPACE` if both set. Unknown name → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
 | 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. Unknown value → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
@@ -124,7 +124,7 @@ After resolution, load **in this exact order** — the sequence forms the sessio
 Applies to every workflow. Track context-window usage; shift read behavior by tier. Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`). Thresholds are guidance, not contractual cutoffs.
 
 | Tier | Usage | Allowed reads |
-| :---: | :---: | :--- |
+| --- | --- | --- |
 | **PEAK** | 0–40% | Full files, parallel spec scans, inline diff bodies. |
 | **NORMAL** | 40–60% | Prefer `INDEX.md` / wiki / `STATE.md`; full read only for the active spec section. |
 | **DEGRADED** | 60–75% | Frontmatter / headings only. Cite line ranges, never full bodies. Warn user once. |

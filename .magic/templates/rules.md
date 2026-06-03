@@ -200,7 +200,7 @@ To minimize redundant resource usage and improve performance, the agent may opti
 At critical decision points, the agent MUST activate the designated role card from `.magic/roles/` before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
 
 | Workflow | Gate | Role | Card |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | `spec.md` | Before `Post-Update Review` | `@role:spec-critic` | `.magic/roles/spec-critic.md` |
 | `task.md` | Before `Plan Write-back` | `@role:planner` | `.magic/roles/planner.md` |
 | `run.md` | Before marking task `Done` | `@role:test-engineer` | `.magic/roles/test-engineer.md` |

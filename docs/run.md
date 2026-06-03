@@ -23,7 +23,7 @@ Key Goals:
 ## 2. Argument Routing
 
 | Input | Mode | Behavior |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | Full | Resolve workspace automatically, execute next available task(s) |
 | `{workspace}` | Scoped | Execute tasks only from that workspace's `TASKS.md` |
 | `"text"` | Directed | Interpret text as execution directive (task ID, phase, or focus) |
@@ -45,7 +45,7 @@ Key Goals:
 The engine enforces 6 mandatory invariants during every execution:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Rules First** | Read `RULES.md` before any code edit; adhere to project conventions |
 | 2.5 | **Live Memory (STATE.md)** | Read STATE.md before execution; display blockers; update after every task transition |
@@ -66,7 +66,7 @@ STATE.md is a live project state digest read before every execution session:
 ## 4. Execution Modes
 
 | Mode | Role | Process |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Sequential** | Mono-Agent | Picks next `Todo` → Executes → Updates `Done` → Repeats |
 | **Parallel** | Manager | Reads tasks + associated spec sections → Detects shared-file conflicts → Assigns tracks → Syncs PLAN.md |
 | **Parallel** | Developer | Track owner → Executes in order → Reports `Done/Blocked` → Waits for next assignment |

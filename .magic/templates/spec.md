@@ -36,7 +36,7 @@ Rules that Layer 2 implementations MUST NOT violate:
 Explicit mapping of every L1 invariant to this implementation:
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | {invariant} | {how it's done in this stack} |
 
 > This table must be complete before the spec can reach RFC status.
@@ -86,7 +86,7 @@ Potential issues and alternative approaches considered.
      This section is the agent's contract — do not delete or leave empty on Stable specs. -->
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[CONFIG]` | `{path/to/config.file}` | {Why this file is the source of truth} |
 | `[SCHEMA]` | `{path/to/schema.file}` | {Why this file defines the data contract} |
 

@@ -24,7 +24,7 @@ After all tests, present a summary table:
 Workflow Test Suite — {date}
 
 | ID | Workflow | Scenario | Result |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | T01 | init | Fresh cold start | ✅ PASS |
 | T02 | init | Partial corruption | ❌ FAIL |
 ...

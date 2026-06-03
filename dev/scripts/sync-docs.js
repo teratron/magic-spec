@@ -159,7 +159,7 @@ function generateContributing(targetVersion, state) {
     }
 
     // Workspaces table from INDEX.md
-    let registryBlock = '| Workspace | Description |\n| :--- | :--- |\n| `root` | No workspaces registered |\n';
+    let registryBlock = '| Workspace | Description |\n| --- | --- |\n| `root` | No workspaces registered |\n';
     if (fs.existsSync(indexPath)) {
         const indexContent = fs.readFileSync(indexPath, 'utf8');
         const start = indexContent.indexOf('## Workspaces');
@@ -176,7 +176,7 @@ function generateContributing(targetVersion, state) {
     }
 
     // Workflows table from workflows/*.md
-    let workflowsTable = '| Command | Description |\n| :--- | :--- |\n';
+    let workflowsTable = '| Command | Description |\n| --- | --- |\n';
     if (fs.existsSync(workflowsDir)) {
         const wfFiles = fs.readdirSync(workflowsDir).filter(f => f.endsWith('.md')).sort();
         for (const file of wfFiles) {

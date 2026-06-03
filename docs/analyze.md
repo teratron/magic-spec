@@ -25,7 +25,7 @@ Key Goals:
 The engine enforces 8 mandatory invariants during every analysis:
 
 | # | Invariant | Summary |
-| ---: | :--- | :--- |
+| ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Auto-Init** | Silently creates `.design/` structure if missing |
 | 3 | **Read-Only** | Proposals only; never modify project code or `.design/` without user approval |
@@ -38,7 +38,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 ## 3. Argument Routing
 
 | Input | Mode | Behavior |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | Full | Mode C (Ventilation) → Mode A or B depending on INDEX.md state |
 | `{workspace}` | Workspace | Mode C with Structural Integrity, scoped to workspace |
 | `"text"` | Focused (D) | Targeted analysis on a specific area/concern |
@@ -62,7 +62,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 Scans the codebase and generates specification proposals:
 
 | Area | Method | Output |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Project Structure** | Directory tree scan (depth 2–3) | Project map |
 | **Tech Stack** | Config file detection (`package.json`, `pyproject.toml`, etc.) | Stack summary |
 | **Architecture** | Directory pattern matching (`controllers/`, `models/`, etc.) | Architecture style + confidence |
@@ -80,7 +80,7 @@ Output: a **Proposal Document** with detected stack, proposed L1/L2 specs, RULES
 Compares current codebase against existing specs to produce a **Gap Report**:
 
 | Category | Description |
-| :--- | :--- |
+| --- | --- |
 | **Covered** | Modules with matching specs |
 | **Uncovered** | Code modules with no corresponding spec |
 | **Orphaned** | Specs referencing code that no longer exists |
@@ -146,7 +146,7 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 ## 8. Relationship to Other Workflows
 
 | Workflow | Relationship |
-| :--- | :--- |
+| --- | --- |
 | **Spec** (`spec.md`) | Partner — analysis results are dispatched via the Spec workflow |
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created, tasks can be planned |

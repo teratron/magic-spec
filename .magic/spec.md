@@ -44,7 +44,7 @@ Universal process for managing project specifications in `.design/specifications
 ```
 
 | File | Role | Updated by |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `INDEX.md` | Central registry of all spec files | Every create/update |
 | `RULES.md` | Project constitution and conventions | Defined triggers |
 
@@ -255,7 +255,7 @@ Skip the refresh in **Explore Mode** and **Project Analysis Delegation** — bot
 Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 | # | Trigger | Approval |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | T1-T3 | "Always/never", repeated pattern, or audit find | Propose & Wait |
 | T4 | User rule: "remember that...", "project rule:" | Apply Immediately |
 
@@ -286,7 +286,7 @@ Compares specs vs. project filesystem and engine integrity.
 **Trigger**: `magic.task` auto-run or *"Verify specs"*.
 
 | Check | Action |
-| :--- | :--- |
+| --- | --- |
 | Path Validity | Referenced files exist? |
 | Layer Integrity | L2 has valid L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |

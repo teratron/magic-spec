@@ -7,7 +7,7 @@ Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 Parse `[arg]` to determine execution mode:
 
 | Input | Detection | Result |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | *(empty)* | No argument | **Full Execution**: resolve workspace via §Workspace Resolution, then execute next available `Todo` task(s) |
 | `engine` | Matches a workspace name in `workspace.json` | **Scoped Execution**: execute tasks only from that workspace's `TASKS.md` |
 | `"T-1A01"` | Quoted text or non-workspace token matching `T-XXXX` pattern | **Targeted Task**: execute a specific task by ID |
@@ -48,7 +48,7 @@ Parse `[arg]` to determine execution mode:
 ## Execution Setup
 
 | Mode | Orchestration | Active Role(s) |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | **Sequential** | No orchestrator | **Track Owner Context** → `@role:coder` → `@role:code-reviewer` → `@role:test-engineer` (sequential hats within one agent) |
 | **Parallel** | `@role:orchestrator` dispatches tracks | Per track: **Track Owner Context** → same role sequence as Sequential |
 

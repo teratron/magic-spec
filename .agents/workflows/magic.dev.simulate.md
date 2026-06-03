@@ -80,7 +80,7 @@ graph TD
 Every synthesized crisis **must** satisfy all of the following structural requirements. If a requirement cannot be met (e.g., single-workspace project), document why it is skipped.
 
 | # | Requirement | Minimum |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | CR-1 | **Workflows affected** | ≥2 distinct workflows from {spec, task, run, analyze, rule, init} |
 | CR-2 | **Full chain walkthrough** | Trace the crisis through Spec→Task→Run in sequence; do not skip a link |
 | CR-3 | **Cross-workspace scope** | If `workspace.json` has >1 workspace, crisis must span ≥2 workspaces |

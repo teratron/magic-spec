@@ -35,7 +35,7 @@ The three mechanisms below address each gap independently and compose cleanly �
 ## 3. Invariant Compliance
 
 | L1 Invariant | Implementation |
-| :--- | :--- |
+| --- | --- |
 | C1 — Kernel integrity (checksums) | New scripts are registered in `.magic/.checksums` via `generate-checksums` after write. |
 | C14 — Automatic meta-updates on engine changes | New scripts under `.magic/scripts/` trigger `update-engine-meta` → version bump + `.checksums` regen. |
 | C21 — Project ventilation for consistency | Wiki export failures surface as warnings in `analyze` coverage audit; cache mismatches are detected on next full build. |
@@ -131,7 +131,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 **Trigger classes:**
 
 | Class | When | Workflows | Action |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | **Write-side** | After any mutation of `.design/` artifacts that contribute graph nodes/edges (specs, PLAN.md phases, RULES.md conventions, INDEX.md entries) | `spec.md` (Creating, Updating, Batch Stabilization), `task.md` (after writing PLAN/TASKS), `analyze.md` (Mode A/B/D after dispatch), `rule.md` (after RULES.md write) | Run canonical refresh **once per workflow invocation**, post-dispatch, before the Task Completion Checklist. |
 | **Read-side** | Before architectural reasoning (impact analysis, planning, audit) | `task.md` (planning), `run.md` (impact check), `analyze.md` (Mode C) | Prefer reading `$designDir/wiki/index.md` over scanning raw `.design/specifications/`. If the MCP graph server is running (see [`l2-spec-graph-memory.md` §4.3](#43-token-budget-truncation-on-query_graph)), use `query_graph` with a bounded `token_budget`. |
 | **Audit-side** | Periodic consistency checks | `analyze.md` Mode C step 6 | Already runs `build-spec-graph` (full mode). Additionally compares `wiki/index.md` mtime against `.design/specifications/**/*.md` and `.design/{ws}/PLAN.md` mtimes; if any source is newer → emit `WIKI_STALE` advisory. |
@@ -165,7 +165,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 ## Canonical References
 
 | Alias | Path | Purpose |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | `[CACHE]` | `.magic/scripts/graph-cache.js` | Extraction cache module — hash, load, save. |
 | `[BUILD]` | `.magic/scripts/build-spec-graph.js` | Graph builder that integrates the cache. |
 | `[WIKI]` | `.magic/scripts/export-wiki.js` | Wiki generator from `graph.json`. |
@@ -174,6 +174,6 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 ## Document History
 
 | Version | Date | Author | Description |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
 | 1.1.0 | 2026-04-25 | Agent | §4.4 Workflow Integration Triggers: canonical refresh command, write/read/audit/visual classes, anti-trigger policy, failure handling, cache hygiene. |

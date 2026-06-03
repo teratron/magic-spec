@@ -15,7 +15,7 @@ Global registry aggregating all project specifications across workspaces.
 ## Workspaces
 
 | Workspace | Description |
-| :--- | :--- |
+| --- | --- |
 | [main](main/INDEX.md) | Primary project workspace |
 
 <!-- Add your workspaces here -->

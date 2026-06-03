@@ -184,7 +184,7 @@ duration_minutes: ~
 ## Track Assignment (Parallel Mode)
 
 | Track | Tasks | Rationale |
-| :--- | :--- | :--- |
+| --- | --- | --- |
 | A | T-3A01, T-3A02 | Role cards + template (different files; can parallelize sub-items but kept as one task each for atomicity) |
 | B | T-3B01 | `run.md` — single large file; serialized |
 | C1 | T-3C01 | `task.md` |

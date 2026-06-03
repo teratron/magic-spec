@@ -12,7 +12,7 @@ This project follows **Specification-Driven Development (SDD)** managed by `magi
 You can trigger these workflows via your AI agent (Claude, Cursor, Windsurf, etc.):
 
 | Command | Description |
-| :--- | :--- |
+| --- | --- |
 | `/magic.analyze` | Project Ventilation — audits health, registry, and rule compliance |
 | `/magic.graph` | Specification Knowledge Graph — builds, analyzes, and visualizes the SDD artifact graph |
 | `/magic.rule` | Workflow for manually adding or amending project conventions in RULES.md. |
@@ -83,7 +83,7 @@ This project adheres to the following constitutional rules (defined in `RULES.md
 ## 🧱 Workspaces
 
 | Workspace | Description | Specs | Registry |
-| :--- | :--- | :--- | :--- |
+| --- | --- | --- | --- |
 | engine | Magic SDD core engine logic, workflows, rules, and history. | 13 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## 🛠️ Getting Started
