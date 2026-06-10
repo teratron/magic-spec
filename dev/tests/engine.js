@@ -295,6 +295,65 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6a. check-prerequisites.js --verify-headers — RE-1 absent-header drift
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js --verify-headers flags absent (not just mismatched) spec headers (RE-1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            const specsDir = path.join(designDir, 'specifications');
+            fs.mkdirSync(specsDir, { recursive: true });
+
+            const indexRow = '| [auth.md](specifications/auth.md) | Auth domain | Stable | 1 | 1.0.0 |';
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                `# Index\n\n| File | Description | Status | Layer | Version |\n| --- | --- | --- | --- | --- |\n${indexRow}\n`
+            );
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+
+            // Checksums must pass integrity so ENGINE_INTEGRITY doesn't mask the result.
+            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
+            execSync(`node "${checksumScript}"`, { cwd: tempDir });
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+
+            // Case A — spec file has NO Version/Status header (the silent-failure bug).
+            fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
+            const drift = JSON.parse(execSync(`node "${scriptPath}" --json --verify-headers`, { cwd: tempDir, encoding: 'utf8' }));
+            assert.ok(
+                drift.warnings.some(w => w.type === 'VERSION_DRIFT' && /MISSING/.test(w.message)),
+                'absent Version header must raise VERSION_DRIFT (MISSING)'
+            );
+            assert.ok(
+                drift.warnings.some(w => w.type === 'STATUS_DRIFT' && /MISSING/.test(w.message)),
+                'absent Status header must raise STATUS_DRIFT (MISSING)'
+            );
+            assert.strictEqual(drift.ok, false, 'missing headers must make ok:false, not a silent pass');
+
+            // Case B — correct headers present: no drift (guards against false positives).
+            fs.writeFileSync(
+                path.join(specsDir, 'auth.md'),
+                '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n\n## Overview\n\nMatches registry.\n'
+            );
+            const clean = JSON.parse(execSync(`node "${scriptPath}" --json --verify-headers`, { cwd: tempDir, encoding: 'utf8' }));
+            assert.ok(
+                !clean.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
+                'matching headers must produce no drift warning'
+            );
+
+            // Case C — backward compatibility: without --verify-headers, absent header is NOT checked.
+            fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
+            const noFlag = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            assert.ok(
+                !noFlag.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
+                'header check must remain opt-in via --verify-headers'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 7. update-state.js
     // ───────────────────────────────────────────────────────────────────────────
     test('update-state.js should bootstrap, patch fields and append decision/constraint', () => {
@@ -399,6 +458,49 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(hookPath), 'pre-commit hook should be created');
             const hookContent = fs.readFileSync(hookPath, 'utf8');
             assert.ok(hookContent.includes('executor.js update-engine-meta --check'), 'Hook should call update-engine-meta --check');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 10. detect-communities.js — gitignore-aware scan (Invariant 7 parity)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('detect-communities.js excludes .gitignored directories from the scan (Invariant 7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            // Real design content (must always be scanned).
+            const designDir = path.join(tempDir, '.design');
+            fs.mkdirSync(designDir, { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n');
+            fs.writeFileSync(path.join(designDir, 'real-a.md'), '# Real A\n[Real B](./real-b.md)\n');
+            fs.writeFileSync(path.join(designDir, 'real-b.md'), '# Real B\n');
+
+            // Fixture subtree that must vanish once `*tmp/` is gitignored.
+            const tmpDir = path.join(tempDir, '.tmp');
+            fs.mkdirSync(tmpDir, { recursive: true });
+            fs.writeFileSync(path.join(tmpDir, 'fix-a.md'), '# Fix A\n[Fix B](./fix-b.md)\n');
+            fs.writeFileSync(path.join(tmpDir, 'fix-b.md'), '# Fix B\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'detect-communities.js');
+            const run = () => JSON.parse(execSync(`node "${scriptPath}" --include-md --json`, { cwd: tempDir, encoding: 'utf8' }));
+
+            // Control — no .gitignore: SKIP_DIRS has no '.tmp', so fixtures ARE scanned.
+            const before = run();
+
+            // Fix — `.gitignore` with `*tmp/` must drop exactly the two fixture files.
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '*tmp/\n');
+            const after = run();
+
+            assert.strictEqual(
+                after.graph.total_files,
+                before.graph.total_files - 2,
+                'the two .tmp/ fixture files must be excluded once *tmp/ is gitignored'
+            );
+            assert.ok(
+                !JSON.stringify(after.communities).includes('.tmp/'),
+                'no community member may reference a gitignored .tmp/ path'
+            );
         } finally {
             cleanup(tempDir);
         }

@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.1.2
+**Version:** 1.1.3
 **Status:** Stable
 **Layer:** concept
 
@@ -49,7 +49,7 @@ Template governance: workflows must always instantiate new files from these temp
 
 The following guards were added to the core workflows as part of the first reliability sprint:
 
-- **RE-1 — Version Drift Detection** (`spec.md` Consistency Check): Compares each spec's `Version:` header against the `INDEX.md` entry. A mismatch raises a `VERSION_DRIFT` flag in the Consistency Report, indicating an external edit bypassed the amendment protocol.
+- **RE-1 — Version Drift Detection** (`spec.md` Consistency Check; `check-prerequisites --verify-headers`): Compares each spec's `Version:` (and `Status:`) header against the `INDEX.md` entry. A mismatch — **or a header field absent from the spec file while `INDEX.md` declares a valid value** — raises a `VERSION_DRIFT` (or `STATUS_DRIFT`) flag in the Consistency Report, indicating an external edit bypassed the amendment protocol. An absent header field is drift, never a silent pass: the registry, not the file, is the source of truth for whether a field must exist.
 - **RE-2 — Spec Stability Spot-Check** (`run.md` Pre-flight): Before execution begins, confirms every spec targeted by a `Todo` task in the current phase is still `Stable` in `INDEX.md`. Catches direct spec demotion that C12 cannot detect.
 - **RE-3 — Version Drift Guard** (`spec.md` §Updating): When VERSION_DRIFT is detected on the target spec of an active update, the engine **HALTs** before writing. Prevents silent absorption of external edits and audit-trail corruption. T4 rules triggered during a VERSION_DRIFT HALT are queued, not written.
 - **RE-T71 — Intent Preservation** (`task.md`): When `task.md` sub-delegates to `init.md` or `analyze.md`, the original user intent is memoized and restored after delegation resolves.
@@ -75,6 +75,7 @@ The following guards were added to the core workflows as part of the first relia
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.3 | 2026-06-10 | Agent | RE-1 clarification: an absent `Version:`/`Status:` header (while INDEX.md declares a valid value) is drift, not a silent pass. Registry is source of truth for field existence. Patch — no RFC revert. |
 | 1.1.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |
 | 1.1.1 | 2026-03-20 | Agent | Fixed template naming: specification.md → spec.md to match disk. |
 | 1.1.0 | 2026-03-04 | Agent | Added Templates subsystem, analyze/rule/onboard/retrospective workflow list, and Runtime Guards (RE-1 – RE-T74). |

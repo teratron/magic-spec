@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.4.1
+**Version:** 1.5.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -22,6 +22,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **init.js**: Scripted setup of the `.design/` directory.
 - **analyze-coverage.js**: Confidence Taxonomy engine — classifies project files by spec coverage confidence (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED) using Canonical References from specifications.
 - **extract-rationale.js**: Rationale Extraction engine — scans source code for design rationale markers (NOTE/WHY/HACK/etc.) and identifies Shadow Logic (uncovered design decisions).
+- **detect-communities.js**: Workspace boundary analysis — builds the dependency graph, detects communities, and scores Jaccard alignment against `workspace.json`. Honors `.gitignore` during the file walk (Invariant 7 parity).
 
 ## Logical Flows
 
@@ -48,6 +49,15 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 3. Append row to `.magic/history/{workflow}.md` (Smart History dedup).
 4. Regenerate `.magic/.checksums` across all tracked engine files.
 
+### Scan Hygiene (Invariant 7 Parity)
+
+Engine scripts that walk the project tree (e.g., `detect-communities.js`) MUST exclude paths ignored by `.gitignore`, in addition to the hardcoded `SKIP_DIRS` denylist. The script reads `.gitignore` at startup and derives two matcher classes:
+
+- **Basename matchers** from directory patterns without a path separator — glob (`*tmp/` → any segment ending in `tmp`; `.*_cache/` → `.ruff_cache`, `.pytest_cache`) or plain (`node_modules/`).
+- **Anchored prefixes** from glob-free directory patterns that contain a path separator (e.g., `.design/wiki/`, `.design/.graph-cache/`).
+
+A directory is skipped when its basename matches a basename matcher, or its workspace-relative path falls under an anchored prefix. This prevents test fixtures and generated artifacts (e.g., `.tmp/`, `.design/wiki/`) from polluting community detection and boundary-alignment metrics. The hardcoded `SKIP_DIRS` remains as a gitignore-independent floor — the two are unioned, never mutually exclusive.
+
 ## Canonical References
 
 | Path | Role |
@@ -60,6 +70,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 | `dev/scripts/update-project-meta.js` | Project metadata hygiene (dev-side, relocated from `.magic/scripts/` in engine v2.1.21) |
 | `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
 | `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
+| `.magic/scripts/detect-communities.js` | Workspace boundary / community detection (gitignore-aware scan, Invariant 7) |
 | `.magic/scripts/lib/` | Finalization helpers: changelog-writer, commit-suggester, git-utils, phase-archiver, project-version, significance |
 | `.magic/.checksums` | Checksum manifest |
 | `.magic/.version` | Current engine version |
@@ -68,6 +79,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.0 | 2026-06-10 | Agent | Documented detect-communities.js (closed INFERRED coverage gap) and added Scan Hygiene section: graph-walk scripts honor .gitignore (Invariant 7 parity), unioned with SKIP_DIRS floor. Stable retained via Trust Mode re-review (C9). |
 | 1.4.1 | 2026-06-10 | Agent | Fixed orphaned Canonical Reference: update-project-meta.js path updated to dev/scripts/ (script relocated in engine v2.1.21). |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Removed stale generate-checksums.js and .magic/history/ refs; replaced with .magic/scripts/lib/ coverage. |
 | 1.3.0 | 2026-04-22 | Agent | Added analyze-coverage.js (Confidence Taxonomy) and extract-rationale.js (Rationale Extraction) to Components and Canonical References. |

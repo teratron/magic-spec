@@ -253,23 +253,38 @@ if (verifyHeaders && indexExists) {
         const fileVersionMatch = specContent.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
         const fileStatusMatch = specContent.match(/^\*\*Status:\*\*\s+(\w+)/m);
 
-        if (fileVersionMatch && indexVersion) {
-            const fileVersion = fileVersionMatch[1];
-            if (fileVersion !== indexVersion && /^\d+\.\d+\.\d+$/.test(indexVersion)) {
+        // RE-1: the registry — not the file — decides whether a header must exist.
+        // A valid INDEX value paired with a MISSING file header is drift, never a silent pass.
+
+        // ── Version parity ──
+        if (indexVersion && /^\d+\.\d+\.\d+$/.test(indexVersion)) {
+            if (!fileVersionMatch) {
                 warn(
                     'VERSION_DRIFT',
-                    `'${specFile}' file header Version (${fileVersion}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
+                    `'${specFile}' file header Version is MISSING but INDEX.md declares (${indexVersion}). Spec headers must mirror the registry.`,
+                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                );
+            } else if (fileVersionMatch[1] !== indexVersion) {
+                warn(
+                    'VERSION_DRIFT',
+                    `'${specFile}' file header Version (${fileVersionMatch[1]}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
                     `Run /magic.spec to reconcile, then re-run /magic.task`
                 );
             }
         }
 
-        if (fileStatusMatch && indexStatus) {
-            const fileStatus = fileStatusMatch[1];
-            if (fileStatus !== indexStatus && ['Draft', 'RFC', 'Stable', 'Deprecated'].includes(indexStatus)) {
+        // ── Status parity ──
+        if (indexStatus && ['Draft', 'RFC', 'Stable', 'Deprecated'].includes(indexStatus)) {
+            if (!fileStatusMatch) {
                 warn(
                     'STATUS_DRIFT',
-                    `'${specFile}' file header Status (${fileStatus}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
+                    `'${specFile}' file header Status is MISSING but INDEX.md declares (${indexStatus}). Spec headers must mirror the registry.`,
+                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                );
+            } else if (fileStatusMatch[1] !== indexStatus) {
+                warn(
+                    'STATUS_DRIFT',
+                    `'${specFile}' file header Status (${fileStatusMatch[1]}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
                     `Run /magic.spec to reconcile, then re-run /magic.task`
                 );
             }

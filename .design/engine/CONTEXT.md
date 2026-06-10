@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-05-07
+**Generated:** 2026-06-10
 
 ## Active Technologies
 
@@ -15,13 +15,13 @@
 │   ├── skills/
 │   └── workflows/
 ├── .design/
+│   ├── .cache/
 │   ├── .graph-cache/
 │   ├── .version
 │   ├── CONTEXT.md
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
-│   ├── spec-graph.html
 │   ├── wiki/
 │   └── workspace.json
 ├── .github/
@@ -59,7 +59,7 @@
 │   ├── spec.md
 │   └── task.md
 ├── rules/
-│   └── MAGIC.md
+│   └── magic.md
 ├── skills/
 │   ├── magic-analyze/
 │   ├── magic-graph/
@@ -93,3 +93,4 @@
 - Extended `.magic/scripts/update-engine-meta.js` with role-card history collapsing (`roles/*` → `roles` category)
 - Engine version bumped: 1.5.182 → 1.5.183; all 13 role cards registered in `.checksums`
 - `check-prerequisites` validation: `role_registry.total=13`, `missing=[]`, `dangling_handoffs=[]` ✓
+

@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** {workspace-name}
-**Updated:** 2026-05-07 10:21
-**Phase:** Backlog — awaiting l2-spec-graph-memory promotion
+**Updated:** 2026-06-10 17:34
+**Phase:** Baseline complete — no active phases
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-3T02 Validation — role_registry_integrity
 - **Spec:** {spec-file.md} §{section}
-- **Next Action:** Promote l2-spec-graph-memory to Stable, then /magic.run
+- **Next Action:** No pending spec work; start new features via /magic.spec
 
 ## Progress
 

@@ -24,6 +24,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   6. **`run.md` §Logic Guards — Sync** — removed "or confirm you want to proceed" gate; RULES/TASKS drift now auto-resolves via `magic.task update` with narration.
   Mode C Ventilation checklist updated: added "Auto-Repair applied; zero option menus" item. Engineer Posture (C25) annotation extended to explicitly forbid option menus.
 - Updated 4 specifications (engine)
+- Updated task plan and task index (engine)
+- Updated specification `spec-graph-memory` (engine)
+- Updated 2 specifications (engine)
+- Updated 3 specifications (engine)
+- Updated 7 specifications (engine)
+- Updated 9 specifications (engine)
 
 ### Added
 

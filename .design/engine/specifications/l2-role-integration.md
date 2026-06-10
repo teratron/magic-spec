@@ -1,18 +1,19 @@
 # Role System Workflow Integration
 
-**Version:** 1.1.0
+**Version:** 2.0.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
 
 ## Overview
 
-Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is wired into existing engine workflows (`run.md`, `task.md`, `spec.md`, `analyze.md`, `rule.md`, `retrospective.md`) and the `RULES.md` constitution. Also defines the `role_registry_integrity` addition to `check-prerequisites`, the role-template file, the `Verify` guard in Run QA, and the `update-engine-meta` treatment of role cards.
+Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is wired into existing engine workflow bodies (`run.md`, `task.md`, `spec.md`, `analyze.md`, `rule.md`, `retrospective.md`) and the `RULES.md` constitution. The engine-side tooling that supports the registry — the `role_registry_integrity` pre-flight check, the `update-engine-meta` checksum treatment, and the role authoring template — moved to [l2-role-tooling.md](l2-role-tooling.md) in the v2.0.0 decomposition; this spec now owns only the workflow-body wiring concern.
 
 ## Related Specifications
 
 - [l1-role-system.md](l1-role-system.md) - Parent concept.
 - [l2-role-cards.md](l2-role-cards.md) - Role card content and frontmatter format.
+- [l2-role-tooling.md](l2-role-tooling.md) - Sibling: engine tooling (check-prerequisites integrity, update-engine-meta, role template).
 - [l2-engine-automation.md](l2-engine-automation.md) - Host spec for `check-prerequisites`, `update-engine-meta`, and checksum logic.
 - [l2-workflow-wrappers.md](l2-workflow-wrappers.md) - User-facing workflow entry points; unchanged but must reflect role references in descriptions.
 
@@ -25,10 +26,10 @@ Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is
 | **R3 — Explicit Triggers** | Every trigger listed in card frontmatter maps to a named gate in this spec's §2 workflow amendments. |
 | **R4 — Orchestration Context Not Role** | `run.md` Execution Setup table (§2.1) renames Manager→Orchestrator, removes Developer row, and introduces "Track Owner Context" prose. |
 | **R5 — Self-Contained Cards** | Workflow bodies do not duplicate card content; they only reference and describe the gate. |
-| **R6 — Skills Advisory Only** | Workflow amendments never auto-invoke skills; `skills_recommended` surface only in card bodies and optional user-facing hints. |
+| **R6 — Skills Advisory Only** | Workflow amendments never auto-invoke skills; `skills_recommended` surface only in card bodies and optional user-facing hints (§5). |
 | **R7 — C24 Backward Compatibility** | `RULES.md §C24` table rewritten as pointer-table (§4). Inline persona phrases removed from all workflow bodies and replaced with `@role:{id}` references. |
-| **R8 — Engine Versioning** | `update-engine-meta` (§6) includes `.magic/roles/*.md` in checksum computation and patch-bump logic. |
-| **R9 — No Silent Dropout** | `check-prerequisites` gains `role_registry_integrity` check (§5) that enumerates role references and HALTs on unresolved IDs. |
+| **R8 — Engine Versioning** | Implemented by the tooling spec — see [l2-role-tooling.md](l2-role-tooling.md) §2. |
+| **R9 — No Silent Dropout** | Implemented by the tooling spec — see [l2-role-tooling.md](l2-role-tooling.md) §1. |
 | **R10 — Read-Only from Projects** | No opt-in extension surface introduced in this version. |
 
 ## 1. Integration Map
@@ -183,7 +184,7 @@ The engine maintains a unified role registry at `.magic/roles/`. At critical wor
 
 Role activation is mandatory at listed gates — it is not skipped in Trust Mode (C9). Activating a role means applying that role's Operating Protocol. The agent adopts the role's stance for one reasoning pass; no user interaction required.
 
-**Integrity:** The engine runs `role_registry_integrity` during `check-prerequisites`. A workflow reference to a non-existent role ID HALTs execution with `ROLE_MISSING`.
+**Integrity:** The engine runs `role_registry_integrity` during `check-prerequisites` (see l2-role-tooling.md §1). A workflow reference to a non-existent role ID HALTs execution with `ROLE_MISSING`.
 ```
 
 ### 4.3 Document History Entry
@@ -194,99 +195,7 @@ Append to `RULES.md` Document History:
 | 1.3.0 | 2026-04-23 | §C24 rewritten as Role Registry pointer table. Persona content externalized to .magic/roles/. See l2-role-integration.md. |
 ```
 
-## 5. `check-prerequisites` Addition
-
-### 5.1 New Check: `role_registry_integrity`
-
-Added to the pre-flight script (`.magic/scripts/check-prerequisites.js` via `executor.js` dispatcher).
-
-**Algorithm:**
-
-1. Enumerate all files under `.magic/roles/` matching `*.md`. Parse frontmatter; extract `id` field. Build role-ID set `R`.
-2. For each workflow file in `.magic/*.md`, grep for `@role:{id}` references. Collect the set of referenced IDs `W`.
-3. Compute `W \ R` (referenced but not registered). Emit each as `ROLE_MISSING` with workflow file and role ID.
-4. Emit warnings (not halts) for `R \ W` (registered but unreferenced) — these are dormant roles, not errors. Format: `ROLE_DORMANT: {id}`.
-5. Parse each card's `handoff.to` field. Any `to:` target not in `R` → `ROLE_HANDOFF_DANGLING` HALT.
-
-**JSON output addition:**
-
-```json
-{
-  "role_registry": {
-    "total": 13,
-    "referenced": 13,
-    "dormant": 0,
-    "missing": [],
-    "dangling_handoffs": []
-  }
-}
-```
-
-### 5.2 Failure Modes
-
-| Code | Severity | Meaning |
-| --- | --- | --- |
-| `ROLE_MISSING` | HALT | Workflow references `@role:{id}` but card file does not exist. |
-| `ROLE_HANDOFF_DANGLING` | HALT | Card's `handoff.to` points at an id not present in the registry. |
-| `ROLE_DORMANT` | WARN | Card exists but no workflow references it. |
-| `ROLE_TRIGGER_UNRESOLVED` | WARN | Card declares `triggers.workflow` that does not exist under `.magic/`. |
-
-## 6. `update-engine-meta` Treatment
-
-### 6.1 Checksum Coverage
-
-`.magic/scripts/update-engine-meta.js` is extended:
-
-1. `.magic/roles/*.md` files are hashed and registered in `.magic/.checksums` under a new `roles:` section.
-2. Any modification to a role card triggers the same patch-version bump as modification to workflow files.
-3. The `--workflow` argument gains a `roles` value: `node .magic/scripts/executor.js update-engine-meta --workflow roles` runs when role cards change (synonym-acceptable with `run`/`spec`/etc.).
-
-### 6.2 Smart History Classification
-
-Role card additions, renames, and semantic changes are recorded in `.magic/history/` with category `roles`. Smart-history deduplication (redundant automated entries skipped) applies as for workflows.
-
-## 7. Template File
-
-New file `.magic/templates/role.md` distributed with the engine. Content:
-
-```markdown
----
-id: {kebab-case-id}
-name: {Human-Readable Name}
-layer: {manager|executor|reviewer|advisor}
-triggers:
-  - workflow: {workflow-file.md}
-    gate: "{named gate}"
-outputs:
-  - type: {output-type}
-    scope: "{what the output covers}"
-handoff:
-  - to: {target-role-id}
-    condition: "{condition}"
-skills_recommended: []
-related_rules: []
-deprecated: false
----
-
-# {Name}
-
-## Mission
-
-{3-5 sentences stating purpose and when active.}
-
-## Operating Protocol
-
-1. {Step 1 — what the role does first.}
-2. {Step 2 — ...}
-3. {Step 3 — ...}
-
-## Anti-patterns
-
-- {What the role MUST NOT do.}
-- {Another anti-pattern.}
-```
-
-## 8. Skill Surface Changes
+## 5. Skill Surface Changes
 
 No new skills are introduced by this spec. Existing skills are **not** modified.
 
@@ -297,23 +206,13 @@ The `skills_recommended` field in role cards is advisory only (per R6). Specific
 
 Future iterations may expand this field, but the surface between roles and skills remains strictly one-way (roles may suggest skills; skills never reference roles).
 
-## 9. Drawbacks & Alternatives
+## 6. Drawbacks & Alternatives
 
-### 9.1 Drawback: Workflow File Churn
+### 6.1 Drawback: Workflow File Churn
 
 Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.md`, `rule.md`, `retrospective.md`) plus `rules.md` template and `.checksums`. Mitigation: changes are localized edits (inline persona → `@role:{id}` reference), not restructuring. Checksums are regenerated by `update-engine-meta`.
 
-### 9.2 Drawback: New `check-prerequisites` Surface
-
-Adding `role_registry_integrity` expands the pre-flight surface. Mitigation: the check is O(workflows × cards) on a small constant (≤20 workflows, ≤20 cards) — negligible runtime.
-
-### 9.3 Alternative: Hard-Coded Role Index
-
-Maintaining a single JSON manifest of role IDs (e.g., `.magic/roles/index.json`) instead of auto-discovery via directory scan. Rejected: directory scan matches the existing `.magic/*.md` discovery pattern (workflows themselves are discovered by scanning, not indexed). Adding a manifest creates a drift-prone duplicate source of truth.
-
-### 9.4 Alternative: Auto-Wire Skills on Role Activation
-
-Automatically invoking `skills_recommended` when a role activates. Rejected: violates R6 (advisory only), couples role system to skill discovery, and risks silent behavior change if a skill is updated.
+> Tooling-side drawbacks (the `check-prerequisites` surface expansion, the hard-coded-index and auto-wire-skills alternatives) moved with their content to [l2-role-tooling.md](l2-role-tooling.md) §4.
 
 ## Canonical References
 
@@ -326,13 +225,11 @@ Automatically invoking `skills_recommended` when a role activates. Rejected: vio
 | `[RULE]` | `.magic/rule.md` | Host of constitutional-reviewer integration. |
 | `[RETRO]` | `.magic/retrospective.md` | Host of retrospective-analyst integration. |
 | `[RULES-TPL]` | `.magic/templates/rules.md` | Source of C24 pointer-table rewrite. |
-| `[CHECK-PREREQ]` | `.magic/scripts/check-prerequisites.js` | Recipient of role_registry_integrity check. |
-| `[UPDATE-META]` | `.magic/scripts/update-engine-meta.js` | Recipient of role-card checksum logic. |
-| `[ROLE-TPL]` | `.magic/templates/role.md` | New file for role card authoring. |
 
 ## Document History
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.0.0 | 2026-06-10 | Scope narrowed to workflow-body wiring: engine tooling (§5 check-prerequisites integrity, §6 update-engine-meta, §7 template) extracted verbatim to l2-role-tooling.md (SPEC_BLOAT fix). §8 Skill Surface → §5; §9 Drawbacks → §6 (tooling drawbacks moved with their content). Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-05-12 | Added explicit Run QA `Verify Criterion` guard aligned with task `Verify` lines and Test-engineer role card. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines workflow amendments, RULES.md §C24 rewrite, check-prerequisites addition, update-engine-meta treatment, and template file. |

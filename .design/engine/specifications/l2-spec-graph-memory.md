@@ -1,7 +1,7 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.1.0
-**Status:** RFC
+**Version:** 1.1.1
+**Status:** Stable
 **Layer:** 2
 **Implements:** l1-engine-core.md
 
@@ -16,7 +16,7 @@ Three adapters that reduce token cost and rebuild time for the Specification Kno
 
 ## 1. Motivation
 
-The Spec Graph subsystem (`build-spec-graph.js`, `serve-spec-graph.js`, `benchmark.js`) already converts `.design/` artifacts into a navigable graph, but three gaps remain:
+The Spec Graph subsystem (`build-spec-graph.js`, `serve-spec-graph.js`) already converts `.design/` artifacts into a navigable graph, but three gaps remain:
 
 1. **Every build re-parses every spec file**, even when only YAML frontmatter (`Version`, `Last Updated`, `Status`) changed. As `.design/` grows, this becomes the dominant cost of `build-spec-graph` invocations.
 2. **Agents still read raw specs** when answering architecture questions — there is no intermediate "agent-friendly" navigation layer that gives a community summary + god-node map in a fraction of the tokens.
@@ -30,7 +30,7 @@ The three mechanisms below address each gap independently and compose cleanly �
 - Cache lives under `$designDir/.graph-cache/` (workspace-scoped, not committed).
 - Wiki output lives under `$designDir/wiki/` (deterministic, regenerable).
 - Frontmatter-aware hashing applies **only** to `.md` specs; `.json` / `.js` are hashed in full.
-- Token budget is an approximation: `chars ≈ tokens × 4` (industry heuristic, matches `benchmark.js`).
+- Token budget is an approximation: `chars ≈ tokens × 4` (industry heuristic).
 
 ## 3. Invariant Compliance
 
@@ -177,3 +177,4 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 | --- | --- | --- | --- |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
 | 1.1.0 | 2026-04-25 | Agent | §4.4 Workflow Integration Triggers: canonical refresh command, write/read/audit/visual classes, anti-trigger policy, failure handling, cache hygiene. |
+| 1.1.1 | 2026-06-10 | Agent | Promoted RFC → Stable: all four design sections verified implemented (graph-cache.js, export-wiki.js, serve-spec-graph.js token_budget, §4.4 workflow triggers). Removed stale benchmark.js references. |

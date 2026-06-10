@@ -4,7 +4,7 @@ description: Workflow for executing tasks from the project plan.
 handoffs:
   - label: "Replan"
     workflow: magic-task
-    prompt: "Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magic-spec recommendation only on substantive design gaps. Per `rules/MAGIC.md §5`, this is the SOLE user-visible next step after a phase — never propose /magic-analyze or /magic-spec proactively."
+    prompt: "Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magic-spec recommendation only on substantive design gaps. Per `rules/MAGIC-md §5`, this is the SOLE user-visible next step after a phase — never propose /magic-analyze or /magic-spec proactively."
     condition: null
 ---
 
