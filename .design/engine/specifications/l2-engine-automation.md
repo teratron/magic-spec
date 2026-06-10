@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -57,7 +57,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 | `.magic/scripts/generate-context.js` | CONTEXT.md regeneration |
 | `.magic/scripts/init.js` | `.design/` scaffold setup |
 | `.magic/scripts/update-engine-meta.js` | Engine versioning and history update |
-| `.magic/scripts/update-project-meta.js` | Project metadata hygiene |
+| `dev/scripts/update-project-meta.js` | Project metadata hygiene (dev-side, relocated from `.magic/scripts/` in engine v2.1.21) |
 | `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
 | `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
 | `.magic/scripts/lib/` | Finalization helpers: changelog-writer, commit-suggester, git-utils, phase-archiver, project-version, significance |
@@ -68,6 +68,7 @@ Each workflow has a dedicated history file at `.magic/history/{workflow}.md`. Th
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.1 | 2026-06-10 | Agent | Fixed orphaned Canonical Reference: update-project-meta.js path updated to dev/scripts/ (script relocated in engine v2.1.21). |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Removed stale generate-checksums.js and .magic/history/ refs; replaced with .magic/scripts/lib/ coverage. |
 | 1.3.0 | 2026-04-22 | Agent | Added analyze-coverage.js (Confidence Taxonomy) and extract-rationale.js (Rationale Extraction) to Components and Canonical References. |
 | 1.2.0 | 2026-03-20 | Agent | Added generate-context.js to Components; fixed engine file count reference. |

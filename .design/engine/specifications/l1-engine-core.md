@@ -1,5 +1,9 @@
 # Engine Core Specification
 
+**Version:** 1.1.2
+**Status:** Stable
+**Layer:** concept
+
 ## Overview
 
 Definition of the Magic SDD core engine logic, workflows, and invariants.
@@ -71,6 +75,7 @@ The following guards were added to the core workflows as part of the first relia
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |
 | 1.1.1 | 2026-03-20 | Agent | Fixed template naming: specification.md → spec.md to match disk. |
 | 1.1.0 | 2026-03-04 | Agent | Added Templates subsystem, analyze/rule/onboard/retrospective workflow list, and Runtime Guards (RE-1 – RE-T74). |
 | 1.0.0 | 2026-03-03 | Antigravity | Initial stable version (captured from existing core). |

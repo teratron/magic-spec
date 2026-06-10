@@ -1,6 +1,6 @@
 # Config Drift Guard
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -29,8 +29,8 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 
 ## Related Specifications
 
-- [engine-core.md](engine-core.md) — defines `check-prerequisites` and init workflow.
-- [engine-automation.md](engine-automation.md) — defines executor scripts.
+- [l1-engine-core.md](l1-engine-core.md) — defines `check-prerequisites` and init workflow.
+- [l2-engine-automation.md](l2-engine-automation.md) — defines executor scripts.
 
 ## Canonical References
 
@@ -44,5 +44,6 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.0.1 | 2026-06-10 | Fixed broken Related Specifications links: added layer prefixes (l1-engine-core.md, l2-engine-automation.md) |
 | 0.1.0 | 2026-03-25 | Initial Micro-spec from simulation RE-1 |
 | 1.0.0 | 2026-03-25 | Auto-promoted to Stable (C9 Trust Mode) |
