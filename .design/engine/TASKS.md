@@ -1,15 +1,21 @@
 # Master Task Index (Registry)
 
-**Version:** 1.7.0
-**Generated:** 2026-06-10
-**Based on PLAN:** .design/engine/PLAN.md v1.8.0
+**Version:** 1.8.0
+**Generated:** 2026-06-11
+**Based on PLAN:** .design/engine/PLAN.md v1.9.0
 **Based on RULES:** .design/RULES.md v1.7.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. Phases 2 and 3 are complete. All 19 registered specs are implemented and Stable (including the three `l2-role-cards-*` child specs and `l2-role-tooling.md` extracted in the v2.0.0 decompositions). Backlog is empty; no active phases remain.
+Tactical registry of all phases and their statuses. Phases 2 and 3 are complete. 20 specs are registered and Stable; Phase 4 (Prompt Quality Gate — `prompt-engineer` role deployment) is active with 10 atomic tasks across 4 tracks.
+
+## Active Phases
+
+| Phase | Description | Status |
+| --- | --- | --- |
+| [Phase 4](tasks/phase-4.md) | Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates | `Todo` |
 
 ## Completed Phases
 
@@ -20,9 +26,9 @@ Tactical registry of all phases and their statuses. Phases 2 and 3 are complete.
 
 ## Backlog
 
-*None — all registered specs are implemented and Stable.*
+*None — all other registered specs are implemented and Stable.*
 
 ## Meta Information
 
-- **Last Updated**: 2026-06-10
+- **Last Updated**: 2026-06-11
 - **Maintainer**: Core Team

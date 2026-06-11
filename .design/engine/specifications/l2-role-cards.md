@@ -1,13 +1,13 @@
 # Role Card Registry (Implementation)
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
 
 ## Overview
 
-Concrete implementation of the role system defined by [l1-role-system.md](l1-role-system.md). Specifies the on-disk location of the registry (`.magic/roles/`), the role card file format (YAML frontmatter + body), and the **inventory index** of all 13 role cards. As of v2.0.0 the full per-card authoring content lives in three focused child specs (token-economy decomposition); this spec is the format/schema authority and the navigation index. Executor/reviewer roles also define the core coding discipline: material assumptions are surfaced, diffs remain traceable to task/spec/verify scope, speculative complexity is rejected, and completion requires explicit verification evidence.
+Concrete implementation of the role system defined by [l1-role-system.md](l1-role-system.md). Specifies the on-disk location of the registry (`.magic/roles/`), the role card file format (YAML frontmatter + body), and the **inventory index** of all 14 role cards. As of v2.0.0 the full per-card authoring content lives in three focused child specs (token-economy decomposition); this spec is the format/schema authority and the navigation index. Executor/reviewer roles also define the core coding discipline: material assumptions are surfaced, diffs remain traceable to task/spec/verify scope, speculative complexity is rejected, and completion requires explicit verification evidence.
 
 ## Card Content Specs
 
@@ -17,7 +17,7 @@ The full canonical authoring source for each card (frontmatter + Mission + Opera
 | --- | --- | --- |
 | [l2-role-cards-execution.md](l2-role-cards-execution.md) | Plan → coordinate → build → fix → document | `planner`, `orchestrator`, `coder`, `debugger`, `docs-specialist` |
 | [l2-role-cards-review.md](l2-role-cards-review.md) | `run.md` inline review gates | `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-engineer` |
-| [l2-role-cards-governance.md](l2-role-cards-governance.md) | Cross-workflow governance (migrated C24) | `spec-critic`, `project-auditor`, `constitutional-reviewer`, `retrospective-analyst` |
+| [l2-role-cards-governance.md](l2-role-cards-governance.md) | Cross-workflow governance (migrated C24 + quality gate) | `spec-critic`, `project-auditor`, `constitutional-reviewer`, `retrospective-analyst`, `prompt-engineer` |
 
 ## Related Specifications
 
@@ -27,6 +27,7 @@ The full canonical authoring source for each card (frontmatter + Mission + Opera
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Child: migrated-C24 governance card content.
 - [l2-role-integration.md](l2-role-integration.md) - Sibling spec covering workflow-side integration (`run.md`, `task.md`, `RULES.md §C24`, etc.).
 - [l2-engine-automation.md](l2-engine-automation.md) - Engine scripts (checksums, update-engine-meta) that govern role card distribution.
+- [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Quality discipline implemented by the `prompt-engineer` card.
 
 ## Invariant Compliance
 
@@ -103,6 +104,7 @@ Cards MAY include additional sections after these four (e.g., `## Examples`, `##
 | `project-auditor` | reviewer | `analyze.md` → Pre-Advisory Audit (migrated C24) | governance |
 | `constitutional-reviewer` | reviewer | `rule.md` → Impact Analysis (migrated C24) | governance |
 | `retrospective-analyst` | advisor | `retrospective.md` → Signal Calculation (migrated C24) | governance |
+| `prompt-engineer` | reviewer | `spec.md` → Instruction Quality Pass · `task.md` → Task Instruction Review · `rule.md` → Rule Wording Review · `analyze.md` → Prompt Quality Audit · `run.md` → Instruction Diff Review (conditional) | governance |
 
 > The **Content Spec** column names the child spec (`l2-role-cards-{cluster}.md`) holding each card's full authoring source. Implementation (L2 integration — see l2-role-integration.md) copies each card section verbatim into `.magic/roles/{id}.md`, combining the frontmatter block (§1.2) with the body (§1.3).
 
@@ -137,6 +139,7 @@ The original v1.x kept all card content in this one spec (~656 lines), which tri
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.0 | 2026-06-11 | Inventory 13 → 14: registered `prompt-engineer` (reviewer, governance cluster) with multi-workflow triggers per l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9). |
 | 2.0.0 | 2026-06-10 | Structural decomposition (SPEC_DECOMPOSE fix): §3 full card content extracted verbatim into three focused child specs (l2-role-cards-execution/review/governance). This spec retains the file format (§1), role inventory index (§2, with new Content Spec column), template, and drawbacks. Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-05-12 | Integrated coding discipline into executor/reviewer cards: material assumptions, diff traceability, minimal implementation, and verify-line enforcement. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines file format, frontmatter schema, body structure, and full content for all 13 initial role cards. |

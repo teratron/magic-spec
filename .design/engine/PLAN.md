@@ -1,13 +1,13 @@
 # Implementation Plan
 
-**Version:** 1.8.0
-**Generated:** 2026-06-10
-**Based on:** .design/engine/INDEX.md v1.10.9
+**Version:** 1.9.0
+**Generated:** 2026-06-11
+**Based on:** .design/engine/INDEX.md v1.11.0
 **Status:** Active
 
 ## Overview
 
-Implementation plan for the Magic SDD engine workspace. Phase 3 introduces the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`.
+Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`. Phase 4 deploys the Prompt Quality Gate (`l1-prompt-quality-gate.md`): the `prompt-engineer` role card (#14) and its five workflow gates.
 
 ## Completed (Baseline)
 
@@ -35,7 +35,11 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduces the u
 
 ## Active Phases
 
-*No active phases — all Stable specs are implemented. See Backlog for pending work.*
+### Phase 4 — Prompt Quality Gate (prompt-engineer role)
+
+- [ ] **Prompt Quality Gate** ([l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md)) [L1] — deployed via role card #14 + five workflow gates
+  - Amendment deployment covered by this phase: [l2-role-cards.md](specifications/l2-role-cards.md) v2.1.0 (inventory #14), [l2-role-cards-governance.md](specifications/l2-role-cards-governance.md) v1.1.0 (§5 card content), [l2-role-integration.md](specifications/l2-role-integration.md) v2.1.0 (§1/§2.8a/§3/§4.2 gate wiring), [l1-role-system.md](specifications/l1-role-system.md) v1.1.0 (§4.3 registry extension).
+  - Tasks: [tasks/phase-4.md](tasks/phase-4.md)
 
 ## Backlog
 

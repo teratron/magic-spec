@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -16,6 +16,7 @@ Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is
 - [l2-role-tooling.md](l2-role-tooling.md) - Sibling: engine tooling (check-prerequisites integrity, update-engine-meta, role template).
 - [l2-engine-automation.md](l2-engine-automation.md) - Host spec for `check-prerequisites`, `update-engine-meta`, and checksum logic.
 - [l2-workflow-wrappers.md](l2-workflow-wrappers.md) - User-facing workflow entry points; unchanged but must reflect role references in descriptions.
+- [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Concept mandating the `prompt-engineer` gates wired in §1, §2.8a, and §3.
 
 ## Invariant Compliance
 
@@ -51,6 +52,11 @@ Full workflow-to-role mapping after integration:
 | `analyze.md` | Pre-Advisory Audit | `project-auditor` | Migrate Auditor |
 | `rule.md` | Impact Analysis | `constitutional-reviewer` | Migrate Constitutional Reviewer |
 | `retrospective.md` | Signal Calculation | `retrospective-analyst` | Migrate Independent Analyst |
+| `spec.md` | Post-Update Review — Instruction Quality Pass (new) | `prompt-engineer` | New gate (v2.1.0) |
+| `task.md` | Plan Write-back — Task Instruction Review (new) | `prompt-engineer` | New gate (v2.1.0) |
+| `rule.md` | Impact Analysis — Rule Wording Review (new) | `prompt-engineer` | New gate (v2.1.0) |
+| `analyze.md` | Mode C — Prompt Quality Audit (new) | `prompt-engineer` | New audit dimension (v2.1.0) |
+| `run.md` | Step 3.4b — Instruction Diff Review (new, conditional) | `prompt-engineer` | New conditional gate (v2.1.0) |
 
 ## 2. `run.md` Amendments
 
@@ -110,6 +116,10 @@ Existing Blocked `[!]` branch gains the attribution `Activate @role:debugger`. C
 
 Inserted between Step 3.5 PASS and the Step 4 "Update" transition. Triggered only when Test-engineer flagged docs-visible changes. Activates `@role:docs-specialist`. Returns to Test-engineer for final Done confirmation.
 
+### 2.8a New Gate: Step 3.4b — Instruction Diff Review (conditional) [ADDED]
+
+Inserted between Step 3.4 and Step 3.5. Triggered only when the diff touches AI-facing instruction artifacts per PQ-1 of [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md): engine workflow bodies, role cards, templates, `RULES.md` tiers, adapter instruction files, or `.design/` specifications edited as task output. Activates `@role:prompt-engineer` on the changed instruction text only (not the whole file). Verdict semantics per PQ-6: FAIL returns to Step 3; PASS-WITH-REWRITES applies rewrites inline and proceeds; PASS proceeds to Step 3.5. Diffs touching only non-instruction code or data skip this gate silently.
+
 ### 2.9 Run Completion Checklist Additions
 
 Two new lines appended to the checklist block in `run.md`:
@@ -127,11 +137,15 @@ Current Step 5 "Planning Audit (C24)" prose is amended: `Adopt a Planning Skepti
 
 Task Completion Checklist line `☐ Role-Switching (C24): Draft Plan audited in Skeptic Persona` changes to `☐ Role: Plan produced by @role:planner; adversarial pass executed`.
 
+**[ADDED v2.1.0]** After the planner adversarial pass and before plan write-back, a new gate **Task Instruction Review** activates `@role:prompt-engineer` over the generated task descriptions, `Verify` lines, and phase notes — these are the instruction text executors receive in `run.md`. Verdict per PQ-6; checklist gains `☐ Instruction Quality: task units reviewed by @role:prompt-engineer`.
+
 ### 3.2 `spec.md`
 
 Post-Update Review section is amended: `Adopt a Project Critic persona to audit the changes` → `Activate @role:spec-critic`. The seven checks (L1 Purity, Invariant Completeness, Substantive Compliance, Coherence, Links, Rules, Sync Check) remain in the workflow body as the gate's checklist (they are also mirrored in the card's Operating Protocol).
 
 Task Completion Checklist line `☐ Review: Post-Update Review performed in Critic Persona` changes to `☐ Review: Post-Update Review performed by @role:spec-critic`.
+
+**[ADDED v2.1.0]** Post-Update Review gains a second stage **Instruction Quality Pass**: after `@role:spec-critic` emits PASS, `@role:prompt-engineer` reviews the created/amended spec sections per the six PQ-3 dimensions (PQ-7 ordering — quality pass never runs on critic-rejected specs). Verdict per PQ-6; FAIL blocks status promotion alongside critic findings. Checklist gains `☐ Instruction Quality: dispatched sections reviewed by @role:prompt-engineer`.
 
 ### 3.3 `analyze.md`
 
@@ -139,9 +153,13 @@ Pre-Advisory Audit section: `Before generating recommendations, adopt an Auditor
 
 Checklist line `☐ Pre-Advisory Audit (C24): Auditor persona applied` (appears twice in the file) changes to `☐ Pre-Advisory Audit: @role:project-auditor activated`.
 
+**[ADDED v2.1.0]** Mode C (deep consistency check) gains a **Prompt Quality Audit** dimension: `@role:prompt-engineer` sweeps existing AI-facing artifacts (PQ-1 classes) for the six PQ-3 defect types and emits findings into the common findings pool, where `@role:project-auditor` severity-ranks them for the Advisory Report. Audit-mode findings are advisory only — no artifact is rewritten during ventilation (Actionable Guard preserved).
+
 ### 3.4 `rule.md`
 
 §5 Constitutional Reviewer Persona Audit: `Adopt the Constitutional Reviewer persona` → `Activate @role:constitutional-reviewer`. Interrogative hooks remain in the workflow body.
+
+**[ADDED v2.1.0]** After the constitutional verdict APPROVE and before the rule is written, a new gate **Rule Wording Review** activates `@role:prompt-engineer` over the proposed rule text in composition with the existing constitution tiers (rules are the highest-leverage prompts in the system — loaded on every operation). AMEND-level wording findings are applied as PASS-WITH-REWRITES; contradictions with already-registered rule text FAIL back to the proposal step. The constitutional-reviewer owns *conflict of meaning*; the prompt-engineer owns *clarity of wording* — no overlap (PQ-7).
 
 ### 3.5 `retrospective.md`
 
@@ -176,11 +194,16 @@ The engine maintains a unified role registry at `.magic/roles/`. At critical wor
 | `analyze.md` | Pre-Advisory Audit | `project-auditor` | `.magic/roles/project-auditor.md` |
 | `rule.md` | Impact Analysis | `constitutional-reviewer` | `.magic/roles/constitutional-reviewer.md` |
 | `retrospective.md` | Signal Calculation | `retrospective-analyst` | `.magic/roles/retrospective-analyst.md` |
+| `spec.md` | Instruction Quality Pass | `prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `task.md` | Task Instruction Review | `prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `rule.md` | Rule Wording Review | `prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `analyze.md` | Prompt Quality Audit (Mode C) | `prompt-engineer` | `.magic/roles/prompt-engineer.md` |
 
 **Opt-in roles** (triggered conditionally; not in mandatory gate table):
 - `code-skeptic` — opt-in decision review before coding.
 - `code-simplifier` — opt-in simplification pass after Code-reviewer.
 - `docs-specialist` — triggered only when a Done task changes public API / docs-visible behavior.
+- `prompt-engineer` (run.md Step 3.4b) — triggered only when the diff touches AI-facing instruction artifacts.
 
 Role activation is mandatory at listed gates — it is not skipped in Trust Mode (C9). Activating a role means applying that role's Operating Protocol. The agent adopts the role's stance for one reasoning pass; no user interaction required.
 
@@ -230,6 +253,7 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.0 | 2026-06-11 | Wired `prompt-engineer` gates per l1-prompt-quality-gate.md: spec.md Instruction Quality Pass, task.md Task Instruction Review, rule.md Rule Wording Review, analyze.md Mode C Prompt Quality Audit, run.md Step 3.4b conditional Instruction Diff Review; C24 pointer-table extended. Stable retained via Trust Mode re-review (C9). |
 | 2.0.0 | 2026-06-10 | Scope narrowed to workflow-body wiring: engine tooling (§5 check-prerequisites integrity, §6 update-engine-meta, §7 template) extracted verbatim to l2-role-tooling.md (SPEC_BLOAT fix). §8 Skill Surface → §5; §9 Drawbacks → §6 (tooling drawbacks moved with their content). Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-05-12 | Added explicit Run QA `Verify Criterion` guard aligned with task `Verify` lines and Test-engineer role card. |
 | 1.0.0 | 2026-04-23 | Initial Stable. Defines workflow amendments, RULES.md §C24 rewrite, check-prerequisites addition, update-engine-meta treatment, and template file. |

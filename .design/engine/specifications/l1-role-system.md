@@ -1,6 +1,6 @@
 # Unified Role System
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -12,6 +12,7 @@ Defines a unified, first-class registry of agent roles used across all SDD workf
 
 - [l1-engine-core.md](l1-engine-core.md) - Core invariants and runtime guards; C24 Role-Switching Gate is superseded by this spec.
 - [l2-agent-surface.md](l2-agent-surface.md) - Adapter-facing surface; role cards are part of the surface exposed to adapters.
+- [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Instruction-quality discipline enforced by the `prompt-engineer` role (registry entry §4.3).
 
 ## 1. Motivation
 
@@ -118,7 +119,7 @@ Role cards distributed with the engine are part of the engine surface and are NO
 
 ## 4. Role Inventory (Initial Registry)
 
-This spec defines *which roles exist* at the concept level. Concrete card content (Mission, Operating Protocol, Anti-patterns, full trigger wiring) is an L2 concern. The initial registry, covering both new roles and C24 migrations, contains **13 roles**:
+This spec defines *which roles exist* at the concept level. Concrete card content (Mission, Operating Protocol, Anti-patterns, full trigger wiring) is an L2 concern. The registry contains **14 roles**: the initial 13 (new roles + C24 migrations) plus the quality-governance extension (§4.3):
 
 ### 4.1 New Roles (Code-Writing Coverage)
 
@@ -144,6 +145,12 @@ This spec defines *which roles exist* at the concept level. Concrete card conten
 | `retrospective-analyst` | advisor | C24 `Independent Analyst` (retrospective.md Signal calc) |
 
 Note: the C24 `Planning Skeptic` is absorbed into `planner` (advisor layer carries its own skeptical review step); the C24 `Tester` is renamed to `test-engineer` without semantic change.
+
+### 4.3 Quality Governance Extension (v1.1.0) [ADDED]
+
+| id | layer | Purpose |
+| --- | --- | --- |
+| `prompt-engineer` | reviewer | Instruction-quality gate over all AI-facing artifacts (specs, rules, task units, role cards, workflow bodies, templates). Fires after the domain reviewer at every artifact-producing gate; also serves as an audit lens during ventilation. Governed by [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md). |
 
 ## 5. Lifecycle & Governance
 
@@ -198,10 +205,12 @@ Placing roles in `.magic/roles/{layer}/` (e.g., `.magic/roles/executor/coder.md`
 | `[RULE]` | `.magic/rule.md` | Host of Constitutional-reviewer trigger. |
 | `[RETRO]` | `.magic/retrospective.md` | Host of Retrospective-analyst trigger. |
 | `[ENGINE-CORE]` | `.design/engine/specifications/l1-engine-core.md` | C24 semantics superseded by this spec; cross-reference required. |
+| `[PQ-GATE]` | `.design/engine/specifications/l1-prompt-quality-gate.md` | Quality discipline enforced by the `prompt-engineer` role. |
 
 ## Document History
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.0 | 2026-06-11 | Registry extended 13 → 14: added `prompt-engineer` (reviewer) as §4.3 Quality Governance Extension, governed by l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9); C12 cascade not triggered. |
 | 1.0.0 | 2026-04-23 | Promoted to Stable. MVC satisfied (Overview + Core Invariants); no RULES.md conflicts; no circular dependencies. |
 | 0.1.0 | 2026-04-23 | Initial Draft. Defines R1–R10 invariants, 13-role initial inventory (9 new + 4 C24 migrations), and lifecycle rules. Frontend-specialist and further domain roles deferred to backlog. |

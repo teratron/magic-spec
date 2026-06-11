@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.3.6
+**Version:** 1.3.7
 **Status:** Active
 **Engine Version:** 2.1.30
 
@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 19 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 20 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.7 | 2026-06-11 | Agent | Engine workspace spec count 19 → 20: added l1-prompt-quality-gate.md; prompt-engineer role registered (14th card) across l1-role-system, l2-role-cards, l2-role-cards-governance, l2-role-integration. |
 | 1.3.6 | 2026-06-10 | Agent | Engine workspace spec count 18 → 19: l2-role-integration tooling extracted to l2-role-tooling (Engine Improvement #4, SPEC_BLOAT fix). |
 | 1.3.5 | 2026-06-10 | Agent | Engine workspace spec count 15 → 18: l2-role-cards decomposed into execution/review/governance child specs (Engine Improvement #3). |
 | 1.3.4 | 2026-06-10 | Agent | Engine Improvements #1–#2 (RE-1 absent-header drift, detect-communities gitignore-aware scan); engine 2.1.28 → 2.1.30. |
