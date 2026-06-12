@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** {workspace-name}
-**Updated:** 2026-06-12 05:54
-**Phase:** 4 — Prompt Quality Gate
-**Status:** Active
+**Updated:** 2026-06-12 06:57
+**Phase:** 6 — SDD Reference Containment (field-priority)
+**Status:** Done
 
 ## Current Position
 
-- **Task:** T-3T02 Validation — role_registry_integrity
+- **Task:** T-6T02 Validation: engine test harness
 - **Spec:** {spec-file.md} §{section}
-- **Next Action:** Run /magic.run engine — Phase 4, then Phase 5 (Decision Autonomy)
+- **Next Action:** Run /magic.run engine (Phase 4 is the next Todo phase)
 
 ## Progress
 
@@ -22,6 +22,8 @@ Overall:   [{done}/{all}]    ██░░░░░░ {pct}%
 ```
 
 ## Recent Decisions
+
+- 2026-06-12 **Decision:** Phase 6 complete. Provides: rules/magic.md §6 containment policy; Coder RC-5 gate; Code-reviewer RC-6 check; analyze.md SDD_REFERENCE_LEAK scan; engine 2.1.31
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 

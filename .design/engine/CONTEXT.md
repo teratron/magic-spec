@@ -93,3 +93,4 @@
 - Extended `.magic/scripts/update-engine-meta.js` with role-card history collapsing (`roles/*` → `roles` category)
 - Engine version bumped: 1.5.182 → 1.5.183; all 13 role cards registered in `.checksums`
 - `check-prerequisites` validation: `role_registry.total=13`, `missing=[]`, `dangling_handoffs=[]` ✓
+

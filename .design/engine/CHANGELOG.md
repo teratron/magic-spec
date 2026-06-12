@@ -1,5 +1,15 @@
 # Engine Workspace Changelog
 
+## Phase 6 — 2026-06-12
+
+- Added §6 "SDD Reference Containment" to user-side `rules/magic.md`: one-way traceability rule (SDD artifacts reference code, never the reverse), forbidden reference classes, exemptions, BAD/GOOD example, enforcement map; Completion Protocol renumbered §6→§7 with a new containment checklist line; recreated the broken `.agents/rules/magic.md` hardlink.
+- Coder card (`.magic/roles/coder.md`): containment authoring gate inserted as protocol step 6 + anti-pattern — no SDD-artifact references in code, comments, docstrings, identifiers, string literals, or test names.
+- Code-reviewer card (`.magic/roles/code-reviewer.md`): containment check inserted as protocol step 4 + anti-pattern — any SDD-layer reference in a product-file diff is FAIL; internal minimalism cross-reference renumbered.
+- Ventilation (`.magic/analyze.md`): Mode C gained step 6 "SDD Reference Containment Scan" emitting advisory `SDD_REFERENCE_LEAK {file}:{line}` findings; "SDD Leak" row added to the Findings Schema; both Mode C checklists extended.
+- Engine version 2.1.30 → 2.1.31 (C14): checksums regenerated (63 files), skill wrappers re-projected.
+- Validation: containment-gate simulation passed (authoring forbid + review FAIL + repo scan clean outside exempt zones); engine test harness 12/12 green.
+- Follow-up surfaced (not fixed, out of phase scope): shipped `analyze.md`/`spec.md`/`task.md` link to `.design/engine/specifications/l2-spec-graph-memory.md` — dead on consumer installs; same violation class, needs its own task.
+
 ## Phase 4 — 2026-05-12
 
 - Integrated coding discipline from the local reference into `.magic/roles/`: Coder now surfaces material assumptions and writes minimal diffs; Code-reviewer enforces traceability; Code-simplifier rejects speculative complexity; Code-skeptic classifies material assumptions; Test-engineer requires explicit `Verify` evidence.

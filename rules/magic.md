@@ -207,9 +207,56 @@ task Done
 - Engine improvement tasks (explicit directive) — engine and spec layers are separate.
 - `MAGIC_POST_TASK_REPLAN=0` env var disables this rule entirely.
 
-## 6. Completion Protocol (Mandatory Checklist)
+## 6. SDD Reference Containment (Code ↔ SDD Boundary)
 
-Before finishing any task that involved magic-spec workflows, verify §1–§5 were honored.
+Products built with this engine may ship releases that exclude `.design/`. Any
+reference to SDD artifacts inside product files becomes dead content in such a
+release. Traceability is one-way: SDD artifacts reference code; code never
+references SDD artifacts.
+
+### Rule
+
+Never write references to SDD artifacts into product files — source code,
+comments, docstrings, identifiers, string literals, test names, build/config
+files, or user-facing docs (README, CHANGELOG). Forbidden reference classes:
+
+- Task IDs (`[T-XXXX]`) and phase designators (`phase-{n}`).
+- SDD system files: `PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`.
+- Specification file names (e.g., `l1-*.md`, `l2-*.md`).
+- Any `.design/…` path.
+
+If design rationale matters at a code site, restate it in plain language.
+Provenance ("which task produced this") lives in the SDD layer (task `Changes`
+fields, phase files) and git metadata (commit messages, PR descriptions) —
+both legitimate channels.
+
+### Example
+
+```plaintext
+BAD : // Implements T-2B03 (see .design/engine/tasks/phase-2.md)
+GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
+GOOD: (commit message) feat(parser): add payload guard [T-2B03]
+```
+
+### Exemptions
+
+- The `.design/` subtree itself and engine directories (`.magic/`, `workflows/`,
+  `skills/`, `rules/`) — engine-internal cross-references are by design.
+- Git metadata — not part of release artifacts.
+- Contributor-facing process docs that document the SDD workflow itself
+  (there the reference IS the content).
+
+### Enforcement
+
+- **Write time** — the Coder role refuses to introduce violations.
+- **Review time** — the Code-reviewer role FAILs any diff adding an SDD reference.
+- **Audit time** — `/magic.analyze` ventilation reports
+  `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
+  never auto-edited).
+
+## 7. Completion Protocol (Mandatory Checklist)
+
+Before finishing any task that involved magic-spec workflows, verify §1–§6 were honored.
 
 - [ ] **§1 Upgrade Detection** — compared `.magic/.version` to `**Engine Version:**`
       in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`); on
@@ -228,3 +275,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§5 w
       workspace context). NEVER proactively offered `/magic.spec` or
       `/magic.analyze` as a separate user-visible step — `/magic.spec` surfaces
       only inside `/magic.task` on a real HALT.
+- [ ] **§6 Reference Containment** — no SDD-artifact references (task IDs,
+      phase designators, `PLAN.md`/`TASKS.md`/`INDEX.md`/`RULES.md`, spec file
+      names, `.design/` paths) were written into product files; rationale
+      restated in plain language where needed.

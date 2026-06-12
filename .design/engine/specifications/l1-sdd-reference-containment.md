@@ -33,7 +33,7 @@ The engine already enforces the mirrored boundary internally: the L1 release ker
 Rules that Layer 2 implementations MUST NOT violate:
 
 - **RC-1 (One-Way Traceability)**: References cross the SDD boundary in one direction only: SDD artifacts → product files. Product files never reference SDD artifacts.
-- **RC-2 (Containment Scope)**: "Product files" means every release-shippable artifact: source code (identifiers, string literals), comments and docstrings, test names, build/config files, and user-facing documentation (README, CHANGELOG). Forbidden references: task IDs (`[T-XXXX]`), phase designators (`phase-{n}`), `PLAN.md` / `TASKS.md`, specification file names, and any `.design/…` path.
+- **RC-2 (Containment Scope)**: "Product files" means every release-shippable artifact: source code (identifiers, string literals), comments and docstrings, test names, build/config files, and user-facing documentation (README, CHANGELOG). Forbidden references: task IDs (`[T-XXXX]`), phase designators (`phase-{n}`), SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), specification file names, and any `.design/…` path.
 - **RC-3 (Self-Containment)**: Every comment and documentation passage must remain fully meaningful with `.design/` absent. Design rationale that matters at the code site is restated in plain language in place; provenance ("which task produced this") is never stated in code.
 - **RC-4 (Traceability Relocation)**: The task ↔ code mapping lives exclusively in the SDD layer (task `Changes` fields, phase files) and git metadata (commit messages, PR descriptions).
 - **RC-5 (Authoring Gate)**: The code-producing role MUST NOT introduce violations — write-time prevention.
@@ -63,7 +63,7 @@ for each file in release scope (respect .gitignore; skip .design/ and engine dir
     flag occurrences of:
         ".design/"                      — any path into the SDD tree
         task-ID tokens ([T-XXXX])       — checklist identifiers
-        "PLAN.md" / "TASKS.md" / "phase-{n}" file references
+        "PLAN.md" / "TASKS.md" / "INDEX.md" / "RULES.md" / "phase-{n}" file references
         spec filenames registered in INDEX.md
 report each as: SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"
 ```

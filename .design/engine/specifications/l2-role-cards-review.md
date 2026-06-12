@@ -52,7 +52,7 @@ related_rules: [C24]
 1. Load the diff produced by Coder.
 2. Check `RULES.md` compliance: language policy, formatting conventions, style rules.
 3. Check traceability: every changed block must map to the task, assigned spec section, `Verify` criterion, or cleanup made necessary by this diff. Unrelated formatting, comment churn, renames, and drive-by refactors are FAIL.
-4. Check containment (RC-6, [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): scan the diff for SDD-layer references — task IDs, phase designators, `PLAN.md`/`TASKS.md`, spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. Any occurrence in product files is FAIL.
+4. Check containment (RC-6, [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): scan the diff for SDD-layer references — task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. Any occurrence in product files is FAIL.
 5. Check surface correctness: typos in identifiers, wrong imports, obvious misuse of APIs.
 6. Check minimalism: dead code, unused variables, one-use abstractions, speculative configuration, impossible error handlers, commented-out blocks.
 7. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?

@@ -175,24 +175,28 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - For each Shadow Logic file: report the count of rationale markers, their types, and the uncovered file path.
    - `shadow_files > 0` → include a `SHADOW_LOGIC` advisory section recommending spec creation for files with ≥3 rationale comments.
    - Report marker distribution (NOTE/WHY/HACK/etc.) as a project health indicator. High HACK/FIXME counts signal technical debt.
-6. **Specification Knowledge Graph**: run `node .magic/scripts/executor.js build-spec-graph`.
+6. **SDD Reference Containment Scan (`SDD_REFERENCE_LEAK`)**: scan product files in scope (respect Invariant 7 gitignore filters; skip the `.design/` subtree and engine directories `.magic/`, `workflows/`, `skills/`, `rules/`) for SDD-layer references per `rules/magic.md` §6:
+   - Match classes: `.design/…` paths, task IDs (`[T-XXXX]`), phase designators (`phase-{n}`), SDD system file names (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), and spec file names registered in `INDEX.md`.
+   - Exemptions: git metadata and contributor-facing docs that document the SDD workflow itself (the reference IS the content).
+   - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited; cleanup is guided by the report only.
+7. **Specification Knowledge Graph**: run `node .magic/scripts/executor.js build-spec-graph`.
    - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
    - Report Orphaned files (workspace-scoped but uncovered) and Missing Implements (L2 specs without parent link).
    - Report Bridge Specs (specs referencing files across multiple workspaces) as candidates for cross-workspace spec or workspace boundary adjustment.
    - **Wiki Staleness (`WIKI_STALE`)**: compare mtime of `.design/wiki/index.md` against the newest mtime among `.design/specifications/**/*.md`, `.design/{ws}/PLAN.md`, and `.design/RULES.md` (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). If wiki is missing or older → emit `WIKI_STALE` advisory with sync path `→ node .magic/scripts/executor.js export-wiki`.
    - **Optional HTML**: if user requests a visual map, run with `--html` flag → outputs `.design/spec-graph.html` (self-contained vis.js visualization). Never auto-generated.
-7. **Workspace Boundary Analysis**: run `node .magic/scripts/executor.js detect-communities --include-md`.
+8. **Workspace Boundary Analysis**: run `node .magic/scripts/executor.js detect-communities --include-md`.
    - Compare detected communities against `workspace.json` boundaries (Jaccard alignment score).
    - Any community Jaccard score < 0.3 → include `BOUNDARY_DRIFT` warning: community members are misaligned with their declared workspace.
    - Any community exceeds the oversized threshold (>25% of graph) and BFS partitioning reveals sub-clusters → suggest workspace split with proposed names.
-8. **Documentation & Version Audit**:
+9. **Documentation & Version Audit**:
    - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
    - Verify `README.md` version badge matches `.magic/.version`.
    - Verify `rules/MAGIC.md` points users to GitHub Releases and the current manual update folders.
    - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
-9. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
-10. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
-11. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
+10. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
+11. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+12. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
     - **Workspace layout drift** (specs on disk differ from configured workspace path in `workspace.json`) → update `workspace.json` to reflect the actual spec location on disk; narrate `[Auto-Repair] Workspace layout fixed: '{ws}' path updated to {actual-path}. (Revert: git restore .design/workspace.json)`. Do NOT present A/B/C variant options.
     - **Registry healing** (Ghost/Zombie entries in `INDEX.md`) → auto-execute registry repair; narrate `[Auto-Repair] Registry healed: {N} Ghost/Zombie entries resolved. (Revert: git restore .design/{ws}/INDEX.md)`.
     - **Wiki stale** → auto-run `node .magic/scripts/executor.js export-wiki`; narrate `[Auto-Repair] Wiki refreshed.`.
@@ -204,8 +208,8 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
       - `TASK_BLOAT` — task phase file > 250 lines → suggest decomposing into sub-tasks.
       - `TASK_DECOMPOSE` — task phase file > 400 lines → recommend splitting the phase.
       Include bloat summary in the Advisory Report under **Spec Quality**.
-12. **Report**: consolidated list of errors, warnings, and suggested repairs.
-13. **Advisory**: generate Advisory Report (see §Advisory Report) for the audited scope.
+13. **Report**: consolidated list of errors, warnings, and suggested repairs.
+14. **Advisory**: generate Advisory Report (see §Advisory Report) for the audited scope.
 
 ### [Mode D] Focused Analysis
 
@@ -239,6 +243,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 | **Gaps** | `RFC` or `Draft` specs with no corresponding implementation. |
 | **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
 | **Shadow Logic** | Files containing rationale comments (NOTE/WHY/HACK/etc.) not captured by any specification. |
+| **SDD Leak** | Product files referencing SDD artifacts (`.design/` paths, task IDs, spec/plan file names) — dead references once a release excludes `.design/`. |
 
 ### Advisory Report Criteria
 
@@ -269,6 +274,7 @@ Mode C Checklist — Ventilation
   ☐ Self-check + Registry audit completed
   ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
   ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
+  ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched)
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
      Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
@@ -373,6 +379,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
   ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
+  ☐ Containment Scan: product files scanned for SDD references (rules/magic.md §6 classes); SDD_REFERENCE_LEAK findings reported as advisory
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
