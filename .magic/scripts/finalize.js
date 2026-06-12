@@ -5,10 +5,11 @@ const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, isDryRun, mkdirSafe } = require('./utils');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
-const { computeSignificance } = require('./lib/significance');
+const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = require('./lib/significance');
 const { createIfMissing, appendBullet, releaseUnreleased } = require('./lib/changelog-writer');
 const { buildCommitMessage, deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
+const { updateState } = require('./update-state');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FINALIZATION PROTOCOL (Post-Workflow Orchestrator)
@@ -139,6 +140,120 @@ function loadConfig() {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Session-State Update (SC-2)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Computes the post-workflow `Next Action` for STATE.md, following the
+ * pipeline order (spec → task → run).
+ *
+ * @param {string} workflow - `spec|task|run|rule`.
+ * @param {string} workspace
+ * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @returns {string}
+ */
+function computeNextAction(workflow, workspace, wsDir) {
+    if (workflow === 'run') {
+        try {
+            const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
+            const open = tasks.match(/^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m);
+            if (open) return `Execute ${open[1]} ${open[2]} via /magic.run ${workspace}`;
+            return `Run /magic.task ${workspace} to plan the next phase`;
+        } catch {
+            return `Run /magic.run ${workspace} to continue execution`;
+        }
+    }
+    const map = {
+        spec: `Run /magic.task ${workspace} to update the plan`,
+        task: `Run /magic.run ${workspace} to execute the active phase`,
+        rule: `Run /magic.task ${workspace} to revalidate the plan against amended rules`,
+    };
+    return map[workflow] || `Run /magic.task ${workspace}`;
+}
+
+/**
+ * SC-2: patches STATE.md after every finalize invocation — significant or
+ * not — so live memory reflects each completed command. Non-blocking:
+ * failures degrade to a warning and never abort finalization.
+ *
+ * @param {Object} opts - Parsed CLI options.
+ * @param {string} workspace
+ * @param {string} designAbs - Absolute `.design/` path.
+ * @returns {{updated: boolean, dryRun?: boolean, nextAction?: string}}
+ */
+function updateSessionState(opts, workspace, designAbs) {
+    const wsDir = process.env.MAGIC_DESIGN_DIR
+        ? path.resolve(projectRoot, process.env.MAGIC_DESIGN_DIR)
+        : path.join(designAbs, workspace);
+    const nextAction = computeNextAction(opts.workflow, workspace, wsDir);
+    if (opts.dryRun) {
+        console.log(`[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}", auto-progress recompute.`);
+        return { updated: false, dryRun: true, nextAction };
+    }
+    try {
+        updateState(wsDir, { nextAction }, { autoProgress: true });
+        return { updated: true, nextAction };
+    } catch (e) {
+        console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);
+        return { updated: false };
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Non-Bumping Commit Suggestion (SC-3)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * SC-3 fallback: when the significance whitelist misses but the working
+ * tree changed, still emit exactly one suggested commit message — labeled
+ * non-bumping (no version bump, no CHANGELOG entry). Suggestion only:
+ * this script never invokes write-side git operations.
+ *
+ * @param {Object} opts - Parsed CLI options.
+ * @param {string} workspace
+ * @param {string} version - Current (unchanged) project version.
+ * @returns {void}
+ */
+function emitFallbackCommitSuggestion(opts, workspace, version) {
+    const probe = gitChangedPaths(projectRoot);
+    if (!probe.available || probe.paths.length === 0) return;
+
+    const MAX_FILES = 15;
+    const capped = probe.paths.slice(0, MAX_FILES);
+    const files = capped.map((p) => ({
+        path: p,
+        status: gitFileStatus(projectRoot, p),
+        ...gitFileNumstat(projectRoot, p),
+    }));
+    const omitted = probe.paths.length - capped.length;
+
+    // Workflow summary heuristics target whitelist artifacts; these files are
+    // off-whitelist by definition, so a neutral header is the honest one.
+    const msg = buildCommitMessage({
+        workflow: opts.workflow,
+        workspace,
+        previousVersion: version,
+        nextVersion: version,
+        files,
+        type: 'chore',
+        summary: `update ${probe.paths.length} changed file${probe.paths.length !== 1 ? 's' : ''}`,
+    });
+
+    process.stdout.write([
+        '',
+        '### Suggested commit message (non-bumping)',
+        '',
+        '```',
+        msg + (omitted > 0 ? `\n(+${omitted} more changed file${omitted !== 1 ? 's' : ''})` : ''),
+        '```',
+        '',
+        '> [!IMPORTANT]',
+        '> Auto-commit is **disabled by design**. Review the diff and run git commit manually.',
+        '',
+    ].join('\n'));
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // State File
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -192,7 +307,7 @@ function emitSuccess(ctx) {
     const {
         workflow, workspace, previous, next,
         files, gitAvailable, changelogResult, commitMsg,
-        archivedPhases,
+        archivedPhases, stateResult,
         opts,
     } = ctx;
 
@@ -217,6 +332,12 @@ function emitSuccess(ctx) {
     }
 
     lines.push(`| Git mode | ${gitAvailable ? 'git diff' : 'snapshot fallback'} |`);
+    if (stateResult) {
+        const stateStatus = stateResult.updated
+            ? 'updated (SC-2)'
+            : stateResult.dryRun ? 'dry-run preview' : 'skipped (warning above)';
+        lines.push(`| STATE.md | ${stateStatus} |`);
+    }
     lines.push(``);
     lines.push(`### Changed artifacts`);
     lines.push(``);
@@ -306,6 +427,12 @@ function main() {
 
     if (!sig.significant && !opts.force) {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
+        // SC-2: live memory reflects every completed command, bump or not.
+        updateSessionState(opts, workspace, designAbs);
+        // SC-3: real-but-non-whitelisted changes still get one suggestion.
+        if (config.suggestCommit && !opts.noCommitMsg) {
+            emitFallbackCommitSuggestion(opts, workspace, currentVersion);
+        }
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
             lastWorkflow: `magic.${opts.workflow}`,
@@ -359,6 +486,9 @@ function main() {
         }
     }
 
+    // ── Session state (SC-2) ────────────────────────────────────────────────
+    const stateResult = updateSessionState(opts, workspace, designAbs);
+
     // ── Commit message ──────────────────────────────────────────────────────
     let commitMsg = null;
     if (config.suggestCommit && !opts.noCommitMsg) {
@@ -381,6 +511,7 @@ function main() {
         changelogResult,
         commitMsg,
         archivedPhases,
+        stateResult,
         opts,
     });
 

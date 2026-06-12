@@ -1,5 +1,16 @@
 # Engine Workspace Changelog
 
+## Phase 8 — 2026-06-12 (Session Continuity & Status Command)
+
+- Wired the SC-2 state-update step into `scripts/finalize.js`: STATE.md is patched (Updated timestamp, pipeline-order Next Action, auto-progress) on BOTH the significant and the skip path of every `finalize --workflow=<spec|task|run|rule>` run; non-blocking on failure; `--dry-run` previews the patch; output gains a `STATE.md` status row.
+- Refactored `scripts/update-state.js`: CLI moved behind a `require.main` guard, `updateState`/`computeProgress` exported, new `--auto-progress` flag recomputes the STATE.md Progress block (active-phase checklist + overall phase registry) from TASKS.md.
+- Implemented the SC-3 non-bumping commit-suggestion fallback: significance miss + dirty working tree → exactly one suggested Conventional Commits message labeled `(non-bumping)` with a neutral `chore` header (new `type`/`summary` overrides in `lib/commit-suggester.js`); no version bump, no CHANGELOG entry; write-side git remains forbidden.
+- Created the `/magic.status` read-only resume briefing: `.magic/status.md` body (5 invariants, seven-section briefing, degraded states), `workflows/magic.status.md` thin wrapper, `skills/magic-status/SKILL.md` generated via skill sync — parity verified.
+- Registered status in the upgrade-detection exemptions of `rules/magic.md` §1 (drift becomes an informational engine line, never a prompt); `.agents/rules/magic.md` hardlink recreated and validated after the edit.
+- README command table: added `/magic.status` and `/magic.graph` (pre-existing gap).
+- Engine version 2.1.34 → 2.1.37 (C14 ×3); checksums 64 → 65 files; skill wrappers re-projected.
+- Validation: engine test harness 12/12 green; check-prerequisites clean (0 warnings); briefing dry-run renders all seven sections with a correct informational drift line.
+
 ## Phase 5 — 2026-06-12 (Decision Autonomy)
 
 - Amended `templates/rules.md`: C13 §3 rewritten from halt-and-ask "Zero Assumptions" to "Bounded Ambiguity Resolution" (resolve via C27, halt only at the Escalation Whitelist); appended the C27 section (DA-1..DA-8 operational summary, RC-9-compliant wording).

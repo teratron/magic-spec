@@ -110,6 +110,8 @@ All core workflows are available as slash commands with optional arguments:
 | `/magic.run` | Execute tasks from the plan |
 | `/magic.rule` | Add or amend project conventions |
 | `/magic.analyze` | Audit project health and detect drift |
+| `/magic.graph` | Build and analyze the specification knowledge graph |
+| `/magic.status` | Resume briefing: position, progress, blockers, next command (read-only) |
 
 #### Commands with Arguments
 

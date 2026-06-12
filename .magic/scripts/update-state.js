@@ -136,6 +136,23 @@ function updateState(designDir, patch, options = {}) {
     }
 
     // ───────────────────────────────────────────────────────────────────────
+    // Auto-Progress (SC-2: best-effort recompute from TASKS.md)
+    // ───────────────────────────────────────────────────────────────────────
+    if (options.autoProgress) {
+        try {
+            const progress = computeProgress(designDir, content);
+            if (progress) {
+                const progressRe = /(## Progress\s*\n+```\n)[\s\S]*?(\n```)/;
+                if (progressRe.test(content)) {
+                    content = content.replace(progressRe, `$1${progress}$2`);
+                }
+            }
+        } catch (e) {
+            console.warn(`[update-state] Progress recompute skipped: ${e.message}`);
+        }
+    }
+
+    // ───────────────────────────────────────────────────────────────────────
     // Line-count guard (100 lines max) — prune oldest decision
     // ───────────────────────────────────────────────────────────────────────
     const lines = content.split('\n');
@@ -159,58 +176,132 @@ function updateState(designDir, patch, options = {}) {
     console.log(`[update-state] STATE.md updated: ${statePath}`);
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Progress Recompute Helpers
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Renders one progress line with an 8-segment bar.
+ *
+ * @param {string} label  Line label (e.g. `Phase 8`, `Overall`).
+ * @param {number} done   Completed item count.
+ * @param {number} total  Total item count (must be > 0).
+ * @returns {string}
+ */
+function progressLine(label, done, total) {
+    const pct = Math.round((done / total) * 100);
+    const filled = Math.min(8, Math.round((pct / 100) * 8));
+    const bar = '█'.repeat(filled) + '░'.repeat(8 - filled);
+    return `${label}: [${done}/${total}] ${bar} ${pct}%`;
+}
+
+/**
+ * Recomputes the STATE.md Progress block from TASKS.md. Best-effort: any
+ * unparsable structure yields `null` and the existing block is preserved.
+ *
+ * Sources:
+ * - Active-phase line: `### Phase {N} Checklist` items in TASKS.md, where
+ *   `{N}` is taken from the STATE.md `**Phase:**` field.
+ * - Overall line: `| [Phase {N}](...)` registry rows in TASKS.md; a row
+ *   counts as done when it contains the `Done` status keyword.
+ *
+ * @param {string} designDir     Path to .design/{workspace} directory.
+ * @param {string} stateContent  Current STATE.md content (for phase number).
+ * @returns {string|null} Replacement block body, or null to skip.
+ */
+function computeProgress(designDir, stateContent) {
+    const tasksPath = path.join(designDir, 'TASKS.md');
+    if (!fs.existsSync(tasksPath)) return null;
+    const tasks = fs.readFileSync(tasksPath, 'utf8');
+
+    const lines = [];
+
+    const phaseMatch = stateContent.match(/\*\*Phase:\*\* (\d+)/);
+    if (phaseMatch) {
+        const n = phaseMatch[1];
+        const section = tasks.match(new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`));
+        if (section) {
+            const done = (section[1].match(/^- \[x\]/gim) || []).length;
+            const open = (section[1].match(/^- \[ \]/gm) || []).length;
+            if (done + open > 0) lines.push(progressLine(`Phase ${n}`, done, done + open));
+        }
+    }
+
+    const phaseRows = tasks.match(/^\| \[Phase \d+\]\([^)]*\)[^\n]*$/gm) || [];
+    if (phaseRows.length > 0) {
+        const phasesDone = phaseRows.filter((r) => /\bDone\b/.test(r)).length;
+        lines.push(progressLine('Overall', phasesDone, phaseRows.length));
+    }
+
+    return lines.length > 0 ? lines.join('\n') : null;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // CLI ENTRYPOINT
 // ═══════════════════════════════════════════════════════════════════════════
 
-const args = process.argv.slice(2);
-if (args.length === 0) {
-    console.error(
-        'Usage: node update-state.js --workspace=<dir> ' +
-        '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
-        '[--next-action=<text>] [--decision=<text>] ' +
-        '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
-        '[--handoff=<path>] [--bootstrap=<true|false>]'
-    );
-    process.exit(1);
-}
-
-const parsed = {};
-const opts = {};
-
-for (const arg of args) {
-    const eqIdx = arg.indexOf('=');
-    const key = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg;
-    const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : '';
-
-    switch (key) {
-        case '--workspace': parsed.workspace = val; break;
-        case '--task': parsed.task = val; break;
-        case '--status': parsed.status = val; break;
-        case '--phase': parsed.phase = val; break;
-        case '--next-action': parsed.nextAction = val; break;
-        case '--handoff': parsed.handoff = val; break;
-        case '--bootstrap': parsed.bootstrap = val; break;
-        case '--decision':
-            parsed.decision = val;
-            opts.addDecision = true;
-            break;
-        case '--constraint-title':
-            parsed.constraint = parsed.constraint || {};
-            parsed.constraint.title = val;
-            opts.addConstraint = true;
-            break;
-        case '--constraint-desc':
-            parsed.constraint = parsed.constraint || {};
-            parsed.constraint.desc = val;
-            opts.addConstraint = true;
-            break;
-        default:
-            console.warn(`[update-state] Unknown argument: ${key}`);
+/**
+ * Parses CLI arguments and applies the requested STATE.md patch.
+ *
+ * @returns {void}
+ */
+function runCli() {
+    const args = process.argv.slice(2);
+    if (args.length === 0) {
+        console.error(
+            'Usage: node update-state.js --workspace=<dir> ' +
+            '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
+            '[--next-action=<text>] [--decision=<text>] ' +
+            '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
+            '[--handoff=<path>] [--bootstrap=<true|false>]'
+        );
+        process.exit(1);
     }
+
+    const parsed = {};
+    const opts = {};
+
+    for (const arg of args) {
+        const eqIdx = arg.indexOf('=');
+        const key = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg;
+        const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : '';
+
+        switch (key) {
+            case '--workspace': parsed.workspace = val; break;
+            case '--task': parsed.task = val; break;
+            case '--status': parsed.status = val; break;
+            case '--phase': parsed.phase = val; break;
+            case '--next-action': parsed.nextAction = val; break;
+            case '--handoff': parsed.handoff = val; break;
+            case '--bootstrap': parsed.bootstrap = val; break;
+            case '--auto-progress': opts.autoProgress = true; break;
+            case '--decision':
+                parsed.decision = val;
+                opts.addDecision = true;
+                break;
+            case '--constraint-title':
+                parsed.constraint = parsed.constraint || {};
+                parsed.constraint.title = val;
+                opts.addConstraint = true;
+                break;
+            case '--constraint-desc':
+                parsed.constraint = parsed.constraint || {};
+                parsed.constraint.desc = val;
+                opts.addConstraint = true;
+                break;
+            default:
+                console.warn(`[update-state] Unknown argument: ${key}`);
+        }
+    }
+
+    const workspaceArg = parsed.workspace || process.env.MAGIC_DESIGN_DIR || '.design';
+    delete parsed.workspace;
+
+    updateState(workspaceArg, parsed, opts);
 }
 
-const workspaceArg = parsed.workspace || process.env.MAGIC_DESIGN_DIR || '.design';
-delete parsed.workspace;
+module.exports = { updateState, computeProgress };
 
-updateState(workspaceArg, parsed, opts);
+if (require.main === module) {
+    runCli();
+}

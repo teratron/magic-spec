@@ -1,6 +1,6 @@
 # L2 Specification: Universal Skill Wrappers
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -65,12 +65,14 @@ GitHub Release archives include the generated `skills/` directory, ensuring that
 | `skills/magic-rule/SKILL.md` | Generated skill wrapper for rule |
 | `skills/magic-run/SKILL.md` | Generated skill wrapper for run |
 | `skills/magic-spec/SKILL.md` | Generated skill wrapper for spec |
+| `skills/magic-status/SKILL.md` | Generated skill wrapper for status (implementation deliverable; produced by update-engine-meta sync from `workflows/magic.status.md`) |
 | `skills/magic-task/SKILL.md` | Generated skill wrapper for task |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-06-12 | Agent | Registered upcoming `magic-status` skill projection (C2 exception per l1-session-continuity.md SC-5); generation mechanism unchanged. |
 | 1.2.0 | 2026-05-07 | Agent | Added Layer/Implements header fields. Updated skill dir names (magic.analyze → magic-analyze format). Added magic-graph. Removed stale sync-skills.js reference. |
 | 1.1.0 | 2026-04-29 | Agent | Replaced legacy package deployment with GitHub Release archive distribution. |
 

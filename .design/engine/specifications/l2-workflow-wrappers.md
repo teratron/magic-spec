@@ -1,6 +1,6 @@
 # Workflow Wrappers
 
-**Version:** 1.0.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -21,7 +21,7 @@ The `workflows/` directory is the public interface of the SDD engine. Unlike `.m
 ## 2. Constraints & Assumptions
 
 - Wrappers must not contain business logic — they delegate to `.magic/*.md`.
-- Each wrapper corresponds 1:1 to a `.magic/` engine file.
+- Each wrapper corresponds 1:1 to a `.magic/` engine file. **Exception:** `magic.graph.md` is self-contained (full workflow in the wrapper, no `.magic/` body) — a read-only analysis workflow with no engine-internal callers.
 - Naming convention: `magic.{command}.md` (dot-separated, not kebab-case).
 
 ## 4. Invariant Compliance
@@ -41,11 +41,15 @@ The `workflows/` directory is the public interface of the SDD engine. Unlike `.m
 ```plaintext
 workflows/
   magic.analyze.md   -> .magic/analyze.md
+  magic.graph.md     (self-contained — see §2 exception)
   magic.rule.md      -> .magic/rule.md
   magic.run.md       -> .magic/run.md
   magic.spec.md      -> .magic/spec.md
+  magic.status.md    -> .magic/status.md   (C2 exception, SC-5)
   magic.task.md      -> .magic/task.md
 ```
+
+> `magic.status.md` is the single authorized C2-exception addition — see [l1-session-continuity.md](l1-session-continuity.md) SC-5 and [l2-status-command.md](l2-status-command.md).
 
 ### 5.2 Wrapper Responsibilities
 
@@ -60,13 +64,17 @@ Each wrapper file contains:
 | Path | Role |
 | --- | --- |
 | `workflows/magic.analyze.md` | Analyze workflow entry point |
+| `workflows/magic.graph.md` | Graph workflow entry point |
 | `workflows/magic.rule.md` | Rule workflow entry point |
 | `workflows/magic.run.md` | Run workflow entry point |
 | `workflows/magic.spec.md` | Spec workflow entry point |
+| `workflows/magic.status.md` | Status workflow entry point (implementation deliverable) |
 | `workflows/magic.task.md` | Task workflow entry point |
 
 ## Document History
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.1 | 2026-06-12 | Factual fix: `magic.graph.md` is self-contained (no `.magic/graph.md` body exists); §2 exception documented. |
+| 1.1.0 | 2026-06-12 | Inventory sync: added `magic.graph.md` (registry drift fix — wrapper shipped without spec coverage) and `magic.status.md` (C2 exception per l1-session-continuity.md SC-5). |
 | 1.0.0 | 2026-03-29 | Initial Stable (bootstrapped from existing code) |

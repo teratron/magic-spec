@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.3.11
+**Version:** 1.3.12
 **Status:** Active
 **Engine Version:** 2.1.34
 
@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 22 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 24 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.12 | 2026-06-12 | Agent | Engine workspace spec count 22 → 24: added l1-session-continuity.md (SC-1..SC-5) and l2-status-command.md (/magic.status, C2 exception); finalization 1.1.0, workflow-wrappers 1.1.0, skill-wrappers 1.3.0 amendments. |
 | 1.3.11 | 2026-06-12 | Agent | Sync: engine snapshot 2.1.32; README badge 2.1.28 → 2.1.32; CONTRIBUTING.md and docs/ regenerated. |
 | 1.3.10 | 2026-06-12 | Agent | l1-sdd-reference-containment.md 1.0.0 → 1.1.0: RC-9 Shipped Self-Containment (engine→`.design/engine/` leaks no longer masked by RC-8 exemption). |
 | 1.3.9 | 2026-06-12 | Agent | Engine workspace spec count 21 → 22: added l1-sdd-reference-containment.md (one-way SDD traceability boundary); coder/code-reviewer cards 1.1.0 (RC-5/RC-6 gates). |

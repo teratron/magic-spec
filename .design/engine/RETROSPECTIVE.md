@@ -1,8 +1,8 @@
 # SDD Retrospective
 
 **Last Full Run:** 2026-06-12
-**Full Sessions:** 1
-**Snapshots:** 4
+**Full Sessions:** 2
+**Snapshots:** 5
 
 ## Snapshots
 
@@ -14,6 +14,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-06-12 | Phase 7 | 0/0/22 | 6/0/0 | 24 | 🟢 |
 | 2026-06-12 | Phase 4 | 0/0/22 | 10/0/0 | 24 | 🟢 |
 | 2026-06-12 | Phase 5 | 0/0/22 | 7/0/0 | 24 | 🟢 |
+| 2026-06-12 | Phase 8 | 0/0/24 | 6/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -51,5 +52,40 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | Metric | Previous Snapshot | Current | Δ |
 | --- | --- | --- | --- |
 | Specs in registry | 21 | 22 | +1 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 2 — 2026-06-12
+
+**Scope:** Plan completion (Phase 8 — Session Continuity & Status Command; single-phase cycle from field directive to deployment)
+**Specs in registry:** 24 (all Stable)
+**Tasks total:** 6 this cycle (Done: 6, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+Manual input / external hook still required — same gap as Session 1.
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | Bootstrapped inventory specs drift from disk truth: the wrapper spec claimed a `.magic/graph.md` body that never existed; survived from v1.0.0 until the Phase 8 inventory sync touched the same table. | l2-workflow-wrappers.md 1.1.1 factual fix |
+| 2 | C-001 (hardlink breakage on `rules/*.md` edits) fired exactly as documented and was repaired by the recorded procedure — the Blocking Constraints section pays for itself. | validate-hardlinks pass after recreate |
+| 3 | No shadow logic: SC-2/SC-3 and the status command were spec-first (Stable before implementation); registry clean (check-prerequisites: 0 warnings). | Phase 8 task `Changes` fields |
+| 4 | Engine snapshot drift (2.1.34 → 2.1.37) is pending §1 ratification — known mechanism, not a registry inconsistency; status command now reports it informationally. | `.magic/.version` vs `.design/INDEX.md` |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R4 | #1 | Add a wrapper-inventory parity check (workflows/ directory listing vs wrapper-spec structure table) to ventilation so phantom mappings fail the audit | `.magic/analyze.md` (Mode C) |
+| R5 | #3 | Extend the engine harness with a finalize skip-path test (SC-2 state patch + SC-3 non-bumping suggestion) — current 12 tests do not cover finalize | `dev/tests/engine.js` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 22 | 24 | +2 |
 | Blocked task rate | 0% | 0% | 0 |
 | Signal | 🟢 | 🟢 | → |

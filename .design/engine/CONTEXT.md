@@ -22,6 +22,7 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
+│   ├── graph-before.json
 │   ├── wiki/
 │   └── workspace.json
 ├── .github/
@@ -39,6 +40,7 @@
 │   ├── run.md
 │   ├── scripts/
 │   ├── spec.md
+│   ├── status.md
 │   ├── task.md
 │   └── templates/
 ├── AGENTS.md
@@ -66,6 +68,7 @@
 │   ├── magic-rule/
 │   ├── magic-run/
 │   ├── magic-spec/
+│   ├── magic-status/
 │   └── magic-task/
 └── workflows/
     ├── magic.analyze.md
@@ -73,6 +76,7 @@
     ├── magic.rule.md
     ├── magic.run.md
     ├── magic.spec.md
+    ├── magic.status.md
     └── magic.task.md
 ```
 

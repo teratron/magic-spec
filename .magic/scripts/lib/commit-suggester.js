@@ -153,14 +153,17 @@ function buildSummary(workflow, files) {
  * @param {string} ctx.previousVersion
  * @param {string} ctx.nextVersion
  * @param {Array<{path: string, status: string, added: number, deleted: number}>} ctx.files
+ * @param {string} [ctx.type] - Overrides the derived Conventional Commits type.
+ *   Use when `files` are not whitelist artifacts and workflow heuristics would mislead.
+ * @param {string} [ctx.summary] - Overrides the derived summary line (same rationale).
  * @returns {string}
  */
-function buildCommitMessage({ workflow, workspace, previousVersion, nextVersion, files }) {
-    const type = deriveType(workflow, files);
+function buildCommitMessage({ workflow, workspace, previousVersion, nextVersion, files, type, summary }) {
+    const headerType = type || deriveType(workflow, files);
     const scope = deriveScope(workspace, files);
-    const summary = buildSummary(workflow, files);
+    const headerSummary = summary || buildSummary(workflow, files);
 
-    const header = `${type}(${scope}): ${summary}`;
+    const header = `${headerType}(${scope}): ${headerSummary}`;
 
     const bodyLines = ['', 'Modified files:'];
     for (const f of files) {

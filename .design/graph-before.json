@@ -1,0 +1,2723 @@
+{
+  "nodes": [
+    {
+      "id": "ws:engine",
+      "label": "engine",
+      "type": "workspace",
+      "group": "workspace",
+      "workspace": "engine",
+      "degree": 44
+    },
+    {
+      "id": "file:.magic",
+      "label": ".magic",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:.agents",
+      "label": ".agents",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:.design",
+      "label": ".design",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:docs",
+      "label": "docs",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows",
+      "label": "workflows",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:skills",
+      "label": "skills",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:rules",
+      "label": "rules",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:.github",
+      "label": ".github",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:README.md",
+      "label": "README.md",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 2
+    },
+    {
+      "id": "file:CHANGELOG.md",
+      "label": "CHANGELOG.md",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 2
+    },
+    {
+      "id": "file:CONTRIBUTING.md",
+      "label": "CONTRIBUTING.md",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 2
+    },
+    {
+      "id": "file:AGENTS.md",
+      "label": "AGENTS.md",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 2
+    },
+    {
+      "id": "file:CLAUDE.md",
+      "label": "CLAUDE.md",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 2
+    },
+    {
+      "id": "conv:C1",
+      "label": "C1 — `.magic/` Engine Safety",
+      "type": "convention",
+      "group": "convention",
+      "num": 1,
+      "degree": 7
+    },
+    {
+      "id": "conv:C2",
+      "label": "C2 — Workflow Minimalism",
+      "type": "convention",
+      "group": "convention",
+      "num": 2,
+      "degree": 7
+    },
+    {
+      "id": "conv:C3",
+      "label": "C3 — Parallel Task Execution Mode",
+      "type": "convention",
+      "group": "convention",
+      "num": 3,
+      "degree": 3
+    },
+    {
+      "id": "conv:C4",
+      "label": "C4 — Automate User Story Priorities",
+      "type": "convention",
+      "group": "convention",
+      "num": 4,
+      "degree": 1
+    },
+    {
+      "id": "conv:C6",
+      "label": "C6 — Autonomous Selective Planning",
+      "type": "convention",
+      "group": "convention",
+      "num": 6,
+      "degree": 0
+    },
+    {
+      "id": "conv:C7",
+      "label": "C7 — Universal Script Executor",
+      "type": "convention",
+      "group": "convention",
+      "num": 7,
+      "degree": 2
+    },
+    {
+      "id": "conv:C8",
+      "label": "C8 — Phase Archival",
+      "type": "convention",
+      "group": "convention",
+      "num": 8,
+      "degree": 0
+    },
+    {
+      "id": "conv:C9",
+      "label": "C9 — Zero-Prompt Automation (Trust Mode)",
+      "type": "convention",
+      "group": "convention",
+      "num": 9,
+      "degree": 9
+    },
+    {
+      "id": "conv:C10",
+      "label": "C10 — Task Architecture & Status Truth",
+      "type": "convention",
+      "group": "convention",
+      "num": 10,
+      "degree": 0
+    },
+    {
+      "id": "conv:C11",
+      "label": "C11 — Simulation Workflow (C2 Exception)",
+      "type": "convention",
+      "group": "convention",
+      "num": 11,
+      "degree": 0
+    },
+    {
+      "id": "conv:C12",
+      "label": "C12 — Quarantine Cascade",
+      "type": "convention",
+      "group": "convention",
+      "num": 12,
+      "degree": 3
+    },
+    {
+      "id": "conv:C13",
+      "label": "C13 — Agent Cognitive Discipline",
+      "type": "convention",
+      "group": "convention",
+      "num": 13,
+      "degree": 2
+    },
+    {
+      "id": "conv:C14",
+      "label": "C14 — Engine Versioning Protocol",
+      "type": "convention",
+      "group": "convention",
+      "num": 14,
+      "degree": 8
+    },
+    {
+      "id": "conv:C15",
+      "label": "C15 — Workspace Scope Isolation",
+      "type": "convention",
+      "group": "convention",
+      "num": 15,
+      "degree": 2
+    },
+    {
+      "id": "conv:C16",
+      "label": "C16 — Micro-spec Convention",
+      "type": "convention",
+      "group": "convention",
+      "num": 16,
+      "degree": 2
+    },
+    {
+      "id": "conv:C17",
+      "label": "C17 — Adapter Distribution Reference",
+      "type": "convention",
+      "group": "convention",
+      "num": 17,
+      "degree": 0
+    },
+    {
+      "id": "conv:C20",
+      "label": "C20 — Auto-Heal Recovery",
+      "type": "convention",
+      "group": "convention",
+      "num": 20,
+      "degree": 1
+    },
+    {
+      "id": "conv:C21",
+      "label": "C21 — Project Ventilation (Analyze)",
+      "type": "convention",
+      "group": "convention",
+      "num": 21,
+      "degree": 3
+    },
+    {
+      "id": "conv:C22",
+      "label": "C22 — Workspace Rule Inheritance",
+      "type": "convention",
+      "group": "convention",
+      "num": 22,
+      "degree": 1
+    },
+    {
+      "id": "conv:C23",
+      "label": "C23 — Context Economy & Validation Caching",
+      "type": "convention",
+      "group": "convention",
+      "num": 23,
+      "degree": 2
+    },
+    {
+      "id": "conv:C24",
+      "label": "C24 — Role-Switching Gates",
+      "type": "convention",
+      "group": "convention",
+      "num": 24,
+      "degree": 8
+    },
+    {
+      "id": "conv:C25",
+      "label": "C25 — Engineer Posture (Narrate-and-Act)",
+      "type": "convention",
+      "group": "convention",
+      "num": 25,
+      "degree": 2
+    },
+    {
+      "id": "conv:C26",
+      "label": "C26 — Workspace Intent Routing",
+      "type": "convention",
+      "group": "convention",
+      "num": 26,
+      "degree": 1
+    },
+    {
+      "id": "conv:C27",
+      "label": "C27 — Autonomous Decision Protocol (\"Engineer Decides\")",
+      "type": "convention",
+      "group": "convention",
+      "num": 27,
+      "degree": 1
+    },
+    {
+      "id": "spec:engine/l1-engine-core",
+      "label": "l1-engine-core.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.1.3",
+      "degree": 25
+    },
+    {
+      "id": "spec:engine/l2-engine-automation",
+      "label": "l2-engine-automation.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.6.0",
+      "degree": 18
+    },
+    {
+      "id": "spec:engine/l2-engine-finalization",
+      "label": "l2-engine-finalization.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 9
+    },
+    {
+      "id": "spec:engine/l2-test-suite",
+      "label": "l2-test-suite.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.4.0",
+      "degree": 5
+    },
+    {
+      "id": "spec:engine/l1-documentation-system",
+      "label": "l1-documentation-system.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.2.2",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l1-config-drift-guard",
+      "label": "l1-config-drift-guard.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.1",
+      "degree": 8
+    },
+    {
+      "id": "spec:engine/l2-workflow-wrappers",
+      "label": "l2-workflow-wrappers.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.1",
+      "degree": 12
+    },
+    {
+      "id": "spec:engine/l2-skill-wrappers",
+      "label": "l2-skill-wrappers.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.3.0",
+      "degree": 10
+    },
+    {
+      "id": "spec:engine/l2-engine-templates",
+      "label": "l2-engine-templates.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 11
+    },
+    {
+      "id": "spec:engine/l2-agent-surface",
+      "label": "l2-agent-surface.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.1",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l1-role-system",
+      "label": "l1-role-system.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.1.0",
+      "degree": 20
+    },
+    {
+      "id": "spec:engine/l1-prompt-quality-gate",
+      "label": "l1-prompt-quality-gate.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.0",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l2-role-cards",
+      "label": "l2-role-cards.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "2.1.0",
+      "degree": 9
+    },
+    {
+      "id": "spec:engine/l2-role-cards-execution",
+      "label": "l2-role-cards-execution.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 13
+    },
+    {
+      "id": "spec:engine/l2-role-cards-review",
+      "label": "l2-role-cards-review.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 9
+    },
+    {
+      "id": "spec:engine/l2-role-cards-governance",
+      "label": "l2-role-cards-governance.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 18
+    },
+    {
+      "id": "spec:engine/l2-role-integration",
+      "label": "l2-role-integration.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "2.1.0",
+      "degree": 11
+    },
+    {
+      "id": "spec:engine/l2-role-tooling",
+      "label": "l2-role-tooling.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.0",
+      "degree": 8
+    },
+    {
+      "id": "spec:engine/l2-spec-graph-memory",
+      "label": "l2-spec-graph-memory.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.1",
+      "degree": 10
+    },
+    {
+      "id": "spec:engine/l1-workspace-intent-routing",
+      "label": "l1-workspace-intent-routing.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.0",
+      "degree": 13
+    },
+    {
+      "id": "spec:engine/l1-decision-autonomy",
+      "label": "l1-decision-autonomy.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.0",
+      "degree": 16
+    },
+    {
+      "id": "spec:engine/l1-sdd-reference-containment",
+      "label": "l1-sdd-reference-containment.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.1.0",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l1-session-continuity",
+      "label": "l1-session-continuity.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.0",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l2-status-command",
+      "label": "l2-status-command.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.0",
+      "degree": 9
+    },
+    {
+      "id": "file:.design/RULES.md",
+      "label": ".design/RULES.md",
+      "type": "file",
+      "group": "file",
+      "degree": 3
+    },
+    {
+      "id": "file:.magic/scripts/check-prerequisites.js",
+      "label": ".magic/scripts/check-prerequisites.js",
+      "type": "file",
+      "group": "file",
+      "degree": 3
+    },
+    {
+      "id": "file:.magic/context.md",
+      "label": ".magic/context.md",
+      "type": "file",
+      "group": "file",
+      "degree": 6
+    },
+    {
+      "id": "file:.magic/templates/rules.md",
+      "label": ".magic/templates/rules.md",
+      "type": "file",
+      "group": "file",
+      "degree": 4
+    },
+    {
+      "id": "file:rules/magic.md",
+      "label": "rules/magic.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.design/engine/specifications/l1-role-system.md",
+      "label": ".design/engine/specifications/l1-role-system.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:docs/",
+      "label": "docs/",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:docs/README.md",
+      "label": "docs/README.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/analyze.md",
+      "label": ".magic/analyze.md",
+      "type": "file",
+      "group": "file",
+      "degree": 5
+    },
+    {
+      "id": "file:.magic/spec.md",
+      "label": ".magic/spec.md",
+      "type": "file",
+      "group": "file",
+      "degree": 5
+    },
+    {
+      "id": "file:.magic/task.md",
+      "label": ".magic/task.md",
+      "type": "file",
+      "group": "file",
+      "degree": 4
+    },
+    {
+      "id": "file:.magic/run.md",
+      "label": ".magic/run.md",
+      "type": "file",
+      "group": "file",
+      "degree": 6
+    },
+    {
+      "id": "file:.magic/rule.md",
+      "label": ".magic/rule.md",
+      "type": "file",
+      "group": "file",
+      "degree": 4
+    },
+    {
+      "id": "file:.magic/init.md",
+      "label": ".magic/init.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/scripts/executor.js",
+      "label": ".magic/scripts/executor.js",
+      "type": "file",
+      "group": "file",
+      "degree": 3
+    },
+    {
+      "id": "file:.magic/templates/",
+      "label": ".magic/templates/",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/.version",
+      "label": ".magic/.version",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/.checksums",
+      "label": ".magic/.checksums",
+      "type": "file",
+      "group": "file",
+      "degree": 4
+    },
+    {
+      "id": "file:.design/engine/specifications/l2-role-cards-governance.md",
+      "label": ".design/engine/specifications/l2-role-cards-governance.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.design/engine/specifications/l2-role-integration.md",
+      "label": ".design/engine/specifications/l2-role-integration.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/retrospective.md",
+      "label": ".magic/retrospective.md",
+      "type": "file",
+      "group": "file",
+      "degree": 3
+    },
+    {
+      "id": "file:.design/engine/specifications/l1-engine-core.md",
+      "label": ".design/engine/specifications/l1-engine-core.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.design/engine/specifications/l1-prompt-quality-gate.md",
+      "label": ".design/engine/specifications/l1-prompt-quality-gate.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/roles/coder.md",
+      "label": ".magic/roles/coder.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/roles/code-reviewer.md",
+      "label": ".magic/roles/code-reviewer.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/templates/state.md",
+      "label": ".magic/templates/state.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/scripts/update-state.js",
+      "label": ".magic/scripts/update-state.js",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/pause.md",
+      "label": ".magic/pause.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/init.js",
+      "label": ".magic/scripts/init.js",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/scripts/create-workspace.js",
+      "label": ".magic/scripts/create-workspace.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.design/workspace.json",
+      "label": ".design/workspace.json",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.agents/workflows/",
+      "label": ".agents/workflows/",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.agents/skills/",
+      "label": ".agents/skills/",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/generate-context.js",
+      "label": ".magic/scripts/generate-context.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/update-engine-meta.js",
+      "label": ".magic/scripts/update-engine-meta.js",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:dev/scripts/update-project-meta.js",
+      "label": "dev/scripts/update-project-meta.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/analyze-coverage.js",
+      "label": ".magic/scripts/analyze-coverage.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/extract-rationale.js",
+      "label": ".magic/scripts/extract-rationale.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/detect-communities.js",
+      "label": ".magic/scripts/detect-communities.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/check-bloat.js",
+      "label": ".magic/scripts/check-bloat.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/utils.js",
+      "label": ".magic/scripts/utils.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/",
+      "label": ".magic/scripts/lib/",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/changelog-writer.js",
+      "label": ".magic/scripts/lib/changelog-writer.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/commit-suggester.js",
+      "label": ".magic/scripts/lib/commit-suggester.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/git-utils.js",
+      "label": ".magic/scripts/lib/git-utils.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/phase-archiver.js",
+      "label": ".magic/scripts/lib/phase-archiver.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/project-version.js",
+      "label": ".magic/scripts/lib/project-version.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/significance.js",
+      "label": ".magic/scripts/lib/significance.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/spec.md",
+      "label": ".magic/templates/spec.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/micro-spec.md",
+      "label": ".magic/templates/micro-spec.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/plan.md",
+      "label": ".magic/templates/plan.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/tasks.md",
+      "label": ".magic/templates/tasks.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/phase.md",
+      "label": ".magic/templates/phase.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/retrospective.md",
+      "label": ".magic/templates/retrospective.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/",
+      "label": ".magic/roles/",
+      "type": "file",
+      "group": "file",
+      "degree": 5
+    },
+    {
+      "id": "file:.magic/roles/planner.md",
+      "label": ".magic/roles/planner.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/orchestrator.md",
+      "label": ".magic/roles/orchestrator.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/debugger.md",
+      "label": ".magic/roles/debugger.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/docs-specialist.md",
+      "label": ".magic/roles/docs-specialist.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/spec-critic.md",
+      "label": ".magic/roles/spec-critic.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/project-auditor.md",
+      "label": ".magic/roles/project-auditor.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/constitutional-reviewer.md",
+      "label": ".magic/roles/constitutional-reviewer.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/retrospective-analyst.md",
+      "label": ".magic/roles/retrospective-analyst.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/prompt-engineer.md",
+      "label": ".magic/roles/prompt-engineer.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/code-simplifier.md",
+      "label": ".magic/roles/code-simplifier.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/code-skeptic.md",
+      "label": ".magic/roles/code-skeptic.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/test-engineer.md",
+      "label": ".magic/roles/test-engineer.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/templates/role.md",
+      "label": ".magic/templates/role.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:skills/magic-analyze/SKILL.md",
+      "label": "skills/magic-analyze/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:skills/magic-graph/SKILL.md",
+      "label": "skills/magic-graph/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:skills/magic-rule/SKILL.md",
+      "label": "skills/magic-rule/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:skills/magic-run/SKILL.md",
+      "label": "skills/magic-run/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:skills/magic-spec/SKILL.md",
+      "label": "skills/magic-spec/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:skills/magic-status/SKILL.md",
+      "label": "skills/magic-status/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:skills/magic-task/SKILL.md",
+      "label": "skills/magic-task/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/graph-cache.js",
+      "label": ".magic/scripts/graph-cache.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/build-spec-graph.js",
+      "label": ".magic/scripts/build-spec-graph.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/export-wiki.js",
+      "label": ".magic/scripts/export-wiki.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/serve-spec-graph.js",
+      "label": ".magic/scripts/serve-spec-graph.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/status.md",
+      "label": ".magic/status.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.status.md",
+      "label": "workflows/magic.status.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:dev/tests/suite.md",
+      "label": "dev/tests/suite.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.agents/skills/magic-dev-simulate/SKILL.md",
+      "label": ".agents/skills/magic-dev-simulate/SKILL.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.analyze.md",
+      "label": "workflows/magic.analyze.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.graph.md",
+      "label": "workflows/magic.graph.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.rule.md",
+      "label": "workflows/magic.rule.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.run.md",
+      "label": "workflows/magic.run.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.spec.md",
+      "label": "workflows/magic.spec.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:workflows/magic.task.md",
+      "label": "workflows/magic.task.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-8",
+      "label": "Phase 8: Session Continuity & Status Command — finalize SC-2/SC-3 wiring + `/magic.status` surface",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Todo",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-2",
+      "label": "Phase 2: Skill Projection & Agent Surface Implementation",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-3",
+      "label": "Phase 3: Unified Role System — `.magic/roles/` + workflow integration",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-4",
+      "label": "Phase 4: Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-5",
+      "label": "Phase 5: Decision Autonomy — C27 constitution anchoring + DA-6 posture + role binding",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-6",
+      "label": "Phase 6: SDD Reference Containment — ambient rules + RC-5/RC-6 card gates + RC-7 leak scan",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-7",
+      "label": "Phase 7: Shipped Self-Containment — RC-9 purge of 15 engine-workspace references",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    }
+  ],
+  "edges": [
+    {
+      "from": "ws:engine",
+      "to": "file:.magic",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:.agents",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:.design",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:docs",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:workflows",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:skills",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:rules",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:.github",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:README.md",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:CHANGELOG.md",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:CONTRIBUTING.md",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:AGENTS.md",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:CLAUDE.md",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-engine-automation",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-engine-finalization",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-test-suite",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-documentation-system",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-config-drift-guard",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-workflow-wrappers",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-skill-wrappers",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-engine-templates",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-agent-surface",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-role-system",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-prompt-quality-gate",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-cards",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-cards-execution",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-cards-review",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-cards-governance",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-integration",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-role-tooling",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-spec-graph-memory",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-workspace-intent-routing",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-decision-autonomy",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-sdd-reference-containment",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-status-command",
+      "relation": "contains"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "file:.design/RULES.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "conv:C3",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "conv:C22",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "file:.magic/templates/rules.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "file:.design/RULES.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "file:rules/magic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "file:.design/engine/specifications/l1-role-system.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C3",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C4",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C13",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C25",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C26",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-decision-autonomy",
+      "to": "conv:C27",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "file:README.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "file:CHANGELOG.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "file:CONTRIBUTING.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "file:docs/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "file:docs/README.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-documentation-system",
+      "to": "conv:C21",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/task.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/rule.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/init.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/scripts/executor.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/templates/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/.version",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/.checksums",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C16",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C21",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "file:.design/engine/specifications/l1-role-system.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "file:.design/engine/specifications/l2-role-cards-governance.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "file:.design/engine/specifications/l2-role-integration.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "file:.design/RULES.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-prompt-quality-gate",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/templates/rules.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/task.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/rule.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.magic/retrospective.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.design/engine/specifications/l1-engine-core.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "file:.design/engine/specifications/l1-prompt-quality-gate.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-role-system",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "file:.magic/roles/coder.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "file:.magic/roles/code-reviewer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "file:rules/magic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/pause.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/init.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/scripts/init.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/scripts/create-workspace.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/scripts/executor.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:.design/workspace.json",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C7",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C25",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "file:.agents/workflows/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "file:.agents/skills/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "file:AGENTS.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "file:CLAUDE.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-agent-surface",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/executor.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/generate-context.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/init.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/update-engine-meta.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:dev/scripts/update-project-meta.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/analyze-coverage.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/extract-rationale.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/detect-communities.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/check-bloat.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/utils.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/scripts/lib/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/.checksums",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/.version",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "conv:C20",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/changelog-writer.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/commit-suggester.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/git-utils.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/phase-archiver.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/project-version.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/significance.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/micro-spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/plan.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/tasks.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/phase.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "file:.magic/templates/retrospective.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-templates",
+      "to": "conv:C16",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/planner.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/orchestrator.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/coder.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/debugger.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/roles/docs-specialist.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "file:.magic/task.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "conv:C3",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/spec-critic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/project-auditor.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/constitutional-reviewer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/retrospective-analyst.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/roles/prompt-engineer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.design/engine/specifications/l1-prompt-quality-gate.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/rule.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "file:.magic/retrospective.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "conv:C13",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "conv:C23",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-governance",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/roles/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/roles/code-reviewer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/roles/code-simplifier.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/roles/code-skeptic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/roles/test-engineer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-review",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "file:.magic/roles/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "file:.magic/templates/role.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "file:.magic/templates/rules.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "file:.magic/.checksums",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/task.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/rule.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/retrospective.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "file:.magic/templates/rules.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-integration",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "file:.magic/scripts/update-engine-meta.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "file:.magic/templates/role.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "file:.magic/roles/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "file:.magic/.checksums",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "spec:engine/l1-role-system",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-role-tooling",
+      "to": "conv:C24",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-analyze/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-graph/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-rule/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-run/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-spec/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-status/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:skills/magic-task/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "file:.magic/scripts/graph-cache.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "file:.magic/scripts/build-spec-graph.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "file:.magic/scripts/export-wiki.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "file:.magic/scripts/serve-spec-graph.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "conv:C21",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-spec-graph-memory",
+      "to": "conv:C23",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "file:.magic/status.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "file:workflows/magic.status.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "file:skills/magic-status/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "file:dev/tests/suite.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "file:.agents/skills/magic-dev-simulate/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.graph.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.rule.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.status.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:workflows/magic.task.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "conv:C7",
+      "relation": "enforces"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-8",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-2",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-3",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-4",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-5",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-6",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-7",
+      "relation": "contains"
+    }
+  ],
+  "analysis": {
+    "god_nodes": [
+      {
+        "id": "ws:engine",
+        "label": "engine",
+        "type": "workspace",
+        "degree": 44
+      },
+      {
+        "id": "spec:engine/l1-engine-core",
+        "label": "l1-engine-core.md",
+        "type": "spec",
+        "degree": 25
+      },
+      {
+        "id": "spec:engine/l1-role-system",
+        "label": "l1-role-system.md",
+        "type": "spec",
+        "degree": 20
+      },
+      {
+        "id": "spec:engine/l2-engine-automation",
+        "label": "l2-engine-automation.md",
+        "type": "spec",
+        "degree": 18
+      },
+      {
+        "id": "spec:engine/l2-role-cards-governance",
+        "label": "l2-role-cards-governance.md",
+        "type": "spec",
+        "degree": 18
+      }
+    ],
+    "orphaned_files": [
+      "file:.magic",
+      "file:.agents",
+      "file:.design",
+      "file:docs",
+      "file:workflows",
+      "file:skills",
+      "file:rules",
+      "file:.github"
+    ],
+    "missing_implements": [],
+    "convention_coverage": {
+      "enforced": [
+        "conv:C1",
+        "conv:C2",
+        "conv:C3",
+        "conv:C4",
+        "conv:C7",
+        "conv:C9",
+        "conv:C12",
+        "conv:C13",
+        "conv:C14",
+        "conv:C15",
+        "conv:C16",
+        "conv:C20",
+        "conv:C21",
+        "conv:C22",
+        "conv:C23",
+        "conv:C24",
+        "conv:C25",
+        "conv:C26",
+        "conv:C27"
+      ],
+      "orphaned": [
+        "conv:C6",
+        "conv:C8",
+        "conv:C10",
+        "conv:C11",
+        "conv:C17"
+      ]
+    },
+    "bridge_specs": [],
+    "coverage_stats": {
+      "engine": {
+        "specs": 24,
+        "files_covered": 94,
+        "total_scope": 13,
+        "coverage_pct": 723.1
+      }
+    },
+    "summary": {
+      "total_nodes": 158,
+      "total_edges": 274,
+      "workspaces": 1,
+      "specs": 24,
+      "files": 102,
+      "conventions": 24,
+      "phases": 7
+    }
+  }
+}

@@ -23,8 +23,10 @@ re-validate the project. No network calls — purely local comparison.
 ### Procedure
 
 Runs at the start of **every** `/magic.*` invocation except `/magic.analyze`
-(would recurse). Trigger on **any** segment difference — `major`, `minor`,
-**and `patch`**; patch releases routinely carry behavior-affecting changes.
+(would recurse) and `/magic.status` (read-only briefing — reports drift as an
+informational line instead of prompting). Trigger on **any** segment
+difference — `major`, `minor`, **and `patch`**; patch releases routinely
+carry behavior-affecting changes.
 
 1. Read `local_engine` from `.magic/.version`.
 2. Read `snapshot_engine` from the `**Engine Version:**` field in `.design/INDEX.md`.
@@ -53,6 +55,7 @@ Runs at the start of **every** `/magic.*` invocation except `/magic.analyze`
 ### Exemptions
 
 - `/magic.analyze` itself (would recurse).
+- `/magic.status` — read-only briefing; renders drift as an informational engine line, never a prompt.
 - Unreadable `.magic/.version` → skip silently, do not block work.
 - `MAGIC_DRIFT_CHECK=0` env var disables this rule entirely.
 

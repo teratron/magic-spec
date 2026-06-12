@@ -1,13 +1,13 @@
 # Implementation Plan
 
-**Version:** 1.12.0
+**Version:** 1.13.0
 **Generated:** 2026-06-12
-**Based on:** .design/engine/INDEX.md v1.13.2
+**Based on:** .design/engine/INDEX.md v1.14.0
 **Status:** Active
 
 ## Overview
 
-Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`. Phase 4 deploys the Prompt Quality Gate (`l1-prompt-quality-gate.md`): the `prompt-engineer` role card (#14) and its five workflow gates. Phase 5 deploys the Autonomous Decision Protocol (`l1-decision-autonomy.md`): C27 constitution anchoring, DA-6 session posture in workflow completion flows, and protocol binding across all role cards. Phase 6 deploys SDD Reference Containment (`l1-sdd-reference-containment.md`): the one-way traceability boundary keeping product code free of SDD-artifact references — field-priority fix, eligible for targeted execution.
+Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`. Phase 4 deploys the Prompt Quality Gate (`l1-prompt-quality-gate.md`): the `prompt-engineer` role card (#14) and its five workflow gates. Phase 5 deploys the Autonomous Decision Protocol (`l1-decision-autonomy.md`): C27 constitution anchoring, DA-6 session posture in workflow completion flows, and protocol binding across all role cards. Phase 6 deploys SDD Reference Containment (`l1-sdd-reference-containment.md`): the one-way traceability boundary keeping product code free of SDD-artifact references — field-priority fix, eligible for targeted execution. Phase 8 deploys Session Continuity (`l1-session-continuity.md`): the SC-2 universal post-command STATE.md update and SC-3 commit-suggestion guarantee carried by the finalize pipeline, plus the read-only `/magic.status` resume briefing command (`l2-status-command.md`, C2 exception SC-5).
 
 ## Completed (Baseline)
 
@@ -60,6 +60,15 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 - [x] **SDD Reference Containment — RC-9** ([l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) v1.1.0) [L1] — purged 15 engine-workspace references from shipped files: 5 dead spec links, 3 baked-in workspace names, 6 governance file-name citations *(Phase 7 complete — engine 2.1.32)*
   - No hard dependency on Phases 4-5; MUST NOT run concurrently with them (shared workflow-body files). Field-priority follow-up of Phase 6.
   - Tasks: [tasks/phase-7.md](tasks/phase-7.md)
+
+### Phase 8 — Session Continuity & Status Command
+
+- [x] **Session Continuity & Status Surface** ([l1-session-continuity.md](specifications/l1-session-continuity.md)) [L1] — deployed via finalize-pipeline state update (SC-2), non-bumping commit-suggestion fallback (SC-3), and the status briefing surface (SC-4/SC-5) *(Phase 8 complete — engine 2.1.37)*
+- [x] **Status Command** ([l2-status-command.md](specifications/l2-status-command.md)) [L2] — `.magic/status.md` body, `workflows/magic.status.md` wrapper, generated `skills/magic-status/SKILL.md`, upgrade-detection exemption, docs *(Phase 8 complete)*
+  - Amendment deployment covered by this phase: [l2-engine-finalization.md](specifications/l2-engine-finalization.md) v1.1.0 (§5 session-continuity integration), [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) v1.1.0 (inventory + graph drift fix), [l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) v1.3.0 (magic-status projection).
+  - Tracks A (finalize) and B (status command) are file-independent but both bump `.magic/` meta (C14 checksums) — execute serially in one session (planner audit).
+  - No dependency on Phases 4-7 (all Done); first runnable phase after plan-complete state.
+  - Tasks: [tasks/phase-8.md](tasks/phase-8.md)
 
 ## Backlog
 
