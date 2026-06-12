@@ -71,7 +71,7 @@ If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` i
     └── archives/tasks/
 ```
 
-> **WI-10 (l1-workspace-intent-routing.md)**: this diagram is authoritative; any deviation is a release blocker. New projects always bootstrap into `.design/{default}/`, never directly under `.design/`. Additional workspaces are added via `create-workspace` (below), not by re-running `init`.
+> **WI-10 (Workspace Intent Routing)**: this diagram is authoritative; any deviation is a release blocker. New projects always bootstrap into `.design/{default}/`, never directly under `.design/`. Additional workspaces are added via `create-workspace` (below), not by re-running `init`.
 
 ### Workspace Creation (Post-Bootstrap)
 
@@ -81,7 +81,7 @@ For projects that already have `.design/`:
 node .magic/scripts/executor.js create-workspace --name={name} [--description="..."] [--default]
 ```
 
-Per `l1-workspace-intent-routing.md` WI-6 the script atomically: (1) validates `{name}` against the workspace name regex; (2) adds an entry under `workspace.json#workspaces.{name}`; (3) provisions `.design/{name}/` with the standard subtree above; (4) leaves `default` unchanged unless `--default` is passed.
+Per Workspace Intent Routing WI-6 the script atomically: (1) validates `{name}` against the workspace name regex; (2) adds an entry under `workspace.json#workspaces.{name}`; (3) provisions `.design/{name}/` with the standard subtree above; (4) leaves `default` unchanged unless `--default` is passed.
 
 `magic.spec` invokes this automatically when `context.md` Step 0 emits `create:{name}` (per WI-2 signal classes). Manual invocation is reserved for users who prefer to author the workspace config explicitly before authoring specs.
 

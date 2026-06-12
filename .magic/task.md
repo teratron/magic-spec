@@ -132,7 +132,7 @@ After writing PLAN.md, TASKS.md, and phase files, regenerate the workspace conte
 
 ### Graph Refresh (Post-Write)
 
-Per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers), `PLAN.md` phases are graph nodes. After Plan Write-back and Context Regeneration, run **once per planning invocation**:
+`PLAN.md` phases are graph nodes; plan mutations invalidate the spec graph and wiki. After Plan Write-back and Context Regeneration, run **once per planning invocation**:
 
 ```bash
 node .magic/scripts/executor.js export-wiki

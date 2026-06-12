@@ -210,7 +210,7 @@ At critical decision points, the agent MUST activate the designated role card fr
 
 Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
-Full registry: `.magic/roles/` — 13 registered role cards (see `l1-role-system.md` for invariants).
+Full registry: `.magic/roles/` — 13 registered role cards; each card is self-contained and defines its own gates and invariants.
 
 ### C25 — Engineer Posture (Narrate-and-Act)
 
@@ -232,7 +232,7 @@ and existing workspace lexicons are demonstrably inconsistent. The cost of
 silent mis-routing (specs accumulating in the wrong workspace, registry
 fragmentation) outweighs the cost of one prompt.
 
-Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
+Governed in full by the engine's Workspace Intent Routing protocol. Operational summary:
 
 1. **Pre-Resolution Detection (WI-1, WI-2)**: Every workflow that creates
    or amends specs / tasks / rules MUST run Workspace Intent Detection

@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.3.9
+**Version:** 1.3.10
 **Status:** Active
-**Engine Version:** 2.1.30
+**Engine Version:** 2.1.32
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.10 | 2026-06-12 | Agent | l1-sdd-reference-containment.md 1.0.0 → 1.1.0: RC-9 Shipped Self-Containment (engine→`.design/engine/` leaks no longer masked by RC-8 exemption). |
 | 1.3.9 | 2026-06-12 | Agent | Engine workspace spec count 21 → 22: added l1-sdd-reference-containment.md (one-way SDD traceability boundary); coder/code-reviewer cards 1.1.0 (RC-5/RC-6 gates). |
 | 1.3.8 | 2026-06-12 | Agent | Engine workspace spec count 20 → 21: added l1-decision-autonomy.md (Autonomous Decision Protocol); RULES.md 1.7.0 → 1.8.0 (C27 added, C13 §3 amended). |
 | 1.3.7 | 2026-06-11 | Agent | Engine workspace spec count 19 → 20: added l1-prompt-quality-gate.md; prompt-engineer role registered (14th card) across l1-role-system, l2-role-cards, l2-role-cards-governance, l2-role-integration. |

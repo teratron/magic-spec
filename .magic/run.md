@@ -136,7 +136,7 @@ After all workflow steps (incl. Phase Completion or Plan Completion) and **befor
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
 
-> **Note**: `Changelog L1` (Phase Completion) appends to `.design/engine/CHANGELOG.md` — the internal phase journal. This Finalization Protocol appends to the **root** `CHANGELOG.md` — the user-facing release notes. Different audiences; no conflict.
+> **Note**: `Changelog L1` (Phase Completion) appends to `.design/{ws}/CHANGELOG.md` — the internal phase journal. This Finalization Protocol appends to the **root** `CHANGELOG.md` — the user-facing release notes. Different audiences; no conflict.
 
 ## Run Completion Checklist
 

@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.10.0
+**Version:** 1.11.0
 **Generated:** 2026-06-12
-**Based on PLAN:** .design/engine/PLAN.md v1.11.0
+**Based on PLAN:** .design/engine/PLAN.md v1.12.0
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. Phases 2 and 3 are complete. 22 specs are registered and Stable; Phase 4 (Prompt Quality Gate — `prompt-engineer` role deployment) is active with 10 atomic tasks across 4 tracks. Phase 5 (Decision Autonomy — C27 protocol deployment) follows with 7 tasks across 4 tracks, serialized after Phase 4 (shared workflow-body files). Phase 6 (SDD Reference Containment — RC gates) carries 7 tasks across 4 tracks; no hard dependency on Phases 4-5, but never concurrent with them (shared files) — field-priority, eligible for targeted execution.
+Tactical registry of all phases and their statuses. Phases 2 and 3 are complete. 22 specs are registered and Stable; Phase 4 (Prompt Quality Gate — `prompt-engineer` role deployment) is active with 10 atomic tasks across 4 tracks. Phase 5 (Decision Autonomy — C27 protocol deployment) follows with 7 tasks across 4 tracks, serialized after Phase 4 (shared workflow-body files). Phase 6 (SDD Reference Containment — RC gates) is complete and archived. Phase 7 (Shipped Self-Containment — RC-9 purge) carries 6 tasks; no hard dependency on Phases 4-5, but never concurrent with them (shared workflow-body files) — field-priority follow-up of Phase 6.
 
 ## Active Phases
 
@@ -18,6 +18,7 @@ Tactical registry of all phases and their statuses. Phases 2 and 3 are complete.
 | [Phase 4](tasks/phase-4.md) | Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates | `Todo` |
 | [Phase 5](tasks/phase-5.md) | Decision Autonomy — C27 constitution anchoring + DA-6 posture + role binding | `Todo` |
 | [Phase 6](archives/tasks/phase-6.md) | SDD Reference Containment — ambient rules + RC-5/RC-6 card gates + RC-7 leak scan | `Done (Archived)` |
+| [Phase 7](archives/tasks/phase-7.md) | Shipped Self-Containment — RC-9 purge of 15 engine-workspace references | `Done (Archived)` |
 
 ## Completed Phases
 

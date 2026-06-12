@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.11.0
+**Version:** 1.12.0
 **Generated:** 2026-06-12
-**Based on:** .design/engine/INDEX.md v1.13.0
+**Based on:** .design/engine/INDEX.md v1.13.1
 **Status:** Active
 
 ## Overview
@@ -53,7 +53,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 - [x] **SDD Reference Containment** ([l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md)) [L1] — deployed via ambient `rules/magic.md` section (RC-1..RC-4), Coder card authoring gate (RC-5), Code-reviewer containment check (RC-6), and ventilation leak scan (RC-7) *(Phase 6 complete — engine 2.1.31)*
   - Card amendments covered by this phase: [l2-role-cards-execution.md](specifications/l2-role-cards-execution.md) v1.1.0 (Coder step 5), [l2-role-cards-review.md](specifications/l2-role-cards-review.md) v1.1.0 (Code-reviewer step 4).
   - No hard dependency on Phases 4-5; MUST NOT run concurrently with them (shared files: role cards, `rules/magic.md`). Field-priority: targeted execution permitted before Phase 4.
-  - Tasks: [tasks/phase-6.md](tasks/phase-6.md)
+  - Tasks: [archives/tasks/phase-6.md](archives/tasks/phase-6.md) *(Done, archived)*
+
+### Phase 7 — Shipped Self-Containment (RC-9 purge)
+
+- [x] **SDD Reference Containment — RC-9** ([l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) v1.1.0) [L1] — purged 15 engine-workspace references from shipped files: 5 dead spec links, 3 baked-in workspace names, 6 governance file-name citations *(Phase 7 complete — engine 2.1.32)*
+  - No hard dependency on Phases 4-5; MUST NOT run concurrently with them (shared workflow-body files). Field-priority follow-up of Phase 6.
+  - Tasks: [tasks/phase-7.md](tasks/phase-7.md)
 
 ## Backlog
 

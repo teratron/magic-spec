@@ -39,7 +39,7 @@ duration_minutes: ~
 - **Assignment:** Agent
 - **Verify:** `grep "Bounded Ambiguity Resolution" .magic/templates/rules.md` hits; `grep -c "C27" .magic/templates/rules.md` ≥ 2; `grep "halt and ask" .magic/templates/rules.md` returns no matches
 - **Handoff:** T-5B01, T-5C01 (C27 text must exist before references land)
-- **Notes:** Mirror the wording already deployed in `.design/RULES.md` C13 §3 + C27 — single source of normative text is the L1 spec §4.4.
+- **Notes:** Mirror the wording already deployed in `.design/RULES.md` C13 §3 + C27 — single source of normative text is the L1 spec §4.4. **RC-9 guard** (l1-sdd-reference-containment.md v1.1.0): when mirroring, replace `Governed in full by l1-decision-autonomy.md` with a protocol-name phrase — shipped template must not cite engine-workspace spec files.
 
 ### [T-5A02] User-side `rules/magic.md` — session posture
 
@@ -48,7 +48,7 @@ duration_minutes: ~
 - **Assignment:** Agent
 - **Verify:** `grep "Autonomous Decision Protocol" rules/magic.md` hits; new section documents DA-6 (next step computed and narrated between workflows, never asked) and the DA-4 DR grammar
 - **Handoff:** T-5D01
-- **Notes:** Compact form — operational summary only; full protocol lives in the constitution template. Completion Protocol checklist in the same file gains a §C27 line.
+- **Notes:** Compact form — operational summary only; full protocol lives in the constitution template. Completion Protocol checklist in the same file gains a §C27 line. **RC-9 guard**: no engine-workspace spec citations in `rules/magic.md`; editing it breaks the `.agents/rules/` hardlink — revalidate via `node dev/scripts/validate-hardlinks.js` after the edit.
 
 ### [T-5B01] Workflow completion sections — DA-6 wiring
 

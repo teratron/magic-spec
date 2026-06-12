@@ -85,7 +85,7 @@ graph LR
 
 ### Step 0: Workspace Intent Detection (Mandatory Pre-Step)
 
-> Governed by `l1-workspace-intent-routing.md`. Run for every spec create/update/dispatch operation BEFORE any other step.
+> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run for every spec create/update/dispatch operation BEFORE any other step.
 
 Apply `context.md` §Step 0 Workspace Intent Detection:
 
@@ -240,7 +240,7 @@ Any check fails → report as `[Spec-Review] {file} §{section}: {issue}` and bl
 
 ### Graph Refresh (Post-Dispatch)
 
-Per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers), any mutation of `.design/specifications/` or `INDEX.md` invalidates the spec graph and wiki. After dispatch (Creating, Updating, Batch Stabilization, T4 RULES.md write) and before the Task Completion Checklist, run the canonical refresh **once per workflow invocation**:
+Any mutation of `.design/specifications/` or `INDEX.md` invalidates the spec graph and wiki. After dispatch (Creating, Updating, Batch Stabilization, T4 RULES.md write) and before the Task Completion Checklist, run the canonical refresh **once per workflow invocation**:
 
 ```bash
 node .magic/scripts/executor.js export-wiki
@@ -305,7 +305,7 @@ After all workflow steps (incl. Graph Refresh) and **before** the Completion Che
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
 
-> **Note for `magic.run` Phase Completion**: `Changelog L1` in run.md appends to `.design/engine/CHANGELOG.md` (internal phase journal). This protocol appends to the **root** `CHANGELOG.md` (user-facing release notes). Separate documents; no conflict.
+> **Note for `magic.run` Phase Completion**: `Changelog L1` in run.md appends to `.design/{ws}/CHANGELOG.md` (internal phase journal). This protocol appends to the **root** `CHANGELOG.md` (user-facing release notes). Separate documents; no conflict.
 
 ### Task Completion Checklist
 

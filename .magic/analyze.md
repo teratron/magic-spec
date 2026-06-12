@@ -183,7 +183,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
    - Report Orphaned files (workspace-scoped but uncovered) and Missing Implements (L2 specs without parent link).
    - Report Bridge Specs (specs referencing files across multiple workspaces) as candidates for cross-workspace spec or workspace boundary adjustment.
-   - **Wiki Staleness (`WIKI_STALE`)**: compare mtime of `.design/wiki/index.md` against the newest mtime among `.design/specifications/**/*.md`, `.design/{ws}/PLAN.md`, and `.design/RULES.md` (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). If wiki is missing or older → emit `WIKI_STALE` advisory with sync path `→ node .magic/scripts/executor.js export-wiki`.
+   - **Wiki Staleness (`WIKI_STALE`)**: compare mtime of `.design/wiki/index.md` against the newest mtime among `.design/specifications/**/*.md`, `.design/{ws}/PLAN.md`, and `.design/RULES.md` — any newer source invalidates the wiki. If wiki is missing or older → emit `WIKI_STALE` advisory with sync path `→ node .magic/scripts/executor.js export-wiki`.
    - **Optional HTML**: if user requests a visual map, run with `--html` flag → outputs `.design/spec-graph.html` (self-contained vis.js visualization). Never auto-generated.
 8. **Workspace Boundary Analysis**: run `node .magic/scripts/executor.js detect-communities --include-md`.
    - Compare detected communities against `workspace.json` boundaries (Jaccard alignment score).
@@ -354,7 +354,7 @@ Mode C Checklist — Ventilation
    - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/MAGIC.md` §1](../rules/MAGIC.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node .magic/scripts/executor.js generate-context`.
-   - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written (per [`l2-spec-graph-memory.md` §4.4](../.design/engine/specifications/l2-spec-graph-memory.md#44-workflow-integration-triggers)). Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
+   - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
    - **Zero-Prompt Handoff (C9)**: if logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: *"[Auto-Analyze] {N} specs proposed and created as Stable. Proceed to Plan/Run?"* and wait for reply.
 
 ## Task Completion Checklist

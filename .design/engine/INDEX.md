@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.13.0
+**Version:** 1.13.1
 **Status:** Active
 
 ## Overview
@@ -36,10 +36,10 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | Stable | 2 | 1.1.1 |
 | [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
 | [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format. | Stable | 1 | 1.0.0 |
-| [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates and leak detection (RC-1..RC-8). | Stable | 1 | 1.0.0 |
+| [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, leak detection, shipped self-containment (RC-1..RC-9). | Stable | 1 | 1.1.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-12 (l1-sdd-reference-containment.md 1.0.0 added; coder/code-reviewer cards 1.1.0: RC-5 authoring gate + RC-6 containment review check)
+- **Last Updated**: 2026-06-12 (l1-sdd-reference-containment.md 1.1.0: RC-9 Shipped Self-Containment — shipped engine files must not reference the engine repo's SDD workspace)

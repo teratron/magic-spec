@@ -4,7 +4,7 @@ Shared workspace resolution logic referenced by all workflows. Every workflow MU
 
 ## Step 0: Workspace Intent Detection (Pre-Resolution)
 
-> Governed by `l1-workspace-intent-routing.md` (WI-1 through WI-10). Run **before** the Resolution Chain for any workflow that creates or amends specs/tasks/rules. Read-only workflows (`magic.analyze`, `magic.graph`) skip this step.
+> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for any workflow that creates or amends specs/tasks/rules. Read-only workflows (`magic.analyze`, `magic.graph`) skip this step.
 
 Detection produces exactly one outcome for the calling workflow:
 

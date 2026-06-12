@@ -1,6 +1,6 @@
 # SDD Reference Containment Specification
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -39,7 +39,8 @@ Rules that Layer 2 implementations MUST NOT violate:
 - **RC-5 (Authoring Gate)**: The code-producing role MUST NOT introduce violations — write-time prevention.
 - **RC-6 (Review Gate)**: Diff review MUST fail any diff that introduces an SDD reference into product files — merge-time prevention.
 - **RC-7 (Leak Detection)**: Project ventilation MUST scan existing product files for violations and report each as an actionable finding — the cleanup path for legacy leaks.
-- **RC-8 (Exemptions)**: Exempt from RC-1/RC-2: the `.design/` subtree itself; engine directories; git metadata; contributor-facing process documentation that documents the SDD workflow itself (there the reference IS the content, not traceability metadata). The magic-spec repository documents the SDD process as its product domain — its references to `.design/` are content, not leaks.
+- **RC-8 (Exemptions)**: Exempt from RC-1/RC-2: the `.design/` subtree itself; engine directories; git metadata; contributor-facing process documentation that documents the SDD workflow itself (there the reference IS the content, not traceability metadata). The magic-spec repository documents the SDD process as its product domain — its references to `.design/` are content, not leaks. The engine-directory exemption covers cross-references **among shipped files only**; references from shipped files into the engine repository's own SDD workspace are governed by RC-9, not exempted. `[MODIFIED]`
+- **RC-9 (Shipped Self-Containment)**: Files distributed with the engine (`.magic/`, `workflows/`, `skills/`, `rules/`, and templates instantiated into user projects) MUST NOT reference the engine repository's own SDD workspace: no `.design/engine/…` paths and no engine-workspace specification file names. Normative content is restated inline or cross-referenced to another shipped file. Three forms stay valid: consumer-generic SDD paths (`.design/{workspace}/…`, `$DESIGN_DIR`, the user's own `.design/INDEX.md`), stable in-text protocol labels (`WI-n`, `DA-n`, `C{n}`), and illustrative examples of forbidden forms. `[ADDED]`
 
 > L2 spec cannot reach RFC status until all invariants here are addressed in its "Invariant Compliance" section.
 
@@ -85,6 +86,7 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 2. Add the ambient containment section to the distributed agent rules file (RC-1..RC-4).
 3. Extend the ventilation checklist with the RC-7 leak scan.
 4. Steps 2-3 modify engine files → C14 applies at implementation time.
+5. Purge engine-workspace references from already-shipped files (workflow bodies, templates, agent rules): replace dead spec links with inline restatement, replace baked-in workspace names with `{workspace}` placeholders, replace governance file-name citations with protocol names (RC-9). `[ADDED]`
 
 ## 6. Drawbacks & Alternatives
 
@@ -106,4 +108,5 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-06-12 | Agent | Added RC-9 (Shipped Self-Containment): shipped engine files must not reference the engine repo's own SDD workspace — closes the gap where RC-8's engine exemption masked engine→`.design/engine/` leaks (15 sites found in first ventilation). RC-8 scope clarified; Implementation Notes step 5 added. |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable. Field-driven: consumer-project releases exclude `.design/`, so SDD references in product code become dead content. Defines RC-1..RC-8 and four enforcement surfaces. |

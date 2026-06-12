@@ -118,7 +118,7 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 
 ### Channels
 
-`.design/engine/CHANGELOG.md` is `magic.run`'s internal phase journal (not touched
+`.design/{ws}/CHANGELOG.md` is `magic.run`'s internal phase journal (not touched
 here). Root `CHANGELOG.md` is user-facing release notes — written by this protocol.
 
 ## 4. Phase Archival Automation

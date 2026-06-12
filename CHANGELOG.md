@@ -34,6 +34,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Added specification `decision-autonomy` (engine)
 - Updated specification `engine-automation` (engine)
 - Completed task `phase-6` (engine)
+- Updated specification `sdd-reference-containment` (engine)
+- Completed 2 tasks (engine)
 
 ### Added
 

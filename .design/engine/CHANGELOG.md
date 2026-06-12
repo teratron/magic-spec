@@ -1,5 +1,15 @@
 # Engine Workspace Changelog
 
+## Phase 7 — 2026-06-12
+
+- Purged all 15 references to the engine repository's own SDD workspace from shipped engine files per RC-9 (l1-sdd-reference-containment.md v1.1.0), in three classes:
+  - **Dead spec links (5)**: `rule.md`, `analyze.md` (×2), `spec.md`, `task.md` — markdown links into `.design/engine/specifications/` replaced with the invalidation rule stated inline.
+  - **Baked-in workspace name (3)**: `run.md`, `spec.md`, `rules/magic.md` — phase-journal path generalized to `.design/{ws}/CHANGELOG.md` (consumers do not have an `engine` workspace).
+  - **Governance citations (6)**: `context.md`, `init.md` (×2), `spec.md`, `templates/rules.md` (×2) — spec file names replaced with protocol names; WI-labels preserved as stable in-text identifiers.
+- Annotated Phase 5 tasks (constitution-template mirroring) with an RC-9 guard so the leak class is not reintroduced.
+- Engine version 2.1.31 → 2.1.32 (C14); checksums regenerated, skill wrappers re-projected; `.agents/rules/magic.md` hardlink recreated after the rules edit.
+- Validation: containment greps 0/0/0 across `.magic/`, `workflows/`, `skills/`, `rules/` (sole residual hit is the illustrative BAD example, exempt); engine test harness 12/12 green.
+
 ## Phase 6 — 2026-06-12
 
 - Added §6 "SDD Reference Containment" to user-side `rules/magic.md`: one-way traceability rule (SDD artifacts reference code, never the reverse), forbidden reference classes, exemptions, BAD/GOOD example, enforcement map; Completion Protocol renumbered §6→§7 with a new containment checklist line; recreated the broken `.agents/rules/magic.md` hardlink.
