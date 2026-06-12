@@ -191,10 +191,10 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Any community Jaccard score < 0.3 → include `BOUNDARY_DRIFT` warning: community members are misaligned with their declared workspace.
    - Any community exceeds the oversized threshold (>25% of graph) and BFS partitioning reveals sub-clusters → suggest workspace split with proposed names.
 10. **Documentation & Version Audit**:
-   - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
-   - Verify `README.md` version badge matches `.magic/.version`.
-   - Verify `rules/MAGIC.md` points users to GitHub Releases and the current manual update folders.
-   - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
+    - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
+    - Verify `README.md` version badge matches `.magic/.version`.
+    - Verify `rules/MAGIC.md` points users to GitHub Releases and the current manual update folders.
+    - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 11. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 12. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
 13. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
