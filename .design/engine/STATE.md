@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-06-12 18:22
+**Updated:** 2026-06-12 18:51
 **Phase:** 8 — Session Continuity & Status Command
 **Status:** Complete
 
@@ -12,16 +12,16 @@
 
 - **Task:** Phase 8 complete (6/6 tasks Done)
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to plan the next phase
+- **Next Action:** Plan complete — add new scope via /magic.spec (or /magic.status for a briefing)
 
 ## Progress
 
 ```
-Phase 8: [6/6] ████████ 100%
 Overall: [7/7] ████████ 100%
 ```
 
 ## Recent Decisions
+
 - 2026-06-12 **Decision:** Phase 8 complete. Provides: SC-2 finalize state updates; SC-3 non-bumping commit suggestions; /magic.status briefing command; engine 2.1.37
 - 2026-06-12 **Decision:** Phase 8 planned: 6 tasks, tracks A (finalize SC-2/SC-3) + B (/magic.status) serial per planner audit; PLAN 1.13.0, TASKS 1.12.0
 - 2026-06-12 **Decision:** Session-continuity contract specified: SC-1..SC-5 + /magic.status (C2 exception SC-5); finalize pipeline owns SC-2/SC-3; specs Stable, project 0.1.31
@@ -30,7 +30,6 @@ Overall: [7/7] ████████ 100%
 - 2026-06-12 **Decision:** Phase 4 complete. Provides: prompt-engineer card #14; five PQ gates wired; engine 2.1.33
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
-
 
 ## Blockers
 

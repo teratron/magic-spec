@@ -2,7 +2,7 @@
 
 **Version:** 1.12.1
 **Generated:** 2026-06-12
-**Based on PLAN:** .design/engine/PLAN.md v1.13.0
+**Based on PLAN:** .design/engine/PLAN.md v1.13.1
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active

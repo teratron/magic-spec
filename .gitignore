@@ -68,6 +68,7 @@ copilot-instructions.md
 .agents/skills/magic-run/
 .agents/skills/magic-spec/
 .agents/skills/magic-task/
+.agents/skills/magic-status/
 .agents/skills/magic-graph/
 
 ## Rules

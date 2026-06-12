@@ -108,4 +108,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-06-12 (v2.1.32).
+Synchronized with engine workflows on 2026-06-12 (v2.1.37).
