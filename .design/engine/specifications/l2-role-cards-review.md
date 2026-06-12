@@ -1,6 +1,6 @@
 # Role Cards — Review Gates
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -18,6 +18,7 @@ Cards in this spec: `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-en
 - [l2-role-cards-execution.md](l2-role-cards-execution.md) - Sibling: plan/build/fix/document execution cards.
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Sibling: migrated C24 governance/audit cards.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side integration of all role cards.
+- [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Containment policy; Code-reviewer carries the review gate (RC-6).
 
 ## 1. Code-reviewer
 
@@ -51,11 +52,12 @@ related_rules: [C24]
 1. Load the diff produced by Coder.
 2. Check `RULES.md` compliance: language policy, formatting conventions, style rules.
 3. Check traceability: every changed block must map to the task, assigned spec section, `Verify` criterion, or cleanup made necessary by this diff. Unrelated formatting, comment churn, renames, and drive-by refactors are FAIL.
-4. Check surface correctness: typos in identifiers, wrong imports, obvious misuse of APIs.
-5. Check minimalism: dead code, unused variables, one-use abstractions, speculative configuration, impossible error handlers, commented-out blocks.
-6. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?
-7. Emit verdict: `PASS` (optionally with notes) or `FAIL` (with itemized issues).
-8. On FAIL, hand back to Coder. On PASS with complexity notes, hand off to Code-simplifier (opt-in). On clean PASS, hand off to Test-engineer.
+4. Check containment (RC-6, [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): scan the diff for SDD-layer references — task IDs, phase designators, `PLAN.md`/`TASKS.md`, spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. Any occurrence in product files is FAIL.
+5. Check surface correctness: typos in identifiers, wrong imports, obvious misuse of APIs.
+6. Check minimalism: dead code, unused variables, one-use abstractions, speculative configuration, impossible error handlers, commented-out blocks.
+7. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?
+8. Emit verdict: `PASS` (optionally with notes) or `FAIL` (with itemized issues).
+9. On FAIL, hand back to Coder. On PASS with complexity notes, hand off to Code-simplifier (opt-in). On clean PASS, hand off to Test-engineer.
 
 **Anti-patterns:**
 
@@ -63,6 +65,7 @@ related_rules: [C24]
 - Passing a diff that violates language policy because "it works".
 - Nitpicking style that is not in `RULES.md` (personal preferences are not review criteria).
 - Approving unrelated cleanup because it is "nearby" or "small".
+- Passing a diff whose comments cite SDD artifacts because they look like "helpful context" — they become dead references once a release excludes `.design/`.
 
 ## 2. Code-simplifier
 
@@ -206,4 +209,5 @@ related_rules: [C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.0 | 2026-06-12 | Code-reviewer card: added RC-6 containment check (protocol step 4 + anti-pattern) per l1-sdd-reference-containment.md — diff with SDD-artifact references is FAIL. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted run.md inline review-gate cards (code-reviewer, code-simplifier, code-skeptic, test-engineer) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

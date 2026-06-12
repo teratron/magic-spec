@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -18,6 +18,7 @@ Cards in this spec: `planner`, `orchestrator`, `coder`, `debugger`, `docs-specia
 - [l2-role-cards-review.md](l2-role-cards-review.md) - Sibling: run.md inline review-gate cards.
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Sibling: migrated C24 governance/audit cards.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side integration of all role cards.
+- [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Containment policy; Coder carries the authoring gate (RC-5).
 
 ## 1. Planner
 
@@ -133,9 +134,10 @@ related_rules: [C2, C3]
 2. Read the assigned spec section and task `Verify` line in full — not just the task title.
 3. Before editing, name any material assumption about API, data shape, security, persistence, file format, public behavior, or compatibility. If the assumption changes behavior or scope, stop and route to Code-skeptic or Debugger; otherwise record it in task notes.
 4. Implement only the minimal diff needed for the spec section and `Verify` criterion. Do not add speculative options, abstractions, configuration, or future-proofing.
-5. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
-6. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
-7. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
+5. Keep the diff self-contained per RC-1/RC-2 ([l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): never reference SDD artifacts — task IDs, phase designators, `PLAN.md`/`TASKS.md`, spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. If spec rationale matters at the code site, restate it in plain language; provenance stays in task notes and the commit message.
+6. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
+7. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
+8. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
 
 **Anti-patterns:**
 
@@ -145,6 +147,7 @@ related_rules: [C2, C3]
 - Ignoring `RULES.md` because "this is a small change".
 - Adding one-use abstractions, knobs, generic handlers, or defensive branches not required by the spec or `Verify` criterion.
 - Reformatting, renaming, or rewriting nearby code to personal taste while solving a narrow task.
+- Embedding SDD breadcrumbs in product files (`// implements T-2B03`, links into `.design/…`) — releases may exclude `.design/`, leaving dead references (RC-5 violation).
 
 ## 4. Debugger
 
@@ -243,4 +246,5 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.0 | 2026-06-12 | Coder card: added RC-5 authoring gate (protocol step 5 + anti-pattern) per l1-sdd-reference-containment.md — no SDD-artifact references in product files. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted execution-pipeline cards (planner, orchestrator, coder, debugger, docs-specialist) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -23,6 +23,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **analyze-coverage.js**: Confidence Taxonomy engine — classifies project files by spec coverage confidence (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED) using Canonical References from specifications.
 - **extract-rationale.js**: Rationale Extraction engine — scans source code for design rationale markers (NOTE/WHY/HACK/etc.) and identifies Shadow Logic (uncovered design decisions).
 - **detect-communities.js**: Workspace boundary analysis — builds the dependency graph, detects communities, and scores Jaccard alignment against `workspace.json`. Honors `.gitignore` during the file walk (Invariant 7 parity).
+- **check-bloat.js**: Context-economy advisory — flags oversized specs and task phases against configurable thresholds (see §Bloat Advisory Configuration).
 
 ## Logical Flows
 
@@ -58,6 +59,47 @@ Engine scripts that walk the project tree (e.g., `detect-communities.js`) MUST e
 
 A directory is skipped when its basename matches a basename matcher, or its workspace-relative path falls under an anchored prefix. This prevents test fixtures and generated artifacts (e.g., `.tmp/`, `.design/wiki/`) from polluting community detection and boundary-alignment metrics. The hardcoded `SKIP_DIRS` remains as a gitignore-independent floor — the two are unioned, never mutually exclusive.
 
+### Path Matching Contract (Scope & Canonical References)
+
+Origin: downstream field report (engine 2.1.27), reproduced upstream at 2.1.30 — scope entries and spec references were matched by literal string comparison, so natural inputs (`docs/` with trailing slash, `src/**` globs) silently matched nothing: empty scans reported as clean, EXTRACTED files demoted to INFERRED, and false `shadow_specs` orphans emitted.
+
+**Single Matcher Invariant.** Every engine script that filters or attributes project paths against user-supplied path sets (workspace `scope` arrays from `workspace.json`, Canonical References `Path` cells) MUST resolve matches through one shared matcher exported by `.magic/scripts/utils.js`. Per-script literal `startsWith` comparison is forbidden. Consumers: `analyze-coverage.js` (scope filter and reference classification), `extract-rationale.js`, `generate-context.js`, `build-spec-graph.js` (workspace attribution — see [l2-spec-graph-memory.md](l2-spec-graph-memory.md)).
+
+**Matching semantics** (one entry = one scope element or one `Path` cell):
+
+| Input form | Interpretation |
+| --- | --- |
+| `dir` or `dir/` | The path itself and everything beneath it (trailing slash normalized away) |
+| `file.ext` | Exact file match |
+| `*` | Wildcard within a single path segment |
+| `**` | Wildcard across any number of segments |
+
+All matching is repo-root-relative, forward-slash normalized, case-sensitive, and anchored at the start of the entry.
+
+**Zero-Match Guard (negative space).** A scope entry or pattern reference that matches zero existing files emits a non-blocking warning (`SCOPE_NO_MATCH` / `REF_NO_MATCH`). Silent empty result sets are forbidden — an empty scan must never be indistinguishable from a clean scan. Mirrors §Scan Hygiene: the boundary input, not the hardcoded assumption, is the source of truth.
+
+**Pattern references in coverage.** A Canonical Reference containing glob metacharacters is a *pattern ref*: files it matches classify as EXTRACTED with spec attribution preserved. The shadow-spec orphan test for a pattern ref is "matches zero files on disk" — never a literal existence probe of the raw pattern string.
+
+### Bloat Advisory Configuration
+
+`check-bloat.js` thresholds are advisory defaults, not constants — legitimate spec style varies by project (downstream report: 42 specs legitimately above 300 lines produce permanent advisory noise). Defaults remain `spec 300/500` and `task 250/400` (soft/hard), overridable per project via `.design/workspace.json`. Configuration contract `[REFERENCE]`:
+
+```json
+{
+  "bloat": {
+    "spec": { "soft": 300, "hard": 500 },
+    "task": { "soft": 250, "hard": 400 }
+  }
+}
+```
+
+- Omitted keys fall back to defaults; a threshold set to `0` disables that signal class.
+- The spec scan walks `specifications/**` recursively — parity with the finalize significance whitelist; top-level-only scanning is a defect.
+
+## Related Specifications
+
+- [l2-spec-graph-memory.md](l2-spec-graph-memory.md) — `build-spec-graph.js` workspace attribution consumes the shared path matcher defined in §Path Matching Contract.
+
 ## Canonical References
 
 | Path | Role |
@@ -71,6 +113,8 @@ A directory is skipped when its basename matches a basename matcher, or its work
 | `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
 | `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
 | `.magic/scripts/detect-communities.js` | Workspace boundary / community detection (gitignore-aware scan, Invariant 7) |
+| `.magic/scripts/check-bloat.js` | Bloat advisory (configurable thresholds, recursive spec scan) |
+| `.magic/scripts/utils.js` | Shared helpers — canonical path matcher (§Path Matching Contract) |
 | `.magic/scripts/lib/` | Finalization helpers: changelog-writer, commit-suggester, git-utils, phase-archiver, project-version, significance |
 | `.magic/.checksums` | Checksum manifest |
 | `.magic/.version` | Current engine version |
@@ -79,6 +123,7 @@ A directory is skipped when its basename matches a basename matcher, or its work
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-06-12 | Agent | Added Path Matching Contract (shared scope/glob matcher in utils.js, zero-match guard, pattern refs) and Bloat Advisory Configuration (workspace.json threshold overrides, recursive scan) — upstream fix design for downstream glob-scope coverage report (engine 2.1.27, reproduced at 2.1.30). Documented check-bloat.js in Components. Stable retained via Trust Mode re-review (C9). |
 | 1.5.0 | 2026-06-10 | Agent | Documented detect-communities.js (closed INFERRED coverage gap) and added Scan Hygiene section: graph-walk scripts honor .gitignore (Invariant 7 parity), unioned with SKIP_DIRS floor. Stable retained via Trust Mode re-review (C9). |
 | 1.4.1 | 2026-06-10 | Agent | Fixed orphaned Canonical Reference: update-project-meta.js path updated to dev/scripts/ (script relocated in engine v2.1.21). |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Removed stale generate-checksums.js and .magic/history/ refs; replaced with .magic/scripts/lib/ coverage. |
