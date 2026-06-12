@@ -17,8 +17,6 @@ Tactical registry of all phases and their statuses. Phases 2 and 3 are complete.
 | --- | --- | --- |
 | [Phase 4](tasks/phase-4.md) | Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates | `Todo` |
 | [Phase 5](tasks/phase-5.md) | Decision Autonomy — C27 constitution anchoring + DA-6 posture + role binding | `Todo` |
-| [Phase 6](archives/tasks/phase-6.md) | SDD Reference Containment — ambient rules + RC-5/RC-6 card gates + RC-7 leak scan | `Done (Archived)` |
-| [Phase 7](archives/tasks/phase-7.md) | Shipped Self-Containment — RC-9 purge of 15 engine-workspace references | `Done (Archived)` |
 
 ## Completed Phases
 
@@ -26,6 +24,8 @@ Tactical registry of all phases and their statuses. Phases 2 and 3 are complete.
 | --- | --- | --- |
 | [Phase 2](tasks/phase-2.md) | Skill Projection & Agent Surface Implementation | `Done` |
 | [Phase 3](archives/tasks/phase-3.md) | Unified Role System — `.magic/roles/` + workflow integration | `Done (Archived)` |
+| [Phase 6](archives/tasks/phase-6.md) | SDD Reference Containment — ambient rules + RC-5/RC-6 card gates + RC-7 leak scan | `Done (Archived)` |
+| [Phase 7](archives/tasks/phase-7.md) | Shipped Self-Containment — RC-9 purge of 15 engine-workspace references | `Done (Archived)` |
 
 ## Backlog
 

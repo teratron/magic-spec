@@ -13,8 +13,9 @@ Sections are independent — apply each by its own trigger.
 
 ## 1. Engine Upgrade Detection (Local ↔ Snapshot)
 
-The user manually replaces engine folders (`.magic/`, `workflows/`, `skills/`,
-`rules/`) when they want to upgrade. `.magic/.version` then changes locally while
+Engine updates ship via the project's **GitHub Releases** page: the user
+downloads the latest release archive and manually replaces the four engine
+folders (`.magic/`, `workflows/`, `skills/`, `rules/`). `.magic/.version` then changes locally while
 the `**Engine Version:**` snapshot in `.design/INDEX.md` still points at the
 previously analyzed value. This section detects that delta and offers to
 re-validate the project. No network calls — purely local comparison.

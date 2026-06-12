@@ -6,7 +6,7 @@ description: Project Sync & Hygiene — synchronizes versions, documentation, an
 
 Maintain project hygiene by synchronizing all metadata, documentation, and versioning across the repository. The pipeline is **idempotent** — re-running it without source changes produces no diff.
 
-Pipeline (orchestrated by `.magic/scripts/sync.js`):
+Pipeline (orchestrated by `dev/scripts/sync.js`):
 
 1. **Engine Meta (C14)**: Detects drift in `.magic/`, `workflows/`, `skills/`. Bumps `.magic/.version`, regenerates checksums, projects Skill wrappers, appends per-workflow history.
 2. **Manifest Parity**: Propagates the version into the anchored `**Active Development** (vX.Y.Z)` line in `README.md`. Other version mentions are not touched.
