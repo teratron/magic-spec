@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -127,7 +127,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 1. **Primary Source Principle**: Always read original `.magic/` and `.design/` files. Never rely on cached memory or interpretive assumptions.
 2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
-3. **Zero Assumptions**: If an instruction is absent or ambiguous, halt and ask for clarification. Do not invent missing steps or scripts.
+3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Halt-and-ask is permitted only when the ambiguity matches the C27 Escalation Whitelist.
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
 5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
 
@@ -227,10 +227,25 @@ Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
 6. **Doc/Code Parity**: `.magic/init.md` "Structure Created" diagram MUST match the layout produced by `init.js` and `create-workspace.js`. Divergence is a release blocker.
 7. **Executor Auto-mkdir**: When `executor.js` encounters a workspace registered in `workspace.json` whose directory is missing, it provisions the standard subtree before dispatching — replacing the legacy silent fallback to `.design/` root.
 
+### C27 — Autonomous Decision Protocol ("Engineer Decides")
+
+Governed in full by `l1-decision-autonomy.md`. Operational summary:
+
+1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26). The list is closed; extending it is itself an E4 event.
+3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
+4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
+5. **Single-Question Format (DA-5)**: at whitelist gates — exactly one question, at most three fixed options, recommended default marked. Open-ended question batteries are forbidden in every mode, including Explore.
+6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
+7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
+
+Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5 — C27 adds the decision procedure itself.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.8.0 | 2026-06-12 | Agent | Added C27 (Autonomous Decision Protocol) per field-feedback T4 rule; amended C13 §3 from halt-and-ask to Bounded Ambiguity Resolution, resolving the C13↔C25 contradiction. |
 | 1.7.0 | 2026-05-07 | Agent | Backported C25 (Engineer Posture) from template; added C26 (Workspace Intent Routing) governing pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, and second-contour fit validation. |
 | 1.6.1 | 2026-04-29 | Agent | Removed legacy distribution wording from active adapter conventions. |
 | 1.6.0 | 2026-04-03 | Agent | Baseline SDD role-switching constitution (C24) finalized across all core workflows. |

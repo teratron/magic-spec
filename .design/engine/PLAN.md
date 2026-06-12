@@ -1,13 +1,13 @@
 # Implementation Plan
 
-**Version:** 1.9.0
-**Generated:** 2026-06-11
-**Based on:** .design/engine/INDEX.md v1.11.0
+**Version:** 1.10.0
+**Generated:** 2026-06-12
+**Based on:** .design/engine/INDEX.md v1.12.0
 **Status:** Active
 
 ## Overview
 
-Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`. Phase 4 deploys the Prompt Quality Gate (`l1-prompt-quality-gate.md`): the `prompt-engineer` role card (#14) and its five workflow gates.
+Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the unified role system defined by `l1-role-system.md`, `l2-role-cards.md`, and `l2-role-integration.md`. Phase 4 deploys the Prompt Quality Gate (`l1-prompt-quality-gate.md`): the `prompt-engineer` role card (#14) and its five workflow gates. Phase 5 deploys the Autonomous Decision Protocol (`l1-decision-autonomy.md`): C27 constitution anchoring, DA-6 session posture in workflow completion flows, and protocol binding across all role cards.
 
 ## Completed (Baseline)
 
@@ -40,6 +40,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 - [ ] **Prompt Quality Gate** ([l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md)) [L1] — deployed via role card #14 + five workflow gates
   - Amendment deployment covered by this phase: [l2-role-cards.md](specifications/l2-role-cards.md) v2.1.0 (inventory #14), [l2-role-cards-governance.md](specifications/l2-role-cards-governance.md) v1.1.0 (§5 card content), [l2-role-integration.md](specifications/l2-role-integration.md) v2.1.0 (§1/§2.8a/§3/§4.2 gate wiring), [l1-role-system.md](specifications/l1-role-system.md) v1.1.0 (§4.3 registry extension).
   - Tasks: [tasks/phase-4.md](tasks/phase-4.md)
+
+### Phase 5 — Decision Autonomy (C27 protocol)
+
+- [ ] **Autonomous Decision Protocol** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md)) [L1] — deployed via constitution template amendment (C13 §3 + C27), workflow completion-flow DA-6 wiring, user-side `rules/magic.md` section, and role-card binding
+  - Reference deployment already live in this project's `.design/RULES.md` v1.8.0 (C27 added, C13 §3 amended).
+  - Serialized after Phase 4 (shared workflow-body files — planner audit).
+  - Tasks: [tasks/phase-5.md](tasks/phase-5.md)
 
 ## Backlog
 

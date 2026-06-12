@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.11.0
+**Version:** 1.12.0
 **Status:** Active
 
 ## Overview
@@ -35,9 +35,10 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-role-tooling.md](specifications/l2-role-tooling.md) | Role system engine tooling: check-prerequisites role_registry_integrity, update-engine-meta treatment, role template. | Stable | 2 | 1.0.0 |
 | [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | Stable | 2 | 1.1.1 |
 | [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
+| [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format. | Stable | 1 | 1.0.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-11 (Prompt Quality Gate: l1-prompt-quality-gate.md added; prompt-engineer role registered as card #14 with five-workflow gate wiring)
+- **Last Updated**: 2026-06-12 (Decision Autonomy: l1-decision-autonomy.md added; C27 anchored in RULES.md, C13 §3 amended to Bounded Ambiguity Resolution)
