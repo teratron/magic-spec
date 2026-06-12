@@ -22,6 +22,7 @@ Overall:   [{done}/{all}]    ██░░░░░░ {pct}%
 ```
 
 ## Recent Decisions
+
 - 2026-06-12 **Decision:** Phase 7 complete. Provides: shipped files free of engine-workspace refs (RC-9); engine 2.1.32
 
 - 2026-06-12 **Decision:** Phase 6 complete. Provides: rules/magic.md §6 containment policy; Coder RC-5 gate; Code-reviewer RC-6 check; analyze.md SDD_REFERENCE_LEAK scan; engine 2.1.31
