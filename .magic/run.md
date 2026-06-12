@@ -86,7 +86,8 @@ graph TD
    - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Blocked`/`Cancelled`) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
 3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
 3.3. **Decision Review (opt-in or auto-triggered)** — Activate `@role:code-skeptic` when (a) the task's spec flags `requires-decision-review: true`, (b) the Coder identifies non-trivial design choices, OR (c) the Coder surfaces 2+ valid interpretations with materially different trade-offs (auto-trigger, see `@role:coder` Operating Protocol §4). Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
-3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. FAIL → return to Step 3. PASS with complexity notes → proceed to 3.6 (opt-in). Clean PASS → proceed to 3.5.
+3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. FAIL → return to Step 3. PASS with complexity notes → proceed to 3.6 (opt-in). Clean PASS → proceed to 3.4b.
+3.4b. **Instruction Diff Review (conditional)** — Activate `@role:prompt-engineer` only when the diff touches AI-facing instruction artifacts (PQ-1 classes): engine workflow bodies, role cards, templates, `RULES.md` tiers, adapter instruction files, or `.design/` specifications edited as task output. Review covers the changed instruction text only — not the whole file. Verdict per PQ-6: FAIL → return to Step 3; PASS-WITH-REWRITES → apply rewrites inline and proceed; PASS → proceed to 3.5. Diffs touching only non-instruction code or data skip this gate silently.
 3.5. **QA Review** — Activate `@role:test-engineer` before marking work complete.
    - **Verify Criterion**: the task's `Verify` command/check/evidence is satisfied?
    - **Spec Boundary**: stays within the assigned spec section? No scope creep?
@@ -154,4 +155,5 @@ Checklist — {operation}
   ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magic.task` only — `/magic.spec` never named directly
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, engine version bumped, CONTEXT.md updated
   ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (release gate is git commit)
+  ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

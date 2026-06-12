@@ -39,3 +39,4 @@ Own plan construction in `task.md`. Produces phase breakdown and task dependency
 - Skipping the adversarial pass because the plan "looks fine".
 - Treating soft links (`Related Specifications`) as hard dependencies (only `Implements` and file-level conflicts are hard).
 - Creating phases so fine-grained that orchestration cost exceeds execution cost.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

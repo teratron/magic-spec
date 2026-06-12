@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Engine plan cycle complete** (engine v2.1.30 → v2.1.34, four phases in one cycle):
+  1. **SDD Reference Containment** (v2.1.31): one-way traceability boundary — product code never references SDD artifacts. Coder card refuses to author such references (RC-5 gate); Code-reviewer FAILs diffs containing them (RC-6); `/magic.analyze` Mode C gained the `SDD_REFERENCE_LEAK {file}:{line}` advisory scan for legacy cleanup (RC-7); user-side `rules/magic.md` §6 states the ambient policy with exemptions and a BAD/GOOD example. Field-driven: consumer releases may exclude `.design/`, turning embedded task IDs and spec links into dead content.
+  2. **Shipped Self-Containment** (v2.1.32): purged 15 references to the engine repository's own SDD workspace from shipped files (5 dead spec links, 3 baked-in `engine` workspace names — phase journal path is now `.design/{ws}/CHANGELOG.md`, 6 governance file-name citations replaced with protocol names). Consumer installs now contain zero references to documents that do not ship.
+  3. **Prompt Quality Gate** (v2.1.33): `prompt-engineer` role card #14 with five workflow gates — spec Instruction Quality Pass, task Instruction Review (step 5a), rule Wording Review (§5a), run conditional Instruction Diff Review (Step 3.4b), analyze Mode C Prompt Quality Audit. Six-dimension review taxonomy, PASS / PASS-WITH-REWRITES / FAIL verdicts.
+  4. **Decision Autonomy** (v2.1.34): C27 anchored in the shipped constitution template (C13 §3 halt-and-ask → Bounded Ambiguity Resolution), DA-6 session posture in `rules/magic.md` §7 (next step narrated, never asked) and all three completion checklists, C27 anti-pattern bound into the role template and all 14 cards.
+  Validation per phase: engine test harness 12/12 green; role registry 14/14; containment greps clean. Hardlink contract restored (5 AGENTS-family anchors + rules link).
+
 - **Blocked-track next-step hardened** (engine v2.1.26 → v2.1.27): eliminated `/magic.spec` leaking into post-run blocked-track narration. Three changes in `run.md`:
   1. **Step 2 Stalled** — "HALT & report" replaced with explicit rule: list blocked tasks + their `[!]` reasons, recommend `/magic.task {workspace}` as the ONE next step; hard-forbids naming `/magic.spec` or `/magic.analyze` directly.
   2. **Logic Guards — Pause Propagation** — inform message rewritten: removed "fix blockers and run /magic.run" (which invited `/magic.spec` improvisation); now says "Run `/magic.task {workspace}` to revalidate"; same hard-forbid inline.
@@ -36,6 +43,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed task `phase-6` (engine)
 - Updated specification `sdd-reference-containment` (engine)
 - Completed 2 tasks (engine)
+- Completed task `phase-4` (engine)
+- Completed 3 tasks (engine)
+- Completed 4 tasks (engine)
 
 ### Added
 

@@ -90,6 +90,10 @@ Activate `@role:constitutional-reviewer` to review the proposed rule before comm
 - **Cognitive Consistency**: is the phrasing unquantified (hallucination risk) or redundant with a global rule?
 - **Operational Friction**: will this rule cause a "Cascade Failure" or excessive HALT points if applied in a standard Parallel workflow (C3)?
 
+### 5a. Rule Wording Review (Post-Verdict)
+
+After the constitutional verdict APPROVE and before the rule is written, activate `@role:prompt-engineer` over the proposed rule text in composition with the existing constitution tiers — rules are the highest-leverage prompts in the system, loaded on every operation. AMEND-level wording findings are applied as PASS-WITH-REWRITES; contradictions with already-registered rule text FAIL back to the proposal step. The constitutional-reviewer owns *conflict of meaning*; the prompt-engineer owns *clarity of wording* — no overlap (PQ-7).
+
 ### 6. Write & Sync
 
 Write target `RULES.md` and update history and version per Step 5 approval.

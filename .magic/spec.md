@@ -238,6 +238,8 @@ Check for:
 
 Any check fails → report as `[Spec-Review] {file} §{section}: {issue}` and block status promotion. Retain current status (`Draft` or `RFC`); do not advance to `Stable` until all critic findings are resolved.
 
+**Instruction Quality Pass (second stage)**: after `@role:spec-critic` emits PASS, activate `@role:prompt-engineer` over the created/amended spec sections — six-dimension review (contradictions, ambiguity, persona/tone consistency, cognitive load, semantic coverage, composition coherence) per the PQ-3 taxonomy. The quality pass never runs on critic-rejected specs (PQ-7 ordering). Verdict per PQ-6: PASS → proceed; PASS-WITH-REWRITES → apply the proposed rewrites within this invocation, then proceed; FAIL → blocks status promotion alongside critic findings.
+
 ### Graph Refresh (Post-Dispatch)
 
 Any mutation of `.design/specifications/` or `INDEX.md` invalidates the spec graph and wiki. After dispatch (Creating, Updating, Batch Stabilization, T4 RULES.md write) and before the Task Completion Checklist, run the canonical refresh **once per workflow invocation**:
@@ -322,8 +324,10 @@ Checklist — {task description}
      Non-empty placeholder rows required. Empty or stub rows → block promotion. Flag `CANONICAL_MISSING`.
   ☐ Engine: update-engine-meta run if .magic/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
+  ☐ Instruction Quality: dispatched sections reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
   ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates; ambiguity recorded as TBD-markers
+  ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```
 
 ## Templates

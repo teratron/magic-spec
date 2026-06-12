@@ -32,3 +32,4 @@ Perform retrospective Signal calculation with a spec-quality lens rather than a 
 - Reporting high Signal based on throughput alone while ignoring spec-revision frequency.
 - Conflating execution overhead with spec ambiguity.
 - Producing a number without a framing paragraph.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

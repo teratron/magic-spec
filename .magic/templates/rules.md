@@ -137,7 +137,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 1. **Primary Source Principle**: Always read original `.magic/` and `.design/` files. Never rely on cached memory or interpretive assumptions.
 2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
-3. **Zero Assumptions**: If an instruction is absent or ambiguous, halt and ask for clarification. Do not invent missing steps or scripts.
+3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Halt-and-ask is permitted only when the ambiguity matches the C27 Escalation Whitelist.
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
 5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
 
@@ -207,10 +207,16 @@ At critical decision points, the agent MUST activate the designated role card fr
 | `retrospective.md` | Before Signal calculation | `@role:retrospective-analyst` | `.magic/roles/retrospective-analyst.md` |
 | `analyze.md` | Before Advisory Report | `@role:project-auditor` | `.magic/roles/project-auditor.md` |
 | `rule.md` | Before Impact Analysis | `@role:constitutional-reviewer` | `.magic/roles/constitutional-reviewer.md` |
+| `spec.md` | Instruction Quality Pass (after spec-critic PASS) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `task.md` | Task Instruction Review (before Plan Write-back) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `rule.md` | Rule Wording Review (after APPROVE verdict) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `analyze.md` | Prompt Quality Audit (Mode C) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+
+**Opt-in conditional gate:** `prompt-engineer` also fires in `run.md` Step 3.4b when the diff touches AI-facing instruction artifacts (specifications, rules, plan/task units, role cards, workflow bodies, templates, adapter instructions); diffs touching only non-instruction code or data skip it silently.
 
 Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
-Full registry: `.magic/roles/` — 13 registered role cards; each card is self-contained and defines its own gates and invariants.
+Full registry: `.magic/roles/` — 14 registered role cards; each card is self-contained and defines its own gates and invariants.
 
 ### C25 — Engineer Posture (Narrate-and-Act)
 
@@ -273,3 +279,17 @@ Governed in full by the engine's Workspace Intent Routing protocol. Operational 
    it provisions the standard subtree before dispatching the script —
    replacing the legacy silent fallback to `.design/` root that caused
    field-observed routing defects.
+
+### C27 — Autonomous Decision Protocol ("Engineer Decides")
+
+Governed in full by the engine's Autonomous Decision Protocol. Operational summary:
+
+1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26). The list is closed; extending it is itself an E4 event.
+3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
+4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
+5. **Single-Question Format (DA-5)**: at whitelist gates — exactly one question, at most three fixed options, recommended default marked. Open-ended question batteries are forbidden in every mode, including Explore.
+6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
+7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
+
+Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5 — C27 adds the decision procedure itself.

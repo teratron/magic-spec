@@ -2,7 +2,7 @@
 
 **Version:** 1.12.0
 **Generated:** 2026-06-12
-**Based on:** .design/engine/INDEX.md v1.13.1
+**Based on:** .design/engine/INDEX.md v1.13.2
 **Status:** Active
 
 ## Overview
@@ -37,13 +37,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 4 — Prompt Quality Gate (prompt-engineer role)
 
-- [ ] **Prompt Quality Gate** ([l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md)) [L1] — deployed via role card #14 + five workflow gates
+- [x] **Prompt Quality Gate** ([l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md)) [L1] — deployed via role card #14 + five workflow gates *(Phase 4 complete — engine 2.1.33)*
   - Amendment deployment covered by this phase: [l2-role-cards.md](specifications/l2-role-cards.md) v2.1.0 (inventory #14), [l2-role-cards-governance.md](specifications/l2-role-cards-governance.md) v1.1.0 (§5 card content), [l2-role-integration.md](specifications/l2-role-integration.md) v2.1.0 (§1/§2.8a/§3/§4.2 gate wiring), [l1-role-system.md](specifications/l1-role-system.md) v1.1.0 (§4.3 registry extension).
   - Tasks: [tasks/phase-4.md](tasks/phase-4.md)
 
 ### Phase 5 — Decision Autonomy (C27 protocol)
 
-- [ ] **Autonomous Decision Protocol** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md)) [L1] — deployed via constitution template amendment (C13 §3 + C27), workflow completion-flow DA-6 wiring, user-side `rules/magic.md` section, and role-card binding
+- [x] **Autonomous Decision Protocol** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md)) [L1] — deployed via constitution template amendment (C13 §3 + C27), workflow completion-flow DA-6 wiring, user-side `rules/magic.md` section, and role-card binding *(Phase 5 complete — engine 2.1.34)*
   - Reference deployment already live in this project's `.design/RULES.md` v1.8.0 (C27 added, C13 §3 amended).
   - Serialized after Phase 4 (shared workflow-body files — planner audit).
   - Tasks: [tasks/phase-5.md](tasks/phase-5.md)

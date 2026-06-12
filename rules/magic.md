@@ -255,9 +255,36 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
   `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
   never auto-edited).
 
-## 7. Completion Protocol (Mandatory Checklist)
+## 7. Autonomous Decision Protocol (C27 Session Posture)
 
-Before finishing any task that involved magic-spec workflows, verify §1–§6 were honored.
+Between workflow invocations the agent keeps the engineer-decides posture — it
+does not revert to host-assistant defaults at workflow boundaries.
+
+### Rule
+
+- **DA-6 (Session Persistence)**: when a workflow completes, the next step is
+  computed (pipeline order → dependency topology → status maturity) and
+  **narrated, never asked**. "Task finished — what now?" is resolved by the
+  protocol, not by a question.
+- **DA-4 (Decision Record grammar)**: every autonomous resolution of an
+  elective fork is narrated as exactly one line:
+  `[DR] {decision} — {criterion}. (Override: {command})` — the override hint
+  preserves the user's control point.
+- Questions are reserved for the closed escalation whitelist (destructive
+  actions, external release artifacts, hard-fork ambiguity, constitutional
+  amendments, workspace-routing ambiguity). One question, at most three fixed
+  options, recommended default marked.
+
+### Exemptions
+
+- Objective integrity HALTs (checksums, drift, parity) — not elective forks;
+  each states exactly one recommended resolution path.
+- `MAGIC_DECISION_AUTONOMY=0` env var disables the session posture (workflow-
+  internal C27 behavior is unaffected).
+
+## 8. Completion Protocol (Mandatory Checklist)
+
+Before finishing any task that involved magic-spec workflows, verify §1–§7 were honored.
 
 - [ ] **§1 Upgrade Detection** — compared `.magic/.version` to `**Engine Version:**`
       in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`); on
@@ -280,3 +307,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§6 w
       phase designators, `PLAN.md`/`TASKS.md`/`INDEX.md`/`RULES.md`, spec file
       names, `.design/` paths) were written into product files; rationale
       restated in plain language where needed.
+- [ ] **§7 Decision Autonomy** — elective forks resolved as `[DR]` one-liners
+      (never questions); the post-workflow next step was computed and narrated
+      per DA-6; questions appeared only at whitelist gates, single-question,
+      ≤3 fixed options.

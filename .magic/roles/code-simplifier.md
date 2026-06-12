@@ -40,3 +40,4 @@ Opt-in review gate focused on minimalism without behavior drift. Triggered when 
 - Refactoring beyond the current task's scope (simplification must stay within the diff being reviewed).
 - Removing defensive code at external system boundaries (those exist by design).
 - Trading explicit, readable control flow for clever compression.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

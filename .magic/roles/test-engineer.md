@@ -45,3 +45,4 @@ QA gate before a task transitions to `Done`. Validates the task's `Verify` crite
 - Approving a `Done` transition while regression risk is unverified.
 - Marking `Done` without explicit evidence for the task's `Verify` line.
 - Approving a bug-fix `Done` without seeing the reproducing test FAIL on baseline (then PASS post-fix) — the fix is unproven without it.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

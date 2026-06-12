@@ -46,3 +46,4 @@ Diff-level adversarial review of Coder output before QA. Inspects the diff for r
 - Nitpicking style that is not in `RULES.md` (personal preferences are not review criteria).
 - Approving unrelated cleanup because it is "nearby" or "small".
 - Passing a diff whose comments cite SDD artifacts because they look like "helpful context" — they become dead references once a release excludes `.design/`.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

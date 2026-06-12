@@ -45,3 +45,4 @@ Write the smallest diff that satisfies the current `Todo` task, its `Verify` cri
 - Adding one-use abstractions, knobs, generic handlers, or defensive branches not required by the spec or `Verify` criterion.
 - Reformatting, renaming, or rewriting nearby code to personal taste while solving a narrow task.
 - Embedding SDD breadcrumbs in product files (`// implements T-2B03`, links into `.design/…`) — releases may exclude `.design/`, leaving dead references.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

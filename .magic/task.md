@@ -94,6 +94,7 @@ graph TD
    - **Optimism Bias**: have task sizes been underestimated?
    - **Hidden Dependencies**: are parallel tracks truly independent, or is there a shared resource/config bottleneck?
    - **Cascade Risk**: if a critical spec fails to implement in Phase 1, how many Phase 2 tasks are instantly blocked?
+5a. **Task Instruction Review**: after the planner adversarial pass and before Plan Write-back, activate `@role:prompt-engineer` over the generated task descriptions, `Verify` lines, and phase notes — the instruction text `run.md` executors receive. Six-dimension review per the PQ-3 taxonomy. Verdict per PQ-6: FAIL → revise the task units before write-back; PASS-WITH-REWRITES → apply rewrites inline; PASS → proceed.
 6. **Execution Mode**: default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
 7. **Decompose**: split the active phase into 2-3 tasks per spec.
    - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
@@ -165,10 +166,12 @@ Task Workflow Checklist — {operation}
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ Planning Audit: Draft Plan reviewed by `@role:planner` (Optimism, Dependencies, Risk)
+  ☐ Instruction Quality: task units reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Phase Frontmatter: YAML block populated in phase-*.md files (phase, name, status, subsystem, requires)
   ☐ STATE.md updated with new phase and next action after plan write-back
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Graph: export-wiki run after plan write-back (skip if no plan written)
   ☐ Engine Meta: C14 bump performed if .magic/ files modified
   ☐ Engineer Posture (C25): plan auto-written and narrated; no "Go" prompts
+  ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

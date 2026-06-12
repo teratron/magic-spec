@@ -41,3 +41,4 @@ Active role on the `Blocked [!]` branch of `run.md`. Owns diagnosis and resoluti
 - Patching the symptom instead of the root cause.
 - Escalating to Planner for issues that are clearly implementation bugs.
 - Silently unblocking without documenting the cause.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

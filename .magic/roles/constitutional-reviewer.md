@@ -34,3 +34,4 @@ Review proposed `RULES.md` updates before they are committed. Migrated from C24 
 - Approving a duplicate because "the wording is slightly different".
 - Scope confusion: permitting a universal rule into a workspace file or vice versa.
 - Skipping practical-conflict check when direct contradiction is absent.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

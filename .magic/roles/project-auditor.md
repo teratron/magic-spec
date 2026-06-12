@@ -34,3 +34,4 @@ Pre-advisory audit for `magic.analyze` workflow. Migrated from C24 "Auditor" wit
 - Upgrading severity to make the report look more urgent.
 - Listing findings without file/line citations (anti-fabrication violation).
 - Presenting systemic patterns as isolated findings.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

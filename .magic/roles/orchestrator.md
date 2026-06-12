@@ -40,3 +40,4 @@ Coordinate parallel-track execution within a single phase. Active only when `run
 - Trusting `INDEX.md` once per dispatch session without re-reads.
 - Absorbing track-owner responsibilities (do not write code; do not perform QA).
 - Activating in Sequential mode.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.

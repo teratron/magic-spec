@@ -1,5 +1,22 @@
 # Engine Workspace Changelog
 
+## Phase 5 — 2026-06-12 (Decision Autonomy)
+
+- Amended `templates/rules.md`: C13 §3 rewritten from halt-and-ask "Zero Assumptions" to "Bounded Ambiguity Resolution" (resolve via C27, halt only at the Escalation Whitelist); appended the C27 section (DA-1..DA-8 operational summary, RC-9-compliant wording).
+- Added §7 "Autonomous Decision Protocol (C27 Session Posture)" to user-side `rules/magic.md`: DA-6 session persistence (next step narrated, never asked), DA-4 Decision Record grammar, whitelist summary; Completion Protocol renumbered §7→§8 with a new §7 checklist item; hardlink recreated and validated.
+- Wired `Decision Autonomy (C27)` line into the completion checklists of `spec.md`, `task.md`, and `run.md`.
+- Bound the C27 anti-pattern line ("Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.") into `templates/role.md` and all 14 role cards.
+- Engine version 2.1.33 → 2.1.34 (C14); checksums regenerated (64 files); skill wrappers re-projected.
+- Validation: session-evidence simulation — [DR] resolution at elective forks, single-question format at the whitelist gate — both assertions PASS; engine test harness 12/12 green.
+
+## Phase 4 — 2026-06-12 (Prompt Quality Gate)
+
+- Created `.magic/roles/prompt-engineer.md` — role card #14 (reviewer): five workflow triggers, six-dimension PQ-3 protocol, PQ-6 verdict semantics (PASS / PASS-WITH-REWRITES / FAIL).
+- Wired five gates into workflow bodies: `spec.md` Post-Update Review gains the Instruction Quality Pass (second stage after spec-critic PASS); `task.md` gains step 5a Task Instruction Review (after planner audit, before write-back); `rule.md` gains §5a Rule Wording Review (after APPROVE, before write); `run.md` gains conditional Step 3.4b Instruction Diff Review (fires only on diffs touching AI-facing instruction artifacts); `analyze.md` Mode C gains step 7 Prompt Quality Audit (advisory sweep feeding the pre-advisory pool; steps renumbered 8-15).
+- Extended `templates/rules.md` §C24 pointer table: 4 mandatory prompt-engineer gate rows + opt-in 3.4b note; registry count 13 → 14.
+- Engine version 2.1.32 → 2.1.33 (C14); checksums 63 → 64 files; skill wrappers re-projected.
+- Validation: role registry integrity 14/14 (0 dormant, 0 missing, 0 dangling); engine test harness 12/12 green. Step 3.4b self-applied to this phase's own diff — verdict PASS.
+
 ## Phase 7 — 2026-06-12
 
 - Purged all 15 references to the engine repository's own SDD workspace from shipped engine files per RC-9 (l1-sdd-reference-containment.md v1.1.0), in three classes:

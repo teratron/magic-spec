@@ -35,3 +35,4 @@ Active role triggered after Test-engineer passes a task whose diff changed publi
 - Modifying specs (`.design/`) directly — that is `spec.md` workflow's domain.
 - Writing docs for internal changes not visible to users.
 - Updating `CHANGELOG.md` L2 entries (release-level) — those are handled by `run.md` Plan Completion step.
+- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
