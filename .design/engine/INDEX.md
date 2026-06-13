@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.14.6
+**Version:** 1.15.0
 **Status:** Active
 
 ## Overview
@@ -39,9 +39,10 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, leak detection, shipped self-containment (RC-1..RC-9). | Stable | 1 | 1.1.0 |
 | [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action, SC-2.1), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.1.0 |
 | [l2-status-command.md](specifications/l2-status-command.md) | Read-only `/magic.status` briefing command: layout contract, degraded states, wrapper/skill surface (C2 exception). | Stable | 2 | 1.0.0 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | GitHub Release CI: tag-driven build of the L1 archive, version source, publication/retry, engine-version tracking constraint (R8). | Stable | 2 | 1.0.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-13 (l1-decision-autonomy.md 1.2.0: DA-9 extended to drift-revalidation offers — Engine Upgrade Detection §1 binds to DA-8/DA-9, no `[y/n]`)
+- **Last Updated**: 2026-06-13 (l2-release-pipeline.md added — retrospec of the GitHub Release CI; documents the engine-version tracking constraint, consolidating R8)

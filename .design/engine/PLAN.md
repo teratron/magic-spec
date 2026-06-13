@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.6
+**Version:** 1.14.0
 **Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.14.6
+**Based on:** .design/engine/INDEX.md v1.15.0
 **Status:** Active
 
 ## Overview
@@ -32,6 +32,7 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 - [x] **Role System Engine Tooling** ([l2-role-tooling.md](specifications/l2-role-tooling.md)) [L2] *(retrospec — check-prerequisites integrity, update-engine-meta, role template extracted from l2-role-integration v2.0.0; mechanisms live in engine scripts)*
 - [x] **Workspace Intent Routing** ([l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md)) [L1] *(retrospec — implemented in engine v2.1.2: `context.md` §Step 0, `create-workspace.js`, C26 in RULES v1.7.0; validated via the workspace-intent-routing simulation document)*
 - [x] **Spec Graph Memory & Token Economy** ([l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md)) [L2] *(retrospec — promoted Stable 2026-06-10 after implementation review: `graph-cache.js`, `export-wiki.js`, `serve-spec-graph.js` token_budget, §4.4 triggers live in spec/task/analyze workflows)*
+- [x] **Release Pipeline** ([l2-release-pipeline.md](specifications/l2-release-pipeline.md)) [L2] *(retrospec 2026-06-13 — `.github/workflows/release.yml` tag-driven build + publish of the L1 archive already exists and is stable; spec documents the contract + R8 engine-version tracking constraint; no execution needed)*
 
 ## Active Phases
 
@@ -106,9 +107,8 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ## Backlog
 
-- **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
 - **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection. (Phase 13 removes the *prompt* friction; the drift recurrence itself remains a separate refinement.)
-- **R8 — `rules/` + `skills/` outside C14 tracking** (found 2026-06-13 in Phase 13): `update-engine-meta` change-detection and `.magic/.checksums` cover `.magic/` only, so a `rules/`-only or `skills/`-only edit does not bump `.magic/.version` — engine-L1 changes can ship invisibly to upgrade-detection. Candidate fix: extend the checksum manifest / version-bump trigger to the full L1 set (`.magic/`, `workflows/`, `skills/`, `rules/`), or document the constraint.
+- **R8 — `rules/` + `skills/` outside C14 tracking** — DOCUMENTED (not fixed): captured as the engine-version tracking constraint in [l2-release-pipeline.md](specifications/l2-release-pipeline.md) §5.3 + §7. Broadening the checksum manifest was deferred (load-bearing, churn risk); the operating rule is "deliberate L1-only releases bump the version explicitly." Revisit only if an isolated `rules/`/`skills/` release is needed.
 - **R9 — AGENTS-family hardlinks delinked** (found 2026-06-13): the root agent rule cards (`AGENTS.md` ↔ `CLAUDE/GEMINI/QWEN/CODEX.md`) show `nlink=2` (only CLAUDE linked); GEMINI/QWEN/CODEX dropped during the session. Non-strict (validate-hardlinks passes) but real. Restore via `/magic.dev:init`.
 - `frontend-specialist` role card (deferred; domain-specific).
 - Skill/role auto-invocation (rejected in v1.0.0 per R6; potential future spec).
