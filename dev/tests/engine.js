@@ -482,6 +482,36 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 7c. phase-archiver.js — eligibility precision (R7 / l2-engine-finalization §6)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('phase-archiver findArchiveCandidates matches checklist lines, not prose `- [ ]` (R7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
+
+            // (a) Done, all checklist items [x], but Notes quote `- [ ]` in prose → archivable.
+            fs.writeFileSync(path.join(tasksDir, 'phase-20.md'),
+                '---\nphase: 20\nname: "Quoting"\nstatus: Done\n---\n\n' +
+                '## Atomic Checklist\n\n- [x] [T-20A01] Done item\n\n' +
+                '## Detailed Tracking\n\n### [T-20A01]\n- **Notes:** detect open `- [ ]` tasks via regex.\n');
+
+            // (b) Done but a genuine unchecked checklist line → NOT archivable.
+            fs.writeFileSync(path.join(tasksDir, 'phase-21.md'),
+                '---\nphase: 21\nname: "Open"\nstatus: Done\n---\n\n' +
+                '## Atomic Checklist\n\n- [x] [T-21A01] Done\n- [ ] [T-21A02] Still open\n');
+
+            const candidates = archiver.findArchiveCandidates(wsDir).map(c => c.file);
+            assert.ok(candidates.includes('phase-20.md'), 'prose `- [ ]` must not block archival (R7 fix)');
+            assert.ok(!candidates.includes('phase-21.md'), 'a real unchecked checklist line must still block archival');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 8. executor.js — input validation
     // ───────────────────────────────────────────────────────────────────────────
     test('executor.js should reject path-traversal in script and workspace names', () => {

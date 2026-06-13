@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.14.1
+**Version:** 1.15.1
 **Generated:** 2026-06-13
-**Based on PLAN:** .design/engine/PLAN.md v1.13.3
+**Based on PLAN:** .design/engine/PLAN.md v1.13.4
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 9 phases (2-10) are Done; 24 specs registered and Stable; engine at 2.1.39. Phase 10 is Done but **pending archival** — surfaced an archiver bug (R7): `phase-archiver.allChecked` substring-matches `- [ ]` anywhere in a phase file, and phase-10's task Notes discuss `- [ ]` detection literally, so the auto-archiver skipped it. Tracked in PLAN Backlog.
+Tactical registry of all phases and their statuses. **Plan complete**: all 10 phases (2-11) are Done; 24 specs registered and Stable; engine at 2.1.40. Phase 11 fixed the archiver eligibility bug (R7) and re-archived phase-10 — all phase files are now archived.
 
 ## Active Phases
 
@@ -27,7 +27,8 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 9 pha
 | [Phase 7](archives/tasks/phase-7.md) | Shipped Self-Containment — RC-9 purge of 15 engine-workspace references | `Done (Archived)` |
 | [Phase 8](archives/tasks/phase-8.md) | Session Continuity & Status Command — finalize SC-2/SC-3 wiring + `/magic.status` surface | `Done (Archived)` |
 | [Phase 9](archives/tasks/phase-9.md) | DA-9 Engine Deployment — proposal surfaces (spec.md / analyze.md / task.md) to narrate-and-act form | `Done (Archived)` |
-| [Phase 10](tasks/phase-10.md) | Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage | `Done` (pending archival — R7) |
+| [Phase 10](archives/tasks/phase-10.md) | Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage | `Done (Archived)` |
+| [Phase 11](archives/tasks/phase-11.md) | Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10 | `Done (Archived)` |
 
 ## Backlog
 

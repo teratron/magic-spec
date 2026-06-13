@@ -27,13 +27,20 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Returns true when all Atomic Checklist items are checked (no `- [ ]` present).
+ * Returns true when all Atomic Checklist items are checked. Per
+ * l2-engine-finalization.md §6, an unchecked item is a checklist *line*
+ * (`- [ ]` at line start, optional indent) — NOT a `- [ ]` sequence quoted
+ * in prose, Notes, or code. Inline code-spans and fenced blocks are stripped
+ * first so a phase that merely documents checkbox syntax stays archivable.
  *
  * @param {string} content - File body content.
  * @returns {boolean}
  */
 function allChecked(content) {
-    return !content.includes('- [ ]');
+    const stripped = content
+        .replace(/```[\s\S]*?```/g, '')  // fenced code blocks
+        .replace(/`[^`]*`/g, '');        // inline code-spans
+    return !/^\s*- \[ \]/m.test(stripped);
 }
 
 /**

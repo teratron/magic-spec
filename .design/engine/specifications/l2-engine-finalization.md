@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -26,7 +26,7 @@ The finalization protocol (§3 of `rules/MAGIC.md`) requires several coordinated
 | `changelog-writer.js` | Appends Keep-a-Changelog entries to root `CHANGELOG.md`. |
 | `commit-suggester.js` | Generates Conventional Commits message from finalization context. |
 | `git-utils.js` | Read-only git helpers: diff detection, staged-file enumeration, mtime queries. |
-| `phase-archiver.js` | Detects `status: Done` phase files and moves them to `archives/tasks/`; rewrites `TASKS.md` link references. |
+| `phase-archiver.js` | Detects `status: Done` phase files and moves them to `archives/tasks/`; rewrites `TASKS.md` link references. Eligibility predicate governed by §6. |
 | `project-version.js` | Reads and writes `.design/.version`; computes next semver bump (major/minor/patch). |
 | `significance.js` | Evaluates whether changed artifacts fall within the whitelist that triggers a version bump. |
 
@@ -65,6 +65,15 @@ The step runs even when the significance whitelist does not hit — live memory 
 
 Read-only workflows (analyze, graph, status) never invoke finalize; they inherit no SC-2/SC-3 obligations. `--dry-run` previews the state patch without writing it.
 
+## 6. Phase Archival Eligibility (Precision) `[ADDED]`
+
+`rules/MAGIC.md` §4 states a phase is archivable when its file has `status: Done` and "no remaining `- [ ]` items". The word *items* is normative and means **unchecked Atomic Checklist line items**, not any textual occurrence of the `- [ ]` sequence. The eligibility predicate MUST:
+
+1. Match an unchecked item only as a **checklist line** — anchored at line start with optional indentation (e.g. `^\s*- \[ \]`), inside the phase file's checklist region.
+2. **Ignore** `- [ ]` appearing in prose, task `Notes`, `Verify` lines, fenced code, or inline code-spans (backticks). A phase whose tasks merely *describe* checkbox syntax is still archivable when its real checklist is fully checked.
+
+A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conformant**: it false-positives on documentation of checkbox syntax and silently suppresses archival. This precision is the acceptance criterion for the `allChecked` helper in `phase-archiver.js`; its regression coverage belongs to the finalize-pipeline harness mandate ([l2-test-suite.md](l2-test-suite.md) §Script-Level Regression Harness).
+
 ## Canonical References
 
 | Path | Role |
@@ -81,5 +90,6 @@ Read-only workflows (analyze, graph, status) never invoke finalize; they inherit
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-06-13 | Agent | Added §6 Phase Archival Eligibility (Precision): `allChecked` must match anchored checklist line items, not substring `- [ ]` in prose/code-spans. Field evidence: phase-10 (whose Notes discuss `- [ ]` detection) was silently skipped by the archiver (R7). |
 | 1.1.0 | 2026-06-12 | Agent | Added §5 Session-Continuity Integration: SC-2 state update step (always-run, non-blocking) and SC-3 non-bumping commit suggestion fallback. |
 | 1.0.0 | 2026-05-07 | Agent | Initial Stable version. Covers the scripts/lib/ finalization helper library introduced in v2.1.0. |

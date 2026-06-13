@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 46
+      "degree": 47
     },
     {
       "id": "file:.magic",
@@ -334,7 +334,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.2.0",
       "degree": 9
     },
     {
@@ -1199,8 +1199,8 @@
       "degree": 1
     },
     {
-      "id": "phase:engine/phase-10",
-      "label": "Phase 10: Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage",
+      "id": "phase:engine/phase-11",
+      "label": "Phase 11: Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -1273,6 +1273,15 @@
     {
       "id": "phase:engine/phase-9",
       "label": "Phase 9: DA-9 Engine Deployment — proposal surfaces (spec.md / analyze.md / task.md) to narrate-and-act form",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-10",
+      "label": "Phase 10: Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -2628,7 +2637,7 @@
     },
     {
       "from": "ws:engine",
-      "to": "phase:engine/phase-10",
+      "to": "phase:engine/phase-11",
       "relation": "contains"
     },
     {
@@ -2670,6 +2679,11 @@
       "from": "ws:engine",
       "to": "phase:engine/phase-9",
       "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-10",
+      "relation": "contains"
     }
   ],
   "analysis": {
@@ -2678,7 +2692,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 46
+        "degree": 47
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -2756,13 +2770,13 @@
       }
     },
     "summary": {
-      "total_nodes": 161,
-      "total_edges": 278,
+      "total_nodes": 162,
+      "total_edges": 279,
       "workspaces": 1,
       "specs": 24,
       "files": 103,
       "conventions": 24,
-      "phases": 9
+      "phases": 10
     }
   }
 }

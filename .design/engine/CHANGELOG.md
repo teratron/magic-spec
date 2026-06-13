@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 11 — 2026-06-13 (Archiver Eligibility Fix — R7)
+
+- Fixed `phase-archiver.allChecked` (`scripts/lib/phase-archiver.js`) per `l2-engine-finalization.md` v1.2.0 §6: it now strips fenced code blocks and inline code-spans, then tests a line-anchored checklist pattern (`/^\s*- \[ \]/m`). Previously a whole-file `content.includes('- [ ]')` substring scan false-positived on any phase whose prose/Notes mentioned checkbox syntax, silently suppressing archival.
+- Added an archiver-eligibility regression test to `dev/tests/engine.js` via the public `findArchiveCandidates` export: a phase with `- [ ]` quoted in Notes but all checklist items checked is archivable; a phase with a genuine unchecked checklist line is not. Harness 14 → 15 tests, all green.
+- Re-archived `phase-10.md` — the phase R7 had blocked — via `archive-phases`; it moved to `archives/tasks/` and its TASKS.md row is now `Done (Archived)`.
+- Engine version 2.1.39 → 2.1.40 (C14); checksums regenerated (65 files). `dev/tests/engine.js` is L2 (dev/) — the bump is from `phase-archiver.js`.
+- Validation: harness 15/15; `update-engine-meta --check` no drift; `check-prerequisites` clean; hardlinks linked.
+- Field evidence: phase-10's own task Notes (which discuss `- [ ]` detection for SC-2.1) tripped the old substring scan — the defect surfaced by the immediately preceding phase's content.
+
 ## Phase 10 — 2026-06-13 (Session-Continuity Hardening Deployment)
 
 - Deployed SC-2.1 (plan-state-aware `Next Action`, `l1-session-continuity.md` v1.1.0): `computeNextAction` in `scripts/finalize.js` now derives the recommendation from the actual plan ledger — open `- [ ]` tasks → `/magic.run`; plan complete → `/magic.spec` (new scope); spec/rule → `/magic.task` (replan); unreadable ledger → `/magic.task` fallback. The static `task: "execute the active phase"` map entry — which misdirected the returning user whenever the plan was complete — is removed.

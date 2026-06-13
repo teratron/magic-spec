@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.3
+**Version:** 1.13.4
 **Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.14.3
+**Based on:** .design/engine/INDEX.md v1.14.4
 **Status:** Active
 
 ## Overview
@@ -84,9 +84,15 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Deploys the R5/R6 spec amendments authored 2026-06-13; no dependency on Phases 4-9.
   - Tasks: [tasks/phase-10.md](tasks/phase-10.md)
 
+### Phase 11 — Archiver Eligibility Fix (R7)
+
+- [x] **Archiver Eligibility Fix** ([l2-engine-finalization.md](specifications/l2-engine-finalization.md) v1.2.0 §6) [L2] — fix `phase-archiver.allChecked` to match anchored checklist line items only (not substring `- [ ]` in prose/code-spans), add regression coverage, and re-archive the pending phase-10. *(Phase 11 complete — engine 2.1.40, harness 15/15, phase-10 archived)*
+  - Field evidence: phase-10 (Notes discuss `- [ ]` detection) was silently skipped by the auto-archiver.
+  - Deploys the §6 amendment authored 2026-06-13; no dependency on Phases 4-10.
+  - Tasks: [tasks/phase-11.md](tasks/phase-11.md)
+
 ## Backlog
 
-- **Archiver `allChecked` false-positive** (R7, found 2026-06-13 in Phase 10): `phase-archiver.allChecked` does `!content.includes('- [ ]')` over the whole file, so a phase whose prose/code-spans mention `- [ ]` (like phase-10's task Notes) never auto-archives. Fix: match checklist line items only (e.g. `^\s*- \[ \]` anchored, or scope to the Atomic Checklist section). Re-archives phase-10 once fixed.
 - **Wrapper-Body Parity Invariant** (standing candidate, R4): analyze Mode C check that every wrapper maps 1:1 to a `.magic/` body or is explicitly self-contained.
 - **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
 - `frontend-specialist` role card (deferred; domain-specific).
