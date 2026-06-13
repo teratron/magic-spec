@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.70
+**Version:** 1.9.73
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.simulate test`
 
@@ -3162,6 +3162,36 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] All three corrected expectations cite their workflow source-of-truth lines (e.g., `run.md` line 104, `init.md` WI-10, `run.md` C25 checklist).
 - **Guards tested:** Suite-to-workflow contract integrity (post-correction); guards that the simulation harness itself does not silently re-introduce outdated assertions.
 
+### T204 — Spec Dispatch Diagram Reflects C9 Non-Blocking (Diagram-Text Parity)
+
+- **Workflow:** `spec.md` (Dispatching from Raw Input — workflow diagram)
+- **Synthetic State:**
+  - `.design/engine/` initialized; raw input maps to 1 domain with no objective conflicts (no RULES.md contradiction, no circular dependency, no VERSION_DRIFT).
+  - Trust Mode (C9) active.
+- **Action:** User provides unstructured spec input; agent enters Dispatching from Raw Input.
+- **Expected:**
+  - [ ] Dispatch proceeds to write files immediately (Dispatch Notice Non-Blocking) — no approval prompt.
+  - [ ] The workflow diagram decision node is an **objective-conflict** gate (`RULES / cycle / drift`), NOT a human `Approved? Yes/No` loop.
+  - [ ] No `AskUserQuestion` / option menu is surfaced on the conflict-free happy path (DA-9 declarative proposal surface).
+  - [ ] Conflict branch (`Yes: RULES / cycle / drift`) routes to Flag & HALT — matching the Conflict constraint in prose.
+- **Guards tested:** Diagram-Text parity for C9/DA-9 zero-prompt dispatch; C24 confirmation-bias prevention (diagram cannot reintroduce an approval gate the prose forbids).
+- **Regression for:** "The Silent Approval" crisis (Improv Mode 2026-06-13); stale `{Approved?}` diagram node predating DA-9 hardening.
+
+### T205 — Run Diagram Phase-to-Phase Convergence (Plan Not Complete)
+
+- **Workflow:** `run.md` (workflow diagram — convergence)
+- **Synthetic State:**
+  - Phase 1: all tasks Done. Phase 2: ≥1 Todo task remaining. Plan is NOT complete.
+  - RULES.md §7 C3: Sequential mode.
+- **Action:** Final Phase 1 task marked Done → Phase Completion (Retro L1 + Changelog L1 + Archive) runs → `Plan Complete?` evaluated.
+- **Expected:**
+  - [ ] `Plan Complete?` resolves **No**.
+  - [ ] Control returns to "Find next Todo task" (next phase) via an explicit `J -->|No| C` diagram edge.
+  - [ ] No undefined or terminal state on the phase→phase transition (matches Step 5 Phase Completion + T21).
+  - [ ] Phase 2 first Todo task is picked automatically (Zero-Prompt, C9).
+- **Guards tested:** Workflow convergence completeness — every decision node (`Plan Complete?`) has all branches defined; no dead-end on incomplete plan.
+- **Regression for:** "The Silent Approval" crisis (Improv Mode 2026-06-13); missing `J -->|No|` edge in run.md diagram.
+
 ```
-**Test Suite Finalized** - v1.9.72 (Last: T203)
+**Test Suite Finalized** - v1.9.73 (Last: T205)
 ```

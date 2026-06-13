@@ -21,14 +21,13 @@ Overall: [12/12] ████████ 100%
 ```
 
 ## Recent Decisions
+
 - 2026-06-13 **Decision:** l2-release-pipeline.md registered as Completed Baseline (retrospec, no execution); R8 documented in §5.3; PLAN 1.14.0, TASKS 1.17.2
 - 2026-06-13 **Decision:** Phase 13 complete. Provides: rules/magic.md §1 DA-8/DA-9-aligned (no [y/n]); README updated; engine 2.1.41 (rules-only, no bump). Findings R8/R9 to backlog
 - 2026-06-13 **Decision:** Phase 13 planned: align rules/magic.md §1 with DA-8/DA-9 (remove [y/n]); README + hardlink; 3 tasks
 
 - 2026-06-13 **Decision:** Phase 12 complete. Provides: WRAPPER_BODY_DRIFT parity check in analyze Mode C (R4 preventive); engine 2.1.41
 - 2026-06-13 **Decision:** Phase 12 planned: deploy R4 WRAPPER_BODY_DRIFT cognitive check into analyze Mode C; 2 tasks, no new script (consistent with sibling structural checks)
-
-
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 

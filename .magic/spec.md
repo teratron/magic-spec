@@ -134,9 +134,9 @@ Handle unstructured input (thoughts, notes) by mapping them to spec domains.
 graph TD
     A[Input] --> B[Parse Topics]
     B --> C[Map to Domains]
-    C --> D{Approved?}
-    D -->|Yes| E[Write to Specs]
-    D -->|No| B
+    C --> D{Objective conflict?}
+    D -->|No — C9 default| E[Write to Specs]
+    D -->|Yes: RULES / cycle / drift| G[Flag conflict & HALT]
     E --> F[Review & Sync]
 ```
 
