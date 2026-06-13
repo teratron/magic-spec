@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.12.1
-**Generated:** 2026-06-12
-**Based on PLAN:** .design/engine/PLAN.md v1.13.1
+**Version:** 1.13.1
+**Generated:** 2026-06-13
+**Based on PLAN:** .design/engine/PLAN.md v1.13.2
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 7 phases (2-8) are Done; 24 specs registered and Stable; engine at 2.1.37. Phase 8 delivered Session Continuity: SC-2 universal post-command STATE.md updates and SC-3 commit-suggestion guarantee in the finalize pipeline, plus the read-only `/magic.status` resume briefing command.
+Tactical registry of all phases and their statuses. **Plan complete**: all 8 phases (2-9) are Done; 24 specs registered and Stable; engine at 2.1.38. Phase 9 deployed DA-9 (Proposal Surfaces Are Declarative) into the engine workflow bodies — closing the deployment gap that allowed a non-whitelisted Blank-Trigger question.
 
 ## Active Phases
 
@@ -26,6 +26,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 7 pha
 | [Phase 6](archives/tasks/phase-6.md) | SDD Reference Containment — ambient rules + RC-5/RC-6 card gates + RC-7 leak scan | `Done (Archived)` |
 | [Phase 7](archives/tasks/phase-7.md) | Shipped Self-Containment — RC-9 purge of 15 engine-workspace references | `Done (Archived)` |
 | [Phase 8](archives/tasks/phase-8.md) | Session Continuity & Status Command — finalize SC-2/SC-3 wiring + `/magic.status` surface | `Done (Archived)` |
+| [Phase 9](archives/tasks/phase-9.md) | DA-9 Engine Deployment — proposal surfaces (spec.md / analyze.md / task.md) to narrate-and-act form | `Done (Archived)` |
 
 ## Backlog
 

@@ -1,5 +1,15 @@
 # Engine Workspace Changelog
 
+## Phase 9 — 2026-06-13 (DA-9 Engine Deployment — Proposal Surfaces)
+
+- Deployed DA-9 (Proposal Surfaces Are Declarative, from `l1-decision-autonomy.md` v1.1.0) into the engine workflow bodies, closing the gap that let a proposal step render as a user-facing question.
+- `spec.md`: Blank Trigger (Creative Sparks) rewritten from the pre-C27 "propose … in the next turn … auto-pick" wait-form to same-turn DA-3 selection narrated as a `[DR]`; Mode Transition and Dispatch Notice gained explicit DA-9 cross-references. Firing gates left intact (WI-4 three-option / E5; T1-T3 "Propose & Wait" / E4).
+- `analyze.md`: post-dispatch Zero-Prompt Handoff rewritten — removed "Proceed to Plan/Run? and wait for reply"; now narrates `[DR] Specs Stable — invoking /magic.task` and pauses only on a firing E3 hard-fork (DA-5 single question).
+- `task.md`: verified already DA-9-compliant (Auto-Plan "no Go confirm; no menu"); added a one-line DA-9 cross-reference so deployment coverage is audit-greppable across all three bodies.
+- Engine version 2.1.37 → 2.1.38 (C14); checksums regenerated (65 files); skill wrappers re-projected.
+- Validation: engine test harness 12/12 green; residual proposal-as-question grep clean across the three bodies (sole match is the negation phrase in `analyze.md`); firing gates verified present; `update-engine-meta --check` no drift; hardlinks linked.
+- Field evidence: a live non-whitelisted `AskUserQuestion` in a `/magic.spec` Blank Trigger (this session) — the violation that motivated DA-9 and this deployment.
+
 ## Phase 8 — 2026-06-12 (Session Continuity & Status Command)
 
 - Wired the SC-2 state-update step into `scripts/finalize.js`: STATE.md is patched (Updated timestamp, pipeline-order Next Action, auto-progress) on BOTH the significant and the skip path of every `finalize --workflow=<spec|task|run|rule>` run; non-blocking on failure; `--dry-run` previews the patch; output gains a `STATE.md` status row.

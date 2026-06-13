@@ -1,12 +1,12 @@
 # Autonomous Decision Protocol
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-Defines the engine-wide protocol by which agents resolve decision points autonomously — "the engineer decides" — instead of interrupting the user with surveys. The spec establishes: a closed Escalation Whitelist of the only situations where soliciting user input is legitimate, a deterministic Selection Procedure for choosing among candidates (specs, tasks, next workflow steps), a Decision Record narration format that replaces questions while preserving user control, a strict format for the rare sanctioned question, and session-level posture persistence between workflow invocations. It also reconciles the constitutional conflict between C13 §3 (halt-and-ask) and C25 (Engineer Posture).
+Defines the engine-wide protocol by which agents resolve decision points autonomously — "the engineer decides" — instead of interrupting the user with surveys. The spec establishes: a closed Escalation Whitelist of the only situations where soliciting user input is legitimate, a deterministic Selection Procedure for choosing among candidates (specs, tasks, next workflow steps), a Decision Record narration format that replaces questions while preserving user control, a strict format for the rare sanctioned question, a declarative-proposal rule (DA-9) keeping option-surfacing workflow steps out of the question channel, and session-level posture persistence between workflow invocations. It also reconciles the constitutional conflict between C13 §3 (halt-and-ask) and C25 (Engineer Posture).
 
 ## Related Specifications
 
@@ -104,6 +104,12 @@ C13 §3 is amended (see §4.4): on absent or ambiguous instructions the agent (a
 
 Objective integrity guards (checksum mismatch, STATUS/VERSION_DRIFT, parity violations, phantom/missing files, ROLE_MISSING) remain hard HALTs and are exempt from DA-1–DA-5. However, a HALT report MUST state exactly one recommended resolution path (the existing "One path, no option menu" pattern) — a HALT that ends in a choice menu is a DA violation.
 
+### DA-9 — Proposal Surfaces Are Declarative
+
+Workflow steps that surface candidate options to the user — Explore Mode "Creative Sparks" (Blank Trigger), the Dispatch Notice, Mode-Transition "auto-transfer" prompts, and any "which of N" selection — are **declarative DR narrations**, not questions. They are Selection-class forks (§4.1): rank by DA-3 and emit a DR the same turn, then proceed; the user's redirect arrives as an interrupt (C25 §5), never as a solicited answer. The `AskUserQuestion` form — or any inline option menu — is reserved for a **firing** E1–E5 gate (DA-2).
+
+Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no arguments resolves its scope by DA-3 (highest-coverage gap, per the Blank Trigger contract), not by asking which gap to pursue.
+
 ## 4. Detailed Design
 
 ### 4.1 Decision Taxonomy
@@ -114,6 +120,8 @@ Objective integrity guards (checksum mismatch, STATUS/VERSION_DRIFT, parity viol
 | Sequencing | "task done — what now" | Pipeline order + Post-Task Replan → DR |
 | Parameterization | priorities, modes, naming defaults | Documented defaults (C4, C3, naming rules) → silent or DR |
 | Escalation | "should the user be asked at all" | DA-2 gate evaluation (§4.2) |
+
+> Selection and Sequencing forks rendered as **workflow proposal steps** — Explore Creative Sparks, Dispatch Notice, Mode Transition — are bound by DA-9: the DA-3 winner is narrated as a [DR] the same turn, never surfaced as a question. A blank/no-argument invocation is a Selection fork, not an Escalation.
 
 ### 4.2 Escalation Gate Evaluation
 
@@ -149,10 +157,10 @@ C13 §3 amended wording (normative):
 
 1. **Project constitution** (`.design/RULES.md`): amend C13 §3, add C27 — done atomically with this spec's dispatch (T4, user-mandated).
 2. **Engine template** (`.magic/templates/rules.md`): mirror the C13 §3 amendment and C27 — Engine Improvement task (C14 applies).
-3. **Workflow touch-points**: completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line.
+3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. Engine Improvement — C14 applies.
 4. **Role system**: role template and card `Anti-patterns` sections gain one advisory line — "elective questions outside C27 E1–E5 are a protocol violation". No new role card (§6.2).
 5. **User-side rules** (`rules/magic.md`): add a compact C27 section so watching-process agents inherit session-level posture (DA-6).
-6. **Simulation**: `magic.dev.simulate` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question.
+6. **Simulation**: `magic.dev.simulate` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question; feed a Blank-Trigger Explore invocation (no arguments), assert a DA-3 [DR] auto-pick (DA-9) rather than an `AskUserQuestion` survey.
 
 ## 6. Drawbacks & Alternatives
 
@@ -188,5 +196,6 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.0 | 2026-06-13 | Added DA-9 (Proposal Surfaces Are Declarative): Explore Creative Sparks / Dispatch Notice / Mode Transition are DR narrations, never `AskUserQuestion`; a blank invocation is a Selection fork, not an Escalation. Closes the §5.3 deployment gap that permitted a non-whitelisted selection question (field evidence: live violation in a `/magic.spec` Blank Trigger). §4.1 taxonomy note, §5.3 proposal-surface touch-points, and §5.6 simulation extended. Re-reviewed under Trust Mode (C9). |
 | 1.0.0 | 2026-06-12 | Promoted to Stable via Trust Mode (C9): MVC satisfied (Overview + Core Invariants DA-1–DA-8), no RULES.md conflicts after C13 §3 amendment, no circular dependencies. |
 | 0.1.0 | 2026-06-12 | Initial Draft from field feedback dispatch: root-cause analysis RC-1–RC-4, invariants DA-1–DA-8, dispatcher-role rejection (§6.2). |

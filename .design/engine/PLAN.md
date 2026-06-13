@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.1
-**Generated:** 2026-06-12
-**Based on:** .design/engine/INDEX.md v1.14.1
+**Version:** 1.13.2
+**Generated:** 2026-06-13
+**Based on:** .design/engine/INDEX.md v1.14.2
 **Status:** Active
 
 ## Overview
@@ -70,7 +70,17 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - No dependency on Phases 4-7 (all Done); first runnable phase after plan-complete state.
   - Tasks: [tasks/phase-8.md](tasks/phase-8.md)
 
+### Phase 9 — DA-9 Engine Deployment (Proposal Surfaces)
+
+- [x] **Decision Autonomy — DA-9 deployment** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) v1.1.0) [L1] — deploy DA-9 (Proposal Surfaces Are Declarative) into engine workflow bodies: rewrite pre-C27 proposal wording in `spec.md` (Blank Trigger / Creative Sparks, Mode Transition, Dispatch Notice) and `analyze.md` (post-analyze handoff) to the narrate-and-act `[DR]` form; verify `task.md` compliance. Firing gates WI-4 (E5) and T1-T3 (E4) preserved intact. *(Phase 9 complete — engine 2.1.38)*
+  - Field evidence: a live non-whitelisted `AskUserQuestion` in a `/magic.spec` Blank Trigger (2026-06-13) exposed that §5.3 wired C27 only into completion sections, not proposal surfaces.
+  - No hard dependency on Phases 4-8; first runnable phase after the session-continuity cycle.
+  - Tasks: [tasks/phase-9.md](tasks/phase-9.md)
+
 ## Backlog
 
+- **Session-Continuity Hardening** (standing candidate, from 2026-06-13 ventilation R5/R6): amend l1-session-continuity SC-2 for plan-state-aware next-action; extend l2-test-suite for finalize regression coverage (SC-2 patch, SC-3 non-bumping fallback, update-state `--auto-progress`).
+- **Wrapper-Body Parity Invariant** (standing candidate, R4): analyze Mode C check that every wrapper maps 1:1 to a `.magic/` body or is explicitly self-contained.
+- **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
 - `frontend-specialist` role card (deferred; domain-specific).
 - Skill/role auto-invocation (rejected in v1.0.0 per R6; potential future spec).

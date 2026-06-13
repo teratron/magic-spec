@@ -357,7 +357,7 @@ Mode C Checklist — Ventilation
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node .magic/scripts/executor.js generate-context`.
    - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
-   - **Zero-Prompt Handoff (C9)**: if logic is clear and non-conflicting (Trust Mode), automatically proceed to task generation (`/magic.task`) without halting. If ambiguity exists, present **Actionable Outcome**: *"[Auto-Analyze] {N} specs proposed and created as Stable. Proceed to Plan/Run?"* and wait for reply.
+   - **Zero-Prompt Handoff (C9 / DA-6 / DA-9)**: after dispatch, compute the next step and narrate it as a Decision Record, then proceed — automatically invoke task generation (`/magic.task`): `[DR] Specs Stable — invoking /magic.task to plan. (Override: Ctrl+C)`. This is a Sequencing fork (DA-9): narrated, never posed as "Proceed to Plan/Run?". The sole pause condition is a **firing E3 hard-fork** (>1 incompatible architectural path with no objective DA-3 tiebreaker), surfaced as a DA-5 single question with a marked default.
 
 ## Task Completion Checklist
 
