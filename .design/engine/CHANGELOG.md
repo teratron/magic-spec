@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 12 — 2026-06-13 (Wrapper-Body Parity Check — R4)
+
+- Deployed the `WRAPPER_BODY_DRIFT` check into `magic.analyze` Mode C (`l2-workflow-wrappers.md` v1.2.0 §6): the Design Registry Audit now verifies that every `workflows/magic.{cmd}.md` carrying a "Full implementation" pointer has its `.magic/{cmd}.md` body on disk. Self-contained wrappers (no pointer, e.g. `magic.graph.md`) are skipped; engine bodies without a wrapper (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are allowed — the invariant is one-directional.
+- Added a `Wrapper Drift` row to the Advisory Report Findings Schema and a parity-check line to both Mode C checklists (Ventilation steps + Task Completion).
+- Cognitive check (no new script) — consistent with the existing Mode C structural checks (Ghost/Zombie, Case Sensitivity, Link Integrity); the Mode C checklist is the enforcement surface.
+- Engine version 2.1.40 → 2.1.41 (C14); checksums regenerated (65 files).
+- Validation: harness 15/15 (no new test — cognitive); `update-engine-meta --check` no drift; cognitive dry-run over the current 7 wrappers reports zero `WRAPPER_BODY_DRIFT` (tree parity-clean, check classifies correctly).
+- Preventive: this is the first non-bugfix engine improvement of the session — it closes the silent-drift class behind the phantom `magic.graph → .magic/graph.md` mapping that survived 13 registry versions.
+
 ## Phase 11 — 2026-06-13 (Archiver Eligibility Fix — R7)
 
 - Fixed `phase-archiver.allChecked` (`scripts/lib/phase-archiver.js`) per `l2-engine-finalization.md` v1.2.0 §6: it now strips fenced code blocks and inline code-spans, then tests a line-anchored checklist pattern (`/^\s*- \[ \]/m`). Previously a whole-file `content.includes('- [ ]')` substring scan false-positived on any phase whose prose/Notes mentioned checkbox syntax, silently suppressing archival.

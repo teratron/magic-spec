@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.14.4
+**Version:** 1.14.5
 **Status:** Active
 
 ## Overview
@@ -21,7 +21,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (157 tests, v1.9.45) + script-level harness with finalize-pipeline coverage mandate. | Stable | 2 | 1.5.0 |
 | [l1-documentation-system.md](specifications/l1-documentation-system.md) | Knowledge base structure, governance, and docs/ sync policy. | Stable | 1 | 1.2.2 |
 | [l1-config-drift-guard.md](specifications/l1-config-drift-guard.md) | Detection of manual RULES.md changes outside workflow lifecycle. | Stable | 1 | 1.0.1 |
-| [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) | User-facing workflow entry points in `workflows/`. | Stable | 2 | 1.1.1 |
+| [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) | User-facing workflow entry points in `workflows/`; wrapper-body parity invariant + WRAPPER_BODY_DRIFT check (§6). | Stable | 2 | 1.2.0 |
 | [l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) | Deployment-facing skill entry points in `skills/`. | Stable | 2 | 1.3.0 |
 | [l2-engine-templates.md](specifications/l2-engine-templates.md) | Structural blueprints for specs, plans, tasks, and phases. | Stable | 2 | 1.1.0 |
 | [l2-agent-surface.md](specifications/l2-agent-surface.md) | Adapter-facing surface definition (`.agents/`). | Stable | 2 | 1.0.1 |
@@ -44,4 +44,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-13 (l2-engine-finalization.md 1.2.0 §6 Phase Archival Eligibility Precision — fixes R7 archiver false-positive on `- [ ]` in prose)
+- **Last Updated**: 2026-06-13 (l2-workflow-wrappers.md 1.2.0 §6 Wrapper-Body Parity Invariant + WRAPPER_BODY_DRIFT analyze check — R4 preventive)

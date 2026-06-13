@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.4
+**Version:** 1.13.5
 **Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.14.4
+**Based on:** .design/engine/INDEX.md v1.14.5
 **Status:** Active
 
 ## Overview
@@ -91,9 +91,15 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Deploys the §6 amendment authored 2026-06-13; no dependency on Phases 4-10.
   - Tasks: [tasks/phase-11.md](tasks/phase-11.md)
 
+### Phase 12 — Wrapper-Body Parity Check Deployment (R4)
+
+- [x] **Wrapper-Body Parity Check** ([l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) v1.2.0 §6) [L2] — add the `WRAPPER_BODY_DRIFT` cognitive check to `magic.analyze` Mode C so phantom wrapper→body mappings fail the audit. Preventive (no active defect); first non-bugfix improvement after the R6→DA-9→R7 chain. *(Phase 12 complete — engine 2.1.41)*
+  - Deploys the §6 amendment authored 2026-06-13; no dependency on prior phases.
+  - Tasks: [tasks/phase-12.md](tasks/phase-12.md)
+
 ## Backlog
 
-- **Wrapper-Body Parity Invariant** (standing candidate, R4): analyze Mode C check that every wrapper maps 1:1 to a `.magic/` body or is explicitly self-contained.
 - **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
+- **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection.
 - `frontend-specialist` role card (deferred; domain-specific).
 - Skill/role auto-invocation (rejected in v1.0.0 per R6; potential future spec).

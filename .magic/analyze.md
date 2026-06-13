@@ -160,6 +160,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - **Ghost/Zombie Check**: identify files on disk not in registry (Orphans) and registry entries with no file (Gaps).
    - **Case Sensitivity**: flag case mismatches (e.g. `API-Routes.md` vs `api-routes.md`) as structural violations.
    - **Metadata Audit**: verify `Version`, `Status`, and `Last Updated` parity between `INDEX.md` and document footers.
+   - **Wrapper-Body Parity** (`WRAPPER_BODY_DRIFT`): for each `workflows/magic.{cmd}.md`, if the wrapper carries a "Full implementation" pointer to `.magic/{cmd}.md`, assert that file exists on disk. A dangling pointer → finding `WRAPPER_BODY_DRIFT {wrapper}: missing .magic/{cmd}.md` (advisory). A self-contained wrapper (no body pointer, e.g. `magic.graph.md`) is skipped; engine bodies without a wrapper (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are allowed — the invariant is one-directional. Governed by `l2-workflow-wrappers.md` §6.
 3. **Structural Integrity** (when workspace is specified):
    - Verify workspace folder exists at `.design/{workspace}/`.
    - Required contents: `INDEX.md`, `specifications/` directory.
@@ -245,6 +246,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 | **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
 | **Shadow Logic** | Files containing rationale comments (NOTE/WHY/HACK/etc.) not captured by any specification. |
 | **SDD Leak** | Product files referencing SDD artifacts (`.design/` paths, task IDs, spec/plan file names) — dead references once a release excludes `.design/`. |
+| **Wrapper Drift** | `WRAPPER_BODY_DRIFT` — a `workflows/` wrapper points to a `.magic/{cmd}.md` body that is missing on disk (phantom mapping). Self-contained wrappers and body-less internal modules are exempt (`l2-workflow-wrappers.md` §6). |
 
 ### Advisory Report Criteria
 
@@ -273,6 +275,7 @@ Mode A/B Checklist — {scope}
 
 Mode C Checklist — Ventilation
   ☐ Self-check + Registry audit completed
+  ☐ Wrapper-Body Parity: each `workflows/` pointer wrapper has its `.magic/{cmd}.md` body; WRAPPER_BODY_DRIFT reported for phantoms (self-contained wrappers exempt)
   ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
   ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
   ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched)
@@ -377,6 +380,7 @@ Analysis Checklist — Mode A/B
 Analysis Checklist — Mode C: Ventilation
   ☐ Self-check complete: engine integrity status noted (non-halting)
   ☐ Registry audit: orphans and unregistered files identified
+  ☐ Wrapper-Body Parity: WRAPPER_BODY_DRIFT check run over `workflows/` (phantom body pointers flagged; self-contained wrappers and body-less internal modules exempt)
   ☐ Structural Integrity checked (if workspace specified)
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included

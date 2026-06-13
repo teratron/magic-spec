@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 47
+      "degree": 48
     },
     {
       "id": "file:.magic",
@@ -378,7 +378,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.1",
+      "version": "1.2.0",
       "degree": 12
     },
     {
@@ -1199,8 +1199,8 @@
       "degree": 1
     },
     {
-      "id": "phase:engine/phase-11",
-      "label": "Phase 11: Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10",
+      "id": "phase:engine/phase-12",
+      "label": "Phase 12: Wrapper-Body Parity Check (R4) — WRAPPER_BODY_DRIFT in analyze Mode C",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -1282,6 +1282,15 @@
     {
       "id": "phase:engine/phase-10",
       "label": "Phase 10: Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-11",
+      "label": "Phase 11: Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -2637,7 +2646,7 @@
     },
     {
       "from": "ws:engine",
-      "to": "phase:engine/phase-11",
+      "to": "phase:engine/phase-12",
       "relation": "contains"
     },
     {
@@ -2684,6 +2693,11 @@
       "from": "ws:engine",
       "to": "phase:engine/phase-10",
       "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-11",
+      "relation": "contains"
     }
   ],
   "analysis": {
@@ -2692,7 +2706,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 47
+        "degree": 48
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -2770,13 +2784,13 @@
       }
     },
     "summary": {
-      "total_nodes": 162,
-      "total_edges": 279,
+      "total_nodes": 163,
+      "total_edges": 280,
       "workspaces": 1,
       "specs": 24,
       "files": 103,
       "conventions": 24,
-      "phases": 10
+      "phases": 11
     }
   }
 }

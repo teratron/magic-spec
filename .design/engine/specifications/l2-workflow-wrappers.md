@@ -1,6 +1,6 @@
 # Workflow Wrappers
 
-**Version:** 1.1.1
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -59,6 +59,20 @@ Each wrapper file contains:
 2. **Argument routing** — parsing and forwarding to engine logic.
 3. **User guidance** — brief descriptions visible in IDE command palettes.
 
+## 6. Wrapper-Body Parity Invariant & Verification
+
+The wrapper↔body relationship is **one-directional**:
+
+1. **Pointer wrappers** — a wrapper that references an engine body (the `> **Full implementation:** \`.magic/{cmd}.md\`` pointer) MUST have that file present on disk. A dangling pointer is a phantom mapping.
+2. **Self-contained wrappers** — a wrapper with no body pointer carries the full workflow itself (e.g., `magic.graph.md`); it requires no `.magic/{cmd}.md`.
+3. **Bodies without wrappers are allowed** — internal engine modules (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are invoked internally and intentionally have no user-facing wrapper. The invariant does NOT require a wrapper per body.
+
+### 6.1 Automated Verification
+
+`magic.analyze` Mode C MUST verify parity deterministically: for each `workflows/magic.{cmd}.md`, if the wrapper text references `.magic/{cmd}.md`, assert that file exists. A missing target is reported as `WRAPPER_BODY_DRIFT {wrapper} → missing .magic/{cmd}.md` (advisory). A self-contained wrapper (no pointer) is skipped. This catches phantom mappings — a wrapper or registry claiming a body that never shipped — before a release ships a dangling entry point.
+
+> Motivation: a phantom `magic.graph.md → .magic/graph.md` mapping persisted undetected across 13 registry versions until a manual inventory sync. The check makes that class of drift fail the audit instead of relying on manual discovery.
+
 ## Canonical References
 
 | Path | Role |
@@ -75,6 +89,7 @@ Each wrapper file contains:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.0 | 2026-06-13 | Added §6 Wrapper-Body Parity Invariant & Verification (R4): one-directional parity (pointer wrappers need a body; self-contained do not; bodies may lack wrappers) + a deterministic `magic.analyze` Mode C `WRAPPER_BODY_DRIFT` check. Field evidence: phantom `magic.graph` mapping survived 13 registry versions. |
 | 1.1.1 | 2026-06-12 | Factual fix: `magic.graph.md` is self-contained (no `.magic/graph.md` body exists); §2 exception documented. |
 | 1.1.0 | 2026-06-12 | Inventory sync: added `magic.graph.md` (registry drift fix — wrapper shipped without spec coverage) and `magic.status.md` (C2 exception per l1-session-continuity.md SC-5). |
 | 1.0.0 | 2026-03-29 | Initial Stable (bootstrapped from existing code) |

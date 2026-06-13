@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.15.1
+**Version:** 1.16.1
 **Generated:** 2026-06-13
-**Based on PLAN:** .design/engine/PLAN.md v1.13.4
+**Based on PLAN:** .design/engine/PLAN.md v1.13.5
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 10 phases (2-11) are Done; 24 specs registered and Stable; engine at 2.1.40. Phase 11 fixed the archiver eligibility bug (R7) and re-archived phase-10 — all phase files are now archived.
+Tactical registry of all phases and their statuses. **Plan complete**: all 11 phases (2-12) are Done; 24 specs registered and Stable; engine at 2.1.41. Phase 12 deployed the R4 Wrapper-Body Parity check (`WRAPPER_BODY_DRIFT`) into `magic.analyze` Mode C.
 
 ## Active Phases
 
@@ -29,6 +29,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 10 ph
 | [Phase 9](archives/tasks/phase-9.md) | DA-9 Engine Deployment — proposal surfaces (spec.md / analyze.md / task.md) to narrate-and-act form | `Done (Archived)` |
 | [Phase 10](archives/tasks/phase-10.md) | Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage | `Done (Archived)` |
 | [Phase 11](archives/tasks/phase-11.md) | Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10 | `Done (Archived)` |
+| [Phase 12](archives/tasks/phase-12.md) | Wrapper-Body Parity Check (R4) — WRAPPER_BODY_DRIFT in analyze Mode C | `Done (Archived)` |
 
 ## Backlog
 
