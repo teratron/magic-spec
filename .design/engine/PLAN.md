@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.2
+**Version:** 1.13.3
 **Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.14.2
+**Based on:** .design/engine/INDEX.md v1.14.3
 **Status:** Active
 
 ## Overview
@@ -77,9 +77,16 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - No hard dependency on Phases 4-8; first runnable phase after the session-continuity cycle.
   - Tasks: [tasks/phase-9.md](tasks/phase-9.md)
 
+### Phase 10 — Session-Continuity Hardening Deployment
+
+- [x] **Session-Continuity Hardening** ([l1-session-continuity.md](specifications/l1-session-continuity.md) v1.1.0 SC-2.1 + [l2-test-suite.md](specifications/l2-test-suite.md) v1.5.0) [L1+L2] — deploy plan-state-aware `computeNextAction` in `finalize.js` (no more static "execute the active phase" against a complete plan) and add the first finalize-pipeline regression coverage to `dev/tests/engine.js`. *(Phase 10 complete — engine 2.1.39, harness 14/14)*
+  - Field evidence: `computeNextAction` returned a stale run-recommendation across this session's plan-complete states (hand-corrected in STATE.md ×3).
+  - Deploys the R5/R6 spec amendments authored 2026-06-13; no dependency on Phases 4-9.
+  - Tasks: [tasks/phase-10.md](tasks/phase-10.md)
+
 ## Backlog
 
-- **Session-Continuity Hardening** (standing candidate, from 2026-06-13 ventilation R5/R6): amend l1-session-continuity SC-2 for plan-state-aware next-action; extend l2-test-suite for finalize regression coverage (SC-2 patch, SC-3 non-bumping fallback, update-state `--auto-progress`).
+- **Archiver `allChecked` false-positive** (R7, found 2026-06-13 in Phase 10): `phase-archiver.allChecked` does `!content.includes('- [ ]')` over the whole file, so a phase whose prose/code-spans mention `- [ ]` (like phase-10's task Notes) never auto-archives. Fix: match checklist line items only (e.g. `^\s*- \[ \]` anchored, or scope to the Atomic Checklist section). Re-archives phase-10 once fixed.
 - **Wrapper-Body Parity Invariant** (standing candidate, R4): analyze Mode C check that every wrapper maps 1:1 to a `.magic/` body or is explicitly self-contained.
 - **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
 - `frontend-specialist` role card (deferred; domain-specific).

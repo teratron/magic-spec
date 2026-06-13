@@ -49,6 +49,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed task `phase-8` (engine)
 - Updated specification `decision-autonomy` (engine)
 - Completed task `phase-9` (engine)
+- Completed task `phase-10` (engine)
 
 ### Added
 

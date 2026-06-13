@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.14.2
+**Version:** 1.14.3
 **Status:** Active
 
 ## Overview
@@ -18,7 +18,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants, and runtime guards. | Stable | 1 | 1.1.3 |
 | [l2-engine-automation.md](specifications/l2-engine-automation.md) | Automation scripts, history subsystem, and execution logic. | Stable | 2 | 1.6.0 |
 | [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival, git-utils, versioning, session-continuity step (SC-2/SC-3). | Stable | 2 | 1.1.0 |
-| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (157 tests, v1.9.45). | Stable | 2 | 1.4.0 |
+| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (157 tests, v1.9.45) + script-level harness with finalize-pipeline coverage mandate. | Stable | 2 | 1.5.0 |
 | [l1-documentation-system.md](specifications/l1-documentation-system.md) | Knowledge base structure, governance, and docs/ sync policy. | Stable | 1 | 1.2.2 |
 | [l1-config-drift-guard.md](specifications/l1-config-drift-guard.md) | Detection of manual RULES.md changes outside workflow lifecycle. | Stable | 1 | 1.0.1 |
 | [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) | User-facing workflow entry points in `workflows/`. | Stable | 2 | 1.1.1 |
@@ -37,11 +37,11 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
 | [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format, declarative proposal surfaces (DA-9). | Stable | 1 | 1.1.0 |
 | [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, leak detection, shipped self-containment (RC-1..RC-9). | Stable | 1 | 1.1.0 |
-| [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates, commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.0.0 |
+| [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action, SC-2.1), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.1.0 |
 | [l2-status-command.md](specifications/l2-status-command.md) | Read-only `/magic.status` briefing command: layout contract, degraded states, wrapper/skill surface (C2 exception). | Stable | 2 | 1.0.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-13 (l1-decision-autonomy.md 1.0.0 → 1.1.0: added DA-9 Proposal Surfaces Are Declarative — closes the deployment gap that allowed a non-whitelisted Blank-Trigger question)
+- **Last Updated**: 2026-06-13 (Session-Continuity Hardening: l1-session-continuity.md 1.1.0 SC-2.1 plan-state-aware next-action; l2-test-suite.md 1.5.0 finalize-pipeline harness coverage mandate)

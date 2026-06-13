@@ -1,6 +1,6 @@
 # Session Continuity & Status Surface
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -45,6 +45,8 @@ Every workspace owns exactly one `STATE.md`, instantiated from the engine templa
 ### SC-2 — Universal Post-Workflow Update
 
 Every mutating workflow (spec, task, run, rule) MUST update `STATE.md` after its main steps complete and before its Completion Checklist — at minimum: `Updated` timestamp, `Status`, progress indicators, and a recomputed `Next Action` (per DA-6). Existing mid-workflow updates (e.g., the run workflow's per-task updates) remain; this invariant adds the end-of-command guarantee. Read-only workflows (analyze, graph, status) are exempt. A workflow invocation that mutated artifacts but left `STATE.md` stale is incomplete.
+
+**Plan-State-Aware Next Action (SC-2.1):** the recomputed `Next Action` MUST reflect the actual plan state, not a fixed per-workflow string. The computation reads the workspace plan/task ledger and resolves to: (a) **open tasks in the active phase** → point to execution (`/magic.run {ws}`); (b) **plan complete** (no open `- [ ]` tasks and no active phase) → point to new-scope authoring (`/magic.spec`) or a status briefing — **never** to "execute the active phase" against an empty plan; (c) **registered specs without a plan** → point to planning (`/magic.task {ws}`). A `Next Action` that recommends running a phase that does not exist, or re-planning a plan with no pending specs, is an SC-2 defect: the briefing then misdirects the returning user (SC-1/SC-4 consume this field as the authoritative resume point).
 
 ### SC-3 — Commit Suggestion Guarantee
 
@@ -99,4 +101,5 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-06-13 | Agent | SC-2.1 Plan-State-Aware Next Action: the recomputed `Next Action` must reflect actual plan state (open tasks → run; plan-complete → /magic.spec; specs-no-plan → task), never a fixed "execute the active phase" against an empty plan. Field evidence: finalize `computeNextAction` returned a stale run-recommendation across this session's plan-complete states. Re-reviewed under Trust Mode (C9). |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable version. SC-1..SC-5 per user directive: live memory contract, universal post-command state updates, commit suggestion guarantee, status briefing surface (C2 exception). |

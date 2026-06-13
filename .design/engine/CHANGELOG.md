@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 10 — 2026-06-13 (Session-Continuity Hardening Deployment)
+
+- Deployed SC-2.1 (plan-state-aware `Next Action`, `l1-session-continuity.md` v1.1.0): `computeNextAction` in `scripts/finalize.js` now derives the recommendation from the actual plan ledger — open `- [ ]` tasks → `/magic.run`; plan complete → `/magic.spec` (new scope); spec/rule → `/magic.task` (replan); unreadable ledger → `/magic.task` fallback. The static `task: "execute the active phase"` map entry — which misdirected the returning user whenever the plan was complete — is removed.
+- Made `finalize.js` requirable for unit testing: `module.exports = { main, computeNextAction, updateSessionState }` behind an `if (require.main === module)` CLI guard (same pattern as `update-state.js`).
+- Added the first finalize-pipeline regression coverage to `dev/tests/engine.js` (`l2-test-suite.md` v1.5.0 mandate): a `computeNextAction` unit test across all SC-2.1 branches (asserting the plan-complete branch never says "execute the active phase"), and an end-to-end skip-path test asserting SC-2 STATE.md patching, the SC-2.1 `/magic.spec` next-action, and the SC-3 non-bumping commit suggestion with no version bump. Harness 12 → 14 tests, all green.
+- Engine version 2.1.38 → 2.1.39 (C14); checksums regenerated (65 files). `dev/tests/engine.js` is L2 (dev/) — no engine bump from the test edit; the bump is from `finalize.js`.
+- Validation: harness 14/14; `update-engine-meta --check` no drift; `check-prerequisites` clean; hardlinks linked.
+- Field evidence: `computeNextAction` produced a stale "execute the active phase" recommendation across this session's plan-complete states (hand-corrected in STATE.md three times) — the defect that motivated SC-2.1.
+
 ## Phase 9 — 2026-06-13 (DA-9 Engine Deployment — Proposal Surfaces)
 
 - Deployed DA-9 (Proposal Surfaces Are Declarative, from `l1-decision-autonomy.md` v1.1.0) into the engine workflow bodies, closing the gap that let a proposal step render as a user-facing question.

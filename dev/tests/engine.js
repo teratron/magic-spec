@@ -409,6 +409,79 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 7b. finalize.js — session continuity (SC-2 / SC-2.1 / SC-3)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('finalize.js computeNextAction is plan-state-aware (SC-2.1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            // require.main guard means requiring finalize.js does NOT run main().
+            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            fs.mkdirSync(wsDir, { recursive: true });
+            const tasksPath = path.join(wsDir, 'TASKS.md');
+
+            // Open task present → recommend execution (/magic.run).
+            fs.writeFileSync(tasksPath, '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n');
+            let next = finalize.computeNextAction('task', 'engine', wsDir);
+            assert.match(next, /\/magic\.run engine/, 'open task → /magic.run');
+            assert.match(next, /T-1A01/, 'should name the open task');
+
+            // Plan complete (no open tasks) → author new scope, NOT "execute the active phase".
+            fs.writeFileSync(tasksPath, '## Active Phases\n\n*None — plan complete.*\n\n- [x] [T-1A01] Done\n');
+            next = finalize.computeNextAction('task', 'engine', wsDir);
+            assert.match(next, /\/magic\.spec/, 'plan complete → /magic.spec (SC-2.1)');
+            assert.doesNotMatch(next, /execute the active phase/, 'must not recommend a non-existent phase (the R6 bug)');
+
+            // spec/rule → replan first (pipeline order).
+            assert.match(finalize.computeNextAction('spec', 'engine', wsDir), /\/magic\.task/, 'spec → /magic.task');
+            assert.match(finalize.computeNextAction('rule', 'engine', wsDir), /\/magic\.task/, 'rule → /magic.task');
+
+            // Unreadable TASKS.md → safe planning fallback.
+            const voidWs = path.join(tempDir, '.design', 'void');
+            assert.match(finalize.computeNextAction('run', 'void', voidWs), /\/magic\.task/, 'missing TASKS.md → /magic.task fallback');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js patches STATE.md and suggests a commit on the skip path (SC-2/SC-3)', () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
+            if (fs.existsSync(realTemplate)) {
+                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
+            }
+            const designDir = path.join(tempDir, '.design');
+            const wsDir = path.join(designDir, 'main');
+            fs.mkdirSync(wsDir, { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
+                default: 'main',
+                finalization: { enabled: true, autoBump: true, autoChangelog: false, suggestCommit: true, versionPath: '.design/.version' },
+            }));
+            fs.writeFileSync(path.join(designDir, '.version'), '0.1.0');
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n*None — plan complete.*\n');
+            // Commit the fixture so HEAD exists and no whitelisted file changed → skip path.
+            execSync('git add -A', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git commit -m "fixture"', { cwd: tempDir, stdio: 'ignore' });
+
+            const finalizePath = path.join(tempDir, '.magic', 'scripts', 'finalize.js');
+            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+
+            assert.match(out, /No significant changes|Finalization complete/, 'finalize should run on the skip path');
+            const statePath = path.join(wsDir, 'STATE.md');
+            assert.ok(fs.existsSync(statePath), 'SC-2: STATE.md created/patched even on the skip path');
+            const state = fs.readFileSync(statePath, 'utf8');
+            assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
+            assert.match(state, /\/magic\.spec/, 'SC-2.1 e2e: plan-complete next-action points to /magic.spec');
+            // STATE.md write dirties the tree → SC-3 non-bumping suggestion is emitted.
+            assert.match(out, /Suggested commit message/, 'SC-3: a commit suggestion is emitted');
+            assert.match(fs.readFileSync(path.join(designDir, '.version'), 'utf8'), /^0\.1\.0$/, 'skip path does not bump the version');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 8. executor.js — input validation
     // ───────────────────────────────────────────────────────────────────────────
     test('executor.js should reject path-traversal in script and workspace names', () => {

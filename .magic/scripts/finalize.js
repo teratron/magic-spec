@@ -145,7 +145,10 @@ function loadConfig() {
 
 /**
  * Computes the post-workflow `Next Action` for STATE.md, following the
- * pipeline order (spec → task → run).
+ * pipeline order (spec → task → run). Plan-state-aware per SC-2.1
+ * (l1-session-continuity.md): for task/run, the recommendation is derived
+ * from the actual plan ledger (open tasks → run; plan complete → new scope),
+ * never a fixed "execute the active phase" against an empty plan.
  *
  * @param {string} workflow - `spec|task|run|rule`.
  * @param {string} workspace
@@ -153,22 +156,22 @@ function loadConfig() {
  * @returns {string}
  */
 function computeNextAction(workflow, workspace, wsDir) {
-    if (workflow === 'run') {
-        try {
-            const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
-            const open = tasks.match(/^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m);
-            if (open) return `Execute ${open[1]} ${open[2]} via /magic.run ${workspace}`;
-            return `Run /magic.task ${workspace} to plan the next phase`;
-        } catch {
-            return `Run /magic.run ${workspace} to continue execution`;
-        }
+    // spec/rule changes require (re)planning before execution — the plan must
+    // absorb the amended specs/rules first (pipeline order).
+    if (workflow === 'spec') return `Run /magic.task ${workspace} to update the plan`;
+    if (workflow === 'rule') return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
+
+    // task/run: derive the next step from the actual plan state (SC-2.1).
+    try {
+        const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
+        const open = tasks.match(/^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m);
+        if (open) return `Execute ${open[1]} ${open[2]} via /magic.run ${workspace}`;
+        // No open tasks → plan complete: author new scope; never recommend
+        // executing a phase that does not exist.
+        return `Plan complete — author new scope via /magic.spec ${workspace} (or /magic.status for a briefing)`;
+    } catch {
+        return `Run /magic.task ${workspace} to plan`;
     }
-    const map = {
-        spec: `Run /magic.task ${workspace} to update the plan`,
-        task: `Run /magic.run ${workspace} to execute the active phase`,
-        rule: `Run /magic.task ${workspace} to revalidate the plan against amended rules`,
-    };
-    return map[workflow] || `Run /magic.task ${workspace}`;
 }
 
 /**
@@ -526,11 +529,18 @@ function main() {
     return 0;
 }
 
-// Execute
-try {
-    process.exit(main());
-} catch (error) {
-    console.error(`❌ Finalization failed: ${error.message}`);
-    if (process.env.MAGIC_DEBUG) console.error(error.stack);
-    process.exit(1);
+// Exported for the regression harness (l2-test-suite §finalize coverage).
+// computeNextAction carries the SC-2.1 plan-state logic and is unit-tested
+// in isolation; main() is the CLI entrypoint.
+module.exports = { main, computeNextAction, updateSessionState };
+
+// Execute only as a CLI, not when required by tests.
+if (require.main === module) {
+    try {
+        process.exit(main());
+    } catch (error) {
+        console.error(`❌ Finalization failed: ${error.message}`);
+        if (process.env.MAGIC_DEBUG) console.error(error.stack);
+        process.exit(1);
+    }
 }
