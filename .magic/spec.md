@@ -13,7 +13,7 @@ Universal process for managing project specifications in `.design/specifications
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
-2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md` or live specs during "Explore/Analyze" modes.
+2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **Linking**: every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
@@ -142,7 +142,7 @@ graph TD
 
 1. **Parse & Map**: identify distinct topics and match to domains.
 2. **Dispatch Notice (Non-Blocking)**: show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question — a declarative proposal surface (DA-9), never an `AskUserQuestion`.
-3. **Dispatch**: write to correct spec files. Auto-promote to `Stable` if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content satisfies MVC criteria (Overview + design section). Otherwise keep as `Draft`.
+3. **Dispatch**: write to correct spec files. Provisionally mark `Stable`-eligible if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content satisfies MVC criteria (Overview + design section); otherwise keep as `Draft`. The advance to `Stable` is **finalized only after Post-Update Review (Step 4) passes** — a critic or quality-pass failure reverts the spec to `Draft`/`RFC` (see §Post-Update Review).
 4. **Post-Update**:
    - Run **Post-Update Review**.
    - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
@@ -151,7 +151,7 @@ graph TD
 
 **Constraints**:
 
-- **Ambiguity (C25)**: do NOT ask clarifying questions. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
+- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), T4 tier routing, existence/parent guards, hard-fork — remain permitted per their own rules.) The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
 - **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
@@ -192,7 +192,7 @@ graph TD
    - **C12 (Quarantine)**: if L1 status drops (Stable → RFC/Draft):
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
      2. For each L2 found, recursively repeat: scan for `Implements: {L2-file}` to discover L3 dependents.
-     3. **Update INDEX.md**: set status of all discovered dependents to match parent's new status (`RFC` or `Draft`). Update file headers to match. This is the authoritative status change — `task.md` and `run.md` react to INDEX.md state, they do not modify it.
+     3. **Update INDEX.md**: set status of all discovered dependents to match parent's new status (`RFC` or `Draft`). Update file headers to match. This **downward** cascade is the authoritative status change — `task.md` and `run.md` react to C12/deprecation status drops, they never reverse them. (Upward `Draft → Stable` promotion is owned by `task.md` Pre-Planning Stabilization / `spec.md` Batch Stabilization.)
      4. Report: *"C12 Cascade: {N} dependents quarantined: [{list}]."*
    - **Deprecation Cascade**: if a spec transitions to `Deprecated`:
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` — flag each as having an **invalid L1 parent** (layer integrity violation). Report: *"L2 `{file}` has no valid L1 parent — `{target}` is Deprecated."*
@@ -216,7 +216,7 @@ Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mod
    - (b) No hard-dependency cycles (`Implements:` chains only — soft `Related Specifications` cycles are non-blocking).
    - (c) Layer constraints: L2 has valid `Implements:` field pointing to a `Stable` L1 parent.
    - (d) MVC satisfied: `Overview` + at least one substantive design section.
-   - **Pass** → promote `Draft → Stable`. Update file header `Status:` and `INDEX.md` entry atomically.
+   - **Pass** → provisionally promote `Draft → Stable` — finalized after the step-6 Post-Update Review; a review failure reverts to `Draft`/`RFC`. Update file header `Status:` and `INDEX.md` entry atomically.
    - **Fail** → skip. Log reason: `[Batch-Skip] {file}: {criterion} failed — {details}.`
 4. **Field Normalization**: if an L2 spec uses a non-standard parent reference field (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to the canonical `Implements:` field.
 5. **Report**: `[Batch-Stabilize] {N} promoted, {M} skipped. Skipped: [{file}: {reason}, ...].`

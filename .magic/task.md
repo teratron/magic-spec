@@ -84,7 +84,7 @@ graph TD
      - (b) No hard-dependency cycles (per Circular Guard Semantic Split — soft reference cycles do NOT block promotion).
      - (c) Layer constraints satisfied (`Implements:` field present and valid for L2).
      - (d) **Minimum Viable Completeness (MVC)**: `Overview` + at least one design section (`Core Invariants` for L1, `Invariant Compliance` for L2, `Detailed Design`, or for non-standard layers like `test`/`tool` — any numbered section with substantive content). Full template compliance NOT required for Draft→Stable batch promotion — missing optional sections (`Drawbacks`, `Implementation Notes`) do not block.
-   - **Promote**: specs passing all criteria → promoted `Draft → Stable`. Update both file headers and `INDEX.md` entries atomically.
+   - **Promote**: specs passing all criteria → provisionally promoted `Draft → Stable`, updating both file headers and `INDEX.md` entries atomically. This batch IS `spec.md` Batch Stabilization (invoked from here); promoted specs are **subject to its Post-Update Review gate** (`@role:spec-critic` + `@role:prompt-engineer`) — a spec that fails the review reverts to `Draft`/`RFC` and is not left `Stable`.
    - **Skip**: specs failing any criterion remain `Draft` with a logged reason.
    - Report: `[Pre-Plan] {N} specs promoted to Stable, {M} remain Draft. Reasons: {summary}.`
    - **Field Normalization**: during iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to canonical `Implements:`. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
@@ -102,7 +102,7 @@ graph TD
    - **Verify Line (Mandatory)**: every atomic task MUST include a `Verify` line with a concrete command, check, or evidence source. Vague criteria such as "works", "verify manually", or "covered by tests" are invalid unless the specific test/check is named.
    - **Testing (Mandatory)**: every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
 8. **Sync (Update Mode)**:
-   - **C12 Quarantine**: if L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md** — status changes are the responsibility of `spec.md` only. **C12.1 Stabilization Exception**: tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
+   - **C12 Quarantine**: if L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` with reason: *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md here** — downward C12/deprecation status changes are `spec.md`'s responsibility (`task.md` writes only the upward `Draft → Stable` promotion in Step 2). **C12.1 Stabilization Exception**: tasks intended to stabilize or fix mismatches to regain `Stable` status may bypass quarantine.
    - **Phantom Specs**: spec in PLAN/INDEX but missing from disk → cancel `Todo`/`Pending`; archive `Done`. Block active tasks.
    - **Phantom Parent Guard**: L2 spec's parent missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: *"Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2). Run `/magic.spec` to author the missing parent, then re-run `/magic.task`."* Move L2 to `## Backlog` with reason: *"Missing L1 Parent (Phantom)."*
    - **Structural Refactor**: if sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
@@ -160,6 +160,7 @@ After all workflow steps (incl. Context Regeneration + Graph Refresh) and **befo
 Task Workflow Checklist — {operation}
   ☐ All registered specs read; no orphans/phantoms left unaddressed
   ☐ Pre-Planning Stabilization: Trust Mode batch applied (L1→L2 order); field normalization done
+  ☐ Stabilization Review: batch-promoted specs passed `spec.md` Post-Update Review gate; review failures reverted (not left Stable)
   ☐ Circular Guard: hard-dependency cycles checked (Implements chains); soft reference cycles logged
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
   ☐ Verify Lines: Every atomic task has a concrete command/check/evidence criterion

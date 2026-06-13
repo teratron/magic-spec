@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Cross-workflow consistency hardening** (engine v2.1.42 → v2.1.44): reconciled `spec.md` ↔ `task.md` divergences surfaced by a composition audit, without changing intended runtime behavior (only mis-stated/contradictory branches were corrected):
+  1. **Status-write ownership scoped** — the C12 cascade in `spec.md` and `task.md` no longer over-claim exclusive `INDEX.md` status ownership; the split is now explicit: `spec.md` owns **downward** (C12/deprecation) status drops, `task.md` owns **upward** `Draft → Stable` promotion.
+  2. **Promotion gated by review consistently** — `task.md` Pre-Planning Stabilization and the `spec.md` Dispatch step now mark `Draft → Stable` as **provisional**, finalized only after the Post-Update Review (`spec-critic` + `prompt-engineer`) passes; a review failure reverts the spec to `Draft`/`RFC`.
+  3. **`spec.md` clarifications** — the Explore/Analyze read-only set now includes `TASKS.md` (Invariant 2 parity with Analysis Delegation); "do NOT ask clarifying questions" is scoped to spec content (objective-gate questions remain permitted).
+  Integrity: `update-engine-meta` regenerated `.checksums` (65 files) and bumped the version; `--check` green.
+
 - **Engine plan cycle complete** (engine v2.1.30 → v2.1.34, four phases in one cycle):
   1. **SDD Reference Containment** (v2.1.31): one-way traceability boundary — product code never references SDD artifacts. Coder card refuses to author such references (RC-5 gate); Code-reviewer FAILs diffs containing them (RC-6); `/magic.analyze` Mode C gained the `SDD_REFERENCE_LEAK {file}:{line}` advisory scan for legacy cleanup (RC-7); user-side `rules/magic.md` §6 states the ambient policy with exemptions and a BAD/GOOD example. Field-driven: consumer releases may exclude `.design/`, turning embedded task IDs and spec links into dead content.
   2. **Shipped Self-Containment** (v2.1.32): purged 15 references to the engine repository's own SDD workspace from shipped files (5 dead spec links, 3 baked-in `engine` workspace names — phase journal path is now `.design/{ws}/CHANGELOG.md`, 6 governance file-name citations replaced with protocol names). Consumer installs now contain zero references to documents that do not ship.
