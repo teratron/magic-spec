@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.14.5
+**Version:** 1.14.6
 **Status:** Active
 
 ## Overview
@@ -35,7 +35,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-role-tooling.md](specifications/l2-role-tooling.md) | Role system engine tooling: check-prerequisites role_registry_integrity, update-engine-meta treatment, role template. | Stable | 2 | 1.0.0 |
 | [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | Stable | 2 | 1.1.1 |
 | [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
-| [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format, declarative proposal surfaces (DA-9). | Stable | 1 | 1.1.0 |
+| [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format, declarative proposal & drift-revalidation surfaces (DA-9). | Stable | 1 | 1.2.0 |
 | [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, leak detection, shipped self-containment (RC-1..RC-9). | Stable | 1 | 1.1.0 |
 | [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action, SC-2.1), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.1.0 |
 | [l2-status-command.md](specifications/l2-status-command.md) | Read-only `/magic.status` briefing command: layout contract, degraded states, wrapper/skill surface (C2 exception). | Stable | 2 | 1.0.0 |
@@ -44,4 +44,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-06-13 (l2-workflow-wrappers.md 1.2.0 §6 Wrapper-Body Parity Invariant + WRAPPER_BODY_DRIFT analyze check — R4 preventive)
+- **Last Updated**: 2026-06-13 (l1-decision-autonomy.md 1.2.0: DA-9 extended to drift-revalidation offers — Engine Upgrade Detection §1 binds to DA-8/DA-9, no `[y/n]`)

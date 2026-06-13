@@ -32,25 +32,24 @@ carry behavior-affecting changes.
 2. Read `snapshot_engine` from the `**Engine Version:**` field in `.design/INDEX.md`.
    Missing file (fresh project) or missing field → treat as `unknown`.
 3. If `local_engine == snapshot_engine` → proceed silently.
-4. On mismatch (including `unknown`), prompt the user interactively:
+4. On mismatch (including `unknown`), narrate **one informational line** and **proceed** —
+   never a `[y/n]` prompt or option menu. This is a drift-revalidation offer governed by
+   DA-8/DA-9 of the Autonomous Decision Protocol (one recommended path, no menu); it mirrors
+   the read-only treatment `/magic.status` already uses (SC-4):
 
    > [!NOTE]
-   > SDD engine version changed: `{snapshot_engine}` → `{local_engine}`.
-   > Run `/magic.analyze` now to revalidate the project against the new engine? **[y/n]**
-   > Recommended after any engine update — even patch releases may carry workflow-affecting changes.
+   > SDD engine drift: `{snapshot_engine}` → `{local_engine}`. Recommend `/magic.analyze`
+   > to revalidate against the new engine — even patch releases may carry
+   > workflow-affecting changes. Proceeding with the requested workflow.
+   > (Override: run `/magic.analyze`.)
 
-5. On **y** (Enter = confirm):
-   - Auto-execute `/magic.analyze` (full scope, no arguments).
-   - On success it updates the `**Engine Version:**` snapshot in `.design/INDEX.md`
-     to `local_engine` — this is the **only** path that updates the field;
-     manual edits must not touch it.
-   - Resume the originally requested workflow with its original arguments.
+5. **Proceed** with the originally requested workflow and its original arguments. Do **not**
+   block, and do **not** auto-divert into `/magic.analyze` — the user runs it when ready.
 
-6. On **n**:
-   - Skip analysis for this session only. Do **not** update the snapshot — it must
-     stay stale so the next session re-prompts.
-   - Emit one line: `⚠️ Engine drift unresolved — re-run /magic.analyze when ready.`
-   - Resume the originally requested workflow.
+6. **Snapshot contract**: the `**Engine Version:**` field updates **only** when
+   `/magic.analyze` runs (the sole writer; manual edits must not touch it). Until then the
+   drift line re-narrates each session — that recurrence is by design (a standing
+   recommendation), not a prompt.
 
 ### Exemptions
 

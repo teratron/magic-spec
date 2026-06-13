@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.3.18
+**Version:** 1.3.19
 **Status:** Active
 **Engine Version:** 2.1.37
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.19 | 2026-06-13 | Agent | l1-decision-autonomy.md 1.2.0: DA-9 extended to drift-revalidation offers (Engine Upgrade Detection §1 binds DA-8/DA-9 — one path, no `[y/n]`). Engine deployment (rules/magic.md §1 + README) queued for /magic.task → /magic.run. |
 | 1.3.18 | 2026-06-13 | Agent | l2-workflow-wrappers.md 1.2.0 §6 Wrapper-Body Parity Invariant + WRAPPER_BODY_DRIFT check (R4 preventive). Engine deployment (analyze Mode C check + test) queued for /magic.task → /magic.run. |
 | 1.3.17 | 2026-06-13 | Agent | l2-engine-finalization.md 1.2.0 §6 Phase Archival Eligibility Precision (R7): allChecked must match anchored checklist line items, not substring `- [ ]` in prose. Engine deployment (regex fix + test + re-archive phase-10) queued for /magic.task → /magic.run. |
 | 1.3.16 | 2026-06-13 | Agent | Session-Continuity Hardening: l1-session-continuity.md 1.1.0 (SC-2.1 plan-state-aware next-action) + l2-test-suite.md 1.5.0 (finalize-pipeline harness coverage mandate). Engine deployment (finalize computeNextAction fix + engine.js finalize test) queued for /magic.task → /magic.run. |

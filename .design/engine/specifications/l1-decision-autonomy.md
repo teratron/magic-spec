@@ -1,6 +1,6 @@
 # Autonomous Decision Protocol
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** concept
 
@@ -110,6 +110,8 @@ Workflow steps that surface candidate options to the user — Explore Mode "Crea
 
 Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no arguments resolves its scope by DA-3 (highest-coverage gap, per the Blank Trigger contract), not by asking which gap to pursue.
 
+**Drift-revalidation offers** (e.g., the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1) are governed jointly by DA-8 and DA-9: a detected version/state drift is narrated with **exactly one recommended path** (`/magic.analyze` to revalidate) and the requested workflow proceeds — never a `[y/n]` or option menu. This is the same informational-line treatment the status surface already uses (SC-4 of `l1-session-continuity.md`). The user's redirect (running `/magic.analyze`) is the override, not a solicited answer.
+
 ## 4. Detailed Design
 
 ### 4.1 Decision Taxonomy
@@ -157,7 +159,7 @@ C13 §3 amended wording (normative):
 
 1. **Project constitution** (`.design/RULES.md`): amend C13 §3, add C27 — done atomically with this spec's dispatch (T4, user-mandated).
 2. **Engine template** (`.magic/templates/rules.md`): mirror the C13 §3 amendment and C27 — Engine Improvement task (C14 applies).
-3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. Engine Improvement — C14 applies.
+3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. (c) **Drift-revalidation offers** — the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1 — bind to DA-8/DA-9: narrate the drift with one recommended path (`/magic.analyze`) and proceed; the pre-C27 `[y/n]` prompt (with `On y` / `On n` branches) is replaced with the single-path informational form (SC-4 reference). Engine Improvement — C14 applies.
 4. **Role system**: role template and card `Anti-patterns` sections gain one advisory line — "elective questions outside C27 E1–E5 are a protocol violation". No new role card (§6.2).
 5. **User-side rules** (`rules/magic.md`): add a compact C27 section so watching-process agents inherit session-level posture (DA-6).
 6. **Simulation**: `magic.dev.simulate` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question; feed a Blank-Trigger Explore invocation (no arguments), assert a DA-3 [DR] auto-pick (DA-9) rather than an `AskUserQuestion` survey.
@@ -196,6 +198,7 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.0 | 2026-06-13 | DA-9 extended to drift-revalidation offers: the Engine Upgrade Detection prompt (`rules/MAGIC.md` §1) binds to DA-8/DA-9 — narrate one recommended path (`/magic.analyze`) and proceed, never `[y/n]`. §5.3(c) deployment touch-point added. Closes the DA-9 deployment tail Phase 9 missed (§1 still carried a `[y/n]` menu — the recurring drift friction). |
 | 1.1.0 | 2026-06-13 | Added DA-9 (Proposal Surfaces Are Declarative): Explore Creative Sparks / Dispatch Notice / Mode Transition are DR narrations, never `AskUserQuestion`; a blank invocation is a Selection fork, not an Escalation. Closes the §5.3 deployment gap that permitted a non-whitelisted selection question (field evidence: live violation in a `/magic.spec` Blank Trigger). §4.1 taxonomy note, §5.3 proposal-surface touch-points, and §5.6 simulation extended. Re-reviewed under Trust Mode (C9). |
 | 1.0.0 | 2026-06-12 | Promoted to Stable via Trust Mode (C9): MVC satisfied (Overview + Core Invariants DA-1–DA-8), no RULES.md conflicts after C13 §3 amendment, no circular dependencies. |
 | 0.1.0 | 2026-06-12 | Initial Draft from field feedback dispatch: root-cause analysis RC-1–RC-4, invariants DA-1–DA-8, dispatcher-role rejection (§6.2). |

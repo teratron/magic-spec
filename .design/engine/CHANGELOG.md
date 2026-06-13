@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 13 — 2026-06-13 (Upgrade-Detection Decision-Autonomy Alignment)
+
+- Aligned `rules/MAGIC.md` §1 Engine Upgrade Detection with the Decision Autonomy protocol (`l1-decision-autonomy.md` v1.2.0 §5.3c): the `[y/n]` prompt and `On y` / `On n` branches are replaced with a single informational line that narrates the drift, recommends `/magic.analyze`, and proceeds with the requested workflow — never a blocking prompt (DA-8 one-path, DA-9 declarative; mirrors the `/magic.status` SC-4 treatment). The snapshot-update-only-via-analyze contract and the analyze/status exemptions + `MAGIC_DRIFT_CHECK=0` are preserved.
+- Updated the README Updating section: removed "asks **[y/n]**" / "will prompt you"; it now describes surfacing the drift and recommending `/magic.analyze` (no blocking prompt).
+- Recreated the `.agents/rules/magic.md` hardlink after the `rules/` edit (C-001); `validate-hardlinks` confirms the rules group is linked.
+- Engine version unchanged (2.1.41): `update-engine-meta` change-detection and `.magic/.checksums` cover `.magic/` only, so this `rules/`-only edit does not bump the version. Validation: harness 15/15; residual `[y/n]` grep clean (only the prohibition line remains); `check-prerequisites` ok.
+- Findings surfaced (backlog): **R8** — `rules/` and `skills/` (engine L1) are outside C14 version/checksum tracking, so L1-only changes can ship without a version bump; **R9** — the root AGENTS-family hardlinks (GEMINI/QWEN/CODEX) are delinked (`nlink=2`), restore via `/magic.dev:init`.
+- Field evidence: §1 was the recurring drift friction resolved via `[DR]` on every `/magic.spec` invocation this session — the DA-9 deployment tail that Phase 9 (proposal-surface alignment) did not reach.
+
 ## Phase 12 — 2026-06-13 (Wrapper-Body Parity Check — R4)
 
 - Deployed the `WRAPPER_BODY_DRIFT` check into `magic.analyze` Mode C (`l2-workflow-wrappers.md` v1.2.0 §6): the Design Registry Audit now verifies that every `workflows/magic.{cmd}.md` carrying a "Full implementation" pointer has its `.magic/{cmd}.md` body on disk. Self-contained wrappers (no pointer, e.g. `magic.graph.md`) are skipped; engine bodies without a wrapper (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are allowed — the invariant is one-directional.

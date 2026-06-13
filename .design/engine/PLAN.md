@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.13.5
+**Version:** 1.13.6
 **Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.14.5
+**Based on:** .design/engine/INDEX.md v1.14.6
 **Status:** Active
 
 ## Overview
@@ -97,9 +97,18 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Deploys the §6 amendment authored 2026-06-13; no dependency on prior phases.
   - Tasks: [tasks/phase-12.md](tasks/phase-12.md)
 
+### Phase 13 — Upgrade-Detection Decision-Autonomy Alignment
+
+- [x] **Upgrade-Detection ↔ DA alignment** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) v1.2.0 §5.3c) [L1] — replace the `[y/n]` prompt in `rules/MAGIC.md` §1 with the DA-8/DA-9 single-path form (narrate drift + recommend `/magic.analyze`, proceed); update README; recreate the `.agents` hardlink. *(Phase 13 complete — rules/ + README; engine 2.1.41 unchanged — see R8)*
+  - Field evidence: §1 was the recurring drift friction handled via `[DR]` every cycle this session — the DA-9 deployment tail Phase 9 missed.
+  - Deploys the §5.3(c) amendment authored 2026-06-13; no dependency on prior phases.
+  - Tasks: [tasks/phase-13.md](tasks/phase-13.md)
+
 ## Backlog
 
 - **Release Pipeline Spec** (standing candidate): L2 spec for `.github/workflows/release.yml` (currently UNCOVERED).
-- **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection.
+- **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection. (Phase 13 removes the *prompt* friction; the drift recurrence itself remains a separate refinement.)
+- **R8 — `rules/` + `skills/` outside C14 tracking** (found 2026-06-13 in Phase 13): `update-engine-meta` change-detection and `.magic/.checksums` cover `.magic/` only, so a `rules/`-only or `skills/`-only edit does not bump `.magic/.version` — engine-L1 changes can ship invisibly to upgrade-detection. Candidate fix: extend the checksum manifest / version-bump trigger to the full L1 set (`.magic/`, `workflows/`, `skills/`, `rules/`), or document the constraint.
+- **R9 — AGENTS-family hardlinks delinked** (found 2026-06-13): the root agent rule cards (`AGENTS.md` ↔ `CLAUDE/GEMINI/QWEN/CODEX.md`) show `nlink=2` (only CLAUDE linked); GEMINI/QWEN/CODEX dropped during the session. Non-strict (validate-hardlinks passes) but real. Restore via `/magic.dev:init`.
 - `frontend-specialist` role card (deferred; domain-specific).
 - Skill/role auto-invocation (rejected in v1.0.0 per R6; potential future spec).

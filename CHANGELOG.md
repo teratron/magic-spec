@@ -53,6 +53,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated specification `engine-finalization` (engine)
 - Updated specification `workflow-wrappers` (engine)
 - Completed task `phase-12` (engine)
+- Completed task `phase-13` (engine)
 
 ### Added
 

@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.16.1
+**Version:** 1.17.1
 **Generated:** 2026-06-13
-**Based on PLAN:** .design/engine/PLAN.md v1.13.5
+**Based on PLAN:** .design/engine/PLAN.md v1.13.6
 **Based on RULES:** .design/RULES.md v1.8.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 11 phases (2-12) are Done; 24 specs registered and Stable; engine at 2.1.41. Phase 12 deployed the R4 Wrapper-Body Parity check (`WRAPPER_BODY_DRIFT`) into `magic.analyze` Mode C.
+Tactical registry of all phases and their statuses. **Plan complete**: all 12 phases (2-13) are Done; 24 specs registered and Stable; engine at 2.1.41. Phase 13 aligned `rules/MAGIC.md` §1 Engine Upgrade Detection with the Decision Autonomy protocol (no `[y/n]` prompt). Open findings R8/R9 in PLAN Backlog.
 
 ## Active Phases
 
@@ -30,6 +30,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 11 ph
 | [Phase 10](archives/tasks/phase-10.md) | Session-Continuity Hardening — plan-state-aware next-action + finalize test coverage | `Done (Archived)` |
 | [Phase 11](archives/tasks/phase-11.md) | Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10 | `Done (Archived)` |
 | [Phase 12](archives/tasks/phase-12.md) | Wrapper-Body Parity Check (R4) — WRAPPER_BODY_DRIFT in analyze Mode C | `Done (Archived)` |
+| [Phase 13](archives/tasks/phase-13.md) | Upgrade-Detection DA Alignment — §1 `[y/n]` → single-path narration | `Done (Archived)` |
 
 ## Backlog
 
