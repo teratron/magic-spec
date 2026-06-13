@@ -10,7 +10,7 @@ Pipeline (orchestrated by `dev/scripts/sync.js`):
 
 1. **Engine Meta (C14)**: Detects drift in `.magic/`, `workflows/`, `skills/`. Bumps `.magic/.version`, regenerates checksums, projects Skill wrappers, appends per-workflow history.
 2. **Manifest Parity**: Propagates the version into the anchored `**Active Development** (vX.Y.Z)` line in `README.md`. Other version mentions are not touched.
-3. **Hardlink Validation**: Verifies that `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Drift is reported (non-fatal by default; pass `--strict-links` to fail). Repair: `/magic.dev:init`.
+3. **Hardlink Validation**: Verifies that `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Drift is reported (non-fatal by default; pass `--strict-links` to fail). Repair: `/magic.dev.init`.
 4. **Project Meta (idempotent)**: Computes a structural digest of `.design/INDEX.md` (with version/date/history fields stripped). Bumps the index version and appends a history row **only when the digest actually changed** — no more "Automated metadata update" floods.
 5. **Doc Sync (content, not stamps)**:
    - Regenerates `CONTRIBUTING.md` from `.magic/templates/contributing.md` using current sources (RULES.md, INDEX.md, workflows/). Footer date reflects the latest source mtime, not "today".

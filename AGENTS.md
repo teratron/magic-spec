@@ -27,7 +27,7 @@ This layer contains ONLY the resources the end-user will download and install. N
 
 - These directories ship to the user via GitHub Releases. Keep them strictly clean of dev-only artifacts.
 - L1 code **must not `require`** anything from `dev/`. The single tolerated exception is a **graceful-fallback `fs.existsSync` guard** (e.g., `update-engine-meta` → `dev/scripts/sync-skills.js` and `dev/scripts/generate-checksums.js`): if the dev tree is absent (user installation), warn and continue, never crash.
-- Any change in this layer modifies the workflow engine itself and triggers **C14** (version bump + checksum regeneration + skill-wrapper sync).
+- Changes to **`.magic/` or `workflows/`** content modify the workflow engine itself and trigger **C14** (version bump + checksum regeneration + skill-wrapper sync). `skills/` wrappers are a C14 **output** (regenerated from workflows, never hand-edited); `rules/` currently fall outside C14's version/checksum tracking, so a `rules/`-only change ships without a version bump — account for this when editing them.
 
 ### 1.2. Layer 2: Auxiliary Core (`dev/`)
 
@@ -92,7 +92,8 @@ All development tasks (metadata sync, analysis, simulation) are handled via the 
 
 ```bash
 # Update engine metadata and version (C14)
-node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}
+# {changed_workflows}: space-separated dotted workflow names, no .md extension (e.g. magic.spec magic.task)
+node .magic/scripts/executor.js update-engine-meta --workflow magic.spec magic.task
 
 # Run project analysis
 /magic.analyze
@@ -212,5 +213,6 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
   - Update relevant `.design/` workspace index/specifications to reflect task completion.
 - [ ] **Synchronized**: Run metadata sync to ensure integrity:
   - `node .magic/scripts/executor.js update-engine-meta`
-  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 5 files: AGENTS, GEMINI, CLAUDE, CODEX, QWEN). If broken, run `/magic.dev:init` to restore.
+  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 5 files: AGENTS, GEMINI, CLAUDE, CODEX, QWEN). If broken, run `/magic.dev.init` to restore.
+  - ⚠️ **Editing breaks links**: writing to any of the 5 agent files with an inode-replacing editor (most `write`/`edit` tools) silently delinks that file — the twins keep the old content. After editing one, re-run `/magic.dev.init` (or recreate the hardlinks) and re-verify with `fsutil hardlink list`.
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.design/INDEX.md`) haven't lost data during edits.

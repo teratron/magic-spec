@@ -18,7 +18,7 @@ const path = require('path');
  * Why: the project deliberately uses hardlinks instead of duplicated files.
  * If an editor or careless `cp` replaces one of them, agents will diverge.
  * This script doesn't auto-repair — it surfaces the drift so the user can
- * run `/magic.dev:init` (the canonical link-rebuild path).
+ * run `/magic.dev.init` (the canonical link-rebuild path).
  *
  * Exit codes:
  *   0 — all good, or only soft warnings (missing optional siblings)
@@ -61,7 +61,7 @@ function validateAgentsLinks() {
     const anchorPath = path.join(projectRoot, ANCHOR);
     const anchorStat = statSafe(anchorPath);
     if (!anchorStat) {
-        console.error(`   ❌ Anchor missing: ${ANCHOR}. Run /magic.dev:init.`);
+        console.error(`   ❌ Anchor missing: ${ANCHOR}. Run /magic.dev.init.`);
         return { drift: 1, missing: 0, fatal: true };
     }
 
@@ -175,7 +175,7 @@ function main() {
     const totalMissing = agents.missing + rules.missing;
 
     if (totalDrift > 0) {
-        console.error(`\n❌ Hardlink validation failed: ${totalDrift} drifted file(s). Run /magic.dev:init to rebuild.`);
+        console.error(`\n❌ Hardlink validation failed: ${totalDrift} drifted file(s). Run /magic.dev.init to rebuild.`);
         process.exit(1);
     }
 
