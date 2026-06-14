@@ -11,7 +11,7 @@ Manages project conventions across a two-tier rules system:
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6) and Constitutional Guard. All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
-5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`. **Rules**: bump Minor (add/amend), Major (remove), Patch (typos). Update Document History in target file. `.design/{workspace}/RULES.md` modifications do NOT trigger C14 (per C14§3 — `.design/` changes are project-manifest, not engine).
+5. **Versioning (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`. **Rules**: bump Minor (add/amend), Major (remove), Patch (typos). Update Document History in target file. `.design/` changes (including `.design/{workspace}/RULES.md`) do NOT trigger C14 — they are project-manifest, not engine (C14 scope is `.magic/`/`workflows/` only).
 
 ## Rule Tier Routing
 
@@ -19,7 +19,7 @@ Determine target tier on every add/amend/remove:
 
 - **Workspace tier** → `.design/{workspace}/RULES.md`: rule names a workspace, references workspace-scoped paths/tools, or applies to one workspace's domain. Signal words: *"in engine"*, *"for this workspace"*, *"this workspace"*.
 - **Global tier** → `.design/RULES.md`: rule applies uniformly regardless of active workspace, or no workspace is active.
-- **Ambiguous**: ask user — *"Should this rule be global (all workspaces) or scoped to `{workspace}` only?"*
+- **Ambiguous**: resolve autonomously (DA-6) — default to the **workspace tier** when a workspace is active, else **global**. Narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magic.rule with an explicit tier)`. No prompt: rule-tier routing is not an approval gate (gates are Core-Amendment §1–6 and Constitutional Guard only, per Invariant 3).
 
 ## Workflow: Convention Management
 
@@ -117,8 +117,7 @@ Convention nodes change when rule entries are added or removed, invalidating the
 Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Resolve before writing."*
 
 - **Notify**: inform user if `TASKS.md` is now stale.
-- **Offer Sync**: propose `magic.task update` to propagate the rule change.
-- **Compliance**: for critical rules, suggest `magic.spec audit`.
+- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `magic.task update` (propagate the rule into the plan); choose `magic.spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
 
 ## Finalization Protocol (Mandatory)
 
@@ -143,6 +142,6 @@ Rule Checklist — {operation}
   ☐ Version bumped (Major/Minor/Patch); Document History updated in target file
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Graph: export-wiki run after Add/Amend/Remove (skip for List and patch-only typo fixes)
-  ☐ Engine Meta: C14 bump ONLY if .magic/ files modified (not for .design/ changes)
+  ☐ Engine Meta: C14 bump ONLY if .magic/ or workflows/ files modified (not for .design/ changes)
   ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates
 ```

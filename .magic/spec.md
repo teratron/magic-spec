@@ -15,7 +15,7 @@ Universal process for managing project specifications in `.design/specifications
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
-4. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
+4. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **Linking**: every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 6. **Status**: assign Draft/RFC/Stable/Deprecated. Follow transitions (D→R→S).
 7. **Dispatch**: use the "Raw Input" flow for unstructured ideas.
@@ -294,7 +294,7 @@ Compares specs vs. project filesystem and engine integrity.
 | Registry Sync | `INDEX.md` entries match disk? |
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | Project configuration files match declared spec metadata? |
-| **Engine Integrity** | `.magic/` matches `.checksums`? → **HALT** if mismatch. Hint: use `init` or `update-engine-meta`. |
+| **Engine Integrity** | `.magic/` matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `magic.analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
 
 ## Finalization Protocol (Mandatory)
 
@@ -320,9 +320,9 @@ Checklist — {task description}
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Rules: RULES.md triggers (T1-T4) checked/applied
-  ☐ Canonical References: If promoting to `Stable` → `## Canonical References` section MUST be filled.
-     Non-empty placeholder rows required. Empty or stub rows → block promotion. Flag `CANONICAL_MISSING`.
-  ☐ Engine: update-engine-meta run if .magic/ modified (C14)
+  ☐ Canonical References: If promoting to `Stable`, `## Canonical References` should be filled.
+     Empty or stub rows → flag `CANONICAL_MISSING` (advisory, non-blocking — does NOT block promotion; matches `analyze.md` Mode C). MVC remains the sole batch/stabilization gate.
+  ☐ Engine: update-engine-meta run if .magic/ or workflows/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
   ☐ Instruction Quality: dispatched sections reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)

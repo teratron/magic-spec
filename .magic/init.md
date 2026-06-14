@@ -8,7 +8,7 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums / Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skip existing files. Never mutate user state.
-5. **Versioning (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`. Initial `RULES.md` is versioned at 1.0.0.
+5. **Versioning (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`. Initial `RULES.md` is versioned at 1.0.0.
 
 ## Workflow: Setup & Verification
 
@@ -52,7 +52,7 @@ Ensure all 6 artifacts exist (including STATE.md). HALT on failure.
 
 #### 4. Hint
 
-If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*.
+If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*. **Suppress this hint when `init` runs as a sub-step of an execution workflow (`/magic.run`)**: per `run.md` and `rules/magic.md` §5, `/magic.analyze` is never named as a next step in the run context.
 
 ### Structure Created
 

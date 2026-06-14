@@ -259,7 +259,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 
 After every successful `/magic.analyze` run (Modes A, B, C, and D — including read-only audits), update the `**Engine Version:**` field in `.design/INDEX.md` to match the current value of `.magic/.version`. Add the field if missing.
 
-This is the contract consumed by [`rules/MAGIC.md` §1](../rules/MAGIC.md): the rule prompts the user to run `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version`. Skipping this step causes the drift prompt to fire on every session.
+This is the contract consumed by [`rules/magic.md` §1](../rules/magic.md): the rule **narrates one informational drift line** recommending `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version` (it never emits a `[y/n]` prompt). Skipping this step causes that drift line to re-narrate every session — by design, until `/magic.analyze` runs.
 
 This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
@@ -373,7 +373,7 @@ Analysis Checklist — Mode A/B
   ☐ Auto-Dispatch (C9): proposed items created as Draft/Stable per MVC; RULES.md §7 updated; action log surfaced
   ☐ Graph: export-wiki run after dispatch (skip if no dispatch occurred)
   ☐ Advisory Report appended to output
-  ☐ Engine Meta: C14 bump if .magic/ files modified
+  ☐ Engine Meta: C14 bump if .magic/ or workflows/ files modified
   ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
   ☐ Engineer Posture (C25): no inline approval menu; user adjusts via /magic.spec amend or git restore
 

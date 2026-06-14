@@ -5,17 +5,17 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
-2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Write ONLY to `RETROSPECTIVE.md`.
+2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Writes are limited to `RETROSPECTIVE.md` and derived diagnostic snapshots (`graph-snapshot.json` / `graph-before.json`). These are not graph sources, so **no `export-wiki`** is required (graph-refresh exemption). Phase archival is NOT performed here — see §7.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
 5. **Level Separation**: L1 (Snapshot) is silent and fast. L2 (Full) is deep and analytical.
-6. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
+6. **Engine Integrity (C14)**: If engine files (`.magic/` or `workflows/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 
 ## Levels
 
 | Level | Goal | Trigger | Output |
 | --- | --- | --- | --- |
-| **L1** | Mini-snapshot | Phase Complete (all tasks Done) | Snapshots table row + Archival (C8) |
+| **L1** | Mini-snapshot | Phase Complete (all tasks Done) | Snapshots table row (archival is owned by `finalize`, see §7) |
 | **L2** | Full audit | Plan Complete or manual command | Deep analysis + recommendations |
 
 ## Steps (L1 & L2)
@@ -70,9 +70,9 @@ Append to `RETROSPECTIVE.md` (create from `.magic/templates/retrospective.md` if
 
 Append to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Signal |`.
 
-### 7. Archival (C8)
+### 7. Archival (C8) — delegated, not performed here
 
-Move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use a **relative** path.
+Phase archival — moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` — is owned **solely** by `finalize --workflow=run` / `archive-phases` during `/magic.run` Phase Completion (see `run.md` Step 5 and `rules/magic.md` §4). The retrospective performs **no** task or archival writes; it only appends the Snapshots row (Step 6). This avoids a double-move (the second pass would hit an already-moved file) and a conflicting link format.
 
 ## Retrospective Completion Checklist
 
@@ -85,8 +85,8 @@ Retro Checklist — {Level}
   ☐ DORA Metrics: Delivery performance (DF/CFR) recorded for L2
   ☐ Deep Audit: Shadow logic and Logic-to-Spec parity verified
   ☐ Signal Calculation: `@role:retrospective-analyst` activated; Signal reviewed through spec-quality lens
-  ☐ L1: Snapshot row appended; Phase N archived to archives/tasks/ (C8)
+  ☐ L1: Snapshot row appended (phase archival is performed by finalize/archive-phases during /magic.run, not by the retro)
   ☐ L2: Actionable recommendations mapped to evidence; trends calculated
   ☐ Integrity: No speculative claims; all findings reference specific files
-  ☐ Engine Meta: C14 bump if .magic/ files modified
+  ☐ Engine Meta: C14 bump if .magic/ or workflows/ files modified
 ```

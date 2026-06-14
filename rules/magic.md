@@ -290,7 +290,8 @@ Before finishing any task that involved magic-spec workflows, verify §1–§7 w
 
 - [ ] **§1 Upgrade Detection** — compared `.magic/.version` to `**Engine Version:**`
       in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`); on
-      mismatch (or `unknown` snapshot) prompted the user and acted on their choice.
+      mismatch (or `unknown` snapshot) narrated exactly one informational drift line
+      and proceeded — never prompted `[y/n]`, never auto-diverted into `/magic.analyze`.
 - [ ] **§2 Spec Graph** — ran `build-spec-graph` before architectural questions;
       navigated `.design/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.design/` change this session.

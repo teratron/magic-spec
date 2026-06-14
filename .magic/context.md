@@ -68,7 +68,9 @@ Auto-resolve workspace using priority order:
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
 | 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: `"Active workspace: {default}."` |
 | 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation** (below). |
-| 4 | **No `workspace.json`** | — | Use root `.design/`. Log: `"No workspace config found — scanning root .design/."` |
+| 4 | **No `workspace.json`** | — | Transient pre-init state only: read root `.design/`, then auto-init (`init.md`) bootstraps `.design/{default}/` (WI-10) and resolution re-runs at Priority 3. Never write artifacts to flat root `.design/`. Log: `"No workspace config found — scanning root .design/."` |
+
+> **Path Notation**: throughout the workflows, `.design/...` references (e.g. `.design/TASKS.md`, `.design/specifications/`) are shorthand for the resolved `.design/{workspace}/...` path after this chain runs — the flat root form is never the literal artifact location (per WI-10).
 
 ## Workspace Disambiguation
 

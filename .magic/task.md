@@ -42,7 +42,7 @@ Parse `[arg]` to determine planning mode:
    - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task amend | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never an `AskUserQuestion`.
    - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
-6. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
+6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 7. **Architectural Logic**:
    - **Circular Guard (Semantic Split)**:
      - **Hard Dependencies** (`Implements:` chains, L2→L1): deep-scan across ALL levels. Any cycle → **HALT**. These are blocking dependencies that define build/planning order.
@@ -172,7 +172,7 @@ Task Workflow Checklist — {operation}
   ☐ STATE.md updated with new phase and next action after plan write-back
   ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
   ☐ Graph: export-wiki run after plan write-back (skip if no plan written)
-  ☐ Engine Meta: C14 bump performed if .magic/ files modified
+  ☐ Engine Meta: C14 bump performed if .magic/ or workflows/ files modified
   ☐ Engineer Posture (C25): plan auto-written and narrated; no "Go" prompts
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

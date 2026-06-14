@@ -43,7 +43,7 @@ Parse `[arg]` to determine execution mode:
      `node .magic/scripts/executor.js update-state --workspace={dir} --status=Blocked`
      Inform: *"⚠ Phase blocked. Run `/magic.task {workspace}` to revalidate the plan. (Pause: /magic.pause)"* **Hard rule**: never name `/magic.spec` or `/magic.analyze` as the next step — they surface inside `/magic.task` Pre-flight only.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
-6. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
+6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 
 ## Execution Setup
 
