@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **CHANGELOG trailing newline normalization** (engine v2.1.46 → v2.1.47): fixed the issue where updating the `CHANGELOG.md` file dynamically added an extra trailing newline on each run. The writer now normalizes the end-of-file formatting to a single trailing newline.
+
 - **Cross-workflow consistency hardening** (engine v2.1.42 → v2.1.46): reconciled cross-file divergences across the engine workflows (surfaced by a composition audit), without changing intended runtime behavior (only mis-stated/contradictory branches were corrected):
   1. **Status-write ownership scoped** — the C12 cascade in `spec.md` and `task.md` no longer over-claim exclusive `INDEX.md` status ownership; the split is now explicit: `spec.md` owns **downward** (C12/deprecation) status drops, `task.md` owns **upward** `Draft → Stable` promotion.
   2. **Promotion gated by review consistently** — `task.md` Pre-Planning Stabilization and the `spec.md` Dispatch step now mark `Draft → Stable` as **provisional**, finalized only after the Post-Update Review (`spec-critic` + `prompt-engineer`) passes; a review failure reverts the spec to `Draft`/`RFC`.

@@ -64,7 +64,7 @@ function isKeepAChangelog(content) {
  */
 function createIfMissing(filePath) {
     if (fs.existsSync(filePath)) return false;
-    const content = KEEP_A_CHANGELOG_HEADER + '\n## [Unreleased]\n';
+    const content = (KEEP_A_CHANGELOG_HEADER + '\n## [Unreleased]\n').trimEnd() + '\n';
     return writeFileSafe(filePath, content);
 }
 
@@ -104,12 +104,12 @@ function appendBullet(filePath, category, bullet) {
             `- ${bullet}`,
             '',
         ].join('\n');
-        const next = block + '\n' + original;
+        const next = (block + '\n' + original).trimEnd() + '\n';
         const written = next !== original ? writeFileSafe(filePath, next) : false;
         return { written, deduped: false, formatWarning: true };
     }
 
-    const next = insertIntoUnreleased(original, category, bullet);
+    const next = insertIntoUnreleased(original, category, bullet).trimEnd() + '\n';
     if (next === original) {
         return { written: false, deduped: true, formatWarning: false };
     }
@@ -201,7 +201,7 @@ function releaseUnreleased(filePath, version, date) {
     const unreleasedRe = /^##\s+\[Unreleased\]\s*$/m;
     if (!unreleasedRe.test(original)) return { written: false, hadUnreleased: false };
 
-    const next = original.replace(unreleasedRe, `## [Unreleased]\n\n## [${version}] - ${date}`);
+    const next = original.replace(unreleasedRe, `## [Unreleased]\n\n## [${version}] - ${date}`).trimEnd() + '\n';
     if (next === original) return { written: false, hadUnreleased: true };
     const written = writeFileSafe(filePath, next);
     return { written, hadUnreleased: true };
