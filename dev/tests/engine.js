@@ -417,26 +417,86 @@ describe('Magic Engine Scripts', () => {
             // require.main guard means requiring finalize.js does NOT run main().
             const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
             const wsDir = path.join(tempDir, '.design', 'engine');
-            fs.mkdirSync(wsDir, { recursive: true });
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
             const tasksPath = path.join(wsDir, 'TASKS.md');
 
-            // Open task present → recommend execution (/magic.run).
+            // (a) Legacy inline format: open task in TASKS.md → /magic.run.
             fs.writeFileSync(tasksPath, '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n');
             let next = finalize.computeNextAction('task', 'engine', wsDir);
-            assert.match(next, /\/magic\.run engine/, 'open task → /magic.run');
+            assert.match(next, /\/magic\.run engine/, 'inline open task → /magic.run');
             assert.match(next, /T-1A01/, 'should name the open task');
 
-            // Plan complete (no open tasks) → author new scope, NOT "execute the active phase".
-            fs.writeFileSync(tasksPath, '## Active Phases\n\n*None — plan complete.*\n\n- [x] [T-1A01] Done\n');
+            // (b) Canonical two-level format: TASKS.md is a registry (table),
+            //     open tasks live in tasks/phase-1.md.
+            fs.writeFileSync(tasksPath, [
+                '# Master Task Index',
+                '',
+                '## Active Phases',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
+                '',
+            ].join('\n'));
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---',
+                'phase: 1',
+                'status: In Progress',
+                '---',
+                '',
+                '## Atomic Checklist',
+                '',
+                '- [x] [T-1A01] Setup project',
+                '- [ ] [T-1A02] Implement feature',
+                '',
+            ].join('\n'));
+            next = finalize.computeNextAction('task', 'engine', wsDir);
+            assert.match(next, /\/magic\.run engine/, 'canonical two-level: open task in phase file → /magic.run');
+            assert.match(next, /T-1A02/, 'should name the open task from phase file');
+
+            // (c) Registry fallback: no open checkboxes anywhere, but registry
+            //     shows a non-Done phase → recommend continuing that phase.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---',
+                'phase: 1',
+                'status: In Progress',
+                '---',
+                '',
+                '## Atomic Checklist',
+                '',
+                '- [x] [T-1A01] Setup project',
+                '- [x] [T-1A02] Implement feature',
+                '',
+            ].join('\n'));
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /Phase 1/, 'registry fallback: non-Done phase → Continue Phase N');
+            assert.match(next, /\/magic\.run/, 'registry fallback recommends /magic.run');
+
+            // (d) Plan complete — no open tasks, all phases Done.
+            fs.writeFileSync(tasksPath, [
+                '## Active Phases',
+                '',
+                '*None — plan complete.*',
+                '',
+                '## Completed Phases',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                '',
+            ].join('\n'));
+            // Remove phase file to be clean.
+            fs.unlinkSync(path.join(tasksDir, 'phase-1.md'));
             next = finalize.computeNextAction('task', 'engine', wsDir);
             assert.match(next, /\/magic\.spec/, 'plan complete → /magic.spec (SC-2.1)');
             assert.doesNotMatch(next, /execute the active phase/, 'must not recommend a non-existent phase (the R6 bug)');
 
-            // spec/rule → replan first (pipeline order).
+            // (e) spec/rule → replan first (pipeline order).
             assert.match(finalize.computeNextAction('spec', 'engine', wsDir), /\/magic\.task/, 'spec → /magic.task');
             assert.match(finalize.computeNextAction('rule', 'engine', wsDir), /\/magic\.task/, 'rule → /magic.task');
 
-            // Unreadable TASKS.md → safe planning fallback.
+            // (f) Unreadable TASKS.md → safe planning fallback.
             const voidWs = path.join(tempDir, '.design', 'void');
             assert.match(finalize.computeNextAction('run', 'void', voidWs), /\/magic\.task/, 'missing TASKS.md → /magic.task fallback');
         } finally {

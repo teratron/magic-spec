@@ -162,12 +162,39 @@ function computeNextAction(workflow, workspace, wsDir) {
     if (workflow === 'rule') return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
+    // Three-tier lookup: inline TASKS.md → phase files → registry table.
+    const openTaskRe = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m;
     try {
         const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
-        const open = tasks.match(/^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m);
-        if (open) return `Execute ${open[1]} ${open[2]} via /magic.run ${workspace}`;
-        // No open tasks → plan complete: author new scope; never recommend
-        // executing a phase that does not exist.
+
+        // 1. Inline checkboxes in TASKS.md (legacy / flat format).
+        const inlineOpen = tasks.match(openTaskRe);
+        if (inlineOpen) return `Execute ${inlineOpen[1]} ${inlineOpen[2]} via /magic.run ${workspace}`;
+
+        // 2. Phase files — canonical two-level format (tasks/phase-N.md).
+        const tasksDir = path.join(wsDir, 'tasks');
+        if (fs.existsSync(tasksDir)) {
+            const phaseFiles = fs.readdirSync(tasksDir)
+                .filter(f => /^phase-\d+\.md$/.test(f))
+                .sort((a, b) => {
+                    const na = parseInt(a.match(/\d+/)[0], 10);
+                    const nb = parseInt(b.match(/\d+/)[0], 10);
+                    return na - nb;
+                });
+            for (const file of phaseFiles) {
+                const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
+                const openTask = content.match(openTaskRe);
+                if (openTask) return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+            }
+        }
+
+        // 3. Registry table fallback — non-Done phase means work remains.
+        const activePhase = tasks.match(
+            /\| \[Phase (\d+)\]\([^)]+\) \|[^|]+\| `(?!Done)([^`]+)` \|/
+        );
+        if (activePhase) return `Continue Phase ${activePhase[1]} via /magic.run ${workspace}`;
+
+        // No open tasks anywhere → plan complete: author new scope.
         return `Plan complete — author new scope via /magic.spec ${workspace} (or /magic.status for a briefing)`;
     } catch {
         return `Run /magic.task ${workspace} to plan`;
