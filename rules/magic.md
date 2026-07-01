@@ -286,7 +286,7 @@ does not revert to host-assistant defaults at workflow boundaries.
 
 ## 8. Completion Protocol (Mandatory Checklist)
 
-Before finishing any task that involved magic-spec workflows, verify §1–§7 were honored.
+Before finishing any task that involved magic-spec workflows, verify §1–§9 were honored.
 
 - [ ] **§1 Upgrade Detection** — compared `.magic/.version` to `**Engine Version:**`
       in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`); on
@@ -314,3 +314,35 @@ Before finishing any task that involved magic-spec workflows, verify §1–§7 w
       (never questions); the post-workflow next step was computed and narrated
       per DA-6; questions appeared only at whitelist gates, single-question,
       ≤3 fixed options.
+- [ ] **§9 Bug Reporting** — if any engine-level bug, unexpected behavior, or crash was
+      encountered in the engine files (`.magic/`, `workflows/`, `skills/`, `rules/`),
+      did NOT attempt to self-repair the engine; generated a formatted
+      `MAGIC-SPEC ENGINE BUG REPORT` block for the user to submit.
+
+## 9. Bug Reporting Protocol (Engine Feedback)
+
+Engine directories (`.magic/`, `workflows/`, `skills/`, `rules/`) are strictly read-only for standard workflows. If you find a bug, logic mismatch, or experience a crash in any engine script or layout, do NOT attempt to edit or fix it yourself. Instead, formulate a structured report so the user can easily submit it.
+
+### Trigger
+
+Any engine-level script error, template mismatch, run-time crash, or logic bug detected in `.magic/`, `workflows/`, `skills/`, or `rules/`.
+
+### Action
+
+Output a dedicated, highly visible Markdown alert block for the user. Do not proceed to execute the task if the engine bug blocks correctness.
+
+### Report Template
+
+```markdown
+> [!CAUTION]
+> **MAGIC-SPEC ENGINE BUG REPORT**
+>
+> **Symptom:** {Clear description of the error / crash / unexpected behavior}
+> **Engine Version:** {Local version from .magic/.version}
+> **Environment Context:** {Workflow, Workspace, OS, Node version}
+> **File/Line:** {Path and line number inside the engine directory if applicable}
+> **Reproduction / Context:**
+> - Command executed: `{command}`
+> - State / Action during failure: `{action}`
+> **Hypothesis / Fix:** {Your technical explanation or suggested fix, if any}
+```

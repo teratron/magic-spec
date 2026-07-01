@@ -9,6 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Engine `computeNextAction` logic fix** (engine v2.1.47 → v2.1.48): Fixed a bug where `finalize.js` would falsely report `"Plan complete"` on `task`/`run` workflows because it was only searching `TASKS.md` for task checkboxes (which actually live in `tasks/phase-N.md` files). It now uses a three-tier cascade lookup.
+
+- **Bug Reporting Protocol added to agent rules**: Added Section 9 (`Bug Reporting Protocol (Engine Feedback)`) to `rules/magic.md` and updated the Section 8 Completion Protocol checklist. This instructs AI agents running the engine on user projects to output a standardized Markdown alert block (`MAGIC-SPEC ENGINE BUG REPORT`) when detecting engine-level errors or crashes, instead of attempting to self-repair the read-only engine files.
+
 - **CHANGELOG trailing newline normalization** (engine v2.1.46 → v2.1.47): fixed the issue where updating the `CHANGELOG.md` file dynamically added an extra trailing newline on each run. The writer now normalizes the end-of-file formatting to a single trailing newline.
 
 - **Cross-workflow consistency hardening** (engine v2.1.42 → v2.1.46): reconciled cross-file divergences across the engine workflows (surfaced by a composition audit), without changing intended runtime behavior (only mis-stated/contradictory branches were corrected):
