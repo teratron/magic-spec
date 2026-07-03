@@ -13,7 +13,7 @@ Sections are independent — apply each by its own trigger.
 
 ## 1. Engine Upgrade Detection (Local ↔ Snapshot)
 
-Engine updates ship via the project's **GitHub Releases** page: the user
+Engine updates ship via the project's releases page on the remote Git host (e.g., GitHub, GitLab, etc.): the user
 downloads the latest release archive and manually replaces the four engine
 folders (`.magic/`, `workflows/`, `skills/`, `rules/`). `.magic/.version` then changes locally while
 the `**Engine Version:**` snapshot in `.design/INDEX.md` still points at the
@@ -55,7 +55,7 @@ carry behavior-affecting changes.
 
 - `/magic.analyze` itself (would recurse).
 - `/magic.status` — read-only briefing; renders drift as an informational engine line, never a prompt.
-- Unreadable `.magic/.version` → skip silently, do not block work.
+- Missing or unreadable `.magic/.version` → skip silently, do not block work.
 - `MAGIC_DRIFT_CHECK=0` env var disables this rule entirely.
 
 ## 2. Specification Knowledge Graph
@@ -296,7 +296,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§9 w
       navigated `.design/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.design/` change this session.
 - [ ] **§3 Finalization** — after `/magic.spec|task|run|rule`, ran
-      `executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**;
+      `node .magic/scripts/executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**;
       did **not** invoke any write-side `git` operation (`add`, `commit`, etc.).
 - [ ] **§4 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
