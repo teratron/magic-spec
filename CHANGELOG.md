@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Engine `commit-suggester` branch alignment** (engine v2.1.48 → v2.1.49): Fixed a bug in `buildChangelogBullet()` where the `'run'` branch would embed the task filename (e.g., `phase-N.md`) using `artifactId()`. Since tasks inside `run` often represent numbered phases, this leaked specific phase filenames into the root CHANGELOG, breaking symmetry with `'task'` and `'rule'` workflows. The `'run'` branch is now aligned with their generic style and does not embed the filename.
+
 - **Engine `computeNextAction` logic fix** (engine v2.1.47 → v2.1.48): Fixed a bug where `finalize.js` would falsely report `"Plan complete"` on `task`/`run` workflows because it was only searching `TASKS.md` for task checkboxes (which actually live in `tasks/phase-N.md` files). It now uses a three-tier cascade lookup.
 
 - **Bug Reporting Protocol added to agent rules**: Added Section 9 (`Bug Reporting Protocol (Engine Feedback)`) to `rules/magic.md` and updated the Section 8 Completion Protocol checklist. This instructs AI agents running the engine on user projects to output a standardized Markdown alert block (`MAGIC-SPEC ENGINE BUG REPORT`) when detecting engine-level errors or crashes, instead of attempting to self-repair the read-only engine files.

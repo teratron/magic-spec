@@ -233,7 +233,7 @@ function buildChangelogBullet(workflow, workspace, files) {
         case 'run': {
             const tasks = files.filter((f) => f.path.includes('/tasks/'));
             if (tasks.length === 1) {
-                return `Completed task \`${artifactId(tasks[0].path)}\` (${workspace})`;
+                return `Completed task (${workspace})`;
             }
             if (tasks.length > 1) return `Completed ${tasks.length} tasks (${workspace})`;
             return `Updated task execution state (${workspace})`;
