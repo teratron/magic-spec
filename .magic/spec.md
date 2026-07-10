@@ -7,7 +7,7 @@ description: Workflow for creating and managing project specifications and the s
 Universal process for managing project specifications in `.design/specifications/`.
 
 > **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
-> **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic.spec/SKILL.md`](../skills/magic.spec/SKILL.md)
+> **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic-spec/SKILL.md`](../skills/magic-spec/SKILL.md)
 > **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
 
 ## Core Invariants (Mandatory)
@@ -55,7 +55,7 @@ Every spec declares its layer in metadata via `Layer:`.
 - **Layer 1 (concept)**: abstract requirements, business logic, domain mechanics. Technology-agnostic; portable to any stack.
 - **Layer 2 (implementation)**: concrete realization of an L1 concept in a specific tech stack. Must include `Implements: {l1-file.md}` pointing to its L1 parent. Cannot enter `RFC` or `Stable` until its L1 parent is `Stable`.
 
-> **Workflow tooling**: specs are created/managed via `workflows/magic.spec.md` (skill: `skills/magic.spec/SKILL.md`). Orchestrated by `workflows/magic.task.md`, executed by `workflows/magic.run.md`, rule governance by `workflows/magic.rule.md`, health audited by `workflows/magic.analyze.md`.
+> **Workflow tooling**: specs are created/managed via `workflows/magic.spec.md` (skill: `skills/magic-spec/SKILL.md`). Orchestrated by `workflows/magic.task.md`, executed by `workflows/magic.run.md`, rule governance by `workflows/magic.rule.md`, health audited by `workflows/magic.analyze.md`.
 
 ## Status Lifecycle
 
@@ -71,6 +71,7 @@ Transition flow:
 ```mermaid
 graph LR
     Draft --> RFC -- "Auto or Approved" --> Stable --> Deprecated
+    Draft -- "Trust Mode (C9) / Batch Stabilization" --> Stable
     RFC --> Draft
     Stable --> RFC
 ```

@@ -15,7 +15,7 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 ## Components
 
-- **magic.simulate (Cognitive)**: The primary engine validation tool. Runs all scenarios in `.magic/tests/suite.md` as a purely cognitive task — no physical scripts are created. The agent evaluates each test scenario internally against the engine workflow logic and reports PASS/FAIL/ROUGH EDGE.
+- **magic.dev.simulate (Cognitive)**: The primary engine validation tool. Runs all scenarios in `.magic/tests/suite.md` as a purely cognitive task — no physical scripts are created. The agent evaluates each test scenario internally against the engine workflow logic and reports PASS/FAIL/ROUGH EDGE.
 
 ## Cognitive Test Suite
 

@@ -81,10 +81,10 @@ graph TD
    - **Bootstrap Detection**: `PLAN.md` contains `[Bootstrap]` markers → warn: *"⚠ Bootstrap Plan detected — specs are not yet Stable. Execution results may need revision when specs are finalized."* Continue execution but append `[Bootstrap]` suffix to all generated artifacts (task outputs, changelogs). Bootstrap artifacts are not final deliverables.
    - **Spec Stability Spot-Check**: read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. **Bootstrap Exception**: task with `[Bootstrap]` marker → `Draft` is acceptable; skip this check for that task. Any other non-Stable spec → **HALT** before execution begins (per Logic Guard above).
    - **File-Header Parity**: for each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. Either mismatches `INDEX.md` → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`."* Catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the L1 parent header (incl. cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
-2. **Select**: Locate `Todo` task with fulfilled dependencies.
+2. **Select**: Locate `Todo` task with fulfilled dependencies. Evaluate the branches below strictly in listed order: *Stalled* → *Backlog-Only* → *Complete*.
    - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT**. List each `Blocked [!]` task with its recorded reason from `TASKS.md`. Recommend exactly ONE next step: `/magic.task {workspace}` (per `rules/MAGIC.md §5`). **Hard rule**: do NOT recommend `/magic.spec` or `/magic.analyze` — blocked specs and drift surface inside `/magic.task` Pre-flight only.
    - *Backlog-Only*: 0 `Todo` AND 0 `In Progress` AND 0 `Done` AND 0 `Blocked` → **HALT**: "Active phase has no started tasks — all work is in `## Backlog`. Run `/magic.task` to activate a phase, then re-run `/magic.run`."
-   - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Blocked`/`Cancelled`) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
+   - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Cancelled`; any `Blocked` routes to *Stalled* above) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
 3. **Execute** — Activate `@role:coder`. Implement per spec section, no scope creep (full protocol in `.magic/roles/coder.md`).
 3.3. **Decision Review (opt-in or auto-triggered)** — Activate `@role:code-skeptic` when (a) the task's spec flags `requires-decision-review: true`, (b) the Coder identifies non-trivial design choices, OR (c) the Coder surfaces 2+ valid interpretations with materially different trade-offs (auto-trigger, see `@role:coder` Operating Protocol §4). Surface 2-3 alternative approaches with trade-offs. PASS → proceed to 3.4. Plan-level issue → escalate to `@role:planner`.
 3.4. **Diff Review** — Activate `@role:code-reviewer`. Inspect diff for `RULES.md` compliance, surface correctness, minimalism, and spec-boundary conformance. FAIL → return to Step 3. PASS with complexity notes → proceed to 3.6 (opt-in). Clean PASS → proceed to 3.4b.
@@ -154,7 +154,7 @@ Checklist — {operation}
   ☐ Handoff Integrity: Handoff chains declared by card frontmatter respected
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magic.task` only — `/magic.spec` never named directly
-  ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, engine version bumped, CONTEXT.md updated
+  ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, project version bumped (project release file only — never .magic/.version), CONTEXT.md updated
   ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (release gate is git commit)
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

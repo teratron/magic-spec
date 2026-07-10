@@ -1,8 +1,8 @@
 # Workflow Test Suite
 
-**Version:** 1.9.73
+**Version:** 1.9.74
 **Purpose:** Regression testing for Magic SDD engine workflows.
-**Trigger:** `/magic.simulate test`
+**Trigger:** `/magic.dev.simulate test`
 
 ## How to Run
 
@@ -49,7 +49,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Post-init verification checks all 6 artifacts: `INDEX.md`, `RULES.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`
   - [ ] Brief report: "SDD initialized — {date}"
   - [ ] Calling workflow continues after init
-- **Guards tested:** Engine Integrity check, post-init verification (5 artifacts)
+- **Guards tested:** Engine Integrity check, post-init verification (6 artifacts)
 
 ### T02 — Init Partial Corruption
 
@@ -79,7 +79,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] New file `ui-components.md` created from `.magic/templates/spec.md`
   - [ ] INDEX.md updated with new entry
   - [ ] Post-Update Review runs on all modified files
-  - [ ] Actionable Outcome shown: `[Batch-Stabilize] {Spec} promoted to Stable; updated registry.`
+  - [ ] Actionable Outcome shown: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 - **Guards tested:** Multi-topic dispatch, Trust Mode (C9) auto-confirm, new file creation with template, registry sync
 
 ### T04 — Spec Intra-Input Self-Contradiction
@@ -258,7 +258,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.magic/.checksums` exists
   - `spec.md` hash does not match stored checksum (file was modified without regeneration)
-- **Action:** `/magic.simulate spec`
+- **Action:** `/magic.dev.simulate spec`
 - **Expected:**
   - [ ] check-prerequisites reports `checksums_mismatch` for `spec.md`
   - [ ] **HALT** — do NOT proceed with simulation
@@ -533,7 +533,7 @@ If any test fails, document the failure reason and propose a fix.
     - Project root has: `package.json`, `src/`, `README.md`, 20+ source files
   - **Action:** Any workflow triggers init
   - **Expected:**
-    - [ ] Init runs: `.design/` created with all 5 artifacts
+    - [ ] Init runs: `.design/` created with all 6 artifacts
     - [ ] Post-init: codebase indicators scanned — `package.json` found
     - [ ] Hint appended: `💡 Existing codebase detected. To generate initial specifications from your code, say: "Analyze project"`
     - [ ] Calling workflow continues after hint
@@ -543,7 +543,7 @@ If any test fails, document the failure reason and propose a fix.
     - Project root has only `.magic/` (freshly installed magic-spec, no user code)
   - **Action:** Any workflow triggers init
   - **Expected:**
-    - [ ] Init runs: `.design/` created with all 5 artifacts
+    - [ ] Init runs: `.design/` created with all 6 artifacts
     - [ ] Post-init: no codebase indicators found
     - [ ] **No hint** — analysis not suggested for empty projects
     - [ ] Calling workflow continues
@@ -577,14 +577,14 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `simulate.md` (Improv Mode)
 - **Synthetic State:**
   - `dev/tests/suite.md` file is missing or inaccessible.
-- **Action 1:** User runs `/magic.simulate test`
+- **Action 1:** User runs `/magic.dev.simulate test`
 - **Expected 1:**
   - [ ] Agent checks for `dev/tests/suite.md` and fails to find it.
   - [ ] Agent alerts user that test suite is missing, provides hint to restore file from origin, and falls back to **Improv Mode**.
   - [ ] Agent synthesizes a complex "Crisis Scenario" (e.g., INDEX.md desync).
   - [ ] Agent runs an end-to-end simulated lifecycle (Spec → Task → Run → Retro).
   - [ ] Agent outputs a Friction Audit report with identified "Rough Edges".
-- **Action 2:** User runs `/magic.simulate` (without target), user requests generic "live simulation"
+- **Action 2:** User runs `/magic.dev.simulate` (without target), user requests generic "live simulation"
 - **Expected 2:**
   - [ ] Agent defaults to **Improv Mode**.
   - [ ] Executes the same synthesis and lifecycle end-to-end as Expected 1.
@@ -629,7 +629,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User explicitly approves the "Corrective Proposal" changes.
 - **Expected:**
   - [ ] Agent performs a spot-check of the modified lines in `init.md`.
-  - [ ] Agent explicitly utilizes the *Run regression tests* handoff from `.agents/workflows/magic.simulate.md` or directly triggers the `/magic.simulate test` suite.
+  - [ ] Agent explicitly utilizes the *Run regression tests* handoff from `.agents/workflows/magic.dev.simulate.md` or directly triggers the `/magic.dev.simulate test` suite.
   - [ ] Full regression suite is executed sequentially to ensure core `init.md` modifications did not break adjacent workflows.
 - **Guards tested:** Post-fix regression sweep enforcement.
 
@@ -651,7 +651,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 3:** `.design/workspace.json` is deleted. Workflow triggered.
 - **Expected 3:**
   - [ ] Fallback kicks in silently.
-  - [ ] Agent uses root `.design/` for all operations.
+  - [ ] Per WI-10 (`context.md` Priority 4): root `.design/` is read transiently only; auto-init bootstraps `.design/{default}/` and resolution re-runs at Priority 3 — no artifacts are ever written to flat root `.design/`.
 - **Guards tested:** Context Resolution Priority, Zero-Prompt Enforcement, Graceful Fallback.
 
 ### T37 — Retrospective Path and Template Resilience
@@ -697,9 +697,9 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (Wrapper & Engine)
 - **Synthetic State:** Fresh design session, all files present.
-- **Action:** User prompts `"/magic.simulate"` without arguments.
+- **Action:** User prompts `"/magic.dev.simulate"` without arguments.
 - **Expected:**
-  - [ ] Agent reads `.agents/workflows/magic.simulate.md`.
+  - [ ] Agent reads `.agents/workflows/magic.dev.simulate.md`.
   - [ ] Agent does NOT ask the user to "pick a workflow".
   - [ ] Agent explicitly engages Step 1.5 "Improv Mode (Live Simulation)".
   - [ ] Agent invents a crisis scenario and proceeds autonomously.
@@ -1032,7 +1032,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:** Fresh repository, `.design/` (missing).
-- **Action:** User runs `/magic.simulate`.
+- **Action:** User runs `/magic.dev.simulate`.
 - **Expected:**
   - [ ] `check-prerequisites` returns `ok: false` (missing `.design/`).
   - [ ] No `ENGINE_INTEGRITY` or `checksums_mismatch` warnings (checksums are valid).
@@ -1166,7 +1166,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `dev/tests/suite.md` exists but contains only the header block (no `### T{N}` test scenarios).
   - File is readable but has zero parseable test cases.
-- **Action:** User runs `/magic.simulate test`
+- **Action:** User runs `/magic.dev.simulate test`
 - **Expected:**
   - [ ] Agent reads `dev/tests/suite.md` successfully (file exists).
   - [ ] Suite Integrity check detects 0 valid test scenarios (no `### T{N} —` headers found).
@@ -1729,7 +1729,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `analyze.md` Invariant 2 fires: `.design/` missing detected
   - [ ] Auto-trigger `.magic/init.md` before any scanning
-  - [ ] `.design/` created with all 5 artifacts
+  - [ ] `.design/` created with all 6 artifacts
   - [ ] Analysis resumes after init completes
 - **Guards tested:** Auto-Init (Invariant 2) on direct analyze trigger
 
@@ -1944,12 +1944,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (§Reporting & Fixes — C14 Enforcement Gate)
 - **Synthetic State:**
-  - Agent ran `/magic.simulate spec` and found 2 ROUGH EDGEs
+  - Agent ran `/magic.dev.simulate spec` and found 2 ROUGH EDGEs
   - Agent applied surgical patches to `.magic/spec.md`
   - Agent is about to report results
 - **Action:** Agent reaches Reporting step
 - **Expected:**
-  - [ ] C14 Enforcement Gate fires: "were any `.magic/` files modified during this `/magic.simulate` invocation?"
+  - [ ] C14 Enforcement Gate fires: "were any `.magic/` files modified during this `/magic.dev.simulate` invocation?"
   - [ ] Answer: yes (`spec.md` patched) → `update-engine-meta` runs
   - [ ] `.version` bumped, `.checksums` regenerated
   - [ ] Only AFTER checksums match does the agent present results
@@ -1960,8 +1960,8 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (§Succession — max iterations)
 - **Synthetic State:**
-  - Round 1: `/magic.simulate test` finds 1 FAIL → agent patches → C14 Gate → Succession
-  - Round 2: `/magic.simulate test` finds 1 new FAIL (introduced by Round 1 fix) → agent patches → C14 Gate → Succession
+  - Round 1: `/magic.dev.simulate test` finds 1 FAIL → agent patches → C14 Gate → Succession
+  - Round 2: `/magic.dev.simulate test` finds 1 new FAIL (introduced by Round 1 fix) → agent patches → C14 Gate → Succession
   - Round 3 would start
 - **Action:** Agent reaches 3rd Succession attempt
 - **Expected:**
@@ -1977,15 +1977,15 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - All engine files present and valid
 - **Test A — Workflow name:**
-  - **Action:** `/magic.simulate spec`
+  - **Action:** `/magic.dev.simulate spec`
   - **Expected:**
     - [ ] Direct mode: cognitive walkthrough of `spec.md`
 - **Test B — File path:**
-  - **Action:** `/magic.simulate @/path/to/magic.analyze.md`
+  - **Action:** `/magic.dev.simulate @/path/to/magic.analyze.md`
   - **Expected:**
     - [ ] File path parsed: workflow name extracted as `analyze`
     - [ ] Direct mode: cognitive walkthrough of `analyze.md`
-    - [ ] Same behavior as `/magic.simulate analyze`
+    - [ ] Same behavior as `/magic.dev.simulate analyze`
 - **Guards tested:** File-path argument parsing, equivalence with workflow-name argument
 
 ### T125 — Checklist Consolidation Strategic/Tactical Split
@@ -2069,7 +2069,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.magic/.checksums` has been manually altered (hash mismatch)
   - `check-prerequisites --json` returns `checksums_mismatch: true`
-- **Action:** `/magic.simulate test` triggered
+- **Action:** `/magic.dev.simulate test` triggered
 - **Expected:**
   - [ ] Pre-flight Step 0 runs `check-prerequisites --json`
   - [ ] Agent detects `checksums_mismatch` in output
@@ -2084,7 +2084,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `workspace.json` has 2 workspaces: `engine`, `docs`
   - All engine files valid
-- **Action:** `/magic.simulate` (no args — Improv mode)
+- **Action:** `/magic.dev.simulate` (no args — Improv mode)
 - **Expected:**
   - [ ] Agent synthesizes a crisis with a named scenario (CR-6)
   - [ ] Crisis header block presented before walkthrough with all CR-1 through CR-6 fields
@@ -2117,12 +2117,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md` (§3 Succession — Context Bleed Warning)
 - **Synthetic State:**
-  - Agent ran `/magic.simulate spec`, found 1 ROUGH EDGE, applied fix
+  - Agent ran `/magic.dev.simulate spec`, found 1 ROUGH EDGE, applied fix
   - C14 gate passed
   - Succession round 1: 0 regressions
 - **Action:** Agent produces final simulation report
 - **Expected:**
-  - [ ] Report includes context bleed warning: `"⚠ Succession ran in-context. For unbiased verification, run /magic.simulate test in a fresh session."`
+  - [ ] Report includes context bleed warning: `"⚠ Succession ran in-context. For unbiased verification, run /magic.dev.simulate test in a fresh session."`
   - [ ] Warning appears in final report text (not buried in checklist)
   - [ ] If warning is missing → **FAIL**
 - **Guards tested:** Context Bleed Warning enforcement, wrapper-implementation sync
@@ -2133,7 +2133,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `dev/tests/suite.md` exists but T14 has a malformed header: `### T14: Missing Dash` (colon instead of dash)
   - suite.md has 20 valid tests + 1 malformed
-- **Action:** `/magic.simulate test` triggered
+- **Action:** `/magic.dev.simulate test` triggered
 - **Expected:**
   - [ ] Suite Integrity check runs **before** scenario execution (timing: `test` mode)
   - [ ] Malformed T14 detected: header uses `:` instead of `—` (dash)
@@ -2288,7 +2288,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `simulate.md` (Step 0: Pre-flight)
 - **Synthetic State:**
   - `.magic/.checksums` exists but `run.md` checksum mismatches (file was modified)
-- **Action:** `/magic.simulate run`
+- **Action:** `/magic.dev.simulate run`
 - **Expected:**
   - [ ] `check-prerequisites` reports `checksums_mismatch` for `run.md`
   - [ ] **HALT** — no simulation proceeds
@@ -2506,7 +2506,7 @@ If any test fails, document the failure reason and propose a fix.
   - Workspace `engine` active (`Scope: .magic, .agents, ...`).
   - Manual drift in `docs/config.json` (OUT OF SCOPE).
   - `.magic/` files are clean and match checksums.
-- **Action:** Run `/magic.simulate`
+- **Action:** Run `/magic.dev.simulate`
 - **Expected:**
   - [ ] check-prerequisites called with `--workspace=engine`.
   - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `docs/config.json`.
@@ -2795,7 +2795,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `dev/tests/suite.md` exists but contains only metadata header (no test scenarios).
   - File size > 0 bytes, readable.
-- **Action:** User runs `/magic.simulate test`
+- **Action:** User runs `/magic.dev.simulate test`
 - **Expected:**
   - [ ] Agent opens and reads `suite.md` — file access succeeds (no "missing" error)
   - [ ] Suite Integrity detects 0 valid `### T{N} —` headers
@@ -2973,12 +2973,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `workflows/magic.test.md` exists with frontmatter and body.
   - Body contains instructions.
-  - `skills/magic.test/SKILL.md` exists (generated).
+  - `skills/magic-test/SKILL.md` exists (generated).
 - **Expected:**
-  - [ ] `SKILL.md` frontmatter `name` = `magic:test` (filename-based default).
+  - [ ] `SKILL.md` frontmatter `name` = `magic-test` (filename-based default, hyphenated).
   - [ ] `SKILL.md` body contains the verbatim body of `magic.test.md`.
   - [ ] `SKILL.md` includes the read-only warning comment with correct source path.
-  - [ ] If `magic.test.md` is deleted, `skills/magic.test/` directory is removed (Orphan Cleanup).
+  - [ ] If `magic.test.md` is deleted, `skills/magic-test/` directory is removed (Orphan Cleanup).
 - **Guards tested:** Parity (exact match), Orphan cleanup, Metadata extraction.
 
 ### T191 — Mechanical File-Header Parity (--verify-headers)
@@ -3153,13 +3153,16 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `run.md` + `init.md` + `run.md` Run Completion Checklist (cross-workflow)
 - **Synthetic State:**
   - Active engine version ≥ 2.1.25.
-  - Three known suite drifts previously corrected (T34, T58, T195) must not re-regress.
+  - Six known suite drifts previously corrected (T34, T58, T195 — v2.1.25; T36, T190, simulate-rename — v2.1.55) must not re-regress.
 - **Action:** Static scan of `dev/tests/suite.md` against workflow source of truth.
 - **Expected:**
   - [ ] T34 expectation cites `rules/MAGIC.md §5` Post-Task Replan collapse to `/magic.task` — does NOT claim direct `run.md → /magic.spec` handoff.
   - [ ] T58 expectation reads `default: main` — does NOT contain the literal string `default: root` (WI-10 contract).
   - [ ] T195 expectation requires verbatim changelog display + git-commit gate — does NOT contain the phrase `Yes/No` as an inline approval gate.
-  - [ ] All three corrected expectations cite their workflow source-of-truth lines (e.g., `run.md` line 104, `init.md` WI-10, `run.md` C25 checklist).
+  - [ ] T36 expectation describes the WI-10 bootstrap fallback (auto-init provisions `.design/{default}/`; root `.design/` read transiently) — does NOT claim root `.design/` is used "for all operations".
+  - [ ] T190 expectation uses the hyphenated skill projection convention (`skills/magic-test/`, `name: magic-test`) — does NOT contain a dotted `skills/magic.test/` path.
+  - [ ] Simulate scenarios invoke `/magic.dev.simulate` and reference `.agents/workflows/magic.dev.simulate.md` — no scenario uses the legacy pre-rename command form.
+  - [ ] All corrected expectations cite their workflow source-of-truth lines (e.g., `run.md` line 104, `init.md` WI-10, `run.md` C25 checklist).
 - **Guards tested:** Suite-to-workflow contract integrity (post-correction); guards that the simulation harness itself does not silently re-introduce outdated assertions.
 
 ### T204 — Spec Dispatch Diagram Reflects C9 Non-Blocking (Diagram-Text Parity)
@@ -3192,6 +3195,34 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Workflow convergence completeness — every decision node (`Plan Complete?`) has all branches defined; no dead-end on incomplete plan.
 - **Regression for:** "The Silent Approval" crisis (Improv Mode 2026-06-13); missing `J -->|No|` edge in run.md diagram.
 
+### T206 — Run Checklist Version-Bump Wording Parity
+
+- **Workflow:** `run.md` (Run Completion Checklist ↔ Plan Completion §3)
+- **Synthetic State:**
+  - Full plan complete; Node.js project with `package.json` version `1.2.0`.
+  - Agent reaches the Run Completion Checklist after Plan Completion.
+- **Action:** Static scan of `run.md`: compare the Conclusion checklist line against Plan Completion Step 3 (Version Bump).
+- **Expected:**
+  - [ ] Checklist Conclusion line says the **project** version is bumped (project release file only — never `.magic/.version`).
+  - [ ] Checklist does NOT contain the phrase `engine version bumped`.
+  - [ ] Plan Completion Step 3 retains the prohibition: `Do NOT modify .magic/.version`.
+  - [ ] An agent literally executing the checklist bumps `package.json`, never `.magic/.version` (consistent with T42).
+- **Guards tested:** Version Bleed Prevention (checklist-body parity); regression for "The Tampered Twin" crisis (Improv Mode 2026-07-10).
+
+### T207 — Run Select Branch Precedence (Stalled Before Complete)
+
+- **Workflow:** `run.md` (Step 2 — Select)
+- **Synthetic State:**
+  - TASKS.md Phase 2: 3 tasks `Done`, 1 task `Blocked [!]` (reason recorded), 0 `Todo`, 0 `In Progress`.
+  - STATE.md: `**Status:** Active`.
+- **Action:** `/magic.run` invoked; Pre-flight passes.
+- **Expected:**
+  - [ ] Select evaluates branches strictly in listed order: *Stalled* → *Backlog-Only* → *Complete*.
+  - [ ] *Stalled* fires first (0 `Todo`, `Blocked` exist) → **HALT** listing the blocked task with its recorded reason.
+  - [ ] *Complete* branch is NOT reached — Phase Completion (Retro L1 + Changelog L1 + Archive) is NOT triggered despite `0 Todo AND 0 In Progress`.
+  - [ ] Exactly ONE next step recommended: `/magic.task {workspace}`.
+- **Guards tested:** Select branch precedence (explicit evaluation order); regression for "The Tampered Twin" crisis (Improv Mode 2026-07-10); complements T11 (all-Blocked stall) and T201 (Backlog-Only before Complete).
+
 ```
-**Test Suite Finalized** - v1.9.73 (Last: T205)
+**Test Suite Finalized** - v1.9.74 (Last: T207)
 ```

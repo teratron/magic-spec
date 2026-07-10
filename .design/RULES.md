@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -113,7 +113,7 @@ All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` c
 
 ### C11 — Simulation Workflow (C2 Exception)
 
-`magic.simulate` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
+`magic.dev.simulate` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
 
 ### C12 — Quarantine Cascade
 
@@ -181,9 +181,9 @@ Each workspace may maintain a local `RULES.md` at `.design/{workspace}/RULES.md`
 To minimize redundant resource usage and improve performance, the agent may optimize `check-prerequisites` calls within a single task lifecycle:
 
 1. **Turn-Aware Caching**: If `check-prerequisites` returned `ok: true` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in `.magic/` or `.design/` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
-2. **External Drift Guard**: If a significant time has passed or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
+2. **External Drift Guard**: If >5 minutes have passed since the last check, the context window has been compacted, or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
-4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
+4. **Audit/Simulate Exemption**: In `/magic.analyze` (Ventilation) or `/magic.dev.simulate` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
 ### C24 — Role-Switching Gates
 
@@ -245,6 +245,7 @@ Relationship to neighbors: C9 grants the authorization scope, C25 governs output
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.9.0 | 2026-07-10 | Agent | Amended C23 §2: quantified External Drift Guard (">5 minutes / context compaction / manual file ops" replacing vague "significant time"), aligning the live constitution with templates/rules.md per C13 vague-term elimination. Recorded C11/C23 §4 simulate-command rename (magic.simulate → magic.dev.simulate) propagated by engine sync v2.1.55. |
 | 1.8.0 | 2026-06-12 | Agent | Added C27 (Autonomous Decision Protocol) per field-feedback T4 rule; amended C13 §3 from halt-and-ask to Bounded Ambiguity Resolution, resolving the C13↔C25 contradiction. |
 | 1.7.0 | 2026-05-07 | Agent | Backported C25 (Engineer Posture) from template; added C26 (Workspace Intent Routing) governing pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, and second-contour fit validation. |
 | 1.6.1 | 2026-04-29 | Agent | Removed legacy distribution wording from active adapter conventions. |
