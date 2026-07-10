@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.17.2
+**Version:** 1.17.3
 **Generated:** 2026-06-13
-**Based on PLAN:** .design/engine/PLAN.md v1.14.0
-**Based on RULES:** .design/RULES.md v1.8.0
+**Based on PLAN:** .design/engine/PLAN.md v1.14.1
+**Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 12 phases (2-13) are Done; 25 specs registered and Stable; engine at 2.1.41. Phase 13 aligned `rules/MAGIC.md` §1 Engine Upgrade Detection with the Decision Autonomy protocol (no `[y/n]` prompt). l2-release-pipeline.md added as a Completed (Baseline) retrospec (no execution — CI pre-exists). R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`.
+Tactical registry of all phases and their statuses. **Plan complete**: all 12 phases (2-13) are Done; 25 specs registered and Stable; engine at 2.1.55. Re-synced 2026-07-10 to INDEX v1.15.2 (l2-test-suite 1.5.1 reality-sync) and RULES v1.9.0 (C23 §2 quantification) — no new scope. Phase 13 aligned `rules/MAGIC.md` §1 Engine Upgrade Detection with the Decision Autonomy protocol (no `[y/n]` prompt). l2-release-pipeline.md added as a Completed (Baseline) retrospec (no execution — CI pre-exists). R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`.
 
 ## Active Phases
 
@@ -38,5 +38,5 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 12 ph
 
 ## Meta Information
 
-- **Last Updated**: 2026-06-12
+- **Last Updated**: 2026-07-10
 - **Maintainer**: Core Team

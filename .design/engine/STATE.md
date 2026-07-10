@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-07-10 14:49
+**Updated:** 2026-07-10 14:58
 **Phase:** 13 — Upgrade-Detection DA Alignment
 **Status:** Complete
 
@@ -12,7 +12,7 @@
 
 - **Task:** l2-release-pipeline registered (baseline retrospec)
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Plan complete — author new scope via /magic.spec engine (or /magic.status for a briefing)
 
 ## Progress
 
@@ -21,13 +21,13 @@ Overall: [12/12] ████████ 100%
 ```
 
 ## Recent Decisions
+- 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
 
 - 2026-06-13 **Decision:** l2-release-pipeline.md registered as Completed Baseline (retrospec, no execution); R8 documented in §5.3; PLAN 1.14.0, TASKS 1.17.2
 - 2026-06-13 **Decision:** Phase 13 complete. Provides: rules/magic.md §1 DA-8/DA-9-aligned (no [y/n]); README updated; engine 2.1.41 (rules-only, no bump). Findings R8/R9 to backlog
 - 2026-06-13 **Decision:** Phase 13 planned: align rules/magic.md §1 with DA-8/DA-9 (remove [y/n]); README + hardlink; 3 tasks
 
 - 2026-06-13 **Decision:** Phase 12 complete. Provides: WRAPPER_BODY_DRIFT parity check in analyze Mode C (R4 preventive); engine 2.1.41
-- 2026-06-13 **Decision:** Phase 12 planned: deploy R4 WRAPPER_BODY_DRIFT cognitive check into analyze Mode C; 2 tasks, no new script (consistent with sibling structural checks)
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 

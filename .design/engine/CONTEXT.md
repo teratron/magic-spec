@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-06-13
+**Generated:** 2026-07-10
 
 ## Active Technologies
 
@@ -15,15 +15,12 @@
 │   ├── skills/
 │   └── workflows/
 ├── .design/
-│   ├── .cache/
-│   ├── .graph-cache/
 │   ├── .version
 │   ├── CONTEXT.md
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
 │   ├── graph-before.json
-│   ├── wiki/
 │   └── workspace.json
 ├── .github/
 │   └── workflows/
