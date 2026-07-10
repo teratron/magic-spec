@@ -105,6 +105,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Completed task `phase-13` (engine)
 - Added specification `release-pipeline` (engine)
 - Updated global project rules (engine)
+- Updated specification `test-suite` (engine)
 
 ### Added
 

@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-07-10 14:42
+**Updated:** 2026-07-10 14:49
 **Phase:** 13 — Upgrade-Detection DA Alignment
 **Status:** Complete
 
@@ -12,7 +12,7 @@
 
 - **Task:** l2-release-pipeline registered (baseline retrospec)
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to revalidate the plan against amended rules
+- **Next Action:** Run /magic.task engine to update the plan
 
 ## Progress
 

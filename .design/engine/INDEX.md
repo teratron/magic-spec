@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.15.1
+**Version:** 1.15.2
 **Status:** Active
 
 ## Overview
@@ -18,7 +18,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants, and runtime guards. | Stable | 1 | 1.1.3 |
 | [l2-engine-automation.md](specifications/l2-engine-automation.md) | Automation scripts, history subsystem, and execution logic. | Stable | 2 | 1.6.0 |
 | [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival (eligibility precision §6), git-utils, versioning, session-continuity step (SC-2/SC-3). | Stable | 2 | 1.2.0 |
-| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (157 tests, v1.9.45) + script-level harness with finalize-pipeline coverage mandate. | Stable | 2 | 1.5.0 |
+| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (206 tests, v1.9.74) + script-level harness with finalize-pipeline coverage mandate. | Stable | 2 | 1.5.1 |
 | [l1-documentation-system.md](specifications/l1-documentation-system.md) | Knowledge base structure, governance, and docs/ sync policy. | Stable | 1 | 1.2.2 |
 | [l1-config-drift-guard.md](specifications/l1-config-drift-guard.md) | Detection of manual RULES.md changes outside workflow lifecycle. | Stable | 1 | 1.0.1 |
 | [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) | User-facing workflow entry points in `workflows/`; wrapper-body parity invariant + WRAPPER_BODY_DRIFT check (§6). | Stable | 2 | 1.2.0 |
@@ -45,4 +45,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-07-01 (l2-release-pipeline.md added — retrospec of the GitHub Release CI; documents the engine-version tracking constraint, consolidating R8)
+- **Last Updated**: 2026-07-10 (l2-test-suite.md 1.5.1 — reality sync of cognitive-suite counters, suite version, and canonical suite path)
