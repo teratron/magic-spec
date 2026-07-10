@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **CommonJS scope boundary for engine scripts** (engine v2.1.49 → v2.1.50): added `.magic/scripts/package.json` declaring `{"type":"commonjs"}`. The engine installs *inside* a consumer repository, so its `.js` files inherited the module system from the consumer's root `package.json`. Downstream projects declaring `"type": "module"` made Node resolve every engine script as ESM, failing at the first `require()` with `ReferenceError: require is not defined in ES module scope` — a hard blocker for `/magic.*` and the pre-commit hook. The boundary file scopes `.magic/scripts/` (and `scripts/lib/`) back to CommonJS regardless of consumer configuration. A test now asserts the file exists, declares `commonjs`, and is **tracked by git** — the release archive is built by walking a fresh CI checkout, and `update-engine-meta --check` does not flag manifest entries whose file is absent, so an untracked boundary would vanish from the release silently.
+
+- **`extract-rationale` now honors `.gitignore`** (engine v2.1.50 → v2.1.51): the rationale scanner walked the project with only a hardcoded `SKIP_DIRS` list and never read `.gitignore`, violating Invariant 7 (Gitignore Safety). Build artifacts leaked into the report — e.g. a `NOTE` marker harvested from rustdoc output under `target/doc/`, which `analyze-coverage` correctly excluded on the same tree. Gitignore filtering was duplicated across three scanners with divergent semantics and absent from a fourth; it is now a single shared `loadGitignore()` helper in `.magic/scripts/utils.js`, validated against real `git check-ignore` behavior (bare names at any depth, root-anchored `/dist`, nested path patterns, wildcard basenames). Ignored directories are pruned during the walk rather than filtered afterwards, so large build trees are never descended into.
+
+- **Phase archival rewrites `PLAN.md` links** (engine v2.1.49 → v2.1.50): `archiveCompletedPhases()` rewrote `tasks/phase-N.md` references only in `TASKS.md`, leaving `PLAN.md` pointing at the moved file. Both indexes are now rewritten to `archives/tasks/phase-N.md`.
+
+- **`build-spec-graph` coverage statistics and orphan detection** (engine v2.1.49 → v2.1.50): the coverage percentage divided a workspace-wide covered-file count by a single spec's scope size, mixing two coordinate systems and reporting figures above 100% (observed: 746.2%). Orphan detection compared scope entries to covered paths by string equality, so scope *directories* (`.magic/`, `docs/`) were reported as orphaned whenever their coverage was recorded against nested files. Both now compare by path prefix.
+
 ### Changed
 
 - **Engine `commit-suggester` branch alignment** (engine v2.1.48 → v2.1.49): Fixed a bug in `buildChangelogBullet()` where the `'run'` branch would embed the task filename (e.g., `phase-N.md`) using `artifactId()`. Since tasks inside `run` often represent numbered phases, this leaked specific phase filenames into the root CHANGELOG, breaking symmetry with `'task'` and `'rule'` workflows. The `'run'` branch is now aligned with their generic style and does not embed the filename.

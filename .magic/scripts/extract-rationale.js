@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath } = require('./utils');
+const { normalizePath, loadGitignore } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -76,13 +76,18 @@ function buildPattern(ext) {
 }
 
 /**
- * Recursively collect source files from a directory, skipping excluded dirs.
+ * Recursively collect source files from a directory, skipping excluded dirs
+ * and anything matched by the project's `.gitignore` (Invariant 7).
+ *
+ * Ignored directories are pruned rather than filtered after the fact, so large
+ * build trees (rustdoc `target/doc/`, `node_modules/`) are never descended into.
  *
  * @param {string} dir - Root directory to scan.
+ * @param {function(string): boolean} isIgnored - Gitignore predicate over root-relative paths.
  * @param {string[]} [results=[]] - Accumulator for recursive calls.
  * @returns {string[]} Array of absolute file paths.
  */
-function collectSourceFiles(dir, results = []) {
+function collectSourceFiles(dir, isIgnored, results = []) {
     let entries;
     try {
         entries = fs.readdirSync(dir, { withFileTypes: true });
@@ -91,13 +96,18 @@ function collectSourceFiles(dir, results = []) {
     }
 
     for (const entry of entries) {
+        const fullPath = path.join(dir, entry.name);
+        const relPath = normalizePath(path.relative('.', fullPath));
+
+        if (isIgnored(relPath)) continue;
+
         if (entry.isDirectory()) {
             if (SKIP_DIRS.has(entry.name)) continue;
-            collectSourceFiles(path.join(dir, entry.name), results);
+            collectSourceFiles(fullPath, isIgnored, results);
         } else if (entry.isFile()) {
             const ext = path.extname(entry.name).toLowerCase();
             if (SOURCE_EXTENSIONS.has(ext)) {
-                results.push(path.join(dir, entry.name));
+                results.push(fullPath);
             }
         }
     }
@@ -300,11 +310,12 @@ function scan(scanDirs, refMap) {
 
     const filesWithRationale = new Set();
 
-    // Collect all source files
+    // Collect all source files, honoring .gitignore (Invariant 7: Gitignore Safety)
+    const isIgnored = loadGitignore('.');
     const allFiles = [];
     for (const dir of scanDirs) {
         if (fs.existsSync(dir)) {
-            collectSourceFiles(dir, allFiles);
+            collectSourceFiles(dir, isIgnored, allFiles);
         }
     }
 

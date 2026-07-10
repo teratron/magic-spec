@@ -460,7 +460,16 @@ function findOrphanedFiles() {
         if (edge.relation === 'covers') coveredFiles.add(edge.to);
     }
 
-    return [...scopedFiles].filter(f => !coveredFiles.has(f));
+    return [...scopedFiles].filter(scopedId => {
+        const scopedPath = scopedId.replace(/^file:/, '');
+        for (const coveredId of coveredFiles) {
+            const coveredPath = coveredId.replace(/^file:/, '');
+            if (coveredPath === scopedPath || coveredPath.startsWith(scopedPath + '/')) {
+                return false;
+            }
+        }
+        return true;
+    });
 }
 
 /**
@@ -599,14 +608,26 @@ function computeCoverageStats() {
             .filter(e => e.from === id && e.relation === 'scopes')
             .map(e => e.to);
 
+        const coveredInScope = new Set();
+        for (const scopedId of scopeFiles) {
+            const scopedPath = scopedId.replace(/^file:/, '');
+            for (const coveredId of coveredFiles) {
+                const coveredPath = coveredId.replace(/^file:/, '');
+                if (coveredPath === scopedPath || coveredPath.startsWith(scopedPath + '/')) {
+                    coveredInScope.add(scopedId);
+                    break;
+                }
+            }
+        }
+
         const totalScope = scopeFiles.length;
         const pct = totalScope > 0
-            ? Math.round((coveredFiles.size / totalScope) * 1000) / 10
+            ? Math.round((coveredInScope.size / totalScope) * 1000) / 10
             : 0;
 
         stats[ws] = {
             specs: wsSpecs.length,
-            files_covered: coveredFiles.size,
+            files_covered: coveredInScope.size,
             total_scope: totalScope,
             coverage_pct: pct,
         };

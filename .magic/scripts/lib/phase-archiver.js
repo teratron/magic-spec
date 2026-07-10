@@ -78,7 +78,7 @@ function findArchiveCandidates(wsDir) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// TASKS.md Mutation
+// Index Mutation (TASKS.md · PLAN.md)
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
@@ -109,13 +109,35 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
     writeFileSafe(tasksIndexPath, content);
 }
 
+/**
+ * Updates PLAN.md after archival:
+ *   Rewrites task links from tasks/phase-N.md to archives/tasks/phase-N.md.
+ *
+ * @param {string} planPath - Absolute path to PLAN.md.
+ * @param {string[]} archivedFiles - Array of filenames that were archived.
+ */
+function updatePlanIndex(planPath, archivedFiles) {
+    if (!fs.existsSync(planPath) || archivedFiles.length === 0) return;
+
+    let content = fs.readFileSync(planPath, 'utf8');
+    for (const file of archivedFiles) {
+        const escaped = file.replace(/\./g, '\\.');
+        content = content.replace(
+            new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
+            `(archives/tasks/${file})`
+        );
+    }
+    writeFileSafe(planPath, content);
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Public API
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
  * Scans wsDir/tasks/ for completed phase-*.md files, moves them to
- * wsDir/archives/tasks/, and updates TASKS.md link references.
+ * wsDir/archives/tasks/, and rewrites link references in both TASKS.md
+ * and PLAN.md so neither index points at a moved file.
  *
  * Safe to call multiple times (idempotent: already-archived files are skipped).
  *
@@ -160,10 +182,13 @@ function archiveCompletedPhases(wsDir, opts = {}) {
 
     if (archived.length > 0) {
         const tasksIndexPath = path.join(wsDir, 'TASKS.md');
+        const planPath = path.join(wsDir, 'PLAN.md');
         if (!dryRun) {
             updateTasksIndex(tasksIndexPath, archived.map(a => a.file));
+            updatePlanIndex(planPath, archived.map(a => a.file));
         } else {
             console.log(`  🧪 [dry-run] would update TASKS.md links for: ${archived.map(a => a.file).join(', ')}`);
+            console.log(`  🧪 [dry-run] would update PLAN.md links for: ${archived.map(a => a.file).join(', ')}`);
         }
     }
 

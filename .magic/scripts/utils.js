@@ -174,6 +174,83 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
     return arrayOfFiles;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Gitignore Filtering
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Loads `.gitignore` patterns and compiles them into a path predicate.
+ *
+ * Supports the subset of gitignore syntax that matters for source scanning:
+ *   - bare directory/file names (`node_modules`, `target`) — matched at any depth
+ *   - wildcard basenames (`*.log`, `*.py[cod]` → treated as `*` globs)
+ *   - root-anchored patterns (`/dist`) — matched only at the project root
+ *   - nested path patterns (`docs/build/`) — anchored, per gitignore semantics
+ *   - trailing-slash directory markers, `#` comments, blank lines
+ *
+ * Negation (`!`) is deliberately unsupported: re-including a path from an
+ * ignored tree cannot be decided without full gitignore ordering semantics,
+ * and over-scanning is a worse failure than under-scanning here.
+ *
+ * @param {string} [rootDir='.'] - Project root containing `.gitignore`.
+ * @returns {function(string): boolean} Predicate: true when the relative path is ignored.
+ */
+function loadGitignore(rootDir = '.') {
+    const gitignorePath = path.join(rootDir, '.gitignore');
+
+    let content;
+    try {
+        content = fs.readFileSync(gitignorePath, 'utf8');
+    } catch {
+        return () => false;
+    }
+
+    /** @type {string[]} Root-relative prefixes (`dist`, `docs/build`). */
+    const anchored = [];
+    /** @type {Set<string>} Bare names matched against any path segment. */
+    const segments = new Set();
+    /** @type {RegExp[]} Wildcard basename matchers. */
+    const globs = [];
+
+    for (const raw of content.split(/\r?\n/)) {
+        const line = raw.trim();
+        if (!line || line.startsWith('#') || line.startsWith('!')) continue;
+
+        const rooted = line.startsWith('/');
+        const cleaned = line.replace(/^\/+/, '').replace(/\/+$/, '');
+        if (!cleaned) continue;
+
+        if (rooted || cleaned.includes('/')) {
+            anchored.push(normalizePath(cleaned));
+        } else if (cleaned.includes('*')) {
+            const source = cleaned
+                .replace(/[.+^${}()|[\]\\]/g, '\\$&')
+                .replace(/\*/g, '.*');
+            globs.push(new RegExp(`^${source}$`));
+        } else {
+            segments.add(cleaned);
+        }
+    }
+
+    /**
+     * @param {string} relPath - Path relative to `rootDir`, any separator style.
+     * @returns {boolean} True when the path lies inside an ignored tree.
+     */
+    return function isIgnored(relPath) {
+        const normalized = normalizePath(relPath);
+        if (!normalized || normalized === '.') return false;
+
+        for (const part of normalized.split('/')) {
+            if (segments.has(part)) return true;
+            if (globs.some(re => re.test(part))) return true;
+        }
+
+        return anchored.some(
+            prefix => normalized === prefix || normalized.startsWith(`${prefix}/`),
+        );
+    };
+}
+
 /**
  * Resolves the root .design/ directory that contains workspace.json.
  * If MAGIC_DESIGN_DIR points to a workspace subdirectory, walks up one level.
@@ -203,6 +280,7 @@ module.exports = {
     writeFileSafe,
     appendFileSafe,
     mkdirSafe,
+    loadGitignore,
     resolveDesignRoot,
     VOLATILE_STATE_FILES,
 };

@@ -129,6 +129,33 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 1b. Architecture invariant — the CommonJS module-scope boundary must ship
+    //     Downstream projects whose root package.json declares "type":"module"
+    //     would otherwise resolve .magic/scripts/*.js as ESM and die on require().
+    //     The boundary only protects users if it is tracked: the release archive
+    //     is built by walking a fresh CI checkout, so untracked files never ship,
+    //     and update-engine-meta --check does NOT flag manifest entries whose
+    //     file is absent — the omission would be silent.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('engine kernel ships a tracked CommonJS scope boundary at .magic/scripts/package.json', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const relPath = '.magic/scripts/package.json';
+        const absPath = path.join(repoRoot, relPath);
+
+        assert.ok(fs.existsSync(absPath), `${relPath} must exist — it pins CommonJS for the engine scripts`);
+
+        const pkg = JSON.parse(fs.readFileSync(absPath, 'utf8'));
+        assert.strictEqual(pkg.type, 'commonjs', `${relPath} must declare "type":"commonjs"`);
+
+        // Untracked → omitted from the release archive → the boundary silently vanishes.
+        if (!fs.existsSync(path.join(repoRoot, '.git'))) return; // not a git checkout: nothing to assert
+        assert.doesNotThrow(
+            () => execSync(`git ls-files --error-unmatch "${relPath}"`, { cwd: repoRoot, stdio: 'pipe' }),
+            `${relPath} exists but is UNTRACKED — it will be missing from the release archive. Run: git add ${relPath}`
+        );
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 2. init.js
     // ───────────────────────────────────────────────────────────────────────────
     test('init.js should initialize .design structure and workspaces', () => {
@@ -572,6 +599,65 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 7d. phase-archiver.js — archival rewrites links in PLAN.md, not only TASKS.md
+    // ───────────────────────────────────────────────────────────────────────────
+    test('archiveCompletedPhases rewrites phase links in both TASKS.md and PLAN.md', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
+
+            fs.writeFileSync(path.join(tasksDir, 'phase-3.md'),
+                '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
+                '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n');
+
+            const tasksPath = path.join(wsDir, 'TASKS.md');
+            fs.writeFileSync(tasksPath, [
+                '# Master Task Index',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 3](tasks/phase-3.md) | Shipping | `Done` |',
+                '',
+            ].join('\n'));
+
+            const planPath = path.join(wsDir, 'PLAN.md');
+            fs.writeFileSync(planPath, [
+                '# Implementation Plan',
+                '',
+                '## Phase 3 — Shipping',
+                '',
+                'Breakdown lives in [Phase 3](tasks/phase-3.md).',
+                '',
+            ].join('\n'));
+
+            const { archived } = archiver.archiveCompletedPhases(wsDir);
+            assert.deepStrictEqual(archived.map(a => a.file), ['phase-3.md'], 'the Done phase must be archived');
+
+            assert.ok(
+                fs.existsSync(path.join(wsDir, 'archives', 'tasks', 'phase-3.md')),
+                'phase file must be moved into archives/tasks/'
+            );
+            assert.ok(
+                !fs.existsSync(path.join(tasksDir, 'phase-3.md')),
+                'archival is a move, not a copy'
+            );
+
+            const tasks = fs.readFileSync(tasksPath, 'utf8');
+            assert.match(tasks, /\(archives\/tasks\/phase-3\.md\)/, 'TASKS.md link must be rewritten');
+            assert.match(tasks, /`Done \(Archived\)`/, 'TASKS.md row status must become Done (Archived)');
+
+            const plan = fs.readFileSync(planPath, 'utf8');
+            assert.match(plan, /\(archives\/tasks\/phase-3\.md\)/, 'PLAN.md link must be rewritten');
+            assert.doesNotMatch(plan, /\(tasks\/phase-3\.md\)/, 'PLAN.md must not keep a dangling link to the moved file');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 8. executor.js — input validation
     // ───────────────────────────────────────────────────────────────────────────
     test('executor.js should reject path-traversal in script and workspace names', () => {
@@ -663,6 +749,60 @@ describe('Magic Engine Scripts', () => {
             assert.ok(
                 !JSON.stringify(after.communities).includes('.tmp/'),
                 'no community member may reference a gitignored .tmp/ path'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 11. extract-rationale.js — gitignore-aware scan (Invariant 7 parity)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('extract-rationale.js excludes .gitignored build artifacts from the scan (Invariant 7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const specsDir = path.join(tempDir, '.design', 'specifications');
+            fs.mkdirSync(specsDir, { recursive: true });
+            fs.writeFileSync(
+                path.join(specsDir, 'l1-core.md'),
+                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
+            );
+
+            // Real source file — must always be scanned.
+            const srcDir = path.join(tempDir, 'src');
+            fs.mkdirSync(srcDir, { recursive: true });
+            fs.writeFileSync(path.join(srcDir, 'main.rs'), '// NOTE: genuine design rationale\n');
+
+            // Build artifact mimicking rustdoc output — must vanish once target/ is gitignored.
+            const artifactDir = path.join(tempDir, 'target', 'doc', 'type.impl', 'core', 'result');
+            fs.mkdirSync(artifactDir, { recursive: true });
+            fs.writeFileSync(path.join(artifactDir, 'enum.Result.js'), '// NOTE: rustdoc artifact, not authored rationale\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js');
+            const run = () => JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+
+            // Control — no .gitignore: `target` is absent from SKIP_DIRS, so the artifact IS scanned.
+            const before = run();
+            assert.ok(
+                before.rationale.some(r => r.file.startsWith('target/')),
+                'control: without .gitignore the artifact is scanned (fixture is meaningful)'
+            );
+
+            // Fix — `.gitignore` with `target/` must drop the artifact entirely.
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), 'target/\n');
+            const after = run();
+
+            assert.ok(
+                !after.rationale.some(r => r.file.startsWith('target/')),
+                'no rationale marker may originate from a gitignored path'
+            );
+            assert.ok(
+                !after.shadow_logic.some(s => s.file.startsWith('target/')),
+                'no shadow-logic entry may originate from a gitignored path'
+            );
+            assert.ok(
+                after.rationale.some(r => r.file === 'src/main.rs'),
+                'genuine source rationale must survive the gitignore filter'
             );
         } finally {
             cleanup(tempDir);
