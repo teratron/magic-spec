@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, loadGitignore } = require('./utils');
+const { normalizePath, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIDENCE TAXONOMY — COVERAGE ANALYSIS
@@ -29,10 +29,14 @@ const workspaceScope = scopeOverride
     || process.env.MAGIC_WORKSPACE_SCOPE
     || null;
 
-/** Directories always excluded from source scanning. */
+/**
+ * Shared build-noise floor plus this scanner's domain excludes.
+ * `.design` and `.magic` are deliberately NOT excluded — spec artifacts and
+ * engine files are classified against Canonical References like any source.
+ */
 const SKIP_DIRS = new Set([
-    'node_modules', '.venv', '__pycache__', 'dist',
-    '.git', '.pytest_cache', '.ruff_cache', '.references',
+    ...BUILD_NOISE_DIRS,
+    '.references',
 ]);
 
 /** Confidence taxonomy definitions. */

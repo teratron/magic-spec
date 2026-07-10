@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, loadGitignore } = require('./utils');
+const { normalizePath, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -23,12 +23,17 @@ const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 // Constants
 // ───────────────────────────────────────────────────────────────────────────
 
-/** Directories to skip during recursive file scanning. */
+/**
+ * Shared build-noise floor plus this scanner's domain excludes.
+ * The SDD layer (`.design`), the read-only engine (`.magic`), and agent-host
+ * directories are not user product code: a marker found there is never
+ * "shadow logic" the user should formalize into a specification, so they are
+ * excluded from the rationale scan by design.
+ */
 const SKIP_DIRS = new Set([
-    'node_modules', '.venv', '__pycache__', 'dist', '.git',
-    '.design', '.magic', '.pytest_cache', '.ruff_cache',
-    '.references', '.agents', '.claude', '.gemini', '.codex',
-    '.qwen', '.kilocode', '.lingma',
+    ...BUILD_NOISE_DIRS,
+    '.design', '.magic', '.references', '.agents',
+    '.claude', '.gemini', '.codex', '.qwen', '.kilocode', '.lingma',
 ]);
 
 /** Supported source file extensions for rationale extraction. */

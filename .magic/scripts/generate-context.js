@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, loadGitignore } = require('./utils');
+const { normalizePath, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION AND PATHS
@@ -71,14 +71,18 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
     let files;
     try {
         files = fs.readdirSync(dir)
-            .filter(f => !ignores.includes(f))
-            .filter(f => !isIgnored(normalizePath(path.relative('.', path.join(dir, f)))))
+            .filter(f => {
+                // Landmark roots bypass every hiding mechanism at depth 1 —
+                // including a user project that gitignores its design dir.
+                if (currentDepth === 1 && FORCE_VISIBLE_ROOTS.has(f)) return true;
+                if (ignores.includes(f)) return false;
+                return !isIgnored(normalizePath(path.relative('.', path.join(dir, f))));
+            })
             .sort();
         // If at root and validScopes is provided, filter allowed top-level directories
         if (currentDepth === 1 && validScopes && validScopes.length > 0) {
             files = files.filter(f => {
-                // Ensure design directory is always visible
-                if (f === '.design' || f === '.magic') return true;
+                if (FORCE_VISIBLE_ROOTS.has(f)) return true;
                 return validScopes.includes(f) || validScopes.some(s => s.startsWith(f + '/') || s.startsWith(f + '\\'));
             });
         }
@@ -108,7 +112,16 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
 }
 
 /** Build directories always hidden from the tree, even when not gitignored. */
-const ignoreList = ['node_modules', 'target', '.git', '.venv', '__pycache__'];
+const ignoreList = [...BUILD_NOISE_DIRS];
+
+/**
+ * Root-level directories that must always appear on the map. The tree exists
+ * to orient a human, and the SDD root and the engine root are its two fixed
+ * landmarks — visible regardless of the ignore list, .gitignore rules, or the
+ * workspace-scope filter. Only the top-level segment is forced; their inner
+ * entries still obey the normal filters.
+ */
+const FORCE_VISIBLE_ROOTS = new Set([normalizePath(designDir).split('/')[0], '.magic']);
 
 // Invariant 7 (Gitignore Safety) — shared with the other engine scanners.
 // Supersedes the former top-level-names-only parser: root-anchored (`/dist`),

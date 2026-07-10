@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, resolveDesignRoot, loadGitignore } = require('./utils');
+const { normalizePath, resolveDesignRoot, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMMUNITY DETECTION — Workspace Discovery via Label Propagation
@@ -54,10 +54,14 @@ const designAbs = resolveDesignRoot(rootDir).designAbs;
 // Skip Patterns
 // ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * Shared build-noise floor plus this scanner's domain excludes.
+ * `.design` and `.magic` are deliberately NOT excluded — spec artifacts and
+ * engine sources are the very nodes this graph clusters into communities.
+ */
 const SKIP_DIRS = new Set([
-    'node_modules', '.venv', '__pycache__', '.git',
-    'dist', 'build', 'temp', '.hatch', 'env', 'venv', 'ENV',
-    'sandbox', '.references',
+    ...BUILD_NOISE_DIRS,
+    '.references',
 ]);
 
 const SKIP_PATH_FRAGMENTS = [

@@ -175,6 +175,34 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Scan Hygiene (Shared Skip Floor)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Build/tooling noise directories that no engine scanner ever treats as a
+ * scan target, regardless of its domain.
+ *
+ * This is the *shared* half of every scanner's skip list. Each scanner unions
+ * it with its own domain excludes — directories that are out of scope for
+ * that tool's question (e.g. `.design` is excluded by extract-rationale but
+ * is the primary subject of detect-communities). Domain excludes stay local
+ * to each scanner by design; only genuinely tool-agnostic noise belongs here.
+ *
+ * The floor is kept hardcoded even though most projects gitignore these
+ * paths: scanners union it with `loadGitignore` (never replace one with the
+ * other), so projects whose .gitignore does not cover their build output are
+ * still protected.
+ *
+ * @type {ReadonlyArray<string>}
+ */
+const BUILD_NOISE_DIRS = Object.freeze([
+    'node_modules', '.git',
+    '.venv', 'venv', 'env', 'ENV',
+    '__pycache__', '.pytest_cache', '.ruff_cache',
+    'dist', 'build', 'target', 'temp', 'sandbox', '.hatch',
+]);
+
+// ───────────────────────────────────────────────────────────────────────────
 // Gitignore Filtering
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -329,5 +357,6 @@ module.exports = {
     mkdirSafe,
     loadGitignore,
     resolveDesignRoot,
+    BUILD_NOISE_DIRS,
     VOLATILE_STATE_FILES,
 };

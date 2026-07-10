@@ -821,31 +821,34 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(srcDir, { recursive: true });
             fs.writeFileSync(path.join(srcDir, 'main.rs'), '// NOTE: genuine design rationale\n');
 
-            // Build artifact mimicking rustdoc output — must vanish once target/ is gitignored.
-            const artifactDir = path.join(tempDir, 'target', 'doc', 'type.impl', 'core', 'result');
+            // Generated artifact tree — must vanish once generated/ is gitignored.
+            // `generated` is deliberately absent from the shared skip floor
+            // (BUILD_NOISE_DIRS), so this fixture isolates the gitignore filter;
+            // a floor name like `target` would be skipped even without .gitignore.
+            const artifactDir = path.join(tempDir, 'generated', 'doc', 'type.impl', 'core', 'result');
             fs.mkdirSync(artifactDir, { recursive: true });
-            fs.writeFileSync(path.join(artifactDir, 'enum.Result.js'), '// NOTE: rustdoc artifact, not authored rationale\n');
+            fs.writeFileSync(path.join(artifactDir, 'enum.Result.js'), '// NOTE: generated artifact, not authored rationale\n');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js');
             const run = () => JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
 
-            // Control — no .gitignore: `target` is absent from SKIP_DIRS, so the artifact IS scanned.
+            // Control — no .gitignore: `generated` is absent from SKIP_DIRS, so the artifact IS scanned.
             const before = run();
             assert.ok(
-                before.rationale.some(r => r.file.startsWith('target/')),
+                before.rationale.some(r => r.file.startsWith('generated/')),
                 'control: without .gitignore the artifact is scanned (fixture is meaningful)'
             );
 
-            // Fix — `.gitignore` with `target/` must drop the artifact entirely.
-            fs.writeFileSync(path.join(tempDir, '.gitignore'), 'target/\n');
+            // Fix — `.gitignore` with `generated/` must drop the artifact entirely.
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), 'generated/\n');
             const after = run();
 
             assert.ok(
-                !after.rationale.some(r => r.file.startsWith('target/')),
+                !after.rationale.some(r => r.file.startsWith('generated/')),
                 'no rationale marker may originate from a gitignored path'
             );
             assert.ok(
-                !after.shadow_logic.some(s => s.file.startsWith('target/')),
+                !after.shadow_logic.some(s => s.file.startsWith('generated/')),
                 'no shadow-logic entry may originate from a gitignored path'
             );
             assert.ok(
@@ -964,6 +967,153 @@ describe('Magic Engine Scripts', () => {
             assert.ok(!context.includes('buildout'), 'a gitignored directory must not appear in the tree');
             assert.ok(!/^.*├──\s\.env$/m.test(context), '.env must be pruned by the .env* rule');
             assert.ok(context.includes('.env.example'), 'the negated .env.example must remain visible');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 15. utils.BUILD_NOISE_DIRS — one shared skip floor, per-scanner domain excludes
+    //     The floor answers "what is never a scan target for ANY tool"; each
+    //     scanner unions it with excludes encoding its own domain question.
+    //     Deduplicating the floor is safe (one right answer); merging the domain
+    //     excludes would be wrong (each scanner's answer differs by design).
+    // ───────────────────────────────────────────────────────────────────────────
+    test('utils.BUILD_NOISE_DIRS is the single hardcoded floor for every scanner', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { BUILD_NOISE_DIRS } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+
+            assert.ok(Array.isArray(BUILD_NOISE_DIRS), 'the floor is exported as an array');
+            assert.ok(Object.isFrozen(BUILD_NOISE_DIRS), 'the floor is frozen against mutation');
+            for (const name of ['node_modules', '.git', 'dist', 'build', 'target', '__pycache__', '.pytest_cache']) {
+                assert.ok(BUILD_NOISE_DIRS.includes(name), `floor must contain ${name}`);
+            }
+
+            // Regression guard: every scanner derives its skip list from the shared
+            // floor instead of re-hardcoding a private copy (the pre-unification state).
+            const consumers = [
+                ['.magic', 'scripts', 'detect-communities.js'],
+                ['.magic', 'scripts', 'extract-rationale.js'],
+                ['.magic', 'scripts', 'analyze-coverage.js'],
+                ['.magic', 'scripts', 'generate-context.js'],
+                ['dev', 'scripts', 'benchmark.js'],
+            ];
+            for (const parts of consumers) {
+                const src = fs.readFileSync(path.join(tempDir, ...parts), 'utf8');
+                assert.ok(
+                    src.includes('...BUILD_NOISE_DIRS'),
+                    `${parts.join('/')} must spread the shared floor, not hardcode its own copy`
+                );
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('scanners share the build-noise floor but keep their domain excludes apart', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const mk = (rel, body) => {
+                const abs = path.join(tempDir, ...rel.split('/'));
+                fs.mkdirSync(path.dirname(abs), { recursive: true });
+                fs.writeFileSync(abs, body);
+            };
+
+            mk('.design/specifications/l1-core.md',
+                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n');
+            mk('src/main.rs', '// NOTE: genuine design rationale\nfn main() {}\n');
+            // SDD-layer source: markers here are never user "shadow logic".
+            mk('.design/tooling.js', '// NOTE: sdd helper, not product code\nvar s = 1;\n');
+            // Directories below were skipped by SOME scanners before unification:
+            // `build` was missing from analyze-coverage's list, `temp` from
+            // extract-rationale's. No .gitignore here — only the floor acts.
+            mk('build/artifact.js', '// NOTE: generated artifact\nvar a = 1;\n');
+            mk('temp/scratch.js', '// NOTE: scratch file\nvar t = 1;\n');
+
+            // analyze-coverage — `build/` no longer reaches classification.
+            const coverage = JSON.parse(execSync(
+                `node "${path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js')}" --json`,
+                { cwd: tempDir, encoding: 'utf8' }
+            ));
+            const covFiles = coverage.coverage.map(c => c.file);
+            assert.ok(!covFiles.some(f => f.startsWith('build/')), 'analyze-coverage must skip build/ via the shared floor');
+            assert.ok(covFiles.includes('src/main.rs'), 'genuine source must still be classified');
+
+            // extract-rationale — floor noise and domain excludes both stay out.
+            const rationale = JSON.parse(execSync(
+                `node "${path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js')}" --json`,
+                { cwd: tempDir, encoding: 'utf8' }
+            ));
+            assert.ok(!rationale.rationale.some(r => r.file.startsWith('temp/')), 'extract-rationale must skip temp/ via the shared floor');
+            assert.ok(!rationale.rationale.some(r => r.file.startsWith('.magic/')), 'domain exclude: engine internals are not user shadow logic');
+            assert.ok(!rationale.rationale.some(r => r.file.startsWith('.design/')), 'domain exclude: the SDD layer is not user shadow logic');
+            assert.ok(rationale.rationale.some(r => r.file === 'src/main.rs'), 'genuine rationale must survive');
+
+            // detect-communities — same floor, OPPOSITE domain: .design/ stays in
+            // the graph (it is the subject), while floor dirs never become nodes.
+            mk('.design/real-a.md', '# Real A\n[Real B](./real-b.md)\n');
+            mk('.design/real-b.md', '# Real B\n');
+            const runGraph = () => JSON.parse(execSync(
+                `node "${path.join(tempDir, '.magic', 'scripts', 'detect-communities.js')}" --include-md --json`,
+                { cwd: tempDir, encoding: 'utf8' }
+            ));
+            const before = runGraph();
+            mk('.pytest_cache/cached.js', 'var c = 1;\n');
+            mk('.pytest_cache/other.js', 'var o = 1;\n');
+            const after = runGraph();
+            assert.strictEqual(
+                after.graph.total_files,
+                before.graph.total_files,
+                'floor dirs (.pytest_cache) must not add graph nodes'
+            );
+            assert.ok(
+                JSON.stringify(after.communities).includes('.design/real-a.md'),
+                'the .design/ subject must remain in the community graph'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 15a. generate-context.js — landmark roots are always on the map
+    // ───────────────────────────────────────────────────────────────────────────
+    test('generate-context.js always shows the design and engine roots (landmarks)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'src', 'a.js'), 'var a = 1;\n');
+            fs.mkdirSync(path.join(tempDir, 'other'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'other', 'b.js'), 'var b = 1;\n');
+            fs.mkdirSync(path.join(tempDir, 'dist'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'dist', 'bundle.js'), 'var d = 1;\n');
+            // A user project may legitimately gitignore its design dir — the
+            // map must still anchor on it.
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '.design/\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
+            const read = () => fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+
+            // (a) No scope: gitignored .design stays visible; dist/ (floor) is hidden.
+            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            let context = read();
+            assert.ok(context.includes('.design/'), 'gitignored design root must remain visible (landmark)');
+            assert.ok(context.includes('.magic/'), 'engine root must remain visible (landmark)');
+            assert.ok(!context.includes('dist/'), 'build noise must be hidden from the tree via the shared floor');
+
+            // (b) Workspace scope: out-of-scope dirs are filtered, landmarks survive.
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+                env: { ...process.env, MAGIC_WORKSPACE_SCOPE: '["src"]' },
+            });
+            context = read();
+            assert.ok(context.includes('src/'), 'scoped dir must be visible');
+            assert.ok(!context.includes('other/'), 'out-of-scope dir must be filtered');
+            assert.ok(context.includes('.design/'), 'design root must survive the scope filter');
+            assert.ok(context.includes('.magic/'), 'engine root must survive the scope filter');
         } finally {
             cleanup(tempDir);
         }

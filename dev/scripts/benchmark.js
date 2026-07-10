@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { normalizePath, resolveDesignRoot } = require('../../.magic/scripts/utils');
+const { normalizePath, resolveDesignRoot, BUILD_NOISE_DIRS } = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOKEN BENCHMARK — SDD Graph vs Raw Corpus
@@ -81,10 +81,14 @@ function fileTokens(absPath) {
 // FILE SCANNING
 // ═══════════════════════════════════════════════════════════════════════════
 
+/**
+ * Shared build-noise floor plus this scanner's domain excludes.
+ * Reference material is neither corpus nor spec layer, so it never counts
+ * toward token totals.
+ */
 const SKIP_DIRS = new Set([
-    'node_modules', '.venv', '__pycache__', '.git',
-    'dist', 'build', 'temp', '.hatch', 'env', 'venv',
-    'sandbox', '.references',
+    ...BUILD_NOISE_DIRS,
+    '.references',
 ]);
 
 const SOURCE_EXTENSIONS = new Set(['.js', '.py', '.ts', '.go', '.rs', '.java', '.c', '.cpp', '.h']);
