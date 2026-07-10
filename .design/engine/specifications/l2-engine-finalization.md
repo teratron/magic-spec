@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -67,7 +67,7 @@ Read-only workflows (analyze, graph, status) never invoke finalize; they inherit
 
 ## 6. Phase Archival Eligibility (Precision) `[ADDED]`
 
-`rules/MAGIC.md` §4 states a phase is archivable when its file has `status: Done` and "no remaining `- [ ]` items". The word *items* is normative and means **unchecked Atomic Checklist line items**, not any textual occurrence of the `- [ ]` sequence. The eligibility predicate MUST:
+This section pins the eligibility predicate for the **C8 (Phase Archival)** convention — the move of a completed phase file from `tasks/` to `archives/tasks/`. `rules/MAGIC.md` §4 states a phase is archivable when its file has `status: Done` and "no remaining `- [ ]` items". The word *items* is normative and means **unchecked Atomic Checklist line items**, not any textual occurrence of the `- [ ]` sequence. The eligibility predicate MUST:
 
 1. Match an unchecked item only as a **checklist line** — anchored at line start with optional indentation (e.g. `^\s*- \[ \]`), inside the phase file's checklist region.
 2. **Ignore** `- [ ]` appearing in prose, task `Notes`, `Verify` lines, fenced code, or inline code-spans (backticks). A phase whose tasks merely *describe* checkbox syntax is still archivable when its real checklist is fully checked.
@@ -90,6 +90,7 @@ A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conf
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.1 | 2026-07-10 | Agent | Traceability: §6 now cites the **C8 (Phase Archival)** convention it implements. No logic change (patch — Stable retained). |
 | 1.2.0 | 2026-06-13 | Agent | Added §6 Phase Archival Eligibility (Precision): `allChecked` must match anchored checklist line items, not substring `- [ ]` in prose/code-spans. Field evidence: phase-10 (whose Notes discuss `- [ ]` detection) was silently skipped by the archiver (R7). |
 | 1.1.0 | 2026-06-12 | Agent | Added §5 Session-Continuity Integration: SC-2 state update step (always-run, non-blocking) and SC-3 non-bumping commit suggestion fallback. |
 | 1.0.0 | 2026-05-07 | Agent | Initial Stable version. Covers the scripts/lib/ finalization helper library introduced in v2.1.0. |

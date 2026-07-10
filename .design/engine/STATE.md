@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-07-10 14:58
+**Updated:** 2026-07-10 19:29
 **Phase:** 13 — Upgrade-Detection DA Alignment
 **Status:** Complete
 
@@ -12,7 +12,7 @@
 
 - **Task:** l2-release-pipeline registered (baseline retrospec)
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Plan complete — author new scope via /magic.spec engine (or /magic.status for a briefing)
+- **Next Action:** Run /magic.task engine to update the plan
 
 ## Progress
 
@@ -21,6 +21,7 @@ Overall: [12/12] ████████ 100%
 ```
 
 ## Recent Decisions
+
 - 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
 
 - 2026-06-13 **Decision:** l2-release-pipeline.md registered as Completed Baseline (retrospec, no execution); R8 documented in §5.3; PLAN 1.14.0, TASKS 1.17.2

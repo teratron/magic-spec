@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.5.1
+**Version:** 1.5.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -25,7 +25,7 @@ Maintain high reliability of the engine core through automated and cognitive reg
 - **Suite version**: v1.9.74.
 - Tests are organized as H3 sections with `Synthetic State`, `Action`, `Expected`, and `Guards tested` fields.
 - Sprint 1 regression tests (T86–T91) cover Runtime Guards: RE-1, RE-2, RE-3, RE-T71, RE-T74, and the T4/VERSION_DRIFT interaction.
-- Post-sprint expansions (T92–T207) cover T4 tier routing, duplication checks, constitutional guards, atomic intent with drift resolution, C15 scope-isolated integrity checks, simulation-harness self-tests (T186–T192), suite-to-workflow source-of-truth contracts (T203), diagram-text parity (T204–T205), and version-bleed / select-precedence wording parity (T206–T207).
+- Post-sprint expansions (T92–T207) cover T4 tier routing, duplication checks, constitutional guards, atomic intent with drift resolution, C15 scope-isolated integrity checks, simulation-harness self-tests (T186–T192) — regression coverage for `magic.dev.simulate`, the developer-facing validation tool authorized under **C11 (Simulation Workflow, C2 exception)** — suite-to-workflow source-of-truth contracts (T203), diagram-text parity (T204–T205), and version-bleed / select-precedence wording parity (T206–T207).
 
 ## Script-Level Regression Harness
 
@@ -52,6 +52,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.2 | 2026-07-10 | Agent | Traceability: the simulation-harness self-test description now cites the **C11 (Simulation Workflow)** convention that authorizes `magic.dev.simulate`. No logic change (patch — Stable retained). |
 | 1.5.1 | 2026-07-10 | Agent | Reality sync: 157→206 tests (T01–T207, gap at T67), suite v1.9.45→v1.9.74; fixed stale body paths .magic/tests/suite.md → dev/tests/suite.md (Canonical References were already correct since 1.4.0); extended coverage description with T186–T207 classes (harness self-tests, source-of-truth contract, diagram parity, version-bleed/select-precedence parity). |
 | 1.5.0 | 2026-06-13 | Agent | Documented `dev/tests/engine.js` script-level harness and added the finalize-pipeline coverage mandate (SC-2 patch both paths, SC-2.1 plan-state next-action, SC-3 non-bumping fallback, update-state --auto-progress). Closes the gap where finalize.js shipped session-continuity logic with zero harness coverage. |
 | 1.4.0 | 2026-05-07 | Agent | Added header fields (Version/Status/Layer/Implements). Updated canonical paths: .magic/tests/suite.md → dev/tests/suite.md; .magic/simulate.md → .agents/skills/magic-dev-simulate/SKILL.md. |

@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.15.2
+**Version:** 1.15.3
 **Status:** Active
 
 ## Overview
@@ -17,8 +17,8 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | --- | --- | --- | --- | --- |
 | [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants, and runtime guards. | Stable | 1 | 1.1.3 |
 | [l2-engine-automation.md](specifications/l2-engine-automation.md) | Automation scripts, history subsystem, and execution logic. | Stable | 2 | 1.6.0 |
-| [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival (eligibility precision §6), git-utils, versioning, session-continuity step (SC-2/SC-3). | Stable | 2 | 1.2.0 |
-| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (206 tests, v1.9.74) + script-level harness with finalize-pipeline coverage mandate. | Stable | 2 | 1.5.1 |
+| [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival (eligibility precision §6, C8), git-utils, versioning, session-continuity step (SC-2/SC-3). | Stable | 2 | 1.2.1 |
+| [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (206 tests, v1.9.74) + script-level harness with finalize-pipeline coverage mandate (C11 simulation). | Stable | 2 | 1.5.2 |
 | [l1-documentation-system.md](specifications/l1-documentation-system.md) | Knowledge base structure, governance, and docs/ sync policy. | Stable | 1 | 1.2.2 |
 | [l1-config-drift-guard.md](specifications/l1-config-drift-guard.md) | Detection of manual RULES.md changes outside workflow lifecycle. | Stable | 1 | 1.0.1 |
 | [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md) | User-facing workflow entry points in `workflows/`; wrapper-body parity invariant + WRAPPER_BODY_DRIFT check (§6). | Stable | 2 | 1.2.0 |
@@ -39,10 +39,10 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, leak detection, shipped self-containment (RC-1..RC-9). | Stable | 1 | 1.1.0 |
 | [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action, SC-2.1), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.1.0 |
 | [l2-status-command.md](specifications/l2-status-command.md) | Read-only `/magic.status` briefing command: layout contract, degraded states, wrapper/skill surface (C2 exception). | Stable | 2 | 1.0.0 |
-| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | GitHub Release CI: tag-driven build of the L1 archive, version source, publication/retry, engine-version tracking constraint (R8). | Stable | 2 | 1.0.0 |
+| [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | GitHub Release CI: tag-driven build of the L1 archive, version source, publication/retry, engine-version tracking constraint (R8), adapter distribution reference (C17). | Stable | 2 | 1.0.1 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-07-10 (l2-test-suite.md 1.5.1 — reality sync of cognitive-suite counters, suite version, and canonical suite path)
+- **Last Updated**: 2026-07-10 (convention traceability: bound C8→l2-engine-finalization 1.2.1, C11→l2-test-suite 1.5.2, C17→l2-release-pipeline 1.0.1)

@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -77,10 +77,11 @@ The release tag/version derives from `.magic/.version`, which is bumped by the C
 | --- | --- | --- |
 | `[CI]` | `.github/workflows/release.yml` | The release workflow this spec documents |
 | `[VERSION]` | `.magic/.version` | Single source for the release tag and archive name |
-| `[DIST]` | `docs/distribution.md` | User-facing manual-install reference linked from release notes |
+| `[DIST]` | `docs/distribution.md` | User-facing manual-install reference linked from release notes; its adapter/target-directory content is mandated by **C17 (Adapter Distribution Reference)** |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-07-10 | Agent | Traceability: the `[DIST]` canonical reference now cites the **C17 (Adapter Distribution Reference)** convention that governs `docs/distribution.md` content. No logic change (patch — Stable retained). |
 | 1.0.0 | 2026-06-13 | Agent | Initial Stable retrospec of `.github/workflows/release.yml` (tag-driven build + publish of the L1 archive). Documents the §5.3 engine-version tracking constraint, consolidating backlog finding R8. |
