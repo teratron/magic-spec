@@ -17,7 +17,7 @@ This layer contains ONLY the resources the end-user will download and install. N
 - `skills/` — Skill wrappers (Compatibility API).
 - `rules/` — Rules for watching-processes on the user side.
 
-**User contract — what the end user does with the release kernel**:
+**User contract** — what the end user does with the release kernel:
 
 - **Consumes** workflows / skills / rules (read-only — the user invokes them via `/magic.*`, never edits them).
 - **Verifies** engine integrity through `update-engine-meta --check` (called by the pre-commit hook installed by `init.js`).

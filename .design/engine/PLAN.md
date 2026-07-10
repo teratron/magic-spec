@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.14.1
-**Generated:** 2026-06-13
-**Based on:** .design/engine/INDEX.md v1.15.2
+**Version:** 1.14.2
+**Generated:** 2026-07-10
+**Based on:** .design/engine/INDEX.md v1.15.4
 **Status:** Active
 
 ## Overview
