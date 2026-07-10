@@ -280,6 +280,54 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 5a. update-engine-meta.js — a manifest entry whose file is gone is drift
+    //     The disk→manifest walk only visits files that exist, so a deleted or
+    //     never-shipped engine file was structurally invisible to --check.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-engine-meta --check fails when a manifest entry has no file on disk', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
+            execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+            const runCheck = () => {
+                try {
+                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
+                    return { failed: false, output: stdout };
+                } catch (e) {
+                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+                }
+            };
+
+            // Control — pristine tree must pass (guards against false positives).
+            assert.strictEqual(runCheck().failed, false, 'an intact engine must pass --check');
+
+            // `init.js` is tracked in the manifest and not required by update-engine-meta.
+            const victim = path.join(tempDir, '.magic', 'scripts', 'init.js');
+            assert.ok(fs.existsSync(victim), 'fixture precondition: init.js is present');
+            fs.unlinkSync(victim);
+
+            const missing = runCheck();
+            assert.ok(missing.failed, 'a manifest entry with no file on disk must fail --check');
+            assert.match(missing.output, /scripts\/init\.js/, '--check must name the missing file');
+
+            // Write mode treats the absence as an engine change: bump + regenerate.
+            execSync(`node "${metaScript}"`, { cwd: tempDir, stdio: 'pipe' });
+            assert.strictEqual(
+                fs.readFileSync(path.join(tempDir, '.magic', '.version'), 'utf8').trim(),
+                '1.0.1',
+                'a removed engine file is a change and must bump the version'
+            );
+            const regenerated = JSON.parse(fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'));
+            assert.ok(!regenerated['scripts/init.js'], 'the regenerated manifest must drop the removed file');
+            assert.strictEqual(runCheck().failed, false, 'after regeneration the engine is consistent again');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6. check-prerequisites.js
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js should validate whole structure', () => {
@@ -804,6 +852,118 @@ describe('Magic Engine Scripts', () => {
                 after.rationale.some(r => r.file === 'src/main.rs'),
                 'genuine source rationale must survive the gitignore filter'
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 12. utils.loadGitignore — the single shared implementation (Invariant 7)
+    //     Semantics are pinned against real `git check-ignore` behavior.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('utils.loadGitignore honors ordering, negation, anchoring and path-aware globs', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { loadGitignore } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+
+            // No .gitignore → predicate must be a permissive no-op.
+            assert.strictEqual(loadGitignore(tempDir)('anything/at/all.js'), false, 'absent .gitignore ignores nothing');
+
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), [
+                'target/',        // any depth
+                '/dist',          // root-anchored only
+                'node_modules',   // any depth, no trailing slash
+                '*.log',          // path-aware glob
+                'docs/build/',    // anchored nested path
+                '.env*',          // broad match…
+                '!.env.example',  // …narrowed by a later negation
+                '',
+                '# a comment',
+            ].join('\n'));
+
+            const isIgnored = loadGitignore(tempDir);
+
+            assert.strictEqual(isIgnored('target/doc/a.js'), true, 'bare dir pattern matches at any depth');
+            assert.strictEqual(isIgnored('nested/target/b.js'), true, 'bare dir pattern is not root-anchored');
+            assert.strictEqual(isIgnored('dist/bundle.js'), true, '/dist matches at the root');
+            assert.strictEqual(isIgnored('src/dist/helper.js'), false, '/dist must NOT match a nested dist/');
+            assert.strictEqual(isIgnored('deep/node_modules/x.js'), true, 'slashless pattern matches any segment');
+            assert.strictEqual(isIgnored('app.log'), true, '*.log matches a log file');
+            assert.strictEqual(isIgnored('src/keep.log.js'), false, '* must not cross into the extension');
+            assert.strictEqual(isIgnored('docs/build/out.js'), true, 'nested path pattern is anchored and matches');
+            assert.strictEqual(isIgnored('docs/src/in.js'), false, 'anchored pattern must not over-match');
+
+            // Ordering: the later `!` rule wins over the earlier broad rule.
+            assert.strictEqual(isIgnored('.env'), true, '.env* ignores .env');
+            assert.strictEqual(isIgnored('.env.local'), true, '.env* ignores .env.local');
+            assert.strictEqual(isIgnored('.env.example'), false, 'a later negation re-includes .env.example');
+
+            assert.strictEqual(isIgnored('src/main.rs'), false, 'unmatched paths are never ignored');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 13. analyze-coverage.js — gitignore parity via the shared helper
+    // ───────────────────────────────────────────────────────────────────────────
+    test('analyze-coverage.js excludes gitignored trees and honors root anchoring (Invariant 7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const specsDir = path.join(tempDir, '.design', 'specifications');
+            fs.mkdirSync(specsDir, { recursive: true });
+            fs.writeFileSync(
+                path.join(specsDir, 'l1-core.md'),
+                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
+            );
+
+            const mk = (rel, body) => {
+                const abs = path.join(tempDir, rel);
+                fs.mkdirSync(path.dirname(abs), { recursive: true });
+                fs.writeFileSync(abs, body);
+            };
+            // `out` is deliberately NOT in analyze-coverage's hardcoded SKIP_DIRS
+            // (unlike `dist`), so these two files isolate gitignore anchoring alone.
+            mk('src/main.rs', 'fn main() {}\n');
+            mk('src/out/helper.rs', 'fn helper() {}\n');    // nested out/ — must survive `/out`
+            mk('out/bundle.js', 'var x = 1;\n');            // root out/ — must be excluded
+            mk('target/doc/artifact.js', 'var y = 2;\n');   // build tree — must be excluded
+
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), 'target/\n/out\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
+            const out = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const files = out.coverage.map(c => c.file);
+
+            assert.ok(!files.some(f => f.startsWith('target/')), 'gitignored build tree must not be classified');
+            assert.ok(!files.includes('out/bundle.js'), 'root-anchored /out must be excluded');
+            assert.ok(files.includes('src/out/helper.rs'), 'a nested out/ must survive root-anchored /out');
+            assert.ok(files.includes('src/main.rs'), 'genuine source must still be classified');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 14. generate-context.js — tree rendering respects .gitignore, negation included
+    // ───────────────────────────────────────────────────────────────────────────
+    test('generate-context.js prunes gitignored entries from the tree but honors negation', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.mkdirSync(path.join(tempDir, 'buildout'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'buildout', 'artifact.bin'), 'x');
+            fs.writeFileSync(path.join(tempDir, '.env'), 'SECRET=1\n');
+            fs.writeFileSync(path.join(tempDir, '.env.example'), 'SECRET=\n');
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), 'buildout/\n.env*\n!.env.example\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
+            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            const context = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+
+            assert.ok(!context.includes('buildout'), 'a gitignored directory must not appear in the tree');
+            assert.ok(!/^.*├──\s\.env$/m.test(context), '.env must be pruned by the .env* rule');
+            assert.ok(context.includes('.env.example'), 'the negated .env.example must remain visible');
         } finally {
             cleanup(tempDir);
         }

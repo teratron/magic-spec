@@ -63,6 +63,9 @@ function updateEngineMeta() {
 
     let anyChanged = false;
 
+    /** @type {Set<string>} Manifest-eligible paths actually present on disk. */
+    const onDisk = new Set();
+
     scanZones.forEach(zone => {
         if (!fs.existsSync(zone.dir)) return;
 
@@ -73,6 +76,8 @@ function updateEngineMeta() {
             // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
             if (VOLATILE_STATE_FILES.has(rel)) return;
 
+            onDisk.add(rel);
+
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {
                 console.log(`✨ Detected change in: ${rel}`);
@@ -81,9 +86,29 @@ function updateEngineMeta() {
         });
     });
 
+    // The walk above only visits files that exist, so it detects modifications
+    // and additions but is structurally blind to removals. Traverse the manifest
+    // in the opposite direction to catch entries whose file is gone — a deleted
+    // script, or one that never made it into the release archive. Exclusion rules
+    // here mirror generate-checksums.js exactly (history/, .checksums, volatile
+    // caches), so a manifest key absent from `onDisk` is genuinely missing.
+    const missingFiles = Object.keys(oldChecksums).filter(rel => !onDisk.has(rel));
+
+    for (const rel of missingFiles) {
+        console.log(`🗑️  Missing engine file: ${rel}`);
+        anyChanged = true;
+    }
+
     if (anyChanged) {
         if (checkOnly) {
-            console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+            if (missingFiles.length > 0) {
+                console.error(
+                    `❌ ${missingFiles.length} file(s) listed in .magic/.checksums are absent from disk. ` +
+                    'Restore .magic/ from the release archive.'
+                );
+            } else {
+                console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+            }
             process.exit(1);
         }
 

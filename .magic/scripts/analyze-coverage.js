@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath } = require('./utils');
+const { normalizePath, loadGitignore } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIDENCE TAXONOMY — COVERAGE ANALYSIS
@@ -142,57 +142,6 @@ function buildRefIndex(specsDir) {
 // ═══════════════════════════════════════════════════════════════════════════
 // FILE SCANNING
 // ═══════════════════════════════════════════════════════════════════════════
-
-/**
- * Loads .gitignore patterns and returns a test function. Supports basic
- * glob prefixes, directory patterns (trailing /), and negation (!).
- * Falls back to a no-op if .gitignore is absent.
- *
- * @param {string} rootDir - Project root directory.
- * @returns {function(string): boolean} Returns true if the relative path should be ignored.
- */
-function loadGitignore(rootDir) {
-    const gitignorePath = path.join(rootDir, '.gitignore');
-    if (!fs.existsSync(gitignorePath)) {
-        return () => false;
-    }
-
-    const content = fs.readFileSync(gitignorePath, 'utf8');
-    const patterns = content
-        .split(/\r?\n/)
-        .map(l => l.trim())
-        .filter(l => l && !l.startsWith('#') && !l.startsWith('!'));
-
-    /**
-     * @param {string} relPath - Forward-slash normalized relative path.
-     * @returns {boolean}
-     */
-    return function isIgnored(relPath) {
-        for (const pat of patterns) {
-            const cleaned = pat.replace(/\/$/, '');
-
-            // Directory-name match: pattern without slashes matches any segment
-            if (!cleaned.includes('/')) {
-                const segments = relPath.split('/');
-                if (segments.some(s => s === cleaned)) return true;
-                // Wildcard prefix match (e.g., *.log, *.py[cod])
-                if (cleaned.includes('*')) {
-                    const re = new RegExp(
-                        '^' + cleaned.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$'
-                    );
-                    if (segments.some(s => re.test(s))) return true;
-                }
-                continue;
-            }
-
-            // Path-prefix match
-            if (relPath.startsWith(cleaned + '/') || relPath === cleaned) {
-                return true;
-            }
-        }
-        return false;
-    };
-}
 
 /**
  * Recursively scans the project root for source files, respecting

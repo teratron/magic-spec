@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { normalizePath, loadGitignore } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION AND PATHS
@@ -60,14 +61,19 @@ contextContent += '\n## Core Project Structure\n\n```plaintext\n';
  * @param {number} currentDepth Current recursion level.
  * @param {number} maxDepth Maximum depth to traverse.
  * @param {string[]} ignores List of folder/file names to skip.
+ * @param {string[]|null} [validScopes] Allowed top-level directories, or null for all.
+ * @param {function(string): boolean} [isIgnored] Gitignore predicate over root-relative paths.
  * @returns {string} Markdown-formatted directory tree.
  */
-function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = null) {
+function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = null, isIgnored = () => false) {
     if (currentDepth > maxDepth) return '';
     let result = '';
     let files;
     try {
-        files = fs.readdirSync(dir).filter(f => !ignores.includes(f)).sort();
+        files = fs.readdirSync(dir)
+            .filter(f => !ignores.includes(f))
+            .filter(f => !isIgnored(normalizePath(path.relative('.', path.join(dir, f)))))
+            .sort();
         // If at root and validScopes is provided, filter allowed top-level directories
         if (currentDepth === 1 && validScopes && validScopes.length > 0) {
             files = files.filter(f => {
@@ -95,29 +101,19 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
 
         if (stat.isDirectory()) {
             const nextPrefix = prefix + (isLast ? '    ' : '│   ');
-            result += buildTree(fullPath, nextPrefix, currentDepth + 1, maxDepth, ignores, validScopes);
+            result += buildTree(fullPath, nextPrefix, currentDepth + 1, maxDepth, ignores, validScopes, isIgnored);
         }
     }
     return result;
 }
 
+/** Build directories always hidden from the tree, even when not gitignored. */
 const ignoreList = ['node_modules', 'target', '.git', '.venv', '__pycache__'];
 
-// Extend ignoreList from .gitignore (Invariant 8: Gitignore Safety)
-if (fs.existsSync('.gitignore')) {
-    const gitignoreContent = fs.readFileSync('.gitignore', 'utf8');
-    gitignoreContent.split(/\r?\n/).forEach(line => {
-        const trimmed = line.trim();
-        // Skip comments, empty lines, and negation patterns
-        if (!trimmed || trimmed.startsWith('#') || trimmed.startsWith('!')) return;
-        // Extract simple directory/file names (strip trailing slashes and leading slashes)
-        const clean = trimmed.replace(/^\/+/, '').replace(/\/+$/, '');
-        // Only add top-level directory/file names (no glob wildcards, no nested paths)
-        if (clean && !clean.includes('/') && !clean.includes('*') && !ignoreList.includes(clean)) {
-            ignoreList.push(clean);
-        }
-    });
-}
+// Invariant 7 (Gitignore Safety) — shared with the other engine scanners.
+// Supersedes the former top-level-names-only parser: root-anchored (`/dist`),
+// nested (`docs/build/`) and wildcard (`*.log`) patterns are now all honored.
+const isGitignored = loadGitignore('.');
 
 let scopes = null;
 if (process.env.MAGIC_WORKSPACE_SCOPE) {
@@ -131,7 +127,7 @@ if (process.env.MAGIC_WORKSPACE_SCOPE) {
 
 try {
     contextContent += '.\n';
-    contextContent += buildTree('.', '', 1, 2, ignoreList, scopes);
+    contextContent += buildTree('.', '', 1, 2, ignoreList, scopes, isGitignored);
 } catch (err) {
     contextContent += `- Project root\n  - ${designDir}/\n  - .magic/\n`;
 }

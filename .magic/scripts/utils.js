@@ -179,58 +179,96 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Loads `.gitignore` patterns and compiles them into a path predicate.
+ * Translates one gitignore glob into a regular-expression source fragment.
  *
- * Supports the subset of gitignore syntax that matters for source scanning:
- *   - bare directory/file names (`node_modules`, `target`) — matched at any depth
- *   - wildcard basenames (`*.log`, `*.py[cod]` → treated as `*` globs)
- *   - root-anchored patterns (`/dist`) — matched only at the project root
- *   - nested path patterns (`docs/build/`) — anchored, per gitignore semantics
- *   - trailing-slash directory markers, `#` comments, blank lines
+ * Glob semantics (not regex): `*` spans a single path segment, `?` one
+ * character, `**` crosses segment boundaries. Every other regex metacharacter
+ * is escaped so patterns like `.*_cache` mean "literal dot, then anything".
  *
- * Negation (`!`) is deliberately unsupported: re-including a path from an
- * ignored tree cannot be decided without full gitignore ordering semantics,
- * and over-scanning is a worse failure than under-scanning here.
+ * @param {string} pattern - Gitignore pattern with leading `!`, leading `/` and trailing `/` already stripped.
+ * @returns {string} Regex source (unanchored).
+ */
+function globToRegexSource(pattern) {
+    let source = '';
+
+    for (let i = 0; i < pattern.length; i++) {
+        const char = pattern[i];
+
+        if (char === '*') {
+            if (pattern[i + 1] === '*') {
+                // `**/` crosses directories (and may match zero of them); bare `**` matches anything.
+                if (pattern[i + 2] === '/') {
+                    source += '(?:.*/)?';
+                    i += 2;
+                } else {
+                    source += '.*';
+                    i += 1;
+                }
+            } else {
+                source += '[^/]*';
+            }
+        } else if (char === '?') {
+            source += '[^/]';
+        } else {
+            source += char.replace(/[.+^${}()|[\]\\]/g, '\\$&');
+        }
+    }
+
+    return source;
+}
+
+/**
+ * Loads `.gitignore` and compiles it into a path predicate that follows real
+ * gitignore semantics for the subset relevant to source scanning:
+ *
+ *   - rules are **ordered**, and the *last* matching rule decides — this is what
+ *     makes the `.env*` + `!.env.example` idiom work
+ *   - a pattern containing a slash anywhere but the end is anchored to the root
+ *     (`/dist`, `docs/build/`); otherwise it matches at any depth (`node_modules`)
+ *   - globs are path-aware: `*` and `?` stop at `/`, `**` crosses segments
+ *   - an ignored **directory** cannot be rescued by a negation inside it, matching
+ *     git's own rule; ancestors are therefore evaluated before the leaf
+ *   - `#` comments and blank lines are skipped
+ *
+ * Trailing-slash (directory-only) patterns are applied to the leaf as well,
+ * since callers invoke this predicate on directory entries to prune the walk.
+ * A regular file whose name collides with a directory-only pattern is therefore
+ * also ignored — an accepted, vanishingly rare imprecision.
  *
  * @param {string} [rootDir='.'] - Project root containing `.gitignore`.
  * @returns {function(string): boolean} Predicate: true when the relative path is ignored.
  */
 function loadGitignore(rootDir = '.') {
-    const gitignorePath = path.join(rootDir, '.gitignore');
-
     let content;
     try {
-        content = fs.readFileSync(gitignorePath, 'utf8');
+        content = fs.readFileSync(path.join(rootDir, '.gitignore'), 'utf8');
     } catch {
         return () => false;
     }
 
-    /** @type {string[]} Root-relative prefixes (`dist`, `docs/build`). */
-    const anchored = [];
-    /** @type {Set<string>} Bare names matched against any path segment. */
-    const segments = new Set();
-    /** @type {RegExp[]} Wildcard basename matchers. */
-    const globs = [];
+    /** @type {{ re: RegExp, negated: boolean }[]} Ordered rules; last match wins. */
+    const rules = [];
 
     for (const raw of content.split(/\r?\n/)) {
         const line = raw.trim();
-        if (!line || line.startsWith('#') || line.startsWith('!')) continue;
+        if (!line || line.startsWith('#')) continue;
 
-        const rooted = line.startsWith('/');
-        const cleaned = line.replace(/^\/+/, '').replace(/\/+$/, '');
-        if (!cleaned) continue;
+        const negated = line.startsWith('!');
+        const body = (negated ? line.slice(1) : line).replace(/\/+$/, '');
+        if (!body) continue;
 
-        if (rooted || cleaned.includes('/')) {
-            anchored.push(normalizePath(cleaned));
-        } else if (cleaned.includes('*')) {
-            const source = cleaned
-                .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-                .replace(/\*/g, '.*');
-            globs.push(new RegExp(`^${source}$`));
-        } else {
-            segments.add(cleaned);
-        }
+        // Anchored when a separator appears at the start or the middle.
+        const rooted = body.startsWith('/') || body.slice(0, -1).includes('/');
+        const source = globToRegexSource(body.replace(/^\/+/, ''));
+        if (!source) continue;
+
+        rules.push({
+            re: new RegExp(rooted ? `^${source}$` : `^(?:.*/)?${source}$`),
+            negated,
+        });
     }
+
+    if (rules.length === 0) return () => false;
 
     /**
      * @param {string} relPath - Path relative to `rootDir`, any separator style.
@@ -240,14 +278,23 @@ function loadGitignore(rootDir = '.') {
         const normalized = normalizePath(relPath);
         if (!normalized || normalized === '.') return false;
 
-        for (const part of normalized.split('/')) {
-            if (segments.has(part)) return true;
-            if (globs.some(re => re.test(part))) return true;
+        const parts = normalized.split('/');
+        let prefix = '';
+
+        for (let i = 0; i < parts.length; i++) {
+            prefix = i === 0 ? parts[0] : `${prefix}/${parts[i]}`;
+
+            // Last matching rule wins, exactly as git resolves conflicts.
+            let ignored = false;
+            for (const rule of rules) {
+                if (rule.re.test(prefix)) ignored = !rule.negated;
+            }
+
+            // An excluded ancestor is final: git never descends to re-include.
+            if (ignored) return true;
         }
 
-        return anchored.some(
-            prefix => normalized === prefix || normalized.startsWith(`${prefix}/`),
-        );
+        return false;
     };
 }
 

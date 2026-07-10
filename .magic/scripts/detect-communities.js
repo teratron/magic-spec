@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, resolveDesignRoot } = require('./utils');
+const { normalizePath, resolveDesignRoot, loadGitignore } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // COMMUNITY DETECTION — Workspace Discovery via Label Propagation
@@ -65,61 +65,10 @@ const SKIP_PATH_FRAGMENTS = [
 ];
 
 /**
- * Parses `.gitignore` into directory-skip matchers (Invariant 7 parity).
- *
- * Honors only directory-oriented ignore rules — the file walk decides which
- * subtrees to descend, so file-only globs (`*.log`, `uv.lock`) are irrelevant.
- * Two matcher classes are derived:
- *   - `nameMatchers`: regexes for patterns WITHOUT a path separator, tested
- *     against a single path segment (`*tmp/` → /^.*tmp$/, `node_modules/`).
- *   - `pathPrefixes`: normalized, glob-free directory prefixes for patterns
- *     WITH a path separator (`.design/wiki/` → `.design/wiki`).
- *
- * @param {string} root - Project root directory.
- * @returns {{ nameMatchers: RegExp[], pathPrefixes: string[] }}
+ * Gitignore predicate over root-relative POSIX paths (Invariant 7 parity).
+ * Shared with the other engine scanners — see `utils.loadGitignore`.
  */
-function loadGitignoreSkips(root) {
-    const nameMatchers = [];
-    const pathPrefixes = [];
-
-    let content;
-    try { content = fs.readFileSync(path.join(root, '.gitignore'), 'utf8'); }
-    catch (_) { return { nameMatchers, pathPrefixes }; }
-
-    for (let line of content.split(/\r?\n/)) {
-        line = line.trim();
-        if (!line || line.startsWith('#') || line.startsWith('!')) continue;
-
-        const isDir = line.endsWith('/');
-        const pat = (isDir ? line.slice(0, -1) : line).replace(/^\//, '');
-        if (!pat) continue;
-
-        if (pat.includes('/')) {
-            // Anchored path pattern — honor only glob-free directory prefixes.
-            if (isDir && !pat.includes('*')) pathPrefixes.push(normalizePath(pat));
-            continue;
-        }
-
-        // Basename pattern. Plain (glob-free) file names are not directories — skip.
-        if (!isDir && !pat.includes('*')) continue;
-        const re = new RegExp('^' + pat.replace(/[.+^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');
-        nameMatchers.push(re);
-    }
-
-    return { nameMatchers, pathPrefixes };
-}
-
-const GITIGNORE = loadGitignoreSkips(rootDir);
-
-/** @param {string} name - A single path segment. @returns {boolean} */
-function gitignoreSkipsName(name) {
-    return GITIGNORE.nameMatchers.some(re => re.test(name));
-}
-
-/** @param {string} rel - Workspace-relative POSIX path. @returns {boolean} */
-function gitignoreSkipsPath(rel) {
-    return GITIGNORE.pathPrefixes.some(p => rel === p || rel.startsWith(p + '/'));
-}
+const isGitignored = loadGitignore(rootDir);
 
 /**
  * Returns true if a file path should be excluded from graph analysis.
@@ -133,8 +82,7 @@ function shouldSkip(absPath) {
 
     if (parts.some(p => SKIP_DIRS.has(p))) return true;
     if (SKIP_PATH_FRAGMENTS.some(f => rel.includes(f))) return true;
-    if (parts.some(gitignoreSkipsName)) return true;
-    if (gitignoreSkipsPath(rel)) return true;
+    if (isGitignored(rel)) return true;
 
     return false;
 }
@@ -162,8 +110,7 @@ function scanDir(dir, result = []) {
         if (entry.isSymbolicLink()) continue;
         if (entry.isDirectory()) {
             if (SKIP_DIRS.has(entry.name)) continue;
-            if (gitignoreSkipsName(entry.name)) continue;
-            if (gitignoreSkipsPath(normalizePath(path.relative(rootDir, abs)))) continue;
+            if (isGitignored(normalizePath(path.relative(rootDir, abs)))) continue;
             scanDir(abs, result);
         } else if (entry.isFile() && SCAN_EXTENSIONS.has(path.extname(entry.name))) {
             if (!shouldSkip(abs)) result.push(abs);

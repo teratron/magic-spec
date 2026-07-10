@@ -1,11 +1,10 @@
 # Project Context
 
-**Generated:** 2026-03-31
+**Generated:** 2026-07-10
 
 ## Active Technologies
 
-- Node.js
-- Python (uv/poetry/hatch)
+- Unknown (no manifest detected)
 
 ## Core Project Structure
 
@@ -16,79 +15,54 @@
 │   ├── skills/
 │   └── workflows/
 ├── .claude/
-│   ├── commands/
-│   ├── rules/
-│   └── skills/
 ├── .codex/
-│   ├── prompts/
-│   ├── rules/
-│   └── skills/
 ├── .design/
+│   ├── .version
+│   ├── CONTEXT.md
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
+│   ├── graph-before.json
 │   └── workspace.json
-├── .env
 ├── .env.example
-├── .gemini/
-│   ├── commands/
-│   ├── rules/
-│   └── skills/
+├── .fallowrc.json
 ├── .gitattributes
-├── .gitignore
-├── .kilocode/
+├── .github/
 │   └── workflows/
+├── .gitignore
 ├── .lingma/
-│   └── commands/
 ├── .magic/
 │   ├── .checksums
 │   ├── .version
 │   ├── analyze.md
-│   ├── history/
+│   ├── context.md
 │   ├── init.md
+│   ├── pause.md
 │   ├── retrospective.md
+│   ├── roles/
 │   ├── rule.md
 │   ├── run.md
 │   ├── scripts/
-│   ├── simulate.md
 │   ├── spec.md
+│   ├── status.md
 │   ├── task.md
-│   ├── templates/
-│   └── tests/
+│   └── templates/
 ├── .markdownlint.json
-├── .pytest_cache/
-│   ├── .gitignore
-│   ├── CACHEDIR.TAG
-│   ├── README.md
-│   └── v/
 ├── .qwen/
-│   ├── commands/
-│   ├── rules/
-│   └── skills/
-├── .ruff_cache/
-│   ├── .gitignore
-│   ├── 0.15.7/
-│   ├── 0.15.8/
-│   └── CACHEDIR.TAG
 ├── AGENTS.md
 ├── CHANGELOG.md
-├── CLAUDE.md
-├── CODEX.md
 ├── CONTRIBUTING.md
-├── GEMINI.md
 ├── LICENSE
-├── QWEN.md
 ├── README.md
-├── dist/
-│   ├── .gitignore
-│   ├── magic-spec-1.5.71.tgz
-│   ├── magic_spec-1.5.71-py3-none-any.whl
-│   └── magic_spec-1.5.71.tar.gz
+├── dev/
+│   ├── scripts/
+│   └── tests/
 ├── docs/
 │   ├── README.md
 │   ├── analyze.md
 │   ├── checksums.md
 │   ├── conception.md
+│   ├── distribution.md
 │   ├── init.md
 │   ├── retrospective.md
 │   ├── rule.md
@@ -96,19 +70,23 @@
 │   ├── simulate.md
 │   ├── spec.md
 │   └── task.md
+├── rules/
+│   └── magic.md
 ├── skills/
 │   ├── magic-analyze/
+│   ├── magic-graph/
 │   ├── magic-rule/
 │   ├── magic-run/
 │   ├── magic-spec/
+│   ├── magic-status/
 │   └── magic-task/
-├── tmp/
-│   └── sandbox/
 └── workflows/
     ├── magic.analyze.md
+    ├── magic.graph.md
     ├── magic.rule.md
     ├── magic.run.md
     ├── magic.spec.md
+    ├── magic.status.md
     └── magic.task.md
 ```
 
