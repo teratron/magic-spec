@@ -71,7 +71,7 @@ graph TD
 
 ### Steps
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --verify-headers --workspace {active-workspace}`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --verify-headers --workspace={active-workspace}`.
    - **C15 Filter**: `checksums_mismatch` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
    - **File-Header Parity**: for each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. Either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`."* Catches manual edits that bypassed the spec workflow.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. Any name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run `/magic.task`."* One recommended path — no option menu.
@@ -123,13 +123,13 @@ After PLAN.md, TASKS.md, and phase files are written:
 
 - If `STATE.md` does not exist → it will be created by `init.md` automatically (always called first).
 - Update STATE.md to reflect new plan:
-  `node .magic/scripts/executor.js update-state --workspace={active-workspace-dir} --phase="1 — {Phase-1 Name}" --status=Active --next-action="Run /magic.run to execute Phase 1"`
+  `node .magic/scripts/executor.js update-state --workspace={active-workspace} --phase="1 — {Phase-1 Name}" --status=Active --next-action="Run /magic.run to execute Phase 1"`
 - If plan update mode (C12, update, sync) → patch `--phase` and `--next-action` to reflect the re-planned state.
 
 ### Context Regeneration
 
 After writing PLAN.md, TASKS.md, and phase files, regenerate the workspace context file:
-`node .magic/scripts/executor.js generate-context --workspace {active-workspace}`
+`node .magic/scripts/executor.js generate-context --workspace={active-workspace}`
 
 ### Graph Refresh (Post-Write)
 

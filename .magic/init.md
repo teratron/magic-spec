@@ -28,7 +28,7 @@ graph TD
 
 #### 1. Check — Pre-flight + C15 Filter
 
-Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. Branch on result:
+Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. Branch on result:
 
 - `ok: true` → skip silently; return control to caller.
 - `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below).

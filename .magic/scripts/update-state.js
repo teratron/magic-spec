@@ -7,6 +7,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { parseFlags } = require('./utils');
 
 /**
  * Updates STATE.md with provided key-value patches.
@@ -258,44 +259,56 @@ function runCli() {
         process.exit(1);
     }
 
+    // One shared grammar (utils.parseFlags): `--flag=value` and `--flag value`
+    // are equivalent, and a valueless value-flag is an error. Previously a bare
+    // `--workspace` yielded an empty value that fell through to `.design/`,
+    // writing STATE.md into the global registry root instead of a workspace.
+    const { values, flags, rest, errors } = parseFlags(args, {
+        valueFlags: [
+            '--workspace', '--task', '--status', '--phase', '--next-action',
+            '--handoff', '--bootstrap', '--decision',
+            '--constraint-title', '--constraint-desc',
+        ],
+        boolFlags: ['--auto-progress'],
+    });
+
+    if (errors.length > 0) {
+        console.error(`[update-state] HALT: ${errors[0]}`);
+        process.exit(1);
+    }
+    for (const unknown of rest) {
+        console.warn(`[update-state] Unknown argument: ${unknown}`);
+    }
+
     const parsed = {};
     const opts = {};
 
-    for (const arg of args) {
-        const eqIdx = arg.indexOf('=');
-        const key = eqIdx !== -1 ? arg.slice(0, eqIdx) : arg;
-        const val = eqIdx !== -1 ? arg.slice(eqIdx + 1) : '';
+    if (values['--task'] !== undefined) parsed.task = values['--task'];
+    if (values['--status'] !== undefined) parsed.status = values['--status'];
+    if (values['--phase'] !== undefined) parsed.phase = values['--phase'];
+    if (values['--next-action'] !== undefined) parsed.nextAction = values['--next-action'];
+    if (values['--handoff'] !== undefined) parsed.handoff = values['--handoff'];
+    if (values['--bootstrap'] !== undefined) parsed.bootstrap = values['--bootstrap'];
+    if (flags['--auto-progress']) opts.autoProgress = true;
 
-        switch (key) {
-            case '--workspace': parsed.workspace = val; break;
-            case '--task': parsed.task = val; break;
-            case '--status': parsed.status = val; break;
-            case '--phase': parsed.phase = val; break;
-            case '--next-action': parsed.nextAction = val; break;
-            case '--handoff': parsed.handoff = val; break;
-            case '--bootstrap': parsed.bootstrap = val; break;
-            case '--auto-progress': opts.autoProgress = true; break;
-            case '--decision':
-                parsed.decision = val;
-                opts.addDecision = true;
-                break;
-            case '--constraint-title':
-                parsed.constraint = parsed.constraint || {};
-                parsed.constraint.title = val;
-                opts.addConstraint = true;
-                break;
-            case '--constraint-desc':
-                parsed.constraint = parsed.constraint || {};
-                parsed.constraint.desc = val;
-                opts.addConstraint = true;
-                break;
-            default:
-                console.warn(`[update-state] Unknown argument: ${key}`);
-        }
+    if (values['--decision'] !== undefined) {
+        parsed.decision = values['--decision'];
+        opts.addDecision = true;
+    }
+    if (values['--constraint-title'] !== undefined) {
+        parsed.constraint = parsed.constraint || {};
+        parsed.constraint.title = values['--constraint-title'];
+        opts.addConstraint = true;
+    }
+    if (values['--constraint-desc'] !== undefined) {
+        parsed.constraint = parsed.constraint || {};
+        parsed.constraint.desc = values['--constraint-desc'];
+        opts.addConstraint = true;
     }
 
-    const workspaceArg = parsed.workspace || process.env.MAGIC_DESIGN_DIR || '.design';
-    delete parsed.workspace;
+    // `--workspace` here is a design *directory* (may contain separators), not
+    // the bare workspace name that executor.js validates. Absent → ambient env.
+    const workspaceArg = values['--workspace'] || process.env.MAGIC_DESIGN_DIR || '.design';
 
     updateState(workspaceArg, parsed, opts);
 }

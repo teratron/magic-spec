@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { writeFileSafe, isDryRun, mkdirSafe } = require('./utils');
+const { writeFileSafe, isDryRun, mkdirSafe, parseFlags, WORKSPACE_NAME_RE } = require('./utils');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
 const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = require('./lib/significance');
 const { createIfMissing, appendBullet, releaseUnreleased } = require('./lib/changelog-writer');
@@ -54,29 +54,33 @@ const VALID_WORKFLOWS = new Set(['spec', 'task', 'run', 'rule']);
  * }}
  */
 function parseArgs() {
-    const args = process.argv.slice(2);
-    const opts = {
-        workflow: null,
-        workspace: null,
-        dryRun: false,
-        noBump: false,
-        noChangelog: false,
-        noCommitMsg: false,
-        force: false,
-    };
-    for (let i = 0; i < args.length; i++) {
-        const a = args[i];
-        if (a.startsWith('--workflow=')) opts.workflow = a.split('=')[1];
-        else if (a === '--workflow' && args[i + 1]) opts.workflow = args[++i];
-        else if (a.startsWith('--workspace=')) opts.workspace = a.split('=')[1];
-        else if (a === '--workspace' && args[i + 1]) opts.workspace = args[++i];
-        else if (a === '--dry-run') opts.dryRun = true;
-        else if (a === '--no-bump') opts.noBump = true;
-        else if (a === '--no-changelog') opts.noChangelog = true;
-        else if (a === '--no-commit-msg') opts.noCommitMsg = true;
-        else if (a === '--force') opts.force = true;
+    const { values, flags, errors } = parseFlags(process.argv.slice(2), {
+        valueFlags: ['--workflow', '--workspace'],
+        boolFlags: ['--dry-run', '--no-bump', '--no-changelog', '--no-commit-msg', '--force'],
+    });
+
+    if (errors.length > 0) {
+        console.error(`❌ ${errors[0]}`);
+        process.exit(1);
     }
-    return opts;
+
+    const workspace = values['--workspace'] || null;
+    // Reaches `path.join(designAbs, workspace)` on direct invocation (no
+    // MAGIC_DESIGN_DIR), so it must satisfy the same guard executor.js applies.
+    if (workspace && !WORKSPACE_NAME_RE.test(workspace)) {
+        console.error(`❌ Invalid workspace name '${workspace}'. Must match ${WORKSPACE_NAME_RE}.`);
+        process.exit(1);
+    }
+
+    return {
+        workflow: values['--workflow'] || null,
+        workspace,
+        dryRun: Boolean(flags['--dry-run']),
+        noBump: Boolean(flags['--no-bump']),
+        noChangelog: Boolean(flags['--no-changelog']),
+        noCommitMsg: Boolean(flags['--no-commit-msg']),
+        force: Boolean(flags['--force']),
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────

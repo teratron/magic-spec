@@ -203,6 +203,91 @@ const BUILD_NOISE_DIRS = Object.freeze([
 ]);
 
 // ───────────────────────────────────────────────────────────────────────────
+// CLI Argument Grammar (Single Source of Truth)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Canonical shape of a workspace *name* (not a path): the value accepted by
+ * `--workspace` on `executor.js`. Shared so every guard rejects the same set.
+ *
+ * Scripts that take a workspace *directory* (`update-state.js`) must NOT use
+ * this — a directory legitimately contains separators.
+ */
+const WORKSPACE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
+
+/**
+ * Parses an argv slice under one grammar shared by every engine entry point.
+ *
+ * Both `--flag=value` and `--flag value` are accepted for value-taking flags —
+ * a divergence here is what let `--workspace nodus` silently fall back to the
+ * default workspace while `--workspace=nodus` worked.
+ *
+ * The parser **fails closed**: a value-taking flag that is present but carries
+ * no value is an error, never a silent default. The full remainder after the
+ * first `=` is returned verbatim, so a malformed value like `a=b` reaches the
+ * caller's validation instead of being truncated to `a`.
+ *
+ * Unrecognized tokens are returned in `rest` untouched, so a proxy (executor)
+ * can forward them to a child process without knowing their grammar.
+ *
+ * @param {string[]} argv - Argument tokens (already sliced past the script name).
+ * @param {{valueFlags?: string[], boolFlags?: string[]}} [spec] - Flag taxonomy.
+ * @returns {{values: Object<string,string>, flags: Object<string,boolean>, rest: string[], errors: string[]}}
+ */
+function parseFlags(argv, spec = {}) {
+    const valueFlags = new Set(spec.valueFlags || []);
+    const boolFlags = new Set(spec.boolFlags || []);
+
+    /** @type {Object<string,string>} */
+    const values = Object.create(null);
+    /** @type {Object<string,boolean>} */
+    const flags = Object.create(null);
+    /** @type {string[]} */
+    const rest = [];
+    /** @type {string[]} */
+    const errors = [];
+
+    for (let i = 0; i < argv.length; i++) {
+        const token = argv[i];
+        const eq = token.indexOf('=');
+        const key = eq === -1 ? token : token.slice(0, eq);
+
+        if (boolFlags.has(key)) {
+            if (eq !== -1) errors.push(`'${key}' is a boolean flag and takes no value.`);
+            else flags[key] = true;
+            continue;
+        }
+
+        if (!valueFlags.has(key)) {
+            rest.push(token);
+            continue;
+        }
+
+        let value;
+        if (eq !== -1) {
+            value = token.slice(eq + 1);
+        } else {
+            const next = argv[i + 1];
+            // A following flag means the value was omitted, not that it is `--x`.
+            if (next === undefined || next.startsWith('--')) {
+                errors.push(`'${key}' requires a value (use ${key}=<value> or ${key} <value>).`);
+                continue;
+            }
+            value = next;
+            i++;
+        }
+
+        if (value === '') {
+            errors.push(`'${key}' requires a non-empty value.`);
+            continue;
+        }
+        values[key] = value;
+    }
+
+    return { values, flags, rest, errors };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Gitignore Filtering
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -357,6 +442,8 @@ module.exports = {
     mkdirSafe,
     loadGitignore,
     resolveDesignRoot,
+    parseFlags,
     BUILD_NOISE_DIRS,
+    WORKSPACE_NAME_RE,
     VOLATILE_STATE_FILES,
 };

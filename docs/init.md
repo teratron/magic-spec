@@ -31,7 +31,7 @@ The engine enforces 5 mandatory invariants:
 
 ### Step 1 — Check Prerequisites
 
-`node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`
+`node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`
 
 | Result | Action |
 | --- | --- |

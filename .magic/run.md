@@ -28,7 +28,7 @@ Parse `[arg]` to determine execution mode:
    - `Blocking Constraints` non-empty → list each `[C-NNN]` and confirm acknowledgment.
    - `**Status:** Paused` → Resume Detection applies (see `context.md §4`).
    - After each task transitions to `Done` or `Blocked` → update STATE.md via:
-     `node .magic/scripts/executor.js update-state --workspace={active-workspace-dir} --task="{T-ID} {Task Title}" --status={Done|Blocked} --next-action="{next task title}"`
+     `node .magic/scripts/executor.js update-state --workspace={active-workspace} --task="{T-ID} {Task Title}" --status={Done|Blocked} --next-action="{next task title}"`
    - After Phase Complete → update `--phase="{N+1} — {Phase Name}"` and `--status=Active`.
    - STATE.md update is part of Step 4 (Update) — never skip.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
@@ -40,7 +40,7 @@ Parse `[arg]` to determine execution mode:
    - **Spec Stability**: before executing each task, verify its target spec is still `Stable` in `INDEX.md`. Demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: *"Spec `{file}` is no longer `Stable`. Run `magic.task update` to re-evaluate the plan."* Catches external status changes that C12 pre-flight alone cannot detect.
    - **Phantom Spec**: spec referenced by `TASKS.md` missing from `INDEX.md` or filesystem → **HALT**. Report: *"Phantom Spec `{file}` detected. Run `/magic.task` to revalidate the plan; it will surface a `/magic.spec` recommendation if the spec must be re-authored."*
    - **Pause Propagation**: task transitions to `Blocked [!]` AND no `Todo` tasks remain in the current phase → automatically call:
-     `node .magic/scripts/executor.js update-state --workspace={dir} --status=Blocked`
+     `node .magic/scripts/executor.js update-state --workspace={active-workspace} --status=Blocked`
      Inform: *"⚠ Phase blocked. Run `/magic.task {workspace}` to revalidate the plan. (Pause: /magic.pause)"* **Hard rule**: never name `/magic.spec` or `/magic.analyze` as the next step — they surface inside `/magic.task` Pre-flight only.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
@@ -76,7 +76,7 @@ graph TD
 
 ### Steps
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --verify-headers --workspace {active-workspace}`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --verify-headers --workspace={active-workspace}`.
    - **C15 Filter**: `checksums_mismatch` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
    - **Bootstrap Detection**: `PLAN.md` contains `[Bootstrap]` markers → warn: *"⚠ Bootstrap Plan detected — specs are not yet Stable. Execution results may need revision when specs are finalized."* Continue execution but append `[Bootstrap]` suffix to all generated artifacts (task outputs, changelogs). Bootstrap artifacts are not final deliverables.
    - **Spec Stability Spot-Check**: read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. **Bootstrap Exception**: task with `[Bootstrap]` marker → `Draft` is acceptable; skip this check for that task. Any other non-Stable spec → **HALT** before execution begins (per Logic Guard above).
@@ -116,7 +116,7 @@ graph TD
      - `key_files.created` and `key_files.modified`: from Done task implementations.
      - `patterns_established`: any architectural decisions made during execution.
      - `duration_minutes`: elapsed time from first In Progress → last Done (if trackable).
-     - `node .magic/scripts/executor.js update-state --workspace={dir} --decision="Phase {N} complete. Provides: {summary of provides}"`
+     - `node .magic/scripts/executor.js update-state --workspace={active-workspace} --decision="Phase {N} complete. Provides: {summary of provides}"`
    - **Phase Archive**: auto-archival runs as part of the Finalization Protocol. `finalize --workflow=run` detects `tasks/phase-{N}.md` files where `status: Done` and all checklist items are checked, then moves them to `archives/tasks/` and updates `TASKS.md` link references. No manual step required.
    - **Actionable Outcome**: after archival, show: `[Archive] Phase {N} archived → archives/tasks/phase-{N}.md`.
 

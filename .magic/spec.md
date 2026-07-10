@@ -158,7 +158,7 @@ graph TD
 
 ### Creating a New Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
    - `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches.
    - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
@@ -172,7 +172,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`. `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
 2. **Versioning**:
    - `patch` (0.0.X) — typos, no logic change.
    - `minor` (0.X.0) — extensions.

@@ -4,6 +4,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const { parseFlags, WORKSPACE_NAME_RE } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIVERSAL EXECUTOR (Engine Kernel Proxy)
@@ -19,7 +20,6 @@ const fs = require('fs');
 // ───────────────────────────────────────────────────────────────────────────
 
 const SCRIPT_NAME_RE = /^[a-z][a-z0-9-]*$/;
-const WORKSPACE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
 const scriptName = process.argv[2];
 let args = process.argv.slice(3);
@@ -38,16 +38,23 @@ if (!SCRIPT_NAME_RE.test(scriptName)) {
 // Workspace Resolution (Zero-Prompt)
 // ───────────────────────────────────────────────────────────────────────────
 
-let workspaceName = process.env.MAGIC_WORKSPACE || null;
-const finalArgs = [];
-for (const arg of args) {
-    if (arg.startsWith('--workspace=')) {
-        workspaceName = arg.split('=')[1];
-    } else {
-        finalArgs.push(arg);
-    }
+// `--workspace=<name>` and `--workspace <name>` are both accepted. A flag that
+// is present but valueless HALTs instead of falling back to the default
+// workspace: a silent fallback routed writes and Pre-flight validation at the
+// wrong workspace, and made the Unknown-workspace guard below unreachable.
+const { values: flagValues, rest: passThroughArgs, errors: flagErrors } = parseFlags(args, {
+    valueFlags: ['--workspace'],
+});
+
+if (flagErrors.length > 0) {
+    console.error(`HALT: ${flagErrors[0]}`);
+    process.exit(1);
 }
-args = finalArgs;
+
+args = passThroughArgs;
+
+// An explicit flag overrides the ambient MAGIC_WORKSPACE; both reach the same guard.
+let workspaceName = flagValues['--workspace'] || process.env.MAGIC_WORKSPACE || null;
 
 if (workspaceName && !WORKSPACE_NAME_RE.test(workspaceName)) {
     console.error(`HALT: Invalid workspace name '${workspaceName}'. Must match ${WORKSPACE_NAME_RE}.`);

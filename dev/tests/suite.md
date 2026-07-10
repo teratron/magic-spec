@@ -1296,7 +1296,7 @@ If any test fails, document the failure reason and propose a fix.
   - No C12 violation (L1 parent `auth.md` is still Stable — this is NOT a parent-layer issue)
 - **Action:** User runs `/magic.run`
 - **Expected:**
-  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace {active-workspace}`.
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace={active-workspace}`.
     - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
   - [ ] Pre-flight: `check-prerequisites` passes (no engine mismatch)
@@ -1997,7 +1997,7 @@ If any test fails, document the failure reason and propose a fix.
   - templates/plan.md and templates/tasks.md updated
 - **Action 1: Generate tasks (`task.md`)**
 - **Expected 1:**
-  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace {active-workspace}`.
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace={active-workspace}`.
     - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`." This catches manual edits that bypassed the spec workflow.
     - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
@@ -2181,7 +2181,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Test 1 — spec.md C12 cascade:**
   - **Action:** Agent completes L1 status change in `spec.md`
   - **Expected:**
-    1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+    1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
     - `ok: true` → proceed.
     - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
     - Missing `.design/` → auto-run `.magic/init.md`, then resume.
@@ -2205,7 +2205,7 @@ If any test fails, document the failure reason and propose a fix.
   - `check-prerequisites --json` returns `checksums_mismatch: true`
 - **Action:** `/magic.rule add "New convention"` triggered
 - **Expected:**
-  1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+  1. **Check**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
   - If `ok: true` → Skip silently. Return control to calling workflow.
   - If `ok: false` & contains `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings:
     - **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope for `{active-workspace}`.
@@ -2258,7 +2258,7 @@ If any test fails, document the failure reason and propose a fix.
   - `analyze.md` Mode C step 3 references "kebab-case convention" with C5 check
 - **Action:** `"Remove rule C5"`
 - **Expected:**
-  1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+  1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
   - `ok: true` → proceed.
   - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
   - Missing `.design/` → auto-run `.magic/init.md`, then resume.
@@ -2508,7 +2508,7 @@ If any test fails, document the failure reason and propose a fix.
   - `.magic/` files are clean and match checksums.
 - **Action:** Run `/magic.simulate`
 - **Expected:**
-  - [ ] check-prerequisites called with `--workspace engine`.
+  - [ ] check-prerequisites called with `--workspace=engine`.
   - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `docs/config.json`.
   - [ ] **C15 Filter** applied: agent recognizes mismatch is out-of-scope.
   - [ ] Agent logs drift but does NOT HALT.
@@ -2579,7 +2579,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/RULES.md` exists and is tracked by git.
   - Git repo is initialized. `git diff HEAD -- .design/RULES.md` returns non-empty output (§7 C3 was manually deleted).
-- **Action:** `check-prerequisites --json --workspace engine`
+- **Action:** `check-prerequisites --json --workspace=engine`
 - **Expected:**
   - [ ] `CONFIG_DRIFT` warning present in JSON output for `.design/RULES.md`.
   - [ ] Warning message includes file path and "modified outside workflow".
@@ -2593,7 +2593,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/RULES.md` exists.
   - No git repository (`.git/` missing or `git` not in PATH).
-- **Action:** `check-prerequisites --json --workspace engine`
+- **Action:** `check-prerequisites --json --workspace=engine`
 - **Expected:**
   - [ ] No `CONFIG_DRIFT` warning in output.
   - [ ] No error or crash from git absence.
@@ -2607,7 +2607,7 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/RULES.md` (global) exists, no uncommitted changes.
   - `.design/engine/RULES.md` (workspace-specific) exists with uncommitted changes.
   - Git repo is initialized.
-- **Action:** `check-prerequisites --json --workspace engine`
+- **Action:** `check-prerequisites --json --workspace=engine`
 - **Expected:**
   - [ ] `CONFIG_DRIFT` warning present for `.design/engine/RULES.md` only.
   - [ ] No warning for `.design/RULES.md` (unchanged).
@@ -2845,7 +2845,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** `/magic.task engine`
 - **Expected:**
   - [ ] Plan Write-back: PLAN.md, TASKS.md, and phase file written
-  - [ ] **Context Regeneration**: `node .magic/scripts/executor.js generate-context --workspace engine` executed
+  - [ ] **Context Regeneration**: `node .magic/scripts/executor.js generate-context --workspace=engine` executed
   - [ ] CONTEXT.md file created or updated in `.design/engine/`
   - [ ] Completion Checklist item "CONTEXT.md regenerated" verifiable
 - **Guards tested:** Context Regeneration as explicit workflow step (RE-2 fix), diagram-text parity

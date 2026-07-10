@@ -60,7 +60,7 @@ graph TD
 
 > **HALT**: Do NOT proceed past Pre-flight until `check-prerequisites` output is recorded in the report. If the command fails, is skipped, or its output is not included verbatim — the entire simulation is INVALID. This is a non-negotiable blocking gate.
 
-1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
     - `ok: true` → proceed to Step 2.
     - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `.magic/init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
     - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.

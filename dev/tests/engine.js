@@ -1077,6 +1077,173 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 16. utils.parseFlags — one CLI grammar for every engine entry point.
+    //     `--flag=value` and `--flag value` are equivalent; a present-but-
+    //     valueless flag is an error, never a silent default.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('utils.parseFlags accepts both flag forms and fails closed on a missing value', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { parseFlags } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+            const spec = { valueFlags: ['--workspace', '--workflow'], boolFlags: ['--json'] };
+
+            // Both forms yield the same value.
+            assert.strictEqual(parseFlags(['--workspace=nodus'], spec).values['--workspace'], 'nodus');
+            assert.strictEqual(parseFlags(['--workspace', 'nodus'], spec).values['--workspace'], 'nodus');
+
+            // Unrecognized tokens pass through untouched (executor forwards them to the child).
+            const proxied = parseFlags(['--json', '--require-tasks', '--workspace', 'nodus'], spec);
+            assert.deepStrictEqual(proxied.rest, ['--require-tasks'], 'unknown tokens survive in rest');
+            assert.strictEqual(proxied.flags['--json'], true, 'boolean flags are captured, not forwarded');
+            assert.strictEqual(proxied.values['--workspace'], 'nodus');
+            assert.deepStrictEqual(proxied.errors, [], 'a well-formed argv produces no errors');
+
+            // Fail closed — the four silent-fallback shapes.
+            assert.ok(parseFlags(['--workspace'], spec).errors.length, 'bare flag at end of argv is an error');
+            assert.ok(parseFlags(['--workspace', '--json'], spec).errors.length, 'a following flag is not a value');
+            assert.ok(parseFlags(['--workspace='], spec).errors.length, 'an empty value is an error');
+            assert.ok(parseFlags(['--json=1'], spec).errors.length, 'a boolean flag rejects a value');
+
+            // An embedded '=' must reach the caller's validation, never be truncated to `a`.
+            assert.strictEqual(
+                parseFlags(['--workspace=a=b'], spec).values['--workspace'],
+                'a=b',
+                "split('=')[1] truncation must not resurface"
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 16a. executor.js — workspace routing is form-agnostic, and the
+    //      Unknown-workspace guard is reachable through BOTH forms.
+    //      Field report: `generate-context --workspace nodus` silently wrote
+    //      .design/main/CONTEXT.md while `--workspace=nodus` wrote the target.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('executor.js routes --workspace <name> identically to --workspace=<name>', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            for (const ws of ['main', 'nodus']) {
+                fs.mkdirSync(path.join(tempDir, '.design', ws), { recursive: true });
+            }
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'workspace.json'),
+                JSON.stringify({ default: 'main', workspaces: { main: {}, nodus: {} } })
+            );
+
+            const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
+            const contextOf = (ws) => path.join(tempDir, '.design', ws, 'CONTEXT.md');
+            const clearContexts = () => {
+                for (const ws of ['main', 'nodus']) {
+                    if (fs.existsSync(contextOf(ws))) fs.unlinkSync(contextOf(ws));
+                }
+            };
+
+            // (a) Space form must hit the requested workspace, not the default.
+            clearContexts();
+            execSync(`node "${executorPath}" generate-context --workspace nodus`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(contextOf('nodus')), 'space form must write the target workspace');
+            assert.ok(!fs.existsSync(contextOf('main')), 'space form must not fall back to the default workspace');
+
+            // (b) Equals form — the control that always worked.
+            clearContexts();
+            execSync(`node "${executorPath}" generate-context --workspace=nodus`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(contextOf('nodus')), 'equals form must write the target workspace');
+            assert.ok(!fs.existsSync(contextOf('main')), 'equals form must not touch the default workspace');
+
+            // (c) The Unknown-workspace guard must be reachable via BOTH forms.
+            //     Previously the space form bypassed it: a typo silently wrote to main.
+            const expectHalt = (argv, why) => {
+                clearContexts();
+                assert.throws(
+                    () => execSync(`node "${executorPath}" generate-context ${argv}`, { cwd: tempDir, stdio: 'pipe' }),
+                    /HALT/,
+                    why
+                );
+                assert.ok(!fs.existsSync(contextOf('main')), `${why} — and nothing may be written`);
+                assert.ok(!fs.existsSync(contextOf('nodus')), `${why} — and nothing may be written`);
+            };
+
+            expectHalt('--workspace bogus', 'a typo in the space form must HALT, not silently target the default');
+            expectHalt('--workspace=bogus', 'a typo in the equals form must HALT');
+            expectHalt('--workspace', 'a bare --workspace must HALT, not fall back to the default');
+            expectHalt('--workspace=', 'an empty --workspace value must HALT');
+            expectHalt('--workspace=nodus=typo', "an embedded '=' must fail validation, not truncate to 'nodus'");
+
+            // (d) Path traversal stays rejected through the space form too.
+            expectHalt('--workspace ../../../etc', 'traversal via the space form must HALT');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 16b. update-state.js — a bare --workspace used to yield an empty value
+    //      that fell through to `.design/`, writing STATE.md into the global
+    //      registry root instead of a workspace.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-state.js honors both flag forms and never writes STATE.md to the registry root', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
+            if (fs.existsSync(realTemplate)) {
+                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
+            }
+            const wsDir = path.join(tempDir, '.design', 'nodus');
+            fs.mkdirSync(wsDir, { recursive: true });
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-state.js');
+            const rootState = path.join(tempDir, '.design', 'STATE.md');
+            const wsState = path.join(wsDir, 'STATE.md');
+
+            // (a) Space form targets the requested directory.
+            execSync(`node "${scriptPath}" --workspace .design/nodus --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(wsState), 'space form must write into the workspace');
+            assert.ok(!fs.existsSync(rootState), 'space form must not write into the registry root');
+
+            // (b) A bare --workspace must HALT rather than degrade to `.design/`.
+            fs.unlinkSync(wsState);
+            assert.throws(
+                () => execSync(`node "${scriptPath}" --workspace --status=Active`, { cwd: tempDir, stdio: 'pipe' }),
+                /HALT/,
+                'a valueless --workspace must HALT'
+            );
+            assert.ok(!fs.existsSync(rootState), 'the HALT must leave the registry root untouched');
+
+            // (c) Equals form still works, and a workspace directory may contain separators.
+            execSync(`node "${scriptPath}" --workspace=.design/nodus --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(wsState), 'equals form must write into the workspace');
+            assert.ok(!fs.existsSync(rootState), 'equals form must not write into the registry root');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 16c. Documentation parity — the shipped workflows must prescribe an
+    //      invocation the executor actually understands. The field bug entered
+    //      through a doc line, not through a user's improvisation.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('shipped workflow bodies prescribe only executor-parsable --workspace forms', () => {
+        const magicRoot = path.resolve(__dirname, '..', '..', '.magic');
+        const bodies = fs.readdirSync(magicRoot).filter(f => f.endsWith('.md'));
+        assert.ok(bodies.length > 0, 'fixture precondition: workflow bodies exist');
+
+        for (const body of bodies) {
+            const content = fs.readFileSync(path.join(magicRoot, body), 'utf8');
+
+            // executor.js validates a bare workspace NAME; a path never matches
+            // WORKSPACE_NAME_RE, so `--workspace={...-dir}` always HALTs.
+            assert.doesNotMatch(
+                content,
+                /--workspace=\{[^}]*dir[^}]*\}/,
+                `${body} passes a directory to executor's --workspace, which only accepts a bare name`
+            );
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 15a. generate-context.js — landmark roots are always on the map
     // ───────────────────────────────────────────────────────────────────────────
     test('generate-context.js always shows the design and engine roots (landmarks)', () => {

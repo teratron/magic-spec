@@ -38,7 +38,7 @@ graph TD
 
 ### Operational Logic
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace {active-workspace}`.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed.
    - `checksums_mismatch` → **C15 Filter** (`init.md §1`) → **HALT** ONLY if in-scope mismatches.
    - Missing `.design/` → silently execute `.magic/init.md`, then resume.

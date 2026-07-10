@@ -58,7 +58,7 @@ Conditional: task's `spec_file` (if known); phase `requires` frontmatter (if pre
 
    ```
    node .magic/scripts/executor.js update-state
-     --workspace={active-workspace-dir}
+     --workspace={active-workspace}
      --status=Paused
      --handoff=.design/{workspace}/HANDOFF.json
    ```
