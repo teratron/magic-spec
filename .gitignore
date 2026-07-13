@@ -88,6 +88,7 @@ dev/.cache/
 # Generated graph artifacts
 .design/spec-graph.html
 .design/spec-graph.json
+.design/graph-before.json
 .design/.graph-cache/
 .design/.cache/
 .design/wiki/
