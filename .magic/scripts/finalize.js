@@ -198,7 +198,15 @@ function computeNextAction(workflow, workspace, wsDir) {
         );
         if (activePhase) return `Continue Phase ${activePhase[1]} via /magic.run ${workspace}`;
 
-        // No open tasks anywhere → plan complete: author new scope.
+        // No open tasks anywhere → plan complete. The resolution is
+        // workflow-sensitive (SC-2.1 + rules/magic.md §5): after `run`, the
+        // single sanctioned next step is the /magic.task funnel — new scope
+        // enters via task → HALT → spec, /magic.spec is never named directly.
+        // After `task` itself, planning just concluded empty, so new-scope
+        // authoring is the only non-circular forward path.
+        if (workflow === 'run') {
+            return `Plan complete — run /magic.task ${workspace} to plan new scope`;
+        }
         return `Plan complete — author new scope via /magic.spec ${workspace} (or /magic.status for a briefing)`;
     } catch {
         return `Run /magic.task ${workspace} to plan`;

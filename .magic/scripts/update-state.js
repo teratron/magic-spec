@@ -143,9 +143,22 @@ function updateState(designDir, patch, options = {}) {
         try {
             const progress = computeProgress(designDir, content);
             if (progress) {
-                const progressRe = /(## Progress\s*\n+```\n)[\s\S]*?(\n```)/;
-                if (progressRe.test(content)) {
-                    content = content.replace(progressRe, `$1${progress}$2`);
+                const progressRe = /(## Progress\s*\n+```\r?\n)([\s\S]*?)(\r?\n```)/;
+                const existing = content.match(progressRe);
+                if (existing) {
+                    // Only counter lines (`Label: [d/t] …`, including template
+                    // `{filled}/{total}` placeholders) are engine-owned and
+                    // recomputed. Any other line inside the fence is treated as
+                    // hand-authored narrative and preserved below the counters —
+                    // the recompute merges, it never clobbers.
+                    const counterRe = /^[^:\n]+:\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/;
+                    const preserved = existing[2]
+                        .split(/\r?\n/)
+                        .filter((l) => l.trim() !== '' && !counterRe.test(l));
+                    const body = preserved.length > 0
+                        ? `${progress}\n${preserved.join('\n')}`
+                        : progress;
+                    content = content.replace(progressRe, `$1${body}$3`);
                 }
             }
         } catch (e) {

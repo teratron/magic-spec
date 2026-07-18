@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.2.1
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -52,8 +52,8 @@ After significance evaluation and phase archival, the pipeline patches the activ
 
 - `Updated` — invocation timestamp.
 - `Status` — recomputed from plan/task state (`Active | Blocked | Complete`).
-- Progress indicators — phase and overall counters, when `TASKS.md` is present.
-- `Next Action` — the computed next step (pipeline order per DA-6).
+- Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect.
+- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1's workflow-sensitive rule).
 
 The step runs even when the significance whitelist does not hit — live memory must reflect every completed command, not only version-bumping ones. Failures are non-blocking: a warning is printed and finalize continues (live memory staleness is reported, never fatal).
 
@@ -90,6 +90,7 @@ A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conf
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-07-18 | Agent | §5.1 progress recompute contract hardened: counter lines are recomputed in place, non-counter lines inside the `## Progress` fence are preserved as hand-authored narrative (merge, never clobber). Field evidence: unconditional wholesale replacement destroyed an operator's Progress notes twice in one session (field report, engine 2.1.49). Next Action bullet now cites SC-2.1's workflow-sensitive plan-complete rule. |
 | 1.2.1 | 2026-07-10 | Agent | Traceability: §6 now cites the **C8 (Phase Archival)** convention it implements. No logic change (patch — Stable retained). |
 | 1.2.0 | 2026-06-13 | Agent | Added §6 Phase Archival Eligibility (Precision): `allChecked` must match anchored checklist line items, not substring `- [ ]` in prose/code-spans. Field evidence: phase-10 (whose Notes discuss `- [ ]` detection) was silently skipped by the archiver (R7). |
 | 1.1.0 | 2026-06-12 | Agent | Added §5 Session-Continuity Integration: SC-2 state update step (always-run, non-blocking) and SC-3 non-bumping commit suggestion fallback. |

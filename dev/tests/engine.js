@@ -567,6 +567,13 @@ describe('Magic Engine Scripts', () => {
             assert.match(next, /\/magic\.spec/, 'plan complete → /magic.spec (SC-2.1)');
             assert.doesNotMatch(next, /execute the active phase/, 'must not recommend a non-existent phase (the R6 bug)');
 
+            // (d2) Same plan-complete state, but reached via `run` — rules/magic.md §5
+            //     forbids naming /magic.spec after /magic.run; the single next step
+            //     is the /magic.task funnel (new scope enters via task → HALT → spec).
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /\/magic\.task engine/, 'plan complete after run → /magic.task funnel (§5)');
+            assert.doesNotMatch(next, /\/magic\.spec/, '/magic.spec must never be named proactively after run (§5)');
+
             // (e) spec/rule → replan first (pipeline order).
             assert.match(finalize.computeNextAction('spec', 'engine', wsDir), /\/magic\.task/, 'spec → /magic.task');
             assert.match(finalize.computeNextAction('rule', 'engine', wsDir), /\/magic\.task/, 'rule → /magic.task');
@@ -706,7 +713,102 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
-    // 7e. phase-archiver.js — CRLF frontmatter tolerance (Windows checkouts)
+    // 7e. update-state.js — autoProgress merges, never clobbers narrative (SC-2)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('updateState autoProgress refreshes counter lines but preserves narrative in the Progress block', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            fs.mkdirSync(wsDir, { recursive: true });
+
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
+                '# Master Task Index',
+                '',
+                '### Phase 2 Checklist',
+                '',
+                '- [x] [T-2A01] First',
+                '- [x] [T-2A02] Second',
+                '- [ ] [T-2A03] Third',
+                '',
+                '## Registry',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                '| [Phase 2](tasks/phase-2.md) | Feature | `In Progress` |',
+                '',
+            ].join('\n'));
+
+            // STATE.md with stale counters AND hand-authored narrative in the fence.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State',
+                '',
+                '**Workspace:** engine',
+                '**Updated:** 2026-01-01 00:00',
+                '**Phase:** 2',
+                '**Status:** Active',
+                '',
+                '## Current Position',
+                '',
+                '- **Next Action:** whatever',
+                '',
+                '## Progress',
+                '',
+                '```',
+                'Phase 2: [0/3] ░░░░░░░░ 0%',
+                'Overall: [0/2] ░░░░░░░░ 0%',
+                'T-2A02 landed the parser rework; edge cases in Notes.',
+                '```',
+                '',
+            ].join('\n'));
+
+            updateState(wsDir, {}, { autoProgress: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(state, /Phase 2: \[2\/3\]/, 'phase counter line must be recomputed');
+            assert.match(state, /Overall: \[1\/2\]/, 'overall counter line must be recomputed');
+            assert.doesNotMatch(state, /\[0\/3\]/, 'stale counters must not survive');
+            assert.match(
+                state, /T-2A02 landed the parser rework/,
+                'hand-authored narrative inside the Progress fence must be preserved'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('updateState autoProgress replaces template placeholder counters without duplicating them', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
+            fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            fs.mkdirSync(wsDir, { recursive: true });
+
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                '',
+            ].join('\n'));
+
+            // Bootstrap STATE.md from the real template (placeholder counters),
+            // then recompute: `{filled}/{total}`-style placeholders are engine-owned
+            // lines and must be replaced, not preserved as narrative.
+            updateState(wsDir, { phase: '1' }, { autoProgress: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(state, /Overall: \[1\/1\]/, 'placeholder block must be recomputed from TASKS.md');
+            assert.doesNotMatch(state, /\{filled\}|\{done\}/, 'template placeholder counters must not survive as narrative');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 7f. phase-archiver.js — CRLF frontmatter tolerance (Windows checkouts)
     // ───────────────────────────────────────────────────────────────────────────
     test('phase-archiver findArchiveCandidates parses CRLF frontmatter (git autocrlf)', () => {
         const tempDir = createTempWorkspace();
