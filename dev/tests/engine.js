@@ -706,6 +706,35 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 7e. phase-archiver.js — CRLF frontmatter tolerance (Windows checkouts)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('phase-archiver findArchiveCandidates parses CRLF frontmatter (git autocrlf)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
+
+            // A genuinely complete phase, but with CRLF line endings as produced
+            // by git autocrlf on a Windows checkout.
+            fs.writeFileSync(path.join(tasksDir, 'phase-16.md'),
+                '---\r\nphase: 16\r\nname: "Windows"\r\nstatus: Done\r\n---\r\n\r\n' +
+                '## Atomic Checklist\r\n\r\n- [x] [T-16A01] Done\r\n');
+
+            const candidates = archiver.findArchiveCandidates(wsDir);
+            assert.deepStrictEqual(
+                candidates.map(c => c.file), ['phase-16.md'],
+                'CRLF line endings must not hide a Done phase from archival'
+            );
+            assert.strictEqual(candidates[0].phase, '16', 'frontmatter values must be parsed without trailing \\r');
+            assert.strictEqual(candidates[0].name, 'Windows', 'quoted values must be unwrapped under CRLF');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 8. executor.js — input validation
     // ───────────────────────────────────────────────────────────────────────────
     test('executor.js should reject path-traversal in script and workspace names', () => {

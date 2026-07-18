@@ -16,10 +16,10 @@ const { writeFileSafe, mkdirSafe, isDryRun } = require('../utils');
  * @returns {Object} Key-value map of scalar frontmatter fields.
  */
 function parseFrontmatter(content) {
-    const match = content.match(/^---\n([\s\S]*?)\n---/);
+    const match = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (!match) return {};
     const result = {};
-    for (const line of match[1].split('\n')) {
+    for (const line of match[1].split(/\r?\n/)) {
         const m = line.match(/^(\w+):\s*(.+)$/);
         if (m) result[m[1]] = m[2].trim().replace(/^["']|["']$/g, '');
     }
