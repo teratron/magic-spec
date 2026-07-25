@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 25 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 27 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.21 | 2026-07-25 | Agent | Engine workspace spec count 25 → 27: added l1-multi-angle-review.md and l2-multi-angle-review.md (LLM Council multi-angle review & decision synthesis protocol). |
 | 1.3.20 | 2026-06-13 | Agent | Engine workspace spec count 24 → 25: added l2-release-pipeline.md (retrospec of the GitHub Release CI; documents engine-version tracking constraint, consolidating R8). No code change — documents existing stable CI. |
 | 1.3.19 | 2026-06-13 | Agent | l1-decision-autonomy.md 1.2.0: DA-9 extended to drift-revalidation offers (Engine Upgrade Detection §1 binds DA-8/DA-9 — one path, no `[y/n]`). Engine deployment (rules/magic.md §1 + README) queued for /magic.task → /magic.run. |
 | 1.3.18 | 2026-06-13 | Agent | l2-workflow-wrappers.md 1.2.0 §6 Wrapper-Body Parity Invariant + WRAPPER_BODY_DRIFT check (R4 preventive). Engine deployment (analyze Mode C check + test) queued for /magic.task → /magic.run. |

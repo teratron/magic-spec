@@ -6,6 +6,17 @@ Shared workspace resolution logic referenced by all workflows. Every workflow MU
 
 > Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for any workflow that creates or amends specs/tasks/rules. Read-only workflows (`magic.analyze`, `magic.graph`) skip this step.
 
+### Step 0.1: Context Auto-Enrichment (MA-1 Pre-flight)
+
+Before framing raw user input for specification authoring, task breakdown, or complex architectural decisions, perform a fast context pre-flight scan of:
+
+1. Constitution: `.design/RULES.md` and `.design/{workspace}/RULES.md`.
+2. Workspace Index: `.design/{workspace}/INDEX.md`.
+3. Retrospectives: recent entries in `RETROSPECTIVE.md` (if present) to avoid repeating past friction.
+4. Active Specs: related L1/L2 specifications referenced by the target domain.
+
+Grounding the execution context in these 4 sources guarantees that subsequent spec drafting and decision autonomy (C27) proceed without unstated assumptions or repetitive prompts.
+
 Detection produces exactly one outcome for the calling workflow:
 
 - `existing:{name}` → enter Resolution Chain with `{name}` resolved.

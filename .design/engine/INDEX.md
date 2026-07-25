@@ -40,9 +40,11 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action, workflow-sensitive plan-complete resolution, SC-2.1), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.2.0 |
 | [l2-status-command.md](specifications/l2-status-command.md) | Read-only `/magic.status` briefing command: layout contract, degraded states, wrapper/skill surface (C2 exception). | Stable | 2 | 1.0.0 |
 | [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | GitHub Release CI: tag-driven build of the L1 archive, version source, publication/retry, engine-version tracking constraint (R8), adapter distribution reference (C17). | Stable | 2 | 1.0.1 |
+| [l1-multi-angle-review.md](specifications/l1-multi-angle-review.md) | Multi-Angle Review & Decision Synthesis Protocol: 5 evaluation lenses, blind cross-evaluation, context auto-enrichment, and structured synthesis. | Stable | 1 | 1.0.0 |
+| [l2-multi-angle-review.md](specifications/l2-multi-angle-review.md) | Multi-Angle Review & Decision Synthesis Implementation: prompt mappings, blind cross-review workflow, and role integrations. | Stable | 2 | 1.0.0 |
 
 ## Meta Information
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-07-18 (field-report fixes: SC-2.1 workflow-sensitive plan-complete resolution → l1-session-continuity 1.2.0; merge-not-clobber progress recompute → l2-engine-finalization 1.3.0)
+- **Last Updated**: 2026-07-25 (added l1-multi-angle-review.md and l2-multi-angle-review.md)

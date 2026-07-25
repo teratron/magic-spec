@@ -227,17 +227,18 @@ Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mod
 
 Activate `@role:spec-critic` to audit the changes. *(C24 pattern analog: Planning Audit in `task.md` uses `@role:planner` — same adversarial review, different phase.)*
 
-Check for:
+**Spec Council (Multi-Angle Evaluation, MA-2)**:
+For major specification edits, RFC/Stable transitions, or high-stakes architectural changes, `@role:spec-critic` evaluates the spec across 5 contrasting lenses:
 
-1. **Layer 1 Purity (L1 only)**: are invariants strictly technology-neutral? Remove any implicit implementation assumptions or specific stack references.
-2. **Invariant Completeness**: are all edge cases, error states, and boundary conditions covered by the specification invariants?
-3. **Substantive Compliance (L2 only)**: does the `Invariant Compliance` table provide meaningful verification details for each L1 point, or is it just a formal placeholder?
-4. **Coherence**: does the document read consistently after edits?
-5. **Links**: `Related Specifications` and `Implements` accurate?
-6. **Rules**: any contradiction with `RULES.md`? (Flag, don't ignore.)
-7. **Sync Check**: `check-prerequisites` status.
+1. **Safety & Boundary Lens (Contrarian)**: Are all edge cases, failure states, and error boundaries fully specified? What breaks under malformed inputs or unexpected execution halts?
+2. **Layer Purity Lens (First Principles)**: Are L1 invariants strictly technology-neutral? Is L2 bound to a valid `Implements:` reference?
+3. **Ecosystem & Extensibility Lens (Expansionist)**: Does the spec compose cleanly with `Related Specifications`? Is future extensibility supported without breaking current invariants?
+4. **Execution & Testability Lens (Executor)**: Are invariant compliance criteria concrete and verifiable by unit/integration tests?
+5. **Zero-Context Usability Lens (Outsider)**: Is terminology unambiguous to a developer reading the spec for the first time? Are there unstated assumptions?
 
 Any check fails → report as `[Spec-Review] {file} §{section}: {issue}` and block status promotion. Retain current status (`Draft` or `RFC`); do not advance to `Stable` until all critic findings are resolved.
+
+When resolving complex architectural forks during review, summarize the evaluation as a **Council Verdict** (MA-4: Agreement, Clashes, Blind Spots, Recommendation, First Action) and emit a Decision Record (`[DR]`, MA-5).
 
 **Instruction Quality Pass (second stage)**: after `@role:spec-critic` emits PASS, activate `@role:prompt-engineer` over the created/amended spec sections — six-dimension review (contradictions, ambiguity, persona/tone consistency, cognitive load, semantic coverage, composition coherence) per the PQ-3 taxonomy. The quality pass never runs on critic-rejected specs (PQ-7 ordering). Verdict per PQ-6: PASS → proceed; PASS-WITH-REWRITES → apply the proposed rewrites within this invocation, then proceed; FAIL → blocks status promotion alongside critic findings.
 
