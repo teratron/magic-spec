@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.20.0
+**Version:** 1.20.1
 **Generated:** 2026-08-06
-**Based on PLAN:** .design/engine/PLAN.md v1.16.1
+**Based on PLAN:** .design/engine/PLAN.md v1.16.2
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -37,7 +37,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 15 ph
 
 ## Backlog
 
-*None at phase level — all registered specs are Stable and either implemented or scheduled in Phases 15-16. Open non-phase items (R10, the §8.7 known gap, the pending debt-ceiling convention) are tracked in [PLAN.md](PLAN.md) Backlog.*
+*None at phase level — all 27 registered specs are Stable and implemented. Re-synced to INDEX v1.15.16, a version-line-only bump carrying no registry content change, so no new scope entered. Every open item is now **design work, not implementation**: R10 and the link-sweep precision fix both need a stated contract before they can be built (the R7 precedent), `UNSCOPED dev/` and the coverage-metric denominator are decisions with project-wide reach, §8.4 needs a patch amendment, `l2-engine-finalization.md` needs decomposition at 350 lines, and the debt-ceiling convention needs `/magic.rule` ratification. All tracked in [PLAN.md](PLAN.md) Backlog with their routing.*
 
 ## Meta Information
 

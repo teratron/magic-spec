@@ -6,7 +6,7 @@ This document explains the Status workflow, the read-only command that tells you
 
 After a break — a new session, a context reset, a week away — the question is always the same: what was I doing, what blocks me, what do I run now. Answering it by hand means reading `STATE.md`, `TASKS.md`, `PLAN.md`, and `INDEX.md` and reconciling them. The Status workflow does that reconciliation and renders a single briefing.
 
-**Triggers:** `/magic.status [workspace]`, *"Where am I"*, *"Resume"*, *"Session briefing"*, *"What's next"*.
+**Triggers:** `/magic.status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
 
 **Slash command:** `/magic.status [workspace]`
 
@@ -79,4 +79,4 @@ With no argument the workspace resolves through the standard priority chain. Pas
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-08-06 (v2.1.62).
+Synchronized with engine workflows on 2026-08-06 (v2.1.64).

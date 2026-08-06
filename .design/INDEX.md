@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.3.23
+**Version:** 1.3.25
 **Status:** Active
-**Engine Version:** 2.1.61
+**Engine Version:** 2.1.64
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.24 | 2026-08-06 | Agent | Ventilation: engine snapshot ratified 2.1.61 → 2.1.64 (finalize/state accuracy fixes and the scaffold-boundary + documentation-parity deployment). Registry clean: 27/27 Stable, 0 ghost/zombie, 0 orphaned conventions, 0 containment leaks. First run of the scaffold-removal check — clean baseline, verified against the release pipeline, which packages the four engine directories and never `.design/`. |
 | 1.3.23 | 2026-08-06 | Agent | Ventilation: engine snapshot ratified 2.1.55 → 2.1.61 (v2.1.56–2.1.61 finalization/containment fixes). |
 | 1.3.21 | 2026-07-25 | Agent | Engine workspace spec count 25 → 27: added l1-multi-angle-review.md and l2-multi-angle-review.md (LLM Council multi-angle review & decision synthesis protocol). |
 | 1.3.20 | 2026-06-13 | Agent | Engine workspace spec count 24 → 25: added l2-release-pipeline.md (retrospec of the GitHub Release CI; documents engine-version tracking constraint, consolidating R8). No code change — documents existing stable CI. |
