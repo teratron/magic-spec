@@ -1284,14 +1284,14 @@ describe('Magic Engine Scripts', () => {
             const spec = { valueFlags: ['--workspace', '--workflow'], boolFlags: ['--json'] };
 
             // Both forms yield the same value.
-            assert.strictEqual(parseFlags(['--workspace=nodus'], spec).values['--workspace'], 'nodus');
-            assert.strictEqual(parseFlags(['--workspace', 'nodus'], spec).values['--workspace'], 'nodus');
+            assert.strictEqual(parseFlags(['--workspace=docs'], spec).values['--workspace'], 'docs');
+            assert.strictEqual(parseFlags(['--workspace', 'docs'], spec).values['--workspace'], 'docs');
 
             // Unrecognized tokens pass through untouched (executor forwards them to the child).
-            const proxied = parseFlags(['--json', '--require-tasks', '--workspace', 'nodus'], spec);
+            const proxied = parseFlags(['--json', '--require-tasks', '--workspace', 'docs'], spec);
             assert.deepStrictEqual(proxied.rest, ['--require-tasks'], 'unknown tokens survive in rest');
             assert.strictEqual(proxied.flags['--json'], true, 'boolean flags are captured, not forwarded');
-            assert.strictEqual(proxied.values['--workspace'], 'nodus');
+            assert.strictEqual(proxied.values['--workspace'], 'docs');
             assert.deepStrictEqual(proxied.errors, [], 'a well-formed argv produces no errors');
 
             // Fail closed — the four silent-fallback shapes.
@@ -1314,38 +1314,38 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
     // 16a. executor.js — workspace routing is form-agnostic, and the
     //      Unknown-workspace guard is reachable through BOTH forms.
-    //      Field report: `generate-context --workspace nodus` silently wrote
-    //      .design/main/CONTEXT.md while `--workspace=nodus` wrote the target.
+    //      Field report: `generate-context --workspace docs` silently wrote
+    //      .design/main/CONTEXT.md while `--workspace=docs` wrote the target.
     // ───────────────────────────────────────────────────────────────────────────
     test('executor.js routes --workspace <name> identically to --workspace=<name>', () => {
         const tempDir = createTempWorkspace();
         try {
-            for (const ws of ['main', 'nodus']) {
+            for (const ws of ['main', 'docs']) {
                 fs.mkdirSync(path.join(tempDir, '.design', ws), { recursive: true });
             }
             fs.writeFileSync(
                 path.join(tempDir, '.design', 'workspace.json'),
-                JSON.stringify({ default: 'main', workspaces: { main: {}, nodus: {} } })
+                JSON.stringify({ default: 'main', workspaces: { main: {}, docs: {} } })
             );
 
             const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
             const contextOf = (ws) => path.join(tempDir, '.design', ws, 'CONTEXT.md');
             const clearContexts = () => {
-                for (const ws of ['main', 'nodus']) {
+                for (const ws of ['main', 'docs']) {
                     if (fs.existsSync(contextOf(ws))) fs.unlinkSync(contextOf(ws));
                 }
             };
 
             // (a) Space form must hit the requested workspace, not the default.
             clearContexts();
-            execSync(`node "${executorPath}" generate-context --workspace nodus`, { cwd: tempDir, stdio: 'pipe' });
-            assert.ok(fs.existsSync(contextOf('nodus')), 'space form must write the target workspace');
+            execSync(`node "${executorPath}" generate-context --workspace docs`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(contextOf('docs')), 'space form must write the target workspace');
             assert.ok(!fs.existsSync(contextOf('main')), 'space form must not fall back to the default workspace');
 
             // (b) Equals form — the control that always worked.
             clearContexts();
-            execSync(`node "${executorPath}" generate-context --workspace=nodus`, { cwd: tempDir, stdio: 'pipe' });
-            assert.ok(fs.existsSync(contextOf('nodus')), 'equals form must write the target workspace');
+            execSync(`node "${executorPath}" generate-context --workspace=docs`, { cwd: tempDir, stdio: 'pipe' });
+            assert.ok(fs.existsSync(contextOf('docs')), 'equals form must write the target workspace');
             assert.ok(!fs.existsSync(contextOf('main')), 'equals form must not touch the default workspace');
 
             // (c) The Unknown-workspace guard must be reachable via BOTH forms.
@@ -1358,14 +1358,14 @@ describe('Magic Engine Scripts', () => {
                     why
                 );
                 assert.ok(!fs.existsSync(contextOf('main')), `${why} — and nothing may be written`);
-                assert.ok(!fs.existsSync(contextOf('nodus')), `${why} — and nothing may be written`);
+                assert.ok(!fs.existsSync(contextOf('docs')), `${why} — and nothing may be written`);
             };
 
             expectHalt('--workspace bogus', 'a typo in the space form must HALT, not silently target the default');
             expectHalt('--workspace=bogus', 'a typo in the equals form must HALT');
             expectHalt('--workspace', 'a bare --workspace must HALT, not fall back to the default');
             expectHalt('--workspace=', 'an empty --workspace value must HALT');
-            expectHalt('--workspace=nodus=typo', "an embedded '=' must fail validation, not truncate to 'nodus'");
+            expectHalt('--workspace=docs=typo', "an embedded '=' must fail validation, not truncate to 'docs'");
 
             // (d) Path traversal stays rejected through the space form too.
             expectHalt('--workspace ../../../etc', 'traversal via the space form must HALT');
@@ -1386,7 +1386,7 @@ describe('Magic Engine Scripts', () => {
             if (fs.existsSync(realTemplate)) {
                 fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
             }
-            const wsDir = path.join(tempDir, '.design', 'nodus');
+            const wsDir = path.join(tempDir, '.design', 'docs');
             fs.mkdirSync(wsDir, { recursive: true });
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-state.js');
@@ -1394,7 +1394,7 @@ describe('Magic Engine Scripts', () => {
             const wsState = path.join(wsDir, 'STATE.md');
 
             // (a) Space form targets the requested directory.
-            execSync(`node "${scriptPath}" --workspace .design/nodus --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}" --workspace .design/docs --status=Active`, { cwd: tempDir, stdio: 'pipe' });
             assert.ok(fs.existsSync(wsState), 'space form must write into the workspace');
             assert.ok(!fs.existsSync(rootState), 'space form must not write into the registry root');
 
@@ -1408,7 +1408,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(!fs.existsSync(rootState), 'the HALT must leave the registry root untouched');
 
             // (c) Equals form still works, and a workspace directory may contain separators.
-            execSync(`node "${scriptPath}" --workspace=.design/nodus --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}" --workspace=.design/docs --status=Active`, { cwd: tempDir, stdio: 'pipe' });
             assert.ok(fs.existsSync(wsState), 'equals form must write into the workspace');
             assert.ok(!fs.existsSync(rootState), 'equals form must not write into the registry root');
         } finally {
@@ -1435,6 +1435,39 @@ describe('Magic Engine Scripts', () => {
                 content,
                 /--workspace=\{[^}]*dir[^}]*\}/,
                 `${body} passes a directory to executor's --workspace, which only accepts a bare name`
+            );
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 14b. SDD containment surfaces state notation-independent patterns (RC-2.1)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('containment surfaces match task IDs and phases in every notation (RC-2.1)', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+
+        // The containment scan has no code — it is a cognitive grep whose match
+        // classes are stated in prose, so the prose IS the implementation. Every
+        // surface that states them must state the notation-independent form:
+        // pinning the bracketed checklist literal `[T-XXXX]` or the `phase-{n}`
+        // file form matches only the SDD layer's internal spellings, while a
+        // reference leaks precisely by being quoted out of them (bare, in prose,
+        // in a test name). That narrowing let 121 leaks accumulate unreported.
+        const surfaces = [
+            'rules/magic.md',
+            '.magic/analyze.md',
+            '.magic/roles/coder.md',
+            '.magic/roles/code-reviewer.md',
+        ];
+
+        for (const rel of surfaces) {
+            const content = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
+            assert.ok(
+                content.includes('T-\\d+[A-Z]\\d+'),
+                `${rel} must state the notation-independent task-ID pattern (bracketed and bare, any phase width)`
+            );
+            assert.ok(
+                content.includes('[Pp]hase[-\\s]\\d+'),
+                `${rel} must state the prose phase-designator pattern, not only the phase-{n} file form`
             );
         }
     });

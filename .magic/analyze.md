@@ -177,9 +177,12 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - `shadow_files > 0` → include a `SHADOW_LOGIC` advisory section recommending spec creation for files with ≥3 rationale comments.
    - Report marker distribution (NOTE/WHY/HACK/etc.) as a project health indicator. High HACK/FIXME counts signal technical debt.
 6. **SDD Reference Containment Scan (`SDD_REFERENCE_LEAK`)**: scan product files in scope (respect Invariant 7 gitignore filters; skip the `.design/` subtree and engine directories `.magic/`, `workflows/`, `skills/`, `rules/`) for SDD-layer references per `rules/magic.md` §6:
-   - Match classes: `.design/…` paths, task IDs (`[T-XXXX]`), phase designators (`phase-{n}`), SDD system file names (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), and spec file names registered in `INDEX.md`.
+   - Match classes (unconditional): `.design/…` paths; task IDs `T-\d+[A-Z]\d+(\.\d+)?` — **bracketed and bare alike**, since checklists bracket the ID but prose and code do not, and phase numbers reach two digits; phase file references `phase-\d+(\.md)?`; SDD system file names (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`); spec file names registered in `INDEX.md`.
+   - Match class (contextual): prose phase designators `[Pp]hase[-\s]\d+` (`Phase 20 Track B`, `Phase 22's closing validation`). Many domains own the word, so apply the self-containment test before reporting: if the sentence stops making sense with `.design/` absent, it denotes the plan's phase → leak; if it reads fine, it is domain vocabulary → skip. Report contextual hits in a separate sub-list so the user can triage them apart from unconditional ones.
+   - **Do NOT bind the scan to a fixed-width or bracket-only literal.** Matching only `[T-XXXX]` misses every bare reference and every two-digit phase — the failure mode that let 121 leaks accumulate unreported in a consumer project.
    - Exemptions: git metadata and contributor-facing docs that document the SDD workflow itself (the reference IS the content).
-   - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited; cleanup is guided by the report only.
+   - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited here: ventilation is read-only and owns detection, not repair.
+   - **Remediation path** (state it whenever the finding count > 0): `→ /magic.task {ws}` to plan a containment-cleanup task, executed by `/magic.run` under the Coder role — the same role that owns the write-time gate. A leak report without this path is incomplete: the finding is otherwise unowned and re-accumulates.
 7. **Prompt Quality & Multi-Angle Audit**: activate `@role:prompt-engineer` and `@role:project-auditor` to sweep existing AI-facing artifacts (PQ-1 classes: specifications, constitution rules, plan/task units, role cards, workflow bodies, templates, adapter instructions) for the six PQ-3 defect types — contradictions, ambiguity, persona/tone drift, cognitive load, semantic coverage gaps, composition conflicts. Applies **Blind Multi-Angle Review (MA-3)** to cross-evaluate critical findings across safety, layer purity, extensibility, testability, and usability lenses. Findings flow into the common findings pool where `@role:project-auditor` severity-ranks them for the Advisory Report. Audit-mode findings are advisory only — no artifact is rewritten during ventilation (Actionable Guard preserved).
 8. **Specification Knowledge Graph**: run `node .magic/scripts/executor.js build-spec-graph`.
    - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
@@ -278,7 +281,7 @@ Mode C Checklist — Ventilation
   ☐ Wrapper-Body Parity: each `workflows/` pointer wrapper has its `.magic/{cmd}.md` body; WRAPPER_BODY_DRIFT reported for phantoms (self-contained wrappers exempt)
   ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
   ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
-  ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched)
+  ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched); bare + bracketed task IDs and two-digit phases both covered; remediation path `→ /magic.task {ws}` stated when count > 0
   ☐ Prompt Quality Audit: @role:prompt-engineer sweep over PQ-1 artifacts; findings routed to pre-advisory pool
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
@@ -385,7 +388,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
   ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
-  ☐ Containment Scan: product files scanned for SDD references (rules/magic.md §6 classes); SDD_REFERENCE_LEAK findings reported as advisory
+  ☐ Containment Scan: product files scanned for SDD references (rules/magic.md §6 classes, bare forms included); SDD_REFERENCE_LEAK findings reported as advisory with a stated remediation path
   ☐ Prompt Quality Audit: @role:prompt-engineer sweep over existing AI-facing artifacts (PQ-1) performed; advisory only
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources

@@ -1,6 +1,6 @@
 # Role Cards — Review Gates
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -52,7 +52,7 @@ related_rules: [C24]
 1. Load the diff produced by Coder.
 2. Check `RULES.md` compliance: language policy, formatting conventions, style rules.
 3. Check traceability: every changed block must map to the task, assigned spec section, `Verify` criterion, or cleanup made necessary by this diff. Unrelated formatting, comment churn, renames, and drive-by refactors are FAIL.
-4. Check containment (RC-6, [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): scan the diff for SDD-layer references — task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. Any occurrence in product files is FAIL.
+4. Check containment (RC-6, [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): scan the diff for SDD-layer references — task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. Any occurrence in product files is FAIL. Per RC-2.1, match `T-\d+[A-Z]\d+(\.\d+)?` **bracketed and bare alike** and `[Pp]hase[-\s]\d+` in both file (`phase-20`) and prose (`Phase 20 Track B`) form — a bracket-only or fixed-width check passes exactly the forms that leak. `[MODIFIED]`
 5. Check surface correctness: typos in identifiers, wrong imports, obvious misuse of APIs.
 6. Check minimalism: dead code, unused variables, one-use abstractions, speculative configuration, impossible error handlers, commented-out blocks.
 7. Check spec-boundary conformance: does the diff touch files outside the spec's declared scope?
@@ -209,5 +209,6 @@ related_rules: [C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.0 | 2026-08-06 | Code-reviewer card: RC-6 containment check bound to RC-2.1 notation-independent patterns — task IDs bracketed and bare, phase designators in file and prose form. A bracket-only or fixed-width check passes exactly the forms that leak. |
 | 1.1.0 | 2026-06-12 | Code-reviewer card: added RC-6 containment check (protocol step 4 + anti-pattern) per l1-sdd-reference-containment.md — diff with SDD-artifact references is FAIL. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted run.md inline review-gate cards (code-reviewer, code-simplifier, code-skeptic, test-engineer) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

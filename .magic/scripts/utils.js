@@ -219,8 +219,8 @@ const WORKSPACE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
  * Parses an argv slice under one grammar shared by every engine entry point.
  *
  * Both `--flag=value` and `--flag value` are accepted for value-taking flags —
- * a divergence here is what let `--workspace nodus` silently fall back to the
- * default workspace while `--workspace=nodus` worked.
+ * a divergence here is what let `--workspace docs` silently fall back to the
+ * default workspace while `--workspace=docs` worked.
  *
  * The parser **fails closed**: a value-taking flag that is present but carries
  * no value is an error, never a silent default. The full remainder after the

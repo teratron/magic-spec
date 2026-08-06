@@ -223,10 +223,23 @@ Never write references to SDD artifacts into product files — source code,
 comments, docstrings, identifiers, string literals, test names, build/config
 files, or user-facing docs (README, CHANGELOG). Forbidden reference classes:
 
-- Task IDs (`[T-XXXX]`) and phase designators (`phase-{n}`).
+- Task IDs in **any** form — bracketed (`[T-1A01]`), bare (`T-22A01`), or split
+  (`T-1A01.1`). The generated shape is `T-{phase}{track}{seq}` and phase numbers
+  reach two digits, so match `T-\d+[A-Z]\d+(\.\d+)?`, never a fixed width. Bare
+  is the form that actually leaks — checklists bracket the ID, prose and code
+  do not.
+- Phase designators in **any** form — the file form (`phase-{n}`,
+  `phase-{n}.md`) **and** prose (`Phase 20`, `Phase 20 Track B`, `Phase 22's
+  closing validation`). Match `[Pp]hase[-\s]\d+`.
 - SDD system files: `PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`.
 - Specification file names (e.g., `l1-*.md`, `l2-*.md`).
 - Any `.design/…` path.
+
+Prose `Phase {n}` is the one class that needs judgment: many domains own the
+word (handshake phases, build phases, moon phases). Disambiguate by the
+self-containment test — if the sentence stops making sense once `.design/` is
+absent, it denotes the plan's phase and is a leak; if it reads fine, it is
+domain vocabulary and is not. Every other class above is unconditional.
 
 If design rationale matters at a code site, restate it in plain language.
 Provenance ("which task produced this") lives in the SDD layer (task `Changes`
@@ -256,6 +269,13 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 - **Audit time** — `/magic.analyze` ventilation reports
   `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
   never auto-edited).
+- **Remediation time** — detection and repair are separate duties, and audit
+  owns only the first. Ventilation is read-only by contract, so a leak it finds
+  is cleaned by scheduling it: the finding carries the path
+  `→ /magic.task {ws}` to plan a containment-cleanup task, which `/magic.run`
+  then executes under the Coder role — the same role that owns the write-time
+  gate. Never treat a `SDD_REFERENCE_LEAK` report as self-resolving, and never
+  edit product files from a workflow whose write scope is `.design/`.
 
 ## 7. Autonomous Decision Protocol (C27 Session Posture)
 

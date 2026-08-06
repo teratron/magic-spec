@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -135,6 +135,7 @@ related_rules: [C2, C3]
 3. Before editing, name any material assumption about API, data shape, security, persistence, file format, public behavior, or compatibility. If the assumption changes behavior or scope, stop and route to Code-skeptic or Debugger; otherwise record it in task notes.
 4. Implement only the minimal diff needed for the spec section and `Verify` criterion. Do not add speculative options, abstractions, configuration, or future-proofing.
 5. Keep the diff self-contained per RC-1/RC-2 ([l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): never reference SDD artifacts — task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), spec file names, any `.design/` path — in code, comments, docstrings, identifiers, string literals, or test names. If spec rationale matters at the code site, restate it in plain language; provenance stays in task notes and the commit message.
+   - Per RC-2.1 the **bare** form is what slips through: the assigned task ID is in working memory while writing, so `T-22A01` in a test name or `@test:` annotation, or a "Phase 20 Track B" aside, reads natural when typed and dead once `.design/` is absent. Before finishing the diff, re-scan the added lines for `T-\d+[A-Z]\d+` and `[Pp]hase[-\s]\d+`; this gate has failed in the field precisely at the bare form. `[ADDED]`
 6. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
 7. On completion, hand off the diff to Code-reviewer with the `Verify` criterion preserved. Do not self-mark `Done`.
 8. If implementation reveals a contradiction between spec and reality, set task status to `Blocked [!]` with reason, and hand off to Debugger.
@@ -246,5 +247,6 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.0 | 2026-08-06 | Coder card: RC-2.1 notation guidance added to the authoring gate — re-scan added lines for bare `T-d+[A-Z]d+` and prose `[Pp]hase[-s]d+`, the forms that leak while the bracketed checklist form does not. Field evidence: the write-time gate was itself the source of several leaks in a consumer project (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Coder card: added RC-5 authoring gate (protocol step 5 + anti-pattern) per l1-sdd-reference-containment.md — no SDD-artifact references in product files. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted execution-pipeline cards (planner, orchestrator, coder, debugger, docs-specialist) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.6.0
+**Version:** 1.7.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -41,6 +41,11 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 A finalize-pipeline change merged without harness coverage of the touched branch is a test-suite gap.
 
+**Shipped-text contract coverage:** some engine behavior has no code at all — the SDD containment scan is a cognitive grep whose match classes are stated in prose, so the shipped prose *is* the implementation and can regress silently. Where that holds, the harness asserts the contract over the shipped text itself:
+
+- **RC-2.1 notation independence** — `rules/magic.md`, `.magic/analyze.md`, and both containment role cards must state the notation-independent task-ID and phase patterns. Pinning the bracketed literal `[T-XXXX]` or the `phase-{n}` file form matches only the SDD layer's internal spellings; a reference leaks by being quoted out of them. This narrowing went unnoticed until a consumer project had accumulated 121 leaks.
+- **Executor-parsable `--workspace` forms** — no shipped workflow body passes a directory to a flag that accepts a bare name.
+
 ## Canonical References
 
 | Path | Role |
@@ -53,6 +58,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.7.0 | 2026-08-06 | Agent | Added the **shipped-text contract coverage** mandate: where engine behavior has no code (the SDD containment scan is a cognitive grep, so its prose statement is the implementation), the harness asserts the contract over the shipped text. Pins RC-2.1 notation independence across rules/magic.md, .magic/analyze.md, and both containment role cards, plus the existing executor-parsable --workspace contract. |
 | 1.6.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with SC-2.2: the reserved-command screen must be swept across the full (workflow x plan state) matrix rather than pinned on one branch, and the SC-2.1 plan-complete expectation restated as the `/magic.task` funnel. Pinning a single branch is what let the prior /magic.spec regression through. |
 | 1.5.2 | 2026-07-10 | Agent | Traceability: the simulation-harness self-test description now cites the **C11 (Simulation Workflow)** convention that authorizes `magic.dev.simulate`. No logic change (patch — Stable retained). |
 | 1.5.1 | 2026-07-10 | Agent | Reality sync: 157→206 tests (T01–T207, gap at T67), suite v1.9.45→v1.9.74; fixed stale body paths .magic/tests/suite.md → dev/tests/suite.md (Canonical References were already correct since 1.4.0); extended coverage description with T186–T207 classes (harness self-tests, source-of-truth contract, diagram parity, version-bleed/select-precedence parity). |

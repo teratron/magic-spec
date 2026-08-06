@@ -1,6 +1,6 @@
 # SDD Reference Containment Specification
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** concept
 
@@ -33,12 +33,14 @@ The engine already enforces the mirrored boundary internally: the L1 release ker
 Rules that Layer 2 implementations MUST NOT violate:
 
 - **RC-1 (One-Way Traceability)**: References cross the SDD boundary in one direction only: SDD artifacts → product files. Product files never reference SDD artifacts.
-- **RC-2 (Containment Scope)**: "Product files" means every release-shippable artifact: source code (identifiers, string literals), comments and docstrings, test names, build/config files, and user-facing documentation (README, CHANGELOG). Forbidden references: task IDs (`[T-XXXX]`), phase designators (`phase-{n}`), SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), specification file names, and any `.design/…` path.
+- **RC-2 (Containment Scope)**: "Product files" means every release-shippable artifact: source code (identifiers, string literals), comments and docstrings, test names, build/config files, and user-facing documentation (README, CHANGELOG). Forbidden references: task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), specification file names, and any `.design/…` path.
+- **RC-2.1 (Notation Independence)**: a containment check MUST match a forbidden class in **every notation it can appear in**, not in the notation the SDD layer happens to use internally. Concretely: task IDs match `T-\d+[A-Z]\d+(\.\d+)?` — bracketed *and* bare, any phase width; phase designators match both the file form (`phase-\d+(\.md)?`) and the prose form (`[Pp]hase[-\s]\d+`). Binding a check to the bracketed checklist form (`[T-XXXX]`) or to a fixed width is a **specification defect**, not a tuning choice: those are the SDD layer's own internal spellings, and a reference leaks precisely when it is *quoted out* of that layer — bare, in prose, inside a test name. Field evidence: a consumer project accumulated 121 leaks across 44 files with zero reports, because the documented literal matched almost none of them. `[ADDED]`
 - **RC-3 (Self-Containment)**: Every comment and documentation passage must remain fully meaningful with `.design/` absent. Design rationale that matters at the code site is restated in plain language in place; provenance ("which task produced this") is never stated in code.
 - **RC-4 (Traceability Relocation)**: The task ↔ code mapping lives exclusively in the SDD layer (task `Changes` fields, phase files) and git metadata (commit messages, PR descriptions).
 - **RC-5 (Authoring Gate)**: The code-producing role MUST NOT introduce violations — write-time prevention.
 - **RC-6 (Review Gate)**: Diff review MUST fail any diff that introduces an SDD reference into product files — merge-time prevention.
-- **RC-7 (Leak Detection)**: Project ventilation MUST scan existing product files for violations and report each as an actionable finding — the cleanup path for legacy leaks.
+- **RC-7 (Leak Detection)**: Project ventilation MUST scan existing product files for violations and report each as an actionable finding. Ventilation owns **detection only** — it is read-only by contract and never edits product files. `[MODIFIED]`
+- **RC-10 (Remediation Owner)**: Every detection surface MUST name the owner that repairs what it finds; a detection surface with no named owner is incomplete. Because ventilation is read-only and the spec-authoring workflow's write scope is confined to `.design/`, no workflow that *detects* a leak may *fix* it. Remediation therefore routes through the normal pipeline: the `SDD_REFERENCE_LEAK` finding carries the path `→ /magic.task {ws}` to schedule a containment-cleanup task, which `/magic.run` executes under the code-producing role — the same role that owns the RC-5 write-time gate. Detection without a routed owner is what lets leaks re-accumulate between audits. `[ADDED]`
 - **RC-8 (Exemptions)**: Exempt from RC-1/RC-2: the `.design/` subtree itself; engine directories; git metadata; contributor-facing process documentation that documents the SDD workflow itself (there the reference IS the content, not traceability metadata). The magic-spec repository documents the SDD process as its product domain — its references to `.design/` are content, not leaks. The engine-directory exemption covers cross-references **among shipped files only**; references from shipped files into the engine repository's own SDD workspace are governed by RC-9, not exempted. `[MODIFIED]`
 - **RC-9 (Shipped Self-Containment)**: Files distributed with the engine (`.magic/`, `workflows/`, `skills/`, `rules/`, and templates instantiated into user projects) MUST NOT reference the engine repository's own SDD workspace: no `.design/engine/…` paths and no engine-workspace specification file names. Normative content is restated inline or cross-referenced to another shipped file. Three forms stay valid: consumer-generic SDD paths (`.design/{workspace}/…`, `$DESIGN_DIR`, the user's own `.design/INDEX.md`), stable in-text protocol labels (`WI-n`, `DA-n`, `C{n}`), and illustrative examples of forbidden forms. `[ADDED]`
 
@@ -54,6 +56,7 @@ Rules that Layer 2 implementations MUST NOT violate:
 | Code-reviewer check | review time | RC-6 | Review-gate role card |
 | Ambient agent rules | ad-hoc edits outside `run` | RC-1..RC-4 | Distributed agent rules (`rules/`) |
 | Ventilation scan | audit time | RC-7 | `analyze` workflow checklist |
+| Cleanup task | remediation time | RC-10 | `task` → `run` pipeline (Coder role) |
 
 The ambient surface is mandatory because not every code change in a consumer project flows through the `run` workflow: direct user-prompted edits must obey the same containment, so the distributed agent-rules file states the policy once for every agent.
 
@@ -61,22 +64,34 @@ The ambient surface is mandatory because not every code change in a consumer pro
 
 ```plaintext
 for each file in release scope (respect .gitignore; skip .design/ and engine dirs):
-    flag occurrences of:
-        ".design/"                      — any path into the SDD tree
-        task-ID tokens ([T-XXXX])       — checklist identifiers
-        "PLAN.md" / "TASKS.md" / "INDEX.md" / "RULES.md" / "phase-{n}" file references
+    flag unconditionally:
+        ".design/"                          — any path into the SDD tree
+        /T-\d+[A-Z]\d+(\.\d+)?/             — task IDs, BRACKETED AND BARE
+        /phase-\d+(\.md)?/                  — phase file references
+        "PLAN.md" / "TASKS.md" / "INDEX.md" / "RULES.md"
         spec filenames registered in INDEX.md
+    flag contextually (self-containment test, see below):
+        /[Pp]hase[-\s]\d+/                  — prose phase designators
 report each as: SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"
+if finding_count > 0: state remediation path → /magic.task {ws}   (RC-10)
 ```
 
-False-positive guard: matches inside the exempt set (RC-8) are skipped. Findings are advisory (severity: warning) — ventilation never auto-edits product files.
+Per RC-2.1 the task-ID and phase patterns are notation-independent: bare `T-22A01` and prose `Phase 20 Track B` are the forms that actually leak, because a reference leaves the SDD layer by being *quoted out* of its internal bracketed/file spelling.
+
+Prose `Phase {n}` is the sole contextual class — many domains own the word (handshake phases, build phases). Disambiguate with RC-3's self-containment test: if the passage stops making sense once `.design/` is absent, it denotes the plan's phase and is a leak; otherwise it is domain vocabulary. Report contextual hits in a separate sub-list so they can be triaged apart from unconditional ones.
+
+False-positive guard: matches inside the exempt set (RC-8) are skipped. Findings are advisory (severity: warning) — ventilation never auto-edits product files; repair is routed per RC-10.
 
 ### 4.3 Correct Form Examples
 
 ```plaintext
 BAD : // Implements T-2B03 (see .design/engine/tasks/phase-2.md)
 BAD : """Validator required by l1-input-rules.md §3."""
+BAD : // T-22A01: @test: block round-trip          <- bare ID, two-digit phase
+BAD : // Added in Phase 20 Track B                 <- prose phase designator
+BAD : fn test_phase_22_closing_validation() {}     <- leak in a test name
 GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
+GOOD: // Round-trip must be lossless: the encoder and decoder share no state.
 GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 ```
 
@@ -108,5 +123,6 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-08-06 | Agent | Added **RC-2.1 (Notation Independence)** and **RC-10 (Remediation Owner)**; RC-7 narrowed to detection-only; §4.2 heuristic split into unconditional and contextual classes with explicit patterns; §4.3 gained bare-form BAD examples. Two compounding defects: (a) every audit surface bound the task-ID class to the bracketed checklist literal `[T-XXXX]` and the phase class to the file form `phase-{n}` — the SDD layer's *internal* spellings — so bare `T-22A01` and prose `Phase 20 Track B`, the forms references actually take when quoted into code, matched nothing; (b) RC-7 called ventilation "the cleanup path" while ventilation is read-only and the spec workflow's write scope is `.design/`-only, leaving detection with no repair owner. Field evidence: 121 leaks across 44 files in a consumer project, unreported, 16 of them inside a crate whose purpose is standalone extraction (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Agent | Added RC-9 (Shipped Self-Containment): shipped engine files must not reference the engine repo's own SDD workspace — closes the gap where RC-8's engine exemption masked engine→`.design/engine/` leaks (15 sites found in first ventilation). RC-8 scope clarified; Implementation Notes step 5 added. |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable. Field-driven: consumer-project releases exclude `.design/`, so SDD references in product code become dead content. Defines RC-1..RC-8 and four enforcement surfaces. |
