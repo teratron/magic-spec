@@ -120,6 +120,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated specification `test-suite` (engine)
 - Completed task (engine)
 - Updated specification `workspace-intent-routing` (engine)
+- Updated specification `engine-core` (engine)
 
 ### Added
 

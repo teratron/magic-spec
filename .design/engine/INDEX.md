@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.15.13
+**Version:** 1.15.14
 **Status:** Active
 
 ## Overview
@@ -15,7 +15,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 | File | Description | Status | Layer | Version |
 | --- | --- | --- | --- | --- |
-| [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants (incl. C6/C10 traceability bindings), and runtime guards. | Stable | 1 | 1.1.4 |
+| [l1-engine-core.md](specifications/l1-engine-core.md) | Core logic, workflows, invariants (incl. C6/C10 traceability bindings), runtime guards, and Known Process Gaps (concept/implementation debt asymmetry, pending /magic.rule ratification). | Stable | 1 | 1.2.0 |
 | [l2-engine-automation.md](specifications/l2-engine-automation.md) | Automation scripts, history subsystem, and execution logic. | Stable | 2 | 1.6.0 |
 | [l2-engine-finalization.md](specifications/l2-engine-finalization.md) | Finalization helper library (`scripts/lib/`): changelog, archival (eligibility precision §6, C8), git-utils, versioning, session-continuity step (SC-2/SC-3, merge-not-clobber progress recompute §5.1, SC-2.2 reserved-command screen), generator containment §7 (RC-11), STATE.md accuracy fixes §8 (SC-1.1, SC-2.1(a), SC-2.3, replacement-string injection §8.5), non-whitelisted file visibility §9 (SC-3.1), line-cap guard defeat §10 (SC-1.2). | Stable | 2 | 1.10.0 |
 | [l2-test-suite.md](specifications/l2-test-suite.md) | Testing architecture, cognitive suite (206 tests, v1.9.74) + script-level harness with finalize-pipeline coverage mandate (C11 simulation, SC-2.2 matrix sweep, RC-2.1 shipped-text contract, RC-11 generator containment, SC-1.1/SC-2.1(a)/SC-2.3 STATE.md accuracy cases incl. replacement-string injection, SC-3.1 non-whitelisted file visibility, SC-1.2 line-cap guard exhaustion). | Stable | 2 | 1.13.0 |
@@ -47,4 +47,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-08-06 (Line-cap guard defeat: l1-session-continuity 1.7.0 (new SC-1.2), l2-engine-finalization 1.10.0 (new §10), l2-test-suite 1.13.0 — STATE.md's 100-line guard prunes only `## Recent Decisions` (own 5-entry cap, floor of 1), never `## Blocking Constraints`, which is unbounded by design; once the floor is hit the guard keeps logging a successful prune while the file grows past the cap unopposed — informal field report ("94/100 lines, trim decisions next cycle"), reproduced independently: 60 accumulated constraints drove a synthetic workspace to 110 lines)
+- **Last Updated**: 2026-08-06 (Known Process Gaps: l1-engine-core 1.2.0 — Concept/Implementation Debt Asymmetry: 7 consecutive `/magic.spec` field-report cycles this session left 8 fully-specified `Required Fix` blocks unimplemented in `l2-engine-finalization.md`; records a proposed debt-ceiling convention pending `/magic.rule` ratification, does not mint a new C-number itself. Self-observed process pattern, not a code defect.)
