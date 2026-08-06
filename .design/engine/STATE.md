@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-06 17:03
-**Phase:** 16 — Documentation Parity & Scaffold Boundary
+**Updated:** 2026-08-06 20:53
+**Phase:** 17 — Scan Input Hygiene
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-17A01 Extract the strip step into one shared helper (SH-2, SH-5) via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [15/15] ████████ 100%
+Phase 17: [0/7] ░░░░░░░░ 0%
+Overall: [15/16] ████████ 94%
 ```
 
 ## Recent Decisions

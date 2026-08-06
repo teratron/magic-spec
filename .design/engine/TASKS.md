@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.20.1
+**Version:** 1.21.0
 **Generated:** 2026-08-06
-**Based on PLAN:** .design/engine/PLAN.md v1.16.2
+**Based on PLAN:** .design/engine/PLAN.md v1.17.0
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -13,7 +13,9 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 15 ph
 
 ## Active Phases
 
-*None — plan complete. New scope enters via `/magic.task`.*
+| Phase | Description | Status |
+| --- | --- | --- |
+| [Phase 17](tasks/phase-17.md) | Scan Input Hygiene — shared strip helper + SH-1/SH-3/SH-4 bindings across four scans | `Todo` |
 
 ## Completed Phases
 
