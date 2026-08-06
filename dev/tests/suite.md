@@ -46,10 +46,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Calling workflow triggers init via `check-prerequisites → ok: false`
 - **Expected:**
   - [ ] `node .magic/scripts/executor.js init` is called
-  - [ ] Post-init verification checks all 6 artifacts: `INDEX.md`, `RULES.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`
+  - [ ] Post-init verification checks the artifacts `init` actually creates: `INDEX.md`, `RULES.md`, `workspace.json`, `specifications/`, `tasks/`, `archives/tasks/` — **not** `STATE.md`, which is bootstrapped lazily on the first mutating command
   - [ ] Brief report: "SDD initialized — {date}"
   - [ ] Calling workflow continues after init
-- **Guards tested:** Engine Integrity check, post-init verification (6 artifacts)
+- **Guards tested:** Engine Integrity check, post-init verification (WI-10 documentation parity — the checked set must match `init.js`)
 
 ### T02 — Init Partial Corruption
 
@@ -62,7 +62,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Init script runs and creates only missing artifacts (INDEX.md, tasks/)
   - [ ] Existing RULES.md is NOT overwritten (idempotency)
-  - [ ] Post-init verification confirms all 6 artifacts present (including `STATE.md`)
+  - [ ] Post-init verification confirms the init-created artifacts are present; `STATE.md` is not among them and its absence is not a failure
 - **Guards tested:** Safe to Re-Run (idempotency), full verification
 
 ### T03 — Spec Dispatch Multi-Topic
@@ -965,7 +965,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `init` workflow executes `init.js`.
   - [ ] `.design/workspace.json` is created with `default: main` (per WI-10 in `l1-workspace-intent-routing.md` — new projects bootstrap into `.design/{default}/`, never directly under `.design/`).
   - [ ] `.design/RULES.md` and `INDEX.md` created.
-  - [ ] `.design/main/` directory created with `INDEX.md`, `STATE.md`, `specifications/`, `tasks/`, `archives/tasks/`.
+  - [ ] `.design/main/` directory created with `INDEX.md`, `specifications/`, `tasks/`, `archives/tasks/` (no `STATE.md` — it appears on the first mutating command, not at bootstrap).
 - **Guards tested:** Core Artifact Initialization (WI-10 layout), Zero-Prompt baseline, default workspace naming.
 
 ### T59 — Analyze: Depth Control (Threshold Enforcement)

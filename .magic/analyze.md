@@ -183,6 +183,16 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Exemptions: git metadata and contributor-facing docs that document the SDD workflow itself (the reference IS the content).
    - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited here: ventilation is read-only and owns detection, not repair.
    - **Remediation path** (state it whenever the finding count > 0): `→ /magic.task {ws}` to plan a containment-cleanup task, executed by `/magic.run` under the Coder role — the same role that owns the write-time gate. A leak report without this path is incomplete: the finding is otherwise unowned and re-accumulates.
+6a. **Scaffold Boundary Check (`SDD_SCAFFOLD_COUPLING`)**: the SDD workspace and the engine directories are development-time scaffolding — erected around the work, never load-bearing for it. The falsifiable form is the **scaffold-removal test**: with `.design/`, `.magic/`, `workflows/`, `skills/`, and `rules/` deleted, the product must still build, test, run, and package. Step 6's token scan cannot see a failure of this kind, because structural coupling leaves no SDD identifier behind — a build script calling the engine names no task, no phase, no spec file. Inspect five points:
+   1. **Build & lifecycle manifests** (`package.json` scripts, `Makefile`, `pyproject.toml`, `Cargo.toml`, `build.gradle`, `Taskfile`, `justfile`, …) → flag any target invoking `executor.js`, a `/magic.*` workflow, or a `.magic/` path.
+   2. **CI/CD configs** (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, …) → flag any build, test, or release step gated on the engine or on `.design/` state.
+   3. **Packaging / include lists** (`package.json` `files`, `MANIFEST.in`, Cargo `include`, `Dockerfile` `COPY`, `.dockerignore`, `.gitattributes` `export-ignore`) → flag `.design/` or an engine directory present in a shipped artifact.
+   4. **Product source and tests** → flag reads of `.design/` or engine paths at build or runtime, and tests asserting on SDD artifact structure.
+   5. **Product toolchain manifests** → flag a runtime or dependency present solely to execute the engine (a Node runtime added to a Python-only project is coupling even where no file names the engine).
+   - **Consumer projects only.** In this engine's own repository the engine directories *are* the product; `.design/` remains scaffolding here as everywhere, so only points 3-5 apply to it.
+   - **Exempt**: the git pre-commit hook `init.js` installs. `.git/hooks/` is neither committed nor packaged, and gating a *commit* is not gating a *build* — it is removed with the scaffold rather than surviving in the product.
+   - Report each finding as `SDD_SCAFFOLD_COUPLING {file}:{line} → "{integration point}"` — advisory, read-only, on step 6's terms. Severity is higher than a reference leak (a leak dirties a shipped artifact; coupling can stop it building at all), but the remediation owner is unchanged: state `→ /magic.task {ws}` whenever the count > 0.
+   - The check is deliberately a five-point inspection rather than an actual deletion rehearsal: the engine knows no consumer's build command, and a read-only audit must not perform a destructive verification. The rehearsal stays available to the user as a manual confirmation.
 7. **Prompt Quality & Multi-Angle Audit**: activate `@role:prompt-engineer` and `@role:project-auditor` to sweep existing AI-facing artifacts (PQ-1 classes: specifications, constitution rules, plan/task units, role cards, workflow bodies, templates, adapter instructions) for the six PQ-3 defect types — contradictions, ambiguity, persona/tone drift, cognitive load, semantic coverage gaps, composition conflicts. Applies **Blind Multi-Angle Review (MA-3)** to cross-evaluate critical findings across safety, layer purity, extensibility, testability, and usability lenses. Findings flow into the common findings pool where `@role:project-auditor` severity-ranks them for the Advisory Report. Audit-mode findings are advisory only — no artifact is rewritten during ventilation (Actionable Guard preserved).
 8. **Specification Knowledge Graph**: run `node .magic/scripts/executor.js build-spec-graph`.
    - Report God Nodes (top 5 by degree) — architectural hotspots requiring prioritized spec coverage. Flag god nodes with `status ≠ Stable` as `PRIORITY_SPEC` advisory.
@@ -249,6 +259,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 | **Drift** | `Stable` specs where `git diff` shows manual modification of logic blocks without a version bump. |
 | **Shadow Logic** | Files containing rationale comments (NOTE/WHY/HACK/etc.) not captured by any specification. |
 | **SDD Leak** | Product files referencing SDD artifacts (`.design/` paths, task IDs, spec/plan file names) — dead references once a release excludes `.design/`. |
+| **Scaffold Coupling** | `SDD_SCAFFOLD_COUPLING` — the product's build, CI, packaging, source, or toolchain depends on the SDD or engine directories, so it stops working once the scaffold is removed. Invisible to the SDD Leak scan: structural coupling names no SDD artifact. Consumer projects only. |
 | **Wrapper Drift** | `WRAPPER_BODY_DRIFT` — a `workflows/` wrapper points to a `.magic/{cmd}.md` body that is missing on disk (phantom mapping). Self-contained wrappers and body-less internal modules are exempt (`l2-workflow-wrappers.md` §6). |
 
 ### Advisory Report Criteria
@@ -282,6 +293,7 @@ Mode C Checklist — Ventilation
   ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
   ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
   ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched); bare + bracketed task IDs and two-digit phases both covered; remediation path `→ /magic.task {ws}` stated when count > 0
+  ☐ Scaffold Boundary: five-point SDD_SCAFFOLD_COUPLING inspection run (build/CI/packaging/source/toolchain); consumer-only scope and the pre-commit-hook exemption honored; remediation path stated when count > 0
   ☐ Prompt Quality Audit: @role:prompt-engineer sweep over PQ-1 artifacts; findings routed to pre-advisory pool
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
@@ -389,6 +401,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
   ☐ Rationale Audit: extract-rationale.js executed; Shadow Logic files identified
   ☐ Containment Scan: product files scanned for SDD references (rules/magic.md §6 classes, bare forms included); SDD_REFERENCE_LEAK findings reported as advisory with a stated remediation path
+  ☐ Scaffold Boundary: product build, CI, packaging, source, and toolchain inspected for dependence on the SDD or engine directories; SDD_SCAFFOLD_COUPLING findings reported as advisory (consumer projects only)
   ☐ Prompt Quality Audit: @role:prompt-engineer sweep over existing AI-facing artifacts (PQ-1) performed; advisory only
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources

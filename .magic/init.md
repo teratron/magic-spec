@@ -44,11 +44,13 @@ Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={act
 
 #### 2. Init
 
-Run `node .magic/scripts/executor.js init`. Provisions: `INDEX.md`, `RULES.md`, `specifications/`, `tasks/`, `archives/tasks/`. Plus **STATE.md**: copy `.magic/templates/state.md` → `.design/{workspace}/STATE.md`; replace `{workspace-name}` and `{YYYY-MM-DD HH:MM}` placeholders; set `**Status:** Active`, `**Phase:** 0 — Not Started`, `**Next Action:** Run /magic.task`. **Skip** STATE.md if it already exists (never overwrite live memory).
+Run `node .magic/scripts/executor.js init`. Provisions the global registry (`.design/INDEX.md`, `.design/RULES.md`, `.design/workspace.json`) and the workspace subtree (`{workspace}/INDEX.md`, `specifications/`, `tasks/`, `archives/tasks/`).
+
+`STATE.md` is **not** created here. It is bootstrapped lazily by `update-state.js`, from `.magic/templates/state.md`, the first time a mutating workflow runs its post-command state update — that step already owns template instantiation (placeholder substitution, default field values), and duplicating it here would be two code paths doing one job. Nothing downstream assumes `STATE.md` exists immediately after `init`.
 
 #### 3. Verify
 
-Ensure all 6 artifacts exist (including STATE.md). HALT on failure.
+Ensure the artifacts listed in Step 2 exist. HALT on failure. `STATE.md` is not among them — its absence directly after `init` is the expected state, not a failure.
 
 #### 4. Hint
 
@@ -65,13 +67,13 @@ If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` i
 ├── workspace.json      (Workspace config registry)
 └── {workspace}/        (Per-workspace artifacts; default name: main)
     ├── INDEX.md        (Workspace-local spec registry)
-    ├── STATE.md        (Live memory — session continuity)
+    ├── STATE.md        (Live memory — created on the first mutating command, not by init)
     ├── specifications/
     ├── tasks/
     └── archives/tasks/
 ```
 
-> **WI-10 (Workspace Intent Routing)**: this diagram is authoritative; any deviation is a release blocker. New projects always bootstrap into `.design/{default}/`, never directly under `.design/`. Additional workspaces are added via `create-workspace` (below), not by re-running `init`.
+> **WI-10 (Workspace Intent Routing)**: every claim this file makes about what `init` produces — the diagram, the Steps narrative, and the Completion Checklist — is authoritative, and any deviation is a release blocker. A claim about *when* an artifact appears is bound exactly as a claim about *whether* it appears: an agent deciding what to verify after `init` acts on both. New projects always bootstrap into `.design/{default}/`, never directly under `.design/`. Additional workspaces are added via `create-workspace` (below), not by re-running `init`.
 
 ### Workspace Creation (Post-Bootstrap)
 
@@ -92,6 +94,6 @@ Init Checklist
   ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
   ☐ RULES.md (C1-C22) & INDEX.md headers present
-  ☐ STATE.md created from template (or skipped if already exists)
+  ☐ Workspace subtree provisioned (specifications/, tasks/, archives/tasks/)
   ☐ Existing codebase check performed; analyzer suggested if applicable
 ```

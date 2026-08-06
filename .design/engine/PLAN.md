@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 1.16.0
+**Version:** 1.16.1
 **Generated:** 2026-08-06
 **Based on:** .design/engine/INDEX.md v1.15.15
 **Status:** Active
@@ -129,12 +129,12 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 16 — Documentation Parity & Scaffold Boundary
 
-- [ ] **WI-10 Parity & RC-12 Scaffold Surfaces** ([l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) v1.1.0 · [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) v1.4.0 §4.4) [L1] — correct every `init.md` surface claiming `init.js` bootstraps `STATE.md` (it does not — verified against `initWorkspace()`, which creates `INDEX.md`, `specifications/`, `tasks/`, `archives/tasks/` only), including the three cognitive-suite scenarios that bake the same false claim into their expected outcomes; then add RC-12's scaffold-removal check to ventilation and state the scaffold framing once in the ambient agent rules.
+- [x] **WI-10 Parity & RC-12 Scaffold Surfaces** ([l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) v1.1.0 · [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) v1.4.0 §4.4) [L1] — corrected every `init.md` surface claiming `init.js` bootstraps `STATE.md` (it does not — verified against `initWorkspace()`, which creates `INDEX.md`, `specifications/`, `tasks/`, `archives/tasks/` only), including the three cognitive-suite scenarios that baked the same false claim into their expected outcomes; added RC-12's scaffold-removal check to ventilation and stated the scaffold framing in the ambient agent rules. *(Phase 16 complete — engine 2.1.64, harness 43/43)*
   - No code changes — both amendments land in prose that *is* the implementation (a cognitive check and a documented contract).
   - No hard dependency on Phase 15; MUST NOT run concurrently with it (both bump `.magic/` checksums).
   - Blocking constraint **[C-001]** applies to T-16B02: `rules/magic.md` is hardlinked to `.agents/rules/magic.md`, and write-replace editors delink the twin silently.
   - The suite correction is not optional polish: `magic.dev.simulate` evaluates T01/T02/T58 cognitively against the documented contract, so correcting `init.md` alone would leave the suite asserting a fact its own source of truth no longer supports.
-  - Tasks: [tasks/phase-16.md](tasks/phase-16.md)
+  - Tasks: [archives/tasks/phase-16.md](archives/tasks/phase-16.md) *(Done, archived)*
 
 ## Backlog
 

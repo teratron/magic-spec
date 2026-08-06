@@ -210,14 +210,44 @@ task Done
 - Engine improvement tasks (explicit directive) — engine and spec layers are separate.
 - `MAGIC_POST_TASK_REPLAN=0` env var disables this rule entirely.
 
-## 6. SDD Reference Containment (Code ↔ SDD Boundary)
+## 6. SDD Containment (Code ↔ SDD Boundary)
 
-Products built with this engine may ship releases that exclude `.design/`. Any
-reference to SDD artifacts inside product files becomes dead content in such a
-release. Traceability is one-way: SDD artifacts reference code; code never
-references SDD artifacts.
+The SDD is **scaffolding**: erected around the work, never a component of it,
+removed when the work is done. The boundary has two dimensions, and both answer
+the same question — *is the product still whole once the scaffold is gone?*
 
-### Rule
+- **Reference containment** — products may ship releases that exclude
+  `.design/`, so any reference to SDD artifacts inside product files becomes
+  dead content. Traceability is one-way: SDD artifacts reference code; code
+  never references SDD artifacts.
+- **Structural containment** — with `.design/`, `.magic/`, `workflows/`,
+  `skills/`, and `rules/` deleted, the product must still build, test, run, and
+  package. Making the scaffold load-bearing leaves no forbidden token behind, so
+  no reference rule can catch it.
+
+### Structural Rule (Scaffold Boundary)
+
+Never wire the engine or the SDD into the product's own lifecycle. Forbidden:
+build or package manifests invoking engine scripts (`package.json` `scripts`,
+`Makefile` targets, `pyproject.toml`, `Cargo.toml`, Gradle tasks); CI/CD steps
+gating a build, test, or release on a `/magic.*` workflow or an `executor.js`
+subcommand; product build or runtime code reading anything under `.design/` or
+the engine directories; product tests asserting on SDD artifact structure;
+release artifacts (archives, images, published packages) that include those
+directories; and toolchain dependencies added solely to run the engine — a Node
+runtime introduced into a Python-only project is coupling even where no file
+names the engine.
+
+The engine installs by unpacking an archive and is removed by deleting
+directories. It is not a package-manager dependency, and must stay removable
+without editing a single product manifest.
+
+**Exempt**: the git pre-commit hook installed during setup. It lives in
+`.git/hooks/` — never committed, never packaged — and gating a *commit* is not
+gating a *build*; it goes away with the scaffold instead of surviving in the
+product.
+
+### Reference Rule
 
 Never write references to SDD artifacts into product files — source code,
 comments, docstrings, identifiers, string literals, test names, build/config
@@ -268,7 +298,12 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 - **Review time** — the Code-reviewer role FAILs any diff adding an SDD reference.
 - **Audit time** — `/magic.analyze` ventilation reports
   `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
-  never auto-edited).
+  never auto-edited), and inspects build, CI, packaging, source, and toolchain
+  for structural coupling, reported as `SDD_SCAFFOLD_COUPLING {file}:{line}`.
+  The two are separate checks because a token scan cannot see coupling — the
+  ambient surface matters most here, since coupling usually arrives through a
+  direct request ("add a lint script", "wire this into CI") rather than through
+  a workflow the role cards mediate.
 - **Remediation time** — detection and repair are separate duties, and audit
   owns only the first. Ventilation is read-only by contract, so a leak it finds
   is cleaned by scheduling it: the finding carries the path
