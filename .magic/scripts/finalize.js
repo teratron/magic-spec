@@ -188,6 +188,29 @@ function computeNextAction(workflow, workspace, wsDir) {
 }
 
 /**
+ * Reports whether a phase is blocked, reading its two independent signals: the
+ * phase file's own frontmatter `status:` and its registry row in TASKS.md.
+ *
+ * Either signal alone is authoritative. The two are written by different steps
+ * and are not updated atomically, so requiring agreement would wave a
+ * half-applied transition straight through the guard.
+ *
+ * @param {string} phaseContent - Phase file source.
+ * @param {string} tasksContent - TASKS.md source.
+ * @param {string} phaseNo - Phase number as it appears in the file name.
+ * @returns {boolean}
+ */
+function isPhaseBlocked(phaseContent, tasksContent, phaseNo) {
+    const frontmatter = phaseContent.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+    if (frontmatter && /^status:\s*["']?Blocked["']?\s*$/im.test(frontmatter[1])) return true;
+
+    const row = tasksContent.match(
+        new RegExp(`^\\| \\[Phase ${phaseNo}\\]\\([^)]*\\)[^\\n]*$`, 'm')
+    );
+    return row ? /\bBlocked\b/.test(row[0]) : false;
+}
+
+/**
  * Derives the raw recommendation from the plan ledger, following pipeline
  * order (spec → task → run). Plan-state-aware per SC-2.1
  * (l1-session-continuity.md): for task/run the recommendation comes from the
@@ -230,7 +253,16 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
             for (const file of phaseFiles) {
                 const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
                 const openTask = content.match(openTaskRe);
-                if (openTask) return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+                if (!openTask) continue;
+                // Blocked is not Done, so a blocked phase still has open
+                // checklist lines — matching one is not licence to recommend it.
+                // Dispatching a resuming session into the very blocker the same
+                // STATE.md records would make the file contradict itself.
+                if (isPhaseBlocked(content, tasks, file.match(/\d+/)[0])) {
+                    return `Resolve blocker on ${openTask[1]} (${workspace}) — ` +
+                        `see STATE.md ## Blockers, then run /magic.run ${workspace}`;
+                }
+                return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
             }
         }
 
@@ -281,6 +313,47 @@ function updateSessionState(opts, workspace, designAbs) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Changed-File Enumeration (SC-3.1)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Upper bound on files listed in a suggested commit message or the stdout
+ * artifact listing. Beyond it the output states how many were omitted.
+ *
+ * @type {number}
+ */
+const MAX_LISTED_FILES = 15;
+
+/**
+ * Enumerates every file changed in the working tree, for output the user reads
+ * before committing — the suggested message body and the stdout listing.
+ *
+ * Deliberately wider than the significance whitelist. Significance answers
+ * "should this bump the version" and is correctly scoped to SDD artifacts;
+ * this answers "what is the user about to stage", and for a task-execution
+ * finalize the task's own product-code deliverable is outside the whitelist by
+ * construction. Header derivation keeps reading the whitelist subset.
+ *
+ * @param {Array<{path: string}>} fallbackFiles - Used when git is unavailable.
+ * @returns {{files: Array<Object>, omitted: number}}
+ */
+function collectChangedFiles(fallbackFiles) {
+    const probe = gitChangedPaths(projectRoot);
+    if (!probe.available || probe.paths.length === 0) {
+        return { files: fallbackFiles, omitted: 0 };
+    }
+    const capped = probe.paths.slice(0, MAX_LISTED_FILES);
+    return {
+        files: capped.map((p) => ({
+            path: p,
+            status: gitFileStatus(projectRoot, p),
+            ...gitFileNumstat(projectRoot, p),
+        })),
+        omitted: probe.paths.length - capped.length,
+    };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Non-Bumping Commit Suggestion (SC-3)
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -296,17 +369,8 @@ function updateSessionState(opts, workspace, designAbs) {
  * @returns {void}
  */
 function emitFallbackCommitSuggestion(opts, workspace, version) {
-    const probe = gitChangedPaths(projectRoot);
-    if (!probe.available || probe.paths.length === 0) return;
-
-    const MAX_FILES = 15;
-    const capped = probe.paths.slice(0, MAX_FILES);
-    const files = capped.map((p) => ({
-        path: p,
-        status: gitFileStatus(projectRoot, p),
-        ...gitFileNumstat(projectRoot, p),
-    }));
-    const omitted = probe.paths.length - capped.length;
+    const { files, omitted } = collectChangedFiles([]);
+    if (files.length === 0) return;
 
     // Workflow summary heuristics target whitelist artifacts; these files are
     // off-whitelist by definition, so a neutral header is the honest one.
@@ -317,7 +381,7 @@ function emitFallbackCommitSuggestion(opts, workspace, version) {
         nextVersion: version,
         files,
         type: 'chore',
-        summary: `update ${probe.paths.length} changed file${probe.paths.length !== 1 ? 's' : ''}`,
+        summary: `update ${files.length + omitted} changed file${files.length + omitted !== 1 ? 's' : ''}`,
     });
 
     process.stdout.write([
@@ -380,6 +444,20 @@ function emitSkip(workflow, workspace, patterns, version) {
 }
 
 /**
+ * Renders the change-count cell. The two numbers answer different questions —
+ * how much changed, and how much of it drove the version bump — so the cell
+ * names both whenever they differ.
+ *
+ * @param {number} total - Files changed in the working tree.
+ * @param {number} [whitelisted] - Files matching the significance whitelist.
+ * @returns {string}
+ */
+function describeChangeCounts(total, whitelisted) {
+    if (whitelisted === undefined || whitelisted === total) return `${total} file(s)`;
+    return `${total} file(s) — ${whitelisted} whitelisted`;
+}
+
+/**
  * Emits the full "finalization complete" block to stdout.
  *
  * @param {Object} ctx
@@ -387,7 +465,7 @@ function emitSkip(workflow, workspace, patterns, version) {
 function emitSuccess(ctx) {
     const {
         workflow, workspace, previous, next,
-        files, gitAvailable, changelogResult, commitMsg,
+        files, omitted = 0, whitelistCount, gitAvailable, changelogResult, commitMsg,
         archivedPhases, stateResult,
         opts,
     } = ctx;
@@ -400,7 +478,7 @@ function emitSuccess(ctx) {
         `| Workflow | magic.${workflow} |`,
         `| Workspace | ${workspace} |`,
         `| Project version | ${previous} → ${next} |`,
-        `| Detected changes | ${files.length} file(s) |`,
+        `| Detected changes | ${describeChangeCounts(files.length + omitted, whitelistCount)} |`,
     ];
 
     if (changelogResult) {
@@ -426,6 +504,9 @@ function emitSuccess(ctx) {
     for (const f of files) {
         const numstat = (f.added || f.deleted) ? ` (+${f.added} -${f.deleted})` : '';
         lines.push(`- \`${f.path}\` [${f.status}]${numstat}`);
+    }
+    if (omitted > 0) {
+        lines.push(`- _(+${omitted} more changed file${omitted !== 1 ? 's' : ''} not listed)_`);
     }
 
     if (archivedPhases && archivedPhases.length > 0) {
@@ -571,6 +652,10 @@ function main() {
     const stateResult = updateSessionState(opts, workspace, designAbs);
 
     // ── Commit message ──────────────────────────────────────────────────────
+    // SC-3.1: what the user reviews before committing is the whole working
+    // tree, not the whitelist subset that drove the bump.
+    const listed = collectChangedFiles(sig.files);
+
     let commitMsg = null;
     if (config.suggestCommit && !opts.noCommitMsg) {
         commitMsg = buildCommitMessage({
@@ -578,8 +663,12 @@ function main() {
             workspace,
             previousVersion: previous,
             nextVersion: next,
-            files: sig.files,
+            files: listed.files,
+            headerFiles: sig.files,
         });
+        if (listed.omitted > 0) {
+            commitMsg += `\n(+${listed.omitted} more changed file${listed.omitted !== 1 ? 's' : ''})`;
+        }
     }
 
     emitSuccess({
@@ -587,7 +676,9 @@ function main() {
         workspace,
         previous,
         next,
-        files: sig.files,
+        files: listed.files,
+        omitted: listed.omitted,
+        whitelistCount: sig.files.length,
         gitAvailable: sig.gitAvailable,
         changelogResult,
         commitMsg,
@@ -610,7 +701,7 @@ function main() {
 // Exported for the regression harness (l2-test-suite §finalize coverage).
 // computeNextAction carries the SC-2.1 plan-state logic and is unit-tested
 // in isolation; main() is the CLI entrypoint.
-module.exports = { main, computeNextAction, updateSessionState };
+module.exports = { main, computeNextAction, updateSessionState, collectChangedFiles, emitSuccess };
 
 // Execute only as a CLI, not when required by tests.
 if (require.main === module) {

@@ -153,15 +153,25 @@ function buildSummary(workflow, files) {
  * @param {string} ctx.previousVersion
  * @param {string} ctx.nextVersion
  * @param {Array<{path: string, status: string, added: number, deleted: number}>} ctx.files
+ *   Every file the invocation changed — enumerated in the body, so the message
+ *   describes what the user is about to stage.
+ * @param {Array<{path: string, status: string}>} [ctx.headerFiles] - Subset the
+ *   header is derived from (the significance-whitelisted artifacts). Defaults to
+ *   `files` when omitted.
  * @param {string} [ctx.type] - Overrides the derived Conventional Commits type.
  *   Use when `files` are not whitelist artifacts and workflow heuristics would mislead.
  * @param {string} [ctx.summary] - Overrides the derived summary line (same rationale).
  * @returns {string}
  */
-function buildCommitMessage({ workflow, workspace, previousVersion, nextVersion, files, type, summary }) {
-    const headerType = type || deriveType(workflow, files);
-    const scope = deriveScope(workspace, files);
-    const headerSummary = summary || buildSummary(workflow, files);
+function buildCommitMessage({ workflow, workspace, previousVersion, nextVersion, files, headerFiles, type, summary }) {
+    // Two questions, two file sets. The header states the *semantic* nature of
+    // the change and stays keyed to the whitelisted artifacts; the body lists
+    // everything in the working tree. Collapsing them onto one set is what hid
+    // a task's own source changes from the message describing that task.
+    const semantic = headerFiles || files;
+    const headerType = type || deriveType(workflow, semantic);
+    const scope = deriveScope(workspace, semantic);
+    const headerSummary = summary || buildSummary(workflow, semantic);
 
     const header = `${headerType}(${scope}): ${headerSummary}`;
 
@@ -218,8 +228,14 @@ function buildChangelogBullet(workflow, workspace, files) {
             const specs = files.filter((f) => f.path.includes('/specifications/'));
             if (specs.length === 0) return `Updated spec registry (${workspace})`;
             const verb = specs.every((f) => f.status === 'added') ? 'Added' : 'Updated';
+            // This string is written verbatim into the product's root
+            // CHANGELOG.md by the pipeline — nobody authors it, nobody reviews
+            // it as a diff, so the write-time and review-time containment gates
+            // never see it. A specification's derived identifier is exactly the
+            // kind of internal name that must not travel into a product file;
+            // the multi-item branch below and the `run` case are already generic.
             if (specs.length === 1) {
-                return `${verb} specification \`${artifactId(specs[0].path)}\` (${workspace})`;
+                return `${verb} a specification (${workspace})`;
             }
             return `${verb} ${specs.length} specifications (${workspace})`;
         }

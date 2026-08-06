@@ -123,6 +123,38 @@ describe('Magic Engine Scripts', () => {
         return { wsDir, tasksDir, tasksPath: path.join(wsDir, 'TASKS.md') };
     };
 
+    // Builds the git-backed workspace every finalize end-to-end test needs:
+    // workspace.json with finalization enabled, a starting version, and the
+    // paths those tests assert against. Caller supplies the workspace content,
+    // then calls commitFixture() to establish a clean baseline.
+    const createFinalizeFixture = (tempDir, { workspace = 'main', version = '0.1.0', autoChangelog = false } = {}) => {
+        copyStateTemplate(tempDir);
+        const designDir = path.join(tempDir, '.design');
+        const wsDir = makeWorkspace(tempDir, workspace);
+        fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
+            default: workspace,
+            finalization: {
+                enabled: true, autoBump: true, autoChangelog,
+                suggestCommit: true, versionPath: '.design/.version',
+            },
+        }));
+        fs.writeFileSync(path.join(designDir, '.version'), version);
+        return {
+            designDir,
+            wsDir,
+            versionPath: path.join(designDir, '.version'),
+            finalizePath: path.join(tempDir, '.magic', 'scripts', 'finalize.js'),
+        };
+    };
+
+    // Commits the fixture so HEAD exists and the working tree starts clean —
+    // finalize reads the diff against HEAD, so a dirty baseline would blur
+    // which change the assertion is actually about.
+    const commitFixture = (tempDir) => {
+        execSync('git add -A', { cwd: tempDir, stdio: 'ignore' });
+        execSync('git commit -m "fixture"', { cwd: tempDir, stdio: 'ignore' });
+    };
+
     // require()s phase-archiver.js and creates its workspace fixture in one
     // step — the pairing every phase-archiver test starts with.
     const requirePhaseArchiverWorkspace = (tempDir) => {
@@ -692,20 +724,11 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js patches STATE.md and suggests a commit on the skip path (SC-2/SC-3)', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            copyStateTemplate(tempDir);
-            const designDir = path.join(tempDir, '.design');
-            const wsDir = makeWorkspace(tempDir, 'main');
-            fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
-                default: 'main',
-                finalization: { enabled: true, autoBump: true, autoChangelog: false, suggestCommit: true, versionPath: '.design/.version' },
-            }));
-            fs.writeFileSync(path.join(designDir, '.version'), '0.1.0');
+            const { designDir, wsDir, finalizePath } = createFinalizeFixture(tempDir);
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n*None — plan complete.*\n');
-            // Commit the fixture so HEAD exists and no whitelisted file changed → skip path.
-            execSync('git add -A', { cwd: tempDir, stdio: 'ignore' });
-            execSync('git commit -m "fixture"', { cwd: tempDir, stdio: 'ignore' });
+            // No whitelisted file changes after this baseline → skip path.
+            commitFixture(tempDir);
 
-            const finalizePath = path.join(tempDir, '.magic', 'scripts', 'finalize.js');
             const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
 
             assert.match(out, /No significant changes|Finalization complete/, 'finalize should run on the skip path');
@@ -718,6 +741,180 @@ describe('Magic Engine Scripts', () => {
             // STATE.md write dirties the tree → SC-3 non-bumping suggestion is emitted.
             assert.match(out, /Suggested commit message/, 'SC-3: a commit suggestion is emitted');
             assert.match(fs.readFileSync(path.join(designDir, '.version'), 'utf8'), /^0\.1\.0$/, 'skip path does not bump the version');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js computeNextAction never recommends executing a task in a Blocked phase (SC-2.1(a))', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+
+            const registry = (status) => [
+                '# Master Task Index',
+                '',
+                '## Active Phases',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                `| [Phase 1](tasks/phase-1.md) | Bootstrap | \`${status}\` |`,
+                '',
+            ].join('\n');
+
+            const phaseFile = (status) => [
+                '---',
+                'phase: 1',
+                `status: ${status}`,
+                '---',
+                '',
+                '## Atomic Checklist',
+                '',
+                '- [ ] [T-1A01] Scaffold the app',
+                '',
+            ].join('\n');
+
+            // The two Blocked signals are written by different steps and are not
+            // updated atomically, so each must be sufficient on its own —
+            // requiring agreement would wave a half-applied transition through.
+            const blockedCases = {
+                'frontmatter only': { registry: 'In Progress', phase: 'Blocked' },
+                'registry row only': { registry: 'Blocked', phase: 'In Progress' },
+                'both signals': { registry: 'Blocked', phase: 'Blocked' },
+            };
+
+            for (const [label, state] of Object.entries(blockedCases)) {
+                fs.writeFileSync(tasksPath, registry(state.registry));
+                fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile(state.phase));
+
+                const next = finalize.computeNextAction('run', 'engine', wsDir);
+                assert.doesNotMatch(
+                    next, /^Execute T-/,
+                    `${label}: Blocked phase must not yield an execute-style recommendation → "${next}"`
+                );
+                assert.match(next, /T-1A01/, `${label}: the blocked task should still be named`);
+                // The redirected value passes the same single-exit screen.
+                assert.doesNotMatch(next, /\/magic\.(spec|analyze)/, `${label}: §5 reserved command leaked`);
+                assert.strictEqual(
+                    (next.match(/\/magic\.[a-z.]+/g) || []).length, 1,
+                    `${label}: exactly one command expected → "${next}"`
+                );
+            }
+
+            // Control: an unblocked phase with the same open item still dispatches.
+            fs.writeFileSync(tasksPath, registry('In Progress'));
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('In Progress'));
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/,
+                'a healthy phase must still resolve to execution — the guard must not fire on every phase'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js reports every changed file, not just whitelisted ones (SC-3.1)', () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { wsDir, versionPath, finalizePath } = createFinalizeFixture(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+            fs.writeFileSync(path.join(tempDir, 'dev', 'deliverable.js'), '// baseline\n');
+            commitFixture(tempDir);
+
+            // One whitelisted change (TASKS.md status flip) and one outside the
+            // whitelist — the shape of every magic.run whose task produced real
+            // source changes, since product code is never inside the whitelist.
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] Also done\n');
+            fs.writeFileSync(path.join(tempDir, 'dev', 'deliverable.js'), '// the task\'s actual output\n');
+
+            const out = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+
+            // (a) Significance is unchanged: the whitelisted file still drives the bump.
+            assert.match(out, /Finalization complete/, 'whitelisted change must still be significant');
+            assert.strictEqual(
+                fs.readFileSync(versionPath, 'utf8').trim(), '0.1.1',
+                'the whitelist subset alone must still decide the version bump'
+            );
+
+            // (b) + (c) Both listings name the non-whitelisted file.
+            const artifacts = out.slice(out.indexOf('### Changed artifacts'), out.indexOf('### Suggested commit message'));
+            assert.match(artifacts, /dev\/deliverable\.js/, 'stdout listing must name the non-whitelisted change');
+            assert.match(artifacts, /TASKS\.md/, 'stdout listing must still name the whitelisted change');
+
+            const message = out.slice(out.indexOf('### Suggested commit message'));
+            assert.match(message, /dev\/deliverable\.js/, 'commit body must name the non-whitelisted change');
+            assert.match(message, /TASKS\.md/, 'commit body must still name the whitelisted change');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('buildCommitMessage derives the header from headerFiles but enumerates every file (SC-3.1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { buildCommitMessage } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'commit-suggester.js'));
+
+            // Disjoint sets on purpose: if the header were derived from `files`
+            // it would read "update INDEX.md" (no spec path in that set), so the
+            // assertion below fails the moment the two collapse back into one.
+            const msg = buildCommitMessage({
+                workflow: 'spec',
+                workspace: 'main',
+                previousVersion: '0.1.0',
+                nextVersion: '0.1.1',
+                files: [{ path: 'dev/tool.js', status: 'modified', added: 3, deleted: 1 }],
+                headerFiles: [{ path: '.design/main/specifications/l1-core.md', status: 'added' }],
+            });
+
+            const [header] = msg.split('\n');
+            assert.match(header, /add core/, 'header must be derived from the whitelisted subset');
+            assert.match(msg, /- dev\/tool\.js \(\+3 -1\)/, 'body must enumerate the full changed set');
+            assert.doesNotMatch(header, /tool\.js/, 'header must not be derived from the wider set');
+
+            // Backward compatibility: omitting headerFiles keeps the old behavior,
+            // which the SC-3 fallback path depends on.
+            const legacy = buildCommitMessage({
+                workflow: 'spec',
+                workspace: 'main',
+                previousVersion: '0.1.0',
+                nextVersion: '0.1.0',
+                files: [{ path: '.design/main/specifications/l1-core.md', status: 'added', added: 9, deleted: 0 }],
+            });
+            assert.match(legacy.split('\n')[0], /add core/, 'headerFiles must default to files when absent');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('buildChangelogBullet keeps spec identifiers out of the product CHANGELOG (RC-11)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { buildChangelogBullet } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'commit-suggester.js'));
+
+            // Asserted against the function's return value, not a written
+            // CHANGELOG.md — only a real invocation touches that file, and this
+            // generator is the only surface where the containment gates cannot
+            // reach: nothing here is authored by a role or reviewed as a diff.
+            const single = buildChangelogBullet('spec', 'main', [
+                { path: '.design/main/specifications/l1-model-runtime.md', status: 'modified' },
+            ]);
+            assert.doesNotMatch(single, /model-runtime/, 'single-spec branch must not embed the artifact ID');
+            assert.match(single, /specification/, 'the bullet must still describe what changed');
+            assert.match(single, /\(main\)/, 'the workspace stays in the bullet — it is not an SDD identifier');
+
+            // The branch that was already correct must stay correct.
+            const multi = buildChangelogBullet('spec', 'main', [
+                { path: '.design/main/specifications/l1-model-runtime.md', status: 'modified' },
+                { path: '.design/main/specifications/l2-model-runtime.md', status: 'modified' },
+            ]);
+            assert.doesNotMatch(multi, /model-runtime/, 'multi-spec branch must stay generic');
+
+            // No other branch may regress into interpolating an identifier.
+            const runBullet = buildChangelogBullet('run', 'main', [
+                { path: '.design/main/tasks/phase-7.md', status: 'modified' },
+            ]);
+            assert.doesNotMatch(runBullet, /phase-7/, 'run branch must not embed a task-file identifier');
         } finally {
             cleanup(tempDir);
         }
@@ -894,6 +1091,238 @@ describe('Magic Engine Scripts', () => {
 
             assert.match(state, /Overall: \[1\/1\]/, 'placeholder block must be recomputed from TASKS.md');
             assert.doesNotMatch(state, /\{filled\}|\{done\}/, 'template placeholder counters must not survive as narrative');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('computeProgress emits a phase counter for the two-level task layout (SC-2.3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+
+            // Registry-only TASKS.md: no inline `### Phase N Checklist` heading.
+            // This is the canonical layout, so the phase line must come from the
+            // phase file — deriving it from the inline heading alone produced an
+            // aggregate-only block for every project on the modern format.
+            fs.writeFileSync(tasksPath, [
+                '# Master Task Index',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                '| [Phase 3](tasks/phase-3.md) | Feature | `In Progress` |',
+                '',
+            ].join('\n'));
+
+            fs.writeFileSync(path.join(tasksDir, 'phase-3.md'), [
+                '---', 'phase: 3', 'status: In Progress', '---',
+                '',
+                '## Atomic Checklist',
+                '',
+                '- [x] [T-3A01] One',
+                '- [x] [T-3A02] Two',
+                '- [ ] [T-3A03] Three',
+                '- [ ] [T-3A04] Four',
+                '- [ ] [T-3A05] Five',
+                '',
+                '## Detailed Tracking',
+                '',
+                '### [T-3A03] Three',
+                '',
+                '- **Notes:** the archiver looks for `- [ ]` lines; quoting one here',
+                '  must not inflate the count.',
+                '',
+            ].join('\n'));
+
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 3', '**Status:** Active', '',
+                '## Progress', '', '```', 'Overall: [0/2] ░░░░░░░░ 0%', '```', '',
+                '## Recent Decisions', '',
+            ].join('\n'));
+
+            updateState(wsDir, {}, { autoProgress: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(state, /Phase 3: \[2\/5\]/, 'phase counter must be derived from the phase file');
+            assert.match(state, /Overall: \[1\/2\]/, 'aggregate counter must still be recomputed');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('computeProgress preserves counter-shaped lines under labels the engine never writes (SC-2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = makeWorkspace(tempDir);
+
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
+                '### Phase 1 Checklist',
+                '',
+                '- [x] [T-1A01] One',
+                '- [ ] [T-1A02] Two',
+                '',
+                '## Registry',
+                '',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
+                '',
+            ].join('\n'));
+
+            // `Overall` and `Phase {N}` are the only labels computeProgress emits.
+            // Anything else sharing the shape is operator narrative: nothing
+            // regenerates it, so matching it as engine-owned means deleting it.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 1', '**Status:** Active', '',
+                '## Progress', '', '```',
+                'Phase 1: [0/2] ░░░░░░░░ 0%',
+                'Overall: [0/1] ░░░░░░░░ 0%',
+                'Specification: [3/3] complete',
+                'Plan: [1/1] complete',
+                'Implementation: [1/5] in progress — see notes below',
+                '```', '',
+                '## Recent Decisions', '',
+            ].join('\n'));
+
+            updateState(wsDir, {}, { autoProgress: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(state, /Phase 1: \[1\/2\]/, 'engine-owned phase counter must be regenerated');
+            assert.match(state, /Overall: \[0\/1\]/, 'engine-owned aggregate counter must be regenerated');
+            assert.match(state, /Specification: \[3\/3\] complete/, 'custom counter-shaped line must survive');
+            assert.match(state, /Plan: \[1\/1\] complete/, 'custom counter-shaped line must survive');
+            assert.match(
+                state, /Implementation: \[1\/5\] in progress — see notes below/,
+                'custom counter-shaped line must survive verbatim, trailing prose included'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('computeProgress leaves `$`-digit sequences in narrative untouched (SC-2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = makeWorkspace(tempDir);
+
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'),
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n');
+
+            // A string-form .replace() re-scans its own result for `$1`-`$9`,
+            // so a dollar amount in preserved narrative used to splice captured
+            // fence fragments into the middle of the note — corrupting the
+            // document's structure, not merely a counter's value.
+            const narrative = [
+                'Budget check: spend is $1,200 of the',
+                '$3,000 sprint allocation — on track.',
+            ];
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 1', '**Status:** Active', '',
+                '## Progress', '', '```',
+                'Overall: [0/1] ░░░░░░░░ 0%',
+                ...narrative,
+                '```', '',
+                '## Recent Decisions', '',
+            ].join('\n'));
+
+            const before = (fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8').match(/```/g) || []).length;
+            updateState(wsDir, {}, { autoProgress: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            for (const line of narrative) {
+                assert.ok(
+                    state.includes(line),
+                    `narrative line must survive byte-for-byte → missing "${line}"`
+                );
+            }
+            assert.strictEqual(
+                (state.match(/```/g) || []).length, before,
+                'the fence count must not change — an injected fence unbalances every section below it'
+            );
+            assert.doesNotMatch(state, /## Progress[\s\S]*## Progress/, 'no structural fragment may be spliced into the fence');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('the line-cap guard distinguishes a real prune from an exhausted one (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = makeWorkspace(tempDir);
+
+            const captureWarnings = (fn) => {
+                const original = console.warn;
+                const messages = [];
+                console.warn = (...args) => messages.push(args.join(' '));
+                try { fn(); } finally { console.warn = original; }
+                return messages.join('\n');
+            };
+
+            // Blocking Constraints grow monotonically by design and are never
+            // pruned, so they can push the file past the cap on their own. Once
+            // Recent Decisions is at its 1-entry floor the guard has nothing
+            // left to remove — and must say so instead of reusing the message
+            // that claims a prune happened.
+            const buildState = (decisionCount) => [
+                '# Project State', '',
+                '**Phase:** 1', '**Status:** Active', '',
+                '## Recent Decisions', '',
+                ...Array.from({ length: decisionCount }, (_, i) => `- 2026-01-0${i + 1} **Decision:** entry ${i + 1}`),
+                '',
+                '## Blocking Constraints', '',
+                ...Array.from({ length: 95 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+                '',
+            ].join('\n');
+
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), buildState(1));
+            const exhausted = captureWarnings(() => updateState(wsDir, {}, {}));
+
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), buildState(3));
+            const restored = captureWarnings(() => updateState(wsDir, {}, {}));
+
+            assert.match(exhausted, /exceeds 100 lines/, 'the cap breach must still be reported');
+            assert.match(restored, /exceeds 100 lines/, 'the cap breach must still be reported');
+            assert.notStrictEqual(
+                exhausted, restored,
+                'an exhausted guard must be observably different from a successful prune'
+            );
+            assert.match(exhausted, /nothing was pruned/, 'the exhausted case must say nothing was removed');
+            assert.match(exhausted, /Blocking Constraints/, 'the exhausted case must name the section to review');
+            assert.doesNotMatch(restored, /nothing was pruned/, 'a real prune must not claim exhaustion');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a task-scoped update leaves the phase-level Status field alone (SC-1.1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = makeWorkspace(tempDir);
+
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 1 — Bootstrap', '**Status:** Active', '',
+                '## Current Position', '',
+                '- **Task:** T-1A01 Scaffold the app',
+                '- **Next Action:** whatever', '',
+            ].join('\n'));
+
+            // `status` is the phase-level field and its vocabulary is
+            // Active | Blocked | Paused. One task finishing is not a phase
+            // transition, so the per-task patch carries no status at all.
+            updateState(wsDir, { task: 'T-1A02 Wire the parser', nextAction: 'Execute T-1A03' }, {});
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(state, /\*\*Status:\*\* Active/, 'the phase-level Status must survive a task-scoped update');
+            assert.match(state, /- \*\*Task:\*\* T-1A02 Wire the parser/, 'the task field must be updated');
+            assert.doesNotMatch(state, /\*\*Status:\*\* (Done|Cancelled|Todo)/, 'task vocabulary must never reach the phase field');
         } finally {
             cleanup(tempDir);
         }

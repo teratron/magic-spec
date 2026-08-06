@@ -28,7 +28,8 @@ Parse `[arg]` to determine execution mode:
    - `Blocking Constraints` non-empty → list each `[C-NNN]` and confirm acknowledgment.
    - `**Status:** Paused` → Resume Detection applies (see `context.md §4`).
    - After each task transitions to `Done` or `Blocked` → update STATE.md via:
-     `node .magic/scripts/executor.js update-state --workspace={active-workspace} --task="{T-ID} {Task Title}" --status={Done|Blocked} --next-action="{next task title}"`
+     `node .magic/scripts/executor.js update-state --workspace={active-workspace} --task="{T-ID} {Task Title}" --next-action="{next task title}"`
+     Pass **no** `--status=` here. That flag targets the top-level `**Status:**` field, whose vocabulary is `Active | Blocked | Paused` and whose scope is the phase, not a task; a task's own state is already authoritative in its checklist line and Detailed Tracking entry.
    - After Phase Complete → update `--phase="{N+1} — {Phase Name}"` and `--status=Active`.
    - STATE.md update is part of Step 4 (Update) — never skip.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).

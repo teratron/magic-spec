@@ -1,6 +1,6 @@
 # Master Task Index (Registry)
 
-**Version:** 1.19.0
+**Version:** 1.19.1
 **Generated:** 2026-08-06
 **Based on PLAN:** .design/engine/PLAN.md v1.16.0
 **Based on RULES:** .design/RULES.md v1.9.0
@@ -9,13 +9,12 @@
 
 ## Overview
 
-Tactical registry of all phases and their statuses. Phases 2-14 are Done; 27 specs registered and Stable; engine at 2.1.62. Re-synced 2026-08-06 to INDEX v1.15.15, which carries nine spec amendments authored since PLAN v1.15.2 and never implemented — **Phases 15-16 are that implementation backlog**, not new scope. Phase 15 closes the eight `Required Fix` blocks in l2-engine-finalization 1.10.0 §7-§10 (SC-1.2, SC-2.1(a), SC-2.3, SC-3.1, RC-11), all re-verified present in engine 2.1.62; Phase 16 deploys the two prose-only amendments (WI-10 documentation parity, RC-12 scaffold-removal check). The phases are file-independent but share `.magic/.checksums`, so they execute serially. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10, the §8.7 known gap, and the pending debt-ceiling convention are tracked in PLAN.md Backlog with their routing.
+Tactical registry of all phases and their statuses. Phases 2-15 are Done; 27 specs registered and Stable; engine at 2.1.63. Re-synced 2026-08-06 to INDEX v1.15.15, which carried nine spec amendments authored since PLAN v1.15.2 and never implemented — **Phases 15-16 are that implementation backlog**, not new scope. Phase 15 closed the eight `Required Fix` blocks in l2-engine-finalization 1.10.0 §7-§10 (SC-1.2, SC-2.1(a), SC-2.3, SC-3.1, RC-11), all re-verified present in engine 2.1.62 before execution; harness 34 → 43. Phase 16 remains: the two prose-only amendments (WI-10 documentation parity, RC-12 scaffold-removal check). The phases are file-independent but share `.magic/.checksums`, so they execute serially. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10, the §8.7 known gap, and the pending debt-ceiling convention are tracked in PLAN.md Backlog with their routing.
 
 ## Active Phases
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 15](tasks/phase-15.md) | Finalize-Pipeline Accuracy & Generator Containment — §7-§10 fixes + 8 harness cases | `Todo` |
 | [Phase 16](tasks/phase-16.md) | Documentation Parity & Scaffold Boundary — WI-10 init surfaces + RC-12 §4.4 check | `Todo` |
 
 ## Completed Phases
@@ -35,6 +34,7 @@ Tactical registry of all phases and their statuses. Phases 2-14 are Done; 27 spe
 | [Phase 12](archives/tasks/phase-12.md) | Wrapper-Body Parity Check (R4) — WRAPPER_BODY_DRIFT in analyze Mode C | `Done (Archived)` |
 | [Phase 13](archives/tasks/phase-13.md) | Upgrade-Detection DA Alignment — §1 `[y/n]` → single-path narration | `Done (Archived)` |
 | [Phase 14](archives/tasks/phase-14.md) | Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill | `Done (Archived)` |
+| [Phase 15](archives/tasks/phase-15.md) | Finalize-Pipeline Accuracy & Generator Containment — §7-§10 fixes + 9 harness cases | `Done (Archived)` |
 
 ## Backlog
 

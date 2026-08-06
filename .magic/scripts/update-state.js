@@ -146,19 +146,33 @@ function updateState(designDir, patch, options = {}) {
                 const progressRe = /(## Progress\s*\n+```\r?\n)([\s\S]*?)(\r?\n```)/;
                 const existing = content.match(progressRe);
                 if (existing) {
-                    // Only counter lines (`Label: [d/t] …`, including template
-                    // `{filled}/{total}` placeholders) are engine-owned and
-                    // recomputed. Any other line inside the fence is treated as
-                    // hand-authored narrative and preserved below the counters —
-                    // the recompute merges, it never clobbers.
-                    const counterRe = /^[^:\n]+:\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/;
+                    // Only the two labels `computeProgress()` itself emits are
+                    // engine-owned and recomputed (including their template
+                    // `{filled}/{total}` placeholder form). Any other line inside
+                    // the fence is hand-authored narrative and is preserved below
+                    // the counters — the recompute merges, it never clobbers.
+                    // The label set is closed on purpose: an open class matched
+                    // operator lines that merely share the counter shape, and
+                    // since nothing regenerates those labels, matching them meant
+                    // deleting them. The phase label also has a placeholder form
+                    // (`Phase {N}`) — that is the shape a freshly bootstrapped
+                    // STATE.md carries, and it is engine-owned like the rest.
+                    const counterRe =
+                        /^(?:Overall|Phase (?:\d+|\{[^}]*\})):\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/;
                     const preserved = existing[2]
                         .split(/\r?\n/)
                         .filter((l) => l.trim() !== '' && !counterRe.test(l));
                     const body = preserved.length > 0
                         ? `${progress}\n${preserved.join('\n')}`
                         : progress;
-                    content = content.replace(progressRe, `$1${body}$3`);
+                    // Function-form replacement: the returned string is used
+                    // verbatim. A string-form replacement would re-scan the whole
+                    // result for `$1`-`$9`/`` $` ``/`$'`/`$&`, and `body` carries
+                    // unconstrained narrative — a literal `$1` in an operator's
+                    // note would splice a captured fence fragment into the middle
+                    // of the file and unbalance its code fences.
+                    content = content.replace(progressRe, (_match, open, _oldBody, close) =>
+                        `${open}${body}${close}`);
                 }
             }
         } catch (e) {
@@ -168,10 +182,18 @@ function updateState(designDir, patch, options = {}) {
 
     // ───────────────────────────────────────────────────────────────────────
     // Line-count guard (100 lines max) — prune oldest decision
+    //
+    // `## Recent Decisions` is the only section this guard can prune, and it has
+    // a floor of one entry. `## Blocking Constraints` grows monotonically by
+    // design (the template marks it MANDATORY reading, so entries are never
+    // dropped silently), which means the cap can be exceeded with nothing left
+    // to remove. That state is reported distinctly instead of reusing the
+    // routine-prune message: an operator told "pruning" while the file keeps
+    // growing has no signal that the cap stopped holding.
     // ───────────────────────────────────────────────────────────────────────
     const lines = content.split('\n');
     if (lines.length > 100) {
-        console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruning oldest decision.`);
+        let pruned = false;
         const secStart = content.indexOf('## Recent Decisions');
         const secEnd = content.indexOf('\n## ', secStart + 1);
         if (secStart !== -1 && secEnd !== -1) {
@@ -179,7 +201,17 @@ function updateState(designDir, patch, options = {}) {
             const decLines = block.split('\n').filter(l => /^- \d{4}-\d{2}-\d{2}/.test(l));
             if (decLines.length > 1) {
                 content = content.replace(decLines[decLines.length - 1] + '\n', '');
+                pruned = true;
             }
+        }
+        if (pruned) {
+            console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`);
+        } else {
+            console.warn(
+                `[update-state] STATE.md exceeds 100 lines (${lines.length}) and ## Recent Decisions ` +
+                'is already at its floor — nothing was pruned. ' +
+                'Review ## Blocking Constraints and archive stale entries.'
+            );
         }
     }
 
@@ -210,12 +242,35 @@ function progressLine(label, done, total) {
 }
 
 /**
+ * Reads the active phase's checklist from the canonical two-level task layout
+ * (`tasks/phase-{N}.md`), for workspaces whose TASKS.md carries no inline
+ * `### Phase {N} Checklist` heading.
+ *
+ * Fenced blocks and inline code-spans are stripped first: these files routinely
+ * quote checkbox syntax while discussing it, and counting those quotations would
+ * inflate the total — the same false-positive class that once suppressed
+ * archival eligibility.
+ *
+ * @param {string} designDir  Path to .design/{workspace} directory.
+ * @param {string} n          Active phase number.
+ * @returns {string|null} Checklist source text, or null when no such file exists.
+ */
+function readPhaseChecklist(designDir, n) {
+    const phasePath = path.join(designDir, 'tasks', `phase-${n}.md`);
+    if (!fs.existsSync(phasePath)) return null;
+    return fs.readFileSync(phasePath, 'utf8')
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/`[^`]*`/g, '');
+}
+
+/**
  * Recomputes the STATE.md Progress block from TASKS.md. Best-effort: any
  * unparsable structure yields `null` and the existing block is preserved.
  *
  * Sources:
- * - Active-phase line: `### Phase {N} Checklist` items in TASKS.md, where
- *   `{N}` is taken from the STATE.md `**Phase:**` field.
+ * - Active-phase line: `### Phase {N} Checklist` items in TASKS.md (legacy
+ *   single-file layout), falling back to `tasks/phase-{N}.md` (canonical
+ *   two-level layout). `{N}` is taken from the STATE.md `**Phase:**` field.
  * - Overall line: `| [Phase {N}](...)` registry rows in TASKS.md; a row
  *   counts as done when it contains the `Done` status keyword.
  *
@@ -234,9 +289,14 @@ function computeProgress(designDir, stateContent) {
     if (phaseMatch) {
         const n = phaseMatch[1];
         const section = tasks.match(new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`));
-        if (section) {
-            const done = (section[1].match(/^- \[x\]/gim) || []).length;
-            const open = (section[1].match(/^- \[ \]/gm) || []).length;
+        // The inline heading exists only in the legacy single-file layout. On the
+        // canonical two-level layout the checklist lives in tasks/phase-{N}.md,
+        // so without the fallback no phase line is ever produced there and the
+        // block silently degrades to the aggregate `Overall` counter alone.
+        const checklist = section ? section[1] : readPhaseChecklist(designDir, n);
+        if (checklist) {
+            const done = (checklist.match(/^- \[x\]/gim) || []).length;
+            const open = (checklist.match(/^- \[ \]/gm) || []).length;
             if (done + open > 0) lines.push(progressLine(`Phase ${n}`, done, done + open));
         }
     }

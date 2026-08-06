@@ -4,30 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-06 15:55
-**Phase:** 15 — Finalize-Pipeline Accuracy & Generator Containment
+**Updated:** 2026-08-06 16:18
+**Phase:** 16 — Documentation Parity & Scaffold Boundary
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Execute T-15A01 Phase-counter fallback to the two-level task layout (SC-2.3) via /magic.run engine
+- **Next Action:** Execute T-16A01 Correct the `STATE.md` bootstrap claim on every `init.md` surface (WI-10) via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [13/15] ███████░ 87%
+Phase 16: [0/5] ░░░░░░░░ 0%
+Overall: [14/15] ███████░ 93%
 ```
 
 ## Recent Decisions
+- 2026-08-06 **Decision:** Phase 15 complete. Provides: two-level progress counters, narrative-safe fence merge, distinct line-cap exhaustion warning, Blocked-phase next-action guard, full changed-file visibility in finalize, generator containment. Engine 2.1.63, harness 43/43.
 - 2026-08-06 **Decision:** Phase 14 complete. Provides: extension-aware skill projection; zero MAGIC.md case drift in shipped artifacts; docs/ covers graph+status; 0 orphaned conventions. Engine 2.1.62, harness 34/34.
 
 - 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
 
 - 2026-06-13 **Decision:** l2-release-pipeline.md registered as Completed Baseline (retrospec, no execution); R8 documented in §5.3; PLAN 1.14.0, TASKS 1.17.2
 - 2026-06-13 **Decision:** Phase 13 complete. Provides: rules/magic.md §1 DA-8/DA-9-aligned (no [y/n]); README updated; engine 2.1.41 (rules-only, no bump). Findings R8/R9 to backlog
-- 2026-06-13 **Decision:** Phase 13 planned: align rules/magic.md §1 with DA-8/DA-9 (remove [y/n]); README + hardlink; 3 tasks
 
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
