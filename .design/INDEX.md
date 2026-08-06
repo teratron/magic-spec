@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.3.22
+**Version:** 1.3.23
 **Status:** Active
-**Engine Version:** 2.1.55
+**Engine Version:** 2.1.61
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.23 | 2026-08-06 | Agent | Ventilation: engine snapshot ratified 2.1.55 → 2.1.61 (v2.1.56–2.1.61 finalization/containment fixes). |
 | 1.3.21 | 2026-07-25 | Agent | Engine workspace spec count 25 → 27: added l1-multi-angle-review.md and l2-multi-angle-review.md (LLM Council multi-angle review & decision synthesis protocol). |
 | 1.3.20 | 2026-06-13 | Agent | Engine workspace spec count 24 → 25: added l2-release-pipeline.md (retrospec of the GitHub Release CI; documents engine-version tracking constraint, consolidating R8). No code change — documents existing stable CI. |
 | 1.3.19 | 2026-06-13 | Agent | l1-decision-autonomy.md 1.2.0: DA-9 extended to drift-revalidation offers (Engine Upgrade Detection §1 binds DA-8/DA-9 — one path, no `[y/n]`). Engine deployment (rules/magic.md §1 + README) queued for /magic.task → /magic.run. |

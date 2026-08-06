@@ -1,19 +1,21 @@
 # Master Task Index (Registry)
 
-**Version:** 1.17.4
-**Generated:** 2026-07-10
-**Based on PLAN:** .design/engine/PLAN.md v1.14.2
+**Version:** 1.18.0
+**Generated:** 2026-08-06
+**Based on PLAN:** .design/engine/PLAN.md v1.15.0
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 12 phases (2-13) are Done; 25 specs registered and Stable; engine at 2.1.55. Re-synced 2026-07-10 to INDEX v1.15.4 (l2-test-suite 1.5.1 reality-sync; convention traceability bindings C8→l2-engine-finalization 1.2.1, C11→l2-test-suite 1.5.2, C17→l2-release-pipeline 1.0.1) and RULES v1.9.0 (C23 §2 quantification) — no new scope. Phase 13 aligned `rules/MAGIC.md` §1 Engine Upgrade Detection with the Decision Autonomy protocol (no `[y/n]` prompt). l2-release-pipeline.md added as a Completed (Baseline) retrospec (no execution — CI pre-exists). R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`.
+Tactical registry of all phases and their statuses. Phases 2-13 are Done; 27 specs registered and Stable; engine at 2.1.61. Re-synced 2026-08-06 to INDEX v1.15.5: the two multi-angle-review specs were registered but absent from the plan — both are now Completed (Baseline) retrospecs, since MA-1..MA-5 were verified live in the engine bodies. Nine archived-phase links in PLAN.md were repaired (the archiver gained its PLAN.md rewrite after those phases had already moved, so the backfill was never applied). **Phase 14 opens new scope** from the 2026-08-06 ventilation: references inside shipped artifacts that do not resolve on a case-sensitive filesystem, and a documentation set that under-reports the command surface it documents. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`.
 
 ## Active Phases
 
-*None — plan complete. New scope enters via `/magic.spec` → `/magic.task`.*
+| Phase | Description | Status |
+| --- | --- | --- |
+| [Phase 14](tasks/phase-14.md) | Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill | `Todo` |
 
 ## Completed Phases
 
@@ -38,5 +40,5 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 12 ph
 
 ## Meta Information
 
-- **Last Updated**: 2026-07-10
+- **Last Updated**: 2026-08-06
 - **Maintainer**: Core Team

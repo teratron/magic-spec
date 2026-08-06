@@ -4,20 +4,20 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-07-10 19:35
-**Phase:** 13 — Upgrade-Detection DA Alignment
+**Updated:** 2026-08-06 09:41
+**Phase:** 14 — Shipped Reference Hygiene & Documentation Sync
 **Status:** Active
 
 ## Current Position
 
 - **Task:** l2-release-pipeline registered (baseline retrospec)
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Plan complete — author new scope via /magic.spec engine (or /magic.status for a briefing)
+- **Next Action:** Execute T-14A01 Preserve file extensions in the skill-wrapper body normalizer via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [12/12] ████████ 100%
+Overall: [12/13] ███████░ 92%
 ```
 
 ## Recent Decisions
