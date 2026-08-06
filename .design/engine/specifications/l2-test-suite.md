@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -40,6 +40,8 @@ Maintain high reliability of the engine core through automated and cognitive reg
 - **SC-3 non-bumping commit suggestion** — significance miss + dirty tree emits exactly one labeled suggestion; no version bump, no CHANGELOG entry, no write-side git.
 - **`update-state.js --auto-progress`** — the Progress block is recomputed from `TASKS.md`.
 - **SC-2.3 progress granularity (two-level layout)** — `computeProgress()` against a `tasks/phase-{N}.md`-format fixture (no inline `### Phase {N} Checklist` in `TASKS.md`) must still produce a `Phase {N}: […]` counter line, not only the aggregate `Overall` line. The prior fixture set only ever exercised the legacy inline-heading format, so this gap was invisible to the existing coverage.
+- **SC-1.1 Status field scope** — a per-task `update-state` call (`--task=`, no `--status=`) must leave the phase-level `Status` field unchanged. The regression that motivated this case passed `--status=Done` alongside `--task=` and the phase field became `Done` — a value outside its own documented vocabulary — after one task of a five-task phase completed.
+- **Progress narrative preservation (over-classification)** — `computeProgress()`'s merge step, given a `## Progress` fence containing custom counter-shaped lines (e.g. `Specification: [3/3] complete`, `Plan: [1/1] complete`) alongside `Overall`/`Phase {N}`, must preserve the custom lines untouched and regenerate only `Overall`/`Phase {N}`. The prior fixture set never included a counter-shaped line under any label other than the two the engine itself emits, so a classifier matching on shape rather than exact label went unpinned.
 - **RC-11 generator-containment contract** (`l1-sdd-reference-containment.md`) — `buildChangelogBullet('spec', …)`'s single-spec branch must not embed a spec's artifact ID in its return value; asserted directly against the function's output, not against the shipped CHANGELOG.md (which only a real invocation touches).
 
 A finalize-pipeline change merged without harness coverage of the touched branch is a test-suite gap.
@@ -61,6 +63,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.10.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate gained two more cases from a second field report (engine 2.1.58): **SC-1.1 Status field scope** — a per-task `update-state` call must not touch the phase-level `Status` field; and **Progress narrative preservation** — hand-authored counter-shaped lines under labels other than `Overall`/`Phase {N}` must survive `computeProgress()`'s merge step, not be silently deleted by an over-broad shape-based classifier. |
 | 1.9.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate gained two cases from one field report (engine 2.1.58): **SC-2.1(a) Blocked-phase precedence** — a Blocked two-level-format phase with an open checklist item must not yield an execute-style `Next Action`; and **SC-2.3 progress granularity** — `computeProgress()` must produce a per-phase counter for the canonical two-level task layout, not only the legacy inline-heading format the existing fixtures exclusively exercised. |
 | 1.8.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with **RC-11 generator-containment**: `buildChangelogBullet()`'s single-spec branch interpolated a spec's artifact ID into text written to root `CHANGELOG.md`, undetected because no prior mandate covered a generator's own return value (as opposed to the shipped-text contracts above, which cover prose an agent authors). Field report against engine 2.1.49. |
 | 1.7.0 | 2026-08-06 | Agent | Added the **shipped-text contract coverage** mandate: where engine behavior has no code (the SDD containment scan is a cognitive grep, so its prose statement is the implementation), the harness asserts the contract over the shipped text. Pins RC-2.1 notation independence across rules/magic.md, .magic/analyze.md, and both containment role cards, plus the existing executor-parsable --workspace contract. |
