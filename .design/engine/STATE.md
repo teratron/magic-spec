@@ -4,20 +4,20 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-06 13:57
-**Phase:** 14 — Shipped Reference Hygiene & Documentation Sync
+**Updated:** 2026-08-06 15:55
+**Phase:** 15 — Finalize-Pipeline Accuracy & Generator Containment
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-15A01 Phase-counter fallback to the two-level task layout (SC-2.3) via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [13/13] ████████ 100%
+Overall: [13/15] ███████░ 87%
 ```
 
 ## Recent Decisions

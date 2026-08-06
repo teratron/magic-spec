@@ -1,19 +1,22 @@
 # Master Task Index (Registry)
 
-**Version:** 1.18.2
+**Version:** 1.19.0
 **Generated:** 2026-08-06
-**Based on PLAN:** .design/engine/PLAN.md v1.15.2
+**Based on PLAN:** .design/engine/PLAN.md v1.16.0
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 13 phases (2-14) are Done; 27 specs registered and Stable; engine at 2.1.62. Re-synced 2026-08-06 to INDEX v1.15.6 (l1-engine-core 1.1.4 — C6/C10 convention bindings; l2-multi-angle-review 1.0.1 — Canonical References backfill) and PLAN v1.15.2 (resolved `docs/workspaces.md` backlog item dropped — closed by Phase 14's inline example, not a dedicated page) — no new scope. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10 (phase-archiver PLAN.md link-label cosmetic drift) tracked in PLAN.md Backlog.
+Tactical registry of all phases and their statuses. Phases 2-14 are Done; 27 specs registered and Stable; engine at 2.1.62. Re-synced 2026-08-06 to INDEX v1.15.15, which carries nine spec amendments authored since PLAN v1.15.2 and never implemented — **Phases 15-16 are that implementation backlog**, not new scope. Phase 15 closes the eight `Required Fix` blocks in l2-engine-finalization 1.10.0 §7-§10 (SC-1.2, SC-2.1(a), SC-2.3, SC-3.1, RC-11), all re-verified present in engine 2.1.62; Phase 16 deploys the two prose-only amendments (WI-10 documentation parity, RC-12 scaffold-removal check). The phases are file-independent but share `.magic/.checksums`, so they execute serially. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10, the §8.7 known gap, and the pending debt-ceiling convention are tracked in PLAN.md Backlog with their routing.
 
 ## Active Phases
 
-*None — plan complete. New scope enters via `/magic.task`.*
+| Phase | Description | Status |
+| --- | --- | --- |
+| [Phase 15](tasks/phase-15.md) | Finalize-Pipeline Accuracy & Generator Containment — §7-§10 fixes + 8 harness cases | `Todo` |
+| [Phase 16](tasks/phase-16.md) | Documentation Parity & Scaffold Boundary — WI-10 init surfaces + RC-12 §4.4 check | `Todo` |
 
 ## Completed Phases
 
@@ -35,7 +38,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 13 ph
 
 ## Backlog
 
-*None — all other registered specs are implemented and Stable.*
+*None at phase level — all registered specs are Stable and either implemented or scheduled in Phases 15-16. Open non-phase items (R10, the §8.7 known gap, the pending debt-ceiling convention) are tracked in [PLAN.md](PLAN.md) Backlog.*
 
 ## Meta Information
 
