@@ -1,15 +1,15 @@
 # Master Task Index (Registry)
 
-**Version:** 1.18.1
+**Version:** 1.18.2
 **Generated:** 2026-08-06
-**Based on PLAN:** .design/engine/PLAN.md v1.15.1
+**Based on PLAN:** .design/engine/PLAN.md v1.15.2
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. Phases 2-13 are Done; 27 specs registered and Stable; engine at 2.1.61. Re-synced 2026-08-06 to INDEX v1.15.5: the two multi-angle-review specs were registered but absent from the plan — both are now Completed (Baseline) retrospecs, since MA-1..MA-5 were verified live in the engine bodies. Nine archived-phase links in PLAN.md were repaired (the archiver gained its PLAN.md rewrite after those phases had already moved, so the backfill was never applied). **Phase 14 opens new scope** from the 2026-08-06 ventilation: references inside shipped artifacts that do not resolve on a case-sensitive filesystem, and a documentation set that under-reports the command surface it documents. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`.
+Tactical registry of all phases and their statuses. **Plan complete**: all 13 phases (2-14) are Done; 27 specs registered and Stable; engine at 2.1.62. Re-synced 2026-08-06 to INDEX v1.15.6 (l1-engine-core 1.1.4 — C6/C10 convention bindings; l2-multi-angle-review 1.0.1 — Canonical References backfill) and PLAN v1.15.2 (resolved `docs/workspaces.md` backlog item dropped — closed by Phase 14's inline example, not a dedicated page) — no new scope. R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10 (phase-archiver PLAN.md link-label cosmetic drift) tracked in PLAN.md Backlog.
 
 ## Active Phases
 

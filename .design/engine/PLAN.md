@@ -1,6 +1,6 @@
 # Implementation Plan
 
-**Version:** 1.15.1
+**Version:** 1.15.2
 **Generated:** 2026-08-06
 **Based on:** .design/engine/INDEX.md v1.15.6
 **Status:** Active
@@ -119,7 +119,6 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 ## Backlog
 
 - **R10 — phase archiver rewrites the link target but not its label** (found 2026-08-06): `updatePlanIndex()` in `phase-archiver.js` replaces `(tasks/phase-N.md)` with `(archives/tasks/phase-N.md)` and leaves the `[tasks/phase-N.md]` label untouched, yielding a working link whose text contradicts its destination. Cosmetic, not a broken link, so it never surfaces in a link sweep — which is why it survived. Fix is a one-line companion replacement; hand-normalized for Phase 14. `updateTasksIndex()` is unaffected (its label is a phase number, not a path).
-- **`docs/workspaces.md` — page referenced but never authored**: `docs/README.md` links `./workspaces.md` for Magic Workspaces configuration. Scheduled as part of T-14C03, which may resolve it by inlining rather than authoring; if the workspace configuration surface grows, revisit as a dedicated page.
 - **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection. (Phase 13 removes the *prompt* friction; the drift recurrence itself remains a separate refinement.)
 - **R8 — `rules/` + `skills/` outside C14 tracking** — DOCUMENTED (not fixed): captured as the engine-version tracking constraint in [l2-release-pipeline.md](specifications/l2-release-pipeline.md) §5.3 + §7. Broadening the checksum manifest was deferred (load-bearing, churn risk); the operating rule is "deliberate L1-only releases bump the version explicitly." Revisit only if an isolated `rules/`/`skills/` release is needed.
 - **R9 — AGENTS-family hardlinks delinked** (found 2026-06-13): the root agent rule cards (`AGENTS.md` ↔ `CLAUDE/GEMINI/QWEN/CODEX.md`) show `nlink=2` (only CLAUDE linked); GEMINI/QWEN/CODEX dropped during the session. Non-strict (validate-hardlinks passes) but real. Restore via `/magic.dev.init`.
