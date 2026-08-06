@@ -510,6 +510,119 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b. check-prerequisites.js — registry cross-reference ignores quoted
+    //     mentions and bounds its capture to the filename grammar (SH-1, SH-4)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js registry cross-reference is scan-hygiene compliant (SH-1, SH-4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            const specsDir = path.join(designDir, 'specifications');
+            fs.mkdirSync(specsDir, { recursive: true });
+
+            fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                '# Index\n\n| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |\n'
+            );
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+
+            // A genuine link, plus (a) a Backlog-style parenthetical quoting several
+            // template placeholder paths in individual code spans — the exact shape
+            // that produced a false REGISTRY_MISMATCH for a nonexistent spec — and
+            // (b) a genuinely unregistered pair mentioned unquoted, comma-separated.
+            // (b) must still fire: SH-1 exempts what is quoted, not what is merely
+            // unbracketed. What SH-4 fixes is *how* it fires — two bounded findings
+            // naming `a.md` and `b.md` individually, not one swallowing the comma,
+            // the trailing prose, and every quoted token that follows on later lines.
+            fs.writeFileSync(path.join(designDir, 'PLAN.md'), [
+                '# Plan',
+                '- [x] real spec ([l1-real.md](specifications/l1-real.md))',
+                '- unquoted mention: specifications/a.md, specifications/b.md in prose',
+                '- placeholder note (`main/INDEX.md`, `specifications/{spec.md}`, `other-spec.md`, `tasks/phase-{N}.md`)',
+                '',
+            ].join('\n'));
+
+            generateChecksums(tempDir);
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const result = JSON.parse(
+                execSync(`node "${scriptPath}" --json --require-specs`, { cwd: tempDir, encoding: 'utf8' })
+            );
+
+            const mismatches = result.warnings.filter(w => w.type === 'REGISTRY_MISMATCH');
+            assert.deepStrictEqual(
+                mismatches.map(w => w.message.match(/^'([^']+)'/)[1]).sort(),
+                ['a.md', 'b.md'],
+                `must report exactly the two unquoted, unregistered files — bounded individually, nothing merged or quoted → ${JSON.stringify(mismatches)}`
+            );
+            assert.ok(
+                !mismatches.some(w => /spec\.md|other-spec|phase-\{N\}|main\/INDEX/.test(w.message)),
+                'no quoted placeholder token may appear in a finding, merged or otherwise'
+            );
+            assert.ok(
+                !result.warnings.some(w => w.type === 'ORPHANED_SPEC'),
+                'the genuinely-linked real spec must still be recognized as covered'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6c. scan-hygiene.js — shared strip-before-match helper (SH-1, SH-2, SH-5)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('scan-hygiene.js stripQuoted removes fenced and inline-quoted content, preserving line count', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { stripQuoted } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'));
+
+            const input = [
+                'a',
+                '```',
+                '- [ ] quoted in a fence',
+                '```',
+                'b `- [ ] quoted in a span` c',
+                '> a blockquoted - [ ] item survives',
+                '<!-- an HTML comment - [ ] also survives -->',
+            ].join('\n');
+
+            const out = stripQuoted(input);
+            const outLines = out.split('\n');
+
+            assert.strictEqual(outLines.length, input.split('\n').length, 'line count must be preserved');
+            assert.doesNotMatch(outLines[2], /- \[ \]/, 'fenced content must not survive');
+            assert.doesNotMatch(outLines[4], /- \[ \]/, 'inline-span content must not survive');
+            assert.match(outLines[5], /blockquoted - \[ \] item survives/, 'blockquotes are out of scope (§2) and must be untouched');
+            assert.match(outLines[6], /HTML comment - \[ \] also survives/, 'HTML comments are out of scope (§2) and must be untouched');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('scan-hygiene.js stripQuoted removes fences before spans (a stray backtick inside a fence must not swallow trailing text)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { stripQuoted } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'));
+
+            // A fence containing a single backtick would, if spans were stripped
+            // first, be read as an unterminated span delimiter and swallow every-
+            // thing up to the next real backtick — including the sentinel below.
+            const input = [
+                '```',
+                'a single ` backtick inside a fence',
+                '```',
+                'SENTINEL should survive `this real span`',
+            ].join('\n');
+
+            const out = stripQuoted(input);
+            assert.match(out, /SENTINEL should survive/, 'fence-first ordering must not let a stray backtick swallow trailing content');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 7. update-state.js
     // ───────────────────────────────────────────────────────────────────────────
     test('update-state.js should bootstrap, patch fields and append decision/constraint', () => {

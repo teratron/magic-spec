@@ -13,9 +13,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 15 ph
 
 ## Active Phases
 
-| Phase | Description | Status |
-| --- | --- | --- |
-| [Phase 17](tasks/phase-17.md) | Scan Input Hygiene — shared strip helper + SH-1/SH-3/SH-4 bindings across four scans | `Todo` |
+*None — plan complete. New scope enters via `/magic.task`.*
 
 ## Completed Phases
 
@@ -36,6 +34,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 15 ph
 | [Phase 14](archives/tasks/phase-14.md) | Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill | `Done (Archived)` |
 | [Phase 15](archives/tasks/phase-15.md) | Finalize-Pipeline Accuracy & Generator Containment — §7-§10 fixes + 9 harness cases | `Done (Archived)` |
 | [Phase 16](archives/tasks/phase-16.md) | Documentation Parity & Scaffold Boundary — WI-10 init surfaces + RC-12 §4.4 check | `Done (Archived)` |
+| [Phase 17](archives/tasks/phase-17.md) | Scan Input Hygiene — shared strip helper + SH-1/SH-3/SH-4 bindings across four scans | `Done (Archived)` |
 
 ## Backlog
 

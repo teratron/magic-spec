@@ -1,6 +1,6 @@
 # Scan Input Hygiene
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -54,11 +54,14 @@ Rules that Layer 2 implementations MUST NOT violate:
 
 | Surface | Kind | Bound by | State |
 | --- | --- | --- | --- |
-| Archival eligibility predicate | script | SH-1, SH-2 | Compliant — strips fences and spans, then matches a line-anchored pattern |
-| Registry cross-reference in the prerequisite check | script | SH-1, SH-2, SH-4 | **Non-compliant** — matches raw content with a punctuation-bounded capture |
-| Link integrity sweep (ventilation) | cognitive | SH-3 | **Non-compliant** — resolves template sources against the filesystem |
-| Reference containment scan (ventilation) | cognitive | SH-1 | Partial — its own spec carves out illustrative examples; the general rule is unstated |
+| Archival eligibility predicate | script | SH-1, SH-2 | Compliant — calls the shared `stripQuoted()` helper, then matches a line-anchored pattern |
+| Registry cross-reference in the prerequisite check | script | SH-1, SH-2, SH-4 | Compliant — strips via the shared helper, then matches a filename-grammar-bounded capture |
+| Link integrity sweep (ventilation) | cognitive | SH-3 | Compliant — `.magic/templates/` excluded from resolution by file role |
+| Reference containment scan (ventilation) | cognitive | SH-1 | Compliant — the boundary is stated once as a precondition on the match-class list |
 | Progress-counter classification | script | SH-4 | Compliant — the label set is closed to what the writer emits |
+| Phase-checklist reader (`update-state.js`) | script | SH-1, SH-2 | Compliant — calls the shared `stripQuoted()` helper |
+
+`stripQuoted()` (`.magic/scripts/lib/scan-hygiene.js`) is the SH-5 shared implementation for script scans; both compliant script rows above call it rather than carrying their own copy.
 
 A surface added later is bound by default. The table records state, not scope: a scan is not exempt by omission.
 
@@ -126,4 +129,5 @@ For those, the containing specification states its own carve-out and the audit a
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-07 | Agent | §4 enforcement-surface table updated to Compliant across all rows: the shared `stripQuoted()` helper (SH-5) now backs both script scans, the link-integrity sweep excludes `.magic/templates/` (SH-3), and the containment scan states SH-1 once as a match-class precondition instead of a local carve-out. New row for the phase-checklist reader, previously undocumented as a strip-copy site. Implements Phase 17. |
 | 1.0.0 | 2026-08-06 | Agent | Initial Stable. Defines SH-1..SH-5 after the same root cause produced a fourth defect in a fourth subsystem: archival eligibility (fixed locally), the registry cross-reference (open — found by writing a Backlog entry that quoted placeholder paths and watching the checker report a nonexistent spec), the ventilation link sweep against template sources (open), and the reference containment scan against fixture literals (handled ad hoc per audit). Records the enforcement-surface table with per-surface compliance state, and §5.3's boundary: stripping removes the syntactic cases so that judgment is spent only on the semantic ones. |

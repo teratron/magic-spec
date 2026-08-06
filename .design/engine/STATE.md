@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-06 20:53
+**Updated:** 2026-08-06 21:10
 **Phase:** 17 — Scan Input Hygiene
 **Status:** Active
 
@@ -12,23 +12,22 @@
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Execute T-17A01 Extract the strip step into one shared helper (SH-2, SH-5) via /magic.run engine
+- **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Phase 17: [0/7] ░░░░░░░░ 0%
-Overall: [15/16] ████████ 94%
+Overall: [15/15] ████████ 100%
 ```
 
 ## Recent Decisions
+- 2026-08-06 **Decision:** Phase 17 complete. Provides: shared scan-hygiene strip helper backing both compliant script scans; registry cross-reference SH-1/SH-4 fixed; link-integrity template exclusion; containment scan SH-1 precondition. Engine 2.1.65, harness 46/46. Plan complete.
 - 2026-08-06 **Decision:** Phase 16 complete. Provides: init.md documentation parity on all three claim surfaces + cognitive suite; RC-12 scaffold-removal check in ventilation and ambient rules. Engine 2.1.64, harness 43/43. Plan complete.
 - 2026-08-06 **Decision:** Phase 15 complete. Provides: two-level progress counters, narrative-safe fence merge, distinct line-cap exhaustion warning, Blocked-phase next-action guard, full changed-file visibility in finalize, generator containment. Engine 2.1.63, harness 43/43.
 - 2026-08-06 **Decision:** Phase 14 complete. Provides: extension-aware skill projection; zero MAGIC.md case drift in shipped artifacts; docs/ covers graph+status; 0 orphaned conventions. Engine 2.1.62, harness 34/34.
 
 - 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
 
-- 2026-06-13 **Decision:** l2-release-pipeline.md registered as Completed Baseline (retrospec, no execution); R8 documented in §5.3; PLAN 1.14.0, TASKS 1.17.2
 
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->

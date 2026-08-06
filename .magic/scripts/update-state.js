@@ -8,6 +8,7 @@
 const fs = require('fs');
 const path = require('path');
 const { parseFlags } = require('./utils');
+const { stripQuoted } = require('./lib/scan-hygiene');
 
 /**
  * Updates STATE.md with provided key-value patches.
@@ -258,9 +259,7 @@ function progressLine(label, done, total) {
 function readPhaseChecklist(designDir, n) {
     const phasePath = path.join(designDir, 'tasks', `phase-${n}.md`);
     if (!fs.existsSync(phasePath)) return null;
-    return fs.readFileSync(phasePath, 'utf8')
-        .replace(/```[\s\S]*?```/g, '')
-        .replace(/`[^`]*`/g, '');
+    return stripQuoted(fs.readFileSync(phasePath, 'utf8'));
 }
 
 /**

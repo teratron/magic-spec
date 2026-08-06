@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, mkdirSafe, isDryRun } = require('../utils');
+const { stripQuoted } = require('./scan-hygiene');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PHASE ARCHIVER (Shared Library)
@@ -37,10 +38,7 @@ function parseFrontmatter(content) {
  * @returns {boolean}
  */
 function allChecked(content) {
-    const stripped = content
-        .replace(/```[\s\S]*?```/g, '')  // fenced code blocks
-        .replace(/`[^`]*`/g, '');        // inline code-spans
-    return !/^\s*- \[ \]/m.test(stripped);
+    return !/^\s*- \[ \]/m.test(stripQuoted(content));
 }
 
 /**

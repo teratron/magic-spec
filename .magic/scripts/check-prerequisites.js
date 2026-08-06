@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { hashFile, normalizePath } = require('./utils');
 const { execSync } = require('child_process');
+const { stripQuoted } = require('./lib/scan-hygiene');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -127,6 +128,13 @@ if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status
 
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
+    // l1-scan-input-hygiene.md SH-1/SH-4: a spec filename quoted in a code
+    // span or fence (e.g. a Backlog entry illustrating a template placeholder)
+    // is a mention, not a reference — strip before matching, and bound the
+    // capture to the filename grammar so one match can't span several
+    // comma-separated tokens up to an unrelated closing paren.
+    const planContentForMatch = stripQuoted(planContent);
+    const specFilenameRe = /specifications\/([a-z0-9][a-z0-9-]*\.md)/g;
 
     const indexSpecMatches = [...indexContent.matchAll(/specifications\/([^)]*\.md)/g)];
     const indexSpecs = [...new Set(indexSpecMatches.map(m => m[1]))];
@@ -149,7 +157,7 @@ if (planExists && indexExists) {
             );
         }
 
-        if (!planContent.includes(spec)) {
+        if (!planContentForMatch.includes(spec)) {
             warn(
                 'ORPHANED_SPEC',
                 `'${spec}' is in INDEX.md but missing from PLAN.md.`,
@@ -158,7 +166,7 @@ if (planExists && indexExists) {
         }
     }
 
-    const planSpecMatches = [...planContent.matchAll(/specifications\/([^)]*\.md)/g)];
+    const planSpecMatches = [...planContentForMatch.matchAll(specFilenameRe)];
     const planSpecs = [...new Set(planSpecMatches.map(m => m[1]))];
 
     for (const pSpec of planSpecs) {

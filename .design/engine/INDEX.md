@@ -42,7 +42,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-release-pipeline.md](specifications/l2-release-pipeline.md) | GitHub Release CI: tag-driven build of the L1 archive, version source, publication/retry, engine-version tracking constraint (R8), adapter distribution reference (C17). | Stable | 2 | 1.0.1 |
 | [l1-multi-angle-review.md](specifications/l1-multi-angle-review.md) | Multi-Angle Review & Decision Synthesis Protocol: 5 evaluation lenses, blind cross-evaluation, context auto-enrichment, and structured synthesis. | Stable | 1 | 1.0.0 |
 | [l2-multi-angle-review.md](specifications/l2-multi-angle-review.md) | Multi-Angle Review & Decision Synthesis Implementation: prompt mappings, blind cross-review workflow, and role integrations. | Stable | 2 | 1.0.1 |
-| [l1-scan-input-hygiene.md](specifications/l1-scan-input-hygiene.md) | Text-scan input preparation: mention/use boundary (SH-1), strip-before-match ordering (SH-2), template sources exempt from resolution (SH-3), bounded token capture (SH-4), one shared strip implementation (SH-5). Enforcement-surface table with per-scan compliance state. | Stable | 1 | 1.0.0 |
+| [l1-scan-input-hygiene.md](specifications/l1-scan-input-hygiene.md) | Text-scan input preparation: mention/use boundary (SH-1), strip-before-match ordering (SH-2), template sources exempt from resolution (SH-3), bounded token capture (SH-4), one shared strip implementation (SH-5). Enforcement-surface table with per-scan compliance state. | Stable | 1 | 1.1.0 |
 
 ## Meta Information
 
