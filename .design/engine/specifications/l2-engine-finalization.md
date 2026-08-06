@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -267,6 +267,56 @@ The header-derivation functions (`deriveType`, `deriveScope`, `buildSummary`) ke
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), a harness case must add a `magic.run` fixture with one whitelist-matched file (`TASKS.md`, a status flip) plus one non-whitelisted file changed in the same working tree (e.g. a file under `dev/` or `.magic/`), and assert: (a) significance and version bump still key off the whitelist subset alone — unchanged; (b) the suggested commit message's `Modified files:` body names both files; (c) `emitSuccess()`'s stdout `### Changed artifacts` section names both files. This is the inverse of the existing SC-3 fallback tests, which already exercise the no-significant-change path against the full changed-set — this closes the equivalent gap on the significant-change path.
 
+## 10. Line-Cap Guard Defeat by Unbounded Blocking Constraints (SC-1.2) `[ADDED]`
+
+### 10.1 The Defect
+
+`update-state.js`'s line-count guard runs unconditionally at the end of `updateState()`:
+
+```js
+const lines = content.split('\n');
+if (lines.length > 100) {
+    console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruning oldest decision.`);
+    // ... removes exactly one `## Recent Decisions` line, only if decLines.length > 1
+}
+```
+
+This is the file's **only** line-cap enforcement, and it targets exactly one section: `## Recent Decisions`, which already has its own independent 5-entry cap enforced at insert time (`addDecision`'s own prune-to-5 step). `## Blocking Constraints` is structurally different — the template marks it "MANDATORY reading", every discovered anti-pattern is appended with an auto-incrementing `[C-NNN]` ID, and nothing in `update-state.js` ever removes an entry from it. The guard was written as if `## Recent Decisions` were the file's dominant growth source; `## Blocking Constraints` is the one section explicitly designed to grow monotonically over a workspace's lifetime.
+
+Reproduced directly (synthetic workspace, `updateState()` called in a loop with `{ addConstraint: true }`):
+
+| Constraints added | Total lines | `## Recent Decisions` entries remaining | Guard engaged? |
+| --- | --- | --- | --- |
+| 20 | 74 | n/a (below threshold) | No — never crossed 100 |
+| 60 | **110** | 1 (its floor — cannot go lower) | Yes, every call — but nothing left to remove |
+
+At 60 accumulated constraints the file sits **10 lines over the documented ceiling**, `## Recent Decisions` is already pruned down to its 1-entry floor, and every further `addConstraint` call grows the file further while the guard's `console.warn` — unconditional on `lines.length > 100`, not on whether a line was actually removed — keeps printing "Pruning oldest decision" as if the cap were being restored. There is no code path that reports "cap exceeded and nothing left to prune" differently from "cap exceeded, pruned successfully". Reported informally as an operator note that `STATE.md` had reached 94 of 100 lines with a same-cycle suggestion to trim the oldest `## Recent Decisions` entries; the reproduction shows that specific remedy has a hard ceiling of its own (5 entries, floor of 1) and cannot hold the 100-line cap once `## Blocking Constraints` — which this repository's own `STATE.md` already carries one entry of, with clear precedent for accumulating more as new anti-patterns are discovered — becomes the dominant growth vector.
+
+### 10.2 Required Fix
+
+Silently auto-pruning `## Blocking Constraints` the way `## Recent Decisions` is pruned is **not** an acceptable mirror-fix: a Decision is disposable narrative (the template already says older ones "archived to PLAN.md"), but a Blocking Constraint exists specifically because it is safety-critical — deleting the oldest one to make room could silently remove the one anti-pattern warning that prevents a future incident, with the operator never told which entry vanished or why.
+
+The guard must instead distinguish two states it currently reports identically:
+
+1. **Cap restored** — `## Recent Decisions` had an entry above its floor to remove; the file is now ≤ 100 lines (or closer). Current behavior and message are correct here.
+2. **Cap exhausted** — `## Recent Decisions` is already at its 1-entry floor and the file remains over 100 lines. This state MUST emit a distinct, non-silent warning (not the reused "Pruning oldest decision" line) directing the operator to manually review and archive stale `## Blocking Constraints` entries — mirroring the archival convention the template's own `## Recent Decisions` comment already establishes for that section, extended in prose to name `## Blocking Constraints` as well. The write still proceeds (`updateState()` must not become a HALT point over a line count), but the operator is told the cap is not actually being held, rather than being told a prune happened when none did.
+
+```plaintext
+BAD : console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruning oldest decision.`);
+      // fires identically whether or not decLines.length > 1, i.e. whether or not anything was pruned
+GOOD: if (decLines.length > 1) {
+          console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`);
+          // ... remove as today
+      } else {
+          console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}) and ## Recent Decisions ` +
+              `is already at its floor — nothing was pruned. Review ## Blocking Constraints for entries to archive.`);
+      }
+```
+
+### 10.3 Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), a harness case must drive a fixture past 100 lines purely via repeated `addConstraint` calls (no `## Recent Decisions` growth), with `## Recent Decisions` pre-seeded at its 1-entry floor, and assert the guard's stdout output differs from the routine-prune case — i.e. that "cap exhausted, nothing pruned" is observably distinguishable from "cap restored, one entry pruned", not the same log line in both cases.
+
 ## Canonical References
 
 | Path | Role |
@@ -278,13 +328,14 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival and TASKS.md rewrite |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
 | `.magic/scripts/lib/significance.js` | Significance whitelist evaluation |
-| `.magic/scripts/update-state.js` | STATE.md patch utility invoked by the state update step (§5.1) |
+| `.magic/scripts/update-state.js` | STATE.md patch utility invoked by the state update step (§5.1); hosts the line-cap guard corrected by §10 |
 | `.magic/run.md` | Hosts the per-task and phase-transition `update-state` call sites corrected by §8.3 |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.10.0 | 2026-08-06 | Agent | New §10 (SC-1.2) — **Line-Cap Guard Defeat by Unbounded Blocking Constraints**: the 100-line guard prunes only `## Recent Decisions`, which already has its own independent 5-entry cap; `## Blocking Constraints` has no cap and no pruning at all, by design (marked "MANDATORY reading" in the template — unlike a Decision, an entry can't be silently deleted without risking loss of safety-critical knowledge). Once Recent Decisions hits its 1-entry floor, the guard has nothing left to remove, yet its `console.warn` fires the same "Pruning oldest decision" message regardless of whether anything was pruned — reproduced directly: 60 accumulated constraints drove a synthetic workspace to 110 lines, 10 over the documented ceiling, with Recent Decisions already exhausted. Fix: the guard must distinguish "cap restored" from "cap exhausted, nothing pruned" with a genuinely different warning in the latter case, directing the operator to manually archive stale Blocking Constraints entries rather than claiming an action that didn't happen. Reported informally as an operator note that `STATE.md` reached 94/100 lines with a same-cycle "trim oldest decisions" suggestion; investigated and reproduced independently, since decision-pruning alone cannot hold the cap once Blocking Constraints dominates growth. Companion invariant: `l1-session-continuity.md` 1.6.0 → 1.7.0 (new **SC-1.2 Line-Cap Enforcement**; §2 Constraints' cap description corrected). |
 | 1.9.0 | 2026-08-06 | Agent | New §9 (SC-3.1) — **Non-Whitelisted File Visibility**: `emitSuccess()`'s `### Changed artifacts` listing and `buildCommitMessage()`'s `Modified files:` body are both built from `sig.files`, the significance whitelist's `.design/{ws}/...`-scoped subset — conflating "should this bump the version" with "what should the message tell the user they changed". Reproduced against a real commit already on `master` rather than a synthetic fixture: `b96ce07` (a `magic.run` finalize) suggested a message naming 2 files while the actual commit spanned 17, including `.magic/*` C14-sync files, root docs, and — the case that matters most for a consumer project — the task's own application-code deliverable (`dev/scripts/sync-skills.js`, `dev/tests/engine.js`), which sits outside `.design/` by construction for every `magic.run` task. Fix: widen the body-enumeration/stdout-listing input to the full `gitChangedPaths()` result (already computed for the SC-3 fallback path, now reused on the success path too), capped at the existing `MAX_FILES = 15`; header-derivation (`deriveType`/`deriveScope`/`buildSummary`) keeps reading `sig.files` only — that scoping is intentional and not the defect. Canonical References gained `.magic/scripts/finalize.js`. Reported informally ("finalize does not see new application files outside `.design/`", no reproduction steps) — confirmed by inspecting the repository's own commit history. Companion invariant added: `l1-session-continuity.md` 1.5.1 → 1.6.0 (new **SC-3.1 Commit Message Completeness**). |
 | 1.8.0 | 2026-08-06 | Agent | New §8.5 (defects renumber: old 8.5 Regression Coverage → 8.6, old 8.6 Known Gap → 8.7) — **The Progress Replacement-String Injection Defect**: `` content.replace(progressRe, `$1${body}$3`) `` uses a string-form replacement against a 3-capture-group regex, so JavaScript re-scans the *entire* resulting string for `$1`-`$9` patterns — including inside `${body}`, built from unconstrained narrative text. A preserved line containing a literal `$` followed by a digit (a dollar amount, in the reproduction) gets that sequence replaced with the *actual* capture-group content, splicing fragments of the surrounding `## Progress` fence markup into the middle of the narrative and unbalancing the file's triple-backtick count. The most severe of the five §8 defects: the others misplace or lose values, this one corrupts markdown structure. Fix: swap the string replacement for a function replacement, whose return value is used verbatim (§8.5's own text). Swept every `.replace()` call across `update-state.js`/`changelog-writer.js`/`phase-archiver.js`: this is the only site combining capture groups with unconstrained content. Reported informally (no reproduction steps, no version) as "STATE.md's ## Progress tore a two-line entry, truncating the first line" after two prior manual restorations; investigated and reproduced independently against engine 2.1.62 rather than taken at face value, since the report gave nothing to verify directly against. |
 | 1.7.0 | 2026-08-06 | Agent | §8 gained two more defects (same day, one further field report) and was reordered: defects now group as §8.1-§8.4, followed by consolidated §8.5 Regression Coverage and §8.6 Known Gap. New §8.3 — `run.md` §2.5's per-task `update-state` call pairs `--task=` with `--status={Done\|Blocked}`, but `update-state.js` has one `status` handler, mapped to the phase-level field; reproduced directly (one task done → phase `Status` becomes `Done`, a value outside SC-1.1's own vocabulary, new this version). Fix: drop `--status=` from the per-task call — task completion is already authoritative in the phase file's checklist. New §8.4 — the merge-not-clobber classifier's `counterRe` matches any `{label}: [n/m]`-shaped line, not only the two labels (`Overall`, `Phase {N}`) `computeProgress()` actually emits, so hand-authored counter-shaped narrative (`Specification:`, `Plan:`, `Implementation:` in the field report) is misclassified as engine-owned and deleted rather than preserved — directly contradicting §5.1's own "merge, never clobbers" promise. Fix: narrow the label alternation to the exact emitted set. Canonical References gained `.magic/run.md`. Field report against engine 2.1.58. |
