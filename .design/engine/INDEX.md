@@ -1,6 +1,6 @@
 # Engine Specifications Registry
 
-**Version:** 1.15.7
+**Version:** 1.15.8
 **Status:** Active
 
 ## Overview
@@ -34,7 +34,7 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 | [l2-role-integration.md](specifications/l2-role-integration.md) | Workflow-body integration of the role system: run/task/spec/analyze/rule/retro amendments + §C24 rewrite. | Stable | 2 | 2.1.0 |
 | [l2-role-tooling.md](specifications/l2-role-tooling.md) | Role system engine tooling: check-prerequisites role_registry_integrity, update-engine-meta treatment, role template. | Stable | 2 | 1.0.0 |
 | [l2-spec-graph-memory.md](specifications/l2-spec-graph-memory.md) | Spec Graph memory & token economy: extraction cache, wiki export, MCP token-budget, workflow integration triggers. | Stable | 2 | 1.1.1 |
-| [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation. | Stable | 1 | 1.0.0 |
+| [l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) | Pre-Resolution intent detection, ambiguity gate, atomic workspace creation, fit validation; WI-10 documentation-parity scope broadened to every init.md surface. | Stable | 1 | 1.1.0 |
 | [l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) | Autonomous Decision Protocol: escalation whitelist, deterministic selection, Decision Records, single-question format, declarative proposal & drift-revalidation surfaces (DA-9). | Stable | 1 | 1.2.0 |
 | [l1-sdd-reference-containment.md](specifications/l1-sdd-reference-containment.md) | One-way traceability boundary: product files never reference SDD artifacts; enforcement gates, notation-independent detection, remediation owner, shipped self-containment, generator self-containment (RC-1..RC-11). | Stable | 1 | 1.3.0 |
 | [l1-session-continuity.md](specifications/l1-session-continuity.md) | Session continuity: STATE.md live-memory contract, universal post-command state updates (plan-state-aware next action SC-2.1, provenance-free field SC-2.2), commit suggestion guarantee, status briefing surface (SC-1..SC-5). | Stable | 1 | 1.3.0 |
@@ -47,4 +47,4 @@ Central registry for the Magic SDD core engine and its automated subsystems.
 
 - **Maintainer**: Core Team
 - **License**: MIT
-- **Last Updated**: 2026-08-06 (RC-11 Generator Self-Containment: l1-sdd-reference-containment 1.3.0, l2-engine-finalization 1.5.0, l2-test-suite 1.8.0 — field report, engine 2.1.49)
+- **Last Updated**: 2026-08-06 (WI-10 scope broadened: l1-workspace-intent-routing 1.1.0 — init.md STATE.md-timing claim is false in 3 surfaces + dev/tests/suite.md T01/T02/T58 — field report, engine 2.1.58)

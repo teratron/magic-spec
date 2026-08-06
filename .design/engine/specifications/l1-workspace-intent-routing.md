@@ -1,6 +1,6 @@
 # Workspace Intent Routing
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -50,6 +50,10 @@ Two further defects were found during root-cause analysis:
   workspace directory is missing. A fresh `workspace.json` declaring
   `default: "main"` therefore routes all subsequent script calls into the
   global registry directory, where files accumulate at root.
+
+A third, later field report (engine 2.1.58) found the diagram fix did not close WI-10 completely: the diagram's *shape* was corrected, but `init.md` §Step 2's prose and the Init Completion Checklist still claim `init.js` copies `STATE.md` from template during bootstrap. It does not — verified against engine 2.1.62, `initWorkspace()` creates `INDEX.md`, `specifications/`, `tasks/`, and `archives/tasks/` only. `STATE.md` is bootstrapped lazily, by `update-state.js`'s own template-copy branch, the first time any mutating workflow's SC-2 step runs ([l1-session-continuity.md](l1-session-continuity.md) SC-2: "adds the end-of-command guarantee"). Non-blocking — nothing downstream assumes `STATE.md` exists immediately after `init` — but an agent trusting the Completion Checklist would falsely conclude bootstrap failed. WI-10's original wording bound only the diagram; the same file has two more surfaces making the same class of claim.
+
+The same false claim also sits inside `dev/tests/suite.md`'s expected outcomes — T01 ("Post-init verification checks all 6 artifacts: `INDEX.md`, `RULES.md`, `STATE.md`, …"), T02 ("Post-init verification confirms all 6 artifacts present (including `STATE.md`)"), and T58 ("`.design/main/` directory created with `INDEX.md`, `STATE.md`, …"). Because `magic.dev.simulate` evaluates these scenarios cognitively against the documented contract rather than by executing `init.js`, none of the three can currently catch this divergence — the suite's own expected outcome already assumes the wrong behavior. Correcting `init.md` without correcting these three scenarios would leave the cognitive suite asserting a fact its own source-of-truth (the corrected docs) no longer supports.
 
 ## 2. Constraints & Assumptions
 
@@ -165,9 +169,14 @@ The following invariants govern any Layer 2 implementation:
   it MUST create the standard subtree (per WI-6 step 3) before dispatching
   the script — replacing the current silent fallback to `.design/` root.
 
-- **WI-10 — Documentation Parity**: `.magic/init.md` "Structure Created"
-  diagram MUST display the per-workspace layout that `init.js` produces. Any
-  divergence between document and code is a release blocker.
+- **WI-10 — Documentation Parity**: `.magic/init.md` MUST accurately describe
+  what `init.js` produces, on **every surface where it makes that claim** —
+  the "Structure Created" diagram, the numbered Steps narrative, and the Init
+  Completion Checklist — not the diagram alone. A claim about *when* an
+  artifact is created is bound by this invariant exactly as a claim about
+  *whether* it is created; both are load-bearing for an agent deciding what to
+  verify after `init` runs. Any divergence between a documented claim and
+  actual init output is a release blocker. `[MODIFIED]`
 
 ## 4. Status Lifecycle Hooks
 
@@ -223,12 +232,14 @@ C9 Trust Mode and adds friction the engine can eliminate.
 risks creating spurious workspaces from casual mentions. Rejected: WI-4's
 overlap gate is a cheap insurance policy against fragmentation.
 
+**Alternative — Make `init.js` create `STATE.md` eagerly, matching the old doc claim** — rejected in favor of fixing the documentation instead. `update-state.js` already owns template instantiation (placeholder substitution, default field values); duplicating that logic in `init.js` would be two code paths doing the same job, the exact drift mechanism this file's other two field reports already trace to. [l1-session-continuity.md](l1-session-continuity.md) SC-2 independently guarantees `STATE.md` exists by the end of the first mutating command regardless of `init`, so eager creation would add a redundant code path to close a gap that is, in practice, already closed.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
 | `[CONTEXT]` | `.magic/context.md` | Hosts the new Step 0 Workspace Intent Detection block. |
-| `[INIT-DOC]` | `.magic/init.md` | Hosts the corrected Structure Created diagram (WI-10). |
+| `[INIT-DOC]` | `.magic/init.md` | Hosts the corrected Structure Created diagram, Step 2 narrative, and Completion Checklist (WI-10). |
 | `[INIT-SCRIPT]` | `.magic/scripts/init.js` | Hosts the standalone `--workspace={name}` CLI mode. |
 | `[CREATE-WS]` | `.magic/scripts/create-workspace.js` | New executor script implementing WI-6 atomicity. |
 | `[EXECUTOR]` | `.magic/scripts/executor.js` | Hosts WI-9 auto-mkdir replacement for the silent fallback. |
@@ -239,4 +250,5 @@ overlap gate is a cheap insurance policy against fragmentation.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-06 | Agent | Broadened **WI-10** from "the diagram must match" to "every surface in `init.md` claiming what/when `init` produces must match" — a claim about *timing* is bound exactly as a claim about *existence*. §1 gained a third field-report defect: `init.md` §Step 2 and the Completion Checklist claim `init.js` bootstraps `STATE.md`; verified against engine 2.1.62, it does not — `STATE.md` is lazily bootstrapped by `update-state.js` on the first mutating workflow's SC-2 step. The same false claim was also found baked into `dev/tests/suite.md`'s expected outcomes (T01, T02, T58), which `magic.dev.simulate` cannot catch because it evaluates cognitively against the documented contract rather than by executing `init.js` — all three scenarios need their expected-outcome text corrected alongside `init.md`. §6 gained the rejected alternative (make `init.js` create it eagerly instead) and why: `update-state.js` already owns template instantiation, duplicating it would recreate the exact doc/code drift mechanism this spec exists to close, and SC-2 already guarantees existence by the first command regardless. Canonical Reference for `[INIT-DOC]` extended to name all three affected surfaces. Field report against engine 2.1.58. |
 | 1.0.0 | 2026-05-07 | Agent | Initial stable specification — addresses workspace dispatch defects observed in field reports. |
