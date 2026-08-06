@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -52,7 +52,7 @@ Implements SC-2 and SC-3 of [l1-session-continuity.md](l1-session-continuity.md)
 After significance evaluation and phase archival, the pipeline patches the active workspace's `STATE.md` via the `update-state` utility (`.magic/scripts/update-state.js`):
 
 - `Updated` — invocation timestamp.
-- `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. This corrects a previous claim in this section that `Status` is "recomputed from plan/task state" here; no code path in this step does that. Left accurate only as long as those explicit call sites stay in sync — a latent gap, not fully closed by this amendment (see §8.6).
+- `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. This corrects a previous claim in this section that `Status` is "recomputed from plan/task state" here; no code path in this step does that. Left accurate only as long as those explicit call sites stay in sync — a latent gap, not fully closed by this amendment (see §8.7).
 - Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect — and so, per SC-2.3, is silently discarding the phase-level counter itself when the recompute can't locate it (§8.2).
 - `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1, Blocked-phase precedence per SC-2.1(a) — §8.1). The synthesized value is screened at the computation's single exit against SC-2.2: exactly one command, never `/magic.spec` or `/magic.analyze`. A screened-out value degrades to the `/magic.task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string.
 
@@ -107,7 +107,7 @@ Per RC-11, the enforcement surface for generator output is regression-test cover
 
 ## 8. STATE.md Accuracy Fixes (SC-1.1, SC-2.1(a), SC-2.3) `[ADDED]`
 
-All four defects below were found across two field reports against the same engine version (2.1.58) and share one root symptom: the SC-2 state-update step made `STATE.md` **less** accurate than before the update it was supposed to refresh.
+All five defects below were found across three field reports against the same engine version (2.1.58) and share one root symptom: the SC-2 state-update step made `STATE.md` **less** accurate than before the update it was supposed to refresh.
 
 ### 8.1 The Next Action Defect
 
@@ -173,16 +173,57 @@ GOOD: /^(?:Overall|Phase \d+):\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/
 
 The placeholder-value alternation (`{filled}/{total}`, for template bootstrap state) stays; only the label portion narrows. Any line whose label is not exactly `Overall` or `Phase {N}` is narrative by definition, however counter-shaped it looks — the classifier's job is to recognize what the engine itself writes, not to guess at operator intent from formatting.
 
-### 8.5 Regression Coverage
+### 8.5 The Progress Replacement-String Injection Defect (SC-2)
 
-Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), all four fixes above need harness cases:
+The fence rewrite itself, independent of §8.4's classification bug, is:
+
+```js
+content = content.replace(progressRe, `$1${body}$3`);
+```
+
+`progressRe` has three capture groups (opening fence, fence body, closing fence). `.replace(regex, replacementString)` scans the **entire final replacement string** for JavaScript's special patterns (`$1`-`$9`, `` $` ``, `$'`, `$&`, `$$`) — including inside `${body}`, which is built from arbitrary, engine-uncontrolled narrative text (§5.1's preserved hand-authored lines). A narrative line containing a literal `$` followed by a digit is therefore re-interpreted as a capture-group backreference, splicing a **fragment of the surrounding STATE.md structure into the middle of the narrative**, not merely corrupting the counter it was never near.
+
+Verified by direct reproduction against engine 2.1.62: a preserved two-line narrative note —
+
+```plaintext
+Budget check: spend is $1,200 of the
+$3,000 sprint allocation — on track.
+```
+
+— recomputed to (note this block uses four backticks so the injected triple-backtick below renders as literal text, not a fence break):
+
+````plaintext
+Overall: [0/1] ░░░░░░░░ 0%
+Budget check: spend is ## Progress
+
+```
+,200 of the
+
+```,000 sprint allocation — on track.
+````
+
+`$1` was replaced with capture group 1 (`## Progress\n` + the fence opener) and `$3` with capture group 3 (the fence closer), **injecting a spurious closing fence mid-document** — the file's triple-backtick count goes from balanced (2) to unbalanced (3), so every section after the injection point is at the mercy of the renderer's fence-recovery behavior. This is more severe than the other four defects in this section: §8.1-§8.4 misplace or lose *values*; this one corrupts *markdown structure*, and the visible symptom — a two-line entry that reads as torn, its first line truncated mid-word — is exactly what a `$`-digit sequence anywhere in a multi-line narrative note produces, not only in a dollar-amount example.
+
+**Required fix**: replace the string-form replacement with a function-form replacement. A function's return value is used verbatim by `.replace()` — none of `$1`/`$3`'s content is re-scanned for special patterns, because the function *receives* the captured groups as arguments instead of the engine writing them as `$`-syntax into a string the interpreter re-parses:
+
+```plaintext
+BAD : content.replace(progressRe, `$1${body}$3`);
+GOOD: content.replace(progressRe, (_match, open, _oldBody, close) => `${open}${body}${close}`);
+```
+
+No other `.replace()` call site in `update-state.js`, `changelog-writer.js`, or `phase-archiver.js` shares this vulnerability — verified by sweeping every `.replace()` call in the finalize/update-state pipeline: the other capture-group-bearing calls either interpolate engine-controlled values only (semver strings, ISO dates, generated filenames) or use regexes with no capture groups at all, so `$`-digit sequences in their inputs have no group to bind to and pass through as literal text. This fix is scoped to the one call site that combines capture groups with unconstrained narrative content.
+
+### 8.6 Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), all five fixes above need harness cases:
 
 - `synthesizeNextAction()`/`computeNextAction()` called against a Blocked two-level-format fixture must not return an execute-style recommendation naming the blocked task's ID (§8.1).
 - `computeProgress()` called against a healthy two-level-format fixture must produce a `Phase {N}: […]` line, not aggregate-only (§8.2).
 - A per-task `update-state` call (`--task=`, no `--status=`) must leave the phase-level `Status` field unchanged (§8.3).
 - `computeProgress()`'s merge step, given a fence containing `Specification:`/`Plan:`/`Implementation:`-style custom counter-shaped lines alongside `Overall`/`Phase {N}`, must preserve the custom lines and regenerate only `Overall`/`Phase {N}` (§8.4).
+- `updateState()` with `autoProgress: true` against a preserved narrative line containing a literal `$1`/`$2`/`$3` sequence must leave that line byte-for-byte unchanged and must not alter the fence's triple-backtick count (§8.5).
 
-### 8.6 Known Gap Not Closed Here
+### 8.7 Known Gap Not Closed Here
 
 §5.1's `Status` bullet (corrected above) documents that no code path in the SC-2 step actually recomputes `Status` — it is only ever set by explicit `--status=` calls elsewhere in `task.md`/`run.md`. §8.3 fixes one of those call sites (the per-task one, which should not touch `Status` at all); the broader claim that `Status` is ever holistically "recomputed" from plan/task state remains false after this amendment, and is not addressed here — noted so it is not mistaken for closed.
 
@@ -203,6 +244,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.8.0 | 2026-08-06 | Agent | New §8.5 (defects renumber: old 8.5 Regression Coverage → 8.6, old 8.6 Known Gap → 8.7) — **The Progress Replacement-String Injection Defect**: `` content.replace(progressRe, `$1${body}$3`) `` uses a string-form replacement against a 3-capture-group regex, so JavaScript re-scans the *entire* resulting string for `$1`-`$9` patterns — including inside `${body}`, built from unconstrained narrative text. A preserved line containing a literal `$` followed by a digit (a dollar amount, in the reproduction) gets that sequence replaced with the *actual* capture-group content, splicing fragments of the surrounding `## Progress` fence markup into the middle of the narrative and unbalancing the file's triple-backtick count. The most severe of the five §8 defects: the others misplace or lose values, this one corrupts markdown structure. Fix: swap the string replacement for a function replacement, whose return value is used verbatim (§8.5's own text). Swept every `.replace()` call across `update-state.js`/`changelog-writer.js`/`phase-archiver.js`: this is the only site combining capture groups with unconstrained content. Reported informally (no reproduction steps, no version) as "STATE.md's ## Progress tore a two-line entry, truncating the first line" after two prior manual restorations; investigated and reproduced independently against engine 2.1.62 rather than taken at face value, since the report gave nothing to verify directly against. |
 | 1.7.0 | 2026-08-06 | Agent | §8 gained two more defects (same day, one further field report) and was reordered: defects now group as §8.1-§8.4, followed by consolidated §8.5 Regression Coverage and §8.6 Known Gap. New §8.3 — `run.md` §2.5's per-task `update-state` call pairs `--task=` with `--status={Done\|Blocked}`, but `update-state.js` has one `status` handler, mapped to the phase-level field; reproduced directly (one task done → phase `Status` becomes `Done`, a value outside SC-1.1's own vocabulary, new this version). Fix: drop `--status=` from the per-task call — task completion is already authoritative in the phase file's checklist. New §8.4 — the merge-not-clobber classifier's `counterRe` matches any `{label}: [n/m]`-shaped line, not only the two labels (`Overall`, `Phase {N}`) `computeProgress()` actually emits, so hand-authored counter-shaped narrative (`Specification:`, `Plan:`, `Implementation:` in the field report) is misclassified as engine-owned and deleted rather than preserved — directly contradicting §5.1's own "merge, never clobbers" promise. Fix: narrow the label alternation to the exact emitted set. Canonical References gained `.magic/run.md`. Field report against engine 2.1.58. |
 | 1.6.0 | 2026-08-06 | Agent | Added §8: two independent SC-2 defects sharing one root symptom (the state update makes `STATE.md` less accurate, not more). §8.1 — `synthesizeNextAction()`'s phase-file tier ignores `status: Blocked`, recommending execution of the very task the recorded blocker prevents (SC-2.1(a)); reproduced directly against engine 2.1.62. §8.2 — `computeProgress()`'s phase-counter branch only recognizes the legacy inline `### Phase {N} Checklist` heading, so it silently drops to an aggregate-only line for every project on the canonical two-level `tasks/phase-{N}.md` layout, Blocked or not — including this engine's own workspace, confirmed carrying the gap for its entire history (SC-2.3, new invariant). §5.1's `Status` bullet corrected: no code path in this step recomputes `Status`, contrary to what it previously claimed — §8.4 records this as a known, separate gap. Field report against engine 2.1.58. |
 | 1.5.0 | 2026-08-06 | Agent | Added §7 Generator Containment (RC-11): `buildChangelogBullet()`'s `spec` case, single-spec branch, interpolates the spec's artifact ID (`artifactId()`, prefix/extension stripped) into text written straight to root `CHANGELOG.md` — no Coder or Code-reviewer gate mediates generator output, so the leak reached a shipped product file undetected. The multi-spec branch and the `run` case's own single-item branch already use safe generic wording; only this one branch is the outlier. §7.2 states the required fix, §7.3 the regression-coverage obligation. Library Modules table corrected: `commit-suggester.js`, not `changelog-writer.js`, composes the bullet text; `changelog-writer.js` only inserts it. Related Specifications gained `l1-sdd-reference-containment.md`. Field report against engine 2.1.49. |
