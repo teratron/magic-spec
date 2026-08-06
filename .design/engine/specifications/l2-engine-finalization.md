@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.4.0
+**Version:** 1.5.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -14,6 +14,7 @@ Internal helper library (`scripts/lib/`) that implements the finalization protoc
 - [l1-engine-core.md](l1-engine-core.md) — Parent concept defining core engine architecture.
 - [l1-session-continuity.md](l1-session-continuity.md) — SC-2/SC-3 invariants carried by the finalize pipeline (§5).
 - [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
+- [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) — RC-11 (Generator Self-Containment) binds `commit-suggester.js`'s CHANGELOG-bullet output (§7).
 
 ## 1. Motivation
 
@@ -23,8 +24,8 @@ The finalization protocol (§3 of `rules/MAGIC.md`) requires several coordinated
 
 | Module | Responsibility |
 | --- | --- |
-| `changelog-writer.js` | Appends Keep-a-Changelog entries to root `CHANGELOG.md`. |
-| `commit-suggester.js` | Generates Conventional Commits message from finalization context. |
+| `changelog-writer.js` | Appends a given bullet to root `CHANGELOG.md` in Keep-a-Changelog form — pure insertion, does not compose bullet text. |
+| `commit-suggester.js` | Composes the Conventional Commits message **and** the CHANGELOG bullet text itself (`buildChangelogBullet`) — the two share the same file-classification logic, so `finalize.js` calls both from here before handing the bullet to `changelog-writer.js` for insertion. Bound by RC-11 (§7): its output is written straight to a product file with no human review step. |
 | `git-utils.js` | Read-only git helpers: diff detection, staged-file enumeration, mtime queries. |
 | `phase-archiver.js` | Detects `status: Done` phase files and moves them to `archives/tasks/`; rewrites `TASKS.md` link references. Eligibility predicate governed by §6. |
 | `project-version.js` | Reads and writes `.design/.version`; computes next semver bump (major/minor/patch). |
@@ -74,12 +75,42 @@ This section pins the eligibility predicate for the **C8 (Phase Archival)** conv
 
 A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conformant**: it false-positives on documentation of checkbox syntax and silently suppresses archival. This precision is the acceptance criterion for the `allChecked` helper in `phase-archiver.js`; its regression coverage belongs to the finalize-pipeline harness mandate ([l2-test-suite.md](l2-test-suite.md) §Script-Level Regression Harness).
 
+## 7. Generator Containment (RC-11) `[ADDED]`
+
+`buildChangelogBullet()` in `commit-suggester.js` is written straight to the product's root `CHANGELOG.md` via `changelog-writer.js`'s `appendBullet()` — no Coder authors this text, no Code-reviewer reviews a diff of it, so [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)'s **RC-5/RC-6 gates never see it**. RC-11 binds this generator exactly as RC-1/RC-2 bind hand-authored text: its output must never embed a spec's **artifact ID** — the identifier obtained by stripping the `l1-`/`l2-` prefix and `.md` extension from the spec's filename (`artifactId()` in this same module).
+
+### 7.1 The Defect (field report, engine 2.1.49)
+
+The `spec` case of `buildChangelogBullet()` has two branches keyed on `specs.length`:
+
+- `specs.length > 1` → `` `${verb} ${specs.length} specifications (${workspace})` `` — generic, safe.
+- `specs.length === 1` → `` `${verb} specification \`${artifactId(specs[0].path)}\` (${workspace})` `` — interpolates the artifact ID, **violating RC-11**.
+
+The `run` case's own single-item branch (`` `Completed task (${workspace})` `` — no task ID interpolated) already demonstrates the correct shape; the `spec` case's single-item branch is the outlier, not the pattern.
+
+`artifactId()` is legitimately used elsewhere in this same module (`buildSummary()`, for the git commit-message header) — that usage is **not** a violation: commit messages are git metadata, exempt under RC-8. The violation is specific to text that reaches a product file: `buildChangelogBullet()`'s return value only.
+
+### 7.2 Required Fix
+
+`buildChangelogBullet()`'s `spec` case, `specs.length === 1` branch, must drop the `artifactId()` interpolation and return a generic bullet — matching the shape its own multi-item branch and the `run` case's single-item branch already use:
+
+```plaintext
+BAD : `${verb} specification \`${artifactId(specs[0].path)}\` (${workspace})`
+GOOD: `${verb} a specification (${workspace})`
+```
+
+No other branch of `buildChangelogBullet()` (`task`, `run`, `rule`) interpolates an SDD-layer identifier — this fix is scoped to the one outlier branch.
+
+### 7.3 Regression Coverage (RC-11 enforcement)
+
+Per RC-11, the enforcement surface for generator output is regression-test coverage, not a role-card gate. The finalize-pipeline harness ([l2-test-suite.md](l2-test-suite.md)) must add a case asserting `buildChangelogBullet('spec', workspace, [oneAddedSpecFile])` contains **no** spec-derived identifier — pinning the fixed shape so the single-item branch cannot regress back to interpolating `artifactId()`.
+
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
 | `.magic/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
-| `.magic/scripts/lib/commit-suggester.js` | Commit message generation |
+| `.magic/scripts/lib/commit-suggester.js` | Commit message generation and CHANGELOG bullet composition (RC-11, §7) |
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival and TASKS.md rewrite |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
@@ -90,6 +121,7 @@ A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conf
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.0 | 2026-08-06 | Agent | Added §7 Generator Containment (RC-11): `buildChangelogBullet()`'s `spec` case, single-spec branch, interpolates the spec's artifact ID (`artifactId()`, prefix/extension stripped) into text written straight to root `CHANGELOG.md` — no Coder or Code-reviewer gate mediates generator output, so the leak reached a shipped product file undetected. The multi-spec branch and the `run` case's own single-item branch already use safe generic wording; only this one branch is the outlier. §7.2 states the required fix, §7.3 the regression-coverage obligation. Library Modules table corrected: `commit-suggester.js`, not `changelog-writer.js`, composes the bullet text; `changelog-writer.js` only inserts it. Related Specifications gained `l1-sdd-reference-containment.md`. Field report against engine 2.1.49. |
 | 1.4.0 | 2026-08-06 | Agent | §5.1 `Next Action` bullet realigned to SC-2.2: the synthesized value is screened at the computation single exit (exactly one command; never `/magic.spec` or `/magic.analyze`), degrading to the `/magic.task` funnel with a warning rather than aborting. Supersedes the 1.3.0 wording that cited SC-2.1 workflow-sensitive rule, withdrawn in l1-session-continuity 1.3.0. |
 | 1.3.0 | 2026-07-18 | Agent | §5.1 progress recompute contract hardened: counter lines are recomputed in place, non-counter lines inside the `## Progress` fence are preserved as hand-authored narrative (merge, never clobber). Field evidence: unconditional wholesale replacement destroyed an operator's Progress notes twice in one session (field report, engine 2.1.49). Next Action bullet now cites SC-2.1's workflow-sensitive plan-complete rule. |
 | 1.2.1 | 2026-07-10 | Agent | Traceability: §6 now cites the **C8 (Phase Archival)** convention it implements. No logic change (patch — Stable retained). |

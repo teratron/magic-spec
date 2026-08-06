@@ -1,6 +1,6 @@
 # SDD Reference Containment Specification
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -20,6 +20,8 @@ Defines the one-way traceability boundary between the SDD layer (`.design/`) and
 Field report from a consumer project: source files accumulated comments such as "implements task T-2B03 from phase-2" and links into `.design/specifications/`. The product ships via release archives that exclude `.design/` — every such reference becomes dead content: links resolve nowhere, task IDs mean nothing to the reader, and SDD internals leak into the public artifact.
 
 The engine already enforces the mirrored boundary internally: the L1 release kernel never references the `dev/` tree. This spec extends the same containment discipline to the code the engine produces inside user projects.
+
+A second field report (engine 2.1.49) surfaced a leak source none of RC-1..RC-10 covers: `finalize.js`'s single-spec CHANGELOG branch composes `` Updated specification `{artifact-id}` (workspace) `` and writes it straight to the product's root `CHANGELOG.md` — no Coder typed the string, no Code-reviewer reviewed a diff, because the script generates and applies the change atomically. The multi-spec branch already used the safe generic form (`` Updated {N} specifications (workspace) ``); only the single-item path interpolated the identifier. See **RC-11**.
 
 ## 2. Constraints & Assumptions
 
@@ -43,6 +45,7 @@ Rules that Layer 2 implementations MUST NOT violate:
 - **RC-10 (Remediation Owner)**: Every detection surface MUST name the owner that repairs what it finds; a detection surface with no named owner is incomplete. Because ventilation is read-only and the spec-authoring workflow's write scope is confined to `.design/`, no workflow that *detects* a leak may *fix* it. Remediation therefore routes through the normal pipeline: the `SDD_REFERENCE_LEAK` finding carries the path `→ /magic.task {ws}` to schedule a containment-cleanup task, which `/magic.run` executes under the code-producing role — the same role that owns the RC-5 write-time gate. Detection without a routed owner is what lets leaks re-accumulate between audits. `[ADDED]`
 - **RC-8 (Exemptions)**: Exempt from RC-1/RC-2: the `.design/` subtree itself; engine directories; git metadata; contributor-facing process documentation that documents the SDD workflow itself (there the reference IS the content, not traceability metadata). The magic-spec repository documents the SDD process as its product domain — its references to `.design/` are content, not leaks. The engine-directory exemption covers cross-references **among shipped files only**; references from shipped files into the engine repository's own SDD workspace are governed by RC-9, not exempted. `[MODIFIED]`
 - **RC-9 (Shipped Self-Containment)**: Files distributed with the engine (`.magic/`, `workflows/`, `skills/`, `rules/`, and templates instantiated into user projects) MUST NOT reference the engine repository's own SDD workspace: no `.design/engine/…` paths and no engine-workspace specification file names. Normative content is restated inline or cross-referenced to another shipped file. Three forms stay valid: consumer-generic SDD paths (`.design/{workspace}/…`, `$DESIGN_DIR`, the user's own `.design/INDEX.md`), stable in-text protocol labels (`WI-n`, `DA-n`, `C{n}`), and illustrative examples of forbidden forms. `[ADDED]`
+- **RC-11 (Generator Self-Containment)**: Text an engine script composes and writes directly into a product file is bound by RC-1/RC-2 exactly as text a role authors by hand — machine generation is not an exemption. This surface receives no RC-5/RC-6 mediation: nothing is typed by a Coder or reviewed as a diff by a Code-reviewer, because the script generates and applies the change atomically inside a workflow's finalize step. It is also a weak signal for RC-7's cognitive scan: a spec's **artifact ID** — the identifier the engine derives internally by stripping the `l1-`/`l2-` prefix and `.md` extension (e.g. `model-runtime` from `l1-model-runtime.md`) — carries none of the markers (path segment, extension, registered filename) the scan looks for, so a leaked artifact ID reads as an unremarkable word rather than an SDD reference. Enforcement is regression-test coverage on the generator function's output shape, pinned in the finalize-pipeline harness ([l2-test-suite.md](l2-test-suite.md)) — not RC-5/RC-6/RC-7, none of which reach this surface. `[ADDED]`
 
 > L2 spec cannot reach RFC status until all invariants here are addressed in its "Invariant Compliance" section.
 
@@ -57,8 +60,11 @@ Rules that Layer 2 implementations MUST NOT violate:
 | Ambient agent rules | ad-hoc edits outside `run` | RC-1..RC-4 | Distributed agent rules (`rules/`) |
 | Ventilation scan | audit time | RC-7 | `analyze` workflow checklist |
 | Cleanup task | remediation time | RC-10 | `task` → `run` pipeline (Coder role) |
+| Generator output | generation time | RC-11 | `dev/tests/engine.js` regression — no role card mediates this surface |
 
 The ambient surface is mandatory because not every code change in a consumer project flows through the `run` workflow: direct user-prompted edits must obey the same containment, so the distributed agent-rules file states the policy once for every agent.
+
+The generator surface (RC-11) is structurally different from the other four: RC-5/RC-6/RC-7 all assume a human or agent produces or reviews the text before it reaches a product file. A finalize-pipeline helper composes and writes CHANGELOG/README fragments with no such step, so the only enforcement available is pinning the generator function's output shape with a regression test — the same discipline already applied to `phase-archiver.js`'s eligibility predicate (§6 of `l2-engine-finalization.md`).
 
 ### 4.2 Detection Heuristic
 
@@ -90,9 +96,12 @@ BAD : """Validator required by l1-input-rules.md §3."""
 BAD : // T-22A01: @test: block round-trip          <- bare ID, two-digit phase
 BAD : // Added in Phase 20 Track B                 <- prose phase designator
 BAD : fn test_phase_22_closing_validation() {}     <- leak in a test name
+BAD : (CHANGELOG.md, generated) Updated specification `model-runtime` (main)
 GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
 GOOD: // Round-trip must be lossless: the encoder and decoder share no state.
 GOOD: (commit message) feat(parser): add payload guard [T-2B03]
+GOOD: (CHANGELOG.md, generated) Updated specification (main)
+GOOD: (CHANGELOG.md, generated) Updated 3 specifications (main)
 ```
 
 ## 5. Implementation Notes
@@ -108,6 +117,7 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 - **Ship `.design/` with releases** — rejected: bloats artifacts, exposes internal planning, and contradicts the release-kernel contract.
 - **Build-time comment stripping** — rejected: stack-specific, fragile, does not fix docs or identifiers, and the engine has no build step in consumer projects.
 - **Drawback**: restating rationale in plain language can drift from the spec wording over time. Accepted: the spec remains the source of truth; code comments state local constraints, not provenance.
+- **Extend RC-7's regex to match bare artifact-ID stems** — rejected: a stem like `model-runtime` or `engine-core` is indistinguishable from ordinary compound-word prose without cross-referencing every product-file token against the live spec registry on every scan, which would produce large false-positive volumes for common English compounds. Fixing at generation time (RC-11) is precise instead of probabilistic: the generator has ground truth that a string originated from a spec's own identifier at the moment it composes it, no whole-file semantic diffing required.
 
 ## Canonical References
 
@@ -123,6 +133,7 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-08-06 | Agent | Added **RC-11 (Generator Self-Containment)**: RC-1/RC-2 bind to text an engine script composes and writes into a product file, exactly as to hand-authored text — closes a leak class none of RC-5/RC-6/RC-7 can reach, since no role authors or reviews generator output. §4.1 gained a Generator-output enforcement row; §4.3 gained a generated-CHANGELOG BAD/GOOD pair; §6 gained the rejected-alternative rationale for why the fix belongs at generation time rather than in RC-7's detection regex. Field evidence: `finalize.js`'s single-spec CHANGELOG branch interpolated the spec's artifact ID (`model-runtime`, stripped of `l1-`/`.md`) into root `CHANGELOG.md` — the multi-spec branch already used safe generic wording, so only the single-item path leaked (field report, engine 2.1.49). |
 | 1.2.0 | 2026-08-06 | Agent | Added **RC-2.1 (Notation Independence)** and **RC-10 (Remediation Owner)**; RC-7 narrowed to detection-only; §4.2 heuristic split into unconditional and contextual classes with explicit patterns; §4.3 gained bare-form BAD examples. Two compounding defects: (a) every audit surface bound the task-ID class to the bracketed checklist literal `[T-XXXX]` and the phase class to the file form `phase-{n}` — the SDD layer's *internal* spellings — so bare `T-22A01` and prose `Phase 20 Track B`, the forms references actually take when quoted into code, matched nothing; (b) RC-7 called ventilation "the cleanup path" while ventilation is read-only and the spec workflow's write scope is `.design/`-only, leaving detection with no repair owner. Field evidence: 121 leaks across 44 files in a consumer project, unreported, 16 of them inside a crate whose purpose is standalone extraction (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Agent | Added RC-9 (Shipped Self-Containment): shipped engine files must not reference the engine repo's own SDD workspace — closes the gap where RC-8's engine exemption masked engine→`.design/engine/` leaks (15 sites found in first ventilation). RC-8 scope clarified; Implementation Notes step 5 added. |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable. Field-driven: consumer-project releases exclude `.design/`, so SDD references in product code become dead content. Defines RC-1..RC-8 and four enforcement surfaces. |

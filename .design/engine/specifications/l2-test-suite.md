@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.7.0
+**Version:** 1.8.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -38,6 +38,7 @@ Maintain high reliability of the engine core through automated and cognitive reg
 - **SC-2.2 provenance-free field** — the reserved-command screen is swept across the full *(workflow × plan state)* matrix, not one cell of it: no branch may emit `/magic.spec` or `/magic.analyze`, and every branch emits exactly one command. Pinning a single branch is what let the prior regression through.
 - **SC-3 non-bumping commit suggestion** — significance miss + dirty tree emits exactly one labeled suggestion; no version bump, no CHANGELOG entry, no write-side git.
 - **`update-state.js --auto-progress`** — the Progress block is recomputed from `TASKS.md`.
+- **RC-11 generator-containment contract** (`l1-sdd-reference-containment.md`) — `buildChangelogBullet('spec', …)`'s single-spec branch must not embed a spec's artifact ID in its return value; asserted directly against the function's output, not against the shipped CHANGELOG.md (which only a real invocation touches).
 
 A finalize-pipeline change merged without harness coverage of the touched branch is a test-suite gap.
 
@@ -58,6 +59,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.8.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with **RC-11 generator-containment**: `buildChangelogBullet()`'s single-spec branch interpolated a spec's artifact ID into text written to root `CHANGELOG.md`, undetected because no prior mandate covered a generator's own return value (as opposed to the shipped-text contracts above, which cover prose an agent authors). Field report against engine 2.1.49. |
 | 1.7.0 | 2026-08-06 | Agent | Added the **shipped-text contract coverage** mandate: where engine behavior has no code (the SDD containment scan is a cognitive grep, so its prose statement is the implementation), the harness asserts the contract over the shipped text. Pins RC-2.1 notation independence across rules/magic.md, .magic/analyze.md, and both containment role cards, plus the existing executor-parsable --workspace contract. |
 | 1.6.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with SC-2.2: the reserved-command screen must be swept across the full (workflow x plan state) matrix rather than pinned on one branch, and the SC-2.1 plan-complete expectation restated as the `/magic.task` funnel. Pinning a single branch is what let the prior /magic.spec regression through. |
 | 1.5.2 | 2026-07-10 | Agent | Traceability: the simulation-harness self-test description now cites the **C11 (Simulation Workflow)** convention that authorizes `magic.dev.simulate`. No logic change (patch — Stable retained). |
