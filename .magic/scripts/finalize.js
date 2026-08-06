@@ -148,11 +148,27 @@ function loadConfig() {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Computes the post-workflow `Next Action` for STATE.md, following the
- * pipeline order (spec → task → run). Plan-state-aware per SC-2.1
- * (l1-session-continuity.md): for task/run, the recommendation is derived
- * from the actual plan ledger (open tasks → run; plan complete → new scope),
- * never a fixed "execute the active phase" against an empty plan.
+ * Commands that must never appear in a synthesized `Next Action`.
+ *
+ * `rules/magic.md` §5 reserves `/magic.spec` to a real `/magic.task` Pre-flight
+ * HALT and keeps `/magic.analyze` on-demand. The constraint is enforced on the
+ * field rather than per-branch because STATE.md `Next Action` carries no
+ * provenance: `/magic.status` replays it verbatim, so a line written by one
+ * workflow is read back in the context of another.
+ *
+ * @type {RegExp}
+ */
+const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
+
+/**
+ * Computes the post-workflow `Next Action` for STATE.md and enforces the §5
+ * reserved-command invariant on the result.
+ *
+ * The guard is deliberately placed at the single exit rather than on each
+ * branch of the synthesis: an earlier fix corrected only the `run` branch and
+ * left `task` emitting `/magic.spec`, which is the regression this closes.
+ * A violation degrades to the planning funnel with a warning — `finalize` is
+ * non-blocking by contract and must never abort over a recommendation string.
  *
  * @param {string} workflow - `spec|task|run|rule`.
  * @param {string} workspace
@@ -160,6 +176,32 @@ function loadConfig() {
  * @returns {string}
  */
 function computeNextAction(workflow, workspace, wsDir) {
+    const next = synthesizeNextAction(workflow, workspace, wsDir);
+    if (RESERVED_COMMAND_RE.test(next)) {
+        console.warn(
+            `[state] Next Action "${next}" names a command reserved by ` +
+            `rules/magic.md §5; substituting the /magic.task funnel.`
+        );
+        return `Run /magic.task ${workspace} to plan`;
+    }
+    return next;
+}
+
+/**
+ * Derives the raw recommendation from the plan ledger, following pipeline
+ * order (spec → task → run). Plan-state-aware per SC-2.1
+ * (l1-session-continuity.md): for task/run the recommendation comes from the
+ * actual plan state (open tasks → run; plan complete → replan), never a fixed
+ * "execute the active phase" against an empty plan.
+ *
+ * Callers should use {@link computeNextAction}, which applies the §5 guard.
+ *
+ * @param {string} workflow - `spec|task|run|rule`.
+ * @param {string} workspace
+ * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @returns {string}
+ */
+function synthesizeNextAction(workflow, workspace, wsDir) {
     // spec/rule changes require (re)planning before execution — the plan must
     // absorb the amended specs/rules first (pipeline order).
     if (workflow === 'spec') return `Run /magic.task ${workspace} to update the plan`;
@@ -198,16 +240,13 @@ function computeNextAction(workflow, workspace, wsDir) {
         );
         if (activePhase) return `Continue Phase ${activePhase[1]} via /magic.run ${workspace}`;
 
-        // No open tasks anywhere → plan complete. The resolution is
-        // workflow-sensitive (SC-2.1 + rules/magic.md §5): after `run`, the
-        // single sanctioned next step is the /magic.task funnel — new scope
-        // enters via task → HALT → spec, /magic.spec is never named directly.
-        // After `task` itself, planning just concluded empty, so new-scope
-        // authoring is the only non-circular forward path.
-        if (workflow === 'run') {
-            return `Plan complete — run /magic.task ${workspace} to plan new scope`;
-        }
-        return `Plan complete — author new scope via /magic.spec ${workspace} (or /magic.status for a briefing)`;
+        // No open tasks anywhere → plan complete. The recommendation is
+        // uniform across workflows (SC-2.1 + rules/magic.md §5): new scope
+        // enters through the /magic.task funnel, whose Pre-flight raises the
+        // HALT that sanctions spec authoring. Naming /magic.spec here would
+        // short-circuit that funnel — and, because /magic.status replays this
+        // field verbatim, would resurface after /magic.run where §5 forbids it.
+        return `Plan complete — run /magic.task ${workspace} to plan new scope`;
     } catch {
         return `Run /magic.task ${workspace} to plan`;
     }

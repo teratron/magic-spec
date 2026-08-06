@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.5.2
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -34,7 +34,8 @@ Maintain high reliability of the engine core through automated and cognitive reg
 **Finalize-pipeline coverage (mandatory):** because `scripts/finalize.js` is the single choke point for session-continuity (SC-2/SC-3 of `l1-session-continuity.md`), the harness MUST cover its non-trivial branches — any change to the finalize pipeline ships with a corresponding harness test:
 
 - **SC-2 state patch** on both the significant path and the no-significant-change (skip) path — `STATE.md` is updated either way.
-- **SC-2.1 plan-state-aware `Next Action`** — the plan-complete branch resolves to new-scope authoring, not "execute the active phase"; the open-tasks branch resolves to execution.
+- **SC-2.1 plan-state-aware `Next Action`** — the plan-complete branch resolves to the `/magic.task` funnel, not "execute the active phase"; the open-tasks branch resolves to execution.
+- **SC-2.2 provenance-free field** — the reserved-command screen is swept across the full *(workflow × plan state)* matrix, not one cell of it: no branch may emit `/magic.spec` or `/magic.analyze`, and every branch emits exactly one command. Pinning a single branch is what let the prior regression through.
 - **SC-3 non-bumping commit suggestion** — significance miss + dirty tree emits exactly one labeled suggestion; no version bump, no CHANGELOG entry, no write-side git.
 - **`update-state.js --auto-progress`** — the Progress block is recomputed from `TASKS.md`.
 
@@ -52,6 +53,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with SC-2.2: the reserved-command screen must be swept across the full (workflow x plan state) matrix rather than pinned on one branch, and the SC-2.1 plan-complete expectation restated as the `/magic.task` funnel. Pinning a single branch is what let the prior /magic.spec regression through. |
 | 1.5.2 | 2026-07-10 | Agent | Traceability: the simulation-harness self-test description now cites the **C11 (Simulation Workflow)** convention that authorizes `magic.dev.simulate`. No logic change (patch — Stable retained). |
 | 1.5.1 | 2026-07-10 | Agent | Reality sync: 157→206 tests (T01–T207, gap at T67), suite v1.9.45→v1.9.74; fixed stale body paths .magic/tests/suite.md → dev/tests/suite.md (Canonical References were already correct since 1.4.0); extended coverage description with T186–T207 classes (harness self-tests, source-of-truth contract, diagram parity, version-bleed/select-precedence parity). |
 | 1.5.0 | 2026-06-13 | Agent | Documented `dev/tests/engine.js` script-level harness and added the finalize-pipeline coverage mandate (SC-2 patch both paths, SC-2.1 plan-state next-action, SC-3 non-bumping fallback, update-state --auto-progress). Closes the gap where finalize.js shipped session-continuity logic with zero harness coverage. |

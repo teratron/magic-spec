@@ -564,15 +564,20 @@ describe('Magic Engine Scripts', () => {
             // Remove phase file to be clean.
             fs.unlinkSync(path.join(tasksDir, 'phase-1.md'));
             next = finalize.computeNextAction('task', 'engine', wsDir);
-            assert.match(next, /\/magic\.spec/, 'plan complete → /magic.spec (SC-2.1)');
+            assert.match(next, /\/magic\.task engine/, 'plan complete after task → /magic.task funnel (§5)');
+            assert.doesNotMatch(next, /\/magic\.spec/, '/magic.spec must never be named proactively (§5)');
             assert.doesNotMatch(next, /execute the active phase/, 'must not recommend a non-existent phase (the R6 bug)');
 
-            // (d2) Same plan-complete state, but reached via `run` — rules/magic.md §5
-            //     forbids naming /magic.spec after /magic.run; the single next step
-            //     is the /magic.task funnel (new scope enters via task → HALT → spec).
-            next = finalize.computeNextAction('run', 'engine', wsDir);
-            assert.match(next, /\/magic\.task engine/, 'plan complete after run → /magic.task funnel (§5)');
-            assert.doesNotMatch(next, /\/magic\.spec/, '/magic.spec must never be named proactively after run (§5)');
+            // (d2) Same plan-complete state reached via `run`. The recommendation
+            //     is deliberately identical to (d): STATE.md `Next Action` is
+            //     workflow-agnostic at read time (/magic.status replays it
+            //     verbatim), so a per-branch recommendation would let a line that
+            //     is legal for one workflow surface under another.
+            assert.strictEqual(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                next,
+                'plan-complete recommendation must not vary by originating workflow'
+            );
 
             // (e) spec/rule → replan first (pipeline order).
             assert.match(finalize.computeNextAction('spec', 'engine', wsDir), /\/magic\.task/, 'spec → /magic.task');
@@ -581,6 +586,65 @@ describe('Magic Engine Scripts', () => {
             // (f) Unreadable TASKS.md → safe planning fallback.
             const voidWs = path.join(tempDir, '.design', 'void');
             assert.match(finalize.computeNextAction('run', 'void', voidWs), /\/magic\.task/, 'missing TASKS.md → /magic.task fallback');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js computeNextAction never names a reserved command (§5)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+            const wsDir = path.join(tempDir, '.design', 'engine');
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
+            const tasksPath = path.join(wsDir, 'TASKS.md');
+
+            // Every plan state the three-tier lookup can land in. The previous
+            // regression fixed the plan-complete `run` branch only and left the
+            // `task` branch emitting /magic.spec, so this sweeps the full matrix
+            // rather than pinning one cell of it.
+            const planStates = {
+                'inline open task': '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n',
+                'registry active phase': [
+                    '## Active Phases', '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |', '',
+                ].join('\n'),
+                'plan complete': [
+                    '## Active Phases', '', '*None — plan complete.*', '',
+                    '## Completed Phases', '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |', '',
+                ].join('\n'),
+                'empty registry': '# Master Task Index\n\n## Active Phases\n\n',
+            };
+
+            for (const [label, tasks] of Object.entries(planStates)) {
+                fs.writeFileSync(tasksPath, tasks);
+                for (const workflow of ['spec', 'task', 'run', 'rule']) {
+                    const next = finalize.computeNextAction(workflow, 'engine', wsDir);
+                    assert.doesNotMatch(
+                        next,
+                        /\/magic\.(spec|analyze)/,
+                        `${workflow} @ ${label}: reserved command leaked into Next Action → "${next}"`
+                    );
+                    // §5 / DA-6: the user sees exactly ONE next step. STATE.md
+                    // `Next Action` is replayed verbatim by /magic.status, so a
+                    // second command here becomes a second user-visible option.
+                    const commands = next.match(/\/magic\.[a-z.]+/g) || [];
+                    assert.strictEqual(
+                        commands.length, 1,
+                        `${workflow} @ ${label}: expected exactly one command, got ${commands.length} → "${next}"`
+                    );
+                }
+            }
+
+            // Unreadable workspace — the catch-path fallback is bound too.
+            const voidNext = finalize.computeNextAction('run', 'void', path.join(tempDir, '.design', 'void'));
+            assert.doesNotMatch(voidNext, /\/magic\.(spec|analyze)/, 'catch fallback must stay §5-clean');
         } finally {
             cleanup(tempDir);
         }
@@ -614,7 +678,8 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(statePath), 'SC-2: STATE.md created/patched even on the skip path');
             const state = fs.readFileSync(statePath, 'utf8');
             assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
-            assert.match(state, /\/magic\.spec/, 'SC-2.1 e2e: plan-complete next-action points to /magic.spec');
+            assert.match(state, /\/magic\.task main/, 'SC-2.1 e2e: plan-complete next-action routes through the /magic.task funnel');
+            assert.doesNotMatch(state, /Next Action:.*\/magic\.spec/, '§5: the persisted Next Action never names /magic.spec');
             // STATE.md write dirties the tree → SC-3 non-bumping suggestion is emitted.
             assert.match(out, /Suggested commit message/, 'SC-3: a commit suggestion is emitted');
             assert.match(fs.readFileSync(path.join(designDir, '.version'), 'utf8'), /^0\.1\.0$/, 'skip path does not bump the version');

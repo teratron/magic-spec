@@ -1,6 +1,6 @@
 # Session Continuity & Status Surface
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -46,7 +46,17 @@ Every workspace owns exactly one `STATE.md`, instantiated from the engine templa
 
 Every mutating workflow (spec, task, run, rule) MUST update `STATE.md` after its main steps complete and before its Completion Checklist — at minimum: `Updated` timestamp, `Status`, progress indicators, and a recomputed `Next Action` (per DA-6). Existing mid-workflow updates (e.g., the run workflow's per-task updates) remain; this invariant adds the end-of-command guarantee. Read-only workflows (analyze, graph, status) are exempt. A workflow invocation that mutated artifacts but left `STATE.md` stale is incomplete.
 
-**Plan-State-Aware Next Action (SC-2.1):** the recomputed `Next Action` MUST reflect the actual plan state, not a fixed per-workflow string. The computation reads the workspace plan/task ledger and resolves to: (a) **open tasks in the active phase** → point to execution (`/magic.run {ws}`); (b) **plan complete** (no open `- [ ]` tasks and no active phase) → the resolution is **workflow-sensitive**, because the Post-Task Replan rule (`rules/magic.md` §5) forbids naming `/magic.spec` proactively after `/magic.run`: after `run`, point to the planning funnel (`/magic.task {ws}`) — new scope enters via task → Pre-flight HALT → spec, so the user still sees exactly one next step; after `task` (planning itself just concluded empty — recommending `/magic.task` again would be circular), point to new-scope authoring (`/magic.spec`) or a status briefing. In no case may the recommendation be "execute the active phase" against an empty plan; (c) **registered specs without a plan** → point to planning (`/magic.task {ws}`). A `Next Action` that recommends running a phase that does not exist, re-planning a plan with no pending specs, or a command the Post-Task Replan rule forbids after the completed workflow, is an SC-2 defect: the briefing then misdirects the returning user (SC-1/SC-4 consume this field as the authoritative resume point).
+**Plan-State-Aware Next Action (SC-2.1):** the recomputed `Next Action` MUST reflect the actual plan state, not a fixed per-workflow string. The computation reads the workspace plan/task ledger and resolves to: (a) **open tasks in the active phase** → point to execution (`/magic.run {ws}`); (b) **plan complete** (no open `- [ ]` tasks and no active phase) → point to the planning funnel (`/magic.task {ws}`), **uniformly for every originating workflow**; (c) **registered specs without a plan** → point to planning (`/magic.task {ws}`). In no case may the recommendation be "execute the active phase" against an empty plan.
+
+**Provenance-Free Field (SC-2.2):** `Next Action` is persisted without any record of which workflow wrote it, and SC-4 replays it **verbatim** in the briefing. Its value is therefore read back in contexts unrelated to the workflow that produced it, and MUST satisfy the Post-Task Replan rule (`rules/magic.md` §5) unconditionally rather than per originating workflow:
+
+- The synthesized value MUST name **exactly one** command (§5's single-next-step contract, DA-6).
+- The synthesized value MUST NOT name `/magic.spec` or `/magic.analyze`. §5 reserves the former to a real `/magic.task` Pre-flight HALT and keeps the latter on-demand; a value chosen as legal for one workflow otherwise resurfaces under another — a `/magic.spec` written by a `task` finalize reappears in the briefing after `/magic.run`, precisely where §5 forbids it.
+- The constraint MUST be enforced at the **single exit** of the computation, not per branch. Branch-local enforcement is the demonstrated failure mode: a fix that corrected only the `run` branch left `task` emitting `/magic.spec` (field report, engine 2.1.49 → 2.1.58).
+
+Routing plan-complete through the funnel is not circular: `/magic.task`'s Pre-flight raises the HALT that sanctions spec authoring, so new scope is still reached — through the one sanctioned door instead of a hardcoded command name.
+
+A `Next Action` that recommends running a phase that does not exist, re-planning a plan with no pending specs, names more than one command, or names a command §5 reserves, is an SC-2 defect: the briefing then misdirects the returning user (SC-1/SC-4 consume this field as the authoritative resume point).
 
 ### SC-3 — Commit Suggestion Guarantee
 
@@ -101,6 +111,7 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-08-06 | Agent | SC-2.1(b) plan-complete resolution reverted to **workflow-agnostic** (`/magic.task {ws}` for every originating workflow) and new **SC-2.2 Provenance-Free Field** added. 1.2.0's workflow-sensitive split was unsound: `Next Action` records no provenance and SC-4 replays it verbatim, so the `/magic.spec` it kept for the `task` branch resurfaced in the briefing after `/magic.run` — the very §5 violation 1.2.0 set out to fix, laundered through STATE.md. SC-2.2 binds the §5 constraint (exactly one command; never `/magic.spec` or `/magic.analyze`) to the field itself and mandates enforcement at the computation's single exit, since branch-local enforcement is the demonstrated failure mode. Field evidence: field report against engine 2.1.49, re-verified against 2.1.58 where the `task` branch still emitted `/magic.spec`. |
 | 1.2.0 | 2026-07-18 | Agent | SC-2.1(b) plan-complete resolution made workflow-sensitive: after `run` → `/magic.task {ws}` funnel (Post-Task Replan `rules/magic.md` §5 forbids naming `/magic.spec` proactively after `/magic.run`); after `task` → `/magic.spec` (unchanged — a repeat `/magic.task` recommendation would be circular). Field evidence: finalize `--workflow=run` at a phase close wrote a `/magic.spec` Next Action into STATE.md, contradicting §5's single-next-step contract (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-13 | Agent | SC-2.1 Plan-State-Aware Next Action: the recomputed `Next Action` must reflect actual plan state (open tasks → run; plan-complete → /magic.spec; specs-no-plan → task), never a fixed "execute the active phase" against an empty plan. Field evidence: finalize `computeNextAction` returned a stale run-recommendation across this session's plan-complete states. Re-reviewed under Trust Mode (C9). |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable version. SC-1..SC-5 per user directive: live memory contract, universal post-command state updates, commit suggestion guarantee, status briefing surface (C2 exception). |
