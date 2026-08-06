@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -35,9 +35,11 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 - **SC-2 state patch** on both the significant path and the no-significant-change (skip) path — `STATE.md` is updated either way.
 - **SC-2.1 plan-state-aware `Next Action`** — the plan-complete branch resolves to the `/magic.task` funnel, not "execute the active phase"; the open-tasks branch resolves to execution.
+- **SC-2.1(a) Blocked-phase precedence** — a two-level-format phase fixture with `status: Blocked` frontmatter (or a `Blocked` `TASKS.md` registry row) and an open checklist item must not resolve to an execute-style `Next Action` naming the blocked task's ID. The regression that motivated this case had `Status: Blocked` and `## Blockers` populated in `STATE.md` while `Next Action` still recommended running straight into the blocker.
 - **SC-2.2 provenance-free field** — the reserved-command screen is swept across the full *(workflow × plan state)* matrix, not one cell of it: no branch may emit `/magic.spec` or `/magic.analyze`, and every branch emits exactly one command. Pinning a single branch is what let the prior regression through.
 - **SC-3 non-bumping commit suggestion** — significance miss + dirty tree emits exactly one labeled suggestion; no version bump, no CHANGELOG entry, no write-side git.
 - **`update-state.js --auto-progress`** — the Progress block is recomputed from `TASKS.md`.
+- **SC-2.3 progress granularity (two-level layout)** — `computeProgress()` against a `tasks/phase-{N}.md`-format fixture (no inline `### Phase {N} Checklist` in `TASKS.md`) must still produce a `Phase {N}: […]` counter line, not only the aggregate `Overall` line. The prior fixture set only ever exercised the legacy inline-heading format, so this gap was invisible to the existing coverage.
 - **RC-11 generator-containment contract** (`l1-sdd-reference-containment.md`) — `buildChangelogBullet('spec', …)`'s single-spec branch must not embed a spec's artifact ID in its return value; asserted directly against the function's output, not against the shipped CHANGELOG.md (which only a real invocation touches).
 
 A finalize-pipeline change merged without harness coverage of the touched branch is a test-suite gap.
@@ -59,6 +61,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.9.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate gained two cases from one field report (engine 2.1.58): **SC-2.1(a) Blocked-phase precedence** — a Blocked two-level-format phase with an open checklist item must not yield an execute-style `Next Action`; and **SC-2.3 progress granularity** — `computeProgress()` must produce a per-phase counter for the canonical two-level task layout, not only the legacy inline-heading format the existing fixtures exclusively exercised. |
 | 1.8.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with **RC-11 generator-containment**: `buildChangelogBullet()`'s single-spec branch interpolated a spec's artifact ID into text written to root `CHANGELOG.md`, undetected because no prior mandate covered a generator's own return value (as opposed to the shipped-text contracts above, which cover prose an agent authors). Field report against engine 2.1.49. |
 | 1.7.0 | 2026-08-06 | Agent | Added the **shipped-text contract coverage** mandate: where engine behavior has no code (the SDD containment scan is a cognitive grep, so its prose statement is the implementation), the harness asserts the contract over the shipped text. Pins RC-2.1 notation independence across rules/magic.md, .magic/analyze.md, and both containment role cards, plus the existing executor-parsable --workspace contract. |
 | 1.6.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate extended with SC-2.2: the reserved-command screen must be swept across the full (workflow x plan state) matrix rather than pinned on one branch, and the SC-2.1 plan-complete expectation restated as the `/magic.task` funnel. Pinning a single branch is what let the prior /magic.spec regression through. |

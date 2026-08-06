@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -52,9 +52,9 @@ Implements SC-2 and SC-3 of [l1-session-continuity.md](l1-session-continuity.md)
 After significance evaluation and phase archival, the pipeline patches the active workspace's `STATE.md` via the `update-state` utility (`.magic/scripts/update-state.js`):
 
 - `Updated` — invocation timestamp.
-- `Status` — recomputed from plan/task state (`Active | Blocked | Complete`).
-- Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect.
-- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1). The synthesized value is screened at the computation's single exit against SC-2.2: exactly one command, never `/magic.spec` or `/magic.analyze`. A screened-out value degrades to the `/magic.task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string.
+- `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. This corrects a previous claim in this section that `Status` is "recomputed from plan/task state" here; no code path in this step does that. Left accurate only as long as those explicit call sites stay in sync — a latent gap, not one this amendment closes (see §8.4).
+- Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect — and so, per SC-2.3, is silently discarding the phase-level counter itself when the recompute can't locate it (§8.2).
+- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1, Blocked-phase precedence per SC-2.1(a) — §8.1). The synthesized value is screened at the computation's single exit against SC-2.2: exactly one command, never `/magic.spec` or `/magic.analyze`. A screened-out value degrades to the `/magic.task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string.
 
 The step runs even when the significance whitelist does not hit — live memory must reflect every completed command, not only version-bumping ones. Failures are non-blocking: a warning is printed and finalize continues (live memory staleness is reported, never fatal).
 
@@ -105,6 +105,47 @@ No other branch of `buildChangelogBullet()` (`task`, `run`, `rule`) interpolates
 
 Per RC-11, the enforcement surface for generator output is regression-test coverage, not a role-card gate. The finalize-pipeline harness ([l2-test-suite.md](l2-test-suite.md)) must add a case asserting `buildChangelogBullet('spec', workspace, [oneAddedSpecFile])` contains **no** spec-derived identifier — pinning the fixed shape so the single-item branch cannot regress back to interpolating `artifactId()`.
 
+## 8. Blocked-Phase and Progress-Granularity Fixes (SC-2.1(a), SC-2.3) `[ADDED]`
+
+Both defects below were found in the same field report (engine 2.1.58) and share one root symptom: the SC-2 state-update step made `STATE.md` **less** accurate than before the update it was supposed to refresh.
+
+### 8.1 The Next Action Defect
+
+`synthesizeNextAction()` in `finalize.js`'s tier-2 lookup (phase files, canonical two-level format) reads each `tasks/phase-{N}.md` in order and returns its first open checklist match with no awareness of phase status:
+
+```js
+for (const file of phaseFiles) {
+    const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
+    const openTask = content.match(openTaskRe);
+    if (openTask) return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+}
+```
+
+A phase recorded `status: Blocked` in its own frontmatter still has an open (`- [ ]`) checklist line for the blocked task — Blocked is not Done — so this loop returns it unconditionally. Verified by direct reproduction against engine 2.1.62: a phase file with `status: Blocked` frontmatter, a `TASKS.md` registry row reading `` `Blocked` ``, and one open checklist item yields `Execute T-1A01 {title} via /magic.run {ws}` byte-for-byte, while `STATE.md`'s own `**Status:** Blocked` and `## Blockers` entry are left untouched by the same call — the file becomes internally contradictory, not just stale.
+
+**Required fix** (SC-2.1(a)): before returning a phase's open-task match, check that phase's `status:` frontmatter (already available in `content`) and its `TASKS.md` registry row. Either reading `Blocked` MUST redirect the return value away from an execute-style recommendation — e.g. `` `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magic.run ${workspace}` `` — rather than either silently falling through to the next phase (which would recommend a *different*, possibly out-of-order phase) or leaving the field untouched (which would go stale the next time the blocker's own detail changes). The redirected value still passes through the SC-2.2 single-exit screen unchanged.
+
+### 8.2 The Progress-Granularity Defect
+
+`computeProgress()` in `update-state.js` derives the active phase's counter line from an inline heading inside `TASKS.md` itself:
+
+```js
+const section = tasks.match(new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`));
+if (section) { /* only path that produces a Phase-N line */ }
+```
+
+That heading exists only in the legacy single-file task layout. The canonical two-level layout (`tasks/phase-{N}.md`, the format this engine's own workspace uses) never contains it, so `section` is always `null` and the phase-line branch never fires — for **every** project on the modern layout, not only Blocked ones. Verified by direct reproduction: a healthy, non-Blocked, 2-of-5-done phase in two-level format loses its `Phase 1: [2/5] …` counter on the very next `autoProgress` recompute, leaving only the aggregate `Overall: [0/1]` (phase-count, not task-count) line. This engine's own `.design/engine/STATE.md` has carried an `Overall`-only `## Progress` block for its entire history as a silent instance of the same gap.
+
+**Required fix** (SC-2.3): `computeProgress()`'s phase-line branch must fall back to reading `tasks/{active-phase-file}.md` directly — mirroring the file lookup `synthesizeNextAction()`'s tier-2 already performs — and count `- [x]`/`- [ ]` lines across that file, when no inline `### Phase {N} Checklist` section is found in `TASKS.md`. The two-level lookup is the common case and should not depend on locating an inline heading that layout never has.
+
+### 8.3 Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), both fixes need harness cases: `synthesizeNextAction()`/`computeNextAction()` called against a Blocked two-level-format fixture must not return an execute-style recommendation naming the blocked task's ID; `computeProgress()` called against a healthy two-level-format fixture must produce a `Phase {N}: […]` line, not aggregate-only.
+
+### 8.4 Known Gap Not Closed Here
+
+§5.1's `Status` bullet (corrected above) documents that no code path in the SC-2 step actually recomputes `Status` — it is only ever set by explicit `--status=` calls elsewhere in `task.md`/`run.md`. That gap is independent of both fixes above (this report's reproduction shows `Status` staying *accidentally* correct, not incorrect) and is not addressed by this amendment; noted here so it is not mistaken for closed.
+
 ## Canonical References
 
 | Path | Role |
@@ -121,6 +162,7 @@ Per RC-11, the enforcement surface for generator output is regression-test cover
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-08-06 | Agent | Added §8: two independent SC-2 defects sharing one root symptom (the state update makes `STATE.md` less accurate, not more). §8.1 — `synthesizeNextAction()`'s phase-file tier ignores `status: Blocked`, recommending execution of the very task the recorded blocker prevents (SC-2.1(a)); reproduced directly against engine 2.1.62. §8.2 — `computeProgress()`'s phase-counter branch only recognizes the legacy inline `### Phase {N} Checklist` heading, so it silently drops to an aggregate-only line for every project on the canonical two-level `tasks/phase-{N}.md` layout, Blocked or not — including this engine's own workspace, confirmed carrying the gap for its entire history (SC-2.3, new invariant). §5.1's `Status` bullet corrected: no code path in this step recomputes `Status`, contrary to what it previously claimed — §8.4 records this as a known, separate gap. Field report against engine 2.1.58. |
 | 1.5.0 | 2026-08-06 | Agent | Added §7 Generator Containment (RC-11): `buildChangelogBullet()`'s `spec` case, single-spec branch, interpolates the spec's artifact ID (`artifactId()`, prefix/extension stripped) into text written straight to root `CHANGELOG.md` — no Coder or Code-reviewer gate mediates generator output, so the leak reached a shipped product file undetected. The multi-spec branch and the `run` case's own single-item branch already use safe generic wording; only this one branch is the outlier. §7.2 states the required fix, §7.3 the regression-coverage obligation. Library Modules table corrected: `commit-suggester.js`, not `changelog-writer.js`, composes the bullet text; `changelog-writer.js` only inserts it. Related Specifications gained `l1-sdd-reference-containment.md`. Field report against engine 2.1.49. |
 | 1.4.0 | 2026-08-06 | Agent | §5.1 `Next Action` bullet realigned to SC-2.2: the synthesized value is screened at the computation single exit (exactly one command; never `/magic.spec` or `/magic.analyze`), degrading to the `/magic.task` funnel with a warning rather than aborting. Supersedes the 1.3.0 wording that cited SC-2.1 workflow-sensitive rule, withdrawn in l1-session-continuity 1.3.0. |
 | 1.3.0 | 2026-07-18 | Agent | §5.1 progress recompute contract hardened: counter lines are recomputed in place, non-counter lines inside the `## Progress` fence are preserved as hand-authored narrative (merge, never clobber). Field evidence: unconditional wholesale replacement destroyed an operator's Progress notes twice in one session (field report, engine 2.1.49). Next Action bullet now cites SC-2.1's workflow-sensitive plan-complete rule. |
