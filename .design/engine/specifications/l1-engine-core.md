@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.1.3
+**Version:** 1.1.4
 **Status:** Stable
 **Layer:** concept
 
@@ -42,6 +42,8 @@ Template governance: workflows must always instantiate new files from these temp
 ## Invariants
 
 - **C1**: Kernel integrity (checksums).
+- **C6**: Autonomous selective planning — spec status alone decides plan membership; `Stable` is pulled into the active plan, `Draft`/`RFC` go to the backlog, and an orphan is a blocker. Carried by the planning workflow.
+- **C10**: Task architecture and status truth — every planned spec carries an atomic checklist of `T-XXXX` units, and a unit's recorded status is the only claim of what is done. Carried by the planning and execution workflows.
 - **C14**: Automatic meta-updates on engine changes.
 - **C21**: Project ventilation for consistency.
 
@@ -75,6 +77,7 @@ The following guards were added to the core workflows as part of the first relia
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.4 | 2026-08-06 | Agent | Cited C6 (Autonomous Selective Planning) and C10 (Task Architecture & Status Truth) in §Invariants. Both were implemented in the planning workflow but cited by no specification, so the graph classified them as orphaned conventions. Traceability binding only — no behavioral change. |
 | 1.1.3 | 2026-06-10 | Agent | RE-1 clarification: an absent `Version:`/`Status:` header (while INDEX.md declares a valid value) is drift, not a silent pass. Registry is source of truth for field existence. Patch — no RFC revert. |
 | 1.1.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |
 | 1.1.1 | 2026-03-20 | Agent | Fixed template naming: specification.md → spec.md to match disk. |

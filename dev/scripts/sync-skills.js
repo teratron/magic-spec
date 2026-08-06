@@ -29,6 +29,40 @@ const CONFIG = {
 // Core Logic
 // ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * Hyphenates the command part of a dotted `magic.*` token, keeping a file
+ * extension intact when the token names a file.
+ *
+ * `magic.dev.sync` → `magic-dev-sync`, `magic.run.md` → `magic-run.md`,
+ * `magic.md` → `magic.md` (single segment: nothing to hyphenate).
+ *
+ * @param {string} token - Dotted token beginning with `magic`.
+ * @returns {string} Token in Skill-name form.
+ */
+function hyphenateMagicToken(token) {
+    if (token.toLowerCase().endsWith('.md')) {
+        return token.slice(0, -3).replace(/\./g, '-') + token.slice(-3);
+    }
+    return token.replace(/\./g, '-');
+}
+
+/**
+ * Rewrites dotted `magic.*` references into the hyphenated form Skill wrappers
+ * use, without destroying file extensions.
+ *
+ * Both replacements must be extension-aware. The slash-prefixed pattern also
+ * matches inside a path — `rules/magic.md` contains `/magic.md` — so guarding
+ * only the bare-token pattern leaves path-form references mangled.
+ *
+ * @param {string} text - Source text to normalize.
+ * @returns {string} Text with Skill-name references normalized.
+ */
+function normalizeMagicReferences(text) {
+    return text
+        .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + hyphenateMagicToken(m.slice(1)))
+        .replace(/\bmagic\.[a-z0-9.-]+\b/gi, m => hyphenateMagicToken(m));
+}
+
 function extractMetadata(content, fileName) {
     const metadata = {
         name: fileName.replace(/\./g, '-'),
@@ -116,28 +150,20 @@ function sync() {
                 : content.trim();
 
             // Normalize skill trigger references in body: /magic.a.b → /magic-a-b
-            // Only replace dots that are part of /magic.* commands, avoiding file names like MAGIC.md
-            const body = rawBody
-                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'))
-                .replace(/\bmagic(\.[a-z][a-z0-9-]*)+(?=\b)/gi, m => m.replace(/\./g, '-'));
+            const body = normalizeMagicReferences(rawBody);
 
             const rawFrontmatter = frontmatterMatch
                 ? frontmatterMatch[1].trim()
                 : `name: ${metadata.name}\ndescription: ${metadata.description}`;
 
-            // Normalize skill name references: replace dots and colons with hyphens, but preserve extension dots in file names (e.g. MAGIC.md)
-            const frontmatterContent = rawFrontmatter
-                .replace(/^(name:\s*)(.+)$/m, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
-                .replace(/^(\s+workflow:\s*)(.+)$/mg, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
-                .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + m.slice(1).replace(/\./g, '-'))
-                .replace(/\bmagic\.[a-z0-9.-]+\b/gi, m => {
-                    // If it is a filename like magic.run.md, replace dots inside the command name but keep .md
-                    if (m.endsWith('.md')) {
-                        const cmdPart = m.slice(0, -3);
-                        return cmdPart.replace(/\./g, '-') + '.md';
-                    }
-                    return m.replace(/\./g, '-');
-                });
+            // Normalize skill name references. `name:` and `workflow:` values are
+            // bare identifiers, so every separator collapses there; the remaining
+            // prose goes through the shared extension-aware normalizer.
+            const frontmatterContent = normalizeMagicReferences(
+                rawFrontmatter
+                    .replace(/^(name:\s*)(.+)$/m, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
+                    .replace(/^(\s+workflow:\s*)(.+)$/mg, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
+            );
 
             mkdirSafe(targetDir);
 

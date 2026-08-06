@@ -52,6 +52,8 @@ graph TD
 | **Pause** | `pause.md` | Saves session state to `HANDOFF.json` for cross-session resume. Supports zero-prompt continuity. | — |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
+| **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
+| **Graph** | `magic.graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -73,7 +75,19 @@ your-project/
     └── specifications/     #    Directory for all .md spec files
 ```
 
-> **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding. See [workspaces.md](./workspaces.md) for full configuration details.
+> **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding.
+>
+> ```json
+> {
+>   "default": "core",
+>   "workspaces": {
+>     "core": { "description": "Backend services", "scope": ["src/core", "src/api"] },
+>     "web":  { "description": "Web client",      "scope": ["src/web"] }
+>   }
+> }
+> ```
+>
+> `default` selects the workspace when a command is given no argument. `scope` bounds every scan — analysis, coverage, and community detection ignore paths outside it. Omit `scope` to let a workspace see the whole project. Every command accepts a workspace name as its first argument to override the default (`/magic.task web`).
 
 **`.gitignore`**: When Magic Spec is used as an installed dependency, add `.magic/`, `workflows/`, `skills/`, and `rules/` to your `.gitignore`. To vendor the engine instead, omit those entries.
 

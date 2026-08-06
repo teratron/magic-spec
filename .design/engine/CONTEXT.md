@@ -49,12 +49,14 @@
 │   ├── checksums.md
 │   ├── conception.md
 │   ├── distribution.md
+│   ├── graph.md
 │   ├── init.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── run.md
 │   ├── simulate.md
 │   ├── spec.md
+│   ├── status.md
 │   └── task.md
 ├── rules/
 │   └── magic.md

@@ -83,7 +83,7 @@ This project adheres to the following constitutional rules (defined in `RULES.md
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 25 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 27 | [.design/engine/INDEX.md](.design/engine/INDEX.md) |
 
 ## 🛠️ Getting Started
 

@@ -1,6 +1,6 @@
 # Multi-Angle Review & Decision Synthesis Implementation
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-multi-angle-review.md
@@ -64,8 +64,19 @@ graph TD
     E --> F[Emit DR & Update Registry]
 ```
 
+## Canonical References
+
+| Alias | Path | Purpose |
+| --- | --- | --- |
+| `[SPEC-ENGINE]` | `.magic/spec.md` | Hosts the MA-2 lens activation in Post-Update Review, the MA-4 Council Verdict block, and MA-5 Decision Record narration. |
+| `[ANALYZE-ENGINE]` | `.magic/analyze.md` | Hosts the MA-3 blind cross-evaluation pass in the ventilation audit. |
+| `[CONTEXT-ENGINE]` | `.magic/context.md` | Hosts the MA-1 context pre-flight scan ahead of the resolution chain. |
+| `[CRITIC-CARD]` | `.magic/roles/spec-critic.md` | Role card that carries the five evaluation lenses of §2.1. |
+| `[PROMPT-CARD]` | `.magic/roles/prompt-engineer.md` | Role card invoked alongside the critic in the review gate. |
+
 ## Document History
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.0.1 | 2026-08-06 | Added the `## Canonical References` section — the only Stable spec that lacked one. No design change: the table records the files §1 already names as the implementation sites. |
 | 1.0.0 | 2026-07-25 | Initial Stable release of L2 implementation mapping for Multi-Angle Review & Decision Synthesis. |

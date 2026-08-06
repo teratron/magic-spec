@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.15.0
+**Version:** 1.15.1
 **Generated:** 2026-08-06
-**Based on:** .design/engine/INDEX.md v1.15.5
+**Based on:** .design/engine/INDEX.md v1.15.6
 **Status:** Active
 
 ## Overview
@@ -109,15 +109,16 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 14 — Shipped Reference Hygiene & Documentation Sync
 
-- [ ] **Shipped Reference Hygiene** ([l1-documentation-system.md](specifications/l1-documentation-system.md) · [l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) · [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md)) [L1+L2] — repair every reference inside a shipped artifact that fails to resolve on a case-sensitive filesystem, and close the documentation drift the 2026-08-06 ventilation surfaced.
+- [x] **Shipped Reference Hygiene** ([l1-documentation-system.md](specifications/l1-documentation-system.md) · [l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) · [l2-workflow-wrappers.md](specifications/l2-workflow-wrappers.md)) [L1+L2] — repair every reference inside a shipped artifact that fails to resolve on a case-sensitive filesystem, and close the documentation drift the 2026-08-06 ventilation surfaced. *(Phase 14 complete — engine 2.1.62, harness 34/34, 239 relative links / 0 broken)*
   - Field evidence: `skills/magic-run/SKILL.md` and `skills/magic-task/SKILL.md` ship `rules/MAGIC-md` — a doubly-broken target. The skill-projection body normalizer in `dev/scripts/sync-skills.js` destroys the `.md` extension of any `rules/magic.md` reference regardless of case, while the comment directly above it claims that case is avoided; the `.md`-preserving guard exists only in the frontmatter path. Independently, `.magic/analyze.md` carries a markdown link to `../rules/MAGIC.md` against an actual file named `rules/magic.md` — dangling on every Linux and macOS installation, invisible on the NTFS development host. `CHANGELOG.md` records an earlier repair of "a dangling `rules/MAGIC.md` reference"; these are the branches that repair missed.
   - **Track A gates Track B**: fixing the case in `workflows/` before the generator is fixed would emit `rules/magic-md` into the wrappers — worse than the current state. The generator is repaired and the projection re-verified first.
   - Tracks C (documentation) and D (SDD layer) are file-independent of A and B and of each other; Track T validates the merged tree.
   - Blocking constraint **[C-001]** applies to Track B: `.agents/workflows/` mirrors `workflows/` by hardlink, and write-replace editors delink the twin silently.
-  - Tasks: [tasks/phase-14.md](tasks/phase-14.md)
+  - Tasks: [archives/tasks/phase-14.md](archives/tasks/phase-14.md) *(Done, archived)*
 
 ## Backlog
 
+- **R10 — phase archiver rewrites the link target but not its label** (found 2026-08-06): `updatePlanIndex()` in `phase-archiver.js` replaces `(tasks/phase-N.md)` with `(archives/tasks/phase-N.md)` and leaves the `[tasks/phase-N.md]` label untouched, yielding a working link whose text contradicts its destination. Cosmetic, not a broken link, so it never surfaces in a link sweep — which is why it survived. Fix is a one-line companion replacement; hand-normalized for Phase 14. `updateTasksIndex()` is unaffected (its label is a phase number, not a path).
 - **`docs/workspaces.md` — page referenced but never authored**: `docs/README.md` links `./workspaces.md` for Magic Workspaces configuration. Scheduled as part of T-14C03, which may resolve it by inlining rather than authoring; if the workspace configuration surface grows, revisit as a dedicated page.
 - **Engine dev-repo snapshot drift** (observation, 2026-06-13): the engine's own repo perpetually drifts (`**Engine Version:**` snapshot updates only via `/magic.analyze`, but C14 bumps every phase). Candidate refinement: snapshot-on-C14 in the engine repo, or a dev-repo exemption in upgrade-detection. (Phase 13 removes the *prompt* friction; the drift recurrence itself remains a separate refinement.)
 - **R8 — `rules/` + `skills/` outside C14 tracking** — DOCUMENTED (not fixed): captured as the engine-version tracking constraint in [l2-release-pipeline.md](specifications/l2-release-pipeline.md) §5.3 + §7. Broadening the checksum manifest was deferred (load-bearing, churn risk); the operating rule is "deliberate L1-only releases bump the version explicitly." Revisit only if an isolated `rules/`/`skills/` release is needed.

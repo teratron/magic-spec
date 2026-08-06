@@ -197,7 +197,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 10. **Documentation & Version Audit**:
     - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
-    - Verify `rules/MAGIC.md` points users to GitHub Releases and the current manual update folders.
+    - Verify `rules/magic.md` points users to GitHub Releases and the current manual update folders.
     - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 11. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 12. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
@@ -359,7 +359,7 @@ Mode C Checklist — Ventilation
 2. **Rules**: apply via T4 protocol to `RULES.md §7`.
 3. **Dispatch**:
    - Registry Sync: update `INDEX.md`. Bump Registry version.
-   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/MAGIC.md` §1](../rules/MAGIC.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
+   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/magic.md` §1](../rules/magic.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node .magic/scripts/executor.js generate-context`.
    - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).

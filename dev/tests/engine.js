@@ -89,6 +89,59 @@ describe('Magic Engine Scripts', () => {
         }
     };
 
+    // Runs the developer-only checksum manifest builder inside a temp workspace,
+    // so scripts gated on engine integrity (check-prerequisites, update-engine-meta)
+    // see a consistent .magic/.checksums.
+    const generateChecksums = (tempDir) => {
+        const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
+        execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+    };
+
+    // Copies the real state.md template into a temp workspace, so bootstrap
+    // paths exercise template-driven behavior instead of a from-scratch write.
+    // No-op if the source template is absent (mirrors the guard every call site used).
+    const copyStateTemplate = (tempDir) => {
+        const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
+        if (fs.existsSync(realTemplate)) {
+            fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
+        }
+    };
+
+    // Creates `.design/{workspace}/` inside a temp workspace.
+    const makeWorkspace = (tempDir, workspace = 'engine') => {
+        const wsDir = path.join(tempDir, '.design', workspace);
+        fs.mkdirSync(wsDir, { recursive: true });
+        return wsDir;
+    };
+
+    // Creates `.design/{workspace}/tasks/` inside a temp workspace, returning
+    // the paths phase/task fixtures are written under.
+    const makeWorkspaceWithTasks = (tempDir, workspace = 'engine') => {
+        const wsDir = makeWorkspace(tempDir, workspace);
+        const tasksDir = path.join(wsDir, 'tasks');
+        fs.mkdirSync(tasksDir, { recursive: true });
+        return { wsDir, tasksDir, tasksPath: path.join(wsDir, 'TASKS.md') };
+    };
+
+    // require()s phase-archiver.js and creates its workspace fixture in one
+    // step — the pairing every phase-archiver test starts with.
+    const requirePhaseArchiverWorkspace = (tempDir) => {
+        const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
+        return { archiver, ...makeWorkspaceWithTasks(tempDir) };
+    };
+
+    // Writes a minimal `l1-core.md` spec with a Canonical References entry for
+    // `src/`, used by the Invariant 7 gitignore-parity fixtures.
+    const writeCanonicalCoreSpec = (tempDir) => {
+        const specsDir = path.join(tempDir, '.design', 'specifications');
+        fs.mkdirSync(specsDir, { recursive: true });
+        fs.writeFileSync(
+            path.join(specsDir, 'l1-core.md'),
+            '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
+        );
+        return specsDir;
+    };
+
     // ───────────────────────────────────────────────────────────────────────────
     // 1. generate-checksums.js
     // ───────────────────────────────────────────────────────────────────────────
@@ -262,8 +315,7 @@ describe('Magic Engine Scripts', () => {
             // update-engine-meta bails early when .checksums is missing (initializes and returns).
             // Seed checksums so the bump branch is exercised. The manifest builder lives in
             // dev/scripts/ (developer-only); tempDir has dev/scripts/ wired up by createTempWorkspace.
-            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
-            execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+            generateChecksums(tempDir);
 
             // Trigger drift: modify a file so update-engine-meta detects change and bumps version
             fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), '\n// drift\n');
@@ -287,8 +339,7 @@ describe('Magic Engine Scripts', () => {
     test('update-engine-meta --check fails when a manifest entry has no file on disk', () => {
         const tempDir = createTempWorkspace();
         try {
-            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
-            execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
+            generateChecksums(tempDir);
 
             const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
             const runCheck = () => {
@@ -339,8 +390,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules');
 
             // Need checksums to pass integrity check (developer-only manifest builder in dev/scripts/)
-            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
-            execSync(`node "${checksumScript}"`, { cwd: tempDir });
+            generateChecksums(tempDir);
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
             const output = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
@@ -387,8 +437,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
 
             // Checksums must pass integrity so ENGINE_INTEGRITY doesn't mask the result.
-            const checksumScript = path.join(tempDir, 'dev', 'scripts', 'generate-checksums.js');
-            execSync(`node "${checksumScript}"`, { cwd: tempDir });
+            generateChecksums(tempDir);
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
 
@@ -435,13 +484,9 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             // Copy real state template so bootstrap path exercises template branch
-            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
-            if (fs.existsSync(realTemplate)) {
-                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
-            }
+            copyStateTemplate(tempDir);
 
-            const wsDir = path.join(tempDir, '.design', 'main');
-            fs.mkdirSync(wsDir, { recursive: true });
+            const wsDir = makeWorkspace(tempDir, 'main');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-state.js');
 
@@ -491,10 +536,7 @@ describe('Magic Engine Scripts', () => {
         try {
             // require.main guard means requiring finalize.js does NOT run main().
             const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
-            const tasksPath = path.join(wsDir, 'TASKS.md');
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
 
             // (a) Legacy inline format: open task in TASKS.md → /magic.run.
             fs.writeFileSync(tasksPath, '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n');
@@ -595,10 +637,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
-            const tasksPath = path.join(wsDir, 'TASKS.md');
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
 
             // Every plan state the three-tier lookup can land in. The previous
             // regression fixed the plan-complete `run` branch only and left the
@@ -653,13 +692,9 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js patches STATE.md and suggests a commit on the skip path (SC-2/SC-3)', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
-            if (fs.existsSync(realTemplate)) {
-                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
-            }
+            copyStateTemplate(tempDir);
             const designDir = path.join(tempDir, '.design');
-            const wsDir = path.join(designDir, 'main');
-            fs.mkdirSync(wsDir, { recursive: true });
+            const wsDir = makeWorkspace(tempDir, 'main');
             fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
                 default: 'main',
                 finalization: { enabled: true, autoBump: true, autoChangelog: false, suggestCommit: true, versionPath: '.design/.version' },
@@ -694,10 +729,7 @@ describe('Magic Engine Scripts', () => {
     test('phase-archiver findArchiveCandidates matches checklist lines, not prose `- [ ]` (R7)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
 
             // (a) Done, all checklist items [x], but Notes quote `- [ ]` in prose → archivable.
             fs.writeFileSync(path.join(tasksDir, 'phase-20.md'),
@@ -724,10 +756,7 @@ describe('Magic Engine Scripts', () => {
     test('archiveCompletedPhases rewrites phase links in both TASKS.md and PLAN.md', () => {
         const tempDir = createTempWorkspace();
         try {
-            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
 
             fs.writeFileSync(path.join(tasksDir, 'phase-3.md'),
                 '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
@@ -784,8 +813,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            fs.mkdirSync(wsDir, { recursive: true });
+            const wsDir = makeWorkspace(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
                 '# Master Task Index',
@@ -849,8 +877,7 @@ describe('Magic Engine Scripts', () => {
             const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
             fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
             const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            fs.mkdirSync(wsDir, { recursive: true });
+            const wsDir = makeWorkspace(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
                 '| Phase | Description | Status |',
@@ -878,10 +905,7 @@ describe('Magic Engine Scripts', () => {
     test('phase-archiver findArchiveCandidates parses CRLF frontmatter (git autocrlf)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
-            const wsDir = path.join(tempDir, '.design', 'engine');
-            const tasksDir = path.join(wsDir, 'tasks');
-            fs.mkdirSync(tasksDir, { recursive: true });
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
 
             // A genuinely complete phase, but with CRLF line endings as produced
             // by git autocrlf on a Windows checkout.
@@ -1005,12 +1029,7 @@ describe('Magic Engine Scripts', () => {
     test('extract-rationale.js excludes .gitignored build artifacts from the scan (Invariant 7)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const specsDir = path.join(tempDir, '.design', 'specifications');
-            fs.mkdirSync(specsDir, { recursive: true });
-            fs.writeFileSync(
-                path.join(specsDir, 'l1-core.md'),
-                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
-            );
+            writeCanonicalCoreSpec(tempDir);
 
             // Real source file — must always be scanned.
             const srcDir = path.join(tempDir, 'src');
@@ -1109,12 +1128,7 @@ describe('Magic Engine Scripts', () => {
     test('analyze-coverage.js excludes gitignored trees and honors root anchoring (Invariant 7)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const specsDir = path.join(tempDir, '.design', 'specifications');
-            fs.mkdirSync(specsDir, { recursive: true });
-            fs.writeFileSync(
-                path.join(specsDir, 'l1-core.md'),
-                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
-            );
+            writeCanonicalCoreSpec(tempDir);
 
             const mk = (rel, body) => {
                 const abs = path.join(tempDir, rel);
@@ -1382,12 +1396,8 @@ describe('Magic Engine Scripts', () => {
     test('update-state.js honors both flag forms and never writes STATE.md to the registry root', () => {
         const tempDir = createTempWorkspace();
         try {
-            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
-            if (fs.existsSync(realTemplate)) {
-                fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
-            }
-            const wsDir = path.join(tempDir, '.design', 'docs');
-            fs.mkdirSync(wsDir, { recursive: true });
+            copyStateTemplate(tempDir);
+            const wsDir = makeWorkspace(tempDir, 'docs');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-state.js');
             const rootState = path.join(tempDir, '.design', 'STATE.md');

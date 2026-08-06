@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.18.0
+**Version:** 1.18.1
 **Generated:** 2026-08-06
-**Based on PLAN:** .design/engine/PLAN.md v1.15.0
+**Based on PLAN:** .design/engine/PLAN.md v1.15.1
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -13,9 +13,7 @@ Tactical registry of all phases and their statuses. Phases 2-13 are Done; 27 spe
 
 ## Active Phases
 
-| Phase | Description | Status |
-| --- | --- | --- |
-| [Phase 14](tasks/phase-14.md) | Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill | `Todo` |
+*None — plan complete. New scope enters via `/magic.task`.*
 
 ## Completed Phases
 
@@ -33,6 +31,7 @@ Tactical registry of all phases and their statuses. Phases 2-13 are Done; 27 spe
 | [Phase 11](archives/tasks/phase-11.md) | Archiver Eligibility Fix (R7) — anchored checklist match + re-archive phase-10 | `Done (Archived)` |
 | [Phase 12](archives/tasks/phase-12.md) | Wrapper-Body Parity Check (R4) — WRAPPER_BODY_DRIFT in analyze Mode C | `Done (Archived)` |
 | [Phase 13](archives/tasks/phase-13.md) | Upgrade-Detection DA Alignment — §1 `[y/n]` → single-path narration | `Done (Archived)` |
+| [Phase 14](archives/tasks/phase-14.md) | Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill | `Done (Archived)` |
 
 ## Backlog
 

@@ -69,7 +69,7 @@ skills/
 
 ## 🔄 Updating
 
-Magic Spec includes a built-in upgrade-detection rule (`rules/MAGIC.md §1`). After you manually replace the engine folders with a newer release, the next `/magic.*` invocation compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md`; on a mismatch it surfaces the drift and recommends `/magic.analyze` to ratify the upgrade, then proceeds — no blocking prompt. No network calls, no hidden cache — purely local.
+Magic Spec includes a built-in upgrade-detection rule (`rules/magic.md §1`). After you manually replace the engine folders with a newer release, the next `/magic.*` invocation compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md`; on a mismatch it surfaces the drift and recommends `/magic.analyze` to ratify the upgrade, then proceeds — no blocking prompt. No network calls, no hidden cache — purely local.
 
 To update:
 
@@ -178,4 +178,4 @@ Distributed under the [Apache License 2.0](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v2.1.55). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v2.1.62). We are constantly refining the SDD engine based on real-world usage.

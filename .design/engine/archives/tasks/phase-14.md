@@ -1,43 +1,65 @@
 ---
 phase: 14
 name: "Shipped Reference Hygiene & Documentation Sync"
-status: Todo
+status: Done
 subsystem: ".magic, workflows, skills, docs"
 requires: []
-provides: []
+provides:
+  - "Extension-aware skill projection: rules/magic.md survives wrapper generation"
+  - "Zero MAGIC.md case-drift references across shipped artifacts"
+  - "docs/ covers the full command surface (graph, status)"
+  - "Convention traceability complete: 0 orphaned conventions"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - docs/graph.md
+    - docs/status.md
+  modified:
+    - dev/scripts/sync-skills.js
+    - .magic/analyze.md
+    - .magic/run.md
+    - workflows/magic.run.md
+    - workflows/magic.task.md
+    - skills/magic-run/SKILL.md
+    - skills/magic-task/SKILL.md
+    - README.md
+    - CONTRIBUTING.md
+    - docs/README.md
+    - .design/engine/specifications/l1-engine-core.md
+    - .design/engine/specifications/l2-multi-angle-review.md
+patterns_established:
+  - "Shared normalizer over duplicated regex chains: one rule, one implementation, both call sites"
+  - "Hardlink-touching edits verify with fsutil + Get-FileHash, not with the editor exit code"
+  - "Link sweeps strip code spans before extraction; a quoted defect is not a broken link"
 duration_minutes: ~
 ---
 
 # Stage 14 Tasks — Shipped Reference Hygiene & Documentation Sync
 
 **Phase:** 14
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** Every reference inside a shipped artifact resolves on a case-sensitive filesystem, and the user-facing documentation set matches the engine it documents. Closes the findings raised by the 2026-08-06 ventilation.
 
 ## Atomic Checklist
 
-- [ ] [T-14A01] Preserve file extensions in the skill-wrapper body normalizer
-- [ ] [T-14A02] Regenerate skill wrappers and verify no mangled filenames remain
-- [ ] [T-14B01] Purge `rules/MAGIC.md` case drift from engine workflow bodies
-- [ ] [T-14B02] Purge `rules/MAGIC.md` case drift from workflow wrappers; restore hardlinks
-- [ ] [T-14C01] Sync README version reference and engine upgrade-rule citation
-- [ ] [T-14C02] Fix CONTRIBUTING spec count and workspace registry link
-- [ ] [T-14C03] Repair `docs/README.md` dead link and complete the workflow table
-- [ ] [T-14C04] Author `docs/graph.md` and `docs/status.md`
-- [ ] [T-14D01] Add `## Canonical References` to `l2-multi-angle-review.md`
-- [ ] [T-14D02] Bind conventions C6 and C10 to `l1-engine-core.md`
-- [ ] [T-14T01] Validation — harness, link integrity, engine meta parity
+- [x] [T-14A01] Preserve file extensions in the skill-wrapper body normalizer
+- [x] [T-14A02] Regenerate skill wrappers and verify no mangled filenames remain
+- [x] [T-14B01] Purge `rules/MAGIC.md` case drift from engine workflow bodies
+- [x] [T-14B02] Purge `rules/MAGIC.md` case drift from workflow wrappers; restore hardlinks
+- [x] [T-14C01] Sync README version reference and engine upgrade-rule citation
+- [x] [T-14C02] Fix CONTRIBUTING spec count and workspace registry link
+- [x] [T-14C03] Repair `docs/README.md` dead link and complete the workflow table
+- [x] [T-14C04] Author `docs/graph.md` and `docs/status.md`
+- [x] [T-14D01] Add `## Canonical References` to `l2-multi-angle-review.md`
+- [x] [T-14D02] Bind conventions C6 and C10 to `l1-engine-core.md`
+- [x] [T-14T01] Validation — harness, link integrity, engine meta parity
 
 ## Detailed Tracking
 
 ### [T-14A01] Preserve file extensions in the skill-wrapper body normalizer
 
 - **Spec:** l2-skill-wrappers.md §Projection
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Extracted hyphenateMagicToken + normalizeMagicReferences; both replacements are now extension-aware and shared by the body and frontmatter paths.
 - **Assignment:** Agent
 - **Track:** A (generator)
 - **Files:** `dev/scripts/sync-skills.js`
@@ -48,7 +70,8 @@ duration_minutes: ~
 ### [T-14A02] Regenerate skill wrappers and verify no mangled filenames remain
 
 - **Spec:** l2-skill-wrappers.md §Projection
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Regenerated 16 wrappers; diff is exactly the 2 known-bad lines, extension restored.
 - **Assignment:** Agent
 - **Track:** A (generator)
 - **Depends:** T-14A01
@@ -60,7 +83,8 @@ duration_minutes: ~
 ### [T-14B01] Purge `rules/MAGIC.md` case drift from engine workflow bodies
 
 - **Spec:** l1-documentation-system.md §Reference Integrity
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** 4 occurrences purged from analyze.md (incl. the markdown link) and run.md.
 - **Assignment:** Agent
 - **Track:** B (engine bodies)
 - **Depends:** T-14A02
@@ -72,7 +96,8 @@ duration_minutes: ~
 ### [T-14B02] Purge `rules/MAGIC.md` case drift from workflow wrappers; restore hardlinks
 
 - **Spec:** l2-workflow-wrappers.md §Inventory · l2-agent-surface.md
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** 2 wrappers purged; hardlinks broke as [C-001] predicted and were recreated (hash-verified); C14 bumped 2.1.61 to 2.1.62.
 - **Assignment:** Agent
 - **Track:** B (engine bodies)
 - **Depends:** T-14B01
@@ -84,7 +109,8 @@ duration_minutes: ~
 ### [T-14C01] Sync README version reference and engine upgrade-rule citation
 
 - **Spec:** l1-documentation-system.md §docs Sync Policy
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** README version reference 2.1.55 to 2.1.62; upgrade-rule citation case-corrected.
 - **Assignment:** Agent
 - **Track:** C (documentation)
 - **Files:** `README.md`
@@ -94,7 +120,8 @@ duration_minutes: ~
 ### [T-14C02] Fix CONTRIBUTING spec count and workspace registry link
 
 - **Spec:** l1-documentation-system.md §docs Sync Policy
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Workspace row: spec count 25 to 27, registry link repaired to .design/engine/INDEX.md.
 - **Assignment:** Agent
 - **Track:** C (documentation)
 - **Files:** `CONTRIBUTING.md`
@@ -104,7 +131,8 @@ duration_minutes: ~
 ### [T-14C03] Repair `docs/README.md` dead link and complete the workflow table
 
 - **Spec:** l1-documentation-system.md §Knowledge Base Structure
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Dangling ./workspaces.md link replaced with an inline workspace.json example; Status and Graph rows added to the workflow table.
 - **Assignment:** Agent
 - **Track:** C (documentation)
 - **Depends:** T-14C04 (table rows must point at pages that exist)
@@ -115,7 +143,8 @@ duration_minutes: ~
 ### [T-14C04] Author `docs/graph.md` and `docs/status.md`
 
 - **Spec:** l1-documentation-system.md §Knowledge Base Structure · l2-status-command.md · l2-spec-graph-memory.md
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Authored docs/graph.md and docs/status.md from their L2 specs.
 - **Assignment:** Agent
 - **Track:** C (documentation)
 - **Files:** `docs/graph.md`, `docs/status.md`
@@ -125,7 +154,8 @@ duration_minutes: ~
 ### [T-14D01] Add `## Canonical References` to `l2-multi-angle-review.md`
 
 - **Spec:** l2-multi-angle-review.md
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Added Canonical References (5 entries); spec 1.0.0 to 1.0.1, INDEX row synced.
 - **Assignment:** Agent
 - **Track:** D (SDD layer)
 - **Files:** `.design/engine/specifications/l2-multi-angle-review.md`, `.design/engine/INDEX.md`
@@ -135,7 +165,8 @@ duration_minutes: ~
 ### [T-14D02] Bind conventions C6 and C10 to `l1-engine-core.md`
 
 - **Spec:** l1-engine-core.md
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** Cited C6 and C10 in l1-engine-core Invariants; spec 1.1.3 to 1.1.4; graph reports Orphaned: 0.
 - **Assignment:** Agent
 - **Track:** D (SDD layer)
 - **Files:** `.design/engine/specifications/l1-engine-core.md`, `.design/engine/INDEX.md`
@@ -145,7 +176,8 @@ duration_minutes: ~
 ### [T-14T01] Validation — harness, link integrity, engine meta parity
 
 - **Spec:** l2-test-suite.md
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** harness 34/34 exit 0; checksums clean; 0 MAGIC.md occurrences; 239 relative links, 0 broken.
 - **Assignment:** Agent
 - **Track:** T (validation)
 - **Depends:** T-14A02, T-14B02, T-14C03, T-14C04, T-14D01, T-14D02

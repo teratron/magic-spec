@@ -4,23 +4,24 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-06 09:41
+**Updated:** 2026-08-06 10:55
 **Phase:** 14 — Shipped Reference Hygiene & Documentation Sync
-**Status:** Active
+**Status:** Done
 
 ## Current Position
 
-- **Task:** l2-release-pipeline registered (baseline retrospec)
+- **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Execute T-14A01 Preserve file extensions in the skill-wrapper body normalizer via /magic.run engine
+- **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Overall: [12/13] ███████░ 92%
+Overall: [13/13] ████████ 100%
 ```
 
 ## Recent Decisions
+- 2026-08-06 **Decision:** Phase 14 complete. Provides: extension-aware skill projection; zero MAGIC.md case drift in shipped artifacts; docs/ covers graph+status; 0 orphaned conventions. Engine 2.1.62, harness 34/34.
 
 - 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
 
@@ -28,7 +29,6 @@ Overall: [12/13] ███████░ 92%
 - 2026-06-13 **Decision:** Phase 13 complete. Provides: rules/magic.md §1 DA-8/DA-9-aligned (no [y/n]); README updated; engine 2.1.41 (rules-only, no bump). Findings R8/R9 to backlog
 - 2026-06-13 **Decision:** Phase 13 planned: align rules/magic.md §1 with DA-8/DA-9 (remove [y/n]); README + hardlink; 3 tasks
 
-- 2026-06-13 **Decision:** Phase 12 complete. Provides: WRAPPER_BODY_DRIFT parity check in analyze Mode C (R4 preventive); engine 2.1.41
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
