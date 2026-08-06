@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -227,10 +227,51 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 §5.1's `Status` bullet (corrected above) documents that no code path in the SC-2 step actually recomputes `Status` — it is only ever set by explicit `--status=` calls elsewhere in `task.md`/`run.md`. §8.3 fixes one of those call sites (the per-task one, which should not touch `Status` at all); the broader claim that `Status` is ever holistically "recomputed" from plan/task state remains false after this amendment, and is not addressed here — noted so it is not mistaken for closed.
 
+## 9. Non-Whitelisted File Visibility (SC-3.1) `[ADDED]`
+
+### 9.1 The Defect
+
+`main()`'s success branch builds both the stdout `### Changed artifacts` listing (`emitSuccess()`, iterating `ctx.files`) and the suggested commit message's `Modified files:` body (`buildCommitMessage()`) from `sig.files` alone — the same whitelist-filtered set `computeSignificance()` returns to decide whether a version bump is warranted. Significance and message completeness are two different questions collapsed onto one file set: "should this bump the version" (correctly scoped to `.design/{ws}/...` per §significance.js's `WHITELIST`) and "what should the commit message tell the user they changed" (should reflect the real working-tree diff) are not the same question, and only the first one the whitelist actually answers.
+
+Reproduced directly against this repository's own history — no synthetic fixture needed, the defect is visible in a commit already on `master`. Commit `b96ce07` (`chore(engine): complete phase-14`, a `magic.run` finalize) suggested a commit body naming exactly two files:
+
+```plaintext
+Modified files:
+- .design/engine/STATE.md (+5 -5)
+- .design/engine/tasks/phase-14.md (+60 -28)
+```
+
+`git show --stat b96ce07` shows the commit the user actually made spans **17 files**, including `.magic/analyze.md`, `.magic/run.md`, `.magic/.checksums`, `.magic/.version` (a C14 engine-metadata sync riding the same working tree), `README.md`, `CONTRIBUTING.md`, and — the case that matters most in a consumer project — `dev/scripts/sync-skills.js` and `dev/tests/engine.js`, both hand-authored by the Coder role as the task's actual deliverable (confirmed via `git log --follow` against both paths). None of the 15 omitted files appear anywhere in finalize's own stdout output either; a user relying on `### Changed artifacts` to review what a `/magic.run` finalize touched has no way to learn these files exist.
+
+For `magic.run` this is the common case, not an edge case: its whitelist (`.design/{ws}/TASKS.md`, `STATE.md`, `archives/**/*`, `tasks/**/*.md`) is pure SDD bookkeeping — the actual application/product code a task implements is, by construction, never inside it. Every `magic.run` finalize whose task produced real source changes reproduces this gap; `b96ce07` is simply the instance this session happened to inspect closely enough to notice. Reported informally, without reproduction steps, as "finalize does not see new application files outside `.design/`" — confirmed by inspecting the repository's own commit history rather than a live repro, since the report gave a symptom, not a test case.
+
+### 9.2 Required Fix
+
+Two file sets already exist in the pipeline and are being collapsed into one where they should stay separate:
+
+- `sig.files` (whitelist-filtered) — correctly drives `deriveType()`, `deriveScope()`, `buildSummary()`, and `deriveChangelogCategory()`/`buildChangelogBullet()`. These derive the *semantic* nature of the change (added a spec, completed a task) and should stay scoped to SDD artifacts — this part is not the defect and must not change.
+- The full working-tree diff — already computed once, but only for the SC-3 non-bumping fallback path (`emitFallbackCommitSuggestion()` calls `gitChangedPaths(projectRoot)` directly, capped at `MAX_FILES = 15`). The success path never calls it.
+
+`buildCommitMessage()`'s `Modified files:` body enumeration, and `emitSuccess()`'s `### Changed artifacts` stdout listing, must switch from `sig.files` to the full `gitChangedPaths(projectRoot)` result — capped at the same `MAX_FILES = 15` the fallback path already uses, with a `(+N more changed file(s))` suffix beyond the cap:
+
+```plaintext
+BAD : buildCommitMessage({ ..., files: sig.files })
+      // header derivation AND body enumeration both read the whitelist subset
+GOOD: buildCommitMessage({ ..., files: allChangedFiles, headerFiles: sig.files })
+      // body enumerates every changed file; header derivation still reads only the whitelist subset
+```
+
+The header-derivation functions (`deriveType`, `deriveScope`, `buildSummary`) keep their existing `sig.files`-only input; only the body-enumeration input widens to the full changed-file set. `emitSuccess()`'s `files` parameter changes the same way, so the stdout the agent relays to the user matches the diff the user is about to commit.
+
+### 9.3 Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), a harness case must add a `magic.run` fixture with one whitelist-matched file (`TASKS.md`, a status flip) plus one non-whitelisted file changed in the same working tree (e.g. a file under `dev/` or `.magic/`), and assert: (a) significance and version bump still key off the whitelist subset alone — unchanged; (b) the suggested commit message's `Modified files:` body names both files; (c) `emitSuccess()`'s stdout `### Changed artifacts` section names both files. This is the inverse of the existing SC-3 fallback tests, which already exercise the no-significant-change path against the full changed-set — this closes the equivalent gap on the significant-change path.
+
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
+| `.magic/scripts/finalize.js` | Pipeline orchestrator; `main()`'s success branch is the site corrected by §9 (`buildCommitMessage`/`emitSuccess` file-set input) |
 | `.magic/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
 | `.magic/scripts/lib/commit-suggester.js` | Commit message generation and CHANGELOG bullet composition (RC-11, §7) |
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
@@ -244,6 +285,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.9.0 | 2026-08-06 | Agent | New §9 (SC-3.1) — **Non-Whitelisted File Visibility**: `emitSuccess()`'s `### Changed artifacts` listing and `buildCommitMessage()`'s `Modified files:` body are both built from `sig.files`, the significance whitelist's `.design/{ws}/...`-scoped subset — conflating "should this bump the version" with "what should the message tell the user they changed". Reproduced against a real commit already on `master` rather than a synthetic fixture: `b96ce07` (a `magic.run` finalize) suggested a message naming 2 files while the actual commit spanned 17, including `.magic/*` C14-sync files, root docs, and — the case that matters most for a consumer project — the task's own application-code deliverable (`dev/scripts/sync-skills.js`, `dev/tests/engine.js`), which sits outside `.design/` by construction for every `magic.run` task. Fix: widen the body-enumeration/stdout-listing input to the full `gitChangedPaths()` result (already computed for the SC-3 fallback path, now reused on the success path too), capped at the existing `MAX_FILES = 15`; header-derivation (`deriveType`/`deriveScope`/`buildSummary`) keeps reading `sig.files` only — that scoping is intentional and not the defect. Canonical References gained `.magic/scripts/finalize.js`. Reported informally ("finalize does not see new application files outside `.design/`", no reproduction steps) — confirmed by inspecting the repository's own commit history. Companion invariant added: `l1-session-continuity.md` 1.5.1 → 1.6.0 (new **SC-3.1 Commit Message Completeness**). |
 | 1.8.0 | 2026-08-06 | Agent | New §8.5 (defects renumber: old 8.5 Regression Coverage → 8.6, old 8.6 Known Gap → 8.7) — **The Progress Replacement-String Injection Defect**: `` content.replace(progressRe, `$1${body}$3`) `` uses a string-form replacement against a 3-capture-group regex, so JavaScript re-scans the *entire* resulting string for `$1`-`$9` patterns — including inside `${body}`, built from unconstrained narrative text. A preserved line containing a literal `$` followed by a digit (a dollar amount, in the reproduction) gets that sequence replaced with the *actual* capture-group content, splicing fragments of the surrounding `## Progress` fence markup into the middle of the narrative and unbalancing the file's triple-backtick count. The most severe of the five §8 defects: the others misplace or lose values, this one corrupts markdown structure. Fix: swap the string replacement for a function replacement, whose return value is used verbatim (§8.5's own text). Swept every `.replace()` call across `update-state.js`/`changelog-writer.js`/`phase-archiver.js`: this is the only site combining capture groups with unconstrained content. Reported informally (no reproduction steps, no version) as "STATE.md's ## Progress tore a two-line entry, truncating the first line" after two prior manual restorations; investigated and reproduced independently against engine 2.1.62 rather than taken at face value, since the report gave nothing to verify directly against. |
 | 1.7.0 | 2026-08-06 | Agent | §8 gained two more defects (same day, one further field report) and was reordered: defects now group as §8.1-§8.4, followed by consolidated §8.5 Regression Coverage and §8.6 Known Gap. New §8.3 — `run.md` §2.5's per-task `update-state` call pairs `--task=` with `--status={Done\|Blocked}`, but `update-state.js` has one `status` handler, mapped to the phase-level field; reproduced directly (one task done → phase `Status` becomes `Done`, a value outside SC-1.1's own vocabulary, new this version). Fix: drop `--status=` from the per-task call — task completion is already authoritative in the phase file's checklist. New §8.4 — the merge-not-clobber classifier's `counterRe` matches any `{label}: [n/m]`-shaped line, not only the two labels (`Overall`, `Phase {N}`) `computeProgress()` actually emits, so hand-authored counter-shaped narrative (`Specification:`, `Plan:`, `Implementation:` in the field report) is misclassified as engine-owned and deleted rather than preserved — directly contradicting §5.1's own "merge, never clobbers" promise. Fix: narrow the label alternation to the exact emitted set. Canonical References gained `.magic/run.md`. Field report against engine 2.1.58. |
 | 1.6.0 | 2026-08-06 | Agent | Added §8: two independent SC-2 defects sharing one root symptom (the state update makes `STATE.md` less accurate, not more). §8.1 — `synthesizeNextAction()`'s phase-file tier ignores `status: Blocked`, recommending execution of the very task the recorded blocker prevents (SC-2.1(a)); reproduced directly against engine 2.1.62. §8.2 — `computeProgress()`'s phase-counter branch only recognizes the legacy inline `### Phase {N} Checklist` heading, so it silently drops to an aggregate-only line for every project on the canonical two-level `tasks/phase-{N}.md` layout, Blocked or not — including this engine's own workspace, confirmed carrying the gap for its entire history (SC-2.3, new invariant). §5.1's `Status` bullet corrected: no code path in this step recomputes `Status`, contrary to what it previously claimed — §8.4 records this as a known, separate gap. Field report against engine 2.1.58. |
