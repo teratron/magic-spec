@@ -19,7 +19,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 19 ph
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 2](tasks/phase-2.md) | Skill Projection & Agent Surface Implementation | `Done` |
+| [Phase 2](archives/tasks/phase-2.md) | Skill Projection & Agent Surface Implementation | `Done (Archived)` |
 | [Phase 3](archives/tasks/phase-3.md) | Unified Role System — `.magic/roles/` + workflow integration | `Done (Archived)` |
 | [Phase 4](archives/tasks/phase-4.md) | Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates | `Done (Archived)` |
 | [Phase 5](archives/tasks/phase-5.md) | Decision Autonomy — C27 constitution anchoring + DA-6 posture + role binding | `Done (Archived)` |

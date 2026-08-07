@@ -1,6 +1,6 @@
 # Workspace Intent Routing
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -245,10 +245,12 @@ overlap gate is a cheap insurance policy against fragmentation.
 | `[EXECUTOR]` | `.magic/scripts/executor.js` | Hosts WI-9 auto-mkdir replacement for the silent fallback. |
 | `[SPEC-WORKFLOW]` | `.magic/spec.md` | Hosts the new Workspace Creation flow + WI-7 fit validation. |
 | `[WS-CONFIG]` | `.design/workspace.json` | Mutated by WI-6 step 2 atomically with directory creation. |
+| `[SIM-MATRIX]` | `specifications/simulations/workspace-intent-routing.md` | Cognitive simulation matrix validating the twelve canonical outcomes (§5) against representative inputs across the Baseline-Z/S/M setups. |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-08-07 | Agent | Registered `[SIM-MATRIX]` Canonical Reference for `specifications/simulations/workspace-intent-routing.md` — the cognitive simulation matrix backing §5's twelve canonical outcomes was present on disk but unregistered, landing `UNCOVERED` in `analyze-coverage.js` (ventilation finding). No content change to the simulation file itself; registry linkage only. |
 | 1.1.0 | 2026-08-06 | Agent | Broadened **WI-10** from "the diagram must match" to "every surface in `init.md` claiming what/when `init` produces must match" — a claim about *timing* is bound exactly as a claim about *existence*. §1 gained a third field-report defect: `init.md` §Step 2 and the Completion Checklist claim `init.js` bootstraps `STATE.md`; verified against engine 2.1.62, it does not — `STATE.md` is lazily bootstrapped by `update-state.js` on the first mutating workflow's SC-2 step. The same false claim was also found baked into `dev/tests/suite.md`'s expected outcomes (T01, T02, T58), which `magic.dev.simulate` cannot catch because it evaluates cognitively against the documented contract rather than by executing `init.js` — all three scenarios need their expected-outcome text corrected alongside `init.md`. §6 gained the rejected alternative (make `init.js` create it eagerly instead) and why: `update-state.js` already owns template instantiation, duplicating it would recreate the exact doc/code drift mechanism this spec exists to close, and SC-2 already guarantees existence by the first command regardless. Canonical Reference for `[INIT-DOC]` extended to name all three affected surfaces. Field report against engine 2.1.58. |
 | 1.0.0 | 2026-05-07 | Agent | Initial stable specification — addresses workspace dispatch defects observed in field reports. |

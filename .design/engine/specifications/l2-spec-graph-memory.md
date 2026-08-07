@@ -1,8 +1,8 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.1.1
+**Version:** 1.1.2
 **Status:** Stable
-**Layer:** 2
+**Layer:** implementation
 **Implements:** l1-engine-core.md
 
 ## Overview
@@ -175,6 +175,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.2 | 2026-08-07 | Agent | Normalized `**Layer:**` field from `2` to `implementation` — the only L2 spec in the registry using the numeric form instead of the project convention (15/15 other L2 specs unaffected, all already `implementation`); no logic change (ventilation finding). |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
 | 1.1.0 | 2026-04-25 | Agent | §4.4 Workflow Integration Triggers: canonical refresh command, write/read/audit/visual classes, anti-trigger policy, failure handling, cache hygiene. |
 | 1.1.1 | 2026-06-10 | Agent | Promoted RFC → Stable: all four design sections verified implemented (graph-cache.js, export-wiki.js, serve-spec-graph.js token_budget, §4.4 workflow triggers). Removed stale benchmark.js references. |

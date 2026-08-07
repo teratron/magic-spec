@@ -18,7 +18,7 @@
   "roles/retrospective-analyst.md": "7cafe734b29c1ad07df7c75187b44e79259df0789858046aae50bcfefe261f4b",
   "roles/spec-critic.md": "d0aea9587a8a79160241e896def1f3e47cdb1a0aa0c7eaec7345b1b8123c4581",
   "roles/test-engineer.md": "03afc7319f114929c0d8090b3d6802c196eb16f8cb703b9be98ae7f192322343",
-  "rule.md": "071515ea97042e15502ad5de4f3d91bd157547e12244bebd659737563ea80794",
+  "rule.md": "a392a9a06fe2864f1db6c5a72d81ae9b1f1855d152b54bf52f0081c0fd69460d",
   "run.md": "b553b29effbfd595fd06431223bd16fef47c68257b8e65a369f5a2b711e1d753",
   "scripts/analyze-coverage.js": "4fedda3c08ab2681068819e8b01b5376eabda7040b6c85ba1f62d423a77bdef0",
   "scripts/archive-phases.js": "ec425f5a4e73c909f1a368ab2544e7c8ff9e386a778ba2a7dcee18f37194f639",

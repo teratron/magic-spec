@@ -50,6 +50,8 @@ graph TD
    - **Duplication**: if semantically overlaps with any C{N} in EITHER tier → propose merge/replace.
 5. **Apply (C9 default)**: write the change to the target tier immediately. Output the diff inline. State target tier and version impact in past tense — e.g., `[Auto-Rule] Applied: WC1 → workspace RULES.md, 1.0.0 → 1.1.0. (Revert: git restore .design/{workspace}/RULES.md)`.
    - **Batch**: when user requests multiple §7 changes in one invocation, group into a single atomic update and narrate as one summary line.
+   - **Batch Version Precedence**: when a batch mixes actions with different version impacts (Add/Amend = Minor, Remove = Major), apply the single highest-precedence bump (Major > Minor > Patch) for the atomic update — never bump more than once per invocation.
+   - **Batch Guard Failure**: if any single item in the batch triggers an approval-required gate (Core-Amendment routing or Constitutional conflict), the entire atomic batch HALTs — no partial application. Once resolved, re-offer the full batch (including the previously-clean items) in the same atomic proposal.
    - **Approval-required exceptions** (C9 objective gates): Core-Amendment to §1–6 (Step 4) and Constitutional Guard conflicts — these HALT until user confirms.
 
 ### Actions

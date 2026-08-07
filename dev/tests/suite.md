@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.74
+**Version:** 1.9.75
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -3223,6 +3223,30 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Exactly ONE next step recommended: `/magic.task {workspace}`.
 - **Guards tested:** Select branch precedence (explicit evaluation order); regression for "The Tampered Twin" crisis (Improv Mode 2026-07-10); complements T11 (all-Blocked stall) and T201 (Backlog-Only before Complete).
 
+### T208 — Rule Batch Mixed-Type Version Precedence and Guard Failure
+
+- **Workflow:** `rule.md` (§Operational Logic — Apply, Batch)
+- **Synthetic State (Test A — version precedence):**
+  - `RULES.md` §7 has C3 ("Parallel Task Execution Mode", referenced by `run.md` as Mode Guard) and C5 ("All dates use ISO 8601 format").
+  - No Core-Amendment or Constitutional conflicts present.
+- **Action A:** `"Remove rule C3, and add a new rule: all API responses must include a request-id header."`
+- **Expected A:**
+  - [ ] Dependency Scan on C3 removal surfaces the `run.md` Mode Guard reference as a non-blocking advisory (per T13).
+  - [ ] Batch groups both changes into a single atomic update (per existing Batch clause).
+  - [ ] **Batch Version Precedence** fires: Remove = Major, Add = Minor → single bump applied is **Major** (highest precedence), not two sequential bumps and not Minor.
+  - [ ] Document History records exactly one version row for the combined change.
+- **Synthetic State (Test B — guard failure):**
+  - `RULES.md` §7 has C4 ("No inline SQL — use query builder").
+  - `RULES.md` §5 (core, Content Rules): "No implementation code — pseudo-code only."
+- **Action B:** `"Remove rule C4, and add a new rule: all specs must include runnable Python code samples."`
+- **Expected B:**
+  - [ ] C4 removal passes Guards cleanly (no core conflict, dependency scan clean).
+  - [ ] The new rule ("runnable code samples") fails the **Constitutional Guard** — contradicts core §5.
+  - [ ] **Batch Guard Failure** fires: the entire atomic batch **HALTs** — C4 is NOT removed despite passing its own guards individually.
+  - [ ] Report names both the blocking item (contradicts §5) and that the clean item (C4 removal) is held pending resolution, not silently applied.
+  - [ ] After the user drops or revises the offending item, the full batch (including C4 removal) is re-offered as one atomic proposal — not auto-split.
+- **Guards tested:** Batch Version Precedence, Batch Guard Failure (no partial atomic application); regression for "The Recursive Quarantine" crisis (Improv Mode 2026-08-07).
+
 ```
-**Test Suite Finalized** - v1.9.74 (Last: T207)
+**Test Suite Finalized** - v1.9.75 (Last: T208)
 ```

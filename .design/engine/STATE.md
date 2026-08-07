@@ -4,13 +4,13 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 11:19
+**Updated:** 2026-08-07 16:08
 **Phase:** 20 — Backlog Implementation (Release Rotation & Coverage Denominator)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
+- **Task:** T-2T01 Add validation tests for skill projection
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
 - **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
@@ -24,11 +24,11 @@ Overall: [19/19] ████████ 100%
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-07 **Decision:** Phase 2 complete (belated closure). Provides: sync-skills.js projection validated by dev/tests/suite.md T190 (retrospec); tasks/phase-2.md frontmatter added and archived via standard C8 mechanism, closing the only Done-but-unarchived phase gap in the registry.
+- 2026-08-07 **Decision:** magic.task engine: registry re-synced to INDEX.md v1.19.0 after 3 spec amendments; PLAN.md Backlog reviewed \u2014 R8 closed (already-decided), DESIGN_DEBT_PENDING gate-gap recorded as new backlog item + diagnostic, debt-ceiling convention left open pending user ratification via /magic.rule. Plan remains complete, no new active phase (all 32 specs deployed).
 - 2026-08-07 **Decision:** Phase 20 complete. Provides: release-changelog.js (explicit opt-in CHANGELOG rotation, R11 remainder closed) and analyze-coverage.js EXEMPT classification (coverage 85.4% -> 96.5% on this workspace, 24 SDD bookkeeping/journal files no longer counted as UNCOVERED). Engine 2.1.69, harness 62/62. Plan complete.
 - 2026-08-07 **Decision:** Phase 20 planned: release-changelog.js (R11 remainder) and EXEMPT coverage classification (denominator fix) — the two backlog items whose design decisions closed in the /magic.spec pass following Phase 19's own DESIGN_DEBT_PENDING signal.
 - 2026-08-07 **Decision:** Phase 19 complete. Provides: self-labelling PLAN.md link rewrite on archival (R10 closed, 5-for-5 reproduced), DESIGN_DEBT_PENDING Pre-flight signal breaking the plan-complete funnel circularity (R13/SC-2.4), addDecision structural harness coverage (R12 gap closed, negative-controlled), CHANGELOG duplicate-heading root-caused to two 2026-05 manual edits (R11 investigation routed to /magic.spec). Engine 2.1.68, harness 57/57. Plan complete.
-- 2026-08-07 **Decision:** Fixed update-state.js addDecision: the insertion-point regex matched a blank line's own trailing newline as satisfying [^<], so every entry landed directly after the ## Recent Decisions heading instead of past the blank/comment preamble (MD022/MD032/MD012). Section now rebuilt deterministically each call. Engine 2.1.67.
-- 2026-08-07 **Decision:** Phase 18 complete. Provides: engine diagnostics digest — lib/diagnostics.js collector (record/read/drain over a global JSONL sink), single emitTail() rendering notice+digest+next-step identically on both finalize exit paths, record-diagnostic agent channel, all 17 pre-existing non-fatal emitters across 6 scripts now recording. Engine 2.1.66, harness 55/55. Plan complete.
 
 ## Blockers
 

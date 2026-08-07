@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 2 — 2026-08-07 (Skill Projection & Agent Surface — belated closure)
+
+- `/magic.run` Pre-flight discovered `tasks/phase-2.md` never carried YAML frontmatter (predates the convention entirely) and — independently — that its third task, `T-2T01` (validation tests for skill projection), was still `Todo` while `TASKS.md`'s registry had reported the whole phase `Done` since 2026-06-12. Neither the C8 auto-archiver (needs `status: Done` frontmatter to fire) nor any Select-step scan (the phase wasn't in `## Active Phases` at all) could have caught this — it required reading the phase file's own checklist against the registry's summary claim.
+- `T-2T01` closed via retrospec, not new authorship: its original target (`.magic/tests/suite.md`) predates the L1/L2 split and no longer exists; the equivalent coverage lives at `dev/tests/suite.md` **T190 — Skill Projection Parity**, which independently satisfies all three `l2-skill-wrappers.md` §5 Invariants (Parity, Naming, Read-Only) plus the §3.1 Orphan Cleanup step. Cross-checked against a live generated skill (`skills/magic-analyze/SKILL.md`) to confirm T190's hyphenated-name expectation matches actual output.
+- Frontmatter added to `tasks/phase-2.md` (`status: Done`, `provides`, `key_files`) so it now archives through the standard C8 mechanism instead of remaining a silent gap.
+- Found and recorded (not fixed here — out of `/magic.run`'s write scope): `l2-skill-wrappers.md` §2.2's frontmatter example still shows `name: magic.{command}` (dot form) against the real hyphenated output — same drift class T190 already guards against, just never back-ported to the spec's own example.
+
 ## Phase 20 — 2026-08-07 (Backlog Implementation — Release Rotation & Coverage Denominator)
 
 - New `.magic/scripts/release-changelog.js`: explicit, opt-in executor subcommand wrapping the already-existing `changelog-writer.js#releaseUnreleased()` — `--version`/`--date` default from `.design/.version` and today (UTC). Deliberately never called from `finalize.js` or any other workflow: magic-spec cannot observe a downstream consumer's release event (a pushed git tag, an `npm publish`, an App Store submission), so rotation is a deliberate maintainer action, never an automatic side effect. Closes the R11 remainder — `finalize.js` also drops its now-dead `releaseUnreleased` import, the concrete evidence §4.2 of the governing spec cited for the suppression bug.
