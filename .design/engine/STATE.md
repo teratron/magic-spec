@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 05:48
-**Phase:** 17 — Scan Input Hygiene
+**Updated:** 2026-08-07 05:54
+**Phase:** 18 — Engine Diagnostics Digest
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-18A01 Collector core — record, read, drain, sink resolution, retention bound via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [16/16] ████████ 100%
+Phase 18: [0/12] ░░░░░░░░ 0%
+Overall: [16/17] ████████ 94%
 ```
 
 ## Recent Decisions
