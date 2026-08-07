@@ -12,7 +12,7 @@ Concrete realization of the diagnostics contract in the Node engine: a `scripts/
 ## Related Specifications
 
 - [l1-engine-diagnostics.md](l1-engine-diagnostics.md) — Parent concept (DG-1..DG-9).
-- [l2-engine-finalization.md](l2-engine-finalization.md) — Host pipeline; §11 records the tail-emitter restructure this spec specifies.
+- [l2-engine-finalization.md](l2-engine-finalization.md) — Host pipeline; §8 records the tail-emitter restructure this spec specifies.
 - [l2-engine-automation.md](l2-engine-automation.md) — Owns the top-level scripts that make up most of the migration inventory (§5.5).
 - [l2-test-suite.md](l2-test-suite.md) — Carries the regression-coverage mandate for §6.
 - [l1-session-continuity.md](l1-session-continuity.md) — SC-2 owns the `Next Action` value the tail emitter prints (DG-6).

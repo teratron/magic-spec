@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Status:** Active
 **Engine Version:** 2.1.64
 
@@ -13,7 +13,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 30 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 32 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## System Files
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-08-07 | Agent | Engine workspace spec count 30 → 32: l2-engine-finalization.md decomposed at 367 lines against the 300 SPEC_BLOAT threshold, following the l2-role-cards precedent — its two accumulated defect registers extracted to l2-finalize-state-accuracy.md (STATE.md correctness: seven defects incl. the new §8 retrospec of a fix that shipped at engine 2.1.67 ahead of its spec) and l2-finalize-output-contract.md (emitted artifacts: RC-11 containment, SC-3.1 completeness, and new §4 CHANGELOG entry suppression). Parent slimmed to the pipeline contract at 2.0.0, gaining §7 Archival Index Rewrite — a five-for-five reproduced defect that had persisted precisely because the module table never documented that the archiver rewrites PLAN.md at all. l1-session-continuity.md 1.7.1 → 1.8.0 (new SC-2.4: SC-2.2's funnel justification assumes Pre-flight can HALT, but Pre-flight tests mechanical drift only, so a plan-complete state blocked on design debt routes back to the command that just produced nothing — observed end-to-end, including one finalize whose digest and next-step line disagreed with each other). Five backlog entries closed, one of them stale since 1.10.1. |
 | 1.5.0 | 2026-08-07 | Agent | Engine workspace spec count 28 → 30: added l1-engine-diagnostics.md (DG-1..DG-9 — non-fatal engine findings are recorded rather than only printed, aggregated across processes, and delivered as one digest immediately before the next step) and l2-engine-diagnostics.md (collector, JSONL sink, agent-facing recorder, single tail emitter, 17-site migration inventory). Root defect established during authoring: `rules/magic.md` §3 binds the agent to relay **stdout**, while every non-fatal finding is written to **stderr** — the invisibility is contractual, not incidental, and the class of engine-applied corrections had no name or destination at all. l2-engine-finalization.md 1.10.1 → 1.11.0 (§11 terminal block ownership), l2-test-suite.md 1.13.0 → 1.14.0 (cross-path output ordering as a pinned contract), l1-session-continuity.md 1.7.0 → 1.7.1 (cross-link). |
 | 1.4.0 | 2026-08-06 | Agent | Engine workspace spec count 27 → 28: added l1-scan-input-hygiene.md (SH-1..SH-5 — the mention/use boundary for text scans, plus template sources exempt from resolution checks). Authored after the same root cause surfaced a fourth time, in `check-prerequisites`' registry cross-reference, which read a quoted placeholder path out of PLAN.md prose and reported a nonexistent specification. l2-engine-finalization.md 1.10.0 → 1.10.1 (§8.4 worked regex corrected). |
 | 1.3.24 | 2026-08-06 | Agent | Ventilation: engine snapshot ratified 2.1.61 → 2.1.64 (finalize/state accuracy fixes and the scaffold-boundary + documentation-parity deployment). Registry clean: 27/27 Stable, 0 ghost/zombie, 0 orphaned conventions, 0 containment leaks. First run of the scaffold-removal check — clean baseline, verified against the release pipeline, which packages the four engine directories and never `.design/`. |

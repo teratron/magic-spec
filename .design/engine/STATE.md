@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 06:54
+**Updated:** 2026-08-07 10:05
 **Phase:** 18 — Engine Diagnostics Digest
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Next Action:** Run /magic.task engine to update the plan
 
 ## Progress
 
