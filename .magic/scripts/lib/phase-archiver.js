@@ -111,6 +111,17 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
  * Updates PLAN.md after archival:
  *   Rewrites task links from tasks/phase-N.md to archives/tasks/phase-N.md.
  *
+ * PLAN.md's own convention writes this link self-labelled — the label *is*
+ * the path (`[tasks/phase-N.md](tasks/phase-N.md)`) — so a target-only
+ * rewrite leaves a link whose visible text asserts a location the file no
+ * longer occupies (`[tasks/phase-N.md](archives/tasks/phase-N.md)`). The
+ * self-labelling form is matched and rewritten as one atomic unit first;
+ * only the leftover generic pass may touch a target whose label is
+ * something else (descriptive prose), which correctly needs no rewrite.
+ * Prose mentions of the bare path (no surrounding `[...](...)`) are never
+ * matched by either pass and are left untouched — l2-engine-finalization.md
+ * §7.3 is explicit that a broader replace would corrupt historical prose.
+ *
  * @param {string} planPath - Absolute path to PLAN.md.
  * @param {string[]} archivedFiles - Array of filenames that were archived.
  */
@@ -120,6 +131,15 @@ function updatePlanIndex(planPath, archivedFiles) {
     let content = fs.readFileSync(planPath, 'utf8');
     for (const file of archivedFiles) {
         const escaped = file.replace(/\./g, '\\.');
+        // Self-labelling form: `[tasks/N.md](tasks/N.md)` — label and target
+        // rewritten together so neither can drift from the other.
+        content = content.replace(
+            new RegExp(`\\[tasks/${escaped}\\]\\(tasks/${escaped}\\)`, 'g'),
+            `[archives/tasks/${file}](archives/tasks/${file})`
+        );
+        // Any remaining target-only occurrence (a descriptive, non-path
+        // label) still needs its destination corrected — its label makes no
+        // claim about location, so it needs no companion rewrite.
         content = content.replace(
             new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
             `(archives/tasks/${file})`

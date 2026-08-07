@@ -243,6 +243,64 @@ if (planExists && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// DESIGN-DEBT BACKLOG (SC-2.4 / l1-session-continuity.md)
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// A plan can go mechanically clean — every check above passes — while still
+// holding real, undone design work: Backlog entries that need a `/magic.spec`
+// pass before anything is implementable. Every other Pre-flight gate tests
+// mechanical drift (header parity, missing parents, collisions, checksums),
+// none of which fires here, so nothing HALTs and the plan-complete funnel
+// (SC-2.1(c)) recommends the very command that just produced no scope. This
+// check gives Pre-flight the one signal it was missing to raise that HALT
+// through the door rules/magic.md §5 already sanctions.
+
+if (planExists && tasksExists) {
+    const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
+    const activePhasesMatch = tasksContentForBacklog.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
+
+    // Require a positive "empty" marker (the italicized `*None — ...*` this
+    // engine's own workflows consistently write for an exhausted section —
+    // e.g. Active Phases here, Backlog elsewhere) rather than merely the
+    // absence of a phase-row table pattern. The absence-only reading fires
+    // on any malformed or unrecognized section content too, which is the
+    // wrong default for a check that can raise a HALT — uncertain must
+    // resolve to "cannot determine", not to "complete".
+    const planComplete = Boolean(activePhasesMatch) && /^\*None\b/m.test(activePhasesMatch[1].trim());
+
+    if (planComplete) {
+        // Read independently rather than reuse the `planContent` above — that
+        // binding is scoped inside the separate `planExists && indexExists`
+        // block and this check must not depend on INDEX.md being present.
+        const planContentForBacklog = fs.readFileSync(planPath, 'utf8');
+        const backlogMatch = planContentForBacklog.match(/## Backlog\r?\n([\s\S]*?)(?=\r?\n## |$)/);
+        if (backlogMatch) {
+            // SH-1/SH-2: strip fenced/inline-quoted spans before matching, so a
+            // Backlog entry illustrating `- {example}` syntax in a code span is
+            // not counted as an open item.
+            const backlogBody = stripQuoted(backlogMatch[1]);
+            // Top-level bullets only (`- `, not `  - ` sub-bullets), matching
+            // how the debt-ceiling convention (l1-engine-core.md) already
+            // counts Backlog entries. No attempt to classify an item as
+            // "genuinely open" vs. "deferred/rejected" narrative within its
+            // own text — the Backlog has no markup for that distinction, and
+            // guessing from wording would be exactly the kind of project-
+            // specific heuristic this check must not depend on.
+            const openItems = backlogBody.split(/\r?\n/).filter((l) => /^-\s+\S/.test(l));
+
+            if (openItems.length > 0) {
+                const workspaceName = normalizePath(designDir).split('/').pop();
+                warn(
+                    'DESIGN_DEBT_PENDING',
+                    `Plan complete with no active phase, but ## Backlog holds ${openItems.length} open item(s) needing design input.`,
+                    `magic.spec ${workspaceName}`
+                );
+            }
+        }
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // FILE-HEADER PARITY (Spec Drift Detection)
 // ═══════════════════════════════════════════════════════════════════════════
 

@@ -570,6 +570,70 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b2. check-prerequisites.js — design-debt backlog signal (SC-2.4)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js reports DESIGN_DEBT_PENDING only when plan-complete meets an open Backlog (SC-2.4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const findDebtWarning = (planBody, tasksBody) => {
+                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
+                fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
+                const result = JSON.parse(
+                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
+                );
+                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
+            };
+
+            // Positive: plan complete (the engine's own empty-state marker),
+            // Backlog holds two open items.
+            const hit = findDebtWarning(
+                '- Some open design item.\n- Another one.',
+                '*None — plan complete. New scope enters via `/magic.task`.*'
+            );
+            assert.ok(hit, 'a plan-complete state with a non-empty Backlog must raise the signal');
+            assert.match(hit.message, /2 open item/, 'the count must reflect the actual number of Backlog bullets');
+            assert.match(hit.fix, /magic\.spec/, 'the remedy must point at spec authoring');
+
+            // Negative (load-bearing — SC-2.4 is about *distinguishing* two
+            // plan-complete states, so a signal that also fires here would be
+            // indistinguishable from one that works): same plan-complete
+            // state, empty Backlog.
+            assert.strictEqual(
+                findDebtWarning('', '*None — plan complete. New scope enters via `/magic.task`.*'),
+                undefined,
+                'an empty Backlog must never raise the signal, even at plan-complete'
+            );
+
+            // Negative: an active phase exists — not plan-complete at all,
+            // regardless of what the Backlog holds.
+            assert.strictEqual(
+                findDebtWarning(
+                    '- Some open design item.',
+                    '| [Phase 3](tasks/phase-3.md) | Something | `In Progress` |'
+                ),
+                undefined,
+                'an active phase must suppress the signal even with a non-empty Backlog'
+            );
+
+            // Negative: ambiguous/unrecognized Active Phases content — the
+            // check must default to "cannot determine", not "must be complete".
+            assert.strictEqual(
+                findDebtWarning('- Some open design item.', 'Some unstructured note, not a table and not the marker.'),
+                undefined,
+                'unrecognized Active Phases content must not be read as plan-complete'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6c. scan-hygiene.js — shared strip-before-match helper (SH-1, SH-2, SH-5)
     // ───────────────────────────────────────────────────────────────────────────
     test('scan-hygiene.js stripQuoted removes fenced and inline-quoted content, preserving line count', () => {
@@ -652,9 +716,29 @@ describe('Magic Engine Scripts', () => {
                 { cwd: tempDir }
             );
             const afterDecision = fs.readFileSync(statePath, 'utf8');
-            assert.ok(
-                /## Recent Decisions[\s\S]*Adopt SDD workflow/.test(afterDecision),
-                'Decision entry should be inserted under Recent Decisions'
+            // Structural assertions, not presence-only: the prior single
+            // assertion here (`/## Recent Decisions[\s\S]*Adopt SDD workflow/`)
+            // matches at any distance, so it passed identically whether the
+            // entry landed before or after the blank-line/comment preamble —
+            // structurally incapable of catching the defect this pins
+            // (addDecision inserting directly after the heading, no blank
+            // line, displacing the preamble below the entries — markdownlint
+            // MD022/MD032/MD012).
+            assert.match(
+                afterDecision, /## Recent Decisions\r?\n\r?\n<!-- Last 3-5 locked decisions/,
+                'the heading must be followed by a blank line, then the comment preamble — not an entry'
+            );
+            assert.match(
+                afterDecision, /Older entries → archived to PLAN\.md -->\r?\n\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* Adopt SDD workflow/,
+                'the new entry must sit after the comment preamble, not before it'
+            );
+            assert.doesNotMatch(
+                afterDecision, /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
+                'no run of two or more consecutive blank lines may appear anywhere in STATE.md'
+            );
+            assert.doesNotMatch(
+                afterDecision, /\{YYYY-MM-DD\}/,
+                "the template's own placeholder decision rows must not survive alongside a real entry"
             );
 
             // 3. Add constraint — should be auto-numbered [C-001]
@@ -1060,6 +1144,25 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // A completed, archivable Phase 3 ("Shipping") plus its TASKS.md registry
+    // row — the fixed point every archival-rewrite test in this section starts
+    // from before layering its own PLAN.md content.
+    const makeDoneShippingPhaseFixture = (tasksDir, wsDir) => {
+        fs.writeFileSync(path.join(tasksDir, 'phase-3.md'),
+            '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
+            '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n');
+
+        const tasksPath = path.join(wsDir, 'TASKS.md');
+        fs.writeFileSync(tasksPath, [
+            '# Master Task Index', '',
+            '| Phase | Description | Status |',
+            '| --- | --- | --- |',
+            '| [Phase 3](tasks/phase-3.md) | Shipping | `Done` |',
+            '',
+        ].join('\n'));
+        return tasksPath;
+    };
+
     // ───────────────────────────────────────────────────────────────────────────
     // 7d. phase-archiver.js — archival rewrites links in PLAN.md, not only TASKS.md
     // ───────────────────────────────────────────────────────────────────────────
@@ -1067,20 +1170,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
-
-            fs.writeFileSync(path.join(tasksDir, 'phase-3.md'),
-                '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n');
-
-            const tasksPath = path.join(wsDir, 'TASKS.md');
-            fs.writeFileSync(tasksPath, [
-                '# Master Task Index',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 3](tasks/phase-3.md) | Shipping | `Done` |',
-                '',
-            ].join('\n'));
+            const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
 
             const planPath = path.join(wsDir, 'PLAN.md');
             fs.writeFileSync(planPath, [
@@ -1111,6 +1201,50 @@ describe('Magic Engine Scripts', () => {
             const plan = fs.readFileSync(planPath, 'utf8');
             assert.match(plan, /\(archives\/tasks\/phase-3\.md\)/, 'PLAN.md link must be rewritten');
             assert.doesNotMatch(plan, /\(tasks\/phase-3\.md\)/, 'PLAN.md must not keep a dangling link to the moved file');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('archiveCompletedPhases rewrites a self-labelling PLAN.md link without touching prose (R10)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+            const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
+
+            // PLAN.md's own convention: the "Tasks:" line is self-labelling —
+            // the label *is* the path — which is the form the R10 fix targets.
+            // A separate Backlog line mentions the same path in plain prose,
+            // describing history; that mention must survive byte-for-byte.
+            const planPath = path.join(wsDir, 'PLAN.md');
+            fs.writeFileSync(planPath, [
+                '### Phase 3 — Shipping', '',
+                '- [x] **Shipping** [L2]',
+                '  - Tasks: [tasks/phase-3.md](tasks/phase-3.md)', '',
+                '## Backlog', '',
+                '- Historical note: the original breakdown lived at tasks/phase-3.md before later restructuring.',
+                '',
+            ].join('\n'));
+
+            const { archived } = archiver.archiveCompletedPhases(wsDir);
+            assert.deepStrictEqual(archived.map(a => a.file), ['phase-3.md']);
+
+            const plan = fs.readFileSync(planPath, 'utf8');
+            assert.match(
+                plan, /Tasks: \[archives\/tasks\/phase-3\.md\]\(archives\/tasks\/phase-3\.md\)/,
+                'the self-labelling link must move both its label and its target together'
+            );
+            assert.doesNotMatch(
+                plan, /\[tasks\/phase-3\.md\]/,
+                'no trace of the pre-move self-label may remain'
+            );
+            assert.match(
+                plan, /Historical note: the original breakdown lived at tasks\/phase-3\.md before later restructuring\./,
+                'a bare prose mention of the path must survive byte-for-byte — it describes history, not a live link'
+            );
+
+            const tasks = fs.readFileSync(tasksPath, 'utf8');
+            assert.match(tasks, /\[Phase 3\]\(archives\/tasks\/phase-3\.md\)/, 'TASKS.md label (a phase number, not a path) must be unchanged');
         } finally {
             cleanup(tempDir);
         }
