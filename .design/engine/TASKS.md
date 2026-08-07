@@ -1,19 +1,21 @@
 # Master Task Index (Registry)
 
-**Version:** 1.22.1
+**Version:** 1.23.0
 **Generated:** 2026-08-07
-**Based on PLAN:** .design/engine/PLAN.md v1.18.1
+**Based on PLAN:** .design/engine/PLAN.md v1.20.0
 **Based on RULES:** .design/RULES.md v1.9.0
 **Execution Mode:** Parallel
 **Status:** Active
 
 ## Overview
 
-Tactical registry of all phases and their statuses. **Plan complete**: all 17 phases (2-18) are Done; 30 specs registered and Stable (INDEX v1.17.0); engine at 2.1.67 (2.1.66 closed Phase 18; 2.1.67 is the out-of-band R12 fix — see Backlog). Phase 18 implemented the Engine Diagnostics Digest (`l1-engine-diagnostics.md` DG-1..DG-9, `l2-engine-diagnostics.md`): non-fatal engine findings are now recorded to a sink and delivered as one digest immediately before the next step, closing a defect found during authoring — the Finalization Protocol binds the agent to relay **stdout**, while all 17 non-fatal findings across 6 scripts were written only to **stderr**, invisible by contract rather than by any one script's oversight. Twelve tasks across five tracks (A gated all; B preceded D on shared `finalize.js`; E — the sole track outside C14 tracking, carrying **[C-001]** — was file-independent of the rest); harness 46 → 55. INDEX v1.15.15 carried nine spec amendments authored since PLAN v1.15.2 and never implemented — Phases 15-16 were that implementation backlog, not new scope, and it is now closed. Phase 15 implemented the eight `Required Fix` blocks in l2-engine-finalization 1.10.0 §7-§10 (SC-1.2, SC-2.1(a), SC-2.3, SC-3.1, RC-11), all re-verified present in engine 2.1.62 before execution; harness 34 → 43. Phase 16 deployed the two prose-only amendments (WI-10 documentation parity across all three `init.md` claim surfaces plus the cognitive suite, RC-12 scaffold-removal check in ventilation and ambient rules). R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10, R11 (new this phase — CHANGELOG dedup suppresses genuine entries), the §8.7 known gap, and the pending debt-ceiling convention are tracked in PLAN.md Backlog with their routing.
+Tactical registry of all phases and their statuses. **Phase 19 active**: 32 specs registered and Stable (INDEX v1.18.0), engine at 2.1.67. Phase 19 implements the four contracts authored by the 2026-08-07 spec pass that also decomposed `l2-engine-finalization.md` at 367 lines — R10 (archival index rewrite, five-for-five reproduced), R13 (plan-complete Pre-flight signal, SC-2.4), R12 (decision-section coverage for a fix that shipped at 2.1.67 ahead of its spec), and R11 (CHANGELOG anomaly root-cause, investigation only — its own spec bars a fix from preceding the diagnosis). Seven tasks across five tracks; Track D is a single-file queue on `dev/tests/engine.js`, Track C produces no code. The SC-2.2 ↔ SC-2.4 tension was resolved at plan time and is recorded in PLAN.md so a cold implementer does not stall on it. Historical: all 17 phases (2-18) are Done. Phase 18 implemented the Engine Diagnostics Digest (`l1-engine-diagnostics.md` DG-1..DG-9, `l2-engine-diagnostics.md`): non-fatal engine findings are now recorded to a sink and delivered as one digest immediately before the next step, closing a defect found during authoring — the Finalization Protocol binds the agent to relay **stdout**, while all 17 non-fatal findings across 6 scripts were written only to **stderr**, invisible by contract rather than by any one script's oversight. Twelve tasks across five tracks (A gated all; B preceded D on shared `finalize.js`; E — the sole track outside C14 tracking, carrying **[C-001]** — was file-independent of the rest); harness 46 → 55. INDEX v1.15.15 carried nine spec amendments authored since PLAN v1.15.2 and never implemented — Phases 15-16 were that implementation backlog, not new scope, and it is now closed. Phase 15 implemented the eight `Required Fix` blocks in l2-engine-finalization 1.10.0 §7-§10 (SC-1.2, SC-2.1(a), SC-2.3, SC-3.1, RC-11), all re-verified present in engine 2.1.62 before execution; harness 34 → 43. Phase 16 deployed the two prose-only amendments (WI-10 documentation parity across all three `init.md` claim surfaces plus the cognitive suite, RC-12 scaffold-removal check in ventilation and ambient rules). R8 documented (l2-release-pipeline §5.3); R9 (AGENTS hardlinks) operational — `/magic.dev.init`; R10, R11 (new this phase — CHANGELOG dedup suppresses genuine entries), the §8.7 known gap, and the pending debt-ceiling convention are tracked in PLAN.md Backlog with their routing.
 
 ## Active Phases
 
-*None — plan complete. New scope enters via `/magic.task`.*
+| Phase | Description | Status |
+| --- | --- | --- |
+| [Phase 19](tasks/phase-19.md) | Finalization Contract Fixes — archival index rewrite, plan-complete Pre-flight signal, decision-section coverage, CHANGELOG anomaly root-cause | `Todo` |
 
 ## Completed Phases
 
@@ -39,7 +41,7 @@ Tactical registry of all phases and their statuses. **Plan complete**: all 17 ph
 
 ## Backlog
 
-*None at phase level — all 30 registered specs are Stable and implemented, and this planning pass found **no implementable scope**: every open item needs design input before it can become a task. R10, R11, and the link-sweep precision fix each need a stated contract first (the R7 precedent); R12 is the inverse — already fixed in code, still unspecified, so it needs a retrospec rather than an implementation task; `UNSCOPED dev/` and the coverage-metric denominator are decisions with project-wide reach; §8.4 needs a patch amendment; `l2-engine-finalization.md` needs decomposition at 367 lines; and the debt-ceiling convention needs `/magic.rule` ratification. All tracked in [PLAN.md](PLAN.md) Backlog with their routing. The spec layer, not the implementation layer, is the current blocker — the mirror image of the state Phases 15-17 closed.*
+*None at phase level — the spec-layer blockade that made the previous planning pass find zero implementable scope is cleared: R10, R11, R12, and R13 now have stated contracts and are Phase 19's scope. What remains in [PLAN.md](PLAN.md) Backlog is genuine design work with no forced ordering — the `Status`-recompute question, the debt-ceiling convention (`/magic.rule` ratification), `UNSCOPED dev/`, the coverage-metric denominator, the dev-repo snapshot drift, and R8/R9 which are documented-not-fixed by decision. One `SPEC_BLOAT` watch item, no longer actionable.*
 
 ## Meta Information
 

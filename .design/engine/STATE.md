@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 10:05
-**Phase:** 18 — Engine Diagnostics Digest
+**Updated:** 2026-08-07 10:12
+**Phase:** 19 — Finalization Contract Fixes
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-19A01 Rewrite the self-labelling phase link in PLAN.md on archival via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [17/17] ████████ 100%
+Phase 19: [0/7] ░░░░░░░░ 0%
+Overall: [17/18] ████████ 94%
 ```
 
 ## Recent Decisions
