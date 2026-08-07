@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, isDryRun } = require('../utils');
+const diagnostics = require('./diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PROJECT VERSION (.design/.version)
@@ -111,7 +112,12 @@ function ensureInitialized(versionPath) {
     if (state.corrupted) {
         const backup = backupCorrupted(versionPath);
         if (backup) {
-            console.warn(`⚠️  Corrupted ${path.basename(versionPath)} backed up → ${path.basename(backup)}; resetting to ${INITIAL_VERSION}.`);
+            const message = `Corrupted ${path.basename(versionPath)} backed up → ${path.basename(backup)}; resetting to ${INITIAL_VERSION}.`;
+            console.warn(`⚠️  ${message}`);
+            diagnostics.record({
+                severity: 'fix', source: 'project-version', code: 'VERSION_FILE_HEALED',
+                message, locus: versionPath,
+            });
         }
     }
     writeVersion(versionPath, INITIAL_VERSION);

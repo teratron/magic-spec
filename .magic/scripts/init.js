@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const { normalizePath } = require('./utils');
+const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SDD INITIALIZER (Project Bootstrapper)
@@ -35,6 +36,10 @@ function getTemplate(name, placeholders = {}) {
     const filePath = path.join(templatesDir, name);
     if (!fs.existsSync(filePath)) {
         console.warn(`⚠️ Template not found: ${name}. Using empty string.`);
+        diagnostics.record({
+            severity: 'fix', source: 'init', code: 'TEMPLATE_MISSING',
+            message: `Template not found: ${name}; used an empty string instead.`, locus: filePath,
+        });
         return '';
     }
     let content = fs.readFileSync(filePath, 'utf8');
@@ -106,6 +111,10 @@ if (fs.existsSync('.git')) {
         execSync(`node "${executorPath}" install-hooks`, { stdio: 'inherit' });
     } catch (e) {
         console.warn('Note: Could not automatically install Git hooks.');
+        diagnostics.record({
+            severity: 'warning', source: 'init', code: 'GIT_HOOKS_NOT_INSTALLED',
+            message: `Could not automatically install Git hooks: ${e.message}`,
+        });
     }
 }
 

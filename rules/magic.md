@@ -372,7 +372,8 @@ Before finishing any task that involved magic-spec workflows, verify §1–§9 w
 - [ ] **§9 Bug Reporting** — if any engine-level bug, unexpected behavior, or crash was
       encountered in the engine files (`.magic/`, `workflows/`, `skills/`, `rules/`),
       did NOT attempt to self-repair the engine; generated a formatted
-      `MAGIC-SPEC ENGINE BUG REPORT` block for the user to submit.
+      `MAGIC-SPEC ENGINE BUG REPORT` block for the user to submit; also recorded the
+      finding via `record-diagnostic` so it survives to the next finalize digest.
 
 ## 9. Bug Reporting Protocol (Engine Feedback)
 
@@ -385,6 +386,19 @@ Any engine-level script error, template mismatch, run-time crash, or logic bug d
 ### Action
 
 Output a dedicated, highly visible Markdown alert block for the user. Do not proceed to execute the task if the engine bug blocks correctness.
+
+### Recording (Diagnostics Digest)
+
+The chat block above is a one-shot emission — in a long session it scrolls away long before the work ends, and a user reading only the final summary never sees it. Alongside it, record the finding so it also survives to the next finalize digest:
+
+```bash
+node .magic/scripts/executor.js record-diagnostic \
+    --severity=error --source=agent --code=<UPPER_SNAKE_CASE> \
+    --message="<one line, matches the Symptom above>" \
+    [--locus=<engine file:line>] [--remedy="<suggested fix, if any>"]
+```
+
+This applies to every finding the agent records this way — not only engine bugs: a specification ambiguity hit mid-execution, a containment leak spotted while reading a product file, or a guard the agent had to work around all qualify. Use `--severity=warning` for anything that did not block the task. The command always exits 0, including when the finding is malformed — recording a complaint never itself fails. This is not a substitute for a HALT: a finding that must stop the work still stops the work; recording is for what the run survives.
 
 ### Report Template
 

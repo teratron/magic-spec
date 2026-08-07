@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseFlags } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
+const diagnostics = require('./lib/diagnostics');
 
 /**
  * Updates STATE.md with provided key-value patches.
@@ -32,6 +33,11 @@ function updateState(designDir, patch, options = {}) {
     if (!fs.existsSync(statePath)) {
         if (!fs.existsSync(templatePath)) {
             console.error('[update-state] Template not found, creating minimal STATE.md');
+            diagnostics.record({
+                severity: 'fix', source: 'update-state', code: 'STATE_TEMPLATE_MISSING',
+                message: 'templates/state.md not found; created a minimal STATE.md instead.',
+                locus: statePath,
+            });
             const minimal = [
                 '# Project State',
                 '',
@@ -84,34 +90,43 @@ function updateState(designDir, patch, options = {}) {
 
     // ───────────────────────────────────────────────────────────────────────
     // Prepend Decision (keeps last 5 entries)
+    //
+    // The whole section is engine-owned (unlike ## Progress, which interleaves
+    // hand-authored narrative and must merge, never clobber) — so it is
+    // rebuilt deterministically on every call rather than insertion-point
+    // arithmetic against the existing bytes. The prior approach searched for
+    // the first line not starting with `<` via `/^[^<]/m` to skip past the
+    // blank-line/comment preamble, but a blank line's own line-terminating
+    // `\n` satisfies `[^<]` too (it is "a character other than `<`"), so the
+    // search matched at position 0 on every call, `commentEnd > 0` was always
+    // false, and every entry was inserted directly after the heading — never
+    // advancing past the blank line and `<!-- ... -->` comment at all. A full
+    // rebuild sidesteps the whole class of positional bugs and self-heals any
+    // spacing drift already present, rather than requiring a correctly-shaped
+    // preamble to begin with (markdownlint MD022/MD032/MD012, field report).
     // ───────────────────────────────────────────────────────────────────────
     if (options.addDecision && patch.decision) {
         const marker = '## Recent Decisions';
-        const idx = content.indexOf(marker);
-        if (idx !== -1) {
-            // Find the line after the marker and its comment block
-            const afterMarker = content.indexOf('\n', idx) + 1;
-            // Skip comment lines (<!-- ... -->)
-            let insertAt = afterMarker;
-            const remaining = content.slice(afterMarker);
-            const commentEnd = remaining.search(/^[^<]/m);
-            if (commentEnd > 0) {
-                insertAt = afterMarker + commentEnd;
-            }
-            const entry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}\n`;
-            content = content.slice(0, insertAt) + entry + content.slice(insertAt);
+        const secStart = content.indexOf(marker);
+        if (secStart !== -1) {
+            const nextHeading = content.indexOf('\n## ', secStart + 1);
+            const secEnd = nextHeading !== -1 ? nextHeading : content.length;
+            const block = content.slice(secStart, secEnd);
 
-            // Prune: keep at most 5 decision lines
-            const secStart = content.indexOf('## Recent Decisions');
-            const secEnd = content.indexOf('\n## ', secStart + 1);
-            if (secStart !== -1 && secEnd !== -1) {
-                const block = content.slice(secStart, secEnd);
-                const decLines = block.split('\n').filter(l => /^- \d{4}-\d{2}-\d{2}/.test(l));
-                if (decLines.length > 5) {
-                    const toRemove = decLines[decLines.length - 1];
-                    content = content.replace(toRemove + '\n', '');
-                }
-            }
+            const existingLines = block.split(/\r?\n/).filter(l => /^- \d{4}-\d{2}-\d{2}/.test(l));
+            const newEntry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}`;
+            const decisionLines = [newEntry, ...existingLines].slice(0, 5);
+
+            const rebuilt = [
+                marker,
+                '',
+                '<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->',
+                '',
+                ...decisionLines,
+                '',
+            ].join('\n');
+
+            content = content.slice(0, secStart) + rebuilt + content.slice(secEnd);
         }
     }
 
@@ -178,6 +193,10 @@ function updateState(designDir, patch, options = {}) {
             }
         } catch (e) {
             console.warn(`[update-state] Progress recompute skipped: ${e.message}`);
+            diagnostics.record({
+                severity: 'error', source: 'update-state', code: 'PROGRESS_RECOMPUTE_SKIPPED',
+                message: `Progress recompute skipped: ${e.message}`, locus: statePath,
+            });
         }
     }
 
@@ -207,12 +226,22 @@ function updateState(designDir, patch, options = {}) {
         }
         if (pruned) {
             console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`);
+            diagnostics.record({
+                severity: 'fix', source: 'update-state', code: 'STATE_DECISION_PRUNED',
+                message: `STATE.md exceeded 100 lines (${lines.length}); pruned the oldest Recent Decisions entry.`,
+                locus: statePath,
+            });
         } else {
             console.warn(
                 `[update-state] STATE.md exceeds 100 lines (${lines.length}) and ## Recent Decisions ` +
                 'is already at its floor — nothing was pruned. ' +
                 'Review ## Blocking Constraints and archive stale entries.'
             );
+            diagnostics.record({
+                severity: 'warning', source: 'update-state', code: 'STATE_CAP_EXHAUSTED',
+                message: `STATE.md exceeds 100 lines (${lines.length}); Recent Decisions is at its floor, nothing was pruned.`,
+                locus: statePath, remedy: 'Review ## Blocking Constraints and archive stale entries.',
+            });
         }
     }
 
@@ -350,6 +379,10 @@ function runCli() {
     }
     for (const unknown of rest) {
         console.warn(`[update-state] Unknown argument: ${unknown}`);
+        diagnostics.record({
+            severity: 'warning', source: 'update-state', code: 'UNKNOWN_ARGUMENT',
+            message: `Unknown argument ignored: ${unknown}`,
+        });
     }
 
     const parsed = {};

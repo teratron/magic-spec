@@ -6,6 +6,7 @@ const path = require('path');
 const { hashFile, normalizePath } = require('./utils');
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
+const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -33,6 +34,12 @@ const warnings = [];
  */
 function warn(type, message, fix) {
     warnings.push({ type, message, fix: fix || null });
+    // Forwards the existing typed-warning shape 1:1 — `type` becomes the
+    // diagnostics `code`, `fix` the `remedy`. No new literal codes here; this
+    // site already produced DG-3's shape before DG-3 existed.
+    const finding = { severity: 'warning', source: 'check-prerequisites', code: type, message };
+    if (fix) finding.remedy = fix;
+    diagnostics.record(finding);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES } = require('./utils');
+const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // ENGINE META UPDATER (C14 Compliance)
@@ -123,6 +124,10 @@ function updateEngineMeta() {
             syncSkills();
         } else {
             console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
+            diagnostics.record({
+                severity: 'warning', source: 'update-engine-meta', code: 'SKILL_SYNC_UNAVAILABLE',
+                message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
+            });
         }
 
         runGenerateChecksums();
@@ -170,6 +175,11 @@ function runGenerateChecksums() {
         console.warn('⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.');
         console.warn('   Engine writes (checksums regeneration) are a developer operation.');
         console.warn('   To clear drift: restore .magic/ from the release archive.');
+        diagnostics.record({
+            severity: 'warning', source: 'update-engine-meta', code: 'CHECKSUM_TOOLING_UNAVAILABLE',
+            message: 'dev/scripts/generate-checksums.js not found (user installation); checksum regeneration skipped.',
+            remedy: 'To clear drift: restore .magic/ from the release archive.',
+        });
         return;
     }
     execFileSync(process.execPath, [scriptPath], { stdio: 'inherit' });

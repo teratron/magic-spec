@@ -10,6 +10,7 @@ const { createIfMissing, appendBullet, releaseUnreleased } = require('./lib/chan
 const { buildCommitMessage, deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
 const { updateState } = require('./update-state');
+const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FINALIZATION PROTOCOL (Post-Workflow Orchestrator)
@@ -178,10 +179,13 @@ const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
 function computeNextAction(workflow, workspace, wsDir) {
     const next = synthesizeNextAction(workflow, workspace, wsDir);
     if (RESERVED_COMMAND_RE.test(next)) {
-        console.warn(
-            `[state] Next Action "${next}" names a command reserved by ` +
-            `rules/magic.md §5; substituting the /magic.task funnel.`
-        );
+        const message = `Next Action "${next}" names a command reserved by ` +
+            `rules/magic.md §5; substituting the /magic.task funnel.`;
+        console.warn(`[state] ${message}`);
+        diagnostics.record({
+            severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED',
+            message, locus: 'STATE.md',
+        });
         return `Run /magic.task ${workspace} to plan`;
     }
     return next;
@@ -308,6 +312,10 @@ function updateSessionState(opts, workspace, designAbs) {
         return { updated: true, nextAction };
     } catch (e) {
         console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);
+        diagnostics.record({
+            severity: 'error', source: 'finalize', code: 'STATE_UPDATE_SKIPPED',
+            message: `STATE.md update skipped (non-blocking): ${e.message}`, locus: 'STATE.md',
+        });
         return { updated: false };
     }
 }
@@ -392,10 +400,12 @@ function emitFallbackCommitSuggestion(opts, workspace, version) {
         msg + (omitted > 0 ? `\n(+${omitted} more changed file${omitted !== 1 ? 's' : ''})` : ''),
         '```',
         '',
-        '> [!IMPORTANT]',
-        '> Auto-commit is **disabled by design**. Review the diff and run git commit manually.',
-        '',
     ].join('\n'));
+    // Auto-commit notice moved to emitTail() — one shared rendering, called
+    // once per invocation regardless of which path produced this suggestion.
+    // The trailing blank element above is still needed: it is what gives
+    // emitTail()'s own leading blank a gap to pair with, matching how every
+    // other block boundary in this file's output is spaced.
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -466,7 +476,7 @@ function emitSuccess(ctx) {
     const {
         workflow, workspace, previous, next,
         files, omitted = 0, whitelistCount, gitAvailable, changelogResult, commitMsg,
-        archivedPhases, stateResult,
+        archivedPhases, stateResult, diagnosticsCount,
         opts,
     } = ctx;
 
@@ -496,6 +506,15 @@ function emitSuccess(ctx) {
             ? 'updated (SC-2)'
             : stateResult.dryRun ? 'dry-run preview' : 'skipped (warning above)';
         lines.push(`| STATE.md | ${stateStatus} |`);
+    }
+    // DG-7: a row that renders on every invocation regardless of content is a
+    // row nobody reads — present only when there is something to report.
+    if (diagnosticsCount && diagnosticsCount.total > 0) {
+        const parts = [];
+        if (diagnosticsCount.error > 0) parts.push(`${diagnosticsCount.error} error${diagnosticsCount.error !== 1 ? 's' : ''}`);
+        if (diagnosticsCount.warning > 0) parts.push(`${diagnosticsCount.warning} warning${diagnosticsCount.warning !== 1 ? 's' : ''}`);
+        if (diagnosticsCount.fix > 0) parts.push(`${diagnosticsCount.fix} fix${diagnosticsCount.fix !== 1 ? 'es' : ''}`);
+        lines.push(`| Diagnostics | ${diagnosticsCount.total} finding(s): ${parts.join(', ')} — see below |`);
     }
     lines.push(``);
     lines.push(`### Changed artifacts`);
@@ -527,10 +546,44 @@ function emitSuccess(ctx) {
         lines.push('```');
     }
 
+    // Auto-commit notice, diagnostics digest, and next step all render once,
+    // from emitTail() — never here (that split is what keeps their order
+    // identical to the skip path's). The trailing blank line is kept so
+    // emitTail()'s own leading blank still produces a gap at the boundary.
     lines.push(``);
-    lines.push(`> [!IMPORTANT]`);
-    lines.push(`> Auto-commit is **disabled by design**. Review the diff and run git commit manually.`);
-    lines.push(``);
+    process.stdout.write(lines.join('\n'));
+}
+
+/**
+ * Renders the terminal block shared by both finalize exit paths, in a fixed
+ * order (l1-engine-diagnostics.md DG-5): the auto-commit notice, the engine
+ * diagnostics digest (omitted entirely when there is nothing to report —
+ * DG-7), then the next step (DG-6) — the exact string this invocation
+ * persisted to STATE.md, never recomputed. Neither `emitSkip()` nor
+ * `emitSuccess()` may render any of these three blocks; that prohibition is
+ * the whole mechanism by which the two exit paths cannot drift apart.
+ *
+ * @param {{nextAction?: string, findings?: Object[]}} ctx
+ * @returns {void}
+ */
+function emitTail(ctx) {
+    const { nextAction, findings = [] } = ctx;
+
+    const lines = [
+        '',
+        '> [!IMPORTANT]',
+        '> Auto-commit is **disabled by design**. Review the diff and run git commit manually.',
+        '',
+    ];
+
+    const digest = diagnostics.formatDigest(findings);
+    if (digest.length > 0) {
+        lines.push(...digest, '');
+    }
+
+    if (nextAction) {
+        lines.push('### Next step', '', nextAction, '');
+    }
 
     process.stdout.write(lines.join('\n'));
 }
@@ -590,11 +643,14 @@ function main() {
     if (!sig.significant && !opts.force) {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
-        updateSessionState(opts, workspace, designAbs);
+        const stateResult = updateSessionState(opts, workspace, designAbs);
         // SC-3: real-but-non-whitelisted changes still get one suggestion.
         if (config.suggestCommit && !opts.noCommitMsg) {
             emitFallbackCommitSuggestion(opts, workspace, currentVersion);
         }
+        // DG-4.1: a preview must not consume what the real run would report.
+        const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
+        emitTail({ nextAction: stateResult.nextAction, findings });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
             lastWorkflow: `magic.${opts.workflow}`,
@@ -625,9 +681,18 @@ function main() {
 
             if (changelogResult.formatWarning) {
                 console.warn(`⚠️  CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker. Consider migrating.`);
+                diagnostics.record({
+                    severity: 'fix', source: 'finalize', code: 'CHANGELOG_FORMAT_NONSTANDARD',
+                    message: 'CHANGELOG.md does not follow Keep-a-Changelog format; entry prepended with a marker.',
+                    locus: 'CHANGELOG.md', remedy: 'Consider migrating CHANGELOG.md to Keep-a-Changelog format.',
+                });
             }
         } catch (e) {
             console.warn(`⚠️  Could not update CHANGELOG.md: ${e.message}`);
+            diagnostics.record({
+                severity: 'error', source: 'finalize', code: 'CHANGELOG_WRITE_FAILED',
+                message: `Could not update CHANGELOG.md: ${e.message}`, locus: 'CHANGELOG.md',
+            });
         }
     }
 
@@ -642,14 +707,29 @@ function main() {
             archivedPhases = archiveResult.archived;
             if (archiveResult.skipped.length > 0) {
                 console.warn(`⚠  Phase archival: skipped ${archiveResult.skipped.length} already-archived file(s).`);
+                diagnostics.record({
+                    severity: 'warning', source: 'finalize', code: 'PHASE_ARCHIVE_SKIPPED',
+                    message: `Phase archival skipped ${archiveResult.skipped.length} already-archived file(s).`,
+                });
             }
         } catch (e) {
             console.warn(`⚠  Phase archival warning: ${e.message}`);
+            diagnostics.record({
+                severity: 'error', source: 'finalize', code: 'PHASE_ARCHIVE_FAILED',
+                message: `Phase archival warning: ${e.message}`,
+            });
         }
     }
 
     // ── Session state (SC-2) ────────────────────────────────────────────────
     const stateResult = updateSessionState(opts, workspace, designAbs);
+
+    // ── Diagnostics (DG-4) ──────────────────────────────────────────────────
+    // After every other mutating step, so findings phase archival / CHANGELOG
+    // / state-update produced are in the sink before the digest is composed.
+    // DG-4.1: a preview must not consume what the real run would report.
+    const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
+    const diagnosticsCount = diagnostics.summarize(findings);
 
     // ── Commit message ──────────────────────────────────────────────────────
     // SC-3.1: what the user reviews before committing is the whole working
@@ -684,8 +764,10 @@ function main() {
         commitMsg,
         archivedPhases,
         stateResult,
+        diagnosticsCount,
         opts,
     });
+    emitTail({ nextAction: stateResult.nextAction, findings });
 
     const nextState = {
         lastVersion: next,
@@ -701,7 +783,7 @@ function main() {
 // Exported for the regression harness (l2-test-suite §finalize coverage).
 // computeNextAction carries the SC-2.1 plan-state logic and is unit-tested
 // in isolation; main() is the CLI entrypoint.
-module.exports = { main, computeNextAction, updateSessionState, collectChangedFiles, emitSuccess };
+module.exports = { main, computeNextAction, updateSessionState, collectChangedFiles, emitSuccess, emitTail };
 
 // Execute only as a CLI, not when required by tests.
 if (require.main === module) {

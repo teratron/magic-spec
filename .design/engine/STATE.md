@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 05:54
+**Updated:** 2026-08-07 06:45
 **Phase:** 18 — Engine Diagnostics Digest
 **Status:** Active
 
@@ -12,26 +12,23 @@
 
 - **Task:** T-14B02 Purge rules/MAGIC.md case drift from workflow wrappers; restore hardlinks
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Execute T-18A01 Collector core — record, read, drain, sink resolution, retention bound via /magic.run engine
+- **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Phase 18: [0/12] ░░░░░░░░ 0%
-Overall: [16/17] ████████ 94%
+Overall: [17/17] ████████ 100%
 ```
 
 ## Recent Decisions
+
+<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
+
+- 2026-08-07 **Decision:** Fixed update-state.js addDecision: the insertion-point regex matched a blank line's own trailing newline as satisfying [^<], so every entry landed directly after the ## Recent Decisions heading instead of past the blank/comment preamble (MD022/MD032/MD012). Section now rebuilt deterministically each call. Engine 2.1.67.
+- 2026-08-07 **Decision:** Phase 18 complete. Provides: engine diagnostics digest — lib/diagnostics.js collector (record/read/drain over a global JSONL sink), single emitTail() rendering notice+digest+next-step identically on both finalize exit paths, record-diagnostic agent channel, all 17 pre-existing non-fatal emitters across 6 scripts now recording. Engine 2.1.66, harness 55/55. Plan complete.
 - 2026-08-06 **Decision:** Phase 17 complete. Provides: shared scan-hygiene strip helper backing both compliant script scans; registry cross-reference SH-1/SH-4 fixed; link-integrity template exclusion; containment scan SH-1 precondition. Engine 2.1.65, harness 46/46. Plan complete.
 - 2026-08-06 **Decision:** Phase 16 complete. Provides: init.md documentation parity on all three claim surfaces + cognitive suite; RC-12 scaffold-removal check in ventilation and ambient rules. Engine 2.1.64, harness 43/43. Plan complete.
 - 2026-08-06 **Decision:** Phase 15 complete. Provides: two-level progress counters, narrative-safe fence merge, distinct line-cap exhaustion warning, Blocked-phase next-action guard, full changed-file visibility in finalize, generator containment. Engine 2.1.63, harness 43/43.
-- 2026-08-06 **Decision:** Phase 14 complete. Provides: extension-aware skill projection; zero MAGIC.md case drift in shipped artifacts; docs/ covers graph+status; 0 orphaned conventions. Engine 2.1.62, harness 34/34.
-
-- 2026-07-10 **Decision:** Plan re-synced to INDEX v1.15.2 + RULES v1.9.0 (PLAN 1.14.1, TASKS 1.17.3); no new scope — plan remains complete
-
-
-
-<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
 ## Blockers
 
