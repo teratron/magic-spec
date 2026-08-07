@@ -122,6 +122,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated specification `workspace-intent-routing` (engine)
 - Updated specification `engine-core` (engine)
 - Updated implementation plan (engine)
+- Updated a specification (engine)
 
 ### Added
 

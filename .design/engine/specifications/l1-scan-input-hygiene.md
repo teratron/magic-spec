@@ -1,6 +1,6 @@
 # Scan Input Hygiene
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** concept
 
@@ -14,7 +14,7 @@ The rule is one line — *strip the quoting constructs, then match* — and its 
 
 - [l1-engine-core.md](l1-engine-core.md) - Hosts the workflows that carry most of the affected scans.
 - [l2-engine-finalization.md](l2-engine-finalization.md) - §6 fixed the first instance (archival eligibility) locally, before the pattern was recognized as general.
-- [l2-engine-automation.md](l2-engine-automation.md) - Owns `check-prerequisites`, whose registry cross-reference is the open code-level instance.
+- [l2-engine-automation.md](l2-engine-automation.md) - Owns `check-prerequisites`, whose registry cross-reference was only half-closed: the PLAN.md-facing extraction is bound, the INDEX.md-facing extraction (and two structurally identical sibling call sites in the same file) are not.
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Its detection surfaces scan product files for SDD tokens and are bound by SH-1; its §4.3 already carves out illustrative examples ad hoc.
 
 ## 1. Motivation
@@ -23,7 +23,7 @@ Four instances, four subsystems, one root cause. Listed in discovery order becau
 
 1. **Archival eligibility.** `phase-archiver.js` decided a phase was unfinished by testing `content.includes('- [ ]')` over the whole file. A phase whose Notes *discussed* checkbox detection was silently held back from archival. Fixed by stripping fenced blocks and code spans, then testing a line-anchored pattern — but the fix and its rationale were written into a single implementation spec section, as though the problem were local to that predicate.
 
-2. **Registry cross-reference.** `check-prerequisites` extracts spec references from `PLAN.md` with `/specifications\/([^)]*\.md)/g` against raw file content. Writing a Backlog entry that *quoted* template placeholder paths produced `REGISTRY_MISMATCH` for a specification that does not and must not exist. Two defects compound here: no stripping (SH-1), and a capture bounded by `)` rather than by the filename's own grammar, so one match swallowed three comma-separated tokens at once (SH-4).
+2. **Registry cross-reference.** `check-prerequisites` extracts spec references from `PLAN.md` with `/specifications\/([^)]*\.md)/g` against raw file content. Writing a Backlog entry that *quoted* template placeholder paths produced `REGISTRY_MISMATCH` for a specification that does not and must not exist. Two defects compound here: no stripping (SH-1), and a capture bounded by `)` rather than by the filename's own grammar, so one match swallowed three comma-separated tokens at once (SH-4). The fix that landed bound only the `PLAN.md`-reading half of this check. The same file runs the identical unbounded, unstripped pattern three more times — reading `INDEX.md` to build the `GHOST_REGISTRY`/`NAMING_VIOLATION`/`ORPHANED_SPEC` set, reading a spec file's own `**Implements:**` line, and re-reading `INDEX.md` for header-parity lookups — none of which route through the bounded pattern or the shared strip helper. A field report against engine 2.1.70 hypothesized exactly this: a bare `specifications/` mention in prose, unclosed on the same token, lets `[^)]*` run forward past a newline to the next unrelated `)` in the document. §4 catalogs the three still-open sites.
 
 3. **Link integrity.** The ventilation link sweep reports every relative link in `.magic/templates/` as broken. It is not wrong about the filesystem — those targets genuinely do not resolve — but a template is a mold, not a document: its paths resolve only once instantiated into a user project (SH-3).
 
@@ -55,7 +55,10 @@ Rules that Layer 2 implementations MUST NOT violate:
 | Surface | Kind | Bound by | State |
 | --- | --- | --- | --- |
 | Archival eligibility predicate | script | SH-1, SH-2 | Compliant — calls the shared `stripQuoted()` helper, then matches a line-anchored pattern |
-| Registry cross-reference in the prerequisite check | script | SH-1, SH-2, SH-4 | Compliant — strips via the shared helper, then matches a filename-grammar-bounded capture |
+| Registry cross-reference — `PLAN.md` → spec extraction | script | SH-1, SH-2, SH-4 | Compliant — strips via the shared helper, then matches a filename-grammar-bounded capture |
+| Registry cross-reference — `INDEX.md` → spec extraction (`GHOST_REGISTRY`/`NAMING_VIOLATION`/`ORPHANED_SPEC`) | script | SH-1, SH-4 | Non-compliant — reads raw `indexContent` with the pre-fix `/specifications\/([^)]*\.md)/g`; `[^)]` does not exclude newlines, so a mention with no immediate closing `)` runs the capture past the paragraph it started in |
+| Layer Integrity — L2 parent lookup (`RULE_57_VIOLATION`) | script | SH-1, SH-4 | Non-compliant — same unbounded pattern, applied to `INDEX.md` rows and to the child spec's `**Implements:**` field |
+| Header parity — `INDEX.md` row → spec-file lookup (`VERSION_DRIFT`/`STATUS_DRIFT`) | script | SH-1, SH-4 | Non-compliant — same unbounded pattern, applied per `INDEX.md` line |
 | Link integrity sweep (ventilation) | cognitive | SH-3 | Compliant — `.magic/templates/` excluded from resolution by file role |
 | Reference containment scan (ventilation) | cognitive | SH-1 | Compliant — the boundary is stated once as a precondition on the match-class list |
 | Progress-counter classification | script | SH-4 | Compliant — the label set is closed to what the writer emits |
@@ -103,10 +106,11 @@ For those, the containing specification states its own carve-out and the audit a
 ## 6. Implementation Notes
 
 1. Extract the strip step into a shared helper and re-point the archival predicate at it — a refactor with existing regression coverage, so it validates the helper before anything depends on it.
-2. Bind the registry cross-reference: strip, then narrow the capture to the filename grammar (SH-4). Its regression case is the one this specification was written from.
+2. Bind the registry cross-reference: strip, then narrow the capture to the filename grammar (SH-4). Its regression case is the one this specification was written from. *(Done for the `PLAN.md`-reading half only — see item 6.)*
 3. Amend the ventilation link check to exclude template sources (SH-3) — prose, no script.
 4. State SH-1 once in the containment scan's match-class preamble, replacing the local carve-out with a reference to it.
 5. Steps 2-4 modify engine files → C14 applies at implementation time.
+6. **Remaining**: bind the three `INDEX.md`-side sites in `check-prerequisites.js` (§4) to the same `stripQuoted()` + filename-grammar capture already validated on the `PLAN.md` side — hoist `specFilenameRe` to a module-level constant per SH-5 (one implementation, not four copies of the literal pattern) and re-point the registry-cross-reference, Layer Integrity, and header-parity reads at it. Regression: extend the existing `PLAN.md`-quoting test case in `[HARNESS]` with an `INDEX.md` Meta Information bullet that mentions `specifications/` in prose without a markdown link, asserting no `GHOST_REGISTRY`/`NAMING_VIOLATION`/`ORPHANED_SPEC` finding is produced from it. Modifies an engine file → C14 applies at implementation time.
 
 ## 7. Drawbacks & Alternatives
 
@@ -120,7 +124,7 @@ For those, the containing specification states its own carve-out and the audit a
 | Alias | Path | Purpose |
 | --- | --- | --- |
 | `[ARCHIVER]` | `.magic/scripts/lib/phase-archiver.js` | Hosts the compliant strip-then-match predicate; the shared helper is extracted from here |
-| `[PREREQ]` | `.magic/scripts/check-prerequisites.js` | Hosts the non-compliant registry cross-reference (SH-1, SH-4) |
+| `[PREREQ]` | `.magic/scripts/check-prerequisites.js` | Hosts the compliant `PLAN.md`-side extraction (line ~144) and the three still-non-compliant `INDEX.md`-side sites (SH-1, SH-4): registry cross-reference (~line 146), Layer Integrity parent lookup (~lines 208, 219), header-parity lookup (~line 310) |
 | `[VENTILATION]` | `.magic/analyze.md` | Hosts the cognitive scans: link integrity (SH-3) and reference containment (SH-1) |
 | `[TEMPLATES]` | `.magic/templates/` | The template source directory whose role triggers the SH-3 exclusion |
 | `[HARNESS]` | `dev/tests/engine.js` | Regression home for the shared helper and each bound script scan |
@@ -129,5 +133,6 @@ For those, the containing specification states its own carve-out and the audit a
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-08-07 | Agent | Corrected an overstated 1.1.0 compliance claim (also self-contradicted by this file's own `[PREREQ]` Canonical Reference, which had continued to read "non-compliant"): the registry-cross-reference fix bound only `check-prerequisites.js`'s `PLAN.md`-reading half. Re-traced the script and found three sibling call sites still on the pre-fix unbounded `/specifications\/([^)]*\.md)/g` pattern — the `INDEX.md`-side registry extraction, the Layer Integrity parent lookup, and the header-parity lookup — none stripped (SH-1), none filename-grammar-bounded (SH-4). §4 table split into the compliant and three non-compliant rows; §1 item 2, Related Specifications, and Canonical References brought into agreement; §6 gained the remaining-work item. Prompted by a field report against engine 2.1.70 describing corrupted `GHOST_REGISTRY`/`NAMING_VIOLATION`/`ORPHANED_SPEC` messages; the report's specific symptom did not reproduce against this repository's current `INDEX.md` content (no bare `specifications/` mention exists there today), but the regex defect it hypothesized is real and confirmed by inspection. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.1.0 | 2026-08-07 | Agent | §4 enforcement-surface table updated to Compliant across all rows: the shared `stripQuoted()` helper (SH-5) now backs both script scans, the link-integrity sweep excludes `.magic/templates/` (SH-3), and the containment scan states SH-1 once as a match-class precondition instead of a local carve-out. New row for the phase-checklist reader, previously undocumented as a strip-copy site. Implements Phase 17. |
 | 1.0.0 | 2026-08-06 | Agent | Initial Stable. Defines SH-1..SH-5 after the same root cause produced a fourth defect in a fourth subsystem: archival eligibility (fixed locally), the registry cross-reference (open — found by writing a Backlog entry that quoted placeholder paths and watching the checker report a nonexistent spec), the ventilation link sweep against template sources (open), and the reference containment scan against fixture literals (handled ad hoc per audit). Records the enforcement-surface table with per-surface compliance state, and §5.3's boundary: stripping removes the syntactic cases so that judgment is spent only on the semantic ones. |

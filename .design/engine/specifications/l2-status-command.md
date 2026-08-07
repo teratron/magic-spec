@@ -98,4 +98,5 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.0 (quarantine reversed) | 2026-08-07 | Agent | **C12 Cascade, then reversed**: L1 parent [l1-session-continuity.md](l1-session-continuity.md) momentarily dropped Stable → RFC (v1.9.0, SC-2.4 Backlog Disposition Convention addendum), quarantining this file to RFC. The parent's Post-Update Review (5-lens) found no blocking issues and Trust Mode (C9) auto-promoted it back to `Stable` within the same invocation, which lifts this file's quarantine in step — content and version unchanged throughout, no defect here. |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable version. Read-only briefing command: layout contract, degraded states, upgrade-detection interplay, C2-exception registration. |

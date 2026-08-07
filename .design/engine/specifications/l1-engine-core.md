@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Stable
 **Layer:** concept
 
@@ -67,13 +67,11 @@ Quantified from this session alone, across seven consecutive `/magic.spec` field
 
 Reported informally, as a self-observed pattern rather than a single reproducible defect: concept specs proliferate because L1 authoring is cheap and pleasant while L2 implementation is expensive; without a budget limiter — L1 authoring blocked while N L2 items are unclosed — the gap only grows.
 
-### Proposed Convention (pending `/magic.rule` ratification)
+### Proposed Convention (rejected 2026-08-07)
 
-This specification records the finding and its evidence; it does **not** mint a new C-numbered convention. `.design/RULES.md` is the sole source of truth for the C-series — this spec only *binds* to conventions already defined there (per the 1.1.4 Document History entry below) — and constitutional amendments are `/magic.rule`'s write scope, not `/magic.spec`'s.
+This specification recorded the finding and its evidence without minting a new C-numbered convention — `.design/RULES.md` is the sole source of truth for the C-series, and constitutional amendments are `/magic.rule`'s write scope, not `/magic.spec`'s. The shape considered for ratification: a debt ceiling on `Required Fix` (or equivalent) blocks awaiting an L2 pass — once N are open against a workspace, `/magic.spec`'s Pre-flight surfaces a HALT recommending `/magic.task {ws}` before authoring further amendments.
 
-The shape recommended for ratification: a debt ceiling on `Required Fix` (or equivalent) blocks awaiting an L2 pass — once N are open against a workspace, `/magic.spec`'s Pre-flight surfaces a HALT recommending `/magic.task {ws}` before authoring further amendments, mirroring how RE-3's Version Drift Guard already HALTs `spec.md` on a different integrity condition. Enforcing that HALT is itself an L1 engine change (`.magic/spec.md` Pre-flight) and is out of scope here for the same reason every fix in §7–§10 of the companion spec is: `/magic.spec` documents, `/magic.run` implements.
-
-This entry is itself an instance of the pattern it describes — writing it took one `/magic.spec` pass; closing it takes a `/magic.rule` pass to ratify the convention, then a `/magic.task`/`/magic.run` cycle to build the actual gate. Left explicit so the irony doesn't go unnoticed.
+**Explicit user ratification decision (Escalation Whitelist E4)**: rejected. The datapoint the proposal itself named as its test arrived: Phases 15-20 closed the exact `Required Fix` backlog that motivated it — 8 blocks in [l2-engine-finalization.md](l2-engine-finalization.md) alone — through normal `/magic.task`/`/magic.run` planning cycles, with no hard ceiling ever existing to force the stop. The asymmetry this section names is real (spec authoring is cheap, L2 closure is expensive), but the evidence shows the existing pipeline already closes the gap without a dedicated numeric gate; a related-but-distinct mechanism (SC-2.4's `DESIGN_DEBT_PENDING` Backlog gate, [l1-session-continuity.md](l1-session-continuity.md)) already HALTs `/magic.task` when a workspace reaches plan-complete with undone design work, covering the adjacent case a debt ceiling was also reaching for. No `/magic.rule` amendment follows from this section.
 
 ### Workspace Scope Completeness (resolved 2026-08-07)
 
@@ -98,13 +96,14 @@ Ventilation (2026-08-06) found `dev/` absent from the `engine` workspace's `scop
 | `.magic/templates/` | Canonical artifact scaffolds |
 | `.magic/.version` | Engine version pin |
 | `.magic/.checksums` | Kernel integrity manifest |
-| `.design/RULES.md` | Global constitution — C-series convention source of truth; ratification target for the proposed debt-ceiling convention (Known Process Gaps) |
+| `.design/RULES.md` | Global constitution — C-series convention source of truth |
 | `.design/workspace.json` | Per-workspace `scope` array (C15 isolation boundary); `engine`'s scope corrected to include `dev` (Known Process Gaps) |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-08-07 | Agent | **Debt-ceiling convention rejected**: routed to the user per Escalation Whitelist E4 (constitutional-tier, `/magic.task`'s `DESIGN_DEBT_PENDING` HALT triggered this pass' `/magic.spec engine` invocation). Decision: reject — Phases 15-20 closed the exact `Required Fix` backlog that motivated the proposal through normal planning cycles, with no hard ceiling ever existing, and SC-2.4's `DESIGN_DEBT_PENDING` gate already covers the adjacent plan-complete-with-open-debt case. §Known Process Gaps' "Proposed Convention" subsection rewritten from pending-ratification to rejected-with-rationale; no `/magic.rule` amendment follows. Canonical Reference for `.design/RULES.md` no longer describes it as a ratification target. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation — no C12 cascade to the ten L2 `Implements` dependents as a result. |
 | 1.3.0 | 2026-08-07 | Agent | New **Workspace Scope Completeness** entry under Known Process Gaps: the `engine` workspace's `scope` array omitted `dev` despite several of the workspace's own L2 specs citing `dev/tests/engine.js` / `dev/scripts/*.js` in their Canonical References, leaving those files outside every scope-respecting scan. Read C15's own stated rationale ("prevent... accidental modification of unrelated modules") and found `dev/` is not unrelated — it is this engine's own Layer 2 Auxiliary Core — so the omission was an inconsistent application of C15, not a deliberate boundary; no `/magic.rule` amendment needed. Resolved directly: `dev` added to `workspace.json`'s `engine.scope`; `dev/.cache/` stays excluded via the pre-existing `.gitignore` check. Canonical References gained `.design/workspace.json`. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-08-06 | Agent | New **Known Process Gaps** section: **Concept/Implementation Debt Asymmetry** — `/magic.spec` authoring is cheap (one workflow pass, `.design/`-only writes) while closing the corresponding L2 implementation is expensive (`/magic.task` → `/magic.run`, code + tests + review), and nothing bounds the gap between them. Quantified from this session: 7 consecutive field-report `/magic.spec` cycles with no interleaving implementation pass left 8 fully-specified `Required Fix` blocks in `l2-engine-finalization.md`, zero implemented. Records a proposed convention (a debt ceiling gating further spec authoring on unclosed L2 items) explicitly **pending `/magic.rule` ratification** — this spec does not mint new C-numbered conventions itself, and enforcement would itself be an L1 engine change out of this workflow's write scope. Canonical References gained `.design/RULES.md`. Reported informally as a self-observed process pattern, not a single reproducible defect. |
 | 1.1.4 | 2026-08-06 | Agent | Cited C6 (Autonomous Selective Planning) and C10 (Task Architecture & Status Truth) in §Invariants. Both were implemented in the planning workflow but cited by no specification, so the graph classified them as orphaned conventions. Traceability binding only — no behavioral change. |

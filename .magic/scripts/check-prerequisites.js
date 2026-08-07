@@ -8,6 +8,13 @@ const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
 
+// l1-scan-input-hygiene.md SH-4/SH-5: single shared pattern source for every
+// `specifications/{file}.md` extraction site in this script — the filename
+// grammar (not an unrelated closing paren) bounds the capture, so one
+// definition backs both the `matchAll()` site and the single-match `.match()`
+// sites instead of four independent copies of the same literal.
+const SPEC_FILENAME_SRC = 'specifications\\/([a-z0-9][a-z0-9-]*\\.md)';
+
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
 // ═══════════════════════════════════════════════════════════════════════════
@@ -117,8 +124,12 @@ let draftCount = 0;
 let rfcCount = 0;
 
 let indexContent = '';
+let indexContentForMatch = '';
 if (indexExists) {
     indexContent = fs.readFileSync(indexPath, 'utf8');
+    // SH-1: strip fenced/inline-quoted spans once, shared by every
+    // `specifications/` extraction site below that reads INDEX.md.
+    indexContentForMatch = stripQuoted(indexContent);
     stableCount = (indexContent.match(/\|\s*Stable\s*\|/g) || []).length;
     draftCount = (indexContent.match(/\|\s*Draft\s*\|/g) || []).length;
     rfcCount = (indexContent.match(/\|\s*RFC\s*\|/g) || []).length;
@@ -141,9 +152,12 @@ if (planExists && indexExists) {
     // capture to the filename grammar so one match can't span several
     // comma-separated tokens up to an unrelated closing paren.
     const planContentForMatch = stripQuoted(planContent);
-    const specFilenameRe = /specifications\/([a-z0-9][a-z0-9-]*\.md)/g;
 
-    const indexSpecMatches = [...indexContent.matchAll(/specifications\/([^)]*\.md)/g)];
+    // SH-1 + SH-4: read from the stripped copy, bound to the filename grammar
+    // — the pre-fix `[^)]*` capture doesn't exclude newlines, so a bare
+    // `specifications/` mention in prose (no immediate closing `)`) could run
+    // the match past the paragraph it started in.
+    const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
     const indexSpecs = [...new Set(indexSpecMatches.map(m => m[1]))];
 
     for (const spec of indexSpecs) {
@@ -173,7 +187,7 @@ if (planExists && indexExists) {
         }
     }
 
-    const planSpecMatches = [...planContentForMatch.matchAll(specFilenameRe)];
+    const planSpecMatches = [...planContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
     const planSpecs = [...new Set(planSpecMatches.map(m => m[1]))];
 
     for (const pSpec of planSpecs) {
@@ -202,10 +216,12 @@ if (planExists && indexExists) {
     }
 
     // Rule 57: Layer Integrity
-    const lines = indexContent.split(/\r?\n/);
+    // SH-1: iterate the stripped copy so a quoted mention in a code span
+    // doesn't masquerade as a registry row.
+    const lines = indexContentForMatch.split(/\r?\n/);
     for (const line of lines) {
         if (line.includes('| [') && line.includes('implementation')) {
-            const specMatch = line.match(/specifications\/([^)]*\.md)/);
+            const specMatch = line.match(new RegExp(SPEC_FILENAME_SRC));
             if (specMatch) {
                 const specFile = specMatch[1];
                 const parts = line.split('|').map(s => s.trim());
@@ -214,9 +230,9 @@ if (planExists && indexExists) {
                     if (status === 'Stable' || status === 'RFC') {
                         const specPath = path.join(designDir, 'specifications', specFile);
                         if (fs.existsSync(specPath)) {
-                            const specContent = fs.readFileSync(specPath, 'utf8');
-                            // Extract parent link reliably
-                            const parentMatch = specContent.match(/\*\*Implements:\*\*\s*(?:\[.*?\]\()?specifications\/([^)]*\.md)\)?/);
+                            const specContent = stripQuoted(fs.readFileSync(specPath, 'utf8'));
+                            // Extract parent link reliably — SH-1 + SH-4
+                            const parentMatch = specContent.match(new RegExp(`\\*\\*Implements:\\*\\*\\s*(?:\\[.*?\\]\\()?${SPEC_FILENAME_SRC}\\)?`));
                             if (parentMatch) {
                                 const parent = parentMatch[1];
                                 const parentLine = lines.find(l => l.includes(`(specifications/${parent})`));
@@ -279,14 +295,18 @@ if (planExists && tasksExists) {
             // Backlog entry illustrating `- {example}` syntax in a code span is
             // not counted as an open item.
             const backlogBody = stripQuoted(backlogMatch[1]);
-            // Top-level bullets only (`- `, not `  - ` sub-bullets), matching
-            // how the debt-ceiling convention (l1-engine-core.md) already
-            // counts Backlog entries. No attempt to classify an item as
-            // "genuinely open" vs. "deferred/rejected" narrative within its
-            // own text — the Backlog has no markup for that distinction, and
-            // guessing from wording would be exactly the kind of project-
-            // specific heuristic this check must not depend on.
-            const openItems = backlogBody.split(/\r?\n/).filter((l) => /^-\s+\S/.test(l));
+            // Top-level bullets only (`- `, not `  - ` sub-bullets). A bullet
+            // whose design question is already answered but is kept visible
+            // on purpose carries a trailing `*(Parked — {reason})*` marker
+            // (l1-session-continuity.md SC-2.4 addendum, Backlog Disposition
+            // Convention) — that is a deliberate, explicit signal, not a
+            // wording guess, so it is the one exclusion this count applies.
+            // Closed items (resolved/rejected/superseded) are expected to be
+            // folded into the Backlog's own intro note and their bullet
+            // deleted, not marked — so no separate "Closed" pattern to match.
+            const openItems = backlogBody
+                .split(/\r?\n/)
+                .filter((l) => /^-\s+\S/.test(l) && !/\*\(Parked\b/.test(l));
 
             if (openItems.length > 0) {
                 const workspaceName = normalizePath(designDir).split('/').pop();
@@ -305,9 +325,10 @@ if (planExists && tasksExists) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 if (verifyHeaders && indexExists) {
-    const lines = indexContent.split(/\r?\n/);
+    // SH-1: iterate the stripped copy — same reasoning as the Layer Integrity scan above.
+    const lines = indexContentForMatch.split(/\r?\n/);
     for (const line of lines) {
-        const specMatch = line.match(/specifications\/([^)]*\.md)/);
+        const specMatch = line.match(new RegExp(SPEC_FILENAME_SRC));
         if (!specMatch) continue;
 
         const specFile = specMatch[1];

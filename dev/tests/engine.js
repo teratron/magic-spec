@@ -570,6 +570,66 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b-bis. check-prerequisites.js — INDEX.md-side registry-scan sites are
+    //         scan-hygiene compliant (SH-1, SH-4) — the three sites Phase 17
+    //         did not reach, closed by Phase 21
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js INDEX.md-side registry-scan sites are scan-hygiene compliant (SH-1, SH-4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            const specsDir = path.join(designDir, 'specifications');
+            fs.mkdirSync(specsDir, { recursive: true });
+
+            fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+
+            // Reproduces the field-reported shape (engine 2.1.70): a Meta
+            // Information bullet mentions `specifications/` bare (no markdown
+            // link), followed later in the same parenthesized bullet by
+            // further `.md` mentions and the bullet's closing `)`. The
+            // pre-fix `/specifications\/([^)]*\.md)/g` has no newline
+            // exclusion and no filename-grammar boundary, so it captured the
+            // entire span as a single corrupted "filename". Also includes a
+            // genuinely broken registered spec, to prove the fix bounds the
+            // capture rather than blinding the check entirely.
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), [
+                '# Index',
+                '',
+                '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
+                '| [l1-missing.md](specifications/l1-missing.md) | y | Stable | 1 | 1.0.0 |',
+                '',
+                '## Meta Information',
+                '',
+                '- **Last Updated**: see specifications/ for the layout convention; also touches l1-other.md and l2-another.md in passing)',
+                '',
+            ].join('\n'));
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            fs.writeFileSync(path.join(designDir, 'PLAN.md'), '# Plan\n- [x] real spec ([l1-real.md](specifications/l1-real.md))\n');
+
+            generateChecksums(tempDir);
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const result = JSON.parse(
+                execSync(`node "${scriptPath}" --json --require-specs --verify-headers`, { cwd: tempDir, encoding: 'utf8' })
+            );
+
+            const registryFindings = result.warnings.filter(
+                (w) => w.type === 'GHOST_REGISTRY' || w.type === 'NAMING_VIOLATION' || w.type === 'ORPHANED_SPEC'
+            );
+            assert.ok(
+                !registryFindings.some((w) => /layout convention|l2-another|l1-other/.test(w.message)),
+                `the bare prose mention must not surface as a finding, corrupted or otherwise → ${JSON.stringify(registryFindings)}`
+            );
+            assert.ok(
+                registryFindings.some((w) => w.type === 'GHOST_REGISTRY' && w.message.includes("'l1-missing.md'")),
+                'a genuinely broken registered spec must still be caught — the fix bounds the capture, it does not blind the check'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6b2. check-prerequisites.js — design-debt backlog signal (SC-2.4)
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js reports DESIGN_DEBT_PENDING only when plan-complete meets an open Backlog (SC-2.4)', () => {
@@ -628,6 +688,59 @@ describe('Magic Engine Scripts', () => {
                 undefined,
                 'unrecognized Active Phases content must not be read as plan-complete'
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6b2-bis. check-prerequisites.js — DESIGN_DEBT_PENDING's openItems count
+    //          skips Parked-marked Backlog bullets (SC-2.4 addendum, Backlog
+    //          Disposition Convention, closed by Phase 21)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js DESIGN_DEBT_PENDING excludes Parked-marked Backlog bullets (SC-2.4 addendum)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            fs.writeFileSync(
+                path.join(designDir, 'TASKS.md'),
+                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magic.task`.*\n'
+            );
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const findDebtWarning = (planBody) => {
+                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
+                const result = JSON.parse(
+                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
+                );
+                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
+            };
+
+            // One plain bullet, one Parked-marked bullet — only the plain one counts.
+            const mixed = findDebtWarning(
+                '- Some open design item.\n- Already decided, kept visible. *(Parked — no current demand signal.)*'
+            );
+            assert.ok(mixed, 'a Backlog with at least one plain bullet must still raise the signal');
+            assert.match(mixed.message, /1 open item/, 'the Parked-marked bullet must not be counted');
+
+            // Every bullet Parked — no open items at all, signal must not fire.
+            assert.strictEqual(
+                findDebtWarning(
+                    '- First parked item. *(Parked — revisit only if X.)*\n- Second parked item. *(Parked — monitoring only.)*'
+                ),
+                undefined,
+                'a Backlog composed entirely of Parked bullets must not raise the signal'
+            );
+
+            // A bullet that merely mentions the word "Parked" mid-sentence, not
+            // as the disposition marker, must still count as open — the
+            // exclusion is the specific `*(Parked` marker shape, not the bare word.
+            const wordOnly = findDebtWarning('- This item was previously Parked but is open again.');
+            assert.ok(wordOnly, 'a bullet using the word "Parked" without the marker shape must still count as open');
+            assert.match(wordOnly.message, /1 open item/, 'the bare-word bullet must be counted, not excluded');
         } finally {
             cleanup(tempDir);
         }
