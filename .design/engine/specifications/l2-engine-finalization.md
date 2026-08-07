@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 1.10.1
+**Version:** 1.11.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -15,6 +15,7 @@ Internal helper library (`scripts/lib/`) that implements the finalization protoc
 - [l1-session-continuity.md](l1-session-continuity.md) — SC-2/SC-3 invariants carried by the finalize pipeline (§5).
 - [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) — RC-11 (Generator Self-Containment) binds `commit-suggester.js`'s CHANGELOG-bullet output (§7).
+- [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Diagnostics digest that this pipeline drains and renders in its terminal block (§11).
 
 ## 1. Motivation
 
@@ -319,11 +320,24 @@ GOOD: if (decLines.length > 1) {
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), a harness case must drive a fixture past 100 lines purely via repeated `addConstraint` calls (no `## Recent Decisions` growth), with `## Recent Decisions` pre-seeded at its 1-entry floor, and assert the guard's stdout output differs from the routine-prune case — i.e. that "cap exhausted, nothing pruned" is observably distinguishable from "cap restored, one entry pruned", not the same log line in both cases.
 
+## 11. Terminal Block Ownership (Diagnostics Digest) `[ADDED]`
+
+The pipeline's stdout gains two sections at its end — an engine diagnostics digest and the next step — governed by [l1-engine-diagnostics.md](l1-engine-diagnostics.md) (DG-5, DG-6) and implemented per [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.7. This section records only what changes **for this pipeline**; the digest's collection, taxonomy, and rendering rules are not restated here.
+
+Two structural consequences for `finalize.js`:
+
+1. **The terminal block leaves the path-specific emitters.** Today the auto-commit notice is assembled twice — once inside `emitFallbackCommitSuggestion()` on the non-significant path, once inside `emitSuccess()` on the significant one. It moves into a single `emitTail()` that `main()` calls once on both paths, together with the digest and the next step. Neither `emitSkip()` nor `emitSuccess()` may render any part of the terminal block after this change; that prohibition is what makes DG-5's "same order on every path" checkable rather than aspirational.
+
+2. **`updateSessionState()`'s return value becomes load-bearing.** It already returns `{ updated, dryRun?, nextAction }` on every branch, but `nextAction` is currently consumed by nobody. `emitTail()` prints that exact value (DG-6). The pipeline must not call `computeNextAction()` a second time to obtain it: the guarantee is that the string shown to the user and the string persisted to `STATE.md` are the same one, and a recomputation satisfies the wording while restoring the divergence the invariant exists to close.
+
+This pipeline is also the inventory's largest emitter block — six non-fatal findings across `main()`, `updateSessionState()`, and the CHANGELOG and phase-archival steps ([l2-engine-diagnostics.md](l2-engine-diagnostics.md) §5.1). The drain runs once in `main()`, after every other step, so findings produced by those steps are in the sink before the digest is composed.
+
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/finalize.js` | Pipeline orchestrator; `main()`'s success branch is the site corrected by §9 (`buildCommitMessage`/`emitSuccess` file-set input) |
+| `.magic/scripts/finalize.js` | Pipeline orchestrator; `main()`'s success branch is the site corrected by §9 (`buildCommitMessage`/`emitSuccess` file-set input), and the host of the §11 terminal block |
+| `.magic/scripts/lib/diagnostics.js` | Diagnostics collector drained by the §11 terminal block |
 | `.magic/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
 | `.magic/scripts/lib/commit-suggester.js` | Commit message generation and CHANGELOG bullet composition (RC-11, §7) |
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
@@ -337,6 +351,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.11.0 | 2026-08-07 | Agent | New §11 (Terminal Block Ownership): the pipeline's stdout gains a diagnostics digest and a next-step section at its end, per the new [l1-engine-diagnostics.md](l1-engine-diagnostics.md) DG-5/DG-6. Records only the two structural consequences for this pipeline — the auto-commit notice moves out of `emitFallbackCommitSuggestion()` and `emitSuccess()` into a single `emitTail()` called once from `main()` on both exit paths (the prohibition on path-local rendering is what makes the ordering invariant checkable), and `updateSessionState()`'s hitherto-unconsumed `nextAction` return value becomes the printed string, threaded rather than recomputed. Collection, taxonomy, and rendering rules live in the new specs and are deliberately not restated. Canonical References gained `lib/diagnostics.js`. |
 | 1.10.1 | 2026-08-06 | Agent | §8.4's `GOOD` replacement regex corrected: it narrowed the label class to `Phase \d+`, which does not match the state template's own `Phase {N}: [{filled}/{total}]` bootstrap line — applying the example verbatim demotes an engine-owned line to narrative and leaves the placeholder in place, caught by an existing harness case during implementation. Now `Phase (?:\d+\|\{[^}]*\})`, with the placeholder alternation stated for both halves of the pattern rather than the value half alone. Correction of a worked example; the section's reasoning and required behavior are unchanged, so patch and no status transition. |
 | 1.10.0 | 2026-08-06 | Agent | New §10 (SC-1.2) — **Line-Cap Guard Defeat by Unbounded Blocking Constraints**: the 100-line guard prunes only `## Recent Decisions`, which already has its own independent 5-entry cap; `## Blocking Constraints` has no cap and no pruning at all, by design (marked "MANDATORY reading" in the template — unlike a Decision, an entry can't be silently deleted without risking loss of safety-critical knowledge). Once Recent Decisions hits its 1-entry floor, the guard has nothing left to remove, yet its `console.warn` fires the same "Pruning oldest decision" message regardless of whether anything was pruned — reproduced directly: 60 accumulated constraints drove a synthetic workspace to 110 lines, 10 over the documented ceiling, with Recent Decisions already exhausted. Fix: the guard must distinguish "cap restored" from "cap exhausted, nothing pruned" with a genuinely different warning in the latter case, directing the operator to manually archive stale Blocking Constraints entries rather than claiming an action that didn't happen. Reported informally as an operator note that `STATE.md` reached 94/100 lines with a same-cycle "trim oldest decisions" suggestion; investigated and reproduced independently, since decision-pruning alone cannot hold the cap once Blocking Constraints dominates growth. Companion invariant: `l1-session-continuity.md` 1.6.0 → 1.7.0 (new **SC-1.2 Line-Cap Enforcement**; §2 Constraints' cap description corrected). |
 | 1.9.0 | 2026-08-06 | Agent | New §9 (SC-3.1) — **Non-Whitelisted File Visibility**: `emitSuccess()`'s `### Changed artifacts` listing and `buildCommitMessage()`'s `Modified files:` body are both built from `sig.files`, the significance whitelist's `.design/{ws}/...`-scoped subset — conflating "should this bump the version" with "what should the message tell the user they changed". Reproduced against a real commit already on `master` rather than a synthetic fixture: `b96ce07` (a `magic.run` finalize) suggested a message naming 2 files while the actual commit spanned 17, including `.magic/*` C14-sync files, root docs, and — the case that matters most for a consumer project — the task's own application-code deliverable (`dev/scripts/sync-skills.js`, `dev/tests/engine.js`), which sits outside `.design/` by construction for every `magic.run` task. Fix: widen the body-enumeration/stdout-listing input to the full `gitChangedPaths()` result (already computed for the SC-3 fallback path, now reused on the success path too), capped at the existing `MAX_FILES = 15`; header-derivation (`deriveType`/`deriveScope`/`buildSummary`) keeps reading `sig.files` only — that scoping is intentional and not the defect. Canonical References gained `.magic/scripts/finalize.js`. Reported informally ("finalize does not see new application files outside `.design/`", no reproduction steps) — confirmed by inspecting the repository's own commit history. Companion invariant added: `l1-session-continuity.md` 1.5.1 → 1.6.0 (new **SC-3.1 Commit Message Completeness**). |

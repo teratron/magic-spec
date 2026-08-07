@@ -1,6 +1,6 @@
 # Session Continuity & Status Surface
 
-**Version:** 1.7.0
+**Version:** 1.7.1
 **Status:** Stable
 **Layer:** concept
 
@@ -14,6 +14,7 @@ Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace
 - [l1-decision-autonomy.md](l1-decision-autonomy.md) - DA-3/DA-6 compute the next step; SC-4 surfaces it on demand as a briefing.
 - [l2-engine-finalization.md](l2-engine-finalization.md) - Finalization pipeline carrying SC-2 and SC-3 at a single choke point.
 - [l2-status-command.md](l2-status-command.md) - Implementation of the status briefing surface (SC-4, SC-5).
+- [l1-engine-diagnostics.md](l1-engine-diagnostics.md) - DG-6 surfaces the SC-2 `Next Action` in finalization stdout so the printed and persisted values cannot diverge; DG-5 places the diagnostics digest immediately before it, alongside SC-3's commit-suggestion output.
 
 ## 1. Motivation
 
@@ -121,6 +122,7 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.7.1 | 2026-08-07 | Agent | Related Specifications gained [l1-engine-diagnostics.md](l1-engine-diagnostics.md): DG-6 prints the `Next Action` this spec's SC-2 already computes and persists, closing the gap where the persisted value and the agent's own DA-6 narration are produced independently and can disagree; DG-5 seats the diagnostics digest immediately before it. Cross-reference only — no SC invariant is amended, so patch and no status transition. |
 | 1.7.0 | 2026-08-06 | Agent | New **SC-1.2 (Line-Cap Enforcement)**: the 100-line ceiling is enforced by pruning `## Recent Decisions` alone, down to a 1-entry floor — `## Blocking Constraints` has no cap and no pruning, so once the floor is hit the file grows unbounded on every subsequent constraint while the guard's own warning keeps claiming it pruned successfully. Reproduced directly: 60 accumulated constraints drove a synthetic workspace to 110 lines with Recent Decisions already exhausted. §2 Constraints' cap description corrected to name the actual (partial) enforcement mechanism. Field report (informal): an operator note flagging `STATE.md` at 94/100 lines with a same-cycle "trim oldest decisions" suggestion — reproduction shows that alone cannot hold the cap once Blocking Constraints dominates growth. Concrete fix tracked in [l2-engine-finalization.md](l2-engine-finalization.md) §10. |
 | 1.6.0 | 2026-08-06 | Agent | New **SC-3.1 (Commit Message Completeness)**: the suggested commit message and its accompanying stdout listing must enumerate every changed file in the working tree, not only the significance-whitelist subset — significance (drives version bump/CHANGELOG) and message completeness (drives what the user reviews before committing) are separate questions the implementation had conflated onto one file set. Reproduced against a real commit already on `master` rather than a synthetic fixture: a `magic.run` finalize's suggested message named 2 files while the actual commit spanned 17, including the task's own source-code deliverable. Concrete fix in [l2-engine-finalization.md](l2-engine-finalization.md) §9. |
 | 1.5.1 | 2026-08-06 | Agent | SC-2's defect enumeration extended with a third example: an update that corrupts `STATE.md`'s markdown structure (e.g. an unbalanced fence) while rewriting it is the same class of defect as misplacing a value or deleting narrative — patch, no new invariant. Field report (engine 2.1.58, informal — no reproduction steps): investigated independently, root cause and fix tracked in [l2-engine-finalization.md](l2-engine-finalization.md) §8.5. |
