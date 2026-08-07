@@ -4,8 +4,8 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-07 10:35
-**Phase:** 19 — Finalization Contract Fixes
+**Updated:** 2026-08-07 11:19
+**Phase:** 20 — Backlog Implementation (Release Rotation & Coverage Denominator)
 **Status:** Active
 
 ## Current Position
@@ -17,18 +17,18 @@
 ## Progress
 
 ```
-Overall: [18/18] ████████ 100%
+Overall: [19/19] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
 
+- 2026-08-07 **Decision:** Phase 20 complete. Provides: release-changelog.js (explicit opt-in CHANGELOG rotation, R11 remainder closed) and analyze-coverage.js EXEMPT classification (coverage 85.4% -> 96.5% on this workspace, 24 SDD bookkeeping/journal files no longer counted as UNCOVERED). Engine 2.1.69, harness 62/62. Plan complete.
+- 2026-08-07 **Decision:** Phase 20 planned: release-changelog.js (R11 remainder) and EXEMPT coverage classification (denominator fix) — the two backlog items whose design decisions closed in the /magic.spec pass following Phase 19's own DESIGN_DEBT_PENDING signal.
 - 2026-08-07 **Decision:** Phase 19 complete. Provides: self-labelling PLAN.md link rewrite on archival (R10 closed, 5-for-5 reproduced), DESIGN_DEBT_PENDING Pre-flight signal breaking the plan-complete funnel circularity (R13/SC-2.4), addDecision structural harness coverage (R12 gap closed, negative-controlled), CHANGELOG duplicate-heading root-caused to two 2026-05 manual edits (R11 investigation routed to /magic.spec). Engine 2.1.68, harness 57/57. Plan complete.
 - 2026-08-07 **Decision:** Fixed update-state.js addDecision: the insertion-point regex matched a blank line's own trailing newline as satisfying [^<], so every entry landed directly after the ## Recent Decisions heading instead of past the blank/comment preamble (MD022/MD032/MD012). Section now rebuilt deterministically each call. Engine 2.1.67.
 - 2026-08-07 **Decision:** Phase 18 complete. Provides: engine diagnostics digest — lib/diagnostics.js collector (record/read/drain over a global JSONL sink), single emitTail() rendering notice+digest+next-step identically on both finalize exit paths, record-diagnostic agent channel, all 17 pre-existing non-fatal emitters across 6 scripts now recording. Engine 2.1.66, harness 55/55. Plan complete.
-- 2026-08-06 **Decision:** Phase 17 complete. Provides: shared scan-hygiene strip helper backing both compliant script scans; registry cross-reference SH-1/SH-4 fixed; link-integrity template exclusion; containment scan SH-1 precondition. Engine 2.1.65, harness 46/46. Plan complete.
-- 2026-08-06 **Decision:** Phase 16 complete. Provides: init.md documentation parity on all three claim surfaces + cognitive suite; RC-12 scaffold-removal check in ventilation and ambient rules. Engine 2.1.64, harness 43/43. Plan complete.
 
 ## Blockers
 

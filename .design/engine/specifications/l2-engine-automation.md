@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.6.0
+**Version:** 1.7.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -20,7 +20,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **generate-checksums.js**: Maintains `.magic/.checksums`.
 - **generate-context.js**: Regenerates `CONTEXT.md` from current project state.
 - **init.js**: Scripted setup of the `.design/` directory.
-- **analyze-coverage.js**: Confidence Taxonomy engine — classifies project files by spec coverage confidence (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED) using Canonical References from specifications.
+- **analyze-coverage.js**: Confidence Taxonomy engine — classifies project files by spec coverage confidence (EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED, plus EXEMPT for SDD bookkeeping files — see §Coverage Denominator Scope) using Canonical References from specifications.
 - **extract-rationale.js**: Rationale Extraction engine — scans source code for design rationale markers (NOTE/WHY/HACK/etc.) and identifies Shadow Logic (uncovered design decisions).
 - **detect-communities.js**: Workspace boundary analysis — builds the dependency graph, detects communities, and scores Jaccard alignment against `workspace.json`. Honors `.gitignore` during the file walk (Invariant 7 parity).
 - **check-bloat.js**: Context-economy advisory — flags oversized specs and task phases against configurable thresholds (see §Bloat Advisory Configuration).
@@ -96,6 +96,23 @@ All matching is repo-root-relative, forward-slash normalized, case-sensitive, an
 - Omitted keys fall back to defaults; a threshold set to `0` disables that signal class.
 - The spec scan walks `specifications/**` recursively — parity with the finalize significance whitelist; top-level-only scanning is a defect.
 
+### Coverage Denominator Scope (EXEMPT classification)
+
+**The defect** (ventilation, 2026-08-06): `analyze-coverage.js` classifies every scanned file — including `.design/`'s own bookkeeping output (`PLAN.md`, `TASKS.md`, `STATE.md`, `CONTEXT.md`, `CHANGELOG.md`, `RETROSPECTIVE.md`, and every archived phase journal under `archives/`) — through the same EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED pipeline as implementation source. None of these files are ever meant to appear in a spec's Canonical References — they are the SDD process's own state, not a coverage subject — so they land UNCOVERED by construction and drag the reported percentage down as project history accumulates. Reproduced on this repository's own `engine` workspace: 85.4% reported, 17 of 25 UNCOVERED files being archived phase journals alone.
+
+**Required Fix**: introduce a fifth classification, `EXEMPT`, applied before the existing four-step `classifyFile()` pipeline runs. A file whose basename is one of `PLAN.md` / `TASKS.md` / `STATE.md` / `CONTEXT.md` / `CHANGELOG.md` / `RETROSPECTIVE.md` under `.design/`, or whose path contains an `archives` segment under `.design/`, classifies `EXEMPT` and is excluded from `total`, `coveredCount`, and `coveragePercent` — but still appears in `--json` output (its own `coverage[]` entry, and a `summary.exempt` count) so the exclusion is auditable, not a silent drop.
+
+```plaintext
+BAD : total = extracted + inferred + ambiguous + uncovered
+      // PLAN.md, archived phase journals, etc. inflate `uncovered`
+GOOD: total = extracted + inferred + ambiguous + uncovered   // EXEMPT excluded entirely
+      summary.exempt = counts.exempt                          // reported, not hidden
+```
+
+`.design/{ws}/specifications/*.md`, `INDEX.md`, `RULES.md`, `workspace.json`, and active (non-archived) `tasks/*.md` are deliberately **not** exempted — the ventilation finding scoped the defect to the bookkeeping/journal set above, and `specifications/` in particular already classifies mostly INFERRED/EXTRACTED, not UNCOVERED, so widening the exemption there was not evidenced as needed.
+
+**Parallel doc update required**: `.magic/analyze.md` §Confidence Taxonomy documents the same four-level enum and states `coverage_percent = (EXTRACTED + INFERRED) / total * 100` verbatim — an L1 engine file, out of this spec's write scope but stale the moment `EXEMPT` ships. The implementing task MUST add the `EXEMPT` row to that table and note it is excluded from `total` entirely (not merely from the numerator, unlike AMBIGUOUS), alongside the code change (C14 applies — `.magic/` content changed).
+
 ## Related Specifications
 
 - [l2-spec-graph-memory.md](l2-spec-graph-memory.md) — `build-spec-graph.js` workspace attribution consumes the shared path matcher defined in §Path Matching Contract.
@@ -111,6 +128,7 @@ All matching is repo-root-relative, forward-slash normalized, case-sensitive, an
 | `.magic/scripts/update-engine-meta.js` | Engine versioning and history update |
 | `dev/scripts/update-project-meta.js` | Project metadata hygiene (dev-side, relocated from `.magic/scripts/` in engine v2.1.21) |
 | `.magic/scripts/analyze-coverage.js` | Confidence Taxonomy coverage classification |
+| `.magic/analyze.md` | Documents the Confidence Taxonomy table and `coverage_percent` formula consumed by `analyze-coverage.js` — must stay in sync with the EXEMPT classification (§Coverage Denominator Scope) |
 | `.magic/scripts/extract-rationale.js` | Rationale Extraction and Shadow Logic detection |
 | `.magic/scripts/detect-communities.js` | Workspace boundary / community detection (gitignore-aware scan, Invariant 7) |
 | `.magic/scripts/check-bloat.js` | Bloat advisory (configurable thresholds, recursive spec scan) |
@@ -123,6 +141,7 @@ All matching is repo-root-relative, forward-slash normalized, case-sensitive, an
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.7.0 | 2026-08-07 | Agent | New **Coverage Denominator Scope** section (`EXEMPT` classification): `analyze-coverage.js` counted `.design/`'s own bookkeeping output (PLAN, TASKS, STATE, CONTEXT, CHANGELOG, RETROSPECTIVE, archived phase journals) in the same denominator as implementation source, so reported coverage fell as SDD history accumulated — 85.4% against the graph's 100% on this repository's own `engine` workspace, 17 of 25 UNCOVERED files being archived phase journals alone (ventilation, 2026-08-06). Required Fix: a fifth classification, `EXEMPT`, applied before the existing four-step pipeline, excluded from `total`/`coveragePercent` but still reported (`summary.exempt`) for auditability. Scope deliberately excludes `specifications/`, `INDEX.md`, `RULES.md`, `workspace.json`, and active `tasks/*.md` — the finding was specific to the bookkeeping/journal set, not the whole `.design/` tree. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.6.0 | 2026-06-12 | Agent | Added Path Matching Contract (shared scope/glob matcher in utils.js, zero-match guard, pattern refs) and Bloat Advisory Configuration (workspace.json threshold overrides, recursive scan) — upstream fix design for downstream glob-scope coverage report (engine 2.1.27, reproduced at 2.1.30). Documented check-bloat.js in Components. Stable retained via Trust Mode re-review (C9). |
 | 1.5.0 | 2026-06-10 | Agent | Documented detect-communities.js (closed INFERRED coverage gap) and added Scan Hygiene section: graph-walk scripts honor .gitignore (Invariant 7 parity), unioned with SKIP_DIRS floor. Stable retained via Trust Mode re-review (C9). |
 | 1.4.1 | 2026-06-10 | Agent | Fixed orphaned Canonical Reference: update-project-meta.js path updated to dev/scripts/ (script relocated in engine v2.1.21). |

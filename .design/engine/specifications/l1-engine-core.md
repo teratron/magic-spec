@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -75,6 +75,14 @@ The shape recommended for ratification: a debt ceiling on `Required Fix` (or equ
 
 This entry is itself an instance of the pattern it describes — writing it took one `/magic.spec` pass; closing it takes a `/magic.rule` pass to ratify the convention, then a `/magic.task`/`/magic.run` cycle to build the actual gate. Left explicit so the irony doesn't go unnoticed.
 
+### Workspace Scope Completeness (resolved 2026-08-07)
+
+Ventilation (2026-08-06) found `dev/` absent from the `engine` workspace's `scope` array in `.design/workspace.json`, while six or more of this workspace's own L2 specs cite `dev/tests/engine.js` and `dev/scripts/*.js` in their Canonical References — inside the traceability boundary (specs point at the files) but outside the scan boundary (`analyze-coverage.js` and the other `MAGIC_WORKSPACE_SCOPE`-consuming scripts never walked them, so they were invisible to coverage/ventilation, not merely UNCOVERED).
+
+`.design/RULES.md` C15 (Workspace Scope Isolation) states scope exists "to ensure logical isolation and prevent context leakage or accidental modification of **unrelated** modules." `dev/` is not unrelated — it is Layer 2 Auxiliary Core for this same engine (per this project's own `CLAUDE.md` layer contract), and it is the file set several of this workspace's Stable specs already declare as their own implementation. Its exclusion was inconsistent with C15's stated intent from the start, not a deliberate isolation boundary — applying C15 correctly means including it, not amending it. No `/magic.rule` ratification is needed (unlike the debt-ceiling item above): this is a corrective application of an existing convention, not a new one.
+
+**Resolution**: `dev` added to the `engine` workspace's `scope` array. `dev/.cache/` (the one noisy subtree) is already gitignored and excluded from every scope-respecting scan via the existing `.gitignore` check, independent of `scope` filtering — no new exclusion logic needed.
+
 ## Canonical References
 
 | Path | Role |
@@ -91,11 +99,13 @@ This entry is itself an instance of the pattern it describes — writing it took
 | `.magic/.version` | Engine version pin |
 | `.magic/.checksums` | Kernel integrity manifest |
 | `.design/RULES.md` | Global constitution — C-series convention source of truth; ratification target for the proposed debt-ceiling convention (Known Process Gaps) |
+| `.design/workspace.json` | Per-workspace `scope` array (C15 isolation boundary); `engine`'s scope corrected to include `dev` (Known Process Gaps) |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-08-07 | Agent | New **Workspace Scope Completeness** entry under Known Process Gaps: the `engine` workspace's `scope` array omitted `dev` despite several of the workspace's own L2 specs citing `dev/tests/engine.js` / `dev/scripts/*.js` in their Canonical References, leaving those files outside every scope-respecting scan. Read C15's own stated rationale ("prevent... accidental modification of unrelated modules") and found `dev/` is not unrelated — it is this engine's own Layer 2 Auxiliary Core — so the omission was an inconsistent application of C15, not a deliberate boundary; no `/magic.rule` amendment needed. Resolved directly: `dev` added to `workspace.json`'s `engine.scope`; `dev/.cache/` stays excluded via the pre-existing `.gitignore` check. Canonical References gained `.design/workspace.json`. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-08-06 | Agent | New **Known Process Gaps** section: **Concept/Implementation Debt Asymmetry** — `/magic.spec` authoring is cheap (one workflow pass, `.design/`-only writes) while closing the corresponding L2 implementation is expensive (`/magic.task` → `/magic.run`, code + tests + review), and nothing bounds the gap between them. Quantified from this session: 7 consecutive field-report `/magic.spec` cycles with no interleaving implementation pass left 8 fully-specified `Required Fix` blocks in `l2-engine-finalization.md`, zero implemented. Records a proposed convention (a debt ceiling gating further spec authoring on unclosed L2 items) explicitly **pending `/magic.rule` ratification** — this spec does not mint new C-numbered conventions itself, and enforcement would itself be an L1 engine change out of this workflow's write scope. Canonical References gained `.design/RULES.md`. Reported informally as a self-observed process pattern, not a single reproducible defect. |
 | 1.1.4 | 2026-08-06 | Agent | Cited C6 (Autonomous Selective Planning) and C10 (Task Architecture & Status Truth) in §Invariants. Both were implemented in the planning workflow but cited by no specification, so the graph classified them as orphaned conventions. Traceability binding only — no behavioral change. |
 | 1.1.3 | 2026-06-10 | Agent | RE-1 clarification: an absent `Version:`/`Status:` header (while INDEX.md declares a valid value) is drift, not a silent pass. Registry is source of truth for field existence. Patch — no RFC revert. |

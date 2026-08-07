@@ -45,7 +45,33 @@ const TAXONOMY = {
     INFERRED: 'File is a sibling of explicitly referenced paths',
     AMBIGUOUS: 'File is scope-adjacent but not directly referenced',
     UNCOVERED: 'No specification covers this file',
+    EXEMPT: 'SDD bookkeeping/journal file — not a coverage subject, excluded from the denominator',
 };
+
+/**
+ * Basenames of `.design/` bookkeeping/journal files: the SDD process's own
+ * state, never meant to appear in a spec's Canonical References. Counting
+ * them alongside implementation source makes reported coverage fall as
+ * project history accumulates (archived phase journals in particular).
+ */
+const EXEMPT_BASENAMES = new Set([
+    'PLAN.md', 'TASKS.md', 'STATE.md', 'CONTEXT.md', 'CHANGELOG.md', 'RETROSPECTIVE.md',
+]);
+
+/**
+ * A file is EXEMPT when it sits under `.design/` and is either one of the
+ * fixed bookkeeping basenames or an archived phase journal (any path segment
+ * named `archives`). Deliberately scoped — `specifications/`, `INDEX.md`,
+ * `RULES.md`, `workspace.json`, and active `tasks/*.md` are NOT exempted.
+ *
+ * @param {string} filePath - Forward-slash normalized, repo-root-relative path.
+ * @returns {boolean}
+ */
+function isExemptFile(filePath) {
+    if (!filePath.startsWith('.design/')) return false;
+    if (EXEMPT_BASENAMES.has(path.basename(filePath))) return true;
+    return filePath.split('/').includes('archives');
+}
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPEC PARSING
@@ -338,9 +364,14 @@ const isIgnored = loadGitignore(rootDir);
 const files = scanProjectFiles(rootDir, isIgnored, workspaceScope);
 
 const coverage = [];
-const counts = { extracted: 0, inferred: 0, ambiguous: 0, uncovered: 0 };
+const counts = { extracted: 0, inferred: 0, ambiguous: 0, uncovered: 0, exempt: 0 };
 
 for (const file of files) {
+    if (isExemptFile(file)) {
+        coverage.push({ file, confidence: 'EXEMPT', spec: null, reason: TAXONOMY.EXEMPT });
+        counts.exempt++;
+        continue;
+    }
     const result = classifyFile(file, pathToSpec, dirRefs, parents, grandparents);
     coverage.push({
         file,
@@ -351,7 +382,7 @@ for (const file of files) {
     counts[result.confidence.toLowerCase()]++;
 }
 
-const total = coverage.length;
+const total = counts.extracted + counts.inferred + counts.ambiguous + counts.uncovered;
 const coveredCount = counts.extracted + counts.inferred;
 const coveragePercent = total > 0
     ? Math.round((coveredCount / total) * 1000) / 10
@@ -373,6 +404,7 @@ if (jsonOutput) {
             inferred: counts.inferred,
             ambiguous: counts.ambiguous,
             uncovered: counts.uncovered,
+            exempt: counts.exempt,
             coverage_percent: coveragePercent,
         },
         shadow_specs: shadowSpecs,
@@ -387,7 +419,7 @@ console.log('CONFIDENCE TAXONOMY — Coverage Analysis');
 console.log('═══════════════════════════════════════════════════════════════');
 console.log(`Design directory : ${designDir}`);
 console.log(`Workspace scope  : ${workspaceScope || '(full project)'}`);
-console.log(`Total files      : ${total}`);
+console.log(`Total files      : ${total} (+ ${counts.exempt} EXEMPT, excluded from coverage math)`);
 console.log('');
 
 // Summary table
@@ -397,6 +429,7 @@ console.log(`  EXTRACTED   ${String(counts.extracted).padStart(7)}   ${total ? (
 console.log(`  INFERRED    ${String(counts.inferred).padStart(7)}   ${total ? ((counts.inferred / total) * 100).toFixed(1) : '0.0'}%`);
 console.log(`  AMBIGUOUS   ${String(counts.ambiguous).padStart(7)}   ${total ? ((counts.ambiguous / total) * 100).toFixed(1) : '0.0'}%`);
 console.log(`  UNCOVERED   ${String(counts.uncovered).padStart(7)}   ${total ? ((counts.uncovered / total) * 100).toFixed(1) : '0.0'}%`);
+console.log(`  EXEMPT      ${String(counts.exempt).padStart(7)}   (excluded from denominator)`);
 console.log('');
 console.log(`  Coverage (EXTRACTED + INFERRED): ${coveragePercent}%`);
 console.log('');

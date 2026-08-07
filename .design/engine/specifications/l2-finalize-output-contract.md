@@ -1,6 +1,6 @@
 # Finalize Pipeline — Output Contract
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -108,22 +108,44 @@ The suppression is total rather than merely occasional because nothing ever clea
 
 The consequence is cumulative: this repository's `[Unreleased]` now spans 192 lines and covers engine 2.1.3 through 2.1.66 — every release since 2026-05-07 sits in a section whose name asserts it is unreleased.
 
-### 4.3 An Unexplained Structural Anomaly
+### 4.3 Root Cause (resolved 2026-08-07)
 
-While verifying the above, `[Unreleased]` was found to contain **two separate `### Changed` sections**, with the duplicate bullets appearing once in each. Since `bulletExists()` scopes its check to one category body, a second heading defeats dedup for every bullet in the first — which is the immediate reason duplicates exist in a file whose writer is idempotent.
+Investigated by locating both `### Changed` headings inside the `[Unreleased]` block (root `CHANGELOG.md` lines 48 and 147, bounded above by line 8's `## [Unreleased]` and below by line 200's `## [2.1.3] - 2026-05-07`) and running `git blame`/`git show` against each heading line individually — not against a filtered/relative line range, which the first investigation pass used and which produces wrong line numbers against the real file.
 
-The mechanism that produced the second heading is **not diagnosed**. The leading hypothesis was tested and eliminated: `insertIntoUnreleased()` bounds the Unreleased block with `nextH2Index()`, so a stray `## `-form line inside the section would truncate the block and hide the first `### Changed` from the category probe — but no such line exists between the `[Unreleased]` heading and the next version heading. Recorded as observed-but-unexplained rather than guessed at; the implementer must root-cause it before fixing, since the correct fix differs depending on whether the duplicate is a live writer bug or a historical artifact predating the current insert logic.
+Both headings trace to direct, human-authored commits, one week apart, neither touching any other engine file in the same commit:
 
-### 4.4 Required Fix — Constraints, Not a Recipe
+| Heading (line) | Commit | Date | Author | Message |
+| --- | --- | --- | --- | --- |
+| 147 | `aea88015` | 2026-05-07 | Oleg Alexandrov | `fix(engine): patch run guards + sync stale test suite (v2.1.1)` |
+| 48 | `07f2fb96` | 2026-05-14 | Oleg Alexandrov | `add documentation and metadata for project analysis and workflow orchestration` |
 
-The obvious remedy is barred: **making the bullets specific again would re-introduce the RC-11 leak §2 exists to prevent.** Genericness is not an accident or an oversight; it is the containment fix. Any resolution MUST satisfy all four:
+Neither commit carries the `Co-Authored-By: Claude` trailer this project's automated finalize commits use, and both predate this repository's earliest `insertIntoUnreleased()`-authored bullet in the `[Unreleased]` section. `insertIntoUnreleased()` itself cannot produce a second `### Changed` heading: `nextH3Index()` treats any `###`- or `##`-prefixed line as the end of the current category body, so a call that finds an existing `### Changed` heading always writes inside it, and a call that doesn't finds none anywhere in the block (there being only one at the time) and appends exactly one. The two-heading state is a **historical artifact of manual editing that predates automated CHANGELOG writing in this section**, not a live defect in the writer. Constraint 4 of §4.4 is satisfied — the accumulated file content itself may still warrant manual cleanup, but that edits data, not logic, and is out of this spec's scope.
 
-1. **RC-11 holds.** No spec artifact ID, task ID, or phase designator may re-enter generated CHANGELOG text.
-2. **Idempotence holds.** Re-running finalize without new work must not append a second identical entry — the dedup exists for a real reason and removing it trades one defect for another.
-3. **Real work produces a record.** Two cycles that changed different things must be distinguishable in release notes, or the CHANGELOG stops being a record of what happened.
-4. **The duplicate-heading anomaly is root-caused first** (§4.3), since a fix layered over an unexplained structural bug inherits it.
+### 4.4 Required Fix
 
-Rotation (§4.2) is the most promising direction — it makes the vocabulary reusable per release rather than per project lifetime, and the function already exists — but wiring `releaseUnreleased()` into finalize raises its own question this spec does not settle: **what event constitutes a release** in a project whose `.design/.version` patch-bumps on nearly every workflow invocation. Answering that is a design decision, not an implementation detail, and it is the reason this section states constraints rather than a `Required Fix` block.
+The obvious remedy is barred: **making the bullets specific again would re-introduce the RC-11 leak §2 exists to prevent.** Genericness is not an accident or an oversight; it is the containment fix. Any resolution MUST satisfy all four constraints from the prior analysis:
+
+1. **RC-11 holds.** No spec artifact ID, task ID, or phase designator may re-enter generated CHANGELOG text. *(Unaffected by this fix — no change to `buildChangelogBullet()`.)*
+2. **Idempotence holds.** Re-running finalize without new work must not append a second identical entry.
+3. **Real work produces a record.** Two cycles that changed different things must be distinguishable in release notes.
+4. **The duplicate-heading anomaly is root-caused first** (§4.3) — done above.
+
+**Design decision — what constitutes a release**: magic-spec cannot observe a downstream consumer project's release event (a pushed git tag, an `npm publish`, an App Store submission — the engine has no visibility into any of them), so rotation MUST NOT be inferred from any signal finalize can see on its own — not `.design/.version` (bumps on nearly every workflow invocation, per [l2-engine-finalization.md](l2-engine-finalization.md)), and not `.magic/.version` (bumps on `.magic/` content changes via C14, which correlates with engine-improvement work, not with a consumer's product release). The only owner who can name that event is the person triggering it. Rotation is therefore an **explicit, opt-in action**, never a side effect of `finalize`.
+
+```plaintext
+New: node .magic/scripts/executor.js release-changelog [--version=X.Y.Z] [--date=YYYY-MM-DD]
+     - Defaults: --version from `.design/.version`; --date from today (UTC).
+     - Calls releaseUnreleased(CHANGELOG.md, version, date) directly — the
+       function already exists (§4.2) and is otherwise unchanged.
+     - No dry-run flag of its own; inherits utils.isDryRun() the same way
+       every other write in this pipeline does.
+
+Changed: finalize.js drops its unused `releaseUnreleased` import (§4.2's
+         "imported and never called" state is resolved by removing the
+         import, not by adding a call finalize itself has no basis to make).
+```
+
+This satisfies all four constraints: RC-11 is untouched (no bullet-shape change); idempotence holds within a rotation window exactly as it does today (`bulletExists()`'s dedup scope is unaffected); distinguishability is restored across windows (a fresh `[Unreleased]` reopens the closed vocabulary — the same real-work shape can appear once per release instead of once per project lifetime); and the maintainer decides when a "release" happens, which is the only place that decision can correctly live. For this project's own dev repo, the natural pairing is running `release-changelog` immediately before pushing the `v*` tag that [l2-release-pipeline.md](l2-release-pipeline.md) §5.1 triggers on.
 
 ## 5. Regression Coverage
 
@@ -131,20 +153,25 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 - `buildChangelogBullet('spec', workspace, [oneAddedSpecFile])` must contain **no** spec-derived identifier — asserted against the function's return value directly, not against a written `CHANGELOG.md`, since only a real invocation touches that (§2).
 - A `magic.run` fixture with one whitelist-matched file plus one non-whitelisted file changed in the same tree must assert: significance and version bump still key off the whitelist subset alone; the commit body names both files; the stdout listing names both files (§3).
-- **Open obligation (§4):** no coverage exists for entry suppression, and none should be written before §4.3 is root-caused — a test pinning current behavior would pin the anomaly along with it. Once resolved, coverage must assert that two finalize invocations representing *different* real work produce two distinguishable CHANGELOG records, which is the property §4.1 shows is currently violated.
+- **§4 coverage** — two finalize-adjacent assertions, now unblocked by §4.3's root-cause:
+  - `release-changelog`'s CLI, given a `CHANGELOG.md` fixture with bullets under `[Unreleased]`, must rotate them under a `## [X.Y.Z] - {date}` heading and leave a fresh empty `[Unreleased]` behind — asserted via `releaseUnreleased()` directly (it is not new logic, just newly invoked).
+  - Two `appendBullet()` calls with identical bullet text separated by a `releaseUnreleased()` rotation must both land in the file (once in the now-released section, once in the fresh `[Unreleased]`) — the regression this fix targets: distinguishability restored across rotation windows.
+  - `finalize.js` must not reference `releaseUnreleased` anywhere in its source (import removal, §4.4) — grep-based assertion, not a behavioral one.
 
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
 | `.magic/scripts/lib/commit-suggester.js` | Composes the commit message and the CHANGELOG bullet (§2, §3, §4.1) |
-| `.magic/scripts/lib/changelog-writer.js` | `appendBullet()` dedup and `releaseUnreleased()` rotation (§4.1, §4.2) |
-| `.magic/scripts/finalize.js` | Success-path file-set input (§3.2); imports `releaseUnreleased` without calling it (§4.2) |
+| `.magic/scripts/lib/changelog-writer.js` | `appendBullet()` dedup and `releaseUnreleased()` rotation (§4.1, §4.2, §4.4) |
+| `.magic/scripts/release-changelog.js` | New (§4.4) — explicit, opt-in CLI invoking `releaseUnreleased()`; not called from `finalize.js` |
+| `.magic/scripts/finalize.js` | Success-path file-set input (§3.2); no longer imports `releaseUnreleased` (§4.4) |
 | `.magic/scripts/lib/significance.js` | Whitelist evaluation — the set §3 must stop conflating with the full diff |
-| `CHANGELOG.md` | The product file all of the above writes into; carries the §2 historical leaks and the §4.3 anomaly |
+| `CHANGELOG.md` | The product file all of the above writes into; carries the §2 historical leaks and the §4.3 historical duplicate heading |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-07 | Agent | §4.3 root-caused: both `### Changed` headings inside `[Unreleased]` trace via `git blame`/`git show` to two direct, human-authored commits a week apart (`aea88015` 2026-05-07, `07f2fb96` 2026-05-14), predating any automated writer involvement in the section — not a live defect in `insertIntoUnreleased()`. §4.4 converted from stated constraints to a `Required Fix`: rotation MUST be an explicit, opt-in `release-changelog` executor subcommand rather than an automatic side effect of `finalize`, because magic-spec has no signal it can observe (`.design/.version`, `.magic/.version`) that reliably means "a downstream consumer released their product" — only the maintainer triggering a real release event knows that. `finalize.js` drops its now-dead `releaseUnreleased` import. §5 gained the corresponding regression-coverage obligations. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §7 (RC-11 generator containment) and §9 (SC-3.1 non-whitelisted file visibility) at that spec's v2.0.0 decomposition, triggered by `SPEC_BLOAT` at 367 lines against a 300 threshold. Content relocated verbatim apart from renumbering and cross-reference retargeting; §2.2 gained a note that the historical leaks remain in the shipped `CHANGELOG.md` deliberately. New §4 — **CHANGELOG Entry Suppression**: `buildChangelogBullet()`'s vocabulary is closed and tiny (3 producible strings for `task`, 2 for `rule`, 3 for `run`), and `appendBullet()` dedups on normalized text, so once a shape appears in `[Unreleased]` every later cycle emitting it writes nothing — observed live three times in one session. Compounding cause verified by grep: `releaseUnreleased()`, the rotation that would restore the vocabulary, is imported by `finalize.js` and called by nothing, so `[Unreleased]` has accumulated 192 lines spanning engine 2.1.3-2.1.66. §4.3 records a structural anomaly found during verification — two `### Changed` sections inside `[Unreleased]`, defeating dedup — as **observed but not root-caused**, with the leading truncation hypothesis explicitly tested and eliminated. §4.4 states constraints rather than a fix, because the obvious remedy (specific bullets) is exactly what RC-11 forbids, and because wiring in rotation first requires deciding what constitutes a release. |

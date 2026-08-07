@@ -2466,4 +2466,150 @@ describe('Magic Engine Scripts', () => {
             cleanup(tempDir);
         }
     });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 17. release-changelog.js — explicit opt-in CHANGELOG rotation (R11)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('release-changelog.js rotates [Unreleased] into a dated version heading, defaulting version/date (R11 §4.4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const changelogPath = path.join(tempDir, 'CHANGELOG.md');
+            fs.writeFileSync(changelogPath, [
+                '# Changelog', '',
+                'All notable changes to this project will be documented in this file.', '',
+                '## [Unreleased]', '',
+                '### Added', '',
+                '- Something new.', '',
+            ].join('\n'));
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'release-changelog.js');
+
+            const out = execSync(`node "${scriptPath}" --version=9.9.9 --date=2026-01-01`, { cwd: tempDir, encoding: 'utf8' });
+            assert.match(out, /Rotated \[Unreleased\] → \[9\.9\.9\] - 2026-01-01/, 'confirms the rotation it performed');
+            const rotated = fs.readFileSync(changelogPath, 'utf8');
+            assert.match(rotated, /## \[Unreleased\]\s*\n\s*## \[9\.9\.9\] - 2026-01-01/, 'Unreleased renamed, fresh Unreleased opened above it');
+            assert.match(rotated, /### Added\s*\n\s*- Something new\./, 'prior bullets survive under the newly-dated heading');
+
+            // Defaults: --version from .design/.version, --date = today (UTC).
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, '.design', '.version'), '4.5.6\n');
+            const out2 = execSync(`node "${scriptPath}"`, { cwd: tempDir, encoding: 'utf8' });
+            const today = new Date().toISOString().slice(0, 10);
+            assert.match(out2, new RegExp(`Rotated \\[Unreleased\\] → \\[4\\.5\\.6\\] - ${today}`), 'falls back to .design/.version and today when flags are omitted');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('release-changelog.js rotation restores per-window bullet distinguishability (R11 §4.1/§4.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { appendBullet, releaseUnreleased } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'changelog-writer.js'));
+            const changelogPath = path.join(tempDir, 'CHANGELOG.md');
+
+            const bullet = 'Updated task plan and task index (engine)';
+            const r1 = appendBullet(changelogPath, 'Changed', bullet);
+            assert.strictEqual(r1.written, true, 'first cycle writes the bullet');
+
+            // Same bullet, no rotation yet — the closed-vocabulary suppression §4.1 documents.
+            const r2 = appendBullet(changelogPath, 'Changed', bullet);
+            assert.strictEqual(r2.deduped, true, 'identical bullet within the same window is correctly deduped');
+
+            const rot = releaseUnreleased(changelogPath, '1.0.0', '2026-02-01');
+            assert.strictEqual(rot.written, true, 'rotation must actually write');
+
+            // Same bullet, new window — must be writable again, not permanently suppressed.
+            const r3 = appendBullet(changelogPath, 'Changed', bullet);
+            assert.strictEqual(r3.written, true, 'the same real-work bullet must be writable again after rotation');
+
+            const escaped = bullet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            const occurrences = (fs.readFileSync(changelogPath, 'utf8').match(new RegExp(escaped, 'g')) || []).length;
+            assert.strictEqual(occurrences, 2, 'the bullet must appear once in the released section and once in the fresh Unreleased');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js no longer references releaseUnreleased — rotation is opt-in only (R11 §4.4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const src = fs.readFileSync(path.join(tempDir, '.magic', 'scripts', 'finalize.js'), 'utf8');
+            assert.doesNotMatch(src, /releaseUnreleased/, 'finalize.js must not import or call releaseUnreleased');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 18. analyze-coverage.js — EXEMPT classification (Coverage Denominator Scope)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('analyze-coverage.js classifies .design/ bookkeeping and archived phase journals as EXEMPT', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const mk = (rel, body) => {
+                const abs = path.join(tempDir, ...rel.split('/'));
+                fs.mkdirSync(path.dirname(abs), { recursive: true });
+                fs.writeFileSync(abs, body);
+            };
+            mk('.design/PLAN.md', '# Plan\n');
+            mk('.design/STATE.md', '# State\n');
+            mk('.design/archives/tasks/phase-1.md', '# Phase 1\n');
+            writeCanonicalCoreSpec(tempDir);
+            mk('src/main.rs', 'fn main() {}\n');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
+            const out = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const byFile = new Map(out.coverage.map((c) => [c.file, c]));
+
+            assert.strictEqual(byFile.get('.design/PLAN.md').confidence, 'EXEMPT', 'PLAN.md must classify EXEMPT');
+            assert.strictEqual(byFile.get('.design/STATE.md').confidence, 'EXEMPT', 'STATE.md must classify EXEMPT');
+            assert.strictEqual(byFile.get('.design/archives/tasks/phase-1.md').confidence, 'EXEMPT', 'an archived phase journal must classify EXEMPT');
+            assert.notStrictEqual(byFile.get('.design/specifications/l1-core.md').confidence, 'EXEMPT', 'specifications/ itself must NOT be exempted — unaffected by this change');
+            assert.strictEqual(byFile.get('src/main.rs').confidence, 'EXTRACTED', 'genuine source coverage classification is unaffected');
+
+            assert.ok(out.summary.exempt >= 3, 'summary.exempt must count at least the three exempted fixture files');
+            assert.strictEqual(
+                out.summary.total,
+                out.summary.extracted + out.summary.inferred + out.summary.ambiguous + out.summary.uncovered,
+                'total must be computed from the four non-exempt buckets only'
+            );
+            assert.strictEqual(
+                out.coverage.length,
+                out.summary.total + out.summary.exempt,
+                'every scanned file must land in either the denominator or the exempt count, with no overlap'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('analyze-coverage.js EXEMPT files do not move the reported coverage percentage', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const mk = (rel, body) => {
+                const abs = path.join(tempDir, ...rel.split('/'));
+                fs.mkdirSync(path.dirname(abs), { recursive: true });
+                fs.writeFileSync(abs, body);
+            };
+            writeCanonicalCoreSpec(tempDir);
+            mk('src/main.rs', 'fn main() {}\n'); // EXTRACTED — establishes a non-zero, non-100% baseline
+            mk('orphan.js', 'var x;\n');          // genuinely UNCOVERED — no spec references it
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
+            const scope = '--scope=src,orphan.js,.design';
+            const before = JSON.parse(execSync(`node "${scriptPath}" --json ${scope}`, { cwd: tempDir, encoding: 'utf8' }));
+
+            // Add EXEMPT-eligible bookkeeping files after the baseline read —
+            // a wrongly-classified UNCOVERED would shift coverage_percent.
+            mk('.design/PLAN.md', '# Plan\n');
+            mk('.design/STATE.md', '# State\n');
+            mk('.design/archives/tasks/phase-1.md', '# Phase 1\n');
+            const after = JSON.parse(execSync(`node "${scriptPath}" --json ${scope}`, { cwd: tempDir, encoding: 'utf8' }));
+
+            assert.strictEqual(after.summary.coverage_percent, before.summary.coverage_percent, 'adding EXEMPT files must not change coverage_percent');
+            assert.strictEqual(after.summary.total, before.summary.total, 'adding EXEMPT files must not change the denominator');
+            assert.strictEqual(after.summary.exempt, before.summary.exempt + 3, 'the three new bookkeeping files must be counted as exempt');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
 });
