@@ -275,14 +275,29 @@ if (planExists && tasksExists) {
     const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
     const activePhasesMatch = tasksContentForBacklog.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
 
-    // Require a positive "empty" marker (the italicized `*None — ...*` this
-    // engine's own workflows consistently write for an exhausted section —
-    // e.g. Active Phases here, Backlog elsewhere) rather than merely the
-    // absence of a phase-row table pattern. The absence-only reading fires
-    // on any malformed or unrecognized section content too, which is the
-    // wrong default for a check that can raise a HALT — uncertain must
-    // resolve to "cannot determine", not to "complete".
-    const planComplete = Boolean(activePhasesMatch) && /^\*None\b/m.test(activePhasesMatch[1].trim());
+    // A complete plan is recognized two ways: the positive "empty" marker
+    // (the italicized `*None — ...*` this engine's own workflows write for
+    // an exhausted section), or a phase table whose every row already
+    // carries a terminal status. The latter matters because phase-archiver.js
+    // rewrites a finished row's status to `Done (Archived)` in place — it
+    // never relocates the row — so under the canonical single-table
+    // tasks.md template (one `## Active Phases` table, no separate
+    // "completed" section) the literal-marker form can never reappear once
+    // any phase has ever been archived (l1-session-continuity.md
+    // §Terminal-Row Recognition). Absence of a recognizable row or marker
+    // still resolves to "cannot determine", not to "complete" — uncertain
+    // input must never satisfy a check that can raise a HALT.
+    const activeSectionTrimmed = activePhasesMatch ? activePhasesMatch[1].trim() : '';
+    const isEmptyMarker = /^\*None\b/m.test(activeSectionTrimmed);
+    const activePhaseRows = activeSectionTrimmed
+        .split(/\r?\n/)
+        .filter((l) => {
+            const t = l.trim();
+            return t.startsWith('|') && !/^\|\s*-+\s*\|/.test(t) && !/^\|\s*Phase\s*\|/i.test(t);
+        });
+    const isAllTerminal = activePhaseRows.length > 0
+        && activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
+    const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal);
 
     if (planComplete) {
         // Read independently rather than reuse the `planContent` above — that

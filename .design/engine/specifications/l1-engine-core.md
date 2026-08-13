@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.4.0
+**Version:** 1.5.0
 **Status:** Stable
 **Layer:** concept
 
@@ -81,6 +81,17 @@ Ventilation (2026-08-06) found `dev/` absent from the `engine` workspace's `scop
 
 **Resolution**: `dev` added to the `engine` workspace's `scope` array. `dev/.cache/` (the one noisy subtree) is already gitignored and excluded from every scope-respecting scan via the existing `.gitignore` check, independent of `scope` filtering — no new exclusion logic needed.
 
+### Mode C Depth Control Bypass Ambiguity (resolved 2026-08-13)
+
+Field report (engine 2.1.71): `.magic/analyze.md`'s Core Invariant 6 "Depth Control (Safety)" states, without mode qualification, that scanning a project with >500 files HALTs for user choice — framed among the Core Invariants as mandatory for the whole workflow. Mode C's own "Audit Policy" note, immediately above its step list, states "Report-delivery is the only HALT point" and names four HALT conditions it deliberately bypasses (`checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine) — Depth Control is absent from that list. The asymmetry repeats structurally: the Mode A/B Completion Checklist carries a `Depth Control obeyed` line; the parallel Mode C Checklist has no such line at all. A large-repo ventilation run (this repository: 763 tracked files) has no textual basis to determine whether it must HALT before scanning or may proceed straight to report delivery.
+
+**Resolution**: Mode C does not HALT on Depth Control. Three of the four HALTs Mode C already bypasses (`checksums_mismatch`, `VERSION_DRIFT`, C12 Quarantine) are integrity guards more severe than a pre-scan file-count sizing question, and the mode's own stated design — read-only (Core Invariant 3), collect-everything-before-reporting — already treats "stop and ask before proceeding" as the wrong shape for ventilation. Extending the existing bypass to Depth Control is consistent with that design, not a new relaxation of it; the omission reads as an oversight in the bypass list rather than a deliberate carve-out.
+
+**Required Fix** (both in `.magic/analyze.md`, Engine Improvement — out of this spec's write scope):
+
+1. Add `Depth Control` to the Mode C "Audit Policy" bypass list alongside the four existing entries.
+2. Add a non-halting, advisory line to the Mode C Completion Checklist for parity with Mode A/B — e.g. `Depth Control noted (advisory only; Mode C never HALTs on file count)` — phrased so it does not re-imply the HALT the resolution above removes.
+
 ## Canonical References
 
 | Path | Role |
@@ -103,6 +114,7 @@ Ventilation (2026-08-06) found `dev/` absent from the `engine` workspace's `scop
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.0 | 2026-08-13 | Agent | New **Mode C Depth Control Bypass Ambiguity** entry under Known Process Gaps: `.magic/analyze.md`'s Core Invariant 6 (Depth Control, mandatory HALT >500 files) is absent from Mode C's own "Audit Policy" bypass list, which otherwise states "Report-delivery is the only HALT point" and names four other bypassed HALTs; the Mode A/B Completion Checklist carries a Depth Control line the parallel Mode C checklist lacks (field report, engine 2.1.71, reproduced on this repository's own 763-file tree). Resolved: Mode C does not HALT on Depth Control — consistent with its existing bypass of three more severe integrity HALTs and its read-only, collect-everything design. Required Fix (Engine Improvement, out of this spec's write scope): add Depth Control to the Mode C bypass list; add a non-halting advisory checklist line for A/B parity. |
 | 1.4.0 | 2026-08-07 | Agent | **Debt-ceiling convention rejected**: routed to the user per Escalation Whitelist E4 (constitutional-tier, `/magic.task`'s `DESIGN_DEBT_PENDING` HALT triggered this pass' `/magic.spec engine` invocation). Decision: reject — Phases 15-20 closed the exact `Required Fix` backlog that motivated the proposal through normal planning cycles, with no hard ceiling ever existing, and SC-2.4's `DESIGN_DEBT_PENDING` gate already covers the adjacent plan-complete-with-open-debt case. §Known Process Gaps' "Proposed Convention" subsection rewritten from pending-ratification to rejected-with-rationale; no `/magic.rule` amendment follows. Canonical Reference for `.design/RULES.md` no longer describes it as a ratification target. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation — no C12 cascade to the ten L2 `Implements` dependents as a result. |
 | 1.3.0 | 2026-08-07 | Agent | New **Workspace Scope Completeness** entry under Known Process Gaps: the `engine` workspace's `scope` array omitted `dev` despite several of the workspace's own L2 specs citing `dev/tests/engine.js` / `dev/scripts/*.js` in their Canonical References, leaving those files outside every scope-respecting scan. Read C15's own stated rationale ("prevent... accidental modification of unrelated modules") and found `dev/` is not unrelated — it is this engine's own Layer 2 Auxiliary Core — so the omission was an inconsistent application of C15, not a deliberate boundary; no `/magic.rule` amendment needed. Resolved directly: `dev` added to `workspace.json`'s `engine.scope`; `dev/.cache/` stays excluded via the pre-existing `.gitignore` check. Canonical References gained `.design/workspace.json`. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-08-06 | Agent | New **Known Process Gaps** section: **Concept/Implementation Debt Asymmetry** — `/magic.spec` authoring is cheap (one workflow pass, `.design/`-only writes) while closing the corresponding L2 implementation is expensive (`/magic.task` → `/magic.run`, code + tests + review), and nothing bounds the gap between them. Quantified from this session: 7 consecutive field-report `/magic.spec` cycles with no interleaving implementation pass left 8 fully-specified `Required Fix` blocks in `l2-engine-finalization.md`, zero implemented. Records a proposed convention (a debt ceiling gating further spec authoring on unclosed L2 items) explicitly **pending `/magic.rule` ratification** — this spec does not mint new C-numbered conventions itself, and enforcement would itself be an L1 engine change out of this workflow's write scope. Canonical References gained `.design/RULES.md`. Reported informally as a self-observed process pattern, not a single reproducible defect. |

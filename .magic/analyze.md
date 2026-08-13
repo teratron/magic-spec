@@ -153,7 +153,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 *Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate engine".
 
 > **Mode Precedence**: when `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, offer to continue with Mode A (first-time analysis) to generate initial spec proposals. Do NOT auto-start Mode A — the user may only want the audit.
-> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine. Report-delivery is the only HALT point.
+> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine, Depth Control (Core Invariant 6 — Mode C is read-only and never pre-scan-HALTs on file count; size is noted, not gated). Report-delivery is the only HALT point.
 
 1. **Self-Check**: compare `.magic/` vs `.checksums`. (Non-halting audit.)
 2. **Design Registry Audit**:
@@ -395,6 +395,7 @@ Analysis Checklist — Mode A/B
   ☐ Engineer Posture (C25): no inline approval menu; user adjusts via /magic.spec amend or git restore
 
 Analysis Checklist — Mode C: Ventilation
+  ☐ Depth Control noted (advisory only; Mode C never HALTs on file count — size is informational, not a gate)
   ☐ Self-check complete: engine integrity status noted (non-halting)
   ☐ Registry audit: orphans and unregistered files identified
   ☐ Wrapper-Body Parity: WRAPPER_BODY_DRIFT check run over `workflows/` (phantom body pointers flagged; self-contained wrappers and body-less internal modules exempt)

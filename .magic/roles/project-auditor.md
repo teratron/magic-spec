@@ -26,7 +26,7 @@ Pre-advisory audit for `magic.analyze` workflow. Migrated from C24 "Auditor" wit
 2. For each finding, verify severity classification (Critical / High / Medium / Low). Re-classify if evidence does not support the tier.
 3. Look for systemic patterns: do multiple Medium-severity findings share a root cause that deserves a single Critical escalation?
 4. Cross-check findings against `RULES.md` — is any finding actually a rule violation that should cite a specific `C{N}`?
-5. Verify anti-fabrication (Invariant 6 from analyze.md): is each finding grounded in a concrete file/reference, not inferred?
+5. Verify anti-fabrication (`.design/RULES.md` C13 §5, Anti-Hallucination Audit): is each finding grounded in a concrete file/reference, not inferred?
 6. Emit refined findings set for the Advisory Report.
 
 ## Anti-patterns

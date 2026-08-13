@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -85,7 +85,7 @@ related_rules: [C24]
 2. For each finding, verify severity classification (Critical / High / Medium / Low). Re-classify if evidence does not support the tier.
 3. Look for systemic patterns: do multiple Medium-severity findings share a root cause that deserves a single Critical escalation?
 4. Cross-check findings against `RULES.md` — is any finding actually a rule violation that should cite a specific `C{N}`?
-5. Verify anti-fabrication (Invariant 6 from analyze.md): is each finding grounded in a concrete file/reference, not inferred?
+5. Verify anti-fabrication (`.design/RULES.md` C13 §5, Anti-Hallucination Audit): is each finding grounded in a concrete file/reference, not inferred?
 6. Emit refined findings set for the Advisory Report.
 
 **Anti-patterns:**
@@ -233,5 +233,6 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.1 | 2026-08-13 | Corrected stale citation in Project-auditor §2 step 5: "Invariant 6 from analyze.md" named Depth Control (file-count HALT thresholds), not anti-fabrication — no invariant of that name exists in `analyze.md`; the concept is `.design/RULES.md` C13 §5 (Anti-Hallucination Audit) (field report, engine 2.1.71). Deployed `.magic/roles/project-auditor.md` carries the identical stale text and requires the matching correction — Engine Improvement, out of this spec's write scope. Typo-only patch (spec.md Amendment rule); no status transition. |
 | 1.1.0 | 2026-06-11 | Added §5 `prompt-engineer` card (reviewer): five-workflow trigger set, six-dimension PQ-3 protocol, PQ-6 verdict semantics. Implements l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9). |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted migrated-C24 governance cards (spec-critic, project-auditor, constitutional-reviewer, retrospective-analyst) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

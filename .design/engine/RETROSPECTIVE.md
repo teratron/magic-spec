@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-06-12
-**Full Sessions:** 2
-**Snapshots:** 15
+**Last Full Run:** 2026-08-13
+**Full Sessions:** 3
+**Snapshots:** 16
 
 ## Snapshots
 
@@ -25,6 +25,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-06 | Phase 16 | 0/0/27 | 5/0/0 | 24 | 🟢 |
 | 2026-08-07 | Phase 17 | 0/0/28 | 7/0/0 | 24 | 🟢 |
 | 2026-08-07 | Phase 2 | 0/0/32 | 3/0/0 | 24 | 🟢 |
+| 2026-08-13 | Phase 22 | 0/0/32 | 5/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -97,5 +98,43 @@ Manual input / external hook still required — same gap as Session 1.
 | Metric | Previous Snapshot | Current | Δ |
 | --- | --- | --- | --- |
 | Specs in registry | 22 | 24 | +2 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 3 — 2026-08-13
+
+**Scope:** Plan completion (Phase 22 — field-report triage: `DESIGN_DEBT_PENDING` structural predicate, Mode C Depth Control bypass, Project-auditor citation; single-phase cycle from three externally-submitted bug reports to deployment via `/magic.spec` → `/magic.task` → `/magic.run`)
+**Specs in registry:** 32 (all Stable; 4 amended this cycle — l1-session-continuity.md, l2-engine-automation.md, l1-engine-core.md, l2-role-cards-governance.md)
+**Tasks total:** 5 this cycle (Done: 5, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged — no new convention needed)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.71 → 2.1.72, single C14 bump for the whole phase (three file-independent-enough tracks batched under one tag) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 64 → 65, green throughout |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | The `DESIGN_DEBT_PENDING` gate's plan-complete predicate had a second, distinct failure mode beyond the one Phase 21 closed: literal-marker matching against `## Active Phases` can never succeed again after any archival under the canonical single-table `tasks.md` template, independent of the Backlog counting fix. Two defects sharing one symptom (`DESIGN_DEBT_PENDING` silent) were fixed two phases apart because they were only found two phases apart. | l2-engine-automation.md §DESIGN_DEBT_PENDING — Plan-Complete Structural Predicate |
+| 2 | This engine's own `TASKS.md` and its `dev/tests/engine.js` fixtures both encode a `## Completed Phases` split that no shipped script (template, archiver, or otherwise) has ever produced — regression coverage was unknowingly scoped to a shape the shipped contract doesn't generate, which is exactly why Finding 1 shipped unnoticed for 21 phases. | grep across `.magic/` for "Completed Phases": zero hits outside `.design/engine/TASKS.md` and the pre-existing test fixtures |
+| 3 | A Core Invariant framed as "mandatory" (Depth Control) was in practice never wired into Mode C's step list at all — only into the Shared Pre-flight for Modes A/B. The ambiguity the field report flagged was real at the text level but the runtime behavior it worried about (Mode C HALTing) could not actually have occurred; the fix closed the textual contradiction, not a live behavioral bug. | `.magic/analyze.md` line 117 scoped to `### Shared Pre-flight (Modes A & B)`; Mode C's own step list starts at "1. Self-Check" |
+| 4 | All three bug reports arrived pre-triaged with exact file/line citations and reproduction evidence (external field reports, not this session's own discovery) — investigation time went to confirming reproduction against current HEAD and designing the fix, not locating the defect. | Bug reports cited engine 2.1.71 line numbers that matched HEAD at investigation time for all three |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R14 | #2 | Reconcile this engine's own `TASKS.md` to the canonical single-table template (drop the undocumented `## Completed Phases` split) so the workspace's own regression posture matches what it ships to users — currently the fixed defect cannot be observed on this repo's own dogfood copy | `.design/engine/TASKS.md` (operational cleanup, not a spec change) |
+| R15 | #1 | When a `Required Fix` closes one failure mode of a named symptom (e.g. `DESIGN_DEBT_PENDING` silent), the amending spec should explicitly state what the fix does *not* cover, to reduce the odds of a second field report against the same symptom being mistaken for a duplicate | `l1-session-continuity.md` / spec.md authoring convention |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 28 (last consistently-logged snapshot, Phase 17) | 32 | +4 |
 | Blocked task rate | 0% | 0% | 0 |
 | Signal | 🟢 | 🟢 | → |

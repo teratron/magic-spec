@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.8.0
+**Version:** 1.9.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -115,9 +115,31 @@ GOOD: total = extracted + inferred + ambiguous + uncovered   // EXEMPT excluded 
 
 **Parallel doc update required**: `.magic/analyze.md` §Confidence Taxonomy documents the same four-level enum and states `coverage_percent = (EXTRACTED + INFERRED) / total * 100` verbatim — an L1 engine file, out of this spec's write scope but stale the moment `EXEMPT` ships. The implementing task MUST add the `EXEMPT` row to that table and note it is excluded from `total` entirely (not merely from the numerator, unlike AMBIGUOUS), alongside the code change (C14 applies — `.magic/` content changed).
 
+### DESIGN_DEBT_PENDING — Plan-Complete Structural Predicate `[ADDED]`
+
+**The defect** (field report, engine 2.1.71; concept authority [l1-session-continuity.md](l1-session-continuity.md) §Terminal-Row Recognition): `check-prerequisites.js`'s `DESIGN_DEBT_PENDING` gate only evaluates the Backlog once a `planComplete` pre-check passes, and that check currently requires the `## Active Phases` section of `TASKS.md` to reduce, verbatim, to the empty-marker line `*None ...*`:
+
+```js
+const planComplete = Boolean(activePhasesMatch) && /^\*None\b/m.test(activePhasesMatch[1].trim());
+```
+
+`phase-archiver.js` (`updateTasksIndex()`, governed by [l2-engine-finalization.md](l2-engine-finalization.md) §2) rewrites a finished phase row's status to `` `Done (Archived)` `` in place — it never relocates the row out of whatever section it already occupies. The canonical `tasks.md` template defines exactly one phase table, under `## Active Phases`, with no second "completed" section for rows to move into. So under the shipped template, once a single phase has ever been archived, `## Active Phases` permanently contains a table row instead of the literal empty marker, and `planComplete` can never evaluate `true` again for the remaining life of the workspace — `DESIGN_DEBT_PENDING` is structurally unreachable regardless of Backlog content.
+
+**Required Fix**: recognize completion by row status, not by literal section text — every row in `## Active Phases` carries a terminal status (`Done`, `Done (Archived)`, `Cancelled`) and none carries a non-terminal one (`Todo`, `In Progress`, `Blocked`); the empty-marker form remains one valid terminal case (zero rows), not the only one.
+
+```plaintext
+BAD : planComplete = section trims to literal `*None ...*`
+GOOD: planComplete = section has zero rows, OR every row's `Status` cell is one of
+      Done / Done (Archived) / Cancelled, with no Todo / In Progress / Blocked row present
+```
+
+**Regression coverage**: the existing `DESIGN_DEBT_PENDING` fixtures in the test harness assume a hand-split `## Active Phases` (empty) + `## Completed Phases` (archived rows) layout that no shipped script produces — that structure is a local, undocumented convention in this engine's own workspace, not the canonical single-table `tasks.md` shape. The fixtures must gain a case built against the canonical single-table layout (one `## Active Phases` table whose only rows are `Done (Archived)`) alongside the existing two-section case, so the suite exercises the structure the shipped template actually generates.
+
 ## Related Specifications
 
 - [l2-spec-graph-memory.md](l2-spec-graph-memory.md) — `build-spec-graph.js` workspace attribution consumes the shared path matcher defined in §Path Matching Contract.
+- [l1-session-continuity.md](l1-session-continuity.md) — SC-2.4 Terminal-Row Recognition: concept-level requirement this Required Fix implements.
+- [l2-engine-finalization.md](l2-engine-finalization.md) — `phase-archiver.js`'s in-place row rewrite is the write side of this contract; this spec covers the `check-prerequisites.js` read side.
 
 ## Canonical References
 
@@ -143,6 +165,7 @@ GOOD: total = extracted + inferred + ambiguous + uncovered   // EXEMPT excluded 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.9.0 | 2026-08-13 | Agent | New **DESIGN_DEBT_PENDING — Plan-Complete Structural Predicate** Required Fix: `check-prerequisites.js`'s `planComplete` pre-check requires `## Active Phases` to reduce to the literal `*None ...*` marker, but `phase-archiver.js` rewrites a finished row's status in place under the canonical single-table `tasks.md` template — no separate "completed" section exists to move rows into — so the predicate can never be true again once any phase has ever been archived (field report, engine 2.1.71). Fix: recognize completion by row status (all terminal, none non-terminal), not by literal section text. Notes the existing regression fixtures were built against an undocumented two-section layout no shipped script produces, and requires a canonical single-table case added alongside. Implements [l1-session-continuity.md](l1-session-continuity.md) §Terminal-Row Recognition. Related Specifications gained the two cross-references. Post-Update Review (5-lens) found no blocking issues; Stable retained via Trust Mode (C9). |
 | 1.8.0 | 2026-08-07 | Agent | **Coverage Denominator Scope** amended: `INDEX.md` and `RULES.md` join the `EXEMPT` set. 1.7.0 left them out on "not evidenced as needed" — a same-day follow-up ventilation reproduced `.design/engine/INDEX.md` itself landing `UNCOVERED` on this repository's own registry, direct evidence against that premise. `specifications/*.md`, `workspace.json`, and active `tasks/*.md` remain not exempted (still classify mostly EXTRACTED/INFERRED, 32/32 specs matched — no evidence of the same failure mode there). Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.7.0 | 2026-08-07 | Agent | New **Coverage Denominator Scope** section (`EXEMPT` classification): `analyze-coverage.js` counted `.design/`'s own bookkeeping output (PLAN, TASKS, STATE, CONTEXT, CHANGELOG, RETROSPECTIVE, archived phase journals) in the same denominator as implementation source, so reported coverage fell as SDD history accumulated — 85.4% against the graph's 100% on this repository's own `engine` workspace, 17 of 25 UNCOVERED files being archived phase journals alone (ventilation, 2026-08-06). Required Fix: a fifth classification, `EXEMPT`, applied before the existing four-step pipeline, excluded from `total`/`coveragePercent` but still reported (`summary.exempt`) for auditability. Scope deliberately excludes `specifications/`, `INDEX.md`, `RULES.md`, `workspace.json`, and active `tasks/*.md` — the finding was specific to the bookkeeping/journal set, not the whole `.design/` tree. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.6.0 | 2026-06-12 | Agent | Added Path Matching Contract (shared scope/glob matcher in utils.js, zero-match guard, pattern refs) and Bloat Advisory Configuration (workspace.json threshold overrides, recursive scan) — upstream fix design for downstream glob-scope coverage report (engine 2.1.27, reproduced at 2.1.30). Documented check-bloat.js in Components. Stable retained via Trust Mode re-review (C9). |

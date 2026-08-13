@@ -747,6 +747,76 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b2-ter. check-prerequisites.js — DESIGN_DEBT_PENDING's plan-complete
+    //          predicate recognizes terminal-row completion under the
+    //          canonical single-table tasks.md layout (Terminal-Row
+    //          Recognition, l1-session-continuity.md SC-2.4 structural
+    //          addendum, closed by Phase 22)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js DESIGN_DEBT_PENDING fires under the canonical single-table Active Phases layout (Terminal-Row Recognition)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = path.join(tempDir, '.design');
+            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const findDebtWarning = (planBody, tasksBody) => {
+                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
+                fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
+                const result = JSON.parse(
+                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
+                );
+                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
+            };
+
+            // Positive: single-table layout (no separate "Completed Phases"
+            // section — the shape the shipped tasks.md template actually
+            // produces), every row already `Done (Archived)`, two open
+            // Backlog bullets — reproduces the field report exactly (engine
+            // 2.1.71: 24/24 phases Done, 2 open bullets, gate stayed silent).
+            const archivedTable = [
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
+                '| [Phase 2](archives/tasks/phase-2.md) | Follow-up | `Done (Archived)` |',
+            ].join('\n');
+            const hit = findDebtWarning(
+                '- Some open design item.\n- Another one.',
+                archivedTable
+            );
+            assert.ok(hit, 'an all-terminal single-table Active Phases must be read as plan-complete, not only the literal empty marker');
+            assert.match(hit.message, /2 open item/, 'the count must reflect the actual number of Backlog bullets');
+
+            // Negative: same shape, but one row is still non-terminal — the
+            // plan is genuinely incomplete and must not be misread as done.
+            const mixedTable = [
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
+                '| [Phase 2](tasks/phase-2.md) | Follow-up | `In Progress` |',
+            ].join('\n');
+            assert.strictEqual(
+                findDebtWarning('- Some open design item.', mixedTable),
+                undefined,
+                'a non-terminal row anywhere in the table must suppress the signal — the plan is not actually complete'
+            );
+
+            // A lone `Cancelled` row is terminal too — must not block the signal.
+            const cancelledTable = [
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](archives/tasks/phase-1.md) | Abandoned | `Cancelled` |',
+            ].join('\n');
+            const cancelledHit = findDebtWarning('- Some open design item.', cancelledTable);
+            assert.ok(cancelledHit, 'a table of only `Cancelled` rows is terminal and must be read as plan-complete');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6c. scan-hygiene.js — shared strip-before-match helper (SH-1, SH-2, SH-5)
     // ───────────────────────────────────────────────────────────────────────────
     test('scan-hygiene.js stripQuoted removes fenced and inline-quoted content, preserving line count', () => {
