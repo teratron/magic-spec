@@ -1,6 +1,6 @@
 # Engine Core Specification
 
-**Version:** 1.5.0
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** concept
 
@@ -92,6 +92,20 @@ Field report (engine 2.1.71): `.magic/analyze.md`'s Core Invariant 6 "Depth Cont
 1. Add `Depth Control` to the Mode C "Audit Policy" bypass list alongside the four existing entries.
 2. Add a non-halting, advisory line to the Mode C Completion Checklist for parity with Mode A/B — e.g. `Depth Control noted (advisory only; Mode C never HALTs on file count)` — phrased so it does not re-imply the HALT the resolution above removes.
 
+### Dev-Repo Engine-Version Snapshot Sync (resolved 2026-08-22)
+
+Observation (first recorded 2026-06-12 as a Parked backlog item — *"revisit only if the drift recurrence itself becomes a problem in practice"*; now revisited by explicit user request). Engine Upgrade Detection (`rules/magic.md` §1) compares `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md`, narrating one drift line and proceeding whenever they diverge. The mechanism exists to catch an **external** engine replacement: a project consuming this engine downloads a new release archive, `.magic/.version` changes under it, and the drift line tells the returning session to re-validate via `/magic.analyze`. The snapshot contract enforces this by naming `/magic.analyze` the field's sole writer — every other workflow only reads it.
+
+In this engine's own dev-repo, the distinction the mechanism is built to detect does not exist: every `.magic/.version` bump is a first-party change made by the same session that is simultaneously editing `.design/`, not a replacement discovered later. The snapshot going stale here is not a signal worth catching — it is self-inflicted noise, re-narrated on every subsequent `/magic.*` invocation until a `/magic.analyze` happens to run. Confirmed live during this session's own Phase 23: immediately after a C14 bump moved `.magic/.version` to `2.1.73`, `.design/INDEX.md`'s snapshot still read `2.1.72`.
+
+**Resolution**: a dev-repo-only exemption, not a change to the general contract. `update-engine-meta.js` already distinguishes "this checkout is the engine's own dev-repo" from "this is a consumer installation" via `fs.existsSync(dev/scripts/generate-checksums.js)` — the exact guard its own checksum-regeneration and skill-sync steps already use (§`runGenerateChecksums`, `dev/scripts/sync-skills.js`). When that guard is true, the C14 write branch additionally patches `.design/INDEX.md`'s `**Engine Version:**` field to the freshly-bumped version, atomically with the rest of the C14 write. When the guard is false — every consumer project — nothing changes: the snapshot stays `/magic.analyze`-only, and the drift-detection signal for a genuine external upgrade is untouched.
+
+**Required Fix** (Engine Improvement, out of this spec's write scope):
+
+1. `.magic/scripts/update-engine-meta.js`: in the C14 write branch, when the `dev/scripts/generate-checksums.js` guard is true, read `.design/INDEX.md` and replace its `**Engine Version:**` line with the newly-bumped version — same call site as the existing skill-sync step, same guard reused, not a second detection mechanism.
+2. `rules/magic.md` §1's "Snapshot contract" sentence amended to carve out the exception: *"...the sole writer, except in this engine's own dev-repo, where `update-engine-meta` patches it directly on every C14 bump (detected via the same `dev/scripts/` presence guard `generate-checksums`/`sync-skills` already use)."* The external-drift-detection contract for every consumer project is otherwise unchanged, word for word.
+3. Regression: a `dev/tests/engine.js` case with a dev-repo fixture (`dev/scripts/generate-checksums.js` present) confirms `.design/INDEX.md`'s `**Engine Version:**` updates after `update-engine-meta`; a consumer-fixture case (`dev/` absent) confirms it does not.
+
 ## Canonical References
 
 | Path | Role |
@@ -104,9 +118,12 @@ Field report (engine 2.1.71): `.magic/analyze.md`'s Core Invariant 6 "Depth Cont
 | `.magic/init.md` | Bootstrap workflow |
 | `.magic/context.md` | Workspace resolution logic |
 | `.magic/scripts/executor.js` | Cross-platform script executor |
+| `.magic/scripts/update-engine-meta.js` | C14 write branch; dev-repo detection guard (`dev/scripts/generate-checksums.js`) reused for the Engine-Version snapshot sync |
 | `.magic/templates/` | Canonical artifact scaffolds |
 | `.magic/.version` | Engine version pin |
 | `.magic/.checksums` | Kernel integrity manifest |
+| `rules/magic.md` | User-side ambient rules; §1 Engine Upgrade Detection snapshot contract |
+| `.design/INDEX.md` | Global aggregate registry; carries the `**Engine Version:**` snapshot field |
 | `.design/RULES.md` | Global constitution — C-series convention source of truth |
 | `.design/workspace.json` | Per-workspace `scope` array (C15 isolation boundary); `engine`'s scope corrected to include `dev` (Known Process Gaps) |
 
@@ -114,6 +131,7 @@ Field report (engine 2.1.71): `.magic/analyze.md`'s Core Invariant 6 "Depth Cont
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-08-22 | Agent | New **Dev-Repo Engine-Version Snapshot Sync** entry under Known Process Gaps: revisits the Parked backlog item (2026-06-12) "Engine dev-repo snapshot drift" at explicit user request. Engine Upgrade Detection's snapshot contract (`rules/magic.md` §1, `/magic.analyze` sole writer) exists to catch *external* engine replacement in consumer projects; in this engine's own dev-repo that distinction does not apply — every version bump is first-party, so the snapshot going stale is self-inflicted noise, confirmed live this session (Phase 23's own C14 bump left the snapshot one version behind). Resolved as a dev-repo-only exemption, not a change to the general contract: reuses `update-engine-meta.js`'s existing `dev/scripts/generate-checksums.js` presence guard (already used for the checksum-regeneration and skill-sync steps) to detect dev-repo vs. consumer install, and patches `.design/INDEX.md`'s `**Engine Version:**` field atomically with the C14 write only when that guard is true. Consumer-project behavior is unchanged. Required Fix (Engine Improvement, out of this spec's write scope) targets `update-engine-meta.js` and `rules/magic.md` §1's snapshot-contract sentence, plus regression coverage for both the dev-repo and consumer-fixture branches. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation — no persisting C12 cascade to the ten L2 `Implements` dependents. |
 | 1.5.0 | 2026-08-13 | Agent | New **Mode C Depth Control Bypass Ambiguity** entry under Known Process Gaps: `.magic/analyze.md`'s Core Invariant 6 (Depth Control, mandatory HALT >500 files) is absent from Mode C's own "Audit Policy" bypass list, which otherwise states "Report-delivery is the only HALT point" and names four other bypassed HALTs; the Mode A/B Completion Checklist carries a Depth Control line the parallel Mode C checklist lacks (field report, engine 2.1.71, reproduced on this repository's own 763-file tree). Resolved: Mode C does not HALT on Depth Control — consistent with its existing bypass of three more severe integrity HALTs and its read-only, collect-everything design. Required Fix (Engine Improvement, out of this spec's write scope): add Depth Control to the Mode C bypass list; add a non-halting advisory checklist line for A/B parity. |
 | 1.4.0 | 2026-08-07 | Agent | **Debt-ceiling convention rejected**: routed to the user per Escalation Whitelist E4 (constitutional-tier, `/magic.task`'s `DESIGN_DEBT_PENDING` HALT triggered this pass' `/magic.spec engine` invocation). Decision: reject — Phases 15-20 closed the exact `Required Fix` backlog that motivated the proposal through normal planning cycles, with no hard ceiling ever existing, and SC-2.4's `DESIGN_DEBT_PENDING` gate already covers the adjacent plan-complete-with-open-debt case. §Known Process Gaps' "Proposed Convention" subsection rewritten from pending-ratification to rejected-with-rationale; no `/magic.rule` amendment follows. Canonical Reference for `.design/RULES.md` no longer describes it as a ratification target. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation — no C12 cascade to the ten L2 `Implements` dependents as a result. |
 | 1.3.0 | 2026-08-07 | Agent | New **Workspace Scope Completeness** entry under Known Process Gaps: the `engine` workspace's `scope` array omitted `dev` despite several of the workspace's own L2 specs citing `dev/tests/engine.js` / `dev/scripts/*.js` in their Canonical References, leaving those files outside every scope-respecting scan. Read C15's own stated rationale ("prevent... accidental modification of unrelated modules") and found `dev/` is not unrelated — it is this engine's own Layer 2 Auxiliary Core — so the omission was an inconsistent application of C15, not a deliberate boundary; no `/magic.rule` amendment needed. Resolved directly: `dev` added to `workspace.json`'s `engine.scope`; `dev/.cache/` stays excluded via the pre-existing `.gitignore` check. Canonical References gained `.design/workspace.json`. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |

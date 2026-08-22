@@ -23,7 +23,7 @@ Overall:   [{done}/{all}]     ██░░░░░░ {pct}%
 
 ## Recent Decisions
 
-<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
+<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
 - {YYYY-MM-DD} **Decision:** {What was decided and why}
 - {YYYY-MM-DD} **Pattern:** {Established pattern name} — {brief description}

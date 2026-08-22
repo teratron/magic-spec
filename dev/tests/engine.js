@@ -912,8 +912,20 @@ describe('Magic Engine Scripts', () => {
                 'the heading must be followed by a blank line, then the comment preamble — not an entry'
             );
             assert.match(
-                afterDecision, /Older entries → archived to PLAN\.md -->\r?\n\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* Adopt SDD workflow/,
+                afterDecision,
+                /are dropped \(not archived\) — see PLAN\.md \/ CHANGELOG\.md for phase history\. -->\r?\n\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* Adopt SDD workflow/,
                 'the new entry must sit after the comment preamble, not before it'
+            );
+            // l2-finalize-state-accuracy.md §10: the preamble previously claimed
+            // an archival to PLAN.md that no code path ever performed — pin the
+            // absence, not only the replacement's presence, so a future edit
+            // cannot silently reintroduce the same false promise while still
+            // passing the match above (a different string could satisfy the
+            // "after the preamble" shape without removing the old claim if a
+            // future preamble concatenated both).
+            assert.doesNotMatch(
+                afterDecision, /archived to PLAN\.md/,
+                'the preamble must not claim an archival the code never performs'
             );
             assert.doesNotMatch(
                 afterDecision, /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
@@ -1189,6 +1201,90 @@ describe('Magic Engine Scripts', () => {
                 finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/,
                 'a healthy phase must still resolve to execution — the guard must not fire on every phase'
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js computeNextAction skips a task whose own Detailed Tracking marks it Blocked or Assignment: User (SC-2.1(c))', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+
+            const registry = () => [
+                '# Master Task Index',
+                '',
+                '## Active Phases',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
+                '',
+            ].join('\n');
+
+            const trackingBlock = (id, title, status, assignment) => [
+                `### [${id}] ${title}`,
+                '',
+                `- **Status:** ${status}`,
+                `- **Assignment:** ${assignment}`,
+                '',
+            ].join('\n');
+
+            const phaseFile = (firstStatus, firstAssignment) => [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '## Atomic Checklist', '',
+                '- [ ] [T-1A01] First task',
+                '- [ ] [T-1A02] Second task', '',
+                '## Detailed Tracking', '',
+                trackingBlock('T-1A01', 'First task', firstStatus, firstAssignment),
+                trackingBlock('T-1A02', 'Second task', 'Todo', 'Agent'),
+            ].join('\n');
+
+            fs.writeFileSync(tasksPath, registry());
+
+            // (i) first item Status: Blocked → the later actionable item is named.
+            // The pre-T-23A01 code named T-1A01 unconditionally here (manually
+            // confirmed against the single-match lookup during spec authoring —
+            // same shape as the Phase 19 R12 negative-control pattern).
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Blocked', 'Agent'));
+            let next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /^Execute T-1A02/, 'a Status: Blocked first item must be skipped for the actionable second item');
+            assert.doesNotMatch(next, /T-1A01/, 'the excluded task must not be named as executable');
+
+            // (ii) first item Assignment: User → the later actionable item is named.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Todo', 'User'));
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /^Execute T-1A02/, 'an Assignment: User first item must be skipped for the actionable second item');
+            assert.doesNotMatch(next, /T-1A01/, 'the excluded task must not be named as executable');
+
+            // (iii) every open item excluded → terminal branch: not Execute-style,
+            // not the plan-complete funnel, no reserved command, exactly one
+            // /magic.* command named.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '## Atomic Checklist', '',
+                '- [ ] [T-1A01] First task',
+                '- [ ] [T-1A02] Second task', '',
+                '## Detailed Tracking', '',
+                trackingBlock('T-1A01', 'First task', 'Blocked', 'Agent'),
+                trackingBlock('T-1A02', 'Second task', 'Todo', 'User'),
+            ].join('\n'));
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.doesNotMatch(next, /^Execute T-/, 'all-excluded phase must not yield an execute-style recommendation');
+            assert.doesNotMatch(next, /Plan complete/, 'all-excluded phase must not be reported as plan-complete — tasks remain');
+            assert.doesNotMatch(next, /\/magic\.(spec|analyze)/, 'reserved command must not leak');
+            assert.strictEqual(
+                (next.match(/\/magic\.[a-z.]+/g) || []).length, 1,
+                `exactly one command expected → "${next}"`
+            );
+            assert.match(next, /T-1A01/, 'the terminal message should still name a task for context');
+
+            // (iv) negative control — everything Todo/Agent still dispatches
+            // normally, the same shape as the existing SC-2.1(a) control case.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Todo', 'Agent'));
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /^Execute T-1A01/, 'a fully agent-actionable phase must still dispatch its first task');
         } finally {
             cleanup(tempDir);
         }

@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-08-13
-**Full Sessions:** 3
-**Snapshots:** 16
+**Last Full Run:** 2026-08-22
+**Full Sessions:** 4
+**Snapshots:** 17
 
 ## Snapshots
 
@@ -26,6 +26,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-07 | Phase 17 | 0/0/28 | 7/0/0 | 24 | 🟢 |
 | 2026-08-07 | Phase 2 | 0/0/32 | 3/0/0 | 24 | 🟢 |
 | 2026-08-13 | Phase 22 | 0/0/32 | 5/0/0 | 24 | 🟢 |
+| 2026-08-22 | Phase 23 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -136,5 +137,44 @@ Manual input / external hook still required — same gap as Session 1.
 | Metric | Previous Snapshot | Current | Δ |
 | --- | --- | --- | --- |
 | Specs in registry | 28 (last consistently-logged snapshot, Phase 17) | 32 | +4 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 4 — 2026-08-22
+
+**Scope:** Plan completion (Phase 23 — Next-Action Task-Level Precedence & Decision-Prune Honesty; single-phase cycle from one externally-submitted bug report to deployment via `/magic.spec` → `/magic.task` → `/magic.run`)
+**Specs in registry:** 32 (all Stable; 2 amended this cycle — l1-session-continuity.md, l2-finalize-state-accuracy.md, the latter twice: once for the §9/§10 required-fix authorship, once more in-phase for the §12 stale-claim correction)
+**Tasks total:** 7 this cycle (Done: 7, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged — no new convention needed)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.72 → 2.1.73, single C14 bump for both file-independent tracks (`finalize.js`, `update-state.js` + template) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 65 → 66, green at every checkpoint after the two implementation bugs below were caught and fixed pre-Done |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | A regex lookahead intended as "end of string or next heading" used bare `$` under the `m` flag — which matches before *any* newline, not only true end-of-string. The Detailed Tracking block-extraction regex hit this exactly: the section's own blank line right after the heading satisfied `$`, collapsing the non-greedy capture to empty on every call. First `repro-a.js` run against the newly-edited code showed the defect *unchanged* — the fix silently no-op'd rather than erroring, which is the more dangerous failure shape (a loud crash would have been caught immediately; a silent no-op required re-running the exact reproduction that motivated the spec to notice nothing had changed). | `.magic/scripts/finalize.js` `isTaskExcluded()`; fixed with `(?![\s\S])`, a flag-independent end-of-string assertion |
+| 2 | A harness assertion realignment (T-23T02) introduced a plural-agreement typo ("is dropped" vs. the code's "entries **are** dropped") that was visually indistinguishable from correct on a side-by-side read — the surrounding text matched exactly, only the verb form differed. `RegExp.test()` correctly failed; a human skim of the diff would very plausibly not have. | `dev/tests/engine.js`; caught by running the harness immediately after the edit, not by re-reading the diff |
+| 3 | Both bugs above were caught **because** every implementation step in this phase ran its own verification immediately (a standalone reproduction script or the full harness) rather than deferring all verification to the phase-end test track (T-23T01-T03). Had verification been batched to the end, both defects would have surfaced together, harder to attribute to a specific task. | Task-by-task `Changes` fields in `tasks/phase-23.md` each cite their own verification run, not a shared end-of-phase one |
+| 4 | Fixing a defect can stale-date a spec's own status prose in the same motion: implementing §9/§10 immediately falsified the Overview's "not yet implemented" claim for both, and doing so surfaced that §12's "§8's coverage obligation is open" claim was *already* false before this phase started (Phase 19 had closed it, months earlier, and nothing had corrected the sentence). T-23C01 closed both in one factual-accuracy patch — but only because planning happened to route a spec-accuracy task through the same phase; nothing structural catches this class otherwise. | `l2-finalize-state-accuracy.md` 1.1.0 → 1.1.1, Document History row |
+| 5 | The field report's own citation ("Blocked (C12)") named the wrong mechanism — C12 is spec-status quarantine, not task-level Blocked/Assignment — but the underlying technical claim was fully correct and reproduced on the first attempt. Imprecise field-report terminology did not cost investigation time here because the spec-authoring session verified the mechanism directly against source rather than trusting the citation. | `l2-finalize-state-accuracy.md` §9, "the report's parenthetical citation is imprecise" framing carried from spec authoring |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R16 | #1, #2 | When a spec's own `Required Fix` section includes a literal regex or string as part of the fix (not only as defect evidence), the authoring pass should test that literal against a real fixture before publishing — both bugs this phase were in code written *from* the spec's prose, not defects the spec described, and neither would have existed if the spec's own illustrative snippets had been execution-checked at authoring time | `spec.md` §Post-Update Review (add a fixture-check sub-step for specs whose `Required Fix` includes literal patterns) |
+| R17 | #4 | Extend the Phase Completion checklist with an explicit "does this phase's fix falsify prose elsewhere in the same spec file (Overview, other sections' status claims)?" check, rather than relying on it being noticed incidentally | `run.md` Step 5 (Phase Completion) |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 32 | 32 | 0 |
 | Blocked task rate | 0% | 0% | 0 |
 | Signal | 🟢 | 🟢 | → |

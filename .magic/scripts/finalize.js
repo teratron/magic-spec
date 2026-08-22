@@ -4,6 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, isDryRun, mkdirSafe, parseFlags, WORKSPACE_NAME_RE } = require('./utils');
+const { stripQuoted } = require('./lib/scan-hygiene');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
 const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = require('./lib/significance');
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
@@ -215,6 +216,41 @@ function isPhaseBlocked(phaseContent, tasksContent, phaseNo) {
 }
 
 /**
+ * Reports whether a specific checklist task is excluded from an
+ * agent-executable recommendation, reading its own `## Detailed Tracking`
+ * entry — independent of the phase-level signals {@link isPhaseBlocked}
+ * checks.
+ *
+ * A phase in good standing can still have, as an open checklist line, a task
+ * whose own tracking entry marks it `Status: Blocked` or `Assignment: User`
+ * — the same class of contradiction `isPhaseBlocked` guards against, one
+ * level down (l1-session-continuity.md SC-2.1(c)). Absence of either field,
+ * or an `Assignment` value outside `Agent | User`, defaults to
+ * agent-actionable: the defect this closes is a missing check on tasks that
+ * positively declare themselves off-limits, not grounds for a stricter
+ * default against tasks that declare nothing.
+ *
+ * @param {string} content - Phase file source (scan-hygiene stripped).
+ * @param {string} taskId - Task ID as it appears in the checklist, e.g. `T-1A01`.
+ * @returns {boolean}
+ */
+function isTaskExcluded(content, taskId) {
+    const escaped = taskId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    // The lookahead's `$` must not rely on the `m` flag's line-boundary
+    // meaning — it would then match before *any* newline (e.g. the section's
+    // own blank line right after the heading), collapsing the capture to
+    // empty. `(?![\s\S])` is a true end-of-string assertion, immune to `m`.
+    const block = content.match(
+        new RegExp(`^### \\[${escaped}\\][^\\n]*\\n([\\s\\S]*?)(?=\\n### |\\n## |(?![\\s\\S]))`, 'm')
+    );
+    if (!block) return false;
+    const status = block[1].match(/^-\s+\*\*Status:\*\*\s+(.+)$/m);
+    if (status && /^Blocked\b/.test(status[1].trim())) return true;
+    const assignment = block[1].match(/^-\s+\*\*Assignment:\*\*\s+(.+)$/m);
+    return !!(assignment && /^User\b/.test(assignment[1].trim()));
+}
+
+/**
  * Derives the raw recommendation from the plan ledger, following pipeline
  * order (spec → task → run). Plan-state-aware per SC-2.1
  * (l1-session-continuity.md): for task/run the recommendation comes from the
@@ -237,6 +273,10 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
     // task/run: derive the next step from the actual plan state (SC-2.1).
     // Three-tier lookup: inline TASKS.md → phase files → registry table.
     const openTaskRe = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m;
+    // Separate global-flagged clone for the tier-2 per-item scan below —
+    // `.match()` against a global regex drops capture groups, so the shared
+    // single-match const above must stay un-flagged for tier-1's use.
+    const openTaskReGlobal = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/gm;
     try {
         const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
 
@@ -254,19 +294,50 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                     const nb = parseInt(b.match(/\d+/)[0], 10);
                     return na - nb;
                 });
+            // SH-1: stripped once per phase file, before any checklist or
+            // Detailed Tracking scan runs against it — a Notes block quoting
+            // checkbox syntax must not be read as a task in force, and the
+            // per-item scan below (unlike the old single-match lookup)
+            // widens that exposure by examining every line, not only the
+            // first (l1-scan-input-hygiene.md SH-1/SH-5).
+            let firstExcludedTask = null;
             for (const file of phaseFiles) {
-                const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
-                const openTask = content.match(openTaskRe);
-                if (!openTask) continue;
+                const content = stripQuoted(fs.readFileSync(path.join(tasksDir, file), 'utf8'));
+                const phaseNo = file.match(/\d+/)[0];
+                const anyOpen = content.match(openTaskRe);
+                if (!anyOpen) continue;
                 // Blocked is not Done, so a blocked phase still has open
                 // checklist lines — matching one is not licence to recommend it.
                 // Dispatching a resuming session into the very blocker the same
                 // STATE.md records would make the file contradict itself.
-                if (isPhaseBlocked(content, tasks, file.match(/\d+/)[0])) {
-                    return `Resolve blocker on ${openTask[1]} (${workspace}) — ` +
+                if (isPhaseBlocked(content, tasks, phaseNo)) {
+                    return `Resolve blocker on ${anyOpen[1]} (${workspace}) — ` +
                         `see STATE.md ## Blockers, then run /magic.run ${workspace}`;
                 }
-                return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+                // The phase itself is not Blocked, but the first-matched line
+                // alone is still not licence to recommend it: that exact
+                // task's own Detailed Tracking entry may independently mark
+                // it Blocked or Assignment: User (SC-2.1(c)). Scan every open
+                // item in the phase, not only the first.
+                for (const openTask of content.matchAll(openTaskReGlobal)) {
+                    if (isTaskExcluded(content, openTask[1])) {
+                        firstExcludedTask = firstExcludedTask || openTask[1];
+                        continue;
+                    }
+                    return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+                }
+                // Every open item in this phase file was excluded — keep
+                // scanning subsequent phase files before giving up.
+            }
+            if (firstExcludedTask) {
+                // At least one open task exists, but every one found across
+                // every phase file is Blocked or Assignment: User. The plan
+                // is not complete — tasks remain — so this must not fall
+                // through to the plan-complete branch below (tier 3), and
+                // must not name the excluded task as /magic.run-executable.
+                return `${firstExcludedTask} and any other open tasks need user or blocker ` +
+                    `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
+                    `then run /magic.run ${workspace}`;
             }
         }
 
