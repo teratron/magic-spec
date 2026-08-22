@@ -1,8 +1,8 @@
 # SDD Retrospective
 
 **Last Full Run:** 2026-08-22
-**Full Sessions:** 5
-**Snapshots:** 18
+**Full Sessions:** 6
+**Snapshots:** 19
 
 ## Snapshots
 
@@ -28,6 +28,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-13 | Phase 22 | 0/0/32 | 5/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 23 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 24 | 0/0/32 | 7/0/0 | 24 | 🟢 |
+| 2026-08-22 | Phase 25 | 0/0/32 | 3/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -211,6 +212,45 @@ Manual input / external hook still required — same gap as Session 1.
 | R18 | #2 | Record the L1→L2 placement judgment as a named, reusable step in the planning workflow (`task.md` or the L1→L2 Classification Algorithm itself) rather than re-deriving it from first principles each time a Required Fix under-specifies file placement | `.magic/task.md` or `AGENTS.md` §1.3 |
 | R19 | #4 | When a new harness case captures `execSync` output from a command expected to emit a diagnostic on a non-fatal branch, default to `2>&1` unless the assertion is specifically about stdout-only content — the stdout/stderr split is a recurring silent-failure shape, not a one-off | `dev/tests/engine.js` authoring convention (no code change; a note for future test authors) |
 | R20 | #5 | Formalize the stash-negative-control technique as a named step in `run.md`'s QA Review (3.5), since it is now used consistently but only exists as inline practice across three phases' task files | `.magic/run.md` §3.5 |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 32 | 32 | 0 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 6 — 2026-08-22
+
+**Scope:** Plan completion (Phase 25 — CHANGELOG Dedup Discoverability Hint; single-phase cycle from an externally-submitted bug report to deployment via `/magic.spec` → `/magic.task` → `/magic.run`)
+**Specs in registry:** 32 (all Stable; 1 amended this cycle — l2-finalize-output-contract.md, 1.1.0 → 1.2.0)
+**Tasks total:** 3 this cycle (Done: 3, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.74 → 2.1.75, single C14 bump (`.magic/scripts/finalize.js` the only touched file) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 68 → 69, green at every checkpoint; the new test's own negative control failed correctly against pre-fix code |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A field report can correctly diagnose the symptom while proposing a remedy this project has already ruled out.** The report reproduced the real §4.1 vocabulary-exhaustion defect accurately, but its suggested fix (interpolate a task/phase identifier into the bullet) is exactly what RC-11 and §4.4 constraint 1 already forbid — settled two spec versions earlier in this same file. Triage had to re-derive that prohibition from the spec's own text before accepting or rejecting the report's hypothesis, rather than implementing it as submitted. | l2-finalize-output-contract.md §2 (RC-11), §4.4 constraint 1, §4.5 |
+| 2 | **A shipped remedy (`release-changelog.js`, Phase 20) had zero live-CLI regression coverage for four phases** — every existing CHANGELOG-related test either asserted `buildChangelogBullet()`'s return value directly or ran against `createFinalizeFixture()`'s default `autoChangelog: false`, so the actual write branch inside `finalize.js` (`if (config.autoChangelog...)`) had never been exercised through a real `execSync` invocation in this harness. The gap was invisible until a test needed to observe the *stdout row*, not just the *file write*. | `dev/tests/engine.js` — new §4.5 test is the first to pass `autoChangelog: true` to `createFinalizeFixture()` |
+| 3 | **Smallest and fastest phase of this session's run** — a single literal-string replacement with no design fork, no [C-001]-class hardlink risk, no cross-workspace concerns. Confirms the pipeline's fixed overhead (spec dispatch, plan write-back, retro, C14) dominates cycle time for a fix this size, not the implementation itself. | 3 tasks total vs. 7 for each of Phases 23/24 |
+| 4 | **Self-referential proof, one workflow stage earlier than usual.** Phase 24's regression was caught by its own `/magic.task` finalize output; this phase's *underlying defect* was caught by its own `/magic.spec` finalize output — the dispatch that authored §4.5 itself hit the exact deduped-without-hint condition live (`CHANGELOG \| skipped (duplicate)`, no remedy named), recorded via `record-diagnostic` before the fix existed. The engine's own operation is proving to be a reliable source of test cases for its own diagnostics-surface defects. | `record-diagnostic` call, code `CHANGELOG_DEDUP_HINT_MISSING`, emitted during this phase's own `/magic.spec` finalize |
+| 5 | **Stash negative-control, fifth consecutive use.** Continues without re-derivation from Phase 19 R12's introduction through Phases 23, 24, and now 25 — confirms R20's premise that the technique is now load-bearing practice, not a one-off. | T-25T01's `Changes` field: stash/run/pop sequence, captured `actual` output from the pre-fix run |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R21 | #2 | When a test-fixture helper defaults a feature flag to off (e.g. `createFinalizeFixture()`'s `autoChangelog: false`), periodically grep for whether *any* test in the suite ever passes the true value — a spec's regression-coverage bullet can name a function correctly while the actual code branch it gates stays permanently unexercised | `dev/tests/engine.js` authoring convention / `l2-test-suite.md` coverage mandate |
+| R22 | #1 | When triaging an externally-submitted bug report, check its proposed remedy against this project's own already-ratified constraints (RC-11, layer boundaries, prior `Required Fix` constraints in the same spec) before accepting it — the report's diagnosis of the symptom and its proposed fix are separate claims with independent evidence bars | `.magic/spec.md` dispatch guidance (informational; no code change) |
 
 ### 📈 Trends (from Snapshots)
 

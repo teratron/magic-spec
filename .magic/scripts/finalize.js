@@ -578,7 +578,7 @@ function emitSuccess(ctx) {
 
     if (changelogResult) {
         const clStatus = changelogResult.deduped
-            ? 'skipped (duplicate)'
+            ? `skipped (duplicate — run 'release-changelog' to rotate [Unreleased])`
             : changelogResult.formatWarning
                 ? 'prepended with warning (non-standard format)'
                 : `appended to [Unreleased] § ${changelogResult.category}`;

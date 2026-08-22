@@ -2931,6 +2931,46 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test("finalize.js's deduped CHANGELOG row names release-changelog as the remedy (§4.5)", () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main', autoChangelog: true });
+            const tasksDir = path.join(wsDir, 'tasks');
+            fs.mkdirSync(tasksDir, { recursive: true });
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '- [ ] [T-1A01] Task', '',
+            ].join('\n'));
+            commitFixture(tempDir);
+
+            // First run: the bullet is genuinely new — must append normally,
+            // no hint. Control case for the second assertion below.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '- [x] [T-1A01] Task', '',
+            ].join('\n'));
+            const firstOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            const firstRow = firstOut.split('\n').find((l) => l.startsWith('| CHANGELOG |'));
+            assert.match(firstRow, /appended to \[Unreleased\] § Changed/, 'first run: bullet is new, must append normally');
+            assert.doesNotMatch(firstRow, /release-changelog/, 'first run: no hint when nothing was deduped');
+
+            // Second run: same shape (one /tasks/ file changed) reproduces the
+            // identical bullet ("Completed task (main)") — the exact §4.1
+            // vocabulary-exhaustion scenario the field report reproduced.
+            commitFixture(tempDir);
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: Done', '---', '',
+                '- [x] [T-1A01] Task', '- [x] [T-1A02] Another', '',
+            ].join('\n'));
+            const secondOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            const secondRow = secondOut.split('\n').find((l) => l.startsWith('| CHANGELOG |'));
+            assert.match(secondRow, /skipped \(duplicate/, 'second run: identical bullet shape must dedupe exactly as §4.1 documents');
+            assert.match(secondRow, /release-changelog/, 'second run: the deduped row must name the remedy (§4.5)');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 18. analyze-coverage.js — EXEMPT classification (Coverage Denominator Scope)
     // ───────────────────────────────────────────────────────────────────────────
