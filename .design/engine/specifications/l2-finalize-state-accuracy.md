@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -9,7 +9,7 @@
 
 Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file owns the `update-state.js` correctness surface, its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
 
-Seven defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively.
+Nine defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72 — both reproduced directly against that version — and their required fixes are not yet implemented.
 
 ## Related Specifications
 
@@ -224,7 +224,56 @@ assert.ok(/## Recent Decisions[\s\S]*Adopt SDD workflow/.test(afterDecision), �
 
 `[\s\S]*` matches any distance, so the assertion holds whether the entry lands immediately after the heading (defective) or after the preamble (correct) — verified by running it against both. A presence assertion cannot express a structural contract; the replacement must assert the section's **shape**, not merely that the entry appears somewhere beneath the heading.
 
-## 9. Regression Coverage
+## 9. The Task-Level Blocking & Assignment Precedence Defect (SC-2.1) `[ADDED]`
+
+`synthesizeNextAction()`'s tier-2 phase-file loop matches the phase's **first** open `Atomic Checklist` line via a single un-flagged `openTaskRe.match()` call, and screens it against exactly one signal — `isPhaseBlocked()`, which reads only the phase file's own frontmatter `status:` and its `TASKS.md` registry row:
+
+```js
+for (const file of phaseFiles) {
+    const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
+    const openTask = content.match(openTaskRe);
+    if (!openTask) continue;
+    if (isPhaseBlocked(content, tasks, file.match(/\d+/)[0])) {
+        return `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magic.run ${workspace}`;
+    }
+    return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+}
+```
+
+`isPhaseBlocked()` never reads the phase file's `## Detailed Tracking` section — the sub-block that carries each task's own `**Status:** {Todo | In Progress | Done | Blocked | Cancelled}` and `**Assignment:** {Agent | User}` fields (`.magic/templates/phase.md`). A phase whose own frontmatter/registry status is *not* `Blocked` (e.g. `In Progress`) still passes the guard unconditionally, so the loop returns an execute-style recommendation for the checklist's first open line even when that exact task's own Detailed Tracking entry marks it `Status: Blocked` or `Assignment: User` — the same class of contradiction SC-2.1(a) already closes at the phase level, reopened one level down at the task level.
+
+Verified by direct reproduction against engine 2.1.72: a synthetic phase file with `status: In Progress` frontmatter (registry row also non-Blocked) and two open checklist items — `T-1A01` (`Detailed Tracking` `**Status:** Blocked`, `**Assignment:** User`) followed by `T-1A02` (`**Status:** Todo`, `**Assignment:** Agent`) — makes `computeNextAction('run', workspace, wsDir)` return `Execute T-1A01 First blocked/user task via /magic.run {workspace}` byte-for-byte, skipping straight past the actionable `T-1A02` to name the one task the same file's own Detailed Tracking says the agent should not run.
+
+**Required fix**: extend the tier-2 loop's per-task screen beyond `isPhaseBlocked()`'s phase-level check to the matched task's own Detailed Tracking entry — parse the `### [{T-ID}] ...` sub-block for that specific ID and read its `**Status:**`/`**Assignment:**` fields. Either `Status: Blocked` or `Assignment: User` on the *matched* task MUST skip it — continuing the checklist scan for the next open line in the same phase file, then the next phase file, exactly mirroring the existing phase-to-phase continuation — rather than returning it as executable. If every open task remaining across all phase files is Blocked or `Assignment: User` (no agent-actionable item found anywhere), the computation MUST NOT fall through to the plan-complete branch (SC-2.1(d) — the plan is not complete, tasks remain) nor recommend `/magic.run` against a task the same pass just excluded; it returns a distinct message naming that the remaining work requires user or blocker action, pointing at `STATE.md`'s `## Blockers` / the phase's `## Detailed Tracking`, without naming a specific `/magic.run`-executable task ID. A missing `**Assignment:**` field (task templates predating the field, or a value outside `Agent | User`) MUST default to agent-actionable — the defect is a missing check on tasks that positively declare `Blocked` or `User`, not a stricter default for tasks that declare nothing.
+
+Tracked in [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c).
+
+## 10. The Recent-Decisions Archival Promise Defect (SC-1.2) `[ADDED]`
+
+The line-cap guard's routine prune path — the "Cap restored" branch §7.2 above leaves unchanged — removes the oldest `## Recent Decisions` entry by deleting its line outright:
+
+```js
+if (decLines.length > 1) {
+    content = content.replace(decLines[decLines.length - 1] + '\n', '');
+    pruned = true;
+}
+```
+
+No code path in `update-state.js` writes to `PLAN.md`, or to any file other than `STATE.md` itself, anywhere in this function. This contradicts the section's own template comment, re-emitted by `addDecision` on every call that adds a decision:
+
+```plaintext
+<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
+```
+
+The comment is not aspirational prose in a design doc the operator never sees — it is written into the live `STATE.md` file itself, read by whoever opens the file, and it describes behavior the guard has never implemented at any point in this section's history (§7's fix corrected the guard's *signaling* when nothing could be pruned; it left the routine-prune path — where the promise is actually broken every time it fires — unexamined). An operator who takes the comment's own claim at face value ("where did the fourth decision go — it should be in PLAN.md") finds nothing there, with no diagnostic recording the loss either.
+
+Verified by direct reproduction against engine 2.1.72: a synthetic `STATE.md` with 5 `## Recent Decisions` entries and enough `## Blocking Constraints` padding to cross the 100-line cap was passed through `updateState()`. The guard fired (`Pruned oldest decision`), the oldest entry (`Decision number 5`) was confirmed absent from `STATE.md` afterward, and no `PLAN.md` was created or written anywhere in the workspace directory at any point during the call.
+
+**Required fix**: either (a) implement the promise — append the pruned entry to a dated log section in `PLAN.md` before removing it from `STATE.md`, in the same call, so no window exists where the decision is in neither file; or (b) if archival is deliberately out of scope for a key-value patch utility, remove the comment's specific claim and replace it with what the guard actually does (prune with no retention). Silently choosing (b) by leaving the code as-is is not an acceptable resolution here: the comment is regenerated by `addDecision` on every decision write, so doing nothing keeps re-asserting the false promise into every workspace's live `STATE.md` going forward, rather than merely leaving a stale doc uncorrected once.
+
+Tracked as a new obligation; no existing invariant names it directly — [l1-session-continuity.md](l1-session-continuity.md) SC-1.2 governs the line-cap mechanism this defect lives inside.
+
+## 11. Regression Coverage
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix above needs a harness case:
 
@@ -235,8 +284,10 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 - `updateState()` with `autoProgress: true` against a preserved narrative line containing a literal `$1`/`$2`/`$3` sequence must leave that line byte-for-byte unchanged and must not alter the fence's triple-backtick count (§6).
 - A fixture driven past 100 lines purely via repeated `addConstraint` calls, with `## Recent Decisions` pre-seeded at its 1-entry floor, must produce guard output observably different from the routine-prune case (§7).
 - **Open obligation (§8):** `addDecision` has no structural coverage. A case must assert the emitted section's shape — heading followed by a blank line, the comment preamble above the entries rather than below them, no consecutive blank runs, and template placeholder rows absent after the first real entry. The existing presence-only assertion must be replaced, not supplemented: leaving it in place preserves a test that passes under the defect it is meant to exclude.
+- **Open obligation (§9):** `synthesizeNextAction()`/`computeNextAction()`'s tier-2 loop, given a non-Blocked phase whose first open checklist item has Detailed Tracking `Status: Blocked` or `Assignment: User` and a later item in the same phase is agent-actionable, must skip the excluded task and name the later one — never the excluded task's ID.
+- **Open obligation (§10):** `updateState()`'s line-cap guard, given a fixture that crosses 100 lines and successfully prunes the oldest `## Recent Decisions` entry, must leave that entry recoverable from `PLAN.md` after the call — or, if archival is intentionally not implemented, a case must assert the section's comment no longer claims it.
 
-## 10. Known Gaps Not Closed Here
+## 12. Known Gaps Not Closed Here
 
 - **`Status` is never holistically recomputed.** [l2-engine-finalization.md](l2-engine-finalization.md) §5.1 documents that no code path in the SC-2 step recomputes `Status` — it is only ever set by explicit `--status=` calls in `task.md`/`run.md`. §4 above fixes one of those call sites (the per-task one, which should not touch `Status` at all); the broader claim that `Status` is ever holistically recomputed from plan/task state remains false, and is not addressed here — noted so it is not mistaken for closed.
 - **§8's coverage obligation is open**, not merely pending: the fix shipped at 2.1.67 without it, so the defect is currently unprotected against regression.
@@ -245,15 +296,17 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the line-cap guard (§7), and the decision-section rebuild (§8) |
-| `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()` (§2) and the SC-2 state-update step that invokes the above |
+| `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the line-cap guard incl. the unimplemented archival promise (§7, §10), and the decision-section rebuild (§8) |
+| `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()`/`isPhaseBlocked()` (§2, §9) and the SC-2 state-update step that invokes the above |
 | `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2 |
+| `.magic/templates/phase.md` | Source of the per-task `Detailed Tracking` `Status`/`Assignment` fields §9's fix must read |
 | `.magic/run.md` | Hosts the per-task and phase-transition `update-state` call sites corrected by §4 |
-| `dev/tests/engine.js` | Regression harness carrying §9's cases, including the open §8 obligation |
+| `dev/tests/engine.js` | Regression harness carrying §11's cases, including the open §8, §9, and §10 obligations |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-22 | Agent | New **§9 — The Task-Level Blocking & Assignment Precedence Defect** and **§10 — The Recent-Decisions Archival Promise Defect**, both from a single field report against engine 2.1.72 and both reproduced directly against that version. §9: `synthesizeNextAction()`'s tier-2 loop screens only the phase-level `Blocked` signal (`isPhaseBlocked()`); it never reads a matched task's own `Detailed Tracking` `Status`/`Assignment` fields, so a phase in good standing can still surface a `Status: Blocked`/`Assignment: User` task as `/magic.run`-executable ahead of a genuinely actionable one later in the same phase — tracked as [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c). §10: the line-cap guard's routine prune deletes the oldest `## Recent Decisions` line outright; no code path writes `PLAN.md`, contradicting the section's own template comment ("Older entries → archived to PLAN.md"), which `addDecision` re-emits on every call regardless. Neither required fix is implemented yet — both routed to `/magic.task engine`. Regression Coverage and Known Gaps renumbered §9/§10 → §11/§12 to make room; two new Open obligations recorded in §11. Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues; retained `Stable` via Trust Mode (C9) amendment cycle. |
 | 1.0.0 (quarantine reversed) | 2026-08-07 | Agent | **C12 Cascade, then reversed**: L1 parent [l1-session-continuity.md](l1-session-continuity.md) momentarily dropped Stable → RFC (v1.9.0, SC-2.4 Backlog Disposition Convention addendum), quarantining this file to RFC. The parent's Post-Update Review (5-lens) found no blocking issues and Trust Mode (C9) auto-promoted it back to `Stable` within the same invocation, which lifts this file's quarantine in step — content and version unchanged throughout, no defect here. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8 (five STATE.md accuracy defects) and §10 (line-cap guard defeat) at that spec's v2.0.0 decomposition, which was triggered by `SPEC_BLOAT` at 367 lines against a 300 threshold. Content relocated verbatim apart from section renumbering and cross-reference retargeting. New §8 — **The Decision-Section Structural Defect**, the retrospec of a fix that shipped at engine 2.1.67 ahead of its specification: `addDecision`'s insertion-offset search used `/^[^<]/m` to skip the comment preamble, but a blank line's own newline satisfies `[^<]`, so the search matched at offset 0 and every entry was inserted directly after the heading (markdownlint MD022/MD032/MD012). Reproduced directly before the fix; a second reproduction surfaced that the same step never prunes the template's `{YYYY-MM-DD}` placeholder rows. §8.4 records that the existing harness assertion (`/## Recent Decisions[\s\S]*{entry}/`) is structurally incapable of catching the class and must be replaced rather than supplemented — that obligation is currently **open**, making §8 the one defect here shipped without regression protection. |

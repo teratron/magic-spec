@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-13 13:27
+**Updated:** 2026-08-22 05:43
 **Phase:** 22 — Field-Report Triage
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** T-22T01 Full harness run + C14 sync
 - **Spec:** l1-session-continuity.md (SC-1..SC-5) + l2-status-command.md (/magic.status)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Next Action:** Run /magic.task engine to update the plan
 
 ## Progress
 
