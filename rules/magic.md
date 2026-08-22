@@ -47,9 +47,13 @@ carry behavior-affecting changes.
    block, and do **not** auto-divert into `/magic.analyze` — the user runs it when ready.
 
 6. **Snapshot contract**: the `**Engine Version:**` field updates **only** when
-   `/magic.analyze` runs (the sole writer; manual edits must not touch it). Until then the
-   drift line re-narrates each session — that recurrence is by design (a standing
-   recommendation), not a prompt.
+   `/magic.analyze` runs (the sole writer; manual edits must not touch it) — except in this
+   engine's own dev-repo, where `update-engine-meta` also patches the field directly on every
+   C14 bump (detected via the same `dev/scripts/` presence guard `generate-checksums`/
+   `sync-skills` already use). Consumer projects are unaffected: the guard is absent there, so
+   the sole-writer contract above holds exactly as written. Until a writer runs, the drift line
+   re-narrates each session — that recurrence is by design (a standing recommendation), not a
+   prompt.
 
 ### Exemptions
 

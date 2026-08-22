@@ -411,6 +411,70 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 5b. update-engine-meta.js — dev-repo Engine-Version snapshot sync
+    //     (l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version
+    //     Snapshot Sync). Reuses createTempWorkspace's existing dev/scripts/
+    //     mirroring: the dev-repo branch is the fixture default, so the
+    //     consumer branch is the one that must explicitly delete the guard
+    //     script — mirroring how the fixture already withholds
+    //     generate-checksums.js from .magic/scripts/ for the same reason.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-engine-meta.js syncs the Engine Version snapshot in a dev-repo, leaves it alone in a consumer install', () => {
+        const devRepoDir = createTempWorkspace();
+        const consumerDir = createTempWorkspace();
+        try {
+            for (const [tempDir, label] of [[devRepoDir, 'dev-repo'], [consumerDir, 'consumer']]) {
+                generateChecksums(tempDir);
+                fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+                fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), [
+                    '# Project Specification Index', '',
+                    '**Version:** 1.0.0', '**Status:** Active', '**Engine Version:** 0.0.0', '',
+                ].join('\n'));
+                // Trigger drift so the write branch runs (same technique as
+                // the "should bump version on engine change" case above).
+                fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), `\n// drift ${label}\n`);
+            }
+
+            // Consumer fixture: remove the guard script — the one thing that
+            // distinguishes "this checkout is the engine's own dev-repo" from
+            // "this is a user installation" throughout update-engine-meta.js.
+            fs.unlinkSync(path.join(consumerDir, 'dev', 'scripts', 'sync-engine-snapshot.js'));
+
+            // `2>&1`: the consumer-branch message is `console.warn` (stderr),
+            // and `execSync`'s return value is stdout only — without merging,
+            // the very warning this case exists to pin is silently dropped.
+            const runWrite = (tempDir) => execSync(
+                `node "${path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js')}" 2>&1`,
+                { cwd: tempDir, encoding: 'utf8' }
+            );
+
+            const devOut = runWrite(devRepoDir);
+            const devIndex = fs.readFileSync(path.join(devRepoDir, '.design', 'INDEX.md'), 'utf8');
+            const devVersion = fs.readFileSync(path.join(devRepoDir, '.magic', '.version'), 'utf8').trim();
+            assert.match(
+                devIndex, new RegExp(`\\*\\*Engine Version:\\*\\* ${devVersion.replace(/\./g, '\\.')}`),
+                'dev-repo: .design/INDEX.md Engine Version must match the freshly-bumped .magic/.version'
+            );
+            assert.match(devOut, /Engine Version snapshot synced/, 'dev-repo: sync must run and log');
+
+            const consumerOut = runWrite(consumerDir);
+            const consumerIndex = fs.readFileSync(path.join(consumerDir, '.design', 'INDEX.md'), 'utf8');
+            assert.match(
+                consumerIndex, /\*\*Engine Version:\*\* 0\.0\.0/,
+                'consumer install: Engine Version snapshot must be untouched'
+            );
+            assert.match(
+                consumerOut, /sync-engine-snapshot\.js not found/,
+                'consumer install: the skip must be logged, not silent'
+            );
+            assert.match(consumerOut, /Engine metadata and version updated/, 'consumer install: the bump itself must still complete');
+        } finally {
+            cleanup(devRepoDir);
+            cleanup(consumerDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6. check-prerequisites.js
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js should validate whole structure', () => {
@@ -1285,6 +1349,55 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Todo', 'Agent'));
             next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(next, /^Execute T-1A01/, 'a fully agent-actionable phase must still dispatch its first task');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js computeNextAction preserves code spans in task titles while still ignoring quoted checklist lines', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+
+            fs.writeFileSync(tasksPath, [
+                '# Master Task Index', '', '## Active Phases', '',
+                '| Phase | Description | Status |', '| --- | --- | --- |',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |', '',
+            ].join('\n'));
+
+            // (i) a title carrying a backticked path must survive verbatim.
+            // `stripQuoted()` (SH-1) blanks matched characters rather than
+            // removing them — same line count, not same character offsets —
+            // so a title read from the stripped text loses the span. This
+            // pins the field regression named `NEXT_ACTION_TITLE_STRIPPED`,
+            // introduced by the SC-2.1(c) per-item scan itself.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '## Atomic Checklist', '',
+                '- [ ] [T-1A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)', '',
+            ].join('\n'));
+            let next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(
+                next, /`dev\/scripts\/sync-engine-snapshot\.js`/,
+                `title's code span must survive verbatim → "${next}"`
+            );
+            assert.doesNotMatch(next, /  /, `no double-space artifact from a blanked span → "${next}"`);
+
+            // (ii) control — the detector must still read stripped text, not
+            // raw: a quoted checklist line in prose must not be picked up as
+            // a real task. This is the assertion that stops a future fix
+            // from reverting to raw content wholesale and reopening SH-1.
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '## Atomic Checklist', '',
+                '- [ ] [T-1A01] Real actionable task', '',
+                '## Notes', '',
+                '`- [ ] [T-9Z99] Not a real task, just documentation`', '',
+            ].join('\n'));
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, /^Execute T-1A01/, `quoted line must not be picked up → "${next}"`);
+            assert.doesNotMatch(next, /T-9Z99/, `quoted task ID must not be named → "${next}"`);
         } finally {
             cleanup(tempDir);
         }

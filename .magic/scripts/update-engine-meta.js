@@ -130,6 +130,23 @@ function updateEngineMeta() {
             });
         }
 
+        // Dev-repo-only: keep .design/INDEX.md's Engine Version snapshot current
+        // with every C14 bump. Consumer installs never reach this branch — the
+        // external-drift signal Engine Upgrade Detection (rules/magic.md §1)
+        // provides to them is untouched (l1-engine-core.md §Known Process Gaps —
+        // Dev-Repo Engine-Version Snapshot Sync).
+        const syncSnapshotPath = path.join(__dirname, '../../dev/scripts/sync-engine-snapshot.js');
+        if (fs.existsSync(syncSnapshotPath)) {
+            const syncEngineSnapshot = require(syncSnapshotPath);
+            syncEngineSnapshot();
+        } else {
+            console.warn('⚠️  dev/scripts/sync-engine-snapshot.js not found — skipping snapshot sync (dev repo only).');
+            diagnostics.record({
+                severity: 'warning', source: 'update-engine-meta', code: 'SNAPSHOT_SYNC_UNAVAILABLE',
+                message: 'dev/scripts/sync-engine-snapshot.js not found; Engine Version snapshot sync skipped (dev repo only).',
+            });
+        }
+
         runGenerateChecksums();
         console.log('✅ Engine metadata and version updated.');
     } else {

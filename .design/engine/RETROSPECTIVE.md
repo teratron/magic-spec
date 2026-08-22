@@ -1,8 +1,8 @@
 # SDD Retrospective
 
 **Last Full Run:** 2026-08-22
-**Full Sessions:** 4
-**Snapshots:** 17
+**Full Sessions:** 5
+**Snapshots:** 18
 
 ## Snapshots
 
@@ -27,6 +27,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-07 | Phase 2 | 0/0/32 | 3/0/0 | 24 | 🟢 |
 | 2026-08-13 | Phase 22 | 0/0/32 | 5/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 23 | 0/0/32 | 7/0/0 | 24 | 🟢 |
+| 2026-08-22 | Phase 24 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -170,6 +171,46 @@ Manual input / external hook still required — same gap as Session 1.
 | --- | --- | --- | --- |
 | R16 | #1, #2 | When a spec's own `Required Fix` section includes a literal regex or string as part of the fix (not only as defect evidence), the authoring pass should test that literal against a real fixture before publishing — both bugs this phase were in code written *from* the spec's prose, not defects the spec described, and neither would have existed if the spec's own illustrative snippets had been execution-checked at authoring time | `spec.md` §Post-Update Review (add a fixture-check sub-step for specs whose `Required Fix` includes literal patterns) |
 | R17 | #4 | Extend the Phase Completion checklist with an explicit "does this phase's fix falsify prose elsewhere in the same spec file (Overview, other sections' status claims)?" check, rather than relying on it being noticed incidentally | `run.md` Step 5 (Phase Completion) |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 32 | 32 | 0 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 5 — 2026-08-22
+
+**Scope:** Plan completion (Phase 24 — Dev-Repo Engine-Version Snapshot Sync; single-phase cycle from a user-raised design observation to deployment via `/magic.spec` → `/magic.task` → `/magic.run`, plus an in-phase regression fix the phase's own planning run surfaced)
+**Specs in registry:** 32 (all Stable; 1 amended this cycle — l1-engine-core.md, 1.5.0 → 1.6.0)
+**Tasks total:** 7 this cycle (Done: 7, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged — `rules/magic.md` §1 amended, no new C-numbered convention)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.73 → 2.1.74, single C14 bump covering both `.magic/` tracks (A: `update-engine-meta.js`; C: `finalize.js`) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 66 → 68, green at every checkpoint after each in-flight bug was caught and fixed |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | This phase's own genesis was a user observation, not a field report or a HALT — the first time this session that planning began from "does this design still make sense" rather than a reproduced defect. The existing Parked backlog item (2026-06-12) supplied the prior art; the design work was confirming scope (dev-repo-only, consumer contract untouched) and picking an implementation shape, not discovering a problem. | User message: "логично мне кажется... для этого проекта... для проектов где используется наш sdd — всё по старому" |
+| 2 | **A spec's own Required Fix was under-specified about *where* code should live**, and the gap was real: the spec named `update-engine-meta.js` as the call site (correct) but said nothing about the file write's own placement. Resolved at plan time by applying `AGENTS.md` §2.1's L1→L2 exception literally — delegation via a new dev script, not inlined L1 logic — the same reasoning that placed `generate-checksums.js` and `update-project-meta.js` in `dev/scripts/` earlier in this project's history. Worth a general note: Required Fix blocks name *what* changes and *why*; *where inside the layer boundary* is a plan-time judgment this project has now made consistently three times without it ever being written down as a rule. | l1-engine-core.md §Known Process Gaps Required Fix item 1; `AGENTS.md` §1.3 Classification Algorithm cited directly at plan time |
+| 3 | **A live regression was found by the planning run's own tooling, not by review.** T-24A01's task title contained a backticked path; the very first `finalize --workflow=task` this phase ran printed it with the span blanked. The defect was in code this same session had written one phase earlier (Phase 23's SC-2.1(c) scan) — a hardening added for one reason (SH-1 quoted-text exposure) reached one step further than its own justification supported (using stripped text for *display*, not only *detection*). Folded into the same phase rather than deferred, on the grounds that it needed no design input and the phase already bumped C14. | Live `finalize` stdout: `Execute T-24A01 New  (L2 snapshot writer) via /magic.run engine`; root-caused and fixed same session |
+| 4 | **Two more bugs surfaced in the *regression tests themselves*, not the fixed code**, both from stdout/stderr stream confusion: `console.warn` output (used for every "skipped, dev-only" diagnostic in this codebase) writes to stderr, and `execSync`'s return value is stdout only. A test asserting against that return value can silently miss the exact warning it was written to pin, passing or failing for the wrong reason depending on what else the assertion happens to check. Neither existing test in this suite that captures `execSync` output for a *successful* (exit-0) run had needed to see stderr before — the failure-path helper (test 5a) already merges `e.stdout + e.stderr`, but only reachable when the command throws. | `dev/tests/engine.js` — the new dev-repo/consumer test initially failed with the exact correct behavior already in place, diagnosed by comparing captured stdout against the real console.warn call site |
+| 5 | **Every new engine change this phase was negative-controlled via `git stash`** on the single relevant source file — confirmed each new test actually fails against pre-fix code before restoring. This is now the fourth consecutive phase using this exact technique (Phase 19 R12 introduced it; Phase 23 and 24 both reused it without re-deriving it). Worth naming as an established practice rather than re-discovering per phase. | T-23T01/T-24C02/T-24T01, each with an explicit stash/run/pop sequence in their `Changes` fields |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R18 | #2 | Record the L1→L2 placement judgment as a named, reusable step in the planning workflow (`task.md` or the L1→L2 Classification Algorithm itself) rather than re-deriving it from first principles each time a Required Fix under-specifies file placement | `.magic/task.md` or `AGENTS.md` §1.3 |
+| R19 | #4 | When a new harness case captures `execSync` output from a command expected to emit a diagnostic on a non-fatal branch, default to `2>&1` unless the assertion is specifically about stdout-only content — the stdout/stderr split is a recurring silent-failure shape, not a one-off | `dev/tests/engine.js` authoring convention (no code change; a note for future test authors) |
+| R20 | #5 | Formalize the stash-negative-control technique as a named step in `run.md`'s QA Review (3.5), since it is now used consistently but only exists as inline practice across three phases' task files | `.magic/run.md` §3.5 |
 
 ### 📈 Trends (from Snapshots)
 

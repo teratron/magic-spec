@@ -1,39 +1,52 @@
 ---
 phase: 24
 name: "Dev-Repo Engine-Version Snapshot Sync"
-status: Todo
+status: Done
 subsystem: "dev/scripts + .magic/scripts"
 requires: []
-provides: []
+provides:
+  - "dev/scripts/sync-engine-snapshot.js: L2 writer patching .design/INDEX.md's Engine Version to .magic/.version"
+  - "update-engine-meta.js: guarded delegation to the L2 writer, dev-repo-only, --check mode unaffected"
+  - "rules/magic.md §1: Snapshot contract carve-out documenting the dev-repo exception"
+  - "finalize.js: Next Action task titles with inline code spans now survive verbatim (regression fix, found by this phase's own planning run)"
+  - "dev/tests/engine.js: dev-repo/consumer branch coverage + code-span title regression case (66 -> 68)"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - "dev/scripts/sync-engine-snapshot.js"
+  modified:
+    - ".magic/scripts/update-engine-meta.js"
+    - ".magic/scripts/finalize.js"
+    - "rules/magic.md"
+    - ".agents/rules/magic.md"
+    - "dev/tests/engine.js"
+patterns_established:
+  - "stripQuoted() preserves line count, not intra-line offsets — a value read for DISPLAY must come from the raw source at the matched line index; only the DETECTOR (deciding which lines are real) should read the stripped text."
+  - "console.warn output is stderr; a harness assertion against execSync's return value needs an explicit `2>&1` redirect to see it — a test can pass a warning-emitting branch as silently as the branch itself passing without warning."
 duration_minutes: ~
 ---
 
 # Stage 24 Tasks — Dev-Repo Engine-Version Snapshot Sync
 
 **Phase:** 24
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** In this engine's own dev-repo — and nowhere else — a C14 bump also refreshes the `**Engine Version:**` snapshot in `.design/INDEX.md`, so the drift line that exists to catch an *external* engine replacement stops firing on first-party changes. Consumer projects keep the current contract byte for byte. Track C additionally repairs a live `Next Action` regression this phase's own planning run surfaced (see Notes).
 
 ## Atomic Checklist
 
-- [ ] [T-24A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)
-- [ ] [T-24A02] Wire the guarded delegation into `update-engine-meta.js`
-- [ ] [T-24B01] Carve out the dev-repo exception in the `rules/magic.md` §1 snapshot contract
-- [ ] [T-24C01] Stop stripping inline code spans out of the Next Action task title
-- [ ] [T-24C02] Regression: task titles containing code spans survive verbatim
-- [ ] [T-24T01] Regression: dev-repo branch writes, consumer branch does not
-- [ ] [T-24T02] Full harness run + C14 sync
+- [x] [T-24A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)
+- [x] [T-24A02] Wire the guarded delegation into `update-engine-meta.js`
+- [x] [T-24B01] Carve out the dev-repo exception in the `rules/magic.md` §1 snapshot contract
+- [x] [T-24C01] Stop stripping inline code spans out of the Next Action task title
+- [x] [T-24C02] Regression: task titles containing code spans survive verbatim
+- [x] [T-24T01] Regression: dev-repo branch writes, consumer branch does not
+- [x] [T-24T02] Full harness run + C14 sync
 
 ## Detailed Tracking
 
 ### [T-24A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)
 
 - **Spec:** l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version Snapshot Sync, Required Fix item 1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** Create a single-purpose L2 script exporting one no-argument function that reads `.magic/.version` and rewrites the `**Engine Version:**` line in `.design/INDEX.md` to that value. Module shape mirrors `dev/scripts/sync-skills.js` exactly: `module.exports = fn`, no side effects on require.
 - **Material assumptions:**
@@ -42,26 +55,28 @@ duration_minutes: ~
   - Target is the **global aggregate** `.design/INDEX.md` only. Verified during planning: workspace-level `.design/{ws}/INDEX.md` carries `**Version:**`/`**Status:**` but no `**Engine Version:**` field, so there is no second file to patch. Do not invent one — but do not crash if the field is absent either.
   - **Non-blocking by contract**: a missing `.design/INDEX.md`, or a file with no `**Engine Version:**` line, warns and returns. It must never throw or `process.exit` — it runs inside a C14 bump that must complete. Note `dev/scripts/update-project-meta.js` does `process.exit(1)` in this situation; do **not** copy that behavior here.
   - Disjoint from `update-project-meta.js`, which owns `**Version:**` / `Last Updated` / history rows in the same file and never touches `**Engine Version:**` (confirmed during planning). Two L2 writers, non-overlapping fields — no coordination needed.
-- **Verify:** `node -e` against a temp fixture: an `.design/INDEX.md` containing `**Engine Version:** 0.0.0` and a `.magic/.version` of `9.9.9` → after the call the field reads `9.9.9`; a second call against a fixture with the file absent returns normally (no throw, non-zero exit not produced).
+- **Verify:** `node -e` against a temp fixture: an `.design/INDEX.md` containing `**Engine Version:** 0.0.0` and a `.magic/.version` of `9.9.9` → after the call the field reads `9.9.9`; a second call against a fixture with the file absent returns normally (no throw, non-zero exit not produced). Confirmed both cases pass.
+- **Changes:** New `dev/scripts/sync-engine-snapshot.js`, `module.exports = sync` matching `sync-skills.js`'s shape exactly. Reads `.magic/.version` and `.design/INDEX.md` directly (no injected version arg); three independent non-blocking guards (version file absent, INDEX.md absent, field absent) each `console.warn` and return rather than throw. Uses the shared `writeFileSafe` from `.magic/scripts/utils` (dry-run aware). Isolated-fixture verification: field patched from `0.0.0` to `9.9.9`; absent-file call completed without throwing.
 - **Handoff:** T-24A02 (the L1 call site that delegates to this).
 
 ### [T-24A02] Wire the guarded delegation into `update-engine-meta.js`
 
 - **Spec:** l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version Snapshot Sync, Required Fix item 1
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** In `update-engine-meta.js`'s C14 **write** branch, add an `fs.existsSync` guard around a lazy `require` of `dev/scripts/sync-engine-snapshot.js` and call it — placed immediately after the existing `sync-skills.js` block so the two dev-delegated syncs sit together. On absence: `console.warn` + `diagnostics.record` (severity `warning`), mirroring the `SKILL_SYNC_UNAVAILABLE` shape already there.
 - **Material assumptions:**
   - **This is the sanctioned L1→L2 exception and must take its exact shape** (`AGENTS.md` §2.1): `fs.existsSync` guard around a lazy `require` of a dev script, graceful warning on absence. Per-script guarding — the guard tests `sync-engine-snapshot.js`'s own presence, exactly as the neighbouring block guards `sync-skills.js`. This is the same dev-tree detection mechanism the file already uses twice, not a second one.
   - **Critical — must not run in `--check` mode.** `checkOnly` `process.exit(1)`s at `update-engine-meta.js:113`, before `bumpVersion()` at :116. The new call goes *after* `bumpVersion()`, inside the same non-check path. The `--check` branch is what the user's pre-commit hook invokes; a hook that mutates `.design/INDEX.md` would be a serious contract violation.
   - Call order within the write branch: `bumpVersion()` → `syncSkills()` → **new call** → `runGenerateChecksums()`. `.design/INDEX.md` is outside `.magic/`, so it does not participate in the checksum manifest and the position relative to `runGenerateChecksums()` is not load-bearing — but keep it before, so a single reading of the block shows all syncs preceding the manifest rebuild.
-- **Verify:** `node .magic/scripts/executor.js update-engine-meta --check` against a tree with a deliberately stale `**Engine Version:**` → the field is **unchanged** afterward (`git diff --exit-code -- .design/INDEX.md` clean), proving check mode still writes nothing.
+- **Verify:** `node .magic/scripts/executor.js update-engine-meta --check` against a tree with a deliberately stale `**Engine Version:**` → the field is **unchanged** afterward (`git diff --exit-code -- .design/INDEX.md` clean), proving check mode still writes nothing. Confirmed against the real repo (mid-phase, `.magic/scripts/update-engine-meta.js` itself is the only detected drift): `git diff --stat -- .design/INDEX.md` empty both before and after `--check`.
+- **Changes:** Added a guarded block mirroring the `sync-skills.js` block exactly — `fs.existsSync` + lazy `require` + call, `console.warn` + `diagnostics.record` (`SNAPSHOT_SYNC_UNAVAILABLE`, severity `warning`) on absence — positioned after `syncSkills()` and before `runGenerateChecksums()`, inside the write branch only (after `bumpVersion()` at :116). The positive (write) path is proven live by T-24T02's own C14 bump, not re-verified in isolation here.
 - **Handoff:** T-24T01 (regression covering both branches).
 
 ### [T-24B01] Carve out the dev-repo exception in the `rules/magic.md` §1 snapshot contract
 
 - **Spec:** l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version Snapshot Sync, Required Fix item 2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** Amend §1's "Snapshot contract" sentence — currently *"the `**Engine Version:**` field updates **only** when `/magic.analyze` runs (the sole writer; manual edits must not touch it)"* — so the sole-writer claim carries the dev-repo exception. Everything else in §1, including the whole external-drift-detection rationale and the drift-line wording, stays untouched.
 - **Material assumptions:**
@@ -69,38 +84,41 @@ duration_minutes: ~
   - `rules/` sits outside C14 checksum tracking, so this task alone triggers no version bump — it rides the phase's single C14 run in T-24T02.
   - `.magic/analyze.md` needs **no** amendment: its own wording ("update the field to match the current value of `.magic/.version`") stays true with a second writer present, and it makes no sole-writer claim. Checked at plan time across all 7 of its `Engine Version` mentions; `.magic/status.md` only reads the field. Do not edit either.
   - The new writer is idempotent against `analyze.md`'s: both set the field to `.magic/.version`. They cannot disagree, so the exception is a documentation correction, not a conflict-resolution rule.
-- **Verify:** `rules/magic.md` §1 states the exception; `fsutil hardlink list rules/magic.md` lists both paths; `Get-FileHash` of `rules/magic.md` and `.agents/rules/magic.md` return identical hashes.
+- **Verify:** `rules/magic.md` §1 states the exception; `fsutil hardlink list rules/magic.md` lists both paths; `Get-FileHash` of `rules/magic.md` and `.agents/rules/magic.md` return identical hashes. Confirmed all three; `dev/scripts/validate-hardlinks.js` also reports `rules/magic.md → .agents/rules/magic.md` linked.
+- **Changes:** Edited §1 step 6 "Snapshot contract" in `.agents/rules/magic.md`. Hardlink broke on edit as documented ([C-001]); recreated via `Remove-Item` + `New-Item -ItemType HardLink` and re-verified (`fsutil hardlink list`, `Get-FileHash` match, `validate-hardlinks.js` clean). Unrelated pre-existing warning noted, not touched: `GEMINI.md` missing from the AGENTS-family group — out of this phase's scope.
 - **Handoff:** independent of Track A — no downstream task depends on it.
 
 ### [T-24C01] Stop stripping inline code spans out of the Next Action task title
 
 - **Spec:** l2-finalize-state-accuracy.md §9 (implementation defect in its tier-2 loop; the §9 contract itself is unchanged), l1-session-continuity.md SC-2.1/SC-2.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** `synthesizeNextAction()`'s tier-2 loop reads the phase file through `stripQuoted()` and then captures **both** the task ID and the display title from that stripped text. Stripping is correct for deciding *which* checklist lines are real tasks (SH-1 — a quoted `- [ ]` inside a Notes block must not count), but wrong for extracting text meant to be shown: a task title routinely contains a backticked file name, and that span is blanked. Fix: keep the stripped text as the detector, recover the title from the raw source.
 - **Material assumptions:**
   - **This is a regression introduced by Phase 23's own T-23A01**, not a pre-existing defect — the SH-1 binding was added there as a plan-time hardening and over-applied. `l2-finalize-state-accuracy.md` §9's written contract says only "skip the item… continue the scan"; it never asked for the title to be stripped, so **no spec amendment is required** — the spec is right and the implementation over-reached.
   - `stripQuoted()` preserves **line count but not intra-line offsets** (it deletes the quoted characters rather than replacing them with spaces — verified directly: `` New `x` (y) `` → `New  (y)`). So a character-offset mapping between stripped and raw is **not** available; a **line-index** mapping is. Recover the title by locating the match's line index in the stripped text and re-matching the regex against that same line index in the raw text.
   - The phase-level `isPhaseBlocked()` and per-task `isTaskExcluded()` screens must keep reading **stripped** content — they are detectors, and this fix must not weaken them back into SH-1 exposure.
-- **Verify:** `node -e` against a temp workspace whose checklist contains ``- [ ] [T-1A01] New `dev/scripts/x.js` (thing)`` → `computeNextAction('run', ws, dir)` returns a string containing `` `dev/scripts/x.js` `` verbatim, backticks included, and containing no double-space artifact.
+- **Verify:** `node -e` against a temp workspace whose checklist contains ``- [ ] [T-1A01] New `dev/scripts/x.js` (thing)`` → `computeNextAction('run', ws, dir)` returns a string containing `` `dev/scripts/x.js` `` verbatim, backticks included, and containing no double-space artifact. Confirmed with the exact field case (T-24A01's own title) plus two controls: SH-1 detector still ignores a quoted checklist line in Notes; SC-2.1(c) Blocked/Assignment precedence still works when titles carry code spans. Full harness 66/66 after the change.
+- **Changes:** Switched the tier-2 per-item scan from `content.matchAll(openTaskReGlobal)` to a line-indexed loop: `rawContent` is now kept alongside the SH-1-stripped `content`, both split into line arrays, and the display title is re-matched from `rawLines[i]` at the same index the detector matched in `strippedLines[i]` — the detector keeps reading stripped text (SH-1 intact), only the title read moved to raw. `openTaskReGlobal` removed (no longer needed); `openTaskRe` reused for single-line matching, since its `m` flag is a no-op against a string with no embedded newline.
 - **Handoff:** T-24C02 (its regression case).
 
 ### [T-24C02] Regression: task titles containing code spans survive verbatim
 
 - **Spec:** l2-finalize-state-accuracy.md §11 (extends the §9 coverage obligation T-23T01 opened)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** Add a harness case to `dev/tests/engine.js` pinning T-24C01: a phase whose first open task title contains an inline code span yields a `Next Action` reproducing that title byte-for-byte. Pair it with a case proving the detector still works — a Notes block quoting `- [ ] [T-9Z99] Not a real task` must still not be picked up.
 - **Material assumptions:**
   - The second half is the part that matters most: it is the assertion that stops a future "fix" from reverting to reading raw content wholesale and silently reopening the SH-1 hole this strip was added to close. Both halves belong in one case so they cannot drift apart.
   - `dev/tests/engine.js` is a shared single-file queue this phase: **T-24C02 → T-24T01 → T-24T02**.
 - **Verify:** `node dev/tests/engine.js` — the new case passes; negative-control it against the pre-T-24C01 code to confirm it actually fails there.
+- **Changes:** New test right after the SC-2.1(c) case, covering (i) code-span title preservation using the exact field case (T-24A01's own title) and (ii) the SH-1 detector control (quoted checklist line in Notes still ignored). Negative-controlled via `git stash` on `finalize.js` alone: 0/1 pass against HEAD (pre-Track-C, post-Phase-23), stash popped, harness 66 → 67 with the fix restored.
 - **Handoff:** T-24T01 (same file, next in queue).
 
 ### [T-24T01] Regression: dev-repo branch writes, consumer branch does not
 
 - **Spec:** l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version Snapshot Sync, Required Fix item 3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** Add harness coverage to `dev/tests/engine.js` pinning both branches: (i) dev-repo fixture (`dev/scripts/sync-engine-snapshot.js` present) → after `update-engine-meta`, `.design/INDEX.md`'s `**Engine Version:**` equals the bumped `.magic/.version`; (ii) consumer fixture (that script absent) → the field is **unchanged**, and the run still completes rather than erroring.
 - **Material assumptions:**
@@ -108,26 +126,29 @@ duration_minutes: ~
   - `createTempWorkspace()` copies all of `dev/scripts/` into the fixture, so the guard is **true by default** — the consumer case must explicitly delete `dev/scripts/sync-engine-snapshot.js` from the temp tree to simulate a user installation. This mirrors how the fixture already withholds `generate-checksums.js` from `.magic/scripts/` to exercise the user-install fallback honestly.
   - Temp fixtures do not create a global `.design/INDEX.md` (only `.design/{ws}/`), so the dev-repo case must write one with a deliberately stale `**Engine Version:**` before invoking. The absent-file path is T-24A01's own Verify, not this task's.
   - Negative-control the dev-repo case: confirm it fails against the unwired code (Phase 19 R12 pattern), so the test is not one that passes under the defect.
-- **Verify:** `node dev/tests/engine.js` — new cases pass, total count rises by the number added, zero pre-existing failures.
+- **Verify:** `node dev/tests/engine.js` — new cases pass, total count rises by the number added, zero pre-existing failures. Confirmed: 67 → 68.
+- **Changes:** New test covers both branches on a paired dev-repo/consumer fixture (deletes `dev/scripts/sync-engine-snapshot.js` only from the consumer copy). **Bug found in the test itself, not the fixed code**: `console.warn` writes to stderr, and `execSync`'s return value is stdout only — the first version silently dropped the exact warning it was written to pin, so the assertion failed against real, correct output. Fixed by redirecting `2>&1` in the exec command. Negative-controlled via `git stash` on `update-engine-meta.js` alone: 0/1 pass against pre-T-24A02 code, restored, harness 67 → 68 with the wiring back.
 - **Handoff:** T-24T02 (same file, sequential).
 
 ### [T-24T02] Full harness run + C14 sync
 
 - **Spec:** l2-test-suite.md (coverage mandate), RULES.md C14
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Goal:** Run the complete harness, then perform the phase's single engine-metadata bump.
 - **Material assumptions:**
   - Two `.magic/` files are inside the C14 manifest this phase — `scripts/update-engine-meta.js` (Track A) and `scripts/finalize.js` (Track C); `dev/scripts/` is L2 and `rules/` is outside checksum tracking. C14 runs **once**, here, with **no** `--workflow` tag, since no `.magic/*.md` or `workflows/*.md` body is touched. Same shape as Phases 21 and 23.
   - **This run is the phase's own end-to-end proof.** With T-24A01/A02 landed, the bump itself patches `.design/INDEX.md`. Expect the snapshot to jump `2.1.72` → the new version directly, skipping `2.1.73` — that is correct: the field records the current version, not a log, and `2.1.73` was the pre-fix state this phase exists to stop producing.
-- **Verify:** `node dev/tests/engine.js` zero failures; then `update-engine-meta` completes and `.design/INDEX.md`'s `**Engine Version:**` matches `.magic/.version` **without any manual edit**; then `check-prerequisites --json --workspace=engine` returns `ok: true` with no `checksums_mismatch`.
+- **Verify:** `node dev/tests/engine.js` zero failures; then `update-engine-meta` completes and `.design/INDEX.md`'s `**Engine Version:**` matches `.magic/.version` **without any manual edit**; then `check-prerequisites --json --workspace=engine` returns `ok: true` with no `checksums_mismatch`. Confirmed live on this repo: harness 68/68; `update-engine-meta` bumped 2.1.73 → 2.1.74 and printed `✅ Engine Version snapshot synced: 2.1.74`; `.design/INDEX.md` now reads `**Engine Version:** 2.1.74`, matching `.magic/.version` exactly, with zero manual edits; `check-prerequisites` returns `ok: true`, `warnings: []`.
+- **Changes:** No code changes — this task is the phase's own live proof. Snapshot correctly jumped `2.1.72` → `2.1.74`, skipping the intermediate `2.1.73` recorded during Phase 23 (before this fix existed), exactly as predicted at plan time: the field records current state, not a log.
 - **Handoff:** phase closure → `/magic.run` finalize archives this file.
 
 ### [T-24T03] Validation Task — consumer-install contract unchanged
 
 - **Goal:** Prove the change is genuinely scoped to this repo: a consumer installation's drift-detection behavior must be bit-for-bit what it was before this phase.
 - **Method:** Build a temp fixture shaped like a user install (four L1 folders, `.design/` with a global `INDEX.md`, **no** `dev/` tree), run `update-engine-meta` after touching a `.magic/` file, and confirm: the version bumps, the `**Engine Version:**` snapshot is untouched, a `warning`-severity diagnostic records the skipped sync, and the process exits 0. Then confirm `/magic.status`'s engine line still reports the resulting drift, i.e. the signal the exemption preserves for consumers is intact.
-- **Status:** Todo
+- **Status:** Done
+- **Evidence:** Isolated fixture with `dev/` absent entirely (confirmed: `dev/ present in fixture? false`). After `update-engine-meta`: version bumped `1.0.0 → 1.0.1`; `**Engine Version:**` snapshot stayed `1.0.0` (untouched); both `dev/scripts/sync-skills.js not found` and `dev/scripts/sync-engine-snapshot.js not found` warnings printed (same guard class, same shape); run completed with `✅ Engine metadata and version updated.` (exit 0). All 5 assertions passed. `/magic.status`'s own drift-reporting logic is unchanged by this phase (no file touched); the resulting `1.0.0` vs `1.0.1` mismatch is exactly the drift state Engine Upgrade Detection is designed to surface for a consumer project — not separately re-verified here since §1's read path (`.magic/status.md`) was confirmed untouched at plan time.
 
 ## Notes
 

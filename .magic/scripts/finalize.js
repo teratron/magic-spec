@@ -273,10 +273,6 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
     // task/run: derive the next step from the actual plan state (SC-2.1).
     // Three-tier lookup: inline TASKS.md → phase files → registry table.
     const openTaskRe = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m;
-    // Separate global-flagged clone for the tier-2 per-item scan below —
-    // `.match()` against a global regex drops capture groups, so the shared
-    // single-match const above must stay un-flagged for tier-1's use.
-    const openTaskReGlobal = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/gm;
     try {
         const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
 
@@ -302,7 +298,8 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
             // first (l1-scan-input-hygiene.md SH-1/SH-5).
             let firstExcludedTask = null;
             for (const file of phaseFiles) {
-                const content = stripQuoted(fs.readFileSync(path.join(tasksDir, file), 'utf8'));
+                const rawContent = fs.readFileSync(path.join(tasksDir, file), 'utf8');
+                const content = stripQuoted(rawContent);
                 const phaseNo = file.match(/\d+/)[0];
                 const anyOpen = content.match(openTaskRe);
                 if (!anyOpen) continue;
@@ -319,12 +316,29 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                 // task's own Detailed Tracking entry may independently mark
                 // it Blocked or Assignment: User (SC-2.1(c)). Scan every open
                 // item in the phase, not only the first.
-                for (const openTask of content.matchAll(openTaskReGlobal)) {
+                //
+                // The detector reads `content` (stripQuoted'd, SH-1) so a
+                // quoted checkbox in prose is never read as a real task line.
+                // The display title must NOT come from that same stripped
+                // text, though — a title routinely carries a backticked file
+                // name, and stripQuoted blanks matched characters rather than
+                // removing them. It preserves *line count*, not intra-line
+                // offsets, so the title is recovered by re-matching the same
+                // line *index* against the raw source, not a character
+                // offset (field-observed: this exact loop, one line earlier
+                // in its own history, shipped a title-stripping regression).
+                const strippedLines = content.split(/\r?\n/);
+                const rawLines = rawContent.split(/\r?\n/);
+                for (let i = 0; i < strippedLines.length; i++) {
+                    const openTask = strippedLines[i].match(openTaskRe);
+                    if (!openTask) continue;
                     if (isTaskExcluded(content, openTask[1])) {
                         firstExcludedTask = firstExcludedTask || openTask[1];
                         continue;
                     }
-                    return `Execute ${openTask[1]} ${openTask[2]} via /magic.run ${workspace}`;
+                    const rawMatch = rawLines[i] && rawLines[i].match(openTaskRe);
+                    const title = rawMatch ? rawMatch[2] : openTask[2];
+                    return `Execute ${openTask[1]} ${title} via /magic.run ${workspace}`;
                 }
                 // Every open item in this phase file was excluded — keep
                 // scanning subsequent phase files before giving up.
