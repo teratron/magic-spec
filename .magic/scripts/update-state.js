@@ -83,7 +83,20 @@ function updateState(designDir, patch, options = {}) {
     for (const [key, { re, prefix }] of Object.entries(fieldMap)) {
         if (patch[key] !== undefined) {
             if (re.test(content)) {
-                content = content.replace(re, `${prefix}${patch[key]}`);
+                // Function-form replacement: the returned string is spliced in
+                // verbatim. A string-form second argument is re-scanned for the
+                // $-dollar patterns $$, $&, $` and $' (the last three need no
+                // capture group), and patch[key] is not engine-controlled here
+                // -- nextAction embeds a finalize.js-synthesized task title,
+                // task carries the raw title, and titles about shell tooling
+                // routinely contain bash ANSI-C quoting ($'...'). Left as a
+                // string replacement, $' expanded to the entire remainder of
+                // STATE.md: the field was truncated and every section below it
+                // duplicated, a stale ## Progress counter among them. Same
+                // defect class as the ## Progress fence rewrite below
+                // (l2-finalize-state-accuracy.md sections 6 and 6.1).
+                const line = `${prefix}${patch[key]}`;
+                content = content.replace(re, () => line);
             }
         }
     }

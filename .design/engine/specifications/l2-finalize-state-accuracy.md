@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.1.2
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -9,7 +9,7 @@
 
 Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file owns the `update-state.js` correctness surface, its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
 
-Nine defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report — all nine are now implemented.
+Ten defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. All ten are now implemented.
 
 ## Related Specifications
 
@@ -126,7 +126,29 @@ BAD : content.replace(progressRe, `$1${body}$3`);
 GOOD: content.replace(progressRe, (_match, open, _oldBody, close) => `${open}${body}${close}`);
 ```
 
-No other `.replace()` call site in `update-state.js`, `changelog-writer.js`, or `phase-archiver.js` shares this vulnerability — verified by sweeping every `.replace()` call in the finalize/update-state pipeline: the other capture-group-bearing calls either interpolate engine-controlled values only (semver strings, ISO dates, generated filenames) or use regexes with no capture groups at all, so `$`-digit sequences in their inputs have no group to bind to and pass through as literal text.
+`changelog-writer.js` and `phase-archiver.js` are clear — their capture-group-bearing `.replace()` calls interpolate engine-controlled values only (semver strings, ISO dates, generated filenames) or use regexes with no capture groups. The original sweep's conclusion that `update-state.js` was likewise clear was **wrong**, because it looked only for `$`-*digit* backreferences: it missed that `` $` ``, `$'`, and `$&` fire with **no capture group at all**. §6.1 records the call site it wrongly exonerated.
+
+### 6.1 The Same Defect in the Field-Patch Loop (SC-2) `[ADDED]`
+
+`updateState()`'s `fieldMap` loop — the step that refreshes the scalar lines (`**Phase:**`, `**Status:**`, `- **Task:**`, `- **Next Action:**`, …) — used the same string-form `.replace()` §6 corrected for the `## Progress` fence:
+
+```js
+content = content.replace(re, `${prefix}${patch[key]}`);
+```
+
+`re` has no capture groups, so the original sweep waved it through. But `.replace()` with a string replacement re-scans that string for `` $` `` (everything **before** the match), `$'` (everything **after** the match), `$&` (the whole match), and `$$` — **none of which need a capture group**. And `patch[key]` is not engine-controlled here: `nextAction` is `finalize.js`'s `synthesizeNextAction()` output, which embeds an arbitrary task **title**, and `--task` carries the raw title. Task titles about shell tooling routinely contain bash ANSI-C quoting (`$'…\n…'`) or a backtick-wrapped `` $`command` ``.
+
+Verified by direct reproduction against engine 2.1.76: a `STATE.md` patched via `updateState(wsDir, { nextAction }, { autoProgress: true })` where `nextAction` is `` Execute T-8B04 Handle `$'refund'` edge case via /magic.run demo `` — the `$'` is expanded to the **entire remainder of `STATE.md` after the `Next Action` line**, so the field is truncated at `` Handle ` `` and every section below it (Progress, Recent Decisions, Blockers, Blocking Constraints, Session Continuity) is duplicated. The duplicate `## Progress` carries the pre-recompute `Phase {N}` counter, so the file now holds two Progress fences disagreeing on the active phase's numbers — the field report's "spoiled the Next Action and the Phase {N} line in `## Progress`" is these two halves of one string-replace expansion, not two separate bugs.
+
+**Required fix**: the §6 fix, applied to this loop too — a function-form replacement, whose return value `.replace()` uses verbatim with no re-scan:
+
+```plaintext
+BAD : content.replace(re, `${prefix}${patch[key]}`);
+GOOD: const line = `${prefix}${patch[key]}`;
+      content.replace(re, () => line);
+```
+
+The two loops now share one rule: **no engine-uncontrolled text is ever the second argument of a string-form `.replace()`** anywhere in `update-state.js`. This one shipped ahead of its spec (a reported field defect with a known root cause and a sibling already fixed in §6), recorded here as the retrospec — the §8 precedent.
 
 ## 7. Line-Cap Guard Defeat by Unbounded Blocking Constraints (SC-1.2)
 
@@ -282,6 +304,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 - A per-task `update-state` call (`--task=`, no `--status=`) must leave the phase-level `Status` field unchanged (§4).
 - `computeProgress()`'s merge step, given a fence containing `Specification:`/`Plan:`/`Implementation:`-style custom counter-shaped lines alongside `Overall`/`Phase {N}`, must preserve the custom lines and regenerate only `Overall`/`Phase {N}` (§5).
 - `updateState()` with `autoProgress: true` against a preserved narrative line containing a literal `$1`/`$2`/`$3` sequence must leave that line byte-for-byte unchanged and must not alter the fence's triple-backtick count (§6).
+- `updateState()` given a `nextAction` / `task` value containing `$'`, `` $` ``, or `$&` must write that value into the field byte-for-byte, and must not duplicate any `##`-level section or unbalance the `## Progress` fence count (§6.1). The value-level assertion and the structural (`^## Progress$` occurrence count, fence count) assertion are both required — a string-form `.replace()` regression fails the structural one even where the field text happens to look intact.
 - A fixture driven past 100 lines purely via repeated `addConstraint` calls, with `## Recent Decisions` pre-seeded at its 1-entry floor, must produce guard output observably different from the routine-prune case (§7).
 - **Open obligation (§8):** `addDecision` has no structural coverage. A case must assert the emitted section's shape — heading followed by a blank line, the comment preamble above the entries rather than below them, no consecutive blank runs, and template placeholder rows absent after the first real entry. The existing presence-only assertion must be replaced, not supplemented: leaving it in place preserves a test that passes under the defect it is meant to exclude.
 - **Open obligation (§9):** `synthesizeNextAction()`/`computeNextAction()`'s tier-2 loop, given a non-Blocked phase whose first open checklist item has Detailed Tracking `Status: Blocked` or `Assignment: User` and a later item in the same phase is agent-actionable, must skip the excluded task and name the later one — never the excluded task's ID.
@@ -296,7 +319,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the line-cap guard incl. the unimplemented archival promise (§7, §10), and the decision-section rebuild (§8) |
+| `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the scalar-field patch loop (§6.1), the line-cap guard incl. the unimplemented archival promise (§7, §10), and the decision-section rebuild (§8) |
 | `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()`/`isPhaseBlocked()` (§2, §9) and the SC-2 state-update step that invokes the above |
 | `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2 |
 | `.magic/templates/phase.md` | Source of the per-task `Detailed Tracking` `Status`/`Assignment` fields §9's fix must read |
@@ -307,6 +330,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-08-27 | Agent | New **§6.1 — The Same Defect in the Field-Patch Loop**, the tenth defect and the retrospec (§8 precedent) of a fix that shipped ahead of its spec. `updateState()`'s `fieldMap` loop patched scalar lines with a string-form `.replace()` whose second argument was the interpolated field value; `re` has no capture groups, so §6's original sweep cleared it — but `` $` `` / `$'` / `$&` fire with no group, and `patch.nextAction` / `patch.task` carry engine-uncontrolled task titles. A title with bash ANSI-C quoting (`$'…'`) expanded `$'` to the entire remainder of `STATE.md`, truncating `Next Action` and duplicating every section below it, the pre-recompute `## Progress` counter among them (field report, engine 2.1.76, reproduced directly). Fixed to the function-form replacement §6 already uses; §6's closing paragraph corrected to retract the false "no other call site" claim; one regression bullet added to §11 (value-level **and** structural assertions). Coverage landed with the fix in `dev/tests/engine.js` (68 → 69). No status transition — `Stable` retained. |
 | 1.1.2 | 2026-08-27 | Agent | Cross-reference wording only: the sibling description of [l2-finalize-output-contract.md](l2-finalize-output-contract.md) no longer names "commit messages" among its emitted artifacts — that output was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement). No content in this spec's own STATE.md-accuracy sections changed; patch, no status transition. |
 | 1.1.1 | 2026-08-22 | Agent | Factual-accuracy patch, no design content (RULES.md §3 patch tier). §12's "§8's coverage obligation is open" claim was already false when written — Phase 19 (R12) had closed it with structural assertions in `dev/tests/engine.js`; corrected to name the covering coverage. Overview's "not yet implemented" claim for §9/§10 also corrected — both fixes landed within the same phase that planned them (Phase 23). No status transition. |
 | 1.1.0 | 2026-08-22 | Agent | New **§9 — The Task-Level Blocking & Assignment Precedence Defect** and **§10 — The Recent-Decisions Archival Promise Defect**, both from a single field report against engine 2.1.72 and both reproduced directly against that version. §9: `synthesizeNextAction()`'s tier-2 loop screens only the phase-level `Blocked` signal (`isPhaseBlocked()`); it never reads a matched task's own `Detailed Tracking` `Status`/`Assignment` fields, so a phase in good standing can still surface a `Status: Blocked`/`Assignment: User` task as `/magic.run`-executable ahead of a genuinely actionable one later in the same phase — tracked as [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c). §10: the line-cap guard's routine prune deletes the oldest `## Recent Decisions` line outright; no code path writes `PLAN.md`, contradicting the section's own template comment ("Older entries → archived to PLAN.md"), which `addDecision` re-emits on every call regardless. Neither required fix is implemented yet — both routed to `/magic.task engine`. Regression Coverage and Known Gaps renumbered §9/§10 → §11/§12 to make room; two new Open obligations recorded in §11. Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues; retained `Stable` via Trust Mode (C9) amendment cycle. |

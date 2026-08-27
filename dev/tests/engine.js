@@ -1933,6 +1933,59 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('field patches insert `$`-bearing values verbatim, never as replacement patterns (SC-2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+            const wsDir = makeWorkspace(tempDir);
+
+            // A string-form .replace() re-scans its replacement text for `$'`
+            // (right context), `` $` `` (left context), `$&` (whole match) and
+            // `$$` — none of which need a capture group to fire. finalize.js's
+            // synthesizeNextAction() embeds arbitrary task titles, so a title
+            // with bash ANSI-C quoting (`$'…'`) used to splice the entire tail
+            // of STATE.md into the Next Action line and duplicate every section
+            // below it, a second stale `## Progress` counter among them.
+            const evilTitle = "Handle the $'refund' path and the $& fallback";
+            const nextAction = `Execute T-8B04 ${evilTitle} via /magic.run engine`;
+
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 8 — Payments', '**Status:** Active', '',
+                '## Current Position', '',
+                '- **Task:** T-8B03 Wire the webhook',
+                '- **Next Action:** whatever', '',
+                '## Progress', '', '```',
+                'Phase 8: [3/7] ███░░░░░ 43%',
+                'Overall: [2/5] ███░░░░░ 40%',
+                '```', '',
+                '## Recent Decisions', '',
+            ].join('\n'));
+
+            updateState(wsDir, { nextAction, task: `T-8B04 ${evilTitle}` }, {});
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.ok(
+                state.includes(`- **Next Action:** ${nextAction}`),
+                'the Next Action value must be inserted byte-for-byte'
+            );
+            assert.ok(
+                state.includes(`- **Task:** T-8B04 ${evilTitle}`),
+                'the Task value must be inserted byte-for-byte'
+            );
+            assert.strictEqual(
+                (state.match(/^## Progress$/gm) || []).length, 1,
+                "a `$'`/`$&` expansion must not duplicate a document section"
+            );
+            assert.strictEqual(
+                (state.match(/```/g) || []).length, 2,
+                'the fence count must stay balanced'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 7f. phase-archiver.js — CRLF frontmatter tolerance (Windows checkouts)
     // ───────────────────────────────────────────────────────────────────────────
