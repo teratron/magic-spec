@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -155,13 +155,12 @@ The severity glyphs reuse the engine's existing output vocabulary (`❌`/`⚠️
 
 ### 4.7 Tail Emitter and Terminal Order
 
-`finalize.js` currently assembles its terminal content twice — `emitSkip()` plus `emitFallbackCommitSuggestion()` on the non-significant path, `emitSuccess()` on the significant one — and each ends with its own copy of the auto-commit notice. DG-5 requires one order on both, so the terminal block is extracted:
+`finalize.js` assembled its terminal content separately per path — `emitSkip()` on the non-significant path, `emitSuccess()` on the significant one. Historically each also ended with its own copy of a commit-suggestion notice (`emitFallbackCommitSuggestion()` on the non-significant path); that notice, and the commit-suggestion feature that produced it, was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement) and is no longer part of the terminal block at all. DG-5 requires one order on both remaining paths, so the terminal block is extracted:
 
 ```plaintext
 emitTail({ workspace, nextAction, findings })
-    1. auto-commit notice          (moved out of emitSkip's fallback and emitSuccess)
-    2. ### Engine diagnostics      (omitted entirely when findings is empty — DG-7)
-    3. ### Next step               (nextAction, verbatim — DG-6)
+    1. ### Engine diagnostics      (omitted entirely when findings is empty — DG-7)
+    2. ### Next step               (nextAction, verbatim — DG-6)
 ```
 
 `main()` calls `emitTail()` exactly once, on both paths, after the path-specific output. Neither `emitSkip()` nor `emitSuccess()` may render any of the three blocks — that prohibition is the whole mechanism by which the order cannot drift, and it is what the §6 coverage asserts.
@@ -271,7 +270,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 ## 7. Implementation Notes
 
 1. `lib/diagnostics.js` first — every other step depends on its contract.
-2. `finalize.js` tail restructure (`emitTail`, drain call, removal of the auto-commit notice from `emitSkip`'s fallback and `emitSuccess`) — independent of the emitter migration and separately testable.
+2. `finalize.js` tail restructure (`emitTail`, drain call; the terminal block no longer includes a commit-suggestion notice at all, retired 2026-08-27 per SC-3's removal) — independent of the emitter migration and separately testable.
 3. `executor.js record-diagnostic` — independent of step 2, parallelizable.
 4. Emitter migration (§5) — mechanical, one script at a time, safe to land incrementally; each script is complete when every row of its table records alongside its existing print.
 5. `check-prerequisites.js` last: its forwarding path is the only one that maps an existing typed structure rather than assigning new codes, so it benefits from the shape being settled.
@@ -299,4 +298,5 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-27 | Agent | **Commit-suggestion notice removed from the terminal block**, following SC-3's retirement in [l1-session-continuity.md](l1-session-continuity.md). §4.7's `emitTail()` shape drops its former step 1 (auto-commit notice); the block now renders only the diagnostics digest and the next step, in that order. Implementation Notes point 2 reworded to match. No change to DG-1..DG-9 themselves, to the collector, sink, or agent channel — this is a terminal-content reduction, not a contract change. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Implements DG-1..DG-9: `lib/diagnostics.js` collector, JSONL sink under the already-gitignored `.design/.cache/`, `executor.js record-diagnostic` agent channel, and a single `emitTail()` in `finalize.js` that drains once and renders auto-commit notice → digest → next step identically on both exit paths. Complete migration inventory of the 17 non-fatal emitters across 6 scripts as of engine 2.1.65, each assigned a severity and a stable code; HALT-and-exit sites excluded by the parent spec's scope. JSONL chosen over a JSON array for append safety across concurrent processes and for bounded corruption damage, both required by DG-4/DG-9. Collector API split into `read()` (non-consuming) and `drain()` (`read()` + unlink) so DG-4.1's preview rule is expressed as a choice of entry point rather than a flag threaded through the parser. |

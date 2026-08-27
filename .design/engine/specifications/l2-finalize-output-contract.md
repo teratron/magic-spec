@@ -1,21 +1,21 @@
 # Finalize Pipeline — Output Contract
 
-**Version:** 1.2.0
+**Version:** 2.0.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
 ## Overview
 
-Defect record and required-fix contract for everything the finalize pipeline **emits**: the suggested commit message, the stdout artifact listing, and the bullets written into the product's root `CHANGELOG.md`. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §7/§9 at that spec's v2.0.0 decomposition; its sibling [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) owns the `STATE.md` correctness surface, and the parent retains the pipeline contract itself.
+Defect record and required-fix contract for everything the finalize pipeline **emits**: the stdout artifact listing and the bullets written into the product's root `CHANGELOG.md`. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §7/§9 at that spec's v2.0.0 decomposition; its sibling [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) owns the `STATE.md` correctness surface, and the parent retains the pipeline contract itself. This spec previously also governed the suggested commit message; that output was retired 2026-08-27 by explicit user directive (SC-3 retirement, [l1-session-continuity.md](l1-session-continuity.md)) — see §3's retirement note.
 
-The unifying property: everything here crosses a boundary the review gates do not watch. A CHANGELOG bullet is generated text written straight into a product file; a commit message is what the user reads to decide what they are staging. Neither passes a Coder or Code-reviewer diff.
+The unifying property: everything here crosses a boundary the review gates do not watch. A CHANGELOG bullet is generated text written straight into a product file, and the stdout artifact listing is what the user reads to understand what the invocation actually changed. Neither passes a Coder or Code-reviewer diff.
 
 ## Related Specifications
 
 - [l1-engine-core.md](l1-engine-core.md) — Parent concept defining core engine architecture.
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) — RC-11 (Generator Self-Containment) binds §2's CHANGELOG-bullet output.
-- [l1-session-continuity.md](l1-session-continuity.md) — SC-3/SC-3.1 (commit suggestion guarantee, message completeness) bind §3.
+- [l1-session-continuity.md](l1-session-continuity.md) — SC-3 (retired 2026-08-27); this spec's former commit-message clauses retired alongside it. §3's stdout-listing completeness requirement survives independently.
 - [l2-engine-finalization.md](l2-engine-finalization.md) — Parent spec: pipeline contract and module inventory.
 - [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) — Sibling: the `STATE.md` correctness surface.
 - [l2-test-suite.md](l2-test-suite.md) — Carries the regression-coverage mandate.
@@ -25,7 +25,7 @@ The unifying property: everything here crosses a boundary the review gates do no
 Two of this pipeline's outputs land somewhere no human reviews before the fact:
 
 - **CHANGELOG bullets** are composed by `commit-suggester.js` and inserted by `changelog-writer.js` directly into a product file. No Coder authors the text; no Code-reviewer sees it as a diff. The containment gates RC-5/RC-6 therefore never apply, which is why RC-11 binds the *generator* instead.
-- **Commit messages and the stdout listing** are what the user reads to decide what to stage. An omission there defeats the review step the suggestion exists to support.
+- **The stdout listing** is what the user reads to understand what the invocation changed. An omission there defeats the transparency the listing exists to provide.
 
 Defects in this class are quiet by construction — they produce plausible-looking output that is wrong in a way only cross-checking against the real diff or the real file reveals.
 
@@ -42,7 +42,7 @@ The `spec` case of `buildChangelogBullet()` had two branches keyed on `specs.len
 
 The `run` case's own single-item branch (`` `Completed task (${workspace})` `` — no task ID interpolated) already demonstrated the correct shape; the `spec` case's single-item branch was the outlier, not the pattern.
 
-`artifactId()` is legitimately used elsewhere in this same module (`buildSummary()`, for the git commit-message header) — that usage is **not** a violation: commit messages are git metadata, exempt under RC-8. The violation is specific to text that reaches a product file: `buildChangelogBullet()`'s return value only.
+At the time of this defect, `artifactId()` was also legitimately used elsewhere in this same module (`buildSummary()`, for the git commit-message header) — that usage was **not** a violation: commit messages are git metadata, exempt under RC-8. `buildSummary()`'s commit-message-header usage no longer exists — commit-message composition was retired 2026-08-27 (SC-3 retirement, [l1-session-continuity.md](l1-session-continuity.md)) — this paragraph is retained only as the historical record of why that usage was never itself a violation. The violation this section fixes was, and remains, specific to text that reaches a product file: `buildChangelogBullet()`'s return value only.
 
 ### 2.2 Required Fix
 
@@ -57,13 +57,13 @@ No other branch of `buildChangelogBullet()` (`task`, `run`, `rule`) interpolates
 
 > The historical leaks this fix stopped are still visible in the repository's own `CHANGELOG.md` (`Updated specification \`engine-core\` (engine)`,`Completed task \`phase-9\` (engine)` and ~15 siblings). Those entries predate the fix and are left in place: rewriting shipped release notes to retrofit a containment rule would falsify the record. §4 addresses what happens to that accumulated section going forward.
 
-## 3. Non-Whitelisted File Visibility (SC-3.1)
+## 3. Stdout Listing Completeness (formerly SC-3.1; commit-message clause retired 2026-08-27)
 
 ### 3.1 The Defect
 
-`main()`'s success branch built both the stdout `### Changed artifacts` listing (`emitSuccess()`) and the suggested commit message's `Modified files:` body (`buildCommitMessage()`) from `sig.files` alone — the same whitelist-filtered set `computeSignificance()` returns to decide whether a version bump is warranted. Significance and message completeness are two different questions collapsed onto one file set: "should this bump the version" (correctly scoped to `.design/{ws}/...`) and "what should the commit message tell the user they changed" (should reflect the real working-tree diff) are not the same question, and the whitelist only answers the first.
+`main()`'s success branch built the stdout `### Changed artifacts` listing (`emitSuccess()`) from `sig.files` alone — the same whitelist-filtered set `computeSignificance()` returns to decide whether a version bump is warranted. Significance and listing completeness are two different questions collapsed onto one file set: "should this bump the version" (correctly scoped to `.design/{ws}/...`) and "what should the stdout tell the user actually changed" (should reflect the real working-tree diff) are not the same question, and the whitelist only answers the first.
 
-Reproduced against this repository's own history — no synthetic fixture needed, the defect is visible in a commit already on `master`. Commit `b96ce07` (`chore(engine): complete phase-14`, a `magic.run` finalize) suggested a commit body naming exactly two files, while `git show --stat b96ce07` shows the commit the user actually made spans **17** — including `.magic/` C14-sync files, root docs, and, the case that matters most in a consumer project, the task's own application-code deliverable (`dev/scripts/sync-skills.js`, `dev/tests/engine.js`). None of the 15 omitted files appeared anywhere in finalize's stdout either.
+Reproduced against this repository's own history — no synthetic fixture needed, the defect is visible in a commit already on `master`. Commit `b96ce07` (`chore(engine): complete phase-14`, a `magic.run` finalize) — from when this pipeline still also suggested a commit message — named exactly two files in both that suggestion and its stdout listing, while `git show --stat b96ce07` shows the commit the user actually made spans **17** — including `.magic/` C14-sync files, root docs, and, the case that matters most in a consumer project, the task's own application-code deliverable (`dev/scripts/sync-skills.js`, `dev/tests/engine.js`). None of the 15 omitted files appeared anywhere in finalize's stdout.
 
 For `magic.run` this is the common case, not an edge case: its whitelist is pure SDD bookkeeping — the application code a task implements is, by construction, never inside it.
 
@@ -72,18 +72,20 @@ For `magic.run` this is the common case, not an edge case: its whitelist is pure
 Two file sets already exist in the pipeline and were being collapsed into one where they should stay separate:
 
 - `sig.files` (whitelist-filtered) — correctly drives `deriveType()`, `deriveScope()`, `buildSummary()`, and `deriveChangelogCategory()`/`buildChangelogBullet()`. These derive the *semantic* nature of the change and must stay scoped to SDD artifacts.
-- The full working-tree diff — already computed, but originally only for the SC-3 non-bumping fallback path.
+- The full working-tree diff — already computed for other pipeline purposes.
 
-`buildCommitMessage()`'s body enumeration and `emitSuccess()`'s stdout listing must read the full `gitChangedPaths(projectRoot)` result, capped at the same `MAX_FILES = 15` the fallback path uses, with a `(+N more changed file(s))` suffix beyond the cap:
+`emitSuccess()`'s stdout listing must read the full `gitChangedPaths(projectRoot)` result, capped at `MAX_FILES = 15`, with a `(+N more changed file(s))` suffix beyond the cap:
 
 ```plaintext
-BAD : buildCommitMessage({ ..., files: sig.files })
-      // header derivation AND body enumeration both read the whitelist subset
-GOOD: buildCommitMessage({ ..., files: allChangedFiles, headerFiles: sig.files })
-      // body enumerates every changed file; header derivation still reads only the whitelist subset
+BAD : emitSuccess({ ..., files: sig.files })
+      // stdout listing reads the whitelist subset
+GOOD: emitSuccess({ ..., files: allChangedFiles, headerFiles: sig.files })
+      // stdout listing enumerates every changed file; category/summary derivation still reads only the whitelist subset
 ```
 
-The header-derivation functions keep their `sig.files`-only input; only body enumeration widens.
+The header-derivation functions keep their `sig.files`-only input; only the stdout listing widens.
+
+**Note (2026-08-27):** this requirement previously bound the suggested commit message's `Modified files:` body equally with the stdout listing, via `buildCommitMessage()`. Commit-message composition — and `buildCommitMessage()` itself — was retired in full (SC-3 retirement, [l1-session-continuity.md](l1-session-continuity.md)); this fix is now scoped to the stdout listing alone.
 
 ## 4. CHANGELOG Entry Suppression (R11) `[ADDED]`
 
@@ -171,7 +173,7 @@ This is a diagnostics-surface change only — `changelogResult.deduped`'s value,
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)):
 
 - `buildChangelogBullet('spec', workspace, [oneAddedSpecFile])` must contain **no** spec-derived identifier — asserted against the function's return value directly, not against a written `CHANGELOG.md`, since only a real invocation touches that (§2).
-- A `magic.run` fixture with one whitelist-matched file plus one non-whitelisted file changed in the same tree must assert: significance and version bump still key off the whitelist subset alone; the commit body names both files; the stdout listing names both files (§3).
+- A `magic.run` fixture with one whitelist-matched file plus one non-whitelisted file changed in the same tree must assert: significance and version bump still key off the whitelist subset alone; the stdout listing names both files (§3).
 - **§4 coverage** — two finalize-adjacent assertions, now unblocked by §4.3's root-cause:
   - `release-changelog`'s CLI, given a `CHANGELOG.md` fixture with bullets under `[Unreleased]`, must rotate them under a `## [X.Y.Z] - {date}` heading and leave a fresh empty `[Unreleased]` behind — asserted via `releaseUnreleased()` directly (it is not new logic, just newly invoked).
   - Two `appendBullet()` calls with identical bullet text separated by a `releaseUnreleased()` rotation must both land in the file (once in the now-released section, once in the fresh `[Unreleased]`) — the regression this fix targets: distinguishability restored across rotation windows.
@@ -182,7 +184,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/lib/commit-suggester.js` | Composes the commit message and the CHANGELOG bullet (§2, §3, §4.1) |
+| `.magic/scripts/lib/commit-suggester.js` | Composes the CHANGELOG bullet text (§2, §4.1); commit-message composition retired 2026-08-27 (SC-3 retirement) |
 | `.magic/scripts/lib/changelog-writer.js` | `appendBullet()` dedup and `releaseUnreleased()` rotation (§4.1, §4.2, §4.4) |
 | `.magic/scripts/release-changelog.js` | New (§4.4) — explicit, opt-in CLI invoking `releaseUnreleased()`; not called from `finalize.js` |
 | `.magic/scripts/finalize.js` | Success-path file-set input (§3.2); no longer imports `releaseUnreleased` (§4.4); deduped-CHANGELOG hint surfacing (§4.5) |
@@ -193,6 +195,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.0.0 | 2026-08-27 | Agent | **Commit-message composition retired** by explicit user directive, alongside SC-3/SC-3.1 in [l1-session-continuity.md](l1-session-continuity.md). Overview and §1 Motivation reworded to drop the suggested commit message from this spec's scope. §2's RC-11 defect record annotated: `buildSummary()`'s commit-message-header `artifactId()` usage no longer exists, retained as historical record only. §3 renamed from "Non-Whitelisted File Visibility (SC-3.1)" to "Stdout Listing Completeness"; its Required Fix rescoped to `emitSuccess()`'s stdout listing alone, dropping `buildCommitMessage()`. §5 Regression Coverage's §3 bullet dropped its commit-body assertion. Canonical References' `commit-suggester.js` row updated to CHANGELOG-bullet composition only. Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-08-22 | Agent | §4.5 added — a field report (engine 2.1.73) against a consumer workspace named `engine` confirmed the §4.1 vocabulary-exhaustion defect surfaces exactly as predicted, via the `run` case's single-item branch. The report's proposed fix (interpolate a phase/task differentiator into the bullet) was rejected as a direct RC-11 violation already barred by §4.4 constraint 1. The actual gap: §4.4's `release-changelog` remedy already exists and is reachable via `executor.js`'s generic dispatch convention, but finalize's `CHANGELOG \| skipped (duplicate)` stdout row never names it, leaving operators with no way to discover the fix from the tool's own output — confirmed against this repository's own unrotated `[Unreleased]` section (lines 8-201, unchanged since 2026-05-07). Required Fix: the deduped stdout row must append an actionable hint naming `release-changelog`; no change to bullet content, dedup logic, or RC-11 compliance. §5 gained the corresponding regression-coverage obligation. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.1.0 | 2026-08-07 | Agent | §4.3 root-caused: both `### Changed` headings inside `[Unreleased]` trace via `git blame`/`git show` to two direct, human-authored commits a week apart (`aea88015` 2026-05-07, `07f2fb96` 2026-05-14), predating any automated writer involvement in the section — not a live defect in `insertIntoUnreleased()`. §4.4 converted from stated constraints to a `Required Fix`: rotation MUST be an explicit, opt-in `release-changelog` executor subcommand rather than an automatic side effect of `finalize`, because magic-spec has no signal it can observe (`.design/.version`, `.magic/.version`) that reliably means "a downstream consumer released their product" — only the maintainer triggering a real release event knows that. `finalize.js` drops its now-dead `releaseUnreleased` import. §5 gained the corresponding regression-coverage obligations. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §7 (RC-11 generator containment) and §9 (SC-3.1 non-whitelisted file visibility) at that spec's v2.0.0 decomposition, triggered by `SPEC_BLOAT` at 367 lines against a 300 threshold. Content relocated verbatim apart from renumbering and cross-reference retargeting; §2.2 gained a note that the historical leaks remain in the shipped `CHANGELOG.md` deliberately. New §4 — **CHANGELOG Entry Suppression**: `buildChangelogBullet()`'s vocabulary is closed and tiny (3 producible strings for `task`, 2 for `rule`, 3 for `run`), and `appendBullet()` dedups on normalized text, so once a shape appears in `[Unreleased]` every later cycle emitting it writes nothing — observed live three times in one session. Compounding cause verified by grep: `releaseUnreleased()`, the rotation that would restore the vocabulary, is imported by `finalize.js` and called by nothing, so `[Unreleased]` has accumulated 192 lines spanning engine 2.1.3-2.1.66. §4.3 records a structural anomaly found during verification — two `### Changed` sections inside `[Unreleased]`, defeating dedup — as **observed but not root-caused**, with the leading truncation hypothesis explicitly tested and eliminated. §4.4 states constraints rather than a fix, because the obvious remedy (specific bullets) is exactly what RC-11 forbids, and because wiring in rotation first requires deciding what constitutes a release. |

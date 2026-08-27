@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 49
+      "degree": 71
     },
     {
       "id": "file:.magic",
@@ -27,6 +27,14 @@
     {
       "id": "file:.design",
       "label": ".design",
+      "type": "file",
+      "group": "file",
+      "workspace": "engine",
+      "degree": 1
+    },
+    {
+      "id": "file:dev",
+      "label": "dev",
       "type": "file",
       "group": "file",
       "workspace": "engine",
@@ -86,7 +94,7 @@
       "type": "file",
       "group": "file",
       "workspace": "engine",
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "file:CONTRIBUTING.md",
@@ -118,7 +126,7 @@
       "type": "convention",
       "group": "convention",
       "num": 1,
-      "degree": 7
+      "degree": 8
     },
     {
       "id": "conv:C2",
@@ -126,7 +134,7 @@
       "type": "convention",
       "group": "convention",
       "num": 2,
-      "degree": 7
+      "degree": 10
     },
     {
       "id": "conv:C3",
@@ -150,7 +158,7 @@
       "type": "convention",
       "group": "convention",
       "num": 6,
-      "degree": 0
+      "degree": 1
     },
     {
       "id": "conv:C7",
@@ -166,7 +174,7 @@
       "type": "convention",
       "group": "convention",
       "num": 8,
-      "degree": 0
+      "degree": 2
     },
     {
       "id": "conv:C9",
@@ -174,7 +182,7 @@
       "type": "convention",
       "group": "convention",
       "num": 9,
-      "degree": 10
+      "degree": 17
     },
     {
       "id": "conv:C10",
@@ -182,7 +190,7 @@
       "type": "convention",
       "group": "convention",
       "num": 10,
-      "degree": 0
+      "degree": 1
     },
     {
       "id": "conv:C11",
@@ -190,7 +198,7 @@
       "type": "convention",
       "group": "convention",
       "num": 11,
-      "degree": 0
+      "degree": 1
     },
     {
       "id": "conv:C12",
@@ -198,7 +206,7 @@
       "type": "convention",
       "group": "convention",
       "num": 12,
-      "degree": 3
+      "degree": 6
     },
     {
       "id": "conv:C13",
@@ -214,7 +222,7 @@
       "type": "convention",
       "group": "convention",
       "num": 14,
-      "degree": 8
+      "degree": 12
     },
     {
       "id": "conv:C15",
@@ -222,7 +230,7 @@
       "type": "convention",
       "group": "convention",
       "num": 15,
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "conv:C16",
@@ -238,7 +246,7 @@
       "type": "convention",
       "group": "convention",
       "num": 17,
-      "degree": 0
+      "degree": 1
     },
     {
       "id": "conv:C20",
@@ -246,7 +254,7 @@
       "type": "convention",
       "group": "convention",
       "num": 20,
-      "degree": 1
+      "degree": 3
     },
     {
       "id": "conv:C21",
@@ -286,7 +294,7 @@
       "type": "convention",
       "group": "convention",
       "num": 25,
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "conv:C26",
@@ -312,8 +320,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.1.3",
-      "degree": 25
+      "version": "1.6.0",
+      "degree": 36
     },
     {
       "id": "spec:engine/l2-engine-automation",
@@ -323,8 +331,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.6.0",
-      "degree": 18
+      "version": "1.9.0",
+      "degree": 20
     },
     {
       "id": "spec:engine/l2-engine-finalization",
@@ -334,8 +342,30 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.0",
-      "degree": 9
+      "version": "3.0.0",
+      "degree": 13
+    },
+    {
+      "id": "spec:engine/l2-finalize-state-accuracy",
+      "label": "l2-finalize-state-accuracy.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.2",
+      "degree": 10
+    },
+    {
+      "id": "spec:engine/l2-finalize-output-contract",
+      "label": "l2-finalize-output-contract.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "2.0.0",
+      "degree": 10
     },
     {
       "id": "spec:engine/l2-test-suite",
@@ -345,8 +375,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.5.0",
-      "degree": 6
+      "version": "1.15.0",
+      "degree": 8
     },
     {
       "id": "spec:engine/l1-documentation-system",
@@ -455,7 +485,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.2.0",
       "degree": 13
     },
     {
@@ -466,7 +496,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.2.0",
       "degree": 9
     },
     {
@@ -477,7 +507,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.1.1",
       "degree": 18
     },
     {
@@ -510,7 +540,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.1",
+      "version": "1.1.2",
       "degree": 10
     },
     {
@@ -521,8 +551,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.0.0",
-      "degree": 13
+      "version": "1.1.1",
+      "degree": 14
     },
     {
       "id": "spec:engine/l1-decision-autonomy",
@@ -543,7 +573,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.1.0",
+      "version": "1.4.0",
       "degree": 7
     },
     {
@@ -554,8 +584,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.1.0",
-      "degree": 8
+      "version": "2.0.0",
+      "degree": 11
     },
     {
       "id": "spec:engine/l2-status-command",
@@ -565,29 +595,95 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
+      "version": "1.1.0",
+      "degree": 11
+    },
+    {
+      "id": "spec:engine/l2-release-pipeline",
+      "label": "l2-release-pipeline.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.1",
+      "degree": 8
+    },
+    {
+      "id": "spec:engine/l1-multi-angle-review",
+      "label": "l1-multi-angle-review.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
       "version": "1.0.0",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l2-multi-angle-review",
+      "label": "l2-multi-angle-review.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.1",
+      "degree": 7
+    },
+    {
+      "id": "spec:engine/l1-scan-input-hygiene",
+      "label": "l1-scan-input-hygiene.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.2.0",
+      "degree": 8
+    },
+    {
+      "id": "spec:engine/l1-engine-diagnostics",
+      "label": "l1-engine-diagnostics.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 1,
+      "version": "1.0.1",
       "degree": 9
+    },
+    {
+      "id": "spec:engine/l2-engine-diagnostics",
+      "label": "l2-engine-diagnostics.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.1.0",
+      "degree": 10
     },
     {
       "id": "file:.design/RULES.md",
       "label": ".design/RULES.md",
       "type": "file",
       "group": "file",
-      "degree": 3
+      "degree": 4
     },
     {
       "id": "file:.magic/scripts/check-prerequisites.js",
       "label": ".magic/scripts/check-prerequisites.js",
       "type": "file",
       "group": "file",
-      "degree": 3
+      "degree": 6
     },
     {
       "id": "file:.magic/context.md",
       "label": ".magic/context.md",
       "type": "file",
       "group": "file",
-      "degree": 6
+      "degree": 8
     },
     {
       "id": "file:.magic/templates/rules.md",
@@ -601,7 +697,7 @@
       "label": "rules/magic.md",
       "type": "file",
       "group": "file",
-      "degree": 2
+      "degree": 4
     },
     {
       "id": "file:.design/engine/specifications/l1-role-system.md",
@@ -629,14 +725,14 @@
       "label": ".magic/analyze.md",
       "type": "file",
       "group": "file",
-      "degree": 5
+      "degree": 9
     },
     {
       "id": "file:.magic/spec.md",
       "label": ".magic/spec.md",
       "type": "file",
       "group": "file",
-      "degree": 5
+      "degree": 7
     },
     {
       "id": "file:.magic/task.md",
@@ -650,7 +746,7 @@
       "label": ".magic/run.md",
       "type": "file",
       "group": "file",
-      "degree": 6
+      "degree": 7
     },
     {
       "id": "file:.magic/rule.md",
@@ -671,6 +767,13 @@
       "label": ".magic/scripts/executor.js",
       "type": "file",
       "group": "file",
+      "degree": 5
+    },
+    {
+      "id": "file:.magic/scripts/update-engine-meta.js",
+      "label": ".magic/scripts/update-engine-meta.js",
+      "type": "file",
+      "group": "file",
       "degree": 3
     },
     {
@@ -678,14 +781,14 @@
       "label": ".magic/templates/",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/.version",
       "label": ".magic/.version",
       "type": "file",
       "group": "file",
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "file:.magic/.checksums",
@@ -693,6 +796,34 @@
       "type": "file",
       "group": "file",
       "degree": 4
+    },
+    {
+      "id": "file:.design/INDEX.md",
+      "label": ".design/INDEX.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.design/workspace.json",
+      "label": ".design/workspace.json",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/scripts/finalize.js",
+      "label": ".magic/scripts/finalize.js",
+      "type": "file",
+      "group": "file",
+      "degree": 5
+    },
+    {
+      "id": "file:.magic/scripts/update-state.js",
+      "label": ".magic/scripts/update-state.js",
+      "type": "file",
+      "group": "file",
+      "degree": 5
     },
     {
       "id": "file:.design/engine/specifications/l2-role-cards-governance.md",
@@ -730,6 +861,20 @@
       "degree": 2
     },
     {
+      "id": "file:.magic/scripts/lib/phase-archiver.js",
+      "label": ".magic/scripts/lib/phase-archiver.js",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:dev/tests/engine.js",
+      "label": "dev/tests/engine.js",
+      "type": "file",
+      "group": "file",
+      "degree": 3
+    },
+    {
       "id": "file:.magic/roles/coder.md",
       "label": ".magic/roles/coder.md",
       "type": "file",
@@ -748,14 +893,7 @@
       "label": ".magic/templates/state.md",
       "type": "file",
       "group": "file",
-      "degree": 2
-    },
-    {
-      "id": "file:.magic/scripts/update-state.js",
-      "label": ".magic/scripts/update-state.js",
-      "type": "file",
-      "group": "file",
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "file:.magic/pause.md",
@@ -779,8 +917,8 @@
       "degree": 1
     },
     {
-      "id": "file:.design/workspace.json",
-      "label": ".design/workspace.json",
+      "id": "file:specifications/simulations/workspace-intent-routing.md",
+      "label": "specifications/simulations/workspace-intent-routing.md",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -805,13 +943,6 @@
       "type": "file",
       "group": "file",
       "degree": 1
-    },
-    {
-      "id": "file:.magic/scripts/update-engine-meta.js",
-      "label": ".magic/scripts/update-engine-meta.js",
-      "type": "file",
-      "group": "file",
-      "degree": 2
     },
     {
       "id": "file:dev/scripts/update-project-meta.js",
@@ -853,7 +984,7 @@
       "label": ".magic/scripts/utils.js",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/scripts/lib/",
@@ -863,29 +994,36 @@
       "degree": 1
     },
     {
+      "id": "file:.gitignore",
+      "label": ".gitignore",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/lib/diagnostics.js",
+      "label": ".magic/scripts/lib/diagnostics.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
       "id": "file:.magic/scripts/lib/changelog-writer.js",
       "label": ".magic/scripts/lib/changelog-writer.js",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/scripts/lib/commit-suggester.js",
       "label": ".magic/scripts/lib/commit-suggester.js",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/scripts/lib/git-utils.js",
       "label": ".magic/scripts/lib/git-utils.js",
-      "type": "file",
-      "group": "file",
-      "degree": 1
-    },
-    {
-      "id": "file:.magic/scripts/lib/phase-archiver.js",
-      "label": ".magic/scripts/lib/phase-archiver.js",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -902,7 +1040,7 @@
       "label": ".magic/scripts/lib/significance.js",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/templates/spec.md",
@@ -937,11 +1075,46 @@
       "label": ".magic/templates/phase.md",
       "type": "file",
       "group": "file",
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "file:.magic/templates/retrospective.md",
       "label": ".magic/templates/retrospective.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/scripts/release-changelog.js",
+      "label": ".magic/scripts/release-changelog.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/roles/spec-critic.md",
+      "label": ".magic/roles/spec-critic.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/roles/prompt-engineer.md",
+      "label": ".magic/roles/prompt-engineer.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.github/workflows/release.yml",
+      "label": ".github/workflows/release.yml",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:docs/distribution.md",
+      "label": "docs/distribution.md",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -982,13 +1155,6 @@
       "degree": 1
     },
     {
-      "id": "file:.magic/roles/spec-critic.md",
-      "label": ".magic/roles/spec-critic.md",
-      "type": "file",
-      "group": "file",
-      "degree": 1
-    },
-    {
       "id": "file:.magic/roles/project-auditor.md",
       "label": ".magic/roles/project-auditor.md",
       "type": "file",
@@ -1005,13 +1171,6 @@
     {
       "id": "file:.magic/roles/retrospective-analyst.md",
       "label": ".magic/roles/retrospective-analyst.md",
-      "type": "file",
-      "group": "file",
-      "degree": 1
-    },
-    {
-      "id": "file:.magic/roles/prompt-engineer.md",
-      "label": ".magic/roles/prompt-engineer.md",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -1143,13 +1302,6 @@
       "degree": 1
     },
     {
-      "id": "file:dev/tests/engine.js",
-      "label": "dev/tests/engine.js",
-      "type": "file",
-      "group": "file",
-      "degree": 1
-    },
-    {
       "id": "file:.agents/skills/magic-dev-simulate/SKILL.md",
       "label": ".agents/skills/magic-dev-simulate/SKILL.md",
       "type": "file",
@@ -1199,12 +1351,21 @@
       "degree": 1
     },
     {
-      "id": "phase:engine/phase-13",
-      "label": "Phase 13: Upgrade-Detection DA Alignment — §1 `[y/n]` → single-path narration",
+      "id": "phase:engine/phase-26",
+      "label": "Phase 26: Commit-Suggestion Feature Removal — strip message-composition from `commit-suggester.js`, flag/config/rendering machinery from `finalize.js`, dead config key from both `workspace.json` files",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
       "status": "Todo",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-25",
+      "label": "Phase 25: CHANGELOG Dedup Discoverability Hint — `finalize.js`'s deduped row names `release-changelog`; field-confirmed §4.5 fix, no bullet-content or dedup-logic change",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
       "degree": 1
     },
     {
@@ -1213,7 +1374,7 @@
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
-      "status": "Done",
+      "status": "Done (Archived)",
       "degree": 1
     },
     {
@@ -1305,6 +1466,114 @@
       "workspace": "engine",
       "status": "Done (Archived)",
       "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-13",
+      "label": "Phase 13: Upgrade-Detection DA Alignment — §1 `[y/n]` → single-path narration",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-14",
+      "label": "Phase 14: Shipped Reference Hygiene & Documentation Sync — skill-projection extension guard, `rules/magic.md` case purge, docs sync, SDD-layer backfill",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-15",
+      "label": "Phase 15: Finalize-Pipeline Accuracy & Generator Containment — §7-§10 fixes + 9 harness cases",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-16",
+      "label": "Phase 16: Documentation Parity & Scaffold Boundary — WI-10 init surfaces + RC-12 §4.4 check",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-17",
+      "label": "Phase 17: Scan Input Hygiene — shared strip helper + SH-1/SH-3/SH-4 bindings across four scans",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-18",
+      "label": "Phase 18: Engine Diagnostics Digest — collector + JSONL sink, finalize tail emitter (digest → next step), agent channel, 17-emitter migration",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-19",
+      "label": "Phase 19: Finalization Contract Fixes — archival index rewrite, plan-complete Pre-flight signal, decision-section coverage, CHANGELOG anomaly root-cause",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-20",
+      "label": "Phase 20: Backlog Implementation — Release Rotation (R11 remainder) & Coverage Denominator Scope (EXEMPT)",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-21",
+      "label": "Phase 21: check-prerequisites.js Registry-Scan Hygiene & Backlog Counter",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-22",
+      "label": "Phase 22: Field-Report Triage — DESIGN_DEBT_PENDING Structural Predicate, Mode C Depth Control, Project-Auditor Citation",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-23",
+      "label": "Phase 23: Next-Action Task-Level Precedence & Decision-Prune Honesty — Detailed Tracking `Status`/`Assignment` screen, terminal all-excluded branch, decision-prune claim correction",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-24",
+      "label": "Phase 24: Dev-Repo Engine-Version Snapshot Sync — L2 snapshot writer, guarded L1 delegation, `rules/magic.md` §1 sole-writer carve-out; plus Track C, the Next Action title-stripping regression found by this phase's own planning run",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
     }
   ],
   "edges": [
@@ -1321,6 +1590,11 @@
     {
       "from": "ws:engine",
       "to": "file:.design",
+      "relation": "scopes"
+    },
+    {
+      "from": "ws:engine",
+      "to": "file:dev",
       "relation": "scopes"
     },
     {
@@ -1386,6 +1660,16 @@
     {
       "from": "ws:engine",
       "to": "spec:engine/l2-engine-finalization",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-finalize-state-accuracy",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-finalize-output-contract",
       "relation": "contains"
     },
     {
@@ -1491,6 +1775,36 @@
     {
       "from": "ws:engine",
       "to": "spec:engine/l2-status-command",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-release-pipeline",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-multi-angle-review",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-multi-angle-review",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-scan-input-hygiene",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l1-engine-diagnostics",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-engine-diagnostics",
       "relation": "contains"
     },
     {
@@ -1675,6 +1989,11 @@
     },
     {
       "from": "spec:engine/l1-engine-core",
+      "to": "file:.magic/scripts/update-engine-meta.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
       "to": "file:.magic/templates/",
       "relation": "covers"
     },
@@ -1690,7 +2009,42 @@
     },
     {
       "from": "spec:engine/l1-engine-core",
+      "to": "file:rules/magic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.design/INDEX.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.design/RULES.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "file:.design/workspace.json",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
       "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C6",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
+      "to": "conv:C10",
       "relation": "enforces"
     },
     {
@@ -1705,12 +2059,77 @@
     },
     {
       "from": "spec:engine/l1-engine-core",
+      "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-core",
       "to": "conv:C16",
       "relation": "enforces"
     },
     {
       "from": "spec:engine/l1-engine-core",
       "to": "conv:C21",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "file:rules/magic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "file:.magic/scripts/executor.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
+      "to": "conv:C20",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-multi-angle-review",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-multi-angle-review",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-multi-angle-review",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-multi-angle-review",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-multi-angle-review",
+      "to": "conv:C25",
       "relation": "enforces"
     },
     {
@@ -1809,6 +2228,41 @@
       "relation": "enforces"
     },
     {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "file:.magic/scripts/lib/phase-archiver.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "file:.magic/templates/",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "file:dev/tests/engine.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-scan-input-hygiene",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
       "from": "spec:engine/l1-sdd-reference-containment",
       "to": "file:.magic/roles/coder.md",
       "relation": "covers"
@@ -1865,7 +2319,17 @@
     },
     {
       "from": "spec:engine/l1-session-continuity",
+      "to": "conv:C8",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
       "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "conv:C12",
       "relation": "enforces"
     },
     {
@@ -1901,6 +2365,11 @@
     {
       "from": "spec:engine/l1-workspace-intent-routing",
       "to": "file:.design/workspace.json",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "file:specifications/simulations/workspace-intent-routing.md",
       "relation": "covers"
     },
     {
@@ -1995,6 +2464,11 @@
     },
     {
       "from": "spec:engine/l2-engine-automation",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
       "to": "file:.magic/scripts/extract-rationale.js",
       "relation": "covers"
     },
@@ -2040,8 +2514,68 @@
     },
     {
       "from": "spec:engine/l2-engine-automation",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
       "to": "conv:C20",
       "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.magic/scripts/executor.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.magic/scripts/utils.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.magic/scripts/check-prerequisites.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "file:.gitignore",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "spec:engine/l1-engine-diagnostics",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-diagnostics",
+      "to": "conv:C20",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/diagnostics.js",
+      "relation": "covers"
     },
     {
       "from": "spec:engine/l2-engine-finalization",
@@ -2082,6 +2616,16 @@
       "from": "spec:engine/l2-engine-finalization",
       "to": "spec:engine/l1-engine-core",
       "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "conv:C8",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "conv:C9",
+      "relation": "enforces"
     },
     {
       "from": "spec:engine/l2-engine-templates",
@@ -2131,6 +2675,161 @@
     {
       "from": "spec:engine/l2-engine-templates",
       "to": "conv:C16",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:.magic/scripts/lib/commit-suggester.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:.magic/scripts/lib/changelog-writer.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:.magic/scripts/release-changelog.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:.magic/scripts/lib/significance.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "file:CHANGELOG.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-finalize-output-contract",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:.magic/templates/phase.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "file:dev/tests/engine.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-finalize-state-accuracy",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "file:.magic/spec.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "file:.magic/analyze.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "file:.magic/roles/spec-critic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "file:.magic/roles/prompt-engineer.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-multi-angle-review",
+      "to": "spec:engine/l1-multi-angle-review",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "file:.github/workflows/release.yml",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "file:.magic/.version",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "file:docs/distribution.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "spec:engine/l1-engine-core",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-release-pipeline",
+      "to": "conv:C17",
       "relation": "enforces"
     },
     {
@@ -2570,6 +3269,16 @@
     },
     {
       "from": "spec:engine/l2-status-command",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-status-command",
       "to": "conv:C14",
       "relation": "enforces"
     },
@@ -2592,6 +3301,16 @@
       "from": "spec:engine/l2-test-suite",
       "to": "spec:engine/l1-engine-core",
       "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C11",
+      "relation": "enforces"
     },
     {
       "from": "spec:engine/l2-test-suite",
@@ -2655,7 +3374,12 @@
     },
     {
       "from": "ws:engine",
-      "to": "phase:engine/phase-13",
+      "to": "phase:engine/phase-26",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-25",
       "relation": "contains"
     },
     {
@@ -2712,6 +3436,66 @@
       "from": "ws:engine",
       "to": "phase:engine/phase-12",
       "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-13",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-14",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-15",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-16",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-17",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-18",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-19",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-20",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-21",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-22",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-23",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-24",
+      "relation": "contains"
     }
   ],
   "analysis": {
@@ -2720,13 +3504,19 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 49
+        "degree": 71
       },
       {
         "id": "spec:engine/l1-engine-core",
         "label": "l1-engine-core.md",
         "type": "spec",
-        "degree": 25
+        "degree": 36
+      },
+      {
+        "id": "spec:engine/l2-engine-automation",
+        "label": "l2-engine-automation.md",
+        "type": "spec",
+        "degree": 20
       },
       {
         "id": "spec:engine/l1-role-system",
@@ -2735,28 +3525,13 @@
         "degree": 20
       },
       {
-        "id": "spec:engine/l2-engine-automation",
-        "label": "l2-engine-automation.md",
-        "type": "spec",
-        "degree": 18
-      },
-      {
         "id": "spec:engine/l2-role-cards-governance",
         "label": "l2-role-cards-governance.md",
         "type": "spec",
         "degree": 18
       }
     ],
-    "orphaned_files": [
-      "file:.magic",
-      "file:.agents",
-      "file:.design",
-      "file:docs",
-      "file:workflows",
-      "file:skills",
-      "file:rules",
-      "file:.github"
-    ],
+    "orphaned_files": [],
     "missing_implements": [],
     "convention_coverage": {
       "enforced": [
@@ -2764,13 +3539,18 @@
         "conv:C2",
         "conv:C3",
         "conv:C4",
+        "conv:C6",
         "conv:C7",
+        "conv:C8",
         "conv:C9",
+        "conv:C10",
+        "conv:C11",
         "conv:C12",
         "conv:C13",
         "conv:C14",
         "conv:C15",
         "conv:C16",
+        "conv:C17",
         "conv:C20",
         "conv:C21",
         "conv:C22",
@@ -2780,31 +3560,25 @@
         "conv:C26",
         "conv:C27"
       ],
-      "orphaned": [
-        "conv:C6",
-        "conv:C8",
-        "conv:C10",
-        "conv:C11",
-        "conv:C17"
-      ]
+      "orphaned": []
     },
     "bridge_specs": [],
     "coverage_stats": {
       "engine": {
-        "specs": 24,
-        "files_covered": 95,
-        "total_scope": 13,
-        "coverage_pct": 730.8
+        "specs": 32,
+        "files_covered": 14,
+        "total_scope": 14,
+        "coverage_pct": 100
       }
     },
     "summary": {
-      "total_nodes": 164,
-      "total_edges": 281,
+      "total_nodes": 194,
+      "total_edges": 384,
       "workspaces": 1,
-      "specs": 24,
-      "files": 103,
+      "specs": 32,
+      "files": 112,
       "conventions": 24,
-      "phases": 12
+      "phases": 25
     }
   }
 }

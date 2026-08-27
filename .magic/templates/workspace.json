@@ -8,8 +8,7 @@
   "finalization": {
     "enabled": true,
     "autoBump": true,
-    "autoChangelog": true,
-    "suggestCommit": true
+    "autoChangelog": true
   },
   "archival": {
     "enabled": true,

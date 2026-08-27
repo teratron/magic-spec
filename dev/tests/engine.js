@@ -135,7 +135,7 @@ describe('Magic Engine Scripts', () => {
             default: workspace,
             finalization: {
                 enabled: true, autoBump: true, autoChangelog,
-                suggestCommit: true, versionPath: '.design/.version',
+                versionPath: '.design/.version',
             },
         }));
         fs.writeFileSync(path.join(designDir, '.version'), version);
@@ -1177,7 +1177,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('finalize.js patches STATE.md and suggests a commit on the skip path (SC-2/SC-3)', () => {
+    test('finalize.js patches STATE.md on the skip path (SC-2)', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { designDir, wsDir, finalizePath } = createFinalizeFixture(tempDir);
@@ -1194,8 +1194,11 @@ describe('Magic Engine Scripts', () => {
             assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
             assert.match(state, /\/magic\.task main/, 'SC-2.1 e2e: plan-complete next-action routes through the /magic.task funnel');
             assert.doesNotMatch(state, /Next Action:.*\/magic\.spec/, '§5: the persisted Next Action never names /magic.spec');
-            // STATE.md write dirties the tree → SC-3 non-bumping suggestion is emitted.
-            assert.match(out, /Suggested commit message/, 'SC-3: a commit suggestion is emitted');
+            // SC-3 retirement regression pins: the STATE.md write dirties the
+            // tree (previously the SC-3 fallback's trigger condition), but no
+            // commit-related output is ever emitted any more.
+            assert.doesNotMatch(out, /Suggested commit message/i, 'SC-3 retired: no commit suggestion is emitted');
+            assert.doesNotMatch(out, /Auto-commit/i, 'SC-3 retired: no auto-commit notice is emitted');
             assert.match(fs.readFileSync(path.join(designDir, '.version'), 'utf8'), /^0\.1\.0$/, 'skip path does not bump the version');
         } finally {
             cleanup(tempDir);
@@ -1403,7 +1406,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('finalize.js reports every changed file, not just whitelisted ones (SC-3.1)', () => {
+    test('finalize.js reports every changed file, not just whitelisted ones (stdout listing completeness)', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { wsDir, versionPath, finalizePath } = createFinalizeFixture(tempDir);
@@ -1426,51 +1429,14 @@ describe('Magic Engine Scripts', () => {
                 'the whitelist subset alone must still decide the version bump'
             );
 
-            // (b) + (c) Both listings name the non-whitelisted file.
-            const artifacts = out.slice(out.indexOf('### Changed artifacts'), out.indexOf('### Suggested commit message'));
+            // (b) The stdout listing names the non-whitelisted file alongside the whitelisted one.
+            const artifacts = out.slice(out.indexOf('### Changed artifacts'), out.indexOf('### Next step'));
             assert.match(artifacts, /dev\/deliverable\.js/, 'stdout listing must name the non-whitelisted change');
             assert.match(artifacts, /TASKS\.md/, 'stdout listing must still name the whitelisted change');
 
-            const message = out.slice(out.indexOf('### Suggested commit message'));
-            assert.match(message, /dev\/deliverable\.js/, 'commit body must name the non-whitelisted change');
-            assert.match(message, /TASKS\.md/, 'commit body must still name the whitelisted change');
-        } finally {
-            cleanup(tempDir);
-        }
-    });
-
-    test('buildCommitMessage derives the header from headerFiles but enumerates every file (SC-3.1)', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            const { buildCommitMessage } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'commit-suggester.js'));
-
-            // Disjoint sets on purpose: if the header were derived from `files`
-            // it would read "update INDEX.md" (no spec path in that set), so the
-            // assertion below fails the moment the two collapse back into one.
-            const msg = buildCommitMessage({
-                workflow: 'spec',
-                workspace: 'main',
-                previousVersion: '0.1.0',
-                nextVersion: '0.1.1',
-                files: [{ path: 'dev/tool.js', status: 'modified', added: 3, deleted: 1 }],
-                headerFiles: [{ path: '.design/main/specifications/l1-core.md', status: 'added' }],
-            });
-
-            const [header] = msg.split('\n');
-            assert.match(header, /add core/, 'header must be derived from the whitelisted subset');
-            assert.match(msg, /- dev\/tool\.js \(\+3 -1\)/, 'body must enumerate the full changed set');
-            assert.doesNotMatch(header, /tool\.js/, 'header must not be derived from the wider set');
-
-            // Backward compatibility: omitting headerFiles keeps the old behavior,
-            // which the SC-3 fallback path depends on.
-            const legacy = buildCommitMessage({
-                workflow: 'spec',
-                workspace: 'main',
-                previousVersion: '0.1.0',
-                nextVersion: '0.1.0',
-                files: [{ path: '.design/main/specifications/l1-core.md', status: 'added', added: 9, deleted: 0 }],
-            });
-            assert.match(legacy.split('\n')[0], /add core/, 'headerFiles must default to files when absent');
+            // SC-3 retirement regression pin: no commit-message output at all.
+            assert.doesNotMatch(out, /Suggested commit message/i, 'SC-3 retired: no commit suggestion is emitted');
+            assert.doesNotMatch(out, /Auto-commit/i, 'SC-3 retired: no auto-commit notice is emitted');
         } finally {
             cleanup(tempDir);
         }

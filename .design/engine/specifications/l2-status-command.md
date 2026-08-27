@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -33,7 +33,6 @@ After a break the user must be able to run one command and learn: where the proj
 | --- | --- |
 | SC-1 (Live Memory Contract) | Reads `STATE.md` as the primary source; treats its `Next Action` as the resume point. |
 | SC-2 (Universal Post-Workflow Update) | Status is on the read-only exemption list; it performs no state writes. |
-| SC-3 (Commit Suggestion Guarantee) | Not applicable at runtime: the command changes nothing, so no commit message is suggested. |
 | SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command. |
 | SC-5 (C2 Exception) | Registered as the single authorized wrapper addition; inventory tracked in l2-workflow-wrappers.md. |
 
@@ -98,5 +97,6 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-08-27 | Agent | §4 Invariant Compliance table dropped the SC-3 row: SC-3 (Commit Suggestion Guarantee) was retired in full in [l1-session-continuity.md](l1-session-continuity.md), so there is no longer an invariant for this read-only command to be exempt from. No behavioral change to the status command itself. |
 | 1.0.0 (quarantine reversed) | 2026-08-07 | Agent | **C12 Cascade, then reversed**: L1 parent [l1-session-continuity.md](l1-session-continuity.md) momentarily dropped Stable → RFC (v1.9.0, SC-2.4 Backlog Disposition Convention addendum), quarantining this file to RFC. The parent's Post-Update Review (5-lens) found no blocking issues and Trust Mode (C9) auto-promoted it back to `Stable` within the same invocation, which lifts this file's quarantine in step — content and version unchanged throughout, no defect here. |
 | 1.0.0 | 2026-06-12 | Agent | Initial Stable version. Read-only briefing command: layout contract, degraded states, upgrade-detection interplay, C2-exception registration. |

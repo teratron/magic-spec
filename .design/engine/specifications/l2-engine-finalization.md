@@ -1,22 +1,22 @@
 # Engine Finalization Library
 
-**Version:** 2.0.0
+**Version:** 3.0.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
 ## Overview
 
-Internal helper library (`scripts/lib/`) that implements the finalization protocol — automatic version bumps, CHANGELOG entries, commit message suggestions, phase archival, and git utilities. These modules are invoked exclusively by `finalize.js` via `executor.js finalize`. The finalize pipeline is also the single choke point for the session-continuity guarantees SC-2 (post-workflow `STATE.md` update) and SC-3 (commit suggestion guarantee).
+Internal helper library (`scripts/lib/`) that implements the finalization protocol — automatic version bumps, CHANGELOG entries, phase archival, and git utilities. These modules are invoked exclusively by `finalize.js` via `executor.js finalize`. The finalize pipeline is also the single choke point for the session-continuity guarantee SC-2 (post-workflow `STATE.md` update). The pipeline previously also carried SC-3 (commit suggestion guarantee); that guarantee was retired 2026-08-27 by explicit user directive — see [l1-session-continuity.md](l1-session-continuity.md).
 
-This spec owns the **pipeline contract**: module inventory, invocation surface, opt-out, archival, and the terminal output block. Its two accumulated defect registers were extracted at v2.0.0 into focused child specs — [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) (the `STATE.md` correctness surface) and [l2-finalize-output-contract.md](l2-finalize-output-contract.md) (commit messages, CHANGELOG bullets, stdout listings).
+This spec owns the **pipeline contract**: module inventory, invocation surface, opt-out, archival, and the terminal output block. Its two accumulated defect registers were extracted at v2.0.0 into focused child specs — [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) (the `STATE.md` correctness surface) and [l2-finalize-output-contract.md](l2-finalize-output-contract.md) (CHANGELOG bullets, stdout listings).
 
 ## Related Specifications
 
 - [l1-engine-core.md](l1-engine-core.md) — Parent concept defining core engine architecture.
-- [l1-session-continuity.md](l1-session-continuity.md) — SC-2/SC-3 invariants carried by this pipeline (§5).
+- [l1-session-continuity.md](l1-session-continuity.md) — SC-2 invariant carried by this pipeline (§5); SC-3 retired.
 - [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) — Child: STATE.md accuracy defects and their required fixes.
-- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Child: emitted-artifact defects (RC-11 containment, SC-3.1 completeness, CHANGELOG suppression).
+- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Child: emitted-artifact defects (RC-11 containment, stdout-listing completeness, CHANGELOG suppression).
 - [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
 - [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Diagnostics digest that this pipeline drains and renders in its terminal block (§8).
 
@@ -29,7 +29,7 @@ The finalization protocol (§3 of `rules/magic.md`) requires several coordinated
 | Module | Responsibility |
 | --- | --- |
 | `changelog-writer.js` | Appends a given bullet to root `CHANGELOG.md` in Keep-a-Changelog form — pure insertion, does not compose bullet text. Also exports the `[Unreleased]` rotation helper (currently uncalled — see child spec §4.2). |
-| `commit-suggester.js` | Composes the Conventional Commits message **and** the CHANGELOG bullet text itself (`buildChangelogBullet`) — the two share the same file-classification logic, so `finalize.js` calls both from here before handing the bullet to `changelog-writer.js` for insertion. Output contract governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md). |
+| `commit-suggester.js` | Composes the CHANGELOG bullet text (`buildChangelogBullet`) using the pipeline's file-classification logic, then hands it to `changelog-writer.js` for insertion. Commit-message composition retired 2026-08-27 (SC-3 retirement). Output contract governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md). |
 | `diagnostics.js` | Collects non-fatal engine findings and renders the digest drained by §8. Governed by [l2-engine-diagnostics.md](l2-engine-diagnostics.md). |
 | `git-utils.js` | Read-only git helpers: diff detection, staged-file enumeration, mtime queries. |
 | `phase-archiver.js` | Detects `status: Done` phase files, moves them to `archives/tasks/`, and rewrites link references in **both** `TASKS.md` and `PLAN.md`. Eligibility predicate governed by §6; index-rewrite contract by §7. |
@@ -41,8 +41,10 @@ The finalization protocol (§3 of `rules/magic.md`) requires several coordinated
 All modules are internal — they export functions consumed only by `finalize.js`. No workflow or spec file should reference individual `lib/` modules directly. The public API is:
 
 ```plaintext
-executor.js finalize --workflow=<spec|task|run|rule> [--dry-run] [--no-bump] [--no-changelog] [--no-commit-msg]
+executor.js finalize --workflow=<spec|task|run|rule> [--dry-run] [--no-bump] [--no-changelog]
 ```
+
+`--no-commit-msg` was removed 2026-08-27 alongside the commit-suggestion feature it toggled (SC-3 retirement) — there is no longer a commit message to opt out of.
 
 ## 4. Opt-Out Mechanism
 
@@ -50,7 +52,7 @@ Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `work
 
 ## 5. Session-Continuity Integration
 
-Implements SC-2 and SC-3 of [l1-session-continuity.md](l1-session-continuity.md) for every `--workflow` value (`spec|task|run|rule`):
+Implements SC-2 of [l1-session-continuity.md](l1-session-continuity.md) for every `--workflow` value (`spec|task|run|rule`). SC-3 was retired 2026-08-27 — see §5.2 below for what the pipeline no longer does.
 
 ### 5.1 State Update Step (SC-2)
 
@@ -65,9 +67,9 @@ The step runs even when the significance whitelist does not hit — live memory 
 
 Defects found against this step, with their required fixes, are catalogued in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md).
 
-### 5.2 Commit Suggestion Guarantee (SC-3)
+### 5.2 Retired: Commit Suggestion Guarantee (formerly SC-3)
 
-`commit-suggester.js` gains a fallback mode: when the significance whitelist misses but the git working tree changed during the invocation, finalize still emits a suggested Conventional Commits message, labeled `(non-bumping)` — no version bump, no CHANGELOG entry, message only. The existing hard rule is unchanged: no write-side git operation is ever invoked; the user commits manually. Message completeness is governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md) §3.
+**Retired 2026-08-27** (explicit user directive — [l1-session-continuity.md](l1-session-continuity.md) §1.3). `commit-suggester.js` previously gained a fallback mode that emitted a suggested Conventional Commits message, labeled `(non-bumping)`, when the significance whitelist missed but the working tree had changed. That fallback, and the significant-path suggestion it complemented, are both removed: the pipeline no longer composes or prints a commit message on any path. The existing hard rule is unaffected: no write-side git operation is ever invoked; the user decides independently, with no engine involvement, when and how to commit. Stdout-listing completeness (distinct from the retired message) is governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md) §3.
 
 ### 5.3 Exemptions
 
@@ -128,7 +130,7 @@ The pipeline's stdout carries two sections at its end — an engine diagnostics 
 
 Two structural consequences for `finalize.js`:
 
-1. **The terminal block leaves the path-specific emitters.** The auto-commit notice was previously assembled twice — once inside `emitFallbackCommitSuggestion()` on the non-significant path, once inside `emitSuccess()` on the significant one. It moves into a single `emitTail()` that `main()` calls once on both paths, together with the digest and the next step. Neither `emitSkip()` nor `emitSuccess()` may render any part of the terminal block; that prohibition is what makes DG-5's "same order on every path" checkable rather than aspirational.
+1. **The terminal block leaves the path-specific emitters.** A commit-suggestion notice was previously assembled twice — once inside `emitFallbackCommitSuggestion()` on the non-significant path, once inside `emitSuccess()` on the significant one — and printed as part of the terminal block. That notice, and the commit-suggestion feature that generated it, was retired 2026-08-27 (SC-3 retirement, §5.2); it is not part of the terminal block at all any longer. What remains moves into a single `emitTail()` that `main()` calls once on both paths, rendering the diagnostics digest and the next step. Neither `emitSkip()` nor `emitSuccess()` may render any part of the terminal block; that prohibition is what makes DG-5's "same order on every path" checkable rather than aspirational.
 
 2. **`updateSessionState()`'s return value becomes load-bearing.** It already returns `{ updated, dryRun?, nextAction }` on every branch, but `nextAction` was consumed by nobody. `emitTail()` prints that exact value (DG-6). The pipeline must not call `computeNextAction()` a second time to obtain it: the guarantee is that the string shown to the user and the string persisted to `STATE.md` are the same one, and a recomputation satisfies the wording while restoring the divergence the invariant exists to close.
 
@@ -141,7 +143,7 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 | `.magic/scripts/finalize.js` | Pipeline orchestrator; host of the §8 terminal block |
 | `.magic/scripts/lib/diagnostics.js` | Diagnostics collector drained by the §8 terminal block |
 | `.magic/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
-| `.magic/scripts/lib/commit-suggester.js` | Commit message generation and CHANGELOG bullet composition |
+| `.magic/scripts/lib/commit-suggester.js` | CHANGELOG bullet composition (commit-message generation retired 2026-08-27) |
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival (§6) and the `TASKS.md`/`PLAN.md` index rewrites (§7) |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
@@ -152,6 +154,7 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.0.0 | 2026-08-27 | Agent | **Commit Suggestion Guarantee (SC-3) retired** by explicit user directive. §5.2 rewritten from "Commit Suggestion Guarantee" to a retirement note; §5 header drops the SC-3 implementation claim. §2 module table's `commit-suggester.js` row rescoped to CHANGELOG-bullet composition only. §3 Invocation Contract drops the `--no-commit-msg` flag. §8 point 1 rewritten: the terminal block no longer includes a commit-suggestion notice at all (previously it deduplicated the notice across paths; now there is no notice to render). Overview, Related Specifications, and Canonical References updated to match. Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 2.0.0 | 2026-08-07 | Agent | **Decomposed** at 367 lines against the 300-line `SPEC_BLOAT` threshold, following the `l2-role-cards` precedent (parent retains the contract, children carry accumulated content). §8 (five STATE.md accuracy defects) and §10 (line-cap guard defeat) → new [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md); §7 (RC-11 generator containment) and §9 (SC-3.1 file visibility) → new [l2-finalize-output-contract.md](l2-finalize-output-contract.md). Surviving sections renumbered: old §11 Terminal Block → §8. New **§7 Archival Index Rewrite**, closing a five-for-five reproduced defect (Phases 14-18) that had no stated contract to fix against: `updatePlanIndex()` rewrites a phase link's target but not its label, and `PLAN.md`'s links are self-labelling (`[tasks/phase-N.md](tasks/phase-N.md)`), so archival yields a working link whose text contradicts its destination. §2's module row corrected — the archiver has always rewritten `PLAN.md` as well as `TASKS.md`, and the omission is why the gap persisted. §7.3 explicitly scopes the fix to the self-labelling form so prose mentions of historical paths are not corrupted; §7.4 requires the harness to pin that distinction. Module table gained `diagnostics.js`. |
 | 1.11.0 | 2026-08-07 | Agent | New §11 (Terminal Block Ownership): the pipeline's stdout gains a diagnostics digest and a next-step section at its end, per the new [l1-engine-diagnostics.md](l1-engine-diagnostics.md) DG-5/DG-6. Records the two structural consequences for this pipeline — the auto-commit notice moves into a single `emitTail()` called once from `main()` on both exit paths, and `updateSessionState()`'s hitherto-unconsumed `nextAction` return value becomes the printed string, threaded rather than recomputed. Canonical References gained `lib/diagnostics.js`. |
 | 1.10.1 | 2026-08-06 | Agent | §8.4's `GOOD` replacement regex corrected: it narrowed the label class to `Phase \d+`, which does not match the state template's own `Phase {N}: [{filled}/{total}]` bootstrap line — applying the example verbatim demotes an engine-owned line to narrative and leaves the placeholder in place, caught by an existing harness case during implementation. Now `Phase (?:\d+\|\{[^}]*\})`. Correction of a worked example; reasoning and required behavior unchanged, so patch and no status transition. *(Section since relocated to the state-accuracy child spec.)* |

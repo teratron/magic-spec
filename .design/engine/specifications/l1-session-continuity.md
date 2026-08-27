@@ -1,30 +1,33 @@
 # Session Continuity & Status Surface
 
-**Version:** 1.11.0
+**Version:** 2.0.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, a commit-message suggestion guarantee for every mutating command, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5.
+Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5. The commit-message suggestion guarantee this spec originally also defined (SC-3) was retired 2026-08-27 by explicit user directive — see §3's SC-3 entry.
 
 ## Related Specifications
 
 - [l1-engine-core.md](l1-engine-core.md) - Core workflows and invariants this contract binds to.
 - [l1-decision-autonomy.md](l1-decision-autonomy.md) - DA-3/DA-6 compute the next step; SC-4 surfaces it on demand as a briefing.
-- [l2-engine-finalization.md](l2-engine-finalization.md) - Finalization pipeline carrying SC-2 and SC-3 at a single choke point.
+- [l2-engine-finalization.md](l2-engine-finalization.md) - Finalization pipeline carrying SC-2 at a single choke point (SC-3 retired).
 - [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) - Defect register and required fixes for every SC-1/SC-2 violation found in the state-update step.
-- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) - SC-3/SC-3.1 implementation surface: commit messages, stdout listings, CHANGELOG bullets.
+- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) - Implementation surface for the finalize pipeline's emitted artifacts: stdout listings and CHANGELOG bullets (commit-message composition retired alongside SC-3).
 - [l2-status-command.md](l2-status-command.md) - Implementation of the status briefing surface (SC-4, SC-5).
-- [l1-engine-diagnostics.md](l1-engine-diagnostics.md) - DG-6 surfaces the SC-2 `Next Action` in finalization stdout so the printed and persisted values cannot diverge; DG-5 places the diagnostics digest immediately before it, alongside SC-3's commit-suggestion output.
+- [l1-engine-diagnostics.md](l1-engine-diagnostics.md) - DG-6 surfaces the SC-2 `Next Action` in finalization stdout so the printed and persisted values cannot diverge; DG-5 places the diagnostics digest immediately before it.
 
 ## 1. Motivation
 
 ### 1.1 Field Evidence (user directive, 2026-06-12)
 
 - `STATE.md` must be filled and updated after **every** completed task or command, including progression. Today only the run workflow (per-task) and the task workflow (plan write-back) update it; spec and rule workflows complete without touching live memory, so a session ending on a spec operation leaves stale resume data.
-- After every command the engine must propose a commit message matching the performed work — **propose only, never commit**. Today the suggestion appears only when the finalize significance whitelist hits; real-but-non-whitelisted changes end without any suggestion.
 - After a break the user has no single command answering "where am I and what is next": that information is scattered across `STATE.md`, `TASKS.md`, `PLAN.md`, and `INDEX.md`.
+
+### 1.3 Retirement: Commit Suggestion Guarantee (user directive, 2026-08-27)
+
+The original 2026-06-12 directive also required the engine to propose a commit message matching the performed work after every mutating command (propose only, never commit). By explicit later user directive, this requirement is retired in full: the engine no longer composes or prints a suggested commit message on any finalize path, bumping or not. Committing — whether, when, how to group changes, and what message to use — is left entirely to the user, with no engine involvement even at the suggestion level. The pre-existing hard rule that the engine and the agent never invoke a write-side git operation (§2) is unaffected and remains in force; only the suggestion itself is removed. See SC-3 in §3 for the retired invariant and [l2-finalize-output-contract.md](l2-finalize-output-contract.md) for the corresponding implementation-surface removal.
 
 ### 1.2 Coverage Gap
 
@@ -34,10 +37,10 @@ The live-memory subsystem (state template, update utility, pause/handoff flow, c
 
 - `STATE.md` stays a per-workspace file capped at 100 lines (template contract) — enforced by pruning `## Recent Decisions` down to a 1-entry floor (SC-1.2); this does not by itself bound `## Blocking Constraints`, which has no pruning of its own.
 - Read-only workflows stay read-only: a status briefing performs zero writes.
-- The commit decision belongs to the user: the engine and the agent never invoke write-side git operations (restates the Finalization Protocol hard rule as a session-level invariant).
+- The commit decision belongs to the user: the engine and the agent never invoke write-side git operations (restates the Finalization Protocol hard rule as a session-level invariant), and — per SC-3's retirement (§1.3) — never compose or print a suggested commit message either.
 - New user-facing commands require an explicit Workflow Minimalism (C2) exception; this spec records exactly one (SC-5).
 - No new artifact files are introduced: the briefing is composed from existing artifacts.
-- SC-2 and SC-3 are carried by the Finalization Protocol pipeline and inherit its documented opt-outs (`MAGIC_FINALIZE=0`, `finalization.enabled: false`): a user who disables finalization knowingly suspends both guarantees for that scope.
+- SC-2 is carried by the Finalization Protocol pipeline and inherits its documented opt-outs (`MAGIC_FINALIZE=0`, `finalization.enabled: false`): a user who disables finalization knowingly suspends the guarantee for that scope.
 
 ## 3. Core Invariants
 
@@ -90,11 +93,11 @@ This engine's own workspace does not exhibit the failure because its `TASKS.md` 
 
 **Progress Granularity (SC-2.3):** the recomputed progress indicators MUST include a per-phase counter for the active phase whenever the workspace uses the canonical two-level task layout (`tasks/phase-{N}.md`), not only the aggregate phase-count line. A recompute that silently drops to an aggregate-only line because it cannot locate the active phase's checklist is an SC-2 defect of the same class as SC-2.1's contradiction: `STATE.md` is supposed to be more precise after an update, not less. Field report (engine 2.1.58): the same finalize pass that produced the Blocked contradiction above also collapsed a two-line `Phase {N}: [d/t] …` / `Overall: [d/t] …` block down to `Overall: [0/1]` alone — independent of the Blocked status, reproducible on any healthy in-progress phase using the two-level layout, because the recompute's phase-line source only ever checked for an inline `### Phase {N} Checklist` heading in `TASKS.md`, a legacy single-file layout most Stable-workflow projects — including this engine's own workspace — no longer use.
 
-### SC-3 — Commit Suggestion Guarantee
+### SC-3 — Retired (formerly: Commit Suggestion Guarantee)
 
-Every mutating workflow invocation that produced file changes MUST end by presenting exactly one suggested commit message (Conventional Commits) describing the performed work. The suggestion is informational only: no write-side git operation (add, commit, push) is ever invoked by the engine or the agent. When the significance whitelist does not hit but the working tree changed relative to the invocation start, a fallback suggestion is still produced and labeled as non-bumping (no version bump, no changelog entry — message only).
+**Retired 2026-08-27** (explicit user directive — §1.3). The engine no longer composes or prints a suggested commit message at any point in the finalize pipeline, on any path — bumping, non-bumping, or skipped. Committing is left entirely to the user: timing, grouping, and message content are their decision alone, with no engine involvement even at the suggestion level. The pre-existing hard rule that no write-side git operation (add, commit, push) is ever invoked by the engine or the agent is unaffected — it was never part of what this invariant removed, and it remains in force under §2.
 
-**Commit Message Completeness (SC-3.1):** the suggested commit message, and any stdout listing finalize presents alongside it, MUST enumerate every file the invocation actually changed in the working tree — not only the subset the significance whitelist matched. Significance (whether to bump the version / add a CHANGELOG entry) and message completeness (what the message tells the user they are about to commit) are separate questions with separate correct answers; collapsing them onto one whitelist-filtered file set makes the message silently omit real changes that sit outside `.design/{ws}/...` — engine files synced by an in-band C14 bump, documentation kept in parity, and, for `magic.run` specifically, the task's own application/product-code deliverable, which is outside `.design/` by construction and is therefore never in the whitelist's scope at all. The user commits manually (§2 Constraints); finalize's output is what they read to decide what they are staging, so an incomplete listing defeats the review step SC-3 exists to support. Field report (informal, engine 2.1.62): a `magic.run` finalize's suggested commit message and stdout "Changed artifacts" section both named 2 files, while the commit the user actually made — following finalize's own "review the diff and commit manually" instruction, all changes staged together as is standard practice — spanned 17, including the task's actual source-code changes; none of the 15 omitted files appeared anywhere in finalize's own output for the user to notice. Concrete fix tracked in [l2-finalize-output-contract.md](l2-finalize-output-contract.md) §3.
+This invariant number is retired, not reassigned or renumbered away: SC-4 and SC-5 keep their identifiers, and historical Document History rows and cross-references to "SC-3" or "SC-3.1" (the former Commit Message Completeness sub-invariant) remain resolvable to their original meaning as a record of what was once specified and why it was later removed. The corresponding implementation-surface content (stdout-listing completeness, which survives independently of the retired commit-message half) is carried by [l2-finalize-output-contract.md](l2-finalize-output-contract.md) §3.
 
 ### SC-4 — Status Briefing Surface
 
@@ -113,14 +116,13 @@ graph LR
     A["Mutating workflow (spec/task/run/rule)"] --> B["Main steps"]
     B --> C["SC-2: STATE.md update"]
     C --> D["Finalize: bump + changelog when significant"]
-    D --> E["SC-3: one suggested commit message"]
-    E --> F["User commits manually"]
-    G["Status command"] -. reads .-> C
+    D --> E["User commits independently, on their own schedule"]
+    F["Status command"] -. reads .-> C
 ```
 
 ### 4.2 Single Choke Point
 
-The SC-2 state update and the SC-3 suggestion are owned by the Finalization Protocol step of each mutating workflow, not duplicated as prose in every workflow body. One pipeline is auditable and testable; scattered prose drifts. The implementation contract lives in [l2-engine-finalization.md](l2-engine-finalization.md).
+The SC-2 state update is owned by the Finalization Protocol step of each mutating workflow, not duplicated as prose in every workflow body. One pipeline is auditable and testable; scattered prose drifts. The implementation contract lives in [l2-engine-finalization.md](l2-engine-finalization.md).
 
 ### 4.3 Briefing Composition
 
@@ -147,6 +149,7 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.0.0 | 2026-08-27 | Agent | **SC-3 (Commit Suggestion Guarantee) and SC-3.1 (Commit Message Completeness) retired** by explicit user directive: the engine no longer composes or prints a suggested commit message on any finalize path — committing is left entirely to the user, with no engine involvement even at the suggestion level. The pre-existing hard rule (no write-side git operation is ever invoked) is unaffected and restated in §2. SC-3's invariant number is retired, not reassigned, so historical cross-references stay resolvable; SC-4/SC-5 numbering is unchanged. New §1.3 records the retirement rationale. Overview, Related Specifications, §2 Constraints, §4.1 Session Loop diagram, and §4.2 Single Choke Point updated to drop the retired guarantee. Corresponding implementation-surface removal tracked in [l2-finalize-output-contract.md](l2-finalize-output-contract.md) and [l2-engine-finalization.md](l2-engine-finalization.md). Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade: dependents ([l2-engine-finalization.md](l2-engine-finalization.md), [l2-finalize-output-contract.md](l2-finalize-output-contract.md), [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), [l2-status-command.md](l2-status-command.md), [l2-test-suite.md](l2-test-suite.md)) momentarily quarantined and updated in the same pass, so none remain `RFC`. |
 | 1.11.0 | 2026-08-22 | Agent | New **SC-2.1(c) (Task-Level Blocking & Assignment Precedence)**: SC-2.1(a)'s phase-level Blocked guard has no visibility into a task's own `Detailed Tracking` `Status`/`Assignment` fields, so a phase in good standing can still surface, as its first open checklist line, a task individually marked `Blocked` or `Assignment: User` — the same contradiction as (a), one level down. Reproduced directly against engine 2.1.72: `computeNextAction` named a `Status: Blocked`, `Assignment: User` task as `/magic.run`-executable while skipping an actionable task later in the same phase. SC-2.1's checked-order list re-lettered: new (c) inserted (open tasks, none agent-actionable → blocker/user resolution, never the plan-complete funnel), former (c)/(d) become (d)/(e). Required fix tracked in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §9. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade momentarily quarantined all four direct dependents (`l2-engine-automation.md`, `l2-status-command.md`, `l2-finalize-state-accuracy.md`, `l2-engine-finalization.md`) and reversed in step; only `l2-finalize-state-accuracy.md` received a content change (§9/§10 below). |
 | 1.10.0 | 2026-08-13 | Agent | New **Terminal-Row Recognition (SC-2.4 structural addendum)**: field report (engine 2.1.71) reproduced `DESIGN_DEBT_PENDING` never firing on a workspace with 24/24 phases `Done` and 2 open Backlog bullets. Root cause distinct from the Backlog Disposition Convention's own counting fix — the gate's prior plan-complete predicate requires `## Active Phases` to reduce to the literal empty-marker text, but C8 archival rewrites a finished row's status in place and never relocates it, so under the canonical single-table `tasks.md` template the section can never return to that literal form once any phase has ever been archived. This engine's own workspace was blind to the gap because its `TASKS.md` carries an undocumented `## Completed Phases` split no shipped script produces, and the gate's regression fixtures were written against that same undocumented shape. Requirement recorded: recognize `## Active Phases` as complete when every row carries a terminal status (`Done`/`Done (Archived)`/`Cancelled`), not only on the literal empty marker. Implementation fix routed to [l2-engine-automation.md](l2-engine-automation.md). Post-Update Review (5-lens) found no blocking issues; Stable retained via Trust Mode (C9). |
 | 1.9.0 | 2026-08-07 | Agent | New **SC-2.4 addendum (Backlog Disposition Convention)**: SC-2.4's `openItems` count (Next Action computation and the `DESIGN_DEBT_PENDING` Pre-flight gate it backs) treated every Backlog bullet as equally open, with no way to mark one as already-answered. Reproduced same-day in this engine's own workspace: a `/magic.spec` pass closed the one item needing design work, and the very next `/magic.task` pass HALTed again on the same gate because the other 7 self-answered notes still counted. Defines two dispositions — **Closed** (fold into the Backlog intro note, delete the bullet; already ad hoc practice for R8/R10/R12/R13/UNSCOPED-`dev/`) and **Parked** (trailing `*(Parked — {reason})*` marker, bullet kept, excluded from the count). Counter implementation in `check-prerequisites.js` not yet updated — tracked as a Backlog item. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation, including the two C12-quarantined L2 children below. |

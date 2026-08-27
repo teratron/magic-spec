@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-08-22
-**Full Sessions:** 6
-**Snapshots:** 19
+**Last Full Run:** 2026-08-27
+**Full Sessions:** 7
+**Snapshots:** 20
 
 ## Snapshots
 
@@ -29,6 +29,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-22 | Phase 23 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 24 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 25 | 0/0/32 | 3/0/0 | 24 | 🟢 |
+| 2026-08-27 | Phase 26 | 0/0/32 | 5/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -251,6 +252,45 @@ Manual input / external hook still required — same gap as Session 1.
 | --- | --- | --- | --- |
 | R21 | #2 | When a test-fixture helper defaults a feature flag to off (e.g. `createFinalizeFixture()`'s `autoChangelog: false`), periodically grep for whether *any* test in the suite ever passes the true value — a spec's regression-coverage bullet can name a function correctly while the actual code branch it gates stays permanently unexercised | `dev/tests/engine.js` authoring convention / `l2-test-suite.md` coverage mandate |
 | R22 | #1 | When triaging an externally-submitted bug report, check its proposed remedy against this project's own already-ratified constraints (RC-11, layer boundaries, prior `Required Fix` constraints in the same spec) before accepting it — the report's diagnosis of the symptom and its proposed fix are separate claims with independent evidence bars | `.magic/spec.md` dispatch guidance (informational; no code change) |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 32 | 32 | 0 |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+## Session 7 — 2026-08-27
+
+**Scope:** Plan completion (Phase 26 — Commit-Suggestion Feature Removal; single-phase cycle from explicit user directive to deployment via `/magic.spec` → `/magic.task` → `/magic.run`)
+**Specs in registry:** 32 (all Stable; 8 amended this cycle in the `/magic.spec` pass that preceded planning — l1-session-continuity.md 1.11.0 → 2.0.0, l2-engine-finalization.md 2.0.0 → 3.0.0, l2-finalize-output-contract.md 1.2.0 → 2.0.0, l2-finalize-state-accuracy.md 1.1.1 → 1.1.2, l2-status-command.md 1.0.0 → 1.1.0, l2-test-suite.md 1.14.0 → 1.15.0, l1-engine-diagnostics.md 1.0.0 → 1.0.1, l2-engine-diagnostics.md 1.0.0 → 1.1.0)
+**Tasks total:** 5 this cycle (Done: 5, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.75 → 2.1.76, single C14 bump covering all three touched `.magic/` files |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness green at 68/68 after the phase; one spacing regression caught and fixed during T-26B01 implementation itself, before any Done transition — never reached a test run as a failure |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **First "retire a whole guarantee" phase in this plan's history, not a bug fix.** Every prior phase this session added or corrected behavior; this one deleted an entire invariant (SC-3) end-to-end — spec, code, config, and tests — with the design question already closed before planning began. The `/magic.spec`/`/magic.task`/`/magic.run` shape held unchanged for a removal, not only additions. | Full session arc: one `/magic.spec` retiring 8 specs, one `/magic.task` planning Phase 26, one `/magic.run` executing it |
+| 2 | **The `DESIGN_DEBT_PENDING` graduation pattern (Phases 20/21/25) generalizes to code-removal work, not only new-remedy work.** The Backlog item this session's own `/magic.spec` pass authored ("no design decision remains") re-triggered the gate on the next `/magic.task`, and graduated straight into a phase exactly as the three prior precedents did — confirming the pattern is about *design-completeness*, not about the nature of the work being planned. | PLAN.md Backlog closure note; `[DR]` resolution recorded in the `/magic.task` turn |
+| 3 | **A deletion is not always a pure subtraction — downstream formatting can be implicitly anchored to the removed block.** `finalize.js`'s `emitTail()` used the (now-retired) unconditional auto-commit notice as its de-facto blank-line spacing anchor for the diagnostics digest and next-step sections; a literal deletion of just the notice lines would have produced a double-blank-line regression between those two sections when both were present. Caught by reasoning through the join/blank-line arithmetic during implementation, not by a later harness failure — the existing test suite had no assertion pinning inter-section spacing at all. | `.magic/scripts/finalize.js` `emitTail()`, rewritten to join present blocks with single `\n\n` separators instead of per-block leading/trailing blanks |
+| 4 | **First net-negative harness count in this plan's recorded history.** Every prior phase snapshot in this table grew the test count (or held flat); this phase went 69 → 68 because a whole capability's dedicated unit test (`buildCommitMessage`) was deleted along with the function it tested, not superseded by a replacement. A shrinking count is not itself a regression signal when it traces to a real capability removal — worth naming so a future retro does not read a headline drop as a coverage loss without checking why. | `dev/tests/engine.js`: `'buildCommitMessage derives the header...'` test removed in T-26T01, no replacement added |
+| 5 | **Self-referential proof, third consecutive session.** Before T-26A01/B01 landed, this same phase's own `finalize --workflow=task --dry-run` printed a "Suggested commit message" block in its stdout; after, the identical command's output contained zero case-insensitive matches for "commit" outside the task's own title. The tool demonstrated its own retirement live, continuing the pattern Phase 24 (Finding 3) and Phase 25 (Finding 4) each independently established. | Dry-run smoke test in T-26B01's `Changes` field, before/after comparison |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R23 | #3 | When a task removes a block that other output-formatting logic (spacing, ordering, delimiters) implicitly depends on being unconditionally present, treat the removal as a redesign of the dependent logic, not a pure deletion — add a harness case pinning inter-section spacing/ordering wherever a shared terminal-block function like `emitTail()` composes multiple optional parts | `l2-test-suite.md` coverage mandate (a general authoring note, not a new invariant) |
+| R24 | #4 | When a retro snapshot shows a harness count *decrease*, the retro should state the traced cause (capability removed vs. coverage regression) inline in the Snapshots-adjacent Finding, rather than leaving a bare number for a future reader to have to investigate | `retrospective.md` §6 (L1 Snapshot Execution), informational |
 
 ### 📈 Trends (from Snapshots)
 

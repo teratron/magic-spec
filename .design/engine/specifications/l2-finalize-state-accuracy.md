@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.1.1
+**Version:** 1.1.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -15,7 +15,7 @@ Nine defects, one root symptom. Six were found across field reports against engi
 
 - [l1-session-continuity.md](l1-session-continuity.md) — Parent concept: SC-1 live-memory contract, SC-1.1/SC-1.2, SC-2/SC-2.1/SC-2.2/SC-2.3.
 - [l2-engine-finalization.md](l2-engine-finalization.md) — Parent spec: pipeline contract, module inventory, §5 session-continuity integration that invokes this step.
-- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Sibling: the emitted-artifact surface (commit messages, CHANGELOG bullets, stdout listings).
+- [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Sibling: the emitted-artifact surface (stdout listings, CHANGELOG bullets; commit-message composition retired 2026-08-27).
 - [l2-test-suite.md](l2-test-suite.md) — Carries the finalize-pipeline regression-coverage mandate these fixes are pinned by.
 
 ## 1. Motivation
@@ -307,6 +307,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.2 | 2026-08-27 | Agent | Cross-reference wording only: the sibling description of [l2-finalize-output-contract.md](l2-finalize-output-contract.md) no longer names "commit messages" among its emitted artifacts — that output was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement). No content in this spec's own STATE.md-accuracy sections changed; patch, no status transition. |
 | 1.1.1 | 2026-08-22 | Agent | Factual-accuracy patch, no design content (RULES.md §3 patch tier). §12's "§8's coverage obligation is open" claim was already false when written — Phase 19 (R12) had closed it with structural assertions in `dev/tests/engine.js`; corrected to name the covering coverage. Overview's "not yet implemented" claim for §9/§10 also corrected — both fixes landed within the same phase that planned them (Phase 23). No status transition. |
 | 1.1.0 | 2026-08-22 | Agent | New **§9 — The Task-Level Blocking & Assignment Precedence Defect** and **§10 — The Recent-Decisions Archival Promise Defect**, both from a single field report against engine 2.1.72 and both reproduced directly against that version. §9: `synthesizeNextAction()`'s tier-2 loop screens only the phase-level `Blocked` signal (`isPhaseBlocked()`); it never reads a matched task's own `Detailed Tracking` `Status`/`Assignment` fields, so a phase in good standing can still surface a `Status: Blocked`/`Assignment: User` task as `/magic.run`-executable ahead of a genuinely actionable one later in the same phase — tracked as [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c). §10: the line-cap guard's routine prune deletes the oldest `## Recent Decisions` line outright; no code path writes `PLAN.md`, contradicting the section's own template comment ("Older entries → archived to PLAN.md"), which `addDecision` re-emits on every call regardless. Neither required fix is implemented yet — both routed to `/magic.task engine`. Regression Coverage and Known Gaps renumbered §9/§10 → §11/§12 to make room; two new Open obligations recorded in §11. Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues; retained `Stable` via Trust Mode (C9) amendment cycle. |
 | 1.0.0 (quarantine reversed) | 2026-08-07 | Agent | **C12 Cascade, then reversed**: L1 parent [l1-session-continuity.md](l1-session-continuity.md) momentarily dropped Stable → RFC (v1.9.0, SC-2.4 Backlog Disposition Convention addendum), quarantining this file to RFC. The parent's Post-Update Review (5-lens) found no blocking issues and Trust Mode (C9) auto-promoted it back to `Stable` within the same invocation, which lifts this file's quarantine in step — content and version unchanged throughout, no defect here. |

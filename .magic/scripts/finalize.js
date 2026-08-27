@@ -8,7 +8,7 @@ const { stripQuoted } = require('./lib/scan-hygiene');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
 const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = require('./lib/significance');
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
-const { buildCommitMessage, deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
+const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
@@ -51,14 +51,13 @@ const VALID_WORKFLOWS = new Set(['spec', 'task', 'run', 'rule']);
  *   dryRun: boolean,
  *   noBump: boolean,
  *   noChangelog: boolean,
- *   noCommitMsg: boolean,
  *   force: boolean,
  * }}
  */
 function parseArgs() {
     const { values, flags, errors } = parseFlags(process.argv.slice(2), {
         valueFlags: ['--workflow', '--workspace'],
-        boolFlags: ['--dry-run', '--no-bump', '--no-changelog', '--no-commit-msg', '--force'],
+        boolFlags: ['--dry-run', '--no-bump', '--no-changelog', '--force'],
     });
 
     if (errors.length > 0) {
@@ -80,7 +79,6 @@ function parseArgs() {
         dryRun: Boolean(flags['--dry-run']),
         noBump: Boolean(flags['--no-bump']),
         noChangelog: Boolean(flags['--no-changelog']),
-        noCommitMsg: Boolean(flags['--no-commit-msg']),
         force: Boolean(flags['--force']),
     };
 }
@@ -121,7 +119,6 @@ function resolveWorkspace(cliWorkspace) {
  *   enabled: boolean,
  *   autoBump: boolean,
  *   autoChangelog: boolean,
- *   suggestCommit: boolean,
  *   changelogPath: string,
  *   versionPath: string,
  * }}
@@ -131,7 +128,6 @@ function loadConfig() {
         enabled: true,
         autoBump: true,
         autoChangelog: true,
-        suggestCommit: true,
         changelogPath: 'CHANGELOG.md',
         versionPath: '.design/.version',
     };
@@ -406,26 +402,27 @@ function updateSessionState(opts, workspace, designAbs) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Changed-File Enumeration (SC-3.1)
+// Changed-File Enumeration (stdout listing completeness)
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Upper bound on files listed in a suggested commit message or the stdout
- * artifact listing. Beyond it the output states how many were omitted.
+ * Upper bound on files listed in the stdout artifact listing. Beyond it the
+ * output states how many were omitted.
  *
  * @type {number}
  */
 const MAX_LISTED_FILES = 15;
 
 /**
- * Enumerates every file changed in the working tree, for output the user reads
- * before committing — the suggested message body and the stdout listing.
+ * Enumerates every file changed in the working tree, for the stdout
+ * `### Changed artifacts` listing.
  *
  * Deliberately wider than the significance whitelist. Significance answers
  * "should this bump the version" and is correctly scoped to SDD artifacts;
- * this answers "what is the user about to stage", and for a task-execution
- * finalize the task's own product-code deliverable is outside the whitelist by
- * construction. Header derivation keeps reading the whitelist subset.
+ * this answers "what did the invocation actually change", and for a
+ * task-execution finalize the task's own product-code deliverable is outside
+ * the whitelist by construction. Header derivation keeps reading the
+ * whitelist subset.
  *
  * @param {Array<{path: string}>} fallbackFiles - Used when git is unavailable.
  * @returns {{files: Array<Object>, omitted: number}}
@@ -444,53 +441,6 @@ function collectChangedFiles(fallbackFiles) {
         })),
         omitted: probe.paths.length - capped.length,
     };
-}
-
-// ───────────────────────────────────────────────────────────────────────────
-// Non-Bumping Commit Suggestion (SC-3)
-// ───────────────────────────────────────────────────────────────────────────
-
-/**
- * SC-3 fallback: when the significance whitelist misses but the working
- * tree changed, still emit exactly one suggested commit message — labeled
- * non-bumping (no version bump, no CHANGELOG entry). Suggestion only:
- * this script never invokes write-side git operations.
- *
- * @param {Object} opts - Parsed CLI options.
- * @param {string} workspace
- * @param {string} version - Current (unchanged) project version.
- * @returns {void}
- */
-function emitFallbackCommitSuggestion(opts, workspace, version) {
-    const { files, omitted } = collectChangedFiles([]);
-    if (files.length === 0) return;
-
-    // Workflow summary heuristics target whitelist artifacts; these files are
-    // off-whitelist by definition, so a neutral header is the honest one.
-    const msg = buildCommitMessage({
-        workflow: opts.workflow,
-        workspace,
-        previousVersion: version,
-        nextVersion: version,
-        files,
-        type: 'chore',
-        summary: `update ${files.length + omitted} changed file${files.length + omitted !== 1 ? 's' : ''}`,
-    });
-
-    process.stdout.write([
-        '',
-        '### Suggested commit message (non-bumping)',
-        '',
-        '```',
-        msg + (omitted > 0 ? `\n(+${omitted} more changed file${omitted !== 1 ? 's' : ''})` : ''),
-        '```',
-        '',
-    ].join('\n'));
-    // Auto-commit notice moved to emitTail() — one shared rendering, called
-    // once per invocation regardless of which path produced this suggestion.
-    // The trailing blank element above is still needed: it is what gives
-    // emitTail()'s own leading blank a gap to pair with, matching how every
-    // other block boundary in this file's output is spaced.
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -560,9 +510,8 @@ function describeChangeCounts(total, whitelisted) {
 function emitSuccess(ctx) {
     const {
         workflow, workspace, previous, next,
-        files, omitted = 0, whitelistCount, gitAvailable, changelogResult, commitMsg,
+        files, omitted = 0, whitelistCount, gitAvailable, changelogResult,
         archivedPhases, stateResult, diagnosticsCount,
-        opts,
     } = ctx;
 
     const lines = [
@@ -622,31 +571,22 @@ function emitSuccess(ctx) {
         }
     }
 
-    if (!opts.noCommitMsg && commitMsg) {
-        lines.push(``);
-        lines.push(`### Suggested commit message`);
-        lines.push(``);
-        lines.push('```');
-        lines.push(commitMsg);
-        lines.push('```');
-    }
-
-    // Auto-commit notice, diagnostics digest, and next step all render once,
-    // from emitTail() — never here (that split is what keeps their order
-    // identical to the skip path's). The trailing blank line is kept so
-    // emitTail()'s own leading blank still produces a gap at the boundary.
+    // Diagnostics digest and next step render once, from emitTail() — never
+    // here (that split is what keeps their order identical to the skip
+    // path's). The trailing blank line is kept so emitTail()'s own leading
+    // blank still produces a gap at the boundary.
     lines.push(``);
     process.stdout.write(lines.join('\n'));
 }
 
 /**
  * Renders the terminal block shared by both finalize exit paths, in a fixed
- * order (l1-engine-diagnostics.md DG-5): the auto-commit notice, the engine
- * diagnostics digest (omitted entirely when there is nothing to report —
- * DG-7), then the next step (DG-6) — the exact string this invocation
- * persisted to STATE.md, never recomputed. Neither `emitSkip()` nor
- * `emitSuccess()` may render any of these three blocks; that prohibition is
- * the whole mechanism by which the two exit paths cannot drift apart.
+ * order (l1-engine-diagnostics.md DG-5): the engine diagnostics digest
+ * (omitted entirely when there is nothing to report — DG-7), then the next
+ * step (DG-6) — the exact string this invocation persisted to STATE.md,
+ * never recomputed. Neither `emitSkip()` nor `emitSuccess()` may render
+ * either of these blocks; that prohibition is the whole mechanism by which
+ * the two exit paths cannot drift apart.
  *
  * @param {{nextAction?: string, findings?: Object[]}} ctx
  * @returns {void}
@@ -654,23 +594,17 @@ function emitSuccess(ctx) {
 function emitTail(ctx) {
     const { nextAction, findings = [] } = ctx;
 
-    const lines = [
-        '',
-        '> [!IMPORTANT]',
-        '> Auto-commit is **disabled by design**. Review the diff and run git commit manually.',
-        '',
-    ];
-
+    // Each present block is joined internally, then blocks are joined with a
+    // single blank line between them — avoids the double-blank a naive
+    // per-block leading-and-trailing '' would produce once the (formerly
+    // unconditional) auto-commit notice stopped anchoring the spacing.
+    const blocks = [];
     const digest = diagnostics.formatDigest(findings);
-    if (digest.length > 0) {
-        lines.push(...digest, '');
-    }
+    if (digest.length > 0) blocks.push(digest.join('\n'));
+    if (nextAction) blocks.push(['### Next step', '', nextAction].join('\n'));
 
-    if (nextAction) {
-        lines.push('### Next step', '', nextAction, '');
-    }
-
-    process.stdout.write(lines.join('\n'));
+    if (blocks.length === 0) return;
+    process.stdout.write('\n' + blocks.join('\n\n') + '\n');
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -729,10 +663,6 @@ function main() {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
         const stateResult = updateSessionState(opts, workspace, designAbs);
-        // SC-3: real-but-non-whitelisted changes still get one suggestion.
-        if (config.suggestCommit && !opts.noCommitMsg) {
-            emitFallbackCommitSuggestion(opts, workspace, currentVersion);
-        }
         // DG-4.1: a preview must not consume what the real run would report.
         const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
         emitTail({ nextAction: stateResult.nextAction, findings });
@@ -816,25 +746,10 @@ function main() {
     const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
     const diagnosticsCount = diagnostics.summarize(findings);
 
-    // ── Commit message ──────────────────────────────────────────────────────
-    // SC-3.1: what the user reviews before committing is the whole working
-    // tree, not the whitelist subset that drove the bump.
+    // ── Changed-file listing ────────────────────────────────────────────────
+    // What the stdout `### Changed artifacts` listing shows is the whole
+    // working tree, not the whitelist subset that drove the bump.
     const listed = collectChangedFiles(sig.files);
-
-    let commitMsg = null;
-    if (config.suggestCommit && !opts.noCommitMsg) {
-        commitMsg = buildCommitMessage({
-            workflow: opts.workflow,
-            workspace,
-            previousVersion: previous,
-            nextVersion: next,
-            files: listed.files,
-            headerFiles: sig.files,
-        });
-        if (listed.omitted > 0) {
-            commitMsg += `\n(+${listed.omitted} more changed file${listed.omitted !== 1 ? 's' : ''})`;
-        }
-    }
 
     emitSuccess({
         workflow: opts.workflow,
@@ -846,11 +761,9 @@ function main() {
         whitelistCount: sig.files.length,
         gitAvailable: sig.gitAvailable,
         changelogResult,
-        commitMsg,
         archivedPhases,
         stateResult,
         diagnosticsCount,
-        opts,
     });
     emitTail({ nextAction: stateResult.nextAction, findings });
 

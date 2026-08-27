@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -13,7 +13,7 @@ The digest also gives the agent a durable channel for its own findings, so that 
 ## Related Specifications
 
 - [l1-engine-core.md](l1-engine-core.md) — Core workflows and runtime guards that emit the findings this contract collects.
-- [l1-session-continuity.md](l1-session-continuity.md) — SC-2 computes the `Next Action` that DG-6 surfaces; SC-3/SC-3.1 own the neighbouring output sections.
+- [l1-session-continuity.md](l1-session-continuity.md) — SC-2 computes the `Next Action` that DG-6 surfaces (SC-3, which formerly owned a neighbouring output section, is retired).
 - [l1-decision-autonomy.md](l1-decision-autonomy.md) — DA-6 computes the next step; DG-6 prints the value that computation persisted, rather than a second one derived independently.
 - [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Implementation: collector module, sink format, agent-facing recorder, render step, emitter migration inventory.
 - [l2-engine-finalization.md](l2-engine-finalization.md) — Pipeline that hosts the drain-and-render step (§11) and is itself the largest single emitter.
@@ -115,7 +115,7 @@ Bounded by construction: identical `(severity, source, code)` triples collapse t
 
 ### DG-5 — Digest Placement and Terminal Order
 
-The digest renders as **one** section inside the finalization **stdout** — the channel the relay contract covers — positioned after the change/commit content and immediately **before** the next step (DG-6). This order is contractual, not cosmetic: the user reads what went wrong, then reads what to do about it, and the last line of the output is an action rather than a complaint.
+The digest renders as **one** section inside the finalization **stdout** — the channel the relay contract covers — positioned after the change-summary content and immediately **before** the next step (DG-6). This order is contractual, not cosmetic: the user reads what went wrong, then reads what to do about it, and the last line of the output is an action rather than a complaint.
 
 The order holds on **every** finalization path, including the `⏭️ No significant changes detected` path. A command that changed nothing can still have produced findings, and that path is precisely where a user is least likely to look for them.
 
@@ -175,7 +175,7 @@ An append-only log would accumulate a project's entire warning history and requi
 
 ### 4.3 Why Placement Is Specified, Not Left to the Renderer
 
-The digest's value is entirely in being **found**. A section whose position varies by path — present after a bump, absent after a skip, sometimes before the commit message, sometimes after — is a section the reader must hunt for, and a reader who must hunt stops looking. Fixing the order across every path (DG-5) costs one rule and buys the habit.
+The digest's value is entirely in being **found**. A section whose position varies by path — present after a bump, absent after a skip, sometimes before the changed-artifacts listing, sometimes after — is a section the reader must hunt for, and a reader who must hunt stops looking. Fixing the order across every path (DG-5) costs one rule and buys the habit.
 
 ### 4.4 Relationship to Ventilation
 
@@ -204,4 +204,5 @@ The digest's value is entirely in being **found**. A section whose position vari
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-08-27 | Agent | Cross-reference wording only: Related Specifications, DG-5, and §4.3 no longer name the "commit message"/"commit content" the digest used to sit near — that output was retired in [l1-session-continuity.md](l1-session-continuity.md) (SC-3 retirement). No invariant amended; patch, no status transition. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. DG-1..DG-9 per user directive: engine-found errors, warnings, and self-applied corrections are collected across a workflow invocation and rendered as one systematic digest immediately before the next step, so the AI operating the engine in a downstream project delivers every grievance at the end in structured form. Root defect identified during authoring: `rules/magic.md` §3 binds the agent to relay **stdout**, while every non-fatal finding is written to **stderr** — the invisibility is contractual, not incidental. Derived requirement DG-6 (next-step surfacing) added because the placement rule the directive states presupposes a next-step section finalization does not currently print, and because printing the persisted `Next Action` also collapses an existing divergence between the value written to `STATE.md` and the one the agent narrates. Post-Update Review added **DG-4.1** (a preview renders but must not drain — otherwise a rehearsal consumes what the real run was to report) and the read-only-command boundary in §2 (findings from non-finalizing commands are delivered late by the next mutating digest, not lost). |
