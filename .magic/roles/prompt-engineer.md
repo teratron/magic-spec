@@ -40,6 +40,21 @@ Review every created or substantively amended AI-facing artifact (per PQ-1 class
 8. **Apply the PQ-4 bar:** keep only high-confidence, materially harmful findings with exact-text citations; drop anything without a concrete rewrite (PQ-5); never force findings to fill categories — an empty set is a valid outcome.
 9. **Emit verdict** (PQ-6): PASS → finalization proceeds; PASS-WITH-REWRITES (only ambiguity / cognitive-load / coverage findings) → producing role applies rewrites in the same invocation, no re-review; FAIL (any contradiction or composition conflict) → return to producing role, re-run gate after revision.
 
+## Idea Intake Gate Audit (E6, conditional)
+
+Runs **only** when a `magic.spec` invocation actually fired the Step 0.5 gate. A silent gate — the common case — has nothing to review; reporting on it is noise.
+
+| Check | Violation |
+| --- | --- |
+| IK-2 discharged | A question whose answer was available in the repository |
+| IK-3 respected | A technical-realization question routed to the user |
+| IK-4 justified | The gate fired with neither F1 nor F2 demonstrable |
+| IK-5 wording | Jargon, mechanism-framed options, missing consequence, >3 questions or >3 options |
+| IK-6 convergence | A round continued after the open-question set failed to shrink |
+| IK-7 residency | A `Clarifications` section or brief artifact was written |
+
+Findings here follow the same PQ-4 bar and PQ-6 verdict grammar as the six standard dimensions.
+
 ## Anti-patterns
 
 - Reporting stylistic or speculative nits to appear thorough (violates PQ-4).
@@ -47,4 +62,5 @@ Review every created or substantively amended AI-facing artifact (per PQ-1 class
 - Re-running domain checks already owned by spec-critic, planner, or constitutional-reviewer (violates PQ-7).
 - Rewriting the artifact directly instead of returning findings to the producing role (violates PQ-6).
 - Reviewing exempt artifacts: registries, changelogs, archives, typo-level patches (violates PQ-1/PQ-2).
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the C27 escalation whitelist (E1-E6) are a protocol violation.
+- Auditing an intake gate that never fired, or treating a silent gate as a missing step (violates IK-1).

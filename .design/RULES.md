@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -232,19 +232,22 @@ Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
 Governed in full by `l1-decision-autonomy.md`. Operational summary:
 
 1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
-2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26). The list is closed; extending it is itself an E4 event.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26), E6 intent incoherence or essence ambiguity in freshly supplied idea input (`l1-idea-intake-gate.md`). The list is closed; extending it is itself an E4 event.
 3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
 4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
 5. **Single-Question Format (DA-5)**: at whitelist gates — exactly one question, at most three fixed options, recommended default marked. Open-ended question batteries are forbidden in every mode, including Explore.
 6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
 7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
 
-Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5 — C27 adds the decision procedure itself.
+Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5, the Idea Intake Gate supplies E6 — C27 adds the decision procedure itself.
+
+> **E6 is narrow by construction.** It fires only on the content of a freshly supplied idea, and only after the agent has exhausted what the repository can answer (IK-2). Technical realization — storage, library, schema, naming, algorithm — is never routed to the user (IK-3); Selection and Sequencing forks stay declarative `[DR]` narrations under DA-9. Questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink its open-question set each round or terminate (IK-6).
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.10.0 | 2026-08-28 | Agent | Extended C27's Escalation Whitelist with **E6 — intent incoherence or essence ambiguity in freshly supplied idea input**, governed by `l1-idea-intake-gate.md`. DA-2 declares its own list closed and extension an E4 event; the amendment is discharged by explicit owner directive. Added the narrowing note that bounds E6: it fires only on a freshly supplied idea and only after repository investigation is exhausted (IK-2), technical realization is never routed to the user (IK-3), Selection and Sequencing forks remain declarative under DA-9, questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink each round or terminate (IK-6). Mirrored verbatim in `.magic/templates/rules.md` — the two must not diverge. |
 | 1.9.0 | 2026-07-10 | Agent | Amended C23 §2: quantified External Drift Guard (">5 minutes / context compaction / manual file ops" replacing vague "significant time"), aligning the live constitution with templates/rules.md per C13 vague-term elimination. Recorded C11/C23 §4 simulate-command rename (magic.simulate → magic.dev.simulate) propagated by engine sync v2.1.55. |
 | 1.8.0 | 2026-06-12 | Agent | Added C27 (Autonomous Decision Protocol) per field-feedback T4 rule; amended C13 §3 from halt-and-ask to Bounded Ambiguity Resolution, resolving the C13↔C25 contradiction. |
 | 1.7.0 | 2026-05-07 | Agent | Backported C25 (Engineer Posture) from template; added C26 (Workspace Intent Routing) governing pre-resolution detection, auto-create-on-clear-signal, ambiguity gate, and second-contour fit validation. |

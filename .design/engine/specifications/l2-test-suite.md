@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.15.0
+**Version:** 1.17.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -21,8 +21,9 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 `dev/tests/suite.md` is the canonical regression suite for the engine. Current state:
 
-- **206 tests** (T01–T207; numbering gap at T67) covering all core workflows, guards, and edge cases.
-- **Suite version**: v1.9.74.
+- **211 tests** (T01–T212; numbering gap at T67) covering all core workflows, guards, and edge cases.
+- **Suite version**: v1.9.76.
+- **Idea Intake Gate coverage (T209–T212)**: the Step 0.5 E6 gate — silent pass on a coherent idea (IK-1/IK-4), a fired F2 gate asserting intent-only and plain-language questions (IK-3/IK-5), non-convergent termination including the `"you decide"` reply and the close-one-open-two case (IK-6/IK-9), and a technical fork proving no question reaches the user channel (IK-3/IK-8). The gate ships no executor code path, so its coverage is cognitive-only by design — the script harness has no case to add.
 - Tests are organized as H3 sections with `Synthetic State`, `Action`, `Expected`, and `Guards tested` fields.
 - Sprint 1 regression tests (T86–T91) cover Runtime Guards: RE-1, RE-2, RE-3, RE-T71, RE-T74, and the T4/VERSION_DRIFT interaction.
 - Post-sprint expansions (T92–T207) cover T4 tier routing, duplication checks, constitutional guards, atomic intent with drift resolution, C15 scope-isolated integrity checks, simulation-harness self-tests (T186–T192) — regression coverage for `magic.dev.simulate`, the developer-facing validation tool authorized under **C11 (Simulation Workflow, C2 exception)** — suite-to-workflow source-of-truth contracts (T203), diagram-text parity (T204–T205), and version-bleed / select-precedence wording parity (T206–T207).
@@ -58,7 +59,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Path | Role |
 | --- | --- |
-| `dev/tests/suite.md` | Cognitive regression test suite (206 tests, v1.9.74) |
+| `dev/tests/suite.md` | Cognitive regression test suite (211 tests, v1.9.76) |
 | `dev/tests/engine.js` | Script-level regression harness (node:test); finalize-pipeline coverage mandate |
 | `.agents/skills/magic-dev-simulate/SKILL.md` | Simulation skill that runs cognitive tests |
 
@@ -66,6 +67,8 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.17.0 | 2026-08-28 | Agent | Script harness 69 → 72 tests, closing the two silent-failure defects Phase 27 hit in production (retrospective R25, R26; [l2-agent-surface.md](l2-agent-surface.md) §4, [l2-skill-wrappers.md](l2-skill-wrappers.md) §3.2). Both new cases are negative-controlled — each was confirmed to fail against the pre-fix code before being confirmed to pass against the fix, not merely written and left green. (1) `update-engine-meta.js` (5c/5d): a `workflows/`-only edit must regenerate `skills/*/SKILL.md` even though the `.magic/` checksum verdict reports no change — asserted by editing `workflows/`, re-running, and reading the regenerated wrapper's content; a companion case pins that `--check` still performs zero writes and zero skill regeneration under the identical pending-change condition, so the write-path fix cannot leak into the read-only pre-commit-hook surface. (2) `validate-hardlinks.js` (§19, new top-level section): a fixture with a real hardlinked `workflows/` pair must pass, and the same pair delinked via unlink+rewrite (the inode-replacing shape a write-replace editor produces, matching `[C-001]`) must fail with the specific file named — run a second time against the git-HEAD (pre-fix, two-group) validator source to confirm the identical fixture passes silently there, proving the new group closes a real gap rather than restating existing coverage. |
+| 1.16.0 | 2026-08-28 | Agent | Cognitive suite 206 → 211 tests (T01–T212, gap at T67), v1.9.74 → v1.9.76 — the recorded count was already one behind before this change (T208 shipped with the rule batch-precedence work without a spec sync), so this row corrects that drift as well as adding T209–T212 for the Idea Intake Gate ([l1-idea-intake-gate.md](l1-idea-intake-gate.md) IK-1..IK-9). Coverage: silent pass on a coherent idea, a fired F2 gate asserting intent-only + plain-language questions, non-convergent termination (both the `"you decide"` reply and the close-one-open-two case that the spec's own Post-Update Review caught as non-terminating), and a technical-fork case proving no realization question reaches the user channel. Recorded explicitly that the gate ships no executor code path and is therefore cognitive-only by design — the script harness has nothing to exercise, so its unchanged count is not an omission. |
 | 1.15.0 | 2026-08-27 | Agent | Finalize-pipeline coverage mandate lost the **SC-3 non-bumping commit suggestion** case entirely — the feature it covered was retired by explicit user directive ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement). The **non-whitelisted file visibility** case (formerly SC-3.1) is retained but rescoped: it now asserts only the stdout `### Changed artifacts` listing, dropping the suggested-commit-message assertion. The mandate's opening sentence updated to cite SC-2 alone. |
 | 1.14.0 | 2026-08-07 | Agent | Finalize-pipeline coverage mandate gained an eighth case: the **diagnostics digest** (new `l1-engine-diagnostics.md` DG-1..DG-9). Unlike the seven before it, this one pins *ordering across exit paths* as a contract in its own right — the digest must precede the next step, and the next step must be last, on both the significant and the skip path — because the terminal block moves out of the two path-specific emitters into one shared emitter precisely so the order cannot drift, and only a test can hold that. Also pins next-step/`STATE.md` string identity, empty-sink silence, exactly-once drain, dedup-with-count and cap-with-omission, partial-sink tolerance, and never-throws recording. Full case list delegated to `l2-engine-diagnostics.md` §6 rather than restated. |
 | 1.13.0 | 2026-08-06 | Agent | Finalize-pipeline coverage mandate gained a seventh case: **line-cap guard exhaustion (SC-1.2)** — a fixture driven past 100 lines via `## Blocking Constraints` growth alone, with `## Recent Decisions` already at its 1-entry floor, must produce a warning distinguishable from the routine one-decision-pruned case. Root cause: the line-cap guard's only pruning target is `## Recent Decisions`; once exhausted it keeps logging the same "pruning" message while `## Blocking Constraints` grows unbounded — reproduced directly, 60 accumulated constraints reached 110 lines. |

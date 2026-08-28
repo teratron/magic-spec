@@ -475,6 +475,87 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 5c. update-engine-meta.js — skill regeneration is not gated on the
+    //     .magic/ checksum verdict (R26). workflows/ is deliberately excluded
+    //     from that manifest (l2-skill-wrappers.md §3.2), so the scan is
+    //     structurally blind to a workflows/-only edit. Under the pre-fix
+    //     logic, sync-skills() lived inside the `if (anyChanged)` branch —
+    //     this reproduces the exact retry that shipped Phase 27's stale
+    //     skill wrapper: .magic/ genuinely unchanged, workflows/ changed.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-engine-meta.js regenerates skill wrappers on a workflows/-only edit, even when .magic/ itself is unchanged', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            generateChecksums(tempDir);
+
+            const workflowsDir = path.join(tempDir, 'workflows');
+            fs.mkdirSync(workflowsDir, { recursive: true });
+            const workflowPath = path.join(workflowsDir, 'magic.example.md');
+            fs.writeFileSync(workflowPath, '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n');
+
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+            const versionPath = path.join(tempDir, '.magic', '.version');
+            const skillPath = path.join(tempDir, 'skills', 'magic-example', 'SKILL.md');
+
+            // Control — a pristine .magic/ must not bump the version, and the
+            // message must name the scope actually checked (not "engine core"
+            // generically — that vagueness was itself part of the defect).
+            const firstRun = execSync(`node "${metaScript}"`, { cwd: tempDir, encoding: 'utf8' });
+            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'control: .magic/ unchanged, version must not bump');
+            assert.match(firstRun, /No changes detected in \.magic\//, 'the message must name .magic/, not "engine core"');
+            assert.ok(fs.existsSync(skillPath), 'the fix: skill wrapper must exist after the very first pass');
+            assert.match(fs.readFileSync(skillPath, 'utf8'), /Original body\./);
+
+            // The reproduction: workflows/ changes, .magic/ does not.
+            fs.writeFileSync(workflowPath, '---\ndescription: updated\n---\n\n# Example\n\nUpdated body.\n');
+            const secondRun = execSync(`node "${metaScript}"`, { cwd: tempDir, encoding: 'utf8' });
+            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'a workflows/-only edit correctly still does not bump the version — no engine-core change occurred');
+            assert.match(secondRun, /No changes detected in \.magic\//, 'the checksum-scoped verdict is genuinely correct here — .magic/ did not change');
+            assert.match(
+                fs.readFileSync(skillPath, 'utf8'), /Updated body\./,
+                'the fix: regeneration must not be gated on the .magic/ verdict — a pre-fix run would still read "Original body."'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5d. update-engine-meta.js --check stays strictly read-only even when
+    //     workflows/ (outside its scope) has an uncommitted change. This is
+    //     the boundary the write-path fix (5c) must not cross: --check is
+    //     hardcoded into the user's pre-commit hook, so it must never gain a
+    //     write side effect — that would turn every commit into a mutation.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-engine-meta.js --check performs no write and never regenerates skills, even with a pending workflows/ change', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            generateChecksums(tempDir);
+
+            const workflowsDir = path.join(tempDir, 'workflows');
+            fs.mkdirSync(workflowsDir, { recursive: true });
+            fs.writeFileSync(path.join(workflowsDir, 'magic.example.md'), '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n');
+
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+            const versionPath = path.join(tempDir, '.magic', '.version');
+            const checksumsPath = path.join(tempDir, '.magic', '.checksums');
+            const skillPath = path.join(tempDir, 'skills', 'magic-example', 'SKILL.md');
+
+            const versionBefore = fs.readFileSync(versionPath, 'utf8');
+            const checksumsBefore = fs.readFileSync(checksumsPath, 'utf8');
+
+            const checkOut = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8' });
+
+            assert.strictEqual(fs.readFileSync(versionPath, 'utf8'), versionBefore, '--check must never write .magic/.version');
+            assert.strictEqual(fs.readFileSync(checksumsPath, 'utf8'), checksumsBefore, '--check must never write .magic/.checksums');
+            assert.ok(!fs.existsSync(skillPath), '--check must never trigger skill regeneration — a write side effect on a read-only surface');
+            assert.match(checkOut, /No changes detected in \.magic\//);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6. check-prerequisites.js
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js should validate whole structure', () => {
@@ -3059,6 +3140,62 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(after.summary.coverage_percent, before.summary.coverage_percent, 'adding EXEMPT files must not change coverage_percent');
             assert.strictEqual(after.summary.total, before.summary.total, 'adding EXEMPT files must not change the denominator');
             assert.strictEqual(after.summary.exempt, before.summary.exempt + 3, 'the three new bookkeeping files must be counted as exempt');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 19. validate-hardlinks.js — table-driven pair coverage extended to
+    //     workflows/ ↔ .agents/workflows/ (R25). The pre-fix validator
+    //     hardcoded only two groups (AGENTS family, rules/), so a broken
+    //     workflows/ pair passed vacuously — this fixture proves the new
+    //     group actually detects the break rather than staying silent.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('validate-hardlinks.js covers workflows/ ↔ .agents/workflows/ and detects a broken pair', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            // Anchor required or validateAgentsLinks() exits fatally before
+            // any other group runs; siblings may be absent (soft warning only).
+            fs.writeFileSync(path.join(tempDir, 'AGENTS.md'), '# Agents\n');
+
+            const workflowsDir = path.join(tempDir, 'workflows');
+            const agentsWorkflowsDir = path.join(tempDir, '.agents', 'workflows');
+            fs.mkdirSync(workflowsDir, { recursive: true });
+            fs.mkdirSync(agentsWorkflowsDir, { recursive: true });
+
+            const src = path.join(workflowsDir, 'magic.example.md');
+            const link = path.join(agentsWorkflowsDir, 'magic.example.md');
+            fs.writeFileSync(src, '# Example\n');
+            fs.linkSync(src, link); // real hardlink, matching production layout
+
+            const validatorScript = path.join(tempDir, 'dev', 'scripts', 'validate-hardlinks.js');
+            const run = () => {
+                try {
+                    return { failed: false, output: execSync(`node "${validatorScript}"`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' }) };
+                } catch (e) {
+                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+                }
+            };
+
+            // Control — an intact pair must pass, and the workflows/ group
+            // must actually run (guards against a vacuous "group skipped").
+            const intact = run();
+            assert.strictEqual(intact.failed, false, 'an intact workflows/ pair must pass validation');
+            assert.match(intact.output, /Validating hardlinks for workflows/, 'the workflows/ group must actually run, not be silently absent');
+            assert.match(intact.output, /all 1 file\(s\) linked/);
+
+            // The reproduction: an inode-replacing edit (unlink + rewrite —
+            // the same shape a write-replace editor produces; see [C-001])
+            // delinks the pair. Under the pre-fix two-group validator this
+            // would pass silently, since workflows/ was never scanned at all.
+            fs.unlinkSync(src);
+            fs.writeFileSync(src, '# Example (edited)\n');
+            assert.notStrictEqual(fs.statSync(src).ino, fs.statSync(link).ino, 'fixture precondition: the edit must actually delink the pair');
+
+            const broken = run();
+            assert.strictEqual(broken.failed, true, 'the fix: a broken workflows/ pair must fail validation');
+            assert.match(broken.output, /Drift.*magic\.example\.md/, 'the specific drifted file must be named');
         } finally {
             cleanup(tempDir);
         }

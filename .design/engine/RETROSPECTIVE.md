@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-08-27
-**Full Sessions:** 7
-**Snapshots:** 20
+**Last Full Run:** 2026-08-28
+**Full Sessions:** 9
+**Snapshots:** 22
 
 ## Snapshots
 
@@ -30,6 +30,8 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-22 | Phase 24 | 0/0/32 | 7/0/0 | 24 | 🟢 |
 | 2026-08-22 | Phase 25 | 0/0/32 | 3/0/0 | 24 | 🟢 |
 | 2026-08-27 | Phase 26 | 0/0/32 | 5/0/0 | 24 | 🟢 |
+| 2026-08-28 | Phase 27 | 0/0/33 | 10/0/0 | 24 | 🟢 |
+| 2026-08-28 | Phase 28 | 0/0/33 | 7/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -299,3 +301,98 @@ Manual input / external hook still required — same gap as Session 1.
 | Specs in registry | 32 | 32 | 0 |
 | Blocked task rate | 0% | 0% | 0 |
 | Signal | 🟢 | 🟢 | → |
+
+## Session 8 — 2026-08-28
+
+**Scope:** Plan completion (Phase 27 — Idea Intake Gate Deployment, E6; single-phase cycle from an explicit owner directive through `/magic.spec` → `/magic.task` → `/magic.run`)
+**Specs in registry:** 33 (all Stable; 1 new — l1-idea-intake-gate.md 1.0.0 — and 3 amended: l1-decision-autonomy.md 1.2.0 → 1.3.0, l2-role-cards-governance.md 1.1.1 → 1.2.0, l2-test-suite.md 1.15.0 → 1.16.0)
+**Tasks total:** 10 this cycle (Done: 10, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged count; C27 amended, RULES 1.9.0 → 1.10.0)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.78 → 2.1.79, one C14 bump over 70 files, `--workflow magic.spec` |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 69/69; two engine defects surfaced during the bump and were repaired in-cycle before phase close, neither reaching a Done transition as a failure |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **First phase to widen a rule the engine was built to enforce, rather than fix or extend one.** C27 was authored from this same owner's complaint that the agent halts sessions with unanswerable surveys; this phase adds a sanctioned question channel to it. The two are consistent only because they address different fork classes — C27 forbids the agent to outsource *its own* decisions, while E6 recovers information that exists only in the requester's head — and the reconciliation had to be written into the constitution itself (the DA-1 containment paragraph) rather than left implicit. | `l1-decision-autonomy.md` 1.3.0 DA-2 containment note; `.design/RULES.md` 1.10.0 C27 narrowing blockquote |
+| 2 | **The spec's own deployment table under-counted its reconciliation sites by one, and planning caught it.** §5 listed Core Invariant 12 and the Ambiguity constraint; a third contradicting clause sat at `.magic/spec.md` Mode Transition — `Auto-Transfer`'s *"never stall on a 2nd 'are you sure?' cycle"*, a hard one-round cap directly against IK-6's uncapped convergent dialogue. Spec authorship reasons about the concept; planning greps the surface. The Planning Audit is where that gap closes, and it closed here. | Phase 27 PLAN.md entry "Reconciliation, not addition"; T-27A02 `Changes` |
+| 3 | **An uncapped dialogue needs a termination proof, and the first draft did not have one.** IK-6 originally read "a round is convergent if the reply removes at least one open question" — which admits a round closing one and opening two, i.e. a non-terminating loop. The Post-Update Review's Safety & Boundary lens caught it during authoring, and the rule was tightened to strict shrink of the open set, yielding a finiteness argument (bounded by the initial question count) without reintroducing the round counter the owner had explicitly rejected. A constraint the owner removes must be replaced by an equivalent guarantee, not simply dropped. | `l1-idea-intake-gate.md` 1.0.0 Document History; IK-6 clause 2 and its closing paragraph |
+| 4 | **A hardlink pair the engine depends on for correctness is guarded by nothing.** `workflows/*.md` are per-file hardlinks to `.agents/workflows/*.md`, and `sync-skills` generates the shipped skill wrappers from the `.agents/` side — yet `validate-hardlinks.js` checks only the AGENTS family and `rules/`, and the `[C-001]` Blocking Constraint text names only `rules/*.md`. The T-27D01 wrapper edit delinked the pair, and C14 shipped a wrapper built from pre-edit content while every integrity check reported success. The `[C-001]` verification ritual worked perfectly where it was defined and was silent one directory over. | Generated `SOURCE:` header read `.agents/workflows/magic.spec.md`; `grep -c intake skills/magic-spec/SKILL.md` = 0 after a green C14 run; diagnostic `WORKFLOWS_HARDLINK_UNGUARDED` |
+| 5 | **The obvious repair was itself blocked by a second defect.** Re-running `update-engine-meta` after restoring the link reported *"No changes detected in engine core"* and skipped skill regeneration entirely — its change detection reads `.magic/` checksums only, and the outstanding change lived in `workflows/`. The two defects compose into a silent-failure pair: the first ships stale output, the second refuses to re-ship correct output. Resolution required calling `sync-skills` directly, outside the C14 path. | Diagnostic `C14_SKIPS_WORKFLOWS_ONLY_CHANGE`; T-27T02 `Changes` |
+| 6 | **A recorded metric had drifted unnoticed for a full cycle.** `l2-test-suite.md` claimed 206 tests at v1.9.74 while the suite file stood at v1.9.75 with T208 present — T208 shipped during the rule batch-precedence work without a spec sync. The drift surfaced only because this phase touched the same fields. Bookkeeping fields that no check validates decay silently between the phases that happen to read them. | `l2-test-suite.md` 1.16.0 history row; suite header v1.9.75 vs. spec's recorded v1.9.74 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R25 | #4 | Extend `validate-hardlinks.js` with a third group covering `workflows/` ↔ `.agents/workflows/`, and widen the `[C-001]` Blocking Constraint text from "`rules/*.md` (or any AGENTS-family anchor)" to every linked pair the repository maintains — the constraint's value is entirely in naming the paths it protects | `dev/scripts/validate-hardlinks.js` + `STATE.md` `[C-001]`; route via `/magic.task engine` |
+| R26 | #5 | Either include `workflows/` in `update-engine-meta`'s change-detection scope, or run `sync-skills` unconditionally on every bump — it is idempotent, so the checksum verdict buys nothing and costs a silent stale-wrapper release | `.magic/scripts/update-engine-meta.js`; route via `/magic.task engine` |
+| R27 | #6 | When a spec records a count or version of an artifact it does not own (test totals, file counts, suite versions), the phase that changes that artifact should sync the recording spec in the same task — or the figure should be generated rather than transcribed | `l2-test-suite.md` authoring note; informational |
+| R28 | #3 | When an owner decision removes a bound (a cap, a limit, a budget), the resolving spec must supply a replacement guarantee and state its termination or safety argument explicitly — "uncapped" is a requirement, not a design | `spec.md` Post-Update Review, Safety & Boundary lens; informational |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 32 | 33 | +1 |
+| Cognitive suite tests | 207 (T208 present, unrecorded) | 211 | +4 |
+| Script harness tests | 68 | 69 | +1 |
+| Blocked task rate | 0% | 0% | 0 |
+| Engine defects found in-cycle | 0 | 2 (both recorded, neither fixed) | +2 |
+| Signal | 🟢 | 🟡 | ↓ |
+
+> Signal downgraded to 🟡 on the two open engine defects (R25, R26), not on phase execution — Phase 27 itself closed clean at 10/10. Both are silent-failure class: the integrity tooling reported success while shipping stale output. They are the strongest candidate scope for the next phase.
+
+## Session 9 — 2026-08-28
+
+**Scope:** Plan completion (Phase 28 — Silent-Failure Pair: Link Coverage & Regeneration Trigger; single-phase cycle graduated directly from this retrospective's own R25/R26, no `/magic.spec` pass — both remedies were concrete at recording time)
+**Specs in registry:** 33 (all Stable; unchanged count — 2 amended: `l2-agent-surface.md` 1.0.1 → 1.1.0, `l2-skill-wrappers.md` 1.3.0 → 1.4.0 — plus `l2-test-suite.md` 1.16.0 → 1.17.0 for harness coverage)
+**Tasks total:** 7 this cycle (Done: 7, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 194 → 200 nodes (+6), 384 → 401 edges (+17); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements`, 0 convention orphans (`diff-spec-graph` against the Phase 27 baseline)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.79 → 2.1.80, single C14 bump (no `--workflow` tag — only `update-engine-meta.js` fell inside `.magic/`) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; a JS-comment syntax bug (see Finding 3) was caught by `node -c` before any task reached Done; all three new harness cases were negative-controlled — run against reverted/pre-fix code and confirmed to fail — before being confirmed green against the fix |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A retrospective recommendation is a hypothesis, not a settled design — planning still has to check it against source.** R26 as recorded offered two options as equivalent ("widen checksum scope" vs. "decouple the trigger"); reading `update-engine-meta.js` during planning found an inline comment documenting that `workflows/`/`skills/`/`rules/` are excluded from the checksum manifest **on purpose**, to keep partial installations working. Widening it would have silently broken that contract to fix a reporting bug. The retrospective's own two-option framing would have let the executing agent pick either — this is the first phase where a retrospective-authored recommendation was narrowed by verifying against the code before execution, rather than implemented as recorded. | Phase 28 PLAN.md entry, `[DR]` "The fix binds the trigger, not the manifest"; `update-engine-meta.js` lines 58-60 |
+| 2 | **DESIGN_DEBT_PENDING-free graduation now covers retrospective-sourced items, not only spec-authored ones.** Phases 20/21/25/26 established the pattern for Backlog items whose design question a preceding `/magic.spec` pass had already closed; this phase is the first to graduate directly from `RETROSPECTIVE.md` recommendations with **no** `/magic.spec` pass at all — both R25 and R26 were concrete enough at recording time that planning could write their governing spec sections itself. | Phase 28 PLAN.md entry, "Graduated directly from the retrospective (not via `/magic.spec`)" |
+| 3 | **A doc-comment path example containing a literal `*/` silently truncates a JS block comment.** Writing `` `skills/*/SKILL.md` `` inside a `/** ... */` doc comment produces the character sequence `*/`, which JavaScript reads as the comment's own terminator — everything after it on that line becomes live code, and `node -c` failed with `SyntaxError: Unexpected identifier 'skills'`. Caught immediately (before any test ran, before the task was marked Done) by reflex-checking syntax after the edit; fixed by rewording to `skills/{name}/SKILL.md`. Worth naming as a class: any doc comment describing a path pattern with a bare `*` glob immediately before a `/` risks this, and the fix is always a wording change, never an escape sequence (JS comments have none). | `dev/scripts/validate-hardlinks.js`, T-28B01 `Changes` field |
+| 4 | **`fs.writeFileSync()` does not reproduce a broken hardlink on Windows/NTFS — only unlink-then-write does.** Verified via a throwaway reproduction before writing any test fixture: overwriting a hardlinked file in place rewrites through the shared inode (both link paths show the new content, same inode), while deleting and recreating the file produces a genuinely different inode. Every negative-control fixture in this phase's three new harness cases uses unlink+write for exactly this reason — a fixture built on plain overwrite would have silently failed to test anything, passing under both old and new code alike. | Live reproduction in `/tmp/hltest` during T-28T01 authoring, cross-checked against the actual Phase 27 field incident |
+| 5 | **Both of Phase 27's production defects were undetectable by every check that existed at the time.** `check-prerequisites`, `update-engine-meta --check`, and the pre-existing two-group `validate-hardlinks.js` all reported clean while a stale skill wrapper had already shipped — the defects surfaced only by a human-initiated `grep -c intake skills/magic-spec/SKILL.md` returning `0` where a reviewer expected a match. This retroactively validates the retrospective's own "silent-failure class" label from Session 8, and is precisely why this phase's harness cases carry a mandatory negative control rather than a plausibility argument: a check that has never been observed to fail is not yet evidence it can. | Retrospective Session 8, Findings 4-5; this session's T-28T01 negative-control method |
+| 6 | **The retrospective's own bookkeeping had itself drifted, in exactly this phase's theme.** Preparing this entry found two stale figures: the Snapshots table was missing Phase 27's row entirely, and the `**Full Sessions:**` header still read 7 despite Session 8 already being written below it — both silently wrong since Phase 27's own retro, caught only because writing Phase 28's entry required touching the same counters. A meta-instance of the pattern this phase exists to fix: recorded state can drift from reality with every existing check reporting nothing wrong. Backfilled in the same edit (Snapshots row for Phase 27, header counters corrected) rather than left for a future session to rediscover. | `RETROSPECTIVE.md` header (`**Full Sessions:** 7` before this edit, `## Session 8` already present) and Snapshots table (20 rows, Phase 27 absent) |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R29 | #1 | When a retrospective Recommendation row offers more than one option as apparently equivalent, the next planning pass that consumes it should explicitly read the governing source before choosing — and narrow the PLAN.md entry to the one it verified, not both, so the choice is not silently re-deferred to whoever executes the task | `task.md` Planning Audit — informational, no invariant change (the behavior this session already did is the pattern being named) |
+| R30 | #4 | Any harness fixture asserting drift/breakage on a hardlinked pair must use unlink-then-write, never a plain overwrite, to actually change the inode on Windows/NTFS — worth a one-line note near `createTempWorkspace`/`cleanup` in `dev/tests/engine.js` so a future fixture author does not have to rediscover this empirically | `dev/tests/engine.js`, informational comment near the top-level test helpers |
+| R31 | #6 | After writing a retrospective entry, verify the Snapshots-table row count and the `**Full Sessions:**`/`**Snapshots:**` header counters match the number of `## Session` headings and phase-completion events actually in the file, before closing the retro step — a cheap `grep -c` check that would have caught this session's own backfill immediately rather than at the next session | `retrospective.md` Retrospective Completion Checklist, add a bookkeeping self-check line |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 33 | 0 |
+| Cognitive suite tests | 211 | 211 | 0 |
+| Script harness tests | 69 | 72 | +3 |
+| Blocked task rate | 0% | 0% | 0 |
+| Engine defects open (R25/R26) | 2 | 0 | -2 |
+| Graph nodes / edges | 194 / 384 | 200 / 401 | +6 / +17 |
+| Signal | 🟡 | 🟢 | ↑ |
+
+> Signal restored to 🟢: the two open engine defects that downgraded Session 8's signal (R25, R26) are both closed, negative-controlled, and live-verified against the real tree — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry drift beyond the two `.design/` bookkeeping corrections this session made to its own past entry.

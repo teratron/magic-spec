@@ -31,6 +31,29 @@ for (let i = 0; i < args.length; i++) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
+ * Regenerates skill wrappers from `workflows/` (and `.agents/workflows/`).
+ *
+ * Deliberately callable independent of the `.magic/` checksum verdict —
+ * `workflows/` is excluded from that manifest by design (l2-skill-wrappers.md
+ * §3.2), so the checksum scan can never observe a workflows/-only edit.
+ * Idempotent: rewrites identical bytes when `workflows/` also didn't change,
+ * so calling it unconditionally on every write invocation is safe.
+ */
+function syncSkillWrappers() {
+    const syncSkillsPath = path.join(__dirname, '../../dev/scripts/sync-skills.js');
+    if (fs.existsSync(syncSkillsPath)) {
+        const syncSkills = require(syncSkillsPath);
+        syncSkills();
+    } else {
+        console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
+        diagnostics.record({
+            severity: 'warning', source: 'update-engine-meta', code: 'SKILL_SYNC_UNAVAILABLE',
+            message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
+        });
+    }
+}
+
+/**
  * Updates the engine metadata: checksums and version.
  * Triggered after any modification to the engine core (.magic, workflows).
  */
@@ -118,17 +141,7 @@ function updateEngineMeta() {
         // Ensure Skill wrappers are also in sync (C14 §3 Compatibility).
         // Fail-fast: if projection breaks, the engine state is inconsistent —
         // surface the error to the caller instead of silently bumping checksums.
-        const syncSkillsPath = path.join(__dirname, '../../dev/scripts/sync-skills.js');
-        if (fs.existsSync(syncSkillsPath)) {
-            const syncSkills = require(syncSkillsPath);
-            syncSkills();
-        } else {
-            console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
-            diagnostics.record({
-                severity: 'warning', source: 'update-engine-meta', code: 'SKILL_SYNC_UNAVAILABLE',
-                message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
-            });
-        }
+        syncSkillWrappers();
 
         // Dev-repo-only: keep .design/INDEX.md's Engine Version snapshot current
         // with every C14 bump. Consumer installs never reach this branch — the
@@ -149,8 +162,20 @@ function updateEngineMeta() {
 
         runGenerateChecksums();
         console.log('✅ Engine metadata and version updated.');
+    } else if (checkOnly) {
+        // Read-only verification path (the user's pre-commit hook). Scope is
+        // exactly what was scanned above — .magic/ against its checksum
+        // manifest — never workflows/, which the manifest excludes by design.
+        console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core).');
     } else {
-        console.log('ℹ️ No changes detected in engine core.');
+        // .magic/ itself is unchanged, but workflows/ is deliberately excluded
+        // from this checksum manifest (l2-skill-wrappers.md §3.2) — the scan
+        // above is structurally blind to a workflows/-only edit. Skill
+        // regeneration reads workflows/ directly, so it must run regardless
+        // of this verdict rather than being skipped alongside a version bump
+        // that genuinely isn't warranted here.
+        console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.');
+        syncSkillWrappers();
     }
 }
 

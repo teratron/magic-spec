@@ -126,6 +126,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated implementation plan (engine)
 - Updated a specification (engine)
 - Updated 8 specifications (engine)
+- Added a specification (engine)
 
 ### Added
 

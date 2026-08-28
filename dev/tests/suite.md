@@ -3247,6 +3247,72 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] After the user drops or revises the offending item, the full batch (including C4 removal) is re-offered as one atomic proposal — not auto-split.
 - **Guards tested:** Batch Version Precedence, Batch Guard Failure (no partial atomic application); regression for "The Recursive Quarantine" crisis (Improv Mode 2026-08-07).
 
+### T209 — Idea Intake Gate Stays Silent on a Coherent Idea (IK-1/IK-4)
+
+- **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate)
+- **Synthetic State:**
+  - `.design/engine/` initialized; source tree already contains a settings page and a theme token system.
+  - Trust Mode (C9) active; `MAGIC_DECISION_AUTONOMY` unset.
+- **Action:** User runs `/magic.spec add a dark theme to the settings page`.
+- **Expected:**
+  - [ ] IK-2 investigation runs (specs, `INDEX.md`, source tree read) before any gate evaluation.
+  - [ ] F1 does not hold (idea is coherent); F2 does not hold — every reading yields the same one-sentence Overview.
+  - [ ] **Zero questions asked.** Dispatch proceeds in the same turn.
+  - [ ] No narration announcing that the gate ran or passed (IK-1 silence).
+  - [ ] Residual detail-level uncertainty (token naming, preference storage) is recorded as `<!-- TBD: … -->`, never asked.
+- **Guards tested:** IK-1 silent-by-default evaluation; IK-4 closed firing conditions; the materiality test discriminating detail-level from essence-level ambiguity.
+- **Regression for:** intake gate degenerating into a mandatory user-visible stage on every invocation.
+
+### T210 — Essence Ambiguity Fires the Gate with Intent-Only, Plain-Language Questions (IK-3/IK-4/IK-5)
+
+- **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate)
+- **Synthetic State:**
+  - `.design/engine/` initialized; **no** notification subsystem exists in specs, `RULES.md`, or source.
+- **Action:** User runs `/magic.spec users should be notified about important changes`.
+- **Expected:**
+  - [ ] IK-2 investigation runs first and finds no precedent — the ambiguity is not resolvable from the repository.
+  - [ ] F2 holds: "in-app badge" and "email digest" produce different one-sentence Overviews.
+  - [ ] Gate fires with ≤3 questions, ≤3 options each, one option marked recommended (IK-5.5/IK-5.6).
+  - [ ] Question text is outcome-framed ("see these inside the app" / "get a message when the app is closed"), free of jargon, and states each option's consequence.
+  - [ ] **No technical question is asked** — storage format, queue technology, template engine, and schema never reach the user (IK-3).
+  - [ ] Question asks what the user wants **built**, never what the agent **should do** — `"Should I build the email version?"` is a C25 violation even at a fired gate.
+- **Guards tested:** IK-3 intent-only question domain; IK-4 F2 materiality test; IK-5 plain-language mandate; C25 form prohibition surviving inside an objective gate.
+- **Regression for:** the C27 §1.1 failure mode — surveys a non-specialist cannot answer.
+
+### T211 — Non-Convergent Reply Terminates the Gate Immediately (IK-6/IK-9)
+
+- **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate + Core Invariant 12 Anti-Stall)
+- **Synthetic State:**
+  - A gate fired under F2 with three open intent questions.
+- **Action (Test A — delegation):** User replies `"you decide"`.
+- **Expected A:**
+  - [ ] Gate terminates on that turn — **no second round is composed**.
+  - [ ] All three open questions become `<!-- TBD: … -->` markers in the Draft.
+  - [ ] Anti-Stall resumes at full force: the Draft spec is written on that same turn (IK-9).
+  - [ ] Delegation is treated as a first-class reply, not an error or a re-prompt.
+- **Action (Test B — set fails to shrink):** User answers one question but the answer opens two consequent questions.
+- **Expected B:**
+  - [ ] Round is **not** convergent — the open set did not get strictly smaller (closing one while opening two fails IK-6.2).
+  - [ ] Gate terminates; residual questions become TBD markers; dispatch proceeds.
+  - [ ] A follow-up may be admitted only when the same round closes more than it opens.
+- **Guards tested:** IK-6 strict-shrink termination (the finiteness proof for an uncapped dialogue); IK-9 Anti-Stall reconciliation; Mode Transition Auto-Transfer rebound to non-convergence rather than a round count.
+- **Regression for:** an uncapped dialogue with a "closes ≥1 question" test that admits a non-terminating loop — the defect caught by the spec's own Post-Update Review before promotion.
+
+### T212 — Technical Fork Never Reaches the User Channel (IK-3/DA-9)
+
+- **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate) + `l1-decision-autonomy.md` DA-2/DA-9
+- **Synthetic State:**
+  - `.design/engine/` initialized; idea is coherent and single-reading, but its realization admits several defensible technical paths.
+- **Action:** User runs `/magic.spec store user drafts so they survive a page reload`.
+- **Expected:**
+  - [ ] F1 and F2 both fail — one coherent reading, one Overview sentence. Gate stays silent.
+  - [ ] Storage mechanism, serialization format, eviction policy, and key naming are resolved by the agent via DA-3, recorded as `[DR]` or TBD — **never** surfaced as questions.
+  - [ ] No `AskUserQuestion` and no inline option menu appears at any point.
+  - [ ] Whitelist reasoning is explicit: no E1–E6 entry fires, so DA-1 decide-by-default governs.
+  - [ ] A `Clarifications` section or brief file is **not** created anywhere (IK-7), including on a silent gate.
+- **Guards tested:** IK-3 boundary test (derivable from repository or ordinary engineering judgment → not askable); IK-8 scope containment keeping E6 off Selection/Sequencing forks; IK-7 chat-only residency.
+- **Regression for:** E6 widening from an intent gate back into a general clarification channel.
+
 ```
-**Test Suite Finalized** - v1.9.75 (Last: T208)
+**Test Suite Finalized** - v1.9.76 (Last: T212)
 ```

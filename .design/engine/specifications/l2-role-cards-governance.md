@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.1.1
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -205,6 +205,17 @@ related_rules: [C13, C24]
 8. **Apply the PQ-4 bar:** keep only high-confidence, materially harmful findings with exact-text citations; drop anything without a concrete rewrite (PQ-5); never force findings to fill categories — an empty set is a valid outcome.
 9. **Emit verdict** (PQ-6): PASS → finalization proceeds; PASS-WITH-REWRITES (only ambiguity / cognitive-load / coverage findings) → producing role applies rewrites in the same invocation, no re-review; FAIL (any contradiction or composition conflict) → return to producing role, re-run gate after revision.
 
+**Idea Intake Gate Audit (E6, conditional):** runs only when a `magic.spec` invocation actually fired the Step 0.5 gate. A silent gate — the common case under IK-1 — has nothing to review, and reporting on it is noise. Findings follow the same PQ-4 bar and PQ-6 verdict grammar as the six standard dimensions.
+
+| Check | Violation |
+| --- | --- |
+| IK-2 discharged | A question whose answer was available in the repository |
+| IK-3 respected | A technical-realization question routed to the user |
+| IK-4 justified | The gate fired with neither F1 nor F2 demonstrable |
+| IK-5 wording | Jargon, mechanism-framed options, missing consequence, >3 questions or >3 options |
+| IK-6 convergence | A round continued after the open-question set failed to shrink |
+| IK-7 residency | A `Clarifications` section or brief artifact was written |
+
 **Anti-patterns:**
 
 - Reporting stylistic or speculative nits to appear thorough (violates PQ-4).
@@ -212,6 +223,7 @@ related_rules: [C13, C24]
 - Re-running domain checks already owned by spec-critic, planner, or constitutional-reviewer (violates PQ-7).
 - Rewriting the artifact directly instead of returning findings to the producing role (violates PQ-6).
 - Reviewing exempt artifacts: registries, changelogs, archives, typo-level patches (violates PQ-1/PQ-2).
+- Auditing an intake gate that never fired, or treating a silent gate as a missing step (violates IK-1).
 
 ## Canonical References
 
@@ -234,5 +246,6 @@ related_rules: [C13, C24]
 | Version | Date | Description |
 | --- | --- | --- |
 | 1.1.1 | 2026-08-13 | Corrected stale citation in Project-auditor §2 step 5: "Invariant 6 from analyze.md" named Depth Control (file-count HALT thresholds), not anti-fabrication — no invariant of that name exists in `analyze.md`; the concept is `.design/RULES.md` C13 §5 (Anti-Hallucination Audit) (field report, engine 2.1.71). Deployed `.magic/roles/project-auditor.md` carries the identical stale text and requires the matching correction — Engine Improvement, out of this spec's write scope. Typo-only patch (spec.md Amendment rule); no status transition. |
+| 1.2.0 | 2026-08-28 | `prompt-engineer` card gains the conditional **Idea Intake Gate Audit (E6)**: a six-row check table (IK-2 investigation discharged, IK-3 intent-only domain, IK-4 firing justified, IK-5 plain-language wording, IK-6 convergence, IK-7 chat-only residency) that runs only when a `magic.spec` invocation actually fired the Step 0.5 gate, plus the matching anti-pattern barring audit of a silent gate. Implements `l1-idea-intake-gate.md` §4.5. Whitelist reference widened E1-E5 → E1-E6 on the deployed card. Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-06-11 | Added §5 `prompt-engineer` card (reviewer): five-workflow trigger set, six-dimension PQ-3 protocol, PQ-6 verdict semantics. Implements l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9). |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted migrated-C24 governance cards (spec-critic, project-auditor, constitutional-reviewer, retrospective-analyst) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

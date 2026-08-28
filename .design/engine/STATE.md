@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-08-27 07:21
-**Phase:** 26 — Commit-Suggestion Feature Removal
+**Updated:** 2026-08-28 09:24
+**Phase:** 28 — Silent-Failure Pair: Link Coverage & Regeneration Trigger
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-26T01 Update harness for commit-suggestion removal
-- **Spec:** l2-finalize-state-accuracy.md §9/§10 (concept: l1-session-continuity.md SC-2.1(c), SC-1.2)
+- **Task:** T-28T02 C14 bump and engine integrity verification
+- **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
 - **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Overall: [25/25] ████████ 100%
+Overall: [27/27] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-08-28 **Decision:** Phase 28 complete. Provides: l2-agent-surface.md 1.1.0 (SS4 closed 3-group linked-pair inventory), l2-skill-wrappers.md 1.4.0 (SS3.2 regeneration-trigger invariant), validate-hardlinks.js table-driven for rules/+workflows/, STATE.md [C-001] widened to all 3 groups, update-engine-meta.js syncSkillWrappers() called unconditionally on write path. Harness 69->72, all 3 negative-controlled against reverted/pre-fix code (incl. actual git-HEAD validate-hardlinks.js). Engine 2.1.79->2.1.80. Plan complete - Retro L2 run (Session 9), signal restored 🟡->🟢.
+- 2026-08-28 **Decision:** Phase 27 complete. Provides: Idea Intake Gate (E6) deployed — .magic/spec.md Step 0.5 + three reconciled anti-question clauses; E6 registered across DA-2 table, .design/RULES.md 1.10.0, .magic/templates/rules.md, rules/magic.md; prompt-engineer conditional IK audit; docs/spec.md SS5.0; suite T209-T212 (v1.9.76); engine 2.1.79. Two engine defects found and recorded, not fixed: workflows/ hardlink pair is unguarded by validate-hardlinks.js and C-001, and update-engine-meta skips skill regeneration on a workflows-only change.
+- 2026-08-28 **Decision:** Phase 27 planned. Idea Intake Gate (l1-idea-intake-gate.md v1.0.0, IK-1..IK-9) deployment across 7 tracks: E6 registration must land atomically in DA-2 table + .design/RULES.md + .magic/templates/rules.md + rules/magic.md. Planning surfaced a 3rd reconciliation site the spec's SS5 missed — the Mode Transition Auto-Transfer one-round cap contradicting IK-6.
 - 2026-08-27 **Decision:** Phase 26 complete. Provides: commit-suggestion feature fully removed from finalize.js/commit-suggester.js/workspace.json configs; harness updated (69 -> 68 tests, capability removed not regressed).
 - 2026-08-22 **Decision:** Phase 25 complete. Provides: finalize.js deduped CHANGELOG stdout row now names the release-changelog remedy (SS4.5), no bullet-content or dedup-logic change; dev/tests/engine.js first live-CLI regression coverage for the CHANGELOG-write branch (autoChangelog: true), 68 -> 69. Field report (engine 2.1.73) proposed a fix that would have violated RC-11; rejected in favor of the discoverability fix.
-- 2026-08-22 **Decision:** Phase 24 complete. Provides: dev/scripts/sync-engine-snapshot.js (L2 writer) + guarded update-engine-meta.js delegation, dev-repo-only .design/INDEX.md Engine Version sync (consumer projects unchanged); rules/magic.md SS1 sole-writer carve-out; finalize.js Next Action title-stripping regression fixed (found by this phase's own planning run). Harness 66 -> 68, engine 2.1.73 -> 2.1.74, snapshot 2.1.72 -> 2.1.74 live-verified.
-- 2026-08-22 **Decision:** Phase 23 complete. Provides: finalize.js task-level Blocked/Assignment precedence (isTaskExcluded + terminal branch, SC-2.1(c)); update-state.js + templates/state.md decision-prune preamble honesty; l2-finalize-state-accuracy.md 1.1.1 (both required fixes implemented, stale §12 claim corrected); harness 65 -> 66.
-- 2026-08-13 **Decision:** Phase 22 complete. Provides: check-prerequisites.js terminal-row plan-complete predicate, analyze.md Mode C Depth Control bypass parity, project-auditor.md citation fix.
 
 ## Blockers
 
@@ -39,7 +39,7 @@ Overall: [25/25] ████████ 100%
 <!-- Anti-patterns discovered through real failures. MANDATORY reading. -->
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
 
-- [C-001] **Hardlink Edit Breakage**: editing `rules/*.md` (or any AGENTS-family anchor) with write-replace tools breaks the `.agents/` hardlink, leaving a stale copy. After any such edit: recreate the link and run `node dev/scripts/validate-hardlinks.js`.
+- [C-001] **Hardlink Edit Breakage**: editing any file with an `.agents/` twin — the AGENTS-family anchor (`AGENTS.md`/`CLAUDE.md`/`GEMINI.md`/`CODEX.md`/`QWEN.md`), `rules/*.md`, or **`workflows/*.md`** — with write-replace tools breaks the hardlink, leaving a stale copy. This is the complete, closed set (`l2-agent-surface.md` §4); `skills/*/SKILL.md` is NOT in it (independently generated, not linked). The break is invisible at edit time — the write always reports success. After any such edit: run `node dev/scripts/validate-hardlinks.js` (now covers all three groups) to detect it, and if it reports drift, recreate the link (`Remove-Item` + `New-Item -ItemType HardLink`) before re-verifying.
 
 ## Session Continuity
 

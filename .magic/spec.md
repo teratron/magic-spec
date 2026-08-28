@@ -23,7 +23,7 @@ Universal process for managing project specifications in `.design/specifications
 9. **Delta-Editing**: for spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 10. **Closure**: every task ends with a mandatory "Task Completion Checklist".
 11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
-12. **Anti-Stall**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity.
+12. **Anti-Stall**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity. **Suspended only during an active IK-6 convergent dialogue** (Step 0.5 Idea Intake Gate) — and the moment that gate terminates, by empty set or by non-convergence, this invariant resumes at full force. A gate that fired without an IK-4 condition, or that continued past a non-convergent round, is an Anti-Stall violation, not an exemption.
 
 ## Directory Structure
 
@@ -98,6 +98,24 @@ Apply `context.md` §Step 0 Workspace Intent Detection:
 
 The detection result is recorded in the agent's working state for the remainder of the workflow invocation. No subsequent step re-runs Step 0 within the same invocation.
 
+### Step 0.5: Idea Intake Gate (E6)
+
+> Governed by `l1-idea-intake-gate.md` (IK-1 through IK-9). Runs after Step 0, before any mode branch. Skipped entirely when the invocation carries no idea (blank trigger, `stabilize`, `amend {file}` with no new content).
+
+**Silent by default (IK-1)**: this is an evaluation, not a stage. When no firing condition holds — the common case — proceed to dispatch in the same turn with no narration. Never announce that the gate ran clean.
+
+1. **Investigate first (IK-2)**: before composing any question, exhaust what the repository can answer — global + workspace `RULES.md`, workspace `INDEX.md`, specs on the idea's topic, the spec graph, the source tree. A question is legitimate only for what cannot exist in the repository: the user's intent. *"I did not read the specs"* is never grounds to ask.
+2. **Evaluate the two firing conditions (IK-4)** — the list is closed:
+   - **F1 Incoherence** — the idea is internally contradictory, or admits no single coherent reading.
+   - **F2 Essence ambiguity** — ≥2 coherent readings yield **materially different** specs. *Test*: draft the one-sentence Overview each reading produces. Same sentence → detail-level, no fire. Different sentence → fire.
+   - Neither holds → record any residual doubt as `<!-- TBD: {question} -->` and dispatch.
+3. **Stay in the intent layer (IK-3)**: ask only what is being built, for whom, where its boundaries are, what "working" looks like, or which of two conflicting requirements wins. **Never** ask storage format, library, schema, naming, algorithm, layer, or test strategy — the engineer decides those via DA-3 and records a TBD or `[DR]`. Routing a technical fork to a user who may lack the expertise to answer is the failure mode C27 exists to prevent.
+4. **Phrase for a non-specialist (IK-5)**: no unexplained jargon; options describe outcomes ("saved even if the browser closes"), not mechanisms ("persisted server-side"); state each option's consequence; ≤3 questions per round, ≤3 options each; mark a recommended option. C25's ban on permission-seeking phrasing still binds the *form*: ask what the user wants **built**, never what the agent **should do**.
+5. **Converge or stop (IK-6)**: rounds are uncapped but must shrink. The open-question set MUST be strictly smaller at each round's end than at its start — closing one while opening two is not convergence. A non-convergent reply (restated intent, `"you decide"`, unmappable or off-topic answer) **terminates the gate immediately**: remaining questions become `<!-- TBD: … -->` markers and dispatch proceeds. This shrink rule is what makes an uncapped dialogue provably finite.
+6. **Leave no trace (IK-7)**: clarifications are conversational. Absorb answers into the spec body in the spec's own voice — no `Clarifications` section, no brief file, no log.
+
+**Scope containment (IK-8)**: E6 fires only on the content of a freshly supplied idea. It never covers the agent's own workflow choices (which spec, which phase, which order), proposal surfaces, or drift offers — those remain declarative `[DR]` narrations under DA-9.
+
 ### Explore Mode (Brainstorming)
 
 Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strives for maximum speed from idea to execution.
@@ -113,7 +131,7 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 Explore Mode ends automatically; the agent MUST transition to Dispatching/Writing when:
 
 1. User provides specific logic, features, or architectural constraints — **transition on first concrete-input message**, do not wait for additional exchanges.
-2. **Auto-Transfer (C9 default)**: if the user's reply is ambiguous or restates intent without new content, write a Draft spec immediately with `<!-- TBD: {open question} -->` markers and proceed to Dispatch. Never stall on a 2nd "are you sure?" cycle — the transition is narrated, never posed as a question (DA-9).
+2. **Auto-Transfer (C9 default)**: if the user's reply is ambiguous or restates intent without new content, write a Draft spec immediately with `<!-- TBD: {open question} -->` markers and proceed to Dispatch. This is IK-6's termination rule seen from Explore Mode: never continue a round that did not shrink the open-question set — the bound is non-convergence, not a round count, so a dialogue that keeps closing questions may continue. The transition is narrated, never posed as a question (DA-9).
 
 ### Project Analysis Delegation
 
@@ -152,7 +170,7 @@ graph TD
 
 **Constraints**:
 
-- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), T4 tier routing, existence/parent guards, hard-fork — remain permitted per their own rules.) The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
+- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), T4 tier routing, existence/parent guards, hard-fork, and the Step 0.5 Idea Intake Gate (E6) — remain permitted per their own rules.) The E6 carve-out is narrow by construction: it resolves at Step 0.5, **before** dispatch, and covers only intent incoherence (F1) or essence ambiguity (F2). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
 - **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
@@ -328,6 +346,9 @@ Checklist — {task description}
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
   ☐ Instruction Quality: dispatched sections reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
+  ☐ Idea Intake (E6): Step 0.5 evaluated; gate fired only on F1/F2 after IK-2 investigation, questions
+     stayed in the intent layer (IK-3) and plain language (IK-5), dialogue shrank each round (IK-6),
+     no clarification artifact written (IK-7)
   ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates; ambiguity recorded as TBD-markers
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

@@ -9,11 +9,19 @@ const path = require('path');
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Verifies two hardlink groups:
+ * Verifies every linked-pair group declared in l2-agent-surface.md §4
+ * (the closed inventory — adding a fourth group there without adding it
+ * here is a spec-compliance gap, not a deferrable follow-up):
  *
  *   1. Per-vendor agent rule files (CLAUDE.md, GEMINI.md, QWEN.md, CODEX.md)
  *      share the same inode as the AGENTS.md anchor.
  *   2. Each `rules/*.md` shares the same inode as `.agents/rules/*.md`.
+ *   3. Each `workflows/*.md` shares the same inode as
+ *      `.agents/workflows/*.md`.
+ *
+ * `skills/{name}/SKILL.md` is deliberately NOT a group here — it is
+ * independently generated into both `skills/` and `.agents/skills/` by
+ * sync-skills.js, not a hardlink pair (l2-agent-surface.md §2.2, §4).
  *
  * Why: the project deliberately uses hardlinks instead of duplicated files.
  * If an editor or careless `cp` replaces one of them, agents will diverge.
@@ -33,6 +41,8 @@ const ANCHOR = 'AGENTS.md';
 const SIBLINGS = ['CLAUDE.md', 'GEMINI.md', 'QWEN.md', 'CODEX.md'];
 const RULES_DIR = 'rules';
 const AGENTS_RULES_DIR = path.join('.agents', 'rules');
+const WORKFLOWS_DIR = 'workflows';
+const AGENTS_WORKFLOWS_DIR = path.join('.agents', 'workflows');
 
 const args = process.argv.slice(2);
 const strict = args.includes('--strict');
@@ -102,41 +112,47 @@ function validateAgentsLinks() {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Group 2 — rules/* ↔ .agents/rules/*
+// Groups 2 & 3 — directory-pair hardlinks (rules/, workflows/)
 // ───────────────────────────────────────────────────────────────────────────
+// Both groups share identical shape (flat directory of *.md files, each
+// paired by name with its .agents/ twin) — table-driven so a future pair
+// declared in l2-agent-surface.md §4 is a data addition here, never a
+// fourth copy of this block. This is the direct fix for the gap that let
+// workflows/ exist unguarded: a hardcoded per-group function has to be
+// remembered and added for each new pair; a table only has to be extended.
 
-function validateRulesLinks() {
-    const rulesPath = path.join(projectRoot, RULES_DIR);
-    if (!fs.existsSync(rulesPath)) {
+function validateDirectoryPairLinks(sourceDir, targetDir, label) {
+    const sourcePath = path.join(projectRoot, sourceDir);
+    if (!fs.existsSync(sourcePath)) {
         return { drift: 0, missing: 0, fatal: false, skipped: true };
     }
 
-    const ruleFiles = fs.readdirSync(rulesPath, { withFileTypes: true })
+    const files = fs.readdirSync(sourcePath, { withFileTypes: true })
         .filter(d => d.isFile() && d.name.endsWith('.md'))
         .map(d => d.name);
 
-    if (ruleFiles.length === 0) {
+    if (files.length === 0) {
         return { drift: 0, missing: 0, fatal: false, skipped: true };
     }
 
-    console.log(`\n🔍 Validating hardlinks for rules (${RULES_DIR}/ ↔ ${AGENTS_RULES_DIR}/)...`);
+    console.log(`\n🔍 Validating hardlinks for ${label} (${sourceDir}/ ↔ ${targetDir}/)...`);
 
     let drift = 0;
     let missing = 0;
     let linked = 0;
 
-    for (const file of ruleFiles) {
-        const sourcePath = path.join(projectRoot, RULES_DIR, file);
-        const targetPath = path.join(projectRoot, AGENTS_RULES_DIR, file);
+    for (const file of files) {
+        const sourceFilePath = path.join(projectRoot, sourceDir, file);
+        const targetFilePath = path.join(projectRoot, targetDir, file);
 
-        const sourceStat = statSafe(sourcePath);
-        const targetStat = statSafe(targetPath);
+        const sourceStat = statSafe(sourceFilePath);
+        const targetStat = statSafe(targetFilePath);
 
         if (!sourceStat) continue;
 
         if (!targetStat) {
             const tag = strict ? '❌' : '⚠️';
-            console.log(`   ${tag} Missing: ${AGENTS_RULES_DIR}/${file}`);
+            console.log(`   ${tag} Missing: ${targetDir}/${file}`);
             missing++;
             continue;
         }
@@ -145,17 +161,17 @@ function validateRulesLinks() {
         const targetFp = fingerprint(targetStat);
 
         if (sourceFp !== targetFp) {
-            console.error(`   ❌ Drift: ${RULES_DIR}/${file} (${sourceFp}) ≠ ${AGENTS_RULES_DIR}/${file} (${targetFp}).`);
+            console.error(`   ❌ Drift: ${sourceDir}/${file} (${sourceFp}) ≠ ${targetDir}/${file} (${targetFp}).`);
             drift++;
         } else {
-            console.log(`   ✅ ${RULES_DIR}/${file} → ${AGENTS_RULES_DIR}/${file}`);
+            console.log(`   ✅ ${sourceDir}/${file} → ${targetDir}/${file}`);
             linked++;
         }
     }
 
     const summary = missing > 0
-        ? `${linked}/${ruleFiles.length} linked, ${missing} missing`
-        : `all ${ruleFiles.length} rule file(s) linked`;
+        ? `${linked}/${files.length} linked, ${missing} missing`
+        : `all ${files.length} file(s) linked`;
     console.log(`   ↳ ${summary}.`);
 
     return { drift, missing, fatal: false };
@@ -169,10 +185,11 @@ function main() {
     const agents = validateAgentsLinks();
     if (agents.fatal) process.exit(1);
 
-    const rules = validateRulesLinks();
+    const rules = validateDirectoryPairLinks(RULES_DIR, AGENTS_RULES_DIR, 'rules');
+    const workflows = validateDirectoryPairLinks(WORKFLOWS_DIR, AGENTS_WORKFLOWS_DIR, 'workflows');
 
-    const totalDrift = agents.drift + rules.drift;
-    const totalMissing = agents.missing + rules.missing;
+    const totalDrift = agents.drift + rules.drift + workflows.drift;
+    const totalMissing = agents.missing + rules.missing + workflows.missing;
 
     if (totalDrift > 0) {
         console.error(`\n❌ Hardlink validation failed: ${totalDrift} drifted file(s). Run /magic.dev.init to rebuild.`);
@@ -191,9 +208,13 @@ function main() {
     }
 }
 
-try {
-    main();
-} catch (e) {
-    console.error(`❌ Hardlink validation crashed: ${e.message}`);
-    process.exit(1);
+module.exports = { validateAgentsLinks, validateDirectoryPairLinks, main };
+
+if (require.main === module) {
+    try {
+        main();
+    } catch (e) {
+        console.error(`❌ Hardlink validation crashed: ${e.message}`);
+        process.exit(1);
+    }
 }

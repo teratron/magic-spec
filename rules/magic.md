@@ -333,8 +333,17 @@ does not revert to host-assistant defaults at workflow boundaries.
   preserves the user's control point.
 - Questions are reserved for the closed escalation whitelist (destructive
   actions, external release artifacts, hard-fork ambiguity, constitutional
-  amendments, workspace-routing ambiguity). One question, at most three fixed
-  options, recommended default marked.
+  amendments, workspace-routing ambiguity, and idea-intake incoherence).
+  One question, at most three fixed options, recommended default marked.
+- **E6 (Idea Intake Gate)**: `/magic.spec {idea}` may clarify before writing
+  specs — but only after the agent has exhausted what the repository can
+  answer, and only when the idea is internally contradictory or admits two
+  readings that would produce materially different specifications. Technical
+  realization (storage, library, schema, naming, algorithm) is **never**
+  asked — the agent decides and records a `[DR]` or a `<!-- TBD: … -->`
+  marker. Questions must be answerable without engineering expertise, and
+  each round must close more questions than it opens or the gate ends and
+  drafting proceeds.
 
 ### Exemptions
 

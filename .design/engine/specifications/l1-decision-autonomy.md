@@ -1,6 +1,6 @@
 # Autonomous Decision Protocol
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -14,6 +14,7 @@ Defines the engine-wide protocol by which agents resolve decision points autonom
 - [l1-role-system.md](l1-role-system.md) - The protocol binds all role cards uniformly; §6.2 records why a dedicated "dispatcher" role was rejected.
 - [l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) - C26 ambiguity gate is Escalation Whitelist entry E5; its fixed three-option menu is the reference for the Single-Question Format.
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Question-format violations (DA-5) become an audit lens for the `prompt-engineer` role.
+- [l1-idea-intake-gate.md](l1-idea-intake-gate.md) - Supplies whitelist entry E6 and bounds it: intent-only question domain, plain-language mandate, convergent termination.
 
 ## 1. Motivation
 
@@ -63,8 +64,11 @@ User input may be solicited ONLY when the fork matches one of these entries (con
 | E3 | Hard-fork architectural ambiguity: >1 incompatible path, no objective tiebreaker after DA-3 exhausts all criteria | C9 exception 3 |
 | E4 | Constitutional amendments via T1–T3 triggers (Propose & Wait) | RULES.md trigger table |
 | E5 | Workspace-routing ambiguity gate (WI-4 three-option menu) | C26 |
+| E6 | Intent incoherence (F1) or essence ambiguity (F2) in freshly supplied idea input, after repository investigation is exhausted | [l1-idea-intake-gate.md](l1-idea-intake-gate.md) |
 
-The list is closed: extending it requires a constitutional amendment (itself an E4 event). Any question that does not match E1–E5 is a protocol violation.
+The list is closed: extending it requires a constitutional amendment (itself an E4 event). Any question that does not match E1–E6 is a protocol violation.
+
+**E6 does not loosen DA-1.** It covers information that exists only in the requester's head — intent — which no investigation can recover, so DA-3 has nothing to rank. It explicitly excludes technical realization (storage, library, schema, naming, algorithm), which stays with the agent: routing those to a user who may lack the expertise to answer is the exact §1.1 failure mode this protocol was written to end. Selection forks, Sequencing forks, and every proposal surface remain declarative under DA-9 regardless of E6. Registration of E6 was itself the E4 event this clause anticipates, discharged by explicit owner directive.
 
 ### DA-3 — Deterministic Selection Procedure
 
@@ -198,6 +202,7 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.0 | 2026-08-28 | DA-2 whitelist extended with **E6 — intent incoherence (F1) or essence ambiguity (F2) in freshly supplied idea input**, governed by [l1-idea-intake-gate.md](l1-idea-intake-gate.md); closure clause rescoped E1–E5 → E1–E6. Added the containment note establishing that E6 does not loosen DA-1: it recovers information no investigation can produce (intent), explicitly excludes technical realization, and leaves Selection/Sequencing forks and every proposal surface declarative under DA-9. Registration was itself the E4 event the closure clause anticipates, discharged by explicit owner directive. Reciprocal `Related Specifications` link added. Amendment Rule applied — reverted to `RFC` for re-review, re-promoted to `Stable` after the 5-lens Post-Update Review and Instruction Quality Pass passed within the same invocation. |
 | 1.2.0 | 2026-06-13 | DA-9 extended to drift-revalidation offers: the Engine Upgrade Detection prompt (`rules/MAGIC.md` §1) binds to DA-8/DA-9 — narrate one recommended path (`/magic.analyze`) and proceed, never `[y/n]`. §5.3(c) deployment touch-point added. Closes the DA-9 deployment tail Phase 9 missed (§1 still carried a `[y/n]` menu — the recurring drift friction). |
 | 1.1.0 | 2026-06-13 | Added DA-9 (Proposal Surfaces Are Declarative): Explore Creative Sparks / Dispatch Notice / Mode Transition are DR narrations, never `AskUserQuestion`; a blank invocation is a Selection fork, not an Escalation. Closes the §5.3 deployment gap that permitted a non-whitelisted selection question (field evidence: live violation in a `/magic.spec` Blank Trigger). §4.1 taxonomy note, §5.3 proposal-surface touch-points, and §5.6 simulation extended. Re-reviewed under Trust Mode (C9). |
 | 1.0.0 | 2026-06-12 | Promoted to Stable via Trust Mode (C9): MVC satisfied (Overview + Core Invariants DA-1–DA-8), no RULES.md conflicts after C13 §3 amendment, no circular dependencies. |

@@ -285,11 +285,13 @@ Governed in full by the engine's Workspace Intent Routing protocol. Operational 
 Governed in full by the engine's Autonomous Decision Protocol. Operational summary:
 
 1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
-2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26). The list is closed; extending it is itself an E4 event.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26), E6 intent incoherence or essence ambiguity in freshly supplied idea input (Idea Intake Gate). The list is closed; extending it is itself an E4 event.
 3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
 4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
 5. **Single-Question Format (DA-5)**: at whitelist gates — exactly one question, at most three fixed options, recommended default marked. Open-ended question batteries are forbidden in every mode, including Explore.
 6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
 7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
 
-Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5 — C27 adds the decision procedure itself.
+Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5, the Idea Intake Gate supplies E6 — C27 adds the decision procedure itself.
+
+> **E6 is narrow by construction.** It fires only on the content of a freshly supplied idea, and only after the agent has exhausted what the repository can answer. Technical realization — storage, library, schema, naming, algorithm — is never routed to the user; Selection and Sequencing forks stay declarative `[DR]` narrations under DA-9. Questions must be answerable without engineering expertise, and the dialogue must shrink its open-question set each round or terminate.

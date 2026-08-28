@@ -35,7 +35,7 @@ The engine enforces 12 mandatory invariants during every spec operation:
 | 9 | **Delta-Editing** | Files >200 lines use search-replace, not full rewrites |
 | 10 | **Closure** | Every session ends with a mandatory Task Completion Checklist |
 | 11 | **Rules** | `RULES.md` is the project constitution; check before every operation |
-| 12 | **Anti-Stall** | If intent captured and >=1 question asked without writing a file, the agent must write a Draft spec on the next turn |
+| 12 | **Anti-Stall** | If intent captured and >=1 question asked without writing a file, the agent must write a Draft spec on the next turn — suspended only while an Idea Intake Gate dialogue is still making progress (§5.0) |
 
 ## 3. Specification Layers
 
@@ -63,6 +63,23 @@ Specifications move through a lifecycle. In **Trust Mode (C9)**, transitions are
 
 ## 5. Key Workflow Modes
 
+### 5.0 Idea Intake Gate
+
+Before writing anything, `/magic.spec {your idea}` checks whether it actually understood you. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
+
+Occasionally the agent will ask you something first. It is allowed to do so in only two situations:
+
+- **Your idea contradicts itself.** "Save everything instantly, and always ask before saving" cannot both be true.
+- **Your idea has two honest readings that lead to different products.** "Notify users about important changes" could mean a badge inside the app, or an email that reaches them when the app is closed. Those are different systems, and guessing wrong wastes the whole build.
+
+**What you will never be asked.** Anything technical is the agent's job, not yours — which database, which library, what to name the files, which algorithm. If you are ever asked a question that needs engineering knowledge to answer, that is a defect in the question.
+
+**How the questions are phrased.** In plain language, describing outcomes rather than mechanisms ("saved even if you close the browser", not "persisted server-side"), with the consequence of each choice spelled out. At most three questions at a time, at most three options each, with a recommended one marked.
+
+**How it ends.** The conversation continues only while it is making progress — each round has to settle more than it opens. Answer **"you decide"** at any point and the gate closes immediately: the agent writes the specification and marks anything still unresolved with a `TBD` note you can revisit later. Nothing is lost, and you are never trapped in a questionnaire.
+
+Answers are not stored separately. They go straight into the specification's own wording, so the finished document reads as a set of decisions rather than a transcript.
+
 ### 5.1 Explore Mode (Brainstorming)
 
 A safe exploration phase. The agent scans `INDEX.md` and project structure, then proposes "Creative Sparks" (topics for new specs or refinement).
@@ -71,7 +88,7 @@ A safe exploration phase. The agent scans `INDEX.md` and project structure, then
 
 - User provides specific logic or architectural constraints.
 - User uses confirmation words ("go ahead", "do it", "looks good").
-- **Auto-Transfer (C9)**: After the 2nd idea exchange in Trust Mode.
+- **Auto-Transfer (C9)**: as soon as an exchange stops making progress — a reply that restates intent, adds nothing new, or hands the decision back ("you decide"). The bound is progress, not a fixed number of rounds (see §5.0).
 
 ### 5.2 Dispatching from Raw Input
 

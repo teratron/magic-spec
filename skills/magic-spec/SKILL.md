@@ -22,7 +22,8 @@ handoffs:
 
 **Hints:**
 
-- **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation).
+- **Idea Intake Gate (E6)**: raw idea input passes a silent Step 0.5 check before dispatch. Clarify ONLY when the idea is self-contradictory or admits two readings yielding materially different specs — and only after exhausting the repository. Never ask technical questions (storage, library, naming, algorithm); phrase for a non-specialist; each round must close more than it opens or the gate ends. See `.magic/spec.md §Step 0.5`.
+- **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation, suspended during an active intake dialogue).
 - **Delta Edits**: use surgical search-and-replace for specs >200 lines.
 - **T4 Capture**: input contains "remember that..." / "project rule:" → spec workflow applies Tier Routing + Duplication Check before writing (see `.magic/spec.md §T4 Inline Guards`).
 - **Pipeline**: `magic-spec` → `magic-task` → `magic-run`.
