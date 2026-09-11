@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.0.0
+**Version:** 3.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -84,6 +84,20 @@ This section pins the eligibility predicate for the **C8 (Phase Archival)** conv
 
 A substring scan (`content.includes('- [ ]')`) over the whole file is **non-conformant**: it false-positives on documentation of checkbox syntax and silently suppresses archival. This precision is the acceptance criterion for the `allChecked` helper in `phase-archiver.js`.
 
+### 6.1 Workbook Name Recognition `[ADDED]`
+
+§6 above pins the *content* predicate — which `- [ ]` occurrences count. It says nothing about the **name** predicate: which files are phase workbooks in the first place. That omission is how a `status: Done` phase with a fully checked checklist could be reported as "No completed phases to archive" with no diagnostic of any kind.
+
+**Canonical shape.** A phase workbook is `phase-{N}[{track}].md` — a phase number, an optional trailing track suffix of one or more letters, matched case-insensitively. The track dimension is not new: the task-ID grammar `T-{phase}{track}{seq}` has always carried it, and splitting a large phase into `phase-10a.md` / `phase-10b.md` is the file-level expression of the same split. A recognizer bound to `phase-{N}.md` alone rejects every such workbook **before its frontmatter is read**, so eligibility is decided by filename rather than by status.
+
+**Single source of truth.** The recognizer, its parser, and its ordering comparator live in one module (`lib/phase-files.js`) and are consumed by every scanner that asks "is this a phase file" — archival, context-economy scanning, and the next-action phase-file lookup. They are shared rather than duplicated precisely so they cannot drift into disagreeing about what a phase file is; the defect above existed in three places at once because the regex had been copied three times.
+
+**Ordering.** Phase files are ordered by number first, track suffix second. A lexical sort of raw filenames is non-conformant once phase numbers reach two digits — it places `phase-10.md` ahead of `phase-2.md`.
+
+**Accounting (no silent exclusion).** A Markdown file in `tasks/` that matches no phase shape MUST be reported, not dropped without comment. Archival is never performed on it, but "I never looked at that file" and "I read it and it was not eligible" are different answers to the user's question, and a scanner that renders them identically leaves no thread to pull. `archiveCompletedPhases()` therefore returns an `unrecognized` list alongside `archived` and `skipped`, and the `archive-phases` CLI names those files on the way out. The `--check` path stays silent on them by design: it runs inside the pre-commit hook, whose remit is pending archival, not naming hygiene on every commit.
+
+**Regression coverage.** The harness must pin three properties: a `Done`, fully-checked `phase-10b.md` is a candidate; a suffixed file with a genuinely open checklist is still not one (the suffix is not a free pass); and a non-phase `.md` in `tasks/` comes back in `unrecognized` rather than vanishing.
+
 ## 7. Archival Index Rewrite `[ADDED]`
 
 ### 7.1 Scope Gap in the Prior Contract
@@ -147,6 +161,7 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 | `.magic/scripts/lib/git-utils.js` | Read-only git helpers |
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival (§6) and the `TASKS.md`/`PLAN.md` index rewrites (§7) |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
+| `.magic/scripts/lib/phase-files.js` | Phase-workbook name recognition, parsing, and ordering (§6.1) |
 | `.magic/scripts/lib/significance.js` | Significance whitelist evaluation |
 | `.magic/scripts/update-state.js` | STATE.md patch utility invoked by §5.1 |
 
@@ -154,6 +169,7 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.1.0 | 2026-09-11 | Agent | New **§6.1 Workbook Name Recognition**, closing a defect with the same shape as §7's: a behavior with no stated contract. §6 pinned only the content predicate, so the *name* predicate went unexamined and was spelled `/^phase-\d+\.md$/` in three separate scanners. A track-split workbook (`phase-10b.md`) was therefore excluded by filename before its `status: Done` frontmatter was ever read, and the CLI reported "No completed phases to archive" — a silent exclusion indistinguishable from a considered rejection. §6.1 pins the canonical shape `phase-{N}[{track}].md`, requires the recognizer to be a single shared module (`lib/phase-files.js`) rather than three copies, fixes numeric-then-suffix ordering, and adds the accounting rule: an unrecognized `.md` in `tasks/` is reported, never dropped without comment. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Field report: engine 2.1.80. |
 | 3.0.0 | 2026-08-27 | Agent | **Commit Suggestion Guarantee (SC-3) retired** by explicit user directive. §5.2 rewritten from "Commit Suggestion Guarantee" to a retirement note; §5 header drops the SC-3 implementation claim. §2 module table's `commit-suggester.js` row rescoped to CHANGELOG-bullet composition only. §3 Invocation Contract drops the `--no-commit-msg` flag. §8 point 1 rewritten: the terminal block no longer includes a commit-suggestion notice at all (previously it deduplicated the notice across paths; now there is no notice to render). Overview, Related Specifications, and Canonical References updated to match. Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 2.0.0 | 2026-08-07 | Agent | **Decomposed** at 367 lines against the 300-line `SPEC_BLOAT` threshold, following the `l2-role-cards` precedent (parent retains the contract, children carry accumulated content). §8 (five STATE.md accuracy defects) and §10 (line-cap guard defeat) → new [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md); §7 (RC-11 generator containment) and §9 (SC-3.1 file visibility) → new [l2-finalize-output-contract.md](l2-finalize-output-contract.md). Surviving sections renumbered: old §11 Terminal Block → §8. New **§7 Archival Index Rewrite**, closing a five-for-five reproduced defect (Phases 14-18) that had no stated contract to fix against: `updatePlanIndex()` rewrites a phase link's target but not its label, and `PLAN.md`'s links are self-labelling (`[tasks/phase-N.md](tasks/phase-N.md)`), so archival yields a working link whose text contradicts its destination. §2's module row corrected — the archiver has always rewritten `PLAN.md` as well as `TASKS.md`, and the omission is why the gap persisted. §7.3 explicitly scopes the fix to the self-labelling form so prose mentions of historical paths are not corrupted; §7.4 requires the harness to pin that distinction. Module table gained `diagnostics.js`. |
 | 1.11.0 | 2026-08-07 | Agent | New §11 (Terminal Block Ownership): the pipeline's stdout gains a diagnostics digest and a next-step section at its end, per the new [l1-engine-diagnostics.md](l1-engine-diagnostics.md) DG-5/DG-6. Records the two structural consequences for this pipeline — the auto-commit notice moves into a single `emitTail()` called once from `main()` on both exit paths, and `updateSessionState()`'s hitherto-unconsumed `nextAction` return value becomes the printed string, threaded rather than recomputed. Canonical References gained `lib/diagnostics.js`. |

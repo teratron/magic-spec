@@ -5,6 +5,7 @@ const fs = require('fs');
 const path = require('path');
 const { writeFileSafe, mkdirSafe, isDryRun } = require('../utils');
 const { stripQuoted } = require('./scan-hygiene');
+const { listPhaseFiles, listUnrecognizedTaskFiles } = require('./phase-files');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PHASE ARCHIVER (Shared Library)
@@ -42,11 +43,15 @@ function allChecked(content) {
 }
 
 /**
- * Scans wsDir/tasks/ for completed phase-*.md files without moving them.
+ * Scans wsDir/tasks/ for completed phase workbooks without moving them.
  * A phase is a candidate when:
+ *   - its name is a phase workbook (see phase-files.js; track suffixes count)
  *   - frontmatter status === 'Done'
  *   - no unchecked items (- [ ])
  *   - not already present in archives/tasks/
+ *
+ * Candidates come back in phase order (number, then track suffix), so the
+ * archival log reads in the order the phases actually ran.
  *
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @returns {{ file: string, phase: string, name: string }[]} List of candidates.
@@ -58,7 +63,7 @@ function findArchiveCandidates(wsDir) {
     const archiveDir = path.join(wsDir, 'archives', 'tasks');
     const candidates = [];
 
-    for (const file of fs.readdirSync(tasksDir).filter(f => /^phase-\d+\.md$/.test(f)).sort()) {
+    for (const { file } of listPhaseFiles(tasksDir)) {
         const filePath = path.join(tasksDir, file);
         const content = fs.readFileSync(filePath, 'utf8');
         const front = parseFrontmatter(content);
@@ -159,25 +164,33 @@ function updatePlanIndex(planPath, archivedFiles) {
  *
  * Safe to call multiple times (idempotent: already-archived files are skipped).
  *
+ * `unrecognized` carries the Markdown files in tasks/ whose names are not phase
+ * workbooks. They are never archived, but they are reported rather than dropped
+ * in silence: otherwise a workbook the scanner never looked at is
+ * indistinguishable from one it read and found ineligible, which is exactly how
+ * a `status: Done` phase came back as "nothing to archive".
+ *
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {{ dryRun?: boolean }} [opts]
  * @returns {{
  *   archived: { file: string, phase: string, name: string }[],
- *   skipped: string[]
+ *   skipped: string[],
+ *   unrecognized: string[]
  * }}
  */
 function archiveCompletedPhases(wsDir, opts = {}) {
     const dryRun = opts.dryRun || isDryRun();
     const tasksDir = path.join(wsDir, 'tasks');
 
-    if (!fs.existsSync(tasksDir)) return { archived: [], skipped: [] };
+    if (!fs.existsSync(tasksDir)) return { archived: [], skipped: [], unrecognized: [] };
 
     const archiveDir = path.join(wsDir, 'archives', 'tasks');
     const archived = [];
     const skipped = [];
+    const unrecognized = listUnrecognizedTaskFiles(tasksDir);
     const candidates = findArchiveCandidates(wsDir);
 
-    if (candidates.length === 0) return { archived: [], skipped: [] };
+    if (candidates.length === 0) return { archived: [], skipped: [], unrecognized };
 
     mkdirSafe(archiveDir);
 
@@ -210,7 +223,7 @@ function archiveCompletedPhases(wsDir, opts = {}) {
         }
     }
 
-    return { archived, skipped };
+    return { archived, skipped, unrecognized };
 }
 
 module.exports = { findArchiveCandidates, archiveCompletedPhases };

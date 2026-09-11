@@ -10,6 +10,7 @@ const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = 
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
+const { listPhaseFiles } = require('./lib/phase-files');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
 
@@ -276,16 +277,13 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
         const inlineOpen = tasks.match(openTaskRe);
         if (inlineOpen) return `Execute ${inlineOpen[1]} ${inlineOpen[2]} via /magic.run ${workspace}`;
 
-        // 2. Phase files — canonical two-level format (tasks/phase-N.md).
+        // 2. Phase files — canonical two-level format (tasks/phase-N.md,
+        //    track splits included). listPhaseFiles owns both the name shape
+        //    and the ordering, so this lookup cannot come to disagree with
+        //    archival about which files are phase workbooks.
         const tasksDir = path.join(wsDir, 'tasks');
         if (fs.existsSync(tasksDir)) {
-            const phaseFiles = fs.readdirSync(tasksDir)
-                .filter(f => /^phase-\d+\.md$/.test(f))
-                .sort((a, b) => {
-                    const na = parseInt(a.match(/\d+/)[0], 10);
-                    const nb = parseInt(b.match(/\d+/)[0], 10);
-                    return na - nb;
-                });
+            const phaseFiles = listPhaseFiles(tasksDir);
             // SH-1: stripped once per phase file, before any checklist or
             // Detailed Tracking scan runs against it — a Notes block quoting
             // checkbox syntax must not be read as a task in force, and the
@@ -293,10 +291,10 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
             // widens that exposure by examining every line, not only the
             // first (l1-scan-input-hygiene.md SH-1/SH-5).
             let firstExcludedTask = null;
-            for (const file of phaseFiles) {
+            for (const { file, number } of phaseFiles) {
                 const rawContent = fs.readFileSync(path.join(tasksDir, file), 'utf8');
                 const content = stripQuoted(rawContent);
-                const phaseNo = file.match(/\d+/)[0];
+                const phaseNo = String(number);
                 const anyOpen = content.match(openTaskRe);
                 if (!anyOpen) continue;
                 // Blocked is not Done, so a blocked phase still has open

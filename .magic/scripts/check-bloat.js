@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { PHASE_FILE_RE } = require('./lib/phase-files');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECK BLOAT (Context-Economy Advisory)
@@ -91,7 +92,7 @@ function main() {
     const issues = [];
 
     scanDir(path.join(wsDir, 'specifications'), /\.md$/, 'spec', 'specifications', issues);
-    scanDir(path.join(wsDir, 'tasks'), /^phase-\d+\.md$/, 'task', 'tasks', issues);
+    scanDir(path.join(wsDir, 'tasks'), PHASE_FILE_RE, 'task', 'tasks', issues);
 
     if (opts.json) {
         process.stdout.write(JSON.stringify({ workspace: designDir, issues }, null, 2) + '\n');

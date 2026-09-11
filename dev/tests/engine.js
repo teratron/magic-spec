@@ -174,6 +174,106 @@ describe('Magic Engine Scripts', () => {
         return specsDir;
     };
 
+    // require()s finalize.js and creates its workspace-with-tasks fixture in
+    // one step — the pairing every computeNextAction test (§7b) starts with.
+    const requireFinalizeWorkspace = (tempDir) => {
+        const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
+        return { finalize, ...makeWorkspaceWithTasks(tempDir) };
+    };
+
+    // The canonical two-level TASKS.md registry: one Phase-1 "Bootstrap" row,
+    // `status` defaulting to `In Progress`. Every computeNextAction test that
+    // needs the registry-table format (rather than the legacy inline-checkbox
+    // format) builds it from here instead of re-typing the same array.
+    const registryTable = (status = 'In Progress') => [
+        '# Master Task Index',
+        '',
+        '## Active Phases',
+        '',
+        '| Phase | Description | Status |',
+        '| --- | --- | --- |',
+        `| [Phase 1](tasks/phase-1.md) | Bootstrap | \`${status}\` |`,
+        '',
+    ].join('\n');
+
+    // require()s update-state.js and creates a plain single-workspace fixture
+    // in one step — the pairing every autoProgress/computeProgress test (§7e)
+    // starts with.
+    const requireUpdateState = (tempDir) => {
+        const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+        return { updateState, wsDir: makeWorkspace(tempDir) };
+    };
+
+    // Same pairing, but with a tasks/ directory too — for the computeProgress
+    // test that needs a phase file alongside TASKS.md.
+    const requireUpdateStateWithTasks = (tempDir) => {
+        const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
+        return { updateState, ...makeWorkspaceWithTasks(tempDir) };
+    };
+
+    // Runs autoProgress and reads back STATE.md — the "recompute, then
+    // inspect" tail shared by every autoProgress assertion in §7e. `patch` is
+    // the field-patch object forwarded as updateState's 2nd argument, for the
+    // one test that recomputes progress alongside a field write.
+    const autoProgressState = (updateState, wsDir, patch = {}) => {
+        updateState(wsDir, patch, { autoProgress: true });
+        return fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+    };
+
+    // Writes a file at tempDir/rel (POSIX-style relative path), creating
+    // parent directories as needed. Shared by fixtures that build an ad hoc
+    // file tree rather than a full .design/ workspace (§15, §18).
+    const writeTreeFile = (tempDir, rel, body) => {
+        const abs = path.join(tempDir, ...rel.split('/'));
+        fs.mkdirSync(path.dirname(abs), { recursive: true });
+        fs.writeFileSync(abs, body);
+    };
+
+    // Creates `.design/specifications/` inside a temp workspace and returns
+    // both paths — the fixture every check-prerequisites.js registry/header
+    // test (§6) starts from.
+    const makeSpecWorkspace = (tempDir) => {
+        const designDir = path.join(tempDir, '.design');
+        const specsDir = path.join(designDir, 'specifications');
+        fs.mkdirSync(specsDir, { recursive: true });
+        return { designDir, specsDir };
+    };
+
+    // Runs check-prerequisites.js against tempDir with the given flags and
+    // returns the parsed --json result.
+    const runCheckPrerequisites = (tempDir, ...extraArgs) => {
+        const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+        const output = execSync(
+            `node "${scriptPath}" --json ${extraArgs.join(' ')}`.trim(),
+            { cwd: tempDir, encoding: 'utf8' }
+        );
+        return JSON.parse(output);
+    };
+
+    // Minimal `.design/` bootstrap (empty specifications/, INDEX.md, RULES.md)
+    // used by every DESIGN_DEBT_PENDING (SC-2.4) probe in §6b2 — none of them
+    // exercise spec content, only PLAN.md/TASKS.md.
+    const makeMinimalDesignDir = (tempDir) => {
+        const designDir = path.join(tempDir, '.design');
+        fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
+        fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
+        fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+        return designDir;
+    };
+
+    // Factory for the repeated DESIGN_DEBT_PENDING probe: writes Backlog (and
+    // optionally Active Phases) content, runs check-prerequisites, and
+    // returns the warning (or undefined). `tasksBody` is optional — when a
+    // test's TASKS.md is fixed for the whole run, omit it and only PLAN.md is
+    // rewritten per call.
+    const makeDebtWarningFinder = (tempDir, designDir) => (planBody, tasksBody) => {
+        fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
+        if (tasksBody !== undefined) {
+            fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
+        }
+        return runCheckPrerequisites(tempDir).warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
+    };
+
     // ───────────────────────────────────────────────────────────────────────────
     // 1. generate-checksums.js
     // ───────────────────────────────────────────────────────────────────────────
@@ -569,15 +669,12 @@ describe('Magic Engine Scripts', () => {
             // Need checksums to pass integrity check (developer-only manifest builder in dev/scripts/)
             generateChecksums(tempDir);
 
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const output = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
-            const result = JSON.parse(output);
+            const result = runCheckPrerequisites(tempDir);
             assert.strictEqual(result.ok, true, 'Should pass with all files present and correct checksums');
 
             // 2. Failure Case - Missing file
             fs.unlinkSync(path.join(tempDir, '.design', 'INDEX.md'));
-            const outputFail = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
-            const resultFail = JSON.parse(outputFail);
+            const resultFail = runCheckPrerequisites(tempDir);
             assert.strictEqual(resultFail.ok, false, 'Should fail if INDEX.md is missing');
             assert.ok(resultFail.missing_required.includes('INDEX.md'));
 
@@ -588,8 +685,7 @@ describe('Magic Engine Scripts', () => {
 
             // Manual edit outside workflow
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Drifted Rules');
-            const outputDrift = execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' });
-            const resultDrift = JSON.parse(outputDrift);
+            const resultDrift = runCheckPrerequisites(tempDir);
             assert.ok(resultDrift.warnings.some(w => w.type === 'CONFIG_DRIFT'), 'Should detect config drift');
         } finally {
             cleanup(tempDir);
@@ -602,9 +698,7 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js --verify-headers flags absent (not just mismatched) spec headers (RE-1)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            const specsDir = path.join(designDir, 'specifications');
-            fs.mkdirSync(specsDir, { recursive: true });
+            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
 
             const indexRow = '| [auth.md](specifications/auth.md) | Auth domain | Stable | 1 | 1.0.0 |';
             fs.writeFileSync(
@@ -616,11 +710,9 @@ describe('Magic Engine Scripts', () => {
             // Checksums must pass integrity so ENGINE_INTEGRITY doesn't mask the result.
             generateChecksums(tempDir);
 
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-
             // Case A — spec file has NO Version/Status header (the silent-failure bug).
             fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
-            const drift = JSON.parse(execSync(`node "${scriptPath}" --json --verify-headers`, { cwd: tempDir, encoding: 'utf8' }));
+            const drift = runCheckPrerequisites(tempDir, '--verify-headers');
             assert.ok(
                 drift.warnings.some(w => w.type === 'VERSION_DRIFT' && /MISSING/.test(w.message)),
                 'absent Version header must raise VERSION_DRIFT (MISSING)'
@@ -636,7 +728,7 @@ describe('Magic Engine Scripts', () => {
                 path.join(specsDir, 'auth.md'),
                 '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n\n## Overview\n\nMatches registry.\n'
             );
-            const clean = JSON.parse(execSync(`node "${scriptPath}" --json --verify-headers`, { cwd: tempDir, encoding: 'utf8' }));
+            const clean = runCheckPrerequisites(tempDir, '--verify-headers');
             assert.ok(
                 !clean.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
                 'matching headers must produce no drift warning'
@@ -644,7 +736,7 @@ describe('Magic Engine Scripts', () => {
 
             // Case C — backward compatibility: without --verify-headers, absent header is NOT checked.
             fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
-            const noFlag = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const noFlag = runCheckPrerequisites(tempDir);
             assert.ok(
                 !noFlag.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
                 'header check must remain opt-in via --verify-headers'
@@ -661,9 +753,7 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js registry cross-reference is scan-hygiene compliant (SH-1, SH-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            const specsDir = path.join(designDir, 'specifications');
-            fs.mkdirSync(specsDir, { recursive: true });
+            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
 
             fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
             fs.writeFileSync(
@@ -690,10 +780,7 @@ describe('Magic Engine Scripts', () => {
 
             generateChecksums(tempDir);
 
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const result = JSON.parse(
-                execSync(`node "${scriptPath}" --json --require-specs`, { cwd: tempDir, encoding: 'utf8' })
-            );
+            const result = runCheckPrerequisites(tempDir, '--require-specs');
 
             const mismatches = result.warnings.filter(w => w.type === 'REGISTRY_MISMATCH');
             assert.deepStrictEqual(
@@ -722,9 +809,7 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js INDEX.md-side registry-scan sites are scan-hygiene compliant (SH-1, SH-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            const specsDir = path.join(designDir, 'specifications');
-            fs.mkdirSync(specsDir, { recursive: true });
+            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
 
             fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
 
@@ -753,10 +838,7 @@ describe('Magic Engine Scripts', () => {
 
             generateChecksums(tempDir);
 
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const result = JSON.parse(
-                execSync(`node "${scriptPath}" --json --require-specs --verify-headers`, { cwd: tempDir, encoding: 'utf8' })
-            );
+            const result = runCheckPrerequisites(tempDir, '--require-specs', '--verify-headers');
 
             const registryFindings = result.warnings.filter(
                 (w) => w.type === 'GHOST_REGISTRY' || w.type === 'NAMING_VIOLATION' || w.type === 'ORPHANED_SPEC'
@@ -780,20 +862,8 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js reports DESIGN_DEBT_PENDING only when plan-complete meets an open Backlog (SC-2.4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
-            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
-            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
-
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const findDebtWarning = (planBody, tasksBody) => {
-                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
-                fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
-                const result = JSON.parse(
-                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
-                );
-                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
-            };
+            const designDir = makeMinimalDesignDir(tempDir);
+            const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
             // Positive: plan complete (the engine's own empty-state marker),
             // Backlog holds two open items.
@@ -846,23 +916,12 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js DESIGN_DEBT_PENDING excludes Parked-marked Backlog bullets (SC-2.4 addendum)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
-            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
-            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            const designDir = makeMinimalDesignDir(tempDir);
             fs.writeFileSync(
                 path.join(designDir, 'TASKS.md'),
                 '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magic.task`.*\n'
             );
-
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const findDebtWarning = (planBody) => {
-                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
-                const result = JSON.parse(
-                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
-                );
-                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
-            };
+            const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
             // One plain bullet, one Parked-marked bullet — only the plain one counts.
             const mixed = findDebtWarning(
@@ -901,20 +960,8 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js DESIGN_DEBT_PENDING fires under the canonical single-table Active Phases layout (Terminal-Row Recognition)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const designDir = path.join(tempDir, '.design');
-            fs.mkdirSync(path.join(designDir, 'specifications'), { recursive: true });
-            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n\n**Version:** 1.0.0\n');
-            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
-
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-            const findDebtWarning = (planBody, tasksBody) => {
-                fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
-                fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
-                const result = JSON.parse(
-                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' })
-                );
-                return result.warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
-            };
+            const designDir = makeMinimalDesignDir(tempDir);
+            const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
             // Positive: single-table layout (no separate "Completed Phases"
             // section — the shape the shipped tasks.md template actually
@@ -1104,8 +1151,7 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             // require.main guard means requiring finalize.js does NOT run main().
-            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
             // (a) Legacy inline format: open task in TASKS.md → /magic.run.
             fs.writeFileSync(tasksPath, '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n');
@@ -1115,16 +1161,7 @@ describe('Magic Engine Scripts', () => {
 
             // (b) Canonical two-level format: TASKS.md is a registry (table),
             //     open tasks live in tasks/phase-1.md.
-            fs.writeFileSync(tasksPath, [
-                '# Master Task Index',
-                '',
-                '## Active Phases',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
                 '---',
                 'phase: 1',
@@ -1205,8 +1242,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js computeNextAction never names a reserved command (§5)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+            const { finalize, wsDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
             // Every plan state the three-tier lookup can land in. The previous
             // regression fixed the plan-complete `run` branch only and left the
@@ -1214,12 +1250,7 @@ describe('Magic Engine Scripts', () => {
             // rather than pinning one cell of it.
             const planStates = {
                 'inline open task': '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n',
-                'registry active phase': [
-                    '## Active Phases', '',
-                    '| Phase | Description | Status |',
-                    '| --- | --- | --- |',
-                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |', '',
-                ].join('\n'),
+                'registry active phase': registryTable('In Progress'),
                 'plan complete': [
                     '## Active Phases', '', '*None — plan complete.*', '',
                     '## Completed Phases', '',
@@ -1289,19 +1320,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js computeNextAction never recommends executing a task in a Blocked phase (SC-2.1(a))', () => {
         const tempDir = createTempWorkspace();
         try {
-            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
-
-            const registry = (status) => [
-                '# Master Task Index',
-                '',
-                '## Active Phases',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                `| [Phase 1](tasks/phase-1.md) | Bootstrap | \`${status}\` |`,
-                '',
-            ].join('\n');
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
             const phaseFile = (status) => [
                 '---',
@@ -1325,7 +1344,7 @@ describe('Magic Engine Scripts', () => {
             };
 
             for (const [label, state] of Object.entries(blockedCases)) {
-                fs.writeFileSync(tasksPath, registry(state.registry));
+                fs.writeFileSync(tasksPath, registryTable(state.registry));
                 fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile(state.phase));
 
                 const next = finalize.computeNextAction('run', 'engine', wsDir);
@@ -1343,7 +1362,7 @@ describe('Magic Engine Scripts', () => {
             }
 
             // Control: an unblocked phase with the same open item still dispatches.
-            fs.writeFileSync(tasksPath, registry('In Progress'));
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('In Progress'));
             assert.match(
                 finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/,
@@ -1357,19 +1376,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js computeNextAction skips a task whose own Detailed Tracking marks it Blocked or Assignment: User (SC-2.1(c))', () => {
         const tempDir = createTempWorkspace();
         try {
-            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
-
-            const registry = () => [
-                '# Master Task Index',
-                '',
-                '## Active Phases',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
-                '',
-            ].join('\n');
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
             const trackingBlock = (id, title, status, assignment) => [
                 `### [${id}] ${title}`,
@@ -1389,7 +1396,7 @@ describe('Magic Engine Scripts', () => {
                 trackingBlock('T-1A02', 'Second task', 'Todo', 'Agent'),
             ].join('\n');
 
-            fs.writeFileSync(tasksPath, registry());
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
 
             // (i) first item Status: Blocked → the later actionable item is named.
             // The pre-T-23A01 code named T-1A01 unconditionally here (manually
@@ -1441,14 +1448,9 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js computeNextAction preserves code spans in task titles while still ignoring quoted checklist lines', () => {
         const tempDir = createTempWorkspace();
         try {
-            const finalize = require(path.join(tempDir, '.magic', 'scripts', 'finalize.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
-            fs.writeFileSync(tasksPath, [
-                '# Master Task Index', '', '## Active Phases', '',
-                '| Phase | Description | Status |', '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |', '',
-            ].join('\n'));
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
 
             // (i) a title carrying a backticked path must survive verbatim.
             // `stripQuoted()` (SH-1) blanks matched characters rather than
@@ -1583,6 +1585,77 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // 7c-2. phase-archiver.js — name recognition (l2-engine-finalization §6.1)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('findArchiveCandidates recognizes track-suffixed phase files (phase-10b.md)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+
+            // A track-split workbook: Done, checklist fully checked. Before the
+            // fix the name filter dropped it before its status was ever read.
+            fs.writeFileSync(path.join(tasksDir, 'phase-10b.md'),
+                '---\nphase: 10\nname: "Track B"\nstatus: Done\n---\n\n' +
+                '## Atomic Checklist\n\n- [x] [T-10B01] Done item\n');
+
+            // Same shape, still open → the suffix must not become a free pass.
+            fs.writeFileSync(path.join(tasksDir, 'phase-10a.md'),
+                '---\nphase: 10\nname: "Track A"\nstatus: Done\n---\n\n' +
+                '## Atomic Checklist\n\n- [x] [T-10A01] Done\n- [ ] [T-10A02] Open\n');
+
+            const candidates = archiver.findArchiveCandidates(wsDir).map(c => c.file);
+            assert.ok(candidates.includes('phase-10b.md'),
+                'a track-suffixed phase file must be evaluated on status, not excluded by name');
+            assert.ok(!candidates.includes('phase-10a.md'),
+                'an open checklist must still block archival for suffixed files');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('findArchiveCandidates orders phase files numerically, suffix as tiebreaker', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+
+            // Lexical sort would yield phase-10* before phase-2 — the numeric
+            // ordering below is what callers and the archival log rely on.
+            for (const [file, phase] of [['phase-10b.md', 10], ['phase-2.md', 2], ['phase-10a.md', 10]]) {
+                fs.writeFileSync(path.join(tasksDir, file),
+                    `---\nphase: ${phase}\nname: "W"\nstatus: Done\n---\n\n` +
+                    '## Atomic Checklist\n\n- [x] [T-1A01] Done\n');
+            }
+
+            assert.deepStrictEqual(
+                archiver.findArchiveCandidates(wsDir).map(c => c.file),
+                ['phase-2.md', 'phase-10a.md', 'phase-10b.md'],
+                'phase files sort by number first, then by track suffix'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('archiveCompletedPhases reports unrecognized task files instead of dropping them silently', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+
+            // Not a phase workbook by any spelling — it must never be archived,
+            // but the caller has to be able to say so out loud. A silent drop is
+            // indistinguishable from "evaluated and found ineligible".
+            fs.writeFileSync(path.join(tasksDir, '02-legacy-workbook.md'), '# Legacy\n\n- [x] done\n');
+
+            const result = archiver.archiveCompletedPhases(wsDir);
+            assert.deepStrictEqual(result.archived, [], 'a non-phase file is never archived');
+            assert.deepStrictEqual(result.unrecognized, ['02-legacy-workbook.md'],
+                'a non-phase .md in tasks/ is surfaced, not swallowed');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // A completed, archivable Phase 3 ("Shipping") plus its TASKS.md registry
     // row — the fixed point every archival-rewrite test in this section starts
     // from before layering its own PLAN.md content.
@@ -1695,8 +1768,7 @@ describe('Magic Engine Scripts', () => {
     test('updateState autoProgress refreshes counter lines but preserves narrative in the Progress block', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
                 '# Master Task Index',
@@ -1739,8 +1811,7 @@ describe('Magic Engine Scripts', () => {
                 '',
             ].join('\n'));
 
-            updateState(wsDir, {}, { autoProgress: true });
-            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            const state = autoProgressState(updateState, wsDir);
 
             assert.match(state, /Phase 2: \[2\/3\]/, 'phase counter line must be recomputed');
             assert.match(state, /Overall: \[1\/2\]/, 'overall counter line must be recomputed');
@@ -1759,8 +1830,7 @@ describe('Magic Engine Scripts', () => {
         try {
             const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
             fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
                 '| Phase | Description | Status |',
@@ -1772,8 +1842,7 @@ describe('Magic Engine Scripts', () => {
             // Bootstrap STATE.md from the real template (placeholder counters),
             // then recompute: `{filled}/{total}`-style placeholders are engine-owned
             // lines and must be replaced, not preserved as narrative.
-            updateState(wsDir, { phase: '1' }, { autoProgress: true });
-            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            const state = autoProgressState(updateState, wsDir, { phase: '1' });
 
             assert.match(state, /Overall: \[1\/1\]/, 'placeholder block must be recomputed from TASKS.md');
             assert.doesNotMatch(state, /\{filled\}|\{done\}/, 'template placeholder counters must not survive as narrative');
@@ -1785,8 +1854,7 @@ describe('Magic Engine Scripts', () => {
     test('computeProgress emits a phase counter for the two-level task layout (SC-2.3)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const { wsDir, tasksDir, tasksPath } = makeWorkspaceWithTasks(tempDir);
+            const { updateState, wsDir, tasksDir, tasksPath } = requireUpdateStateWithTasks(tempDir);
 
             // Registry-only TASKS.md: no inline `### Phase N Checklist` heading.
             // This is the canonical layout, so the phase line must come from the
@@ -1829,8 +1897,7 @@ describe('Magic Engine Scripts', () => {
                 '## Recent Decisions', '',
             ].join('\n'));
 
-            updateState(wsDir, {}, { autoProgress: true });
-            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            const state = autoProgressState(updateState, wsDir);
 
             assert.match(state, /Phase 3: \[2\/5\]/, 'phase counter must be derived from the phase file');
             assert.match(state, /Overall: \[1\/2\]/, 'aggregate counter must still be recomputed');
@@ -1842,8 +1909,7 @@ describe('Magic Engine Scripts', () => {
     test('computeProgress preserves counter-shaped lines under labels the engine never writes (SC-2)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
                 '### Phase 1 Checklist',
@@ -1873,8 +1939,7 @@ describe('Magic Engine Scripts', () => {
                 '## Recent Decisions', '',
             ].join('\n'));
 
-            updateState(wsDir, {}, { autoProgress: true });
-            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            const state = autoProgressState(updateState, wsDir);
 
             assert.match(state, /Phase 1: \[1\/2\]/, 'engine-owned phase counter must be regenerated');
             assert.match(state, /Overall: \[0\/1\]/, 'engine-owned aggregate counter must be regenerated');
@@ -1892,8 +1957,7 @@ describe('Magic Engine Scripts', () => {
     test('computeProgress leaves `$`-digit sequences in narrative untouched (SC-2)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'TASKS.md'),
                 '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n');
@@ -1917,8 +1981,7 @@ describe('Magic Engine Scripts', () => {
             ].join('\n'));
 
             const before = (fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8').match(/```/g) || []).length;
-            updateState(wsDir, {}, { autoProgress: true });
-            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            const state = autoProgressState(updateState, wsDir);
 
             for (const line of narrative) {
                 assert.ok(
@@ -1939,8 +2002,7 @@ describe('Magic Engine Scripts', () => {
     test('the line-cap guard distinguishes a real prune from an exhausted one (SC-1.2)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             const captureWarnings = (fn) => {
                 const original = console.warn;
@@ -1989,8 +2051,7 @@ describe('Magic Engine Scripts', () => {
     test('a task-scoped update leaves the phase-level Status field alone (SC-1.1)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
                 '# Project State', '',
@@ -2017,8 +2078,7 @@ describe('Magic Engine Scripts', () => {
     test('field patches insert `$`-bearing values verbatim, never as replacement patterns (SC-2)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState } = require(path.join(tempDir, '.magic', 'scripts', 'update-state.js'));
-            const wsDir = makeWorkspace(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
 
             // A string-form .replace() re-scans its replacement text for `$'`
             // (right context), `` $` `` (left context), `$&` (whole match) and
@@ -2298,11 +2358,7 @@ describe('Magic Engine Scripts', () => {
         try {
             writeCanonicalCoreSpec(tempDir);
 
-            const mk = (rel, body) => {
-                const abs = path.join(tempDir, rel);
-                fs.mkdirSync(path.dirname(abs), { recursive: true });
-                fs.writeFileSync(abs, body);
-            };
+            const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
             // `out` is deliberately NOT in analyze-coverage's hardcoded SKIP_DIRS
             // (unlike `dist`), so these two files isolate gitignore anchoring alone.
             mk('src/main.rs', 'fn main() {}\n');
@@ -2392,11 +2448,7 @@ describe('Magic Engine Scripts', () => {
     test('scanners share the build-noise floor but keep their domain excludes apart', () => {
         const tempDir = createTempWorkspace();
         try {
-            const mk = (rel, body) => {
-                const abs = path.join(tempDir, ...rel.split('/'));
-                fs.mkdirSync(path.dirname(abs), { recursive: true });
-                fs.writeFileSync(abs, body);
-            };
+            const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
 
             mk('.design/specifications/l1-core.md',
                 '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n');
@@ -2704,6 +2756,19 @@ describe('Magic Engine Scripts', () => {
         commitFixture(tempDir);
     };
 
+    // Bootstraps a finalize fixture already committed at plan-complete, plus a
+    // fresh diagnostics.js handle — the pairing every DG-4.1/DG-5 test below
+    // starts from.
+    const requireFinalizeDiagnostics = (tempDir) => {
+        const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
+        commitPlanCompleteFixture(tempDir, wsDir);
+        return {
+            wsDir,
+            finalizePath,
+            diagnostics: require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js')),
+        };
+    };
+
     test('diagnostics.js record/read/drain round-trip in append order, exactly once (DG-4)', () => {
         const tempDir = createTempWorkspace();
         try {
@@ -2809,10 +2874,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js --dry-run reads the diagnostics sink without draining it (DG-4.1)', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
-            commitPlanCompleteFixture(tempDir, wsDir);
-
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const { wsDir, finalizePath, diagnostics } = requireFinalizeDiagnostics(tempDir);
             diagnostics.record({ severity: 'warning', source: 'test', code: 'DRY_RUN_PROBE', message: 'should survive a preview' });
 
             const dryOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main --dry-run`, { cwd: tempDir, encoding: 'utf8' });
@@ -2837,10 +2899,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js terminal block orders the digest before the next step on both exit paths (DG-5)', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
-            commitPlanCompleteFixture(tempDir, wsDir);
-
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const { wsDir, finalizePath, diagnostics } = requireFinalizeDiagnostics(tempDir);
             const assertOrder = (out, label) => {
                 const digestIdx = out.indexOf('### Engine diagnostics');
                 const nextIdx = out.indexOf('### Next step');
@@ -3077,11 +3136,7 @@ describe('Magic Engine Scripts', () => {
     test('analyze-coverage.js classifies .design/ bookkeeping and archived phase journals as EXEMPT', () => {
         const tempDir = createTempWorkspace();
         try {
-            const mk = (rel, body) => {
-                const abs = path.join(tempDir, ...rel.split('/'));
-                fs.mkdirSync(path.dirname(abs), { recursive: true });
-                fs.writeFileSync(abs, body);
-            };
+            const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
             mk('.design/PLAN.md', '# Plan\n');
             mk('.design/STATE.md', '# State\n');
             mk('.design/archives/tasks/phase-1.md', '# Phase 1\n');
@@ -3117,11 +3172,7 @@ describe('Magic Engine Scripts', () => {
     test('analyze-coverage.js EXEMPT files do not move the reported coverage percentage', () => {
         const tempDir = createTempWorkspace();
         try {
-            const mk = (rel, body) => {
-                const abs = path.join(tempDir, ...rel.split('/'));
-                fs.mkdirSync(path.dirname(abs), { recursive: true });
-                fs.writeFileSync(abs, body);
-            };
+            const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
             writeCanonicalCoreSpec(tempDir);
             mk('src/main.rs', 'fn main() {}\n'); // EXTRACTED — establishes a non-zero, non-100% baseline
             mk('orphan.js', 'var x;\n');          // genuinely UNCOVERED — no spec references it

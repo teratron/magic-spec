@@ -11,9 +11,15 @@ const { findArchiveCandidates, archiveCompletedPhases } = require('./lib/phase-a
 /**
  * CLI wrapper for phase archival.
  *
- * Scans the active workspace tasks/ directory for completed phase-*.md files
+ * Scans the active workspace tasks/ directory for completed phase workbooks
  * (status: Done + all checkboxes checked) and moves them to archives/tasks/.
  * Updates TASKS.md link references accordingly.
+ *
+ * A workbook is recognized by name as `phase-{N}[{track}].md` (phase-files.js).
+ * Markdown files in tasks/ that do not take that shape are listed on the way
+ * out instead of being dropped without comment: the question this command
+ * answers when it archives nothing is "why not?", and "I never looked at that
+ * file" is a different answer from "I read it and it was not eligible".
  *
  * Flags:
  *   --dry-run   Preview operations without writing anything.
@@ -42,6 +48,30 @@ function parseArgs() {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Reporting
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Names the Markdown files in tasks/ that are not phase workbooks.
+ *
+ * Advisory only — these files are never archived and nothing here fails. The
+ * point is that the scanner accounts for every file it saw. Deliberately not
+ * emitted on the `--check` path: that runs in the pre-commit hook, whose job
+ * is to nag about pending archival, not to lint naming on every commit.
+ *
+ * @param {string[]} unrecognized - Filenames that matched no phase shape.
+ */
+function reportUnrecognized(unrecognized) {
+    if (!unrecognized || unrecognized.length === 0) return;
+    console.log(
+        "[Archive] Not phase workbooks, so not considered (expected phase-{N}[{track}].md):"
+    );
+    for (const file of unrecognized) {
+        console.log(`  ↷ ${file}`);
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Main
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -65,10 +95,11 @@ function main() {
         return 0;
     }
 
-    const { archived, skipped } = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
+    const { archived, skipped, unrecognized } = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
 
     if (archived.length === 0 && skipped.length === 0) {
         console.log('[Archive] No completed phases to archive.');
+        reportUnrecognized(unrecognized);
         return 0;
     }
 
@@ -85,6 +116,8 @@ function main() {
             console.log(`  ⚠ ${file}`);
         }
     }
+
+    reportUnrecognized(unrecognized);
 
     return 0;
 }
