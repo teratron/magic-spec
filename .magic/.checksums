@@ -1,4 +1,8 @@
 {
+  ".fallow/.gitignore": "cdbcae15105d6b781e620813c79c7e868740d4e9cc53ce6f5fcbbc12387adf4b",
+  ".fallow/cache.bin": "42f2b7f315caa5a70b1e03fc8b5c0a57d3514d06c50466a7f07d7ca807dbc9b2",
+  ".fallow/churn.bin": "db4da241840123db662272dab29f245899237767e8093df704feb1607f82fe9b",
+  ".fallow/graph-cache.bin": "bb598f662f1a519386e586df2634e7640434ee3489b4bfe29c7d9a62ff510b9d",
   "analyze.md": "6b973ec2d3f188e46b98cfbc35bae0757526e597cc3f52d6b9760e22b104650d",
   "context.md": "a0b91a9bfaf8cc65d66edcdc42f06da93c247c41eb0bb9bb92384cc5a7e3129f",
   "init.md": "c0655e9713359ebba6f4d09d720183fc9cd08ca72745f89e59b8f5748e1101b3",
