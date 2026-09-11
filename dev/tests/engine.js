@@ -239,6 +239,15 @@ describe('Magic Engine Scripts', () => {
         return { designDir, specsDir };
     };
 
+    // makeSpecWorkspace() plus a single genuine `l1-real.md` spec with a
+    // matching header — the fixture both registry-scan (SH-1/SH-4) tests in
+    // §6b start from before diverging on INDEX.md/PLAN.md content.
+    const makeRegistryScanWorkspace = (tempDir) => {
+        const { designDir, specsDir } = makeSpecWorkspace(tempDir);
+        fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+        return { designDir, specsDir };
+    };
+
     // Runs check-prerequisites.js against tempDir with the given flags and
     // returns the parsed --json result.
     const runCheckPrerequisites = (tempDir, ...extraArgs) => {
@@ -753,9 +762,8 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js registry cross-reference is scan-hygiene compliant (SH-1, SH-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
+            const { designDir } = makeRegistryScanWorkspace(tempDir);
 
-            fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
             fs.writeFileSync(
                 path.join(designDir, 'INDEX.md'),
                 '# Index\n\n| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |\n'
@@ -809,9 +817,7 @@ describe('Magic Engine Scripts', () => {
     test('check-prerequisites.js INDEX.md-side registry-scan sites are scan-hygiene compliant (SH-1, SH-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
-
-            fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+            const { designDir } = makeRegistryScanWorkspace(tempDir);
 
             // Reproduces the field-reported shape (engine 2.1.70): a Meta
             // Information bullet mentions `specifications/` bare (no markdown
@@ -1003,6 +1009,58 @@ describe('Magic Engine Scripts', () => {
             ].join('\n');
             const cancelledHit = findDebtWarning('- Some open design item.', cancelledTable);
             assert.ok(cancelledHit, 'a table of only `Cancelled` rows is terminal and must be read as plan-complete');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6b2-quater. check-prerequisites.js — the zero-row terminal case. Both
+    //             specs already require it (l1-session-continuity.md
+    //             §Terminal-Row Recognition names "a workspace whose table was
+    //             manually cleared"; l2-engine-automation.md's normative line
+    //             reads "section has zero rows, OR every row ... terminal"),
+    //             but the implementation recognized zero rows only when the
+    //             literal `*None*` marker was present.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js DESIGN_DEBT_PENDING fires on a vacant Active Phases section (zero-row terminal case)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = makeMinimalDesignDir(tempDir);
+            const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
+            const openBacklog = '- Some open design item.\n- Another one.';
+
+            // (a) Rows relocated into a separate `## Completed Phases` section,
+            // leaving `## Active Phases` empty — the hand-split layout this
+            // engine's own workspace carries. Terminal-Row Recognition fixed
+            // the single-table shape; this is the same predicate's other end,
+            // where there is no row to read a terminal status from at all.
+            const vacant = findDebtWarning(openBacklog, [
+                '## Completed Phases', '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
+            ].join('\n'));
+            assert.ok(vacant, 'a vacant Active Phases section is plan-complete — zero rows is a terminal case');
+            assert.match(vacant.message, /2 open item/, 'the count must still reflect the Backlog');
+
+            // (b) Table scaffolding with no data rows — the same zero-row state
+            // spelled with a header the author left behind.
+            assert.ok(
+                findDebtWarning(openBacklog, '| Phase | Description | Status |\n| --- | --- | --- |'),
+                'a header-only table carries zero phase rows and is equally terminal'
+            );
+
+            // (c) The fail-closed boundary the vacancy rule must not erode:
+            // content that is present but unrecognized stays "cannot
+            // determine". A gate that can raise a HALT must never fire on
+            // input it could not parse — only on input it positively read as
+            // empty.
+            assert.strictEqual(
+                findDebtWarning(openBacklog, 'Some unstructured note, not a table and not the marker.'),
+                undefined,
+                'unrecognized content must still suppress the signal'
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1675,16 +1733,22 @@ describe('Magic Engine Scripts', () => {
         return tasksPath;
     };
 
+    // require()s phase-archiver.js, applies the Done-Shipping-phase fixture,
+    // and returns the PLAN.md path — the pairing both archival index-rewrite
+    // tests below start from before diverging on PLAN.md's own content.
+    const requireShippingPhaseWithPlan = (tempDir) => {
+        const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+        const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
+        return { archiver, wsDir, tasksDir, tasksPath, planPath: path.join(wsDir, 'PLAN.md') };
+    };
+
     // ───────────────────────────────────────────────────────────────────────────
     // 7d. phase-archiver.js — archival rewrites links in PLAN.md, not only TASKS.md
     // ───────────────────────────────────────────────────────────────────────────
     test('archiveCompletedPhases rewrites phase links in both TASKS.md and PLAN.md', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
-            const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
-
-            const planPath = path.join(wsDir, 'PLAN.md');
+            const { archiver, wsDir, tasksDir, tasksPath, planPath } = requireShippingPhaseWithPlan(tempDir);
             fs.writeFileSync(planPath, [
                 '# Implementation Plan',
                 '',
@@ -1721,14 +1785,12 @@ describe('Magic Engine Scripts', () => {
     test('archiveCompletedPhases rewrites a self-labelling PLAN.md link without touching prose (R10)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
-            const tasksPath = makeDoneShippingPhaseFixture(tasksDir, wsDir);
+            const { archiver, wsDir, tasksPath, planPath } = requireShippingPhaseWithPlan(tempDir);
 
             // PLAN.md's own convention: the "Tasks:" line is self-labelling —
             // the label *is* the path — which is the form the R10 fix targets.
             // A separate Backlog line mentions the same path in plain prose,
             // describing history; that mention must survive byte-for-byte.
-            const planPath = path.join(wsDir, 'PLAN.md');
             fs.writeFileSync(planPath, [
                 '### Phase 3 — Shipping', '',
                 '- [x] **Shipping** [L2]',

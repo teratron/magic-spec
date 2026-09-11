@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.9.0
+**Version:** 1.10.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -135,6 +135,23 @@ GOOD: planComplete = section has zero rows, OR every row's `Status` cell is one 
 
 **Regression coverage**: the existing `DESIGN_DEBT_PENDING` fixtures in the test harness assume a hand-split `## Active Phases` (empty) + `## Completed Phases` (archived rows) layout that no shipped script produces — that structure is a local, undocumented convention in this engine's own workspace, not the canonical single-table `tasks.md` shape. The fixtures must gain a case built against the canonical single-table layout (one `## Active Phases` table whose only rows are `Done (Archived)`) alongside the existing two-section case, so the suite exercises the structure the shipped template actually generates.
 
+#### Zero-Row Vacancy — the branch the normative line specified and the implementation did not build `[AMENDED]`
+
+The `GOOD` line above reads *"planComplete = section has **zero rows**, OR every row's `Status` cell is ... terminal"*. The shipped predicate built the second disjunct and, for the first, substituted the literal marker: zero rows counted as complete **only when spelled `*None ...*`**. A section left genuinely vacant matched neither branch and fell through to "cannot determine", so `DESIGN_DEBT_PENDING` never reached its Backlog evaluation. Two shapes reach that state in practice — the hand-split `## Active Phases` + `## Completed Phases` layout (this engine's own workspace convention) once every row has moved across, and a table cleared outright.
+
+The implementation recorded the narrowing as deliberate, in a code comment: *"absence of a recognizable row or marker still resolves to cannot determine"*. The rule it states is sound and worth keeping — but it had no counterpart in either spec, so code and contract disagreed with no surface on which to notice it. That is the reusable lesson here: a guard that narrows a specified predicate is itself a specification change, and a comment is not where it lives.
+
+**Required Fix**: recognize a **vacant** section — zero phase rows, with nothing remaining but table scaffolding (header/separator rows) or whitespace — as a third positive terminal case alongside the marker and the all-terminal table. Vacancy MUST stay narrower than "nothing matched": content present but unrecognized continues to resolve to "cannot determine", because this predicate gates a check that raises a HALT.
+
+```plaintext
+BAD : zero rows counts only when spelled `*None ...*`; a cleared section is "cannot determine"
+GOOD: zero rows counts however it is spelled — marker, vacant section, or header-only table;
+      only content the predicate could not parse is "cannot determine"
+```
+
+**Regression coverage**: one harness case pinning all three halves together — a vacant section under a populated `## Completed Phases` fires; a header-only table (same zero-row state, scaffolding left behind) fires; and unrecognized prose in the section still does **not** fire. The third assertion is the load-bearing one: without it the fix is indistinguishable from deleting the guard.
+
+
 ## Related Specifications
 
 - [l2-spec-graph-memory.md](l2-spec-graph-memory.md) — `build-spec-graph.js` workspace attribution consumes the shared path matcher defined in §Path Matching Contract.
@@ -165,6 +182,7 @@ GOOD: planComplete = section has zero rows, OR every row's `Status` cell is one 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.10.0 | 2026-09-11 | Agent | **Zero-Row Vacancy** amendment to the DESIGN_DEBT_PENDING predicate: 1.9.0's own normative line specified `planComplete = section has zero rows, OR every row terminal`, but the shipped code built only the second disjunct and substituted the literal `*None ...*` marker for the first — so a vacant `## Active Phases` section (hand-split `## Completed Phases` layout with every row moved across, or a table cleared outright) fell through to "cannot determine" and the gate never evaluated its Backlog. Opposite end of the same predicate from 1.9.0. The narrowing was recorded only in an implementation comment, never in either spec, so code and contract disagreed with no surface on which to notice it. Required Fix: vacancy (zero rows, nothing but table scaffolding or whitespace) is a third positive terminal case, while unrecognized content still resolves to "cannot determine" — the predicate gates a HALT. Regression must pin all three halves, the negative included. Concept authority [l1-session-continuity.md](l1-session-continuity.md) 2.1.0 §Zero-Row Vacancy. Status reverted `Stable → RFC` (Amendment Rule, minor); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.9.0 | 2026-08-13 | Agent | New **DESIGN_DEBT_PENDING — Plan-Complete Structural Predicate** Required Fix: `check-prerequisites.js`'s `planComplete` pre-check requires `## Active Phases` to reduce to the literal `*None ...*` marker, but `phase-archiver.js` rewrites a finished row's status in place under the canonical single-table `tasks.md` template — no separate "completed" section exists to move rows into — so the predicate can never be true again once any phase has ever been archived (field report, engine 2.1.71). Fix: recognize completion by row status (all terminal, none non-terminal), not by literal section text. Notes the existing regression fixtures were built against an undocumented two-section layout no shipped script produces, and requires a canonical single-table case added alongside. Implements [l1-session-continuity.md](l1-session-continuity.md) §Terminal-Row Recognition. Related Specifications gained the two cross-references. Post-Update Review (5-lens) found no blocking issues; Stable retained via Trust Mode (C9). |
 | 1.8.0 | 2026-08-07 | Agent | **Coverage Denominator Scope** amended: `INDEX.md` and `RULES.md` join the `EXEMPT` set. 1.7.0 left them out on "not evidenced as needed" — a same-day follow-up ventilation reproduced `.design/engine/INDEX.md` itself landing `UNCOVERED` on this repository's own registry, direct evidence against that premise. `specifications/*.md`, `workspace.json`, and active `tasks/*.md` remain not exempted (still classify mostly EXTRACTED/INFERRED, 32/32 specs matched — no evidence of the same failure mode there). Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.7.0 | 2026-08-07 | Agent | New **Coverage Denominator Scope** section (`EXEMPT` classification): `analyze-coverage.js` counted `.design/`'s own bookkeeping output (PLAN, TASKS, STATE, CONTEXT, CHANGELOG, RETROSPECTIVE, archived phase journals) in the same denominator as implementation source, so reported coverage fell as SDD history accumulated — 85.4% against the graph's 100% on this repository's own `engine` workspace, 17 of 25 UNCOVERED files being archived phase journals alone (ventilation, 2026-08-06). Required Fix: a fifth classification, `EXEMPT`, applied before the existing four-step pipeline, excluded from `total`/`coveragePercent` but still reported (`summary.exempt`) for auditability. Scope deliberately excludes `specifications/`, `INDEX.md`, `RULES.md`, `workspace.json`, and active `tasks/*.md` — the finding was specific to the bookkeeping/journal set, not the whole `.design/` tree. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |

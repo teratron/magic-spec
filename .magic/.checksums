@@ -24,7 +24,7 @@
   "scripts/archive-phases.js": "81e9a2fda22876dcf4d40b0ecb0367d0a57dc8446bc9932bdfdf49b739fc8dee",
   "scripts/build-spec-graph.js": "40001645b26327e6884f0b199e15f8485ad4db62a9e07e8e621dcd2bfe36a2ce",
   "scripts/check-bloat.js": "4269a28525a12254052e375f706653dc67da86fb90b41d757838f5f92b15e615",
-  "scripts/check-prerequisites.js": "5679c5f46018a5ad306d99080d8152e4a5a028ade6886ff520f9319c7a2cd8bf",
+  "scripts/check-prerequisites.js": "ffc540230695690ad670b735ffcba324c4d7d251a9c55f9fae7e2e5d04773ea0",
   "scripts/create-workspace.js": "d65b2ae0b55eaf49ef61c7c9f414659a4a5deae6d2463266445bebf70e2afa95",
   "scripts/detect-communities.js": "8c0dedd8e8fe5be3f078d556702bf330d0163cf7839181e51f6659621b0e553d",
   "scripts/diff-spec-graph.js": "51c287eb6a2af410356f4246ed4b98de8c035bbbb97c24e4b66470284d8b69dc",

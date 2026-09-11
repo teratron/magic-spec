@@ -275,29 +275,45 @@ if (planExists && tasksExists) {
     const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
     const activePhasesMatch = tasksContentForBacklog.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
 
-    // A complete plan is recognized two ways: the positive "empty" marker
-    // (the italicized `*None — ...*` this engine's own workflows write for
-    // an exhausted section), or a phase table whose every row already
-    // carries a terminal status. The latter matters because phase-archiver.js
-    // rewrites a finished row's status to `Done (Archived)` in place — it
-    // never relocates the row — so under the canonical single-table
-    // tasks.md template (one `## Active Phases` table, no separate
-    // "completed" section) the literal-marker form can never reappear once
-    // any phase has ever been archived (l1-session-continuity.md
-    // §Terminal-Row Recognition). Absence of a recognizable row or marker
-    // still resolves to "cannot determine", not to "complete" — uncertain
-    // input must never satisfy a check that can raise a HALT.
+    // A complete plan is recognized three ways, all of them positive reads
+    // (l1-session-continuity.md §Terminal-Row Recognition):
+    //
+    //   1. the italicized `*None — ...*` marker this engine's own workflows
+    //      write for an exhausted section;
+    //   2. a phase table whose every row already carries a terminal status —
+    //      phase-archiver.js rewrites a finished row's status to
+    //      `Done (Archived)` in place and never relocates the row, so under
+    //      the canonical single-table tasks.md template the literal-marker
+    //      form can never reappear once any phase has ever been archived;
+    //   3. a *vacant* section — zero phase rows and nothing but table
+    //      scaffolding (header/separator) or whitespace left in it. This is
+    //      the spec's zero-row case ("a workspace that has never had a
+    //      phase, or whose table was manually cleared"), and it is the shape
+    //      a hand-split `## Active Phases` + `## Completed Phases` layout
+    //      leaves behind once every row has been moved across.
+    //
+    // Vacancy is deliberately narrower than "nothing matched": content that
+    // is present but unrecognized still resolves to "cannot determine", not
+    // to "complete". A gate that can raise a HALT must fire on input it
+    // positively read as empty, never on input it merely failed to parse.
     const activeSectionTrimmed = activePhasesMatch ? activePhasesMatch[1].trim() : '';
     const isEmptyMarker = /^\*None\b/m.test(activeSectionTrimmed);
+    const isTableScaffold = (t) => /^\|\s*-+\s*\|/.test(t) || /^\|\s*Phase\s*\|/i.test(t);
     const activePhaseRows = activeSectionTrimmed
         .split(/\r?\n/)
         .filter((l) => {
             const t = l.trim();
-            return t.startsWith('|') && !/^\|\s*-+\s*\|/.test(t) && !/^\|\s*Phase\s*\|/i.test(t);
+            return t.startsWith('|') && !isTableScaffold(t);
         });
     const isAllTerminal = activePhaseRows.length > 0
         && activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
-    const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal);
+    const isVacant = activeSectionTrimmed
+        .split(/\r?\n/)
+        .every((l) => {
+            const t = l.trim();
+            return t === '' || isTableScaffold(t);
+        });
+    const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal || isVacant);
 
     if (planComplete) {
         // Read independently rather than reuse the `planContent` above — that
