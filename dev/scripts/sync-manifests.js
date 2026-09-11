@@ -67,6 +67,62 @@ function buildTargets(targetVersion) {
 // Core Logic
 // ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * Applies every edit rule for one manifest target and reports what happened.
+ * The caller tallies `'updated'`/`'current'` into the run summary;
+ * `'missing'`/`'unmatched'`/`'declined'` (writeFileSafe — e.g. dry-run —
+ * chose not to write) are logged here and deliberately left uncounted, same
+ * as the original inline loop.
+ *
+ * @param {{ name: string, file: string, edits: Array }} target
+ * @param {string} targetVersion
+ * @returns {'missing'|'unmatched'|'current'|'updated'|'declined'}
+ */
+/**
+ * Applies every edit rule to `content` in sequence.
+ *
+ * @param {string} content
+ * @param {{ regex: RegExp, replace: string }[]} edits
+ * @returns {{ content: string, matchedAny: boolean }}
+ */
+function applyEdits(content, edits) {
+    let matchedAny = false;
+    for (const edit of edits) {
+        if (edit.regex.test(content)) {
+            matchedAny = true;
+            content = content.replace(edit.regex, edit.replace);
+        }
+    }
+    return { content, matchedAny };
+}
+
+function syncOneTarget(target, targetVersion) {
+    const fullPath = path.join(projectRoot, target.file);
+    if (!fs.existsSync(fullPath)) {
+        console.log(`  ⏭️  ${target.name} — not present, skipping`);
+        return 'missing';
+    }
+
+    const original = fs.readFileSync(fullPath, 'utf8');
+    const { content, matchedAny } = applyEdits(original, target.edits);
+
+    if (!matchedAny) {
+        console.warn(`  ⚠️  ${target.name} — no version anchor matched (skipped)`);
+        return 'unmatched';
+    }
+
+    if (content === original) {
+        console.log(`  ℹ️  ${target.name} — already at v${targetVersion}`);
+        return 'current';
+    }
+
+    if (writeFileSafe(fullPath, content)) {
+        console.log(`  ✅ ${target.name} → v${targetVersion}`);
+        return 'updated';
+    }
+    return 'declined';
+}
+
 function syncManifests() {
     if (!fs.existsSync(versionFile)) {
         console.error('❌ Version file (.magic/.version) not found. Run update-engine-meta first.');
@@ -76,44 +132,9 @@ function syncManifests() {
     const targetVersion = fs.readFileSync(versionFile, 'utf8').trim();
     console.log(`🔄 Syncing project ecosystem to version ${targetVersion}...`);
 
-    const targets = buildTargets(targetVersion);
-    let changes = 0;
-    let alreadyCurrent = 0;
-
-    for (const target of targets) {
-        const fullPath = path.join(projectRoot, target.file);
-        if (!fs.existsSync(fullPath)) {
-            console.log(`  ⏭️  ${target.name} — not present, skipping`);
-            continue;
-        }
-
-        const original = fs.readFileSync(fullPath, 'utf8');
-        let content = original;
-        let matchedAny = false;
-
-        for (const edit of target.edits) {
-            if (edit.regex.test(content)) {
-                matchedAny = true;
-                content = content.replace(edit.regex, edit.replace);
-            }
-        }
-
-        if (!matchedAny) {
-            console.warn(`  ⚠️  ${target.name} — no version anchor matched (skipped)`);
-            continue;
-        }
-
-        if (content === original) {
-            console.log(`  ℹ️  ${target.name} — already at v${targetVersion}`);
-            alreadyCurrent++;
-            continue;
-        }
-
-        if (writeFileSafe(fullPath, content)) {
-            console.log(`  ✅ ${target.name} → v${targetVersion}`);
-            changes++;
-        }
-    }
+    const results = buildTargets(targetVersion).map(target => syncOneTarget(target, targetVersion));
+    const changes = results.filter(r => r === 'updated').length;
+    const alreadyCurrent = results.filter(r => r === 'current').length;
 
     console.log(`🚀 Manifest Sync: ${changes} updated, ${alreadyCurrent} already current.`);
 }

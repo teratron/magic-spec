@@ -151,7 +151,6 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 **Regression coverage**: one harness case pinning all three halves together — a vacant section under a populated `## Completed Phases` fires; a header-only table (same zero-row state, scaffolding left behind) fires; and unrecognized prose in the section still does **not** fire. The third assertion is the load-bearing one: without it the fix is indistinguishable from deleting the guard.
 
-
 ## Related Specifications
 
 - [l2-spec-graph-memory.md](l2-spec-graph-memory.md) — `build-spec-graph.js` workspace attribution consumes the shared path matcher defined in §Path Matching Contract.

@@ -61,9 +61,52 @@ function fingerprint(stat) {
     return `${stat.dev}:${stat.ino}`;
 }
 
+/**
+ * Tallies per-item classify results (each `'missing'`/`'drift'`/`'linked'`,
+ * `null` silently ignored) into outcome counts — shared by both link groups
+ * below, which otherwise differ only in how each item is classified.
+ *
+ * @param {(string|null)[]} results
+ * @returns {{ missing: number, drift: number, linked: number }}
+ */
+function tallyLinkResults(results) {
+    return {
+        missing: results.filter(r => r === 'missing').length,
+        drift: results.filter(r => r === 'drift').length,
+        linked: results.filter(r => r === 'linked').length,
+    };
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Group 1 — AGENTS.md siblings
 // ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Compares one sibling file's inode against the AGENTS.md anchor's and logs
+ * the outcome.
+ *
+ * @param {string} sib - Sibling filename (e.g. `CLAUDE.md`).
+ * @param {string} anchorFp - The anchor's `fingerprint()` value.
+ * @returns {'missing'|'drift'|'linked'}
+ */
+function classifySibling(sib, anchorFp) {
+    const sibPath = path.join(projectRoot, sib);
+    const sibStat = statSafe(sibPath);
+
+    if (!sibStat) {
+        const tag = strict ? '❌' : '⚠️';
+        console.log(`   ${tag} Missing: ${sib}`);
+        return 'missing';
+    }
+
+    const sibFp = fingerprint(sibStat);
+    if (sibFp !== anchorFp) {
+        console.error(`   ❌ Drift: ${sib} has different inode (${sibFp} ≠ ${anchorFp}).`);
+        return 'drift';
+    }
+    console.log(`   ✅ ${sib} → linked`);
+    return 'linked';
+}
 
 function validateAgentsLinks() {
     console.log('🔍 Validating hardlinks for agent rule cards...');
@@ -78,30 +121,7 @@ function validateAgentsLinks() {
     const anchorFp = fingerprint(anchorStat);
     console.log(`   📎 Anchor: ${ANCHOR} (inode=${anchorFp}, nlink=${anchorStat.nlink})`);
 
-    let drift = 0;
-    let missing = 0;
-    let linked = 0;
-
-    for (const sib of SIBLINGS) {
-        const sibPath = path.join(projectRoot, sib);
-        const sibStat = statSafe(sibPath);
-
-        if (!sibStat) {
-            const tag = strict ? '❌' : '⚠️';
-            console.log(`   ${tag} Missing: ${sib}`);
-            missing++;
-            continue;
-        }
-
-        const sibFp = fingerprint(sibStat);
-        if (sibFp !== anchorFp) {
-            console.error(`   ❌ Drift: ${sib} has different inode (${sibFp} ≠ ${anchorFp}).`);
-            drift++;
-        } else {
-            console.log(`   ✅ ${sib} → linked`);
-            linked++;
-        }
-    }
+    const { missing, drift, linked } = tallyLinkResults(SIBLINGS.map(sib => classifySibling(sib, anchorFp)));
 
     const summary = missing > 0
         ? `${linked}/${SIBLINGS.length} linked, ${missing} missing`
@@ -121,6 +141,43 @@ function validateAgentsLinks() {
 // workflows/ exist unguarded: a hardcoded per-group function has to be
 // remembered and added for each new pair; a table only has to be extended.
 
+/**
+ * Compares one paired file's inode across `sourceDir`/`targetDir` and logs
+ * the outcome.
+ *
+ * @param {string} sourceDir
+ * @param {string} targetDir
+ * @param {string} file - Filename shared by both directories.
+ * @returns {'missing'|'drift'|'linked'|null} `null` when the source itself
+ *          vanished mid-scan — nothing to report, matching the original
+ *          loop's silent `continue`.
+ */
+function classifyPairedFile(sourceDir, targetDir, file) {
+    const sourceFilePath = path.join(projectRoot, sourceDir, file);
+    const targetFilePath = path.join(projectRoot, targetDir, file);
+
+    const sourceStat = statSafe(sourceFilePath);
+    const targetStat = statSafe(targetFilePath);
+
+    if (!sourceStat) return null;
+
+    if (!targetStat) {
+        const tag = strict ? '❌' : '⚠️';
+        console.log(`   ${tag} Missing: ${targetDir}/${file}`);
+        return 'missing';
+    }
+
+    const sourceFp = fingerprint(sourceStat);
+    const targetFp = fingerprint(targetStat);
+
+    if (sourceFp !== targetFp) {
+        console.error(`   ❌ Drift: ${sourceDir}/${file} (${sourceFp}) ≠ ${targetDir}/${file} (${targetFp}).`);
+        return 'drift';
+    }
+    console.log(`   ✅ ${sourceDir}/${file} → ${targetDir}/${file}`);
+    return 'linked';
+}
+
 function validateDirectoryPairLinks(sourceDir, targetDir, label) {
     const sourcePath = path.join(projectRoot, sourceDir);
     if (!fs.existsSync(sourcePath)) {
@@ -137,37 +194,7 @@ function validateDirectoryPairLinks(sourceDir, targetDir, label) {
 
     console.log(`\n🔍 Validating hardlinks for ${label} (${sourceDir}/ ↔ ${targetDir}/)...`);
 
-    let drift = 0;
-    let missing = 0;
-    let linked = 0;
-
-    for (const file of files) {
-        const sourceFilePath = path.join(projectRoot, sourceDir, file);
-        const targetFilePath = path.join(projectRoot, targetDir, file);
-
-        const sourceStat = statSafe(sourceFilePath);
-        const targetStat = statSafe(targetFilePath);
-
-        if (!sourceStat) continue;
-
-        if (!targetStat) {
-            const tag = strict ? '❌' : '⚠️';
-            console.log(`   ${tag} Missing: ${targetDir}/${file}`);
-            missing++;
-            continue;
-        }
-
-        const sourceFp = fingerprint(sourceStat);
-        const targetFp = fingerprint(targetStat);
-
-        if (sourceFp !== targetFp) {
-            console.error(`   ❌ Drift: ${sourceDir}/${file} (${sourceFp}) ≠ ${targetDir}/${file} (${targetFp}).`);
-            drift++;
-        } else {
-            console.log(`   ✅ ${sourceDir}/${file} → ${targetDir}/${file}`);
-            linked++;
-        }
-    }
+    const { missing, drift, linked } = tallyLinkResults(files.map(file => classifyPairedFile(sourceDir, targetDir, file)));
 
     const summary = missing > 0
         ? `${linked}/${files.length} linked, ${missing} missing`

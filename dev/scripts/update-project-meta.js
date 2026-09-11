@@ -103,53 +103,122 @@ function writeState(state) {
 // Core Logic
 // ───────────────────────────────────────────────────────────────────────────
 
+/**
+ * Resolves the target workspace name when the CLI didn't already supply one:
+ * `MAGIC_WORKSPACE` env var first, then `workspace.json`'s `default` field.
+ *
+ * @returns {string|null}
+ */
+function resolveWorkspaceName() {
+    if (process.env.MAGIC_WORKSPACE) return process.env.MAGIC_WORKSPACE;
+    if (!fs.existsSync(workspaceJsonPath)) return null;
+    try {
+        const wsData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
+        return wsData.default || null;
+    } catch (e) {
+        console.error(`⚠️ Error reading workspace.json: ${e.message}`);
+        return null;
+    }
+}
+
+/**
+ * Updates the global `.design/INDEX.md`. Fatal (exits the process) when the
+ * file is missing — every project has one, so its absence means the run
+ * targeted the wrong directory, not a workspace-specific gap.
+ *
+ * @returns {boolean} Whether state was mutated (a real change occurred).
+ */
+function processGlobalIndex(now, state) {
+    if (!fs.existsSync(globalIndexPath)) {
+        console.error('❌ Global INDEX.md not found.');
+        process.exit(1);
+    }
+    return updateFileMeta(globalIndexPath, now, message, state, 'global');
+}
+
+/**
+ * Updates the resolved workspace's `.design/{name}/INDEX.md`, when a
+ * workspace was resolved at all. A missing workspace INDEX.md is only a
+ * warning — unlike the global registry, not every invocation targets a
+ * workspace that has one yet.
+ *
+ * @returns {boolean} Whether state was mutated (a real change occurred).
+ */
+function processWorkspaceIndex(now, state) {
+    if (!workspaceName) return false;
+    const workspaceIndexPath = path.join(designDir, workspaceName, 'INDEX.md');
+    if (!fs.existsSync(workspaceIndexPath)) {
+        console.warn(`⚠️ Workspace '${workspaceName}' INDEX.md not found at ${workspaceIndexPath}. Skipping.`);
+        return false;
+    }
+    return updateFileMeta(workspaceIndexPath, now, message, state, `workspace:${workspaceName}`);
+}
+
 function updateProjectMeta() {
     console.log('🔍 Updating project metadata...');
 
     const now = new Date().toISOString().split('T')[0];
     const state = readState();
-    let stateMutated = false;
+    workspaceName = workspaceName || resolveWorkspaceName();
 
-    // 1. Resolve workspace from env, args, or workspace.json
-    if (!workspaceName && process.env.MAGIC_WORKSPACE) {
-        workspaceName = process.env.MAGIC_WORKSPACE;
-    }
-    if (!workspaceName && fs.existsSync(workspaceJsonPath)) {
-        try {
-            const wsData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
-            if (wsData.default) workspaceName = wsData.default;
-        } catch (e) {
-            console.error(`⚠️ Error reading workspace.json: ${e.message}`);
-        }
-    }
+    const globalChanged = processGlobalIndex(now, state);
+    const workspaceChanged = processWorkspaceIndex(now, state);
 
-    // 2. Process global INDEX.md
-    if (fs.existsSync(globalIndexPath)) {
-        const changed = updateFileMeta(globalIndexPath, now, message, state, 'global');
-        if (changed) stateMutated = true;
-    } else {
-        console.error('❌ Global INDEX.md not found.');
-        process.exit(1);
-    }
+    if (globalChanged || workspaceChanged) writeState(state);
+}
 
-    // 3. Process workspace INDEX.md
-    if (workspaceName) {
-        const workspaceIndexPath = path.join(designDir, workspaceName, 'INDEX.md');
-        if (fs.existsSync(workspaceIndexPath)) {
-            const changed = updateFileMeta(workspaceIndexPath, now, message, state, `workspace:${workspaceName}`);
-            if (changed) stateMutated = true;
-        } else {
-            console.warn(`⚠️ Workspace '${workspaceName}' INDEX.md not found at ${workspaceIndexPath}. Skipping.`);
-        }
-    }
+/**
+ * Bumps the patch component of a `**Version:** X.Y.Z` line, when present.
+ *
+ * @param {string} content
+ * @returns {{ content: string, newVersion: string|null }}
+ */
+function bumpVersionLine(content) {
+    const versionRegex = /\*\*Version:\*\* (\d+)\.(\d+)\.(\d+)/;
+    const match = content.match(versionRegex);
+    if (!match) return { content, newVersion: null };
+    const newVersion = `${parseInt(match[1], 10)}.${parseInt(match[2], 10)}.${parseInt(match[3], 10) + 1}`;
+    return { content: content.replace(versionRegex, `**Version:** ${newVersion}`), newVersion };
+}
 
-    if (stateMutated) writeState(state);
+/**
+ * Stamps `date` onto whichever "Last Updated" line shape the file uses
+ * (bulleted field or table cell).
+ *
+ * @param {string} content
+ * @param {string} date
+ * @returns {string}
+ */
+function stampLastUpdated(content, date) {
+    const dateRegex = /- \*\*Last Updated\*\*: \d{4}-\d{2}-\d{2}/;
+    if (dateRegex.test(content)) {
+        return content.replace(dateRegex, `- **Last Updated**: ${date}`);
+    }
+    const altDateRegex = /\*\*Last Updated\*\* \| \d{4}-\d{2}-\d{2}/;
+    return content.replace(altDateRegex, `**Last Updated** | ${date}`);
 }
 
 /**
  * Idempotent update of a single index file.
  * Returns true when state was mutated (i.e., a real change occurred).
  */
+/**
+ * Bumps the version, stamps the date, and appends the history row — the
+ * three content edits `updateFileMeta` applies once a structural change is
+ * confirmed.
+ *
+ * @param {string} original
+ * @param {string} date
+ * @param {string} msg
+ * @returns {{ content: string, newVersion: string|null }}
+ */
+function applyMetaEdits(original, date, msg) {
+    const { content: bumped, newVersion } = bumpVersionLine(original);
+    const stamped = stampLastUpdated(bumped, date);
+    // Append history entry — with Smart-History dedup (mirrors update-engine-meta.js)
+    return { content: appendHistoryRow(stamped, newVersion, date, msg), newVersion };
+}
+
 function updateFileMeta(filePath, date, msg, state, key) {
     const original = fs.readFileSync(filePath, 'utf8');
     const digest = structuralDigest(original);
@@ -160,40 +229,102 @@ function updateFileMeta(filePath, date, msg, state, key) {
         return false;
     }
 
-    let content = original;
-    let newVersion = null;
+    // Only reached when a structural change was detected above.
+    const { content, newVersion } = applyMetaEdits(original, date, msg);
 
-    // Bump version (**Version:** X.Y.Z) — only when structural change detected
-    const versionRegex = /\*\*Version:\*\* (\d+)\.(\d+)\.(\d+)/;
-    const match = content.match(versionRegex);
-    if (match) {
-        const major = parseInt(match[1], 10);
-        const minor = parseInt(match[2], 10);
-        const patch = parseInt(match[3], 10) + 1;
-        newVersion = `${major}.${minor}.${patch}`;
-        content = content.replace(versionRegex, `**Version:** ${newVersion}`);
-    }
-
-    // Update Last Updated date
-    const dateRegex = /- \*\*Last Updated\*\*: \d{4}-\d{2}-\d{2}/;
-    if (content.match(dateRegex)) {
-        content = content.replace(dateRegex, `- **Last Updated**: ${date}`);
-    } else {
-        const altDateRegex = /\*\*Last Updated\*\* \| \d{4}-\d{2}-\d{2}/;
-        content = content.replace(altDateRegex, `**Last Updated** | ${date}`);
-    }
-
-    // Append history entry — with Smart-History dedup (mirrors update-engine-meta.js)
-    content = appendHistoryRow(content, newVersion, date, msg);
-
-    if (content !== original) {
-        if (writeFileSafe(filePath, content)) {
-            console.log(`  ✅ ${path.relative(projectRoot, filePath)} → v${newVersion || '?'}`);
-        }
+    if (content !== original && writeFileSafe(filePath, content)) {
+        console.log(`  ✅ ${path.relative(projectRoot, filePath)} → v${newVersion || '?'}`);
     }
 
     state[key] = { digest, version: newVersion, date };
     return true;
+}
+
+const HISTORY_HEADER_4COL = /\| Version \| Date \| Author \| Description \|\s*\n\| :--- \| :--- \| :--- \| :--- \|/;
+const HISTORY_HEADER_3COL = /\| Version \| Date \| Description \|\s*\n\| :--- \| :--- \| :--- \|/;
+
+/**
+ * Locates the Document History table header — the 4-column form (with
+ * Author) or the legacy 3-column form.
+ *
+ * @param {string} content
+ * @returns {{ match: RegExpMatchArray, fourCol: boolean } | null}
+ */
+function findHistoryHeader(content) {
+    const fourCol = content.match(HISTORY_HEADER_4COL);
+    if (fourCol) return { match: fourCol, fourCol: true };
+    const threeCol = content.match(HISTORY_HEADER_3COL);
+    return threeCol ? { match: threeCol, fourCol: false } : null;
+}
+
+/**
+ * Slices `content` around the history table: the header's own span runs
+ * from the matched header through the next `## ` heading or end of file.
+ * Critical: the slice MUST start at the history header, not the file start
+ * — otherwise a divider search would lock onto an earlier table (e.g.
+ * Workspaces) instead of the history table's own.
+ *
+ * @param {string} content
+ * @param {RegExpMatchArray} headerMatch
+ * @returns {{ before: string, lines: string[], after: string }}
+ */
+function sliceHistoryTable(content, headerMatch) {
+    const headerStart = headerMatch.index;
+    const tailFromHeader = content.slice(headerStart);
+    const nextSection = tailFromHeader.search(/\n##\s/);
+    const sliceLen = nextSection === -1 ? tailFromHeader.length : nextSection;
+    return {
+        before: content.slice(0, headerStart),
+        lines: content.slice(headerStart, headerStart + sliceLen).split(/\r?\n/),
+        after: content.slice(headerStart + sliceLen),
+    };
+}
+
+/**
+ * Within a history-table line slice (header, divider, then data rows,
+ * newest-first by project convention), finds the divider row's index.
+ *
+ * @param {string[]} lines
+ * @returns {number} -1 when no divider row is present.
+ */
+function findDividerIndex(lines) {
+    return lines.findIndex(l => l.includes(':---') && l.trim().startsWith('|'));
+}
+
+/**
+ * Parses the newest data row (immediately after the divider) into the
+ * fields Smart-History dedup needs. `null` when the table has no data rows
+ * yet (a freshly created history table).
+ *
+ * @param {string[]} lines
+ * @param {number} newestRowIdx
+ * @param {boolean} fourCol
+ * @returns {{ startVersion: string, lastDate: string, lastMsg: string } | null}
+ */
+function parseNewestRow(lines, newestRowIdx, fourCol) {
+    const newestRow = (lines[newestRowIdx] || '').trim();
+    if (!newestRow.startsWith('|')) return null;
+    const cols = newestRow.split('|').map(c => c.trim()).filter(Boolean);
+    return {
+        startVersion: cols[0].split(' - ').shift().trim(),   // keep oldest as range start
+        lastDate: cols[1],
+        lastMsg: fourCol ? cols[3] : cols[2],
+    };
+}
+
+function historyRowText(fourCol, version, date, author, msg) {
+    return fourCol
+        ? `| ${version} | ${date} | ${author} | ${msg} |`
+        : `| ${version} | ${date} | ${msg} |`;
+}
+
+/**
+ * @returns {boolean} Whether `newest` (from parseNewestRow) is the same
+ *          day + message as the entry about to be appended — the
+ *          Smart-History dedup trigger.
+ */
+function isSameHistoryEntry(newest, date, msg) {
+    return Boolean(newest) && newest.lastDate === date && newest.lastMsg === msg;
 }
 
 /**
@@ -205,70 +336,30 @@ function appendHistoryRow(content, version, date, msg) {
     const author = process.env.MAGIC_AUTHOR || 'Agent';
     const v = version || '?.?.?';
 
-    const fourColHeader = /\| Version \| Date \| Author \| Description \|\s*\n\| :--- \| :--- \| :--- \| :--- \|/;
-    const threeColHeader = /\| Version \| Date \| Description \|\s*\n\| :--- \| :--- \| :--- \|/;
+    const header = findHistoryHeader(content);
+    if (!header) return content;
 
-    const fourCol = content.match(fourColHeader);
-    const threeCol = content.match(threeColHeader);
-
-    if (!fourCol && !threeCol) return content;
-
-    // Slice from the matched history-table header to end of file or next
-    // `## ` section. Critical: this slice MUST start at the history header
-    // — not at the file start — otherwise the "first divider in lines" scan
-    // below would lock onto an earlier table (e.g. Workspaces).
-    const headerStart = fourCol ? fourCol.index : threeCol.index;
-    const tailFromHeader = content.slice(headerStart);
-    const nextSection = tailFromHeader.search(/\n##\s/);
-    const sliceLen = nextSection === -1 ? tailFromHeader.length : nextSection;
-    const before = content.slice(0, headerStart);
-    const tableSlice = content.slice(headerStart, headerStart + sliceLen);
-    const after = content.slice(headerStart + sliceLen);
-
-    const lines = tableSlice.split(/\r?\n/);
-
-    // Within the history-table slice, lines[0] = header row, lines[1] =
-    // divider, lines[2..] = data rows (newest-first by project convention).
-    let dividerIdx = -1;
-    for (let i = 0; i < lines.length; i++) {
-        if (lines[i].includes(':---') && lines[i].trim().startsWith('|')) {
-            dividerIdx = i;
-            break;
-        }
-    }
-
-    const newRow = fourCol
-        ? `| ${v} | ${date} | ${author} | ${msg} |`
-        : `| ${v} | ${date} | ${msg} |`;
+    const { before, lines, after } = sliceHistoryTable(content, header.match);
+    const dividerIdx = findDividerIndex(lines);
 
     if (dividerIdx === -1) {
         // No divider in this slice — defensive append at end of slice
-        lines.push(newRow);
+        lines.push(historyRowText(header.fourCol, v, date, author, msg));
         return before + lines.join('\n') + after;
     }
 
     // Newest row sits right after the divider (if any rows exist at all)
     const newestRowIdx = dividerIdx + 1;
-    const newestRow = (lines[newestRowIdx] || '').trim();
+    const newest = parseNewestRow(lines, newestRowIdx, header.fourCol);
 
-    if (newestRow.startsWith('|')) {
-        const cols = newestRow.split('|').map(c => c.trim()).filter(Boolean);
-        const lastDate = cols[1];
-        const lastMsg = fourCol ? cols[3] : cols[2];
-
-        if (lastDate === date && lastMsg === msg) {
-            // Smart-History dedup: same day + same message → condense range
-            const startVersion = cols[0].split(' - ').shift().trim();   // keep oldest as range start
-            const condensed = fourCol
-                ? `| ${startVersion} - ${v} | ${date} | ${author} | ${msg} |`
-                : `| ${startVersion} - ${v} | ${date} | ${msg} |`;
-            lines[newestRowIdx] = condensed;
-            return before + lines.join('\n') + after;
-        }
+    if (isSameHistoryEntry(newest, date, msg)) {
+        // Smart-History dedup: same day + same message → condense range
+        lines[newestRowIdx] = historyRowText(header.fourCol, `${newest.startVersion} - ${v}`, date, author, msg);
+        return before + lines.join('\n') + after;
     }
 
     // Insert as the new "newest" row, right after the divider
-    lines.splice(newestRowIdx, 0, newRow);
+    lines.splice(newestRowIdx, 0, historyRowText(header.fourCol, v, date, author, msg));
     return before + lines.join('\n') + after;
 }
 
@@ -276,17 +367,18 @@ function appendHistoryRow(content, version, date, msg) {
 // Hygiene Pass (MD012 Fix)
 // ───────────────────────────────────────────────────────────────────────────
 
+function collapseExcessBlankLines(file) {
+    if (!fs.existsSync(file)) return;
+    const content = fs.readFileSync(file, 'utf8');
+    const cleaned = content.replace(/\n{3,}/g, '\n\n');
+    if (content !== cleaned && writeFileSafe(file, cleaned)) {
+        console.log(`  ✨ Cleaned: ${path.relative(projectRoot, file)}`);
+    }
+}
+
 function runHygiene(targetFiles) {
     console.log('🧹 Running documentation hygiene (MD012)...');
-    for (const file of targetFiles) {
-        if (fs.existsSync(file)) {
-            const content = fs.readFileSync(file, 'utf8');
-            const cleaned = content.replace(/\n{3,}/g, '\n\n');
-            if (content !== cleaned && writeFileSafe(file, cleaned)) {
-                console.log(`  ✨ Cleaned: ${path.relative(projectRoot, file)}`);
-            }
-        }
-    }
+    targetFiles.forEach(collapseExcessBlankLines);
 }
 
 // Execute

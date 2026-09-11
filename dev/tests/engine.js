@@ -16,43 +16,41 @@ describe('Magic Engine Scripts', () => {
     const scriptsDir = path.resolve(__dirname, '..', '..', '.magic', 'scripts');
     const devScriptsDir = path.resolve(__dirname, '..', 'scripts');
 
-    const createTempWorkspace = (withGit = false) => {
-        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-test-'));
+    const scaffoldTempDirs = (tempDir) => {
         fs.mkdirSync(path.join(tempDir, '.magic'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'scripts', 'lib'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, '.magic', 'templates'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, 'dev'), { recursive: true });
         fs.mkdirSync(path.join(tempDir, 'dev', 'scripts'), { recursive: true });
+    };
 
-        const copyDirShallow = (src, dst) => {
-            if (!fs.existsSync(src)) return;
-            for (const entry of fs.readdirSync(src)) {
-                const srcPath = path.join(src, entry);
-                if (fs.statSync(srcPath).isFile()) {
-                    fs.copyFileSync(srcPath, path.join(dst, entry));
-                }
+    const copyDirShallow = (src, dst) => {
+        if (!fs.existsSync(src)) return;
+        for (const entry of fs.readdirSync(src)) {
+            const srcPath = path.join(src, entry);
+            if (fs.statSync(srcPath).isFile()) {
+                fs.copyFileSync(srcPath, path.join(dst, entry));
             }
-        };
+        }
+    };
 
-        copyDirShallow(scriptsDir, path.join(tempDir, '.magic', 'scripts'));
-        copyDirShallow(path.join(scriptsDir, 'lib'), path.join(tempDir, '.magic', 'scripts', 'lib'));
-        copyDirShallow(devScriptsDir, path.join(tempDir, 'dev', 'scripts'));
+    // Compatibility shim: tests reference dev-only scripts (sync.js,
+    // sync-docs.js, validate-hardlinks.js, …) at `.magic/scripts/` even
+    // though their canonical home is `dev/scripts/`. Mirror only files
+    // that don't already exist in `.magic/scripts/` so the production
+    // executor.js, init.js, etc., are NOT overwritten by their
+    // dev-namespace counterparts (the dev executor.js intentionally
+    // lacks workspace validation).
+    //
+    // Skip `generate-checksums.js` explicitly — it's a developer-only
+    // manifest builder. Keeping it out of `tempDir/.magic/scripts/`
+    // makes the fixture match the actual user-install layout, so
+    // update-engine-meta's user-side fallback path is exercised
+    // honestly when dev/ scripts are absent.
+    const DEV_ONLY_NEVER_MIRROR = new Set(['generate-checksums.js']);
 
-        // Compatibility shim: tests reference dev-only scripts (sync.js,
-        // sync-docs.js, validate-hardlinks.js, …) at `.magic/scripts/` even
-        // though their canonical home is `dev/scripts/`. Mirror only files
-        // that don't already exist in `.magic/scripts/` so the production
-        // executor.js, init.js, etc., are NOT overwritten by their
-        // dev-namespace counterparts (the dev executor.js intentionally
-        // lacks workspace validation).
-        //
-        // Skip `generate-checksums.js` explicitly — it's a developer-only
-        // manifest builder. Keeping it out of `tempDir/.magic/scripts/`
-        // makes the fixture match the actual user-install layout, so
-        // update-engine-meta's user-side fallback path is exercised
-        // honestly when dev/ scripts are absent.
-        const DEV_ONLY_NEVER_MIRROR = new Set(['generate-checksums.js']);
+    const mirrorDevOnlyScripts = (tempDir) => {
         const productionScripts = new Set(fs.readdirSync(scriptsDir));
         for (const entry of fs.readdirSync(devScriptsDir)) {
             const src = path.join(devScriptsDir, entry);
@@ -61,23 +59,37 @@ describe('Magic Engine Scripts', () => {
             if (DEV_ONLY_NEVER_MIRROR.has(entry)) continue;
             fs.copyFileSync(src, path.join(tempDir, '.magic', 'scripts', entry));
         }
+    };
+
+    const initGitFixture = (tempDir) => {
+        try {
+            execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git config user.email "test@example.com"', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git config user.name "Test User"', { cwd: tempDir, stdio: 'ignore' });
+            // Initial commit with a baseline file
+            fs.writeFileSync(path.join(tempDir, 'README.md'), '# Test Project\n**Active Development** (v0.0.1)\n');
+            execSync('git add .', { cwd: tempDir, stdio: 'ignore' });
+            execSync('git commit -m "Initial commit"', { cwd: tempDir, stdio: 'ignore' });
+        } catch (e) {
+            console.warn('Note: Git initialization failed in test, some tests may skip drift check.');
+            console.error(e.message);
+        }
+    };
+
+    const createTempWorkspace = (withGit = false) => {
+        const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-test-'));
+        scaffoldTempDirs(tempDir);
+
+        copyDirShallow(scriptsDir, path.join(tempDir, '.magic', 'scripts'));
+        copyDirShallow(path.join(scriptsDir, 'lib'), path.join(tempDir, '.magic', 'scripts', 'lib'));
+        copyDirShallow(devScriptsDir, path.join(tempDir, 'dev', 'scripts'));
+
+        mirrorDevOnlyScripts(tempDir);
 
         fs.writeFileSync(path.join(tempDir, '.magic', '.version'), '1.0.0');
 
-        if (withGit) {
-            try {
-                execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
-                execSync('git config user.email "test@example.com"', { cwd: tempDir, stdio: 'ignore' });
-                execSync('git config user.name "Test User"', { cwd: tempDir, stdio: 'ignore' });
-                // Initial commit with a baseline file
-                fs.writeFileSync(path.join(tempDir, 'README.md'), '# Test Project\n**Active Development** (v0.0.1)\n');
-                execSync('git add .', { cwd: tempDir, stdio: 'ignore' });
-                execSync('git commit -m "Initial commit"', { cwd: tempDir, stdio: 'ignore' });
-            } catch (e) {
-                console.warn('Note: Git initialization failed in test, some tests may skip drift check.');
-                console.error(e.message);
-            }
-        }
+        if (withGit) initGitFixture(tempDir);
+
         return tempDir;
     };
 
@@ -259,6 +271,17 @@ describe('Magic Engine Scripts', () => {
         return JSON.parse(output);
     };
 
+    // Creates a bare `.design/` directory and returns both it and the
+    // INDEX.md path callers write into — the pairing every
+    // update-project-meta.js test starts from before layering its own
+    // INDEX.md content (that content varies per test, unlike the other
+    // `.design/`-bootstrap helpers below).
+    const makeDesignDir = (tempDir) => {
+        const designDir = path.join(tempDir, '.design');
+        fs.mkdirSync(designDir, { recursive: true });
+        return { designDir, indexPath: path.join(designDir, 'INDEX.md') };
+    };
+
     // Minimal `.design/` bootstrap (empty specifications/, INDEX.md, RULES.md)
     // used by every DESIGN_DEBT_PENDING (SC-2.4) probe in §6b2 — none of them
     // exercise spec content, only PLAN.md/TASKS.md.
@@ -404,6 +427,21 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(workflowsDir);
             fs.writeFileSync(path.join(workflowsDir, 'magic.test-wf.md'), '---\ndescription: test\n---\n**Triggers:** `new-trigger`, `another-trigger`');
 
+            // Second doc/workflow pair: pins the "[arg]" slash-command suffix
+            // preservation branch (sync-docs.js syncSlashCommandLine), the
+            // shape every multi-arg command doc actually uses.
+            fs.writeFileSync(
+                path.join(docsDir, 'arg-wf.md'),
+                '# Arg Workflow\n\n**Slash command:** `/old-arg-command [old]`\n'
+            );
+            fs.writeFileSync(path.join(workflowsDir, 'magic.arg-wf.md'), '---\ndescription: arg test\n---\n');
+
+            // A doc with no matching workflows/magic.{name}.md — pins the
+            // "no source → leave doc alone" skip branch (sync-docs.js
+            // syncDocsFolder's early `continue`).
+            const orphanContent = '# Orphan\n\nNo matching workflow exists for this doc.\n';
+            fs.writeFileSync(path.join(docsDir, 'orphan.md'), orphanContent);
+
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'sync.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
 
@@ -423,6 +461,136 @@ describe('Magic Engine Scripts', () => {
             assert.ok(docContent.includes('`new-trigger`'), 'Doc triggers should be updated');
             assert.ok(docContent.includes('`another-trigger`'), 'Doc triggers should be updated');
             assert.ok(docContent.includes('**Slash command:** `/magic.test-wf`'), 'Doc slash command should be updated');
+            // Sync Note refreshes on a first-ever sync (state starts empty,
+            // so wfChanged is unconditionally true).
+            assert.match(docContent, /Synchronized with engine workflows on \d{4}-\d{2}-\d{2} \(v1\.0\.0\)\./, 'Sync Note should refresh on first sync');
+
+            // The "[arg]" suffix must survive, only the command name changes.
+            const argDocContent = fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8');
+            assert.ok(argDocContent.includes('**Slash command:** `/magic.arg-wf [old]`'), 'the [arg] suffix must be preserved, only the command name replaced');
+
+            // The orphan doc has no matching workflow source and must be
+            // byte-for-byte untouched.
+            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'orphan.md'), 'utf8'), orphanContent, 'a doc with no matching workflow source must be left alone');
+
+            // Idempotent second run: nothing under workflows/, .design/, or
+            // .magic/ changed, so every doc must come out byte-identical —
+            // including the Sync Note, which must NOT re-stamp today's date
+            // on every invocation regardless of whether anything changed.
+            const beforeSecondRun = {
+                'test-wf.md': docContent,
+                'arg-wf.md': argDocContent,
+                'CONTRIBUTING.md': contributing,
+            };
+            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'test-wf.md'), 'utf8'), beforeSecondRun['test-wf.md'], 'an unchanged workflow source must not re-stamp the Sync Note on a second run');
+            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8'), beforeSecondRun['arg-wf.md'], 'an unchanged workflow source must leave the doc byte-identical on a second run');
+            assert.strictEqual(fs.readFileSync(path.join(tempDir, 'CONTRIBUTING.md'), 'utf8'), beforeSecondRun['CONTRIBUTING.md'], 'CONTRIBUTING.md must be byte-identical when none of its sources changed');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 3b. update-project-meta.js — idempotent version bump + Smart-History dedup
+    //     (exercised only as a silent no-op via the sync.js pipeline test above —
+    //     this pins its own branching directly: version bump, Last Updated stamp,
+    //     idempotency skip, and the Document History append/dedup logic)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-project-meta.js bumps version/history only on real structural change, dedups same-day rows', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { indexPath } = makeDesignDir(tempDir);
+            const buildIndex = (workspacesTable) => [
+                '# Index',
+                '',
+                '**Version:** 1.0.0',
+                '- **Last Updated**: 2026-01-01',
+                '',
+                '## Workspaces',
+                '',
+                workspacesTable,
+                '',
+                '## Document History',
+                '',
+                '| Version | Date | Author | Description |',
+                '| :--- | :--- | :--- | :--- |',
+                '| 0.9.0 | 2025-12-01 | Agent | Initial |',
+                '',
+            ].join('\n');
+            fs.writeFileSync(indexPath, buildIndex('| root | seed |'));
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-project-meta.js');
+            const run = (extraArgs = '') => execSync(`node "${scriptPath}" -m "test change"${extraArgs}`, { cwd: tempDir, encoding: 'utf8' });
+
+            // (a) First run: structural digest is new (no state file yet) → bump + stamp + history row.
+            run();
+            const afterFirst = fs.readFileSync(indexPath, 'utf8');
+            assert.match(afterFirst, /\*\*Version:\*\* 1\.0\.1/, 'first run must bump the patch version');
+            assert.match(afterFirst, /- \*\*Last Updated\*\*: \d{4}-\d{2}-\d{2}/, 'Last Updated must be stamped');
+            assert.doesNotMatch(afterFirst, /- \*\*Last Updated\*\*: 2026-01-01/, 'the stale Last Updated date must not survive');
+            assert.match(afterFirst, /\| 1\.0\.1 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/, 'a new history row must be inserted right after the divider');
+            assert.match(afterFirst, /0\.9\.0 \| 2025-12-01 \| Agent \| Initial/, 'the prior history row must survive untouched');
+
+            // (b) Second run, no structural change (only volatile fields would
+            // differ, and they were already stripped when the digest was taken)
+            // → idempotency must skip the bump entirely. This is the file's
+            // own stated reason for existing.
+            const stdout = run();
+            const afterSecond = fs.readFileSync(indexPath, 'utf8');
+            assert.strictEqual(afterSecond, afterFirst, 'no structural change → file must be byte-identical after a second run');
+            assert.match(stdout, /no structural change, skipping bump/, 'the skip must be reported, not silent');
+
+            // (c) A genuine structural change (new workspace row) → bump again,
+            // same day, same message → Smart-History dedup must condense into
+            // a version range on the existing newest row, not insert a second one.
+            // Edits the file the script itself just produced (afterSecond),
+            // not a fresh buildIndex() — a full rewrite would discard the
+            // 1.0.1 bump and history row run (a) already wrote, making a
+            // rebuilt-from-scratch fixture indistinguishable from run (a) itself.
+            fs.writeFileSync(indexPath, afterSecond.replace('| root | seed |', '| root | seed |\n| extra | added |'));
+            run();
+            const afterThird = fs.readFileSync(indexPath, 'utf8');
+            assert.match(afterThird, /\*\*Version:\*\* 1\.0\.2/, 'a genuine structural change must bump the version again');
+            assert.match(afterThird, /\| 1\.0\.1 - 1\.0\.2 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/, 'same-day + same-message must condense into a version range, not a duplicate row');
+            assert.strictEqual((afterThird.match(/test change/g) || []).length, 1, 'the dedup must leave exactly one row for the condensed range');
+
+            // (d) --force bypasses the idempotency check even with zero
+            // structural change — the documented escape hatch.
+            const beforeForce = fs.readFileSync(indexPath, 'utf8');
+            run(' --force');
+            const afterForce = fs.readFileSync(indexPath, 'utf8');
+            assert.notStrictEqual(afterForce, beforeForce, '--force must bump even without a structural change');
+            assert.match(afterForce, /\*\*Version:\*\* 1\.0\.3/, '--force must still bump the patch version');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('update-project-meta.js appendHistoryRow handles the legacy 3-column history table (no Author)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { indexPath } = makeDesignDir(tempDir);
+            fs.writeFileSync(indexPath, [
+                '# Index',
+                '',
+                '**Version:** 2.0.0',
+                '',
+                '## Document History',
+                '',
+                '| Version | Date | Description |',
+                '| :--- | :--- | :--- |',
+                '| 1.9.0 | 2025-12-01 | Initial |',
+                '',
+            ].join('\n'));
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-project-meta.js');
+            execSync(`node "${scriptPath}" -m "legacy table"`, { cwd: tempDir, stdio: 'pipe' });
+
+            const result = fs.readFileSync(indexPath, 'utf8');
+            assert.match(result, /\*\*Version:\*\* 2\.0\.1/, '3-column table must still bump the version');
+            assert.match(result, /\| 2\.0\.1 \| \d{4}-\d{2}-\d{2} \| legacy table \|/, 'the 3-column row must carry no Author cell');
+            assert.doesNotMatch(result, /Agent/, 'a 3-column table must never gain a 4th (Author) cell');
         } finally {
             cleanup(tempDir);
         }

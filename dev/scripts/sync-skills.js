@@ -63,6 +63,34 @@ function normalizeMagicReferences(text) {
         .replace(/\bmagic\.[a-z0-9.-]+\b/gi, m => hyphenateMagicToken(m));
 }
 
+/**
+ * Applies `name:`/`description:` frontmatter fields onto `metadata`, in
+ * place. Every other field is ignored, matching the original loop's
+ * selective behavior — this is not a general YAML parser.
+ *
+ * @param {string} frontmatterBody - Text between the `---` fences.
+ * @param {{ name: string, description: string }} metadata - Mutated in place.
+ */
+function applyFrontmatterFields(frontmatterBody, metadata) {
+    for (const line of frontmatterBody.split('\n')) {
+        const [key, ...parts] = line.split(':');
+        if (!key || parts.length === 0) continue;
+        const cleanKey = key.trim();
+        const value = parts.join(':').trim();
+        if (cleanKey === 'name') metadata.name = value;
+        if (cleanKey === 'description') metadata.description = value;
+    }
+}
+
+/**
+ * @param {string} content
+ * @returns {string} The first non-heading line of `content`, trimmed.
+ */
+function firstBodyLine(content) {
+    const bodyLines = content.replace(/^#+\s*/, '').trim().split('\n');
+    return bodyLines[0].trim();
+}
+
 function extractMetadata(content, fileName) {
     const metadata = {
         name: fileName.replace(/\./g, '-'),
@@ -71,20 +99,10 @@ function extractMetadata(content, fileName) {
 
     const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
     if (frontmatterMatch) {
-        const lines = frontmatterMatch[1].split('\n');
-        for (const line of lines) {
-            const [key, ...parts] = line.split(':');
-            if (key && parts.length > 0) {
-                const value = parts.join(':').trim();
-                const cleanKey = key.trim();
-                if (cleanKey === 'name') metadata.name = value;
-                if (cleanKey === 'description') metadata.description = value;
-            }
-        }
+        applyFrontmatterFields(frontmatterMatch[1], metadata);
     } else {
         // Fallback for description if no frontmatter
-        const bodyLines = content.replace(/^#+\s*/, '').trim().split('\n');
-        metadata.description = bodyLines[0].trim() || metadata.description;
+        metadata.description = firstBodyLine(content) || metadata.description;
     }
 
     return metadata;
@@ -121,6 +139,41 @@ function sourceMarkerPath(sourcePath, file) {
     }
 
     return normalizePath(path.relative(ROOT_DIR, sourcePath));
+}
+
+/**
+ * Removes one no-longer-active skill directory, but only when it is
+ * confirmed to be a wrapper this script itself generated (carries the
+ * "GENERATED FILE" marker) — a hand-crafted skill directory that happens to
+ * share a name with a since-removed workflow is left untouched. Honors
+ * MAGIC_DRY_RUN (via `isDryRun()`) the same as every other write in this file.
+ *
+ * @param {string} dir - Skill directory name (not a full path).
+ * @param {string} sourceTarget - The `skills/` or `.agents/skills/` root it lives under.
+ */
+function cleanupOrphanSkill(dir, sourceTarget) {
+    const orphanPath = path.join(sourceTarget, dir);
+    const orphanSkillMdPath = path.join(orphanPath, 'SKILL.md');
+
+    let isGenerated = false;
+    if (fs.existsSync(orphanSkillMdPath)) {
+        const content = fs.readFileSync(orphanSkillMdPath, 'utf8');
+        if (content.includes('⚠️ GENERATED FILE - DO NOT EDIT MANUALLY')) {
+            isGenerated = true;
+        }
+    }
+
+    if (!isGenerated) {
+        console.log(` ⏭️  Skipping hand-crafted skill: ${dir}`);
+        return;
+    }
+
+    if (isDryRun()) {
+        console.log(` 🧪 [dry-run] would remove orphaned generated skill: ${dir}`);
+    } else {
+        console.log(` 🗑️  Removing orphaned generated skill: ${dir}`);
+        fs.rmSync(orphanPath, { recursive: true, force: true });
+    }
 }
 
 function sync() {
@@ -191,30 +244,7 @@ ${body}`;
                 .map(dirent => dirent.name);
 
             existingSkillDirs.forEach(dir => {
-                if (!activeSkills.has(dir)) {
-                    const orphanPath = path.join(source.target, dir);
-                    const orphanSkillMdPath = path.join(orphanPath, 'SKILL.md');
-
-                    // Only delete if it's actually a generated wrapper
-                    let isGenerated = false;
-                    if (fs.existsSync(orphanSkillMdPath)) {
-                        const content = fs.readFileSync(orphanSkillMdPath, 'utf8');
-                        if (content.includes('⚠️ GENERATED FILE - DO NOT EDIT MANUALLY')) {
-                            isGenerated = true;
-                        }
-                    }
-
-                    if (isGenerated) {
-                        if (isDryRun()) {
-                            console.log(` 🧪 [dry-run] would remove orphaned generated skill: ${dir}`);
-                        } else {
-                            console.log(` 🗑️  Removing orphaned generated skill: ${dir}`);
-                            fs.rmSync(orphanPath, { recursive: true, force: true });
-                        }
-                    } else {
-                        console.log(` ⏭️  Skipping hand-crafted skill: ${dir}`);
-                    }
-                }
+                if (!activeSkills.has(dir)) cleanupOrphanSkill(dir, source.target);
             });
         }
     });

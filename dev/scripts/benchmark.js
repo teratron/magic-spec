@@ -129,6 +129,26 @@ function scanDir(dir, extensions, result = []) {
  *
  * @returns {{nodes: Map<string, object>, edges: object[], analysis: object, adjacency: Map<string, string[]>}}
  */
+/**
+ * Builds an undirected adjacency list from graph edges: each edge links
+ * both endpoints to each other, and only among ids present in `nodeIds`
+ * (an edge referencing a pruned/missing node contributes nothing on that
+ * side).
+ *
+ * @param {Iterable<string>} nodeIds
+ * @param {{ from: string, to: string }[]} edges
+ * @returns {Map<string, string[]>}
+ */
+function buildAdjacency(nodeIds, edges) {
+    const adjacency = new Map();
+    for (const id of nodeIds) adjacency.set(id, []);
+    for (const edge of edges) {
+        if (adjacency.has(edge.from)) adjacency.get(edge.from).push(edge.to);
+        if (adjacency.has(edge.to)) adjacency.get(edge.to).push(edge.from);
+    }
+    return adjacency;
+}
+
 function loadGraph() {
     const executorPath = path.join(__dirname, '../../.magic/scripts/executor.js');
     const stdout = execFileSync(process.execPath, [executorPath, 'build-spec-graph', '--json'], {
@@ -139,13 +159,7 @@ function loadGraph() {
 
     const raw = JSON.parse(stdout.toString('utf8'));
     const nodes = new Map(raw.nodes.map(n => [n.id, n]));
-
-    const adjacency = new Map();
-    for (const n of nodes.keys()) adjacency.set(n, []);
-    for (const edge of raw.edges) {
-        if (adjacency.has(edge.from)) adjacency.get(edge.from).push(edge.to);
-        if (adjacency.has(edge.to)) adjacency.get(edge.to).push(edge.from);
-    }
+    const adjacency = buildAdjacency(nodes.keys(), raw.edges);
 
     return { nodes, edges: raw.edges, analysis: raw.analysis || {}, adjacency };
 }
@@ -189,21 +203,35 @@ function benchSpecLayer() {
  * @param {number} depth - BFS depth limit.
  * @returns {{nodes_visited: number, tokens: number, seed: string}}
  */
+/**
+ * Expands one BFS layer: every unvisited neighbor of every node in
+ * `frontier` is marked visited (mutates `visited`) and becomes part of the
+ * next frontier.
+ *
+ * @param {string[]} frontier
+ * @param {Map<string, string[]>} adjacency
+ * @param {Set<string>} visited
+ * @returns {string[]} The next frontier.
+ */
+function bfsExpand(frontier, adjacency, visited) {
+    const next = [];
+    for (const nodeId of frontier) {
+        for (const nb of adjacency.get(nodeId) || []) {
+            if (!visited.has(nb)) {
+                visited.add(nb);
+                next.push(nb);
+            }
+        }
+    }
+    return next;
+}
+
 function benchGraphQuery(nodes, adjacency, seedId, depth) {
     const visited = new Set([seedId]);
     let frontier = [seedId];
 
     for (let d = 0; d < depth; d++) {
-        const next = [];
-        for (const nodeId of frontier) {
-            for (const nb of adjacency.get(nodeId) || []) {
-                if (!visited.has(nb)) {
-                    visited.add(nb);
-                    next.push(nb);
-                }
-            }
-        }
-        frontier = next;
+        frontier = bfsExpand(frontier, adjacency, visited);
     }
 
     // Serialize the subgraph to approximate what an agent would load
@@ -232,6 +260,48 @@ function fmt(n) {
 }
 
 /**
+ * Averages token cost across every graph query, once — both report sections
+ * below quote the same figure, and the original computed it separately (and
+ * identically) in each. `null` when there were no queries to average.
+ *
+ * @param {{ tokens: number }[]} queries
+ * @param {number} corpusTokens
+ * @returns {{ avgGraphTokens: number, avgRatio: string } | null}
+ */
+function graphQueryAverage(queries, corpusTokens) {
+    if (!queries.length) return null;
+    const avgGraphTokens = Math.round(queries.reduce((sum, q) => sum + q.tokens, 0) / queries.length);
+    const avgRatio = corpusTokens > 0 ? (corpusTokens / avgGraphTokens).toFixed(1) : '—';
+    return { avgGraphTokens, avgRatio };
+}
+
+function printGraphQueryResults(queries, corpusTokens) {
+    console.log(`GRAPH QUERY RESULTS (BFS depth=${BFS_DEPTH}, top ${TOP_SEEDS} god-node seeds):`);
+    console.log('───────────────────────────────────────────────────────────────');
+    for (const q of queries) {
+        const ratio = corpusTokens > 0 ? (corpusTokens / q.tokens).toFixed(1) : '—';
+        console.log(`  Seed: ${q.seed.slice(0, 55).padEnd(55)}`);
+        console.log(`    Nodes visited : ${q.nodes_visited.toString().padStart(4)}  Tokens : ${fmt(q.tokens).padStart(8)}  Ratio vs corpus : ${ratio}×`);
+    }
+}
+
+function printInterpretation(corpus, specs, avg) {
+    console.log('INTERPRETATION:');
+    console.log('───────────────────────────────────────────────────────────────');
+    console.log('  Corpus  = full context load (naive "read everything" approach)');
+    console.log('  Specs   = SDD spec-layer only (structured but still all specs)');
+    console.log(`  Graph   = targeted BFS query (depth ${BFS_DEPTH}: only what the agent needs)`);
+    console.log('');
+    if (avg) {
+        console.log(`  Average token cost per architecture question:`);
+        console.log(`    Raw corpus : ${fmt(corpus.tokens)} tokens`);
+        console.log(`    Spec layer : ${fmt(specs.tokens)} tokens  (${(corpus.tokens / specs.tokens).toFixed(1)}× cheaper)`);
+        console.log(`    Graph BFS  : ${fmt(avg.avgGraphTokens)} tokens  (${avg.avgRatio}× cheaper)`);
+    }
+    console.log('');
+}
+
+/**
  * Prints the human-readable benchmark report.
  *
  * @param {object} report
@@ -255,40 +325,16 @@ function printReport(report) {
     console.log(`  Spec / Corpus reduction : ${specRatio}×  (loading specs vs full codebase)`);
     console.log('');
 
-    console.log(`GRAPH QUERY RESULTS (BFS depth=${BFS_DEPTH}, top ${TOP_SEEDS} god-node seeds):`);
-    console.log('───────────────────────────────────────────────────────────────');
+    printGraphQueryResults(queries, corpus.tokens);
 
-    let totalGraphTokens = 0;
-    for (const q of queries) {
-        const ratio = corpus.tokens > 0 ? (corpus.tokens / q.tokens).toFixed(1) : '—';
-        console.log(`  Seed: ${q.seed.slice(0, 55).padEnd(55)}`);
-        console.log(`    Nodes visited : ${q.nodes_visited.toString().padStart(4)}  Tokens : ${fmt(q.tokens).padStart(8)}  Ratio vs corpus : ${ratio}×`);
-        totalGraphTokens += q.tokens;
-    }
-
-    if (queries.length) {
-        const avgGraphTokens = Math.round(totalGraphTokens / queries.length);
-        const avgRatio = corpus.tokens > 0 ? (corpus.tokens / avgGraphTokens).toFixed(1) : '—';
+    const avg = graphQueryAverage(queries, corpus.tokens);
+    if (avg) {
         console.log('');
-        console.log(`  Average graph query : ${fmt(avgGraphTokens)} tokens  (${avgRatio}× vs corpus)`);
+        console.log(`  Average graph query : ${fmt(avg.avgGraphTokens)} tokens  (${avg.avgRatio}× vs corpus)`);
     }
 
     console.log('');
-    console.log('INTERPRETATION:');
-    console.log('───────────────────────────────────────────────────────────────');
-    console.log('  Corpus  = full context load (naive "read everything" approach)');
-    console.log('  Specs   = SDD spec-layer only (structured but still all specs)');
-    console.log(`  Graph   = targeted BFS query (depth ${BFS_DEPTH}: only what the agent needs)`);
-    console.log('');
-    if (queries.length) {
-        const avgGraphTokens = Math.round(totalGraphTokens / queries.length);
-        const avgRatio = corpus.tokens > 0 ? (corpus.tokens / avgGraphTokens).toFixed(1) : '—';
-        console.log(`  Average token cost per architecture question:`);
-        console.log(`    Raw corpus : ${fmt(corpus.tokens)} tokens`);
-        console.log(`    Spec layer : ${fmt(specs.tokens)} tokens  (${(corpus.tokens / specs.tokens).toFixed(1)}× cheaper)`);
-        console.log(`    Graph BFS  : ${fmt(avgGraphTokens)} tokens  (${avgRatio}× cheaper)`);
-    }
-    console.log('');
+    printInterpretation(corpus, specs, avg);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
