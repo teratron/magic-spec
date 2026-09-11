@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -9,7 +9,7 @@
 
 Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file owns the `update-state.js` correctness surface, its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
 
-Ten defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. All ten are now implemented.
+Eleven defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. The eleventh (§8.5) is §8's own fix reopened in its sibling call site (`addConstraint`), never audited when §8 landed — found and fixed in the same cycle, reproduced directly against engine 2.1.82. All eleven are now implemented.
 
 ## Related Specifications
 
@@ -246,6 +246,28 @@ assert.ok(/## Recent Decisions[\s\S]*Adopt SDD workflow/.test(afterDecision), �
 
 `[\s\S]*` matches any distance, so the assertion holds whether the entry lands immediately after the heading (defective) or after the preamble (correct) — verified by running it against both. A presence assertion cannot express a structural contract; the replacement must assert the section's **shape**, not merely that the entry appears somewhere beneath the heading.
 
+### 8.5 The Same Defect, Unfixed in the Sibling Call Site `[ADDED]`
+
+§8.3's rebuild was applied to `addDecision` only. `addConstraint` — the function immediately below it in `update-state.js`, prepending into `## Blocking Constraints` rather than `## Recent Decisions` — kept the exact insertion-offset code §8.2 diagnosed, unchanged:
+
+```js
+const afterMarker = content.indexOf('\n', idx) + 1;
+let insertAt = afterMarker;
+const remaining = content.slice(afterMarker);
+const contentStart = remaining.search(/^[^<]/m);
+if (contentStart > 0) {
+    insertAt = afterMarker + contentStart;
+}
+```
+
+Same regex, same reasoning failure, same result: every constraint landed immediately after the `## Blocking Constraints` heading, above its two-line MANDATORY-reading comment, instead of joining the entry list below it. Reproduced directly (temp workspace, three successive `addConstraint` calls before any edit): each new entry stacked at the top, pushing the comment block — and every previously-added constraint — further down each time, growing a pile of misplaced lines right under the heading.
+
+The two functions are adjacent in the file and §8's own fix (2.1.67) touched only one of them; nothing then or since re-examined the sibling for the same pattern, matching the recurring shape in this codebase where a fix lands at one call site of a shared defect and the audit that would have caught the rest never runs (cf. l1-scan-input-hygiene.md's SH-1 gap across multiple scan sites). Unlike §8.2's decision case, this one carries no pruning consequence (constraints are never capped or pruned — SC-1.2, §7) — the defect here is purely positional and cumulative.
+
+**Required fix**: the same rebuild §8.3 specifies, adapted for `addConstraint`'s two differences from `addDecision`: the comment preamble is two lines, not one, and the entry list carries no 5-entry cap (every constraint is kept, by design). Auto-numbering is scoped to entries found inside the rebuilt block, not a whole-file scan for `[C-\d{3}]` — a constraint id mentioned in passing elsewhere (e.g. a Recent Decisions note referencing one) must not inflate the next number, a stricter guarantee than the pre-fix code provided incidentally.
+
+Regression coverage extends the existing `dev/tests/engine.js` decision-structure case (§8.4) with the parallel assertion for constraints: heading followed by a blank line, both comment lines, then entries newest-first, no consecutive-blank runs — plus a second `addConstraint` call asserting the list rebuilds correctly rather than only the first insertion. Field-observed (this engine's own session tooling, not a downstream report): reproduced directly against 2.1.82 before either the test or the fix were written.
+
 ## 9. The Task-Level Blocking & Assignment Precedence Defect (SC-2.1) `[ADDED]`
 
 `synthesizeNextAction()`'s tier-2 phase-file loop matches the phase's **first** open `Atomic Checklist` line via a single un-flagged `openTaskRe.match()` call, and screens it against exactly one signal — `isPhaseBlocked()`, which reads only the phase file's own frontmatter `status:` and its `TASKS.md` registry row:
@@ -330,6 +352,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-09-11 | Agent | New **§8.5 — The Same Defect, Unfixed in the Sibling Call Site**, the eleventh defect: §8's rebuild fix (engine 2.1.67) was applied to `addDecision` only. `addConstraint` — its immediate neighbor in `update-state.js`, prepending into `## Blocking Constraints` — kept the exact pre-fix insertion-offset code (`/^[^<]/m` matching a blank line's own newline at position 0), never audited when §8 landed. Every constraint was inserted directly after the heading, above its two-line MANDATORY-reading comment, piling misplaced entries there across calls instead of joining the list below it — reproduced directly (three successive `addConstraint` calls, temp workspace). No pruning consequence (constraints are never capped, SC-1.2 §7): the defect is purely positional and cumulative, not a data-loss one. Fixed with the same rebuild §8.3 specifies, adapted for the two-line comment and the uncapped entry list; auto-numbering rescoped to the rebuilt block rather than a whole-file `[C-\d{3}]` scan. `dev/tests/engine.js`'s constraint case extended with the structural assertions §8.4 established for decisions, plus a second-call case pinning the rebuilt list order. Field-observed in this engine's own session tooling while auditing document/artifact generators for accumulating-line defects; reproduced directly against 2.1.82 before either the fix or its regression were written. Overview's defect count corrected ten → eleven, all implemented. No status transition — `Stable` retained. |
 | 1.2.0 | 2026-08-27 | Agent | New **§6.1 — The Same Defect in the Field-Patch Loop**, the tenth defect and the retrospec (§8 precedent) of a fix that shipped ahead of its spec. `updateState()`'s `fieldMap` loop patched scalar lines with a string-form `.replace()` whose second argument was the interpolated field value; `re` has no capture groups, so §6's original sweep cleared it — but `` $` `` / `$'` / `$&` fire with no group, and `patch.nextAction` / `patch.task` carry engine-uncontrolled task titles. A title with bash ANSI-C quoting (`$'…'`) expanded `$'` to the entire remainder of `STATE.md`, truncating `Next Action` and duplicating every section below it, the pre-recompute `## Progress` counter among them (field report, engine 2.1.76, reproduced directly). Fixed to the function-form replacement §6 already uses; §6's closing paragraph corrected to retract the false "no other call site" claim; one regression bullet added to §11 (value-level **and** structural assertions). Coverage landed with the fix in `dev/tests/engine.js` (68 → 69). No status transition — `Stable` retained. |
 | 1.1.2 | 2026-08-27 | Agent | Cross-reference wording only: the sibling description of [l2-finalize-output-contract.md](l2-finalize-output-contract.md) no longer names "commit messages" among its emitted artifacts — that output was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement). No content in this spec's own STATE.md-accuracy sections changed; patch, no status transition. |
 | 1.1.1 | 2026-08-22 | Agent | Factual-accuracy patch, no design content (RULES.md §3 patch tier). §12's "§8's coverage obligation is open" claim was already false when written — Phase 19 (R12) had closed it with structural assertions in `dev/tests/engine.js`; corrected to name the covering coverage. Overview's "not yet implemented" claim for §9/§10 also corrected — both fixes landed within the same phase that planned them (Phase 23). No status transition. |

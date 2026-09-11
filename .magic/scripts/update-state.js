@@ -146,23 +146,52 @@ function updateState(designDir, patch, options = {}) {
 
     // ───────────────────────────────────────────────────────────────────────
     // Prepend Blocking Constraint (auto-numbered [C-NNN])
+    //
+    // The whole section is engine-owned (the template marks it MANDATORY
+    // reading, not hand-authored narrative), so — like ## Recent Decisions
+    // above — it is rebuilt deterministically on every call rather than
+    // insertion-point arithmetic against the existing bytes. The prior
+    // approach searched for the first line not starting with `<` via
+    // `/^[^<]/m` to skip past the blank-line/comment preamble — the exact
+    // same defect `addDecision` was rewritten away from above: a blank
+    // line's own line-terminating `\n` satisfies `[^<]` too, so the search
+    // matched at position 0 on every call, `contentStart > 0` was always
+    // false, and every constraint was inserted directly after the heading —
+    // never advancing past the blank line and MANDATORY-reading comment at
+    // all. Each new constraint piled up there, pushing the comment (and
+    // every prior constraint) further down instead of joining the list
+    // below it. Unlike decisions, constraints are never pruned — every
+    // entry is kept by design (l1-session-continuity.md SC-1.2) — so the
+    // rebuild carries the full existing list, not a capped slice.
     // ───────────────────────────────────────────────────────────────────────
     if (options.addConstraint && patch.constraint) {
         const marker = '## Blocking Constraints';
-        const idx = content.indexOf(marker);
-        if (idx !== -1) {
-            const afterMarker = content.indexOf('\n', idx) + 1;
-            let insertAt = afterMarker;
-            const remaining = content.slice(afterMarker);
-            const contentStart = remaining.search(/^[^<]/m);
-            if (contentStart > 0) {
-                insertAt = afterMarker + contentStart;
-            }
-            // Auto-number: count existing [C-NNN]
-            const existing = (content.match(/\[C-\d{3}\]/g) || []).length;
-            const id = `C-${String(existing + 1).padStart(3, '0')}`;
-            const entry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}\n`;
-            content = content.slice(0, insertAt) + entry + content.slice(insertAt);
+        const secStart = content.indexOf(marker);
+        if (secStart !== -1) {
+            const nextHeading = content.indexOf('\n## ', secStart + 1);
+            const secEnd = nextHeading !== -1 ? nextHeading : content.length;
+            const block = content.slice(secStart, secEnd);
+
+            const existingLines = block.split(/\r?\n/).filter(l => /^- \[C-\d{3}\]/.test(l));
+            // Auto-number from entries already inside this block, not a
+            // whole-file scan — a `[C-NNN]` mentioned in passing elsewhere
+            // (e.g. a Recent Decisions note referencing a constraint) must
+            // not inflate the next id.
+            const id = `C-${String(existingLines.length + 1).padStart(3, '0')}`;
+            const newEntry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}`;
+            const constraintLines = [newEntry, ...existingLines];
+
+            const rebuilt = [
+                marker,
+                '',
+                '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
+                '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
+                '',
+                ...constraintLines,
+                '',
+            ].join('\n');
+
+            content = content.slice(0, secStart) + rebuilt + content.slice(secEnd);
         }
     }
 

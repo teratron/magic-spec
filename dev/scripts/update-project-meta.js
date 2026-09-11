@@ -381,19 +381,31 @@ function runHygiene(targetFiles) {
     targetFiles.forEach(collapseExcessBlankLines);
 }
 
-// Execute
-try {
-    updateProjectMeta();
+module.exports = {
+    structuralDigest, readState, writeState, resolveWorkspaceName,
+    processGlobalIndex, processWorkspaceIndex, updateProjectMeta,
+    bumpVersionLine, stampLastUpdated, applyMetaEdits, updateFileMeta,
+    findHistoryHeader, sliceHistoryTable, findDividerIndex, parseNewestRow,
+    historyRowText, isSameHistoryEntry, appendHistoryRow,
+    collapseExcessBlankLines, runHygiene,
+};
 
-    const docsToClean = [
-        path.join(projectRoot, 'CHANGELOG.md'),
-        path.join(projectRoot, 'README.md'),
-        path.join(projectRoot, 'CONTRIBUTING.md'),
-        globalIndexPath,
-        rulesPath,
-    ];
-    runHygiene(docsToClean);
-} catch (error) {
-    console.error(`❌ Metadata update failed: ${error.message}`);
-    process.exit(1);
+// Execute — require.main guard means require()-ing this module (as the test
+// harness does) never runs the CLI side effect.
+if (require.main === module) {
+    try {
+        updateProjectMeta();
+
+        const docsToClean = [
+            path.join(projectRoot, 'CHANGELOG.md'),
+            path.join(projectRoot, 'README.md'),
+            path.join(projectRoot, 'CONTRIBUTING.md'),
+            globalIndexPath,
+            rulesPath,
+        ];
+        runHygiene(docsToClean);
+    } catch (error) {
+        console.error(`❌ Metadata update failed: ${error.message}`);
+        process.exit(1);
+    }
 }

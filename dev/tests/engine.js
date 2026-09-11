@@ -567,6 +567,51 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('update-project-meta.js unit: bumpVersionLine/stampLastUpdated/updateFileMeta as pure functions', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const upm = require(path.join(tempDir, '.magic', 'scripts', 'update-project-meta.js'));
+
+            // bumpVersionLine: patch increments, non-version content untouched;
+            // absent version → no-op with newVersion: null.
+            const bumped = upm.bumpVersionLine('**Version:** 2.3.4\nOther text');
+            assert.strictEqual(bumped.content, '**Version:** 2.3.5\nOther text');
+            assert.strictEqual(bumped.newVersion, '2.3.5');
+            const noVersion = upm.bumpVersionLine('No version line here');
+            assert.strictEqual(noVersion.content, 'No version line here');
+            assert.strictEqual(noVersion.newVersion, null);
+
+            // stampLastUpdated: bulleted form takes priority; table-cell form
+            // is the fallback when the bulleted form is absent.
+            assert.strictEqual(
+                upm.stampLastUpdated('- **Last Updated**: 2020-01-01', '2026-05-05'),
+                '- **Last Updated**: 2026-05-05'
+            );
+            assert.strictEqual(
+                upm.stampLastUpdated('**Last Updated** | 2020-01-01', '2026-05-05'),
+                '**Last Updated** | 2026-05-05'
+            );
+
+            // updateFileMeta as a direct unit call (bypassing the CLI layer
+            // entirely): first call bumps on a fresh digest, second call with
+            // byte-identical content is idempotent.
+            const filePath = path.join(tempDir, 'unit-index.md');
+            const seed = '# Index\n\n**Version:** 1.0.0\n\n## Document History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| 0.9.0 | 2025-01-01 | Agent | Seed |\n';
+            fs.writeFileSync(filePath, seed);
+            const state = {};
+            const changed1 = upm.updateFileMeta(filePath, '2026-05-05', 'unit test change', state, 'unit');
+            assert.strictEqual(changed1, true, 'a fresh digest must always be treated as a structural change');
+            const afterFirst = fs.readFileSync(filePath, 'utf8');
+            assert.match(afterFirst, /\*\*Version:\*\* 1\.0\.1/);
+
+            const changed2 = upm.updateFileMeta(filePath, '2026-05-06', 'unit test change', state, 'unit');
+            assert.strictEqual(changed2, false, 'an unchanged structural digest must skip the bump on the second call');
+            assert.strictEqual(fs.readFileSync(filePath, 'utf8'), afterFirst, 'a skipped bump must leave the file untouched');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('update-project-meta.js appendHistoryRow handles the legacy 3-column history table (no Author)', () => {
         const tempDir = createTempWorkspace();
         try {
@@ -1364,6 +1409,41 @@ describe('Magic Engine Scripts', () => {
             assert.ok(
                 /\[C-002\].*No Mocks.*Integration tests only/.test(afterConstraint),
                 'Constraint entry should be auto-numbered (C-002 given template placeholder)'
+            );
+            // Structural assertions, not presence-only — same defect class as
+            // addDecision above: addConstraint's insertion point used the
+            // identical `/^[^<]/m` comment-skip search addDecision was
+            // rewritten away from. A blank line's own line-terminating `\n`
+            // satisfies `[^<]` at position 0, so `contentStart > 0` was
+            // always false and every constraint landed directly after the
+            // heading — above the MANDATORY-reading comment block — piling
+            // up there across calls instead of joining the entry list below it.
+            assert.match(
+                afterConstraint, /## Blocking Constraints\r?\n\r?\n<!-- Anti-patterns discovered through real failures\. MANDATORY reading\. -->/,
+                'the heading must be followed by a blank line, then the comment preamble — not an entry'
+            );
+            assert.match(
+                afterConstraint,
+                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
+                'the new entry must sit after the comment preamble, not before it'
+            );
+            assert.doesNotMatch(
+                afterConstraint, /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
+                'no run of two or more consecutive blank lines may appear anywhere in STATE.md'
+            );
+
+            // A second constraint must join the first newest-first, both
+            // still below the comment preamble — pins that the fix rebuilds
+            // the whole entry list rather than only the first insertion.
+            execSync(
+                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --constraint-title="No Sleep Loops" --constraint-desc="Use condition polling"`,
+                { cwd: tempDir }
+            );
+            const afterSecondConstraint = fs.readFileSync(statePath, 'utf8');
+            assert.match(
+                afterSecondConstraint,
+                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-003\] \*\*No Sleep Loops\*\*: Use condition polling\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
+                'a second constraint must be prepended above the first, both below the comment preamble — newest-first, list never split by the heading'
             );
         } finally {
             cleanup(tempDir);
