@@ -1,8 +1,4 @@
 {
-  ".fallow/.gitignore": "cdbcae15105d6b781e620813c79c7e868740d4e9cc53ce6f5fcbbc12387adf4b",
-  ".fallow/cache.bin": "42f2b7f315caa5a70b1e03fc8b5c0a57d3514d06c50466a7f07d7ca807dbc9b2",
-  ".fallow/churn.bin": "db4da241840123db662272dab29f245899237767e8093df704feb1607f82fe9b",
-  ".fallow/graph-cache.bin": "bb598f662f1a519386e586df2634e7640434ee3489b4bfe29c7d9a62ff510b9d",
   "analyze.md": "6b973ec2d3f188e46b98cfbc35bae0757526e597cc3f52d6b9760e22b104650d",
   "context.md": "a0b91a9bfaf8cc65d66edcdc42f06da93c247c41eb0bb9bb92384cc5a7e3129f",
   "init.md": "c0655e9713359ebba6f4d09d720183fc9cd08ca72745f89e59b8f5748e1101b3",
@@ -35,7 +31,7 @@
   "scripts/executor.js": "24236d151aa9d9c7c71654ea95b4a58da9eaecbec71e709c1489363673f25af3",
   "scripts/export-wiki.js": "d782906108ae7ac89cb8fe4e55723e309e3e2affadab0afd0edc678d2adbe991",
   "scripts/extract-rationale.js": "3d52c14be19d6015ff08ed81a06fdaf3e6959837f60ef09e6b343246f4533155",
-  "scripts/finalize.js": "aac4fb30874bca35a7dd9494c6ce1941a06736024197d9abe75f36f9a290df04",
+  "scripts/finalize.js": "1f18a2491e4799ba504f7d65b68958bb0b549f92547092823d43b0249f64f4c4",
   "scripts/generate-context.js": "6bce33337171560e0ef457c26643d6aa4b63aa275fe03b5328ae1d491d7a6c55",
   "scripts/graph-cache.js": "154d101b59a82ee822999b89b89bf6a149c021d0c4f0a62e816319b5a3022967",
   "scripts/init.js": "52676d05b6691b88bed790ae50450b9aaad57b1bc482578c9ddd643d4407e194",

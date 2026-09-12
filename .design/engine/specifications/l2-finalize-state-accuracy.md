@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -9,7 +9,7 @@
 
 Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file owns the `update-state.js` correctness surface, its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
 
-Eleven defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. The eleventh (§8.5) is §8's own fix reopened in its sibling call site (`addConstraint`), never audited when §8 landed — found and fixed in the same cycle, reproduced directly against engine 2.1.82. All eleven are now implemented.
+Twelve defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. The eleventh (§8.5) is §8's own fix reopened in its sibling call site (`addConstraint`), never audited when §8 landed — found and fixed in the same cycle, reproduced directly against engine 2.1.82. The twelfth (§11) is a workspace-directory resolution defect in `finalize.js` itself rather than in `update-state.js`'s section logic — found via a field report against engine 2.1.80 describing two outwardly different symptoms across a two-workspace project, reproduced directly against a synthetic two-workspace fixture, and fixed in the same cycle per the §8/§6.1 retrospec precedent. All twelve are now implemented.
 
 ## Related Specifications
 
@@ -317,7 +317,52 @@ Verified by direct reproduction against engine 2.1.72: a synthetic `STATE.md` wi
 
 Tracked as a new obligation; no existing invariant names it directly — [l1-session-continuity.md](l1-session-continuity.md) SC-1.2 governs the line-cap mechanism this defect lives inside.
 
-## 11. Regression Coverage
+## 11. The Workspace-Scoping Defect (SC-2) `[ADDED]`
+
+Every defect above lives inside `update-state.js`'s section-rewrite logic, operating correctly on whichever `STATE.md` it is handed. This one is upstream of all of them: `finalize.js`'s own resolution of *which* `STATE.md` to hand `update-state()` in the first place.
+
+`updateSessionState()` computed its target directory independently of the `workspace` name the rest of the same invocation already used for the version bump, the CHANGELOG bullet, and the printed `Workspace` field:
+
+```js
+function updateSessionState(opts, workspace, designAbs) {
+    const wsDir = process.env.MAGIC_DESIGN_DIR
+        ? path.resolve(projectRoot, process.env.MAGIC_DESIGN_DIR)
+        : path.join(designAbs, workspace);
+    const nextAction = computeNextAction(opts.workflow, workspace, wsDir);
+    ...
+```
+
+`resolveWorkspace()` — the function `main()` uses to produce `workspace` — ranks an explicit `--workspace` flag and `MAGIC_WORKSPACE` above `MAGIC_DESIGN_DIR`. `updateSessionState()`'s own `wsDir` computation inverted that ranking: whenever `MAGIC_DESIGN_DIR` was present in the environment **at all**, it won unconditionally, regardless of whether a higher-precedence `--workspace` flag had already resolved `workspace` to something else. A `MAGIC_DESIGN_DIR` left over from an earlier command in the same shell or process environment — naming a different workspace than the one this invocation was explicitly told to target — silently redirected the write. The identical formula was written a second time, independently, in the `workflow === 'run'` phase-archival block a few dozen lines below; neither call site was audited against the other, the same "a fix lands at one call site, its sibling never re-examined" recurrence §8.5 and `l1-scan-input-hygiene.md` SH-1 already name in this codebase.
+
+Verified by direct reproduction against engine 2.1.80: a synthetic two-workspace fixture (`main`, `other`), `MAGIC_DESIGN_DIR=.design/other` set in the environment, `node finalize.js --workflow=task --workspace=main` invoked directly. Every other output — the `Workspace | main` table row, the version bump, the CHANGELOG bullet, the significance computation — correctly scoped to `main`. The `STATE.md` write did not: it patched `.design/other/STATE.md`, clobbering its `Next Action` with a value computed by reading `main`'s own `TASKS.md` for the task/phase content but substituting the *`main`* workspace name into the message text — an internally-inconsistent hybrid, not merely a wrong-but-coherent value.
+
+This single defect produces two outwardly different field-reported symptoms depending on which workspace the stale `MAGIC_DESIGN_DIR` happened to name at the moment:
+
+- **Cross-contamination**: the wrong workspace's `STATE.md` is overwritten with a `Next Action` computed in the context of a workflow that was never run against it — reproduced above.
+- **Apparent reversion**: the *correct* workspace's `STATE.md` is never reached by the call that was supposed to refresh it (the write went to whatever workspace `MAGIC_DESIGN_DIR` named instead), so a later inspection finds it still holding whatever an earlier, correctly-routed call last left there — indistinguishable from the file having "reverted," even though nothing wrote old content back into it. The same root cause, observed from the other workspace's side.
+
+Both were reported together against a downstream two-workspace project (workspaces `main` and a second workspace) across two consecutive `finalize` invocations in the same session — reported as "two distinct ways" the state update misbehaved, which this reproduction confirms are one defect wearing two faces depending on which workspace the stale environment variable happened to name each time.
+
+**Required fix**: resolve the workspace directory exactly once, using `resolveWorkspace()`'s own precedence, and have every write site consume that single value instead of re-deriving it:
+
+```plaintext
+BAD : each write site independently checks `process.env.MAGIC_DESIGN_DIR` first,
+      falling back to `path.join(designAbs, workspace)` only when the env var
+      is entirely absent — silently overriding an explicit --workspace flag
+      whenever a stale value happens to be set
+GOOD: const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
+      // trusts MAGIC_DESIGN_DIR as the literal directory only when it was
+      // itself the sole signal that produced `workspace` (no --workspace
+      // flag, no MAGIC_WORKSPACE) — otherwise always `designAbs/workspace`
+      computed once in main(), passed into updateSessionState() and the
+      phase-archival block alike
+```
+
+`MAGIC_DESIGN_DIR` is not always wrong to trust: a project may legitimately point it at a design root that doesn't sit at `.design/{workspace}`, and in that specific case — no `--workspace` flag, no `MAGIC_WORKSPACE`, `MAGIC_DESIGN_DIR` the only naming signal — it remains the literal directory, exactly reproducing `resolveWorkspace()`'s own reasoning rather than a stricter one. The defect was never "trust the env var," it was "trust it even when a higher-precedence, explicitly-resolved workspace name disagrees with it."
+
+Tracked under the existing SC-2 update-completeness contract ([l1-session-continuity.md](l1-session-continuity.md): "a workflow invocation that mutated artifacts but left `STATE.md` stale is incomplete") — no new sub-clause is needed; SC-2 already requires the *correct* workspace's `STATE.md` to receive the update, this defect is simply the first one found in the step that decides which file that is, rather than in what gets written to it once resolved.
+
+## 12. Regression Coverage
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix above needs a harness case:
 
@@ -331,8 +376,9 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 - **Open obligation (§8):** `addDecision` has no structural coverage. A case must assert the emitted section's shape — heading followed by a blank line, the comment preamble above the entries rather than below them, no consecutive blank runs, and template placeholder rows absent after the first real entry. The existing presence-only assertion must be replaced, not supplemented: leaving it in place preserves a test that passes under the defect it is meant to exclude.
 - **Open obligation (§9):** `synthesizeNextAction()`/`computeNextAction()`'s tier-2 loop, given a non-Blocked phase whose first open checklist item has Detailed Tracking `Status: Blocked` or `Assignment: User` and a later item in the same phase is agent-actionable, must skip the excluded task and name the later one — never the excluded task's ID.
 - **Open obligation (§10):** `updateState()`'s line-cap guard, given a fixture that crosses 100 lines and successfully prunes the oldest `## Recent Decisions` entry, must leave that entry recoverable from `PLAN.md` after the call — or, if archival is intentionally not implemented, a case must assert the section's comment no longer claims it.
+- `finalize.js`'s `resolveWorkspaceDir()` must return the `designAbs`/`workspace` path whenever an explicit `--workspace` flag or `MAGIC_WORKSPACE` is given, even when `MAGIC_DESIGN_DIR` is simultaneously set to a different workspace's directory, and must return the resolved `MAGIC_DESIGN_DIR` path only when neither of those was given (§11). An end-to-end case must additionally drive `finalize.js` against a two-workspace fixture with a disagreeing `MAGIC_DESIGN_DIR` and assert the unrelated workspace's `STATE.md` is left byte-for-byte untouched while the explicitly-requested one receives the real computed `Next Action`.
 
-## 12. Known Gaps Not Closed Here
+## 13. Known Gaps Not Closed Here
 
 - **`Status` is never holistically recomputed.** [l2-engine-finalization.md](l2-engine-finalization.md) §5.1 documents that no code path in the SC-2 step recomputes `Status` — it is only ever set by explicit `--status=` calls in `task.md`/`run.md`. §4 above fixes one of those call sites (the per-task one, which should not touch `Status` at all); the broader claim that `Status` is ever holistically recomputed from plan/task state remains false, and is not addressed here — noted so it is not mistaken for closed.
 - **§8's coverage obligation is closed** `[MODIFIED]` — corrected from a prior claim that it was open. Phase 19 (R12) added the structural assertions §8.4 calls for: `dev/tests/engine.js`'s decision case now asserts the emitted section's shape (heading followed by a blank line, entries after the comment preamble, no consecutive-blank runs, no surviving `{YYYY-MM-DD}` placeholder rows), replacing the presence-only assertion that could not distinguish the defect from its fix. This entry previously read "open, not merely pending" — that was already false by the time it was written; both the fix (2.1.67) and its coverage (Phase 19) predate this correction.
@@ -342,7 +388,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 | Path | Role |
 | --- | --- |
 | `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the scalar-field patch loop (§6.1), the line-cap guard incl. the unimplemented archival promise (§7, §10), and the decision-section rebuild (§8) |
-| `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()`/`isPhaseBlocked()` (§2, §9) and the SC-2 state-update step that invokes the above |
+| `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()`/`isPhaseBlocked()` (§2, §9), the SC-2 state-update step that invokes the above, and `resolveWorkspaceDir()`, the single workspace-directory resolution both write sites now share (§11) |
 | `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2 |
 | `.magic/templates/phase.md` | Source of the per-task `Detailed Tracking` `Status`/`Assignment` fields §9's fix must read |
 | `.magic/run.md` | Hosts the per-task and phase-transition `update-state` call sites corrected by §4 |
@@ -352,6 +398,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-09-12 | Agent | New **§11 — The Workspace-Scoping Defect**, the twelfth defect and the first found in `finalize.js`'s own workspace-directory resolution rather than in `update-state.js`'s section logic. `updateSessionState()` (and, independently, the `workflow === 'run'` phase-archival block) computed `wsDir` by checking `process.env.MAGIC_DESIGN_DIR` first and falling back to `designAbs`/`workspace` only when the env var was entirely absent — inverting `resolveWorkspace()`'s own precedence in the same file, where an explicit `--workspace` flag or `MAGIC_WORKSPACE` outranks `MAGIC_DESIGN_DIR`. A `MAGIC_DESIGN_DIR` left over from an earlier command in the same shell/process environment, naming a different workspace than an explicit `--workspace` flag, silently redirected the `STATE.md` write. Field report against engine 2.1.80 described two outwardly different symptoms in a two-workspace project — an unrelated workspace's `STATE.md` overwritten with a foreign `Next Action`, and the actually-targeted workspace's `STATE.md` left looking "reverted" — both reproduced directly here as one defect: which workspace absorbs the stale env var's redirection depends only on which one it happened to name at the time. Fixed by extracting `resolveWorkspaceDir()`, computed once in `main()` and consumed by both write sites, honoring `resolveWorkspace()`'s exact precedence (`MAGIC_DESIGN_DIR` trusted as the literal directory only when it was itself the sole naming signal). Regression coverage added to `dev/tests/engine.js`: a precedence unit test against the exported `resolveWorkspaceDir()`, plus an end-to-end two-workspace fixture asserting the unrelated workspace's `STATE.md` is left byte-for-byte untouched. Overview's defect count corrected eleven → twelve, all implemented. No status transition — `Stable` retained. |
 | 1.3.0 | 2026-09-11 | Agent | New **§8.5 — The Same Defect, Unfixed in the Sibling Call Site**, the eleventh defect: §8's rebuild fix (engine 2.1.67) was applied to `addDecision` only. `addConstraint` — its immediate neighbor in `update-state.js`, prepending into `## Blocking Constraints` — kept the exact pre-fix insertion-offset code (`/^[^<]/m` matching a blank line's own newline at position 0), never audited when §8 landed. Every constraint was inserted directly after the heading, above its two-line MANDATORY-reading comment, piling misplaced entries there across calls instead of joining the list below it — reproduced directly (three successive `addConstraint` calls, temp workspace). No pruning consequence (constraints are never capped, SC-1.2 §7): the defect is purely positional and cumulative, not a data-loss one. Fixed with the same rebuild §8.3 specifies, adapted for the two-line comment and the uncapped entry list; auto-numbering rescoped to the rebuilt block rather than a whole-file `[C-\d{3}]` scan. `dev/tests/engine.js`'s constraint case extended with the structural assertions §8.4 established for decisions, plus a second-call case pinning the rebuilt list order. Field-observed in this engine's own session tooling while auditing document/artifact generators for accumulating-line defects; reproduced directly against 2.1.82 before either the fix or its regression were written. Overview's defect count corrected ten → eleven, all implemented. No status transition — `Stable` retained. |
 | 1.2.0 | 2026-08-27 | Agent | New **§6.1 — The Same Defect in the Field-Patch Loop**, the tenth defect and the retrospec (§8 precedent) of a fix that shipped ahead of its spec. `updateState()`'s `fieldMap` loop patched scalar lines with a string-form `.replace()` whose second argument was the interpolated field value; `re` has no capture groups, so §6's original sweep cleared it — but `` $` `` / `$'` / `$&` fire with no group, and `patch.nextAction` / `patch.task` carry engine-uncontrolled task titles. A title with bash ANSI-C quoting (`$'…'`) expanded `$'` to the entire remainder of `STATE.md`, truncating `Next Action` and duplicating every section below it, the pre-recompute `## Progress` counter among them (field report, engine 2.1.76, reproduced directly). Fixed to the function-form replacement §6 already uses; §6's closing paragraph corrected to retract the false "no other call site" claim; one regression bullet added to §11 (value-level **and** structural assertions). Coverage landed with the fix in `dev/tests/engine.js` (68 → 69). No status transition — `Stable` retained. |
 | 1.1.2 | 2026-08-27 | Agent | Cross-reference wording only: the sibling description of [l2-finalize-output-contract.md](l2-finalize-output-contract.md) no longer names "commit messages" among its emitted artifacts — that output was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement). No content in this spec's own STATE.md-accuracy sections changed; patch, no status transition. |

@@ -1623,6 +1623,116 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('finalize.js resolveWorkspaceDir: an explicit --workspace or MAGIC_WORKSPACE always outranks MAGIC_DESIGN_DIR (workspace-scoping defect)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize } = requireFinalizeWorkspace(tempDir);
+            const designAbs = path.join(tempDir, '.design');
+            const savedDesignDir = process.env.MAGIC_DESIGN_DIR;
+            const savedWorkspaceEnv = process.env.MAGIC_WORKSPACE;
+            try {
+                // A stale MAGIC_DESIGN_DIR naming a different workspace must never
+                // win over an explicit --workspace flag.
+                process.env.MAGIC_DESIGN_DIR = '.design/other';
+                delete process.env.MAGIC_WORKSPACE;
+                assert.strictEqual(
+                    finalize.resolveWorkspaceDir('engine', 'engine', designAbs),
+                    path.join(designAbs, 'engine'),
+                    'an explicit --workspace must win over a disagreeing MAGIC_DESIGN_DIR'
+                );
+
+                // Same precedence for MAGIC_WORKSPACE (no CLI flag, but the env
+                // var that named `workspace` still outranks MAGIC_DESIGN_DIR).
+                process.env.MAGIC_WORKSPACE = 'engine';
+                assert.strictEqual(
+                    finalize.resolveWorkspaceDir(null, 'engine', designAbs),
+                    path.join(designAbs, 'engine'),
+                    'MAGIC_WORKSPACE must win over a disagreeing MAGIC_DESIGN_DIR'
+                );
+
+                // Legitimate case: neither a flag nor MAGIC_WORKSPACE was given,
+                // so MAGIC_DESIGN_DIR was itself the signal resolveWorkspace()
+                // used to name `workspace` — it is trusted as the literal directory.
+                delete process.env.MAGIC_WORKSPACE;
+                process.env.MAGIC_DESIGN_DIR = '.design/engine';
+                assert.strictEqual(
+                    finalize.resolveWorkspaceDir(null, 'engine', designAbs),
+                    path.resolve(tempDir, '.design/engine'),
+                    'MAGIC_DESIGN_DIR is authoritative only when it is the sole naming signal'
+                );
+            } finally {
+                if (savedDesignDir === undefined) delete process.env.MAGIC_DESIGN_DIR;
+                else process.env.MAGIC_DESIGN_DIR = savedDesignDir;
+                if (savedWorkspaceEnv === undefined) delete process.env.MAGIC_WORKSPACE;
+                else process.env.MAGIC_WORKSPACE = savedWorkspaceEnv;
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js does not let a stale MAGIC_DESIGN_DIR redirect STATE.md away from an explicit --workspace (workspace-scoping defect)', () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [ ] [T-1A01] Todo\n');
+
+            // A second, unrelated workspace with its own STATE.md — never named
+            // by this invocation's --workspace, only by a stale MAGIC_DESIGN_DIR
+            // left in the environment (e.g. from an earlier command in the same
+            // shell/session targeting a different workspace).
+            const otherWsDir = makeWorkspace(tempDir, 'other');
+            const otherStatePath = path.join(otherWsDir, 'STATE.md');
+            const sentinel = [
+                '# Project State',
+                '',
+                '**Workspace:** other',
+                '**Updated:** 2020-01-01 00:00',
+                '**Phase:** 1',
+                '**Status:** Active',
+                '',
+                '## Current Position',
+                '',
+                '- **Task:** [T-0000] Sentinel — must never change',
+                '- **Spec:** sentinel.md',
+                '- **Next Action:** SENTINEL-UNTOUCHED',
+                '',
+            ].join('\n');
+            fs.writeFileSync(otherStatePath, sentinel);
+            commitFixture(tempDir);
+
+            // An uncommitted, whitelisted change → the success path, matching
+            // the shape of the real-world repro (a workflow that just landed
+            // new TASKS.md content, then invoked finalize).
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+
+            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+                env: { ...process.env, MAGIC_DESIGN_DIR: '.design/other' },
+            });
+
+            assert.match(out, /Finalization complete/, 'the whitelisted TASKS.md change must still be significant');
+            assert.match(out, /\| Workspace \| main \|/, 'finalize reports the explicitly-requested workspace');
+            assert.match(
+                out, /\.design[\\/]main[\\/]STATE\.md/,
+                'STATE.md update must target the main workspace explicitly, not one named by MAGIC_DESIGN_DIR'
+            );
+            const mainStatePath = path.join(wsDir, 'STATE.md');
+            assert.ok(fs.existsSync(mainStatePath), 'STATE.md must have been created/patched inside the main workspace directory');
+            const mainState = fs.readFileSync(mainStatePath, 'utf8');
+            assert.match(mainState, /- \*\*Next Action:\*\* Plan complete/, 'main STATE.md received the real computed Next Action, not the template placeholder');
+            assert.doesNotMatch(mainState, /SENTINEL/, 'main STATE.md must never carry the other workspace\'s sentinel content');
+
+            assert.strictEqual(
+                fs.readFileSync(otherStatePath, 'utf8'), sentinel,
+                'the unrelated workspace named only by a stale MAGIC_DESIGN_DIR must be left byte-for-byte untouched'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js computeNextAction never recommends executing a task in a Blocked phase (SC-2.1(a))', () => {
         const tempDir = createTempWorkspace();
         try {

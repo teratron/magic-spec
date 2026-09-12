@@ -368,19 +368,42 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
 }
 
 /**
+ * Resolves the workspace's design directory, honoring the exact precedence
+ * {@link resolveWorkspace} already used to name `workspace`: an explicit
+ * `--workspace` flag or `MAGIC_WORKSPACE` always outranks `MAGIC_DESIGN_DIR`.
+ *
+ * `MAGIC_DESIGN_DIR` is trusted as the literal directory only in the one case
+ * where it was itself the signal that produced `workspace` (no flag, no
+ * `MAGIC_WORKSPACE`) — the case where a custom design root legitimately
+ * doesn't sit at `.design/{workspace}`. In every other case it may be left
+ * over from an unrelated invocation in the same shell/process environment
+ * and must not silently redirect a write away from the workspace a
+ * higher-precedence source already resolved.
+ *
+ * @param {string|null} cliWorkspace - The `--workspace` flag value, if given.
+ * @param {string} workspace - The already-resolved workspace name.
+ * @param {string} designAbs - Absolute `.design/` path.
+ * @returns {string} Absolute path to the workspace's design directory.
+ */
+function resolveWorkspaceDir(cliWorkspace, workspace, designAbs) {
+    const envDir = process.env.MAGIC_DESIGN_DIR;
+    const envNamedThisWorkspace = !cliWorkspace && !process.env.MAGIC_WORKSPACE && envDir;
+    return envNamedThisWorkspace
+        ? path.resolve(projectRoot, envDir)
+        : path.join(designAbs, workspace);
+}
+
+/**
  * SC-2: patches STATE.md after every finalize invocation — significant or
  * not — so live memory reflects each completed command. Non-blocking:
  * failures degrade to a warning and never abort finalization.
  *
  * @param {Object} opts - Parsed CLI options.
  * @param {string} workspace
- * @param {string} designAbs - Absolute `.design/` path.
+ * @param {string} wsDir - Absolute path to the workspace's design directory.
  * @returns {{updated: boolean, dryRun?: boolean, nextAction?: string}}
  */
-function updateSessionState(opts, workspace, designAbs) {
-    const wsDir = process.env.MAGIC_DESIGN_DIR
-        ? path.resolve(projectRoot, process.env.MAGIC_DESIGN_DIR)
-        : path.join(designAbs, workspace);
+function updateSessionState(opts, workspace, wsDir) {
     const nextAction = computeNextAction(opts.workflow, workspace, wsDir);
     if (opts.dryRun) {
         console.log(`[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}", auto-progress recompute.`);
@@ -643,6 +666,13 @@ function main() {
         return 1;
     }
 
+    // Resolved once, from the same precedence that named `workspace`, and
+    // reused by every step below that writes inside the workspace — never
+    // recomputed independently, which is what let a stale MAGIC_DESIGN_DIR
+    // diverge from an explicit --workspace at one call site while another
+    // stayed correct (l2-finalize-state-accuracy.md, workspace-scoping defect).
+    const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
+
     const versionPath = path.resolve(projectRoot, config.versionPath);
     const changelogPath = path.resolve(projectRoot, config.changelogPath);
 
@@ -660,7 +690,7 @@ function main() {
     if (!sig.significant && !opts.force) {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
-        const stateResult = updateSessionState(opts, workspace, designAbs);
+        const stateResult = updateSessionState(opts, workspace, wsDir);
         // DG-4.1: a preview must not consume what the real run would report.
         const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
         emitTail({ nextAction: stateResult.nextAction, findings });
@@ -713,9 +743,6 @@ function main() {
     let archivedPhases = [];
     if (opts.workflow === 'run') {
         try {
-            const wsDir = process.env.MAGIC_DESIGN_DIR
-                ? path.resolve(projectRoot, process.env.MAGIC_DESIGN_DIR)
-                : path.join(designAbs, workspace);
             const archiveResult = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
             archivedPhases = archiveResult.archived;
             if (archiveResult.skipped.length > 0) {
@@ -735,7 +762,7 @@ function main() {
     }
 
     // ── Session state (SC-2) ────────────────────────────────────────────────
-    const stateResult = updateSessionState(opts, workspace, designAbs);
+    const stateResult = updateSessionState(opts, workspace, wsDir);
 
     // ── Diagnostics (DG-4) ──────────────────────────────────────────────────
     // After every other mutating step, so findings phase archival / CHANGELOG
@@ -779,7 +806,10 @@ function main() {
 // Exported for the regression harness (l2-test-suite §finalize coverage).
 // computeNextAction carries the SC-2.1 plan-state logic and is unit-tested
 // in isolation; main() is the CLI entrypoint.
-module.exports = { main, computeNextAction, updateSessionState, collectChangedFiles, emitSuccess, emitTail };
+module.exports = {
+    main, computeNextAction, updateSessionState, resolveWorkspaceDir,
+    collectChangedFiles, emitSuccess, emitTail,
+};
 
 // Execute only as a CLI, not when required by tests.
 if (require.main === module) {
