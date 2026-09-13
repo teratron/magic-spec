@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 74
+      "degree": 75
     },
     {
       "id": "file:.magic",
@@ -182,7 +182,7 @@
       "type": "convention",
       "group": "convention",
       "num": 9,
-      "degree": 18
+      "degree": 19
     },
     {
       "id": "conv:C10",
@@ -320,7 +320,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.6.0",
+      "version": "1.7.1",
       "degree": 36
     },
     {
@@ -331,7 +331,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.9.0",
+      "version": "1.12.0",
       "degree": 20
     },
     {
@@ -342,8 +342,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "3.0.0",
-      "degree": 13
+      "version": "3.1.0",
+      "degree": 14
     },
     {
       "id": "spec:engine/l2-finalize-state-accuracy",
@@ -353,7 +353,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.0",
+      "version": "1.4.0",
       "degree": 10
     },
     {
@@ -573,8 +573,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.4.0",
-      "degree": 7
+      "version": "1.5.0",
+      "degree": 8
     },
     {
       "id": "spec:engine/l1-session-continuity",
@@ -584,7 +584,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "2.0.0",
+      "version": "2.1.0",
       "degree": 11
     },
     {
@@ -1068,6 +1068,13 @@
       "degree": 1
     },
     {
+      "id": "file:.magic/scripts/lib/phase-files.js",
+      "label": ".magic/scripts/lib/phase-files.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
       "id": "file:.magic/scripts/lib/significance.js",
       "label": ".magic/scripts/lib/significance.js",
       "type": "file",
@@ -1383,12 +1390,21 @@
       "degree": 1
     },
     {
+      "id": "phase:engine/phase-29",
+      "label": "Phase 29: Concept-Only Spec Classification — `**Concept-Only:** true` header marker excludes a Stable L1 from `.magic/analyze.md`'s \"Bare L1 without L2 children\" advisory; planning mis-targeted `analyze-coverage.js`, corrected during Execute before any code was written",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done",
+      "degree": 1
+    },
+    {
       "id": "phase:engine/phase-28",
       "label": "Phase 28: Silent-Failure Pair: Link Coverage & Regeneration Trigger — linked-pair inventory + table-driven validator covering `workflows/`, widened `[C-001]`, skill regeneration decoupled from the checksum verdict, harness negative controls",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
-      "status": "Todo",
+      "status": "Done (Archived)",
       "degree": 1
     },
     {
@@ -2404,6 +2420,11 @@
     },
     {
       "from": "spec:engine/l1-sdd-reference-containment",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-sdd-reference-containment",
       "to": "conv:C14",
       "relation": "enforces"
     },
@@ -2725,6 +2746,11 @@
     {
       "from": "spec:engine/l2-engine-finalization",
       "to": "file:.magic/scripts/lib/project-version.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-finalization",
+      "to": "file:.magic/scripts/lib/phase-files.js",
       "relation": "covers"
     },
     {
@@ -3499,6 +3525,11 @@
     },
     {
       "from": "ws:engine",
+      "to": "phase:engine/phase-29",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
       "to": "phase:engine/phase-28",
       "relation": "contains"
     },
@@ -3639,7 +3670,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 74
+        "degree": 75
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -3663,7 +3694,7 @@
         "id": "conv:C9",
         "label": "C9 — Zero-Prompt Automation (Trust Mode)",
         "type": "convention",
-        "degree": 18
+        "degree": 19
       }
     ],
     "orphaned_files": [],
@@ -3707,13 +3738,13 @@
       }
     },
     "summary": {
-      "total_nodes": 200,
-      "total_edges": 401,
+      "total_nodes": 202,
+      "total_edges": 404,
       "workspaces": 1,
       "specs": 33,
-      "files": 115,
+      "files": 116,
       "conventions": 24,
-      "phases": 27
+      "phases": 28
     }
   }
 }

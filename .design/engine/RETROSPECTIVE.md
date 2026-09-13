@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-08-28
-**Full Sessions:** 9
-**Snapshots:** 22
+**Last Full Run:** 2026-09-13
+**Full Sessions:** 10
+**Snapshots:** 23
 
 ## Snapshots
 
@@ -32,6 +32,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-27 | Phase 26 | 0/0/32 | 5/0/0 | 24 | 🟢 |
 | 2026-08-28 | Phase 27 | 0/0/33 | 10/0/0 | 24 | 🟢 |
 | 2026-08-28 | Phase 28 | 0/0/33 | 7/0/0 | 24 | 🟢 |
+| 2026-09-13 | Phase 29 | 0/0/33 | 4/0/2 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -396,3 +397,50 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟡 | 🟢 | ↑ |
 
 > Signal restored to 🟢: the two open engine defects that downgraded Session 8's signal (R25, R26) are both closed, negative-controlled, and live-verified against the real tree — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry drift beyond the two `.design/` bookkeeping corrections this session made to its own past entry.
+
+## Session 10 — 2026-09-13
+
+**Scope:** Plan completion (Phase 29 — Concept-Only Spec Classification; single-phase cycle from a reference-mining pass through `/magic.spec` → `/magic.task` → `/magic.run`, with an in-flight spec correction discovered during Execute before any code was written)
+**Specs in registry:** 33 (all Stable; unchanged count — 2 amended for content this cycle: `l1-engine-core.md` 1.6.0 → 1.7.1 (Concept-Only Classification added, then its Required Fix corrected mid-execution), `l1-sdd-reference-containment.md` 1.4.0 → 1.5.0 (provisional-boundary assumption); 1 amended then reverted: `l2-engine-automation.md` 1.9.0(registry)/1.10.0(file, drifted) → 1.11.0 (mis-targeted addition) → 1.12.0 (reverted, net content unchanged from pre-cycle); 3 registry-sync-only, no content change: `l2-engine-finalization.md` 3.0.0 → 3.1.0, `l2-finalize-state-accuracy.md` 1.2.0 → 1.4.0, `l1-session-continuity.md` 2.0.0 → 2.1.0)
+**Tasks total:** 6 this cycle (Done: 4, Blocked: 0, Cancelled: 2 — T-29A01/A02, cancelled when their premise was found wrong before any code was written against it)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 200 → 202 nodes (+2), 401 → 404 edges (+3); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements`, 0 convention orphans (`diff-spec-graph` against the Phase 28 baseline)
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session | Manual | Engine 2.1.85 → 2.1.86 for Phase 29 itself (tagged `magic.analyze`, the one workflow body touched); 2.1.84 → 2.1.85 earlier the same session was an unrelated ad hoc user-directed fix (`generate-context.js`), outside this phase's scope |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; the mis-targeted spec (see Findings #1) never reached a `Done` code deployment — caught and corrected within the same planning-to-execution cycle, before any script was touched |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A Required Fix routed by vocabulary analogy survived two full review gates before Execute caught it by reading source.** `l1-engine-core.md` 1.7.0 named `l2-engine-automation.md`'s `EXEMPT` classification (`analyze-coverage.js`) as the implementation target for excluding `concept-only` specs from a coverage advisory — reasoning that both concepts used the word "coverage." Neither `/magic.spec`'s Post-Update Review (`@role:spec-critic` + `@role:prompt-engineer`) nor `/magic.task`'s Planning Audit (`@role:planner` + `@role:prompt-engineer`) caught it, because both review the spec's internal coherence and instruction quality, not whether its named target file actually contains the described mechanism. Execute's mandatory pre-edit full read of `analyze-coverage.js` (465 lines) showed it classifies **project source files** against spec references — an axis with no "does this spec have a child spec" concept at all; a grep for the advisory's actual wording found it as a cognitive check in `.magic/analyze.md` §Advisory Report Categories, no script behind it. | `analyze-coverage.js` full read at Execute start (Pre-read Requirement); grep for "Bare L1 without L2" resolving to `.magic/analyze.md` line 317, not any `.magic/scripts/*.js` file |
+| 2 | **Correcting the target collapsed the fix from a multi-part mechanism to one sentence.** The mis-targeted design required two script functions (exclusion + a "precedence guard" to handle a stale marker being overridden by a real L2 child), a new `summary.conceptOnly` JSON field, a doc-template line, and three harness cases. Once the real mechanism (a cognitive check in `.magic/analyze.md`) was identified, the "precedence guard" turned out to solve a problem that cannot occur: the advisory only ever fires in the branch where no L2 child already exists, so a marker is never at risk of overriding a real one — there is no state to guard. | `l1-engine-core.md` 1.7.1 Required Fix (one sentence, no persisted-state clearing step) vs. the withdrawn 1.7.0/`l2-engine-automation.md` 1.11.0 design |
+| 3 | **Four VERSION_DRIFT instances surfaced across five specs in one session, on a registry that had stayed clean for 28 prior phases.** `l2-engine-automation.md`'s file header was one version ahead of the registry when this session's `/magic.spec engine` pass began (caught by its own pre-flight); `/magic.task engine`'s stricter `--verify-headers` pre-flight then caught three more, on entirely unrelated specs (`l2-engine-finalization.md`, `l2-finalize-state-accuracy.md`, `l1-session-continuity.md`). All four traced to a content change whose own Document History already recorded a passed Post-Update Review — registry-sync gaps, not unreviewed edits — but four in one session, after 28 phases with none reported, is a cluster worth investigating rather than four independent coincidences. | `check-prerequisites --json --verify-headers` output at both `/magic.spec engine` and `/magic.task engine` pre-flight, this session |
+| 4 | **An ad hoc, user-directed engine fix landed mid-session with zero SDD-layer trace by design.** `generate-context.js`'s double-trailing-newline bug (a markdownlint MD012 finding) was fixed directly on explicit user instruction — no spec, no phase, no task, since the fix was a single redundant `+ '\n'` with an immediately obvious root cause and no design fork. This is a legitimate, bounded exception to SDD-First for the narrowest change class, but it means engine 2.1.84 → 2.1.85 in this session's own version history has no corresponding `.design/` entry — discoverable only via `git log` / `.magic/history/`, not via `PLAN.md`/`TASKS.md`. Named here so a future retro reading the version-history gap does not mistake it for an untracked-work gap. | `.magic/scripts/generate-context.js` (this session's diff); no `tasks/phase-*.md` references it |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R32 | #1 | Add a lightweight target-verification sub-step to `spec.md` §Post-Update Review (or `task.md`'s Planning Audit): before a Required Fix names a specific file/function as its implementation target, read or grep that target to confirm the described mechanism actually lives there — reviewing a spec's internal coherence does not catch a factually wrong target, only a self-consistent one | `.magic/spec.md` §Post-Update Review; informational until evidenced further |
+| R33 | #2 | When a Required Fix proposes a new persisted marker with an explicit "clearing" step, check first whether the condition that would trigger clearing already makes the marker's check unreachable — a marker consulted only in a branch nothing else already resolves needs no separate invalidation logic | `spec.md` / `task.md` authoring convention; informational |
+| R34 | #3 | Audit whether `update-engine-meta.js`'s C14 write path, or `spec.md`'s Batch Stabilization flow, has a code path that bumps a spec's `Version`/Document History without the matching `INDEX.md` sync `spec.md` §Updating normally performs — four drift instances in one session against a 28-phase clean baseline is a signal | `.magic/scripts/update-engine-meta.js` / `.magic/spec.md`; route via `/magic.task engine` |
+| R35 | #4 | No code change: when a user directs an ad hoc engine fix outside any `/magic.*` workflow, the next retrospective snapshot should name it explicitly in surrounding prose (as this entry does), so its absence from `PLAN.md`/`TASKS.md` reads as a recognized, bounded exception rather than an audit gap | `retrospective.md` §6 (L1/L2 Execution); informational |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 33 | 0 |
+| Specs with version churn this session | — | 6 | n/a (first time tracked; unusually high for a stable spec count) |
+| Cognitive suite tests | 211 | 211 | 0 |
+| Script harness tests | 72 | 72 | 0 (matches the Phase 16 precedent — a pure cognitive-instruction change to `.magic/analyze.md` needs no new harness case) |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 200 / 401 | 202 / 404 | +2 / +3 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.

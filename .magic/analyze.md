@@ -314,7 +314,7 @@ Mode C Checklist — Ventilation
 
 1. **Spec Quality**
    - Oversized specs (>300 lines) → suggest splitting into L1 + L2s.
-   - Bare L1 without L2 children → suggest adding detail specs.
+   - Bare L1 without L2 children → suggest adding detail specs. Skip a spec whose header declares `**Concept-Only:** true` (`l1-engine-core.md` §Known Process Gaps — Concept-Only Classification) — a deliberate design-library entry, not a coverage gap.
    - L2 specs with no parent L1 → suggest grouping under an umbrella.
    - Specs with empty or stub sections → flag as incomplete.
 
