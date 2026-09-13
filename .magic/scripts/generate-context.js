@@ -155,7 +155,7 @@ if (fs.existsSync(changelogPath)) {
     const changelogText = fs.readFileSync(changelogPath, 'utf8');
     const lines = changelogText.trimEnd().split(/\r?\n/);
     const last15 = lines.slice(-15).join('\n');
-    contextContent += last15 + '\n';
+    contextContent += last15;
 } else {
     contextContent += 'No recent changelog found.';
 }

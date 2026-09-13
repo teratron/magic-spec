@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-12 06:02
-**Phase:** 28 — Silent-Failure Pair: Link Coverage & Regeneration Trigger
+**Updated:** 2026-09-13 11:45
+**Phase:** 29 — Concept-Only Spec Classification
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-28T02 C14 bump and engine integrity verification
 - **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-29A01 Concept-only exclusion in the coverage-gap advisory via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [27/27] ████████ 100%
+Phase 29: [0/5] ░░░░░░░░ 0%
+Overall: [27/28] ████████ 96%
 ```
 
 ## Recent Decisions
