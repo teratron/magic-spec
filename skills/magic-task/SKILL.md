@@ -11,7 +11,7 @@ handoffs:
     condition: "tasks_generated"
 ---
 
-<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.task.md (relative to workspace root) -->
+<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.task.md (relative to workspace root) -->
 
 # Task Workflow
 
@@ -32,7 +32,7 @@ Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 i
 - **Registry First**: every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
 - Plan generation, task decomposition, and execution orchestration. Execution is handled by `magic-run`. Specification authoring by `magic-spec`. Rule governance by `magic-rule`.
 - **Pipeline**: `magic-spec` → `magic-task` → `magic-run`.
-- **Post-Run Entry (`rules/magic.md §5`)**: when invoked after `/magic-run` for drift recovery, Pre-Planning Stabilization auto-fixes mechanical drift (Draft→Stable promotion, field normalization, phantom backlog moves); Pre-flight HALTs with a single `/magic-spec` recommendation only on substantive gaps requiring human design input.
+- **Post-Run Entry (`rules/MAGIC.md §5`)**: when invoked after `/magic-run` for drift recovery, Pre-Planning Stabilization auto-fixes mechanical drift (Draft→Stable promotion, field normalization, phantom backlog moves); Pre-flight HALTs with a single `/magic-spec` recommendation only on substantive gaps requiring human design input.
 - **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/task.md`. Read it before proceeding.

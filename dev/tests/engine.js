@@ -373,6 +373,98 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 1c. Architecture invariant — every .checksums entry must be git-tracked
+    //     (Historical: engine ≤2.1.86 baked four `.fallow/` cache-file hashes
+    //     from an unrelated third-party tool into the manifest — a release
+    //     archive is built from a fresh CI checkout (.github/workflows/release.yml),
+    //     so an untracked path in .checksums can never exist on a fresh install,
+    //     and every consumer's very first `update-engine-meta --check` failed
+    //     unconditionally, with no self-heal path on a consumer install.)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('every .magic/.checksums entry must be a git-tracked file', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        if (!fs.existsSync(path.join(repoRoot, '.git'))) return; // not a git checkout: nothing to assert
+
+        const tracked = new Set(
+            execSync('git ls-files .magic', { cwd: repoRoot, encoding: 'utf8' })
+                .split(/\r?\n/)
+                .filter(Boolean)
+                .map((p) => p.slice('.magic/'.length))
+        );
+
+        const checksums = JSON.parse(fs.readFileSync(path.join(repoRoot, '.magic', '.checksums'), 'utf8'));
+        const untracked = Object.keys(checksums).filter((rel) => !tracked.has(rel));
+
+        assert.deepStrictEqual(
+            untracked,
+            [],
+            `.magic/.checksums references untracked path(s) — a release archive can never contain them, so every consumer's first commit would fail: ${untracked.join(', ')}`
+        );
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 1d. generate-checksums.js / update-engine-meta.js — gitignore-aware scan
+    //     (Invariant 7 parity, engine v2.1.87). `detect-communities.js` and
+    //     siblings already honor .gitignore (§10/§11 below); the checksum
+    //     scanners never did, which is exactly how `.fallow/`'s cache entered
+    //     .checksums in the first place.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('generate-checksums.js excludes .gitignored directories from the manifest (Invariant 7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '.foreign-cache/\n');
+
+            const strayDir = path.join(tempDir, '.magic', '.foreign-cache');
+            fs.mkdirSync(strayDir, { recursive: true });
+            fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile third-party cache content');
+
+            generateChecksums(tempDir);
+
+            const checksums = JSON.parse(fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'));
+            assert.ok(
+                !Object.keys(checksums).some((rel) => rel.startsWith('.foreign-cache/')),
+                'a .gitignored directory inside .magic/ must never enter the manifest'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('update-engine-meta.js --check does not flag a .gitignored file that newly appears inside .magic/ (Invariant 7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '.foreign-cache/\n');
+            generateChecksums(tempDir);
+
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+            const runCheck = () => {
+                try {
+                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
+                    return { failed: false, output: stdout };
+                } catch (e) {
+                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+                }
+            };
+
+            assert.strictEqual(runCheck().failed, false, 'baseline --check must be clean');
+
+            // A foreign tool (unrelated to the engine) drops a cache file inside
+            // .magic/ after install — exactly how `.fallow/` appeared in engine
+            // v2.1.86. A consumer install has no dev/scripts/generate-checksums.js
+            // to clear resulting drift, so this must never be flagged at all.
+            const strayDir = path.join(tempDir, '.magic', '.foreign-cache');
+            fs.mkdirSync(strayDir, { recursive: true });
+            fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile');
+
+            const after = runCheck();
+            assert.strictEqual(after.failed, false, 'a .gitignored file appearing inside .magic/ must never be reported as drift');
+            assert.doesNotMatch(after.output, /Detected change/, 'gitignored content must not surface as a detected change');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 2. init.js
     // ───────────────────────────────────────────────────────────────────────────
     test('init.js should initialize .design structure and workspaces', () => {

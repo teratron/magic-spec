@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -84,6 +84,11 @@ function updateEngineMeta() {
     const scanZones = [
         { dir: magicDir, relBase: magicDir }
     ];
+    // Invariant 7 parity (l2-engine-automation.md §Scan Hygiene) — must stay
+    // in sync with generate-checksums.js's identical floor/gitignore union,
+    // or the two can disagree about what belongs in the manifest.
+    const scanIgnoreDirs = ['history', ...BUILD_NOISE_DIRS];
+    const isGitignored = loadGitignore(projectRoot);
 
     let anyChanged = false;
 
@@ -93,12 +98,15 @@ function updateEngineMeta() {
     scanZones.forEach(zone => {
         if (!fs.existsSync(zone.dir)) return;
 
-        getAllFiles(zone.dir).forEach(fullPath => {
+        getAllFiles(zone.dir, scanIgnoreDirs).forEach(fullPath => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums') return;
             // State caches written by sync sub-scripts (volatile, not engine logic).
             // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
             if (VOLATILE_STATE_FILES.has(rel)) return;
+            // A path the project's own .gitignore disowns can never be satisfied
+            // by a real release archive (fresh CI checkout) — see generate-checksums.js.
+            if (isGitignored(normalizePath(path.relative(projectRoot, fullPath)))) return;
 
             onDisk.add(rel);
 

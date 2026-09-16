@@ -1,8 +1,4 @@
 {
-  ".fallow/.gitignore": "cdbcae15105d6b781e620813c79c7e868740d4e9cc53ce6f5fcbbc12387adf4b",
-  ".fallow/cache.bin": "42f2b7f315caa5a70b1e03fc8b5c0a57d3514d06c50466a7f07d7ca807dbc9b2",
-  ".fallow/churn.bin": "db4da241840123db662272dab29f245899237767e8093df704feb1607f82fe9b",
-  ".fallow/graph-cache.bin": "bb598f662f1a519386e586df2634e7640434ee3489b4bfe29c7d9a62ff510b9d",
   "analyze.md": "9b09ee3689241a00b56b8fdf719ce15a28e6f7558395e73409e277e001d78cd5",
   "context.md": "a0b91a9bfaf8cc65d66edcdc42f06da93c247c41eb0bb9bb92384cc5a7e3129f",
   "init.md": "c0655e9713359ebba6f4d09d720183fc9cd08ca72745f89e59b8f5748e1101b3",
@@ -53,7 +49,7 @@
   "scripts/record-diagnostic.js": "0d07f1ef4a85cc75ffc0b89abd48f5f3ad5ad065147d1518ae8539aad58c436c",
   "scripts/release-changelog.js": "ec66370ff2d7d47d3df37663aff9abb8dca669973b37fe3aeb5ed4f43c6097ab",
   "scripts/serve-spec-graph.js": "1f1068a332483d1c3faf9bd7b3cb0b0deb523785a83986b351d3f905e0a4353f",
-  "scripts/update-engine-meta.js": "2d99a5c1743b8ed701656d618a1e8c919bb58b9dccb12421e437cd9c4841a6f7",
+  "scripts/update-engine-meta.js": "7ccc9ec3db6d0e46629b64e0821b8e6dd8b94680e8423cf70285ff6004dbf5af",
   "scripts/update-state.js": "c7ddc5af8e0615113d1e52fb5fda4049c74dcc2de3f0838c6fad84248de1dcb8",
   "scripts/utils.js": "e9617e29ea37eb60612b6f76f3f3567b1bf74aebd48378f7819c3bcfecb5992f",
   "spec.md": "048876e0bf4bab74600108bdf508a3946ddae6633fb9296c7741e9659de5dbf8",
