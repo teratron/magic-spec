@@ -3763,4 +3763,41 @@ describe('Magic Engine Scripts', () => {
             cleanup(tempDir);
         }
     });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 17. rules/magic.md §1 — Fresh-Project Snapshot Ambiguity (structural)
+    //     Engine Upgrade Detection is a cognitive procedure the agent follows
+    //     by reading this file — no executor subcommand implements the
+    //     compare/narrate logic — so coverage is structural/textual, the same
+    //     precedent as T-29T01's .magic/analyze.md cognitive-instruction case.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('rules/magic.md §1 distinguishes a fresh project from an unknown-field registry', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const content = fs.readFileSync(path.join(repoRoot, 'rules', 'magic.md'), 'utf8');
+
+        const start = content.indexOf('## 1. Engine Upgrade Detection');
+        const end = content.indexOf('### Exemptions');
+        assert.ok(start !== -1 && end !== -1 && end > start, 'fixture precondition: §1 section must be found');
+        const section = content.slice(start, end);
+
+        // The historical defect: both causes collapsed into one `unknown`
+        // bucket, and step 4 fired identically on both — including on a
+        // project that was never analyzed at all.
+        assert.doesNotMatch(
+            section,
+            /Missing file \(fresh project\) or missing field[\s\S]*?treat as `unknown`/,
+            'the collapsed fresh+unknown wording must not reappear — that was the defect'
+        );
+
+        // Step 2: two named, distinct outcomes.
+        assert.match(section, /Missing `\.design\/INDEX\.md`[\s\S]*?treat as `fresh`/, 'step 2 must name `fresh` for a missing registry file');
+        assert.match(section, /field missing[\s\S]*?treat as `unknown`/, 'step 2 must keep `unknown` for a present-but-fieldless registry');
+
+        // Step 3: `fresh` joins the silent-proceed branch, not just an exact version match.
+        assert.match(section, /local_engine == snapshot_engine`, or the result is `fresh`[\s\S]*?proceed silently/, 'step 3 must proceed silently on `fresh` too');
+
+        // Step 4: narration fires on a real mismatch or `unknown`, never on `fresh`.
+        assert.match(section, /On mismatch, or `unknown`, narrate/, 'step 4 must narrate on mismatch or `unknown`');
+        assert.doesNotMatch(section, /including `unknown`/, 'the old "(including unknown)" phrasing must be gone — fresh is now excluded from narration');
+    });
 });

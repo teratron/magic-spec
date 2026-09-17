@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-17 04:25
-**Phase:** 29 — Concept-Only Spec Classification
+**Updated:** 2026-09-17 04:55
+**Phase:** 30 — Checksum Scan Hygiene, Git-Commit Scope Retirement, Fresh-Project Drift Silence
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-28T02 C14 bump and engine integrity verification
 - **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Overall: [28/28] ████████ 100%
+Overall: [29/29] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-09-17 **Decision:** Phase 30 complete. Provides: checksum scanners join Invariant 7 gitignore parity; write-side git prohibition retired from every agent-facing surface; rules/magic.md Engine Upgrade Detection distinguishes fresh vs unknown.
 - 2026-09-13 **Decision:** Phase 29 complete. Provides: l1-engine-core.md 1.7.1 (Concept-Only Classification, Required Fix re-targeted to .magic/analyze.md during Execute), l1-sdd-reference-containment.md 1.5.0 (provisional-boundary assumption), l2-engine-automation.md 1.12.0 (mis-targeted 1.11.0 addition reverted), .magic/analyze.md (Bare-L1-without-L2 advisory skips Concept-Only specs). Engine 2.1.84->2.1.86. Plan complete - Retro L2 run (Session 10), signal held 🟢.
 - 2026-08-28 **Decision:** Phase 28 complete. Provides: l2-agent-surface.md 1.1.0 (SS4 closed 3-group linked-pair inventory), l2-skill-wrappers.md 1.4.0 (SS3.2 regeneration-trigger invariant), validate-hardlinks.js table-driven for rules/+workflows/, STATE.md [C-001] widened to all 3 groups, update-engine-meta.js syncSkillWrappers() called unconditionally on write path. Harness 69->72, all 3 negative-controlled against reverted/pre-fix code (incl. actual git-HEAD validate-hardlinks.js). Engine 2.1.79->2.1.80. Plan complete - Retro L2 run (Session 9), signal restored 🟡->🟢.
 - 2026-08-28 **Decision:** Phase 27 complete. Provides: Idea Intake Gate (E6) deployed — .magic/spec.md Step 0.5 + three reconciled anti-question clauses; E6 registered across DA-2 table, .design/RULES.md 1.10.0, .magic/templates/rules.md, rules/magic.md; prompt-engineer conditional IK audit; docs/spec.md SS5.0; suite T209-T212 (v1.9.76); engine 2.1.79. Two engine defects found and recorded, not fixed: workflows/ hardlink pair is unguarded by validate-hardlinks.js and C-001, and update-engine-meta skips skill regeneration on a workflows-only change.
 - 2026-08-28 **Decision:** Phase 27 planned. Idea Intake Gate (l1-idea-intake-gate.md v1.0.0, IK-1..IK-9) deployment across 7 tracks: E6 registration must land atomically in DA-2 table + .design/RULES.md + .magic/templates/rules.md + rules/magic.md. Planning surfaced a 3rd reconciliation site the spec's SS5 missed — the Mode Transition Auto-Transfer one-round cap contradicting IK-6.
-- 2026-08-27 **Decision:** Phase 26 complete. Provides: commit-suggestion feature fully removed from finalize.js/commit-suggester.js/workspace.json configs; harness updated (69 -> 68 tests, capability removed not regressed).
 
 ## Blockers
 

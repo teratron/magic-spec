@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-09-13
-**Full Sessions:** 10
-**Snapshots:** 23
+**Last Full Run:** 2026-09-17
+**Full Sessions:** 11
+**Snapshots:** 24
 
 ## Snapshots
 
@@ -33,6 +33,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-28 | Phase 27 | 0/0/33 | 10/0/0 | 24 | 🟢 |
 | 2026-08-28 | Phase 28 | 0/0/33 | 7/0/0 | 24 | 🟢 |
 | 2026-09-13 | Phase 29 | 0/0/33 | 4/0/2 | 24 | 🟢 |
+| 2026-09-17 | Phase 30 | 0/0/33 | 5/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -442,5 +443,53 @@ Manual input / external hook still required — same gap as Session 1.
 | Blocked task rate | 0% | 0% | 0 |
 | Graph nodes / edges | 200 / 401 | 202 / 404 | +2 / +3 |
 | Signal | 🟢 | 🟢 | → |
+
+> Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.
+
+## Session 11 — 2026-09-17
+
+**Scope:** Plan completion (Phase 30 — Checksum Scan Hygiene, Git-Commit Scope Retirement, Fresh-Project Drift Silence; three independent Required Fixes, two executed as Engine Improvement ahead of formal planning, one planned and executed through the full `/magic.spec` → `/magic.task` → `/magic.run` cycle)
+**Specs in registry:** 33 (all Stable; unchanged count — 4 amended for content this session: `l2-engine-automation.md` 1.12.0 → 1.13.0 (checksum-scanner Invariant 7 parity), `l1-session-continuity.md` 2.1.0 → 2.2.0 (§1.4 write-side git prohibition retired), `l2-engine-finalization.md` 3.1.0 → 3.2.0 (§5.2 same retirement, implementation surface), `l1-engine-core.md` 1.7.1 → 1.8.0 (§Known Process Gaps — Fresh-Project Snapshot Ambiguity))
+**Tasks total:** 5 this cycle (Done: 5, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 202 → 204 nodes (+2), 404 → 406 edges (+2); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements`
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 3 engine-version bumps | Manual | Engine 2.1.86 → 2.1.87 (Track A, checksum scanners); 2.1.87 → 2.1.89 across two passes (Track B, git-commit retirement — the first pass reworded the rule permissively, the user corrected that a restatement still keeps the topic present, the second pass removed it outright); Track C (`rules/magic.md` §1) shipped with no version bump by design (`rules/` outside C14 tracking) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; the one self-correction (Track B's permissive-vs-removed wording) was caught by the user mid-session and fixed in the same turn, before formal planning — no task was ever marked `Done` against the wrong version of the fix |
+| **Rework Rate** | 1 correction / 3 tracks | Manual | Track B alone: an interrupted tool call surfaced the user's correction before the second `update-engine-meta` bump landed, so the rework cost was one extra edit pass across 6 files, not a reverted `Done` task |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A permissive restatement of a retired rule is not the same as removing the rule, and the difference is invisible to every mechanical check this engine runs.** Track B's first pass replaced "agent MUST NOT commit" with "committing is outside this protocol's scope, [...] a matter for the user and their AI agent to agree on directly" — narrower in force but not narrower in *topic*: the paragraph still requires a reader to parse a git-commit-policy sentence on every invocation. `@role:spec-critic`, `@role:prompt-engineer`, and the full harness all passed this wording, because none of them check for topic presence, only for internal consistency and behavioral correctness — the same blind spot Session 10's Finding #1 named for a different axis (target-correctness vs. topic-presence). Caught only by the user re-reading the actual shipped sentence. | User correction mid-session, quoting the exact `rules/magic.md` step 4 sentence back; `dev/tests/engine.js` has no assertion that would have caught this either way, since "does this text still discuss git" is not a property the harness was ever built to check |
+| 2 | **Two engine defects (checksum-scanner Invariant 7 gap, git-commit-policy scope) and one retired-topic correction all landed as direct Engine Improvement before any formal `/magic.task` plan existed for them — the third time this session-family has hit this shape (Session 10 Finding #4, Phase 24/26/29's own "graduated directly" pattern).** Unlike those precedents, this time the *spec* was authored first in every case (`/magic.spec` ran before the code change, per SDD-First) — the gap is between spec-authoring and formal task-planning, not between code and spec. `/magic.task engine` was run afterward specifically to close that gap retroactively (Phase 30 Tracks A/B), rather than the code change having zero SDD-layer trace at all. | `.design/engine/tasks/phase-30.md` T-30A01/T-30B01 `Notes` fields, both stating "Executed directly as Engine Improvement... ahead of this formal planning pass — recorded here per this workspace's retrospective-documentation precedent" |
+| 3 | **A hardlink pair the engine's own tooling doesn't yet track as a group ([C-001]'s `rules/magic.md` ↔ `.agents/rules/magic.md`) delinked three separate times in one session-family, each time silently and each time caught only by manually re-running `validate-hardlinks.js`.** Every `Write`/`Edit`-tool pass over `rules/magic.md` (Tracks A, B, and C's own edit) broke the hardlink; none of the three were caught automatically — no hook, no pre-task check, re-verifies it. The task's own `Verify` line names re-checking as a manual step each time, which worked, but only because the executor remembered to run it. | `dev/scripts/validate-hardlinks.js` output immediately after each of the three `rules/magic.md` edits this session, each showing `❌ Drift` before the manual `mklink /H` re-link |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R36 | #1 | Extend `@role:prompt-engineer`'s PQ-3 six-dimension review (or add a PQ dimension) with an explicit "topic containment" check for any diff whose task description says a rule/feature is being *retired* or *removed*: the reviewer should flag a replacement sentence that still names the retired topic, not just check the replacement's internal clarity | `l1-prompt-quality-gate.md` / `l2-role-cards-governance.md` (`prompt-engineer` card content); route via `/magic.spec` |
+| R37 | #2 | No code change: this is the accepted shape for a spec-first-but-plan-after workflow, not a defect — named so a future retro reading three same-session "graduated directly" entries in a row does not mistake a working pattern for drift | `retrospective.md` §6; informational |
+| R38 | #3 | Add `rules/magic.md` ↔ `.agents/rules/magic.md` re-verification as an automatic post-edit check, not a manually-remembered `Verify` line — e.g. a lightweight hook or a `run.md` Step 4 addition that calls `validate-hardlinks.js` whenever a task's `key_files` includes `rules/magic.md`, so a forgotten manual re-link is caught before the next task starts rather than by chance | `.magic/run.md` §4 Update, or `dev/scripts/validate-hardlinks.js` invocation site; route via `/magic.task engine` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 33 | 0 |
+| Specs with version churn this session | 6 | 4 | -2 |
+| Cognitive suite tests | 211 | 211 | 0 |
+| Script harness tests | 84 | 85 | +1 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 202 / 404 | 204 / 406 | +2 / +2 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal held at 🟢: zero Blocked tasks, zero orphans, and the one mid-session correction (Finding #1) was resolved by the user before any task reached `Done` against the wrong wording — Track B's `Done` status reflects only the final, corrected state. [C-001]'s recurring hardlink drift (Finding #3) is flagged in Recommendations rather than the Signal score, matching Session 10's precedent for mid-session friction that was fully resolved before this snapshot.
 
 > Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.

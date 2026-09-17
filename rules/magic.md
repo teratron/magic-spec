@@ -30,9 +30,13 @@ carry behavior-affecting changes.
 
 1. Read `local_engine` from `.magic/.version`.
 2. Read `snapshot_engine` from the `**Engine Version:**` field in `.design/INDEX.md`.
-   Missing file (fresh project) or missing field → treat as `unknown`.
-3. If `local_engine == snapshot_engine` → proceed silently.
-4. On mismatch (including `unknown`), narrate **one informational line** and **proceed** —
+   Missing `.design/INDEX.md` → treat as `fresh` (no prior analysis exists — nothing has
+   drifted from anything). File present but the `**Engine Version:**` field missing →
+   treat as `unknown` (a registry exists without the snapshot).
+3. If `local_engine == snapshot_engine`, or the result is `fresh` → proceed silently.
+   A fresh project has no prior snapshot to revalidate against; Auto-Init creates
+   `.design/INDEX.md` with a correctly-seeded snapshot on its own.
+4. On mismatch, or `unknown`, narrate **one informational line** and **proceed** —
    never a `[y/n]` prompt or option menu. This is a drift-revalidation offer governed by
    DA-8/DA-9 of the Autonomous Decision Protocol (one recommended path, no menu); it mirrors
    the read-only treatment `/magic.status` already uses (SC-4):
