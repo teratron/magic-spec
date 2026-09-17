@@ -97,4 +97,4 @@ Output: `.design/spec-graph.html`, a self-contained interactive view with commun
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-08-06 (v2.1.64).
+Synchronized with engine workflows on 2026-09-17 (v2.1.92).

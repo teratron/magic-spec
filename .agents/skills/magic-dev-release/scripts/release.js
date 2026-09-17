@@ -48,9 +48,12 @@ try {
 // 4. Update Meta & Sync
 log('Synchronizing metadata and documentation...');
 try {
-    // We use the executor to ensure proper environment and C14 updates
+    // We use the executor to ensure proper environment and C14 updates.
+    // `sync` is a dev-layer orchestrator (dev/scripts/sync.js) — it has no
+    // .magic/scripts/ counterpart, so it must be invoked directly rather than
+    // through executor.js (which only proxies .magic/scripts/<name>.{js,ps1,sh}).
     execSync('node .magic/scripts/executor.js update-engine-meta', { stdio: 'inherit', cwd: ROOT_DIR });
-    execSync('node .magic/scripts/executor.js sync', { stdio: 'inherit', cwd: ROOT_DIR });
+    execSync('node dev/scripts/sync.js', { stdio: 'inherit', cwd: ROOT_DIR });
 } catch (e) {
     error('Metadata synchronization failed.');
 }

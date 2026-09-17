@@ -72,13 +72,13 @@ Task execution defaults to **Parallel mode**. A Manager Agent coordinates execut
 
 Skip the user story priority prompt. The agent must automatically assign default priorities (P2) to User Stories during task generation to maximize automation and avoid interrupting the user.
 
-### C6 — Selective Planning
+### C6 — Autonomous Selective Planning
 
 During plan updates, specs are handled by their status:
 
 - **Draft specs**: automatically moved to `## Backlog` in `PLAN.md` without user input.
-- **RFC specs**: surfaced to user with a recommendation to backlog until Stable.
-- **Stable specs**: agent asks which ones to pull into the active plan. All others go to Backlog.
+- **RFC specs**: automatically moved to `## Backlog` in `PLAN.md` without user input.
+- **Stable specs**: automatically pulled into the active plan. No user prompt unless a priority conflict is detected.
 - **Orphaned specs** (in INDEX.md but absent from both plan and backlog): flagged as critical blockers.
 
 ### C7 — Universal Script Executor

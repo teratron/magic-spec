@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.77
+**Version:** 1.9.78
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -3362,6 +3362,33 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] No file's trigger condition names `.magic/` alone, omitting `workflows/` (pre-fix `analyze.md` divergence — a real narrowing, not a wording variant).
 - **Guards tested:** C14 trigger-condition substantive parity (both paths present in every file), sibling regression to T193's Auto-Init parity check; found in Improv Mode simulation 2026-09-17.
 
+### T217 — Guided Planning Filter Applies to Bootstrap Mode
+
+- **Workflow:** `task.md` (Guided Planning Filter × C6 Bootstrap Exception interaction)
+- **Synthetic State:**
+  - `engine` workspace: 4 specs, ALL `Draft`, all pass MVC (Overview + design section) — none reach `Stable` after Pre-Planning Stabilization (e.g. all blocked by a shared `RULES.md` conflict).
+  - No prior `PLAN.md` exists (Bootstrap Mode eligible).
+  - Specs: `auth.md`, `payments.md`, `ui-theme.md`, `logging.md`.
+- **Action:** `/magic.task "only payments and auth"`
+- **Expected:**
+  - [ ] Pre-Planning Stabilization promotes 0 specs to Stable (all remain Draft) → C6 Bootstrap Exception activates.
+  - [ ] **Guided Planning Filter** applies to the Bootstrap Draft-spec pull: only `payments.md` and `auth.md` (directive matches) are planned with `[Bootstrap]` marker.
+  - [ ] `ui-theme.md` and `logging.md` — Draft, MVC-passing, but non-matching — are NOT included in the Bootstrap plan.
+  - [ ] `PLAN.md` (`[Bootstrap Plan]`) contains phases for `auth.md` and `payments.md` only.
+- **Guards tested:** Guided Planning Filter × C6 Bootstrap Exception interaction (regression for the gap found in `/magic.dev.simulate test`, 2026-09-17 — "The Filter That Forgot Bootstrap").
+
+### T218 — Template C6 Wording Matches task.md Autonomous Behavior (Constitution/Engine Parity)
+
+- **Workflow:** `task.md` (§7 Architectural Logic — Autonomous Selection C6) vs `.magic/templates/rules.md` (§7 C6)
+- **Synthetic State:** Fresh project just ran `init` — `.design/RULES.md` seeded from `.magic/templates/rules.md`.
+- **Action:** Static scan comparing the shipped C6 template wording against `task.md`'s actual C6 implementation.
+- **Expected:**
+  - [ ] Template C6 text does NOT contain "agent asks which ones to pull" or any phrase implying a user prompt for Stable specs.
+  - [ ] Template C6 text does NOT contain "surfaced to user" for RFC specs.
+  - [ ] Template C6 text states Draft AND RFC specs both move to Backlog without user input, matching `task.md`'s "Move Draft/RFC to Backlog. No user prompt...".
+  - [ ] Template C6 text states Stable specs are auto-pulled into the active plan, matching `task.md`'s "auto-pull ALL Stable specs...No user prompt unless a priority conflict is detected."
+- **Guards tested:** Constitution/Engine parity (shipped template must not misdescribe actual autonomous behavior to new users); regression for the "Stale Selective Planning" drift found via `/magic.dev.simulate test`, 2026-09-17.
+
 ```
-**Test Suite Finalized** - v1.9.77 (Last: T216)
+**Test Suite Finalized** - v1.9.79 (Last: T218)
 ```
