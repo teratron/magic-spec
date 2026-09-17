@@ -148,10 +148,9 @@ Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stal
 
 After all workflow steps (incl. Context Regeneration + Graph Refresh) and **before** the Completion Checklist:
 
-1. Run `node .magic/scripts/executor.js finalize --workflow=task`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry + suggested commit message) or `⏭️ No significant changes detected`.
+1. Run `node .magic/scripts/executor.js finalize --workflow=task`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
 2. **Display the entire script output verbatim** in a fenced block.
-3. **Hard rule**: do NOT invoke `git commit`, `git add`, or any write-side git command — the user reviews the suggested message and commits manually.
-4. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
+3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
 

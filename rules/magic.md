@@ -97,22 +97,18 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
    ```
 
 2. The script detects significant changes to whitelisted artifacts. On hit, it
-   bumps `.design/.version`, appends a Keep-a-Changelog entry to root `CHANGELOG.md`,
-   and prints a Conventional Commits message. On no hit, prints
-   `⏭️ No significant changes detected` and exits 0.
+   bumps `.design/.version` and appends a Keep-a-Changelog entry to root `CHANGELOG.md`.
+   On no hit, prints `⏭️ No significant changes detected` and exits 0.
 
 3. **Display the entire script stdout verbatim** to the user in a fenced block.
 
-4. **HARD RULE**: The agent MUST NOT call `git commit`, `git add`, or any write-side
-   git operation. The commit is always the user's decision.
-
-5. If the script exits non-zero → emit a WARNING but do not block the Completion Checklist.
+4. If the script exits non-zero → emit a WARNING but do not block the Completion Checklist.
 
 ### Opt-Out
 
 `MAGIC_FINALIZE=0` (env, highest precedence) · `finalization.enabled = false` in
 `.design/workspace.json` (project-wide) · `--dry-run` (preview) · `--no-bump`,
-`--no-changelog`, `--no-commit-msg` (per-step disable).
+`--no-changelog` (per-step disable).
 
 ### Significance Whitelist
 
@@ -364,8 +360,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§9 w
       navigated `.design/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.design/` change this session.
 - [ ] **§3 Finalization** — after `/magic.spec|task|run|rule`, ran
-      `node .magic/scripts/executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**;
-      did **not** invoke any write-side `git` operation (`add`, `commit`, etc.).
+      `node .magic/scripts/executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**.
 - [ ] **§4 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
       references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.

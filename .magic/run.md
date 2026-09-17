@@ -124,7 +124,7 @@ graph TD
 ### Plan Completion (Succession Loop)
 
 1. **Retro L2**: auto-run Level 2 (Full).
-2. **Changelog L2**: compile and write the release entry, then display it verbatim. The user-facing approval gate for release artifacts is the standard git commit step (per Finalization Protocol) — not an inline Yes/No prompt. This preserves the C9 §9 release-artifact gate without re-introducing inline confirmation.
+2. **Changelog L2**: compile and write the release entry, then display it verbatim. The user reviews release artifacts independently afterward — not via an inline Yes/No prompt. This preserves the C9 §9 release-artifact gate without re-introducing inline confirmation.
 3. **Version Bump**: bump the **project's** release version file (`package.json`, `pyproject.toml`, `Cargo.toml`, or equivalent) per the changelog (Major/Minor/Patch). Do NOT modify `.magic/.version` — engine version is managed by `update-engine-meta` (C14) and is not a per-plan artifact.
 4. **Finalize**: regenerate `CONTEXT.md`.
 
@@ -132,10 +132,9 @@ graph TD
 
 After all workflow steps (incl. Phase Completion or Plan Completion) and **before** the Completion Checklist:
 
-1. Run `node .magic/scripts/executor.js finalize --workflow=run`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry + suggested commit message) or `⏭️ No significant changes detected`.
+1. Run `node .magic/scripts/executor.js finalize --workflow=run`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
 2. **Display the entire script output verbatim** in a fenced block.
-3. **Hard rule**: do NOT invoke `git commit`, `git add`, or any write-side git command — the user reviews the suggested message and commits manually.
-4. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
+3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.design/workspace.json`.
 
@@ -156,6 +155,6 @@ Checklist — {operation}
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
   ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magic.task` only — `/magic.spec` never named directly
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, project version bumped (project release file only — never .magic/.version), CONTEXT.md updated
-  ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (release gate is git commit)
+  ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (user reviews release artifacts independently afterward)
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```

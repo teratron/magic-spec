@@ -106,7 +106,7 @@ On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` 
 6. **Engine Integrity Failure** — `checksums_mismatch` or `GHOST_REGISTRY` blocks in-scope files (C15 Filter).
 7. **Depth Control Limit** — analysis scope exceeds the depth threshold (>500 source files); user picks Focused or Quick mode.
 8. **Pause / STATE.md Acknowledgment** — `Blocking Constraints` displayed before resuming work; informational, not a question.
-9. **Changelog Level 2 / Release Artifacts** — public release entries; user reviews via the standard git commit gate, not inline.
+9. **Changelog Level 2 / Release Artifacts** — public release entries; user reviews independently afterward, not inline.
 10. **Constitutional Guard** — proposed §7 rule contradicts §1–6 → HALT.
 11. **Hard-Dependency Cycle** — circular `Implements:` chain (soft `Related Specifications` cycles do NOT block).
 
