@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { execFileSync } = require('child_process');
 const { mkdirSafe, appendFileSafe } = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -30,6 +31,12 @@ const OVERFLOW_CODE = 'DIAGNOSTICS_SINK_OVERFLOW';
 /** Render cap (DG-4), matching finalize.js's existing MAX_LISTED_FILES convention. */
 const MAX_RENDERED_FINDINGS = 15;
 
+/** DG-10: same path-traversal guard executor.js applies to a user-supplied script name — `recheck.script` reaches a spawn too. */
+const SCRIPT_NAME_RE = /^[a-z][a-z0-9-]*$/;
+
+/** DG-10: upper bound on one recheck spawn — a hung check must not hang the digest it is trying to render. */
+const RECHECK_TIMEOUT_MS = 5000;
+
 // ───────────────────────────────────────────────────────────────────────────
 // Validation
 // ───────────────────────────────────────────────────────────────────────────
@@ -46,7 +53,7 @@ function normalize(finding) {
     if (!finding || typeof finding !== 'object') {
         return { ok: false, reason: 'finding must be an object' };
     }
-    const { severity, source, code, message, locus, remedy } = finding;
+    const { severity, source, code, message, locus, remedy, recheck } = finding;
     if (!SEVERITIES.has(severity)) return { ok: false, reason: `invalid severity '${severity}'` };
     if (!source || typeof source !== 'string') return { ok: false, reason: 'missing source' };
     if (!code || typeof code !== 'string') return { ok: false, reason: 'missing code' };
@@ -65,6 +72,17 @@ function normalize(finding) {
     };
     if (locus) value.locus = oneLine(locus);
     if (remedy) value.remedy = oneLine(remedy);
+    // DG-10: a malformed recheck degrades to no revalidation for this finding
+    // (rendered as recorded, same as before DG-10 existed) rather than
+    // rejecting the finding outright — a construction bug in optional
+    // metadata must not cost the finding itself its visibility.
+    if (recheck && typeof recheck === 'object' && typeof recheck.script === 'string') {
+        value.recheck = {
+            script: oneLine(recheck.script),
+            args: Array.isArray(recheck.args) ? recheck.args.map(String) : [],
+            env: (recheck.env && typeof recheck.env === 'object') ? recheck.env : {},
+        };
+    }
     return { ok: true, value };
 }
 
@@ -88,11 +106,18 @@ function readSinkLines() {
  * finding, an unwritable sink, or a full sink degrade to a warning and a
  * `false` return rather than propagating.
  *
+ * Self-reference guard (DG-10): when `MAGIC_DIAGNOSTICS_SUPPRESS` is set,
+ * returns `false` immediately without touching the sink. `revalidate()`
+ * spawns a recheck under this flag so the recheck's own findings — which
+ * would otherwise describe the very condition already being asked about —
+ * are never recorded back into the sink revalidation is reading from.
+ *
  * @param {{severity: 'error'|'warning'|'fix', source: string, code: string,
  *   message: string, locus?: string, remedy?: string}} finding
  * @returns {boolean} True when the entry physically reached the sink.
  */
 function record(finding) {
+    if (process.env.MAGIC_DIAGNOSTICS_SUPPRESS) return false;
     try {
         const result = normalize(finding);
         if (!result.ok) {
@@ -167,6 +192,95 @@ function drain() {
         console.warn(`[diagnostics] drain() could not clear the sink (non-blocking): ${e.message}`);
     }
     return findings;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Revalidation (DG-10)
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Runs one recheck out-of-process and returns the set of finding codes it
+ * still reports, or `null` on any failure — missing script, invalid name,
+ * non-zero exit, timeout, or unparseable stdout — so the caller degrades to
+ * rendering the finding as recorded (DG-9 extends: fail toward showing more,
+ * never less). Spawns the L1 script directly, never through `executor.js`
+ * (l1-engine-diagnostics.md §5 Drawbacks: `executor.js` re-resolves
+ * `MAGIC_DESIGN_DIR` from ambient `--workspace`/`workspace.json`, which can
+ * diverge from the workspace `recheck.env` captured at record time). Forces
+ * `MAGIC_DIAGNOSTICS_SUPPRESS=1` on the child so its own findings are never
+ * recorded back into the sink revalidation is reading (DG-10 self-reference
+ * guard). Never throws.
+ *
+ * @param {{script: string, args?: string[], env?: Object}} recheck
+ * @returns {Set<string>|null}
+ */
+function runRecheck(recheck) {
+    try {
+        if (!recheck || !SCRIPT_NAME_RE.test(recheck.script || '')) return null;
+        const scriptPath = path.join(__dirname, '..', `${recheck.script}.js`);
+        if (!fs.existsSync(scriptPath)) return null;
+
+        const args = Array.isArray(recheck.args) ? recheck.args.slice() : [];
+        if (!args.includes('--json')) args.push('--json');
+        const env = Object.assign({}, process.env, recheck.env || {}, { MAGIC_DIAGNOSTICS_SUPPRESS: '1' });
+
+        const stdout = execFileSync('node', [scriptPath, ...args], {
+            cwd: projectRoot, env, encoding: 'utf8', timeout: RECHECK_TIMEOUT_MS,
+        });
+        const parsed = JSON.parse(stdout);
+        const warnings = Array.isArray(parsed.warnings) ? parsed.warnings : [];
+        return new Set(warnings.map((w) => w.type));
+    } catch (e) {
+        return null;
+    }
+}
+
+/**
+ * Reverifies findings that declare a `recheck` (DG-10) and drops any whose
+ * condition no longer reproduces. A filter over its input, never a source of
+ * new findings — a finding the recheck surfaces that was not already among
+ * the input `code`s never enters the returned array. Findings with no
+ * `recheck` pass through unchanged, in their original relative order;
+ * survivors are appended after (order is not otherwise guaranteed — callers
+ * feed the result into {@link dedupe} next, which is already order-tolerant).
+ *
+ * Groups recheck-bearing findings by signature (`script` + serialized `args`
+ * + serialized `env`) so N findings sharing one recheck context spawn one
+ * process, not N. Never throws.
+ *
+ * @param {Object[]} findings
+ * @returns {Object[]}
+ */
+function revalidate(findings) {
+    if (!Array.isArray(findings) || findings.length === 0) return findings;
+
+    const passthrough = [];
+    const groups = new Map();
+
+    for (const f of findings) {
+        if (!f || !f.recheck || typeof f.recheck !== 'object') {
+            passthrough.push(f);
+            continue;
+        }
+        const key = JSON.stringify({
+            script: f.recheck.script, args: f.recheck.args || [], env: f.recheck.env || {},
+        });
+        if (!groups.has(key)) groups.set(key, { recheck: f.recheck, items: [] });
+        groups.get(key).items.push(f);
+    }
+
+    const survivors = passthrough;
+    for (const { recheck, items } of groups.values()) {
+        const reproducedCodes = runRecheck(recheck);
+        if (reproducedCodes === null) {
+            survivors.push(...items); // Spawn/parse failure — fail open (DG-9).
+            continue;
+        }
+        for (const f of items) {
+            if (reproducedCodes.has(f.code)) survivors.push(f);
+        }
+    }
+    return survivors;
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -274,6 +388,7 @@ module.exports = {
     record,
     read,
     drain,
+    revalidate,
     summarize,
     formatDigest,
 };

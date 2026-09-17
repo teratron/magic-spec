@@ -11,6 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **`update-engine-meta.js --check` no longer fails every consumer commit when `.magic/` is wholesale-gitignored** (engine v2.1.92 → v2.1.93): the pre-commit hook's on-disk scan excluded any path matching the *consumer's own* `.gitignore` from the `onDisk` set before comparing it against `.checksums` — the same `isGitignored` union `generate-checksums.js` uses to keep accidental dev-machine cruft (e.g. `.fallow/`, engine v2.1.87) out of the manifest. That reasoning holds only in the source/dev repo, where `.magic/` itself is git-tracked and never gitignored. Every consumer install is expected to gitignore `.magic/` wholesale — it is "installed from a release archive, not committed" (CLAUDE.md §1.1) — so in a real consumer project the exclusion matched *every single file* the manifest listed, `onDisk` came back empty, and the reverse missing-files pass reported all 71 shipped engine files as `🗑️ Missing engine file`, failing `--check` (and the pre-commit hook) unconditionally on every commit. Reproduced against a real consumer project (`metaquant`): `.gitignore` contains `.magic/` per the documented convention, and `update-engine-meta --check` failed with all 71 manifest entries flagged missing despite every file being present and byte-identical on disk. Fixed by scoping the gitignore exclusion to paths **not already present** in `.checksums` (`!isManifested`) — a manifested file is always verified against disk regardless of the consumer's own `.gitignore`, while a genuinely new, gitignored stray file is still excluded from triggering a false "new engine file" detection, preserving the original v2.1.87 protection. New regression: `dev/tests/engine.js` (`--check still verifies manifested files even when the consumer wholesale-gitignores .magic/`) and `dev/tests/suite.md` T219; suite 218 → 219 scenarios, `dev/tests/engine.js` 85 → 86.
 
+### Changed
+
+- Updated 2 specifications (engine)
+- Updated task plan and task index (engine)
+
 ## [2.1.92] - 2026-09-17
 
 ### Fixed

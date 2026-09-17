@@ -3417,6 +3417,174 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // ───────────────────────────────────────────────────────────────────────────
+    // 16a-2. lib/diagnostics.js — revalidation before render (DG-10)
+    // ───────────────────────────────────────────────────────────────────────────
+
+    // Writes a controllable recheck target into a temp workspace's
+    // .magic/scripts/: echoes { warnings: JSON.parse(FIXTURE_WARNINGS) } and
+    // increments a counter file on every invocation, so tests can assert both
+    // what a recheck reports and how many times it actually ran (§4.10 step 2,
+    // signature collapse).
+    const writeRevalidateFixture = (tempDir) => {
+        const src = [
+            '#!/usr/bin/env node',
+            "'use strict';",
+            "const fs = require('fs');",
+            "const path = require('path');",
+            "const counterPath = path.join(__dirname, '..', '..', '.design', '.cache', 'revalidate-fixture-count.txt');",
+            'try {',
+            '    fs.mkdirSync(path.dirname(counterPath), { recursive: true });',
+            '    const n = fs.existsSync(counterPath) ? parseInt(fs.readFileSync(counterPath, "utf8"), 10) : 0;',
+            '    fs.writeFileSync(counterPath, String(n + 1));',
+            '} catch (e) { /* best-effort counter, never block the fixture output */ }',
+            "console.log(JSON.stringify({ warnings: JSON.parse(process.env.FIXTURE_WARNINGS || '[]') }));",
+            '',
+        ].join('\n');
+        fs.writeFileSync(path.join(tempDir, '.magic', 'scripts', 'revalidate-fixture.js'), src);
+    };
+
+    const revalidateFixtureCount = (tempDir) => {
+        const counterPath = path.join(tempDir, '.design', '.cache', 'revalidate-fixture-count.txt');
+        return fs.existsSync(counterPath) ? parseInt(fs.readFileSync(counterPath, 'utf8'), 10) : 0;
+    };
+
+    test('revalidate() drops a finding whose recheck no longer reproduces the code (DG-10)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeRevalidateFixture(tempDir);
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            const survivors = diagnostics.revalidate([{
+                severity: 'warning', source: 'test', code: 'GONE', message: 'was true at record time',
+                recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } },
+            }]);
+
+            assert.strictEqual(survivors.length, 0, 'a finding whose recheck reports no matching code must be dropped');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('revalidate() keeps a finding whose recheck still reproduces the code (DG-10)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeRevalidateFixture(tempDir);
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            const survivors = diagnostics.revalidate([{
+                severity: 'warning', source: 'test', code: 'STILL_OPEN', message: 'condition persists',
+                recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) } },
+            }]);
+
+            assert.strictEqual(survivors.length, 1, 'a finding whose recheck still reports its code must survive unchanged');
+            assert.strictEqual(survivors[0].code, 'STILL_OPEN');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('revalidate() spawns one recheck process per distinct signature, not one per finding (DG-10)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeRevalidateFixture(tempDir);
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            const sharedRecheck = {
+                script: 'revalidate-fixture', args: ['shared'],
+                env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'A' }, { type: 'B' }]) },
+            };
+            const survivors = diagnostics.revalidate([
+                { severity: 'warning', source: 'test', code: 'A', message: 'm', recheck: sharedRecheck },
+                { severity: 'warning', source: 'test', code: 'B', message: 'm', recheck: sharedRecheck },
+            ]);
+
+            assert.strictEqual(revalidateFixtureCount(tempDir), 1, 'two findings sharing one recheck signature must spawn exactly one process');
+            assert.deepStrictEqual(survivors.map((f) => f.code).sort(), ['A', 'B'], 'both findings survive — the shared recheck reproduced both codes');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('revalidate() leaves a finding untouched when its recheck cannot be run (DG-10 extends DG-9)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            const survivors = diagnostics.revalidate([{
+                severity: 'error', source: 'test', code: 'UNCHECKABLE', message: 'recheck target does not exist',
+                recheck: { script: 'does-not-exist-xyz', args: [], env: {} },
+            }]);
+
+            assert.strictEqual(survivors.length, 1, 'a recheck that cannot be spawned must fail open — the finding renders as recorded, not dropped');
+            assert.strictEqual(survivors[0].code, 'UNCHECKABLE');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('revalidate() passes a finding with no recheck field through unchanged (DG-10)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeRevalidateFixture(tempDir);
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            const findings = [
+                { severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED', message: 'an event, not a condition' },
+                { severity: 'warning', source: 'test', code: 'GONE', message: 'm', recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } } },
+            ];
+            const survivors = diagnostics.revalidate(findings);
+
+            assert.strictEqual(survivors.length, 1, 'the event finding survives; the resolved condition finding does not — partition is per-finding, not per-batch');
+            assert.strictEqual(survivors[0].code, 'NEXT_ACTION_SUBSTITUTED');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('record() suppresses writes under MAGIC_DIAGNOSTICS_SUPPRESS, and a live recheck spawn cannot feed its own finding back into the sink (DG-10 self-reference guard)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const sinkPath = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
+
+            process.env.MAGIC_DIAGNOSTICS_SUPPRESS = '1';
+            const suppressed = diagnostics.record({ severity: 'warning', source: 'test', code: 'SHOULD_NOT_APPEAR', message: 'm' });
+            delete process.env.MAGIC_DIAGNOSTICS_SUPPRESS;
+            assert.strictEqual(suppressed, false, 'a suppressed record() must report false');
+            assert.ok(!fs.existsSync(sinkPath), 'a suppressed record() must not create the sink');
+
+            // Live integration through the real emitter (copied by
+            // createTempWorkspace, including this session's own
+            // recheck-attachment change) — a missing .magic/.checksums
+            // reliably yields one ENGINE_INTEGRITY finding with a recheck.
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Registry\n');
+            fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules\n');
+            const cpPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            execSync(`node "${cpPath}" --json`, { cwd: tempDir, stdio: 'pipe' });
+
+            const recorded = diagnostics.read();
+            assert.ok(recorded.some((f) => f.code === 'ENGINE_INTEGRITY'), 'sanity: the real emitter must have recorded its own finding first');
+            assert.ok(
+                recorded.every((f) => f.recheck && f.recheck.script === 'check-prerequisites'),
+                'every check-prerequisites finding must carry a recheck reference'
+            );
+
+            const survivors = diagnostics.revalidate(diagnostics.drain());
+            assert.ok(
+                survivors.some((f) => f.code === 'ENGINE_INTEGRITY'),
+                'the condition is still real (.checksums is still missing) — it must survive its own revalidation'
+            );
+            assert.ok(
+                !fs.existsSync(sinkPath),
+                "the recheck's own warn()/record() calls must not have written a new finding back into the sink"
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js --dry-run reads the diagnostics sink without draining it (DG-4.1)', () => {
         const tempDir = createTempWorkspace(true);
         try {

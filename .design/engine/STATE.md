@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-17 04:55
-**Phase:** 30 — Checksum Scan Hygiene, Git-Commit Scope Retirement, Fresh-Project Drift Silence
+**Updated:** 2026-09-17 16:02
+**Phase:** 31 — Diagnostics Revalidation Before Render (DG-10)
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-28T02 C14 bump and engine integrity verification
 - **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Next Action:** Execute T-31A01 Self-reference suppression guard on `record()` via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [29/29] ████████ 100%
+Phase 31: [0/6] ░░░░░░░░ 0%
+Overall: [29/30] ████████ 97%
 ```
 
 ## Recent Decisions

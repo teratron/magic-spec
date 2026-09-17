@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.1.0
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -47,6 +47,7 @@ The parent contract states *what* must be collected and *where* it must appear. 
 | **DG-7** Empty state is silence | `emitTail()` renders the digest section only when the drained, deduplicated list is non-empty; the summary-table row in `emitSuccess()` is likewise conditional. |
 | **DG-8** Agent channel | `executor.js record-diagnostic` subcommand (§4.8) writes through the same `record()` path with `source` defaulting to `agent`. |
 | **DG-9** Non-blocking degradation | Every collector entry point is wrapped so no filesystem error escapes; `drain()` parses line-by-line and discards unparseable lines rather than failing the digest (§4.4). |
+| **DG-10** Revalidation before render | `revalidate()` in `lib/diagnostics.js` (§4.10), called by `finalize.js` on both `read()` and `drain()` results before `formatDigest()`; groups by recheck signature, spawns each signature's check at most once, and drops findings whose code no longer reproduces. A recheck failure leaves its findings untouched (extends DG-9). |
 
 ## 4. Detailed Design
 
@@ -74,6 +75,11 @@ record(finding, options?) -> boolean
     finding.remedy   : string                          (optional)
     options.workspace: string                          (optional; resolved as elsewhere)
 
+    First checks process.env.MAGIC_DIAGNOSTICS_SUPPRESS: when set, returns
+    false immediately without touching the sink (§4.10's self-reference
+    guard) — a recheck subprocess runs under this flag so its own findings
+    are never recorded back into the sink revalidation is reading from.
+
     Returns true when the entry reached the sink, false when it was
     dropped. NEVER throws — a false return is informational only and
     no caller is required to branch on it (DG-9).
@@ -87,6 +93,23 @@ drain(workspace) -> Finding[]
     read() followed by removal of the sink. The only consuming entry
     point; reserved to the mutating finalization path (DG-4.1).
     NEVER throws.
+
+revalidate(findings) -> Finding[]
+    Groups input findings by recheck signature (the recheck script
+    name plus its serialized argument vector and environment
+    overrides). For each distinct signature present, spawns the named
+    L1 script once, out-of-process, and parses its `--json` output.
+    A finding whose `code` is absent from the recheck result's
+    `warnings[].type` list is dropped from the returned array; every
+    other finding — including every finding with no `recheck` field
+    at all — passes through unchanged. Order is not guaranteed to be
+    preserved (callers feed the result into dedupe() next, which is
+    already order-tolerant). A signature that cannot be spawned,
+    times out, or returns unparseable output leaves its findings in
+    the output untouched (DG-9 extends). Pure with respect to the
+    diagnostics sink — reads nothing from and writes nothing to
+    `diagnostics.jsonl` — but impure with respect to the filesystem
+    /repository state its rechecks inspect. NEVER throws.
 
 formatDigest(findings) -> string[]
     Pure. Deduplicates, sorts, caps, and renders markdown lines.
@@ -107,6 +130,18 @@ One JSON object per line:
 ```
 
 `ts` is written by the collector, not the caller, and orders findings across processes that finish out of sequence.
+
+A condition finding additionally carries `recheck` (§4.10), the DG-10 revalidation reference:
+
+```plaintext
+{"ts":"<ISO-8601>","severity":"warning","source":"check-prerequisites",
+ "code":"SYNC_GAP",
+ "message":"PLAN.md is based on INDEX.md v1.27.0, but registry is at v1.27.1.",
+ "remedy":"magic.task update",
+ "recheck":{"script":"check-prerequisites",
+            "args":["--json","--require-specs","--verify-headers"],
+            "env":{"MAGIC_DESIGN_DIR":".design/engine"}}}
+```
 
 ### 4.4 Sink Format and Why JSONL
 
@@ -169,6 +204,8 @@ emitTail({ workspace, nextAction, findings })
 
 The drain is called once, in `main()`, immediately before `emitTail()` — after every other pipeline step, so findings emitted by phase archival, the state update, and the CHANGELOG write are all in the sink by then. Under `--dry-run` that call is `read()` rather than `drain()` (DG-4.1): the preview shows the digest it would print and leaves the findings for the real invocation, matching how `--dry-run` already previews the `STATE.md` patch without writing it.
 
+`revalidate()` (§4.10) sits between that call and `emitTail()` on both paths: `const findings = diagnostics.revalidate(diagnostics.drain())` (or `read()` under `--dry-run`). It runs last of all — after the drain/read that already runs after every mutating step — so a condition a recheck reproduces or clears reflects the full effect of this invocation's own writes, not a partial one.
+
 ### 4.8 Agent Channel Subcommand
 
 ```plaintext
@@ -196,9 +233,38 @@ graph TD
     D["executor.js record-diagnostic (agent)"] --> S
     S --> F[".design/.cache/diagnostics.jsonl"]
     E["finalize.js pipeline steps"] --> S
-    F --> G["drain() in main()"]
-    G --> H["emitTail(): notice → digest → next step"]
+    F --> G["drain()/read() in main()"]
+    G --> V["revalidate() (§4.10)"]
+    V --> H["emitTail(): digest → next step"]
 ```
+
+### 4.10 Revalidation
+
+`recheck` (DG-10) is an optional field on a finding, attached only by an emitter whose finding is a **condition**, not an event (l1-engine-diagnostics.md §DG-10):
+
+```plaintext
+recheck: {
+    script : string    // L1 script basename under .magic/scripts/, no extension
+    args   : string[]  // argv the script needs to reproduce the same check
+    env    : object    // env var overrides — at minimum MAGIC_DESIGN_DIR,
+                        // captured at record time so revalidation targets
+                        // the same workspace the original check ran against,
+                        // independent of whatever workspace context happens
+                        // to be ambient when the digest later renders
+}
+```
+
+`check-prerequisites.js` is, as of this version, the only emitter that attaches one (§5.4): its `warn()` helper already runs inside the script's own module scope, where the live `args` (the semantic flags — `--require-plan`, `--require-tasks`, `--require-specs`, `--verify-headers`) and `process.env.MAGIC_DESIGN_DIR` are both already in scope. It forces `--json` onto the recheck's `args` regardless of whether the original invocation passed it, since revalidation needs parseable output and the original caller's own output mode is irrelevant to reverification.
+
+`revalidate(findings)`:
+
+1. Partitions `findings` into those with a `recheck` and those without. The latter pass straight through.
+2. Groups the former by a signature — `script` + JSON-serialized `args` + JSON-serialized `env` — so two findings produced by the identical recheck context spawn one process between them, not one each. (Two occurrences of `SYNC_GAP` from the same Pre-flight call always share a signature; two occurrences from two separate `check-prerequisites` calls earlier in the same invocation — e.g. Pre-flight, then Pre-Planning Stabilization's own re-check — may not, and are revalidated independently, which is correct: one may have since resolved while the other has not.)
+3. For each distinct signature, spawns `node .magic/scripts/{script}.js {...args}` with `env` merged over the current process environment **plus `MAGIC_DIAGNOSTICS_SUPPRESS=1`** (self-reference guard, l1-engine-diagnostics.md DG-10) — the recheck's own `warn()`/`record()` calls no-op for the duration, so a still-open condition is not re-queued into the sink as a side effect of merely checking it. The spawn is out-of-process, read-only with respect to every artifact but the sink-suppression flag, and parses stdout as the same `{ warnings: [{ type, message, fix }] }` shape `check-prerequisites --json` already produces (§5.4's forwarding path is what makes this shape the one to standardize on).
+4. A finding in that signature's group survives if its `code` appears among the recheck result's `warnings[].type`; otherwise it is dropped from the array `revalidate()` returns.
+5. Any failure in steps 3-4 for a given signature — spawn error, non-zero exit outside the script's own documented HALT conditions, timeout, unparseable stdout — leaves every finding in that signature's group in the output, untouched (DG-9 extends: revalidation degrades toward showing more, never less).
+
+`revalidate()` never mutates the sink and never calls `record()` — a dropped finding is simply absent from the array passed to `dedupe()`/`formatDigest()` next; DG-4's "exactly once" guarantee is unaffected because the finding was still drained from the sink exactly once, it is just not selected for rendering.
 
 ## 5. Migration Inventory
 
@@ -245,7 +311,7 @@ Both are the sanctioned L1→L2 graceful-fallback guards. They are exactly the c
 | `init.js` | `Note: Could not automatically install Git hooks.` | `warning` | `GIT_HOOKS_NOT_INSTALLED` |
 | `check-prerequisites.js` | `[{w.type}] {w.message}{fixHint}` | `warning` | forwarded from `w.type` |
 
-`check-prerequisites.js` needs no code assignment: it already carries a typed identifier and a fix hint per warning (`l1-engine-diagnostics.md` §1.5). Its migration forwards `w.type` as `code` and `fixHint` as `remedy` unchanged — the site that most closely already satisfies DG-3.
+`check-prerequisites.js` needs no code assignment: it already carries a typed identifier and a fix hint per warning (`l1-engine-diagnostics.md` §1.5). Its migration forwards `w.type` as `code` and `fixHint` as `remedy` unchanged — the site that most closely already satisfies DG-3. Its `warn()` additionally attaches `recheck` (§4.10, DG-10) to every finding it records — every warning this script produces is a condition assessed against current repository state, never an event, so the whole emitter opts in.
 
 ### 5.5 Coverage Statement
 
@@ -266,6 +332,12 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 7. **Never-throws** — `record()` against an unwritable sink path returns `false`, prints one warning, and leaves the caller's control flow unchanged (DG-9).
 8. **Agent channel** — `executor.js record-diagnostic` exits 0 both for a valid finding and for one with an invalid severity, and the valid one appears in the next drain (DG-8, §4.8).
 9. **Preview does not consume** — a `--dry-run` finalize over a populated sink renders the digest and leaves the sink byte-identical; the immediately following non-dry-run invocation still reports the same findings (DG-4.1).
+10. **Revalidation drops a resolved condition** — a fixture recording a `check-prerequisites`-shaped finding with `recheck`, where the recheck fixture no longer reports that `type`, must not appear in `revalidate()`'s output or in the rendered digest (DG-10).
+11. **Revalidation keeps an unresolved condition** — the same fixture, where the recheck fixture still reports the `type`, must survive `revalidate()` unchanged and still render (DG-10).
+12. **Revalidation signature collapse** — two findings sharing one `recheck` signature must trigger exactly one recheck invocation, verified by an invocation counter in the test double (§4.10 step 2).
+13. **Revalidation failure renders, not hides** — a `recheck` whose script path does not exist (or whose fixture throws) must leave its findings in `revalidate()`'s output untouched, not drop them (DG-9 extends).
+14. **Event findings bypass revalidation** — a finding with no `recheck` field must reach `formatDigest()` unchanged whether or not any other finding in the same batch has one, confirming §4.10's partition is per-finding, not per-batch.
+15. **Recheck does not feed the sink** — a `record()` call made with `MAGIC_DIAGNOSTICS_SUPPRESS=1` set must return `false` and leave the sink file byte-identical to its pre-call state (including "sink file absent" staying absent); a live `revalidate()` run against a fixture whose recheck script itself calls `record()` must leave the sink empty afterward (DG-10 self-reference guard).
 
 ## 7. Implementation Notes
 
@@ -274,6 +346,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 3. `executor.js record-diagnostic` — independent of step 2, parallelizable.
 4. Emitter migration (§5) — mechanical, one script at a time, safe to land incrementally; each script is complete when every row of its table records alongside its existing print.
 5. `check-prerequisites.js` last: its forwarding path is the only one that maps an existing typed structure rather than assigning new codes, so it benefits from the shape being settled.
+6. `revalidate()` (§4.10) after `check-prerequisites.js`'s migration lands, since it is the only emitter `recheck` initially covers and the function has nothing to revalidate against until that emitter attaches the field. Wired into `finalize.js` between the drain/read call and `emitTail()` (§4.7) in the same change.
 
 ## 8. Drawbacks & Alternatives
 
@@ -282,6 +355,8 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 - **Emitting the digest from a `process.on('exit')` hook in each script** — rejected: reproduces the scatter it aims to fix and fires for read-only commands that have no report surface.
 - **Deriving severity from the existing glyph (`⚠️` vs `❌`)** — rejected: the glyphs are inconsistent across scripts and cannot express the `fix` class at all, which is the class with the highest reporting value.
 - **Cost**: `MAX_SINK_ENTRIES` suppression means a pathological run can lose findings. Accepted, and made visible by the overflow marker (§4.5) — an honest truncation notice beats an unbounded file nothing reads.
+- **Revalidating through `executor.js` instead of the L1 script directly** — rejected for §4.10's `recheck.script`: `executor.js` re-derives `MAGIC_DESIGN_DIR` from `--workspace`/`workspace.json` at revalidation time, which can disagree with the workspace the original check actually ran against if ambient workspace state shifted mid-invocation. Spawning the L1 script directly with the `env` captured at record time reproduces the exact original context instead of re-resolving a new one.
+- **Cost (DG-10)**: `revalidate()` adds one child-process spawn per distinct recheck signature to every digest render, including preview. Accepted: signatures collapse duplicates (§4.10 step 2), only `check-prerequisites`-sourced findings currently opt in, and DG-9's failure-open default bounds the downside of a spawn that fails to a no-op, never a hang the caller cannot recover from (the spawn is subject to the same timeout discipline as `finalize.js`'s existing git probes).
 
 ## Canonical References
 
@@ -298,5 +373,6 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-09-17 | Agent | Implements l1-engine-diagnostics.md DG-10 (Revalidation Before Render). New `revalidate(findings)` in the collector contract (§4.2) and its detailed design (§4.10): groups findings by recheck signature (`script` + `args` + `env`), spawns each signature's L1 script at most once via direct invocation (not through `executor.js` — rejected in §8, see Drawbacks), and drops findings whose `code` no longer appears in the recheck's `warnings[].type`. Wired into `finalize.js` between drain()/read() and `emitTail()` on both paths (§4.7 amended); flow diagram (§4.9) updated. `check-prerequisites.js`'s `warn()` (§5.4) now attaches `recheck` to every finding — the only current emitter, since every one of its warnings is a condition, never an event. Invariant Compliance table (§3) gained the DG-10 row. Seven new Regression Coverage cases (§6.10-15) and one new Implementation Notes step (§7.6). Three new Drawbacks entries: direct-script-invocation-over-executor.js rationale, added per-digest spawn cost, and (Post-Update Review finding, fixed before promotion) a self-reference gap — spawning a recheck runs the emitter's own `warn()`, which would otherwise `record()` its result straight back into the sink revalidation is reading, silently re-queuing a still-open condition regardless of this render's outcome. Closed by `MAGIC_DIAGNOSTICS_SUPPRESS=1` on every recheck spawn and a matching early-return guard in `record()` (§4.2), per l1-engine-diagnostics.md DG-10's self-reference-guard clause. No change to DG-1..DG-9's implementation, to the sink format, or to any finding lacking `recheck` — additive only. Amendment rule applied: Stable → RFC → Stable in this pass (Post-Update Review PASS after the self-reference fix, no objective conflicts). |
 | 1.1.0 | 2026-08-27 | Agent | **Commit-suggestion notice removed from the terminal block**, following SC-3's retirement in [l1-session-continuity.md](l1-session-continuity.md). §4.7's `emitTail()` shape drops its former step 1 (auto-commit notice); the block now renders only the diagnostics digest and the next step, in that order. Implementation Notes point 2 reworded to match. No change to DG-1..DG-9 themselves, to the collector, sink, or agent channel — this is a terminal-content reduction, not a contract change. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Implements DG-1..DG-9: `lib/diagnostics.js` collector, JSONL sink under the already-gitignored `.design/.cache/`, `executor.js record-diagnostic` agent channel, and a single `emitTail()` in `finalize.js` that drains once and renders auto-commit notice → digest → next step identically on both exit paths. Complete migration inventory of the 17 non-fatal emitters across 6 scripts as of engine 2.1.65, each assigned a severity and a stable code; HALT-and-exit sites excluded by the parent spec's scope. JSONL chosen over a JSON array for append safety across concurrent processes and for bounded corruption damage, both required by DG-4/DG-9. Collector API split into `read()` (non-consuming) and `drain()` (`read()` + unlink) so DG-4.1's preview rule is expressed as a choice of entry point rather than a flag threaded through the parser. |

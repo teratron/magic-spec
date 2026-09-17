@@ -29,6 +29,19 @@ const verifyHeaders = args.includes('--verify-headers');
 const missing = [];
 const warnings = [];
 
+// l1-engine-diagnostics.md DG-10: the exact flag vector that reproduces this
+// invocation's own check, forced to include --json regardless of whether
+// this run itself was asked to emit JSON — a recheck always needs parseable
+// output. Every `warn()` finding is a condition (an assessment of current
+// repository state), never an event, so this is attached unconditionally.
+const RECHECK_ARGS = [
+    '--json',
+    ...(reqPlan ? ['--require-plan'] : []),
+    ...(reqTasks ? ['--require-tasks'] : []),
+    ...(reqSpecs ? ['--require-specs'] : []),
+    ...(verifyHeaders ? ['--verify-headers'] : []),
+];
+
 // ───────────────────────────────────────────────────────────────────────────
 // Helpers
 // ───────────────────────────────────────────────────────────────────────────
@@ -46,6 +59,16 @@ function warn(type, message, fix) {
     // site already produced DG-3's shape before DG-3 existed.
     const finding = { severity: 'warning', source: 'check-prerequisites', code: type, message };
     if (fix) finding.remedy = fix;
+    // DG-10 recheck reference. MAGIC_DESIGN_DIR is re-read here rather than
+    // closing over the module-scope `designDir` const declared below — the
+    // ENGINE_INTEGRITY checks above call warn() before that line runs, and a
+    // closure over it would throw a TDZ ReferenceError on this script's very
+    // first possible warning.
+    finding.recheck = {
+        script: 'check-prerequisites',
+        args: RECHECK_ARGS,
+        env: { MAGIC_DESIGN_DIR: process.env.MAGIC_DESIGN_DIR || '.design' },
+    };
     diagnostics.record(finding);
 }
 

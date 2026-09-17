@@ -692,7 +692,10 @@ function main() {
         // SC-2: live memory reflects every completed command, bump or not.
         const stateResult = updateSessionState(opts, workspace, wsDir);
         // DG-4.1: a preview must not consume what the real run would report.
-        const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
+        // DG-10: revalidate() runs on both paths, after the drain/read that
+        // already runs after every mutating step, so a condition this
+        // invocation's own writes resolved is not rendered as still open.
+        const findings = diagnostics.revalidate(opts.dryRun ? diagnostics.read() : diagnostics.drain());
         emitTail({ nextAction: stateResult.nextAction, findings });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
@@ -768,7 +771,10 @@ function main() {
     // After every other mutating step, so findings phase archival / CHANGELOG
     // / state-update produced are in the sink before the digest is composed.
     // DG-4.1: a preview must not consume what the real run would report.
-    const findings = opts.dryRun ? diagnostics.read() : diagnostics.drain();
+    // DG-10: revalidate() runs last of all — after the drain/read that
+    // already runs after every mutating step — so a condition this
+    // invocation's own writes resolved is not rendered as still open.
+    const findings = diagnostics.revalidate(opts.dryRun ? diagnostics.read() : diagnostics.drain());
     const diagnosticsCount = diagnostics.summarize(findings);
 
     // ── Changed-file listing ────────────────────────────────────────────────

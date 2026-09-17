@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -59,6 +59,12 @@ A single `/magic.run` phase spans many separate node processes — `check-prereq
 
 `check-prerequisites` already emits its warnings as `[{type}] {message}{fixHint}` — a typed code, a message, and a suggested remedy. This contract does not invent a finding shape; it generalizes the one the engine's most warning-dense script already uses, and gives every other emitter the same one.
 
+### 1.6 Condition Findings Can Resolve Mid-Invocation
+
+`check-prerequisites` runs at a workflow's own Pre-flight — before that same workflow's writes. A finding it records (`SYNC_GAP`, `ORPHANED_SPEC`, and the rest of its typed-warning set) describes repository state **as of that moment**, not as of the moment the digest is read. DG-4's aggregation window (§1.3: "every engine invocation since the previous drain") is exactly what makes the gap possible — it deliberately spans processes that ran *before* the workflow's own mutations, not only after them, because that is the only arrangement that survives the process boundary. A workflow that finds `SYNC_GAP` at Pre-flight and then, later in the same invocation, performs the very write that closes the gap, has — by the time finalize drains the sink — a recorded finding whose condition no longer holds. The digest was designed to survive its aggregation window; it was not designed to notice when the window's own contents go stale inside it. Read at that point, a resolved condition and a real unresolved one are indistinguishable.
+
+This is a narrower defect than §1.1-§1.4: those describe findings that never reached the user at all. This one describes a finding that reaches the user and is **wrong** — a false positive the workflow's own progress manufactures, not a gap in coverage.
+
 ## 2. Constraints & Assumptions
 
 - **Never fatal.** Recording, draining, or rendering a diagnostic MUST NOT change any exit code, abort any workflow, gate a version bump, or become a HALT point. Diagnostics report on work; they never arbitrate it.
@@ -69,6 +75,7 @@ A single `/magic.run` phase spans many separate node processes — `check-prereq
 - **HALTs are out of scope.** A `console.error` that precedes `process.exit(1)` already reaches the user — the run stops and the message is the outcome. This contract governs findings the run *survives*.
 - **Inherits the finalize opt-outs.** `MAGIC_FINALIZE=0` and `finalization.enabled: false` suspend the render step along with the rest of the pipeline; a user who disables finalization knowingly suspends the digest.
 - **Read-only commands emit but never deliver.** `/magic.analyze`, `/magic.graph`, and `/magic.status` never finalize (SC-2 exemption), so findings they record wait in the sink until the next mutating command's digest. This is deferred delivery, not loss, and it is the accepted boundary: giving a read-only command its own digest surface would duplicate the Advisory Report for ventilation and add a report to a briefing whose whole contract is that it reports nothing new (SC-4). The sink's own retention bound is what keeps the deferral safe.
+- **Revalidation is opt-in and read-only.** A finding's DG-10 `recheck` — the reference it carries to reverify itself before render — MUST be side-effect-free. Revalidation is not scheduled; it runs once per distinct recheck signature every time a digest is about to render, so a `recheck` that mutated state would itself become an unrecorded, uncontrolled second mutation.
 
 ## 3. Core Invariants
 
@@ -151,6 +158,23 @@ If the sink cannot be written or read — missing directory, permission failure,
 
 Corollary: the drain must tolerate a partially-written or malformed sink by discarding what it cannot parse and rendering what it can, rather than failing the whole digest over one bad entry.
 
+### DG-10 — Revalidation Before Render
+
+A finding MAY declare how to reverify itself: a **recheck** reference naming a read-only, re-runnable check and the exact parameters that reproduce it. Revalidation runs once per distinct recheck signature, immediately before rendering — on every path that renders the digest, preview included — and only after every other step of the invocation has run, so it observes the same repository state the reader is about to act on (§1.6).
+
+Not every finding is a revalidation candidate. Findings divide, for this invariant, into two kinds:
+
+- **Event findings** report something that happened during the run — a substitution applied, a value healed, an update skipped. These are true forever once they occur; no later state change can retroactively un-happen them, and they carry no `recheck`.
+- **Condition findings** report an assessment of current repository state, produced by a check that could be re-run this instant and could legitimately answer differently. Only these are revalidation candidates, and only when their emitter chooses to attach a `recheck`.
+
+A finding with no `recheck` renders exactly as before DG-10 existed — this invariant is additive over DG-1..DG-9, not a migration obligation on findings that were never wrong to begin with.
+
+Revalidation is a **filter, never a source**: it may cause a finding to be dropped when its recheck no longer reproduces a finding of the same code; it MUST NOT surface a different finding the recheck happens to turn up. A recheck result that was never itself recorded through DG-1 has not passed DG-2/DG-3 validation and has no standing to enter the digest.
+
+**Non-blocking (extends DG-9):** if a recheck cannot be run, times out, or returns something revalidation cannot interpret, the finding it would have reverified renders exactly as recorded. Revalidation is only permitted to move a finding from "rendered" to "not rendered" by successfully proving the condition no longer holds; every other outcome — including its own failure — must fail toward showing the finding, not hiding it.
+
+**Self-reference guard:** a recheck runs the same check the original emitter is, which records through DG-1 like any other invocation of that check. Left unguarded, every recheck would feed a fresh copy of its own finding back into the sink it is being read from, and DG-4's exactly-once guarantee would hold for the finding revalidation just rendered while silently queuing a duplicate for the *next* digest regardless of this render's outcome. Revalidation MUST suppress recording for the duration of a recheck invocation — the recheck's own findings are never worth recording, because the code it might reproduce is already the one revalidation is asking about.
+
 ## 4. Detailed Design
 
 ### 4.1 Collection and Delivery Flow
@@ -162,7 +186,11 @@ graph TD
     D["Agent finding (DG-8)"] --> C
     C --> E["Sink accumulates across processes (DG-4)"]
     E --> F["Finalization drains and clears (DG-4)"]
-    F --> G{"Any findings?"}
+    F --> R{"Has recheck? (DG-10)"}
+    R -->|No| G
+    R -->|"Yes — still reproduces"| G
+    R -->|"Yes — no longer reproduces"| X["Dropped, silently"]
+    G{"Any findings left?"}
     G -->|No| H["No section (DG-7)"]
     G -->|Yes| I["Render digest (DG-5)"]
     I --> J["Next step (DG-6)"]
@@ -181,14 +209,22 @@ The digest's value is entirely in being **found**. A section whose position vari
 
 `/magic.analyze` (Mode C) performs a deliberate, deep, read-only audit on demand and reports through the Advisory Report. The digest is the opposite instrument: passive, incidental, and attached to work the user was already doing. They share the finding *notation* (code, locus, `→` remedy) so that a class recognized in one is recognizable in the other, and they must not share a rendering path — an audit the user asked for and a byproduct of a command they ran are different products with different reading contexts.
 
+### 4.5 Why Revalidation, Not a Shorter Window
+
+Shrinking DG-4's aggregation window — draining more often, or scoping it to "since this workflow's Pre-flight" instead of "since the previous drain" — would not close the gap §1.6 describes: the finding goes stale *because* the workflow's own later step resolves it, and no window boundary can sit between a Pre-flight check and that same invocation's own write without either running the check again (which is revalidation, stated differently) or moving the check itself to run later (which changes what Pre-flight validates, not just when the digest reads it). Revalidation re-asks the one question that matters — does this condition still hold, right before the reader sees it — without touching DG-4's contract for every finding that isn't a condition.
+
 ## 5. Drawbacks & Alternatives
 
 - **Route stderr into the relay contract instead** (instruct the agent to relay stderr too) — rejected: it fixes visibility without fixing structure. The user would receive an unordered, undeduplicated, uncapped stream interleaved with stack traces and progress chatter, spread across every process of a run, and would still have no aggregation at the end. It also leaves the DG-8 agent channel with nowhere to go.
 - **Render the digest in every script rather than at finalization** — rejected: N reports per run is the scatter problem (§1.3) with extra formatting, and read-only commands that never finalize would each grow their own report surface.
 - **Keep an append-only diagnostics log** — rejected under §2 (findings are not history) and 4.2; it converts a report into an artifact nobody prunes.
 - **Fold the digest into the Advisory Report format** — rejected per 4.4; shared notation, separate surfaces.
+- **Time-to-live on findings instead of recheck** — rejected: a TTL discards a finding by elapsed time, which bears no relationship to whether its condition resolved. A fast-typing user closes a real `SYNC_GAP` in seconds; a slow one leaves a stale one open for minutes. Only asking the check itself answers the question a TTL can only guess at.
+- **Always re-run every emitter's full check before rendering** — rejected: most findings are events, not conditions (DG-10), and have no check left to re-run — `NEXT_ACTION_SUBSTITUTED` describes something that already happened, not an assessment a second run could revise. Blanket re-running would also multiply process spawns per digest by the emitter count regardless of whether any finding needs it.
 - **Cost**: every emitter call site gains a recording call, and the migration touches many scripts at once. Mitigated by the emitters being a bounded, enumerable set (inventoried in the L2 spec) and by DG-9 making the added call unable to introduce a new failure mode.
 - **Risk**: the digest is only as honest as its emitters. A finding no script records is still invisible, and this contract cannot detect one that was never written. Mitigated by the migration inventory being explicit and by regression coverage pinning the highest-value classes, not by any runtime check.
+- **Risk (DG-10)**: a `recheck` is only as faithful as the parameters it captures — an emitter that records the wrong flags reverifies the wrong question and could suppress a finding that is still real. Mitigated by scoping `recheck` construction to the emitter that owns the original check (it already holds the exact invocation context) and by DG-9's failure-open default, which renders rather than hides whenever revalidation itself cannot run.
+- **Granularity (DG-10)**: revalidation matches on `code`, the same class-not-instance identifier DG-3/DG-4 already collapse to. Two findings of one code from one recheck signature (two `ORPHANED_SPEC` entries, two different files) stand or fall together — if the recheck still reports the code for *either* file, both survive, even if the specific file one of them named was individually fixed. Accepted as consistent with the granularity the digest already commits to everywhere else (DG-4's dedup already discards per-instance `message` detail); a per-instance recheck would need to match on `locus` too, which not every finding carries (DG-3 marks it optional).
 
 ## Canonical References
 
@@ -204,5 +240,6 @@ The digest's value is entirely in being **found**. A section whose position vari
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-09-17 | Agent | Added **DG-10** (Revalidation Before Render) and new §1.6 (Motivation) + §4.5 (Detailed Design): a finding MAY declare a read-only `recheck` reference; the digest reruns it once per distinct signature, immediately before every render (including preview), and drops any finding whose condition no longer reproduces. Revalidation is a filter only — it MUST NOT surface a finding the recheck turns up that was not already recorded through DG-1 — and degrades to rendering-as-recorded on any recheck failure (extends DG-9's failure-open default). Self-reference guard added during authoring: a recheck runs the emitter's own check, which would otherwise call `record()` on itself and re-queue a duplicate finding for the next digest regardless of this render's outcome — revalidation now MUST suppress recording for the duration of its own recheck invocations. Closes a field-reported defect: `check-prerequisites` records `SYNC_GAP`/`ORPHANED_SPEC` at a workflow's own Pre-flight, before that same invocation's writes (e.g. `magic.task` regenerating `PLAN.md`/`TASKS.md`) resolve the condition; finalize then drained and rendered the now-stale finding as still open, confirmed by an immediate manual `check-prerequisites --json` re-run returning `warnings: []`. New Constraints bullet (§2: recheck MUST be read-only) and three Drawbacks & Alternatives entries (TTL rejected, blanket re-run rejected, recheck-fidelity risk). Post-Update Review found one defect before promotion: a recheck runs the emitter's own check, which records through DG-1 like any other invocation — left unguarded, every recheck would feed a fresh copy of its own finding back into the sink revalidation is reading from, silently re-queuing a still-open condition for the next digest regardless of this render's outcome. Fixed by adding DG-10's self-reference guard (recording MUST be suppressed for the duration of a recheck invocation) before promotion. DG-1..DG-9 unchanged otherwise; no breaking change — findings without `recheck` are unaffected. Amendment rule applied: Stable → RFC → Stable in this pass (Post-Update Review: Spec Council 5-lens + Instruction Quality Pass, both PASS after the fix, no objective conflicts — Trust Mode C9 auto-promotion). |
 | 1.0.1 | 2026-08-27 | Agent | Cross-reference wording only: Related Specifications, DG-5, and §4.3 no longer name the "commit message"/"commit content" the digest used to sit near — that output was retired in [l1-session-continuity.md](l1-session-continuity.md) (SC-3 retirement). No invariant amended; patch, no status transition. |
 | 1.0.0 | 2026-08-07 | Agent | Initial Stable version. DG-1..DG-9 per user directive: engine-found errors, warnings, and self-applied corrections are collected across a workflow invocation and rendered as one systematic digest immediately before the next step, so the AI operating the engine in a downstream project delivers every grievance at the end in structured form. Root defect identified during authoring: `rules/magic.md` §3 binds the agent to relay **stdout**, while every non-fatal finding is written to **stderr** — the invisibility is contractual, not incidental. Derived requirement DG-6 (next-step surfacing) added because the placement rule the directive states presupposes a next-step section finalization does not currently print, and because printing the persisted `Next Action` also collapses an existing divergence between the value written to `STATE.md` and the one the agent narrates. Post-Update Review added **DG-4.1** (a preview renders but must not drain — otherwise a rehearsal consumes what the real run was to report) and the read-only-command boundary in §2 (findings from non-finalizing commands are delivered late by the next mutating digest, not lost). |
