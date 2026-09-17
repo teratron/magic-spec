@@ -3389,6 +3389,19 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Template C6 text states Stable specs are auto-pulled into the active plan, matching `task.md`'s "auto-pull ALL Stable specs...No user prompt unless a priority conflict is detected."
 - **Guards tested:** Constitution/Engine parity (shipped template must not misdescribe actual autonomous behavior to new users); regression for the "Stale Selective Planning" drift found via `/magic.dev.simulate test`, 2026-09-17.
 
+### T219 — Wholesale-Gitignored `.magic/` Must Not Fail `--check` (Invariant 7 Boundary, Regression)
+
+- **Workflow:** `update-engine-meta.js --check` (pre-commit hook, consumer install)
+- **Synthetic State:**
+  - Consumer project (e.g. `metaquant`) installs the engine from a release archive and follows the documented L1 contract: its own `.gitignore` contains `.magic/` (engine is "installed from a release archive, not committed" — CLAUDE.md §1.1).
+  - `.magic/.checksums` lists all shipped engine files, unmodified on disk.
+- **Action:** run `node .magic/scripts/executor.js update-engine-meta --check` (as the pre-commit hook does).
+- **Expected:**
+  - [ ] Every file listed in `.checksums` is still verified against disk, regardless of the consumer's own `.gitignore` — a manifested path is never treated as "disowned."
+  - [ ] `--check` exits 0 with "No changes detected" when the shipped files are unmodified.
+  - [ ] The Invariant 7 gitignore exclusion still applies to paths **not yet in the manifest** (stray dev-machine cruft, e.g. `.foreign-cache/`), preserving the original protection (see `generate-checksums.js` / `update-engine-meta.js` gitignore-parity tests in `dev/tests/engine.js`).
+- **Guards tested:** Invariant 7 scope boundary — gitignore-based exclusion must be scoped to *new/unmanifested* paths only, never to paths already in `.checksums`. Found live in `metaquant` (a real consumer project): its pre-commit hook failed on every commit because `isGitignored` was applied unconditionally in `update-engine-meta.js`'s on-disk scan, causing all 71 manifested files to read as "missing" the instant the consumer's `.gitignore` disowned `.magic/` — the exact convention this engine mandates. Fixed engine v2.1.93 by gating the exclusion on `!isManifested`.
+
 ```
-**Test Suite Finalized** - v1.9.79 (Last: T218)
+**Test Suite Finalized** - v1.9.80 (Last: T219)
 ```

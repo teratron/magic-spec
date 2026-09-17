@@ -104,9 +104,18 @@ function updateEngineMeta() {
             // State caches written by sync sub-scripts (volatile, not engine logic).
             // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
             if (VOLATILE_STATE_FILES.has(rel)) return;
-            // A path the project's own .gitignore disowns can never be satisfied
-            // by a real release archive (fresh CI checkout) — see generate-checksums.js.
-            if (isGitignored(normalizePath(path.relative(projectRoot, fullPath)))) return;
+            // Gitignore exclusion only guards *new* (not-yet-manifested) paths —
+            // it exists to keep accidental dev-machine cruft (e.g. a stray
+            // `.fallow/` cache) from being treated as a legitimate engine
+            // addition, mirroring generate-checksums.js's manifest-authoring
+            // scope. It must NOT apply to a path already listed in `.checksums`:
+            // every consumer install is expected to gitignore `.magic/` wholesale
+            // (it's an installed release artifact, never committed — see
+            // CLAUDE.md L1 contract), so treating that as "disowned" would mark
+            // every shipped engine file as missing and fail `--check` on every
+            // single consumer commit.
+            const isManifested = Object.prototype.hasOwnProperty.call(oldChecksums, rel);
+            if (!isManifested && isGitignored(normalizePath(path.relative(projectRoot, fullPath)))) return;
 
             onDisk.add(rel);
 

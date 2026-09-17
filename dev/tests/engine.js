@@ -464,6 +464,40 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // Real-world regression: a consumer project (e.g. metaquant) follows the
+    // documented L1 contract and gitignores `.magic/` wholesale ("installed
+    // from a release archive, not committed" — CLAUDE.md §1.1). Before this
+    // fix, the Invariant 7 exclusion applied unconditionally, so every single
+    // manifested file read as "disowned" by the consumer's own .gitignore and
+    // was reported missing — failing the pre-commit hook on every commit.
+    test('update-engine-meta.js --check still verifies manifested files even when the consumer wholesale-gitignores .magic/ (Invariant 7 boundary)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            generateChecksums(tempDir);
+
+            // Consumer convention: .magic/ is an installed release artifact,
+            // never committed — this is the documented, expected state for
+            // every consumer install, not an edge case.
+            fs.writeFileSync(path.join(tempDir, '.gitignore'), '.magic/\n');
+
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+            const runCheck = () => {
+                try {
+                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
+                    return { failed: false, output: stdout };
+                } catch (e) {
+                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+                }
+            };
+
+            const result = runCheck();
+            assert.strictEqual(result.failed, false, 'unmodified manifested files must not be reported as missing merely because the consumer gitignores .magic/ wholesale');
+            assert.doesNotMatch(result.output, /Missing engine file/, 'a manifested, unmodified file must never read as missing due to the consumer\'s own .gitignore');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 2. init.js
     // ───────────────────────────────────────────────────────────────────────────
