@@ -4,7 +4,7 @@ Shared workspace resolution logic referenced by all workflows. Every workflow MU
 
 ## Step 0: Workspace Intent Detection (Pre-Resolution)
 
-> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for any workflow that creates or amends specs/tasks/rules. Read-only workflows (`magic.analyze`, `magic.graph`) skip this step.
+> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for `magic.spec` — the sole workflow that authors new topical spec content and can therefore require workspace-creation routing. Read-only workflows (`magic.analyze`, `magic.graph`) and `task.md`/`rule.md` (operate only on already-registered specs/rules and never introduce a new domain topic) skip this step.
 
 ### Step 0.1: Context Auto-Enrichment (MA-1 Pre-flight)
 

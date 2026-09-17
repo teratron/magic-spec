@@ -1,6 +1,6 @@
 {
-  "analyze.md": "9b09ee3689241a00b56b8fdf719ce15a28e6f7558395e73409e277e001d78cd5",
-  "context.md": "a0b91a9bfaf8cc65d66edcdc42f06da93c247c41eb0bb9bb92384cc5a7e3129f",
+  "analyze.md": "032033cb76a1a8920f7e2cd05916db1c25292be2945434113efa0b55f039daaf",
+  "context.md": "1688be942f2408385f4c7cfcd3b735e517ed4a1d9890a12cd23f5f17519c54d3",
   "init.md": "c0655e9713359ebba6f4d09d720183fc9cd08ca72745f89e59b8f5748e1101b3",
   "pause.md": "95a849b7a5962b2127a8ef789cdf51f728a073be5b8b6ba65551d80ffade2c0c",
   "retrospective.md": "35370f2f9e30d1de28f20d2766f8daedacfa64d88cb93b664a9bc6139056f3df",
@@ -54,7 +54,7 @@
   "scripts/utils.js": "e9617e29ea37eb60612b6f76f3f3567b1bf74aebd48378f7819c3bcfecb5992f",
   "spec.md": "a8fc692d209a859cac3d29fc252169db33643abbdd9865580cd21537caf39e27",
   "status.md": "bc901b0827a2094d82b0dd9423c5eceebed824168b5d829bee9eac107fea21a5",
-  "task.md": "ea75989e7db8da7d5c6492c3bd6d51acdd6de70f398d81499d4f771e40b2d376",
+  "task.md": "2344ce01ad9f8ceeb85f7cbad0aaec28b5d6f53968b42dcd12cf05791d554cb8",
   "templates/changelog.md": "5e83d67073c1153a621bead8e832c6817b2195e7551d47ee9292b2eec41783ad",
   "templates/contributing.md": "e4e597d9f5eb7d16d85343187c2f838212547a57be04562c1b7a358a05f832e3",
   "templates/global-index.md": "fc42cd28cfd42f07a5d9d6c882b2e56065a60ca1560ae8a194ca2858a2ee522e",

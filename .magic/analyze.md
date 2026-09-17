@@ -21,7 +21,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
    - **50-500 files**: ask Full or Focused?
    - **>500 files**: recommend Focused/Quick. HALT for user choice.
 7. **Gitignore Safety**: If `.gitignore` exists in project root or active workspace, the agent MUST read and apply its patterns before any scan. Files/directories matching these patterns (e.g., `node_modules/`, `.venv/`, `dist/`) are strictly out-of-scope for all analysis modes (A-D) and Mode C Project Ventilation.
-8. **Engine Integrity (C14)**: If `.magic/` modified → `node .magic/scripts/executor.js update-engine-meta`.
+8. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 
 ## Argument Routing
 

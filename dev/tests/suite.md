@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.75
+**Version:** 1.9.77
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -3313,6 +3313,55 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** IK-3 boundary test (derivable from repository or ordinary engineering judgment → not askable); IK-8 scope containment keeping E6 off Selection/Sequencing forks; IK-7 chat-only residency.
 - **Regression for:** E6 widening from an intent gate back into a general clarification channel.
 
+### T213 — Task Guided Planning Directive Filter Enforcement
+
+- **Workflow:** `task.md` (Guided Planning — directive-to-selection wiring)
+- **Synthetic State:**
+  - `engine` workspace has 5 `Stable` specs: `auth.md`, `payments.md`, `ui-theme.md`, `logging.md`, `metrics.md`.
+  - No `PLAN.md` exists yet.
+- **Action:** `/magic.task "only payments and auth"`
+- **Expected:**
+  - [ ] Argument Routing detects Guided Planning (Mode C) — text matches no workspace name.
+  - [ ] **Guided Planning Filter** restricts C6 selection to `Stable` specs matching the directive: `auth.md`, `payments.md` selected.
+  - [ ] `ui-theme.md`, `logging.md`, `metrics.md` — `Stable` but non-matching — are left untouched in their current placement, NOT force-moved to Backlog and NOT silently included.
+  - [ ] `PLAN.md` is written containing phases for `auth.md` and `payments.md` only.
+- **Guards tested:** Guided Planning Filter (previously undocumented / unimplemented in Steps 1–8; regression for T148/T149 gap found in Improv Mode simulation 2026-09-17, "The Discarded Directive").
+
+### T214 — Task Guided Planning Directive Matches Zero Specs
+
+- **Workflow:** `task.md` (Guided Planning — zero-match HALT)
+- **Synthetic State:**
+  - `engine` workspace has 3 `Stable` specs, none related to "mobile".
+- **Action:** `/magic.task "plan the new mobile-client offline sync"`
+- **Expected:**
+  - [ ] Directive parsed and matched against all registered spec titles/filenames/content → 0 matches.
+  - [ ] **HALT**: `"Could not map planning directive 'plan the new mobile-client offline sync' to any registered spec. Run /magic.task {workspace} for full planning, or author it first with /magic.spec."`
+  - [ ] Agent does NOT silently fall back to full C6 Autonomous Selection (would discard user intent silently).
+  - [ ] No `PLAN.md`/`TASKS.md` written from this invocation.
+- **Guards tested:** Guided Planning zero-match fallback (mirrors `analyze.md` Mode D's existing "Could not map focus" HALT pattern); regression for T148/T149 gap.
+
+### T215 — Context Step 0 Scope Claim Matches Implementation
+
+- **Workflow:** `context.md` (§Step 0 scope) vs. `task.md` / `rule.md`
+- **Synthetic State:** static text scan (no runtime state).
+- **Action:** review `context.md` Step 0 preamble against `task.md` and `rule.md` bodies.
+- **Expected:**
+  - [ ] `context.md` Step 0 explicitly states it governs `magic.spec` — the sole workflow authoring new topical spec content requiring workspace-creation routing.
+  - [ ] `context.md` explicitly names `task.md`/`rule.md` as exempt, with the one-line reason that they operate only on already-registered specs/rules and never introduce a new domain topic.
+  - [ ] `task.md` and `rule.md` contain zero references to "Workspace Intent", "WI-", or "Step 0" (they never claim to perform detection they don't implement).
+- **Guards tested:** Contract/implementation parity (regression for the Step-0 scope-claim drift found in Improv Mode simulation 2026-09-17, "The Discarded Directive").
+
+### T216 — C14 Trigger Condition Parity (Regression, sibling to T193)
+
+- **Workflow:** All workflows with an Engine Integrity (C14) Core Invariant
+- **Synthetic State:**
+  - 7 files declare a C14 Engine Integrity/Versioning invariant: `retrospective.md`, `init.md`, `analyze.md`, `spec.md`, `task.md`, `rule.md`, `run.md`.
+- **Action:** scan all 7 files for the C14 trigger condition wording.
+- **Expected:**
+  - [ ] All 7 files' trigger condition covers BOTH paths — `.magic/` AND `workflows/` — substantively; exact prose may vary (e.g. `retrospective.md`'s "engine files (`.magic/` or `workflows/`)" wrapper is an acceptable restatement, not a divergence — same precedent as T193's rule.md extension).
+  - [ ] No file's trigger condition names `.magic/` alone, omitting `workflows/` (pre-fix `analyze.md` divergence — a real narrowing, not a wording variant).
+- **Guards tested:** C14 trigger-condition substantive parity (both paths present in every file), sibling regression to T193's Auto-Init parity check; found in Improv Mode simulation 2026-09-17.
+
 ```
-**Test Suite Finalized** - v1.9.76 (Last: T212)
+**Test Suite Finalized** - v1.9.77 (Last: T216)
 ```
