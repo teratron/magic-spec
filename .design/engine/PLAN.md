@@ -288,7 +288,7 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - **Track shape**: A (`lib/diagnostics.js` — guard + `revalidate()`) is foundational and file-independent of B. B (`check-prerequisites.js` — attach `recheck`) is file-independent of A but is what gives `revalidate()` something to revalidate; per the spec's own Implementation Notes, B's migration lands before C is exercised end-to-end. C (`finalize.js` wiring) depends on A's `revalidate()` existing and is most meaningfully tested once B supplies real `recheck`-bearing findings. T (regression, 6 new cases per [l2-engine-diagnostics.md](specifications/l2-engine-diagnostics.md) §6.10-15) depends on A+B+C.
   - Every track writes inside `.magic/` → C14 runs once, at T-31T02, after every track lands.
   - **Highest blast radius** is T-31C01: it changes what every `finalize` invocation renders, on every workflow, on every workspace — the same shape as Phase 15's T-15B02 and Phase 18's T-18B01.
-  - Tasks: [tasks/phase-31.md](tasks/phase-31.md)
+  - Tasks: [archives/tasks/phase-31.md](archives/tasks/phase-31.md)
 
 ## Backlog
 

@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-09-17
-**Full Sessions:** 11
-**Snapshots:** 24
+**Last Full Run:** 2026-09-18
+**Full Sessions:** 12
+**Snapshots:** 25
 
 ## Snapshots
 
@@ -34,6 +34,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-28 | Phase 28 | 0/0/33 | 7/0/0 | 24 | 🟢 |
 | 2026-09-13 | Phase 29 | 0/0/33 | 4/0/2 | 24 | 🟢 |
 | 2026-09-17 | Phase 30 | 0/0/33 | 5/0/0 | 24 | 🟢 |
+| 2026-09-17 | Phase 31 | 0/0/33 | 6/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -491,5 +492,50 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal held at 🟢: zero Blocked tasks, zero orphans, and the one mid-session correction (Finding #1) was resolved by the user before any task reached `Done` against the wrong wording — Track B's `Done` status reflects only the final, corrected state. [C-001]'s recurring hardlink drift (Finding #3) is flagged in Recommendations rather than the Signal score, matching Session 10's precedent for mid-session friction that was fully resolved before this snapshot.
+
+## Session 12 — 2026-09-18
+
+**Scope:** Plan completion (Phase 31 — Diagnostics Revalidation Before Render, DG-10; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from a field bug report)
+**Specs in registry:** 33 (all Stable; unchanged count — 2 amended for content this session: `l1-engine-diagnostics.md` 1.0.1 → 1.1.0 (new DG-10 invariant + §1.6 Motivation), `l2-engine-diagnostics.md` 1.1.0 → 1.2.0 (§4.10 `revalidate()` implementation))
+**Tasks total:** 6 this cycle (Done: 6, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 202 → 205 nodes (+3), 404 → 408 edges (+4); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements` — see Finding #2: this diff spans both Phase 30 and Phase 31, not Phase 31 alone
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.93 → 2.1.94, single C14 bump after all four tracks (A/B/C/T) landed — no `--workflow` tag, matching the Phase 21 precedent (script-only change, no dotted workflow-doc body touched) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks. One implementation defect (Finding #3) was caught by a manual smoke test *before* the regression suite was even written, let alone before any task reached `Done` — no `Done` task was ever built on the broken intermediate state |
+| **Rework Rate** | 1 correction / 6 tasks | Manual | `normalize()`'s missing `recheck` passthrough (Finding #3), caught inside T-31A02 itself via `node -e` inspection of the live sink, fixed in the same pass — no task was reopened after being marked `Done` |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The defect this phase fixes reproduced itself against its own author, twice, before the fix even existed — the strongest form of field evidence a bug report can get.** The originating report showed `finalize --workflow=task` rendering a stale `SYNC_GAP`; during this session's own `/magic.spec`/`/magic.task` Pre-flight calls against this repository's own `INDEX.md`/`PLAN.md` version pointers, the identical class fired twice more, independent of the downstream report. The eventual fix (T-31C01) was verified with a live, self-contained reproduction against this repository — not only a synthetic fixture — forcing the exact stale-pointer condition, observing it recorded with a `recheck`, resolving it, then confirming the digest no longer rendered it while a genuinely-still-open `ENGINE_INTEGRITY` correctly survived in the same run. | `tasks/phase-31.md` T-31C01 Verify line; this session's own two Pre-flight `SYNC_GAP` warnings, both citing `INDEX.md` versions this same session had already moved past by the time `finalize` drained them |
+| 2 | **The retrospective's own rolling-baseline step (`retrospective.md` §2, "rename snapshot to graph-before.json after use") did not run at the close of Session 11** — `graph-before.json` still reflected pre-Phase-30 state, so this session's `diff-spec-graph` conflates two phases' worth of structural change (Phase 30's `l2-engine-automation.md`/checksum-scanner edge plus Phase 31's own two new phase nodes and two spec-version edges) into one diff with no way to attribute deltas to either phase individually from the diff alone. Not a design defect — the diff itself is accurate for the window it actually covers — but it silently widened that window without saying so. | `diff-spec-graph` output this session: `l2-engine-automation` shows `version: 1.12.0 → 1.14.0` (two versions, not one) and a new edge to `dev/scripts/generate-checksums.js` neither of which this session's own work touched — both are Phase 30 carryover |
+| 3 | **A single-purpose field-allowlist function silently dropped a newly-added optional field, because the field's producer and its allowlist were edited in two different places and only one was updated first.** `check-prerequisites.js`'s `warn()` was given a `recheck` field to attach to every finding (T-31B01), but `lib/diagnostics.js`'s `normalize()` — which explicitly destructures only the fields it knows about before building the stored record — had no matching update, so `recheck` reached `record()` and was silently discarded before ever touching the sink. Caught by direct inspection of the sink's own JSONL content immediately after the first live test run, not by the type system or any static check (neither exists for this boundary). | Live `cat .design/.cache/diagnostics.jsonl` output showing two `ENGINE_INTEGRITY` entries with no `recheck` key, immediately after `check-prerequisites.js` was edited to attach one; `lib/diagnostics.js` `normalize()`'s pre-fix destructuring line, confirmed via `git show HEAD` to have listed only the original five DG-3 fields |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R39 | #2 | Add a cheap self-check to the retrospective's own Collect step: before running `diff-spec-graph`, compare `graph-before.json`'s embedded node/edge counts (or a stored phase-tag) against the *previous* Snapshots-table row rather than assuming the baseline is current: if they disagree, name the gap explicitly in the session's Scope line (as this session had to do manually for Finding #2) instead of presenting a multi-phase diff as if it were single-phase | `retrospective.md` §2 (Collect) / §7 rolling-baseline step; route via `/magic.task engine` |
+| R40 | #3 | When a collector-style function enumerates the exact fields it forwards (`lib/diagnostics.js` `normalize()` is the concrete instance, but the shape recurs anywhere a "known fields only" allowlist exists), add one comment at the allowlist site itself naming it as the single point every new optional field must also touch — not a process change, a two-line comment that turns a silent-drop failure mode into a place a future editor is already looking when they add the field to its producer | `lib/diagnostics.js` `normalize()`, next time either function is touched; no standalone task warranted for a comment-only addition |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 33 | 0 |
+| Specs with version churn this session | 4 | 2 | -2 |
+| Cognitive suite tests | 211 | 211 | 0 |
+| Script harness tests | 86 | 92 | +6 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 202 / 404 | 205 / 408 | +3 / +4 (spans Phase 30+31 — Finding #2) |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal held at 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage held. The one implementation defect this session (Finding #3) was caught and fixed before any task reached `Done`, and the stale graph baseline (Finding #2) is a retrospective-tooling gap, not a registry-health signal — both routed to Recommendations rather than affecting the score.
 
 > Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.

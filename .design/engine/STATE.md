@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-17 16:02
+**Updated:** 2026-09-18 03:56
 **Phase:** 31 — Diagnostics Revalidation Before Render (DG-10)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-28T02 C14 bump and engine integrity verification
-- **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
-- **Next Action:** Execute T-31A01 Self-reference suppression guard on `record()` via /magic.run engine
+- **Task:** T-31T02 Verification
+- **Spec:** l1-engine-diagnostics.md (DG-10 Revalidation Before Render) · l2-engine-diagnostics.md (§4.10 implementation)
+- **Next Action:** Plan complete - run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Phase 31: [0/6] ░░░░░░░░ 0%
-Overall: [29/30] ████████ 97%
+Overall: [30/30] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-09-18 **Decision:** Phase 31 complete. Provides: lib/diagnostics.js gains revalidate() (DG-10) — a condition finding's recheck is rerun once per signature immediately before every render, dropping what no longer reproduces; self-reference guard (MAGIC_DIAGNOSTICS_SUPPRESS) prevents a recheck from re-queuing its own finding. check-prerequisites.js attaches recheck to every finding. finalize.js wires revalidate() on both exit paths. Live-reproduced and fixed the field-reported stale-SYNC_GAP defect. Engine 2.1.93->2.1.94, harness 86->92.
 - 2026-09-17 **Decision:** Phase 30 complete. Provides: checksum scanners join Invariant 7 gitignore parity; write-side git prohibition retired from every agent-facing surface; rules/magic.md Engine Upgrade Detection distinguishes fresh vs unknown.
 - 2026-09-13 **Decision:** Phase 29 complete. Provides: l1-engine-core.md 1.7.1 (Concept-Only Classification, Required Fix re-targeted to .magic/analyze.md during Execute), l1-sdd-reference-containment.md 1.5.0 (provisional-boundary assumption), l2-engine-automation.md 1.12.0 (mis-targeted 1.11.0 addition reverted), .magic/analyze.md (Bare-L1-without-L2 advisory skips Concept-Only specs). Engine 2.1.84->2.1.86. Plan complete - Retro L2 run (Session 10), signal held 🟢.
 - 2026-08-28 **Decision:** Phase 28 complete. Provides: l2-agent-surface.md 1.1.0 (SS4 closed 3-group linked-pair inventory), l2-skill-wrappers.md 1.4.0 (SS3.2 regeneration-trigger invariant), validate-hardlinks.js table-driven for rules/+workflows/, STATE.md [C-001] widened to all 3 groups, update-engine-meta.js syncSkillWrappers() called unconditionally on write path. Harness 69->72, all 3 negative-controlled against reverted/pre-fix code (incl. actual git-HEAD validate-hardlinks.js). Engine 2.1.79->2.1.80. Plan complete - Retro L2 run (Session 9), signal restored 🟡->🟢.
 - 2026-08-28 **Decision:** Phase 27 complete. Provides: Idea Intake Gate (E6) deployed — .magic/spec.md Step 0.5 + three reconciled anti-question clauses; E6 registered across DA-2 table, .design/RULES.md 1.10.0, .magic/templates/rules.md, rules/magic.md; prompt-engineer conditional IK audit; docs/spec.md SS5.0; suite T209-T212 (v1.9.76); engine 2.1.79. Two engine defects found and recorded, not fixed: workflows/ hardlink pair is unguarded by validate-hardlinks.js and C-001, and update-engine-meta skips skill regeneration on a workflows-only change.
-- 2026-08-28 **Decision:** Phase 27 planned. Idea Intake Gate (l1-idea-intake-gate.md v1.0.0, IK-1..IK-9) deployment across 7 tracks: E6 registration must land atomically in DA-2 table + .design/RULES.md + .magic/templates/rules.md + rules/magic.md. Planning surfaced a 3rd reconciliation site the spec's SS5 missed — the Mode Transition Auto-Transfer one-round cap contradicting IK-6.
 
 ## Blockers
 

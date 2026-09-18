@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 75
+      "degree": 77
     },
     {
       "id": "file:.magic",
@@ -182,7 +182,7 @@
       "type": "convention",
       "group": "convention",
       "num": 9,
-      "degree": 19
+      "degree": 20
     },
     {
       "id": "conv:C10",
@@ -320,7 +320,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.7.1",
+      "version": "1.8.0",
       "degree": 36
     },
     {
@@ -331,8 +331,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.12.0",
-      "degree": 20
+      "version": "1.14.0",
+      "degree": 21
     },
     {
       "id": "spec:engine/l2-engine-finalization",
@@ -342,7 +342,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "3.1.0",
+      "version": "3.2.0",
       "degree": 14
     },
     {
@@ -584,7 +584,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "2.1.0",
+      "version": "2.2.0",
       "degree": 11
     },
     {
@@ -650,8 +650,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.0.1",
-      "degree": 9
+      "version": "1.1.0",
+      "degree": 10
     },
     {
       "id": "spec:engine/l2-engine-diagnostics",
@@ -661,7 +661,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.2.0",
       "degree": 10
     },
     {
@@ -972,6 +972,13 @@
     {
       "id": "file:.magic/scripts/generate-context.js",
       "label": ".magic/scripts/generate-context.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:dev/scripts/generate-checksums.js",
+      "label": "dev/scripts/generate-checksums.js",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -1390,12 +1397,30 @@
       "degree": 1
     },
     {
+      "id": "phase:engine/phase-31",
+      "label": "Phase 31: Diagnostics Revalidation Before Render (DG-10) — condition findings (`check-prerequisites` warnings) carry a read-only `recheck`; the digest reruns it once per signature before every render and drops what no longer reproduces; self-reference guard prevents a recheck from re-queuing its own finding",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-30",
+      "label": "Phase 30: Checksum Scan Hygiene, Git-Commit Scope Retirement, Fresh-Project Drift Silence — checksum scanners join Invariant 7 parity, write-side git prohibition retired from every agent-facing surface, `rules/magic.md` §1 fresh/unknown split",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
       "id": "phase:engine/phase-29",
       "label": "Phase 29: Concept-Only Spec Classification — `**Concept-Only:** true` header marker excludes a Stable L1 from `.magic/analyze.md`'s \"Bare L1 without L2 children\" advisory; planning mis-targeted `analyze-coverage.js`, corrected during Execute before any code was written",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
-      "status": "Done",
+      "status": "Done (Archived)",
       "degree": 1
     },
     {
@@ -2175,6 +2200,11 @@
     },
     {
       "from": "spec:engine/l1-engine-diagnostics",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-engine-diagnostics",
       "to": "conv:C20",
       "relation": "enforces"
     },
@@ -2596,6 +2626,11 @@
     {
       "from": "spec:engine/l2-engine-automation",
       "to": "file:.magic/scripts/update-engine-meta.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-engine-automation",
+      "to": "file:dev/scripts/generate-checksums.js",
       "relation": "covers"
     },
     {
@@ -3525,6 +3560,16 @@
     },
     {
       "from": "ws:engine",
+      "to": "phase:engine/phase-31",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-30",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
       "to": "phase:engine/phase-29",
       "relation": "contains"
     },
@@ -3670,7 +3715,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 75
+        "degree": 77
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -3682,6 +3727,12 @@
         "id": "spec:engine/l2-engine-automation",
         "label": "l2-engine-automation.md",
         "type": "spec",
+        "degree": 21
+      },
+      {
+        "id": "conv:C9",
+        "label": "C9 — Zero-Prompt Automation (Trust Mode)",
+        "type": "convention",
         "degree": 20
       },
       {
@@ -3689,12 +3740,6 @@
         "label": "l1-role-system.md",
         "type": "spec",
         "degree": 20
-      },
-      {
-        "id": "conv:C9",
-        "label": "C9 — Zero-Prompt Automation (Trust Mode)",
-        "type": "convention",
-        "degree": 19
       }
     ],
     "orphaned_files": [],
@@ -3738,13 +3783,13 @@
       }
     },
     "summary": {
-      "total_nodes": 202,
-      "total_edges": 404,
+      "total_nodes": 205,
+      "total_edges": 408,
       "workspaces": 1,
       "specs": 33,
-      "files": 116,
+      "files": 117,
       "conventions": 24,
-      "phases": 28
+      "phases": 30
     }
   }
 }
