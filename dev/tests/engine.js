@@ -2594,6 +2594,94 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test("addDecision/addConstraint preserve existing entries' wrapped continuation lines (SC-1.2)", () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // A wrapped list-item continuation line is valid, common Markdown —
+            // and the section rebuild used to lose it: `existingLines` filtered
+            // `block.split(/\r?\n/)` down to lines matching the entry marker
+            // regex alone, so a continuation line (carrying no marker of its
+            // own) was silently dropped on every subsequent rebuild.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 1', '**Status:** Active', '',
+                '## Recent Decisions', '',
+                '<!-- Last 3-5 locked decisions. -->', '',
+                '- 2026-01-01 **Decision:** This is a long decision that wraps',
+                '  onto a second continuation line for readability.',
+                '- 2025-12-31 **Pattern:** A short one-line entry.',
+                '',
+                '## Blocking Constraints', '',
+                '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
+                '<!-- Agent MUST explicitly acknowledge each constraint before working. -->', '',
+                '- [C-001] **Do not X**: because Y happened before',
+                '  and here is the continuation explaining Y.',
+                '',
+            ].join('\n'));
+
+            updateState(wsDir, { decision: 'A brand new decision' }, { addDecision: true });
+            updateState(wsDir, { constraint: { title: 'No Z', desc: 'Because W' } }, { addConstraint: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.match(
+                state,
+                /- 2026-01-01 \*\*Decision:\*\* This is a long decision that wraps\r?\n {2}onto a second continuation line for readability\./,
+                'the wrapped decision continuation must survive the window rebuild, attached to its own entry'
+            );
+            assert.match(
+                state,
+                /- \[C-001\] \*\*Do not X\*\*: because Y happened before\r?\n {2}and here is the continuation explaining Y\./,
+                'the wrapped constraint continuation must survive the rebuild, attached to its own entry'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('the line-cap guard prunes a whole multi-line decision entry, not just its marker line (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // `decLines` used to be filtered to marker-only lines, and the
+            // prune removed just `decLines[last] + '\n'` — for a wrapped
+            // oldest entry that deletes only its first line, leaving the
+            // continuation as an orphaned fragment where the entry used to be.
+            const state = [
+                '# Project State', '',
+                '**Phase:** 1', '**Status:** Active', '',
+                '## Recent Decisions', '',
+                '- 2026-01-05 **Decision:** entry 5',
+                '- 2026-01-04 **Decision:** entry 4',
+                '- 2026-01-03 **Decision:** entry 3',
+                '- 2026-01-02 **Decision:** the oldest entry wraps',
+                '  onto a continuation line that must be pruned along with it.',
+                '',
+                '## Blocking Constraints', '',
+                ...Array.from({ length: 95 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+                '',
+            ].join('\n');
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), state);
+
+            updateState(wsDir, {}, {});
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.doesNotMatch(
+                after, /onto a continuation line that must be pruned along with it\./,
+                "the oldest entry's continuation line must be pruned along with its marker line"
+            );
+            assert.doesNotMatch(
+                after, /the oldest entry wraps/,
+                "the oldest entry's own marker line must be pruned too"
+            );
+            assert.match(after, /entry 3/, 'entries within the cap must survive');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('a task-scoped update leaves the phase-level Status field alone (SC-1.1)', () => {
         const tempDir = createTempWorkspace();
         try {

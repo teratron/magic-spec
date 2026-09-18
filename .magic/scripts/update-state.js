@@ -12,6 +12,41 @@ const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
 
 /**
+ * Groups a Markdown list section into logical entries, keeping each entry's
+ * wrapped continuation lines attached to it. An entry starts at a line
+ * matching `startRe`; every following non-blank line that does not itself
+ * start a new entry is a continuation of it (how a wrapped Recent Decisions
+ * or Blocking Constraints line looks on disk — marker line, then indented
+ * continuation lines). Filtering lines by `startRe` alone, as the section
+ * rebuilds below used to, keeps only each entry's first line and silently
+ * drops the continuations on every rebuild (field report, engine v2.1.93).
+ *
+ * @param {string} block    Section text (heading through the line before the next heading).
+ * @param {RegExp} startRe  Pattern matching an entry's first line.
+ * @returns {string[]} One string per entry; multi-line entries keep internal `\n`.
+ */
+function collectEntries(block, startRe) {
+    const lines = block.split(/\r?\n/);
+    const entries = [];
+    let current = null;
+    for (const line of lines) {
+        if (startRe.test(line)) {
+            if (current) entries.push(current.join('\n'));
+            current = [line];
+        } else if (current) {
+            if (line.trim() === '') {
+                entries.push(current.join('\n'));
+                current = null;
+            } else {
+                current.push(line);
+            }
+        }
+    }
+    if (current) entries.push(current.join('\n'));
+    return entries;
+}
+
+/**
  * Updates STATE.md with provided key-value patches.
  * Reads the existing state file, applies changes, and writes back.
  * Never exceeds 100 lines — prunes old Decisions if needed.
@@ -126,9 +161,9 @@ function updateState(designDir, patch, options = {}) {
             const secEnd = nextHeading !== -1 ? nextHeading : content.length;
             const block = content.slice(secStart, secEnd);
 
-            const existingLines = block.split(/\r?\n/).filter(l => /^- \d{4}-\d{2}-\d{2}/.test(l));
+            const existingEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
             const newEntry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}`;
-            const decisionLines = [newEntry, ...existingLines].slice(0, 5);
+            const decisionEntries = [newEntry, ...existingEntries].slice(0, 5);
 
             const rebuilt = [
                 marker,
@@ -136,7 +171,7 @@ function updateState(designDir, patch, options = {}) {
                 '<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) ' +
                     '— see PLAN.md / CHANGELOG.md for phase history. -->',
                 '',
-                ...decisionLines,
+                ...decisionEntries,
                 '',
             ].join('\n');
 
@@ -172,14 +207,14 @@ function updateState(designDir, patch, options = {}) {
             const secEnd = nextHeading !== -1 ? nextHeading : content.length;
             const block = content.slice(secStart, secEnd);
 
-            const existingLines = block.split(/\r?\n/).filter(l => /^- \[C-\d{3}\]/.test(l));
+            const existingEntries = collectEntries(block, /^- \[C-\d{3}\]/);
             // Auto-number from entries already inside this block, not a
             // whole-file scan — a `[C-NNN]` mentioned in passing elsewhere
             // (e.g. a Recent Decisions note referencing a constraint) must
             // not inflate the next id.
-            const id = `C-${String(existingLines.length + 1).padStart(3, '0')}`;
+            const id = `C-${String(existingEntries.length + 1).padStart(3, '0')}`;
             const newEntry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}`;
-            const constraintLines = [newEntry, ...existingLines];
+            const constraintEntries = [newEntry, ...existingEntries];
 
             const rebuilt = [
                 marker,
@@ -187,7 +222,7 @@ function updateState(designDir, patch, options = {}) {
                 '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
                 '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
                 '',
-                ...constraintLines,
+                ...constraintEntries,
                 '',
             ].join('\n');
 
@@ -261,9 +296,9 @@ function updateState(designDir, patch, options = {}) {
         const secEnd = content.indexOf('\n## ', secStart + 1);
         if (secStart !== -1 && secEnd !== -1) {
             const block = content.slice(secStart, secEnd);
-            const decLines = block.split('\n').filter(l => /^- \d{4}-\d{2}-\d{2}/.test(l));
-            if (decLines.length > 1) {
-                content = content.replace(decLines[decLines.length - 1] + '\n', '');
+            const decEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
+            if (decEntries.length > 1) {
+                content = content.replace(decEntries[decEntries.length - 1] + '\n', '');
                 pruned = true;
             }
         }
