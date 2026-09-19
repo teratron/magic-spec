@@ -137,10 +137,11 @@ remove_link() {
 
 echo ">>> Initializing Unix/macOS Agent Environment ($INIT_MODE)"
 
-# 3.1. Sync Skill wrappers
-if [ -f ".magic/scripts/sync-skills.js" ]; then
+# 3.1. Sync Skill wrappers. The generator is a developer tool that lives in
+# dev/scripts/, so it is absent from a user install — skip then.
+if [ -f "dev/scripts/sync-skills.js" ]; then
     echo "Synchronizing Skill wrappers..."
-    node .magic/scripts/sync-skills.js
+    node dev/scripts/sync-skills.js
 fi
 
 # 3.2. Cleanup (must precede git rm for parity with Windows; see AGENTS.md §8)

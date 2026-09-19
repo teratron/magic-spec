@@ -17,9 +17,14 @@ Set up junctions, hardlinks, and symlinks so agent-facing directories mirror the
 
 | Mode | Effect |
 | --- | --- |
-| `/magic-dev-init` | Infrastructure only — no agents, only `.agents/` structure |
+| `/magic-dev-init` | Infrastructure only — rebuilds `.agents/`, **removes** every agent's existing links and creates none (see the warning below) |
 | `/magic-dev-init claude` | Targeted — only `CLAUDE.md` + `.claude/` |
 | `/magic-dev-init claude qwen` | Targeted — only the named agents |
+
+> [!WARNING]
+> **Never run it bare on a working checkout.** With no agent arguments the script rebuilds only the `.agents/` structure, but its cleanup phase still removes the managed links of **every** agent listed in `agents.json` — not just the ones you name — and recreates only the named ones. On Windows a bare run therefore deletes `CLAUDE.md`, `QWEN.md` and `CODEX.md` (hardlinks to `AGENTS.md`) and the `.claude/`, `.qwen/` and `.codex/` junctions and puts none of them back: an agent session running in the checkout loses its skills, commands, rules and instruction file until the script is re-run with agent names.
+>
+> To repair drift in an existing setup, name **every** agent already in use. For this repository that is `/magic-dev-init claude gemini qwen codex`, which restores the five names `fsutil hardlink list AGENTS.md` should show (`AGENTS.md` plus the four agent files).
 
 Valid agent names: `claude`, `gemini`, `qwen`, `codex`
 
@@ -42,7 +47,7 @@ Windows → PowerShell script. Unix/macOS → Bash script.
 
 ### 2. Run Init Script
 
-Must run from the repository root.
+Must run from the repository root. Name every agent you use — a bare run removes the existing agent links (see the [warning](#arguments)).
 
 **Windows:**
 
@@ -58,8 +63,8 @@ bash .agents/skills/magic-dev-init/scripts/setup_unix.sh [agents...]
 
 Phases executed by the script:
 
-1. **Sync wrappers** — `node .magic/scripts/sync-skills.js` (if present)
-2. **Cleanup** — remove existing managed links (safe pre-condition for git index ops, see [Windows Junction Safety](#windows-junction-safety) below)
+1. **Sync wrappers** — `node dev/scripts/sync-skills.js` (dev repo only; skipped when absent)
+2. **Cleanup** — remove existing managed links of **all** agents in `agents.json`, not only the named ones (safe pre-condition for git index ops, see [Windows Junction Safety](#windows-junction-safety) below)
 3. **Git index** — `git rm --cached --ignore-unmatch` on all managed paths
 4. **Infrastructure** — create `.agents/{workflows,skills,rules}/`
 5. **Workflow links** — `workflows/*.md` → `.agents/workflows/` (hardlinks on Windows, symlinks on Unix)

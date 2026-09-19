@@ -118,10 +118,12 @@ function New-Hardlink {
 
 Write-Host ">>> Initializing Windows Agent Environment ($initMode)" -ForegroundColor Cyan
 
-# 3.1. Sync Skill wrappers (source of truth: workflows/)
-if (Test-Path ".magic\scripts\sync-skills.js") {
+# 3.1. Sync Skill wrappers (source of truth: workflows/). The generator is a
+#      developer tool that lives in dev/scripts/, so it is absent from a user
+#      install — skip then.
+if (Test-Path "dev\scripts\sync-skills.js") {
     Write-Host "Synchronizing Skill wrappers..." -ForegroundColor Cyan
-    node .magic\scripts\sync-skills.js
+    node dev\scripts\sync-skills.js
 }
 
 # 3.2. Cleanup — must happen BEFORE git rm so `git rm -r --cached` cannot
