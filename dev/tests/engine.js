@@ -5,7 +5,7 @@ const { test, describe, before, after } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { execSync, spawnSync } = require('child_process');
 const os = require('os');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -883,9 +883,11 @@ describe('Magic Engine Scripts', () => {
                 fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), `\n// drift ${label}\n`);
             }
 
-            // Consumer fixture: remove the guard script — the one thing that
-            // distinguishes "this checkout is the engine's own dev-repo" from
-            // "this is a user installation" throughout update-engine-meta.js.
+            // Consumer-style fixture: remove the snapshot guard script only. The
+            // manifest builder stays, so the write branch still runs and the
+            // per-script guard is what is under test. A true user installation
+            // lacks the manifest builder and is refused before any of this
+            // (see 5b-bis below).
             fs.unlinkSync(path.join(consumerDir, 'dev', 'scripts', 'sync-engine-snapshot.js'));
 
             // `2>&1`: the consumer-branch message is `console.warn` (stderr),
@@ -915,10 +917,131 @@ describe('Magic Engine Scripts', () => {
                 consumerOut, /sync-engine-snapshot\.js not found/,
                 'consumer install: the skip must be logged, not silent'
             );
-            assert.match(consumerOut, /Engine metadata and version updated/, 'consumer install: the bump itself must still complete');
+            assert.match(consumerOut, /Engine metadata and version updated/, 'the rest of the write branch must still complete when only the snapshot script is absent');
         } finally {
             cleanup(devRepoDir);
             cleanup(consumerDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5b-bis. update-engine-meta.js / check-prerequisites.js — a user
+    //         installation cannot resolve engine drift, and must say so.
+    //
+    //     A release ships `.magic/` only, so a user installation has no manifest
+    //     builder. The write branch used to bump `.magic/.version` anyway, print
+    //     "Engine metadata and version updated", and leave the manifest — and
+    //     therefore the warning that sent the operator there — exactly as it
+    //     was. Every retry moved the version again. The version is the signal
+    //     Engine Upgrade Detection reads as "the engine was replaced under this
+    //     project", so a local bump reads as a phantom upgrade.
+    // ───────────────────────────────────────────────────────────────────────────
+
+    // createTempWorkspace mirrors dev/scripts by default (the dev-repo shape), so
+    // the user-installation shape is that fixture with dev/ removed AFTER the
+    // manifest is built — the order a release ships in. `spec.md` and `task.md`
+    // are the two files the field report named: one edited, one with its line
+    // endings converted (the check cannot tell the two apart, and must not have to).
+    const makeDriftedEngine = (tempDir, { userInstallation }) => {
+        fs.writeFileSync(path.join(tempDir, '.magic', 'spec.md'), '# spec\n');
+        fs.writeFileSync(path.join(tempDir, '.magic', 'task.md'), '# task\n');
+        generateChecksums(tempDir);
+        if (userInstallation) fs.rmSync(path.join(tempDir, 'dev'), { recursive: true, force: true });
+        fs.appendFileSync(path.join(tempDir, '.magic', 'spec.md'), '<!-- local note -->\n');
+        fs.writeFileSync(path.join(tempDir, '.magic', 'task.md'), '# task\r\n');
+    };
+
+    // stdout and stderr merged, and a non-zero exit returned instead of thrown:
+    // these cases assert on the refusal's message and status, not just success.
+    const runMeta = (tempDir, script, ...args) => {
+        const res = spawnSync(
+            process.execPath,
+            [path.join(tempDir, '.magic', 'scripts', script), ...args],
+            { cwd: tempDir, encoding: 'utf8' }
+        );
+        return { status: res.status, out: `${res.stdout || ''}${res.stderr || ''}` };
+    };
+
+    test('update-engine-meta write mode is refused in a user installation: no version bump, no manifest rewrite, non-zero exit', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            makeDriftedEngine(tempDir, { userInstallation: true });
+            const versionPath = path.join(tempDir, '.magic', '.version');
+            const checksumsPath = path.join(tempDir, '.magic', '.checksums');
+            const manifestBefore = fs.readFileSync(checksumsPath, 'utf8');
+
+            // Twice on purpose: the hazard was a ratchet — each retry of the
+            // suggested fix moved the version again while the drift stayed.
+            for (const attempt of [1, 2]) {
+                // Through the executor, as the warning's own hint invokes it.
+                const run = runMeta(tempDir, 'executor.js', 'update-engine-meta');
+                assert.notStrictEqual(run.status, 0, `attempt ${attempt}: drift that cannot be resolved must not exit 0`);
+                assert.match(run.out, /spec\.md/, `attempt ${attempt}: the drifted files must be named`);
+                assert.match(run.out, /task\.md/, `attempt ${attempt}: the drifted files must be named`);
+                assert.match(run.out, /release archive/, `attempt ${attempt}: the only real remedy must be stated`);
+                assert.doesNotMatch(
+                    run.out, /Engine metadata and version updated/,
+                    `attempt ${attempt}: must not claim a success that changed nothing`
+                );
+            }
+
+            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'the engine version must not move');
+            assert.strictEqual(fs.readFileSync(checksumsPath, 'utf8'), manifestBefore, 'the manifest must be left untouched');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('update-engine-meta --check tells a user installation to restore from the release archive, and a dev repo to run C14', () => {
+        const userDir = createTempWorkspace();
+        const devDir = createTempWorkspace();
+        try {
+            makeDriftedEngine(userDir, { userInstallation: true });
+            makeDriftedEngine(devDir, { userInstallation: false });
+
+            const user = runMeta(userDir, 'update-engine-meta.js', '--check');
+            assert.strictEqual(user.status, 1, 'drift must fail --check (the pre-commit hook relies on it)');
+            assert.match(user.out, /release archive/, 'user installation: the remedy is a restore');
+            assert.doesNotMatch(
+                user.out, /update-engine-meta/,
+                'user installation: must not point at a command it cannot use — regenerating the manifest would mask the change'
+            );
+
+            const dev = runMeta(devDir, 'update-engine-meta.js', '--check');
+            assert.strictEqual(dev.status, 1, 'dev repo: drift must fail --check');
+            assert.match(dev.out, /update-engine-meta/, 'dev repo: C14 is the remedy and must stay named');
+        } finally {
+            cleanup(userDir);
+            cleanup(devDir);
+        }
+    });
+
+    test('check-prerequisites ENGINE_INTEGRITY names the release archive in a user installation, and the C14 command in a dev repo', () => {
+        const userDir = createTempWorkspace();
+        const devDir = createTempWorkspace();
+        try {
+            makeDriftedEngine(userDir, { userInstallation: true });
+            makeDriftedEngine(devDir, { userInstallation: false });
+            const integrity = (tempDir) => runCheckPrerequisites(tempDir).warnings.filter((w) => w.type === 'ENGINE_INTEGRITY');
+
+            const user = integrity(userDir);
+            assert.deepStrictEqual(
+                user.map((w) => w.message.match(/'\.magic\/([^']+)'/)[1]).sort(), ['spec.md', 'task.md'],
+                'user installation: exactly the two drifted files are reported'
+            );
+            for (const w of user) {
+                assert.match(w.message, /release archive/, `user installation: ${w.message}`);
+                assert.strictEqual(w.fix, null, 'user installation: there is no automated fix to suggest');
+            }
+
+            const dev = integrity(devDir);
+            assert.strictEqual(dev.length, 2, 'dev repo: the same two files are reported');
+            for (const w of dev) {
+                assert.match(w.fix, /update-engine-meta/, 'dev repo: the C14 command stays the suggested fix');
+            }
+        } finally {
+            cleanup(userDir);
+            cleanup(devDir);
         }
     });
 

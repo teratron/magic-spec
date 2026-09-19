@@ -30,6 +30,24 @@ const VOLATILE_STATE_FILES = new Set([
     '.version',   // bumped on every engine update; drift-detector already skips it
 ]);
 
+/**
+ * Whether this checkout carries the engine's write tooling — the developer
+ * repository — as opposed to a user installation, which ships `.magic/` only.
+ *
+ * The manifest builder is the discriminator every L1 caller already keys on
+ * (update-engine-meta.js). It is a presence probe, never a `require`, so L1
+ * still loads and runs with no `dev/` directory. It answers one question —
+ * "can this installation bless an engine change by regenerating `.checksums`?"
+ * — and decides which remedy an integrity failure may name: C14
+ * (`update-engine-meta`) in the developer repo, a restore from the release
+ * archive everywhere else (l2-engine-automation.md, Engine Meta Update Flow).
+ *
+ * @returns {boolean} True in the developer repository, false in a user installation.
+ */
+function hasEngineWriteTooling() {
+    return fs.existsSync(path.join(__dirname, '..', '..', 'dev', 'scripts', 'generate-checksums.js'));
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // Dry-Run Guard (Read-Only Invariant)
 // ───────────────────────────────────────────────────────────────────────────
@@ -446,4 +464,5 @@ module.exports = {
     BUILD_NOISE_DIRS,
     WORKSPACE_NAME_RE,
     VOLATILE_STATE_FILES,
+    hasEngineWriteTooling,
 };

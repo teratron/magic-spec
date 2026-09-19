@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { hashFile, normalizePath } = require('./utils');
+const { hashFile, normalizePath, hasEngineWriteTooling } = require('./utils');
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
@@ -78,6 +78,16 @@ function warn(type, message, fix) {
 
 const checksumsFile = path.join('.magic', '.checksums');
 
+// The remedy an integrity failure names depends on what this installation can
+// do. The developer repo can bless an intentional engine edit through C14
+// (`update-engine-meta`). A user installation cannot regenerate the manifest —
+// and must not, since that would mask the change — so its only remedy is a
+// restore, and there is no automated fix to suggest. Naming C14 there sent
+// operators to a command that bumped `.magic/.version` and fixed nothing.
+const canRunC14 = hasEngineWriteTooling();
+const C14_FIX = 'node .magic/scripts/executor.js update-engine-meta';
+const RESTORE_HINT = ' Restore .magic/ from the release archive; do not regenerate .checksums.';
+
 if (fs.existsSync(checksumsFile)) {
     try {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
@@ -96,8 +106,8 @@ if (fs.existsSync(checksumsFile)) {
         for (const f of mismatchedFiles) {
             warn(
                 'ENGINE_INTEGRITY',
-                `'.magic/${f}' has been modified locally.`,
-                'node .magic/scripts/executor.js update-engine-meta'
+                `'.magic/${f}' has been modified locally.${canRunC14 ? '' : RESTORE_HINT}`,
+                canRunC14 ? C14_FIX : null
             );
         }
     } catch (e) {
@@ -106,8 +116,8 @@ if (fs.existsSync(checksumsFile)) {
 } else {
     warn(
         'ENGINE_INTEGRITY',
-        "'.magic/.checksums' is missing.",
-        'node .magic/scripts/executor.js update-engine-meta'
+        `'.magic/.checksums' is missing.${canRunC14 ? '' : RESTORE_HINT}`,
+        canRunC14 ? C14_FIX : null
     );
 }
 

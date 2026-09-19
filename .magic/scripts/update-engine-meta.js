@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS, hasEngineWriteTooling } = require('./utils');
 const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -147,11 +147,30 @@ function updateEngineMeta() {
                     `❌ ${missingFiles.length} file(s) listed in .magic/.checksums are absent from disk. ` +
                     'Restore .magic/ from the release archive.'
                 );
-            } else {
+            } else if (hasEngineWriteTooling()) {
                 console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+            } else {
+                // A user installation cannot regenerate the manifest, and must
+                // not: overwriting `.checksums` would mask the very change this
+                // check exists to surface.
+                console.error(
+                    '❌ Engine drift detected. Restore .magic/ from the release archive — ' +
+                    'do not regenerate .checksums (that would mask the change).'
+                );
             }
             process.exit(1);
         }
+
+        // Write mode blesses an intentional engine edit: it bumps the version
+        // and regenerates the manifest. A user installation has no manifest
+        // builder, so it can do neither — and must not do the half it can.
+        // Bumping `.version` there moves the very signal Engine Upgrade
+        // Detection (rules/magic.md §1) reads as "the engine was replaced under
+        // this project", while the drift it claims to resolve is untouched: the
+        // manifest is unchanged, so the next check reports the same files again
+        // and every retry bumps the version once more. Refuse before anything
+        // is touched (l2-engine-automation.md, Engine Meta Update Flow).
+        if (!hasEngineWriteTooling()) refuseUserInstallWrite();
 
         bumpVersion();
 
@@ -230,7 +249,7 @@ function bumpVersion() {
  */
 function runGenerateChecksums() {
     const scriptPath = path.join(__dirname, '../../dev/scripts/generate-checksums.js');
-    if (!fs.existsSync(scriptPath)) {
+    if (!hasEngineWriteTooling()) {
         console.warn('⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.');
         console.warn('   Engine writes (checksums regeneration) are a developer operation.');
         console.warn('   To clear drift: restore .magic/ from the release archive.');
@@ -242,6 +261,21 @@ function runGenerateChecksums() {
         return;
     }
     execFileSync(process.execPath, [scriptPath], { stdio: 'inherit' });
+}
+
+/**
+ * Refuses the C14 write branch in a user installation: nothing is bumped,
+ * synced or regenerated, and the process exits non-zero. The standard
+ * "this is a user installation" guidance (and its diagnostics finding) comes
+ * from {@link runGenerateChecksums}, which does nothing else there — drift that
+ * cannot be resolved must not read as success.
+ *
+ * @returns {never}
+ */
+function refuseUserInstallWrite() {
+    runGenerateChecksums();
+    console.error('❌ Engine drift not resolved: nothing was changed (version and .checksums untouched).');
+    process.exit(1);
 }
 
 // Execute
