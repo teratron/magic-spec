@@ -47,6 +47,33 @@ function collectEntries(block, startRe) {
 }
 
 /**
+ * Widens a single-line field pattern to the field's whole logical entry: its
+ * marker line plus the wrapped continuation lines hanging beneath it. A field
+ * value an agent hand-wrapped over several lines is one entry, and a pattern
+ * that matches only its first physical line replaces that line alone — the new
+ * text lands on the marker line and the old continuation stays behind as
+ * orphaned prose under text it no longer belongs to (field report, engine
+ * v2.1.95; l2-finalize-state-accuracy.md section 12.1, the scalar-field sibling
+ * of the section-rebuild defect `collectEntries` closes).
+ *
+ * A continuation line is one that is indented and non-blank. That is stricter
+ * than the "every following non-blank line" rule `collectEntries` applies, on
+ * purpose: inside an engine-owned list section nothing but entries can follow
+ * an entry, but field lines sit directly against their neighbours
+ * (`**Phase:**` / `**Status:**`, the three `- **X:**` bullets) with no blank
+ * line between them, so the broader rule would swallow the next field.
+ * Indentation is the one signal that cannot be mistaken for one. Line breaks
+ * match as `\r?\n` so a CRLF checkout works, and the terminator of the last
+ * matched line stays in place, so the replacement never disturbs line endings.
+ *
+ * @param {RegExp} lineRe  Pattern matching the field's first physical line (ends in `.*`).
+ * @returns {RegExp} `lineRe` extended over the entry's continuation lines.
+ */
+function wholeEntryRe(lineRe) {
+    return new RegExp(`${lineRe.source}(?:\\r?\\n[ \\t]+\\S.*)*`, lineRe.flags);
+}
+
+/**
  * Updates STATE.md with provided key-value patches.
  * Reads the existing state file, applies changes, and writes back.
  * Never exceeds 100 lines — prunes old Decisions if needed.
@@ -117,7 +144,11 @@ function updateState(designDir, patch, options = {}) {
 
     for (const [key, { re, prefix }] of Object.entries(fieldMap)) {
         if (patch[key] !== undefined) {
-            if (re.test(content)) {
+            // Match the whole entry, not just its first physical line: a wrapped
+            // value's continuation lines are replaced along with its marker line
+            // (see wholeEntryRe). Every field goes through this one loop.
+            const entryRe = wholeEntryRe(re);
+            if (entryRe.test(content)) {
                 // Function-form replacement: the returned string is spliced in
                 // verbatim. A string-form second argument is re-scanned for the
                 // $-dollar patterns $$, $&, $` and $' (the last three need no
@@ -131,7 +162,7 @@ function updateState(designDir, patch, options = {}) {
                 // defect class as the ## Progress fence rewrite below
                 // (l2-finalize-state-accuracy.md sections 6 and 6.1).
                 const line = `${prefix}${patch[key]}`;
-                content = content.replace(re, () => line);
+                content = content.replace(entryRe, () => line);
             }
         }
     }

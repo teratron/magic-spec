@@ -2682,6 +2682,162 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('scalar field patches replace a wrapped entry whole, not just its first line (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // The scalar-field loop patched each field with a single-line `.*`
+            // pattern, so an entry an agent had hand-wrapped onto indented
+            // continuation lines lost only its marker line: the new (shorter)
+            // text landed there and the old continuation lines stayed behind,
+            // orphaned, under text they no longer belonged to. Every field goes
+            // through the same loop, so a header field is covered as well as
+            // the three `- **X:**` bullets.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Workspace:** docs',
+                '**Updated:** 2026-01-01 00:00',
+                '**Phase:** 4 — A long phase name that an agent wrapped',
+                '  onto a continuation line',
+                '**Status:** Active', '',
+                '## Current Position', '',
+                '- **Task:** [T-3A02] A long task title that an agent wrapped onto',
+                '  a second physical line because it exceeded the column limit,',
+                '  and then a third.',
+                '- **Spec:** l1-example.md §3, wrapped so that the',
+                '  spec pointer spills onto its own continuation line.',
+                '- **Next Action:** Run the next task; the description is long',
+                '  enough that it wraps once more onto a continuation line.', '',
+                '## Recent Decisions', '',
+                '- 2026-01-02 **Decision:** an entry this call must not touch',
+                '  together with its own continuation line.', '',
+            ].join('\n'));
+
+            updateState(wsDir, {
+                phase: '5 — Next',
+                task: '[T-3A03] Short',
+                spec: 'x.md',
+                nextAction: 'Go',
+            }, {});
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            // Whole-file equality (modulo the volatile timestamp) rather than a
+            // presence check: it fails on a surviving orphan *and* on a patch
+            // that swallowed a neighbouring line.
+            assert.strictEqual(
+                after.replace(/^\*\*Updated:\*\* .*\n/m, ''),
+                [
+                    '# Project State', '',
+                    '**Workspace:** docs',
+                    '**Phase:** 5 — Next',
+                    '**Status:** Active', '',
+                    '## Current Position', '',
+                    '- **Task:** [T-3A03] Short',
+                    '- **Spec:** x.md',
+                    '- **Next Action:** Go', '',
+                    '## Recent Decisions', '',
+                    '- 2026-01-02 **Decision:** an entry this call must not touch',
+                    '  together with its own continuation line.', '',
+                ].join('\n'),
+                'each patched field must occupy exactly one line, its old continuation lines gone and every other line untouched'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a scalar field patch consumes indented continuation lines only, never a neighbouring line (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // Fields sit on adjacent lines with no blank line between them
+            // (`**Phase:**` / `**Status:**`, and the three `- **X:**` bullets),
+            // so the rule `collectEntries` applies inside an engine-owned list
+            // section — every following non-blank line belongs to the entry —
+            // would swallow the next field here. Indentation is the one signal
+            // that unambiguously marks a continuation; an unindented line after
+            // a field is left exactly where it is, and an indented sub-bullet
+            // belongs to the entry it hangs under.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Workspace:** docs',
+                '**Updated:** 2026-01-01 00:00',
+                '**Phase:** 1 — Bootstrap',
+                '**Status:** Active',
+                'An unindented line directly under the header fields.', '',
+                '## Current Position', '',
+                '- **Task:** old task',
+                '- **Spec:** old.md §1',
+                'An unindented line between two bullets.',
+                '- **Next Action:** old action',
+                '  - a nested sub-bullet that belongs to the entry above it',
+                '',
+            ].join('\n'));
+
+            updateState(wsDir, {
+                phase: '2 — Build',
+                status: 'Blocked',
+                task: 'new task',
+                spec: 'new.md §2',
+                nextAction: 'new action',
+            }, {});
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.strictEqual(
+                after.replace(/^\*\*Updated:\*\* .*\n/m, ''),
+                [
+                    '# Project State', '',
+                    '**Workspace:** docs',
+                    '**Phase:** 2 — Build',
+                    '**Status:** Blocked',
+                    'An unindented line directly under the header fields.', '',
+                    '## Current Position', '',
+                    '- **Task:** new task',
+                    '- **Spec:** new.md §2',
+                    'An unindented line between two bullets.',
+                    '- **Next Action:** new action',
+                    '',
+                ].join('\n'),
+                'only the patched entries (marker line plus indented continuation) may change'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a wrapped field is replaced whole in a CRLF file without introducing a bare LF (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // A Windows checkout under `core.autocrlf` leaves STATE.md CRLF, so
+            // the continuation pattern has to span `\r\n` line breaks — and the
+            // replacement must not disturb the endings of the lines around it.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '**Phase:** 1 — Bootstrap', '**Status:** Active', '',
+                '## Current Position', '',
+                '- **Task:** [T-1A01] A long title that wraps',
+                '  onto a continuation line.',
+                '- **Next Action:** Go', '',
+            ].join('\r\n'));
+
+            updateState(wsDir, { task: '[T-1A02] Short' }, {});
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.doesNotMatch(after, /onto a continuation line/, 'the wrapped continuation must not survive as an orphan');
+            assert.match(
+                after, /- \*\*Task:\*\* \[T-1A02\] Short\r\n- \*\*Next Action:\*\* Go\r\n/,
+                'the patched entry must be followed directly by the next bullet, CRLF intact'
+            );
+            assert.doesNotMatch(after, /[^\r]\n/, 'no bare LF may be introduced into a CRLF file');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('a task-scoped update leaves the phase-level Status field alone (SC-1.1)', () => {
         const tempDir = createTempWorkspace();
         try {
