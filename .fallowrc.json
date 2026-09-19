@@ -3,5 +3,11 @@
   "entry": [
     "dev/scripts/*.js",
     "dev/tests/*.js"
-  ]
+  ],
+  "ignorePatterns": [
+    ".magic/**"
+  ],
+  "health": {
+    "maxCrap": 0
+  }
 }

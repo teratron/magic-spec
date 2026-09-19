@@ -109,6 +109,18 @@ describe('Magic Engine Scripts', () => {
         execSync(`node "${checksumScript}"`, { cwd: tempDir, stdio: 'pipe' });
     };
 
+    // Runs update-engine-meta.js --check in a temp workspace, returning
+    // { failed: boolean, output: string }.
+    const runEngineMetaCheck = (tempDir) => {
+        const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+        try {
+            const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
+            return { failed: false, output: stdout };
+        } catch (e) {
+            return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
+        }
+    };
+
     // Copies the real state.md template into a temp workspace, so bootstrap
     // paths exercise template-driven behavior instead of a from-scratch write.
     // No-op if the source template is absent (mirrors the guard every call site used).
@@ -466,17 +478,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.gitignore'), '.foreign-cache/\n');
             generateChecksums(tempDir);
 
-            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
-            const runCheck = () => {
-                try {
-                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
-                    return { failed: false, output: stdout };
-                } catch (e) {
-                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
-                }
-            };
-
-            assert.strictEqual(runCheck().failed, false, 'baseline --check must be clean');
+            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'baseline --check must be clean');
 
             // A foreign tool (unrelated to the engine) drops a cache file inside
             // .magic/ after install — exactly how `.fallow/` appeared in engine
@@ -486,7 +488,7 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(strayDir, { recursive: true });
             fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile');
 
-            const after = runCheck();
+            const after = runEngineMetaCheck(tempDir);
             assert.strictEqual(after.failed, false, 'a .gitignored file appearing inside .magic/ must never be reported as drift');
             assert.doesNotMatch(after.output, /Detected change/, 'gitignored content must not surface as a detected change');
         } finally {
@@ -510,17 +512,7 @@ describe('Magic Engine Scripts', () => {
             // every consumer install, not an edge case.
             fs.writeFileSync(path.join(tempDir, '.gitignore'), '.magic/\n');
 
-            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
-            const runCheck = () => {
-                try {
-                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
-                    return { failed: false, output: stdout };
-                } catch (e) {
-                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
-                }
-            };
-
-            const result = runCheck();
+            const result = runEngineMetaCheck(tempDir);
             assert.strictEqual(result.failed, false, 'unmodified manifested files must not be reported as missing merely because the consumer gitignores .magic/ wholesale');
             assert.doesNotMatch(result.output, /Missing engine file/, 'a manifested, unmodified file must never read as missing due to the consumer\'s own .gitignore');
         } finally {
@@ -851,29 +843,20 @@ describe('Magic Engine Scripts', () => {
         try {
             generateChecksums(tempDir);
 
-            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
-            const runCheck = () => {
-                try {
-                    const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
-                    return { failed: false, output: stdout };
-                } catch (e) {
-                    return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
-                }
-            };
-
             // Control — pristine tree must pass (guards against false positives).
-            assert.strictEqual(runCheck().failed, false, 'an intact engine must pass --check');
+            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'an intact engine must pass --check');
 
             // `init.js` is tracked in the manifest and not required by update-engine-meta.
             const victim = path.join(tempDir, '.magic', 'scripts', 'init.js');
             assert.ok(fs.existsSync(victim), 'fixture precondition: init.js is present');
             fs.unlinkSync(victim);
 
-            const missing = runCheck();
+            const missing = runEngineMetaCheck(tempDir);
             assert.ok(missing.failed, 'a manifest entry with no file on disk must fail --check');
             assert.match(missing.output, /scripts\/init\.js/, '--check must name the missing file');
 
             // Write mode treats the absence as an engine change: bump + regenerate.
+            const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
             execSync(`node "${metaScript}"`, { cwd: tempDir, stdio: 'pipe' });
             assert.strictEqual(
                 fs.readFileSync(path.join(tempDir, '.magic', '.version'), 'utf8').trim(),
@@ -882,7 +865,7 @@ describe('Magic Engine Scripts', () => {
             );
             const regenerated = JSON.parse(fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'));
             assert.ok(!regenerated['scripts/init.js'], 'the regenerated manifest must drop the removed file');
-            assert.strictEqual(runCheck().failed, false, 'after regeneration the engine is consistent again');
+            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'after regeneration the engine is consistent again');
         } finally {
             cleanup(tempDir);
         }
@@ -4069,61 +4052,49 @@ describe('Magic Engine Scripts', () => {
         return fs.existsSync(counterPath) ? parseInt(fs.readFileSync(counterPath, 'utf8'), 10) : 0;
     };
 
-    test('revalidate() drops a finding whose recheck no longer reproduces the code (DG-10)', () => {
+    const testRevalidate = (findings, checkFn) => {
         const tempDir = createTempWorkspace();
         try {
             writeRevalidateFixture(tempDir);
             const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-
-            const survivors = diagnostics.revalidate([{
-                severity: 'warning', source: 'test', code: 'GONE', message: 'was true at record time',
-                recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } },
-            }]);
-
-            assert.strictEqual(survivors.length, 0, 'a finding whose recheck reports no matching code must be dropped');
+            const survivors = diagnostics.revalidate(findings);
+            checkFn(survivors, tempDir);
         } finally {
             cleanup(tempDir);
         }
+    };
+
+    test('revalidate() drops a finding whose recheck no longer reproduces the code (DG-10)', () => {
+        testRevalidate([{
+            severity: 'warning', source: 'test', code: 'GONE', message: 'was true at record time',
+            recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } },
+        }], (survivors) => {
+            assert.strictEqual(survivors.length, 0, 'a finding whose recheck reports no matching code must be dropped');
+        });
     });
 
     test('revalidate() keeps a finding whose recheck still reproduces the code (DG-10)', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            writeRevalidateFixture(tempDir);
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-
-            const survivors = diagnostics.revalidate([{
-                severity: 'warning', source: 'test', code: 'STILL_OPEN', message: 'condition persists',
-                recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) } },
-            }]);
-
+        testRevalidate([{
+            severity: 'warning', source: 'test', code: 'STILL_OPEN', message: 'condition persists',
+            recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) } },
+        }], (survivors) => {
             assert.strictEqual(survivors.length, 1, 'a finding whose recheck still reports its code must survive unchanged');
             assert.strictEqual(survivors[0].code, 'STILL_OPEN');
-        } finally {
-            cleanup(tempDir);
-        }
+        });
     });
 
     test('revalidate() spawns one recheck process per distinct signature, not one per finding (DG-10)', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            writeRevalidateFixture(tempDir);
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-
-            const sharedRecheck = {
-                script: 'revalidate-fixture', args: ['shared'],
-                env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'A' }, { type: 'B' }]) },
-            };
-            const survivors = diagnostics.revalidate([
-                { severity: 'warning', source: 'test', code: 'A', message: 'm', recheck: sharedRecheck },
-                { severity: 'warning', source: 'test', code: 'B', message: 'm', recheck: sharedRecheck },
-            ]);
-
+        const sharedRecheck = {
+            script: 'revalidate-fixture', args: ['shared'],
+            env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'A' }, { type: 'B' }]) },
+        };
+        testRevalidate([
+            { severity: 'warning', source: 'test', code: 'A', message: 'm', recheck: sharedRecheck },
+            { severity: 'warning', source: 'test', code: 'B', message: 'm', recheck: sharedRecheck },
+        ], (survivors, tempDir) => {
             assert.strictEqual(revalidateFixtureCount(tempDir), 1, 'two findings sharing one recheck signature must spawn exactly one process');
             assert.deepStrictEqual(survivors.map((f) => f.code).sort(), ['A', 'B'], 'both findings survive — the shared recheck reproduced both codes');
-        } finally {
-            cleanup(tempDir);
-        }
+        });
     });
 
     test('revalidate() leaves a finding untouched when its recheck cannot be run (DG-10 extends DG-9)', () => {
@@ -4144,22 +4115,13 @@ describe('Magic Engine Scripts', () => {
     });
 
     test('revalidate() passes a finding with no recheck field through unchanged (DG-10)', () => {
-        const tempDir = createTempWorkspace();
-        try {
-            writeRevalidateFixture(tempDir);
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-
-            const findings = [
-                { severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED', message: 'an event, not a condition' },
-                { severity: 'warning', source: 'test', code: 'GONE', message: 'm', recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } } },
-            ];
-            const survivors = diagnostics.revalidate(findings);
-
+        testRevalidate([
+            { severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED', message: 'an event, not a condition' },
+            { severity: 'warning', source: 'test', code: 'GONE', message: 'm', recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } } },
+        ], (survivors) => {
             assert.strictEqual(survivors.length, 1, 'the event finding survives; the resolved condition finding does not — partition is per-finding, not per-batch');
             assert.strictEqual(survivors[0].code, 'NEXT_ACTION_SUBSTITUTED');
-        } finally {
-            cleanup(tempDir);
-        }
+        });
     });
 
     test('record() suppresses writes under MAGIC_DIAGNOSTICS_SUPPRESS, and a live recheck spawn cannot feed its own finding back into the sink (DG-10 self-reference guard)', () => {
