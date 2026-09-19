@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS, hasEngineWriteTooling } = require('./utils');
+const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS, hasEngineWriteTooling, describeManifestDelta } = require('./utils');
 const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -121,7 +121,13 @@ function updateEngineMeta() {
 
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {
-                console.log(`✨ Detected change in: ${rel}`);
+                // A line-endings-only difference is the one cause worth naming on
+                // the line itself: it is common, and invisible in an editor.
+                const delta = isManifested ? describeManifestDelta(fullPath, oldChecksums[rel]) : null;
+                const note = delta && delta.lineEndingsOnly
+                    ? ` — only line endings differ (found ${delta.found}, the release ships ${delta.expectedEol})`
+                    : '';
+                console.log(`✨ Detected change in: ${rel}${note}`);
                 anyChanged = true;
             }
         });

@@ -3,7 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { hashFile, normalizePath, hasEngineWriteTooling } = require('./utils');
+const { hashFile, normalizePath, hasEngineWriteTooling, describeManifestDelta } = require('./utils');
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
@@ -88,6 +88,20 @@ const canRunC14 = hasEngineWriteTooling();
 const C14_FIX = 'node .magic/scripts/executor.js update-engine-meta';
 const RESTORE_HINT = ' Restore .magic/ from the release archive; do not regenerate .checksums.';
 
+// How a mismatched file differs, in the words of its finding (see
+// utils.describeManifestDelta). `modified locally` on its own was printed alike
+// for an edit, a line-ending conversion and a swapped manifest, and no hash was
+// recorded — so a flagged file later found byte-identical to the release could
+// not be explained. Both short hashes are always given; a difference that is
+// line endings and nothing else says so.
+function integrityDetail(delta) {
+    if (!delta) return '.';
+    const hashes = `sha256 expected ${delta.expected.slice(0, 12)}, found ${delta.actual.slice(0, 12)}`;
+    return delta.lineEndingsOnly
+        ? `: only its line endings differ (found ${delta.found}, the release ships ${delta.expectedEol}; ${hashes}).`
+        : ` (${hashes}).`;
+}
+
 if (fs.existsSync(checksumsFile)) {
     try {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
@@ -99,14 +113,14 @@ if (fs.existsSync(checksumsFile)) {
             if (fs.existsSync(fullPath)) {
                 const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
-                    mismatchedFiles.push(normalizedRelPath);
+                    mismatchedFiles.push({ file: normalizedRelPath, delta: describeManifestDelta(fullPath, storedHash) });
                 }
             }
         }
-        for (const f of mismatchedFiles) {
+        for (const { file, delta } of mismatchedFiles) {
             warn(
                 'ENGINE_INTEGRITY',
-                `'.magic/${f}' has been modified locally.${canRunC14 ? '' : RESTORE_HINT}`,
+                `'.magic/${file}' has been modified locally${integrityDetail(delta)}${canRunC14 ? '' : RESTORE_HINT}`,
                 canRunC14 ? C14_FIX : null
             );
         }

@@ -403,6 +403,36 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 1c-bis. Architecture invariant — no NUL byte anywhere in the engine kernel
+    //     `lib/diagnostics.js` built its dedup key with two RAW NUL bytes as
+    //     separators instead of the `\0` escape. Runtime-identical, but git
+    //     classifies any file containing NUL as `-text` (so `eol=lf`
+    //     normalisation never applies to it) and GNU grep answers "Binary file
+    //     matches" instead of the matching lines — a core engine file hidden
+    //     from grep-based review and audit tooling, this project's own included.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('no engine kernel file contains a raw NUL byte', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const found = [];
+        const walk = (dir) => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    if (!['history', '.git', 'node_modules'].includes(entry.name)) walk(full);
+                } else {
+                    const at = fs.readFileSync(full).indexOf(0);
+                    if (at !== -1) found.push(`${path.relative(repoRoot, full).split(path.sep).join('/')}@${at}`);
+                }
+            }
+        };
+        for (const dir of ['.magic', 'workflows', 'skills', 'rules']) {
+            if (fs.existsSync(path.join(repoRoot, dir))) walk(path.join(repoRoot, dir));
+        }
+
+        assert.deepStrictEqual(found, [], `raw NUL byte(s) (file@offset) — write the \\0 escape instead: ${found.join(', ')}`);
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 1d. generate-checksums.js / update-engine-meta.js — gitignore-aware scan
     //     (Invariant 7 parity, engine v2.1.87). `detect-communities.js` and
     //     siblings already honor .gitignore (§10/§11 below); the checksum
@@ -1042,6 +1072,112 @@ describe('Magic Engine Scripts', () => {
         } finally {
             cleanup(userDir);
             cleanup(devDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5b-ter. An integrity finding must say HOW a file differs, not only that it
+    //         does.
+    //
+    //     A field report — ENGINE_INTEGRITY for two engine files that were
+    //     byte-identical to the release both before and after — could not be
+    //     explained afterwards: "modified locally" was printed alike for an edit,
+    //     a line-ending conversion and a swapped manifest, and no hash was
+    //     recorded. The finding now carries the two short hashes and names the
+    //     one difference that is both common and invisible in an editor.
+    // ───────────────────────────────────────────────────────────────────────────
+
+    const sha256Hex = (text) => require('crypto').createHash('sha256').update(text).digest('hex');
+
+    test('describeManifestDelta tells a line-endings-only difference from a content difference, in both directions', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { describeManifestDelta } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+            const file = path.join(tempDir, 'probe.md');
+
+            // [on disk, what the manifest recorded, expected verdict]
+            const cases = [
+                ['a\r\nb\r\n', 'a\nb\n', { lineEndingsOnly: true, found: 'CRLF', expectedEol: 'LF' }],
+                ['a\nb\n', 'a\r\nb\r\n', { lineEndingsOnly: true, found: 'LF', expectedEol: 'CRLF' }],
+                ['a\r\nb\n', 'a\nb\n', { lineEndingsOnly: true, found: 'mixed', expectedEol: 'LF' }],
+                ['a\nc\n', 'a\nb\n', { lineEndingsOnly: false, found: 'LF', expectedEol: null }],
+                // Both differ: the content difference is the finding, the endings are incidental.
+                ['a\r\nc\r\n', 'a\nb\n', { lineEndingsOnly: false, found: 'CRLF', expectedEol: null }],
+            ];
+            for (const [onDisk, recorded, want] of cases) {
+                fs.writeFileSync(file, onDisk);
+                const got = describeManifestDelta(file, sha256Hex(recorded));
+                const label = JSON.stringify({ onDisk, recorded });
+                assert.strictEqual(got.actual, sha256Hex(onDisk), `actual hash for ${label}`);
+                assert.strictEqual(got.expected, sha256Hex(recorded), `expected hash for ${label}`);
+                assert.strictEqual(got.lineEndingsOnly, want.lineEndingsOnly, `lineEndingsOnly for ${label}`);
+                assert.strictEqual(got.found, want.found, `found for ${label}`);
+                assert.strictEqual(got.expectedEol, want.expectedEol, `expectedEol for ${label}`);
+            }
+
+            // The verdict must not depend on multi-byte text surviving a round trip.
+            fs.writeFileSync(file, 'сводка — §1\r\n');
+            assert.strictEqual(
+                describeManifestDelta(file, sha256Hex('сводка — §1\n')).lineEndingsOnly, true,
+                'non-ASCII bytes must round-trip exactly'
+            );
+
+            // A vanished file is reported, never thrown: a diagnostic must not become a second failure.
+            assert.strictEqual(describeManifestDelta(path.join(tempDir, 'absent.md'), sha256Hex('x')), null);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('check-prerequisites ENGINE_INTEGRITY carries both hashes, and says when only the line endings differ', () => {
+        const devDir = createTempWorkspace();
+        const userDir = createTempWorkspace();
+        try {
+            makeDriftedEngine(devDir, { userInstallation: false });
+            makeDriftedEngine(userDir, { userInstallation: true });
+            const short = (text) => sha256Hex(text).slice(0, 12);
+
+            for (const [label, tempDir] of [['dev repo', devDir], ['user installation', userDir]]) {
+                const byFile = Object.fromEntries(
+                    runCheckPrerequisites(tempDir).warnings
+                        .filter((w) => w.type === 'ENGINE_INTEGRITY')
+                        .map((w) => [w.message.match(/'\.magic\/([^']+)'/)[1], w.message])
+                );
+
+                // task.md: converted to CRLF, otherwise identical to what the manifest recorded.
+                assert.match(
+                    byFile['task.md'], /only its line endings differ \(found CRLF, the release ships LF; /,
+                    `${label}: an endings-only difference must be named as such`
+                );
+                assert.ok(
+                    byFile['task.md'].includes(`sha256 expected ${short('# task\n')}, found ${short('# task\r\n')}`),
+                    `${label}: both hashes must be recorded — ${byFile['task.md']}`
+                );
+
+                // spec.md: edited. Content difference, plain wording, still both hashes.
+                assert.doesNotMatch(byFile['spec.md'], /line endings/, `${label}: a content edit must not be blamed on line endings`);
+                assert.ok(
+                    byFile['spec.md'].includes(`sha256 expected ${short('# spec\n')}, found ${short('# spec\n<!-- local note -->\n')}`),
+                    `${label}: both hashes must be recorded — ${byFile['spec.md']}`
+                );
+            }
+        } finally {
+            cleanup(devDir);
+            cleanup(userDir);
+        }
+    });
+
+    test('update-engine-meta --check names a line-endings-only difference on the file line, and leaves a content difference plain', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            makeDriftedEngine(tempDir, { userInstallation: true });
+            const run = runMeta(tempDir, 'update-engine-meta.js', '--check');
+            const lineFor = (name) => run.out.split(/\r?\n/).find((l) => l.includes(`Detected change in: ${name}`));
+
+            assert.match(lineFor('task.md'), /only line endings differ \(found CRLF, the release ships LF\)/);
+            assert.doesNotMatch(lineFor('spec.md'), /line endings/, 'a content edit must not be blamed on line endings');
+        } finally {
+            cleanup(tempDir);
         }
     });
 
@@ -3873,6 +4009,29 @@ describe('Magic Engine Scripts', () => {
             const bulletCount = distinctLines.filter((l) => l.startsWith('- ') && !l.includes('more finding')).length;
             assert.strictEqual(bulletCount, 15, 'the render cap must stop at 15 distinct findings');
             assert.match(distinctLines.join('\n'), /\+5 more findings not listed/, 'the omission must state how many were left out');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('diagnostics dedup keeps findings apart whose source and code differ only at the field boundary (DG-4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+
+            // ("a" + "BC") and ("aB" + "C") concatenate to the same text, so only a
+            // real separator between the key's fields keeps them two findings. The
+            // separator is U+0000 and has to survive being written as the `\0`
+            // escape rather than as a raw byte — dropping it would merge these.
+            const findings = [
+                { severity: 'warning', source: 'a', code: 'BC', message: 'first finding' },
+                { severity: 'warning', source: 'aB', code: 'C', message: 'second finding' },
+            ];
+
+            assert.strictEqual(diagnostics.summarize(findings).total, 2, 'distinct findings must not collapse into one');
+            const digest = diagnostics.formatDigest(findings).join('\n');
+            assert.match(digest, /first finding/, 'the first finding must render');
+            assert.match(digest, /second finding/, 'the second finding must render');
         } finally {
             cleanup(tempDir);
         }

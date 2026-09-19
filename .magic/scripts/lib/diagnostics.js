@@ -304,7 +304,7 @@ function dedupe(findings) {
     const groups = new Map();
     for (const f of findings) {
         if (!f || !SEVERITIES.has(f.severity) || !f.source || !f.code || !f.message) continue;
-        const key = `${f.severity} ${f.source} ${f.code}`;
+        const key = `${f.severity}\0${f.source}\0${f.code}`;
         const existing = groups.get(key);
         if (existing) {
             existing.count += 1;

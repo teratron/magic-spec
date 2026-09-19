@@ -168,6 +168,51 @@ function hashFileSafe(filePath, retry = 5) {
 }
 
 /**
+ * Describes HOW a file differs from the hash its manifest recorded, so an
+ * integrity finding can say more than "modified": both hashes, and whether the
+ * bytes are the recorded content with other line endings — the difference that
+ * is both common (autocrlf, an editor's `files.eol`, a tool that rewrites a
+ * file) and invisible in an editor. A field report of two engine files flagged
+ * and later found byte-identical to the release could not be explained
+ * afterwards, because `modified locally` was printed alike for an edit, a
+ * line-ending conversion and a swapped manifest, and no hash was recorded.
+ *
+ * Total by design: a diagnostic must never become a second failure, so an
+ * unreadable file yields `null` and the caller simply omits the detail.
+ *
+ * @param {string} filePath - Path of the file on disk.
+ * @param {string} expectedHash - Hex SHA-256 the manifest records for it.
+ * @returns {{expected: string, actual: string, found: string, lineEndingsOnly: boolean, expectedEol: (string|null)}|null}
+ *   `found` is the file's own line-ending style (`LF`, `CRLF`, `mixed`, `none`);
+ *   `expectedEol` (`LF` or `CRLF`) is the style the manifest's bytes use, set only
+ *   when line endings are the whole difference. `null` when the file cannot be read.
+ */
+function describeManifestDelta(filePath, expectedHash) {
+    let buf;
+    try {
+        buf = fs.readFileSync(filePath);
+    } catch (e) {
+        return null;
+    }
+    const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
+    const actual = sha(buf);
+    // 'latin1' maps every byte to exactly one code unit, so the decode/encode
+    // round trip below is lossless for any content, multi-byte text included.
+    const text = buf.toString('latin1');
+    const crlf = (text.match(/\r\n/g) || []).length;
+    const lf = (text.match(/(?<!\r)\n/g) || []).length;
+    const found = crlf && lf ? 'mixed' : crlf ? 'CRLF' : lf ? 'LF' : 'none';
+
+    let expectedEol = null;
+    if (actual !== expectedHash) {
+        const asLf = text.replace(/\r\n/g, '\n');
+        if (sha(Buffer.from(asLf, 'latin1')) === expectedHash) expectedEol = 'LF';
+        else if (sha(Buffer.from(asLf.replace(/\n/g, '\r\n'), 'latin1')) === expectedHash) expectedEol = 'CRLF';
+    }
+    return { expected: expectedHash, actual, found, lineEndingsOnly: expectedEol !== null, expectedEol };
+}
+
+/**
  * Recursively collects all files in a directory.
  *
  * @param {string} dirPath - Root directory to scan.
@@ -452,6 +497,7 @@ function resolveDesignRoot(rootDir) {
 module.exports = {
     hashFile,
     hashFileSafe,
+    describeManifestDelta,
     getAllFiles,
     normalizePath,
     isDryRun,
