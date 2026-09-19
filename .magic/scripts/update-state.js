@@ -56,21 +56,39 @@ function collectEntries(block, startRe) {
  * v2.1.95; l2-finalize-state-accuracy.md section 12.1, the scalar-field sibling
  * of the section-rebuild defect `collectEntries` closes).
  *
- * A continuation line is one that is indented and non-blank. That is stricter
- * than the "every following non-blank line" rule `collectEntries` applies, on
- * purpose: inside an engine-owned list section nothing but entries can follow
- * an entry, but field lines sit directly against their neighbours
- * (`**Phase:**` / `**Status:**`, the three `- **X:**` bullets) with no blank
- * line between them, so the broader rule would swallow the next field.
- * Indentation is the one signal that cannot be mistaken for one. Line breaks
- * match as `\r?\n` so a CRLF checkout works, and the terminator of the last
- * matched line stays in place, so the replacement never disturbs line endings.
+ * What counts as a continuation is narrower than the "every following
+ * non-blank line" rule `collectEntries` applies, on purpose: inside an
+ * engine-owned list section nothing but entries can follow an entry, but field
+ * lines sit directly against their neighbours (`**Phase:**` / `**Status:**`,
+ * the three `- **X:**` bullets) with no blank line between them, so the broad
+ * rule would swallow the next field. Two rules stand in for it:
  *
- * @param {RegExp} lineRe  Pattern matching the field's first physical line (ends in `.*`).
+ * - An indented, non-blank line continues the entry above it, for every field.
+ * - For a field written as a list item (`- **Task:** ...`) an unindented line
+ *   continues it too — CommonMark's lazy continuation, which renders exactly
+ *   like the indented wrap — unless it opens a new block: a line starting with
+ *   `-`, `+` or `*` (a bullet, a `**Label:**` field, a thematic break), an
+ *   ordered-list marker, `#`, `>`, `|`, `<` (heading, quote, table row, HTML or
+ *   comment) or a code fence. The set errs toward stopping: a line outside it
+ *   is consumed, so an incomplete set fails by deleting, whereas a line that
+ *   stops early leaves only the orphan this function exists to remove — the
+ *   milder failure. Header fields get no lazy rule: with no list structure to
+ *   anchor "continues" to, an unindented line under `**Phase:**` is as likely
+ *   to be a neighbouring field or a stray note as its wrap.
+ *
+ * A blank line ends every entry. Line breaks match as `\r?\n` so a CRLF
+ * checkout works, and the terminator of the last matched line stays in place,
+ * so the replacement never disturbs line endings.
+ *
+ * @param {RegExp} lineRe       Pattern matching the field's first physical line (ends in `.*`).
+ * @param {boolean} isListItem  True when the field is written as a Markdown list item.
  * @returns {RegExp} `lineRe` extended over the entry's continuation lines.
  */
-function wholeEntryRe(lineRe) {
-    return new RegExp(`${lineRe.source}(?:\\r?\\n[ \\t]+\\S.*)*`, lineRe.flags);
+function wholeEntryRe(lineRe, isListItem) {
+    const indented = '[ \\t]+\\S';
+    const lazy = '(?![-+*#>|<]|```|~~~|\\d+[.)][ \\t])\\S';
+    const continuation = isListItem ? `(?:${indented}|${lazy})` : indented;
+    return new RegExp(`${lineRe.source}(?:\\r?\\n${continuation}.*)*`, lineRe.flags);
 }
 
 /**
@@ -146,8 +164,9 @@ function updateState(designDir, patch, options = {}) {
         if (patch[key] !== undefined) {
             // Match the whole entry, not just its first physical line: a wrapped
             // value's continuation lines are replaced along with its marker line
-            // (see wholeEntryRe). Every field goes through this one loop.
-            const entryRe = wholeEntryRe(re);
+            // (see wholeEntryRe). Every field goes through this one loop; the
+            // `- ` prefix marks the three fields that are Markdown list items.
+            const entryRe = wholeEntryRe(re, prefix.startsWith('- '));
             if (entryRe.test(content)) {
                 // Function-form replacement: the returned string is spliced in
                 // verbatim. A string-form second argument is re-scanned for the

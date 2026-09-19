@@ -2747,42 +2747,28 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('a scalar field patch consumes indented continuation lines only, never a neighbouring line (SC-1.2)', () => {
+    test('a header field consumes indented continuation lines only; an unindented line under it is left alone (SC-1.2)', () => {
         const tempDir = createTempWorkspace();
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            // Fields sit on adjacent lines with no blank line between them
-            // (`**Phase:**` / `**Status:**`, and the three `- **X:**` bullets),
-            // so the rule `collectEntries` applies inside an engine-owned list
-            // section — every following non-blank line belongs to the entry —
-            // would swallow the next field here. Indentation is the one signal
-            // that unambiguously marks a continuation; an unindented line after
-            // a field is left exactly where it is, and an indented sub-bullet
-            // belongs to the entry it hangs under.
+            // Header fields sit against one another with no list structure, so
+            // unlike a `- **X:**` bullet there is nothing for a lazy (unindented)
+            // continuation to attach to: an unindented line under one is as
+            // likely to be its neighbour or a stray note as its wrap, and
+            // guessing wrong deletes it. Indentation is the only continuation
+            // signal a header field honours.
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
                 '# Project State', '',
                 '**Workspace:** docs',
                 '**Updated:** 2026-01-01 00:00',
                 '**Phase:** 1 — Bootstrap',
+                '  wrapped and indented',
                 '**Status:** Active',
                 'An unindented line directly under the header fields.', '',
-                '## Current Position', '',
-                '- **Task:** old task',
-                '- **Spec:** old.md §1',
-                'An unindented line between two bullets.',
-                '- **Next Action:** old action',
-                '  - a nested sub-bullet that belongs to the entry above it',
-                '',
             ].join('\n'));
 
-            updateState(wsDir, {
-                phase: '2 — Build',
-                status: 'Blocked',
-                task: 'new task',
-                spec: 'new.md §2',
-                nextAction: 'new action',
-            }, {});
+            updateState(wsDir, { phase: '2 — Build', status: 'Blocked' }, {});
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
@@ -2793,14 +2779,120 @@ describe('Magic Engine Scripts', () => {
                     '**Phase:** 2 — Build',
                     '**Status:** Blocked',
                     'An unindented line directly under the header fields.', '',
-                    '## Current Position', '',
-                    '- **Task:** new task',
-                    '- **Spec:** new.md §2',
-                    'An unindented line between two bullets.',
-                    '- **Next Action:** new action',
-                    '',
                 ].join('\n'),
-                'only the patched entries (marker line plus indented continuation) may change'
+                'the indented wrap goes with its field; the unindented line under Status must survive'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a list-item field also consumes lazily wrapped (unindented) continuation lines (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // CommonMark lets a list item's paragraph continue on an unindented
+            // line — it renders identically to the indented wrap — so an agent
+            // that wraps `- **Task:**` without indenting still produces one
+            // logical entry, and replacing only its marker line orphans the
+            // rest. An indented sub-bullet hangs under the entry it follows.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '',
+                '## Current Position', '',
+                '- **Task:** [T-1A01] A long title that an agent wrapped',
+                'without indenting the second line, which Markdown still',
+                'reads as part of the same list item.',
+                '- **Spec:** l1-example.md §3, wrapped in two styles',
+                '  first indented',
+                'then unindented',
+                '- **Next Action:** Run the next task;',
+                'a lazy line',
+                '  - a nested sub-bullet that belongs to the entry above it',
+                '',
+                '## Progress', '',
+            ].join('\n'));
+
+            updateState(wsDir, { task: '[T-1A02] Short', spec: 'x.md', nextAction: 'Go' }, {});
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.strictEqual(
+                after,
+                [
+                    '# Project State', '',
+                    '## Current Position', '',
+                    '- **Task:** [T-1A02] Short',
+                    '- **Spec:** x.md',
+                    '- **Next Action:** Go',
+                    '',
+                    '## Progress', '',
+                ].join('\n'),
+                'lazy, indented and mixed continuation lines must all go with their entry, and nothing else'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a list-item field stops at a blank line and at every construct that opens a new block (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // The lazy rule must never reach past its own entry. Each line below
+            // can directly follow a bullet field with no blank line between them
+            // and has to be left exactly where it is: dropping any one of them
+            // from the engine's stop-set would delete it on the next patch.
+            const blockStarts = [
+                '- **Spec:** the next bullet',
+                '* a star bullet',
+                '+ a plus bullet',
+                '1. an ordered item',
+                '2) another ordered item',
+                '**Handoff File:** none',
+                '# a heading',
+                '> a quote',
+                '| a | table |',
+                '<!-- a comment -->',
+                '```text',
+                '~~~',
+                '---',
+            ];
+            const stateFile = path.join(wsDir, 'STATE.md');
+
+            for (const start of blockStarts) {
+                fs.writeFileSync(stateFile, [
+                    '# Project State', '',
+                    '- **Task:** old task',
+                    'a lazy line that is part of the entry',
+                    start,
+                    '',
+                ].join('\n'));
+
+                updateState(wsDir, { task: 'new task' }, {});
+
+                assert.strictEqual(
+                    fs.readFileSync(stateFile, 'utf8'),
+                    ['# Project State', '', '- **Task:** new task', start, ''].join('\n'),
+                    `a line opening \`${start}\` must survive the patch of the bullet above it`
+                );
+            }
+
+            fs.writeFileSync(stateFile, [
+                '# Project State', '',
+                '- **Task:** old task',
+                'a lazy line that is part of the entry',
+                '',
+                'A plain paragraph after a blank line.',
+                '',
+            ].join('\n'));
+
+            updateState(wsDir, { task: 'new task' }, {});
+
+            assert.strictEqual(
+                fs.readFileSync(stateFile, 'utf8'),
+                ['# Project State', '', '- **Task:** new task', '', 'A plain paragraph after a blank line.', ''].join('\n'),
+                'a blank line must end the entry'
             );
         } finally {
             cleanup(tempDir);
@@ -2820,14 +2912,16 @@ describe('Magic Engine Scripts', () => {
                 '**Phase:** 1 — Bootstrap', '**Status:** Active', '',
                 '## Current Position', '',
                 '- **Task:** [T-1A01] A long title that wraps',
-                '  onto a continuation line.',
+                '  onto an indented continuation line,',
+                'then a lazy one.',
                 '- **Next Action:** Go', '',
             ].join('\r\n'));
 
             updateState(wsDir, { task: '[T-1A02] Short' }, {});
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
-            assert.doesNotMatch(after, /onto a continuation line/, 'the wrapped continuation must not survive as an orphan');
+            assert.doesNotMatch(after, /onto an indented continuation line/, 'the indented continuation must not survive as an orphan');
+            assert.doesNotMatch(after, /then a lazy one/, 'the lazy continuation must not survive as an orphan');
             assert.match(
                 after, /- \*\*Task:\*\* \[T-1A02\] Short\r\n- \*\*Next Action:\*\* Go\r\n/,
                 'the patched entry must be followed directly by the next bullet, CRLF intact'
