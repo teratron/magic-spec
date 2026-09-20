@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-20 10:01
-**Phase:** 31 — Diagnostics Revalidation Before Render (DG-10)
+**Updated:** 2026-09-20 15:33
+**Phase:** 32 — Automatic Session Checkpoints (SC-6..SC-9)
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-31T02 Verification
 - **Spec:** l1-engine-diagnostics.md (DG-10 Revalidation Before Render) · l2-engine-diagnostics.md (§4.10 implementation)
-- **Next Action:** Run /magic.task engine to update the plan
+- **Next Action:** Execute T-32A01 Extract the tracking-entry block reader from `finalize.js` into `lib/` via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [30/30] ████████ 100%
+Phase 32: [0/18] ░░░░░░░░ 0%
+Overall: [30/31] ████████ 97%
 ```
 
 ## Recent Decisions
