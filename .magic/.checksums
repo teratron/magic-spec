@@ -50,7 +50,7 @@
   "scripts/release-changelog.js": "ec66370ff2d7d47d3df37663aff9abb8dca669973b37fe3aeb5ed4f43c6097ab",
   "scripts/serve-spec-graph.js": "1f1068a332483d1c3faf9bd7b3cb0b0deb523785a83986b351d3f905e0a4353f",
   "scripts/update-engine-meta.js": "81c91895e3e7f977eaabc41e292dc8bb154879a2d02eb212a070a54492a9805a",
-  "scripts/update-state.js": "1185655818feccba8b496f4de35f9da73d269fd3bd0be93a3573c9769568c8db",
+  "scripts/update-state.js": "08857c6fb0f4f1c98e8689c93fd83269655834ade496b55f6d9e46542c4373db",
   "scripts/utils.js": "709815ac9049766e9f2fc4678ba299e299d387b84544c5c694e1f1fdb757254f",
   "spec.md": "a8fc692d209a859cac3d29fc252169db33643abbdd9865580cd21537caf39e27",
   "status.md": "bc901b0827a2094d82b0dd9423c5eceebed824168b5d829bee9eac107fea21a5",

@@ -244,6 +244,17 @@ describe('Magic Engine Scripts', () => {
         return fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
     };
 
+    // Runs `fn` and returns everything it sent to stderr through console.warn —
+    // the shared tail of the update-state tests that assert on what the script
+    // announces (line-cap guard, section creation).
+    const warnedBy = (fn) => {
+        const original = console.warn;
+        const messages = [];
+        console.warn = (...args) => messages.push(args.join(' '));
+        try { fn(); } finally { console.warn = original; }
+        return messages;
+    };
+
     // Writes a file at tempDir/rel (POSIX-style relative path), creating
     // parent directories as needed. Shared by fixtures that build an ad hoc
     // file tree rather than a full .design/ workspace (§15, §18).
@@ -2792,13 +2803,7 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            const captureWarnings = (fn) => {
-                const original = console.warn;
-                const messages = [];
-                console.warn = (...args) => messages.push(args.join(' '));
-                try { fn(); } finally { console.warn = original; }
-                return messages.join('\n');
-            };
+            const captureWarnings = (fn) => warnedBy(fn).join('\n');
 
             // Blocking Constraints grow monotonically by design and are never
             // pruned, so they can push the file past the cap on their own. Once
@@ -3251,6 +3256,522 @@ describe('Magic Engine Scripts', () => {
         } finally {
             cleanup(tempDir);
         }
+    });
+
+    // A STATE.md an agent has trimmed by hand keeps its header fields,
+    // `## Current Position` and the `## Progress` fence, and loses the list
+    // sections `update-state` writes into. Both list writers used to guard
+    // their whole rebuild with `if (secStart !== -1)` and no alternative, so
+    // on such a file they accepted the request, wrote nothing, and the CLI
+    // still reported `STATE.md updated` (l2-finalize-state-accuracy.md §13).
+    const trimmedState = [
+        '# Project State', '',
+        '**Workspace:** docs',
+        '**Updated:** 2026-01-01 00:00',
+        '**Phase:** 2 — Build',
+        '**Status:** Active', '',
+        '## Current Position', '',
+        '- **Task:** [T-2A01] Wire the parser',
+        '- **Spec:** l1-example.md §3',
+        '- **Next Action:** Continue', '',
+        '## Progress', '',
+        '```',
+        'Overall: [1/2] ████░░░░ 50%',
+        '```', '',
+    ];
+    const decisionsPreamble =
+        '<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->';
+    const constraintsPreamble = [
+        '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
+        '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
+    ];
+    // Whole-file view with the two volatile parts normalised — the
+    // `**Updated:**` stamp is dropped and an entry's date becomes `DATE` — so a
+    // test can assert equality rather than presence.
+    const withoutVolatile = (state) => state
+        .replace(/^\*\*Updated:\*\* .*\r?\n/m, '')
+        .replace(/^- \d{4}-\d{2}-\d{2} /gm, '- DATE ');
+    // Codes of every finding recorded so far in a temp workspace's sink.
+    const recordedCodes = (tempDir) => {
+        const sink = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
+        if (!fs.existsSync(sink)) return [];
+        return fs.readFileSync(sink, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line).code);
+    };
+
+    test('addDecision creates a missing "## Recent Decisions" section instead of dropping the entry (SC-1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
+
+            const warnings = warnedBy(() =>
+                updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true }));
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            // Whole-file equality pins where the section lands, the single blank
+            // line on each side and the preamble — not merely that the text exists.
+            assert.strictEqual(
+                withoutVolatile(after),
+                withoutVolatile([
+                    ...trimmedState,
+                    '## Recent Decisions', '',
+                    decisionsPreamble, '',
+                    '- DATE **Decision:** Adopt the strict parser',
+                    '',
+                ].join('\n')),
+                'the entry must be recorded in a newly created section at the end of the file'
+            );
+            assert.ok(
+                warnings.some((w) => /Recent Decisions/.test(w) && /created/i.test(w)),
+                'creating the section must be announced on stderr'
+            );
+            assert.deepStrictEqual(
+                recordedCodes(tempDir), ['STATE_SECTION_CREATED'],
+                'creating the section must be recorded once as a diagnostic'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a section addDecision created is reused by the next call, which announces nothing (SC-1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
+
+            updateState(wsDir, { decision: 'first' }, { addDecision: true });
+            const warnings = warnedBy(() => updateState(wsDir, { decision: 'second' }, { addDecision: true }));
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.strictEqual(
+                (after.match(/^## Recent Decisions$/gm) || []).length, 1,
+                'the second call must find the section the first created, not add another'
+            );
+            assert.match(
+                after,
+                /- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* second\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* first/,
+                'entries must sit newest-first in the one section'
+            );
+            assert.deepStrictEqual(warnings, [], 'a call that finds its section has nothing to announce');
+            assert.deepStrictEqual(
+                recordedCodes(tempDir), ['STATE_SECTION_CREATED'],
+                'creation is recorded once, not once per call'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('addConstraint creates a missing "## Blocking Constraints" section at its template position (SC-1.2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // The section's slot is set by the template order, not by where the
+            // file happens to end: it goes before the earliest section that
+            // follows it, and at the end of the file only when none does.
+            const cases = [
+                {
+                    name: 'nothing follows it, so it is appended at the end of the file',
+                    existing: ['## Recent Decisions', '', '- 2026-01-02 **Decision:** an existing entry', ''],
+                    expected: [
+                        '## Recent Decisions', '', '- 2026-01-02 **Decision:** an existing entry', '',
+                        '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **No Z**: Because W', '',
+                    ],
+                },
+                {
+                    name: 'Session Continuity follows it, so it is inserted before that section',
+                    existing: ['## Session Continuity', '', '**Handoff File:** none', ''],
+                    expected: [
+                        '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **No Z**: Because W', '',
+                        '## Session Continuity', '', '**Handoff File:** none', '',
+                    ],
+                },
+            ];
+
+            for (const { name, existing, expected } of cases) {
+                fs.writeFileSync(path.join(wsDir, 'STATE.md'), [...trimmedState, ...existing].join('\n'));
+                updateState(wsDir, { constraint: { title: 'No Z', desc: 'Because W' } }, { addConstraint: true });
+                const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+                assert.strictEqual(
+                    withoutVolatile(after),
+                    withoutVolatile([...trimmedState, ...expected].join('\n')),
+                    `${name}: the constraint must be recorded as C-001 in a newly created section`
+                );
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // Records one decision in a STATE.md made of `trimmedState` plus `following`
+    // and asserts the new section landed directly after `## Progress`, with
+    // `following` — everything that used to come next — untouched below it.
+    // Whole-file equality also proves the section is set off by exactly one
+    // blank line on each side (no MD012/MD022 drift).
+    const assertDecisionSectionCreatedAhead = (following, message) => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [...trimmedState, ...following].join('\n'));
+
+            updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true });
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.strictEqual(
+                withoutVolatile(after),
+                withoutVolatile([
+                    ...trimmedState,
+                    '## Recent Decisions', '',
+                    decisionsPreamble, '',
+                    '- DATE **Decision:** Adopt the strict parser', '',
+                    ...following,
+                ].join('\n')),
+                message
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    };
+
+    test('addDecision places a created section before the sections that follow it in template order (SC-1)', () => {
+        assertDecisionSectionCreatedAhead([
+            '## Blockers', '', '- [blocking] none', '',
+            '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **Do not X**: because Y', '',
+            '## Session Continuity', '', '**Handoff File:** none', '',
+        ], 'the section must land between Progress and Blockers, the sections after it untouched');
+    });
+
+    test('a STATE.md that only quotes the heading text is not corrupted by addDecision (SC-2)', () => {
+        // The heading is absent, but its text appears mid-line in another
+        // section. The old substring search took that occurrence for the
+        // heading and spliced the rebuilt block into the middle of the line:
+        // its tail was destroyed and a decisions section appeared inside
+        // `## Blocking Constraints`.
+        assertDecisionSectionCreatedAhead([
+            '## Blocking Constraints', '', ...constraintsPreamble, '',
+            '- [C-001] **Heads-up**: update-state ignores ## Recent Decisions when it is absent', '',
+            '## Session Continuity', '', '**Handoff File:** none', '',
+        ], 'the quoted line must survive whole and the decision must get a real section of its own');
+    });
+
+    test('a CRLF STATE.md missing the section gets it created once, and both entries survive (SC-1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // A Windows checkout under git autocrlf. The section rebuild has
+            // always written its own block with bare LF; what matters here is
+            // that the heading is found on the second call and not created again.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\r\n'));
+
+            updateState(wsDir, { decision: 'first' }, { addDecision: true });
+            updateState(wsDir, { decision: 'second' }, { addDecision: true });
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.strictEqual(
+                (after.match(/^## Recent Decisions$/gm) || []).length, 1,
+                'the heading must be created once, then found on the next call'
+            );
+            assert.match(
+                after,
+                /\*\*Decision:\*\* second\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* first/,
+                'both entries must be present, newest first'
+            );
+            assert.deepStrictEqual(recordedCodes(tempDir), ['STATE_SECTION_CREATED']);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a hand-suffixed "## Recent Decisions (last 5)" heading is still the section, not a missing one (SC-1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+
+            // Anchoring the heading to the start of a line must not demand the
+            // end of it too: a heading someone suffixed by hand was found by the
+            // old substring search, and a second section here would duplicate it.
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                ...trimmedState,
+                '## Recent Decisions (last 5)', '',
+                '- 2026-01-02 **Decision:** an earlier entry', '',
+            ].join('\n'));
+
+            const warnings = warnedBy(() =>
+                updateState(wsDir, { decision: 'a later entry' }, { addDecision: true }));
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.deepStrictEqual(
+                after.match(/^## Recent Decisions.*$/gm), ['## Recent Decisions'],
+                'exactly one section, rebuilt to the canonical heading'
+            );
+            assert.match(
+                after,
+                /\*\*Decision:\*\* a later entry\r?\n- 2026-01-02 \*\*Decision:\*\* an earlier entry/,
+                'the existing entry must be kept below the new one'
+            );
+            assert.deepStrictEqual(warnings, [], 'an existing section must not be announced as created');
+            assert.deepStrictEqual(recordedCodes(tempDir), [], 'an existing section must not be recorded as created');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // Applies one updateState call to a STATE.md built from `lines` (joined with
+    // `eol`) in a throwaway workspace and returns what it left behind: the file,
+    // whatever it announced on stderr and the diagnostic codes it recorded.
+    // `files` are extra workspace files (a TASKS.md for the progress cases).
+    const patchState = (lines, patch, options = {}, { eol = '\n', files = {} } = {}) => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), lines.join(eol));
+            for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(wsDir, name), body);
+            const warnings = warnedBy(() => updateState(wsDir, patch, options));
+            return {
+                after: fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8'),
+                warnings,
+                codes: recordedCodes(tempDir),
+            };
+        } finally {
+            cleanup(tempDir);
+        }
+    };
+
+    // §13.1 — the scalar-field loop and the Progress recompute used to skip,
+    // silently, a write whose anchor was absent, and matched their anchors
+    // anywhere in a line rather than at its start.
+    test('a requested header field with no line is created in template order (SC-2)', () => {
+        const tail = ['## Current Position', '', '- **Task:** [T-2A01] Wire the parser', ''];
+        const headerOf = (...fields) => ['# Project State', '', ...(fields.length ? [...fields, ''] : []), ...tail];
+        const stamp = '**Updated:** 2026-01-01 00:00';
+        const cases = [
+            {
+                name: 'before the earliest present field that follows it',
+                existing: headerOf('**Workspace:** docs', stamp, '**Status:** Active'),
+                patch: { phase: '3 — Ship' },
+                expected: headerOf('**Workspace:** docs', stamp, '**Phase:** 3 — Ship', '**Status:** Active'),
+            },
+            {
+                name: 'after the last present field when none follows it',
+                existing: headerOf('**Workspace:** docs', stamp, '**Phase:** 2 — Build'),
+                patch: { status: 'Blocked' },
+                expected: headerOf('**Workspace:** docs', stamp, '**Phase:** 2 — Build', '**Status:** Blocked'),
+            },
+            {
+                name: 'after the title when the header holds no field at all',
+                existing: headerOf(),
+                patch: { phase: '2 — Build' },
+                expected: headerOf('**Phase:** 2 — Build'),
+            },
+        ];
+
+        for (const { name, existing, patch, expected } of cases) {
+            const { after, warnings, codes } = patchState(existing, patch);
+            assert.strictEqual(
+                withoutVolatile(after), withoutVolatile(expected.join('\n')),
+                `${name}: the field must be created where the template puts it, adjacent to its neighbours`
+            );
+            assert.deepStrictEqual(codes, ['STATE_FIELD_CREATED'], `${name}: creation must be recorded once`);
+            assert.ok(warnings.some((w) => /created/i.test(w)), `${name}: creation must be announced on stderr`);
+        }
+    });
+
+    test('a requested Current Position field with no line is created, and so is the section when it is gone (SC-2)', () => {
+        const header = ['# Project State', '', '**Phase:** 2 — Build', ''];
+        const progress = ['## Progress', '', '```', 'Overall: [1/2] ████░░░░ 50%', '```', ''];
+        const cases = [
+            {
+                name: 'appended after the last field of the section',
+                existing: [...header, '## Current Position', '', '- **Task:** [T-2A01] Wire the parser', ''],
+                patch: { nextAction: 'Go' },
+                expected: [...header, '## Current Position', '', '- **Task:** [T-2A01] Wire the parser', '- **Next Action:** Go', ''],
+                codes: ['STATE_FIELD_CREATED'],
+            },
+            {
+                name: 'inserted before the earliest present field that follows it',
+                existing: [...header, '## Current Position', '', '- **Next Action:** Continue', ''],
+                patch: { task: '[T-2A02] New task' },
+                expected: [...header, '## Current Position', '', '- **Task:** [T-2A02] New task', '- **Next Action:** Continue', ''],
+                codes: ['STATE_FIELD_CREATED'],
+            },
+            {
+                name: 'with the section itself created ahead of Progress when the file has none',
+                existing: [...header, ...progress],
+                patch: { nextAction: 'Go' },
+                expected: [...header, '## Current Position', '', '- **Next Action:** Go', '', ...progress],
+                codes: ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'],
+            },
+        ];
+
+        for (const { name, existing, patch, expected, codes } of cases) {
+            const result = patchState(existing, patch);
+            assert.strictEqual(
+                withoutVolatile(result.after), withoutVolatile(expected.join('\n')),
+                `${name}: position and blank-line separation must be exactly the template's`
+            );
+            assert.deepStrictEqual(result.codes, codes, `${name}: every creation must be recorded`);
+        }
+    });
+
+    test('--handoff on a file without Session Continuity creates the section and the field, and a quoted label is left alone (SC-2)', () => {
+        // The pointer `pause.md` leaves for a later session. The second case is
+        // §13's second manifestation in the field patterns: the unanchored
+        // pattern took the label quoted in a decision for the field itself and
+        // rewrote that entry from the label onward.
+        const cases = [
+            { name: 'no line and no section', entry: 'an existing entry' },
+            { name: 'the label quoted mid-line in a decision', entry: 'set **Handoff File:** to none when the session ends' },
+        ];
+
+        for (const { name, entry } of cases) {
+            const existing = [...trimmedState, '## Recent Decisions', '', `- 2026-01-02 **Decision:** ${entry}`, ''];
+            const { after, codes } = patchState(existing, { handoff: '.design/docs/HANDOFF.json' });
+
+            assert.strictEqual(
+                withoutVolatile(after),
+                withoutVolatile([
+                    ...existing,
+                    '## Session Continuity', '', '**Handoff File:** .design/docs/HANDOFF.json', '',
+                ].join('\n')),
+                `${name}: the decision must survive whole and the pointer must land in a real section`
+            );
+            assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'], name);
+        }
+    });
+
+    test('Updated is refreshed where present and never created where absent (SC-2)', () => {
+        // No caller requests `Updated`: updateState injects a fresh stamp into
+        // every call, including one that patches nothing, so creating the line
+        // would hand every hand-trimmed file a new line on its first call.
+        const bare = ['# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', ''];
+
+        const untouched = patchState(bare, {});
+        assert.strictEqual(untouched.after, bare.join('\n'), 'a call that patches nothing must leave a stampless file byte-identical');
+        assert.deepStrictEqual(untouched.warnings, [], 'and must announce nothing');
+
+        const patched = patchState(bare, { phase: '3 — Ship' });
+        assert.doesNotMatch(patched.after, /Updated/, 'a patched file without a stamp must still have none');
+        assert.match(patched.after, /^\*\*Phase:\*\* 3 — Ship$/m, 'while the requested field is applied');
+        assert.deepStrictEqual(patched.codes, [], 'and nothing is recorded as created');
+    });
+
+    test('a field a call created is found by the next call, which announces nothing (SC-2)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
+                '# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', '',
+            ].join('\n'));
+
+            updateState(wsDir, { status: 'Blocked' }, {});
+            const warnings = warnedBy(() => updateState(wsDir, { status: 'Active' }, {}));
+            const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+
+            assert.deepStrictEqual(after.match(/^\*\*Status:\*\*.*$/gm), ['**Status:** Active'], 'one line, holding the latest value');
+            assert.deepStrictEqual(warnings, [], 'the second call has nothing to announce');
+            assert.deepStrictEqual(recordedCodes(tempDir), ['STATE_FIELD_CREATED'], 'creation is recorded once, not per call');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a field created in a CRLF file brings no bare LF with it (SC-2)', () => {
+        const { after } = patchState(
+            ['# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', ''],
+            { status: 'Active' }, {}, { eol: '\r\n' }
+        );
+
+        assert.match(after, /\*\*Phase:\*\* 2 — Build\r\n\*\*Status:\*\* Active\r\n/, 'the field must sit directly under its neighbour');
+        assert.doesNotMatch(after, /(?<!\r)\n/, 'every line break in the file must still be CRLF');
+    });
+
+    test('autoProgress creates a missing "## Progress" section holding the counters (SC-2)', () => {
+        const existing = ['# Project State', '', '**Phase:** 1', '**Status:** Active', '', '## Current Position', '', '- **Next Action:** go', ''];
+        const { after, codes } = patchState(
+            existing, {}, { autoProgress: true },
+            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } }
+        );
+
+        assert.strictEqual(
+            after,
+            [...existing, '## Progress', '', '```', 'Overall: [1/1] ████████ 100%', '```', ''].join('\n'),
+            'the section must be created at the end of the file with the recomputed counter in its fence'
+        );
+        assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED']);
+    });
+
+    test('a "## Progress" heading without a fence is left untouched, and the skip is announced (SC-2)', () => {
+        // The engine cannot tell narrative from a counter block it never wrote,
+        // so it must not overwrite this — but a silent skip is what §13.1 removes.
+        const existing = ['# Project State', '', '**Phase:** 1', '**Status:** Active', '', '## Progress', '', 'Just prose, no counters here.', ''];
+        const { after, warnings, codes } = patchState(
+            existing, {}, { autoProgress: true },
+            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } }
+        );
+
+        assert.strictEqual(after, existing.join('\n'), 'the block must be left exactly as it was');
+        assert.ok(warnings.some((w) => /Progress/.test(w)), 'the skip must be announced on stderr');
+        assert.deepStrictEqual(codes, ['PROGRESS_BLOCK_UNRECOGNISED']);
+    });
+
+    // §13.2 — the line-cap guard located the section with a substring search,
+    // required a heading to follow it, and removed the oldest entry by looking
+    // its text up again in the file.
+    test('the line-cap guard prunes the oldest decision when Recent Decisions is the last section (SC-1.2)', () => {
+        // The Next Action line quotes the heading text before the real heading:
+        // a substring search would have anchored on it.
+        const lines = [
+            '# Project State', '',
+            '**Phase:** 2 — Build', '**Status:** Active', '',
+            '## Current Position', '',
+            '- **Next Action:** revisit ## Recent Decisions once the cap is hit', '',
+            '## Blocking Constraints', '',
+            ...Array.from({ length: 90 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+            '',
+            '## Recent Decisions', '',
+            '- 2026-01-05 **Decision:** entry 5',
+            '- 2026-01-04 **Decision:** entry 4',
+            '- 2026-01-03 **Decision:** entry 3',
+            '- 2026-01-02 **Decision:** entry 2',
+            '- 2026-01-01 **Decision:** entry 1',
+        ];
+
+        for (const { name, tail } of [{ name: 'a trailing newline', tail: [''] }, { name: 'no trailing newline', tail: [] }]) {
+            const { after, warnings, codes } = patchState([...lines, ...tail], {});
+
+            assert.strictEqual(
+                after.trimEnd(), lines.slice(0, -1).join('\n').trimEnd(),
+                `${name}: exactly the oldest entry must go, everything else byte-for-byte`
+            );
+            assert.ok(warnings.some((w) => /Pruned oldest decision/.test(w)), `${name}: the prune must be reported`);
+            assert.ok(!warnings.some((w) => /nothing was pruned/.test(w)), `${name}: and must not be reported as exhausted`);
+            assert.deepStrictEqual(codes, ['STATE_DECISION_PRUNED'], name);
+        }
+    });
+
+    test('the line-cap guard prunes in a CRLF file by position, not by text (SC-1.2)', () => {
+        // The text the guard used to search for is LF-joined, so it never matched
+        // a CRLF file — yet `pruned` was set unconditionally and the prune was
+        // reported. Decisions are not last here, so the boundary is not in play.
+        const lines = [
+            ...trimmedState,
+            '## Recent Decisions', '',
+            ...[5, 4, 3, 2, 1].map((n) => `- 2026-01-0${n} **Decision:** entry ${n}`),
+            '',
+            '## Blocking Constraints', '',
+            ...Array.from({ length: 90 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+            '',
+        ];
+        const { after, warnings } = patchState(lines, {}, {}, { eol: '\r\n' });
+
+        assert.doesNotMatch(after, /entry 1\b/, 'the oldest entry must actually be gone');
+        assert.match(after, /entry 2\b/, 'the next-oldest must stay');
+        assert.ok(warnings.some((w) => /Pruned oldest decision/.test(w)), 'the prune must be reported');
+        assert.doesNotMatch(after, /(?<!\r)\n/, 'the removal must not introduce a bare LF');
     });
 
     // ───────────────────────────────────────────────────────────────────────────

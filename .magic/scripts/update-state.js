@@ -13,37 +13,61 @@ const diagnostics = require('./lib/diagnostics');
 
 /**
  * Groups a Markdown list section into logical entries, keeping each entry's
- * wrapped continuation lines attached to it. An entry starts at a line
- * matching `startRe`; every following non-blank line that does not itself
- * start a new entry is a continuation of it (how a wrapped Recent Decisions
- * or Blocking Constraints line looks on disk — marker line, then indented
- * continuation lines). Filtering lines by `startRe` alone, as the section
- * rebuilds below used to, keeps only each entry's first line and silently
- * drops the continuations on every rebuild (field report, engine v2.1.93).
+ * wrapped continuation lines attached to it, and returns where each one sits.
+ * An entry starts at a line matching `startRe`; every following non-blank line
+ * that does not itself start a new entry is a continuation of it (how a
+ * wrapped Recent Decisions or Blocking Constraints line looks on disk — marker
+ * line, then indented continuation lines). Filtering lines by `startRe` alone,
+ * as the section rebuilds below used to, keeps only each entry's first line and
+ * silently drops the continuations on every rebuild (field report, engine
+ * v2.1.93).
+ *
+ * This is the one place the grouping rule lives: `collectEntries` reads the
+ * entries' text through it, and the line-cap prune removes an entry by these
+ * offsets instead of looking its text up again in the file — a lookup that
+ * never matched a CRLF file or a last entry with no trailing newline, yet was
+ * reported as a prune (l2-finalize-state-accuracy.md section 13.2).
+ *
+ * @param {string} block    Section text (heading through the line before the next heading).
+ * @param {RegExp} startRe  Pattern matching an entry's first line.
+ * @returns {{start: number, end: number}[]} Offsets into `block`, in file order;
+ *   `end` is exclusive and includes the entry's last line terminator when it has one.
+ */
+function entryRanges(block, startRe) {
+    const ranges = [];
+    let current = null;
+    let offset = 0;
+    for (const raw of block.split(/(?<=\n)/)) {
+        const line = raw.replace(/\r?\n$/, '');
+        if (startRe.test(line)) {
+            if (current) ranges.push(current);
+            current = { start: offset, end: offset + raw.length };
+        } else if (current) {
+            if (line.trim() === '') {
+                ranges.push(current);
+                current = null;
+            } else {
+                current.end = offset + raw.length;
+            }
+        }
+        offset += raw.length;
+    }
+    if (current) ranges.push(current);
+    return ranges;
+}
+
+/**
+ * Reads a section's entries as text — each one string, its lines joined with
+ * `\n` whatever the file's own line endings are, ready to be re-emitted by a
+ * rebuild.
  *
  * @param {string} block    Section text (heading through the line before the next heading).
  * @param {RegExp} startRe  Pattern matching an entry's first line.
  * @returns {string[]} One string per entry; multi-line entries keep internal `\n`.
  */
 function collectEntries(block, startRe) {
-    const lines = block.split(/\r?\n/);
-    const entries = [];
-    let current = null;
-    for (const line of lines) {
-        if (startRe.test(line)) {
-            if (current) entries.push(current.join('\n'));
-            current = [line];
-        } else if (current) {
-            if (line.trim() === '') {
-                entries.push(current.join('\n'));
-                current = null;
-            } else {
-                current.push(line);
-            }
-        }
-    }
-    if (current) entries.push(current.join('\n'));
-    return entries;
+    return entryRanges(block, startRe).map(({ start, end }) =>
+        block.slice(start, end).replace(/\r?\n$/, '').split(/\r?\n/).join('\n'));
 }
 
 /**
@@ -89,6 +113,208 @@ function wholeEntryRe(lineRe, isListItem) {
     const lazy = '(?![-+*#>|<]|```|~~~|\\d+[.)][ \\t])\\S';
     const continuation = isListItem ? `(?:${indented}|${lazy})` : indented;
     return new RegExp(`${lineRe.source}(?:\\r?\\n${continuation}.*)*`, lineRe.flags);
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Section Location
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * STATE.md's `## ` sections in template order (`templates/state.md`). A section
+ * the file lacks is created at its slot in this order — before the earliest
+ * present section that follows it — so a repaired file reads the way a freshly
+ * bootstrapped one does.
+ */
+const SECTION_ORDER = [
+    '## Current Position',
+    '## Progress',
+    '## Recent Decisions',
+    '## Blockers',
+    '## Blocking Constraints',
+    '## Session Continuity',
+];
+
+/**
+ * Builds the pattern that recognises a section heading: the marker at the
+ * *start of a line*, then a word boundary. It is a heading test, not a
+ * substring search: `content.indexOf('## Recent Decisions')` also hits a line
+ * that merely quotes the heading — a constraint naming the section, say — and a
+ * rebuild spliced at that offset lands mid-line, destroying the quoting line's
+ * tail and creating the section inside the wrong one
+ * (l2-finalize-state-accuracy.md section 13). A word boundary, not end-of-line,
+ * follows the marker so a hand-suffixed heading (`## Recent Decisions (last 5)`)
+ * is still the section. Markers are the engine's own literal constants, so they
+ * need no regex escaping.
+ *
+ * @param {string} marker  Section heading, e.g. `## Recent Decisions`.
+ * @returns {RegExp} A fresh multiline pattern (no `lastIndex` state is shared).
+ */
+function headingRe(marker) {
+    return new RegExp(`^${marker}\\b`, 'm');
+}
+
+/**
+ * Locates a `## ` section: from its heading up to the line break that precedes
+ * the next level-2 heading, or to the end of the file for the last section.
+ *
+ * @param {string} content  STATE.md text.
+ * @param {string} marker   Section heading, e.g. `## Recent Decisions`.
+ * @returns {{start: number, end: number}|null} Bounds, or null when the file has no such heading.
+ */
+function locateSection(content, marker) {
+    const heading = headingRe(marker).exec(content);
+    if (!heading) return null;
+    const next = content.indexOf('\n## ', heading.index + 1);
+    return { start: heading.index, end: next !== -1 ? next : content.length };
+}
+
+/**
+ * Locates a `## ` section, first creating an empty one when the file has none.
+ * The two list-section writers (`addDecision`, `addConstraint`) used to guard
+ * their whole rebuild with `if (secStart !== -1)` and no alternative, so a
+ * STATE.md without the heading — routine for a file agents maintain by hand —
+ * took the request, wrote nothing, and still printed `STATE.md updated`
+ * (l2-finalize-state-accuracy.md section 13). Creating the section is safe
+ * because both are wholly engine-owned: the caller's deterministic rebuild
+ * fills it exactly as it fills one that was always there, and there is no
+ * hand-authored content to protect. The heading goes before the earliest
+ * present section that follows it in SECTION_ORDER, else at the end of the
+ * file, set off by one blank line on each side. The repair is announced on
+ * stderr and recorded as a `fix` diagnostic so it cannot pass unnoticed. The
+ * same step creates the container a missing field belongs in (`ensureField`)
+ * and a missing `## Progress` (section 13.1).
+ *
+ * @param {string} content    STATE.md text.
+ * @param {string} marker     Section heading; must be one of SECTION_ORDER.
+ * @param {string} statePath  Path of STATE.md, for the diagnostic's locus.
+ * @returns {{content: string, start: number, end: number}} STATE.md text (with
+ *   the section added when it was missing) and the section's bounds within it.
+ */
+function ensureSection(content, marker, statePath) {
+    const found = locateSection(content, marker);
+    if (found) return { content, ...found };
+
+    let at = content.length;
+    for (const following of SECTION_ORDER.slice(SECTION_ORDER.indexOf(marker) + 1)) {
+        const heading = headingRe(following).exec(content);
+        if (heading && heading.index < at) at = heading.index;
+    }
+    // Normalise the gap on the near side to exactly one blank line; the far
+    // side gets its blank line from the rest of the file (or none, at the end).
+    // The separators follow the file's own line ending.
+    const eol = lineEnding(content);
+    const head = content.slice(0, at).trimEnd();
+    const rest = content.slice(at);
+    const created = `${head ? `${head}${eol}${eol}` : ''}${marker}${eol}${rest ? `${eol}${rest}` : ''}`;
+
+    const message = `STATE.md had no "${marker}" section; created it so the requested write could be recorded.`;
+    console.warn(`[update-state] ${message}`);
+    diagnostics.record({
+        severity: 'fix', source: 'update-state', code: 'STATE_SECTION_CREATED',
+        message, locus: statePath,
+    });
+    return { content: created, ...locateSection(created, marker) };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Field Location
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The scalar fields `update-state` patches: a line-anchored pattern for each
+ * field's first physical line, and the prefix a line is (re)written with. The
+ * anchor matters for the reason a heading's does (`headingRe`): a pattern that
+ * matches anywhere in a line takes a label merely quoted mid-line for the field
+ * and rewrites the quoting line from there on, destroying its tail
+ * (l2-finalize-state-accuracy.md section 13.1). The `- ` prefix marks the three
+ * fields written as Markdown list items (see `wholeEntryRe`).
+ */
+const FIELD_MAP = {
+    workspace: { re: /^\*\*Workspace:\*\* .*/m, prefix: '**Workspace:** ' },
+    updated: { re: /^\*\*Updated:\*\* .*/m, prefix: '**Updated:** ' },
+    phase: { re: /^\*\*Phase:\*\* .*/m, prefix: '**Phase:** ' },
+    status: { re: /^\*\*Status:\*\* .*/m, prefix: '**Status:** ' },
+    task: { re: /^- \*\*Task:\*\* .*/m, prefix: '- **Task:** ' },
+    spec: { re: /^- \*\*Spec:\*\* .*/m, prefix: '- **Spec:** ' },
+    nextAction: { re: /^- \*\*Next Action:\*\* .*/m, prefix: '- **Next Action:** ' },
+    handoff: { re: /^\*\*Handoff File:\*\* .*/m, prefix: '**Handoff File:** ' },
+    bootstrap: { re: /^\*\*Bootstrap Mode:\*\* .*/m, prefix: '**Bootstrap Mode:** ' },
+};
+
+/**
+ * Where each patchable field lives and the order the template lists them in:
+ * the header block (the text before the first level-2 heading) or a `## `
+ * section. `ensureField` places a missing line by this.
+ */
+const FIELD_CONTAINERS = [
+    { section: null, keys: ['workspace', 'updated', 'phase', 'status'] },
+    { section: '## Current Position', keys: ['task', 'spec', 'nextAction'] },
+    { section: '## Session Continuity', keys: ['handoff', 'bootstrap'] },
+];
+
+/** A line that is itself a field: `**Label:** …` or `- **Label:** …`. */
+const FIELD_LINE_RE = /^(?:- )?\*\*[^*\n]+:\*\*/;
+
+/**
+ * The line ending a file uses, for text the engine inserts into it: CRLF when
+ * the file has any, else LF.
+ *
+ * @param {string} content  File text.
+ * @returns {string} `\r\n` or `\n`.
+ */
+function lineEnding(content) {
+    return content.includes('\r\n') ? '\r\n' : '\n';
+}
+
+/**
+ * Adds a field line that the file lacks. The scalar-field loop used to patch a
+ * field only when its line was found and to do nothing otherwise, so on a
+ * hand-trimmed file a `--next-action`, `--status` or `--handoff` was accepted
+ * and dropped while `STATE.md updated` was still printed
+ * (l2-finalize-state-accuracy.md section 13.1). The line goes before the
+ * earliest present field that follows it in template order within its
+ * container, else after the container's last non-blank line; a container
+ * section the file lacks is created first (`ensureSection`). Field lines stay
+ * adjacent to one another, and a field that follows a heading or prose is set
+ * off by one blank line. Separators and the line's own terminator use the
+ * file's line ending, so a CRLF file gains no bare LF from this step.
+ *
+ * @param {string} content    STATE.md text.
+ * @param {string} key        A key of FIELD_MAP.
+ * @param {string} line       The complete line to add (prefix and value).
+ * @param {string} statePath  Path of STATE.md, for a created section's diagnostic.
+ * @returns {string} STATE.md text with the line added.
+ */
+function ensureField(content, key, line, statePath) {
+    const container = FIELD_CONTAINERS.find((c) => c.keys.includes(key));
+    let start = 0;
+    let end = content.length;
+    if (container.section) {
+        const section = ensureSection(content, container.section, statePath);
+        ({ content, start, end } = section);
+    } else {
+        const firstHeading = content.search(/^## /m);
+        if (firstHeading !== -1) end = firstHeading;
+    }
+    const block = content.slice(start, end);
+    const eol = lineEnding(content);
+
+    let at = -1;
+    for (const following of container.keys.slice(container.keys.indexOf(key) + 1)) {
+        const found = FIELD_MAP[following].re.exec(block);
+        if (found && (at === -1 || found.index < at)) at = found.index;
+    }
+
+    let updated;
+    if (at !== -1) {
+        updated = `${block.slice(0, at)}${line}${eol}${block.slice(at)}`;
+    } else {
+        const body = block.trimEnd();
+        const lastLine = body.slice(body.lastIndexOf('\n') + 1);
+        const gap = FIELD_LINE_RE.test(lastLine) ? eol : `${eol}${eol}`;
+        updated = `${body}${gap}${line}${block.slice(body.length)}`;
+    }
+    return `${content.slice(0, start)}${updated}${content.slice(end)}`;
 }
 
 /**
@@ -145,28 +371,19 @@ function updateState(designDir, patch, options = {}) {
     // ───────────────────────────────────────────────────────────────────────
     // Apply simple field patches (regex-based line replacement)
     // ───────────────────────────────────────────────────────────────────────
-    const fieldMap = {
-        workspace: { re: /\*\*Workspace:\*\* .*/, prefix: '**Workspace:** ' },
-        updated: { re: /\*\*Updated:\*\* .*/, prefix: '**Updated:** ' },
-        phase: { re: /\*\*Phase:\*\* .*/, prefix: '**Phase:** ' },
-        status: { re: /\*\*Status:\*\* .*/, prefix: '**Status:** ' },
-        task: { re: /- \*\*Task:\*\* .*/, prefix: '- **Task:** ' },
-        spec: { re: /- \*\*Spec:\*\* .*/, prefix: '- **Spec:** ' },
-        nextAction: { re: /- \*\*Next Action:\*\* .*/, prefix: '- **Next Action:** ' },
-        handoff: { re: /\*\*Handoff File:\*\* .*/, prefix: '**Handoff File:** ' },
-        bootstrap: { re: /\*\*Bootstrap Mode:\*\* .*/, prefix: '**Bootstrap Mode:** ' },
-    };
 
     // Always update timestamp
     patch.updated = now;
 
-    for (const [key, { re, prefix }] of Object.entries(fieldMap)) {
+    const createdFields = [];
+    for (const [key, { re, prefix }] of Object.entries(FIELD_MAP)) {
         if (patch[key] !== undefined) {
             // Match the whole entry, not just its first physical line: a wrapped
             // value's continuation lines are replaced along with its marker line
             // (see wholeEntryRe). Every field goes through this one loop; the
             // `- ` prefix marks the three fields that are Markdown list items.
             const entryRe = wholeEntryRe(re, prefix.startsWith('- '));
+            const line = `${prefix}${patch[key]}`;
             if (entryRe.test(content)) {
                 // Function-form replacement: the returned string is spliced in
                 // verbatim. A string-form second argument is re-scanned for the
@@ -180,10 +397,26 @@ function updateState(designDir, patch, options = {}) {
                 // duplicated, a stale ## Progress counter among them. Same
                 // defect class as the ## Progress fence rewrite below
                 // (l2-finalize-state-accuracy.md sections 6 and 6.1).
-                const line = `${prefix}${patch[key]}`;
                 content = content.replace(entryRe, () => line);
+            } else if (key !== 'updated') {
+                // Absent: create the line at its template position rather than
+                // drop the write (section 13.1). `updated` is the exception —
+                // no caller requests it, a fresh stamp is injected into every
+                // call — so it is refreshed where present and left absent where
+                // absent, and a call that patches nothing stays a no-op.
+                content = ensureField(content, key, line, statePath);
+                createdFields.push(prefix.replace(/^- /, '').trim());
             }
         }
+    }
+    if (createdFields.length > 0) {
+        const message = `STATE.md lacked the field line(s) ${createdFields.join(', ')}; ` +
+            'created so the requested update could be recorded.';
+        console.warn(`[update-state] ${message}`);
+        diagnostics.record({
+            severity: 'fix', source: 'update-state', code: 'STATE_FIELD_CREATED',
+            message, locus: statePath,
+        });
     }
 
     // ───────────────────────────────────────────────────────────────────────
@@ -205,28 +438,27 @@ function updateState(designDir, patch, options = {}) {
     // ───────────────────────────────────────────────────────────────────────
     if (options.addDecision && patch.decision) {
         const marker = '## Recent Decisions';
-        const secStart = content.indexOf(marker);
-        if (secStart !== -1) {
-            const nextHeading = content.indexOf('\n## ', secStart + 1);
-            const secEnd = nextHeading !== -1 ? nextHeading : content.length;
-            const block = content.slice(secStart, secEnd);
+        // A hand-trimmed file may lack the heading: ensureSection creates the
+        // section instead of letting the write be skipped (section 13).
+        const section = ensureSection(content, marker, statePath);
+        content = section.content;
+        const block = content.slice(section.start, section.end);
 
-            const existingEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
-            const newEntry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}`;
-            const decisionEntries = [newEntry, ...existingEntries].slice(0, 5);
+        const existingEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
+        const newEntry = `- ${now.slice(0, 10)} **Decision:** ${patch.decision}`;
+        const decisionEntries = [newEntry, ...existingEntries].slice(0, 5);
 
-            const rebuilt = [
-                marker,
-                '',
-                '<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) ' +
-                    '— see PLAN.md / CHANGELOG.md for phase history. -->',
-                '',
-                ...decisionEntries,
-                '',
-            ].join('\n');
+        const rebuilt = [
+            marker,
+            '',
+            '<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) ' +
+                '— see PLAN.md / CHANGELOG.md for phase history. -->',
+            '',
+            ...decisionEntries,
+            '',
+        ].join('\n');
 
-            content = content.slice(0, secStart) + rebuilt + content.slice(secEnd);
-        }
+        content = content.slice(0, section.start) + rebuilt + content.slice(section.end);
     }
 
     // ───────────────────────────────────────────────────────────────────────
@@ -251,33 +483,32 @@ function updateState(designDir, patch, options = {}) {
     // ───────────────────────────────────────────────────────────────────────
     if (options.addConstraint && patch.constraint) {
         const marker = '## Blocking Constraints';
-        const secStart = content.indexOf(marker);
-        if (secStart !== -1) {
-            const nextHeading = content.indexOf('\n## ', secStart + 1);
-            const secEnd = nextHeading !== -1 ? nextHeading : content.length;
-            const block = content.slice(secStart, secEnd);
+        // Same as ## Recent Decisions above: an absent section is created, not
+        // skipped — and it is the one whose entries must never be lost.
+        const section = ensureSection(content, marker, statePath);
+        content = section.content;
+        const block = content.slice(section.start, section.end);
 
-            const existingEntries = collectEntries(block, /^- \[C-\d{3}\]/);
-            // Auto-number from entries already inside this block, not a
-            // whole-file scan — a `[C-NNN]` mentioned in passing elsewhere
-            // (e.g. a Recent Decisions note referencing a constraint) must
-            // not inflate the next id.
-            const id = `C-${String(existingEntries.length + 1).padStart(3, '0')}`;
-            const newEntry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}`;
-            const constraintEntries = [newEntry, ...existingEntries];
+        const existingEntries = collectEntries(block, /^- \[C-\d{3}\]/);
+        // Auto-number from entries already inside this block, not a
+        // whole-file scan — a `[C-NNN]` mentioned in passing elsewhere
+        // (e.g. a Recent Decisions note referencing a constraint) must
+        // not inflate the next id.
+        const id = `C-${String(existingEntries.length + 1).padStart(3, '0')}`;
+        const newEntry = `- [${id}] **${patch.constraint.title}**: ${patch.constraint.desc}`;
+        const constraintEntries = [newEntry, ...existingEntries];
 
-            const rebuilt = [
-                marker,
-                '',
-                '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
-                '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
-                '',
-                ...constraintEntries,
-                '',
-            ].join('\n');
+        const rebuilt = [
+            marker,
+            '',
+            '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
+            '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
+            '',
+            ...constraintEntries,
+            '',
+        ].join('\n');
 
-            content = content.slice(0, secStart) + rebuilt + content.slice(secEnd);
-        }
+        content = content.slice(0, section.start) + rebuilt + content.slice(section.end);
     }
 
     // ───────────────────────────────────────────────────────────────────────
@@ -287,9 +518,31 @@ function updateState(designDir, patch, options = {}) {
         try {
             const progress = computeProgress(designDir, content);
             if (progress) {
-                const progressRe = /(## Progress\s*\n+```\r?\n)([\s\S]*?)(\r?\n```)/;
+                const progressRe = /(^## Progress\s*\n+```\r?\n)([\s\S]*?)(\r?\n```)/m;
                 const existing = content.match(progressRe);
-                if (existing) {
+                if (!existing && !locateSection(content, '## Progress')) {
+                    // No section at all: create it holding the counters instead
+                    // of skipping the recompute (section 13.1). Built with plain
+                    // concatenation — the fence carries backticks, and nothing
+                    // here may be a replacement string.
+                    const section = ensureSection(content, '## Progress', statePath);
+                    content = section.content.slice(0, section.start) +
+                        '## Progress\n\n```\n' + progress + '\n```\n' +
+                        section.content.slice(section.end);
+                } else if (!existing) {
+                    // A heading with no fence directly under it is a shape the
+                    // merge-not-clobber rule does not recognise, and the engine
+                    // cannot tell narrative from a counter block it never wrote:
+                    // leave it exactly as it is, but say so.
+                    const message = 'STATE.md has a "## Progress" heading with no counter block under it that ' +
+                        'the recompute recognises; left it untouched.';
+                    console.warn(`[update-state] ${message}`);
+                    diagnostics.record({
+                        severity: 'warning', source: 'update-state', code: 'PROGRESS_BLOCK_UNRECOGNISED',
+                        message, locus: statePath,
+                        remedy: 'Put the counters in a fenced block directly under the heading, or delete the section and let the recompute recreate it.',
+                    });
+                } else {
                     // Only the two labels `computeProgress()` itself emits are
                     // engine-owned and recomputed (including their template
                     // `{filled}/{total}` placeholder form). Any other line inside
@@ -342,13 +595,19 @@ function updateState(designDir, patch, options = {}) {
     const lines = content.split('\n');
     if (lines.length > 100) {
         let pruned = false;
-        const secStart = content.indexOf('## Recent Decisions');
-        const secEnd = content.indexOf('\n## ', secStart + 1);
-        if (secStart !== -1 && secEnd !== -1) {
-            const block = content.slice(secStart, secEnd);
-            const decEntries = collectEntries(block, /^- \d{4}-\d{2}-\d{2}/);
-            if (decEntries.length > 1) {
-                content = content.replace(decEntries[decEntries.length - 1] + '\n', '');
+        // Located by the same anchored, end-of-file-bounded locator the section
+        // writers use, and the oldest entry removed by its position in the file
+        // — not by looking its text up again, which never matched a CRLF file or
+        // a last entry with no trailing newline while `pruned` was still set,
+        // and never ran at all when the section was the file's last
+        // (l2-finalize-state-accuracy.md section 13.2).
+        const section = locateSection(content, '## Recent Decisions');
+        if (section) {
+            const ranges = entryRanges(content.slice(section.start, section.end), /^- \d{4}-\d{2}-\d{2}/);
+            if (ranges.length > 1) {
+                const oldest = ranges[ranges.length - 1];
+                content = content.slice(0, section.start + oldest.start) +
+                    content.slice(section.start + oldest.end);
                 pruned = true;
             }
         }
