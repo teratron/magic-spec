@@ -1,12 +1,12 @@
 # Session Continuity & Status Surface
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5. The commit-message suggestion guarantee this spec originally also defined (SC-3) was retired 2026-08-27 by explicit user directive — see §3's SC-3 entry. The adjacent hard rule that survived that retirement — the engine and the agent never invoke a write-side git operation — was itself retired 2026-09-17, also by explicit user directive; see §1.4.
+Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace live memory, a universal post-workflow state update, and a read-only status briefing surface for resuming work after a break. Consolidates the previously unspecified live-memory subsystem (state template, update utility, pause/handoff flow) under explicit invariants SC-1..SC-5, extended by SC-1.3 and SC-6..SC-9 in 2.3.0. The commit-message suggestion guarantee this spec originally also defined (SC-3) was retired 2026-08-27 by explicit user directive — see §3's SC-3 entry. The adjacent hard rule that survived that retirement — the engine and the agent never invoke a write-side git operation — was itself retired 2026-09-17, also by explicit user directive; see §1.4. Version 2.3.0 adds the automatic-checkpoint contract (SC-1.3, SC-6..SC-9): a session may be ended at any checkpoint — cleared, restarted, handed to another agent — and resumed from persisted state alone, with no user-typed command and no engine behavior that depends on the agent measuring its own context window.
 
 ## Related Specifications
 
@@ -17,6 +17,7 @@ Defines the engine-wide session-continuity contract: `STATE.md` as per-workspace
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) - Implementation surface for the finalize pipeline's emitted artifacts: stdout listings and CHANGELOG bullets (commit-message composition retired alongside SC-3).
 - [l2-status-command.md](l2-status-command.md) - Implementation of the status briefing surface (SC-4, SC-5).
 - [l1-engine-diagnostics.md](l1-engine-diagnostics.md) - DG-6 surfaces the SC-2 `Next Action` in finalization stdout so the printed and persisted values cannot diverge; DG-5 places the diagnostics digest immediately before it.
+- [l2-session-checkpoint.md](l2-session-checkpoint.md) - Implementation contract for SC-1.3 and SC-6..SC-9: the task-start record, the `Attempts` field, the shared resume predicate, the checkpoint claim, and the retirement of fill-percentage triggers.
 
 ## 1. Motivation
 
@@ -37,6 +38,19 @@ The engine has restricted the agent's own git behavior twice: first the commit-m
 
 The live-memory subsystem (state template, update utility, pause/handoff flow, context load order) ships with the engine but is governed by no specification — behavior is defined only by workflow prose. This spec closes the gap and adds the missing invariants.
 
+### 1.5 Context Rot and Session Boundaries (user directive, 2026-09-20)
+
+A long session degrades: as the context window fills and ages, early facts are weighted less reliably, superseded facts sit beside current ones, and after a compaction the detail is replaced by a summary. The user's remedy is to end the session and continue in a fresh one from persisted state. The directive is that the engine make this safe **automatically** — no new command, nothing the user must remember to run. Read against that directive, the shipped pause/handoff path (audit, 2026-09-20) cannot deliver it:
+
+- **Its automatic trigger is unmeasurable.** The only one is a context-fill percentage (the POOR tier of the Context Budget Guard in `context.md`) that the agent has no means of observing. The text itself calls the thresholds "guidance, not contractual cutoffs" while requiring the agent to narrate a figure such as `NORMAL → DEGRADED at 63%` — a number the agent cannot observe is a number it must invent.
+- **Its manual trigger is not a command.** `/magic.pause` names an internal module with no wrapper ([l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6, item 3), yet eight shipped lines advertise it to the user as something to run.
+- **Nothing shows it ever ran.** No `HANDOFF*` file was ever added to this repository's history and the workspace's `Handoff File` reads `none`; the script harness pins only the pointer field's patching; the cognitive suite has no case for the snapshot or for Resume Detection; and no invariant here covers the snapshot, its trigger or its lifecycle — §1.2 said this spec closes that gap, and SC-1..SC-5 did not.
+- **Its resume trigger contradicts its own lifecycle.** Resume Detection fires on `Status: Paused` **or** on a `HANDOFF.json` existing, while the snapshot's merge rule (`pause.md`, Iterative Merge) requires the file to outlive a resume. Read literally, every workflow after the first pause re-announces a paused session and reloads a stale reading list — reintroducing the rot the pause was meant to remove.
+- **Nothing records work in flight.** No step of `run.md` sets a task to `In Progress`, so a session interrupted mid-task leaves the task `Todo` and its partial work unexplained. An abandoned approach has no place to be recorded at all. And the snapshot's `relevant_files` is copied from phase frontmatter that is filled only when the phase closes, so a mid-phase snapshot lists nothing.
+- **One field can never be true.** `**Last Session Ended:**` has no writer: `update-state.js` maintains no such field, and this workspace's `STATE.md` read `2026-06-12` against an `Updated` of `2026-09-20`.
+
+SC-6..SC-9 replace the pause *act* with checkpoints the engine writes at events it can observe, and SC-1.3 removes the field that could never be kept true. §4.4 records why the widely recommended six-section handoff file was not adopted as a new artifact.
+
 ## 2. Constraints & Assumptions
 
 - `STATE.md` stays a per-workspace file capped at 100 lines (template contract) — enforced by pruning `## Recent Decisions` down to a 1-entry floor (SC-1.2); this does not by itself bound `## Blocking Constraints`, which has no pruning of its own.
@@ -45,6 +59,8 @@ The live-memory subsystem (state template, update utility, pause/handoff flow, c
 - New user-facing commands require an explicit Workflow Minimalism (C2) exception; this spec records exactly one (SC-5).
 - No new artifact files are introduced: the briefing is composed from existing artifacts.
 - SC-2 is carried by the Finalization Protocol pipeline and inherits its documented opt-outs (`MAGIC_FINALIZE=0`, `finalization.enabled: false`): a user who disables finalization knowingly suspends the guarantee for that scope.
+- No new user-facing command (user directive, 2026-09-20): SC-5 remains the only C2 exception this spec records. Every guarantee in SC-6..SC-9 is delivered by workflow steps, scripts and always-loaded rules, never by something the user must type. An internal executor subcommand invoked by the engine is not a user-facing command and needs no C2 exception.
+- The engine cannot clear, restart or end a session — the host owns that — and it never sees a session close, a clear or a compaction as it happens. It can only make ending a session safe and starting one seamless. Continuity therefore rests on state written at events the engine can observe, never on an act performed when a session ends.
 
 ## 3. Core Invariants
 
@@ -55,6 +71,8 @@ Every workspace owns exactly one `STATE.md`, instantiated from the engine templa
 **`Status` Field Scope (SC-1.1):** the top-level `**Status:**` field is **phase/workspace-level only** — its confirmed vocabulary is `Active | Blocked | Paused` (`pause.md` writes and clears `Paused`; Pause Propagation and `task.md` phase-start writes set `Blocked`/`Active`), describing the state of the *phase currently in progress* (or the workspace as a whole), never an individual task. Plan completion is communicated through `Next Action`'s text (SC-2.1(c)), not a fourth `Status` value — no code path currently writes one, and this invariant does not introduce one. A task's own completion state is tracked authoritatively in `TASKS.md` / `tasks/phase-{N}.md`'s checklist (`- [x]`/`- [ ]`) and Detailed Tracking `**Status:**` sub-field — `STATE.md` does not duplicate it. A write that sets the top-level `Status` field from a task-scoped event (e.g. one task among several completing) is an SC-1 violation regardless of which value is written: it conflates two different vocabularies (task status includes `Done`/`Cancelled`, which are not valid phase-level values) and misrepresents the phase as finished when work remains. This does not forbid Pause Propagation's `--status=Blocked` call: that call is conditioned on phase-wide exhaustion (no `Todo` tasks anywhere in the phase), not on any single task's transition, so it is a phase-scoped assessment even though one task's transition is what triggers the check. Field report (engine 2.1.58): a per-task update call paired `--task="{T-ID} {Title}"` with `--status=Done`, and the phase-level field became `Done` — a value outside its own confirmed vocabulary — after a single task of an active phase completed.
 
 **Line-Cap Enforcement (SC-1.2):** the 100-line ceiling (§2 Constraints) is enforced by a single mechanism — pruning the oldest `## Recent Decisions` entry, one per `update-state` invocation, down to a floor of 1 remaining entry — that assumes `## Recent Decisions` is the file's dominant growth source. `## Blocking Constraints` has no cap and no pruning of its own: every discovered anti-pattern is appended (auto-numbered `[C-NNN]`) and never removed, by design — the template marks the section "MANDATORY reading", so silently deleting an entry would drop safety-critical operator knowledge without notice, unlike a disposable Decision note. Once `## Recent Decisions` is pruned to its 1-entry floor, the line-cap guard has nothing left to remove: the file grows without bound on every subsequent `addConstraint` call, and — because the guard's warning is unconditional on the `lines.length > 100` check rather than on whether a line was actually removed — it keeps reporting the cap as handled ("Pruning oldest decision") when it is not. A workspace whose `## Blocking Constraints` section alone exceeds the line budget remaining after the fixed template sections and a 1-entry `## Recent Decisions` breaks the "never exceeds 100 lines" contract with no signal distinguishing that state from a routine, successfully-pruned invocation. Reproduced directly: a synthetic workspace with 20 `addConstraint` calls stayed under the cap (74 lines total — the guard never engaged, since nothing crossed 100 yet); pushed to 60 accumulated constraints, the same workspace reached 110 lines with `## Recent Decisions` already at its 1-entry floor — 10 lines over the documented ceiling, growing further with every subsequent call, silently. Field report (informal): an operator note that `STATE.md` had reached 94 of 100 lines and should have its oldest `## Recent Decisions` entries trimmed "next cycle" — the reproduction shows decision-pruning alone cannot hold the line once `## Blocking Constraints` is the dominant growth source, since that section is never pruned at all.
+
+**No Dead Fields (SC-1.3):** every field the `STATE.md` template defines has a named writer — a script flag or a workflow step — and a moment at which that writer runs; a field with no writer is removed from the template rather than left to age. The file is read first in every session, so a field that can only go stale misdirects the returning session exactly as a stale `Next Action` does. Field evidence: `**Last Session Ended:**` — the state utility maintains no such field, and this workspace's file carried `2026-06-12` against `Updated: 2026-09-20`. The engine cannot observe a session end (§2), so the field could never have been kept true; `Updated` already records the last activity.
 
 ### SC-2 — Universal Post-Workflow Update
 
@@ -115,6 +133,37 @@ The engine exposes a read-only command that composes a resume briefing from exis
 
 The status command is an authorized Workflow Minimalism (C2) exception, requested by explicit user directive (2026-06-12). The user-facing wrapper set grows by exactly one command; any further command addition requires its own explicit authorization.
 
+### SC-6 — Cold-Start Sufficiency
+
+After every **checkpoint**, a session holding no conversation memory can continue the work from persisted state alone — without asking the user and without repeating settled work. A checkpoint is (a) the SC-2 update at the end of every mutating workflow, and (b) each task-level event SC-8 and SC-9 define. *Sufficient* means the persisted state yields the **recorded** facts a continuing session needs: position, `Next Action`, blocking constraints, the tasks in flight (SC-9), the dead ends recorded against them (SC-8), and the working-tree files those tasks touched. Understanding that was never recorded is outside the guarantee by definition; SC-8 exists to record the part of it that is costly to rediscover.
+
+Consequences: ending a session at a checkpoint — clearing it, restarting it, switching agent — costs nothing, so no engine behavior needs to *diagnose* that a session has degraded (SC-7), and none may make ending one depend on such a diagnosis. Sufficiency is testable: end a synthetic session at a checkpoint, start another from the files alone, and compare the recorded facts.
+
+**Checkpoint Claim (SC-6.1):** the terminal output of a mutating workflow states, in one line, that the checkpoint was written, so the user learns which moments are safe to clear instead of guessing. The claim is made only when the SC-2 state update actually succeeded: a skipped, failed or previewed (`--dry-run`) update MUST NOT claim durability. A promise of safety the engine did not earn is worse than silence. Under an opt-out of finalization (§2) there is neither a checkpoint nor a claim.
+
+### SC-7 — Observable Triggers
+
+Every automatic engine behavior fires on an event the engine or the agent can observe: a workflow or task boundary, a script exit status, a Verify or review verdict, a status transition, recorded state (SC-9), or an explicit statement by the user. It never fires on a quantity the agent cannot measure. Context-window fill is such a quantity: it MUST NOT trigger any behavior and MUST NOT be reported as a measured value; a figure may be quoted only when the host supplied it. A trigger that no fixture can reproduce is not a trigger — SC-7 is what makes SC-6 testable.
+
+Consequences: the percentage tiers of the Context Budget Guard cease to be triggers, and the automatic pause they fired at the POOR tier is retired — nothing observable corresponds to it. Read-economy guidance survives as guidance (Read Hygiene is unaffected). One observable event does earn a behavior: a compaction the agent can see — its context now begins with a summary standing in for earlier turns — is a cold context (SC-9(c)), because the detail the summary dropped is exactly what rots.
+
+### SC-8 — Dead-End Record
+
+An approach tried and abandoned inside an open task is recorded in that task's own tracking entry (its `Detailed Tracking` block) at the moment it is abandoned, as one line — what was tried, why it failed — in Evidence Capsule terms (no raw tool output; see `context.md` Read Hygiene). The list of moments is closed: a Verify or QA failure; a review verdict that returns work to execution; an approach the executor discards or reverts. The record is read before an approach is chosen, and an executor that re-attempts a recorded dead end states in one line what is different this time — an unchanged retry of a failed approach is the failure this invariant prevents.
+
+Scope and lifetime: the record belongs to the task and lives in the phase workbook (`tasks/phase-{N}.md`), so it travels with the task's other fields, is loaded with the workbook at every resume (which is why no separate handoff file is needed), and is archived with the phase; it never enters a product file ([l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)). It is bounded, and it does not enter `STATE.md`, whose cap (SC-1.2) cannot absorb a per-task log. A dead end that would bite unrelated future work — an anti-pattern rather than an episode — is promoted to `Blocking Constraints` through the existing constraint mechanism; promotion is deliberate because that section is never pruned.
+
+### SC-9 — Resume From Recorded State
+
+In-flight work is a recorded state, and a session resumes from that state: never from the mere presence of a file, and never by asking the user.
+
+- **(a) Recording.** Starting a task is an event: the task is recorded as in flight in its own tracking entry before any execution step begins. The checklist line is left untouched: the readers that decide whether a task is open — the `Next Action` computation and archival eligibility — key on the open checkbox, and an in-flight marker there would hide the very task a resuming session must find.
+- **(b) Detection.** Work is in flight when a tracking entry in the workspace's live plan (not an archived phase) records it as in flight, or when `STATE.md` records `Status: Paused` (an agent-initiated snapshot; it remains valid, and no guarantee here depends on it). A snapshot file whose `STATE.md` pointer reads `none` is inert — never loaded, never a trigger. The engine holds one implementation of this predicate and every surface that reports a resume calls it: the prose copies that motivated this invariant (§1.5) disagreed about when a resume completes.
+- **(c) Cold context.** Detection runs before the first substantive action whenever the agent holds no `STATE.md` for the workspace in its current context — a new session, a cleared one, a compaction — and at every workflow's context load. The predicate is observable, so no session boundary has to be detected.
+- **(d) Output.** When work is in flight: one informational line, no prompt, no menu. When none is: silence. The user's actual request outranks the recorded `Next Action`; a divergence is narrated in one line (the Memory Fence in the context load order stays).
+- **(e) In-flight product.** The files an in-flight task touched are recovered from the working tree, never from the agent's notes; the resume line reports how many when the project is a version-controlled tree and omits the count, without error, when it is not.
+- **(f) Multiplicity.** Parallel execution (C3) can hold several tasks in flight at once; detection reports each of them within a fixed bound.
+
 ## 4. Detailed Design
 
 ### 4.1 Session Loop
@@ -126,6 +175,10 @@ graph LR
     C --> D["Finalize: bump + changelog when significant"]
     D --> E["User commits independently, on their own schedule"]
     F["Status command"] -. reads .-> C
+    G["Task events: start, dead end (SC-8, SC-9)"] --> H["Task tracking entry"]
+    I["Cold context: new session, clear, compaction"] --> J["Resume check (SC-9)"]
+    J -. reads .-> C
+    J -. reads .-> H
 ```
 
 ### 4.2 Single Choke Point
@@ -136,11 +189,31 @@ The SC-2 state update is owned by the Finalization Protocol step of each mutatin
 
 The status surface is intentionally thin: it renders what SC-1/SC-2 already maintain. If the briefing is inaccurate, the defect is in the state updates, not in the briefing — this keeps one source of truth. Composition order and degraded states are specified in [l2-status-command.md](l2-status-command.md).
 
+### 4.4 Carrier Map — the six-section handoff practice
+
+A widely recommended practice keeps a per-task handoff file with six sections and starts every new session by reading it. The mechanic is sound. The engine already carries five of the six sections, each in the artifact that owns that kind of fact; SC-6..SC-9 supply the sixth and the freshness the others lacked.
+
+| Section | Carrier | Written |
+| --- | --- | --- |
+| Goal | Task entry: title, `Spec`, `Verify`; `STATE.md` `Task` and `Spec` | at planning time |
+| Current State | Task `Status`; `STATE.md` `Status` and `## Progress` | at task start (SC-9(a)) and at every checkpoint (SC-2) |
+| Active Files | The working tree, read at resume (SC-9(e)) | derived, never recalled |
+| Changes Made | Task `Changes` at completion; the working tree while in flight | at completion; derived in flight |
+| Failed Attempts | Task `Attempts` (SC-8) | when the dead end occurs |
+| Next Steps | `STATE.md` `Next Action` (exactly one command, SC-2.1, SC-2.2); task `Handoff` | recomputed at every checkpoint |
+
+A separate handoff file is rejected (§5): it would be a third source of truth derived from the first two; it would live on the agent's discipline, the same soft trigger that left the shipped pause path unexercised; and placed outside `.design/` it would carry SDD state into the product tree.
+
 ## 5. Drawbacks & Alternatives
 
 - **Per-workflow prose updates** (each workflow body re-describes the state write) — rejected: duplicated prose drifts apart; a single finalize choke point is verifiable by tests.
 - **Auto-running analysis on detected drift inside the status briefing** — rejected: violates read-only purity (SC-4); the briefing reports, the user decides.
 - **Churn**: updating `STATE.md` on every command increases write frequency on one file — mitigated by the 100-line cap with pruning, and by the file's role as disposable live memory (history lives in `PLAN.md`/`CHANGELOG.md`).
+- **A separate handoff file rewritten at every checkpoint** — rejected: a third source of truth derived from `STATE.md` and the phase workbook, holding nothing they do not (§4.4); the shipped one's mid-phase fields were empty.
+- **Keeping the fill-percentage tiers "as guidance"** — rejected: a tier that must be narrated forces a figure the agent cannot measure. SC-7 keeps the read-economy guidance (Read Hygiene) without the number.
+- **Per-step `STATE.md` writes for finer checkpoints** — rejected: churn on a tracked file for a gain the working tree already provides (SC-9(e)).
+- **Retiring the pause snapshot now** — deferred, not chosen: nothing requested it and SC-6 holds without it, so a `Paused` snapshot stays a valid, optional path. Revisit when there is usage evidence either way (today there is none).
+- **A task abandoned mid-flight keeps announcing itself** at every cold context until it is completed, blocked or cancelled — deliberate: it is unfinished work, and silence would be the failure.
 
 ## Canonical References
 
@@ -149,7 +222,9 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 | `[TEMPLATE]` | `.magic/templates/state.md` | STATE.md structure contract (SC-1) |
 | `[UPDATER]` | `.magic/scripts/update-state.js` | Key-value patch utility implementing state writes (SC-2) |
 | `[CONTEXT]` | `.magic/context.md` | Live-memory load order and resume detection |
-| `[PAUSE]` | `.magic/pause.md` | Pause/handoff flow that snapshots STATE.md |
+| `[PAUSE]` | `.magic/pause.md` | Pause/handoff flow that snapshots STATE.md (optional path, SC-9(b)) |
+| `[PHASE]` | `.magic/templates/phase.md` | Task tracking entry schema: where `In Progress` (SC-9(a)) and `Attempts` (SC-8) are recorded |
+| `[HANDOFF]` | `.magic/templates/handoff.json` | Optional snapshot schema; no guarantee here depends on it |
 
 ## Document History
 
@@ -157,6 +232,7 @@ The status surface is intentionally thin: it renders what SC-1/SC-2 already main
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.3.0 | 2026-09-20 | Agent | **Automatic checkpointing (SC-1.3, SC-6, SC-6.1, SC-7, SC-8, SC-9)** by explicit user directive: a session can be ended at any point and resumed from persisted state, with no new command and everything under the hood. Prompted by the user's question whether the engine already has the widely recommended per-task handoff file. It does — `STATE.md`, the phase workbook and `HANDOFF.json` carry five of its six sections — but the audit recorded in the new §1.5 found the path meant to deliver the guarantee unmeasurable (a fill-percentage trigger), unreachable (`/magic.pause` is not a command), unexercised (no snapshot ever committed, no coverage), self-contradicting (a file-presence resume trigger over a file that must outlive resume) and blind to work in flight (no step records `In Progress`; no place for an abandoned approach). New: **SC-6** Cold-Start Sufficiency with **SC-6.1** Checkpoint Claim (never claim a checkpoint that was not written); **SC-7** Observable Triggers (retires the fill-percentage tiers and the automatic pause they fired); **SC-8** Dead-End Record (the one section of the six with no carrier); **SC-9** Resume From Recorded State (task-start record, one shared detection predicate, cold-context trigger, the working tree as the source of in-flight files); **SC-1.3** No Dead Fields (retires `Last Session Ended`). §4.4 maps the six sections onto existing carriers and records why a separate handoff file was rejected; §5 records four rejected or deferred alternatives, including keeping the pause snapshot as an optional path. Implementation contract: [l2-session-checkpoint.md](l2-session-checkpoint.md). Status reverted `Stable → RFC` (Amendment Rule, minor). Post-Update Review (5-lens) and Instruction Quality Pass found defects in the first draft, all fixed before promotion: the resume script's all-workspace default would have read outside a resolved workspace (C15), now scoped by `--workspace` except at session start; the claim that the script records no diagnostics contradicted DG-1, so it now records its one non-fatal condition and [l2-status-command.md](l2-status-command.md) §2 states that "no writes" means no artifact writes; the moment a resume completes was ambiguous, so a snapshot is now consumed when loaded; SC-9's "active phase" and "first substantive action" were undefined, so they are pinned to the live plan and the first tool call; two time-bound statements about shipped text were removed or rephrased so the invariants stay timeless; "tracking entry" and "phase workbook" were undefined at first use. Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade: [l2-status-command.md](l2-status-command.md), [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), [l2-update-state-structure.md](l2-update-state-structure.md) and [l2-update-state-values.md](l2-update-state-values.md) momentarily quarantined and reversed in step; only `l2-status-command.md` received a content change. |
 | 2.2.0 | 2026-09-17 | Agent | **Write-Side Git Prohibition retired** by explicit user directive (repeated across multiple sessions — user flagged that the constraint kept resurfacing after being raised before). The hard rule surviving the 2.0.0 SC-3 retirement — "the engine and the agent never invoke a write-side git operation" — is itself retired: the engine is cross-agent scaffolding (`.agents/` adapters serve more than one AI tool), and dictating git-commit policy to whichever agent a project has chosen sits outside an SDD methodology's actual scope; every capable agent already governs its own git behavior through its own operating rules regardless of what this engine states. New §1.4 records the retirement rationale (mirroring §1.3's shape); §2's constraint bullet and the SC-3 entry (§3) amended to point to it instead of asserting the rule as still in force. Does not reopen §1.3/SC-3 — the commit-message suggestion stays retired independently. Required Fix (Engine Improvement, out of this spec's write scope) propagated the same turn to `rules/magic.md` §3/§8, and `.magic/spec.md`/`task.md`/`run.md`/`rule.md` Finalization Protocol step 3 (each also had the already-retired "suggested commit message" wording surviving stale in step 1, corrected in the same pass as an adjacent, independently-true defect). Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade: [l2-engine-finalization.md](l2-engine-finalization.md) momentarily quarantined and updated (§5.2) in the same pass; other 2.0.0-cascade dependents ([l2-finalize-output-contract.md](l2-finalize-output-contract.md), [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), [l2-status-command.md](l2-status-command.md), [l2-test-suite.md](l2-test-suite.md)) carry no assertion of the retired rule and needed no change. |
 | 2.0.0 | 2026-08-27 | Agent | **SC-3 (Commit Suggestion Guarantee) and SC-3.1 (Commit Message Completeness) retired** by explicit user directive: the engine no longer composes or prints a suggested commit message on any finalize path — committing is left entirely to the user, with no engine involvement even at the suggestion level. The pre-existing hard rule (no write-side git operation is ever invoked) is unaffected and restated in §2. SC-3's invariant number is retired, not reassigned, so historical cross-references stay resolvable; SC-4/SC-5 numbering is unchanged. New §1.3 records the retirement rationale. Overview, Related Specifications, §2 Constraints, §4.1 Session Loop diagram, and §4.2 Single Choke Point updated to drop the retired guarantee. Corresponding implementation-surface removal tracked in [l2-finalize-output-contract.md](l2-finalize-output-contract.md) and [l2-engine-finalization.md](l2-engine-finalization.md). Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade: dependents ([l2-engine-finalization.md](l2-engine-finalization.md), [l2-finalize-output-contract.md](l2-finalize-output-contract.md), [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), [l2-status-command.md](l2-status-command.md), [l2-test-suite.md](l2-test-suite.md)) momentarily quarantined and updated in the same pass, so none remain `RFC`. |
 | 1.11.0 | 2026-08-22 | Agent | New **SC-2.1(c) (Task-Level Blocking & Assignment Precedence)**: SC-2.1(a)'s phase-level Blocked guard has no visibility into a task's own `Detailed Tracking` `Status`/`Assignment` fields, so a phase in good standing can still surface, as its first open checklist line, a task individually marked `Blocked` or `Assignment: User` — the same contradiction as (a), one level down. Reproduced directly against engine 2.1.72: `computeNextAction` named a `Status: Blocked`, `Assignment: User` task as `/magic.run`-executable while skipping an actionable task later in the same phase. SC-2.1's checked-order list re-lettered: new (c) inserted (open tasks, none agent-actionable → blocker/user resolution, never the plan-complete funnel), former (c)/(d) become (d)/(e). Required fix tracked in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §9. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. C12 Cascade momentarily quarantined all four direct dependents (`l2-engine-automation.md`, `l2-status-command.md`, `l2-finalize-state-accuracy.md`, `l2-engine-finalization.md`) and reversed in step; only `l2-finalize-state-accuracy.md` received a content change (§9/§10 below). |

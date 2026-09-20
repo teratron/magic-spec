@@ -1,6 +1,6 @@
 # Workflow Wrappers
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -65,11 +65,13 @@ The wrapper↔body relationship is **one-directional**:
 
 1. **Pointer wrappers** — a wrapper that references an engine body (the `> **Full implementation:** \`.magic/{cmd}.md\`` pointer) MUST have that file present on disk. A dangling pointer is a phantom mapping.
 2. **Self-contained wrappers** — a wrapper with no body pointer carries the full workflow itself (e.g., `magic.graph.md`); it requires no `.magic/{cmd}.md`.
-3. **Bodies without wrappers are allowed** — internal engine modules (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are invoked internally and intentionally have no user-facing wrapper. The invariant does NOT require a wrapper per body.
+3. **Bodies without wrappers are allowed** — internal engine modules (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are invoked internally and intentionally have no user-facing wrapper. The invariant does NOT require a wrapper per body. Because they are not commands, user-facing text (workflow bodies, templates, docs) MUST NOT advertise them as `/magic.*` commands: a hint that names a non-command sends the user to a dead end. Field evidence: `/magic.pause` was advertised on eight shipped lines while `pause.md` has no wrapper (see [l1-session-continuity.md](l1-session-continuity.md) §1.5).
 
 ### 6.1 Automated Verification
 
 `magic.analyze` Mode C MUST verify parity deterministically: for each `workflows/magic.{cmd}.md`, if the wrapper text references `.magic/{cmd}.md`, assert that file exists. A missing target is reported as `WRAPPER_BODY_DRIFT {wrapper} → missing .magic/{cmd}.md` (advisory). A self-contained wrapper (no pointer) is skipped. This catches phantom mappings — a wrapper or registry claiming a body that never shipped — before a release ships a dangling entry point.
+
+The converse direction is checked the same way. `magic.analyze` Mode C MUST scan the shipped engine and documentation text (`.magic/`, `docs/`, `workflows/`, `rules/`, `README.md`) for `/magic.{cmd}` command mentions and assert that each resolves to `workflows/magic.{cmd}.md`. A mention that does not is reported as `PHANTOM_COMMAND {file}:{line} → /magic.{cmd} has no wrapper` (advisory). A token counts as a command mention only when it stands as its own word, preceded by whitespace, a backtick or an opening quote, so file paths such as `rules/magic.md` are never read as commands; developer-facing `magic.dev.*` names are exempt.
 
 > Motivation: a phantom `magic.graph.md → .magic/graph.md` mapping persisted undetected across 13 registry versions until a manual inventory sync. The check makes that class of drift fail the audit instead of relying on manual discovery.
 
@@ -89,6 +91,7 @@ The wrapper↔body relationship is **one-directional**:
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.0 | 2026-09-20 | Added the converse of the §6 parity check: internal-module bodies (`pause.md` and its siblings) MUST NOT be advertised as `/magic.*` commands in user-facing text, and `magic.analyze` Mode C gains an advisory `PHANTOM_COMMAND` scan over shipped engine and documentation text — own-word tokens only, so paths such as `rules/magic.md` are never read as commands, and `magic.dev.*` names are exempt. Field evidence: `/magic.pause` was advertised on eight shipped lines while `pause.md` has no wrapper ([l1-session-continuity.md](l1-session-continuity.md) §1.5). Engine deployment (the analyze check) is routed to `/magic.task engine` through [l2-session-checkpoint.md](l2-session-checkpoint.md) §7. Status reverted `Stable → RFC` (Amendment Rule, minor); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-06-13 | Added §6 Wrapper-Body Parity Invariant & Verification (R4): one-directional parity (pointer wrappers need a body; self-contained do not; bodies may lack wrappers) + a deterministic `magic.analyze` Mode C `WRAPPER_BODY_DRIFT` check. Field evidence: phantom `magic.graph` mapping survived 13 registry versions. |
 | 1.1.1 | 2026-06-12 | Factual fix: `magic.graph.md` is self-contained (no `.magic/graph.md` body exists); §2 exception documented. |
 | 1.1.0 | 2026-06-12 | Inventory sync: added `magic.graph.md` (registry drift fix — wrapper shipped without spec coverage) and `magic.status.md` (C2 exception per l1-session-continuity.md SC-5). |

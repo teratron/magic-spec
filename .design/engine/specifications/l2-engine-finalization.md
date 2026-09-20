@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.2.1
+**Version:** 3.2.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -19,6 +19,7 @@ This spec owns the **pipeline contract**: module inventory, invocation surface, 
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Child: emitted-artifact defects (RC-11 containment, stdout-listing completeness, CHANGELOG suppression).
 - [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
 - [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Diagnostics digest that this pipeline drains and renders in its terminal block (§8).
+- [l2-session-checkpoint.md](l2-session-checkpoint.md) — Owns the checkpoint claim that the state-update step's output makes (§5.5 there).
 
 ## 1. Motivation
 
@@ -66,6 +67,8 @@ After significance evaluation and phase archival, the pipeline patches the activ
 The step runs even when the significance whitelist does not hit — live memory must reflect every completed command, not only version-bumping ones. Failures are non-blocking: a warning is printed and finalize continues.
 
 Defects found against this step, with their required fixes, are catalogued in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md).
+
+**Checkpoint claim.** On a successful update the step's output states that the checkpoint was written (SC-6.1); a skipped, failed or `--dry-run` update makes no such claim. Contract and wording: [l2-session-checkpoint.md](l2-session-checkpoint.md) §5.5. The claim belongs to the path-specific output, not to the terminal block of §8.
 
 ### 5.2 Retired: Commit Suggestion Guarantee (formerly SC-3)
 
@@ -171,6 +174,7 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.2.2 | 2026-09-20 | Agent | Cross-reference only, no design content (patch, no status transition): §5.1 gained a short paragraph, and Related Specifications an entry, pointing to the checkpoint claim that the state-update step's output now makes ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.5, SC-6.1 of [l1-session-continuity.md](l1-session-continuity.md)). The claim's contract lives there; this spec records only that it belongs to the path-specific output, not to the terminal block of §8. |
 | 3.2.1 | 2026-09-20 | Agent | Cross-reference correction only, no design content (patch, no status transition): the `Status` bullet in §5.1 named [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §10 as the home of its latent-gap record — a Known Gaps section number that had drifted through successive renumberings of that register, §10 now being its Recent-Decisions Archival Promise Defect. Retargeted to the Known Gaps section by name, which survives the register's 2.0.0 decomposition (defect numbers are permanent there; the Known Gaps section is deliberately unnumbered). Found while retargeting live references for that decomposition. |
 | 3.2.0 | 2026-09-17 | Agent | **Write-Side Git Prohibition retired** by explicit user directive, cascading from [l1-session-continuity.md](l1-session-continuity.md) §1.4: §5.2 extended with a second paragraph noting the hard rule it previously described as "unaffected" by the SC-3 retirement is itself now retired — the pipeline (and the agent invoking it) takes no position on whether, when, or how to commit. `finalize.js`'s own read-only-git-probes implementation fact is unchanged and restated as exactly that: a fact about this script, not a policy for the agent. Overview cross-reference added. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 3.1.0 | 2026-09-11 | Agent | New **§6.1 Workbook Name Recognition**, closing a defect with the same shape as §7's: a behavior with no stated contract. §6 pinned only the content predicate, so the *name* predicate went unexamined and was spelled `/^phase-\d+\.md$/` in three separate scanners. A track-split workbook (`phase-10b.md`) was therefore excluded by filename before its `status: Done` frontmatter was ever read, and the CLI reported "No completed phases to archive" — a silent exclusion indistinguishable from a considered rejection. §6.1 pins the canonical shape `phase-{N}[{track}].md`, requires the recognizer to be a single shared module (`lib/phase-files.js`) rather than three copies, fixes numeric-then-suffix ordering, and adds the accounting rule: an unrecognized `.md` in `tasks/` is reported, never dropped without comment. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Field report: engine 2.1.80. |

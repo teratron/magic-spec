@@ -33,6 +33,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated task execution state (engine)
 - Updated task plan and task index (engine)
 - Updated 5 specifications (engine)
+- Updated 6 specifications (engine)
 
 ## [2.1.92] - 2026-09-17
 
