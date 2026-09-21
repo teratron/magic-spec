@@ -53,14 +53,10 @@ The engine enforces 7 mandatory invariants during every task operation:
 
 ## 4. Context Quality Guidance
 
-The agent adapts operation depth based on context window utilization:
+Read economy is guidance, not a measurement: the agent has no reliable reading of its own context-window fill, so no tier or percentage is used.
 
-| Tier | Context Used | Behavior |
-| --- | --- | --- |
-| **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
-| **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
-| **DEGRADING** | 50–70% | Read only relevant spec sections; use frontmatter summaries |
-| **POOR** | 70%+ | Read STATE.md + phase frontmatter only; trigger `/magic.pause` if needed |
+- Prefer the wiki, `INDEX.md`, STATE.md `Next Action` and the phase files' `provides` frontmatter before broad scans; read the relevant spec sections rather than whole files.
+- Once a context begins with a summary standing in for earlier turns, re-ground on STATE.md and the phase files rather than on the summary.
 
 ## 5. The Planning System
 
@@ -69,6 +65,8 @@ Magic uses three file levels to manage project state:
 - **`PLAN.md`**: Strategic overview — Phases, assigned Specifications, and their current status.
 - **`TASKS.md`**: Master Phase Index — phase registry and status tracking.
 - **`tasks/phase-{N}.md`**: Tactical execution workbooks — atomic checklists with `T-XXXX` IDs.
+
+When a plan is updated, a task that survives keeps its recorded state (`Status`, `Changes`, `Attempts`) verbatim — regeneration never resets work already done or attempted.
 
 ### Task ID Format
 

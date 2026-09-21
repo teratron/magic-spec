@@ -5105,4 +5105,742 @@ describe('Magic Engine Scripts', () => {
         assert.match(section, /On mismatch, or `unknown`, narrate/, 'step 4 must narrate on mismatch or `unknown`');
         assert.doesNotMatch(section, /including `unknown`/, 'the old "(including unknown)" phrasing must be gone — fresh is now excluded from narration');
     });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 20. resume-state.js — the one shared resume predicate (SC-9), and the
+    //     tracking-entry reader it shares with finalize.js (SC-8 parser safety).
+    //     Every case runs the real script through executor.js, never a
+    //     re-implementation of its predicate.
+    // ───────────────────────────────────────────────────────────────────────────
+
+    // A `### [T-…]` tracking entry the way a phase workbook writes it.
+    const trackingEntry = (id, title, status, extra = []) => [
+        `### [${id}] ${title}`, '',
+        `- **Status:** ${status}`, '- **Assignment:** Agent', ...extra, '',
+    ].join('\n');
+
+    const resumeStateText = (status, nextAction) => [
+        '# Project State', '',
+        '**Workspace:** engine', '**Updated:** 2026-01-01 00:00', '**Phase:** 1 — Test', `**Status:** ${status}`, '',
+        '## Current Position', '',
+        '- **Task:** none', '- **Spec:** none', `- **Next Action:** ${nextAction}`, '',
+        '## Session Continuity', '', '**Handoff File:** none', '**Bootstrap Mode:** false', '',
+    ].join('\n');
+
+    // Writes the tree resume-state.js reads: a registry plus, per workspace, a
+    // STATE.md and (when given) one phase workbook of tracking entries.
+    const writeResumeFixture = (tempDir, workspaces, { eol = '\n', defaultWorkspace = null } = {}) => {
+        const designDir = path.join(tempDir, '.design');
+        const toEol = (text) => text.replace(/\n/g, eol);
+        const registry = {};
+        for (const [name, def] of Object.entries(workspaces)) {
+            registry[name] = { description: name, scope: ['.design'] };
+            const wsDir = path.join(designDir, name);
+            fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
+            fs.writeFileSync(path.join(wsDir, 'STATE.md'), toEol(resumeStateText(
+                def.status || 'Active', def.nextAction || 'Execute T-1A01 Thing via /magic.run engine'
+            )));
+            if (def.entries) {
+                fs.writeFileSync(path.join(wsDir, 'tasks', 'phase-1.md'), toEol([
+                    '---', 'phase: 1', 'status: In Progress', '---', '',
+                    '## Detailed Tracking', '', ...def.entries,
+                ].join('\n')));
+            }
+            if (def.staleHandoff) fs.writeFileSync(path.join(wsDir, 'HANDOFF.json'), '{"schema_version":"1.1"}');
+        }
+        fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
+            default: defaultWorkspace || Object.keys(workspaces)[0], workspaces: registry,
+        }));
+        return designDir;
+    };
+
+    const runResumeState = (tempDir, args = []) => spawnSync(
+        process.execPath,
+        [path.join(tempDir, '.magic', 'scripts', 'executor.js'), 'resume-state', ...args],
+        { cwd: tempDir, encoding: 'utf8' }
+    );
+
+    // Path → digest of every file under `root` (`.git` excluded); a directory is
+    // its own entry, so a directory turning up where a file was is visible.
+    const treeDigest = (root) => {
+        const crypto = require('crypto');
+        const digest = {};
+        const walk = (dir) => {
+            for (const name of fs.readdirSync(dir).sort()) {
+                if (name === '.git') continue;
+                const full = path.join(dir, name);
+                const rel = path.relative(root, full).split(path.sep).join('/');
+                if (fs.statSync(full).isDirectory()) {
+                    digest[`${rel}/`] = 'dir';
+                    walk(full);
+                } else {
+                    digest[rel] = crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');
+                }
+            }
+        };
+        walk(root);
+        return digest;
+    };
+
+    test('resume-state stays silent when nothing is recorded in flight, even beside a stale handoff file (SC-9(b), H1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, {
+                engine: {
+                    status: 'Active', staleHandoff: true,
+                    entries: [trackingEntry('T-1A01', 'Finished', 'Done'), trackingEntry('T-1A02', 'Later', 'Todo')],
+                },
+            });
+            assert.ok(
+                fs.existsSync(path.join(tempDir, '.design', 'engine', 'HANDOFF.json')),
+                'fixture precondition: the stale snapshot is on disk'
+            );
+
+            const quiet = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(quiet.status, 0);
+            assert.strictEqual(
+                quiet.stdout, '',
+                `a leftover snapshot with nothing in flight must not trigger a resume — the file's presence is not a trigger → "${quiet.stdout}"`
+            );
+
+            // Control: the same tree with `Status: Paused` does speak, so the
+            // silence above is a decision and not a script that says nothing.
+            fs.writeFileSync(path.join(tempDir, '.design', 'engine', 'STATE.md'), resumeStateText('Paused', 'Pick up T-1A02'));
+            const paused = runResumeState(tempDir, ['--workspace=engine']);
+            assert.match(paused.stdout, /^▶ Resume \[engine\]: paused snapshot\. Next: Pick up T-1A02\n$/);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state names one in-flight task with its dead ends and the modified-file count, identically for LF and CRLF (SC-9(d), (e), H2, H4)', () => {
+        const printed = {};
+        for (const eol of ['\n', '\r\n']) {
+            const tempDir = createTempWorkspace(true);
+            try {
+                // Both the title and the Next Action carry a code span: stripping
+                // deletes those, so each must be read back from the raw line.
+                writeResumeFixture(tempDir, {
+                    engine: {
+                        nextAction: 'Execute T-1A01 Extract `finalize.js` via /magic.run engine',
+                        entries: [
+                            trackingEntry('T-1A01', 'Extract `finalize.js`', 'In Progress',
+                                ['- **Attempts:**', '  - tried a global regex → it swallowed the next entry', '  - tried a line scan → it split on CRLF']),
+                            trackingEntry('T-1A02', 'Later', 'Todo'),
+                        ],
+                    },
+                }, { eol });
+                commitFixture(tempDir);
+
+                // One tracked edit and one untracked file are product changes; the
+                // workbook edit is bookkeeping the line already reports, so it must
+                // not be counted.
+                fs.appendFileSync(path.join(tempDir, 'README.md'), 'edit\n');
+                fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+                fs.writeFileSync(path.join(tempDir, 'src', 'feature.js'), '// new\n');
+                fs.appendFileSync(path.join(tempDir, '.design', 'engine', 'tasks', 'phase-1.md'), 'edited\n');
+
+                const result = runResumeState(tempDir, ['--workspace=engine']);
+                assert.strictEqual(result.status, 0);
+                printed[eol] = result.stdout;
+            } finally {
+                cleanup(tempDir);
+            }
+        }
+
+        assert.strictEqual(printed['\r\n'], printed['\n'], 'the line must not depend on the workbook\'s line endings');
+        assert.strictEqual(
+            printed['\n'],
+            '▶ Resume [engine]: T-1A01 Extract `finalize.js` in flight — 2 dead end(s) recorded, 2 file(s) modified. ' +
+            'Next: Execute T-1A01 Extract `finalize.js` via /magic.run engine\n',
+            'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)'
+        );
+    });
+
+    test('resume-state names every task in flight up to three, then counts the rest, and marks a paused snapshot that also has work in flight (SC-9(f), H3, H4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const inFlight = (id, title) => trackingEntry(id, title, 'In Progress');
+            writeResumeFixture(tempDir, {
+                engine: { entries: [inFlight('T-1A01', 'One'), inFlight('T-1B01', 'Two')] },
+            });
+            assert.match(
+                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two in flight — 0 dead end\(s\) recorded\. Next: /,
+                'two tasks in flight: both named'
+            );
+
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [inFlight('T-1A01', 'One'), inFlight('T-1B01', 'Two'), inFlight('T-1C01', 'Three'), inFlight('T-1D01', 'Four')],
+                },
+            });
+            assert.match(
+                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two; T-1C01 Three \+1 more in flight — /,
+                'four tasks in flight: three named, one counted'
+            );
+
+            writeResumeFixture(tempDir, {
+                engine: { status: 'Paused', entries: [inFlight('T-1A01', 'One')] },
+            });
+            assert.match(
+                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                /T-1A01 One in flight \(paused snapshot\) — /,
+                'a paused workspace that also has a task in flight says so'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state omits the file count outside a repository and before the first commit, without an error (SC-9(e), H5)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] } });
+
+            const outside = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(outside.status, 0);
+            assert.match(outside.stdout, /^▶ Resume \[engine\]: T-1A01 Only in flight — 0 dead end\(s\) recorded\. Next: /);
+            assert.doesNotMatch(outside.stdout, /modified/, 'not a repository: there is nothing to count');
+            assert.strictEqual(outside.stderr, '', 'git\'s own diagnostics must not leak into a script that is silent by default');
+
+            // A repository whose first commit has not happened yet: "changed since HEAD" has no meaning.
+            execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
+            const uncommitted = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(uncommitted.status, 0);
+            assert.doesNotMatch(uncommitted.stdout, /modified/, 'no commit yet: the count must be omitted, not guessed');
+            assert.strictEqual(uncommitted.stderr, '', 'a repository with no commit must not print git\'s "fatal:" line');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state writes nothing on a clean run and records exactly one finding for an unreadable STATE.md (read-only, DG-1, H6)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] } });
+
+            const before = treeDigest(tempDir);
+            const clean = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(clean.status, 0);
+            assert.strictEqual(clean.stdout, '');
+            assert.deepStrictEqual(treeDigest(tempDir), before, 'a clean run must leave every file byte-identical');
+            assert.ok(
+                !fs.existsSync(path.join(tempDir, '.design', '.cache')),
+                'a clean run must not even create the diagnostics directory'
+            );
+
+            // A STATE.md that exists but cannot be read is the script's one non-fatal condition.
+            const statePath = path.join(tempDir, '.design', 'engine', 'STATE.md');
+            fs.rmSync(statePath);
+            fs.mkdirSync(statePath);
+            const beforeFault = treeDigest(tempDir);
+
+            const faulty = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(faulty.status, 0, 'a fault here must never become a halt in someone else\'s workflow');
+            assert.strictEqual(faulty.stdout, '');
+            assert.match(faulty.stderr, /cannot be read/, 'printed, and recorded (DG-1: the record is in addition to the print)');
+
+            const sinkPath = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
+            const findings = fs.readFileSync(sinkPath, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
+            assert.strictEqual(findings.length, 1, 'exactly one finding');
+            assert.strictEqual(findings[0].code, 'RESUME_STATE_UNREADABLE');
+            assert.strictEqual(findings[0].severity, 'warning');
+            assert.strictEqual(findings[0].source, 'resume-state');
+
+            const after = treeDigest(tempDir);
+            delete after['.design/.cache/diagnostics.jsonl'];
+            delete after['.design/.cache/'];
+            assert.deepStrictEqual(after, beforeFault, 'the finding is the only thing the run may have written');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state and computeNextAction read a tracking entry the same way: quoted labels and Attempts items change nothing (SC-8 parser safety, H7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            writeResumeFixture(tempDir, { engine: {} });
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
+
+            const workbook = (entries) => [
+                '---', 'phase: 1', 'status: In Progress', '---', '',
+                '## Atomic Checklist', '',
+                '- [ ] [T-1A01] First task',
+                '- [ ] [T-1A02] Second task', '',
+                '## Detailed Tracking', '', ...entries,
+            ].join('\n');
+
+            const plain = [
+                trackingEntry('T-1A01', 'First task', 'In Progress'),
+                trackingEntry('T-1A02', 'Second task', 'Todo'),
+            ];
+            // The same tasks, with the labels a reader must never take for the
+            // entry's own quoted twice over: as a fenced template at column 0
+            // *ahead of* the real fields (a reader that skipped the SH-1 strip
+            // would find these first), and inside an `Attempts` item.
+            const quoting = [
+                [
+                    '### [T-1A01] First task', '',
+                    '```plaintext', '- **Status:** Blocked', '- **Assignment:** User', '```', '',
+                    '- **Status:** In Progress', '- **Assignment:** Agent',
+                    '- **Attempts:**',
+                    '  - tried `**Status:** Blocked` and **Assignment:** User → rejected', '',
+                ].join('\n'),
+                trackingEntry('T-1A02', 'Second task', 'Todo'),
+            ];
+
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), workbook(plain));
+            const nextPlain = finalize.computeNextAction('run', 'engine', wsDir);
+            const linePlain = runResumeState(tempDir, ['--workspace=engine']).stdout;
+
+            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), workbook(quoting));
+            const nextQuoting = finalize.computeNextAction('run', 'engine', wsDir);
+            const lineQuoting = runResumeState(tempDir, ['--workspace=engine']).stdout;
+
+            assert.match(nextPlain, /^Execute T-1A01 /, 'fixture precondition: the in-flight first task is the next action');
+            assert.strictEqual(nextQuoting, nextPlain, 'quoted labels must not change which task the Next Action names');
+            assert.match(linePlain, /T-1A01 First task in flight — 0 dead end\(s\) recorded/);
+            assert.match(
+                lineQuoting, /T-1A01 First task in flight — 1 dead end\(s\) recorded/,
+                'the entry is still read as In Progress, and its one Attempts item is counted'
+            );
+            assert.doesNotMatch(lineQuoting, /T-1A02/, 'the Todo task must not be listed as in flight');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state scope: the workspace the executor resolved by default, one workspace on --workspace, every registered one only under --all (l2-session-checkpoint §5.3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const inFlight = (title) => ({ entries: [trackingEntry('T-1A01', title, 'In Progress')] });
+            writeResumeFixture(tempDir, {
+                alpha: inFlight('Alpha task'),
+                beta: inFlight('Beta task'),
+                gamma: inFlight('Gamma task'),
+                delta: inFlight('Delta task'),
+                quiet: { entries: [trackingEntry('T-1A01', 'Quiet task', 'Done')] },
+            }, { defaultWorkspace: 'alpha' });
+
+            // executor.js consumes --workspace and substitutes the registry
+            // default when it is absent, handing the result on only as
+            // MAGIC_DESIGN_DIR — so "no flag" can mean "the default", never "all".
+            const byDefault = runResumeState(tempDir).stdout.trim().split('\n');
+            assert.strictEqual(byDefault.length, 1, 'no flag: exactly the default workspace');
+            assert.match(byDefault[0], /^▶ Resume \[alpha\]: /);
+
+            const beta = runResumeState(tempDir, ['--workspace=beta']).stdout.trim().split('\n');
+            assert.strictEqual(beta.length, 1, '--workspace: exactly that workspace');
+            assert.match(beta[0], /^▶ Resume \[beta\]: /);
+
+            const all = runResumeState(tempDir, ['--all']).stdout.trim().split('\n');
+            assert.strictEqual(all.length, 4, 'three workspace lines and one overflow line');
+            assert.match(all[3], /^▶ Resume: \+1 more workspace\(s\) with work in flight$/);
+            assert.doesNotMatch(all.join('\n'), /Quiet/, 'a workspace with nothing in flight is not reported');
+
+            // Direct invocation (no executor): faults are silence, and an explicit
+            // --workspace narrows --all.
+            const direct = (args) => spawnSync(
+                process.execPath, [path.join(tempDir, '.magic', 'scripts', 'resume-state.js'), ...args],
+                { cwd: tempDir, encoding: 'utf8' }
+            );
+            for (const args of [['--workspace=nope'], ['--workspace']]) {
+                const result = direct(args);
+                assert.strictEqual(result.status, 0, `${args.join(' ')}: never a non-zero exit`);
+                assert.strictEqual(result.stdout, '', `${args.join(' ')}: silence`);
+            }
+            assert.match(direct(['--all', '--workspace=gamma']).stdout, /^▶ Resume \[gamma\]: .*\n$/);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state --json returns the documented shape, and { in_flight: false } when nothing is in flight', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [trackingEntry('T-1A01', 'Only', 'In Progress', ['- **Attempts:**', '  - tried X → failed'])],
+                },
+            });
+            const parsed = JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout);
+            assert.strictEqual(parsed.in_flight, true);
+            assert.strictEqual(parsed.workspaces.length, 1);
+            const entry = parsed.workspaces[0];
+            assert.deepStrictEqual(Object.keys(entry).sort(), ['changed_files', 'next_action', 'source', 'tasks', 'workspace']);
+            assert.strictEqual(entry.source, 'in-progress');
+            assert.deepStrictEqual(entry.tasks, [{ id: 'T-1A01', title: 'Only', attempts: 1 }]);
+            assert.strictEqual(entry.changed_files, null, 'not a repository: null, not zero');
+            assert.strictEqual(entry.next_action, 'Execute T-1A01 Thing via /magic.run engine');
+
+            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] } });
+            assert.deepStrictEqual(
+                JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
+                { in_flight: false, workspaces: [] }
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 21. Checkpoint contract — the state template's writer map (SC-1.3) and the
+    //     finalize checkpoint claim (SC-6.1).
+    // ───────────────────────────────────────────────────────────────────────────
+
+    // Every field the state template declares, against the `updateState` patch
+    // key that writes it. The table is the contract's statement of "no dead
+    // field": a template field without a row has no writer and would go stale in
+    // every consumer's STATE.md (the retired `Last Session Ended` did exactly
+    // that), and a row without a template field is a writer for a line the file
+    // no longer carries. `update-state.js` keeps its own field map private, so
+    // the check is driven through behavior — patch each field, read the file back.
+    const STATE_FIELD_WRITERS = {
+        'Workspace': 'workspace',
+        'Updated': 'updated',
+        'Phase': 'phase',
+        'Status': 'status',
+        'Task': 'task',
+        'Spec': 'spec',
+        'Next Action': 'nextAction',
+        'Handoff File': 'handoff',
+        'Bootstrap Mode': 'bootstrap',
+    };
+
+    test('the STATE.md template declares only fields update-state writes, never a dead one such as Last Session Ended (SC-1.3, H8)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const template = fs.readFileSync(path.join(tempDir, '.magic', 'templates', 'state.md'), 'utf8');
+            const declared = [...template.matchAll(/^(?:- )?\*\*([^*\n]+):\*\*/gm)].map((match) => match[1]);
+
+            assert.ok(
+                !declared.includes('Last Session Ended'),
+                'the retired field must not return: nothing ever wrote it after the first bootstrap'
+            );
+            assert.deepStrictEqual(
+                [...declared].sort(), Object.keys(STATE_FIELD_WRITERS).sort(),
+                'every template field needs a writer row here, and every row a template field'
+            );
+
+            // Each row's key must really write its own label's line.
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            const statePath = path.join(wsDir, 'STATE.md');
+            warnedBy(() => updateState(wsDir, {}));
+            for (const [label, key] of Object.entries(STATE_FIELD_WRITERS)) {
+                if (key === 'updated') continue; // stamped by every call, never requested
+                const value = `written-through-${key}`;
+                warnedBy(() => updateState(wsDir, { [key]: value }));
+                assert.match(
+                    fs.readFileSync(statePath, 'utf8'),
+                    new RegExp(`^(?:- )?\\*\\*${label}:\\*\\* ${value}$`, 'm'),
+                    `patch key '${key}' must write the '${label}' line`
+                );
+            }
+            assert.match(
+                fs.readFileSync(statePath, 'utf8'),
+                /^\*\*Updated:\*\* \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/m,
+                'Updated is stamped by every call, so the template placeholder must be gone'
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // One finalize run against a fresh git-backed fixture. `change` leaves an
+    // uncommitted edit to a whitelisted file (the significant path), otherwise
+    // nothing changed since the baseline (the skip path). `stateBlocked` puts a
+    // directory where STATE.md belongs, so the update cannot be written — under
+    // `--workflow=task`, whose significance scan does not read STATE.md; the
+    // `run` whitelist does, and would stop the whole run before any update.
+    const runFinalizeCheckpoint = ({ change, dryRun = false, stateBlocked = false }) => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
+            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+            commitFixture(tempDir);
+            if (change) {
+                fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] More\n');
+            }
+            const statePath = path.join(wsDir, 'STATE.md');
+            if (stateBlocked) fs.mkdirSync(statePath);
+
+            const result = spawnSync(
+                process.execPath,
+                [finalizePath, '--workflow=task', '--workspace=main', ...(dryRun ? ['--dry-run'] : [])],
+                { cwd: tempDir, encoding: 'utf8' }
+            );
+            return { result, stateWritten: fs.existsSync(statePath) && fs.statSync(statePath).isFile() };
+        } finally {
+            cleanup(tempDir);
+        }
+    };
+
+    test('finalize.js claims a saved checkpoint only once STATE.md was really updated, on both exit paths (SC-6.1, H9)', () => {
+        const claim = /checkpoint saved/;
+        const path_ = (change) => (change ? 'significant' : 'skip');
+
+        // The claim rides the STATE.md row on the significant path...
+        const significant = runFinalizeCheckpoint({ change: true });
+        assert.strictEqual(significant.result.status, 0);
+        assert.match(
+            significant.result.stdout, /^\| STATE\.md \|[^\n]*checkpoint saved/m,
+            'significant path: the STATE.md row carries the claim'
+        );
+        assert.ok(significant.stateWritten, 'the claim must be backed by a STATE.md on disk');
+
+        // ...and is its own line on the skip path.
+        const skipped = runFinalizeCheckpoint({ change: false });
+        assert.strictEqual(skipped.result.status, 0);
+        assert.match(
+            skipped.result.stdout, /^\[state\] STATE\.md updated — checkpoint saved\.$/m,
+            'skip path: the claim follows the update'
+        );
+        assert.ok(skipped.stateWritten, 'the claim must be backed by a STATE.md on disk');
+
+        // A preview saves nothing, so it claims nothing.
+        for (const change of [true, false]) {
+            const preview = runFinalizeCheckpoint({ change, dryRun: true });
+            assert.strictEqual(preview.result.status, 0);
+            assert.doesNotMatch(
+                preview.result.stdout, claim,
+                `--dry-run (${path_(change)} path) must not claim a save`
+            );
+            assert.strictEqual(preview.stateWritten, false, `--dry-run (${path_(change)} path) must not write STATE.md`);
+        }
+
+        // A failed update is not a saved checkpoint, and does not block finalize.
+        for (const change of [true, false]) {
+            const failed = runFinalizeCheckpoint({ change, stateBlocked: true });
+            assert.strictEqual(failed.result.status, 0, 'a STATE.md failure is non-blocking');
+            assert.match(failed.result.stderr, /STATE\.md update skipped/, 'the failure must be announced');
+            assert.doesNotMatch(
+                failed.result.stdout + failed.result.stderr, claim,
+                `an unwritable STATE.md (${path_(change)} path) must not be reported as a saved checkpoint`
+            );
+            assert.strictEqual(failed.stateWritten, false, 'the blocked path must not have become a file');
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 22. Shipped-text contracts — behavior that is prose (H10). The workflow
+    //     bodies and rules are read by an agent, so what they say IS the
+    //     behavior. Each contract states its detector once, proves the detector on
+    //     synthetic text (it must flag what it claims to and spare what it must),
+    //     and only then applies it to the shipped tree.
+    // ───────────────────────────────────────────────────────────────────────────
+
+    const shippedRoot = path.resolve(__dirname, '..', '..');
+    const readShipped = (rel) => fs.readFileSync(path.join(shippedRoot, rel), 'utf8');
+
+    // Repo-relative POSIX paths of the files under `dir` with one of `extensions`.
+    const listShipped = (dir, extensions) => {
+        const found = [];
+        const walk = (current) => {
+            for (const entry of fs.readdirSync(current, { withFileTypes: true })) {
+                const full = path.join(current, entry.name);
+                if (entry.isDirectory()) {
+                    if (!['history', '.git', 'node_modules'].includes(entry.name)) walk(full);
+                } else if (extensions.includes(path.extname(entry.name))) {
+                    found.push(path.relative(shippedRoot, full).split(path.sep).join('/'));
+                }
+            }
+        };
+        if (fs.existsSync(path.join(shippedRoot, dir))) walk(path.join(shippedRoot, dir));
+        return found.sort();
+    };
+
+    // The text of one numbered workflow step: its own line plus the indented
+    // lines beneath it, up to the next step or heading.
+    const stepBlock = (text, label) => {
+        const lines = text.split(/\r?\n/);
+        const start = lines.findIndex((line) => line.startsWith(`${label} `));
+        if (start === -1) return null;
+        let end = start + 1;
+        while (end < lines.length && /^\s/.test(lines[end])) end++;
+        return lines.slice(start, end).join('\n');
+    };
+
+    // The own-word rule `analyze.md` states for PHANTOM_COMMAND: a `/magic.{cmd}`
+    // token is a command mention only when nothing but whitespace, a backtick or
+    // an opening quote precedes it — so a path such as `rules/magic.md` is never
+    // one; `{cmd}` is a lowercase word (a hyphen ends it); developer-facing
+    // `magic.dev.*` names are exempt.
+    const phantomCommands = (files, wrappers) => {
+        const found = [];
+        for (const { rel, text } of files) {
+            text.split(/\r?\n/).forEach((line, index) => {
+                for (const match of line.matchAll(/(?<![^\s`"'“‘])\/magic\.([a-z]+)/g)) {
+                    if (match[1] === 'dev' || wrappers.has(match[1])) continue;
+                    found.push(`${rel}:${index + 1}: /magic.${match[1]}`);
+                }
+            });
+        }
+        return found;
+    };
+
+    test('shipped text advertises no phantom command, and the scan flags one when it is planted (H10a)', () => {
+        // The detector, on synthetic text.
+        const wrappers = new Set(['run', 'task']);
+        const sample = [{
+            rel: 'sample.md',
+            text: [
+                'Run `/magic.pause` to stop.',
+                'Say "/magic.context" first.',
+                'Use /magic.retrospective now',
+                'See rules/magic.md and .agents/workflows/magic.run.md.',
+                'The `/magic.run`-executable flag and /magic.task both resolve.',
+                'Developer-facing: `/magic.dev.init`.',
+                '/magic.pause at a line start',
+            ].join('\n'),
+        }];
+        assert.deepStrictEqual(
+            phantomCommands(sample, wrappers),
+            ['sample.md:1: /magic.pause', 'sample.md:2: /magic.context', 'sample.md:3: /magic.retrospective', 'sample.md:7: /magic.pause'],
+            'flags a mention after a backtick, a quote, whitespace and a line start; spares paths, resolving commands, a hyphen-ended token and magic.dev.*'
+        );
+
+        // The shipped tree: `.magic/` (bodies, scripts, templates), docs, wrappers, rules, README.
+        const resolved = new Set(
+            fs.readdirSync(path.join(shippedRoot, 'workflows'))
+                .map((name) => name.match(/^magic\.([a-z]+)\.md$/))
+                .filter(Boolean)
+                .map((match) => match[1])
+        );
+        assert.ok(resolved.has('run') && resolved.has('task'), 'the wrapper set is read from workflows/');
+        const scanned = [
+            ...listShipped('.magic', ['.md', '.js', '.json']),
+            ...listShipped('docs', ['.md']),
+            ...listShipped('workflows', ['.md']),
+            ...listShipped('rules', ['.md']),
+            ...(fs.existsSync(path.join(shippedRoot, 'README.md')) ? ['README.md'] : []),
+        ].map((rel) => ({ rel, text: readShipped(rel) }));
+        assert.ok(scanned.length > 30, `the scan must actually see the shipped tree (saw ${scanned.length} files)`);
+
+        assert.deepStrictEqual(
+            phantomCommands(scanned, resolved), [],
+            'a /magic.{cmd} mention must resolve to workflows/magic.{cmd}.md — internal modules must not be advertised as commands'
+        );
+        // The pause module stays a module: no shipped text names it as a command,
+        // whether or not a wrapper ever appears for it.
+        assert.deepStrictEqual(
+            phantomCommands(scanned, new Set()).filter((hit) => hit.endsWith('/magic.pause')), [],
+            '/magic.pause is not a command'
+        );
+    });
+
+    // A context-fill tier: a table cell holding only a percentage range,
+    // threshold or open end (`0–40%`, `75%+`, `>70%`), or a narration of the form
+    // `at 63%` / `at {n}%`. Percentages inside prose — a similarity threshold, a
+    // coverage share — are not tiers and are spared.
+    const fillTiers = (files) => {
+        const cellRe = /\|\s*(?:[<>≥≤]=?\s*)?\d{1,3}\s*(?:[–—-]\s*\d{1,3}\s*)?%\+?\s*\|/;
+        const narrationRe = /\bat\s+(?:\{\w+\}|\d{1,3})\s*%/i;
+        const found = [];
+        for (const { rel, text } of files) {
+            text.split(/\r?\n/).forEach((line, index) => {
+                if (cellRe.test(line) || narrationRe.test(line)) found.push(`${rel}:${index + 1}`);
+            });
+        }
+        return found;
+    };
+
+    test('shipped text carries no context-fill percentage tier or narration in any engine body (H10b)', () => {
+        const retired = [{
+            rel: 'retired.md',
+            text: [
+                '| **PEAK** | 0–40% | Full files, parallel spec scans. |',
+                '| **DEGRADING** | 50-70% | Read only relevant spec sections. |',
+                '| **POOR** | 75%+ | Halt new reads. |',
+                '| **POOR** | >70% | Skip full spec reads. |',
+                'Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`).',
+                'Narrate `at {n}%` when a tier is crossed.',
+            ].join('\n'),
+        }];
+        assert.deepStrictEqual(
+            fillTiers(retired),
+            ['retired.md:1', 'retired.md:2', 'retired.md:3', 'retired.md:4', 'retired.md:5', 'retired.md:6'],
+            'every shape the retired tier tables used must be flagged'
+        );
+        const legitimate = [{
+            rel: 'legitimate.md',
+            text: [
+                '**RESCUE (AOP)**: name, title, or semantic similarity >80% → propose rename/sync.',
+                '🟢 = <5% uncovered/drift AND <3 shadow logic files.',
+                "2. ≥1 existing workspace's lexicon overlaps the signal token by ≥30% (prefix or stem match).",
+                '| Threshold | 80% similarity | rename |',
+                'Overall: [2/3] ██░░ 66%',
+                'Look at 100 files before deciding.',
+            ].join('\n'),
+        }];
+        assert.deepStrictEqual(fillTiers(legitimate), [], 'thresholds and shares inside prose are not tiers');
+
+        // The shipped engine bodies: `.magic/*.md`, not only `context.md` — a
+        // narrower scan passed while `task.md` still shipped its own tier table.
+        const bodies = listShipped('.magic', ['.md'])
+            .filter((rel) => !rel.slice('.magic/'.length).includes('/'))
+            .map((rel) => ({ rel, text: readShipped(rel) }));
+        assert.ok(bodies.length >= 8, `the scan must see the engine bodies (saw ${bodies.length})`);
+        assert.deepStrictEqual(
+            fillTiers(bodies), [],
+            'the agent has no reading of its own context fill: no body may key behavior to a percentage tier'
+        );
+    });
+
+    test('shipped text: run.md records Task Start and all three Attempts events, in order (H10c)', () => {
+        const run = readShipped('.magic/run.md');
+
+        // Step numbers repeat elsewhere in the file (another list has its own
+        // "3."), so the steps are looked up inside their own section only.
+        const stepsStart = run.indexOf('\n### Steps');
+        const stepsEnd = run.indexOf('\n### Dead-End Record');
+        assert.ok(stepsStart !== -1 && stepsEnd > stepsStart, 'run.md must carry the Steps section followed by the Dead-End Record section');
+        const steps = run.slice(stepsStart, stepsEnd);
+
+        // Task Start sits between Select and Execute — the record must exist
+        // before the executor is activated.
+        const select = steps.indexOf('\n2. **Select**');
+        const start = steps.indexOf('\n2b. **Task Start**');
+        const execute = steps.indexOf('\n3. **Execute**');
+        assert.ok(select !== -1 && start !== -1 && execute !== -1, 'run.md must carry Select, Task Start and Execute steps');
+        assert.ok(select < start && start < execute, 'Task Start must sit between Select and Execute');
+        const taskStart = stepBlock(steps, '2b.');
+        assert.match(taskStart, /`In Progress`/, 'Task Start records the task as in flight');
+        assert.match(taskStart, /- \[ \]/, 'Task Start states that the checklist line stays open');
+        assert.match(taskStart, /Attempts/, 'Task Start reads the recorded dead ends before an approach is chosen');
+
+        // The three moments a dead end is recorded, each at its own step.
+        assert.match(stepBlock(steps, '3.'), /Attempts/, 'an approach discarded or reverted in Step 3 is recorded');
+        assert.match(stepBlock(steps, '3.4.'), /FAIL[^\n]*Attempts/, 'a Diff Review return is recorded');
+        assert.match(stepBlock(steps, '3.4b.'), /FAIL[^\n]*Attempts/, 'an Instruction Diff Review return is recorded');
+        const qa = stepBlock(steps, '3.5.');
+        assert.ok(
+            qa.includes('Attempts') && qa.includes('Blocked [!]') && qa.indexOf('Attempts') < qa.indexOf('Blocked [!]'),
+            'a Verify or QA failure is recorded before the task is set Blocked'
+        );
+
+        // The closed list and the cap, stated once.
+        const section = run.match(/^### Dead-End Record \(`Attempts`\)\n([\s\S]*?)(?=\n### |\n## |(?![\s\S]))/m);
+        assert.ok(section, 'run.md must carry the Dead-End Record section');
+        assert.match(section[1], /^1\. .*(Verify|QA)/m, 'event 1: a Verify or QA failure');
+        assert.match(section[1], /^2\. .*review/im, 'event 2: a review verdict that returns work to Step 3');
+        assert.match(section[1], /^3\. .*(discard|revert)/im, 'event 3: an approach discarded or reverted');
+        assert.match(section[1], /At most \*\*five\*\* entries/, 'the dead-end list is capped at five');
+
+        assert.match(run, /☐ Task Start:/, 'the Run Completion Checklist verifies Task Start');
+        assert.match(run, /☐ Dead-End Record:/, 'the Run Completion Checklist verifies the dead-end record');
+    });
+
+    test('shipped text: rules/magic.md carries the session resume check and its opt-out (H10d)', () => {
+        const rules = readShipped('rules/magic.md');
+        assert.match(rules, /^## 10\. Session Resume Check/m, 'rules/magic.md must carry section 10');
+        assert.ok(rules.indexOf('\n## 9. ') < rules.indexOf('\n## 10. '), 'section 10 follows section 9');
+        assert.match(rules, /executor\.js resume-state --all/, 'the rule runs the shared predicate over every workspace');
+        assert.match(rules, /MAGIC_RESUME_CHECK=0/, 'the rule states its opt-out');
+        assert.match(rules, /verify §1–§10 were honored/, 'the completion protocol counts section 10');
+        assert.match(rules, /\*\*§10 Session Resume Check\*\*/, 'the completion protocol carries a section 10 item');
+    });
 });

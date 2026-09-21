@@ -35,6 +35,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-13 | Phase 29 | 0/0/33 | 4/0/2 | 24 | 🟢 |
 | 2026-09-17 | Phase 30 | 0/0/33 | 5/0/0 | 24 | 🟢 |
 | 2026-09-17 | Phase 31 | 0/0/33 | 6/0/0 | 24 | 🟢 |
+| 2026-09-21 | Phase 32 | 0/0/36 | 18/0/0 | 24 | 🟡 |
 
 ## Session 1 — 2026-06-12
 
@@ -537,5 +538,55 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal held at 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage held. The one implementation defect this session (Finding #3) was caught and fixed before any task reached `Done`, and the stale graph baseline (Finding #2) is a retrospective-tooling gap, not a registry-health signal — both routed to Recommendations rather than affecting the score.
-
+>
 > Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.
+
+## Session 13 — 2026-09-21
+
+**Scope:** Plan completion (Phase 32 — Automatic Session Checkpoints, SC-6..SC-9; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from an external recommendation, with the standing directive that nothing new is added for the user to type)
+**Specs in registry:** 36 (all Stable). Three are new since Session 12: `l2-update-state-structure.md` and `l2-update-state-values.md` (the 2026-09-20 decomposition of `l2-finalize-state-accuracy.md`) and `l2-session-checkpoint.md` (1.0.0 → 1.0.1 during this phase); eight more moved version across the window (`l1-session-continuity.md` 2.2.0 → 2.3.0, `l2-status-command.md` 1.1.0 → 1.2.0, `l2-workflow-wrappers.md` 1.2.0 → 1.3.0, `l2-test-suite.md` 1.17.0 → 1.18.0, `l2-engine-finalization.md` 3.2.0 → 3.2.2, `l2-engine-automation.md` 1.14.0 → 1.16.0, `l2-engine-diagnostics.md` 1.2.0 → 1.2.2, `l2-finalize-state-accuracy.md` 1.4.0 → 2.0.0)
+**Tasks total:** 18 this cycle (Done: 18, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 205 → 211 nodes (+6), 408 → 452 edges (+44); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements`, 24 conventions enforced and none orphaned. The baseline was current (it matches Session 12's close, so R39's check passed), which means this diff spans exactly the window since that session — the decomposition pair, the checkpoint spec, `resume-state.js`, `handoff.json` and the Phase 32 node — rather than two phases at once.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.102 → 2.1.103, a single C14 at the closing task after every track landed, tagged `magic.run magic.task magic.status magic.analyze`; the regenerated skill wrappers came out identical, so no `skills/` change |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; nothing marked `Done` was reopened. Five corrections were made, each inside the task that surfaced it (Findings #1–#3) |
+| **Rework Rate** | 5 corrections / 18 tasks | Manual | The `--all` scope (spec 1.0.1), git stderr leaking through `git-utils`, a fixture gap in H2, a step-lookup collision in the H10 test, and the cognitive-case numbering — all caught by the task's own probe, negative control or first test run |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The plan assumed a property of the executor that does not exist, and only running the script through the executor showed it.** The spec said "no flag = every workspace", but `executor.js` consumes `--workspace`, substitutes the registry default when it is absent and forwards nothing but `MAGIC_DESIGN_DIR`, so a script cannot tell "omitted" from "defaulted". Direct invocation, which is how the first probes ran, hid it. Fixed by an explicit `--all` flag and a spec correction before any consumer depended on the wrong reading | `l2-session-checkpoint.md` §5.3 and its 1.0.1 history row; the harness scope case; mutations M10 and M22 turn it red |
+| 2 | **The recorded test counts were stale before the phase began, and the plan built on them.** The plan, the checkpoint spec and `l2-test-suite.md` all said "211 cognitive tests, next free T213", while the suite already held T213–T219 (218 headings); its own header read 1.9.78 against a footer of 1.9.80. The collision surfaced only when the cases were written, and the new ones took T220–T224 | `grep -c "^### T[0-9]" dev/tests/suite.md` printed 218 before and prints 223 now; `l2-session-checkpoint.md` §6 still says "proposed T213–T217" |
+| 3 | **Negative controls exposed two tests that were green for the wrong reason.** One needle, passed through the shell, lost its backslashes and matched a comment instead of the regex, so the case stayed green; and the H2 fixture's Next Action carried no code span, so a "read the value from the stripped line" mutation passed. A control that cannot fail proves nothing. Both were closed before their tasks were marked `Done`, and the method was made routine: a driver applies one-line mutations to the real files, maps each to the case it must turn red, and verifies every restore by hash — 48 mutations, 48 caught | Mutation M23 (H2), the first control on the tracking-entry extraction; the driver's three suites |
+| 4 | **A phase that adds an engine file cannot reach an all-green harness until the file is tracked.** C14 writes the new files into `.checksums` at once, and the tracked-files invariant compares the manifest against `git ls-files`, so it stays red while they are untracked — correctly, since a release archive built from a fresh checkout would lack them. The task's Verify said "all green" and could not be met without a git write the run does not make | `every .magic/.checksums entry must be a git-tracked file` names `scripts/resume-state.js` and `scripts/lib/tracking-entries.js`; it passes against a temporary index holding them |
+| 5 | **A failure fixture found an adjacent defect in a different path.** Under `--workflow=run`, `finalize` aborts with exit 1 when `STATE.md` exists but cannot be read: the run whitelist includes `STATE.md`, the significance snapshot hashes it, and `hashFileSafe` retries five times and rethrows — whereas `--workflow=task` degrades to `STATE_UPDATE_SKIPPED`. The checkpoint claim stays honest either way (none is printed). Recorded, not repaired: it is outside this phase | Diagnostic `FINALIZE_RUN_ABORTS_ON_UNREADABLE_STATE`; `lib/significance.js` `snapshotHashes()` |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R41 | #1 | State in the executor contract, in one sentence, that a script sees the resolved workspace only through `MAGIC_DESIGN_DIR` and never receives `--workspace`, so a spec for a new subcommand cannot key behavior to that flag's absence | `l2-engine-automation.md` executor section, next `/magic.spec` pass |
+| R42 | #2 | Sync `l2-test-suite.md`'s recorded counts (harness 138, cognitive 223) and the checkpoint spec's "proposed T213–T217"; then make the suite's own footer (`Last: T224`) the single source so the count stops being copied into a spec that cannot follow it | `l2-test-suite.md`, `l2-session-checkpoint.md` §6, next `/magic.spec` pass |
+| R43 | #4 | When a phase adds an engine file, have its closing task's Verify say that the tracked-files invariant is green only once the file is added, so the red reads as a to-do and not a defect; git writes stay with the user | Planning guidance in `.magic/task.md`, next `/magic.task` |
+| R44 | #5 | Make `snapshotHashes()` treat an unreadable whitelisted file as absent-with-a-finding, matching how the state update degrades, so an unreadable `STATE.md` cannot abort a `run` finalize | `lib/significance.js`, via `/magic.spec engine` then `/magic.task engine` |
+| R45 | #3 | Promote the mutation driver from a scratch file to `dev/scripts/` (Layer 2), so a task's negative controls are repeatable by the next agent and not only narrated | `dev/scripts/`, a future task |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 36 | +3 |
+| Specs with version churn this session | 2 | 8 | +6 (the window spans eight direct-repair releases and two spec passes) |
+| Cognitive suite tests | 211 (recorded; the suite held 218) | 223 | +12 recorded / +5 actual |
+| Script harness tests | 92 | 138 | +46 (124 when the phase began; +14 in it) |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 205 / 408 | 211 / 452 | +6 / +44 |
+| Signal | 🟢 | 🟡 | ↓ |
+
+> Signal moved to 🟡: the structure is clean — 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage, 0 shadow logic — but two non-critical stale references stand in the registry itself (the recorded test counts in `l2-test-suite.md` and the "proposed T213–T217" in `l2-session-checkpoint.md`), which is the table's "1–2 non-critical drift items" condition. Both are known, routed (R42) and non-blocking; the Signal returns to 🟢 with that sync. The tracked-files red (Finding #4) is working-tree state at the end of a run, not a registry-health matter, and is not scored.

@@ -4,16 +4,10 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/spec
 
 ## Context Quality Guidance
 
-The agent adapts operation depth based on context window utilization:
+Read economy is guidance, not a measurement: the agent has no reliable reading of its own context-window fill, so no tier or percentage is used here (see `context.md` §Context Budget Guard).
 
-| Tier | Context Used | Behaviour |
-| --- | --- | --- |
-| **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
-| **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
-| **DEGRADING** | 50–70% | Read only relevant spec §sections; use frontmatter summaries |
-| **POOR** | 70%+ | Read STATE.md + phase frontmatter only; skip full spec reads |
-
-> At DEGRADING/POOR tier: prioritize STATE.md `Next Action` and phase `provides` fields over broad file scans. Trigger `/magic.pause` if POOR tier reached mid-phase.
+- Prefer the wiki, `INDEX.md`, `STATE.md` `Next Action` and the phase files' `provides` frontmatter before broad scans; read the relevant spec §sections rather than whole files unless the step edits the whole file.
+- Once the context begins with a summary standing in for earlier turns, re-ground on `STATE.md` and the phase files rather than on the summary (`context.md` §Post-Compaction Re-grounding).
 
 ## Argument Routing
 
@@ -116,6 +110,7 @@ graph TD
 - PLAN.md: strategic overview (Phases & Specifications). No atomic checklist items.
 - TASKS.md: master Phase Index. Contains phase registry and status tracking.
 - tasks/phase-{n}.md: tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
+- **Preserve recorded task state (Update mode)**: when a phase workbook is regenerated or updated, every task ID that survives the rewrite keeps its tracking entry's `Status` (including `In Progress`), `Changes` and `Attempts` **verbatim** — they record work already done or attempted, and a rewrite that resets them erases exactly what a resuming session needs. Only new task IDs receive fresh template entries; a removed ID leaves with its entry.
 - **Phase Frontmatter**: when creating `tasks/phase-{N}.md`, populate the YAML frontmatter from the draft PLAN.md. At minimum fill: `phase`, `name`, `status: Todo`, `subsystem` (inferred from touched directories/specs), `requires` (from dependency graph built in Step 3). Leave `provides`, `key_files`, `patterns_established`, `duration_minutes` empty — filled by `run.md` on phase completion.
 - **Dependency Read**: when building the dependency matrix (Step 3), also read existing `phase-*.md` frontmatter `provides` fields to understand what prior phases deliver. Supplements PLAN.md prose descriptions with machine-readable data.
 

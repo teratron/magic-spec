@@ -14,6 +14,15 @@ const { normalizePath } = require('../utils');
  * Any caller that needs to mutate the repo must do so outside this module.
  */
 
+/**
+ * Options for every probe below: stdout captured, stderr discarded. A probe that
+ * fails says so through its return value; git's own diagnostics (`fatal:` on a
+ * repository with no commit yet, line-ending warnings) are not engine findings,
+ * and would otherwise surface in the output of a script that must stay silent
+ * when there is nothing to report.
+ */
+const QUIET = { encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'] };
+
 // ───────────────────────────────────────────────────────────────────────────
 // Repo Detection
 // ───────────────────────────────────────────────────────────────────────────
@@ -41,7 +50,7 @@ function isGitRepo(cwd) {
  */
 function headSha(cwd) {
     try {
-        return execSync('git rev-parse --short=8 HEAD', { cwd, encoding: 'utf8' }).trim();
+        return execSync('git rev-parse --short=8 HEAD', { cwd, ...QUIET }).trim();
     } catch {
         return null;
     }
@@ -61,17 +70,17 @@ function headSha(cwd) {
 function changedPaths(cwd) {
     let tracked = '';
     try {
-        tracked = execSync('git diff --name-only HEAD', { cwd, encoding: 'utf8' });
+        tracked = execSync('git diff --name-only HEAD', { cwd, ...QUIET });
     } catch {
         try {
-            tracked = execSync('git ls-files', { cwd, encoding: 'utf8' });
+            tracked = execSync('git ls-files', { cwd, ...QUIET });
         } catch {
             tracked = '';
         }
     }
     let untracked = '';
     try {
-        untracked = execSync('git ls-files --others --exclude-standard', { cwd, encoding: 'utf8' });
+        untracked = execSync('git ls-files --others --exclude-standard', { cwd, ...QUIET });
     } catch {
         untracked = '';
     }
@@ -93,7 +102,7 @@ function fileNumstat(cwd, relPath) {
     try {
         const out = execSync(
             `git diff --numstat HEAD -- "${relPath}"`,
-            { cwd, encoding: 'utf8' }
+            { cwd, ...QUIET }
         ).trim();
         if (!out) return { added: 0, deleted: 0 };
         const [a, d] = out.split(/\s+/);
@@ -115,7 +124,7 @@ function fileStatus(cwd, relPath) {
     try {
         const out = execSync(
             `git status --porcelain -- "${relPath}"`,
-            { cwd, encoding: 'utf8' }
+            { cwd, ...QUIET }
         ).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);

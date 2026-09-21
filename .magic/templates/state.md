@@ -43,6 +43,5 @@ Overall:   [{done}/{all}]     ██░░░░░░ {pct}%
 
 ## Session Continuity
 
-**Last Session Ended:** {YYYY-MM-DD HH:MM}
 **Handoff File:** {.design/{workspace}/HANDOFF.json | none}
 **Bootstrap Mode:** {true | false}

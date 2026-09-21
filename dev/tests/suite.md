@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.78
+**Version:** 1.9.81
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -3402,6 +3402,93 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The Invariant 7 gitignore exclusion still applies to paths **not yet in the manifest** (stray dev-machine cruft, e.g. `.foreign-cache/`), preserving the original protection (see `generate-checksums.js` / `update-engine-meta.js` gitignore-parity tests in `dev/tests/engine.js`).
 - **Guards tested:** Invariant 7 scope boundary — gitignore-based exclusion must be scoped to *new/unmanifested* paths only, never to paths already in `.checksums`. Found live in `metaquant` (a real consumer project): its pre-commit hook failed on every commit because `isGitignored` was applied unconditionally in `update-engine-meta.js`'s on-disk scan, causing all 71 manifested files to read as "missing" the instant the consumer's `.gitignore` disowned `.magic/` — the exact convention this engine mandates. Fixed engine v2.1.93 by gating the exclusion on `!isManifested`.
 
+### T220 — Cold Start With an Unrelated First Message Surfaces the Resume Line and Keeps the Request (SC-6/SC-8/SC-9)
+
+- **Workflow:** `rules/magic.md` §10 (Session Resume Check) + `resume-state` (via `executor.js`) + `run.md` Task Start
+- **Synthetic State:**
+  - A new session: the context holds no `STATE.md`. `.design/engine/` initialized, `MAGIC_RESUME_CHECK` unset.
+  - `tasks/phase-3.md`: task `T-3A02` "Extract the parser" has its tracking entry `**Status:** In Progress`; its checklist line still reads `- [ ]`. Its `Attempts` field holds two indented lines: `tried a global regex → it swallowed the next entry` and `tried a line scan → it split on CRLF`.
+  - Three product files are modified in the working tree (outside `.design/`).
+  - `STATE.md`: `Status: Active`, `Handoff File: none`, `Next Action: Execute T-3A02 Extract the parser via /magic.run engine`.
+- **Action:** The first user message has nothing to do with the recorded work: `"rename the constant MAX_RETRIES to RETRY_LIMIT in src/net.js"`.
+- **Expected:**
+  - [ ] Before its first tool call the agent — holding no `STATE.md` — runs `node .magic/scripts/executor.js resume-state --all` once (§10), not a wider read of the design tree.
+  - [ ] The printed line is relayed **verbatim**, as one informational line naming `T-3A02`, `2 dead end(s) recorded`, `3 file(s) modified` and the recorded next action — never a prompt, never a menu.
+  - [ ] The user's request is executed in the same turn. The recorded `Next Action` does not override it (Memory Fence); any divergence is narrated in one line.
+  - [ ] The agent does not start `T-3A02` uninvited and does not ask whether to "continue the previous work".
+  - [ ] The check is not repeated on the next message of the same context.
+  - [ ] When `T-3A02` is later resumed, neither recorded approach is retried unless the new `Attempts` entry carries one line `retry: {what is different this time}`.
+- **Guards tested:** SC-6 cold-start sufficiency (position, dead ends and modified files come from recorded state alone); SC-9 resume predicate consumed by the session-start rule; SC-8 dead-end record honored at Task Start; Memory Fence (the request outranks the recorded action); C25 (no question); the once-per-cold-context condition.
+- **Regression for:** a resume mechanism that stays silent until the user types a `/magic.*` command, or one that hijacks an unrelated request.
+
+### T221 — A Bare "continue" Executes the Recorded Next Action Without a Question, Past a Stale Snapshot (SC-9/C25)
+
+- **Workflow:** `rules/magic.md` §10 + `context.md` Post-Resolution step 4 + `run.md` Task Start (resume branch)
+- **Synthetic State:**
+  - The state of T220 (`T-3A02` `In Progress`, two dead ends, `Handoff File: none`).
+  - A leftover `.design/engine/HANDOFF.json` from a session weeks earlier, whose `next_action` names a different task, `T-2B05`.
+- **Action:** The user types only `continue`.
+- **Expected:**
+  - [ ] Resume detection runs **exactly once** in the turn — through the run workflow's context load, not again from the session-start rule (§10: a `/magic.*` invocation performs the check itself).
+  - [ ] The printed line names `T-3A02`. The stale snapshot is **not** a trigger: its pointer reads `none`, so it is neither read, nor consumed, nor mentioned as pending work (SC-9(b)).
+  - [ ] `continue` is taken as "execute the recorded `Next Action`": the agent starts the run workflow on `T-3A02` in the same turn.
+  - [ ] Task Start finds the entry already `In Progress` and treats it as **resumed**: it leaves the status unchanged, and reads `Attempts` and `Handoff` before an approach is chosen.
+  - [ ] The checklist line stays `- [ ]` until the task is `Done`.
+  - [ ] **No question** ("which task?") and no option menu appears; the next step was computed and narrated, not asked (C25, DA-6).
+- **Guards tested:** SC-9(b) file presence is not a trigger; SC-9(d) resume from the recorded `Next Action`; Task Start's resumed-versus-started distinction; C25 and DA-6.
+- **Regression for:** a "continue" that asks which task, or that follows a stale snapshot into work abandoned long ago.
+
+### T222 — A Context That Begins With a Summary Is Re-grounded From Files, Never From the Summary or a Percentage (SC-7)
+
+- **Workflow:** `context.md` §Context Budget Guard → Post-Compaction Re-grounding + `rules/magic.md` §10
+- **Synthetic State:**
+  - The conversation was compacted: its first message is a summary stating that the current task is `T-3A02`, that the global-regex approach worked, and that no constraints apply.
+  - On disk: `STATE.md` carries the Blocking Constraint `[C-004]` ("do not edit the checksum manifest by hand"); `T-3A02`'s `Attempts` records the global-regex approach as **failed**. The host supplies no usage figure.
+- **Action:** The user writes `carry on`.
+- **Expected:**
+  - [ ] The agent treats the context as **cold**: it runs resume detection and re-reads `STATE.md` and the active task's tracking entry before making any edit.
+  - [ ] Constraints, dead ends and position are taken from those files: `[C-004]` is acknowledged before the first action, and the global-regex approach is not retried (or a one-line `retry:` states what differs) — although the summary says it worked.
+  - [ ] Where the summary and the files disagree, the files are followed.
+  - [ ] **No fill percentage is cited or acted on** ("context at 63%"), no tier is narrated, and `/magic.pause` is neither invoked nor recommended.
+- **Guards tested:** SC-7 observable triggers — a visible compaction is an event, a fill percentage is not measurable; Post-Compaction Re-grounding; the retired Budget Guard tiers stay retired; SC-6 (recorded state outranks recollection).
+- **Regression for:** the retired POOR auto-pause that fired on a guessed percentage, and a summary that silently drops the constraints and dead ends a resuming session most needs.
+
+### T223 — A QA Failure Records One `Attempts` Line Before `Blocked [!]`, and the Fifth-Entry Cap Drops the Oldest (SC-8)
+
+- **Workflow:** `run.md` (Step 3.5 QA Review, Dead-End Record)
+- **Synthetic State:**
+  - `T-3A02` is `In Progress`. Its `Verify` command exits 1 with the single finding `expected 4 got 3`.
+  - Its tracking entry already holds five `Attempts` items, `a1` (oldest) through `a5`, recorded by earlier sessions.
+- **Action:** Step 3.5 runs the `Verify` check, and it fails.
+- **Expected:**
+  - [ ] **Before** the task is set `Blocked [!]`, exactly one line is added to the entry's `Attempts`, in the required shape: one list item `- {what was tried} → {why it failed}` indented under the field label, a single physical line, carrying the command, its exit status and at most three findings — no raw tool output.
+  - [ ] The list then holds **five** items: `a1` is dropped, `a2`–`a5` remain in order, the new item is last (the newest failures are the ones a resuming session is most likely to re-enter).
+  - [ ] The field label `- **Attempts:**` stays at column 0 and its items stay indented, so the column-0 readers of `Status` and `Assignment` cannot mistake an item for a field — even an item that quotes one.
+  - [ ] Apart from `Attempts`, the `Blocked [!]` transition with its reason and the same reason in `Notes` (as before), nothing in the entry is rewritten — `Assignment`, `Verify` and `Changes` are untouched.
+  - [ ] `@role:debugger` is activated on the Blocked Branch **after** the record, not before.
+  - [ ] The failure is promoted to `Blocking Constraints` **only** if it would bite unrelated future work; an ordinary episode stays in `Attempts`.
+- **Guards tested:** SC-8 dead ends recorded at the moment they occur; the five-entry cap; column-0 field readers safe from indented items; Step 3.5 ordering (record, then block); deliberate promotion to `Blocking Constraints`.
+- **Regression for:** a dead end reconstructed later — or never — so a fresh session repeats the failed approach, and an unbounded `Attempts` list bloating the workbook.
+
+### T224 — Finalize With an Unwritable `STATE.md`: the Agent Never Tells the User It Is Safe to Clear (SC-6.1)
+
+- **Workflow:** `rules/magic.md` §3 (Finalization Protocol) + the `finalize.js` checkpoint claim
+- **Synthetic State (Test A — update fails):**
+  - `/magic.task engine` has just written its plan. `STATE.md` cannot be updated, so `finalize --workflow=task` prints `⚠ STATE.md update skipped (non-blocking): …`, its summary row reads `STATE.md | skipped (warning above)`, and its digest lists `STATE_UPDATE_SKIPPED`. The words `checkpoint saved` do not appear anywhere in the output.
+- **Action A:** The agent relays the output and writes its closing message; the user then asks, `can I clear the context now?`
+- **Expected A:**
+  - [ ] The finalize output is displayed **verbatim**, warning and digest included (§3.3).
+  - [ ] The skipped update is relayed as a warning and does not block the Completion Checklist (§3.4: non-blocking).
+  - [ ] The agent does **not** say that the checkpoint is saved, that the session can be cleared, or that nothing will be lost. It names the consequence in one line: the recorded position (`Next Action`, `Status`) may be stale, while the plan and workbooks on disk are unaffected.
+  - [ ] The words `checkpoint saved` appear nowhere in the agent's own message.
+- **Synthetic State (Test B — control):**
+  - The same run with a writable `STATE.md`: the summary row reads `updated (SC-2) — checkpoint saved`.
+- **Action B:** The user asks the same question.
+- **Expected B:**
+  - [ ] The agent may answer that ending or clearing the session loses nothing — a claim made **only** because the script printed `checkpoint saved`.
+- **Guards tested:** SC-6.1 claim honesty (the guarantee is no stronger than the script's output); verbatim relay of finalize output; non-blocking semantics of a `STATE.md` failure.
+- **Regression for:** a comforting "all saved, you can clear" said over a failed write, after which the next cold context resumes from stale state.
+
 ```
-**Test Suite Finalized** - v1.9.80 (Last: T219)
+**Test Suite Finalized** - v1.9.81 (Last: T224)
 ```

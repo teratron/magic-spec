@@ -26,6 +26,11 @@ duration_minutes: ~
 
 ## Detailed Tracking
 
+<!-- Optional entry field, created by /magic.run on a task's first dead end — absent means none. A nested list under the entry's field list, one line per abandoned approach, at most five (run.md, Dead-End Record):
+  - **Attempts:**
+    - {what was tried} → {why it failed}
+-->
+
 ### [T-{ID}] {Task Title}
 
 - **Spec:** {spec.md} §{section}

@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 77
+      "degree": 81
     },
     {
       "id": "file:.magic",
@@ -126,7 +126,7 @@
       "type": "convention",
       "group": "convention",
       "num": 1,
-      "degree": 8
+      "degree": 10
     },
     {
       "id": "conv:C2",
@@ -134,7 +134,7 @@
       "type": "convention",
       "group": "convention",
       "num": 2,
-      "degree": 10
+      "degree": 11
     },
     {
       "id": "conv:C3",
@@ -142,7 +142,7 @@
       "type": "convention",
       "group": "convention",
       "num": 3,
-      "degree": 3
+      "degree": 5
     },
     {
       "id": "conv:C4",
@@ -150,7 +150,7 @@
       "type": "convention",
       "group": "convention",
       "num": 4,
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "conv:C6",
@@ -182,7 +182,7 @@
       "type": "convention",
       "group": "convention",
       "num": 9,
-      "degree": 20
+      "degree": 25
     },
     {
       "id": "conv:C10",
@@ -190,7 +190,7 @@
       "type": "convention",
       "group": "convention",
       "num": 10,
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "conv:C11",
@@ -222,7 +222,7 @@
       "type": "convention",
       "group": "convention",
       "num": 14,
-      "degree": 14
+      "degree": 15
     },
     {
       "id": "conv:C15",
@@ -230,7 +230,7 @@
       "type": "convention",
       "group": "convention",
       "num": 15,
-      "degree": 3
+      "degree": 5
     },
     {
       "id": "conv:C16",
@@ -294,7 +294,7 @@
       "type": "convention",
       "group": "convention",
       "num": 25,
-      "degree": 4
+      "degree": 5
     },
     {
       "id": "conv:C26",
@@ -331,7 +331,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.14.0",
+      "version": "1.16.0",
       "degree": 21
     },
     {
@@ -342,7 +342,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "3.2.0",
+      "version": "3.2.2",
       "degree": 14
     },
     {
@@ -353,8 +353,30 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.4.0",
-      "degree": 10
+      "version": "2.0.0",
+      "degree": 9
+    },
+    {
+      "id": "spec:engine/l2-update-state-structure",
+      "label": "l2-update-state-structure.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.0",
+      "degree": 6
+    },
+    {
+      "id": "spec:engine/l2-update-state-values",
+      "label": "l2-update-state-values.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.0",
+      "degree": 6
     },
     {
       "id": "spec:engine/l2-finalize-output-contract",
@@ -375,8 +397,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.17.0",
-      "degree": 8
+      "version": "1.18.0",
+      "degree": 11
     },
     {
       "id": "spec:engine/l1-documentation-system",
@@ -408,8 +430,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.0",
-      "degree": 12
+      "version": "1.3.0",
+      "degree": 13
     },
     {
       "id": "spec:engine/l2-skill-wrappers",
@@ -584,8 +606,19 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "2.2.0",
-      "degree": 11
+      "version": "2.3.0",
+      "degree": 18
+    },
+    {
+      "id": "spec:engine/l2-session-checkpoint",
+      "label": "l2-session-checkpoint.md",
+      "type": "spec",
+      "group": "spec",
+      "workspace": "engine",
+      "status": "Stable",
+      "layer": 2,
+      "version": "1.0.1",
+      "degree": 24
     },
     {
       "id": "spec:engine/l2-status-command",
@@ -595,7 +628,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.0",
+      "version": "1.2.0",
       "degree": 11
     },
     {
@@ -661,7 +694,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.0",
+      "version": "1.2.2",
       "degree": 10
     },
     {
@@ -694,7 +727,7 @@
       "label": ".magic/context.md",
       "type": "file",
       "group": "file",
-      "degree": 8
+      "degree": 9
     },
     {
       "id": "file:.magic/templates/rules.md",
@@ -708,7 +741,7 @@
       "label": "rules/magic.md",
       "type": "file",
       "group": "file",
-      "degree": 5
+      "degree": 6
     },
     {
       "id": "file:.design/engine/specifications/l1-role-system.md",
@@ -757,7 +790,7 @@
       "label": ".magic/run.md",
       "type": "file",
       "group": "file",
-      "degree": 7
+      "degree": 8
     },
     {
       "id": "file:.magic/rule.md",
@@ -827,14 +860,14 @@
       "label": ".magic/scripts/finalize.js",
       "type": "file",
       "group": "file",
-      "degree": 5
+      "degree": 6
     },
     {
       "id": "file:.magic/scripts/update-state.js",
       "label": ".magic/scripts/update-state.js",
       "type": "file",
       "group": "file",
-      "degree": 5
+      "degree": 8
     },
     {
       "id": "file:.design/engine/specifications/l1-decision-autonomy.md",
@@ -890,7 +923,7 @@
       "label": "dev/tests/engine.js",
       "type": "file",
       "group": "file",
-      "degree": 3
+      "degree": 6
     },
     {
       "id": "file:.magic/roles/coder.md",
@@ -911,11 +944,25 @@
       "label": ".magic/templates/state.md",
       "type": "file",
       "group": "file",
-      "degree": 3
+      "degree": 5
     },
     {
       "id": "file:.magic/pause.md",
       "label": ".magic/pause.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:.magic/templates/phase.md",
+      "label": ".magic/templates/phase.md",
+      "type": "file",
+      "group": "file",
+      "degree": 4
+    },
+    {
+      "id": "file:.magic/templates/handoff.json",
+      "label": ".magic/templates/handoff.json",
       "type": "file",
       "group": "file",
       "degree": 1
@@ -1117,13 +1164,6 @@
       "degree": 1
     },
     {
-      "id": "file:.magic/templates/phase.md",
-      "label": ".magic/templates/phase.md",
-      "type": "file",
-      "group": "file",
-      "degree": 2
-    },
-    {
       "id": "file:.magic/templates/retrospective.md",
       "label": ".magic/templates/retrospective.md",
       "type": "file",
@@ -1250,6 +1290,27 @@
       "degree": 2
     },
     {
+      "id": "file:.magic/scripts/resume-state.js",
+      "label": ".magic/scripts/resume-state.js",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "file:.magic/status.md",
+      "label": ".magic/status.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
+      "id": "file:dev/tests/suite.md",
+      "label": "dev/tests/suite.md",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
       "id": "file:skills/magic-analyze/SKILL.md",
       "label": "skills/magic-analyze/SKILL.md",
       "type": "file",
@@ -1327,25 +1388,11 @@
       "degree": 1
     },
     {
-      "id": "file:.magic/status.md",
-      "label": ".magic/status.md",
-      "type": "file",
-      "group": "file",
-      "degree": 1
-    },
-    {
       "id": "file:workflows/magic.status.md",
       "label": "workflows/magic.status.md",
       "type": "file",
       "group": "file",
       "degree": 2
-    },
-    {
-      "id": "file:dev/tests/suite.md",
-      "label": "dev/tests/suite.md",
-      "type": "file",
-      "group": "file",
-      "degree": 1
     },
     {
       "id": "file:.agents/skills/magic-dev-simulate/SKILL.md",
@@ -1397,12 +1444,21 @@
       "degree": 1
     },
     {
+      "id": "phase:engine/phase-32",
+      "label": "Phase 32: Automatic Session Checkpoints — Task Start record, `Attempts` dead-end field, one shared read-only `resume-state` script, checkpoint claim in finalize output, fill-percentage tiers replaced by post-compaction re-grounding, dead `Last Session Ended` field and phantom `/magic.pause` removed, cold-context rule in `rules/magic.md` §10",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done",
+      "degree": 1
+    },
+    {
       "id": "phase:engine/phase-31",
       "label": "Phase 31: Diagnostics Revalidation Before Render (DG-10) — condition findings (`check-prerequisites` warnings) carry a read-only `recheck`; the digest reruns it once per signature before every render and drops what no longer reproduces; self-reference guard prevents a recheck from re-queuing its own finding",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
-      "status": "Done",
+      "status": "Done (Archived)",
       "degree": 1
     },
     {
@@ -1760,6 +1816,16 @@
     },
     {
       "from": "ws:engine",
+      "to": "spec:engine/l2-update-state-structure",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-update-state-values",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
       "to": "spec:engine/l2-finalize-output-contract",
       "relation": "contains"
     },
@@ -1861,6 +1927,11 @@
     {
       "from": "ws:engine",
       "to": "spec:engine/l1-session-continuity",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "spec:engine/l2-session-checkpoint",
       "relation": "contains"
     },
     {
@@ -2480,7 +2551,22 @@
     },
     {
       "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/templates/phase.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "file:.magic/templates/handoff.json",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
       "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "conv:C3",
       "relation": "enforces"
     },
     {
@@ -2496,6 +2582,11 @@
     {
       "from": "spec:engine/l1-session-continuity",
       "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-session-continuity",
+      "to": "conv:C15",
       "relation": "enforces"
     },
     {
@@ -2910,17 +3001,12 @@
     },
     {
       "from": "spec:engine/l2-finalize-state-accuracy",
-      "to": "file:.magic/scripts/update-state.js",
-      "relation": "covers"
-    },
-    {
-      "from": "spec:engine/l2-finalize-state-accuracy",
       "to": "file:.magic/scripts/finalize.js",
       "relation": "covers"
     },
     {
       "from": "spec:engine/l2-finalize-state-accuracy",
-      "to": "file:.magic/templates/state.md",
+      "to": "file:.magic/scripts/update-state.js",
       "relation": "covers"
     },
     {
@@ -3329,6 +3415,121 @@
       "relation": "enforces"
     },
     {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/scripts/resume-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/run.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/context.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/pause.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/status.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/templates/phase.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:.magic/scripts/finalize.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:rules/magic.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:dev/tests/engine.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "file:dev/tests/suite.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C3",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C4",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C5",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C10",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C14",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-session-checkpoint",
+      "to": "conv:C25",
+      "relation": "enforces"
+    },
+    {
       "from": "spec:engine/l2-skill-wrappers",
       "to": "file:skills/magic-analyze/SKILL.md",
       "relation": "covers"
@@ -3490,7 +3691,22 @@
     },
     {
       "from": "spec:engine/l2-test-suite",
+      "to": "conv:C1",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
       "to": "conv:C2",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C5",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C9",
       "relation": "enforces"
     },
     {
@@ -3501,6 +3717,56 @@
     {
       "from": "spec:engine/l2-test-suite",
       "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-update-state-structure",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-structure",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-structure",
+      "to": "file:dev/tests/engine.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-structure",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-update-state-structure",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-update-state-values",
+      "to": "file:.magic/scripts/update-state.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-values",
+      "to": "file:.magic/templates/state.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-values",
+      "to": "file:dev/tests/engine.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-update-state-values",
+      "to": "spec:engine/l1-session-continuity",
+      "relation": "implements"
+    },
+    {
+      "from": "spec:engine/l2-update-state-values",
+      "to": "conv:C9",
       "relation": "enforces"
     },
     {
@@ -3557,6 +3823,16 @@
       "from": "spec:engine/l2-workflow-wrappers",
       "to": "conv:C7",
       "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
+      "to": "conv:C9",
+      "relation": "enforces"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-32",
+      "relation": "contains"
     },
     {
       "from": "ws:engine",
@@ -3715,7 +3991,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 77
+        "degree": 81
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -3724,22 +4000,22 @@
         "degree": 36
       },
       {
+        "id": "conv:C9",
+        "label": "C9 — Zero-Prompt Automation (Trust Mode)",
+        "type": "convention",
+        "degree": 25
+      },
+      {
+        "id": "spec:engine/l2-session-checkpoint",
+        "label": "l2-session-checkpoint.md",
+        "type": "spec",
+        "degree": 24
+      },
+      {
         "id": "spec:engine/l2-engine-automation",
         "label": "l2-engine-automation.md",
         "type": "spec",
         "degree": 21
-      },
-      {
-        "id": "conv:C9",
-        "label": "C9 — Zero-Prompt Automation (Trust Mode)",
-        "type": "convention",
-        "degree": 20
-      },
-      {
-        "id": "spec:engine/l1-role-system",
-        "label": "l1-role-system.md",
-        "type": "spec",
-        "degree": 20
       }
     ],
     "orphaned_files": [],
@@ -3776,20 +4052,20 @@
     "bridge_specs": [],
     "coverage_stats": {
       "engine": {
-        "specs": 33,
+        "specs": 36,
         "files_covered": 14,
         "total_scope": 14,
         "coverage_pct": 100
       }
     },
     "summary": {
-      "total_nodes": 205,
-      "total_edges": 408,
+      "total_nodes": 211,
+      "total_edges": 452,
       "workspaces": 1,
-      "specs": 33,
-      "files": 117,
+      "specs": 36,
+      "files": 119,
       "conventions": 24,
-      "phases": 30
+      "phases": 31
     }
   }
 }

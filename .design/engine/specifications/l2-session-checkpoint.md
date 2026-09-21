@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -104,11 +104,11 @@ A nested list on the tracking entry:
 ### 5.3 Resume Detection: `resume-state` (SC-9(b), (d)–(f))
 
 ```plaintext
-node .magic/scripts/executor.js resume-state [--workspace=<name>] [--json]
+node .magic/scripts/executor.js resume-state [--workspace=<name> | --all] [--json]
 ```
 
 ```plaintext
-for each workspace in scope (--workspace, else every registered workspace):
+for each workspace in scope (the resolved workspace, or every registered one under --all):
     read STATE.md                      absent -> skipped; unreadable -> skipped + finding
     paused  = (Status == Paused)
     flight  = tracking entries with Status == In Progress in the live phase
@@ -127,7 +127,7 @@ Output is nothing when no workspace has work in flight; otherwise one line per w
 ▶ Resume [{workspace}]: {T-ID} {title} in flight — {k} dead end(s) recorded, {m} file(s) modified. Next: {next action}
 ```
 
-Variants: several in-flight tasks name at most three, then `+{n} more`; `Status: Paused` appends `(paused snapshot)`; a paused workspace with nothing else reads `▶ Resume [{workspace}]: paused snapshot. Next: {next action}`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress" | "paused" | "both", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magic.*` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, omits it.
+Variants: several in-flight tasks name at most three, then `+{n} more`; `Status: Paused` appends `(paused snapshot)`; a paused workspace with nothing else reads `▶ Resume [{workspace}]: paused snapshot. Next: {next action}`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress" | "paused" | "both", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magic.*` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
 
 Call sites, each replacing prose that decides the same question independently:
 
@@ -143,7 +143,7 @@ Call sites, each replacing prose that decides the same question independently:
 `rules/magic.md` gains **§10 Session Resume Check**, alongside §1 (upgrade detection) and with the same shape:
 
 - **Trigger (observable):** the agent is about to make its first tool call and holds no `STATE.md` for the workspace in its current context — a new session, a cleared one, a compaction. Once per cold context. A `/magic.*` invocation already performs the check in its context load (§5.3) and does not repeat it.
-- **Action:** run `resume-state` without `--workspace` (no workspace is resolved yet, §5.3); relay a printed line verbatim as one informational line; proceed with the user's request (narrated, never asked). Silent when the script prints nothing. A missing or failing script counts as silence: the rule fails open and never halts a session.
+- **Action:** run `resume-state --all` (no workspace is resolved yet, §5.3); relay a printed line verbatim as one informational line; proceed with the user's request (narrated, never asked). Silent when the script prints nothing. A missing or failing script counts as silence: the rule fails open and never halts a session.
 - **Exemptions:** `MAGIC_RESUME_CHECK=0` disables the rule; `/magic.status` renders the same information in its own briefing.
 - `rules/magic.md` §8 (Completion Protocol) gains the matching checklist item.
 
@@ -241,4 +241,5 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-09-21 | Agent | Correction found while implementing §5.3, patch, no status transition: the all-workspace scope is now the explicit `--all` flag, not the absence of `--workspace`. The executor consumes `--workspace` and defaults the workspace when it is absent, handing the result on only as `MAGIC_DESIGN_DIR`, so the script cannot distinguish "omitted" from "defaulted" — the 1.0.0 wording (§5.3 usage, pseudo-code header and C15 scope paragraph; §5.4 action) described a behavior no script behind `executor.js` can have. The rule that a caller with a resolved workspace stays inside it, and that only the session-start rule reads every workspace, is unchanged; only its spelling moved. The planning-time note that the derived variable "must be ignored" was the same misreading in the other direction: it is precisely how a resolved workspace reaches the script. |
 | 1.0.0 | 2026-09-20 | Agent | Initial version. Implementation contract for the automatic-checkpoint invariants of [l1-session-continuity.md](l1-session-continuity.md) 2.3.0 (SC-1.3, SC-6, SC-6.1, SC-7, SC-8, SC-9), written after the user ruled out any new command and asked for everything to run under the hood. Deliverables: a task-start record in `run.md` (no step recorded a task as in flight); the `Attempts` field, the one section of the external six-section handoff practice with no carrier; a single read-only `resume-state` script replacing three prose copies of the resume rule that disagreed about when a resume completes; a cold-context session rule in `rules/magic.md`; a checkpoint claim in finalize output that is made only when the state update succeeded; retirement of the fill-percentage tiers in favor of post-compaction re-grounding; removal of the dead `Last Session Ended` field and the eight advertisements of the non-command `/magic.pause`. §6 fixes the coverage the previous pause/handoff path never had (harness H1–H10, cognitive C1–C5) and §7 the thirteen-row deployment inventory routed to `/magic.task engine`. Post-Update Review (5-lens) and Instruction Quality Pass found defects in the first draft, all fixed before promotion: the script's all-workspace default would have read outside a resolved workspace (C15), now scoped by `--workspace` except at session start; the claim that it records no diagnostics contradicted DG-1, now stated as one recorded warning with a clean run writing nothing; the resume-completion moment was ambiguous, now consumption at load; H8 asserted an init-provisioning exception the field map does not need, H9's fixture was platform-fragile (an unwritable file, now a directory at the state path); the session-start trigger said "first substantive action", now the first tool call; a line-number reference into `pause.md` would have gone stale. Status `Draft → Stable` via Trust Mode (C9) after the L1 parent was promoted. |

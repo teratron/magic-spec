@@ -11,7 +11,7 @@ Read-only resume briefing for returning users. Composes current position, progre
 
 ## Core Invariants (Mandatory)
 
-1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature.
+1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.design/.cache/`; the sink is not an artifact and that is not a write in this sense.)
 2. **Context (Zero-Prompt)**: resolve the workspace via the resolution chain in [context.md](context.md) (Priority 1-4). Optional `{workspace}` argument overrides.
 3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
@@ -43,7 +43,7 @@ Read-only resume briefing for returning users. Composes current position, progre
 ### 3. Degraded States
 
 - **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magic.task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
-- **Paused session** (`**Status:** Paused` or `HANDOFF.json` present) → add a resume line: handoff `next_action` and `required_reading` (pause contract).
+- **In-flight or paused session** → add the resume line printed by `node .magic/scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`, or `**Status:** Paused` (then also the handoff `required_reading`, per the pause contract). A `HANDOFF.json` whose `Handoff File` pointer in `STATE.md` reads `none` is inert and is not, by itself, a paused session. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
 
@@ -56,5 +56,5 @@ Status Checklist
   ☐ Blocking Constraints surfaced (mandatory reading)
   ☐ Engine line rendered: in-sync or informational drift (no prompt, no auto-analyze)
   ☐ Exactly one next command recommended as [DR] (DA-6)
-  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; Paused → resume line)
+  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; in-flight or paused → resume line)
 ```

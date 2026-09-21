@@ -354,7 +354,7 @@ does not revert to host-assistant defaults at workflow boundaries.
 
 ## 8. Completion Protocol (Mandatory Checklist)
 
-Before finishing any task that involved magic-spec workflows, verify §1–§9 were honored.
+Before finishing any task that involved magic-spec workflows, verify §1–§10 were honored.
 
 - [ ] **§1 Upgrade Detection** — compared `.magic/.version` to `**Engine Version:**`
       in `.design/INDEX.md` before any `/magic.*` (except `/magic.analyze`); on
@@ -386,6 +386,10 @@ Before finishing any task that involved magic-spec workflows, verify §1–§9 w
       did NOT attempt to self-repair the engine; generated a formatted
       `MAGIC-SPEC ENGINE BUG REPORT` block for the user to submit; also recorded the
       finding via `record-diagnostic` so it survives to the next finalize digest.
+- [ ] **§10 Session Resume Check** — on a cold context (new, cleared, or after a
+      compaction), ran `resume-state --all` once before the first tool call; relayed a
+      printed line verbatim as one informational line and carried on with the user's
+      request; said nothing when the script printed nothing.
 
 ## 9. Bug Reporting Protocol (Engine Feedback)
 
@@ -427,3 +431,36 @@ This applies to every finding the agent records this way — not only engine bug
 > - State / Action during failure: `{action}`
 > **Hypothesis / Fix:** {Your technical explanation or suggested fix, if any}
 ```
+
+## 10. Session Resume Check (Cold Context)
+
+A session that is new, cleared, or continuing after a compaction starts with no
+memory of the work in flight. The engine records that work at events it can
+observe — a task marked `In Progress`, dead ends written to `Attempts`, the
+`STATE.md` update every finalize makes — so a cold context can recover it
+without asking anyone. This section makes the recovery automatic: there is
+nothing for the user to type.
+
+### Procedure
+
+Runs **once per cold context**: the first time the agent is about to make a tool
+call while it holds no `STATE.md` for the workspace in its current context. A
+`/magic.*` invocation already performs the same check in its context load
+(`.magic/context.md` Post-Resolution, step 4) and does not repeat it.
+
+1. Run `node .magic/scripts/executor.js resume-state --all` — no workspace is
+   resolved yet, so it reads every registered workspace.
+2. If it prints a line (`▶ Resume [{workspace}]: …`), relay it **verbatim** as one
+   informational line — never a prompt, never a menu — and carry on with the
+   user's request. The request outranks the recorded `Next Action`; narrate any
+   divergence in one line (Memory Fence, `.magic/context.md`).
+3. If it prints nothing, say nothing.
+
+A missing or failing script counts as silence: this rule fails open and never
+halts a session.
+
+### Exemptions
+
+- `MAGIC_RESUME_CHECK=0` env var disables this rule entirely.
+- `/magic.status` — its briefing already renders the same information.
+- A project with no `.design/` — there is nothing to resume.

@@ -1,7 +1,7 @@
 # Pause Workflow
 
 Saves session state and generates `HANDOFF.json` for cross-session continuity.
-Trigger: `/magic.pause` OR POOR context tier detected mid-phase.
+Trigger: an explicit user statement that the session is ending or being cleared. This module is internal — it has no slash command — and no guarantee in the engine depends on it: the checkpoints `STATE.md` receives after every workflow and task event already make ending a session safe.
 
 ## Core Invariants
 
@@ -80,13 +80,7 @@ Resume by running /magic.run in a new session.
 
 ## Resume Protocol (reference)
 
-When `/magic.run` is called in a new session, Resume Detection fires (context.md §4):
-
-1. Detect `**Status:** Paused` in STATE.md OR presence of `HANDOFF.json`.
-2. Load files listed in `required_reading` from HANDOFF.json.
-3. Acknowledge each `blocking_constraints` entry explicitly.
-4. Execute `next_action` with no user prompt.
-5. Call `update-state --status=Active --handoff=none` after first successful task step.
+Detection and consumption are defined once, in `context.md` §4 (Resume Detection); this module states no rule of its own. In short: `resume-state` reports a paused snapshot only while `**Status:** Paused` and the `Handoff File` pointer in `STATE.md` are set; the resume step loads `required_reading`, acknowledges each `blocking_constraints` entry, consumes the snapshot (`update-state --status=Active --handoff=none`) and then executes `next_action` with no user prompt. A `HANDOFF.json` left on disk with the pointer `none` is inert.
 
 ## Error Handling
 

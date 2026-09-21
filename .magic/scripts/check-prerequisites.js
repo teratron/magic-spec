@@ -649,7 +649,7 @@ if (jsonOutput) {
     } else {
         let errorMsg = `Missing required artifacts: ${missing.join(', ')}`;
         if (missing.includes('INDEX.md') && missing.includes('RULES.md')) {
-            errorMsg += `. 💡 SDD structure missing. Run '/magic.init' to setup.`;
+            errorMsg += `. 💡 SDD structure missing. Any /magic.* workflow sets it up automatically (Auto-Init), or run: node .magic/scripts/executor.js init`;
         }
         // For non-JSON mode, also print warnings as plain strings for backward compatibility
         for (const w of warnings) {

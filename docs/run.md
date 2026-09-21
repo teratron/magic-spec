@@ -60,8 +60,11 @@ STATE.md is a live project state digest read before every execution session:
 
 - **Blockers**: If non-empty, displayed before proceeding.
 - **Blocking Constraints**: Each `[C-NNN]` confirmed before execution.
-- **Paused state**: Triggers Resume Detection for seamless session continuity.
+- **Work in flight** (a task marked `In Progress`, or a paused session): Triggers Resume Detection for seamless session continuity — automatically, with no command to type.
 - **Updates**: STATE.md is updated after every task transition (`Done` / `Blocked`) and phase completion.
+- **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task.
+- **Dead ends**: An approach tried and abandoned (a failed check, a review that sent the work back, a reverted change) is recorded as one line in the task's `Attempts` field, so a fresh session does not repeat it.
+- **Checkpoint**: When a workflow reports `checkpoint saved`, ending the session loses nothing — a new one resumes from STATE.md.
 
 ## 4. Execution Modes
 
@@ -106,7 +109,7 @@ Before committing any task as `Done`, the engine re-verifies the target spec is 
 After each task completes:
 
 - **STATE Sync**: STATE.md updated via executor script before touching TASKS.md.
-- **Task Status**: `In Progress` → `Done` (or `Blocked [!]`) in TASKS.md Phase Checklist.
+- **Task Status**: The tracking entry moves `In Progress` → `Done` (or `Blocked [!]`); the TASKS.md Phase Checklist line is ticked when `Done`.
 - **Plan Sync**: Completed specs/phases → `[x]` in `PLAN.md`.
 - **Change Record**: 1-line summary in the task's `Changes` field.
 - **Handoff**: If spec is ambiguous → **HALT** and delegate to `magic.spec` for update.
@@ -115,7 +118,7 @@ After each task completes:
 
 If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked` and halts. A delegated handoff jumps to the Spec Workflow (Explore Mode) where specifications are formally updated before resuming.
 
-**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status with a suggestion to run `/magic.pause` for full handoff.
+**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magic.task {workspace}` to revalidate the plan.
 
 ## 6. Lifecycle & Conclusion
 
@@ -135,7 +138,7 @@ If a task encounters ambiguous instructions or missing details, the agent marks 
 
 ## 7. Session Isolation (Phase Gates — C17)
 
-Major transitions within or out of the Run Workflow are protected by a **Hard Stop**. You must physically open a **New Chat** before starting a new phase or returning to Specification/Planning to eliminate context bleed-over.
+Major transitions within or out of the Run Workflow are protected by a **Hard Stop**. You must physically open a **New Chat** before starting a new phase or returning to Specification/Planning to eliminate context bleed-over. Because state is checkpointed after every workflow, a new chat loses nothing: if work was left in flight, the next session opens with a one-line resume report.
 
 ## 8. Run Completion Checklist
 

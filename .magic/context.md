@@ -124,24 +124,19 @@ After resolution, load **in this exact order** — the sequence forms the sessio
    - Read **before** any operation. This is the project's current position digest.
    - Fields `Current Position`, `Blockers`, `Blocking Constraints` take precedence over inferences from TASKS.md / PLAN.md when determining next action.
    - If `Blocking Constraints` is non-empty, the agent MUST acknowledge each `[C-NNN]` entry explicitly before proceeding.
-4. **Resume Detection** — if STATE.md `**Status:** Paused` OR `HANDOFF.json` exists in workspace:
-   - Display: `⚠ Paused session detected. Last action: {next_action from STATE/HANDOFF}.`
-   - Zero-Prompt (Trust Mode): automatically resume from recorded position.
-   - Read `required_reading` from HANDOFF.json and load those files.
+4. **Resume Detection** — run `node .magic/scripts/executor.js resume-state --workspace={workspace}`, the one shared predicate for "work is in flight" (SC-9):
+   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`, or `**Status:** Paused`. A missing or failing script counts as nothing in flight: never a halt. A leftover `HANDOFF.json` whose `Handoff File` pointer in `STATE.md` reads `none` is inert; the presence of the file is not a trigger.
+   - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
+   - `**Status:** Paused` with the `Handoff File` pointer set → read `required_reading` from that snapshot and load those files; acknowledge its `blocking_constraints` before the first action. Once `required_reading` is read, and before the recorded `Next Action` runs, the snapshot is **consumed**: `node .magic/scripts/executor.js update-state --workspace={workspace} --status=Active --handoff=none`. The file stays on disk (the pause merge rule needs it) and is inert once the pointer reads `none`. Read-only workflows (`magic.status`, `magic.analyze`, `magic.graph`) report the line but never consume a snapshot.
    - **Memory Fence**: Loaded HANDOFF / STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with `next_action` or any `blocking_constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
-   - Acknowledge all `blocking_constraints` from HANDOFF.json before first action.
-   - After successful resume → update STATE.md: set `**Status:** Active`, clear handoff field.
+   - A cold context that does not open with a `/magic.*` command runs the same check through the session-start rule in `rules/magic.md`.
 
 ## Context Budget Guard
 
-Applies to every workflow. Track context-window usage; shift read behavior by tier. Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`). Thresholds are guidance, not contractual cutoffs.
+Applies to every workflow. Read economy is guidance, not a measurement: the agent has no reliable reading of its own context-window fill, so **no tier, threshold or percentage is narrated or acted on**, and nothing here triggers an automatic pause (SC-7). A usage figure may be quoted only when the host supplied it.
 
-| Tier | Usage | Allowed reads |
-| --- | --- | --- |
-| **PEAK** | 0–40% | Full files, parallel spec scans, inline diff bodies. |
-| **NORMAL** | 40–60% | Prefer `INDEX.md` / wiki / `STATE.md`; full read only for the active spec section. |
-| **DEGRADED** | 60–75% | Frontmatter / headings only. Cite line ranges, never full bodies. Warn user once. |
-| **POOR** | 75%+ | Halt new reads. Finish current atomic step; auto-call `/magic.pause`. No new tool spawns. |
+- Prefer the cheapest source that answers the question: `STATE.md` `Next Action`, `INDEX.md`, the wiki and phase frontmatter before full spec bodies. Read the active spec section, not the whole file, unless the whole file is what the step edits.
+- Cite line ranges instead of re-quoting full bodies; refer to an earlier step by number or one-line summary.
 
 ### Read Hygiene
 
@@ -149,12 +144,6 @@ Applies to every workflow. Track context-window usage; shift read behavior by ti
 - **Evidence Capsule** — when persisting a tool result into `STATE.md` / `HANDOFF.json` / phase frontmatter, store only: `command`, `exit_code`, `key_findings` (≤3 lines), `errors`, `next_action`. Never full stdout.
 - **Cache-Prefix Invariant** — the Post-Resolution load order (global `RULES.md` → workspace `RULES.md` → `STATE.md`) is fixed; it forms the session prompt-cache prefix. Reordering or interleaving wide reads ahead of it invalidates cache hits — preserve the order.
 
-### POOR Auto-Halt
+### Post-Compaction Re-grounding
 
-When usage crosses **75%**:
-
-1. Complete only the current atomic step — no new task, role activation, or tool spawn.
-2. Auto-invoke `/magic.pause` so `STATE.md` and `HANDOFF.json` capture position.
-3. Surface to user: `⚠ Context budget POOR ({pct}%). Session paused; resume in a fresh session.`
-
-Opt-out: set `MAGIC_CONTEXT_GUARD=0` to disable the auto-halt (warnings still emitted).
+When the context begins with a summary standing in for earlier turns — a compaction the agent can see — treat it as a **cold context**: run Resume Detection (Post-Resolution step 4) and re-read `STATE.md` and the active task's tracking entry before continuing. Take constraints, recorded dead ends (`Attempts`) and position from those files, not from the summary: a summary drops exactly the detail that rots.

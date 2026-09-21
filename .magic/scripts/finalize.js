@@ -11,6 +11,7 @@ const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
 const { listPhaseFiles } = require('./lib/phase-files');
+const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
 
@@ -38,6 +39,15 @@ const designCacheDir = path.join(projectRoot, '.design', '.cache');
 const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
 const VALID_WORKFLOWS = new Set(['spec', 'task', 'run', 'rule']);
+
+/**
+ * The words finalize uses to tell the user that the SC-2 state update was
+ * written (SC-6.1), so the moment is known to be safe to end a session at.
+ * Printed only after an update that actually succeeded — never for a preview,
+ * a skipped update or a failed one: a promise of safety the engine did not earn
+ * is worse than silence.
+ */
+const CHECKPOINT_CLAIM = 'checkpoint saved';
 
 // ───────────────────────────────────────────────────────────────────────────
 // Argument Parsing
@@ -232,19 +242,14 @@ function isPhaseBlocked(phaseContent, tasksContent, phaseNo) {
  * @returns {boolean}
  */
 function isTaskExcluded(content, taskId) {
-    const escaped = taskId.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    // The lookahead's `$` must not rely on the `m` flag's line-boundary
-    // meaning — it would then match before *any* newline (e.g. the section's
-    // own blank line right after the heading), collapsing the capture to
-    // empty. `(?![\s\S])` is a true end-of-string assertion, immune to `m`.
-    const block = content.match(
-        new RegExp(`^### \\[${escaped}\\][^\\n]*\\n([\\s\\S]*?)(?=\\n### |\\n## |(?![\\s\\S]))`, 'm')
-    );
-    if (!block) return false;
-    const status = block[1].match(/^-\s+\*\*Status:\*\*\s+(.+)$/m);
-    if (status && /^Blocked\b/.test(status[1].trim())) return true;
-    const assignment = block[1].match(/^-\s+\*\*Assignment:\*\*\s+(.+)$/m);
-    return !!(assignment && /^User\b/.test(assignment[1].trim()));
+    // The block reader is shared with resume-state.js (lib/tracking-entries.js)
+    // so the two can never disagree about where an entry ends.
+    const block = getTrackingBlock(content, taskId);
+    if (block === null) return false;
+    const status = readField(block, 'Status');
+    if (status && /^Blocked\b/.test(status)) return true;
+    const assignment = readField(block, 'Assignment');
+    return !!(assignment && /^User\b/.test(assignment));
 }
 
 /**
@@ -558,7 +563,7 @@ function emitSuccess(ctx) {
     lines.push(`| Git mode | ${gitAvailable ? 'git diff' : 'snapshot fallback'} |`);
     if (stateResult) {
         const stateStatus = stateResult.updated
-            ? 'updated (SC-2)'
+            ? `updated (SC-2) — ${CHECKPOINT_CLAIM}`
             : stateResult.dryRun ? 'dry-run preview' : 'skipped (warning above)';
         lines.push(`| STATE.md | ${stateStatus} |`);
     }
@@ -691,6 +696,9 @@ function main() {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
         const stateResult = updateSessionState(opts, workspace, wsDir);
+        // SC-6.1: this path prints no summary table, so the claim is its own
+        // line — after the update it describes, and outside the terminal block.
+        if (stateResult.updated) console.log(`[state] STATE.md updated — ${CHECKPOINT_CLAIM}.`);
         // DG-4.1: a preview must not consume what the real run would report.
         // DG-10: revalidate() runs on both paths, after the drain/read that
         // already runs after every mutating step, so a condition this

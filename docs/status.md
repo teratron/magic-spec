@@ -55,7 +55,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | State | Behavior |
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
-| **Paused session** | A paused status or a handoff file present surfaces the resume line — the recorded next action and its required reading. |
+| **In-flight or paused session** | A task recorded `In Progress`, or a paused status, surfaces the resume line — the recorded next action and, for a paused session, its required reading. A leftover handoff file whose pointer reads `none` is not, by itself, a paused session. |
 | **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
