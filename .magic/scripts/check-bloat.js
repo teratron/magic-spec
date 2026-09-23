@@ -66,15 +66,28 @@ function scanDir(dir, pattern, kind, relPrefix, issues) {
     if (!fs.existsSync(dir)) return;
     const limits = THRESHOLDS[kind];
 
-    for (const file of fs.readdirSync(dir).filter(f => pattern.test(f)).sort()) {
+    for (const file of fs
+        .readdirSync(dir)
+        .filter((f) => pattern.test(f))
+        .sort()) {
         const filePath = path.join(dir, file);
         const lines = countLines(filePath);
         const relPath = `${relPrefix}/${file}`;
 
         if (lines > limits.hard) {
-            issues.push({ type: `${kind.toUpperCase()}_DECOMPOSE`, file: relPath, lines, limit: limits.hard });
+            issues.push({
+                type: `${kind.toUpperCase()}_DECOMPOSE`,
+                file: relPath,
+                lines,
+                limit: limits.hard,
+            });
         } else if (lines > limits.soft) {
-            issues.push({ type: `${kind.toUpperCase()}_BLOAT`, file: relPath, lines, limit: limits.soft });
+            issues.push({
+                type: `${kind.toUpperCase()}_BLOAT`,
+                file: relPath,
+                lines,
+                limit: limits.soft,
+            });
         }
     }
 }
@@ -107,11 +120,17 @@ function main() {
     console.log(`⚠ Bloat Report — ${issues.length} issue(s) in ${designDir}:\n`);
     for (const issue of issues) {
         const icon = issue.type.endsWith('_DECOMPOSE') ? '🔴' : '🟡';
-        console.log(`  ${icon} [${issue.type}] ${issue.file} — ${issue.lines} lines (limit: ${issue.limit})`);
+        console.log(
+            `  ${icon} [${issue.type}] ${issue.file} — ${issue.lines} lines (limit: ${issue.limit})`,
+        );
         if (issue.type.startsWith('SPEC_')) {
-            console.log(`     → /magic.spec amend ${path.basename(issue.file, '.md')} to split into focused L2 specs`);
+            console.log(
+                `     → /magic.spec amend ${path.basename(issue.file, '.md')} to split into focused L2 specs`,
+            );
         } else {
-            console.log(`     → Decompose ${path.basename(issue.file)} into sub-tasks or split the phase`);
+            console.log(
+                `     → Decompose ${path.basename(issue.file)} into sub-tasks or split the phase`,
+            );
         }
     }
     console.log('');

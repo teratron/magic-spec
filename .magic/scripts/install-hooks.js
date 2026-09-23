@@ -51,11 +51,11 @@ try {
     // Write the hook file and make it executable (on Unix)
     fs.writeFileSync(preCommitPath, hookContent);
 
-    // In Windows, the execute permission is handled differently, 
+    // In Windows, the execute permission is handled differently,
     // but Git Bash follows the #! header regardless.
     try {
         fs.chmodSync(preCommitPath, 0o755);
-    } catch (chmodErr) {
+    } catch {
         // Ignore chmod errors on some Windows setups if they occur
     }
 

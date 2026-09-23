@@ -100,14 +100,17 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
         const escaped = file.replace(/\./g, '\\.');
         content = content.replace(
             new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
-            `(archives/tasks/${file})`
+            `(archives/tasks/${file})`,
         );
-        content = content.split('\n').map(line => {
-            if (line.includes(`(archives/tasks/${file})`)) {
-                return line.replace(/`(Done|In Progress|Blocked|Todo)`/, '`Done (Archived)`');
-            }
-            return line;
-        }).join('\n');
+        content = content
+            .split('\n')
+            .map((line) => {
+                if (line.includes(`(archives/tasks/${file})`)) {
+                    return line.replace(/`(Done|In Progress|Blocked|Todo)`/, '`Done (Archived)`');
+                }
+                return line;
+            })
+            .join('\n');
     }
     writeFileSafe(tasksIndexPath, content);
 }
@@ -140,14 +143,14 @@ function updatePlanIndex(planPath, archivedFiles) {
         // rewritten together so neither can drift from the other.
         content = content.replace(
             new RegExp(`\\[tasks/${escaped}\\]\\(tasks/${escaped}\\)`, 'g'),
-            `[archives/tasks/${file}](archives/tasks/${file})`
+            `[archives/tasks/${file}](archives/tasks/${file})`,
         );
         // Any remaining target-only occurrence (a descriptive, non-path
         // label) still needs its destination corrected — its label makes no
         // claim about location, so it needs no companion rewrite.
         content = content.replace(
             new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
-            `(archives/tasks/${file})`
+            `(archives/tasks/${file})`,
         );
     }
     writeFileSafe(planPath, content);
@@ -215,11 +218,21 @@ function archiveCompletedPhases(wsDir, opts = {}) {
         const tasksIndexPath = path.join(wsDir, 'TASKS.md');
         const planPath = path.join(wsDir, 'PLAN.md');
         if (!dryRun) {
-            updateTasksIndex(tasksIndexPath, archived.map(a => a.file));
-            updatePlanIndex(planPath, archived.map(a => a.file));
+            updateTasksIndex(
+                tasksIndexPath,
+                archived.map((a) => a.file),
+            );
+            updatePlanIndex(
+                planPath,
+                archived.map((a) => a.file),
+            );
         } else {
-            console.log(`  🧪 [dry-run] would update TASKS.md links for: ${archived.map(a => a.file).join(', ')}`);
-            console.log(`  🧪 [dry-run] would update PLAN.md links for: ${archived.map(a => a.file).join(', ')}`);
+            console.log(
+                `  🧪 [dry-run] would update TASKS.md links for: ${archived.map((a) => a.file).join(', ')}`,
+            );
+            console.log(
+                `  🧪 [dry-run] would update PLAN.md links for: ${archived.map((a) => a.file).join(', ')}`,
+            );
         }
     }
 

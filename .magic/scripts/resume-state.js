@@ -70,12 +70,13 @@ const MAX_WORKSPACES = 3;
 function readRegistry(designAbs) {
     try {
         const data = JSON.parse(fs.readFileSync(path.join(designAbs, 'workspace.json'), 'utf8'));
-        if (!data || !data.workspaces || typeof data.workspaces !== 'object') return null;
+        if (!data?.workspaces || typeof data.workspaces !== 'object') return null;
         return {
             names: Object.keys(data.workspaces).filter((name) => WORKSPACE_NAME_RE.test(name)),
-            defaultName: typeof data.default === 'string' && WORKSPACE_NAME_RE.test(data.default)
-                ? data.default
-                : null,
+            defaultName:
+                typeof data.default === 'string' && WORKSPACE_NAME_RE.test(data.default)
+                    ? data.default
+                    : null,
         };
     } catch {
         return null;
@@ -113,7 +114,7 @@ function listWorkspaces(designAbs, request) {
     }
     if (request.all && registry !== null) return registry.names.map(at);
 
-    const resolved = workspaceFromEnv(designAbs) || (registry && registry.defaultName);
+    const resolved = workspaceFromEnv(designAbs) || registry?.defaultName;
     if (resolved) return [at(resolved)];
 
     // No registry: an older single-workspace layout keeps STATE.md at the root.
@@ -175,8 +176,9 @@ function readStateField(stripped, raw, labelRe) {
  * @returns {{ id: string, title: string, attempts: number }[]}
  */
 function collectInFlight(wsDir) {
-    const sources = listPhaseFiles(path.join(wsDir, 'tasks'))
-        .map(({ file }) => path.join(wsDir, 'tasks', file));
+    const sources = listPhaseFiles(path.join(wsDir, 'tasks')).map(({ file }) =>
+        path.join(wsDir, 'tasks', file),
+    );
     sources.push(path.join(wsDir, 'TASKS.md'));
 
     const inFlight = [];
@@ -210,8 +212,11 @@ function inspectWorkspace(workspace) {
         const message = `STATE.md of workspace '${workspace.name}' exists but cannot be read: ${state.error.message}`;
         console.error(`[resume-state] ${message}`);
         diagnostics.record({
-            severity: 'warning', source: 'resume-state', code: 'RESUME_STATE_UNREADABLE',
-            message, locus: 'STATE.md',
+            severity: 'warning',
+            source: 'resume-state',
+            code: 'RESUME_STATE_UNREADABLE',
+            message,
+            locus: 'STATE.md',
         });
         return null;
     }
@@ -269,7 +274,8 @@ function formatLine(summary) {
             .slice(0, MAX_TASKS_PER_WORKSPACE)
             .map((task) => `${task.id} ${task.title}`.trim());
         const extra = summary.tasks.length - named.length;
-        body = `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
+        body =
+            `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
             `${summary.paused ? ' (paused snapshot)' : ''} — ${summary.attempts} dead end(s) recorded` +
             `${summary.changedFiles === null ? '' : `, ${summary.changedFiles} file(s) modified`}`;
     } else {
@@ -313,16 +319,18 @@ function main() {
 
     if (flags['--json']) {
         // Machine-readable and unbounded: the caps below are for a human line.
-        console.log(JSON.stringify({
-            in_flight: summaries.length > 0,
-            workspaces: summaries.map((summary) => ({
-                workspace: summary.workspace,
-                source: summary.source,
-                tasks: summary.tasks,
-                changed_files: summary.changedFiles,
-                next_action: summary.nextAction,
-            })),
-        }));
+        console.log(
+            JSON.stringify({
+                in_flight: summaries.length > 0,
+                workspaces: summaries.map((summary) => ({
+                    workspace: summary.workspace,
+                    source: summary.source,
+                    tasks: summary.tasks,
+                    changed_files: summary.changedFiles,
+                    next_action: summary.nextAction,
+                })),
+            }),
+        );
         return;
     }
     if (summaries.length === 0) return;

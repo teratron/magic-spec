@@ -27,7 +27,7 @@ const crypto = require('crypto');
  *   - check-prerequisites.js — relies on the manifest above being clean.
  */
 const VOLATILE_STATE_FILES = new Set([
-    '.version',   // bumped on every engine update; drift-detector already skips it
+    '.version', // bumped on every engine update; drift-detector already skips it
 ]);
 
 /**
@@ -45,7 +45,9 @@ const VOLATILE_STATE_FILES = new Set([
  * @returns {boolean} True in the developer repository, false in a user installation.
  */
 function hasEngineWriteTooling() {
-    return fs.existsSync(path.join(__dirname, '..', '..', 'dev', 'scripts', 'generate-checksums.js'));
+    return fs.existsSync(
+        path.join(__dirname, '..', '..', 'dev', 'scripts', 'generate-checksums.js'),
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -160,7 +162,9 @@ function hashFileSafe(filePath, retry = 5) {
         if (retry > 0) {
             // Synchronous delay via busy-wait (200ms)
             const end = Date.now() + 200;
-            while (Date.now() < end) { /* spin */ }
+            while (Date.now() < end) {
+                /* spin */
+            }
             return hashFileSafe(filePath, retry - 1);
         }
         throw e;
@@ -191,7 +195,7 @@ function describeManifestDelta(filePath, expectedHash) {
     let buf;
     try {
         buf = fs.readFileSync(filePath);
-    } catch (e) {
+    } catch {
         return null;
     }
     const sha = (b) => crypto.createHash('sha256').update(b).digest('hex');
@@ -207,9 +211,16 @@ function describeManifestDelta(filePath, expectedHash) {
     if (actual !== expectedHash) {
         const asLf = text.replace(/\r\n/g, '\n');
         if (sha(Buffer.from(asLf, 'latin1')) === expectedHash) expectedEol = 'LF';
-        else if (sha(Buffer.from(asLf.replace(/\n/g, '\r\n'), 'latin1')) === expectedHash) expectedEol = 'CRLF';
+        else if (sha(Buffer.from(asLf.replace(/\n/g, '\r\n'), 'latin1')) === expectedHash)
+            expectedEol = 'CRLF';
     }
-    return { expected: expectedHash, actual, found, lineEndingsOnly: expectedEol !== null, expectedEol };
+    return {
+        expected: expectedHash,
+        actual,
+        found,
+        lineEndingsOnly: expectedEol !== null,
+        expectedEol,
+    };
 }
 
 /**
@@ -259,10 +270,21 @@ function getAllFiles(dirPath, ignoreDirs = ['history'], arrayOfFiles = []) {
  * @type {ReadonlyArray<string>}
  */
 const BUILD_NOISE_DIRS = Object.freeze([
-    'node_modules', '.git',
-    '.venv', 'venv', 'env', 'ENV',
-    '__pycache__', '.pytest_cache', '.ruff_cache',
-    'dist', 'build', 'target', 'temp', 'sandbox', '.hatch',
+    'node_modules',
+    '.git',
+    '.venv',
+    'venv',
+    'env',
+    'ENV',
+    '__pycache__',
+    '.pytest_cache',
+    '.ruff_cache',
+    'dist',
+    'build',
+    'target',
+    'temp',
+    'sandbox',
+    '.hatch',
 ]);
 
 // ───────────────────────────────────────────────────────────────────────────

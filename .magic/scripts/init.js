@@ -37,8 +37,11 @@ function getTemplate(name, placeholders = {}) {
     if (!fs.existsSync(filePath)) {
         console.warn(`⚠️ Template not found: ${name}. Using empty string.`);
         diagnostics.record({
-            severity: 'fix', source: 'init', code: 'TEMPLATE_MISSING',
-            message: `Template not found: ${name}; used an empty string instead.`, locus: filePath,
+            severity: 'fix',
+            source: 'init',
+            code: 'TEMPLATE_MISSING',
+            message: `Template not found: ${name}; used an empty string instead.`,
+            locus: filePath,
         });
         return '';
     }
@@ -81,10 +84,10 @@ function initWorkspace(workspaceDir) {
     const dirsToCreate = [
         path.join(workspaceDir, 'specifications'),
         path.join(workspaceDir, 'tasks'),
-        path.join(workspaceDir, 'archives', 'tasks')
+        path.join(workspaceDir, 'archives', 'tasks'),
     ];
 
-    dirsToCreate.forEach(dir => {
+    dirsToCreate.forEach((dir) => {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     });
 
@@ -112,10 +115,10 @@ if (fs.existsSync('.git')) {
     } catch (e) {
         console.warn('Note: Could not automatically install Git hooks.');
         diagnostics.record({
-            severity: 'warning', source: 'init', code: 'GIT_HOOKS_NOT_INSTALLED',
+            severity: 'warning',
+            source: 'init',
+            code: 'GIT_HOOKS_NOT_INSTALLED',
             message: `Could not automatically install Git hooks: ${e.message}`,
         });
     }
 }
-
-

@@ -20,24 +20,17 @@ const { normalizePath, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
 const scopeIdx = args.indexOf('--scope');
-const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1]
-    ? args[scopeIdx + 1]
-    : null;
+const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : null;
 
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
-const workspaceScope = scopeOverride
-    || process.env.MAGIC_WORKSPACE_SCOPE
-    || null;
+const workspaceScope = scopeOverride || process.env.MAGIC_WORKSPACE_SCOPE || null;
 
 /**
  * Shared build-noise floor plus this scanner's domain excludes.
  * `.design` and `.magic` are deliberately NOT excluded — spec artifacts and
  * engine files are classified against Canonical References like any source.
  */
-const SKIP_DIRS = new Set([
-    ...BUILD_NOISE_DIRS,
-    '.references',
-]);
+const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
 
 /** Confidence taxonomy definitions. */
 const TAXONOMY = {
@@ -55,7 +48,12 @@ const TAXONOMY = {
  * project history accumulates (archived phase journals in particular).
  */
 const EXEMPT_BASENAMES = new Set([
-    'PLAN.md', 'TASKS.md', 'STATE.md', 'CONTEXT.md', 'CHANGELOG.md', 'RETROSPECTIVE.md',
+    'PLAN.md',
+    'TASKS.md',
+    'STATE.md',
+    'CONTEXT.md',
+    'CHANGELOG.md',
+    'RETROSPECTIVE.md',
 ]);
 
 /**
@@ -107,11 +105,11 @@ function parseCanonicalRefs(specPath) {
 
         if (!inTable) continue;
 
-        const cells = line.split('|').map(c => c.trim());
+        const cells = line.split('|').map((c) => c.trim());
 
         // Identify header row and find the Path column index
         if (pathColIdx === -1) {
-            const idx = cells.findIndex(c => /^Path$/i.test(c));
+            const idx = cells.findIndex((c) => /^Path$/i.test(c));
             if (idx !== -1) {
                 pathColIdx = idx;
             }
@@ -150,7 +148,7 @@ function buildRefIndex(specsDir) {
 
     if (!fs.existsSync(specsDir)) return { pathToSpec, dirRefs, specRefs };
 
-    const specFiles = fs.readdirSync(specsDir).filter(f => f.endsWith('.md'));
+    const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md'));
 
     for (const specFile of specFiles) {
         const specPath = path.join(specsDir, specFile);
@@ -183,9 +181,7 @@ function buildRefIndex(specsDir) {
  * @returns {string[]} Array of forward-slash normalized relative paths.
  */
 function scanProjectFiles(rootDir, isIgnored, scope) {
-    const scopePrefixes = scope
-        ? scope.split(',').map(s => normalizePath(s.trim()))
-        : null;
+    const scopePrefixes = scope ? scope.split(',').map((s) => normalizePath(s.trim())) : null;
 
     const results = [];
 
@@ -214,7 +210,7 @@ function scanProjectFiles(rootDir, isIgnored, scope) {
                 // Scope filtering: only include files under scope prefixes
                 if (scopePrefixes) {
                     const inScope = scopePrefixes.some(
-                        prefix => relPath.startsWith(prefix + '/') || relPath === prefix
+                        (prefix) => relPath.startsWith(prefix + '/') || relPath === prefix,
                     );
                     if (!inScope) continue;
                 }
@@ -335,9 +331,7 @@ function detectShadowSpecs(specRefs) {
     for (const [spec, refs] of specRefs.entries()) {
         const orphaned = [];
         for (const ref of refs) {
-            const diskPath = ref.endsWith('/')
-                ? ref.replace(/\/$/, '')
-                : ref;
+            const diskPath = ref.endsWith('/') ? ref.replace(/\/$/, '') : ref;
             if (!fs.existsSync(diskPath)) {
                 orphaned.push(ref);
             }
@@ -384,9 +378,7 @@ for (const file of files) {
 
 const total = counts.extracted + counts.inferred + counts.ambiguous + counts.uncovered;
 const coveredCount = counts.extracted + counts.inferred;
-const coveragePercent = total > 0
-    ? Math.round((coveredCount / total) * 1000) / 10
-    : 0;
+const coveragePercent = total > 0 ? Math.round((coveredCount / total) * 1000) / 10 : 0;
 
 const shadowSpecs = detectShadowSpecs(specRefs);
 
@@ -425,10 +417,18 @@ console.log('');
 // Summary table
 console.log('  Level       Count   Pct');
 console.log('  ─────────── ─────── ──────');
-console.log(`  EXTRACTED   ${String(counts.extracted).padStart(7)}   ${total ? ((counts.extracted / total) * 100).toFixed(1) : '0.0'}%`);
-console.log(`  INFERRED    ${String(counts.inferred).padStart(7)}   ${total ? ((counts.inferred / total) * 100).toFixed(1) : '0.0'}%`);
-console.log(`  AMBIGUOUS   ${String(counts.ambiguous).padStart(7)}   ${total ? ((counts.ambiguous / total) * 100).toFixed(1) : '0.0'}%`);
-console.log(`  UNCOVERED   ${String(counts.uncovered).padStart(7)}   ${total ? ((counts.uncovered / total) * 100).toFixed(1) : '0.0'}%`);
+console.log(
+    `  EXTRACTED   ${String(counts.extracted).padStart(7)}   ${total ? ((counts.extracted / total) * 100).toFixed(1) : '0.0'}%`,
+);
+console.log(
+    `  INFERRED    ${String(counts.inferred).padStart(7)}   ${total ? ((counts.inferred / total) * 100).toFixed(1) : '0.0'}%`,
+);
+console.log(
+    `  AMBIGUOUS   ${String(counts.ambiguous).padStart(7)}   ${total ? ((counts.ambiguous / total) * 100).toFixed(1) : '0.0'}%`,
+);
+console.log(
+    `  UNCOVERED   ${String(counts.uncovered).padStart(7)}   ${total ? ((counts.uncovered / total) * 100).toFixed(1) : '0.0'}%`,
+);
 console.log(`  EXEMPT      ${String(counts.exempt).padStart(7)}   (excluded from denominator)`);
 console.log('');
 console.log(`  Coverage (EXTRACTED + INFERRED): ${coveragePercent}%`);
@@ -438,7 +438,7 @@ console.log('');
 if (counts.uncovered > 0) {
     console.log('UNCOVERED files:');
     console.log('───────────────────────────────────────────────────────────────');
-    const uncovered = coverage.filter(c => c.confidence === 'UNCOVERED');
+    const uncovered = coverage.filter((c) => c.confidence === 'UNCOVERED');
     const limit = Math.min(uncovered.length, 20);
     for (let i = 0; i < limit; i++) {
         console.log(`  ${uncovered[i].file}`);

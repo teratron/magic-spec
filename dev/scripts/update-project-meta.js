@@ -35,7 +35,6 @@ const { writeFileSafe, mkdirSafe } = require('../../.magic/scripts/utils');
  */
 
 const projectRoot = path.join(__dirname, '..', '..');
-const magicDir = path.join(projectRoot, '.magic');
 const designDir = path.join(projectRoot, '.design');
 const globalIndexPath = path.join(designDir, 'INDEX.md');
 const workspaceJsonPath = path.join(designDir, 'workspace.json');
@@ -148,7 +147,9 @@ function processWorkspaceIndex(now, state) {
     if (!workspaceName) return false;
     const workspaceIndexPath = path.join(designDir, workspaceName, 'INDEX.md');
     if (!fs.existsSync(workspaceIndexPath)) {
-        console.warn(`⚠️ Workspace '${workspaceName}' INDEX.md not found at ${workspaceIndexPath}. Skipping.`);
+        console.warn(
+            `⚠️ Workspace '${workspaceName}' INDEX.md not found at ${workspaceIndexPath}. Skipping.`,
+        );
         return false;
     }
     return updateFileMeta(workspaceIndexPath, now, message, state, `workspace:${workspaceName}`);
@@ -225,7 +226,9 @@ function updateFileMeta(filePath, date, msg, state, key) {
     const prevDigest = state[key]?.digest;
 
     if (!force && prevDigest === digest) {
-        console.log(`  ⏭️  ${path.relative(projectRoot, filePath)} — no structural change, skipping bump`);
+        console.log(
+            `  ⏭️  ${path.relative(projectRoot, filePath)} — no structural change, skipping bump`,
+        );
         return false;
     }
 
@@ -240,7 +243,8 @@ function updateFileMeta(filePath, date, msg, state, key) {
     return true;
 }
 
-const HISTORY_HEADER_4COL = /\| Version \| Date \| Author \| Description \|\s*\n\| :--- \| :--- \| :--- \| :--- \|/;
+const HISTORY_HEADER_4COL =
+    /\| Version \| Date \| Author \| Description \|\s*\n\| :--- \| :--- \| :--- \| :--- \|/;
 const HISTORY_HEADER_3COL = /\| Version \| Date \| Description \|\s*\n\| :--- \| :--- \| :--- \|/;
 
 /**
@@ -288,7 +292,7 @@ function sliceHistoryTable(content, headerMatch) {
  * @returns {number} -1 when no divider row is present.
  */
 function findDividerIndex(lines) {
-    return lines.findIndex(l => l.includes(':---') && l.trim().startsWith('|'));
+    return lines.findIndex((l) => l.includes(':---') && l.trim().startsWith('|'));
 }
 
 /**
@@ -304,9 +308,12 @@ function findDividerIndex(lines) {
 function parseNewestRow(lines, newestRowIdx, fourCol) {
     const newestRow = (lines[newestRowIdx] || '').trim();
     if (!newestRow.startsWith('|')) return null;
-    const cols = newestRow.split('|').map(c => c.trim()).filter(Boolean);
+    const cols = newestRow
+        .split('|')
+        .map((c) => c.trim())
+        .filter(Boolean);
     return {
-        startVersion: cols[0].split(' - ').shift().trim(),   // keep oldest as range start
+        startVersion: cols[0].split(' - ').shift().trim(), // keep oldest as range start
         lastDate: cols[1],
         lastMsg: fourCol ? cols[3] : cols[2],
     };
@@ -354,7 +361,13 @@ function appendHistoryRow(content, version, date, msg) {
 
     if (isSameHistoryEntry(newest, date, msg)) {
         // Smart-History dedup: same day + same message → condense range
-        lines[newestRowIdx] = historyRowText(header.fourCol, `${newest.startVersion} - ${v}`, date, author, msg);
+        lines[newestRowIdx] = historyRowText(
+            header.fourCol,
+            `${newest.startVersion} - ${v}`,
+            date,
+            author,
+            msg,
+        );
         return before + lines.join('\n') + after;
     }
 
@@ -382,12 +395,26 @@ function runHygiene(targetFiles) {
 }
 
 module.exports = {
-    structuralDigest, readState, writeState, resolveWorkspaceName,
-    processGlobalIndex, processWorkspaceIndex, updateProjectMeta,
-    bumpVersionLine, stampLastUpdated, applyMetaEdits, updateFileMeta,
-    findHistoryHeader, sliceHistoryTable, findDividerIndex, parseNewestRow,
-    historyRowText, isSameHistoryEntry, appendHistoryRow,
-    collapseExcessBlankLines, runHygiene,
+    structuralDigest,
+    readState,
+    writeState,
+    resolveWorkspaceName,
+    processGlobalIndex,
+    processWorkspaceIndex,
+    updateProjectMeta,
+    bumpVersionLine,
+    stampLastUpdated,
+    applyMetaEdits,
+    updateFileMeta,
+    findHistoryHeader,
+    sliceHistoryTable,
+    findDividerIndex,
+    parseNewestRow,
+    historyRowText,
+    isSameHistoryEntry,
+    appendHistoryRow,
+    collapseExcessBlankLines,
+    runHygiene,
 };
 
 // Execute — require.main guard means require()-ing this module (as the test

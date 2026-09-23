@@ -59,14 +59,9 @@ const designAbs = resolveDesignRoot(rootDir).designAbs;
  * `.design` and `.magic` are deliberately NOT excluded — spec artifacts and
  * engine sources are the very nodes this graph clusters into communities.
  */
-const SKIP_DIRS = new Set([
-    ...BUILD_NOISE_DIRS,
-    '.references',
-]);
+const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
 
-const SKIP_PATH_FRAGMENTS = [
-    '/.agents/',
-];
+const SKIP_PATH_FRAGMENTS = ['/.agents/'];
 
 /**
  * Gitignore predicate over root-relative POSIX paths (Invariant 7 parity).
@@ -84,8 +79,8 @@ function shouldSkip(absPath) {
     const rel = normalizePath(path.relative(rootDir, absPath));
     const parts = rel.split('/');
 
-    if (parts.some(p => SKIP_DIRS.has(p))) return true;
-    if (SKIP_PATH_FRAGMENTS.some(f => rel.includes(f))) return true;
+    if (parts.some((p) => SKIP_DIRS.has(p))) return true;
+    if (SKIP_PATH_FRAGMENTS.some((f) => rel.includes(f))) return true;
     if (isGitignored(rel)) return true;
 
     return false;
@@ -106,8 +101,11 @@ const SCAN_EXTENSIONS = new Set(['.js', '.py', '.md']);
  */
 function scanDir(dir, result = []) {
     let entries;
-    try { entries = fs.readdirSync(dir, { withFileTypes: true }); }
-    catch (_) { return result; }
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch (_) {
+        return result;
+    }
 
     for (const entry of entries) {
         const abs = path.join(dir, entry.name);
@@ -142,22 +140,26 @@ const JS_IMPORT_RE = /(?:^|\n)\s*import\s+(?:[^'"]*\s+from\s+)?['"](\.[^'"]+)['"
  */
 function extractJsDeps(absPath) {
     let content;
-    try { content = fs.readFileSync(absPath, 'utf8'); }
-    catch (_) { return []; }
+    try {
+        content = fs.readFileSync(absPath, 'utf8');
+    } catch (_) {
+        return [];
+    }
 
     const dir = path.dirname(absPath);
     const deps = new Set();
     const exts = ['.js', ''];
 
     for (const re of [JS_REQUIRE_RE, JS_IMPORT_RE]) {
-        re.lastIndex = 0;
-        let m;
-        while ((m = re.exec(content)) !== null) {
+        for (const m of content.matchAll(re)) {
             const raw = m[1];
             let resolved = null;
             for (const ext of exts) {
                 const candidate = path.resolve(dir, raw + ext);
-                if (fs.existsSync(candidate)) { resolved = candidate; break; }
+                if (fs.existsSync(candidate)) {
+                    resolved = candidate;
+                    break;
+                }
             }
             if (resolved && !shouldSkip(resolved)) {
                 deps.add(normalizePath(path.relative(rootDir, resolved)));
@@ -173,11 +175,36 @@ function extractJsDeps(absPath) {
 // ───────────────────────────────────────────────────────────────────────────
 
 const PY_STDLIB = new Set([
-    'os', 'sys', 're', 'json', 'pathlib', 'typing', 'collections',
-    'functools', 'itertools', 'io', 'abc', 'enum', 'dataclasses',
-    'subprocess', 'shutil', 'hashlib', 'tempfile', 'time', 'datetime',
-    'math', 'random', 'string', 'textwrap', 'copy', 'warnings',
-    'logging', 'argparse', 'inspect', 'ast', '__future__',
+    'os',
+    'sys',
+    're',
+    'json',
+    'pathlib',
+    'typing',
+    'collections',
+    'functools',
+    'itertools',
+    'io',
+    'abc',
+    'enum',
+    'dataclasses',
+    'subprocess',
+    'shutil',
+    'hashlib',
+    'tempfile',
+    'time',
+    'datetime',
+    'math',
+    'random',
+    'string',
+    'textwrap',
+    'copy',
+    'warnings',
+    'logging',
+    'argparse',
+    'inspect',
+    'ast',
+    '__future__',
 ]);
 
 const PY_IMPORT_RE = /^(?:import|from)\s+([a-zA-Z0-9_.]+)/gm;
@@ -192,15 +219,16 @@ const PY_PACKAGE_PREFIXES = [];
  */
 function extractPyDeps(absPath) {
     let content;
-    try { content = fs.readFileSync(absPath, 'utf8'); }
-    catch (_) { return []; }
+    try {
+        content = fs.readFileSync(absPath, 'utf8');
+    } catch (_) {
+        return [];
+    }
 
     const deps = new Set();
     if (PY_PACKAGE_PREFIXES.length === 0) return [];
-    PY_IMPORT_RE.lastIndex = 0;
-    let m;
 
-    while ((m = PY_IMPORT_RE.exec(content)) !== null) {
+    for (const m of content.matchAll(PY_IMPORT_RE)) {
         const mod = m[1];
         const top = mod.split('.')[0];
 
@@ -209,10 +237,7 @@ function extractPyDeps(absPath) {
             if (!mod.startsWith(prefix)) continue;
             const sub = mod.slice(prefix.length).replace(/^\./, '').replace(/\./g, '/');
             const base = path.join(rootDir, prefix.replace(/\./g, '/'));
-            const candidates = [
-                path.join(base, sub + '.py'),
-                path.join(base, sub, '__init__.py'),
-            ];
+            const candidates = [path.join(base, sub + '.py'), path.join(base, sub, '__init__.py')];
             for (const c of candidates) {
                 if (fs.existsSync(c) && !shouldSkip(c)) {
                     deps.add(normalizePath(path.relative(rootDir, c)));
@@ -242,15 +267,16 @@ function extractMdDeps(absPath) {
     if (!INCLUDE_MD) return [];
 
     let content;
-    try { content = fs.readFileSync(absPath, 'utf8'); }
-    catch (_) { return []; }
+    try {
+        content = fs.readFileSync(absPath, 'utf8');
+    } catch (_) {
+        return [];
+    }
 
     const dir = path.dirname(absPath);
     const deps = new Set();
-    MD_LINK_RE.lastIndex = 0;
-    let m;
 
-    while ((m = MD_LINK_RE.exec(content)) !== null) {
+    for (const m of content.matchAll(MD_LINK_RE)) {
         const rawLink = m[2].split('#')[0]; // strip anchors
         if (!rawLink) continue;
         const resolved = path.resolve(dir, rawLink);
@@ -419,9 +445,8 @@ function computeModularity(communities) {
         }
         internalEdges /= 2;
 
-        const m = totalEdges > 0
-            ? (internalEdges / totalEdges) - Math.pow(degSum / (2 * totalEdges), 2)
-            : 0;
+        const m =
+            totalEdges > 0 ? internalEdges / totalEdges - (degSum / (2 * totalEdges)) ** 2 : 0;
         mods.set(label, Math.round(m * 10000) / 10000);
     }
     return mods;
@@ -447,7 +472,7 @@ function loadWorkspaces() {
 
     for (const [name, config] of Object.entries(workspaces)) {
         const fileSet = new Set();
-        for (const scopeEntry of (config.scope || [])) {
+        for (const scopeEntry of config.scope || []) {
             const abs = path.resolve(rootDir, scopeEntry);
             const rel = normalizePath(path.relative(rootDir, abs));
 
@@ -555,10 +580,9 @@ function bfsPartition(members) {
  *
  * @param {Map<string, Set<string>>} communities
  * @param {number} totalNodes
- * @param {Record<string, Set<string>>} workspaces
  * @returns {Array<{community: string, size: number, sub_clusters: string[][], suggestion: string}>}
  */
-function generateSplitSuggestions(communities, totalNodes, workspaces) {
+function generateSplitSuggestions(communities, totalNodes) {
     const threshold = (OVERSIZED_THRESHOLD_PCT / 100) * totalNodes;
     const suggestions = [];
 
@@ -568,7 +592,7 @@ function generateSplitSuggestions(communities, totalNodes, workspaces) {
         const subClusters = bfsPartition(members);
         if (subClusters.length <= 1) continue;
 
-        const topDirs = subClusters.map(cluster => {
+        const topDirs = subClusters.map((cluster) => {
             const dirCount = new Map();
             for (const node of cluster) {
                 const dir = node.split('/')[0];
@@ -619,12 +643,15 @@ function printSummary(report) {
         const mod = modularity.get(comm.label) || 0;
         const ws = align ? align.workspace : 'unassigned';
         const score = align ? align.score : 0;
-        const oversized = comm.size > (OVERSIZED_THRESHOLD_PCT / 100) * graph.nodes ? ' ⚠ OVERSIZED' : '';
+        const oversized =
+            comm.size > (OVERSIZED_THRESHOLD_PCT / 100) * graph.nodes ? ' ⚠ OVERSIZED' : '';
         console.log(`  [${comm.label.slice(0, 40).padEnd(40)}]${oversized}`);
         console.log(`    Nodes: ${comm.size}  Cohesion: ${comm.cohesion}  Modularity: ${mod}`);
         console.log(`    Best workspace: ${ws} (Jaccard: ${score})`);
         const top5 = comm.members.slice(0, 5);
-        console.log(`    Members (top 5): ${top5.join(', ')}${comm.members.length > 5 ? ' ...' : ''}`);
+        console.log(
+            `    Members (top 5): ${top5.join(', ')}${comm.members.length > 5 ? ' ...' : ''}`,
+        );
         console.log('');
     }
 
@@ -639,7 +666,9 @@ function printSummary(report) {
                 const name = s.suggested_names[i] || `sub-${i + 1}`;
                 const members = s.sub_clusters[i];
                 console.log(`    Sub-workspace "${name}": ${members.length} files`);
-                members.slice(0, 3).forEach(f => console.log(`      - ${f}`));
+                members.slice(0, 3).forEach((f) => {
+                    console.log(`      - ${f}`);
+                });
                 if (members.length > 3) console.log(`      ... and ${members.length - 3} more`);
             }
             console.log('');
@@ -654,12 +683,19 @@ function printSummary(report) {
         console.log('WORKSPACE BOUNDARY ALIGNMENT:');
         console.log('───────────────────────────────────────────────────────────────');
         for (const ws of workspaceNames) {
-            const matching = communities.filter(c => alignments.get(c.label)?.workspace === ws);
+            const matching = communities.filter((c) => alignments.get(c.label)?.workspace === ws);
             const avgScore = matching.length
-                ? Math.round(matching.reduce((s, c) => s + (alignments.get(c.label)?.score || 0), 0) / matching.length * 1000) / 1000
+                ? Math.round(
+                      (matching.reduce((s, c) => s + (alignments.get(c.label)?.score || 0), 0) /
+                          matching.length) *
+                          1000,
+                  ) / 1000
                 : 0;
-            const drift = avgScore < 0.3 ? ' ⚠ LOW ALIGNMENT' : avgScore >= 0.7 ? ' ✓ WELL ALIGNED' : '';
-            console.log(`  ${ws}: ${matching.length} communities matched, avg Jaccard ${avgScore}${drift}`);
+            const drift =
+                avgScore < 0.3 ? ' ⚠ LOW ALIGNMENT' : avgScore >= 0.7 ? ' ✓ WELL ALIGNED' : '';
+            console.log(
+                `  ${ws}: ${matching.length} communities matched, avg Jaccard ${avgScore}${drift}`,
+            );
         }
         console.log('');
     }
@@ -712,16 +748,16 @@ function main() {
             cohesion: cohesionScore(members),
             modularity: modMap.get(label) || 0,
         }))
-        .filter(c => c.size >= MIN_COMMUNITY_NODES)
+        .filter((c) => c.size >= MIN_COMMUNITY_NODES)
         .sort((a, b) => b.size - a.size);
 
     // 5. Load workspaces and align
-    const { workspaces, raw: wsRaw } = loadWorkspaces();
+    const { workspaces } = loadWorkspaces();
     const workspaceNames = Object.keys(workspaces);
     const alignments = alignCommunities(rawCommunities, workspaces);
 
     // 6. Generate split suggestions
-    const suggestions = generateSplitSuggestions(rawCommunities, totalNodes, workspaces);
+    const suggestions = generateSplitSuggestions(rawCommunities, totalNodes);
 
     const report = {
         graph: { total_files: allFiles.length, nodes: totalNodes, edges: Math.round(totalEdges) },
@@ -734,12 +770,18 @@ function main() {
 
     // 7. Output
     if (JSON_OUTPUT) {
-        console.log(JSON.stringify({
-            graph: report.graph,
-            communities: report.communities,
-            alignments: Object.fromEntries(report.alignments),
-            suggestions: report.suggestions,
-        }, null, 2));
+        console.log(
+            JSON.stringify(
+                {
+                    graph: report.graph,
+                    communities: report.communities,
+                    alignments: Object.fromEntries(report.alignments),
+                    suggestions: report.suggestions,
+                },
+                null,
+                2,
+            ),
+        );
     } else {
         printSummary(report);
     }

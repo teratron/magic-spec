@@ -11,9 +11,16 @@ const path = require('path');
  * Triggers the GitHub Actions release workflow via tag push.
  */
 
-function log(msg) { console.log(`\x1b[36m[RELEASE]\x1b[0m ${msg}`); }
-function success(msg) { console.log(`\x1b[32m[SUCCESS]\x1b[0m ${msg}`); }
-function error(msg) { console.error(`\x1b[31m[ERROR]\x1b[0m ${msg}`); process.exit(1); }
+function log(msg) {
+    console.log(`\x1b[36m[RELEASE]\x1b[0m ${msg}`);
+}
+function success(msg) {
+    console.log(`\x1b[32m[SUCCESS]\x1b[0m ${msg}`);
+}
+function error(msg) {
+    console.error(`\x1b[31m[ERROR]\x1b[0m ${msg}`);
+    process.exit(1);
+}
 
 const ROOT_DIR = path.resolve(__dirname, '../../../../');
 const VERSION_FILE = path.join(ROOT_DIR, '.magic/.version');
@@ -41,7 +48,7 @@ if (fs.existsSync(CHANGELOG_FILE)) {
 log('Running engine tests (QA Gate)...');
 try {
     execSync('node dev/tests/engine.js', { stdio: 'inherit', cwd: ROOT_DIR });
-} catch (e) {
+} catch {
     error('Engine tests failed. Fix issues before releasing.');
 }
 
@@ -52,9 +59,12 @@ try {
     // `sync` is a dev-layer orchestrator (dev/scripts/sync.js) — it has no
     // .magic/scripts/ counterpart, so it must be invoked directly rather than
     // through executor.js (which only proxies .magic/scripts/<name>.{js,ps1,sh}).
-    execSync('node .magic/scripts/executor.js update-engine-meta', { stdio: 'inherit', cwd: ROOT_DIR });
+    execSync('node .magic/scripts/executor.js update-engine-meta', {
+        stdio: 'inherit',
+        cwd: ROOT_DIR,
+    });
     execSync('node dev/scripts/sync.js', { stdio: 'inherit', cwd: ROOT_DIR });
-} catch (e) {
+} catch {
     error('Metadata synchronization failed.');
 }
 
@@ -69,8 +79,8 @@ try {
     } else {
         log('Working tree clean. No new changes to commit.');
     }
-} catch (e) {
-    // git commit fails if there's nothing to commit, which we handled with status check, 
+} catch {
+    // git commit fails if there's nothing to commit, which we handled with status check,
     // but just in case of race conditions.
 }
 
@@ -81,7 +91,7 @@ try {
     // Delete tag if it exists locally to avoid conflicts (dangerous but useful for retries)
     // Actually, let's just try to create it and fail if exists.
     execSync(`git tag -a ${tagName} -m "${tagName} Release"`, { cwd: ROOT_DIR });
-} catch (e) {
+} catch {
     log(`Warning: Tag ${tagName} already exists locally.`);
 }
 
@@ -90,7 +100,7 @@ log('Pushing changes to origin...');
 try {
     execSync('git push origin master', { cwd: ROOT_DIR });
     execSync(`git push origin ${tagName}`, { cwd: ROOT_DIR });
-} catch (e) {
+} catch {
     error('Failed to push to origin. Verify git configuration and network.');
 }
 

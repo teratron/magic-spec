@@ -54,8 +54,8 @@ function getTrackingBlock(content, taskId) {
     const block = content.match(
         new RegExp(
             `^### \\[${escapeRegExp(taskId)}\\][^\\n]*\\n([\\s\\S]*?)(?=\\n### |\\n## |(?![\\s\\S]))`,
-            'm'
-        )
+            'm',
+        ),
     );
     return block ? block[1] : null;
 }
@@ -73,7 +73,7 @@ function getTrackingBlock(content, taskId) {
  */
 function readField(block, label) {
     const match = block.match(
-        new RegExp(`^-[ \\t]+\\*\\*${escapeRegExp(label)}:\\*\\*[ \\t]+(.+)$`, 'm')
+        new RegExp(`^-[ \\t]+\\*\\*${escapeRegExp(label)}:\\*\\*[ \\t]+(.+)$`, 'm'),
     );
     return match ? match[1].trim() : null;
 }
@@ -94,7 +94,10 @@ function countAttempts(block) {
     let count = 0;
     for (let i = start + 1; i < lines.length; i++) {
         const line = lines[i];
-        if (/^[ \t]+-(?:[ \t]|$)/.test(line)) { count++; continue; }
+        if (/^[ \t]+-(?:[ \t]|$)/.test(line)) {
+            count++;
+            continue;
+        }
         // A wrapped item, or a blank line inside a loose list, still belongs
         // to the field; only a column-0 line ends it.
         if (/^[ \t]+\S/.test(line) || line.trim() === '') continue;

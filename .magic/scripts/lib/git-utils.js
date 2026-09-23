@@ -100,10 +100,7 @@ function changedPaths(cwd) {
  */
 function fileNumstat(cwd, relPath) {
     try {
-        const out = execSync(
-            `git diff --numstat HEAD -- "${relPath}"`,
-            { cwd, ...QUIET }
-        ).trim();
+        const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, { cwd, ...QUIET }).trim();
         if (!out) return { added: 0, deleted: 0 };
         const [a, d] = out.split(/\s+/);
         return { added: parseInt(a, 10) || 0, deleted: parseInt(d, 10) || 0 };
@@ -122,10 +119,7 @@ function fileNumstat(cwd, relPath) {
  */
 function fileStatus(cwd, relPath) {
     try {
-        const out = execSync(
-            `git status --porcelain -- "${relPath}"`,
-            { cwd, ...QUIET }
-        ).trim();
+        const out = execSync(`git status --porcelain -- "${relPath}"`, { cwd, ...QUIET }).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);
         if (code === '??' || code.includes('A')) return 'added';

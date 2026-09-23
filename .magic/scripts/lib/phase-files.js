@@ -81,10 +81,7 @@ function comparePhaseFiles(a, b) {
  */
 function listPhaseFiles(tasksDir) {
     if (!fs.existsSync(tasksDir)) return [];
-    return fs.readdirSync(tasksDir)
-        .map(parsePhaseFileName)
-        .filter(Boolean)
-        .sort(comparePhaseFiles);
+    return fs.readdirSync(tasksDir).map(parsePhaseFileName).filter(Boolean).sort(comparePhaseFiles);
 }
 
 /**
@@ -99,8 +96,9 @@ function listPhaseFiles(tasksDir) {
  */
 function listUnrecognizedTaskFiles(tasksDir) {
     if (!fs.existsSync(tasksDir)) return [];
-    return fs.readdirSync(tasksDir)
-        .filter(f => f.toLowerCase().endsWith('.md') && !isPhaseFile(f))
+    return fs
+        .readdirSync(tasksDir)
+        .filter((f) => f.toLowerCase().endsWith('.md') && !isPhaseFile(f))
         .sort();
 }
 

@@ -4,7 +4,17 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS, hasEngineWriteTooling, describeManifestDelta } = require('./utils');
+const {
+    hashFileSafe,
+    getAllFiles,
+    normalizePath,
+    writeFileSafe,
+    VOLATILE_STATE_FILES,
+    loadGitignore,
+    BUILD_NOISE_DIRS,
+    hasEngineWriteTooling,
+    describeManifestDelta,
+} = require('./utils');
 const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -45,9 +55,13 @@ function syncSkillWrappers() {
         const syncSkills = require(syncSkillsPath);
         syncSkills();
     } else {
-        console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
+        console.warn(
+            '⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).',
+        );
         diagnostics.record({
-            severity: 'warning', source: 'update-engine-meta', code: 'SKILL_SYNC_UNAVAILABLE',
+            severity: 'warning',
+            source: 'update-engine-meta',
+            code: 'SKILL_SYNC_UNAVAILABLE',
             message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
         });
     }
@@ -81,9 +95,7 @@ function updateEngineMeta() {
     // Integrity scope: engine kernel only (.magic/). Surface artifacts in
     // workflows/, skills/, rules/ are user-customizable wrappers — not
     // protected by checksum so partial installations stay supported.
-    const scanZones = [
-        { dir: magicDir, relBase: magicDir }
-    ];
+    const scanZones = [{ dir: magicDir, relBase: magicDir }];
     // Invariant 7 parity (l2-engine-automation.md §Scan Hygiene) — must stay
     // in sync with generate-checksums.js's identical floor/gitignore union,
     // or the two can disagree about what belongs in the manifest.
@@ -95,10 +107,10 @@ function updateEngineMeta() {
     /** @type {Set<string>} Manifest-eligible paths actually present on disk. */
     const onDisk = new Set();
 
-    scanZones.forEach(zone => {
+    scanZones.forEach((zone) => {
         if (!fs.existsSync(zone.dir)) return;
 
-        getAllFiles(zone.dir, scanIgnoreDirs).forEach(fullPath => {
+        getAllFiles(zone.dir, scanIgnoreDirs).forEach((fullPath) => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums') return;
             // State caches written by sync sub-scripts (volatile, not engine logic).
@@ -114,8 +126,9 @@ function updateEngineMeta() {
             // CLAUDE.md L1 contract), so treating that as "disowned" would mark
             // every shipped engine file as missing and fail `--check` on every
             // single consumer commit.
-            const isManifested = Object.prototype.hasOwnProperty.call(oldChecksums, rel);
-            if (!isManifested && isGitignored(normalizePath(path.relative(projectRoot, fullPath)))) return;
+            const isManifested = Object.hasOwn(oldChecksums, rel);
+            if (!isManifested && isGitignored(normalizePath(path.relative(projectRoot, fullPath))))
+                return;
 
             onDisk.add(rel);
 
@@ -123,8 +136,10 @@ function updateEngineMeta() {
             if (oldChecksums[rel] !== currentHash) {
                 // A line-endings-only difference is the one cause worth naming on
                 // the line itself: it is common, and invisible in an editor.
-                const delta = isManifested ? describeManifestDelta(fullPath, oldChecksums[rel]) : null;
-                const note = delta && delta.lineEndingsOnly
+                const delta = isManifested
+                    ? describeManifestDelta(fullPath, oldChecksums[rel])
+                    : null;
+                const note = delta?.lineEndingsOnly
                     ? ` — only line endings differ (found ${delta.found}, the release ships ${delta.expectedEol})`
                     : '';
                 console.log(`✨ Detected change in: ${rel}${note}`);
@@ -139,7 +154,7 @@ function updateEngineMeta() {
     // script, or one that never made it into the release archive. Exclusion rules
     // here mirror generate-checksums.js exactly (history/, .checksums, volatile
     // caches), so a manifest key absent from `onDisk` is genuinely missing.
-    const missingFiles = Object.keys(oldChecksums).filter(rel => !onDisk.has(rel));
+    const missingFiles = Object.keys(oldChecksums).filter((rel) => !onDisk.has(rel));
 
     for (const rel of missingFiles) {
         console.log(`🗑️  Missing engine file: ${rel}`);
@@ -151,17 +166,19 @@ function updateEngineMeta() {
             if (missingFiles.length > 0) {
                 console.error(
                     `❌ ${missingFiles.length} file(s) listed in .magic/.checksums are absent from disk. ` +
-                    'Restore .magic/ from the release archive.'
+                        'Restore .magic/ from the release archive.',
                 );
             } else if (hasEngineWriteTooling()) {
-                console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+                console.error(
+                    '❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.',
+                );
             } else {
                 // A user installation cannot regenerate the manifest, and must
                 // not: overwriting `.checksums` would mask the very change this
                 // check exists to surface.
                 console.error(
                     '❌ Engine drift detected. Restore .magic/ from the release archive — ' +
-                    'do not regenerate .checksums (that would mask the change).'
+                        'do not regenerate .checksums (that would mask the change).',
                 );
             }
             process.exit(1);
@@ -195,10 +212,15 @@ function updateEngineMeta() {
             const syncEngineSnapshot = require(syncSnapshotPath);
             syncEngineSnapshot();
         } else {
-            console.warn('⚠️  dev/scripts/sync-engine-snapshot.js not found — skipping snapshot sync (dev repo only).');
+            console.warn(
+                '⚠️  dev/scripts/sync-engine-snapshot.js not found — skipping snapshot sync (dev repo only).',
+            );
             diagnostics.record({
-                severity: 'warning', source: 'update-engine-meta', code: 'SNAPSHOT_SYNC_UNAVAILABLE',
-                message: 'dev/scripts/sync-engine-snapshot.js not found; Engine Version snapshot sync skipped (dev repo only).',
+                severity: 'warning',
+                source: 'update-engine-meta',
+                code: 'SNAPSHOT_SYNC_UNAVAILABLE',
+                message:
+                    'dev/scripts/sync-engine-snapshot.js not found; Engine Version snapshot sync skipped (dev repo only).',
             });
         }
 
@@ -216,7 +238,9 @@ function updateEngineMeta() {
         // regeneration reads workflows/ directly, so it must run regardless
         // of this verdict rather than being skipped alongside a version bump
         // that genuinely isn't warranted here.
-        console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.');
+        console.log(
+            'ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.',
+        );
         syncSkillWrappers();
     }
 }
@@ -234,7 +258,7 @@ function bumpVersion() {
     const currentVersion = fs.readFileSync(versionPath, 'utf8').trim();
     const parts = currentVersion.split('.');
     if (parts.length === 3) {
-        parts[2] = parseInt(parts[2]) + 1;
+        parts[2] = parseInt(parts[2], 10) + 1;
         const newVersion = parts.join('.');
         if (writeFileSafe(versionPath, newVersion)) {
             console.log(`📈 Version bumped: ${currentVersion} -> ${newVersion}`);
@@ -256,12 +280,17 @@ function bumpVersion() {
 function runGenerateChecksums() {
     const scriptPath = path.join(__dirname, '../../dev/scripts/generate-checksums.js');
     if (!hasEngineWriteTooling()) {
-        console.warn('⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.');
+        console.warn(
+            '⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.',
+        );
         console.warn('   Engine writes (checksums regeneration) are a developer operation.');
         console.warn('   To clear drift: restore .magic/ from the release archive.');
         diagnostics.record({
-            severity: 'warning', source: 'update-engine-meta', code: 'CHECKSUM_TOOLING_UNAVAILABLE',
-            message: 'dev/scripts/generate-checksums.js not found (user installation); checksum regeneration skipped.',
+            severity: 'warning',
+            source: 'update-engine-meta',
+            code: 'CHECKSUM_TOOLING_UNAVAILABLE',
+            message:
+                'dev/scripts/generate-checksums.js not found (user installation); checksum regeneration skipped.',
             remedy: 'To clear drift: restore .magic/ from the release archive.',
         });
         return;
@@ -280,7 +309,9 @@ function runGenerateChecksums() {
  */
 function refuseUserInstallWrite() {
     runGenerateChecksums();
-    console.error('❌ Engine drift not resolved: nothing was changed (version and .checksums untouched).');
+    console.error(
+        '❌ Engine drift not resolved: nothing was changed (version and .checksums untouched).',
+    );
     process.exit(1);
 }
 

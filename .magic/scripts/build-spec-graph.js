@@ -27,9 +27,8 @@ const args = process.argv.slice(2);
 const jsonFlag = args.includes('--json');
 const htmlIdx = args.indexOf('--html');
 const htmlFlag = htmlIdx !== -1;
-const htmlPath = (htmlFlag && args[htmlIdx + 1] && !args[htmlIdx + 1].startsWith('--'))
-    ? args[htmlIdx + 1]
-    : null;
+const htmlPath =
+    htmlFlag && args[htmlIdx + 1] && !args[htmlIdx + 1].startsWith('--') ? args[htmlIdx + 1] : null;
 
 /** When true, per-file extraction cache is bypassed (see l2-spec-graph-memory §4.1). */
 const noCacheFlag = args.includes('--no-cache');
@@ -43,22 +42,6 @@ const cacheStats = { hits: 0, misses: 0 };
 
 /** Default HTML output path relative to project root. */
 const DEFAULT_HTML_PATH = path.join(designDir, 'spec-graph.html');
-
-// ───────────────────────────────────────────────────────────────────────────
-// Node & Edge Type Definitions
-// ───────────────────────────────────────────────────────────────────────────
-
-/** @type {Record<string, {color: string, shape: string}>} */
-const NODE_TYPES = {
-    workspace: { color: '#4A90D9', shape: 'diamond' },
-    spec: { color: '#50C878', shape: 'dot' },
-    file: { color: '#A0A0A0', shape: 'square' },
-    convention: { color: '#F5A623', shape: 'triangle' },
-    phase: { color: '#9B59B6', shape: 'star' },
-};
-
-/** @type {string[]} Valid edge relation types. */
-const EDGE_RELATIONS = ['contains', 'covers', 'implements', 'enforces', 'scopes', 'plans'];
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DATA MODEL
@@ -161,11 +144,14 @@ function extractSpecRegistry(wsName) {
         if (inTable && /^##\s+/.test(line)) break;
         if (!inTable) continue;
 
-        const cells = line.split('|').map(c => c.trim()).filter(c => c);
+        const cells = line
+            .split('|')
+            .map((c) => c.trim())
+            .filter((c) => c);
 
         // Skip header row
         if (!headerParsed) {
-            if (cells.some(c => /^File$/i.test(c))) {
+            if (cells.some((c) => /^File$/i.test(c))) {
                 headerParsed = true;
             }
             continue;
@@ -211,8 +197,11 @@ function extractSpecRegistry(wsName) {
  */
 function parseSpecBody(specPath) {
     let content;
-    try { content = fs.readFileSync(specPath, 'utf8'); }
-    catch (_) { return { refs: [], parent: null, conventions: [] }; }
+    try {
+        content = fs.readFileSync(specPath, 'utf8');
+    } catch (_) {
+        return { refs: [], parent: null, conventions: [] };
+    }
 
     const lines = content.split(/\r?\n/);
     const refs = [];
@@ -225,12 +214,15 @@ function parseSpecBody(specPath) {
             pathColIdx = -1;
             continue;
         }
-        if (inCanonical && /^##\s+/.test(line)) { inCanonical = false; continue; }
+        if (inCanonical && /^##\s+/.test(line)) {
+            inCanonical = false;
+            continue;
+        }
         if (!inCanonical) continue;
 
-        const cells = line.split('|').map(c => c.trim());
+        const cells = line.split('|').map((c) => c.trim());
         if (pathColIdx === -1) {
-            const idx = cells.findIndex(c => /^Path$/i.test(c));
+            const idx = cells.findIndex((c) => /^Path$/i.test(c));
             if (idx !== -1) pathColIdx = idx;
             continue;
         }
@@ -247,9 +239,7 @@ function parseSpecBody(specPath) {
         : (content.match(/\*\*Implements:\*\*\s*`?([a-z0-9][\w-]*\.md)`?/i) || [])[1] || null;
 
     const found = new Set();
-    const re = /\bC(\d+)\b/g;
-    let m;
-    while ((m = re.exec(content)) !== null) {
+    for (const m of content.matchAll(/\bC(\d+)\b/g)) {
         const num = parseInt(m[1], 10);
         if (num >= 1 && num <= 99) found.add(num);
     }
@@ -262,13 +252,12 @@ function parseSpecBody(specPath) {
  * Creates file nodes, covers edges, implements edges, and enforces edges.
  *
  * @param {string} wsName - Workspace name.
- * @param {Array<{file: string}>} registrySpecs - Specs from INDEX.md.
  */
-function extractSpecDetails(wsName, registrySpecs) {
+function extractSpecDetails(wsName) {
     const specsDir = path.join(designAbs, wsName, 'specifications');
     if (!fs.existsSync(specsDir)) return;
 
-    const specFiles = fs.readdirSync(specsDir).filter(f => f.endsWith('.md'));
+    const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md'));
 
     for (const specFile of specFiles) {
         const specPath = path.join(specsDir, specFile);
@@ -289,8 +278,11 @@ function extractSpecDetails(wsName, registrySpecs) {
             parsed = parseSpecBody(specPath);
             cacheStats.misses += 1;
             if (!noCacheFlag) {
-                try { graphCache.saveCached(specPath, parsed, designAbs, rootDir); }
-                catch (_) { /* cache write failures must not break a build */ }
+                try {
+                    graphCache.saveCached(specPath, parsed, designAbs, rootDir);
+                } catch (_) {
+                    /* cache write failures must not break a build */
+                }
             }
         }
         const { refs, parent, conventions } = parsed;
@@ -368,7 +360,7 @@ function extractPhases(wsName) {
     for (const line of lines) {
         // Match: | Phase N | or | [Phase N](path) | patterns
         const match = line.match(
-            /\|\s*(?:\[)?\s*Phase\s+(\d+)\s*(?:\])?\s*(?:\([^)]*\))?\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|/i
+            /\|\s*(?:\[)?\s*Phase\s+(\d+)\s*(?:\])?\s*(?:\([^)]*\))?\s*\|\s*(.+?)\s*\|\s*(.+?)\s*\|/i,
         );
         if (!match) continue;
 
@@ -460,7 +452,7 @@ function findOrphanedFiles() {
         if (edge.relation === 'covers') coveredFiles.add(edge.to);
     }
 
-    return [...scopedFiles].filter(scopedId => {
+    return [...scopedFiles].filter((scopedId) => {
         const scopedPath = scopedId.replace(/^file:/, '');
         for (const coveredId of coveredFiles) {
             const coveredPath = coveredId.replace(/^file:/, '');
@@ -479,7 +471,7 @@ function findOrphanedFiles() {
  */
 function findMissingImplements() {
     const implementsSources = new Set(
-        edges.filter(e => e.relation === 'implements').map(e => e.from)
+        edges.filter((e) => e.relation === 'implements').map((e) => e.from),
     );
 
     const missing = [];
@@ -498,9 +490,7 @@ function findMissingImplements() {
  * @returns {{enforced: string[], orphaned: string[]}}
  */
 function analyzeConventionCoverage() {
-    const enforcedConvs = new Set(
-        edges.filter(e => e.relation === 'enforces').map(e => e.to)
-    );
+    const enforcedConvs = new Set(edges.filter((e) => e.relation === 'enforces').map((e) => e.to));
 
     const enforced = [];
     const orphaned = [];
@@ -591,9 +581,12 @@ function computeCoverageStats() {
         const ws = node.label;
 
         const wsSpecs = edges
-            .filter(e => e.from === id && e.relation === 'contains')
-            .map(e => e.to)
-            .filter(t => { const n = nodes.get(t); return n && n.type === 'spec'; });
+            .filter((e) => e.from === id && e.relation === 'contains')
+            .map((e) => e.to)
+            .filter((t) => {
+                const n = nodes.get(t);
+                return n && n.type === 'spec';
+            });
 
         const coveredFiles = new Set();
         for (const specId of wsSpecs) {
@@ -605,8 +598,8 @@ function computeCoverageStats() {
         }
 
         const scopeFiles = edges
-            .filter(e => e.from === id && e.relation === 'scopes')
-            .map(e => e.to);
+            .filter((e) => e.from === id && e.relation === 'scopes')
+            .map((e) => e.to);
 
         const coveredInScope = new Set();
         for (const scopedId of scopeFiles) {
@@ -621,9 +614,7 @@ function computeCoverageStats() {
         }
 
         const totalScope = scopeFiles.length;
-        const pct = totalScope > 0
-            ? Math.round((coveredInScope.size / totalScope) * 1000) / 10
-            : 0;
+        const pct = totalScope > 0 ? Math.round((coveredInScope.size / totalScope) * 1000) / 10 : 0;
 
         stats[ws] = {
             specs: wsSpecs.length,
@@ -687,11 +678,15 @@ function runAnalysis(degrees, workspaceScopes) {
  * @returns {string} Pretty-printed JSON string.
  */
 function toJSON(analysis) {
-    return JSON.stringify({
-        nodes: [...nodes.values()],
-        edges,
-        analysis,
-    }, null, 2);
+    return JSON.stringify(
+        {
+            nodes: [...nodes.values()],
+            edges,
+            analysis,
+        },
+        null,
+        2,
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -716,7 +711,7 @@ function toHTML(analysis) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Specification Knowledge Graph</title>
-<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"><\/script>
+<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
@@ -953,7 +948,7 @@ function toHTML(analysis) {
 
   document.getElementById('stats-content').innerHTML = statsHtml;
 })();
-<\/script>
+</script>
 </body>
 </html>`;
 }
@@ -979,7 +974,9 @@ function printSummary(analysis) {
     const cacheTotal = cacheStats.hits + cacheStats.misses;
     if (cacheTotal > 0) {
         const pct = Math.round((cacheStats.hits / cacheTotal) * 100);
-        console.log(`Extraction cache : ${cacheStats.hits}/${cacheTotal} hits (${pct}%)${noCacheFlag ? ' — bypassed via --no-cache' : ''}`);
+        console.log(
+            `Extraction cache : ${cacheStats.hits}/${cacheTotal} hits (${pct}%)${noCacheFlag ? ' — bypassed via --no-cache' : ''}`,
+        );
     }
     console.log('');
 
@@ -1007,7 +1004,9 @@ function printSummary(analysis) {
         console.log('COVERAGE STATS (per workspace):');
         console.log('───────────────────────────────────────────────────────────────');
         for (const [ws, stat] of Object.entries(analysis.coverage_stats)) {
-            console.log(`  ${ws}: ${stat.specs} specs, ${stat.files_covered} files covered / ${stat.total_scope} scope → ${stat.coverage_pct}%`);
+            console.log(
+                `  ${ws}: ${stat.specs} specs, ${stat.files_covered} files covered / ${stat.total_scope} scope → ${stat.coverage_pct}%`,
+            );
         }
         console.log('');
     }
@@ -1074,8 +1073,8 @@ function main() {
 
     // 3. For each workspace: extract spec registry, spec details, phases, plan links
     for (const wsName of workspaceNames) {
-        const registrySpecs = extractSpecRegistry(wsName);
-        extractSpecDetails(wsName, registrySpecs);
+        extractSpecRegistry(wsName);
+        extractSpecDetails(wsName);
         extractPhases(wsName);
     }
 
@@ -1096,7 +1095,9 @@ function main() {
         writeFileSafe(absPath, html);
         const relPath = path.relative(rootDir, absPath);
         console.log(`Spec graph written to: ${normalizePath(relPath)}`);
-        console.log(`  ${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges`);
+        console.log(
+            `  ${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges`,
+        );
         return;
     }
 

@@ -3,10 +3,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const { writeFileSafe, isDryRun, mkdirSafe, parseFlags, WORKSPACE_NAME_RE } = require('./utils');
+const { writeFileSafe, mkdirSafe, parseFlags, WORKSPACE_NAME_RE } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
-const { computeSignificance, gitChangedPaths, gitFileStatus, gitFileNumstat } = require('./lib/significance');
+const {
+    computeSignificance,
+    gitChangedPaths,
+    gitFileStatus,
+    gitFileNumstat,
+} = require('./lib/significance');
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
@@ -187,12 +192,16 @@ const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
 function computeNextAction(workflow, workspace, wsDir) {
     const next = synthesizeNextAction(workflow, workspace, wsDir);
     if (RESERVED_COMMAND_RE.test(next)) {
-        const message = `Next Action "${next}" names a command reserved by ` +
+        const message =
+            `Next Action "${next}" names a command reserved by ` +
             `rules/magic.md §5; substituting the /magic.task funnel.`;
         console.warn(`[state] ${message}`);
         diagnostics.record({
-            severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED',
-            message, locus: 'STATE.md',
+            severity: 'fix',
+            source: 'finalize',
+            code: 'NEXT_ACTION_SUBSTITUTED',
+            message,
+            locus: 'STATE.md',
         });
         return `Run /magic.task ${workspace} to plan`;
     }
@@ -217,7 +226,7 @@ function isPhaseBlocked(phaseContent, tasksContent, phaseNo) {
     if (frontmatter && /^status:\s*["']?Blocked["']?\s*$/im.test(frontmatter[1])) return true;
 
     const row = tasksContent.match(
-        new RegExp(`^\\| \\[Phase ${phaseNo}\\]\\([^)]*\\)[^\\n]*$`, 'm')
+        new RegExp(`^\\| \\[Phase ${phaseNo}\\]\\([^)]*\\)[^\\n]*$`, 'm'),
     );
     return row ? /\bBlocked\b/.test(row[0]) : false;
 }
@@ -270,7 +279,8 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
     // spec/rule changes require (re)planning before execution — the plan must
     // absorb the amended specs/rules first (pipeline order).
     if (workflow === 'spec') return `Run /magic.task ${workspace} to update the plan`;
-    if (workflow === 'rule') return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
+    if (workflow === 'rule')
+        return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
     // Three-tier lookup: inline TASKS.md → phase files → registry table.
@@ -280,7 +290,8 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
 
         // 1. Inline checkboxes in TASKS.md (legacy / flat format).
         const inlineOpen = tasks.match(openTaskRe);
-        if (inlineOpen) return `Execute ${inlineOpen[1]} ${inlineOpen[2]} via /magic.run ${workspace}`;
+        if (inlineOpen)
+            return `Execute ${inlineOpen[1]} ${inlineOpen[2]} via /magic.run ${workspace}`;
 
         // 2. Phase files — canonical two-level format (tasks/phase-N.md,
         //    track splits included). listPhaseFiles owns both the name shape
@@ -307,8 +318,10 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                 // Dispatching a resuming session into the very blocker the same
                 // STATE.md records would make the file contradict itself.
                 if (isPhaseBlocked(content, tasks, phaseNo)) {
-                    return `Resolve blocker on ${anyOpen[1]} (${workspace}) — ` +
-                        `see STATE.md ## Blockers, then run /magic.run ${workspace}`;
+                    return (
+                        `Resolve blocker on ${anyOpen[1]} (${workspace}) — ` +
+                        `see STATE.md ## Blockers, then run /magic.run ${workspace}`
+                    );
                 }
                 // The phase itself is not Blocked, but the first-matched line
                 // alone is still not licence to recommend it: that exact
@@ -335,7 +348,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                         firstExcludedTask = firstExcludedTask || openTask[1];
                         continue;
                     }
-                    const rawMatch = rawLines[i] && rawLines[i].match(openTaskRe);
+                    const rawMatch = rawLines[i]?.match(openTaskRe);
                     const title = rawMatch ? rawMatch[2] : openTask[2];
                     return `Execute ${openTask[1]} ${title} via /magic.run ${workspace}`;
                 }
@@ -348,15 +361,17 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                 // is not complete — tasks remain — so this must not fall
                 // through to the plan-complete branch below (tier 3), and
                 // must not name the excluded task as /magic.run-executable.
-                return `${firstExcludedTask} and any other open tasks need user or blocker ` +
+                return (
+                    `${firstExcludedTask} and any other open tasks need user or blocker ` +
                     `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
-                    `then run /magic.run ${workspace}`;
+                    `then run /magic.run ${workspace}`
+                );
             }
         }
 
         // 3. Registry table fallback — non-Done phase means work remains.
         const activePhase = tasks.match(
-            /\| \[Phase (\d+)\]\([^)]+\) \|[^|]+\| `(?!Done)([^`]+)` \|/
+            /\| \[Phase (\d+)\]\([^)]+\) \|[^|]+\| `(?!Done)([^`]+)` \|/,
         );
         if (activePhase) return `Continue Phase ${activePhase[1]} via /magic.run ${workspace}`;
 
@@ -411,7 +426,9 @@ function resolveWorkspaceDir(cliWorkspace, workspace, designAbs) {
 function updateSessionState(opts, workspace, wsDir) {
     const nextAction = computeNextAction(opts.workflow, workspace, wsDir);
     if (opts.dryRun) {
-        console.log(`[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}", auto-progress recompute.`);
+        console.log(
+            `[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}", auto-progress recompute.`,
+        );
         return { updated: false, dryRun: true, nextAction };
     }
     try {
@@ -420,8 +437,11 @@ function updateSessionState(opts, workspace, wsDir) {
     } catch (e) {
         console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);
         diagnostics.record({
-            severity: 'error', source: 'finalize', code: 'STATE_UPDATE_SKIPPED',
-            message: `STATE.md update skipped (non-blocking): ${e.message}`, locus: 'STATE.md',
+            severity: 'error',
+            source: 'finalize',
+            code: 'STATE_UPDATE_SKIPPED',
+            message: `STATE.md update skipped (non-blocking): ${e.message}`,
+            locus: 'STATE.md',
         });
         return { updated: false };
     }
@@ -506,12 +526,14 @@ function writeState(state) {
  * @param {string} version
  */
 function emitSkip(workflow, workspace, patterns, version) {
-    process.stdout.write([
-        `⏭️  No significant changes detected for magic.${workflow} on workspace '${workspace}'.`,
-        `Whitelist checked: ${patterns.length ? patterns.join(', ') : '(none)'}.`,
-        `Project version unchanged: ${version}.`,
-        '',
-    ].join('\n'));
+    process.stdout.write(
+        [
+            `⏭️  No significant changes detected for magic.${workflow} on workspace '${workspace}'.`,
+            `Whitelist checked: ${patterns.length ? patterns.join(', ') : '(none)'}.`,
+            `Project version unchanged: ${version}.`,
+            '',
+        ].join('\n'),
+    );
 }
 
 /**
@@ -535,9 +557,18 @@ function describeChangeCounts(total, whitelisted) {
  */
 function emitSuccess(ctx) {
     const {
-        workflow, workspace, previous, next,
-        files, omitted = 0, whitelistCount, gitAvailable, changelogResult,
-        archivedPhases, stateResult, diagnosticsCount,
+        workflow,
+        workspace,
+        previous,
+        next,
+        files,
+        omitted = 0,
+        whitelistCount,
+        gitAvailable,
+        changelogResult,
+        archivedPhases,
+        stateResult,
+        diagnosticsCount,
     } = ctx;
 
     const lines = [
@@ -555,8 +586,8 @@ function emitSuccess(ctx) {
         const clStatus = changelogResult.deduped
             ? `skipped (duplicate — run 'release-changelog' to rotate [Unreleased])`
             : changelogResult.formatWarning
-                ? 'prepended with warning (non-standard format)'
-                : `appended to [Unreleased] § ${changelogResult.category}`;
+              ? 'prepended with warning (non-standard format)'
+              : `appended to [Unreleased] § ${changelogResult.category}`;
         lines.push(`| CHANGELOG | ${clStatus} |`);
     }
 
@@ -564,24 +595,33 @@ function emitSuccess(ctx) {
     if (stateResult) {
         const stateStatus = stateResult.updated
             ? `updated (SC-2) — ${CHECKPOINT_CLAIM}`
-            : stateResult.dryRun ? 'dry-run preview' : 'skipped (warning above)';
+            : stateResult.dryRun
+              ? 'dry-run preview'
+              : 'skipped (warning above)';
         lines.push(`| STATE.md | ${stateStatus} |`);
     }
     // DG-7: a row that renders on every invocation regardless of content is a
     // row nobody reads — present only when there is something to report.
     if (diagnosticsCount && diagnosticsCount.total > 0) {
         const parts = [];
-        if (diagnosticsCount.error > 0) parts.push(`${diagnosticsCount.error} error${diagnosticsCount.error !== 1 ? 's' : ''}`);
-        if (diagnosticsCount.warning > 0) parts.push(`${diagnosticsCount.warning} warning${diagnosticsCount.warning !== 1 ? 's' : ''}`);
-        if (diagnosticsCount.fix > 0) parts.push(`${diagnosticsCount.fix} fix${diagnosticsCount.fix !== 1 ? 'es' : ''}`);
-        lines.push(`| Diagnostics | ${diagnosticsCount.total} finding(s): ${parts.join(', ')} — see below |`);
+        if (diagnosticsCount.error > 0)
+            parts.push(`${diagnosticsCount.error} error${diagnosticsCount.error !== 1 ? 's' : ''}`);
+        if (diagnosticsCount.warning > 0)
+            parts.push(
+                `${diagnosticsCount.warning} warning${diagnosticsCount.warning !== 1 ? 's' : ''}`,
+            );
+        if (diagnosticsCount.fix > 0)
+            parts.push(`${diagnosticsCount.fix} fix${diagnosticsCount.fix !== 1 ? 'es' : ''}`);
+        lines.push(
+            `| Diagnostics | ${diagnosticsCount.total} finding(s): ${parts.join(', ')} — see below |`,
+        );
     }
     lines.push(``);
     lines.push(`### Changed artifacts`);
     lines.push(``);
 
     for (const f of files) {
-        const numstat = (f.added || f.deleted) ? ` (+${f.added} -${f.deleted})` : '';
+        const numstat = f.added || f.deleted ? ` (+${f.added} -${f.deleted})` : '';
         lines.push(`- \`${f.path}\` [${f.status}]${numstat}`);
     }
     if (omitted > 0) {
@@ -647,7 +687,9 @@ function main() {
     if (opts.dryRun) process.env.MAGIC_DRY_RUN = '1';
 
     if (!opts.workflow || !VALID_WORKFLOWS.has(opts.workflow)) {
-        console.error(`❌ Invalid or missing --workflow. Expected: ${[...VALID_WORKFLOWS].map((w) => `magic.${w}`).join(', ')}.`);
+        console.error(
+            `❌ Invalid or missing --workflow. Expected: ${[...VALID_WORKFLOWS].map((w) => `magic.${w}`).join(', ')}.`,
+        );
         return 1;
     }
 
@@ -703,7 +745,9 @@ function main() {
         // DG-10: revalidate() runs on both paths, after the drain/read that
         // already runs after every mutating step, so a condition this
         // invocation's own writes resolved is not rendered as still open.
-        const findings = diagnostics.revalidate(opts.dryRun ? diagnostics.read() : diagnostics.drain());
+        const findings = diagnostics.revalidate(
+            opts.dryRun ? diagnostics.read() : diagnostics.drain(),
+        );
         emitTail({ nextAction: stateResult.nextAction, findings });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
@@ -716,7 +760,7 @@ function main() {
     }
 
     // ── Version bump ────────────────────────────────────────────────────────
-    let previous = currentVersion;
+    const previous = currentVersion;
     let next = currentVersion;
     if (config.autoBump && !opts.noBump) {
         next = bumpPatch(currentVersion);
@@ -734,18 +778,27 @@ function main() {
             changelogResult = { ...result, category, bullet };
 
             if (changelogResult.formatWarning) {
-                console.warn(`⚠️  CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker. Consider migrating.`);
+                console.warn(
+                    `⚠️  CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker. Consider migrating.`,
+                );
                 diagnostics.record({
-                    severity: 'fix', source: 'finalize', code: 'CHANGELOG_FORMAT_NONSTANDARD',
-                    message: 'CHANGELOG.md does not follow Keep-a-Changelog format; entry prepended with a marker.',
-                    locus: 'CHANGELOG.md', remedy: 'Consider migrating CHANGELOG.md to Keep-a-Changelog format.',
+                    severity: 'fix',
+                    source: 'finalize',
+                    code: 'CHANGELOG_FORMAT_NONSTANDARD',
+                    message:
+                        'CHANGELOG.md does not follow Keep-a-Changelog format; entry prepended with a marker.',
+                    locus: 'CHANGELOG.md',
+                    remedy: 'Consider migrating CHANGELOG.md to Keep-a-Changelog format.',
                 });
             }
         } catch (e) {
             console.warn(`⚠️  Could not update CHANGELOG.md: ${e.message}`);
             diagnostics.record({
-                severity: 'error', source: 'finalize', code: 'CHANGELOG_WRITE_FAILED',
-                message: `Could not update CHANGELOG.md: ${e.message}`, locus: 'CHANGELOG.md',
+                severity: 'error',
+                source: 'finalize',
+                code: 'CHANGELOG_WRITE_FAILED',
+                message: `Could not update CHANGELOG.md: ${e.message}`,
+                locus: 'CHANGELOG.md',
             });
         }
     }
@@ -757,16 +810,22 @@ function main() {
             const archiveResult = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
             archivedPhases = archiveResult.archived;
             if (archiveResult.skipped.length > 0) {
-                console.warn(`⚠  Phase archival: skipped ${archiveResult.skipped.length} already-archived file(s).`);
+                console.warn(
+                    `⚠  Phase archival: skipped ${archiveResult.skipped.length} already-archived file(s).`,
+                );
                 diagnostics.record({
-                    severity: 'warning', source: 'finalize', code: 'PHASE_ARCHIVE_SKIPPED',
+                    severity: 'warning',
+                    source: 'finalize',
+                    code: 'PHASE_ARCHIVE_SKIPPED',
                     message: `Phase archival skipped ${archiveResult.skipped.length} already-archived file(s).`,
                 });
             }
         } catch (e) {
             console.warn(`⚠  Phase archival warning: ${e.message}`);
             diagnostics.record({
-                severity: 'error', source: 'finalize', code: 'PHASE_ARCHIVE_FAILED',
+                severity: 'error',
+                source: 'finalize',
+                code: 'PHASE_ARCHIVE_FAILED',
                 message: `Phase archival warning: ${e.message}`,
             });
         }
@@ -821,8 +880,13 @@ function main() {
 // computeNextAction carries the SC-2.1 plan-state logic and is unit-tested
 // in isolation; main() is the CLI entrypoint.
 module.exports = {
-    main, computeNextAction, updateSessionState, resolveWorkspaceDir,
-    collectChangedFiles, emitSuccess, emitTail,
+    main,
+    computeNextAction,
+    updateSessionState,
+    resolveWorkspaceDir,
+    collectChangedFiles,
+    emitSuccess,
+    emitTail,
 };
 
 // Execute only as a CLI, not when required by tests.

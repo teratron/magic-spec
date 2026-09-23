@@ -13,37 +13,22 @@
     "spec_section": "{section}"
   },
   "next_action": "{Concrete next action, verbatim from STATE.md}",
-  "blocking_constraints": [
-    "[C-001] {Constraint Title}: {description}"
-  ],
+  "blocking_constraints": ["[C-001] {Constraint Title}: {description}"],
   "required_reading": [
     ".design/{workspace}/STATE.md",
     ".design/{workspace}/tasks/phase-{N}.md",
     ".design/{workspace}/specifications/{spec-file.md}"
   ],
   "context_snapshot": {
-    "active_decisions": [
-      "{decision summary 1}",
-      "{decision summary 2}"
-    ],
-    "patterns_established": [
-      "{pattern name}: {description}"
-    ],
-    "open_questions": [
-      "{question 1}"
-    ],
+    "active_decisions": ["{decision summary 1}", "{decision summary 2}"],
+    "patterns_established": ["{pattern name}: {description}"],
+    "open_questions": ["{question 1}"],
     "progress": {
-      "done_in_phase": [
-        "[T-ID] {Task Title}"
-      ],
+      "done_in_phase": ["[T-ID] {Task Title}"],
       "in_progress": "[T-ID] {Task Title}",
-      "blocked": [
-        "[T-ID] {reason}"
-      ]
+      "blocked": ["[T-ID] {reason}"]
     },
-    "relevant_files": [
-      "{path}: {one-line note}"
-    ]
+    "relevant_files": ["{path}: {one-line note}"]
   },
   "resume_instructions": "Load STATE.md first. Acknowledge blocking_constraints. Load required_reading. Then execute next_action without prompting. Backwards-compat: legacy 1.0 handoffs (no progress / relevant_files) — treat absent fields as empty arrays."
 }

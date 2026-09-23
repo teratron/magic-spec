@@ -33,9 +33,7 @@ function stripQuoted(content) {
     // started with — matches the original callers' char classes exactly
     // (`[\s\S]*?` for fences, `[^\`]*` for spans, both newline-permissive).
     const blank = (match) => match.replace(/[^\r\n]/g, '');
-    return content
-        .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, blank)
-        .replace(/`[^`]*`/g, blank);
+    return content.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, blank).replace(/`[^`]*`/g, blank);
 }
 
 module.exports = { stripQuoted };

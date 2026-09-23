@@ -112,14 +112,20 @@ function cacheDir(designAbs) {
  */
 function loadCached(absPath, designAbs, rootDir = designAbs) {
     let hash;
-    try { hash = fileHash(absPath, rootDir); }
-    catch (_) { return null; }
+    try {
+        hash = fileHash(absPath, rootDir);
+    } catch (_) {
+        return null;
+    }
 
     const entry = path.join(cacheDir(designAbs), `${hash}.json`);
     if (!fs.existsSync(entry)) return null;
 
-    try { return JSON.parse(fs.readFileSync(entry, 'utf8')); }
-    catch (_) { return null; }
+    try {
+        return JSON.parse(fs.readFileSync(entry, 'utf8'));
+    } catch (_) {
+        return null;
+    }
 }
 
 /**
@@ -133,26 +139,34 @@ function loadCached(absPath, designAbs, rootDir = designAbs) {
  */
 function saveCached(absPath, result, designAbs, rootDir = designAbs) {
     let hash;
-    try { hash = fileHash(absPath, rootDir); }
-    catch (_) { return; }
+    try {
+        hash = fileHash(absPath, rootDir);
+    } catch (_) {
+        return;
+    }
 
     const entry = path.join(cacheDir(designAbs), `${hash}.json`);
     const tmp = `${entry}.tmp`;
 
     try {
         fs.writeFileSync(tmp, JSON.stringify(result), 'utf8');
-        try { fs.renameSync(tmp, entry); }
-        catch (err) {
+        try {
+            fs.renameSync(tmp, entry);
+        } catch (err) {
             // Windows fallback: rename may fail (EPERM/EBUSY) on locked files.
             if (err.code === 'EPERM' || err.code === 'EBUSY') {
                 fs.copyFileSync(tmp, entry);
-                try { fs.unlinkSync(tmp); } catch (_) { }
+                try {
+                    fs.unlinkSync(tmp);
+                } catch (_) {}
             } else {
                 throw err;
             }
         }
     } catch (err) {
-        try { fs.unlinkSync(tmp); } catch (_) { }
+        try {
+            fs.unlinkSync(tmp);
+        } catch (_) {}
         throw err;
     }
 }
@@ -172,7 +186,10 @@ function clearCache(designAbs) {
     let removed = 0;
     for (const f of fs.readdirSync(dir)) {
         if (!f.endsWith('.json')) continue;
-        try { fs.unlinkSync(path.join(dir, f)); removed += 1; } catch (_) { }
+        try {
+            fs.unlinkSync(path.join(dir, f));
+            removed += 1;
+        } catch (_) {}
     }
     return removed;
 }

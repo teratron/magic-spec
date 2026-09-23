@@ -2,7 +2,6 @@
 'use strict';
 
 const fs = require('fs');
-const path = require('path');
 const { writeFileSafe } = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -83,12 +82,16 @@ function createIfMissing(filePath) {
  */
 function appendBullet(filePath, category, bullet) {
     if (!VALID_CATEGORIES.includes(category)) {
-        throw new Error(`Invalid Keep-a-Changelog category: '${category}'. Use one of ${VALID_CATEGORIES.join(', ')}.`);
+        throw new Error(
+            `Invalid Keep-a-Changelog category: '${category}'. Use one of ${VALID_CATEGORIES.join(', ')}.`,
+        );
     }
     if (!fs.existsSync(filePath)) {
         createIfMissing(filePath);
     }
-    const original = fs.existsSync(filePath) ? fs.readFileSync(filePath, 'utf8') : (KEEP_A_CHANGELOG_HEADER + '\n## [Unreleased]\n');
+    const original = fs.existsSync(filePath)
+        ? fs.readFileSync(filePath, 'utf8')
+        : KEEP_A_CHANGELOG_HEADER + '\n## [Unreleased]\n';
 
     if (!isKeepAChangelog(original)) {
         // Non-standard file: prepend a clearly-marked block with the new
@@ -130,7 +133,6 @@ function appendBullet(filePath, category, bullet) {
 function insertIntoUnreleased(content, category, bullet) {
     const unreleasedRe = /^##\s+\[Unreleased\]\s*$/m;
     let withUnreleased = content;
-    let unrIdx;
 
     if (!unreleasedRe.test(content)) {
         // No Unreleased — insert one above the first versioned section.
@@ -142,7 +144,7 @@ function insertIntoUnreleased(content, category, bullet) {
     }
 
     const unrMatch = withUnreleased.match(unreleasedRe);
-    unrIdx = unrMatch.index;
+    const unrIdx = unrMatch.index;
     const unrEnd = nextH2Index(withUnreleased, unrIdx + unrMatch[0].length);
     const unrBlock = withUnreleased.slice(unrIdx, unrEnd);
 
@@ -158,7 +160,7 @@ function insertIntoUnreleased(content, category, bullet) {
         const catBody = unrBlock.slice(catBodyStart, catEnd);
 
         if (bulletExists(catBody, bullet)) {
-            return content;  // idempotent dedup
+            return content; // idempotent dedup
         }
 
         const trimmedBody = catBody.trim();
@@ -201,7 +203,9 @@ function releaseUnreleased(filePath, version, date) {
     const unreleasedRe = /^##\s+\[Unreleased\]\s*$/m;
     if (!unreleasedRe.test(original)) return { written: false, hadUnreleased: false };
 
-    const next = original.replace(unreleasedRe, `## [Unreleased]\n\n## [${version}] - ${date}`).trimEnd() + '\n';
+    const next =
+        original.replace(unreleasedRe, `## [Unreleased]\n\n## [${version}] - ${date}`).trimEnd() +
+        '\n';
     if (next === original) return { written: false, hadUnreleased: true };
     const written = writeFileSafe(filePath, next);
     return { written, hadUnreleased: true };

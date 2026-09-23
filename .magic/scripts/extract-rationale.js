@@ -13,9 +13,7 @@ const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
 
 const scopeIdx = args.indexOf('--scope');
-const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1]
-    ? args[scopeIdx + 1]
-    : null;
+const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : null;
 
 const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
 
@@ -32,21 +30,35 @@ const designDir = process.env.MAGIC_DESIGN_DIR || '.design';
  */
 const SKIP_DIRS = new Set([
     ...BUILD_NOISE_DIRS,
-    '.design', '.magic', '.references', '.agents',
-    '.claude', '.gemini', '.codex', '.qwen', '.kilocode', '.lingma',
+    '.design',
+    '.magic',
+    '.references',
+    '.agents',
+    '.claude',
+    '.gemini',
+    '.codex',
+    '.qwen',
+    '.kilocode',
+    '.lingma',
 ]);
 
 /** Supported source file extensions for rationale extraction. */
 const SOURCE_EXTENSIONS = new Set([
-    '.js', '.ts', '.py', '.go', '.rs', '.java', '.c', '.cpp',
-    '.rb', '.sh', '.ps1',
+    '.js',
+    '.ts',
+    '.py',
+    '.go',
+    '.rs',
+    '.java',
+    '.c',
+    '.cpp',
+    '.rb',
+    '.sh',
+    '.ps1',
 ]);
 
 /** Rationale marker keywords (upper-case canonical form). */
-const MARKERS = [
-    'NOTE', 'WHY', 'HACK', 'IMPORTANT', 'TODO',
-    'FIXME', 'SAFETY', 'WARN', 'PERF',
-];
+const MARKERS = ['NOTE', 'WHY', 'HACK', 'IMPORTANT', 'TODO', 'FIXME', 'SAFETY', 'WARN', 'PERF'];
 
 /**
  * Extensions that use hash-prefixed comments (`# MARKER:`).
@@ -74,10 +86,7 @@ const HASH_COMMENT_EXTENSIONS = new Set(['.py', '.sh', '.ps1', '.rb']);
 function buildPattern(ext) {
     const prefix = HASH_COMMENT_EXTENSIONS.has(ext) ? '#' : '\\/\\/';
     const markerGroup = MARKERS.join('|');
-    return new RegExp(
-        `${prefix}\\s*(${markerGroup}):\\s*(.+)`,
-        'i',
-    );
+    return new RegExp(`${prefix}\\s*(${markerGroup}):\\s*(.+)`, 'i');
 }
 
 /**
@@ -165,7 +174,7 @@ function loadCanonicalReferences(baseDesignDir) {
 
         let files;
         try {
-            files = fs.readdirSync(specDir).filter(f => f.endsWith('.md'));
+            files = fs.readdirSync(specDir).filter((f) => f.endsWith('.md'));
         } catch {
             continue;
         }
@@ -219,8 +228,16 @@ function extractReferencePaths(content) {
         if (btMatch) {
             extracted = btMatch[1];
         } else {
-            const cells = line.split('|').map(c => c.trim()).filter(Boolean);
-            if (cells.length >= 1 && cells[0] && !cells[0].startsWith(':') && !cells[0].startsWith('-')) {
+            const cells = line
+                .split('|')
+                .map((c) => c.trim())
+                .filter(Boolean);
+            if (
+                cells.length >= 1 &&
+                cells[0] &&
+                !cells[0].startsWith(':') &&
+                !cells[0].startsWith('-')
+            ) {
                 extracted = cells[0];
             }
         }
@@ -258,7 +275,11 @@ function checkCoverage(filePath, refMap) {
         // Also match if the reference is a directory without trailing slash.
         // Verify via fs.existsSync + statSync to avoid false positives on
         // extensionless files (Makefile, Dockerfile, LICENSE).
-        if (!refPath.endsWith('/') && !path.extname(refPath) && normalized.startsWith(refPath + '/')) {
+        if (
+            !refPath.endsWith('/') &&
+            !path.extname(refPath) &&
+            normalized.startsWith(refPath + '/')
+        ) {
             try {
                 if (fs.existsSync(refPath) && fs.statSync(refPath).isDirectory()) {
                     return { covered: true, spec: specFile };
@@ -285,12 +306,18 @@ function checkCoverage(filePath, refMap) {
  */
 function resolveScanDirs() {
     if (scopeOverride) {
-        return scopeOverride.split(',').map(s => s.trim()).filter(Boolean);
+        return scopeOverride
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
     }
 
     const envScope = process.env.MAGIC_WORKSPACE_SCOPE;
     if (envScope) {
-        return envScope.split(',').map(s => s.trim()).filter(Boolean);
+        return envScope
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
     }
 
     return ['.'];
@@ -380,7 +407,7 @@ function scan(scanDirs, refMap) {
     }
 
     // Build summary
-    const coveredCount = rationale.filter(r => r.covered).length;
+    const coveredCount = rationale.filter((r) => r.covered).length;
     const summary = {
         total_rationale: rationale.length,
         covered_rationale: coveredCount,
@@ -436,7 +463,7 @@ function printHumanReadable(result) {
     }
 
     // Covered rationale details
-    const covered = rationale.filter(r => r.covered);
+    const covered = rationale.filter((r) => r.covered);
     if (covered.length > 0) {
         console.log('\nCovered Rationale:');
         for (const r of covered) {

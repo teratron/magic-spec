@@ -67,7 +67,12 @@ function entryRanges(block, startRe) {
  */
 function collectEntries(block, startRe) {
     return entryRanges(block, startRe).map(({ start, end }) =>
-        block.slice(start, end).replace(/\r?\n$/, '').split(/\r?\n/).join('\n'));
+        block
+            .slice(start, end)
+            .replace(/\r?\n$/, '')
+            .split(/\r?\n/)
+            .join('\n'),
+    );
 }
 
 /**
@@ -210,8 +215,11 @@ function ensureSection(content, marker, statePath) {
     const message = `STATE.md had no "${marker}" section; created it so the requested write could be recorded.`;
     console.warn(`[update-state] ${message}`);
     diagnostics.record({
-        severity: 'fix', source: 'update-state', code: 'STATE_SECTION_CREATED',
-        message, locus: statePath,
+        severity: 'fix',
+        source: 'update-state',
+        code: 'STATE_SECTION_CREATED',
+        message,
+        locus: statePath,
     });
     return { content: created, ...locateSection(created, marker) };
 }
@@ -340,7 +348,9 @@ function updateState(designDir, patch, options = {}) {
         if (!fs.existsSync(templatePath)) {
             console.error('[update-state] Template not found, creating minimal STATE.md');
             diagnostics.record({
-                severity: 'fix', source: 'update-state', code: 'STATE_TEMPLATE_MISSING',
+                severity: 'fix',
+                source: 'update-state',
+                code: 'STATE_TEMPLATE_MISSING',
                 message: 'templates/state.md not found; created a minimal STATE.md instead.',
                 locus: statePath,
             });
@@ -410,12 +420,16 @@ function updateState(designDir, patch, options = {}) {
         }
     }
     if (createdFields.length > 0) {
-        const message = `STATE.md lacked the field line(s) ${createdFields.join(', ')}; ` +
+        const message =
+            `STATE.md lacked the field line(s) ${createdFields.join(', ')}; ` +
             'created so the requested update could be recorded.';
         console.warn(`[update-state] ${message}`);
         diagnostics.record({
-            severity: 'fix', source: 'update-state', code: 'STATE_FIELD_CREATED',
-            message, locus: statePath,
+            severity: 'fix',
+            source: 'update-state',
+            code: 'STATE_FIELD_CREATED',
+            message,
+            locus: statePath,
         });
     }
 
@@ -526,20 +540,27 @@ function updateState(designDir, patch, options = {}) {
                     // concatenation — the fence carries backticks, and nothing
                     // here may be a replacement string.
                     const section = ensureSection(content, '## Progress', statePath);
-                    content = section.content.slice(0, section.start) +
-                        '## Progress\n\n```\n' + progress + '\n```\n' +
+                    content =
+                        section.content.slice(0, section.start) +
+                        '## Progress\n\n```\n' +
+                        progress +
+                        '\n```\n' +
                         section.content.slice(section.end);
                 } else if (!existing) {
                     // A heading with no fence directly under it is a shape the
                     // merge-not-clobber rule does not recognise, and the engine
                     // cannot tell narrative from a counter block it never wrote:
                     // leave it exactly as it is, but say so.
-                    const message = 'STATE.md has a "## Progress" heading with no counter block under it that ' +
+                    const message =
+                        'STATE.md has a "## Progress" heading with no counter block under it that ' +
                         'the recompute recognises; left it untouched.';
                     console.warn(`[update-state] ${message}`);
                     diagnostics.record({
-                        severity: 'warning', source: 'update-state', code: 'PROGRESS_BLOCK_UNRECOGNISED',
-                        message, locus: statePath,
+                        severity: 'warning',
+                        source: 'update-state',
+                        code: 'PROGRESS_BLOCK_UNRECOGNISED',
+                        message,
+                        locus: statePath,
                         remedy: 'Put the counters in a fenced block directly under the heading, or delete the section and let the recompute recreate it.',
                     });
                 } else {
@@ -559,24 +580,28 @@ function updateState(designDir, patch, options = {}) {
                     const preserved = existing[2]
                         .split(/\r?\n/)
                         .filter((l) => l.trim() !== '' && !counterRe.test(l));
-                    const body = preserved.length > 0
-                        ? `${progress}\n${preserved.join('\n')}`
-                        : progress;
+                    const body =
+                        preserved.length > 0 ? `${progress}\n${preserved.join('\n')}` : progress;
                     // Function-form replacement: the returned string is used
                     // verbatim. A string-form replacement would re-scan the whole
                     // result for `$1`-`$9`/`` $` ``/`$'`/`$&`, and `body` carries
                     // unconstrained narrative — a literal `$1` in an operator's
                     // note would splice a captured fence fragment into the middle
                     // of the file and unbalance its code fences.
-                    content = content.replace(progressRe, (_match, open, _oldBody, close) =>
-                        `${open}${body}${close}`);
+                    content = content.replace(
+                        progressRe,
+                        (_match, open, _oldBody, close) => `${open}${body}${close}`,
+                    );
                 }
             }
         } catch (e) {
             console.warn(`[update-state] Progress recompute skipped: ${e.message}`);
             diagnostics.record({
-                severity: 'error', source: 'update-state', code: 'PROGRESS_RECOMPUTE_SKIPPED',
-                message: `Progress recompute skipped: ${e.message}`, locus: statePath,
+                severity: 'error',
+                source: 'update-state',
+                code: 'PROGRESS_RECOMPUTE_SKIPPED',
+                message: `Progress recompute skipped: ${e.message}`,
+                locus: statePath,
             });
         }
     }
@@ -603,31 +628,42 @@ function updateState(designDir, patch, options = {}) {
         // (l2-finalize-state-accuracy.md section 13.2).
         const section = locateSection(content, '## Recent Decisions');
         if (section) {
-            const ranges = entryRanges(content.slice(section.start, section.end), /^- \d{4}-\d{2}-\d{2}/);
+            const ranges = entryRanges(
+                content.slice(section.start, section.end),
+                /^- \d{4}-\d{2}-\d{2}/,
+            );
             if (ranges.length > 1) {
                 const oldest = ranges[ranges.length - 1];
-                content = content.slice(0, section.start + oldest.start) +
+                content =
+                    content.slice(0, section.start + oldest.start) +
                     content.slice(section.start + oldest.end);
                 pruned = true;
             }
         }
         if (pruned) {
-            console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`);
+            console.warn(
+                `[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`,
+            );
             diagnostics.record({
-                severity: 'fix', source: 'update-state', code: 'STATE_DECISION_PRUNED',
+                severity: 'fix',
+                source: 'update-state',
+                code: 'STATE_DECISION_PRUNED',
                 message: `STATE.md exceeded 100 lines (${lines.length}); pruned the oldest Recent Decisions entry.`,
                 locus: statePath,
             });
         } else {
             console.warn(
                 `[update-state] STATE.md exceeds 100 lines (${lines.length}) and ## Recent Decisions ` +
-                'is already at its floor — nothing was pruned. ' +
-                'Review ## Blocking Constraints and archive stale entries.'
+                    'is already at its floor — nothing was pruned. ' +
+                    'Review ## Blocking Constraints and archive stale entries.',
             );
             diagnostics.record({
-                severity: 'warning', source: 'update-state', code: 'STATE_CAP_EXHAUSTED',
+                severity: 'warning',
+                source: 'update-state',
+                code: 'STATE_CAP_EXHAUSTED',
                 message: `STATE.md exceeds 100 lines (${lines.length}); Recent Decisions is at its floor, nothing was pruned.`,
-                locus: statePath, remedy: 'Review ## Blocking Constraints and archive stale entries.',
+                locus: statePath,
+                remedy: 'Review ## Blocking Constraints and archive stale entries.',
             });
         }
     }
@@ -703,7 +739,9 @@ function computeProgress(designDir, stateContent) {
     const phaseMatch = stateContent.match(/\*\*Phase:\*\* (\d+)/);
     if (phaseMatch) {
         const n = phaseMatch[1];
-        const section = tasks.match(new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`));
+        const section = tasks.match(
+            new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`),
+        );
         // The inline heading exists only in the legacy single-file layout. On the
         // canonical two-level layout the checklist lives in tasks/phase-{N}.md,
         // so without the fallback no phase line is ever produced there and the
@@ -739,10 +777,10 @@ function runCli() {
     if (args.length === 0) {
         console.error(
             'Usage: node update-state.js --workspace=<dir> ' +
-            '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
-            '[--next-action=<text>] [--decision=<text>] ' +
-            '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
-            '[--handoff=<path>] [--bootstrap=<true|false>]'
+                '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
+                '[--next-action=<text>] [--decision=<text>] ' +
+                '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
+                '[--handoff=<path>] [--bootstrap=<true|false>]',
         );
         process.exit(1);
     }
@@ -753,9 +791,16 @@ function runCli() {
     // writing STATE.md into the global registry root instead of a workspace.
     const { values, flags, rest, errors } = parseFlags(args, {
         valueFlags: [
-            '--workspace', '--task', '--status', '--phase', '--next-action',
-            '--handoff', '--bootstrap', '--decision',
-            '--constraint-title', '--constraint-desc',
+            '--workspace',
+            '--task',
+            '--status',
+            '--phase',
+            '--next-action',
+            '--handoff',
+            '--bootstrap',
+            '--decision',
+            '--constraint-title',
+            '--constraint-desc',
         ],
         boolFlags: ['--auto-progress'],
     });
@@ -767,7 +812,9 @@ function runCli() {
     for (const unknown of rest) {
         console.warn(`[update-state] Unknown argument: ${unknown}`);
         diagnostics.record({
-            severity: 'warning', source: 'update-state', code: 'UNKNOWN_ARGUMENT',
+            severity: 'warning',
+            source: 'update-state',
+            code: 'UNKNOWN_ARGUMENT',
             message: `Unknown argument ignored: ${unknown}`,
         });
     }

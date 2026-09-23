@@ -3,7 +3,12 @@
 
 const fs = require('fs');
 const path = require('path');
-const { hashFile, normalizePath, hasEngineWriteTooling, describeManifestDelta } = require('./utils');
+const {
+    hashFile,
+    normalizePath,
+    hasEngineWriteTooling,
+    describeManifestDelta,
+} = require('./utils');
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
@@ -113,7 +118,10 @@ if (fs.existsSync(checksumsFile)) {
             if (fs.existsSync(fullPath)) {
                 const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
-                    mismatchedFiles.push({ file: normalizedRelPath, delta: describeManifestDelta(fullPath, storedHash) });
+                    mismatchedFiles.push({
+                        file: normalizedRelPath,
+                        delta: describeManifestDelta(fullPath, storedHash),
+                    });
                 }
             }
         }
@@ -121,17 +129,17 @@ if (fs.existsSync(checksumsFile)) {
             warn(
                 'ENGINE_INTEGRITY',
                 `'.magic/${file}' has been modified locally${integrityDetail(delta)}${canRunC14 ? '' : RESTORE_HINT}`,
-                canRunC14 ? C14_FIX : null
+                canRunC14 ? C14_FIX : null,
             );
         }
-    } catch (e) {
+    } catch {
         // Ignore parse errors
     }
 } else {
     warn(
         'ENGINE_INTEGRITY',
         `'.magic/.checksums' is missing.${canRunC14 ? '' : RESTORE_HINT}`,
-        canRunC14 ? C14_FIX : null
+        canRunC14 ? C14_FIX : null,
     );
 }
 
@@ -188,7 +196,8 @@ if (reqSpecs && stableCount === 0) {
     else missing.push('Stable specs (only Draft/RFC found)');
 }
 
-if (draftCount > 0) warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
+if (draftCount > 0)
+    warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
 if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magic.spec');
 
 if (planExists && indexExists) {
@@ -205,14 +214,14 @@ if (planExists && indexExists) {
     // `specifications/` mention in prose (no immediate closing `)`) could run
     // the match past the paragraph it started in.
     const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const indexSpecs = [...new Set(indexSpecMatches.map(m => m[1]))];
+    const indexSpecs = [...new Set(indexSpecMatches.map((m) => m[1]))];
 
     for (const spec of indexSpecs) {
         if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
             warn(
                 'GHOST_REGISTRY',
                 `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
-                'magic.analyze'
+                'magic.analyze',
             );
         }
 
@@ -221,7 +230,7 @@ if (planExists && indexExists) {
             warn(
                 'NAMING_VIOLATION',
                 `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
-                'Rename file and update INDEX.md references'
+                'Rename file and update INDEX.md references',
             );
         }
 
@@ -229,20 +238,20 @@ if (planExists && indexExists) {
             warn(
                 'ORPHANED_SPEC',
                 `'${spec}' is in INDEX.md but missing from PLAN.md.`,
-                'magic.task update'
+                'magic.task update',
             );
         }
     }
 
     const planSpecMatches = [...planContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const planSpecs = [...new Set(planSpecMatches.map(m => m[1]))];
+    const planSpecs = [...new Set(planSpecMatches.map((m) => m[1]))];
 
     for (const pSpec of planSpecs) {
         if (!indexSpecs.includes(pSpec)) {
             warn(
                 'REGISTRY_MISMATCH',
                 `'${pSpec}' is referenced in PLAN.md but missing from INDEX.md.`,
-                'magic.spec --audit'
+                'magic.spec --audit',
             );
         }
     }
@@ -257,7 +266,7 @@ if (planExists && indexExists) {
             warn(
                 'SYNC_GAP',
                 `PLAN.md is based on INDEX.md v${planBasedOn}, but registry is at v${indexVersion}.`,
-                'magic.task update'
+                'magic.task update',
             );
         }
     }
@@ -271,7 +280,7 @@ if (planExists && indexExists) {
             const specMatch = line.match(new RegExp(SPEC_FILENAME_SRC));
             if (specMatch) {
                 const specFile = specMatch[1];
-                const parts = line.split('|').map(s => s.trim());
+                const parts = line.split('|').map((s) => s.trim());
                 if (parts.length >= 5) {
                     const status = parts[3];
                     if (status === 'Stable' || status === 'RFC') {
@@ -279,19 +288,25 @@ if (planExists && indexExists) {
                         if (fs.existsSync(specPath)) {
                             const specContent = stripQuoted(fs.readFileSync(specPath, 'utf8'));
                             // Extract parent link reliably — SH-1 + SH-4
-                            const parentMatch = specContent.match(new RegExp(`\\*\\*Implements:\\*\\*\\s*(?:\\[.*?\\]\\()?${SPEC_FILENAME_SRC}\\)?`));
+                            const parentMatch = specContent.match(
+                                new RegExp(
+                                    `\\*\\*Implements:\\*\\*\\s*(?:\\[.*?\\]\\()?${SPEC_FILENAME_SRC}\\)?`,
+                                ),
+                            );
                             if (parentMatch) {
                                 const parent = parentMatch[1];
-                                const parentLine = lines.find(l => l.includes(`(specifications/${parent})`));
+                                const parentLine = lines.find((l) =>
+                                    l.includes(`(specifications/${parent})`),
+                                );
                                 if (parentLine) {
-                                    const parentParts = parentLine.split('|').map(s => s.trim());
+                                    const parentParts = parentLine.split('|').map((s) => s.trim());
                                     if (parentParts.length >= 5) {
                                         const parentStatus = parentParts[3];
                                         if (parentStatus && parentStatus !== 'Stable') {
                                             warn(
                                                 'RULE_57_VIOLATION',
                                                 `L2 spec '${specFile}' is ${status}, but its L1 parent '${parent}' is ${parentStatus} (Must be Stable).`,
-                                                'magic.task update'
+                                                'magic.task update',
                                             );
                                         }
                                     }
@@ -320,7 +335,9 @@ if (planExists && indexExists) {
 
 if (planExists && tasksExists) {
     const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
-    const activePhasesMatch = tasksContentForBacklog.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
+    const activePhasesMatch = tasksContentForBacklog.match(
+        /## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/,
+    );
 
     // A complete plan is recognized three ways, all of them positive reads
     // (l1-session-continuity.md §Terminal-Row Recognition):
@@ -346,20 +363,17 @@ if (planExists && tasksExists) {
     const activeSectionTrimmed = activePhasesMatch ? activePhasesMatch[1].trim() : '';
     const isEmptyMarker = /^\*None\b/m.test(activeSectionTrimmed);
     const isTableScaffold = (t) => /^\|\s*-+\s*\|/.test(t) || /^\|\s*Phase\s*\|/i.test(t);
-    const activePhaseRows = activeSectionTrimmed
-        .split(/\r?\n/)
-        .filter((l) => {
-            const t = l.trim();
-            return t.startsWith('|') && !isTableScaffold(t);
-        });
-    const isAllTerminal = activePhaseRows.length > 0
-        && activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
-    const isVacant = activeSectionTrimmed
-        .split(/\r?\n/)
-        .every((l) => {
-            const t = l.trim();
-            return t === '' || isTableScaffold(t);
-        });
+    const activePhaseRows = activeSectionTrimmed.split(/\r?\n/).filter((l) => {
+        const t = l.trim();
+        return t.startsWith('|') && !isTableScaffold(t);
+    });
+    const isAllTerminal =
+        activePhaseRows.length > 0 &&
+        activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
+    const isVacant = activeSectionTrimmed.split(/\r?\n/).every((l) => {
+        const t = l.trim();
+        return t === '' || isTableScaffold(t);
+    });
     const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal || isVacant);
 
     if (planComplete) {
@@ -391,7 +405,7 @@ if (planExists && tasksExists) {
                 warn(
                     'DESIGN_DEBT_PENDING',
                     `Plan complete with no active phase, but ## Backlog holds ${openItems.length} open item(s) needing design input.`,
-                    `magic.spec ${workspaceName}`
+                    `magic.spec ${workspaceName}`,
                 );
             }
         }
@@ -414,7 +428,7 @@ if (verifyHeaders && indexExists) {
         if (!fs.existsSync(specPath)) continue; // GHOST_REGISTRY handles missing files
 
         // Extract INDEX.md values from table row: | [Name](path) | Status | Layer | Version |
-        const parts = line.split('|').map(s => s.trim());
+        const parts = line.split('|').map((s) => s.trim());
         if (parts.length < 5) continue;
 
         const indexStatus = parts[3];
@@ -434,13 +448,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version is MISSING but INDEX.md declares (${indexVersion}). Spec headers must mirror the registry.`,
-                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                    `Run /magic.spec to restore the header, then re-run /magic.task`,
                 );
             } else if (fileVersionMatch[1] !== indexVersion) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version (${fileVersionMatch[1]}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
-                    `Run /magic.spec to reconcile, then re-run /magic.task`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`,
                 );
             }
         }
@@ -451,13 +465,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status is MISSING but INDEX.md declares (${indexStatus}). Spec headers must mirror the registry.`,
-                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                    `Run /magic.spec to restore the header, then re-run /magic.task`,
                 );
             } else if (fileStatusMatch[1] !== indexStatus) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status (${fileStatusMatch[1]}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
-                    `Run /magic.spec to reconcile, then re-run /magic.task`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`,
                 );
             }
         }
@@ -478,55 +492,61 @@ const roleRegistry = {
     referenced: 0,
     dormant: 0,
     missing: [],
-    dangling_handoffs: []
+    dangling_handoffs: [],
 };
 
 if (fs.existsSync(rolesDir)) {
     const cards = {};
     const roleIds = new Set();
 
-    fs.readdirSync(rolesDir).filter(f => f.endsWith('.md')).forEach(cardFile => {
-        const content = fs.readFileSync(path.join(rolesDir, cardFile), 'utf8');
-        const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-        if (!fmMatch) return;
+    fs.readdirSync(rolesDir)
+        .filter((f) => f.endsWith('.md'))
+        .forEach((cardFile) => {
+            const content = fs.readFileSync(path.join(rolesDir, cardFile), 'utf8');
+            const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+            if (!fmMatch) return;
 
-        const fm = fmMatch[1];
-        const idMatch = fm.match(/^id:\s*(\S+)/m);
-        if (!idMatch) return;
+            const fm = fmMatch[1];
+            const idMatch = fm.match(/^id:\s*(\S+)/m);
+            if (!idMatch) return;
 
-        const id = idMatch[1];
-        roleIds.add(id);
-        cards[id] = {
-            file: cardFile,
-            handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map(m => m[1]),
-            triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map(m => m[1])
-        };
-    });
+            const id = idMatch[1];
+            roleIds.add(id);
+            cards[id] = {
+                file: cardFile,
+                handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map((m) => m[1]),
+                triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map((m) => m[1]),
+            };
+        });
 
     roleRegistry.total = roleIds.size;
 
     const referencedIds = new Set();
-    const scanRoots = [workflowsRoot, templatesRoot].filter(d => fs.existsSync(d));
+    const scanRoots = [workflowsRoot, templatesRoot].filter((d) => fs.existsSync(d));
 
     for (const root of scanRoots) {
-        fs.readdirSync(root).filter(f => f.endsWith('.md')).forEach(file => {
-            const content = fs.readFileSync(path.join(root, file), 'utf8');
-            for (const match of content.matchAll(roleRefPattern)) {
-                const refId = match[1];
-                referencedIds.add(refId);
-                if (!roleIds.has(refId)) {
-                    const rel = normalizePath(path.join(root, file));
-                    warn(
-                        'ROLE_MISSING',
-                        `'${rel}' references @role:${refId} but card is not in .magic/roles/.`,
-                        'Create role card or correct reference'
-                    );
-                    if (!roleRegistry.missing.some(m => m.location === rel && m.id === refId)) {
-                        roleRegistry.missing.push({ location: rel, id: refId });
+        fs.readdirSync(root)
+            .filter((f) => f.endsWith('.md'))
+            .forEach((file) => {
+                const content = fs.readFileSync(path.join(root, file), 'utf8');
+                for (const match of content.matchAll(roleRefPattern)) {
+                    const refId = match[1];
+                    referencedIds.add(refId);
+                    if (!roleIds.has(refId)) {
+                        const rel = normalizePath(path.join(root, file));
+                        warn(
+                            'ROLE_MISSING',
+                            `'${rel}' references @role:${refId} but card is not in .magic/roles/.`,
+                            'Create role card or correct reference',
+                        );
+                        if (
+                            !roleRegistry.missing.some((m) => m.location === rel && m.id === refId)
+                        ) {
+                            roleRegistry.missing.push({ location: rel, id: refId });
+                        }
                     }
                 }
-            }
-        });
+            });
     }
 
     roleRegistry.referenced = referencedIds.size;
@@ -536,7 +556,7 @@ if (fs.existsSync(rolesDir)) {
             warn(
                 'ROLE_DORMANT',
                 `Role card '${id}' exists but no workflow or template references @role:${id}.`,
-                'Remove card or add workflow trigger reference'
+                'Remove card or add workflow trigger reference',
             );
             roleRegistry.dormant++;
         }
@@ -548,7 +568,7 @@ if (fs.existsSync(rolesDir)) {
                 warn(
                     'ROLE_HANDOFF_DANGLING',
                     `Role '${id}' declares handoff to '${target}' but target card is missing.`,
-                    'Create target role card or fix handoff reference'
+                    'Create target role card or fix handoff reference',
                 );
                 roleRegistry.dangling_handoffs.push({ from: id, to: target });
             }
@@ -558,7 +578,7 @@ if (fs.existsSync(rolesDir)) {
                 warn(
                     'ROLE_TRIGGER_UNRESOLVED',
                     `Role '${id}' triggers on workflow '${wf}' which does not exist in .magic/.`,
-                    'Create workflow or fix trigger'
+                    'Create workflow or fix trigger',
                 );
             }
         }
@@ -596,13 +616,13 @@ function checkConfigDrift() {
         try {
             const diff = execSync(`git diff HEAD -- "${posixPath}"`, {
                 encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe']
+                stdio: ['pipe', 'pipe', 'pipe'],
             });
             if (diff.trim().length > 0) {
                 warn(
                     'CONFIG_DRIFT',
                     `'${posixPath}' has uncommitted changes (modified outside workflow).`,
-                    `Review changes: git diff HEAD -- ${posixPath}`
+                    `Review changes: git diff HEAD -- ${posixPath}`,
                 );
             }
         } catch {
@@ -613,10 +633,14 @@ function checkConfigDrift() {
 
 checkConfigDrift();
 
-const integrity_ok = !warnings.some(w =>
-    w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY' ||
-    w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT' ||
-    w.type === 'ROLE_MISSING' || w.type === 'ROLE_HANDOFF_DANGLING'
+const integrity_ok = !warnings.some(
+    (w) =>
+        w.type === 'ENGINE_INTEGRITY' ||
+        w.type === 'GHOST_REGISTRY' ||
+        w.type === 'VERSION_DRIFT' ||
+        w.type === 'STATUS_DRIFT' ||
+        w.type === 'ROLE_MISSING' ||
+        w.type === 'ROLE_HANDOFF_DANGLING',
 );
 const ok = missing.length === 0 && integrity_ok;
 
@@ -631,15 +655,15 @@ if (jsonOutput) {
         checked_at: date,
         design_dir: designDir,
         artifacts: {
-            "INDEX.md": { exists: indexExists, path: normalizePath(indexPath) },
-            "RULES.md": { exists: rulesExists, path: normalizePath(rulesPath) },
-            "PLAN.md": { exists: planExists, path: normalizePath(planPath) },
-            "TASKS.md": { exists: tasksExists, path: normalizePath(tasksPath) },
-            "specs": { count: specCount, stable: stableCount, draft: draftCount }
+            'INDEX.md': { exists: indexExists, path: normalizePath(indexPath) },
+            'RULES.md': { exists: rulesExists, path: normalizePath(rulesPath) },
+            'PLAN.md': { exists: planExists, path: normalizePath(planPath) },
+            'TASKS.md': { exists: tasksExists, path: normalizePath(tasksPath) },
+            specs: { count: specCount, stable: stableCount, draft: draftCount },
         },
         role_registry: roleRegistry,
         missing_required: missing,
-        warnings
+        warnings,
     };
     console.log(JSON.stringify(output, null, 2));
     process.exit(0);

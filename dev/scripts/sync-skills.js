@@ -16,13 +16,13 @@ const CONFIG = {
     sources: [
         {
             path: path.join(ROOT_DIR, 'workflows'),
-            target: path.join(ROOT_DIR, 'skills')
+            target: path.join(ROOT_DIR, 'skills'),
         },
         {
             path: path.join(ROOT_DIR, '.agents/workflows'),
-            target: path.join(ROOT_DIR, '.agents/skills')
-        }
-    ]
+            target: path.join(ROOT_DIR, '.agents/skills'),
+        },
+    ],
 };
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -59,8 +59,8 @@ function hyphenateMagicToken(token) {
  */
 function normalizeMagicReferences(text) {
     return text
-        .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, m => '/' + hyphenateMagicToken(m.slice(1)))
-        .replace(/\bmagic\.[a-z0-9.-]+\b/gi, m => hyphenateMagicToken(m));
+        .replace(/\/magic(\.[a-z][a-z0-9-]*)+/gi, (m) => '/' + hyphenateMagicToken(m.slice(1)))
+        .replace(/\bmagic\.[a-z0-9.-]+\b/gi, (m) => hyphenateMagicToken(m));
 }
 
 /**
@@ -87,14 +87,17 @@ function applyFrontmatterFields(frontmatterBody, metadata) {
  * @returns {string} The first non-heading line of `content`, trimmed.
  */
 function firstBodyLine(content) {
-    const bodyLines = content.replace(/^#+\s*/, '').trim().split('\n');
+    const bodyLines = content
+        .replace(/^#+\s*/, '')
+        .trim()
+        .split('\n');
     return bodyLines[0].trim();
 }
 
 function extractMetadata(content, fileName) {
     const metadata = {
         name: fileName.replace(/\./g, '-'),
-        description: 'Magic Spec Workflow'
+        description: 'Magic Spec Workflow',
     };
 
     const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
@@ -179,13 +182,13 @@ function cleanupOrphanSkill(dir, sourceTarget) {
 function sync() {
     console.log('🔄 Projecting Workflows to Skill Wrappers...');
 
-    CONFIG.sources.forEach(source => {
+    CONFIG.sources.forEach((source) => {
         if (!fs.existsSync(source.path)) return;
 
-        const workflowFiles = fs.readdirSync(source.path).filter(f => f.endsWith('.md'));
+        const workflowFiles = fs.readdirSync(source.path).filter((f) => f.endsWith('.md'));
         const activeSkills = new Set();
 
-        workflowFiles.forEach(file => {
+        workflowFiles.forEach((file) => {
             const name = path.basename(file, '.md').replace(/\./g, '-');
             activeSkills.add(name);
 
@@ -215,7 +218,10 @@ function sync() {
             const frontmatterContent = normalizeMagicReferences(
                 rawFrontmatter
                     .replace(/^(name:\s*)(.+)$/m, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
-                    .replace(/^(\s+workflow:\s*)(.+)$/mg, (_, p, v) => p + v.trim().replace(/[.:]/g, '-'))
+                    .replace(
+                        /^(\s+workflow:\s*)(.+)$/gm,
+                        (_, p, v) => p + v.trim().replace(/[.:]/g, '-'),
+                    ),
             );
 
             mkdirSafe(targetDir);
@@ -239,11 +245,12 @@ ${body}`;
         // Orphan Cleanup
         // ───────────────────────────────────────────────────────────────────────────
         if (fs.existsSync(source.target)) {
-            const existingSkillDirs = fs.readdirSync(source.target, { withFileTypes: true })
-                .filter(dirent => dirent.isDirectory())
-                .map(dirent => dirent.name);
+            const existingSkillDirs = fs
+                .readdirSync(source.target, { withFileTypes: true })
+                .filter((dirent) => dirent.isDirectory())
+                .map((dirent) => dirent.name);
 
-            existingSkillDirs.forEach(dir => {
+            existingSkillDirs.forEach((dir) => {
                 if (!activeSkills.has(dir)) cleanupOrphanSkill(dir, source.target);
             });
         }

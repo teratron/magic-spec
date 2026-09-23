@@ -32,25 +32,15 @@ const { hashFileSafe, normalizePath } = require('../utils');
  * `.design/` paths are workspace-rooted; `.design/RULES.md` is global.
  */
 const WHITELIST = {
-    'magic.spec': [
-        '.design/{ws}/specifications/**/*.md',
-        '.design/{ws}/INDEX.md',
-    ],
-    'magic.task': [
-        '.design/{ws}/PLAN.md',
-        '.design/{ws}/TASKS.md',
-        '.design/{ws}/tasks/**/*.md',
-    ],
+    'magic.spec': ['.design/{ws}/specifications/**/*.md', '.design/{ws}/INDEX.md'],
+    'magic.task': ['.design/{ws}/PLAN.md', '.design/{ws}/TASKS.md', '.design/{ws}/tasks/**/*.md'],
     'magic.run': [
         '.design/{ws}/TASKS.md',
         '.design/{ws}/STATE.md',
         '.design/{ws}/archives/**/*',
         '.design/{ws}/tasks/**/*.md',
     ],
-    'magic.rule': [
-        '.design/RULES.md',
-        '.design/{ws}/RULES.md',
-    ],
+    'magic.rule': ['.design/RULES.md', '.design/{ws}/RULES.md'],
 };
 
 /**
@@ -59,7 +49,7 @@ const WHITELIST = {
  * depending on whether the file is new).
  */
 const DEFAULT_CATEGORIES = {
-    'magic.spec': 'Changed',  // promoted to 'Added' if all matched files are new
+    'magic.spec': 'Changed', // promoted to 'Added' if all matched files are new
     'magic.task': 'Changed',
     'magic.run': 'Changed',
     'magic.rule': 'Changed',
@@ -84,7 +74,7 @@ function compileGlob(pattern) {
             if (pattern[i + 1] === '*') {
                 re += '.*';
                 i++;
-                if (pattern[i + 1] === '/') i++;  // consume trailing slash of `**/`
+                if (pattern[i + 1] === '/') i++; // consume trailing slash of `**/`
             } else {
                 re += '[^/]*';
             }
@@ -182,7 +172,10 @@ function gitChangedPaths(cwd) {
  */
 function gitFileStatus(cwd, relPath) {
     try {
-        const out = execSync(`git status --porcelain -- "${relPath}"`, { cwd, encoding: 'utf8' }).trim();
+        const out = execSync(`git status --porcelain -- "${relPath}"`, {
+            cwd,
+            encoding: 'utf8',
+        }).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);
         if (code.includes('A') || code === '??') return 'added';
@@ -218,7 +211,10 @@ function gitFileDiff(cwd, relPath) {
  */
 function gitFileNumstat(cwd, relPath) {
     try {
-        const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, { cwd, encoding: 'utf8' }).trim();
+        const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, {
+            cwd,
+            encoding: 'utf8',
+        }).trim();
         if (!out) return { added: 0, deleted: 0 };
         const [addStr, delStr] = out.split(/\s+/);
         return {
@@ -264,7 +260,7 @@ function diffSnapshots(prev, next) {
     const keys = new Set([...Object.keys(prev || {}), ...Object.keys(next || {})]);
     const out = [];
     for (const k of keys) {
-        if ((prev || {})[k] !== (next || {})[k]) out.push(k);
+        if (prev?.[k] !== next?.[k]) out.push(k);
     }
     return out;
 }
@@ -352,7 +348,10 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
 
     // Build next snapshot for state file (always — even when not significant,
     // so non-git mode can pick up future changes).
-    const nextSnapshot = snapshotHashes(cwd, patterns.filter((p) => !p.includes('*')));
+    const nextSnapshot = snapshotHashes(
+        cwd,
+        patterns.filter((p) => !p.includes('*')),
+    );
 
     return {
         significant,
@@ -361,7 +360,11 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
         defaultCategory,
         gitAvailable: probe.available,
         nextSnapshot,
-        reason: significant ? undefined : (probe.available ? 'no-whitelist-matches' : 'no-snapshot-diff'),
+        reason: significant
+            ? undefined
+            : probe.available
+              ? 'no-whitelist-matches'
+              : 'no-snapshot-diff',
     };
 }
 

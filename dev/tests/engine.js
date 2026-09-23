@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-const { test, describe, before, after } = require('node:test');
+const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
@@ -67,11 +67,16 @@ describe('Magic Engine Scripts', () => {
             execSync('git config user.email "test@example.com"', { cwd: tempDir, stdio: 'ignore' });
             execSync('git config user.name "Test User"', { cwd: tempDir, stdio: 'ignore' });
             // Initial commit with a baseline file
-            fs.writeFileSync(path.join(tempDir, 'README.md'), '# Test Project\n**Active Development** (v0.0.1)\n');
+            fs.writeFileSync(
+                path.join(tempDir, 'README.md'),
+                '# Test Project\n**Active Development** (v0.0.1)\n',
+            );
             execSync('git add .', { cwd: tempDir, stdio: 'ignore' });
             execSync('git commit -m "Initial commit"', { cwd: tempDir, stdio: 'ignore' });
         } catch (e) {
-            console.warn('Note: Git initialization failed in test, some tests may skip drift check.');
+            console.warn(
+                'Note: Git initialization failed in test, some tests may skip drift check.',
+            );
             console.error(e.message);
         }
     };
@@ -81,7 +86,10 @@ describe('Magic Engine Scripts', () => {
         scaffoldTempDirs(tempDir);
 
         copyDirShallow(scriptsDir, path.join(tempDir, '.magic', 'scripts'));
-        copyDirShallow(path.join(scriptsDir, 'lib'), path.join(tempDir, '.magic', 'scripts', 'lib'));
+        copyDirShallow(
+            path.join(scriptsDir, 'lib'),
+            path.join(tempDir, '.magic', 'scripts', 'lib'),
+        );
         copyDirShallow(devScriptsDir, path.join(tempDir, 'dev', 'scripts'));
 
         mirrorDevOnlyScripts(tempDir);
@@ -97,7 +105,9 @@ describe('Magic Engine Scripts', () => {
         if (dir && fs.existsSync(dir)) {
             try {
                 fs.rmSync(dir, { recursive: true, force: true });
-            } catch (e) { /* ignore */ }
+            } catch {
+                /* ignore */
+            }
         }
     };
 
@@ -114,7 +124,11 @@ describe('Magic Engine Scripts', () => {
     const runEngineMetaCheck = (tempDir) => {
         const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
         try {
-            const stdout = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' });
+            const stdout = execSync(`node "${metaScript}" --check`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+                stdio: 'pipe',
+            });
             return { failed: false, output: stdout };
         } catch (e) {
             return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
@@ -151,17 +165,25 @@ describe('Magic Engine Scripts', () => {
     // workspace.json with finalization enabled, a starting version, and the
     // paths those tests assert against. Caller supplies the workspace content,
     // then calls commitFixture() to establish a clean baseline.
-    const createFinalizeFixture = (tempDir, { workspace = 'main', version = '0.1.0', autoChangelog = false } = {}) => {
+    const createFinalizeFixture = (
+        tempDir,
+        { workspace = 'main', version = '0.1.0', autoChangelog = false } = {},
+    ) => {
         copyStateTemplate(tempDir);
         const designDir = path.join(tempDir, '.design');
         const wsDir = makeWorkspace(tempDir, workspace);
-        fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
-            default: workspace,
-            finalization: {
-                enabled: true, autoBump: true, autoChangelog,
-                versionPath: '.design/.version',
-            },
-        }));
+        fs.writeFileSync(
+            path.join(designDir, 'workspace.json'),
+            JSON.stringify({
+                default: workspace,
+                finalization: {
+                    enabled: true,
+                    autoBump: true,
+                    autoChangelog,
+                    versionPath: '.design/.version',
+                },
+            }),
+        );
         fs.writeFileSync(path.join(designDir, '.version'), version);
         return {
             designDir,
@@ -182,7 +204,9 @@ describe('Magic Engine Scripts', () => {
     // require()s phase-archiver.js and creates its workspace fixture in one
     // step — the pairing every phase-archiver test starts with.
     const requirePhaseArchiverWorkspace = (tempDir) => {
-        const archiver = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'));
+        const archiver = require(
+            path.join(tempDir, '.magic', 'scripts', 'lib', 'phase-archiver.js'),
+        );
         return { archiver, ...makeWorkspaceWithTasks(tempDir) };
     };
 
@@ -193,7 +217,7 @@ describe('Magic Engine Scripts', () => {
         fs.mkdirSync(specsDir, { recursive: true });
         fs.writeFileSync(
             path.join(specsDir, 'l1-core.md'),
-            '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n'
+            '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n',
         );
         return specsDir;
     };
@@ -209,16 +233,17 @@ describe('Magic Engine Scripts', () => {
     // `status` defaulting to `In Progress`. Every computeNextAction test that
     // needs the registry-table format (rather than the legacy inline-checkbox
     // format) builds it from here instead of re-typing the same array.
-    const registryTable = (status = 'In Progress') => [
-        '# Master Task Index',
-        '',
-        '## Active Phases',
-        '',
-        '| Phase | Description | Status |',
-        '| --- | --- | --- |',
-        `| [Phase 1](tasks/phase-1.md) | Bootstrap | \`${status}\` |`,
-        '',
-    ].join('\n');
+    const registryTable = (status = 'In Progress') =>
+        [
+            '# Master Task Index',
+            '',
+            '## Active Phases',
+            '',
+            '| Phase | Description | Status |',
+            '| --- | --- | --- |',
+            `| [Phase 1](tasks/phase-1.md) | Bootstrap | \`${status}\` |`,
+            '',
+        ].join('\n');
 
     // require()s update-state.js and creates a plain single-workspace fixture
     // in one step — the pairing every autoProgress/computeProgress test (§7e)
@@ -251,7 +276,11 @@ describe('Magic Engine Scripts', () => {
         const original = console.warn;
         const messages = [];
         console.warn = (...args) => messages.push(args.join(' '));
-        try { fn(); } finally { console.warn = original; }
+        try {
+            fn();
+        } finally {
+            console.warn = original;
+        }
         return messages;
     };
 
@@ -279,7 +308,10 @@ describe('Magic Engine Scripts', () => {
     // §6b start from before diverging on INDEX.md/PLAN.md content.
     const makeRegistryScanWorkspace = (tempDir) => {
         const { designDir, specsDir } = makeSpecWorkspace(tempDir);
-        fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+        fs.writeFileSync(
+            path.join(specsDir, 'l1-real.md'),
+            '# Real\n\n**Version:** 1.0.0\n**Status:** Stable\n',
+        );
         return { designDir, specsDir };
     };
 
@@ -287,10 +319,10 @@ describe('Magic Engine Scripts', () => {
     // returns the parsed --json result.
     const runCheckPrerequisites = (tempDir, ...extraArgs) => {
         const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
-        const output = execSync(
-            `node "${scriptPath}" --json ${extraArgs.join(' ')}`.trim(),
-            { cwd: tempDir, encoding: 'utf8' }
-        );
+        const output = execSync(`node "${scriptPath}" --json ${extraArgs.join(' ')}`.trim(), {
+            cwd: tempDir,
+            encoding: 'utf8',
+        });
         return JSON.parse(output);
     };
 
@@ -324,9 +356,14 @@ describe('Magic Engine Scripts', () => {
     const makeDebtWarningFinder = (tempDir, designDir) => (planBody, tasksBody) => {
         fs.writeFileSync(path.join(designDir, 'PLAN.md'), `# Plan\n\n## Backlog\n\n${planBody}\n`);
         if (tasksBody !== undefined) {
-            fs.writeFileSync(path.join(designDir, 'TASKS.md'), `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`);
+            fs.writeFileSync(
+                path.join(designDir, 'TASKS.md'),
+                `# Tasks\n\n## Active Phases\n\n${tasksBody}\n`,
+            );
         }
-        return runCheckPrerequisites(tempDir).warnings.find((w) => w.type === 'DESIGN_DEBT_PENDING');
+        return runCheckPrerequisites(tempDir).warnings.find(
+            (w) => w.type === 'DESIGN_DEBT_PENDING',
+        );
     };
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -363,7 +400,7 @@ describe('Magic Engine Scripts', () => {
         for (const name of forbidden) {
             assert.ok(
                 !fs.existsSync(path.join(magicRoot, name)),
-                `${name} must not exist inside .magic/ — relocate to dev/.cache/ or .design/.cache/`
+                `${name} must not exist inside .magic/ — relocate to dev/.cache/ or .design/.cache/`,
             );
         }
     });
@@ -382,7 +419,10 @@ describe('Magic Engine Scripts', () => {
         const relPath = '.magic/scripts/package.json';
         const absPath = path.join(repoRoot, relPath);
 
-        assert.ok(fs.existsSync(absPath), `${relPath} must exist — it pins CommonJS for the engine scripts`);
+        assert.ok(
+            fs.existsSync(absPath),
+            `${relPath} must exist — it pins CommonJS for the engine scripts`,
+        );
 
         const pkg = JSON.parse(fs.readFileSync(absPath, 'utf8'));
         assert.strictEqual(pkg.type, 'commonjs', `${relPath} must declare "type":"commonjs"`);
@@ -390,8 +430,12 @@ describe('Magic Engine Scripts', () => {
         // Untracked → omitted from the release archive → the boundary silently vanishes.
         if (!fs.existsSync(path.join(repoRoot, '.git'))) return; // not a git checkout: nothing to assert
         assert.doesNotThrow(
-            () => execSync(`git ls-files --error-unmatch "${relPath}"`, { cwd: repoRoot, stdio: 'pipe' }),
-            `${relPath} exists but is UNTRACKED — it will be missing from the release archive. Run: git add ${relPath}`
+            () =>
+                execSync(`git ls-files --error-unmatch "${relPath}"`, {
+                    cwd: repoRoot,
+                    stdio: 'pipe',
+                }),
+            `${relPath} exists but is UNTRACKED — it will be missing from the release archive. Run: git add ${relPath}`,
         );
     });
 
@@ -412,16 +456,18 @@ describe('Magic Engine Scripts', () => {
             execSync('git ls-files .magic', { cwd: repoRoot, encoding: 'utf8' })
                 .split(/\r?\n/)
                 .filter(Boolean)
-                .map((p) => p.slice('.magic/'.length))
+                .map((p) => p.slice('.magic/'.length)),
         );
 
-        const checksums = JSON.parse(fs.readFileSync(path.join(repoRoot, '.magic', '.checksums'), 'utf8'));
+        const checksums = JSON.parse(
+            fs.readFileSync(path.join(repoRoot, '.magic', '.checksums'), 'utf8'),
+        );
         const untracked = Object.keys(checksums).filter((rel) => !tracked.has(rel));
 
         assert.deepStrictEqual(
             untracked,
             [],
-            `.magic/.checksums references untracked path(s) — a release archive can never contain them, so every consumer's first commit would fail: ${untracked.join(', ')}`
+            `.magic/.checksums references untracked path(s) — a release archive can never contain them, so every consumer's first commit would fail: ${untracked.join(', ')}`,
         );
     });
 
@@ -444,7 +490,10 @@ describe('Magic Engine Scripts', () => {
                     if (!['history', '.git', 'node_modules'].includes(entry.name)) walk(full);
                 } else {
                     const at = fs.readFileSync(full).indexOf(0);
-                    if (at !== -1) found.push(`${path.relative(repoRoot, full).split(path.sep).join('/')}@${at}`);
+                    if (at !== -1)
+                        found.push(
+                            `${path.relative(repoRoot, full).split(path.sep).join('/')}@${at}`,
+                        );
                 }
             }
         };
@@ -452,7 +501,11 @@ describe('Magic Engine Scripts', () => {
             if (fs.existsSync(path.join(repoRoot, dir))) walk(path.join(repoRoot, dir));
         }
 
-        assert.deepStrictEqual(found, [], `raw NUL byte(s) (file@offset) — write the \\0 escape instead: ${found.join(', ')}`);
+        assert.deepStrictEqual(
+            found,
+            [],
+            `raw NUL byte(s) (file@offset) — write the \\0 escape instead: ${found.join(', ')}`,
+        );
     });
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -473,10 +526,12 @@ describe('Magic Engine Scripts', () => {
 
             generateChecksums(tempDir);
 
-            const checksums = JSON.parse(fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'));
+            const checksums = JSON.parse(
+                fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'),
+            );
             assert.ok(
                 !Object.keys(checksums).some((rel) => rel.startsWith('.foreign-cache/')),
-                'a .gitignored directory inside .magic/ must never enter the manifest'
+                'a .gitignored directory inside .magic/ must never enter the manifest',
             );
         } finally {
             cleanup(tempDir);
@@ -489,7 +544,11 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.gitignore'), '.foreign-cache/\n');
             generateChecksums(tempDir);
 
-            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'baseline --check must be clean');
+            assert.strictEqual(
+                runEngineMetaCheck(tempDir).failed,
+                false,
+                'baseline --check must be clean',
+            );
 
             // A foreign tool (unrelated to the engine) drops a cache file inside
             // .magic/ after install — exactly how `.fallow/` appeared in engine
@@ -500,8 +559,16 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(strayDir, 'data.bin'), 'volatile');
 
             const after = runEngineMetaCheck(tempDir);
-            assert.strictEqual(after.failed, false, 'a .gitignored file appearing inside .magic/ must never be reported as drift');
-            assert.doesNotMatch(after.output, /Detected change/, 'gitignored content must not surface as a detected change');
+            assert.strictEqual(
+                after.failed,
+                false,
+                'a .gitignored file appearing inside .magic/ must never be reported as drift',
+            );
+            assert.doesNotMatch(
+                after.output,
+                /Detected change/,
+                'gitignored content must not surface as a detected change',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -524,8 +591,16 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tempDir, '.gitignore'), '.magic/\n');
 
             const result = runEngineMetaCheck(tempDir);
-            assert.strictEqual(result.failed, false, 'unmodified manifested files must not be reported as missing merely because the consumer gitignores .magic/ wholesale');
-            assert.doesNotMatch(result.output, /Missing engine file/, 'a manifested, unmodified file must never read as missing due to the consumer\'s own .gitignore');
+            assert.strictEqual(
+                result.failed,
+                false,
+                'unmodified manifested files must not be reported as missing merely because the consumer gitignores .magic/ wholesale',
+            );
+            assert.doesNotMatch(
+                result.output,
+                /Missing engine file/,
+                "a manifested, unmodified file must never read as missing due to the consumer's own .gitignore",
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -540,7 +615,10 @@ describe('Magic Engine Scripts', () => {
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'init.js');
 
             // 1. Standard init
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, env: { ...process.env, MAGIC_DESIGN_DIR: '.design' } });
+            execSync(`node "${scriptPath}"`, {
+                cwd: tempDir,
+                env: { ...process.env, MAGIC_DESIGN_DIR: '.design' },
+            });
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'RULES.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'main', 'INDEX.md')));
@@ -549,7 +627,7 @@ describe('Magic Engine Scripts', () => {
             const wsPath = path.join('.design', 'test-ws');
             execSync(`node "${scriptPath}"`, {
                 cwd: tempDir,
-                env: { ...process.env, MAGIC_DESIGN_DIR: wsPath }
+                env: { ...process.env, MAGIC_DESIGN_DIR: wsPath },
             });
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, wsPath, 'specifications')));
@@ -567,33 +645,48 @@ describe('Magic Engine Scripts', () => {
             // Setup template
             const templatesDir = path.join(tempDir, '.magic', 'templates');
             if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
-            fs.writeFileSync(path.join(templatesDir, 'contributing.md'), '# Contributing v{{VERSION}}\n\n## Rules\n{{rules_block}}\n\n## Registry\n{{registry_block}}');
+            fs.writeFileSync(
+                path.join(templatesDir, 'contributing.md'),
+                '# Contributing v{{VERSION}}\n\n## Rules\n{{rules_block}}\n\n## Registry\n{{registry_block}}',
+            );
 
             // Setup .design content
             fs.mkdirSync(path.join(tempDir, '.design'));
-            fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '## 1. Concept\nRule 1\n## 7. Misc\n');
-            fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '## Workspaces\n| test | desc |\n## Meta\n');
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'RULES.md'),
+                '## 1. Concept\nRule 1\n## 7. Misc\n',
+            );
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'INDEX.md'),
+                '## Workspaces\n| test | desc |\n## Meta\n',
+            );
 
             // Setup docs and workflows for trigger sync test
             const docsDir = path.join(tempDir, 'docs');
             fs.mkdirSync(docsDir);
             fs.writeFileSync(
                 path.join(docsDir, 'test-wf.md'),
-                '# Test Workflow\n\n**Triggers:** `old-trigger`\n\n**Slash command:** `/old-command`\n\n## Sync Note\n\nSynchronized with engine workflows on 2026-01-01 (v0.0.1).\n'
+                '# Test Workflow\n\n**Triggers:** `old-trigger`\n\n**Slash command:** `/old-command`\n\n## Sync Note\n\nSynchronized with engine workflows on 2026-01-01 (v0.0.1).\n',
             );
 
             const workflowsDir = path.join(tempDir, 'workflows');
             fs.mkdirSync(workflowsDir);
-            fs.writeFileSync(path.join(workflowsDir, 'magic.test-wf.md'), '---\ndescription: test\n---\n**Triggers:** `new-trigger`, `another-trigger`');
+            fs.writeFileSync(
+                path.join(workflowsDir, 'magic.test-wf.md'),
+                '---\ndescription: test\n---\n**Triggers:** `new-trigger`, `another-trigger`',
+            );
 
             // Second doc/workflow pair: pins the "[arg]" slash-command suffix
             // preservation branch (sync-docs.js syncSlashCommandLine), the
             // shape every multi-arg command doc actually uses.
             fs.writeFileSync(
                 path.join(docsDir, 'arg-wf.md'),
-                '# Arg Workflow\n\n**Slash command:** `/old-arg-command [old]`\n'
+                '# Arg Workflow\n\n**Slash command:** `/old-arg-command [old]`\n',
             );
-            fs.writeFileSync(path.join(workflowsDir, 'magic.arg-wf.md'), '---\ndescription: arg test\n---\n');
+            fs.writeFileSync(
+                path.join(workflowsDir, 'magic.arg-wf.md'),
+                '---\ndescription: arg test\n---\n',
+            );
 
             // A doc with no matching workflows/magic.{name}.md — pins the
             // "no source → leave doc alone" skip branch (sync-docs.js
@@ -619,18 +712,32 @@ describe('Magic Engine Scripts', () => {
             assert.ok(docContent.includes('v1.0.0'), 'Doc version should be updated');
             assert.ok(docContent.includes('`new-trigger`'), 'Doc triggers should be updated');
             assert.ok(docContent.includes('`another-trigger`'), 'Doc triggers should be updated');
-            assert.ok(docContent.includes('**Slash command:** `/magic.test-wf`'), 'Doc slash command should be updated');
+            assert.ok(
+                docContent.includes('**Slash command:** `/magic.test-wf`'),
+                'Doc slash command should be updated',
+            );
             // Sync Note refreshes on a first-ever sync (state starts empty,
             // so wfChanged is unconditionally true).
-            assert.match(docContent, /Synchronized with engine workflows on \d{4}-\d{2}-\d{2} \(v1\.0\.0\)\./, 'Sync Note should refresh on first sync');
+            assert.match(
+                docContent,
+                /Synchronized with engine workflows on \d{4}-\d{2}-\d{2} \(v1\.0\.0\)\./,
+                'Sync Note should refresh on first sync',
+            );
 
             // The "[arg]" suffix must survive, only the command name changes.
             const argDocContent = fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8');
-            assert.ok(argDocContent.includes('**Slash command:** `/magic.arg-wf [old]`'), 'the [arg] suffix must be preserved, only the command name replaced');
+            assert.ok(
+                argDocContent.includes('**Slash command:** `/magic.arg-wf [old]`'),
+                'the [arg] suffix must be preserved, only the command name replaced',
+            );
 
             // The orphan doc has no matching workflow source and must be
             // byte-for-byte untouched.
-            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'orphan.md'), 'utf8'), orphanContent, 'a doc with no matching workflow source must be left alone');
+            assert.strictEqual(
+                fs.readFileSync(path.join(docsDir, 'orphan.md'), 'utf8'),
+                orphanContent,
+                'a doc with no matching workflow source must be left alone',
+            );
 
             // Idempotent second run: nothing under workflows/, .design/, or
             // .magic/ changed, so every doc must come out byte-identical —
@@ -642,9 +749,21 @@ describe('Magic Engine Scripts', () => {
                 'CONTRIBUTING.md': contributing,
             };
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
-            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'test-wf.md'), 'utf8'), beforeSecondRun['test-wf.md'], 'an unchanged workflow source must not re-stamp the Sync Note on a second run');
-            assert.strictEqual(fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8'), beforeSecondRun['arg-wf.md'], 'an unchanged workflow source must leave the doc byte-identical on a second run');
-            assert.strictEqual(fs.readFileSync(path.join(tempDir, 'CONTRIBUTING.md'), 'utf8'), beforeSecondRun['CONTRIBUTING.md'], 'CONTRIBUTING.md must be byte-identical when none of its sources changed');
+            assert.strictEqual(
+                fs.readFileSync(path.join(docsDir, 'test-wf.md'), 'utf8'),
+                beforeSecondRun['test-wf.md'],
+                'an unchanged workflow source must not re-stamp the Sync Note on a second run',
+            );
+            assert.strictEqual(
+                fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8'),
+                beforeSecondRun['arg-wf.md'],
+                'an unchanged workflow source must leave the doc byte-identical on a second run',
+            );
+            assert.strictEqual(
+                fs.readFileSync(path.join(tempDir, 'CONTRIBUTING.md'), 'utf8'),
+                beforeSecondRun['CONTRIBUTING.md'],
+                'CONTRIBUTING.md must be byte-identical when none of its sources changed',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -660,36 +779,61 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { indexPath } = makeDesignDir(tempDir);
-            const buildIndex = (workspacesTable) => [
-                '# Index',
-                '',
-                '**Version:** 1.0.0',
-                '- **Last Updated**: 2026-01-01',
-                '',
-                '## Workspaces',
-                '',
-                workspacesTable,
-                '',
-                '## Document History',
-                '',
-                '| Version | Date | Author | Description |',
-                '| :--- | :--- | :--- | :--- |',
-                '| 0.9.0 | 2025-12-01 | Agent | Initial |',
-                '',
-            ].join('\n');
+            const buildIndex = (workspacesTable) =>
+                [
+                    '# Index',
+                    '',
+                    '**Version:** 1.0.0',
+                    '- **Last Updated**: 2026-01-01',
+                    '',
+                    '## Workspaces',
+                    '',
+                    workspacesTable,
+                    '',
+                    '## Document History',
+                    '',
+                    '| Version | Date | Author | Description |',
+                    '| :--- | :--- | :--- | :--- |',
+                    '| 0.9.0 | 2025-12-01 | Agent | Initial |',
+                    '',
+                ].join('\n');
             fs.writeFileSync(indexPath, buildIndex('| root | seed |'));
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-project-meta.js');
-            const run = (extraArgs = '') => execSync(`node "${scriptPath}" -m "test change"${extraArgs}`, { cwd: tempDir, encoding: 'utf8' });
+            const run = (extraArgs = '') =>
+                execSync(`node "${scriptPath}" -m "test change"${extraArgs}`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                });
 
             // (a) First run: structural digest is new (no state file yet) → bump + stamp + history row.
             run();
             const afterFirst = fs.readFileSync(indexPath, 'utf8');
-            assert.match(afterFirst, /\*\*Version:\*\* 1\.0\.1/, 'first run must bump the patch version');
-            assert.match(afterFirst, /- \*\*Last Updated\*\*: \d{4}-\d{2}-\d{2}/, 'Last Updated must be stamped');
-            assert.doesNotMatch(afterFirst, /- \*\*Last Updated\*\*: 2026-01-01/, 'the stale Last Updated date must not survive');
-            assert.match(afterFirst, /\| 1\.0\.1 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/, 'a new history row must be inserted right after the divider');
-            assert.match(afterFirst, /0\.9\.0 \| 2025-12-01 \| Agent \| Initial/, 'the prior history row must survive untouched');
+            assert.match(
+                afterFirst,
+                /\*\*Version:\*\* 1\.0\.1/,
+                'first run must bump the patch version',
+            );
+            assert.match(
+                afterFirst,
+                /- \*\*Last Updated\*\*: \d{4}-\d{2}-\d{2}/,
+                'Last Updated must be stamped',
+            );
+            assert.doesNotMatch(
+                afterFirst,
+                /- \*\*Last Updated\*\*: 2026-01-01/,
+                'the stale Last Updated date must not survive',
+            );
+            assert.match(
+                afterFirst,
+                /\| 1\.0\.1 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/,
+                'a new history row must be inserted right after the divider',
+            );
+            assert.match(
+                afterFirst,
+                /0\.9\.0 \| 2025-12-01 \| Agent \| Initial/,
+                'the prior history row must survive untouched',
+            );
 
             // (b) Second run, no structural change (only volatile fields would
             // differ, and they were already stripped when the digest was taken)
@@ -697,8 +841,16 @@ describe('Magic Engine Scripts', () => {
             // own stated reason for existing.
             const stdout = run();
             const afterSecond = fs.readFileSync(indexPath, 'utf8');
-            assert.strictEqual(afterSecond, afterFirst, 'no structural change → file must be byte-identical after a second run');
-            assert.match(stdout, /no structural change, skipping bump/, 'the skip must be reported, not silent');
+            assert.strictEqual(
+                afterSecond,
+                afterFirst,
+                'no structural change → file must be byte-identical after a second run',
+            );
+            assert.match(
+                stdout,
+                /no structural change, skipping bump/,
+                'the skip must be reported, not silent',
+            );
 
             // (c) A genuine structural change (new workspace row) → bump again,
             // same day, same message → Smart-History dedup must condense into
@@ -707,20 +859,43 @@ describe('Magic Engine Scripts', () => {
             // not a fresh buildIndex() — a full rewrite would discard the
             // 1.0.1 bump and history row run (a) already wrote, making a
             // rebuilt-from-scratch fixture indistinguishable from run (a) itself.
-            fs.writeFileSync(indexPath, afterSecond.replace('| root | seed |', '| root | seed |\n| extra | added |'));
+            fs.writeFileSync(
+                indexPath,
+                afterSecond.replace('| root | seed |', '| root | seed |\n| extra | added |'),
+            );
             run();
             const afterThird = fs.readFileSync(indexPath, 'utf8');
-            assert.match(afterThird, /\*\*Version:\*\* 1\.0\.2/, 'a genuine structural change must bump the version again');
-            assert.match(afterThird, /\| 1\.0\.1 - 1\.0\.2 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/, 'same-day + same-message must condense into a version range, not a duplicate row');
-            assert.strictEqual((afterThird.match(/test change/g) || []).length, 1, 'the dedup must leave exactly one row for the condensed range');
+            assert.match(
+                afterThird,
+                /\*\*Version:\*\* 1\.0\.2/,
+                'a genuine structural change must bump the version again',
+            );
+            assert.match(
+                afterThird,
+                /\| 1\.0\.1 - 1\.0\.2 \| \d{4}-\d{2}-\d{2} \| Agent \| test change \|/,
+                'same-day + same-message must condense into a version range, not a duplicate row',
+            );
+            assert.strictEqual(
+                (afterThird.match(/test change/g) || []).length,
+                1,
+                'the dedup must leave exactly one row for the condensed range',
+            );
 
             // (d) --force bypasses the idempotency check even with zero
             // structural change — the documented escape hatch.
             const beforeForce = fs.readFileSync(indexPath, 'utf8');
             run(' --force');
             const afterForce = fs.readFileSync(indexPath, 'utf8');
-            assert.notStrictEqual(afterForce, beforeForce, '--force must bump even without a structural change');
-            assert.match(afterForce, /\*\*Version:\*\* 1\.0\.3/, '--force must still bump the patch version');
+            assert.notStrictEqual(
+                afterForce,
+                beforeForce,
+                '--force must bump even without a structural change',
+            );
+            assert.match(
+                afterForce,
+                /\*\*Version:\*\* 1\.0\.3/,
+                '--force must still bump the patch version',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -744,28 +919,53 @@ describe('Magic Engine Scripts', () => {
             // is the fallback when the bulleted form is absent.
             assert.strictEqual(
                 upm.stampLastUpdated('- **Last Updated**: 2020-01-01', '2026-05-05'),
-                '- **Last Updated**: 2026-05-05'
+                '- **Last Updated**: 2026-05-05',
             );
             assert.strictEqual(
                 upm.stampLastUpdated('**Last Updated** | 2020-01-01', '2026-05-05'),
-                '**Last Updated** | 2026-05-05'
+                '**Last Updated** | 2026-05-05',
             );
 
             // updateFileMeta as a direct unit call (bypassing the CLI layer
             // entirely): first call bumps on a fresh digest, second call with
             // byte-identical content is idempotent.
             const filePath = path.join(tempDir, 'unit-index.md');
-            const seed = '# Index\n\n**Version:** 1.0.0\n\n## Document History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| 0.9.0 | 2025-01-01 | Agent | Seed |\n';
+            const seed =
+                '# Index\n\n**Version:** 1.0.0\n\n## Document History\n\n| Version | Date | Author | Description |\n| :--- | :--- | :--- | :--- |\n| 0.9.0 | 2025-01-01 | Agent | Seed |\n';
             fs.writeFileSync(filePath, seed);
             const state = {};
-            const changed1 = upm.updateFileMeta(filePath, '2026-05-05', 'unit test change', state, 'unit');
-            assert.strictEqual(changed1, true, 'a fresh digest must always be treated as a structural change');
+            const changed1 = upm.updateFileMeta(
+                filePath,
+                '2026-05-05',
+                'unit test change',
+                state,
+                'unit',
+            );
+            assert.strictEqual(
+                changed1,
+                true,
+                'a fresh digest must always be treated as a structural change',
+            );
             const afterFirst = fs.readFileSync(filePath, 'utf8');
             assert.match(afterFirst, /\*\*Version:\*\* 1\.0\.1/);
 
-            const changed2 = upm.updateFileMeta(filePath, '2026-05-06', 'unit test change', state, 'unit');
-            assert.strictEqual(changed2, false, 'an unchanged structural digest must skip the bump on the second call');
-            assert.strictEqual(fs.readFileSync(filePath, 'utf8'), afterFirst, 'a skipped bump must leave the file untouched');
+            const changed2 = upm.updateFileMeta(
+                filePath,
+                '2026-05-06',
+                'unit test change',
+                state,
+                'unit',
+            );
+            assert.strictEqual(
+                changed2,
+                false,
+                'an unchanged structural digest must skip the bump on the second call',
+            );
+            assert.strictEqual(
+                fs.readFileSync(filePath, 'utf8'),
+                afterFirst,
+                'a skipped bump must leave the file untouched',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -775,26 +975,41 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { indexPath } = makeDesignDir(tempDir);
-            fs.writeFileSync(indexPath, [
-                '# Index',
-                '',
-                '**Version:** 2.0.0',
-                '',
-                '## Document History',
-                '',
-                '| Version | Date | Description |',
-                '| :--- | :--- | :--- |',
-                '| 1.9.0 | 2025-12-01 | Initial |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                indexPath,
+                [
+                    '# Index',
+                    '',
+                    '**Version:** 2.0.0',
+                    '',
+                    '## Document History',
+                    '',
+                    '| Version | Date | Description |',
+                    '| :--- | :--- | :--- |',
+                    '| 1.9.0 | 2025-12-01 | Initial |',
+                    '',
+                ].join('\n'),
+            );
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'update-project-meta.js');
             execSync(`node "${scriptPath}" -m "legacy table"`, { cwd: tempDir, stdio: 'pipe' });
 
             const result = fs.readFileSync(indexPath, 'utf8');
-            assert.match(result, /\*\*Version:\*\* 2\.0\.1/, '3-column table must still bump the version');
-            assert.match(result, /\| 2\.0\.1 \| \d{4}-\d{2}-\d{2} \| legacy table \|/, 'the 3-column row must carry no Author cell');
-            assert.doesNotMatch(result, /Agent/, 'a 3-column table must never gain a 4th (Author) cell');
+            assert.match(
+                result,
+                /\*\*Version:\*\* 2\.0\.1/,
+                '3-column table must still bump the version',
+            );
+            assert.match(
+                result,
+                /\| 2\.0\.1 \| \d{4}-\d{2}-\d{2} \| legacy table \|/,
+                'the 3-column row must carry no Author cell',
+            );
+            assert.doesNotMatch(
+                result,
+                /Agent/,
+                'a 3-column table must never gain a 4th (Author) cell',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -807,11 +1022,17 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             fs.mkdirSync(path.join(tempDir, '.design'));
-            fs.writeFileSync(path.join(tempDir, 'package.json'), '{"name":"fixture","version":"1.0.0"}\n');
+            fs.writeFileSync(
+                path.join(tempDir, 'package.json'),
+                '{"name":"fixture","version":"1.0.0"}\n',
+            );
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
             execSync(`node "${scriptPath}"`, { cwd: tempDir });
 
-            const contextContent = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+            const contextContent = fs.readFileSync(
+                path.join(tempDir, '.design', 'CONTEXT.md'),
+                'utf8',
+            );
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'CONTEXT.md')));
             assert.ok(contextContent.includes('Node.js'), 'Should detect Node.js technology');
         } finally {
@@ -855,7 +1076,11 @@ describe('Magic Engine Scripts', () => {
             generateChecksums(tempDir);
 
             // Control — pristine tree must pass (guards against false positives).
-            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'an intact engine must pass --check');
+            assert.strictEqual(
+                runEngineMetaCheck(tempDir).failed,
+                false,
+                'an intact engine must pass --check',
+            );
 
             // `init.js` is tracked in the manifest and not required by update-engine-meta.
             const victim = path.join(tempDir, '.magic', 'scripts', 'init.js');
@@ -872,11 +1097,20 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 fs.readFileSync(path.join(tempDir, '.magic', '.version'), 'utf8').trim(),
                 '1.0.1',
-                'a removed engine file is a change and must bump the version'
+                'a removed engine file is a change and must bump the version',
             );
-            const regenerated = JSON.parse(fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'));
-            assert.ok(!regenerated['scripts/init.js'], 'the regenerated manifest must drop the removed file');
-            assert.strictEqual(runEngineMetaCheck(tempDir).failed, false, 'after regeneration the engine is consistent again');
+            const regenerated = JSON.parse(
+                fs.readFileSync(path.join(tempDir, '.magic', '.checksums'), 'utf8'),
+            );
+            assert.ok(
+                !regenerated['scripts/init.js'],
+                'the regenerated manifest must drop the removed file',
+            );
+            assert.strictEqual(
+                runEngineMetaCheck(tempDir).failed,
+                false,
+                'after regeneration the engine is consistent again',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -895,16 +1129,29 @@ describe('Magic Engine Scripts', () => {
         const devRepoDir = createTempWorkspace();
         const consumerDir = createTempWorkspace();
         try {
-            for (const [tempDir, label] of [[devRepoDir, 'dev-repo'], [consumerDir, 'consumer']]) {
+            for (const [tempDir, label] of [
+                [devRepoDir, 'dev-repo'],
+                [consumerDir, 'consumer'],
+            ]) {
                 generateChecksums(tempDir);
                 fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
-                fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), [
-                    '# Project Specification Index', '',
-                    '**Version:** 1.0.0', '**Status:** Active', '**Engine Version:** 0.0.0', '',
-                ].join('\n'));
+                fs.writeFileSync(
+                    path.join(tempDir, '.design', 'INDEX.md'),
+                    [
+                        '# Project Specification Index',
+                        '',
+                        '**Version:** 1.0.0',
+                        '**Status:** Active',
+                        '**Engine Version:** 0.0.0',
+                        '',
+                    ].join('\n'),
+                );
                 // Trigger drift so the write branch runs (same technique as
                 // the "should bump version on engine change" case above).
-                fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'init.js'), `\n// drift ${label}\n`);
+                fs.appendFileSync(
+                    path.join(tempDir, '.magic', 'scripts', 'init.js'),
+                    `\n// drift ${label}\n`,
+                );
             }
 
             // Consumer-style fixture: remove the snapshot guard script only. The
@@ -917,31 +1164,48 @@ describe('Magic Engine Scripts', () => {
             // `2>&1`: the consumer-branch message is `console.warn` (stderr),
             // and `execSync`'s return value is stdout only — without merging,
             // the very warning this case exists to pin is silently dropped.
-            const runWrite = (tempDir) => execSync(
-                `node "${path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js')}" 2>&1`,
-                { cwd: tempDir, encoding: 'utf8' }
-            );
+            const runWrite = (tempDir) =>
+                execSync(
+                    `node "${path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js')}" 2>&1`,
+                    { cwd: tempDir, encoding: 'utf8' },
+                );
 
             const devOut = runWrite(devRepoDir);
             const devIndex = fs.readFileSync(path.join(devRepoDir, '.design', 'INDEX.md'), 'utf8');
-            const devVersion = fs.readFileSync(path.join(devRepoDir, '.magic', '.version'), 'utf8').trim();
+            const devVersion = fs
+                .readFileSync(path.join(devRepoDir, '.magic', '.version'), 'utf8')
+                .trim();
             assert.match(
-                devIndex, new RegExp(`\\*\\*Engine Version:\\*\\* ${devVersion.replace(/\./g, '\\.')}`),
-                'dev-repo: .design/INDEX.md Engine Version must match the freshly-bumped .magic/.version'
+                devIndex,
+                new RegExp(`\\*\\*Engine Version:\\*\\* ${devVersion.replace(/\./g, '\\.')}`),
+                'dev-repo: .design/INDEX.md Engine Version must match the freshly-bumped .magic/.version',
             );
-            assert.match(devOut, /Engine Version snapshot synced/, 'dev-repo: sync must run and log');
+            assert.match(
+                devOut,
+                /Engine Version snapshot synced/,
+                'dev-repo: sync must run and log',
+            );
 
             const consumerOut = runWrite(consumerDir);
-            const consumerIndex = fs.readFileSync(path.join(consumerDir, '.design', 'INDEX.md'), 'utf8');
-            assert.match(
-                consumerIndex, /\*\*Engine Version:\*\* 0\.0\.0/,
-                'consumer install: Engine Version snapshot must be untouched'
+            const consumerIndex = fs.readFileSync(
+                path.join(consumerDir, '.design', 'INDEX.md'),
+                'utf8',
             );
             assert.match(
-                consumerOut, /sync-engine-snapshot\.js not found/,
-                'consumer install: the skip must be logged, not silent'
+                consumerIndex,
+                /\*\*Engine Version:\*\* 0\.0\.0/,
+                'consumer install: Engine Version snapshot must be untouched',
             );
-            assert.match(consumerOut, /Engine metadata and version updated/, 'the rest of the write branch must still complete when only the snapshot script is absent');
+            assert.match(
+                consumerOut,
+                /sync-engine-snapshot\.js not found/,
+                'consumer install: the skip must be logged, not silent',
+            );
+            assert.match(
+                consumerOut,
+                /Engine metadata and version updated/,
+                'the rest of the write branch must still complete when only the snapshot script is absent',
+            );
         } finally {
             cleanup(devRepoDir);
             cleanup(consumerDir);
@@ -970,7 +1234,8 @@ describe('Magic Engine Scripts', () => {
         fs.writeFileSync(path.join(tempDir, '.magic', 'spec.md'), '# spec\n');
         fs.writeFileSync(path.join(tempDir, '.magic', 'task.md'), '# task\n');
         generateChecksums(tempDir);
-        if (userInstallation) fs.rmSync(path.join(tempDir, 'dev'), { recursive: true, force: true });
+        if (userInstallation)
+            fs.rmSync(path.join(tempDir, 'dev'), { recursive: true, force: true });
         fs.appendFileSync(path.join(tempDir, '.magic', 'spec.md'), '<!-- local note -->\n');
         fs.writeFileSync(path.join(tempDir, '.magic', 'task.md'), '# task\r\n');
     };
@@ -981,7 +1246,7 @@ describe('Magic Engine Scripts', () => {
         const res = spawnSync(
             process.execPath,
             [path.join(tempDir, '.magic', 'scripts', script), ...args],
-            { cwd: tempDir, encoding: 'utf8' }
+            { cwd: tempDir, encoding: 'utf8' },
         );
         return { status: res.status, out: `${res.stdout || ''}${res.stderr || ''}` };
     };
@@ -999,18 +1264,43 @@ describe('Magic Engine Scripts', () => {
             for (const attempt of [1, 2]) {
                 // Through the executor, as the warning's own hint invokes it.
                 const run = runMeta(tempDir, 'executor.js', 'update-engine-meta');
-                assert.notStrictEqual(run.status, 0, `attempt ${attempt}: drift that cannot be resolved must not exit 0`);
-                assert.match(run.out, /spec\.md/, `attempt ${attempt}: the drifted files must be named`);
-                assert.match(run.out, /task\.md/, `attempt ${attempt}: the drifted files must be named`);
-                assert.match(run.out, /release archive/, `attempt ${attempt}: the only real remedy must be stated`);
+                assert.notStrictEqual(
+                    run.status,
+                    0,
+                    `attempt ${attempt}: drift that cannot be resolved must not exit 0`,
+                );
+                assert.match(
+                    run.out,
+                    /spec\.md/,
+                    `attempt ${attempt}: the drifted files must be named`,
+                );
+                assert.match(
+                    run.out,
+                    /task\.md/,
+                    `attempt ${attempt}: the drifted files must be named`,
+                );
+                assert.match(
+                    run.out,
+                    /release archive/,
+                    `attempt ${attempt}: the only real remedy must be stated`,
+                );
                 assert.doesNotMatch(
-                    run.out, /Engine metadata and version updated/,
-                    `attempt ${attempt}: must not claim a success that changed nothing`
+                    run.out,
+                    /Engine metadata and version updated/,
+                    `attempt ${attempt}: must not claim a success that changed nothing`,
                 );
             }
 
-            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'the engine version must not move');
-            assert.strictEqual(fs.readFileSync(checksumsPath, 'utf8'), manifestBefore, 'the manifest must be left untouched');
+            assert.strictEqual(
+                fs.readFileSync(versionPath, 'utf8').trim(),
+                '1.0.0',
+                'the engine version must not move',
+            );
+            assert.strictEqual(
+                fs.readFileSync(checksumsPath, 'utf8'),
+                manifestBefore,
+                'the manifest must be left untouched',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1024,16 +1314,25 @@ describe('Magic Engine Scripts', () => {
             makeDriftedEngine(devDir, { userInstallation: false });
 
             const user = runMeta(userDir, 'update-engine-meta.js', '--check');
-            assert.strictEqual(user.status, 1, 'drift must fail --check (the pre-commit hook relies on it)');
+            assert.strictEqual(
+                user.status,
+                1,
+                'drift must fail --check (the pre-commit hook relies on it)',
+            );
             assert.match(user.out, /release archive/, 'user installation: the remedy is a restore');
             assert.doesNotMatch(
-                user.out, /update-engine-meta/,
-                'user installation: must not point at a command it cannot use — regenerating the manifest would mask the change'
+                user.out,
+                /update-engine-meta/,
+                'user installation: must not point at a command it cannot use — regenerating the manifest would mask the change',
             );
 
             const dev = runMeta(devDir, 'update-engine-meta.js', '--check');
             assert.strictEqual(dev.status, 1, 'dev repo: drift must fail --check');
-            assert.match(dev.out, /update-engine-meta/, 'dev repo: C14 is the remedy and must stay named');
+            assert.match(
+                dev.out,
+                /update-engine-meta/,
+                'dev repo: C14 is the remedy and must stay named',
+            );
         } finally {
             cleanup(userDir);
             cleanup(devDir);
@@ -1046,22 +1345,34 @@ describe('Magic Engine Scripts', () => {
         try {
             makeDriftedEngine(userDir, { userInstallation: true });
             makeDriftedEngine(devDir, { userInstallation: false });
-            const integrity = (tempDir) => runCheckPrerequisites(tempDir).warnings.filter((w) => w.type === 'ENGINE_INTEGRITY');
+            const integrity = (tempDir) =>
+                runCheckPrerequisites(tempDir).warnings.filter(
+                    (w) => w.type === 'ENGINE_INTEGRITY',
+                );
 
             const user = integrity(userDir);
             assert.deepStrictEqual(
-                user.map((w) => w.message.match(/'\.magic\/([^']+)'/)[1]).sort(), ['spec.md', 'task.md'],
-                'user installation: exactly the two drifted files are reported'
+                user.map((w) => w.message.match(/'\.magic\/([^']+)'/)[1]).sort(),
+                ['spec.md', 'task.md'],
+                'user installation: exactly the two drifted files are reported',
             );
             for (const w of user) {
                 assert.match(w.message, /release archive/, `user installation: ${w.message}`);
-                assert.strictEqual(w.fix, null, 'user installation: there is no automated fix to suggest');
+                assert.strictEqual(
+                    w.fix,
+                    null,
+                    'user installation: there is no automated fix to suggest',
+                );
             }
 
             const dev = integrity(devDir);
             assert.strictEqual(dev.length, 2, 'dev repo: the same two files are reported');
             for (const w of dev) {
-                assert.match(w.fix, /update-engine-meta/, 'dev repo: the C14 command stays the suggested fix');
+                assert.match(
+                    w.fix,
+                    /update-engine-meta/,
+                    'dev repo: the C14 command stays the suggested fix',
+                );
             }
         } finally {
             cleanup(userDir);
@@ -1086,17 +1397,35 @@ describe('Magic Engine Scripts', () => {
     test('describeManifestDelta tells a line-endings-only difference from a content difference, in both directions', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { describeManifestDelta } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+            const { describeManifestDelta } = require(
+                path.join(tempDir, '.magic', 'scripts', 'utils.js'),
+            );
             const file = path.join(tempDir, 'probe.md');
 
             // [on disk, what the manifest recorded, expected verdict]
             const cases = [
-                ['a\r\nb\r\n', 'a\nb\n', { lineEndingsOnly: true, found: 'CRLF', expectedEol: 'LF' }],
-                ['a\nb\n', 'a\r\nb\r\n', { lineEndingsOnly: true, found: 'LF', expectedEol: 'CRLF' }],
-                ['a\r\nb\n', 'a\nb\n', { lineEndingsOnly: true, found: 'mixed', expectedEol: 'LF' }],
+                [
+                    'a\r\nb\r\n',
+                    'a\nb\n',
+                    { lineEndingsOnly: true, found: 'CRLF', expectedEol: 'LF' },
+                ],
+                [
+                    'a\nb\n',
+                    'a\r\nb\r\n',
+                    { lineEndingsOnly: true, found: 'LF', expectedEol: 'CRLF' },
+                ],
+                [
+                    'a\r\nb\n',
+                    'a\nb\n',
+                    { lineEndingsOnly: true, found: 'mixed', expectedEol: 'LF' },
+                ],
                 ['a\nc\n', 'a\nb\n', { lineEndingsOnly: false, found: 'LF', expectedEol: null }],
                 // Both differ: the content difference is the finding, the endings are incidental.
-                ['a\r\nc\r\n', 'a\nb\n', { lineEndingsOnly: false, found: 'CRLF', expectedEol: null }],
+                [
+                    'a\r\nc\r\n',
+                    'a\nb\n',
+                    { lineEndingsOnly: false, found: 'CRLF', expectedEol: null },
+                ],
             ];
             for (const [onDisk, recorded, want] of cases) {
                 fs.writeFileSync(file, onDisk);
@@ -1104,7 +1433,11 @@ describe('Magic Engine Scripts', () => {
                 const label = JSON.stringify({ onDisk, recorded });
                 assert.strictEqual(got.actual, sha256Hex(onDisk), `actual hash for ${label}`);
                 assert.strictEqual(got.expected, sha256Hex(recorded), `expected hash for ${label}`);
-                assert.strictEqual(got.lineEndingsOnly, want.lineEndingsOnly, `lineEndingsOnly for ${label}`);
+                assert.strictEqual(
+                    got.lineEndingsOnly,
+                    want.lineEndingsOnly,
+                    `lineEndingsOnly for ${label}`,
+                );
                 assert.strictEqual(got.found, want.found, `found for ${label}`);
                 assert.strictEqual(got.expectedEol, want.expectedEol, `expectedEol for ${label}`);
             }
@@ -1112,12 +1445,16 @@ describe('Magic Engine Scripts', () => {
             // The verdict must not depend on multi-byte text surviving a round trip.
             fs.writeFileSync(file, 'сводка — §1\r\n');
             assert.strictEqual(
-                describeManifestDelta(file, sha256Hex('сводка — §1\n')).lineEndingsOnly, true,
-                'non-ASCII bytes must round-trip exactly'
+                describeManifestDelta(file, sha256Hex('сводка — §1\n')).lineEndingsOnly,
+                true,
+                'non-ASCII bytes must round-trip exactly',
             );
 
             // A vanished file is reported, never thrown: a diagnostic must not become a second failure.
-            assert.strictEqual(describeManifestDelta(path.join(tempDir, 'absent.md'), sha256Hex('x')), null);
+            assert.strictEqual(
+                describeManifestDelta(path.join(tempDir, 'absent.md'), sha256Hex('x')),
+                null,
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1131,28 +1468,40 @@ describe('Magic Engine Scripts', () => {
             makeDriftedEngine(userDir, { userInstallation: true });
             const short = (text) => sha256Hex(text).slice(0, 12);
 
-            for (const [label, tempDir] of [['dev repo', devDir], ['user installation', userDir]]) {
+            for (const [label, tempDir] of [
+                ['dev repo', devDir],
+                ['user installation', userDir],
+            ]) {
                 const byFile = Object.fromEntries(
-                    runCheckPrerequisites(tempDir).warnings
-                        .filter((w) => w.type === 'ENGINE_INTEGRITY')
-                        .map((w) => [w.message.match(/'\.magic\/([^']+)'/)[1], w.message])
+                    runCheckPrerequisites(tempDir)
+                        .warnings.filter((w) => w.type === 'ENGINE_INTEGRITY')
+                        .map((w) => [w.message.match(/'\.magic\/([^']+)'/)[1], w.message]),
                 );
 
                 // task.md: converted to CRLF, otherwise identical to what the manifest recorded.
                 assert.match(
-                    byFile['task.md'], /only its line endings differ \(found CRLF, the release ships LF; /,
-                    `${label}: an endings-only difference must be named as such`
+                    byFile['task.md'],
+                    /only its line endings differ \(found CRLF, the release ships LF; /,
+                    `${label}: an endings-only difference must be named as such`,
                 );
                 assert.ok(
-                    byFile['task.md'].includes(`sha256 expected ${short('# task\n')}, found ${short('# task\r\n')}`),
-                    `${label}: both hashes must be recorded — ${byFile['task.md']}`
+                    byFile['task.md'].includes(
+                        `sha256 expected ${short('# task\n')}, found ${short('# task\r\n')}`,
+                    ),
+                    `${label}: both hashes must be recorded — ${byFile['task.md']}`,
                 );
 
                 // spec.md: edited. Content difference, plain wording, still both hashes.
-                assert.doesNotMatch(byFile['spec.md'], /line endings/, `${label}: a content edit must not be blamed on line endings`);
+                assert.doesNotMatch(
+                    byFile['spec.md'],
+                    /line endings/,
+                    `${label}: a content edit must not be blamed on line endings`,
+                );
                 assert.ok(
-                    byFile['spec.md'].includes(`sha256 expected ${short('# spec\n')}, found ${short('# spec\n<!-- local note -->\n')}`),
-                    `${label}: both hashes must be recorded — ${byFile['spec.md']}`
+                    byFile['spec.md'].includes(
+                        `sha256 expected ${short('# spec\n')}, found ${short('# spec\n<!-- local note -->\n')}`,
+                    ),
+                    `${label}: both hashes must be recorded — ${byFile['spec.md']}`,
                 );
             }
         } finally {
@@ -1166,10 +1515,18 @@ describe('Magic Engine Scripts', () => {
         try {
             makeDriftedEngine(tempDir, { userInstallation: true });
             const run = runMeta(tempDir, 'update-engine-meta.js', '--check');
-            const lineFor = (name) => run.out.split(/\r?\n/).find((l) => l.includes(`Detected change in: ${name}`));
+            const lineFor = (name) =>
+                run.out.split(/\r?\n/).find((l) => l.includes(`Detected change in: ${name}`));
 
-            assert.match(lineFor('task.md'), /only line endings differ \(found CRLF, the release ships LF\)/);
-            assert.doesNotMatch(lineFor('spec.md'), /line endings/, 'a content edit must not be blamed on line endings');
+            assert.match(
+                lineFor('task.md'),
+                /only line endings differ \(found CRLF, the release ships LF\)/,
+            );
+            assert.doesNotMatch(
+                lineFor('spec.md'),
+                /line endings/,
+                'a content edit must not be blamed on line endings',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1192,7 +1549,10 @@ describe('Magic Engine Scripts', () => {
             const workflowsDir = path.join(tempDir, 'workflows');
             fs.mkdirSync(workflowsDir, { recursive: true });
             const workflowPath = path.join(workflowsDir, 'magic.example.md');
-            fs.writeFileSync(workflowPath, '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n');
+            fs.writeFileSync(
+                workflowPath,
+                '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n',
+            );
 
             const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
             const versionPath = path.join(tempDir, '.magic', '.version');
@@ -1202,19 +1562,42 @@ describe('Magic Engine Scripts', () => {
             // message must name the scope actually checked (not "engine core"
             // generically — that vagueness was itself part of the defect).
             const firstRun = execSync(`node "${metaScript}"`, { cwd: tempDir, encoding: 'utf8' });
-            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'control: .magic/ unchanged, version must not bump');
-            assert.match(firstRun, /No changes detected in \.magic\//, 'the message must name .magic/, not "engine core"');
-            assert.ok(fs.existsSync(skillPath), 'the fix: skill wrapper must exist after the very first pass');
+            assert.strictEqual(
+                fs.readFileSync(versionPath, 'utf8').trim(),
+                '1.0.0',
+                'control: .magic/ unchanged, version must not bump',
+            );
+            assert.match(
+                firstRun,
+                /No changes detected in \.magic\//,
+                'the message must name .magic/, not "engine core"',
+            );
+            assert.ok(
+                fs.existsSync(skillPath),
+                'the fix: skill wrapper must exist after the very first pass',
+            );
             assert.match(fs.readFileSync(skillPath, 'utf8'), /Original body\./);
 
             // The reproduction: workflows/ changes, .magic/ does not.
-            fs.writeFileSync(workflowPath, '---\ndescription: updated\n---\n\n# Example\n\nUpdated body.\n');
+            fs.writeFileSync(
+                workflowPath,
+                '---\ndescription: updated\n---\n\n# Example\n\nUpdated body.\n',
+            );
             const secondRun = execSync(`node "${metaScript}"`, { cwd: tempDir, encoding: 'utf8' });
-            assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.0', 'a workflows/-only edit correctly still does not bump the version — no engine-core change occurred');
-            assert.match(secondRun, /No changes detected in \.magic\//, 'the checksum-scoped verdict is genuinely correct here — .magic/ did not change');
+            assert.strictEqual(
+                fs.readFileSync(versionPath, 'utf8').trim(),
+                '1.0.0',
+                'a workflows/-only edit correctly still does not bump the version — no engine-core change occurred',
+            );
             assert.match(
-                fs.readFileSync(skillPath, 'utf8'), /Updated body\./,
-                'the fix: regeneration must not be gated on the .magic/ verdict — a pre-fix run would still read "Original body."'
+                secondRun,
+                /No changes detected in \.magic\//,
+                'the checksum-scoped verdict is genuinely correct here — .magic/ did not change',
+            );
+            assert.match(
+                fs.readFileSync(skillPath, 'utf8'),
+                /Updated body\./,
+                'the fix: regeneration must not be gated on the .magic/ verdict — a pre-fix run would still read "Original body."',
             );
         } finally {
             cleanup(tempDir);
@@ -1235,7 +1618,10 @@ describe('Magic Engine Scripts', () => {
 
             const workflowsDir = path.join(tempDir, 'workflows');
             fs.mkdirSync(workflowsDir, { recursive: true });
-            fs.writeFileSync(path.join(workflowsDir, 'magic.example.md'), '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n');
+            fs.writeFileSync(
+                path.join(workflowsDir, 'magic.example.md'),
+                '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n',
+            );
 
             const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
             const versionPath = path.join(tempDir, '.magic', '.version');
@@ -1245,11 +1631,25 @@ describe('Magic Engine Scripts', () => {
             const versionBefore = fs.readFileSync(versionPath, 'utf8');
             const checksumsBefore = fs.readFileSync(checksumsPath, 'utf8');
 
-            const checkOut = execSync(`node "${metaScript}" --check`, { cwd: tempDir, encoding: 'utf8' });
+            const checkOut = execSync(`node "${metaScript}" --check`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
 
-            assert.strictEqual(fs.readFileSync(versionPath, 'utf8'), versionBefore, '--check must never write .magic/.version');
-            assert.strictEqual(fs.readFileSync(checksumsPath, 'utf8'), checksumsBefore, '--check must never write .magic/.checksums');
-            assert.ok(!fs.existsSync(skillPath), '--check must never trigger skill regeneration — a write side effect on a read-only surface');
+            assert.strictEqual(
+                fs.readFileSync(versionPath, 'utf8'),
+                versionBefore,
+                '--check must never write .magic/.version',
+            );
+            assert.strictEqual(
+                fs.readFileSync(checksumsPath, 'utf8'),
+                checksumsBefore,
+                '--check must never write .magic/.checksums',
+            );
+            assert.ok(
+                !fs.existsSync(skillPath),
+                '--check must never trigger skill regeneration — a write side effect on a read-only surface',
+            );
             assert.match(checkOut, /No changes detected in \.magic\//);
         } finally {
             cleanup(tempDir);
@@ -1271,7 +1671,11 @@ describe('Magic Engine Scripts', () => {
             generateChecksums(tempDir);
 
             const result = runCheckPrerequisites(tempDir);
-            assert.strictEqual(result.ok, true, 'Should pass with all files present and correct checksums');
+            assert.strictEqual(
+                result.ok,
+                true,
+                'Should pass with all files present and correct checksums',
+            );
 
             // 2. Failure Case - Missing file
             fs.unlinkSync(path.join(tempDir, '.design', 'INDEX.md'));
@@ -1287,7 +1691,10 @@ describe('Magic Engine Scripts', () => {
             // Manual edit outside workflow
             fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Drifted Rules');
             const resultDrift = runCheckPrerequisites(tempDir);
-            assert.ok(resultDrift.warnings.some(w => w.type === 'CONFIG_DRIFT'), 'Should detect config drift');
+            assert.ok(
+                resultDrift.warnings.some((w) => w.type === 'CONFIG_DRIFT'),
+                'Should detect config drift',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1301,10 +1708,11 @@ describe('Magic Engine Scripts', () => {
         try {
             const { designDir, specsDir } = makeSpecWorkspace(tempDir);
 
-            const indexRow = '| [auth.md](specifications/auth.md) | Auth domain | Stable | 1 | 1.0.0 |';
+            const indexRow =
+                '| [auth.md](specifications/auth.md) | Auth domain | Stable | 1 | 1.0.0 |';
             fs.writeFileSync(
                 path.join(designDir, 'INDEX.md'),
-                `# Index\n\n| File | Description | Status | Layer | Version |\n| --- | --- | --- | --- | --- |\n${indexRow}\n`
+                `# Index\n\n| File | Description | Status | Layer | Version |\n| --- | --- | --- | --- | --- |\n${indexRow}\n`,
             );
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
 
@@ -1312,35 +1720,49 @@ describe('Magic Engine Scripts', () => {
             generateChecksums(tempDir);
 
             // Case A — spec file has NO Version/Status header (the silent-failure bug).
-            fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
+            fs.writeFileSync(
+                path.join(specsDir, 'auth.md'),
+                '# Auth\n\n## Overview\n\nNo header here.\n',
+            );
             const drift = runCheckPrerequisites(tempDir, '--verify-headers');
             assert.ok(
-                drift.warnings.some(w => w.type === 'VERSION_DRIFT' && /MISSING/.test(w.message)),
-                'absent Version header must raise VERSION_DRIFT (MISSING)'
+                drift.warnings.some((w) => w.type === 'VERSION_DRIFT' && /MISSING/.test(w.message)),
+                'absent Version header must raise VERSION_DRIFT (MISSING)',
             );
             assert.ok(
-                drift.warnings.some(w => w.type === 'STATUS_DRIFT' && /MISSING/.test(w.message)),
-                'absent Status header must raise STATUS_DRIFT (MISSING)'
+                drift.warnings.some((w) => w.type === 'STATUS_DRIFT' && /MISSING/.test(w.message)),
+                'absent Status header must raise STATUS_DRIFT (MISSING)',
             );
-            assert.strictEqual(drift.ok, false, 'missing headers must make ok:false, not a silent pass');
+            assert.strictEqual(
+                drift.ok,
+                false,
+                'missing headers must make ok:false, not a silent pass',
+            );
 
             // Case B — correct headers present: no drift (guards against false positives).
             fs.writeFileSync(
                 path.join(specsDir, 'auth.md'),
-                '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n\n## Overview\n\nMatches registry.\n'
+                '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n\n## Overview\n\nMatches registry.\n',
             );
             const clean = runCheckPrerequisites(tempDir, '--verify-headers');
             assert.ok(
-                !clean.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
-                'matching headers must produce no drift warning'
+                !clean.warnings.some(
+                    (w) => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT',
+                ),
+                'matching headers must produce no drift warning',
             );
 
             // Case C — backward compatibility: without --verify-headers, absent header is NOT checked.
-            fs.writeFileSync(path.join(specsDir, 'auth.md'), '# Auth\n\n## Overview\n\nNo header here.\n');
+            fs.writeFileSync(
+                path.join(specsDir, 'auth.md'),
+                '# Auth\n\n## Overview\n\nNo header here.\n',
+            );
             const noFlag = runCheckPrerequisites(tempDir);
             assert.ok(
-                !noFlag.warnings.some(w => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT'),
-                'header check must remain opt-in via --verify-headers'
+                !noFlag.warnings.some(
+                    (w) => w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT',
+                ),
+                'header check must remain opt-in via --verify-headers',
             );
         } finally {
             cleanup(tempDir);
@@ -1358,7 +1780,7 @@ describe('Magic Engine Scripts', () => {
 
             fs.writeFileSync(
                 path.join(designDir, 'INDEX.md'),
-                '# Index\n\n| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |\n'
+                '# Index\n\n| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |\n',
             );
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
 
@@ -1370,31 +1792,36 @@ describe('Magic Engine Scripts', () => {
             // unbracketed. What SH-4 fixes is *how* it fires — two bounded findings
             // naming `a.md` and `b.md` individually, not one swallowing the comma,
             // the trailing prose, and every quoted token that follows on later lines.
-            fs.writeFileSync(path.join(designDir, 'PLAN.md'), [
-                '# Plan',
-                '- [x] real spec ([l1-real.md](specifications/l1-real.md))',
-                '- unquoted mention: specifications/a.md, specifications/b.md in prose',
-                '- placeholder note (`main/INDEX.md`, `specifications/{spec.md}`, `other-spec.md`, `tasks/phase-{N}.md`)',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                [
+                    '# Plan',
+                    '- [x] real spec ([l1-real.md](specifications/l1-real.md))',
+                    '- unquoted mention: specifications/a.md, specifications/b.md in prose',
+                    '- placeholder note (`main/INDEX.md`, `specifications/{spec.md}`, `other-spec.md`, `tasks/phase-{N}.md`)',
+                    '',
+                ].join('\n'),
+            );
 
             generateChecksums(tempDir);
 
             const result = runCheckPrerequisites(tempDir, '--require-specs');
 
-            const mismatches = result.warnings.filter(w => w.type === 'REGISTRY_MISMATCH');
+            const mismatches = result.warnings.filter((w) => w.type === 'REGISTRY_MISMATCH');
             assert.deepStrictEqual(
-                mismatches.map(w => w.message.match(/^'([^']+)'/)[1]).sort(),
+                mismatches.map((w) => w.message.match(/^'([^']+)'/)[1]).sort(),
                 ['a.md', 'b.md'],
-                `must report exactly the two unquoted, unregistered files — bounded individually, nothing merged or quoted → ${JSON.stringify(mismatches)}`
+                `must report exactly the two unquoted, unregistered files — bounded individually, nothing merged or quoted → ${JSON.stringify(mismatches)}`,
             );
             assert.ok(
-                !mismatches.some(w => /spec\.md|other-spec|phase-\{N\}|main\/INDEX/.test(w.message)),
-                'no quoted placeholder token may appear in a finding, merged or otherwise'
+                !mismatches.some((w) =>
+                    /spec\.md|other-spec|phase-\{N\}|main\/INDEX/.test(w.message),
+                ),
+                'no quoted placeholder token may appear in a finding, merged or otherwise',
             );
             assert.ok(
-                !result.warnings.some(w => w.type === 'ORPHANED_SPEC'),
-                'the genuinely-linked real spec must still be recognized as covered'
+                !result.warnings.some((w) => w.type === 'ORPHANED_SPEC'),
+                'the genuinely-linked real spec must still be recognized as covered',
             );
         } finally {
             cleanup(tempDir);
@@ -1420,34 +1847,47 @@ describe('Magic Engine Scripts', () => {
             // entire span as a single corrupted "filename". Also includes a
             // genuinely broken registered spec, to prove the fix bounds the
             // capture rather than blinding the check entirely.
-            fs.writeFileSync(path.join(designDir, 'INDEX.md'), [
-                '# Index',
-                '',
-                '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
-                '| [l1-missing.md](specifications/l1-missing.md) | y | Stable | 1 | 1.0.0 |',
-                '',
-                '## Meta Information',
-                '',
-                '- **Last Updated**: see specifications/ for the layout convention; also touches l1-other.md and l2-another.md in passing)',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                [
+                    '# Index',
+                    '',
+                    '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
+                    '| [l1-missing.md](specifications/l1-missing.md) | y | Stable | 1 | 1.0.0 |',
+                    '',
+                    '## Meta Information',
+                    '',
+                    '- **Last Updated**: see specifications/ for the layout convention; also touches l1-other.md and l2-another.md in passing)',
+                    '',
+                ].join('\n'),
+            );
             fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
-            fs.writeFileSync(path.join(designDir, 'PLAN.md'), '# Plan\n- [x] real spec ([l1-real.md](specifications/l1-real.md))\n');
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                '# Plan\n- [x] real spec ([l1-real.md](specifications/l1-real.md))\n',
+            );
 
             generateChecksums(tempDir);
 
             const result = runCheckPrerequisites(tempDir, '--require-specs', '--verify-headers');
 
             const registryFindings = result.warnings.filter(
-                (w) => w.type === 'GHOST_REGISTRY' || w.type === 'NAMING_VIOLATION' || w.type === 'ORPHANED_SPEC'
+                (w) =>
+                    w.type === 'GHOST_REGISTRY' ||
+                    w.type === 'NAMING_VIOLATION' ||
+                    w.type === 'ORPHANED_SPEC',
             );
             assert.ok(
-                !registryFindings.some((w) => /layout convention|l2-another|l1-other/.test(w.message)),
-                `the bare prose mention must not surface as a finding, corrupted or otherwise → ${JSON.stringify(registryFindings)}`
+                !registryFindings.some((w) =>
+                    /layout convention|l2-another|l1-other/.test(w.message),
+                ),
+                `the bare prose mention must not surface as a finding, corrupted or otherwise → ${JSON.stringify(registryFindings)}`,
             );
             assert.ok(
-                registryFindings.some((w) => w.type === 'GHOST_REGISTRY' && w.message.includes("'l1-missing.md'")),
-                'a genuinely broken registered spec must still be caught — the fix bounds the capture, it does not blind the check'
+                registryFindings.some(
+                    (w) => w.type === 'GHOST_REGISTRY' && w.message.includes("'l1-missing.md'"),
+                ),
+                'a genuinely broken registered spec must still be caught — the fix bounds the capture, it does not blind the check',
             );
         } finally {
             cleanup(tempDir);
@@ -1467,10 +1907,14 @@ describe('Magic Engine Scripts', () => {
             // Backlog holds two open items.
             const hit = findDebtWarning(
                 '- Some open design item.\n- Another one.',
-                '*None — plan complete. New scope enters via `/magic.task`.*'
+                '*None — plan complete. New scope enters via `/magic.task`.*',
             );
             assert.ok(hit, 'a plan-complete state with a non-empty Backlog must raise the signal');
-            assert.match(hit.message, /2 open item/, 'the count must reflect the actual number of Backlog bullets');
+            assert.match(
+                hit.message,
+                /2 open item/,
+                'the count must reflect the actual number of Backlog bullets',
+            );
             assert.match(hit.fix, /magic\.spec/, 'the remedy must point at spec authoring');
 
             // Negative (load-bearing — SC-2.4 is about *distinguishing* two
@@ -1480,7 +1924,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 findDebtWarning('', '*None — plan complete. New scope enters via `/magic.task`.*'),
                 undefined,
-                'an empty Backlog must never raise the signal, even at plan-complete'
+                'an empty Backlog must never raise the signal, even at plan-complete',
             );
 
             // Negative: an active phase exists — not plan-complete at all,
@@ -1488,18 +1932,21 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 findDebtWarning(
                     '- Some open design item.',
-                    '| [Phase 3](tasks/phase-3.md) | Something | `In Progress` |'
+                    '| [Phase 3](tasks/phase-3.md) | Something | `In Progress` |',
                 ),
                 undefined,
-                'an active phase must suppress the signal even with a non-empty Backlog'
+                'an active phase must suppress the signal even with a non-empty Backlog',
             );
 
             // Negative: ambiguous/unrecognized Active Phases content — the
             // check must default to "cannot determine", not "must be complete".
             assert.strictEqual(
-                findDebtWarning('- Some open design item.', 'Some unstructured note, not a table and not the marker.'),
+                findDebtWarning(
+                    '- Some open design item.',
+                    'Some unstructured note, not a table and not the marker.',
+                ),
                 undefined,
-                'unrecognized Active Phases content must not be read as plan-complete'
+                'unrecognized Active Phases content must not be read as plan-complete',
             );
         } finally {
             cleanup(tempDir);
@@ -1517,32 +1964,48 @@ describe('Magic Engine Scripts', () => {
             const designDir = makeMinimalDesignDir(tempDir);
             fs.writeFileSync(
                 path.join(designDir, 'TASKS.md'),
-                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magic.task`.*\n'
+                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magic.task`.*\n',
             );
             const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
             // One plain bullet, one Parked-marked bullet — only the plain one counts.
             const mixed = findDebtWarning(
-                '- Some open design item.\n- Already decided, kept visible. *(Parked — no current demand signal.)*'
+                '- Some open design item.\n- Already decided, kept visible. *(Parked — no current demand signal.)*',
             );
-            assert.ok(mixed, 'a Backlog with at least one plain bullet must still raise the signal');
-            assert.match(mixed.message, /1 open item/, 'the Parked-marked bullet must not be counted');
+            assert.ok(
+                mixed,
+                'a Backlog with at least one plain bullet must still raise the signal',
+            );
+            assert.match(
+                mixed.message,
+                /1 open item/,
+                'the Parked-marked bullet must not be counted',
+            );
 
             // Every bullet Parked — no open items at all, signal must not fire.
             assert.strictEqual(
                 findDebtWarning(
-                    '- First parked item. *(Parked — revisit only if X.)*\n- Second parked item. *(Parked — monitoring only.)*'
+                    '- First parked item. *(Parked — revisit only if X.)*\n- Second parked item. *(Parked — monitoring only.)*',
                 ),
                 undefined,
-                'a Backlog composed entirely of Parked bullets must not raise the signal'
+                'a Backlog composed entirely of Parked bullets must not raise the signal',
             );
 
             // A bullet that merely mentions the word "Parked" mid-sentence, not
             // as the disposition marker, must still count as open — the
             // exclusion is the specific `*(Parked` marker shape, not the bare word.
-            const wordOnly = findDebtWarning('- This item was previously Parked but is open again.');
-            assert.ok(wordOnly, 'a bullet using the word "Parked" without the marker shape must still count as open');
-            assert.match(wordOnly.message, /1 open item/, 'the bare-word bullet must be counted, not excluded');
+            const wordOnly = findDebtWarning(
+                '- This item was previously Parked but is open again.',
+            );
+            assert.ok(
+                wordOnly,
+                'a bullet using the word "Parked" without the marker shape must still count as open',
+            );
+            assert.match(
+                wordOnly.message,
+                /1 open item/,
+                'the bare-word bullet must be counted, not excluded',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1572,12 +2035,16 @@ describe('Magic Engine Scripts', () => {
                 '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
                 '| [Phase 2](archives/tasks/phase-2.md) | Follow-up | `Done (Archived)` |',
             ].join('\n');
-            const hit = findDebtWarning(
-                '- Some open design item.\n- Another one.',
-                archivedTable
+            const hit = findDebtWarning('- Some open design item.\n- Another one.', archivedTable);
+            assert.ok(
+                hit,
+                'an all-terminal single-table Active Phases must be read as plan-complete, not only the literal empty marker',
             );
-            assert.ok(hit, 'an all-terminal single-table Active Phases must be read as plan-complete, not only the literal empty marker');
-            assert.match(hit.message, /2 open item/, 'the count must reflect the actual number of Backlog bullets');
+            assert.match(
+                hit.message,
+                /2 open item/,
+                'the count must reflect the actual number of Backlog bullets',
+            );
 
             // Negative: same shape, but one row is still non-terminal — the
             // plan is genuinely incomplete and must not be misread as done.
@@ -1590,7 +2057,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 findDebtWarning('- Some open design item.', mixedTable),
                 undefined,
-                'a non-terminal row anywhere in the table must suppress the signal — the plan is not actually complete'
+                'a non-terminal row anywhere in the table must suppress the signal — the plan is not actually complete',
             );
 
             // A lone `Cancelled` row is terminal too — must not block the signal.
@@ -1600,7 +2067,10 @@ describe('Magic Engine Scripts', () => {
                 '| [Phase 1](archives/tasks/phase-1.md) | Abandoned | `Cancelled` |',
             ].join('\n');
             const cancelledHit = findDebtWarning('- Some open design item.', cancelledTable);
-            assert.ok(cancelledHit, 'a table of only `Cancelled` rows is terminal and must be read as plan-complete');
+            assert.ok(
+                cancelledHit,
+                'a table of only `Cancelled` rows is terminal and must be read as plan-complete',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1627,20 +2097,30 @@ describe('Magic Engine Scripts', () => {
             // engine's own workspace carries. Terminal-Row Recognition fixed
             // the single-table shape; this is the same predicate's other end,
             // where there is no row to read a terminal status from at all.
-            const vacant = findDebtWarning(openBacklog, [
-                '## Completed Phases', '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
-            ].join('\n'));
-            assert.ok(vacant, 'a vacant Active Phases section is plan-complete — zero rows is a terminal case');
+            const vacant = findDebtWarning(
+                openBacklog,
+                [
+                    '## Completed Phases',
+                    '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
+                ].join('\n'),
+            );
+            assert.ok(
+                vacant,
+                'a vacant Active Phases section is plan-complete — zero rows is a terminal case',
+            );
             assert.match(vacant.message, /2 open item/, 'the count must still reflect the Backlog');
 
             // (b) Table scaffolding with no data rows — the same zero-row state
             // spelled with a header the author left behind.
             assert.ok(
-                findDebtWarning(openBacklog, '| Phase | Description | Status |\n| --- | --- | --- |'),
-                'a header-only table carries zero phase rows and is equally terminal'
+                findDebtWarning(
+                    openBacklog,
+                    '| Phase | Description | Status |\n| --- | --- | --- |',
+                ),
+                'a header-only table carries zero phase rows and is equally terminal',
             );
 
             // (c) The fail-closed boundary the vacancy rule must not erode:
@@ -1649,9 +2129,12 @@ describe('Magic Engine Scripts', () => {
             // input it could not parse — only on input it positively read as
             // empty.
             assert.strictEqual(
-                findDebtWarning(openBacklog, 'Some unstructured note, not a table and not the marker.'),
+                findDebtWarning(
+                    openBacklog,
+                    'Some unstructured note, not a table and not the marker.',
+                ),
                 undefined,
-                'unrecognized content must still suppress the signal'
+                'unrecognized content must still suppress the signal',
             );
         } finally {
             cleanup(tempDir);
@@ -1664,7 +2147,9 @@ describe('Magic Engine Scripts', () => {
     test('scan-hygiene.js stripQuoted removes fenced and inline-quoted content, preserving line count', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { stripQuoted } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'));
+            const { stripQuoted } = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'),
+            );
 
             const input = [
                 'a',
@@ -1679,11 +2164,23 @@ describe('Magic Engine Scripts', () => {
             const out = stripQuoted(input);
             const outLines = out.split('\n');
 
-            assert.strictEqual(outLines.length, input.split('\n').length, 'line count must be preserved');
+            assert.strictEqual(
+                outLines.length,
+                input.split('\n').length,
+                'line count must be preserved',
+            );
             assert.doesNotMatch(outLines[2], /- \[ \]/, 'fenced content must not survive');
             assert.doesNotMatch(outLines[4], /- \[ \]/, 'inline-span content must not survive');
-            assert.match(outLines[5], /blockquoted - \[ \] item survives/, 'blockquotes are out of scope (§2) and must be untouched');
-            assert.match(outLines[6], /HTML comment - \[ \] also survives/, 'HTML comments are out of scope (§2) and must be untouched');
+            assert.match(
+                outLines[5],
+                /blockquoted - \[ \] item survives/,
+                'blockquotes are out of scope (§2) and must be untouched',
+            );
+            assert.match(
+                outLines[6],
+                /HTML comment - \[ \] also survives/,
+                'HTML comments are out of scope (§2) and must be untouched',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1692,7 +2189,9 @@ describe('Magic Engine Scripts', () => {
     test('scan-hygiene.js stripQuoted removes fences before spans (a stray backtick inside a fence must not swallow trailing text)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { stripQuoted } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'));
+            const { stripQuoted } = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'scan-hygiene.js'),
+            );
 
             // A fence containing a single backtick would, if spans were stripped
             // first, be read as an unterminated span delimiter and swallow every-
@@ -1705,7 +2204,11 @@ describe('Magic Engine Scripts', () => {
             ].join('\n');
 
             const out = stripQuoted(input);
-            assert.match(out, /SENTINEL should survive/, 'fence-first ordering must not let a stray backtick swallow trailing content');
+            assert.match(
+                out,
+                /SENTINEL should survive/,
+                'fence-first ordering must not let a stray backtick swallow trailing content',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1727,7 +2230,7 @@ describe('Magic Engine Scripts', () => {
             // 1. Bootstrap — STATE.md should be created from template
             execSync(
                 `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --status=Active --phase=1 --next-action="Run /magic.spec"`,
-                { cwd: tempDir }
+                { cwd: tempDir },
             );
             const statePath = path.join(wsDir, 'STATE.md');
             assert.ok(fs.existsSync(statePath), 'STATE.md should be created from template');
@@ -1738,7 +2241,7 @@ describe('Magic Engine Scripts', () => {
             // 2. Add decision — should appear under Recent Decisions with today's date
             execSync(
                 `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --decision="Adopt SDD workflow"`,
-                { cwd: tempDir }
+                { cwd: tempDir },
             );
             const afterDecision = fs.readFileSync(statePath, 'utf8');
             // Structural assertions, not presence-only: the prior single
@@ -1750,13 +2253,14 @@ describe('Magic Engine Scripts', () => {
             // line, displacing the preamble below the entries — markdownlint
             // MD022/MD032/MD012).
             assert.match(
-                afterDecision, /## Recent Decisions\r?\n\r?\n<!-- Last 3-5 locked decisions/,
-                'the heading must be followed by a blank line, then the comment preamble — not an entry'
+                afterDecision,
+                /## Recent Decisions\r?\n\r?\n<!-- Last 3-5 locked decisions/,
+                'the heading must be followed by a blank line, then the comment preamble — not an entry',
             );
             assert.match(
                 afterDecision,
                 /are dropped \(not archived\) — see PLAN\.md \/ CHANGELOG\.md for phase history\. -->\r?\n\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* Adopt SDD workflow/,
-                'the new entry must sit after the comment preamble, not before it'
+                'the new entry must sit after the comment preamble, not before it',
             );
             // l2-finalize-state-accuracy.md §10: the preamble previously claimed
             // an archival to PLAN.md that no code path ever performed — pin the
@@ -1766,28 +2270,31 @@ describe('Magic Engine Scripts', () => {
             // "after the preamble" shape without removing the old claim if a
             // future preamble concatenated both).
             assert.doesNotMatch(
-                afterDecision, /archived to PLAN\.md/,
-                'the preamble must not claim an archival the code never performs'
+                afterDecision,
+                /archived to PLAN\.md/,
+                'the preamble must not claim an archival the code never performs',
             );
             assert.doesNotMatch(
-                afterDecision, /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
-                'no run of two or more consecutive blank lines may appear anywhere in STATE.md'
+                afterDecision,
+                /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
+                'no run of two or more consecutive blank lines may appear anywhere in STATE.md',
             );
             assert.doesNotMatch(
-                afterDecision, /\{YYYY-MM-DD\}/,
-                "the template's own placeholder decision rows must not survive alongside a real entry"
+                afterDecision,
+                /\{YYYY-MM-DD\}/,
+                "the template's own placeholder decision rows must not survive alongside a real entry",
             );
 
             // 3. Add constraint — should be auto-numbered [C-001]
             execSync(
                 `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --constraint-title="No Mocks" --constraint-desc="Integration tests only"`,
-                { cwd: tempDir }
+                { cwd: tempDir },
             );
             const afterConstraint = fs.readFileSync(statePath, 'utf8');
             // Template state.md already contains a [C-001] placeholder, so auto-numbering produces C-002
             assert.ok(
                 /\[C-002\].*No Mocks.*Integration tests only/.test(afterConstraint),
-                'Constraint entry should be auto-numbered (C-002 given template placeholder)'
+                'Constraint entry should be auto-numbered (C-002 given template placeholder)',
             );
             // Structural assertions, not presence-only — same defect class as
             // addDecision above: addConstraint's insertion point used the
@@ -1798,17 +2305,19 @@ describe('Magic Engine Scripts', () => {
             // heading — above the MANDATORY-reading comment block — piling
             // up there across calls instead of joining the entry list below it.
             assert.match(
-                afterConstraint, /## Blocking Constraints\r?\n\r?\n<!-- Anti-patterns discovered through real failures\. MANDATORY reading\. -->/,
-                'the heading must be followed by a blank line, then the comment preamble — not an entry'
+                afterConstraint,
+                /## Blocking Constraints\r?\n\r?\n<!-- Anti-patterns discovered through real failures\. MANDATORY reading\. -->/,
+                'the heading must be followed by a blank line, then the comment preamble — not an entry',
             );
             assert.match(
                 afterConstraint,
                 /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
-                'the new entry must sit after the comment preamble, not before it'
+                'the new entry must sit after the comment preamble, not before it',
             );
             assert.doesNotMatch(
-                afterConstraint, /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
-                'no run of two or more consecutive blank lines may appear anywhere in STATE.md'
+                afterConstraint,
+                /\r?\n[ \t]*\r?\n[ \t]*\r?\n/,
+                'no run of two or more consecutive blank lines may appear anywhere in STATE.md',
             );
 
             // A second constraint must join the first newest-first, both
@@ -1816,13 +2325,13 @@ describe('Magic Engine Scripts', () => {
             // the whole entry list rather than only the first insertion.
             execSync(
                 `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --constraint-title="No Sleep Loops" --constraint-desc="Use condition polling"`,
-                { cwd: tempDir }
+                { cwd: tempDir },
             );
             const afterSecondConstraint = fs.readFileSync(statePath, 'utf8');
             assert.match(
                 afterSecondConstraint,
                 /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-003\] \*\*No Sleep Loops\*\*: Use condition polling\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
-                'a second constraint must be prepended above the first, both below the comment preamble — newest-first, list never split by the heading'
+                'a second constraint must be prepended above the first, both below the comment preamble — newest-first, list never split by the heading',
             );
         } finally {
             cleanup(tempDir);
@@ -1847,59 +2356,84 @@ describe('Magic Engine Scripts', () => {
             // (b) Canonical two-level format: TASKS.md is a registry (table),
             //     open tasks live in tasks/phase-1.md.
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---',
-                'phase: 1',
-                'status: In Progress',
-                '---',
-                '',
-                '## Atomic Checklist',
-                '',
-                '- [x] [T-1A01] Setup project',
-                '- [ ] [T-1A02] Implement feature',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [x] [T-1A01] Setup project',
+                    '- [ ] [T-1A02] Implement feature',
+                    '',
+                ].join('\n'),
+            );
             next = finalize.computeNextAction('task', 'engine', wsDir);
-            assert.match(next, /\/magic\.run engine/, 'canonical two-level: open task in phase file → /magic.run');
+            assert.match(
+                next,
+                /\/magic\.run engine/,
+                'canonical two-level: open task in phase file → /magic.run',
+            );
             assert.match(next, /T-1A02/, 'should name the open task from phase file');
 
             // (c) Registry fallback: no open checkboxes anywhere, but registry
             //     shows a non-Done phase → recommend continuing that phase.
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---',
-                'phase: 1',
-                'status: In Progress',
-                '---',
-                '',
-                '## Atomic Checklist',
-                '',
-                '- [x] [T-1A01] Setup project',
-                '- [x] [T-1A02] Implement feature',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [x] [T-1A01] Setup project',
+                    '- [x] [T-1A02] Implement feature',
+                    '',
+                ].join('\n'),
+            );
             next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(next, /Phase 1/, 'registry fallback: non-Done phase → Continue Phase N');
             assert.match(next, /\/magic\.run/, 'registry fallback recommends /magic.run');
 
             // (d) Plan complete — no open tasks, all phases Done.
-            fs.writeFileSync(tasksPath, [
-                '## Active Phases',
-                '',
-                '*None — plan complete.*',
-                '',
-                '## Completed Phases',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                tasksPath,
+                [
+                    '## Active Phases',
+                    '',
+                    '*None — plan complete.*',
+                    '',
+                    '## Completed Phases',
+                    '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                    '',
+                ].join('\n'),
+            );
             // Remove phase file to be clean.
             fs.unlinkSync(path.join(tasksDir, 'phase-1.md'));
             next = finalize.computeNextAction('task', 'engine', wsDir);
-            assert.match(next, /\/magic\.task engine/, 'plan complete after task → /magic.task funnel (§5)');
-            assert.doesNotMatch(next, /\/magic\.spec/, '/magic.spec must never be named proactively (§5)');
-            assert.doesNotMatch(next, /execute the active phase/, 'must not recommend a non-existent phase (the R6 bug)');
+            assert.match(
+                next,
+                /\/magic\.task engine/,
+                'plan complete after task → /magic.task funnel (§5)',
+            );
+            assert.doesNotMatch(
+                next,
+                /\/magic\.spec/,
+                '/magic.spec must never be named proactively (§5)',
+            );
+            assert.doesNotMatch(
+                next,
+                /execute the active phase/,
+                'must not recommend a non-existent phase (the R6 bug)',
+            );
 
             // (d2) Same plan-complete state reached via `run`. The recommendation
             //     is deliberately identical to (d): STATE.md `Next Action` is
@@ -1909,16 +2443,28 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 finalize.computeNextAction('run', 'engine', wsDir),
                 next,
-                'plan-complete recommendation must not vary by originating workflow'
+                'plan-complete recommendation must not vary by originating workflow',
             );
 
             // (e) spec/rule → replan first (pipeline order).
-            assert.match(finalize.computeNextAction('spec', 'engine', wsDir), /\/magic\.task/, 'spec → /magic.task');
-            assert.match(finalize.computeNextAction('rule', 'engine', wsDir), /\/magic\.task/, 'rule → /magic.task');
+            assert.match(
+                finalize.computeNextAction('spec', 'engine', wsDir),
+                /\/magic\.task/,
+                'spec → /magic.task',
+            );
+            assert.match(
+                finalize.computeNextAction('rule', 'engine', wsDir),
+                /\/magic\.task/,
+                'rule → /magic.task',
+            );
 
             // (f) Unreadable TASKS.md → safe planning fallback.
             const voidWs = path.join(tempDir, '.design', 'void');
-            assert.match(finalize.computeNextAction('run', 'void', voidWs), /\/magic\.task/, 'missing TASKS.md → /magic.task fallback');
+            assert.match(
+                finalize.computeNextAction('run', 'void', voidWs),
+                /\/magic\.task/,
+                'missing TASKS.md → /magic.task fallback',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1937,11 +2483,16 @@ describe('Magic Engine Scripts', () => {
                 'inline open task': '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n',
                 'registry active phase': registryTable('In Progress'),
                 'plan complete': [
-                    '## Active Phases', '', '*None — plan complete.*', '',
-                    '## Completed Phases', '',
+                    '## Active Phases',
+                    '',
+                    '*None — plan complete.*',
+                    '',
+                    '## Completed Phases',
+                    '',
                     '| Phase | Description | Status |',
                     '| --- | --- | --- |',
-                    '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |', '',
+                    '| [Phase 1](archives/tasks/phase-1.md) | Bootstrap | `Done (Archived)` |',
+                    '',
                 ].join('\n'),
                 'empty registry': '# Master Task Index\n\n## Active Phases\n\n',
             };
@@ -1953,22 +2504,31 @@ describe('Magic Engine Scripts', () => {
                     assert.doesNotMatch(
                         next,
                         /\/magic\.(spec|analyze)/,
-                        `${workflow} @ ${label}: reserved command leaked into Next Action → "${next}"`
+                        `${workflow} @ ${label}: reserved command leaked into Next Action → "${next}"`,
                     );
                     // §5 / DA-6: the user sees exactly ONE next step. STATE.md
                     // `Next Action` is replayed verbatim by /magic.status, so a
                     // second command here becomes a second user-visible option.
                     const commands = next.match(/\/magic\.[a-z.]+/g) || [];
                     assert.strictEqual(
-                        commands.length, 1,
-                        `${workflow} @ ${label}: expected exactly one command, got ${commands.length} → "${next}"`
+                        commands.length,
+                        1,
+                        `${workflow} @ ${label}: expected exactly one command, got ${commands.length} → "${next}"`,
                     );
                 }
             }
 
             // Unreadable workspace — the catch-path fallback is bound too.
-            const voidNext = finalize.computeNextAction('run', 'void', path.join(tempDir, '.design', 'void'));
-            assert.doesNotMatch(voidNext, /\/magic\.(spec|analyze)/, 'catch fallback must stay §5-clean');
+            const voidNext = finalize.computeNextAction(
+                'run',
+                'void',
+                path.join(tempDir, '.design', 'void'),
+            );
+            assert.doesNotMatch(
+                voidNext,
+                /\/magic\.(spec|analyze)/,
+                'catch fallback must stay §5-clean',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -1978,25 +2538,58 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { designDir, wsDir, finalizePath } = createFinalizeFixture(tempDir);
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n*None — plan complete.*\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n*None — plan complete.*\n',
+            );
             // No whitelisted file changes after this baseline → skip path.
             commitFixture(tempDir);
 
-            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
 
-            assert.match(out, /No significant changes|Finalization complete/, 'finalize should run on the skip path');
+            assert.match(
+                out,
+                /No significant changes|Finalization complete/,
+                'finalize should run on the skip path',
+            );
             const statePath = path.join(wsDir, 'STATE.md');
-            assert.ok(fs.existsSync(statePath), 'SC-2: STATE.md created/patched even on the skip path');
+            assert.ok(
+                fs.existsSync(statePath),
+                'SC-2: STATE.md created/patched even on the skip path',
+            );
             const state = fs.readFileSync(statePath, 'utf8');
             assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
-            assert.match(state, /\/magic\.task main/, 'SC-2.1 e2e: plan-complete next-action routes through the /magic.task funnel');
-            assert.doesNotMatch(state, /Next Action:.*\/magic\.spec/, '§5: the persisted Next Action never names /magic.spec');
+            assert.match(
+                state,
+                /\/magic\.task main/,
+                'SC-2.1 e2e: plan-complete next-action routes through the /magic.task funnel',
+            );
+            assert.doesNotMatch(
+                state,
+                /Next Action:.*\/magic\.spec/,
+                '§5: the persisted Next Action never names /magic.spec',
+            );
             // SC-3 retirement regression pins: the STATE.md write dirties the
             // tree (previously the SC-3 fallback's trigger condition), but no
             // commit-related output is ever emitted any more.
-            assert.doesNotMatch(out, /Suggested commit message/i, 'SC-3 retired: no commit suggestion is emitted');
-            assert.doesNotMatch(out, /Auto-commit/i, 'SC-3 retired: no auto-commit notice is emitted');
-            assert.match(fs.readFileSync(path.join(designDir, '.version'), 'utf8'), /^0\.1\.0$/, 'skip path does not bump the version');
+            assert.doesNotMatch(
+                out,
+                /Suggested commit message/i,
+                'SC-3 retired: no commit suggestion is emitted',
+            );
+            assert.doesNotMatch(
+                out,
+                /Auto-commit/i,
+                'SC-3 retired: no auto-commit notice is emitted',
+            );
+            assert.match(
+                fs.readFileSync(path.join(designDir, '.version'), 'utf8'),
+                /^0\.1\.0$/,
+                'skip path does not bump the version',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2017,7 +2610,7 @@ describe('Magic Engine Scripts', () => {
                 assert.strictEqual(
                     finalize.resolveWorkspaceDir('engine', 'engine', designAbs),
                     path.join(designAbs, 'engine'),
-                    'an explicit --workspace must win over a disagreeing MAGIC_DESIGN_DIR'
+                    'an explicit --workspace must win over a disagreeing MAGIC_DESIGN_DIR',
                 );
 
                 // Same precedence for MAGIC_WORKSPACE (no CLI flag, but the env
@@ -2026,7 +2619,7 @@ describe('Magic Engine Scripts', () => {
                 assert.strictEqual(
                     finalize.resolveWorkspaceDir(null, 'engine', designAbs),
                     path.join(designAbs, 'engine'),
-                    'MAGIC_WORKSPACE must win over a disagreeing MAGIC_DESIGN_DIR'
+                    'MAGIC_WORKSPACE must win over a disagreeing MAGIC_DESIGN_DIR',
                 );
 
                 // Legitimate case: neither a flag nor MAGIC_WORKSPACE was given,
@@ -2037,7 +2630,7 @@ describe('Magic Engine Scripts', () => {
                 assert.strictEqual(
                     finalize.resolveWorkspaceDir(null, 'engine', designAbs),
                     path.resolve(tempDir, '.design/engine'),
-                    'MAGIC_DESIGN_DIR is authoritative only when it is the sole naming signal'
+                    'MAGIC_DESIGN_DIR is authoritative only when it is the sole naming signal',
                 );
             } finally {
                 if (savedDesignDir === undefined) delete process.env.MAGIC_DESIGN_DIR;
@@ -2054,7 +2647,10 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [ ] [T-1A01] Todo\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [ ] [T-1A01] Todo\n',
+            );
 
             // A second, unrelated workspace with its own STATE.md — never named
             // by this invocation's --workspace, only by a stale MAGIC_DESIGN_DIR
@@ -2083,7 +2679,10 @@ describe('Magic Engine Scripts', () => {
             // An uncommitted, whitelisted change → the success path, matching
             // the shape of the real-world repro (a workflow that just landed
             // new TASKS.md content, then invoked finalize).
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [x] [T-1A01] Done\n',
+            );
 
             const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
                 cwd: tempDir,
@@ -2091,21 +2690,42 @@ describe('Magic Engine Scripts', () => {
                 env: { ...process.env, MAGIC_DESIGN_DIR: '.design/other' },
             });
 
-            assert.match(out, /Finalization complete/, 'the whitelisted TASKS.md change must still be significant');
-            assert.match(out, /\| Workspace \| main \|/, 'finalize reports the explicitly-requested workspace');
             assert.match(
-                out, /\.design[\\/]main[\\/]STATE\.md/,
-                'STATE.md update must target the main workspace explicitly, not one named by MAGIC_DESIGN_DIR'
+                out,
+                /Finalization complete/,
+                'the whitelisted TASKS.md change must still be significant',
+            );
+            assert.match(
+                out,
+                /\| Workspace \| main \|/,
+                'finalize reports the explicitly-requested workspace',
+            );
+            assert.match(
+                out,
+                /\.design[\\/]main[\\/]STATE\.md/,
+                'STATE.md update must target the main workspace explicitly, not one named by MAGIC_DESIGN_DIR',
             );
             const mainStatePath = path.join(wsDir, 'STATE.md');
-            assert.ok(fs.existsSync(mainStatePath), 'STATE.md must have been created/patched inside the main workspace directory');
+            assert.ok(
+                fs.existsSync(mainStatePath),
+                'STATE.md must have been created/patched inside the main workspace directory',
+            );
             const mainState = fs.readFileSync(mainStatePath, 'utf8');
-            assert.match(mainState, /- \*\*Next Action:\*\* Plan complete/, 'main STATE.md received the real computed Next Action, not the template placeholder');
-            assert.doesNotMatch(mainState, /SENTINEL/, 'main STATE.md must never carry the other workspace\'s sentinel content');
+            assert.match(
+                mainState,
+                /- \*\*Next Action:\*\* Plan complete/,
+                'main STATE.md received the real computed Next Action, not the template placeholder',
+            );
+            assert.doesNotMatch(
+                mainState,
+                /SENTINEL/,
+                "main STATE.md must never carry the other workspace's sentinel content",
+            );
 
             assert.strictEqual(
-                fs.readFileSync(otherStatePath, 'utf8'), sentinel,
-                'the unrelated workspace named only by a stale MAGIC_DESIGN_DIR must be left byte-for-byte untouched'
+                fs.readFileSync(otherStatePath, 'utf8'),
+                sentinel,
+                'the unrelated workspace named only by a stale MAGIC_DESIGN_DIR must be left byte-for-byte untouched',
             );
         } finally {
             cleanup(tempDir);
@@ -2117,17 +2737,18 @@ describe('Magic Engine Scripts', () => {
         try {
             const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
-            const phaseFile = (status) => [
-                '---',
-                'phase: 1',
-                `status: ${status}`,
-                '---',
-                '',
-                '## Atomic Checklist',
-                '',
-                '- [ ] [T-1A01] Scaffold the app',
-                '',
-            ].join('\n');
+            const phaseFile = (status) =>
+                [
+                    '---',
+                    'phase: 1',
+                    `status: ${status}`,
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] Scaffold the app',
+                    '',
+                ].join('\n');
 
             // The two Blocked signals are written by different steps and are not
             // updated atomically, so each must be sufficient on its own —
@@ -2144,15 +2765,21 @@ describe('Magic Engine Scripts', () => {
 
                 const next = finalize.computeNextAction('run', 'engine', wsDir);
                 assert.doesNotMatch(
-                    next, /^Execute T-/,
-                    `${label}: Blocked phase must not yield an execute-style recommendation → "${next}"`
+                    next,
+                    /^Execute T-/,
+                    `${label}: Blocked phase must not yield an execute-style recommendation → "${next}"`,
                 );
                 assert.match(next, /T-1A01/, `${label}: the blocked task should still be named`);
                 // The redirected value passes the same single-exit screen.
-                assert.doesNotMatch(next, /\/magic\.(spec|analyze)/, `${label}: §5 reserved command leaked`);
+                assert.doesNotMatch(
+                    next,
+                    /\/magic\.(spec|analyze)/,
+                    `${label}: §5 reserved command leaked`,
+                );
                 assert.strictEqual(
-                    (next.match(/\/magic\.[a-z.]+/g) || []).length, 1,
-                    `${label}: exactly one command expected → "${next}"`
+                    (next.match(/\/magic\.[a-z.]+/g) || []).length,
+                    1,
+                    `${label}: exactly one command expected → "${next}"`,
                 );
             }
 
@@ -2160,8 +2787,9 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('In Progress'));
             assert.match(
-                finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/,
-                'a healthy phase must still resolve to execution — the guard must not fire on every phase'
+                finalize.computeNextAction('run', 'engine', wsDir),
+                /^Execute T-1A01/,
+                'a healthy phase must still resolve to execution — the guard must not fire on every phase',
             );
         } finally {
             cleanup(tempDir);
@@ -2173,23 +2801,32 @@ describe('Magic Engine Scripts', () => {
         try {
             const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
-            const trackingBlock = (id, title, status, assignment) => [
-                `### [${id}] ${title}`,
-                '',
-                `- **Status:** ${status}`,
-                `- **Assignment:** ${assignment}`,
-                '',
-            ].join('\n');
+            const trackingBlock = (id, title, status, assignment) =>
+                [
+                    `### [${id}] ${title}`,
+                    '',
+                    `- **Status:** ${status}`,
+                    `- **Assignment:** ${assignment}`,
+                    '',
+                ].join('\n');
 
-            const phaseFile = (firstStatus, firstAssignment) => [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] First task',
-                '- [ ] [T-1A02] Second task', '',
-                '## Detailed Tracking', '',
-                trackingBlock('T-1A01', 'First task', firstStatus, firstAssignment),
-                trackingBlock('T-1A02', 'Second task', 'Todo', 'Agent'),
-            ].join('\n');
+            const phaseFile = (firstStatus, firstAssignment) =>
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] First task',
+                    '- [ ] [T-1A02] Second task',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    trackingBlock('T-1A01', 'First task', firstStatus, firstAssignment),
+                    trackingBlock('T-1A02', 'Second task', 'Todo', 'Agent'),
+                ].join('\n');
 
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
 
@@ -2199,42 +2836,85 @@ describe('Magic Engine Scripts', () => {
             // same shape as the Phase 19 R12 negative-control pattern).
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Blocked', 'Agent'));
             let next = finalize.computeNextAction('run', 'engine', wsDir);
-            assert.match(next, /^Execute T-1A02/, 'a Status: Blocked first item must be skipped for the actionable second item');
-            assert.doesNotMatch(next, /T-1A01/, 'the excluded task must not be named as executable');
+            assert.match(
+                next,
+                /^Execute T-1A02/,
+                'a Status: Blocked first item must be skipped for the actionable second item',
+            );
+            assert.doesNotMatch(
+                next,
+                /T-1A01/,
+                'the excluded task must not be named as executable',
+            );
 
             // (ii) first item Assignment: User → the later actionable item is named.
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Todo', 'User'));
             next = finalize.computeNextAction('run', 'engine', wsDir);
-            assert.match(next, /^Execute T-1A02/, 'an Assignment: User first item must be skipped for the actionable second item');
-            assert.doesNotMatch(next, /T-1A01/, 'the excluded task must not be named as executable');
+            assert.match(
+                next,
+                /^Execute T-1A02/,
+                'an Assignment: User first item must be skipped for the actionable second item',
+            );
+            assert.doesNotMatch(
+                next,
+                /T-1A01/,
+                'the excluded task must not be named as executable',
+            );
 
             // (iii) every open item excluded → terminal branch: not Execute-style,
             // not the plan-complete funnel, no reserved command, exactly one
             // /magic.* command named.
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] First task',
-                '- [ ] [T-1A02] Second task', '',
-                '## Detailed Tracking', '',
-                trackingBlock('T-1A01', 'First task', 'Blocked', 'Agent'),
-                trackingBlock('T-1A02', 'Second task', 'Todo', 'User'),
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] First task',
+                    '- [ ] [T-1A02] Second task',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    trackingBlock('T-1A01', 'First task', 'Blocked', 'Agent'),
+                    trackingBlock('T-1A02', 'Second task', 'Todo', 'User'),
+                ].join('\n'),
+            );
             next = finalize.computeNextAction('run', 'engine', wsDir);
-            assert.doesNotMatch(next, /^Execute T-/, 'all-excluded phase must not yield an execute-style recommendation');
-            assert.doesNotMatch(next, /Plan complete/, 'all-excluded phase must not be reported as plan-complete — tasks remain');
+            assert.doesNotMatch(
+                next,
+                /^Execute T-/,
+                'all-excluded phase must not yield an execute-style recommendation',
+            );
+            assert.doesNotMatch(
+                next,
+                /Plan complete/,
+                'all-excluded phase must not be reported as plan-complete — tasks remain',
+            );
             assert.doesNotMatch(next, /\/magic\.(spec|analyze)/, 'reserved command must not leak');
             assert.strictEqual(
-                (next.match(/\/magic\.[a-z.]+/g) || []).length, 1,
-                `exactly one command expected → "${next}"`
+                (next.match(/\/magic\.[a-z.]+/g) || []).length,
+                1,
+                `exactly one command expected → "${next}"`,
             );
-            assert.match(next, /T-1A01/, 'the terminal message should still name a task for context');
+            assert.match(
+                next,
+                /T-1A01/,
+                'the terminal message should still name a task for context',
+            );
 
             // (iv) negative control — everything Todo/Agent still dispatches
             // normally, the same shape as the existing SC-2.1(a) control case.
             fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), phaseFile('Todo', 'Agent'));
             next = finalize.computeNextAction('run', 'engine', wsDir);
-            assert.match(next, /^Execute T-1A01/, 'a fully agent-actionable phase must still dispatch its first task');
+            assert.match(
+                next,
+                /^Execute T-1A01/,
+                'a fully agent-actionable phase must still dispatch its first task',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2253,29 +2933,54 @@ describe('Magic Engine Scripts', () => {
             // so a title read from the stripped text loses the span. This
             // pins the field regression named `NEXT_ACTION_TITLE_STRIPPED`,
             // introduced by the SC-2.1(c) per-item scan itself.
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)',
+                    '',
+                ].join('\n'),
+            );
             let next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(
-                next, /`dev\/scripts\/sync-engine-snapshot\.js`/,
-                `title's code span must survive verbatim → "${next}"`
+                next,
+                /`dev\/scripts\/sync-engine-snapshot\.js`/,
+                `title's code span must survive verbatim → "${next}"`,
             );
-            assert.doesNotMatch(next, /  /, `no double-space artifact from a blanked span → "${next}"`);
+            assert.doesNotMatch(
+                next,
+                / {2}/,
+                `no double-space artifact from a blanked span → "${next}"`,
+            );
 
             // (ii) control — the detector must still read stripped text, not
             // raw: a quoted checklist line in prose must not be picked up as
             // a real task. This is the assertion that stops a future fix
             // from reverting to raw content wholesale and reopening SH-1.
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] Real actionable task', '',
-                '## Notes', '',
-                '`- [ ] [T-9Z99] Not a real task, just documentation`', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] Real actionable task',
+                    '',
+                    '## Notes',
+                    '',
+                    '`- [ ] [T-9Z99] Not a real task, just documentation`',
+                    '',
+                ].join('\n'),
+            );
             next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(next, /^Execute T-1A01/, `quoted line must not be picked up → "${next}"`);
             assert.doesNotMatch(next, /T-9Z99/, `quoted task ID must not be named → "${next}"`);
@@ -2288,33 +2993,69 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { wsDir, versionPath, finalizePath } = createFinalizeFixture(tempDir);
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [x] [T-1A01] Done\n',
+            );
             fs.writeFileSync(path.join(tempDir, 'dev', 'deliverable.js'), '// baseline\n');
             commitFixture(tempDir);
 
             // One whitelisted change (TASKS.md status flip) and one outside the
             // whitelist — the shape of every magic.run whose task produced real
             // source changes, since product code is never inside the whitelist.
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] Also done\n');
-            fs.writeFileSync(path.join(tempDir, 'dev', 'deliverable.js'), '// the task\'s actual output\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] Also done\n',
+            );
+            fs.writeFileSync(
+                path.join(tempDir, 'dev', 'deliverable.js'),
+                "// the task's actual output\n",
+            );
 
-            const out = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            const out = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
 
             // (a) Significance is unchanged: the whitelisted file still drives the bump.
-            assert.match(out, /Finalization complete/, 'whitelisted change must still be significant');
+            assert.match(
+                out,
+                /Finalization complete/,
+                'whitelisted change must still be significant',
+            );
             assert.strictEqual(
-                fs.readFileSync(versionPath, 'utf8').trim(), '0.1.1',
-                'the whitelist subset alone must still decide the version bump'
+                fs.readFileSync(versionPath, 'utf8').trim(),
+                '0.1.1',
+                'the whitelist subset alone must still decide the version bump',
             );
 
             // (b) The stdout listing names the non-whitelisted file alongside the whitelisted one.
-            const artifacts = out.slice(out.indexOf('### Changed artifacts'), out.indexOf('### Next step'));
-            assert.match(artifacts, /dev\/deliverable\.js/, 'stdout listing must name the non-whitelisted change');
-            assert.match(artifacts, /TASKS\.md/, 'stdout listing must still name the whitelisted change');
+            const artifacts = out.slice(
+                out.indexOf('### Changed artifacts'),
+                out.indexOf('### Next step'),
+            );
+            assert.match(
+                artifacts,
+                /dev\/deliverable\.js/,
+                'stdout listing must name the non-whitelisted change',
+            );
+            assert.match(
+                artifacts,
+                /TASKS\.md/,
+                'stdout listing must still name the whitelisted change',
+            );
 
             // SC-3 retirement regression pin: no commit-message output at all.
-            assert.doesNotMatch(out, /Suggested commit message/i, 'SC-3 retired: no commit suggestion is emitted');
-            assert.doesNotMatch(out, /Auto-commit/i, 'SC-3 retired: no auto-commit notice is emitted');
+            assert.doesNotMatch(
+                out,
+                /Suggested commit message/i,
+                'SC-3 retired: no commit suggestion is emitted',
+            );
+            assert.doesNotMatch(
+                out,
+                /Auto-commit/i,
+                'SC-3 retired: no auto-commit notice is emitted',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2323,7 +3064,9 @@ describe('Magic Engine Scripts', () => {
     test('buildChangelogBullet keeps spec identifiers out of the product CHANGELOG (RC-11)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { buildChangelogBullet } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'commit-suggester.js'));
+            const { buildChangelogBullet } = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'commit-suggester.js'),
+            );
 
             // Asserted against the function's return value, not a written
             // CHANGELOG.md — only a real invocation touches that file, and this
@@ -2332,9 +3075,17 @@ describe('Magic Engine Scripts', () => {
             const single = buildChangelogBullet('spec', 'main', [
                 { path: '.design/main/specifications/l1-model-runtime.md', status: 'modified' },
             ]);
-            assert.doesNotMatch(single, /model-runtime/, 'single-spec branch must not embed the artifact ID');
+            assert.doesNotMatch(
+                single,
+                /model-runtime/,
+                'single-spec branch must not embed the artifact ID',
+            );
             assert.match(single, /specification/, 'the bullet must still describe what changed');
-            assert.match(single, /\(main\)/, 'the workspace stays in the bullet — it is not an SDD identifier');
+            assert.match(
+                single,
+                /\(main\)/,
+                'the workspace stays in the bullet — it is not an SDD identifier',
+            );
 
             // The branch that was already correct must stay correct.
             const multi = buildChangelogBullet('spec', 'main', [
@@ -2347,7 +3098,11 @@ describe('Magic Engine Scripts', () => {
             const runBullet = buildChangelogBullet('run', 'main', [
                 { path: '.design/main/tasks/phase-7.md', status: 'modified' },
             ]);
-            assert.doesNotMatch(runBullet, /phase-7/, 'run branch must not embed a task-file identifier');
+            assert.doesNotMatch(
+                runBullet,
+                /phase-7/,
+                'run branch must not embed a task-file identifier',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2362,19 +3117,29 @@ describe('Magic Engine Scripts', () => {
             const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
 
             // (a) Done, all checklist items [x], but Notes quote `- [ ]` in prose → archivable.
-            fs.writeFileSync(path.join(tasksDir, 'phase-20.md'),
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-20.md'),
                 '---\nphase: 20\nname: "Quoting"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-20A01] Done item\n\n' +
-                '## Detailed Tracking\n\n### [T-20A01]\n- **Notes:** detect open `- [ ]` tasks via regex.\n');
+                    '## Atomic Checklist\n\n- [x] [T-20A01] Done item\n\n' +
+                    '## Detailed Tracking\n\n### [T-20A01]\n- **Notes:** detect open `- [ ]` tasks via regex.\n',
+            );
 
             // (b) Done but a genuine unchecked checklist line → NOT archivable.
-            fs.writeFileSync(path.join(tasksDir, 'phase-21.md'),
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-21.md'),
                 '---\nphase: 21\nname: "Open"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-21A01] Done\n- [ ] [T-21A02] Still open\n');
+                    '## Atomic Checklist\n\n- [x] [T-21A01] Done\n- [ ] [T-21A02] Still open\n',
+            );
 
-            const candidates = archiver.findArchiveCandidates(wsDir).map(c => c.file);
-            assert.ok(candidates.includes('phase-20.md'), 'prose `- [ ]` must not block archival (R7 fix)');
-            assert.ok(!candidates.includes('phase-21.md'), 'a real unchecked checklist line must still block archival');
+            const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
+            assert.ok(
+                candidates.includes('phase-20.md'),
+                'prose `- [ ]` must not block archival (R7 fix)',
+            );
+            assert.ok(
+                !candidates.includes('phase-21.md'),
+                'a real unchecked checklist line must still block archival',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2390,20 +3155,28 @@ describe('Magic Engine Scripts', () => {
 
             // A track-split workbook: Done, checklist fully checked. Before the
             // fix the name filter dropped it before its status was ever read.
-            fs.writeFileSync(path.join(tasksDir, 'phase-10b.md'),
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-10b.md'),
                 '---\nphase: 10\nname: "Track B"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-10B01] Done item\n');
+                    '## Atomic Checklist\n\n- [x] [T-10B01] Done item\n',
+            );
 
             // Same shape, still open → the suffix must not become a free pass.
-            fs.writeFileSync(path.join(tasksDir, 'phase-10a.md'),
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-10a.md'),
                 '---\nphase: 10\nname: "Track A"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-10A01] Done\n- [ ] [T-10A02] Open\n');
+                    '## Atomic Checklist\n\n- [x] [T-10A01] Done\n- [ ] [T-10A02] Open\n',
+            );
 
-            const candidates = archiver.findArchiveCandidates(wsDir).map(c => c.file);
-            assert.ok(candidates.includes('phase-10b.md'),
-                'a track-suffixed phase file must be evaluated on status, not excluded by name');
-            assert.ok(!candidates.includes('phase-10a.md'),
-                'an open checklist must still block archival for suffixed files');
+            const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
+            assert.ok(
+                candidates.includes('phase-10b.md'),
+                'a track-suffixed phase file must be evaluated on status, not excluded by name',
+            );
+            assert.ok(
+                !candidates.includes('phase-10a.md'),
+                'an open checklist must still block archival for suffixed files',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2416,16 +3189,22 @@ describe('Magic Engine Scripts', () => {
 
             // Lexical sort would yield phase-10* before phase-2 — the numeric
             // ordering below is what callers and the archival log rely on.
-            for (const [file, phase] of [['phase-10b.md', 10], ['phase-2.md', 2], ['phase-10a.md', 10]]) {
-                fs.writeFileSync(path.join(tasksDir, file),
+            for (const [file, phase] of [
+                ['phase-10b.md', 10],
+                ['phase-2.md', 2],
+                ['phase-10a.md', 10],
+            ]) {
+                fs.writeFileSync(
+                    path.join(tasksDir, file),
                     `---\nphase: ${phase}\nname: "W"\nstatus: Done\n---\n\n` +
-                    '## Atomic Checklist\n\n- [x] [T-1A01] Done\n');
+                        '## Atomic Checklist\n\n- [x] [T-1A01] Done\n',
+                );
             }
 
             assert.deepStrictEqual(
-                archiver.findArchiveCandidates(wsDir).map(c => c.file),
+                archiver.findArchiveCandidates(wsDir).map((c) => c.file),
                 ['phase-2.md', 'phase-10a.md', 'phase-10b.md'],
-                'phase files sort by number first, then by track suffix'
+                'phase files sort by number first, then by track suffix',
             );
         } finally {
             cleanup(tempDir);
@@ -2440,12 +3219,18 @@ describe('Magic Engine Scripts', () => {
             // Not a phase workbook by any spelling — it must never be archived,
             // but the caller has to be able to say so out loud. A silent drop is
             // indistinguishable from "evaluated and found ineligible".
-            fs.writeFileSync(path.join(tasksDir, '02-legacy-workbook.md'), '# Legacy\n\n- [x] done\n');
+            fs.writeFileSync(
+                path.join(tasksDir, '02-legacy-workbook.md'),
+                '# Legacy\n\n- [x] done\n',
+            );
 
             const result = archiver.archiveCompletedPhases(wsDir);
             assert.deepStrictEqual(result.archived, [], 'a non-phase file is never archived');
-            assert.deepStrictEqual(result.unrecognized, ['02-legacy-workbook.md'],
-                'a non-phase .md in tasks/ is surfaced, not swallowed');
+            assert.deepStrictEqual(
+                result.unrecognized,
+                ['02-legacy-workbook.md'],
+                'a non-phase .md in tasks/ is surfaced, not swallowed',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2455,18 +3240,24 @@ describe('Magic Engine Scripts', () => {
     // row — the fixed point every archival-rewrite test in this section starts
     // from before layering its own PLAN.md content.
     const makeDoneShippingPhaseFixture = (tasksDir, wsDir) => {
-        fs.writeFileSync(path.join(tasksDir, 'phase-3.md'),
+        fs.writeFileSync(
+            path.join(tasksDir, 'phase-3.md'),
             '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
-            '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n');
+                '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n',
+        );
 
         const tasksPath = path.join(wsDir, 'TASKS.md');
-        fs.writeFileSync(tasksPath, [
-            '# Master Task Index', '',
-            '| Phase | Description | Status |',
-            '| --- | --- | --- |',
-            '| [Phase 3](tasks/phase-3.md) | Shipping | `Done` |',
-            '',
-        ].join('\n'));
+        fs.writeFileSync(
+            tasksPath,
+            [
+                '# Master Task Index',
+                '',
+                '| Phase | Description | Status |',
+                '| --- | --- | --- |',
+                '| [Phase 3](tasks/phase-3.md) | Shipping | `Done` |',
+                '',
+            ].join('\n'),
+        );
         return tasksPath;
     };
 
@@ -2485,35 +3276,59 @@ describe('Magic Engine Scripts', () => {
     test('archiveCompletedPhases rewrites phase links in both TASKS.md and PLAN.md', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { archiver, wsDir, tasksDir, tasksPath, planPath } = requireShippingPhaseWithPlan(tempDir);
-            fs.writeFileSync(planPath, [
-                '# Implementation Plan',
-                '',
-                '## Phase 3 — Shipping',
-                '',
-                'Breakdown lives in [Phase 3](tasks/phase-3.md).',
-                '',
-            ].join('\n'));
+            const { archiver, wsDir, tasksDir, tasksPath, planPath } =
+                requireShippingPhaseWithPlan(tempDir);
+            fs.writeFileSync(
+                planPath,
+                [
+                    '# Implementation Plan',
+                    '',
+                    '## Phase 3 — Shipping',
+                    '',
+                    'Breakdown lives in [Phase 3](tasks/phase-3.md).',
+                    '',
+                ].join('\n'),
+            );
 
             const { archived } = archiver.archiveCompletedPhases(wsDir);
-            assert.deepStrictEqual(archived.map(a => a.file), ['phase-3.md'], 'the Done phase must be archived');
+            assert.deepStrictEqual(
+                archived.map((a) => a.file),
+                ['phase-3.md'],
+                'the Done phase must be archived',
+            );
 
             assert.ok(
                 fs.existsSync(path.join(wsDir, 'archives', 'tasks', 'phase-3.md')),
-                'phase file must be moved into archives/tasks/'
+                'phase file must be moved into archives/tasks/',
             );
             assert.ok(
                 !fs.existsSync(path.join(tasksDir, 'phase-3.md')),
-                'archival is a move, not a copy'
+                'archival is a move, not a copy',
             );
 
             const tasks = fs.readFileSync(tasksPath, 'utf8');
-            assert.match(tasks, /\(archives\/tasks\/phase-3\.md\)/, 'TASKS.md link must be rewritten');
-            assert.match(tasks, /`Done \(Archived\)`/, 'TASKS.md row status must become Done (Archived)');
+            assert.match(
+                tasks,
+                /\(archives\/tasks\/phase-3\.md\)/,
+                'TASKS.md link must be rewritten',
+            );
+            assert.match(
+                tasks,
+                /`Done \(Archived\)`/,
+                'TASKS.md row status must become Done (Archived)',
+            );
 
             const plan = fs.readFileSync(planPath, 'utf8');
-            assert.match(plan, /\(archives\/tasks\/phase-3\.md\)/, 'PLAN.md link must be rewritten');
-            assert.doesNotMatch(plan, /\(tasks\/phase-3\.md\)/, 'PLAN.md must not keep a dangling link to the moved file');
+            assert.match(
+                plan,
+                /\(archives\/tasks\/phase-3\.md\)/,
+                'PLAN.md link must be rewritten',
+            );
+            assert.doesNotMatch(
+                plan,
+                /\(tasks\/phase-3\.md\)/,
+                'PLAN.md must not keep a dangling link to the moved file',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2528,34 +3343,50 @@ describe('Magic Engine Scripts', () => {
             // the label *is* the path — which is the form the R10 fix targets.
             // A separate Backlog line mentions the same path in plain prose,
             // describing history; that mention must survive byte-for-byte.
-            fs.writeFileSync(planPath, [
-                '### Phase 3 — Shipping', '',
-                '- [x] **Shipping** [L2]',
-                '  - Tasks: [tasks/phase-3.md](tasks/phase-3.md)', '',
-                '## Backlog', '',
-                '- Historical note: the original breakdown lived at tasks/phase-3.md before later restructuring.',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                planPath,
+                [
+                    '### Phase 3 — Shipping',
+                    '',
+                    '- [x] **Shipping** [L2]',
+                    '  - Tasks: [tasks/phase-3.md](tasks/phase-3.md)',
+                    '',
+                    '## Backlog',
+                    '',
+                    '- Historical note: the original breakdown lived at tasks/phase-3.md before later restructuring.',
+                    '',
+                ].join('\n'),
+            );
 
             const { archived } = archiver.archiveCompletedPhases(wsDir);
-            assert.deepStrictEqual(archived.map(a => a.file), ['phase-3.md']);
+            assert.deepStrictEqual(
+                archived.map((a) => a.file),
+                ['phase-3.md'],
+            );
 
             const plan = fs.readFileSync(planPath, 'utf8');
             assert.match(
-                plan, /Tasks: \[archives\/tasks\/phase-3\.md\]\(archives\/tasks\/phase-3\.md\)/,
-                'the self-labelling link must move both its label and its target together'
+                plan,
+                /Tasks: \[archives\/tasks\/phase-3\.md\]\(archives\/tasks\/phase-3\.md\)/,
+                'the self-labelling link must move both its label and its target together',
             );
             assert.doesNotMatch(
-                plan, /\[tasks\/phase-3\.md\]/,
-                'no trace of the pre-move self-label may remain'
+                plan,
+                /\[tasks\/phase-3\.md\]/,
+                'no trace of the pre-move self-label may remain',
             );
             assert.match(
-                plan, /Historical note: the original breakdown lived at tasks\/phase-3\.md before later restructuring\./,
-                'a bare prose mention of the path must survive byte-for-byte — it describes history, not a live link'
+                plan,
+                /Historical note: the original breakdown lived at tasks\/phase-3\.md before later restructuring\./,
+                'a bare prose mention of the path must survive byte-for-byte — it describes history, not a live link',
             );
 
             const tasks = fs.readFileSync(tasksPath, 'utf8');
-            assert.match(tasks, /\[Phase 3\]\(archives\/tasks\/phase-3\.md\)/, 'TASKS.md label (a phase number, not a path) must be unchanged');
+            assert.match(
+                tasks,
+                /\[Phase 3\]\(archives\/tasks\/phase-3\.md\)/,
+                'TASKS.md label (a phase number, not a path) must be unchanged',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2569,46 +3400,52 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
-                '# Master Task Index',
-                '',
-                '### Phase 2 Checklist',
-                '',
-                '- [x] [T-2A01] First',
-                '- [x] [T-2A02] Second',
-                '- [ ] [T-2A03] Third',
-                '',
-                '## Registry',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
-                '| [Phase 2](tasks/phase-2.md) | Feature | `In Progress` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                [
+                    '# Master Task Index',
+                    '',
+                    '### Phase 2 Checklist',
+                    '',
+                    '- [x] [T-2A01] First',
+                    '- [x] [T-2A02] Second',
+                    '- [ ] [T-2A03] Third',
+                    '',
+                    '## Registry',
+                    '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                    '| [Phase 2](tasks/phase-2.md) | Feature | `In Progress` |',
+                    '',
+                ].join('\n'),
+            );
 
             // STATE.md with stale counters AND hand-authored narrative in the fence.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State',
-                '',
-                '**Workspace:** engine',
-                '**Updated:** 2026-01-01 00:00',
-                '**Phase:** 2',
-                '**Status:** Active',
-                '',
-                '## Current Position',
-                '',
-                '- **Next Action:** whatever',
-                '',
-                '## Progress',
-                '',
-                '```',
-                'Phase 2: [0/3] ░░░░░░░░ 0%',
-                'Overall: [0/2] ░░░░░░░░ 0%',
-                'T-2A02 landed the parser rework; edge cases in Notes.',
-                '```',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Workspace:** engine',
+                    '**Updated:** 2026-01-01 00:00',
+                    '**Phase:** 2',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Next Action:** whatever',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Phase 2: [0/3] ░░░░░░░░ 0%',
+                    'Overall: [0/2] ░░░░░░░░ 0%',
+                    'T-2A02 landed the parser rework; edge cases in Notes.',
+                    '```',
+                    '',
+                ].join('\n'),
+            );
 
             const state = autoProgressState(updateState, wsDir);
 
@@ -2616,8 +3453,9 @@ describe('Magic Engine Scripts', () => {
             assert.match(state, /Overall: \[1\/2\]/, 'overall counter line must be recomputed');
             assert.doesNotMatch(state, /\[0\/3\]/, 'stale counters must not survive');
             assert.match(
-                state, /T-2A02 landed the parser rework/,
-                'hand-authored narrative inside the Progress fence must be preserved'
+                state,
+                /T-2A02 landed the parser rework/,
+                'hand-authored narrative inside the Progress fence must be preserved',
             );
         } finally {
             cleanup(tempDir);
@@ -2627,24 +3465,42 @@ describe('Magic Engine Scripts', () => {
     test('updateState autoProgress replaces template placeholder counters without duplicating them', () => {
         const tempDir = createTempWorkspace();
         try {
-            const realTemplate = path.resolve(__dirname, '..', '..', '.magic', 'templates', 'state.md');
+            const realTemplate = path.resolve(
+                __dirname,
+                '..',
+                '..',
+                '.magic',
+                'templates',
+                'state.md',
+            );
             fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'state.md'));
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                [
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                    '',
+                ].join('\n'),
+            );
 
             // Bootstrap STATE.md from the real template (placeholder counters),
             // then recompute: `{filled}/{total}`-style placeholders are engine-owned
             // lines and must be replaced, not preserved as narrative.
             const state = autoProgressState(updateState, wsDir, { phase: '1' });
 
-            assert.match(state, /Overall: \[1\/1\]/, 'placeholder block must be recomputed from TASKS.md');
-            assert.doesNotMatch(state, /\{filled\}|\{done\}/, 'template placeholder counters must not survive as narrative');
+            assert.match(
+                state,
+                /Overall: \[1\/1\]/,
+                'placeholder block must be recomputed from TASKS.md',
+            );
+            assert.doesNotMatch(
+                state,
+                /\{filled\}|\{done\}/,
+                'template placeholder counters must not survive as narrative',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2653,52 +3509,78 @@ describe('Magic Engine Scripts', () => {
     test('computeProgress emits a phase counter for the two-level task layout (SC-2.3)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { updateState, wsDir, tasksDir, tasksPath } = requireUpdateStateWithTasks(tempDir);
+            const { updateState, wsDir, tasksDir, tasksPath } =
+                requireUpdateStateWithTasks(tempDir);
 
             // Registry-only TASKS.md: no inline `### Phase N Checklist` heading.
             // This is the canonical layout, so the phase line must come from the
             // phase file — deriving it from the inline heading alone produced an
             // aggregate-only block for every project on the modern format.
-            fs.writeFileSync(tasksPath, [
-                '# Master Task Index',
-                '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
-                '| [Phase 3](tasks/phase-3.md) | Feature | `In Progress` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                tasksPath,
+                [
+                    '# Master Task Index',
+                    '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |',
+                    '| [Phase 3](tasks/phase-3.md) | Feature | `In Progress` |',
+                    '',
+                ].join('\n'),
+            );
 
-            fs.writeFileSync(path.join(tasksDir, 'phase-3.md'), [
-                '---', 'phase: 3', 'status: In Progress', '---',
-                '',
-                '## Atomic Checklist',
-                '',
-                '- [x] [T-3A01] One',
-                '- [x] [T-3A02] Two',
-                '- [ ] [T-3A03] Three',
-                '- [ ] [T-3A04] Four',
-                '- [ ] [T-3A05] Five',
-                '',
-                '## Detailed Tracking',
-                '',
-                '### [T-3A03] Three',
-                '',
-                '- **Notes:** the archiver looks for `- [ ]` lines; quoting one here',
-                '  must not inflate the count.',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-3.md'),
+                [
+                    '---',
+                    'phase: 3',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [x] [T-3A01] One',
+                    '- [x] [T-3A02] Two',
+                    '- [ ] [T-3A03] Three',
+                    '- [ ] [T-3A04] Four',
+                    '- [ ] [T-3A05] Five',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    '### [T-3A03] Three',
+                    '',
+                    '- **Notes:** the archiver looks for `- [ ]` lines; quoting one here',
+                    '  must not inflate the count.',
+                    '',
+                ].join('\n'),
+            );
 
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 3', '**Status:** Active', '',
-                '## Progress', '', '```', 'Overall: [0/2] ░░░░░░░░ 0%', '```', '',
-                '## Recent Decisions', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 3',
+                    '**Status:** Active',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Overall: [0/2] ░░░░░░░░ 0%',
+                    '```',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                ].join('\n'),
+            );
 
             const state = autoProgressState(updateState, wsDir);
 
-            assert.match(state, /Phase 3: \[2\/5\]/, 'phase counter must be derived from the phase file');
+            assert.match(
+                state,
+                /Phase 3: \[2\/5\]/,
+                'phase counter must be derived from the phase file',
+            );
             assert.match(state, /Overall: \[1\/2\]/, 'aggregate counter must still be recomputed');
         } finally {
             cleanup(tempDir);
@@ -2710,43 +3592,73 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
-                '### Phase 1 Checklist',
-                '',
-                '- [x] [T-1A01] One',
-                '- [ ] [T-1A02] Two',
-                '',
-                '## Registry',
-                '',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                [
+                    '### Phase 1 Checklist',
+                    '',
+                    '- [x] [T-1A01] One',
+                    '- [ ] [T-1A02] Two',
+                    '',
+                    '## Registry',
+                    '',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
+                    '',
+                ].join('\n'),
+            );
 
             // `Overall` and `Phase {N}` are the only labels computeProgress emits.
             // Anything else sharing the shape is operator narrative: nothing
             // regenerates it, so matching it as engine-owned means deleting it.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 1', '**Status:** Active', '',
-                '## Progress', '', '```',
-                'Phase 1: [0/2] ░░░░░░░░ 0%',
-                'Overall: [0/1] ░░░░░░░░ 0%',
-                'Specification: [3/3] complete',
-                'Plan: [1/1] complete',
-                'Implementation: [1/5] in progress — see notes below',
-                '```', '',
-                '## Recent Decisions', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1',
+                    '**Status:** Active',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Phase 1: [0/2] ░░░░░░░░ 0%',
+                    'Overall: [0/1] ░░░░░░░░ 0%',
+                    'Specification: [3/3] complete',
+                    'Plan: [1/1] complete',
+                    'Implementation: [1/5] in progress — see notes below',
+                    '```',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                ].join('\n'),
+            );
 
             const state = autoProgressState(updateState, wsDir);
 
-            assert.match(state, /Phase 1: \[1\/2\]/, 'engine-owned phase counter must be regenerated');
-            assert.match(state, /Overall: \[0\/1\]/, 'engine-owned aggregate counter must be regenerated');
-            assert.match(state, /Specification: \[3\/3\] complete/, 'custom counter-shaped line must survive');
-            assert.match(state, /Plan: \[1\/1\] complete/, 'custom counter-shaped line must survive');
             assert.match(
-                state, /Implementation: \[1\/5\] in progress — see notes below/,
-                'custom counter-shaped line must survive verbatim, trailing prose included'
+                state,
+                /Phase 1: \[1\/2\]/,
+                'engine-owned phase counter must be regenerated',
+            );
+            assert.match(
+                state,
+                /Overall: \[0\/1\]/,
+                'engine-owned aggregate counter must be regenerated',
+            );
+            assert.match(
+                state,
+                /Specification: \[3\/3\] complete/,
+                'custom counter-shaped line must survive',
+            );
+            assert.match(
+                state,
+                /Plan: \[1\/1\] complete/,
+                'custom counter-shaped line must survive',
+            );
+            assert.match(
+                state,
+                /Implementation: \[1\/5\] in progress — see notes below/,
+                'custom counter-shaped line must survive verbatim, trailing prose included',
             );
         } finally {
             cleanup(tempDir);
@@ -2758,8 +3670,10 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'),
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
+            );
 
             // A string-form .replace() re-scans its own result for `$1`-`$9`,
             // so a dollar amount in preserved narrative used to splice captured
@@ -2769,30 +3683,47 @@ describe('Magic Engine Scripts', () => {
                 'Budget check: spend is $1,200 of the',
                 '$3,000 sprint allocation — on track.',
             ];
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 1', '**Status:** Active', '',
-                '## Progress', '', '```',
-                'Overall: [0/1] ░░░░░░░░ 0%',
-                ...narrative,
-                '```', '',
-                '## Recent Decisions', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1',
+                    '**Status:** Active',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Overall: [0/1] ░░░░░░░░ 0%',
+                    ...narrative,
+                    '```',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                ].join('\n'),
+            );
 
-            const before = (fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8').match(/```/g) || []).length;
+            const before = (
+                fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8').match(/```/g) || []
+            ).length;
             const state = autoProgressState(updateState, wsDir);
 
             for (const line of narrative) {
                 assert.ok(
                     state.includes(line),
-                    `narrative line must survive byte-for-byte → missing "${line}"`
+                    `narrative line must survive byte-for-byte → missing "${line}"`,
                 );
             }
             assert.strictEqual(
-                (state.match(/```/g) || []).length, before,
-                'the fence count must not change — an injected fence unbalances every section below it'
+                (state.match(/```/g) || []).length,
+                before,
+                'the fence count must not change — an injected fence unbalances every section below it',
             );
-            assert.doesNotMatch(state, /## Progress[\s\S]*## Progress/, 'no structural fragment may be spliced into the fence');
+            assert.doesNotMatch(
+                state,
+                /## Progress[\s\S]*## Progress/,
+                'no structural fragment may be spliced into the fence',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2810,16 +3741,29 @@ describe('Magic Engine Scripts', () => {
             // Recent Decisions is at its 1-entry floor the guard has nothing
             // left to remove — and must say so instead of reusing the message
             // that claims a prune happened.
-            const buildState = (decisionCount) => [
-                '# Project State', '',
-                '**Phase:** 1', '**Status:** Active', '',
-                '## Recent Decisions', '',
-                ...Array.from({ length: decisionCount }, (_, i) => `- 2026-01-0${i + 1} **Decision:** entry ${i + 1}`),
-                '',
-                '## Blocking Constraints', '',
-                ...Array.from({ length: 95 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
-                '',
-            ].join('\n');
+            const buildState = (decisionCount) =>
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1',
+                    '**Status:** Active',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                    ...Array.from(
+                        { length: decisionCount },
+                        (_, i) => `- 2026-01-0${i + 1} **Decision:** entry ${i + 1}`,
+                    ),
+                    '',
+                    '## Blocking Constraints',
+                    '',
+                    ...Array.from(
+                        { length: 95 },
+                        (_, i) =>
+                            `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
+                    ),
+                    '',
+                ].join('\n');
 
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), buildState(1));
             const exhausted = captureWarnings(() => updateState(wsDir, {}, {}));
@@ -2830,12 +3774,25 @@ describe('Magic Engine Scripts', () => {
             assert.match(exhausted, /exceeds 100 lines/, 'the cap breach must still be reported');
             assert.match(restored, /exceeds 100 lines/, 'the cap breach must still be reported');
             assert.notStrictEqual(
-                exhausted, restored,
-                'an exhausted guard must be observably different from a successful prune'
+                exhausted,
+                restored,
+                'an exhausted guard must be observably different from a successful prune',
             );
-            assert.match(exhausted, /nothing was pruned/, 'the exhausted case must say nothing was removed');
-            assert.match(exhausted, /Blocking Constraints/, 'the exhausted case must name the section to review');
-            assert.doesNotMatch(restored, /nothing was pruned/, 'a real prune must not claim exhaustion');
+            assert.match(
+                exhausted,
+                /nothing was pruned/,
+                'the exhausted case must say nothing was removed',
+            );
+            assert.match(
+                exhausted,
+                /Blocking Constraints/,
+                'the exhausted case must name the section to review',
+            );
+            assert.doesNotMatch(
+                restored,
+                /nothing was pruned/,
+                'a real prune must not claim exhaustion',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -2851,36 +3808,50 @@ describe('Magic Engine Scripts', () => {
             // `block.split(/\r?\n/)` down to lines matching the entry marker
             // regex alone, so a continuation line (carrying no marker of its
             // own) was silently dropped on every subsequent rebuild.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 1', '**Status:** Active', '',
-                '## Recent Decisions', '',
-                '<!-- Last 3-5 locked decisions. -->', '',
-                '- 2026-01-01 **Decision:** This is a long decision that wraps',
-                '  onto a second continuation line for readability.',
-                '- 2025-12-31 **Pattern:** A short one-line entry.',
-                '',
-                '## Blocking Constraints', '',
-                '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
-                '<!-- Agent MUST explicitly acknowledge each constraint before working. -->', '',
-                '- [C-001] **Do not X**: because Y happened before',
-                '  and here is the continuation explaining Y.',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1',
+                    '**Status:** Active',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                    '<!-- Last 3-5 locked decisions. -->',
+                    '',
+                    '- 2026-01-01 **Decision:** This is a long decision that wraps',
+                    '  onto a second continuation line for readability.',
+                    '- 2025-12-31 **Pattern:** A short one-line entry.',
+                    '',
+                    '## Blocking Constraints',
+                    '',
+                    '<!-- Anti-patterns discovered through real failures. MANDATORY reading. -->',
+                    '<!-- Agent MUST explicitly acknowledge each constraint before working. -->',
+                    '',
+                    '- [C-001] **Do not X**: because Y happened before',
+                    '  and here is the continuation explaining Y.',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { decision: 'A brand new decision' }, { addDecision: true });
-            updateState(wsDir, { constraint: { title: 'No Z', desc: 'Because W' } }, { addConstraint: true });
+            updateState(
+                wsDir,
+                { constraint: { title: 'No Z', desc: 'Because W' } },
+                { addConstraint: true },
+            );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.match(
                 state,
                 /- 2026-01-01 \*\*Decision:\*\* This is a long decision that wraps\r?\n {2}onto a second continuation line for readability\./,
-                'the wrapped decision continuation must survive the window rebuild, attached to its own entry'
+                'the wrapped decision continuation must survive the window rebuild, attached to its own entry',
             );
             assert.match(
                 state,
                 /- \[C-001\] \*\*Do not X\*\*: because Y happened before\r?\n {2}and here is the continuation explaining Y\./,
-                'the wrapped constraint continuation must survive the rebuild, attached to its own entry'
+                'the wrapped constraint continuation must survive the rebuild, attached to its own entry',
             );
         } finally {
             cleanup(tempDir);
@@ -2897,17 +3868,26 @@ describe('Magic Engine Scripts', () => {
             // oldest entry that deletes only its first line, leaving the
             // continuation as an orphaned fragment where the entry used to be.
             const state = [
-                '# Project State', '',
-                '**Phase:** 1', '**Status:** Active', '',
-                '## Recent Decisions', '',
+                '# Project State',
+                '',
+                '**Phase:** 1',
+                '**Status:** Active',
+                '',
+                '## Recent Decisions',
+                '',
                 '- 2026-01-05 **Decision:** entry 5',
                 '- 2026-01-04 **Decision:** entry 4',
                 '- 2026-01-03 **Decision:** entry 3',
                 '- 2026-01-02 **Decision:** the oldest entry wraps',
                 '  onto a continuation line that must be pruned along with it.',
                 '',
-                '## Blocking Constraints', '',
-                ...Array.from({ length: 95 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+                '## Blocking Constraints',
+                '',
+                ...Array.from(
+                    { length: 95 },
+                    (_, i) =>
+                        `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
+                ),
                 '',
             ].join('\n');
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), state);
@@ -2916,12 +3896,14 @@ describe('Magic Engine Scripts', () => {
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.doesNotMatch(
-                after, /onto a continuation line that must be pruned along with it\./,
-                "the oldest entry's continuation line must be pruned along with its marker line"
+                after,
+                /onto a continuation line that must be pruned along with it\./,
+                "the oldest entry's continuation line must be pruned along with its marker line",
             );
             assert.doesNotMatch(
-                after, /the oldest entry wraps/,
-                "the oldest entry's own marker line must be pruned too"
+                after,
+                /the oldest entry wraps/,
+                "the oldest entry's own marker line must be pruned too",
             );
             assert.match(after, /entry 3/, 'entries within the cap must survive');
         } finally {
@@ -2941,32 +3923,45 @@ describe('Magic Engine Scripts', () => {
             // orphaned, under text they no longer belonged to. Every field goes
             // through the same loop, so a header field is covered as well as
             // the three `- **X:**` bullets.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Workspace:** docs',
-                '**Updated:** 2026-01-01 00:00',
-                '**Phase:** 4 — A long phase name that an agent wrapped',
-                '  onto a continuation line',
-                '**Status:** Active', '',
-                '## Current Position', '',
-                '- **Task:** [T-3A02] A long task title that an agent wrapped onto',
-                '  a second physical line because it exceeded the column limit,',
-                '  and then a third.',
-                '- **Spec:** l1-example.md §3, wrapped so that the',
-                '  spec pointer spills onto its own continuation line.',
-                '- **Next Action:** Run the next task; the description is long',
-                '  enough that it wraps once more onto a continuation line.', '',
-                '## Recent Decisions', '',
-                '- 2026-01-02 **Decision:** an entry this call must not touch',
-                '  together with its own continuation line.', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Workspace:** docs',
+                    '**Updated:** 2026-01-01 00:00',
+                    '**Phase:** 4 — A long phase name that an agent wrapped',
+                    '  onto a continuation line',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-3A02] A long task title that an agent wrapped onto',
+                    '  a second physical line because it exceeded the column limit,',
+                    '  and then a third.',
+                    '- **Spec:** l1-example.md §3, wrapped so that the',
+                    '  spec pointer spills onto its own continuation line.',
+                    '- **Next Action:** Run the next task; the description is long',
+                    '  enough that it wraps once more onto a continuation line.',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                    '- 2026-01-02 **Decision:** an entry this call must not touch',
+                    '  together with its own continuation line.',
+                    '',
+                ].join('\n'),
+            );
 
-            updateState(wsDir, {
-                phase: '5 — Next',
-                task: '[T-3A03] Short',
-                spec: 'x.md',
-                nextAction: 'Go',
-            }, {});
+            updateState(
+                wsDir,
+                {
+                    phase: '5 — Next',
+                    task: '[T-3A03] Short',
+                    spec: 'x.md',
+                    nextAction: 'Go',
+                },
+                {},
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             // Whole-file equality (modulo the volatile timestamp) rather than a
@@ -2975,19 +3970,25 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 after.replace(/^\*\*Updated:\*\* .*\n/m, ''),
                 [
-                    '# Project State', '',
+                    '# Project State',
+                    '',
                     '**Workspace:** docs',
                     '**Phase:** 5 — Next',
-                    '**Status:** Active', '',
-                    '## Current Position', '',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
                     '- **Task:** [T-3A03] Short',
                     '- **Spec:** x.md',
-                    '- **Next Action:** Go', '',
-                    '## Recent Decisions', '',
+                    '- **Next Action:** Go',
+                    '',
+                    '## Recent Decisions',
+                    '',
                     '- 2026-01-02 **Decision:** an entry this call must not touch',
-                    '  together with its own continuation line.', '',
+                    '  together with its own continuation line.',
+                    '',
                 ].join('\n'),
-                'each patched field must occupy exactly one line, its old continuation lines gone and every other line untouched'
+                'each patched field must occupy exactly one line, its old continuation lines gone and every other line untouched',
             );
         } finally {
             cleanup(tempDir);
@@ -3005,15 +4006,20 @@ describe('Magic Engine Scripts', () => {
             // likely to be its neighbour or a stray note as its wrap, and
             // guessing wrong deletes it. Indentation is the only continuation
             // signal a header field honours.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Workspace:** docs',
-                '**Updated:** 2026-01-01 00:00',
-                '**Phase:** 1 — Bootstrap',
-                '  wrapped and indented',
-                '**Status:** Active',
-                'An unindented line directly under the header fields.', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Workspace:** docs',
+                    '**Updated:** 2026-01-01 00:00',
+                    '**Phase:** 1 — Bootstrap',
+                    '  wrapped and indented',
+                    '**Status:** Active',
+                    'An unindented line directly under the header fields.',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { phase: '2 — Build', status: 'Blocked' }, {});
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
@@ -3021,13 +4027,15 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 after.replace(/^\*\*Updated:\*\* .*\n/m, ''),
                 [
-                    '# Project State', '',
+                    '# Project State',
+                    '',
                     '**Workspace:** docs',
                     '**Phase:** 2 — Build',
                     '**Status:** Blocked',
-                    'An unindented line directly under the header fields.', '',
+                    'An unindented line directly under the header fields.',
+                    '',
                 ].join('\n'),
-                'the indented wrap goes with its field; the unindented line under Status must survive'
+                'the indented wrap goes with its field; the unindented line under Status must survive',
             );
         } finally {
             cleanup(tempDir);
@@ -3044,21 +4052,27 @@ describe('Magic Engine Scripts', () => {
             // that wraps `- **Task:**` without indenting still produces one
             // logical entry, and replacing only its marker line orphans the
             // rest. An indented sub-bullet hangs under the entry it follows.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '## Current Position', '',
-                '- **Task:** [T-1A01] A long title that an agent wrapped',
-                'without indenting the second line, which Markdown still',
-                'reads as part of the same list item.',
-                '- **Spec:** l1-example.md §3, wrapped in two styles',
-                '  first indented',
-                'then unindented',
-                '- **Next Action:** Run the next task;',
-                'a lazy line',
-                '  - a nested sub-bullet that belongs to the entry above it',
-                '',
-                '## Progress', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-1A01] A long title that an agent wrapped',
+                    'without indenting the second line, which Markdown still',
+                    'reads as part of the same list item.',
+                    '- **Spec:** l1-example.md §3, wrapped in two styles',
+                    '  first indented',
+                    'then unindented',
+                    '- **Next Action:** Run the next task;',
+                    'a lazy line',
+                    '  - a nested sub-bullet that belongs to the entry above it',
+                    '',
+                    '## Progress',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { task: '[T-1A02] Short', spec: 'x.md', nextAction: 'Go' }, {});
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
@@ -3066,15 +4080,18 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 after,
                 [
-                    '# Project State', '',
-                    '## Current Position', '',
+                    '# Project State',
+                    '',
+                    '## Current Position',
+                    '',
                     '- **Task:** [T-1A02] Short',
                     '- **Spec:** x.md',
                     '- **Next Action:** Go',
                     '',
-                    '## Progress', '',
+                    '## Progress',
+                    '',
                 ].join('\n'),
-                'lazy, indented and mixed continuation lines must all go with their entry, and nothing else'
+                'lazy, indented and mixed continuation lines must all go with their entry, and nothing else',
             );
         } finally {
             cleanup(tempDir);
@@ -3108,38 +4125,53 @@ describe('Magic Engine Scripts', () => {
             const stateFile = path.join(wsDir, 'STATE.md');
 
             for (const start of blockStarts) {
-                fs.writeFileSync(stateFile, [
-                    '# Project State', '',
-                    '- **Task:** old task',
-                    'a lazy line that is part of the entry',
-                    start,
-                    '',
-                ].join('\n'));
+                fs.writeFileSync(
+                    stateFile,
+                    [
+                        '# Project State',
+                        '',
+                        '- **Task:** old task',
+                        'a lazy line that is part of the entry',
+                        start,
+                        '',
+                    ].join('\n'),
+                );
 
                 updateState(wsDir, { task: 'new task' }, {});
 
                 assert.strictEqual(
                     fs.readFileSync(stateFile, 'utf8'),
                     ['# Project State', '', '- **Task:** new task', start, ''].join('\n'),
-                    `a line opening \`${start}\` must survive the patch of the bullet above it`
+                    `a line opening \`${start}\` must survive the patch of the bullet above it`,
                 );
             }
 
-            fs.writeFileSync(stateFile, [
-                '# Project State', '',
-                '- **Task:** old task',
-                'a lazy line that is part of the entry',
-                '',
-                'A plain paragraph after a blank line.',
-                '',
-            ].join('\n'));
+            fs.writeFileSync(
+                stateFile,
+                [
+                    '# Project State',
+                    '',
+                    '- **Task:** old task',
+                    'a lazy line that is part of the entry',
+                    '',
+                    'A plain paragraph after a blank line.',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { task: 'new task' }, {});
 
             assert.strictEqual(
                 fs.readFileSync(stateFile, 'utf8'),
-                ['# Project State', '', '- **Task:** new task', '', 'A plain paragraph after a blank line.', ''].join('\n'),
-                'a blank line must end the entry'
+                [
+                    '# Project State',
+                    '',
+                    '- **Task:** new task',
+                    '',
+                    'A plain paragraph after a blank line.',
+                    '',
+                ].join('\n'),
+                'a blank line must end the entry',
             );
         } finally {
             cleanup(tempDir);
@@ -3154,24 +4186,41 @@ describe('Magic Engine Scripts', () => {
             // A Windows checkout under `core.autocrlf` leaves STATE.md CRLF, so
             // the continuation pattern has to span `\r\n` line breaks — and the
             // replacement must not disturb the endings of the lines around it.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 1 — Bootstrap', '**Status:** Active', '',
-                '## Current Position', '',
-                '- **Task:** [T-1A01] A long title that wraps',
-                '  onto an indented continuation line,',
-                'then a lazy one.',
-                '- **Next Action:** Go', '',
-            ].join('\r\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1 — Bootstrap',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-1A01] A long title that wraps',
+                    '  onto an indented continuation line,',
+                    'then a lazy one.',
+                    '- **Next Action:** Go',
+                    '',
+                ].join('\r\n'),
+            );
 
             updateState(wsDir, { task: '[T-1A02] Short' }, {});
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
-            assert.doesNotMatch(after, /onto an indented continuation line/, 'the indented continuation must not survive as an orphan');
-            assert.doesNotMatch(after, /then a lazy one/, 'the lazy continuation must not survive as an orphan');
+            assert.doesNotMatch(
+                after,
+                /onto an indented continuation line/,
+                'the indented continuation must not survive as an orphan',
+            );
+            assert.doesNotMatch(
+                after,
+                /then a lazy one/,
+                'the lazy continuation must not survive as an orphan',
+            );
             assert.match(
-                after, /- \*\*Task:\*\* \[T-1A02\] Short\r\n- \*\*Next Action:\*\* Go\r\n/,
-                'the patched entry must be followed directly by the next bullet, CRLF intact'
+                after,
+                /- \*\*Task:\*\* \[T-1A02\] Short\r\n- \*\*Next Action:\*\* Go\r\n/,
+                'the patched entry must be followed directly by the next bullet, CRLF intact',
             );
             assert.doesNotMatch(after, /[^\r]\n/, 'no bare LF may be introduced into a CRLF file');
         } finally {
@@ -3184,23 +4233,47 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
 
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 1 — Bootstrap', '**Status:** Active', '',
-                '## Current Position', '',
-                '- **Task:** T-1A01 Scaffold the app',
-                '- **Next Action:** whatever', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1 — Bootstrap',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** T-1A01 Scaffold the app',
+                    '- **Next Action:** whatever',
+                    '',
+                ].join('\n'),
+            );
 
             // `status` is the phase-level field and its vocabulary is
             // Active | Blocked | Paused. One task finishing is not a phase
             // transition, so the per-task patch carries no status at all.
-            updateState(wsDir, { task: 'T-1A02 Wire the parser', nextAction: 'Execute T-1A03' }, {});
+            updateState(
+                wsDir,
+                { task: 'T-1A02 Wire the parser', nextAction: 'Execute T-1A03' },
+                {},
+            );
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
-            assert.match(state, /\*\*Status:\*\* Active/, 'the phase-level Status must survive a task-scoped update');
-            assert.match(state, /- \*\*Task:\*\* T-1A02 Wire the parser/, 'the task field must be updated');
-            assert.doesNotMatch(state, /\*\*Status:\*\* (Done|Cancelled|Todo)/, 'task vocabulary must never reach the phase field');
+            assert.match(
+                state,
+                /\*\*Status:\*\* Active/,
+                'the phase-level Status must survive a task-scoped update',
+            );
+            assert.match(
+                state,
+                /- \*\*Task:\*\* T-1A02 Wire the parser/,
+                'the task field must be updated',
+            );
+            assert.doesNotMatch(
+                state,
+                /\*\*Status:\*\* (Done|Cancelled|Todo)/,
+                'task vocabulary must never reach the phase field',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -3221,37 +4294,51 @@ describe('Magic Engine Scripts', () => {
             const evilTitle = "Handle the $'refund' path and the $& fallback";
             const nextAction = `Execute T-8B04 ${evilTitle} via /magic.run engine`;
 
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '',
-                '**Phase:** 8 — Payments', '**Status:** Active', '',
-                '## Current Position', '',
-                '- **Task:** T-8B03 Wire the webhook',
-                '- **Next Action:** whatever', '',
-                '## Progress', '', '```',
-                'Phase 8: [3/7] ███░░░░░ 43%',
-                'Overall: [2/5] ███░░░░░ 40%',
-                '```', '',
-                '## Recent Decisions', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 8 — Payments',
+                    '**Status:** Active',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** T-8B03 Wire the webhook',
+                    '- **Next Action:** whatever',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Phase 8: [3/7] ███░░░░░ 43%',
+                    'Overall: [2/5] ███░░░░░ 40%',
+                    '```',
+                    '',
+                    '## Recent Decisions',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { nextAction, task: `T-8B04 ${evilTitle}` }, {});
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.ok(
                 state.includes(`- **Next Action:** ${nextAction}`),
-                'the Next Action value must be inserted byte-for-byte'
+                'the Next Action value must be inserted byte-for-byte',
             );
             assert.ok(
                 state.includes(`- **Task:** T-8B04 ${evilTitle}`),
-                'the Task value must be inserted byte-for-byte'
+                'the Task value must be inserted byte-for-byte',
             );
             assert.strictEqual(
-                (state.match(/^## Progress$/gm) || []).length, 1,
-                "a `$'`/`$&` expansion must not duplicate a document section"
+                (state.match(/^## Progress$/gm) || []).length,
+                1,
+                "a `$'`/`$&` expansion must not duplicate a document section",
             );
             assert.strictEqual(
-                (state.match(/```/g) || []).length, 2,
-                'the fence count must stay balanced'
+                (state.match(/```/g) || []).length,
+                2,
+                'the fence count must stay balanced',
             );
         } finally {
             cleanup(tempDir);
@@ -3265,19 +4352,25 @@ describe('Magic Engine Scripts', () => {
     // on such a file they accepted the request, wrote nothing, and the CLI
     // still reported `STATE.md updated` (l2-finalize-state-accuracy.md §13).
     const trimmedState = [
-        '# Project State', '',
+        '# Project State',
+        '',
         '**Workspace:** docs',
         '**Updated:** 2026-01-01 00:00',
         '**Phase:** 2 — Build',
-        '**Status:** Active', '',
-        '## Current Position', '',
+        '**Status:** Active',
+        '',
+        '## Current Position',
+        '',
         '- **Task:** [T-2A01] Wire the parser',
         '- **Spec:** l1-example.md §3',
-        '- **Next Action:** Continue', '',
-        '## Progress', '',
+        '- **Next Action:** Continue',
+        '',
+        '## Progress',
+        '',
         '```',
         'Overall: [1/2] ████░░░░ 50%',
-        '```', '',
+        '```',
+        '',
     ];
     const decisionsPreamble =
         '<!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->';
@@ -3288,14 +4381,19 @@ describe('Magic Engine Scripts', () => {
     // Whole-file view with the two volatile parts normalised — the
     // `**Updated:**` stamp is dropped and an entry's date becomes `DATE` — so a
     // test can assert equality rather than presence.
-    const withoutVolatile = (state) => state
-        .replace(/^\*\*Updated:\*\* .*\r?\n/m, '')
-        .replace(/^- \d{4}-\d{2}-\d{2} /gm, '- DATE ');
+    const withoutVolatile = (state) =>
+        state
+            .replace(/^\*\*Updated:\*\* .*\r?\n/m, '')
+            .replace(/^- \d{4}-\d{2}-\d{2} /gm, '- DATE ');
     // Codes of every finding recorded so far in a temp workspace's sink.
     const recordedCodes = (tempDir) => {
         const sink = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
         if (!fs.existsSync(sink)) return [];
-        return fs.readFileSync(sink, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line).code);
+        return fs
+            .readFileSync(sink, 'utf8')
+            .split('\n')
+            .filter(Boolean)
+            .map((line) => JSON.parse(line).code);
     };
 
     test('addDecision creates a missing "## Recent Decisions" section instead of dropping the entry (SC-1)', () => {
@@ -3305,29 +4403,35 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
 
             const warnings = warnedBy(() =>
-                updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true }));
+                updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true }),
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             // Whole-file equality pins where the section lands, the single blank
             // line on each side and the preamble — not merely that the text exists.
             assert.strictEqual(
                 withoutVolatile(after),
-                withoutVolatile([
-                    ...trimmedState,
-                    '## Recent Decisions', '',
-                    decisionsPreamble, '',
-                    '- DATE **Decision:** Adopt the strict parser',
-                    '',
-                ].join('\n')),
-                'the entry must be recorded in a newly created section at the end of the file'
+                withoutVolatile(
+                    [
+                        ...trimmedState,
+                        '## Recent Decisions',
+                        '',
+                        decisionsPreamble,
+                        '',
+                        '- DATE **Decision:** Adopt the strict parser',
+                        '',
+                    ].join('\n'),
+                ),
+                'the entry must be recorded in a newly created section at the end of the file',
             );
             assert.ok(
                 warnings.some((w) => /Recent Decisions/.test(w) && /created/i.test(w)),
-                'creating the section must be announced on stderr'
+                'creating the section must be announced on stderr',
             );
             assert.deepStrictEqual(
-                recordedCodes(tempDir), ['STATE_SECTION_CREATED'],
-                'creating the section must be recorded once as a diagnostic'
+                recordedCodes(tempDir),
+                ['STATE_SECTION_CREATED'],
+                'creating the section must be recorded once as a diagnostic',
             );
         } finally {
             cleanup(tempDir);
@@ -3341,22 +4445,30 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), trimmedState.join('\n'));
 
             updateState(wsDir, { decision: 'first' }, { addDecision: true });
-            const warnings = warnedBy(() => updateState(wsDir, { decision: 'second' }, { addDecision: true }));
+            const warnings = warnedBy(() =>
+                updateState(wsDir, { decision: 'second' }, { addDecision: true }),
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
-                (after.match(/^## Recent Decisions$/gm) || []).length, 1,
-                'the second call must find the section the first created, not add another'
+                (after.match(/^## Recent Decisions$/gm) || []).length,
+                1,
+                'the second call must find the section the first created, not add another',
             );
             assert.match(
                 after,
                 /- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* second\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* first/,
-                'entries must sit newest-first in the one section'
+                'entries must sit newest-first in the one section',
             );
-            assert.deepStrictEqual(warnings, [], 'a call that finds its section has nothing to announce');
             assert.deepStrictEqual(
-                recordedCodes(tempDir), ['STATE_SECTION_CREATED'],
-                'creation is recorded once, not once per call'
+                warnings,
+                [],
+                'a call that finds its section has nothing to announce',
+            );
+            assert.deepStrictEqual(
+                recordedCodes(tempDir),
+                ['STATE_SECTION_CREATED'],
+                'creation is recorded once, not once per call',
             );
         } finally {
             cleanup(tempDir);
@@ -3374,31 +4486,59 @@ describe('Magic Engine Scripts', () => {
             const cases = [
                 {
                     name: 'nothing follows it, so it is appended at the end of the file',
-                    existing: ['## Recent Decisions', '', '- 2026-01-02 **Decision:** an existing entry', ''],
+                    existing: [
+                        '## Recent Decisions',
+                        '',
+                        '- 2026-01-02 **Decision:** an existing entry',
+                        '',
+                    ],
                     expected: [
-                        '## Recent Decisions', '', '- 2026-01-02 **Decision:** an existing entry', '',
-                        '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **No Z**: Because W', '',
+                        '## Recent Decisions',
+                        '',
+                        '- 2026-01-02 **Decision:** an existing entry',
+                        '',
+                        '## Blocking Constraints',
+                        '',
+                        ...constraintsPreamble,
+                        '',
+                        '- [C-001] **No Z**: Because W',
+                        '',
                     ],
                 },
                 {
                     name: 'Session Continuity follows it, so it is inserted before that section',
                     existing: ['## Session Continuity', '', '**Handoff File:** none', ''],
                     expected: [
-                        '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **No Z**: Because W', '',
-                        '## Session Continuity', '', '**Handoff File:** none', '',
+                        '## Blocking Constraints',
+                        '',
+                        ...constraintsPreamble,
+                        '',
+                        '- [C-001] **No Z**: Because W',
+                        '',
+                        '## Session Continuity',
+                        '',
+                        '**Handoff File:** none',
+                        '',
                     ],
                 },
             ];
 
             for (const { name, existing, expected } of cases) {
-                fs.writeFileSync(path.join(wsDir, 'STATE.md'), [...trimmedState, ...existing].join('\n'));
-                updateState(wsDir, { constraint: { title: 'No Z', desc: 'Because W' } }, { addConstraint: true });
+                fs.writeFileSync(
+                    path.join(wsDir, 'STATE.md'),
+                    [...trimmedState, ...existing].join('\n'),
+                );
+                updateState(
+                    wsDir,
+                    { constraint: { title: 'No Z', desc: 'Because W' } },
+                    { addConstraint: true },
+                );
                 const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
                 assert.strictEqual(
                     withoutVolatile(after),
                     withoutVolatile([...trimmedState, ...expected].join('\n')),
-                    `${name}: the constraint must be recorded as C-001 in a newly created section`
+                    `${name}: the constraint must be recorded as C-001 in a newly created section`,
                 );
             }
         } finally {
@@ -3415,21 +4555,29 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [...trimmedState, ...following].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [...trimmedState, ...following].join('\n'),
+            );
 
             updateState(wsDir, { decision: 'Adopt the strict parser' }, { addDecision: true });
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
                 withoutVolatile(after),
-                withoutVolatile([
-                    ...trimmedState,
-                    '## Recent Decisions', '',
-                    decisionsPreamble, '',
-                    '- DATE **Decision:** Adopt the strict parser', '',
-                    ...following,
-                ].join('\n')),
-                message
+                withoutVolatile(
+                    [
+                        ...trimmedState,
+                        '## Recent Decisions',
+                        '',
+                        decisionsPreamble,
+                        '',
+                        '- DATE **Decision:** Adopt the strict parser',
+                        '',
+                        ...following,
+                    ].join('\n'),
+                ),
+                message,
             );
         } finally {
             cleanup(tempDir);
@@ -3437,11 +4585,25 @@ describe('Magic Engine Scripts', () => {
     };
 
     test('addDecision places a created section before the sections that follow it in template order (SC-1)', () => {
-        assertDecisionSectionCreatedAhead([
-            '## Blockers', '', '- [blocking] none', '',
-            '## Blocking Constraints', '', ...constraintsPreamble, '', '- [C-001] **Do not X**: because Y', '',
-            '## Session Continuity', '', '**Handoff File:** none', '',
-        ], 'the section must land between Progress and Blockers, the sections after it untouched');
+        assertDecisionSectionCreatedAhead(
+            [
+                '## Blockers',
+                '',
+                '- [blocking] none',
+                '',
+                '## Blocking Constraints',
+                '',
+                ...constraintsPreamble,
+                '',
+                '- [C-001] **Do not X**: because Y',
+                '',
+                '## Session Continuity',
+                '',
+                '**Handoff File:** none',
+                '',
+            ],
+            'the section must land between Progress and Blockers, the sections after it untouched',
+        );
     });
 
     test('a STATE.md that only quotes the heading text is not corrupted by addDecision (SC-2)', () => {
@@ -3450,11 +4612,21 @@ describe('Magic Engine Scripts', () => {
         // heading and spliced the rebuilt block into the middle of the line:
         // its tail was destroyed and a decisions section appeared inside
         // `## Blocking Constraints`.
-        assertDecisionSectionCreatedAhead([
-            '## Blocking Constraints', '', ...constraintsPreamble, '',
-            '- [C-001] **Heads-up**: update-state ignores ## Recent Decisions when it is absent', '',
-            '## Session Continuity', '', '**Handoff File:** none', '',
-        ], 'the quoted line must survive whole and the decision must get a real section of its own');
+        assertDecisionSectionCreatedAhead(
+            [
+                '## Blocking Constraints',
+                '',
+                ...constraintsPreamble,
+                '',
+                '- [C-001] **Heads-up**: update-state ignores ## Recent Decisions when it is absent',
+                '',
+                '## Session Continuity',
+                '',
+                '**Handoff File:** none',
+                '',
+            ],
+            'the quoted line must survive whole and the decision must get a real section of its own',
+        );
     });
 
     test('a CRLF STATE.md missing the section gets it created once, and both entries survive (SC-1)', () => {
@@ -3472,13 +4644,14 @@ describe('Magic Engine Scripts', () => {
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.strictEqual(
-                (after.match(/^## Recent Decisions$/gm) || []).length, 1,
-                'the heading must be created once, then found on the next call'
+                (after.match(/^## Recent Decisions$/gm) || []).length,
+                1,
+                'the heading must be created once, then found on the next call',
             );
             assert.match(
                 after,
                 /\*\*Decision:\*\* second\r?\n- \d{4}-\d{2}-\d{2} \*\*Decision:\*\* first/,
-                'both entries must be present, newest first'
+                'both entries must be present, newest first',
             );
             assert.deepStrictEqual(recordedCodes(tempDir), ['STATE_SECTION_CREATED']);
         } finally {
@@ -3494,27 +4667,42 @@ describe('Magic Engine Scripts', () => {
             // Anchoring the heading to the start of a line must not demand the
             // end of it too: a heading someone suffixed by hand was found by the
             // old substring search, and a second section here would duplicate it.
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                ...trimmedState,
-                '## Recent Decisions (last 5)', '',
-                '- 2026-01-02 **Decision:** an earlier entry', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    ...trimmedState,
+                    '## Recent Decisions (last 5)',
+                    '',
+                    '- 2026-01-02 **Decision:** an earlier entry',
+                    '',
+                ].join('\n'),
+            );
 
             const warnings = warnedBy(() =>
-                updateState(wsDir, { decision: 'a later entry' }, { addDecision: true }));
+                updateState(wsDir, { decision: 'a later entry' }, { addDecision: true }),
+            );
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
             assert.deepStrictEqual(
-                after.match(/^## Recent Decisions.*$/gm), ['## Recent Decisions'],
-                'exactly one section, rebuilt to the canonical heading'
+                after.match(/^## Recent Decisions.*$/gm),
+                ['## Recent Decisions'],
+                'exactly one section, rebuilt to the canonical heading',
             );
             assert.match(
                 after,
                 /\*\*Decision:\*\* a later entry\r?\n- 2026-01-02 \*\*Decision:\*\* an earlier entry/,
-                'the existing entry must be kept below the new one'
+                'the existing entry must be kept below the new one',
             );
-            assert.deepStrictEqual(warnings, [], 'an existing section must not be announced as created');
-            assert.deepStrictEqual(recordedCodes(tempDir), [], 'an existing section must not be recorded as created');
+            assert.deepStrictEqual(
+                warnings,
+                [],
+                'an existing section must not be announced as created',
+            );
+            assert.deepStrictEqual(
+                recordedCodes(tempDir),
+                [],
+                'an existing section must not be recorded as created',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -3529,7 +4717,8 @@ describe('Magic Engine Scripts', () => {
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), lines.join(eol));
-            for (const [name, body] of Object.entries(files)) fs.writeFileSync(path.join(wsDir, name), body);
+            for (const [name, body] of Object.entries(files))
+                fs.writeFileSync(path.join(wsDir, name), body);
             const warnings = warnedBy(() => updateState(wsDir, patch, options));
             return {
                 after: fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8'),
@@ -3546,20 +4735,35 @@ describe('Magic Engine Scripts', () => {
     // anywhere in a line rather than at its start.
     test('a requested header field with no line is created in template order (SC-2)', () => {
         const tail = ['## Current Position', '', '- **Task:** [T-2A01] Wire the parser', ''];
-        const headerOf = (...fields) => ['# Project State', '', ...(fields.length ? [...fields, ''] : []), ...tail];
+        const headerOf = (...fields) => [
+            '# Project State',
+            '',
+            ...(fields.length ? [...fields, ''] : []),
+            ...tail,
+        ];
         const stamp = '**Updated:** 2026-01-01 00:00';
         const cases = [
             {
                 name: 'before the earliest present field that follows it',
                 existing: headerOf('**Workspace:** docs', stamp, '**Status:** Active'),
                 patch: { phase: '3 — Ship' },
-                expected: headerOf('**Workspace:** docs', stamp, '**Phase:** 3 — Ship', '**Status:** Active'),
+                expected: headerOf(
+                    '**Workspace:** docs',
+                    stamp,
+                    '**Phase:** 3 — Ship',
+                    '**Status:** Active',
+                ),
             },
             {
                 name: 'after the last present field when none follows it',
                 existing: headerOf('**Workspace:** docs', stamp, '**Phase:** 2 — Build'),
                 patch: { status: 'Blocked' },
-                expected: headerOf('**Workspace:** docs', stamp, '**Phase:** 2 — Build', '**Status:** Blocked'),
+                expected: headerOf(
+                    '**Workspace:** docs',
+                    stamp,
+                    '**Phase:** 2 — Build',
+                    '**Status:** Blocked',
+                ),
             },
             {
                 name: 'after the title when the header holds no field at all',
@@ -3572,11 +4776,19 @@ describe('Magic Engine Scripts', () => {
         for (const { name, existing, patch, expected } of cases) {
             const { after, warnings, codes } = patchState(existing, patch);
             assert.strictEqual(
-                withoutVolatile(after), withoutVolatile(expected.join('\n')),
-                `${name}: the field must be created where the template puts it, adjacent to its neighbours`
+                withoutVolatile(after),
+                withoutVolatile(expected.join('\n')),
+                `${name}: the field must be created where the template puts it, adjacent to its neighbours`,
             );
-            assert.deepStrictEqual(codes, ['STATE_FIELD_CREATED'], `${name}: creation must be recorded once`);
-            assert.ok(warnings.some((w) => /created/i.test(w)), `${name}: creation must be announced on stderr`);
+            assert.deepStrictEqual(
+                codes,
+                ['STATE_FIELD_CREATED'],
+                `${name}: creation must be recorded once`,
+            );
+            assert.ok(
+                warnings.some((w) => /created/i.test(w)),
+                `${name}: creation must be announced on stderr`,
+            );
         }
     });
 
@@ -3586,23 +4798,50 @@ describe('Magic Engine Scripts', () => {
         const cases = [
             {
                 name: 'appended after the last field of the section',
-                existing: [...header, '## Current Position', '', '- **Task:** [T-2A01] Wire the parser', ''],
+                existing: [
+                    ...header,
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-2A01] Wire the parser',
+                    '',
+                ],
                 patch: { nextAction: 'Go' },
-                expected: [...header, '## Current Position', '', '- **Task:** [T-2A01] Wire the parser', '- **Next Action:** Go', ''],
+                expected: [
+                    ...header,
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-2A01] Wire the parser',
+                    '- **Next Action:** Go',
+                    '',
+                ],
                 codes: ['STATE_FIELD_CREATED'],
             },
             {
                 name: 'inserted before the earliest present field that follows it',
                 existing: [...header, '## Current Position', '', '- **Next Action:** Continue', ''],
                 patch: { task: '[T-2A02] New task' },
-                expected: [...header, '## Current Position', '', '- **Task:** [T-2A02] New task', '- **Next Action:** Continue', ''],
+                expected: [
+                    ...header,
+                    '## Current Position',
+                    '',
+                    '- **Task:** [T-2A02] New task',
+                    '- **Next Action:** Continue',
+                    '',
+                ],
                 codes: ['STATE_FIELD_CREATED'],
             },
             {
                 name: 'with the section itself created ahead of Progress when the file has none',
                 existing: [...header, ...progress],
                 patch: { nextAction: 'Go' },
-                expected: [...header, '## Current Position', '', '- **Next Action:** Go', '', ...progress],
+                expected: [
+                    ...header,
+                    '## Current Position',
+                    '',
+                    '- **Next Action:** Go',
+                    '',
+                    ...progress,
+                ],
                 codes: ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'],
             },
         ];
@@ -3610,8 +4849,9 @@ describe('Magic Engine Scripts', () => {
         for (const { name, existing, patch, expected, codes } of cases) {
             const result = patchState(existing, patch);
             assert.strictEqual(
-                withoutVolatile(result.after), withoutVolatile(expected.join('\n')),
-                `${name}: position and blank-line separation must be exactly the template's`
+                withoutVolatile(result.after),
+                withoutVolatile(expected.join('\n')),
+                `${name}: position and blank-line separation must be exactly the template's`,
             );
             assert.deepStrictEqual(result.codes, codes, `${name}: every creation must be recorded`);
         }
@@ -3624,20 +4864,34 @@ describe('Magic Engine Scripts', () => {
         // rewrote that entry from the label onward.
         const cases = [
             { name: 'no line and no section', entry: 'an existing entry' },
-            { name: 'the label quoted mid-line in a decision', entry: 'set **Handoff File:** to none when the session ends' },
+            {
+                name: 'the label quoted mid-line in a decision',
+                entry: 'set **Handoff File:** to none when the session ends',
+            },
         ];
 
         for (const { name, entry } of cases) {
-            const existing = [...trimmedState, '## Recent Decisions', '', `- 2026-01-02 **Decision:** ${entry}`, ''];
+            const existing = [
+                ...trimmedState,
+                '## Recent Decisions',
+                '',
+                `- 2026-01-02 **Decision:** ${entry}`,
+                '',
+            ];
             const { after, codes } = patchState(existing, { handoff: '.design/docs/HANDOFF.json' });
 
             assert.strictEqual(
                 withoutVolatile(after),
-                withoutVolatile([
-                    ...existing,
-                    '## Session Continuity', '', '**Handoff File:** .design/docs/HANDOFF.json', '',
-                ].join('\n')),
-                `${name}: the decision must survive whole and the pointer must land in a real section`
+                withoutVolatile(
+                    [
+                        ...existing,
+                        '## Session Continuity',
+                        '',
+                        '**Handoff File:** .design/docs/HANDOFF.json',
+                        '',
+                    ].join('\n'),
+                ),
+                `${name}: the decision must survive whole and the pointer must land in a real section`,
             );
             assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'], name);
         }
@@ -3647,15 +4901,36 @@ describe('Magic Engine Scripts', () => {
         // No caller requests `Updated`: updateState injects a fresh stamp into
         // every call, including one that patches nothing, so creating the line
         // would hand every hand-trimmed file a new line on its first call.
-        const bare = ['# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', ''];
+        const bare = [
+            '# Project State',
+            '',
+            '**Phase:** 2 — Build',
+            '',
+            '## Current Position',
+            '',
+            '- **Task:** t',
+            '',
+        ];
 
         const untouched = patchState(bare, {});
-        assert.strictEqual(untouched.after, bare.join('\n'), 'a call that patches nothing must leave a stampless file byte-identical');
+        assert.strictEqual(
+            untouched.after,
+            bare.join('\n'),
+            'a call that patches nothing must leave a stampless file byte-identical',
+        );
         assert.deepStrictEqual(untouched.warnings, [], 'and must announce nothing');
 
         const patched = patchState(bare, { phase: '3 — Ship' });
-        assert.doesNotMatch(patched.after, /Updated/, 'a patched file without a stamp must still have none');
-        assert.match(patched.after, /^\*\*Phase:\*\* 3 — Ship$/m, 'while the requested field is applied');
+        assert.doesNotMatch(
+            patched.after,
+            /Updated/,
+            'a patched file without a stamp must still have none',
+        );
+        assert.match(
+            patched.after,
+            /^\*\*Phase:\*\* 3 — Ship$/m,
+            'while the requested field is applied',
+        );
         assert.deepStrictEqual(patched.codes, [], 'and nothing is recorded as created');
     });
 
@@ -3663,17 +4938,35 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const { updateState, wsDir } = requireUpdateState(tempDir);
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), [
-                '# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 2 — Build',
+                    '',
+                    '## Current Position',
+                    '',
+                    '- **Task:** t',
+                    '',
+                ].join('\n'),
+            );
 
             updateState(wsDir, { status: 'Blocked' }, {});
             const warnings = warnedBy(() => updateState(wsDir, { status: 'Active' }, {}));
             const after = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
 
-            assert.deepStrictEqual(after.match(/^\*\*Status:\*\*.*$/gm), ['**Status:** Active'], 'one line, holding the latest value');
+            assert.deepStrictEqual(
+                after.match(/^\*\*Status:\*\*.*$/gm),
+                ['**Status:** Active'],
+                'one line, holding the latest value',
+            );
             assert.deepStrictEqual(warnings, [], 'the second call has nothing to announce');
-            assert.deepStrictEqual(recordedCodes(tempDir), ['STATE_FIELD_CREATED'], 'creation is recorded once, not per call');
+            assert.deepStrictEqual(
+                recordedCodes(tempDir),
+                ['STATE_FIELD_CREATED'],
+                'creation is recorded once, not per call',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -3681,25 +4974,54 @@ describe('Magic Engine Scripts', () => {
 
     test('a field created in a CRLF file brings no bare LF with it (SC-2)', () => {
         const { after } = patchState(
-            ['# Project State', '', '**Phase:** 2 — Build', '', '## Current Position', '', '- **Task:** t', ''],
-            { status: 'Active' }, {}, { eol: '\r\n' }
+            [
+                '# Project State',
+                '',
+                '**Phase:** 2 — Build',
+                '',
+                '## Current Position',
+                '',
+                '- **Task:** t',
+                '',
+            ],
+            { status: 'Active' },
+            {},
+            { eol: '\r\n' },
         );
 
-        assert.match(after, /\*\*Phase:\*\* 2 — Build\r\n\*\*Status:\*\* Active\r\n/, 'the field must sit directly under its neighbour');
+        assert.match(
+            after,
+            /\*\*Phase:\*\* 2 — Build\r\n\*\*Status:\*\* Active\r\n/,
+            'the field must sit directly under its neighbour',
+        );
         assert.doesNotMatch(after, /(?<!\r)\n/, 'every line break in the file must still be CRLF');
     });
 
     test('autoProgress creates a missing "## Progress" section holding the counters (SC-2)', () => {
-        const existing = ['# Project State', '', '**Phase:** 1', '**Status:** Active', '', '## Current Position', '', '- **Next Action:** go', ''];
+        const existing = [
+            '# Project State',
+            '',
+            '**Phase:** 1',
+            '**Status:** Active',
+            '',
+            '## Current Position',
+            '',
+            '- **Next Action:** go',
+            '',
+        ];
         const { after, codes } = patchState(
-            existing, {}, { autoProgress: true },
-            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } }
+            existing,
+            {},
+            { autoProgress: true },
+            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } },
         );
 
         assert.strictEqual(
             after,
-            [...existing, '## Progress', '', '```', 'Overall: [1/1] ████████ 100%', '```', ''].join('\n'),
-            'the section must be created at the end of the file with the recomputed counter in its fence'
+            [...existing, '## Progress', '', '```', 'Overall: [1/1] ████████ 100%', '```', ''].join(
+                '\n',
+            ),
+            'the section must be created at the end of the file with the recomputed counter in its fence',
         );
         assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED']);
     });
@@ -3707,14 +5029,29 @@ describe('Magic Engine Scripts', () => {
     test('a "## Progress" heading without a fence is left untouched, and the skip is announced (SC-2)', () => {
         // The engine cannot tell narrative from a counter block it never wrote,
         // so it must not overwrite this — but a silent skip is what §13.1 removes.
-        const existing = ['# Project State', '', '**Phase:** 1', '**Status:** Active', '', '## Progress', '', 'Just prose, no counters here.', ''];
+        const existing = [
+            '# Project State',
+            '',
+            '**Phase:** 1',
+            '**Status:** Active',
+            '',
+            '## Progress',
+            '',
+            'Just prose, no counters here.',
+            '',
+        ];
         const { after, warnings, codes } = patchState(
-            existing, {}, { autoProgress: true },
-            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } }
+            existing,
+            {},
+            { autoProgress: true },
+            { files: { 'TASKS.md': '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n' } },
         );
 
         assert.strictEqual(after, existing.join('\n'), 'the block must be left exactly as it was');
-        assert.ok(warnings.some((w) => /Progress/.test(w)), 'the skip must be announced on stderr');
+        assert.ok(
+            warnings.some((w) => /Progress/.test(w)),
+            'the skip must be announced on stderr',
+        );
         assert.deepStrictEqual(codes, ['PROGRESS_BLOCK_UNRECOGNISED']);
     });
 
@@ -3725,14 +5062,25 @@ describe('Magic Engine Scripts', () => {
         // The Next Action line quotes the heading text before the real heading:
         // a substring search would have anchored on it.
         const lines = [
-            '# Project State', '',
-            '**Phase:** 2 — Build', '**Status:** Active', '',
-            '## Current Position', '',
-            '- **Next Action:** revisit ## Recent Decisions once the cap is hit', '',
-            '## Blocking Constraints', '',
-            ...Array.from({ length: 90 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+            '# Project State',
             '',
-            '## Recent Decisions', '',
+            '**Phase:** 2 — Build',
+            '**Status:** Active',
+            '',
+            '## Current Position',
+            '',
+            '- **Next Action:** revisit ## Recent Decisions once the cap is hit',
+            '',
+            '## Blocking Constraints',
+            '',
+            ...Array.from(
+                { length: 90 },
+                (_, i) =>
+                    `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
+            ),
+            '',
+            '## Recent Decisions',
+            '',
             '- 2026-01-05 **Decision:** entry 5',
             '- 2026-01-04 **Decision:** entry 4',
             '- 2026-01-03 **Decision:** entry 3',
@@ -3740,15 +5088,25 @@ describe('Magic Engine Scripts', () => {
             '- 2026-01-01 **Decision:** entry 1',
         ];
 
-        for (const { name, tail } of [{ name: 'a trailing newline', tail: [''] }, { name: 'no trailing newline', tail: [] }]) {
+        for (const { name, tail } of [
+            { name: 'a trailing newline', tail: [''] },
+            { name: 'no trailing newline', tail: [] },
+        ]) {
             const { after, warnings, codes } = patchState([...lines, ...tail], {});
 
             assert.strictEqual(
-                after.trimEnd(), lines.slice(0, -1).join('\n').trimEnd(),
-                `${name}: exactly the oldest entry must go, everything else byte-for-byte`
+                after.trimEnd(),
+                lines.slice(0, -1).join('\n').trimEnd(),
+                `${name}: exactly the oldest entry must go, everything else byte-for-byte`,
             );
-            assert.ok(warnings.some((w) => /Pruned oldest decision/.test(w)), `${name}: the prune must be reported`);
-            assert.ok(!warnings.some((w) => /nothing was pruned/.test(w)), `${name}: and must not be reported as exhausted`);
+            assert.ok(
+                warnings.some((w) => /Pruned oldest decision/.test(w)),
+                `${name}: the prune must be reported`,
+            );
+            assert.ok(
+                !warnings.some((w) => /nothing was pruned/.test(w)),
+                `${name}: and must not be reported as exhausted`,
+            );
             assert.deepStrictEqual(codes, ['STATE_DECISION_PRUNED'], name);
         }
     });
@@ -3759,18 +5117,27 @@ describe('Magic Engine Scripts', () => {
         // reported. Decisions are not last here, so the boundary is not in play.
         const lines = [
             ...trimmedState,
-            '## Recent Decisions', '',
+            '## Recent Decisions',
+            '',
             ...[5, 4, 3, 2, 1].map((n) => `- 2026-01-0${n} **Decision:** entry ${n}`),
             '',
-            '## Blocking Constraints', '',
-            ...Array.from({ length: 90 }, (_, i) => `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`),
+            '## Blocking Constraints',
+            '',
+            ...Array.from(
+                { length: 90 },
+                (_, i) =>
+                    `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
+            ),
             '',
         ];
         const { after, warnings } = patchState(lines, {}, {}, { eol: '\r\n' });
 
         assert.doesNotMatch(after, /entry 1\b/, 'the oldest entry must actually be gone');
         assert.match(after, /entry 2\b/, 'the next-oldest must stay');
-        assert.ok(warnings.some((w) => /Pruned oldest decision/.test(w)), 'the prune must be reported');
+        assert.ok(
+            warnings.some((w) => /Pruned oldest decision/.test(w)),
+            'the prune must be reported',
+        );
         assert.doesNotMatch(after, /(?<!\r)\n/, 'the removal must not introduce a bare LF');
     });
 
@@ -3784,17 +5151,28 @@ describe('Magic Engine Scripts', () => {
 
             // A genuinely complete phase, but with CRLF line endings as produced
             // by git autocrlf on a Windows checkout.
-            fs.writeFileSync(path.join(tasksDir, 'phase-16.md'),
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-16.md'),
                 '---\r\nphase: 16\r\nname: "Windows"\r\nstatus: Done\r\n---\r\n\r\n' +
-                '## Atomic Checklist\r\n\r\n- [x] [T-16A01] Done\r\n');
+                    '## Atomic Checklist\r\n\r\n- [x] [T-16A01] Done\r\n',
+            );
 
             const candidates = archiver.findArchiveCandidates(wsDir);
             assert.deepStrictEqual(
-                candidates.map(c => c.file), ['phase-16.md'],
-                'CRLF line endings must not hide a Done phase from archival'
+                candidates.map((c) => c.file),
+                ['phase-16.md'],
+                'CRLF line endings must not hide a Done phase from archival',
             );
-            assert.strictEqual(candidates[0].phase, '16', 'frontmatter values must be parsed without trailing \\r');
-            assert.strictEqual(candidates[0].name, 'Windows', 'quoted values must be unwrapped under CRLF');
+            assert.strictEqual(
+                candidates[0].phase,
+                '16',
+                'frontmatter values must be parsed without trailing \\r',
+            );
+            assert.strictEqual(
+                candidates[0].name,
+                'Windows',
+                'quoted values must be unwrapped under CRLF',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -3810,24 +5188,29 @@ describe('Magic Engine Scripts', () => {
 
             // Path traversal in script name
             assert.throws(
-                () => execSync(`node "${executorPath}" "../../../etc/passwd"`, { cwd: tempDir, stdio: 'pipe' }),
+                () =>
+                    execSync(`node "${executorPath}" "../../../etc/passwd"`, {
+                        cwd: tempDir,
+                        stdio: 'pipe',
+                    }),
                 /Invalid script name/,
-                'Should reject script name with path separators'
+                'Should reject script name with path separators',
             );
 
             // Path traversal in workspace name
             fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
             fs.writeFileSync(
                 path.join(tempDir, '.design', 'workspace.json'),
-                JSON.stringify({ default: 'main', workspaces: { main: {} } })
+                JSON.stringify({ default: 'main', workspaces: { main: {} } }),
             );
             assert.throws(
-                () => execSync(
-                    `node "${executorPath}" init --workspace=../../../etc`,
-                    { cwd: tempDir, stdio: 'pipe' }
-                ),
+                () =>
+                    execSync(`node "${executorPath}" init --workspace=../../../etc`, {
+                        cwd: tempDir,
+                        stdio: 'pipe',
+                    }),
                 /Invalid workspace name/,
-                'Should reject workspace name with path separators'
+                'Should reject workspace name with path separators',
             );
         } finally {
             cleanup(tempDir);
@@ -3849,7 +5232,10 @@ describe('Magic Engine Scripts', () => {
             const hookPath = path.join(gitHooksDir, 'pre-commit');
             assert.ok(fs.existsSync(hookPath), 'pre-commit hook should be created');
             const hookContent = fs.readFileSync(hookPath, 'utf8');
-            assert.ok(hookContent.includes('executor.js update-engine-meta --check'), 'Hook should call update-engine-meta --check');
+            assert.ok(
+                hookContent.includes('executor.js update-engine-meta --check'),
+                'Hook should call update-engine-meta --check',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -3865,7 +5251,10 @@ describe('Magic Engine Scripts', () => {
             const designDir = path.join(tempDir, '.design');
             fs.mkdirSync(designDir, { recursive: true });
             fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index\n');
-            fs.writeFileSync(path.join(designDir, 'real-a.md'), '# Real A\n[Real B](./real-b.md)\n');
+            fs.writeFileSync(
+                path.join(designDir, 'real-a.md'),
+                '# Real A\n[Real B](./real-b.md)\n',
+            );
             fs.writeFileSync(path.join(designDir, 'real-b.md'), '# Real B\n');
 
             // Fixture subtree that must vanish once `*tmp/` is gitignored.
@@ -3875,7 +5264,13 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(tmpDir, 'fix-b.md'), '# Fix B\n');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'detect-communities.js');
-            const run = () => JSON.parse(execSync(`node "${scriptPath}" --include-md --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const run = () =>
+                JSON.parse(
+                    execSync(`node "${scriptPath}" --include-md --json`, {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    }),
+                );
 
             // Control — no .gitignore: SKIP_DIRS has no '.tmp', so fixtures ARE scanned.
             const before = run();
@@ -3887,11 +5282,11 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 after.graph.total_files,
                 before.graph.total_files - 2,
-                'the two .tmp/ fixture files must be excluded once *tmp/ is gitignored'
+                'the two .tmp/ fixture files must be excluded once *tmp/ is gitignored',
             );
             assert.ok(
                 !JSON.stringify(after.communities).includes('.tmp/'),
-                'no community member may reference a gitignored .tmp/ path'
+                'no community member may reference a gitignored .tmp/ path',
             );
         } finally {
             cleanup(tempDir);
@@ -3915,18 +5310,31 @@ describe('Magic Engine Scripts', () => {
             // `generated` is deliberately absent from the shared skip floor
             // (BUILD_NOISE_DIRS), so this fixture isolates the gitignore filter;
             // a floor name like `target` would be skipped even without .gitignore.
-            const artifactDir = path.join(tempDir, 'generated', 'doc', 'type.impl', 'core', 'result');
+            const artifactDir = path.join(
+                tempDir,
+                'generated',
+                'doc',
+                'type.impl',
+                'core',
+                'result',
+            );
             fs.mkdirSync(artifactDir, { recursive: true });
-            fs.writeFileSync(path.join(artifactDir, 'enum.Result.js'), '// NOTE: generated artifact, not authored rationale\n');
+            fs.writeFileSync(
+                path.join(artifactDir, 'enum.Result.js'),
+                '// NOTE: generated artifact, not authored rationale\n',
+            );
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js');
-            const run = () => JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const run = () =>
+                JSON.parse(
+                    execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+                );
 
             // Control — no .gitignore: `generated` is absent from SKIP_DIRS, so the artifact IS scanned.
             const before = run();
             assert.ok(
-                before.rationale.some(r => r.file.startsWith('generated/')),
-                'control: without .gitignore the artifact is scanned (fixture is meaningful)'
+                before.rationale.some((r) => r.file.startsWith('generated/')),
+                'control: without .gitignore the artifact is scanned (fixture is meaningful)',
             );
 
             // Fix — `.gitignore` with `generated/` must drop the artifact entirely.
@@ -3934,16 +5342,16 @@ describe('Magic Engine Scripts', () => {
             const after = run();
 
             assert.ok(
-                !after.rationale.some(r => r.file.startsWith('generated/')),
-                'no rationale marker may originate from a gitignored path'
+                !after.rationale.some((r) => r.file.startsWith('generated/')),
+                'no rationale marker may originate from a gitignored path',
             );
             assert.ok(
-                !after.shadow_logic.some(s => s.file.startsWith('generated/')),
-                'no shadow-logic entry may originate from a gitignored path'
+                !after.shadow_logic.some((s) => s.file.startsWith('generated/')),
+                'no shadow-logic entry may originate from a gitignored path',
             );
             assert.ok(
-                after.rationale.some(r => r.file === 'src/main.rs'),
-                'genuine source rationale must survive the gitignore filter'
+                after.rationale.some((r) => r.file === 'src/main.rs'),
+                'genuine source rationale must survive the gitignore filter',
             );
         } finally {
             cleanup(tempDir);
@@ -3960,38 +5368,81 @@ describe('Magic Engine Scripts', () => {
             const { loadGitignore } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
 
             // No .gitignore → predicate must be a permissive no-op.
-            assert.strictEqual(loadGitignore(tempDir)('anything/at/all.js'), false, 'absent .gitignore ignores nothing');
+            assert.strictEqual(
+                loadGitignore(tempDir)('anything/at/all.js'),
+                false,
+                'absent .gitignore ignores nothing',
+            );
 
-            fs.writeFileSync(path.join(tempDir, '.gitignore'), [
-                'target/',        // any depth
-                '/dist',          // root-anchored only
-                'node_modules',   // any depth, no trailing slash
-                '*.log',          // path-aware glob
-                'docs/build/',    // anchored nested path
-                '.env*',          // broad match…
-                '!.env.example',  // …narrowed by a later negation
-                '',
-                '# a comment',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tempDir, '.gitignore'),
+                [
+                    'target/', // any depth
+                    '/dist', // root-anchored only
+                    'node_modules', // any depth, no trailing slash
+                    '*.log', // path-aware glob
+                    'docs/build/', // anchored nested path
+                    '.env*', // broad match…
+                    '!.env.example', // …narrowed by a later negation
+                    '',
+                    '# a comment',
+                ].join('\n'),
+            );
 
             const isIgnored = loadGitignore(tempDir);
 
-            assert.strictEqual(isIgnored('target/doc/a.js'), true, 'bare dir pattern matches at any depth');
-            assert.strictEqual(isIgnored('nested/target/b.js'), true, 'bare dir pattern is not root-anchored');
+            assert.strictEqual(
+                isIgnored('target/doc/a.js'),
+                true,
+                'bare dir pattern matches at any depth',
+            );
+            assert.strictEqual(
+                isIgnored('nested/target/b.js'),
+                true,
+                'bare dir pattern is not root-anchored',
+            );
             assert.strictEqual(isIgnored('dist/bundle.js'), true, '/dist matches at the root');
-            assert.strictEqual(isIgnored('src/dist/helper.js'), false, '/dist must NOT match a nested dist/');
-            assert.strictEqual(isIgnored('deep/node_modules/x.js'), true, 'slashless pattern matches any segment');
+            assert.strictEqual(
+                isIgnored('src/dist/helper.js'),
+                false,
+                '/dist must NOT match a nested dist/',
+            );
+            assert.strictEqual(
+                isIgnored('deep/node_modules/x.js'),
+                true,
+                'slashless pattern matches any segment',
+            );
             assert.strictEqual(isIgnored('app.log'), true, '*.log matches a log file');
-            assert.strictEqual(isIgnored('src/keep.log.js'), false, '* must not cross into the extension');
-            assert.strictEqual(isIgnored('docs/build/out.js'), true, 'nested path pattern is anchored and matches');
-            assert.strictEqual(isIgnored('docs/src/in.js'), false, 'anchored pattern must not over-match');
+            assert.strictEqual(
+                isIgnored('src/keep.log.js'),
+                false,
+                '* must not cross into the extension',
+            );
+            assert.strictEqual(
+                isIgnored('docs/build/out.js'),
+                true,
+                'nested path pattern is anchored and matches',
+            );
+            assert.strictEqual(
+                isIgnored('docs/src/in.js'),
+                false,
+                'anchored pattern must not over-match',
+            );
 
             // Ordering: the later `!` rule wins over the earlier broad rule.
             assert.strictEqual(isIgnored('.env'), true, '.env* ignores .env');
             assert.strictEqual(isIgnored('.env.local'), true, '.env* ignores .env.local');
-            assert.strictEqual(isIgnored('.env.example'), false, 'a later negation re-includes .env.example');
+            assert.strictEqual(
+                isIgnored('.env.example'),
+                false,
+                'a later negation re-includes .env.example',
+            );
 
-            assert.strictEqual(isIgnored('src/main.rs'), false, 'unmatched paths are never ignored');
+            assert.strictEqual(
+                isIgnored('src/main.rs'),
+                false,
+                'unmatched paths are never ignored',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4009,19 +5460,27 @@ describe('Magic Engine Scripts', () => {
             // `out` is deliberately NOT in analyze-coverage's hardcoded SKIP_DIRS
             // (unlike `dist`), so these two files isolate gitignore anchoring alone.
             mk('src/main.rs', 'fn main() {}\n');
-            mk('src/out/helper.rs', 'fn helper() {}\n');    // nested out/ — must survive `/out`
-            mk('out/bundle.js', 'var x = 1;\n');            // root out/ — must be excluded
-            mk('target/doc/artifact.js', 'var y = 2;\n');   // build tree — must be excluded
+            mk('src/out/helper.rs', 'fn helper() {}\n'); // nested out/ — must survive `/out`
+            mk('out/bundle.js', 'var x = 1;\n'); // root out/ — must be excluded
+            mk('target/doc/artifact.js', 'var y = 2;\n'); // build tree — must be excluded
 
             fs.writeFileSync(path.join(tempDir, '.gitignore'), 'target/\n/out\n');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
-            const out = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
-            const files = out.coverage.map(c => c.file);
+            const out = JSON.parse(
+                execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+            );
+            const files = out.coverage.map((c) => c.file);
 
-            assert.ok(!files.some(f => f.startsWith('target/')), 'gitignored build tree must not be classified');
+            assert.ok(
+                !files.some((f) => f.startsWith('target/')),
+                'gitignored build tree must not be classified',
+            );
             assert.ok(!files.includes('out/bundle.js'), 'root-anchored /out must be excluded');
-            assert.ok(files.includes('src/out/helper.rs'), 'a nested out/ must survive root-anchored /out');
+            assert.ok(
+                files.includes('src/out/helper.rs'),
+                'a nested out/ must survive root-anchored /out',
+            );
             assert.ok(files.includes('src/main.rs'), 'genuine source must still be classified');
         } finally {
             cleanup(tempDir);
@@ -4045,9 +5504,15 @@ describe('Magic Engine Scripts', () => {
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
             const context = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
 
-            assert.ok(!context.includes('buildout'), 'a gitignored directory must not appear in the tree');
+            assert.ok(
+                !context.includes('buildout'),
+                'a gitignored directory must not appear in the tree',
+            );
             assert.ok(!/^.*├──\s\.env$/m.test(context), '.env must be pruned by the .env* rule');
-            assert.ok(context.includes('.env.example'), 'the negated .env.example must remain visible');
+            assert.ok(
+                context.includes('.env.example'),
+                'the negated .env.example must remain visible',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4063,11 +5528,21 @@ describe('Magic Engine Scripts', () => {
     test('utils.BUILD_NOISE_DIRS is the single hardcoded floor for every scanner', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { BUILD_NOISE_DIRS } = require(path.join(tempDir, '.magic', 'scripts', 'utils.js'));
+            const { BUILD_NOISE_DIRS } = require(
+                path.join(tempDir, '.magic', 'scripts', 'utils.js'),
+            );
 
             assert.ok(Array.isArray(BUILD_NOISE_DIRS), 'the floor is exported as an array');
             assert.ok(Object.isFrozen(BUILD_NOISE_DIRS), 'the floor is frozen against mutation');
-            for (const name of ['node_modules', '.git', 'dist', 'build', 'target', '__pycache__', '.pytest_cache']) {
+            for (const name of [
+                'node_modules',
+                '.git',
+                'dist',
+                'build',
+                'target',
+                '__pycache__',
+                '.pytest_cache',
+            ]) {
                 assert.ok(BUILD_NOISE_DIRS.includes(name), `floor must contain ${name}`);
             }
 
@@ -4084,7 +5559,7 @@ describe('Magic Engine Scripts', () => {
                 const src = fs.readFileSync(path.join(tempDir, ...parts), 'utf8');
                 assert.ok(
                     src.includes('...BUILD_NOISE_DIRS'),
-                    `${parts.join('/')} must spread the shared floor, not hardcode its own copy`
+                    `${parts.join('/')} must spread the shared floor, not hardcode its own copy`,
                 );
             }
         } finally {
@@ -4097,8 +5572,10 @@ describe('Magic Engine Scripts', () => {
         try {
             const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
 
-            mk('.design/specifications/l1-core.md',
-                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n');
+            mk(
+                '.design/specifications/l1-core.md',
+                '# Core\n\n## Canonical References\n\n| Path | Description |\n| :--- | :--- |\n| `src/` | Source tree |\n',
+            );
             mk('src/main.rs', '// NOTE: genuine design rationale\nfn main() {}\n');
             // SDD-layer source: markers here are never user "shadow logic".
             mk('.design/tooling.js', '// NOTE: sdd helper, not product code\nvar s = 1;\n');
@@ -4109,32 +5586,54 @@ describe('Magic Engine Scripts', () => {
             mk('temp/scratch.js', '// NOTE: scratch file\nvar t = 1;\n');
 
             // analyze-coverage — `build/` no longer reaches classification.
-            const coverage = JSON.parse(execSync(
-                `node "${path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js')}" --json`,
-                { cwd: tempDir, encoding: 'utf8' }
-            ));
-            const covFiles = coverage.coverage.map(c => c.file);
-            assert.ok(!covFiles.some(f => f.startsWith('build/')), 'analyze-coverage must skip build/ via the shared floor');
+            const coverage = JSON.parse(
+                execSync(
+                    `node "${path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js')}" --json`,
+                    { cwd: tempDir, encoding: 'utf8' },
+                ),
+            );
+            const covFiles = coverage.coverage.map((c) => c.file);
+            assert.ok(
+                !covFiles.some((f) => f.startsWith('build/')),
+                'analyze-coverage must skip build/ via the shared floor',
+            );
             assert.ok(covFiles.includes('src/main.rs'), 'genuine source must still be classified');
 
             // extract-rationale — floor noise and domain excludes both stay out.
-            const rationale = JSON.parse(execSync(
-                `node "${path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js')}" --json`,
-                { cwd: tempDir, encoding: 'utf8' }
-            ));
-            assert.ok(!rationale.rationale.some(r => r.file.startsWith('temp/')), 'extract-rationale must skip temp/ via the shared floor');
-            assert.ok(!rationale.rationale.some(r => r.file.startsWith('.magic/')), 'domain exclude: engine internals are not user shadow logic');
-            assert.ok(!rationale.rationale.some(r => r.file.startsWith('.design/')), 'domain exclude: the SDD layer is not user shadow logic');
-            assert.ok(rationale.rationale.some(r => r.file === 'src/main.rs'), 'genuine rationale must survive');
+            const rationale = JSON.parse(
+                execSync(
+                    `node "${path.join(tempDir, '.magic', 'scripts', 'extract-rationale.js')}" --json`,
+                    { cwd: tempDir, encoding: 'utf8' },
+                ),
+            );
+            assert.ok(
+                !rationale.rationale.some((r) => r.file.startsWith('temp/')),
+                'extract-rationale must skip temp/ via the shared floor',
+            );
+            assert.ok(
+                !rationale.rationale.some((r) => r.file.startsWith('.magic/')),
+                'domain exclude: engine internals are not user shadow logic',
+            );
+            assert.ok(
+                !rationale.rationale.some((r) => r.file.startsWith('.design/')),
+                'domain exclude: the SDD layer is not user shadow logic',
+            );
+            assert.ok(
+                rationale.rationale.some((r) => r.file === 'src/main.rs'),
+                'genuine rationale must survive',
+            );
 
             // detect-communities — same floor, OPPOSITE domain: .design/ stays in
             // the graph (it is the subject), while floor dirs never become nodes.
             mk('.design/real-a.md', '# Real A\n[Real B](./real-b.md)\n');
             mk('.design/real-b.md', '# Real B\n');
-            const runGraph = () => JSON.parse(execSync(
-                `node "${path.join(tempDir, '.magic', 'scripts', 'detect-communities.js')}" --include-md --json`,
-                { cwd: tempDir, encoding: 'utf8' }
-            ));
+            const runGraph = () =>
+                JSON.parse(
+                    execSync(
+                        `node "${path.join(tempDir, '.magic', 'scripts', 'detect-communities.js')}" --include-md --json`,
+                        { cwd: tempDir, encoding: 'utf8' },
+                    ),
+                );
             const before = runGraph();
             mk('.pytest_cache/cached.js', 'var c = 1;\n');
             mk('.pytest_cache/other.js', 'var o = 1;\n');
@@ -4142,11 +5641,11 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 after.graph.total_files,
                 before.graph.total_files,
-                'floor dirs (.pytest_cache) must not add graph nodes'
+                'floor dirs (.pytest_cache) must not add graph nodes',
             );
             assert.ok(
                 JSON.stringify(after.communities).includes('.design/real-a.md'),
-                'the .design/ subject must remain in the community graph'
+                'the .design/ subject must remain in the community graph',
             );
         } finally {
             cleanup(tempDir);
@@ -4165,27 +5664,53 @@ describe('Magic Engine Scripts', () => {
             const spec = { valueFlags: ['--workspace', '--workflow'], boolFlags: ['--json'] };
 
             // Both forms yield the same value.
-            assert.strictEqual(parseFlags(['--workspace=docs'], spec).values['--workspace'], 'docs');
-            assert.strictEqual(parseFlags(['--workspace', 'docs'], spec).values['--workspace'], 'docs');
+            assert.strictEqual(
+                parseFlags(['--workspace=docs'], spec).values['--workspace'],
+                'docs',
+            );
+            assert.strictEqual(
+                parseFlags(['--workspace', 'docs'], spec).values['--workspace'],
+                'docs',
+            );
 
             // Unrecognized tokens pass through untouched (executor forwards them to the child).
             const proxied = parseFlags(['--json', '--require-tasks', '--workspace', 'docs'], spec);
-            assert.deepStrictEqual(proxied.rest, ['--require-tasks'], 'unknown tokens survive in rest');
-            assert.strictEqual(proxied.flags['--json'], true, 'boolean flags are captured, not forwarded');
+            assert.deepStrictEqual(
+                proxied.rest,
+                ['--require-tasks'],
+                'unknown tokens survive in rest',
+            );
+            assert.strictEqual(
+                proxied.flags['--json'],
+                true,
+                'boolean flags are captured, not forwarded',
+            );
             assert.strictEqual(proxied.values['--workspace'], 'docs');
             assert.deepStrictEqual(proxied.errors, [], 'a well-formed argv produces no errors');
 
             // Fail closed — the four silent-fallback shapes.
-            assert.ok(parseFlags(['--workspace'], spec).errors.length, 'bare flag at end of argv is an error');
-            assert.ok(parseFlags(['--workspace', '--json'], spec).errors.length, 'a following flag is not a value');
-            assert.ok(parseFlags(['--workspace='], spec).errors.length, 'an empty value is an error');
-            assert.ok(parseFlags(['--json=1'], spec).errors.length, 'a boolean flag rejects a value');
+            assert.ok(
+                parseFlags(['--workspace'], spec).errors.length,
+                'bare flag at end of argv is an error',
+            );
+            assert.ok(
+                parseFlags(['--workspace', '--json'], spec).errors.length,
+                'a following flag is not a value',
+            );
+            assert.ok(
+                parseFlags(['--workspace='], spec).errors.length,
+                'an empty value is an error',
+            );
+            assert.ok(
+                parseFlags(['--json=1'], spec).errors.length,
+                'a boolean flag rejects a value',
+            );
 
             // An embedded '=' must reach the caller's validation, never be truncated to `a`.
             assert.strictEqual(
                 parseFlags(['--workspace=a=b'], spec).values['--workspace'],
                 'a=b',
-                "split('=')[1] truncation must not resurface"
+                "split('=')[1] truncation must not resurface",
             );
         } finally {
             cleanup(tempDir);
@@ -4206,7 +5731,7 @@ describe('Magic Engine Scripts', () => {
             }
             fs.writeFileSync(
                 path.join(tempDir, '.design', 'workspace.json'),
-                JSON.stringify({ default: 'main', workspaces: { main: {}, docs: {} } })
+                JSON.stringify({ default: 'main', workspaces: { main: {}, docs: {} } }),
             );
 
             const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
@@ -4219,34 +5744,62 @@ describe('Magic Engine Scripts', () => {
 
             // (a) Space form must hit the requested workspace, not the default.
             clearContexts();
-            execSync(`node "${executorPath}" generate-context --workspace docs`, { cwd: tempDir, stdio: 'pipe' });
-            assert.ok(fs.existsSync(contextOf('docs')), 'space form must write the target workspace');
-            assert.ok(!fs.existsSync(contextOf('main')), 'space form must not fall back to the default workspace');
+            execSync(`node "${executorPath}" generate-context --workspace docs`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
+            assert.ok(
+                fs.existsSync(contextOf('docs')),
+                'space form must write the target workspace',
+            );
+            assert.ok(
+                !fs.existsSync(contextOf('main')),
+                'space form must not fall back to the default workspace',
+            );
 
             // (b) Equals form — the control that always worked.
             clearContexts();
-            execSync(`node "${executorPath}" generate-context --workspace=docs`, { cwd: tempDir, stdio: 'pipe' });
-            assert.ok(fs.existsSync(contextOf('docs')), 'equals form must write the target workspace');
-            assert.ok(!fs.existsSync(contextOf('main')), 'equals form must not touch the default workspace');
+            execSync(`node "${executorPath}" generate-context --workspace=docs`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
+            assert.ok(
+                fs.existsSync(contextOf('docs')),
+                'equals form must write the target workspace',
+            );
+            assert.ok(
+                !fs.existsSync(contextOf('main')),
+                'equals form must not touch the default workspace',
+            );
 
             // (c) The Unknown-workspace guard must be reachable via BOTH forms.
             //     Previously the space form bypassed it: a typo silently wrote to main.
             const expectHalt = (argv, why) => {
                 clearContexts();
                 assert.throws(
-                    () => execSync(`node "${executorPath}" generate-context ${argv}`, { cwd: tempDir, stdio: 'pipe' }),
+                    () =>
+                        execSync(`node "${executorPath}" generate-context ${argv}`, {
+                            cwd: tempDir,
+                            stdio: 'pipe',
+                        }),
                     /HALT/,
-                    why
+                    why,
                 );
                 assert.ok(!fs.existsSync(contextOf('main')), `${why} — and nothing may be written`);
                 assert.ok(!fs.existsSync(contextOf('docs')), `${why} — and nothing may be written`);
             };
 
-            expectHalt('--workspace bogus', 'a typo in the space form must HALT, not silently target the default');
+            expectHalt(
+                '--workspace bogus',
+                'a typo in the space form must HALT, not silently target the default',
+            );
             expectHalt('--workspace=bogus', 'a typo in the equals form must HALT');
             expectHalt('--workspace', 'a bare --workspace must HALT, not fall back to the default');
             expectHalt('--workspace=', 'an empty --workspace value must HALT');
-            expectHalt('--workspace=docs=typo', "an embedded '=' must fail validation, not truncate to 'docs'");
+            expectHalt(
+                '--workspace=docs=typo',
+                "an embedded '=' must fail validation, not truncate to 'docs'",
+            );
 
             // (d) Path traversal stays rejected through the space form too.
             expectHalt('--workspace ../../../etc', 'traversal via the space form must HALT');
@@ -4271,23 +5824,39 @@ describe('Magic Engine Scripts', () => {
             const wsState = path.join(wsDir, 'STATE.md');
 
             // (a) Space form targets the requested directory.
-            execSync(`node "${scriptPath}" --workspace .design/docs --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}" --workspace .design/docs --status=Active`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             assert.ok(fs.existsSync(wsState), 'space form must write into the workspace');
-            assert.ok(!fs.existsSync(rootState), 'space form must not write into the registry root');
+            assert.ok(
+                !fs.existsSync(rootState),
+                'space form must not write into the registry root',
+            );
 
             // (b) A bare --workspace must HALT rather than degrade to `.design/`.
             fs.unlinkSync(wsState);
             assert.throws(
-                () => execSync(`node "${scriptPath}" --workspace --status=Active`, { cwd: tempDir, stdio: 'pipe' }),
+                () =>
+                    execSync(`node "${scriptPath}" --workspace --status=Active`, {
+                        cwd: tempDir,
+                        stdio: 'pipe',
+                    }),
                 /HALT/,
-                'a valueless --workspace must HALT'
+                'a valueless --workspace must HALT',
             );
             assert.ok(!fs.existsSync(rootState), 'the HALT must leave the registry root untouched');
 
             // (c) Equals form still works, and a workspace directory may contain separators.
-            execSync(`node "${scriptPath}" --workspace=.design/docs --status=Active`, { cwd: tempDir, stdio: 'pipe' });
+            execSync(`node "${scriptPath}" --workspace=.design/docs --status=Active`, {
+                cwd: tempDir,
+                stdio: 'pipe',
+            });
             assert.ok(fs.existsSync(wsState), 'equals form must write into the workspace');
-            assert.ok(!fs.existsSync(rootState), 'equals form must not write into the registry root');
+            assert.ok(
+                !fs.existsSync(rootState),
+                'equals form must not write into the registry root',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4300,7 +5869,7 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
     test('shipped workflow bodies prescribe only executor-parsable --workspace forms', () => {
         const magicRoot = path.resolve(__dirname, '..', '..', '.magic');
-        const bodies = fs.readdirSync(magicRoot).filter(f => f.endsWith('.md'));
+        const bodies = fs.readdirSync(magicRoot).filter((f) => f.endsWith('.md'));
         assert.ok(bodies.length > 0, 'fixture precondition: workflow bodies exist');
 
         for (const body of bodies) {
@@ -4311,7 +5880,7 @@ describe('Magic Engine Scripts', () => {
             assert.doesNotMatch(
                 content,
                 /--workspace=\{[^}]*dir[^}]*\}/,
-                `${body} passes a directory to executor's --workspace, which only accepts a bare name`
+                `${body} passes a directory to executor's --workspace, which only accepts a bare name`,
             );
         }
     });
@@ -4340,11 +5909,11 @@ describe('Magic Engine Scripts', () => {
             const content = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
             assert.ok(
                 content.includes('T-\\d+[A-Z]\\d+'),
-                `${rel} must state the notation-independent task-ID pattern (bracketed and bare, any phase width)`
+                `${rel} must state the notation-independent task-ID pattern (bracketed and bare, any phase width)`,
             );
             assert.ok(
                 content.includes('[Pp]hase[-\\s]\\d+'),
-                `${rel} must state the prose phase-designator pattern, not only the phase-{n} file form`
+                `${rel} must state the prose phase-designator pattern, not only the phase-{n} file form`,
             );
         }
     });
@@ -4372,9 +5941,15 @@ describe('Magic Engine Scripts', () => {
             // (a) No scope: gitignored .design stays visible; dist/ (floor) is hidden.
             execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
             let context = read();
-            assert.ok(context.includes('.design/'), 'gitignored design root must remain visible (landmark)');
+            assert.ok(
+                context.includes('.design/'),
+                'gitignored design root must remain visible (landmark)',
+            );
             assert.ok(context.includes('.magic/'), 'engine root must remain visible (landmark)');
-            assert.ok(!context.includes('dist/'), 'build noise must be hidden from the tree via the shared floor');
+            assert.ok(
+                !context.includes('dist/'),
+                'build noise must be hidden from the tree via the shared floor',
+            );
 
             // (b) Workspace scope: out-of-scope dirs are filtered, landmarks survive.
             execSync(`node "${scriptPath}"`, {
@@ -4399,7 +5974,10 @@ describe('Magic Engine Scripts', () => {
     // Plan-complete TASKS.md, committed — the skip-path baseline every
     // diagnostics-digest test below starts from before layering its own change.
     const commitPlanCompleteFixture = (tempDir, wsDir) => {
-        fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n*None — plan complete.*\n');
+        fs.writeFileSync(
+            path.join(wsDir, 'TASKS.md'),
+            '## Active Phases\n\n*None — plan complete.*\n',
+        );
         commitFixture(tempDir);
     };
 
@@ -4419,9 +5997,15 @@ describe('Magic Engine Scripts', () => {
     test('diagnostics.js record/read/drain round-trip in append order, exactly once (DG-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
-            assert.deepStrictEqual(diagnostics.read(), [], 'a missing sink reads as empty, not an error');
+            assert.deepStrictEqual(
+                diagnostics.read(),
+                [],
+                'a missing sink reads as empty, not an error',
+            );
 
             const findings = [
                 { severity: 'error', source: 'a', code: 'A1', message: 'first' },
@@ -4429,17 +6013,26 @@ describe('Magic Engine Scripts', () => {
                 { severity: 'fix', source: 'c', code: 'C1', message: 'third' },
             ];
             for (const f of findings) {
-                assert.strictEqual(diagnostics.record(f), true, `record() should succeed for ${f.code}`);
+                assert.strictEqual(
+                    diagnostics.record(f),
+                    true,
+                    `record() should succeed for ${f.code}`,
+                );
             }
 
             const drained = diagnostics.drain();
             assert.strictEqual(drained.length, 3, 'all three findings should drain');
             assert.deepStrictEqual(
-                drained.map((f) => f.code), ['A1', 'B1', 'C1'],
-                'findings must drain in append order'
+                drained.map((f) => f.code),
+                ['A1', 'B1', 'C1'],
+                'findings must drain in append order',
             );
 
-            assert.deepStrictEqual(diagnostics.drain(), [], 'a second drain must return nothing — exactly-once delivery');
+            assert.deepStrictEqual(
+                diagnostics.drain(),
+                [],
+                'a second drain must return nothing — exactly-once delivery',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4448,7 +6041,9 @@ describe('Magic Engine Scripts', () => {
     test('diagnostics.record() never throws, even when the sink cannot be written (DG-9)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
             // Occupy .design/.cache with a file so the sink's parent path
             // cannot resolve to a directory — the write itself must fail.
@@ -4457,9 +6052,18 @@ describe('Magic Engine Scripts', () => {
 
             let result;
             assert.doesNotThrow(() => {
-                result = diagnostics.record({ severity: 'warning', source: 'test', code: 'X', message: 'm' });
+                result = diagnostics.record({
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'X',
+                    message: 'm',
+                });
             }, 'record() must never throw, regardless of why the write failed');
-            assert.strictEqual(result, false, 'a failed write must report false, not silently succeed');
+            assert.strictEqual(
+                result,
+                false,
+                'a failed write must report false, not silently succeed',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4468,8 +6072,15 @@ describe('Magic Engine Scripts', () => {
     test('diagnostics.read() drains every parseable line even when one is truncated (DG-9 corollary)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-            diagnostics.record({ severity: 'warning', source: 'a', code: 'BEFORE', message: 'first' });
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
+            diagnostics.record({
+                severity: 'warning',
+                source: 'a',
+                code: 'BEFORE',
+                message: 'first',
+            });
 
             const sinkPath = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
             fs.appendFileSync(sinkPath, '{"severity":"error","source":"b","code":"TRUNC","mess\n');
@@ -4478,10 +6089,23 @@ describe('Magic Engine Scripts', () => {
 
             const findings = diagnostics.drain();
             const codes = findings.map((f) => f.code);
-            assert.ok(codes.includes('BEFORE'), 'a finding recorded before the corrupt line must survive');
-            assert.ok(codes.includes('AFTER'), 'a finding recorded after the corrupt line must survive — the tail is not lost');
-            assert.ok(!codes.includes('TRUNC'), 'the corrupt line itself must not appear as a finding');
-            assert.strictEqual(findings.length, 2, 'exactly the two valid lines should drain, no more, no fewer');
+            assert.ok(
+                codes.includes('BEFORE'),
+                'a finding recorded before the corrupt line must survive',
+            );
+            assert.ok(
+                codes.includes('AFTER'),
+                'a finding recorded after the corrupt line must survive — the tail is not lost',
+            );
+            assert.ok(
+                !codes.includes('TRUNC'),
+                'the corrupt line itself must not appear as a finding',
+            );
+            assert.strictEqual(
+                findings.length,
+                2,
+                'exactly the two valid lines should drain, no more, no fewer',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4490,29 +6114,52 @@ describe('Magic Engine Scripts', () => {
     test('diagnostics.formatDigest dedups with an occurrence count and caps with an omission line (DG-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
-            assert.deepStrictEqual(diagnostics.formatDigest([]), [], 'empty input must render nothing — not a heading with no body');
+            assert.deepStrictEqual(
+                diagnostics.formatDigest([]),
+                [],
+                'empty input must render nothing — not a heading with no body',
+            );
 
             // 12 identical (severity, source, code) findings collapse to one entry.
             const repeated = Array.from({ length: 12 }, () => ({
-                severity: 'warning', source: 'update-state', code: 'STATE_CAP_EXHAUSTED', message: 'cap exhausted',
+                severity: 'warning',
+                source: 'update-state',
+                code: 'STATE_CAP_EXHAUSTED',
+                message: 'cap exhausted',
             }));
             const repeatedDigest = diagnostics.formatDigest(repeated).join('\n');
-            assert.match(repeatedDigest, /STATE_CAP_EXHAUSTED.*\(×12\)/, 'twelve identical findings must collapse to one line with a ×12 count');
+            assert.match(
+                repeatedDigest,
+                /STATE_CAP_EXHAUSTED.*\(×12\)/,
+                'twelve identical findings must collapse to one line with a ×12 count',
+            );
             assert.strictEqual(
-                (repeatedDigest.match(/STATE_CAP_EXHAUSTED/g) || []).length, 1,
-                'the code must appear exactly once, not twelve times'
+                (repeatedDigest.match(/STATE_CAP_EXHAUSTED/g) || []).length,
+                1,
+                'the code must appear exactly once, not twelve times',
             );
 
             // 20 distinct findings: 15 rendered, 5 reported as omitted.
             const distinct = Array.from({ length: 20 }, (_, i) => ({
-                severity: 'warning', source: 'test', code: `CODE_${i}`, message: `finding ${i}`,
+                severity: 'warning',
+                source: 'test',
+                code: `CODE_${i}`,
+                message: `finding ${i}`,
             }));
             const distinctLines = diagnostics.formatDigest(distinct);
-            const bulletCount = distinctLines.filter((l) => l.startsWith('- ') && !l.includes('more finding')).length;
+            const bulletCount = distinctLines.filter(
+                (l) => l.startsWith('- ') && !l.includes('more finding'),
+            ).length;
             assert.strictEqual(bulletCount, 15, 'the render cap must stop at 15 distinct findings');
-            assert.match(distinctLines.join('\n'), /\+5 more findings not listed/, 'the omission must state how many were left out');
+            assert.match(
+                distinctLines.join('\n'),
+                /\+5 more findings not listed/,
+                'the omission must state how many were left out',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4521,7 +6168,9 @@ describe('Magic Engine Scripts', () => {
     test('diagnostics dedup keeps findings apart whose source and code differ only at the field boundary (DG-4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
             // ("a" + "BC") and ("aB" + "C") concatenate to the same text, so only a
             // real separator between the key's fields keeps them two findings. The
@@ -4532,7 +6181,11 @@ describe('Magic Engine Scripts', () => {
                 { severity: 'warning', source: 'aB', code: 'C', message: 'second finding' },
             ];
 
-            assert.strictEqual(diagnostics.summarize(findings).total, 2, 'distinct findings must not collapse into one');
+            assert.strictEqual(
+                diagnostics.summarize(findings).total,
+                2,
+                'distinct findings must not collapse into one',
+            );
             const digest = diagnostics.formatDigest(findings).join('\n');
             assert.match(digest, /first finding/, 'the first finding must render');
             assert.match(digest, /second finding/, 'the second finding must render');
@@ -4577,7 +6230,9 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             writeRevalidateFixture(tempDir);
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
             const survivors = diagnostics.revalidate(findings);
             checkFn(survivors, tempDir);
         } finally {
@@ -4586,49 +6241,116 @@ describe('Magic Engine Scripts', () => {
     };
 
     test('revalidate() drops a finding whose recheck no longer reproduces the code (DG-10)', () => {
-        testRevalidate([{
-            severity: 'warning', source: 'test', code: 'GONE', message: 'was true at record time',
-            recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } },
-        }], (survivors) => {
-            assert.strictEqual(survivors.length, 0, 'a finding whose recheck reports no matching code must be dropped');
-        });
+        testRevalidate(
+            [
+                {
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'GONE',
+                    message: 'was true at record time',
+                    recheck: {
+                        script: 'revalidate-fixture',
+                        args: [],
+                        env: { FIXTURE_WARNINGS: '[]' },
+                    },
+                },
+            ],
+            (survivors) => {
+                assert.strictEqual(
+                    survivors.length,
+                    0,
+                    'a finding whose recheck reports no matching code must be dropped',
+                );
+            },
+        );
     });
 
     test('revalidate() keeps a finding whose recheck still reproduces the code (DG-10)', () => {
-        testRevalidate([{
-            severity: 'warning', source: 'test', code: 'STILL_OPEN', message: 'condition persists',
-            recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) } },
-        }], (survivors) => {
-            assert.strictEqual(survivors.length, 1, 'a finding whose recheck still reports its code must survive unchanged');
-            assert.strictEqual(survivors[0].code, 'STILL_OPEN');
-        });
+        testRevalidate(
+            [
+                {
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'STILL_OPEN',
+                    message: 'condition persists',
+                    recheck: {
+                        script: 'revalidate-fixture',
+                        args: [],
+                        env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'STILL_OPEN' }]) },
+                    },
+                },
+            ],
+            (survivors) => {
+                assert.strictEqual(
+                    survivors.length,
+                    1,
+                    'a finding whose recheck still reports its code must survive unchanged',
+                );
+                assert.strictEqual(survivors[0].code, 'STILL_OPEN');
+            },
+        );
     });
 
     test('revalidate() spawns one recheck process per distinct signature, not one per finding (DG-10)', () => {
         const sharedRecheck = {
-            script: 'revalidate-fixture', args: ['shared'],
+            script: 'revalidate-fixture',
+            args: ['shared'],
             env: { FIXTURE_WARNINGS: JSON.stringify([{ type: 'A' }, { type: 'B' }]) },
         };
-        testRevalidate([
-            { severity: 'warning', source: 'test', code: 'A', message: 'm', recheck: sharedRecheck },
-            { severity: 'warning', source: 'test', code: 'B', message: 'm', recheck: sharedRecheck },
-        ], (survivors, tempDir) => {
-            assert.strictEqual(revalidateFixtureCount(tempDir), 1, 'two findings sharing one recheck signature must spawn exactly one process');
-            assert.deepStrictEqual(survivors.map((f) => f.code).sort(), ['A', 'B'], 'both findings survive — the shared recheck reproduced both codes');
-        });
+        testRevalidate(
+            [
+                {
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'A',
+                    message: 'm',
+                    recheck: sharedRecheck,
+                },
+                {
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'B',
+                    message: 'm',
+                    recheck: sharedRecheck,
+                },
+            ],
+            (survivors, tempDir) => {
+                assert.strictEqual(
+                    revalidateFixtureCount(tempDir),
+                    1,
+                    'two findings sharing one recheck signature must spawn exactly one process',
+                );
+                assert.deepStrictEqual(
+                    survivors.map((f) => f.code).sort(),
+                    ['A', 'B'],
+                    'both findings survive — the shared recheck reproduced both codes',
+                );
+            },
+        );
     });
 
     test('revalidate() leaves a finding untouched when its recheck cannot be run (DG-10 extends DG-9)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
-            const survivors = diagnostics.revalidate([{
-                severity: 'error', source: 'test', code: 'UNCHECKABLE', message: 'recheck target does not exist',
-                recheck: { script: 'does-not-exist-xyz', args: [], env: {} },
-            }]);
+            const survivors = diagnostics.revalidate([
+                {
+                    severity: 'error',
+                    source: 'test',
+                    code: 'UNCHECKABLE',
+                    message: 'recheck target does not exist',
+                    recheck: { script: 'does-not-exist-xyz', args: [], env: {} },
+                },
+            ]);
 
-            assert.strictEqual(survivors.length, 1, 'a recheck that cannot be spawned must fail open — the finding renders as recorded, not dropped');
+            assert.strictEqual(
+                survivors.length,
+                1,
+                'a recheck that cannot be spawned must fail open — the finding renders as recorded, not dropped',
+            );
             assert.strictEqual(survivors[0].code, 'UNCHECKABLE');
         } finally {
             cleanup(tempDir);
@@ -4636,23 +6358,52 @@ describe('Magic Engine Scripts', () => {
     });
 
     test('revalidate() passes a finding with no recheck field through unchanged (DG-10)', () => {
-        testRevalidate([
-            { severity: 'fix', source: 'finalize', code: 'NEXT_ACTION_SUBSTITUTED', message: 'an event, not a condition' },
-            { severity: 'warning', source: 'test', code: 'GONE', message: 'm', recheck: { script: 'revalidate-fixture', args: [], env: { FIXTURE_WARNINGS: '[]' } } },
-        ], (survivors) => {
-            assert.strictEqual(survivors.length, 1, 'the event finding survives; the resolved condition finding does not — partition is per-finding, not per-batch');
-            assert.strictEqual(survivors[0].code, 'NEXT_ACTION_SUBSTITUTED');
-        });
+        testRevalidate(
+            [
+                {
+                    severity: 'fix',
+                    source: 'finalize',
+                    code: 'NEXT_ACTION_SUBSTITUTED',
+                    message: 'an event, not a condition',
+                },
+                {
+                    severity: 'warning',
+                    source: 'test',
+                    code: 'GONE',
+                    message: 'm',
+                    recheck: {
+                        script: 'revalidate-fixture',
+                        args: [],
+                        env: { FIXTURE_WARNINGS: '[]' },
+                    },
+                },
+            ],
+            (survivors) => {
+                assert.strictEqual(
+                    survivors.length,
+                    1,
+                    'the event finding survives; the resolved condition finding does not — partition is per-finding, not per-batch',
+                );
+                assert.strictEqual(survivors[0].code, 'NEXT_ACTION_SUBSTITUTED');
+            },
+        );
     });
 
     test('record() suppresses writes under MAGIC_DIAGNOSTICS_SUPPRESS, and a live recheck spawn cannot feed its own finding back into the sink (DG-10 self-reference guard)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
             const sinkPath = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
 
             process.env.MAGIC_DIAGNOSTICS_SUPPRESS = '1';
-            const suppressed = diagnostics.record({ severity: 'warning', source: 'test', code: 'SHOULD_NOT_APPEAR', message: 'm' });
+            const suppressed = diagnostics.record({
+                severity: 'warning',
+                source: 'test',
+                code: 'SHOULD_NOT_APPEAR',
+                message: 'm',
+            });
             delete process.env.MAGIC_DIAGNOSTICS_SUPPRESS;
             assert.strictEqual(suppressed, false, 'a suppressed record() must report false');
             assert.ok(!fs.existsSync(sinkPath), 'a suppressed record() must not create the sink');
@@ -4668,20 +6419,23 @@ describe('Magic Engine Scripts', () => {
             execSync(`node "${cpPath}" --json`, { cwd: tempDir, stdio: 'pipe' });
 
             const recorded = diagnostics.read();
-            assert.ok(recorded.some((f) => f.code === 'ENGINE_INTEGRITY'), 'sanity: the real emitter must have recorded its own finding first');
+            assert.ok(
+                recorded.some((f) => f.code === 'ENGINE_INTEGRITY'),
+                'sanity: the real emitter must have recorded its own finding first',
+            );
             assert.ok(
                 recorded.every((f) => f.recheck && f.recheck.script === 'check-prerequisites'),
-                'every check-prerequisites finding must carry a recheck reference'
+                'every check-prerequisites finding must carry a recheck reference',
             );
 
             const survivors = diagnostics.revalidate(diagnostics.drain());
             assert.ok(
                 survivors.some((f) => f.code === 'ENGINE_INTEGRITY'),
-                'the condition is still real (.checksums is still missing) — it must survive its own revalidation'
+                'the condition is still real (.checksums is still missing) — it must survive its own revalidation',
             );
             assert.ok(
                 !fs.existsSync(sinkPath),
-                "the recheck's own warn()/record() calls must not have written a new finding back into the sink"
+                "the recheck's own warn()/record() calls must not have written a new finding back into the sink",
             );
         } finally {
             cleanup(tempDir);
@@ -4691,20 +6445,44 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js --dry-run reads the diagnostics sink without draining it (DG-4.1)', () => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath, diagnostics } = requireFinalizeDiagnostics(tempDir);
-            diagnostics.record({ severity: 'warning', source: 'test', code: 'DRY_RUN_PROBE', message: 'should survive a preview' });
+            const { finalizePath, diagnostics } = requireFinalizeDiagnostics(tempDir);
+            diagnostics.record({
+                severity: 'warning',
+                source: 'test',
+                code: 'DRY_RUN_PROBE',
+                message: 'should survive a preview',
+            });
 
-            const dryOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main --dry-run`, { cwd: tempDir, encoding: 'utf8' });
-            assert.match(dryOut, /DRY_RUN_PROBE/, 'a --dry-run invocation must still render the digest');
+            const dryOut = execSync(
+                `node "${finalizePath}" --workflow=task --workspace=main --dry-run`,
+                { cwd: tempDir, encoding: 'utf8' },
+            );
+            assert.match(
+                dryOut,
+                /DRY_RUN_PROBE/,
+                'a --dry-run invocation must still render the digest',
+            );
             assert.deepStrictEqual(
-                diagnostics.read().map((f) => f.code), ['DRY_RUN_PROBE'],
-                'the finding must still be sitting in the sink after a preview — the preview must not have drained it'
+                diagnostics.read().map((f) => f.code),
+                ['DRY_RUN_PROBE'],
+                'the finding must still be sitting in the sink after a preview — the preview must not have drained it',
             );
 
             // A second, real run reports the same finding and this time consumes it.
-            const realOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
-            assert.match(realOut, /DRY_RUN_PROBE/, 'the real run must still report the finding the preview left untouched');
-            assert.deepStrictEqual(diagnostics.read(), [], 'the real run must have drained the sink');
+            const realOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
+            assert.match(
+                realOut,
+                /DRY_RUN_PROBE/,
+                'the real run must still report the finding the preview left untouched',
+            );
+            assert.deepStrictEqual(
+                diagnostics.read(),
+                [],
+                'the real run must have drained the sink',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4724,18 +6502,38 @@ describe('Magic Engine Scripts', () => {
                 assert.ok(nextIdx !== -1, `${label}: next-step heading must be present`);
                 assert.ok(digestIdx < nextIdx, `${label}: digest must render before the next step`);
                 const afterNextStep = out.slice(nextIdx + '### Next step'.length);
-                assert.doesNotMatch(afterNextStep, /\n### /, `${label}: nothing may follow the next step section`);
+                assert.doesNotMatch(
+                    afterNextStep,
+                    /\n### /,
+                    `${label}: nothing may follow the next step section`,
+                );
             };
 
             // Skip path: no whitelisted change, but a recorded finding exists.
-            diagnostics.record({ severity: 'warning', source: 'test', code: 'ORDER_SKIP', message: 'skip path probe' });
-            const skipOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            diagnostics.record({
+                severity: 'warning',
+                source: 'test',
+                code: 'ORDER_SKIP',
+                message: 'skip path probe',
+            });
+            const skipOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
             assertOrder(skipOut, 'skip path');
 
             // Significant path: a whitelisted change plus a recorded finding.
             fs.writeFileSync(path.join(wsDir, 'PLAN.md'), '# Plan\n\nreal content\n');
-            diagnostics.record({ severity: 'warning', source: 'test', code: 'ORDER_SUCCESS', message: 'success path probe' });
-            const successOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            diagnostics.record({
+                severity: 'warning',
+                source: 'test',
+                code: 'ORDER_SUCCESS',
+                message: 'success path probe',
+            });
+            const successOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
             assertOrder(successOut, 'significant path');
         } finally {
             cleanup(tempDir);
@@ -4748,31 +6546,61 @@ describe('Magic Engine Scripts', () => {
             const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
             const tasksDir = path.join(wsDir, 'tasks');
             fs.mkdirSync(tasksDir, { recursive: true });
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), [
-                '# Master Task Index', '',
-                '## Active Phases', '',
-                '| Phase | Description | Status |',
-                '| --- | --- | --- |',
-                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |', '',
-            ].join('\n'));
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] Scaffold the app', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                [
+                    '# Master Task Index',
+                    '',
+                    '## Active Phases',
+                    '',
+                    '| Phase | Description | Status |',
+                    '| --- | --- | --- |',
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `In Progress` |',
+                    '',
+                ].join('\n'),
+            );
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] Scaffold the app',
+                    '',
+                ].join('\n'),
+            );
             commitFixture(tempDir);
 
             fs.writeFileSync(path.join(wsDir, 'PLAN.md'), '# Plan\n\nreal content\n');
-            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            const out = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
 
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
             const persisted = state.match(/- \*\*Next Action:\*\* (.+)/)[1].trim();
 
             const nextIdx = out.indexOf('### Next step');
-            const printed = out.slice(nextIdx + '### Next step'.length).split('\n').map((l) => l.trim()).filter(Boolean)[0];
+            const printed = out
+                .slice(nextIdx + '### Next step'.length)
+                .split('\n')
+                .map((l) => l.trim())
+                .filter(Boolean)[0];
 
-            assert.strictEqual(printed, persisted, 'the printed next step must be byte-identical to what was written to STATE.md');
-            assert.match(printed, /T-1A01/, 'sanity: the computed action should reference the open task');
+            assert.strictEqual(
+                printed,
+                persisted,
+                'the printed next step must be byte-identical to what was written to STATE.md',
+            );
+            assert.match(
+                printed,
+                /T-1A01/,
+                'sanity: the computed action should reference the open task',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4782,25 +6610,56 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { wsDir, finalizePath } = createFinalizeFixture(tempDir);
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n*None — plan complete.*\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n*None — plan complete.*\n',
+            );
             commitFixture(tempDir);
 
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
-            assert.deepStrictEqual(diagnostics.read(), [], 'sanity: the sink must start empty for this assertion to mean anything');
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
+            assert.deepStrictEqual(
+                diagnostics.read(),
+                [],
+                'sanity: the sink must start empty for this assertion to mean anything',
+            );
 
             // Skip path: nothing whitelisted changed, sink is empty.
-            const skipOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
-            assert.doesNotMatch(skipOut, /### Engine diagnostics/, 'skip path: no digest heading when nothing was recorded');
+            const skipOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
+            assert.doesNotMatch(
+                skipOut,
+                /### Engine diagnostics/,
+                'skip path: no digest heading when nothing was recorded',
+            );
             assert.match(skipOut, /### Next step/, 'skip path: the next step must still print');
 
             // Significant path: a whitelisted change, still an empty sink —
             // the summary table gains rows for other fields but must not
             // gain one for diagnostics.
             fs.writeFileSync(path.join(wsDir, 'PLAN.md'), '# Plan\n\nreal content\n');
-            const successOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
-            assert.doesNotMatch(successOut, /### Engine diagnostics/, 'significant path: no digest heading when nothing was recorded');
-            assert.doesNotMatch(successOut, /\| Diagnostics \|/, 'significant path: no summary-table row when nothing was recorded');
-            assert.match(successOut, /### Next step/, 'significant path: the next step must still print');
+            const successOut = execSync(`node "${finalizePath}" --workflow=task --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
+            assert.doesNotMatch(
+                successOut,
+                /### Engine diagnostics/,
+                'significant path: no digest heading when nothing was recorded',
+            );
+            assert.doesNotMatch(
+                successOut,
+                /\| Diagnostics \|/,
+                'significant path: no summary-table row when nothing was recorded',
+            );
+            assert.match(
+                successOut,
+                /### Next step/,
+                'significant path: the next step must still print',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4810,26 +6669,40 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'record-diagnostic.js');
-            const diagnostics = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'));
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
 
             // Valid finding.
             const validOut = execSync(
                 `node "${scriptPath}" --severity=warning --code=CLI_PROBE --message="from the agent channel"`,
-                { cwd: tempDir, encoding: 'utf8' }
+                { cwd: tempDir, encoding: 'utf8' },
             );
-            assert.match(validOut, /Recorded warning CLI_PROBE/, 'a valid finding should confirm what was recorded');
+            assert.match(
+                validOut,
+                /Recorded warning CLI_PROBE/,
+                'a valid finding should confirm what was recorded',
+            );
 
             // Invalid severity — must not throw or exit non-zero.
             assert.doesNotThrow(() => {
                 execSync(
                     `node "${scriptPath}" --severity=bogus --code=BAD --message="should be dropped"`,
-                    { cwd: tempDir, encoding: 'utf8' }
+                    { cwd: tempDir, encoding: 'utf8' },
                 );
             }, 'an invalid severity must not produce a non-zero exit');
 
             const drained = diagnostics.drain();
-            assert.deepStrictEqual(drained.map((f) => f.code), ['CLI_PROBE'], 'only the valid finding should have reached the sink');
-            assert.strictEqual(drained[0].source, 'agent', '--source defaults to "agent" when omitted');
+            assert.deepStrictEqual(
+                drained.map((f) => f.code),
+                ['CLI_PROBE'],
+                'only the valid finding should have reached the sink',
+            );
+            assert.strictEqual(
+                drained[0].source,
+                'agent',
+                '--source defaults to "agent" when omitted',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4842,27 +6715,54 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             const changelogPath = path.join(tempDir, 'CHANGELOG.md');
-            fs.writeFileSync(changelogPath, [
-                '# Changelog', '',
-                'All notable changes to this project will be documented in this file.', '',
-                '## [Unreleased]', '',
-                '### Added', '',
-                '- Something new.', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                changelogPath,
+                [
+                    '# Changelog',
+                    '',
+                    'All notable changes to this project will be documented in this file.',
+                    '',
+                    '## [Unreleased]',
+                    '',
+                    '### Added',
+                    '',
+                    '- Something new.',
+                    '',
+                ].join('\n'),
+            );
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'release-changelog.js');
 
-            const out = execSync(`node "${scriptPath}" --version=9.9.9 --date=2026-01-01`, { cwd: tempDir, encoding: 'utf8' });
-            assert.match(out, /Rotated \[Unreleased\] → \[9\.9\.9\] - 2026-01-01/, 'confirms the rotation it performed');
+            const out = execSync(`node "${scriptPath}" --version=9.9.9 --date=2026-01-01`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
+            assert.match(
+                out,
+                /Rotated \[Unreleased\] → \[9\.9\.9\] - 2026-01-01/,
+                'confirms the rotation it performed',
+            );
             const rotated = fs.readFileSync(changelogPath, 'utf8');
-            assert.match(rotated, /## \[Unreleased\]\s*\n\s*## \[9\.9\.9\] - 2026-01-01/, 'Unreleased renamed, fresh Unreleased opened above it');
-            assert.match(rotated, /### Added\s*\n\s*- Something new\./, 'prior bullets survive under the newly-dated heading');
+            assert.match(
+                rotated,
+                /## \[Unreleased\]\s*\n\s*## \[9\.9\.9\] - 2026-01-01/,
+                'Unreleased renamed, fresh Unreleased opened above it',
+            );
+            assert.match(
+                rotated,
+                /### Added\s*\n\s*- Something new\./,
+                'prior bullets survive under the newly-dated heading',
+            );
 
             // Defaults: --version from .design/.version, --date = today (UTC).
             fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
             fs.writeFileSync(path.join(tempDir, '.design', '.version'), '4.5.6\n');
             const out2 = execSync(`node "${scriptPath}"`, { cwd: tempDir, encoding: 'utf8' });
             const today = new Date().toISOString().slice(0, 10);
-            assert.match(out2, new RegExp(`Rotated \\[Unreleased\\] → \\[4\\.5\\.6\\] - ${today}`), 'falls back to .design/.version and today when flags are omitted');
+            assert.match(
+                out2,
+                new RegExp(`Rotated \\[Unreleased\\] → \\[4\\.5\\.6\\] - ${today}`),
+                'falls back to .design/.version and today when flags are omitted',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4871,7 +6771,9 @@ describe('Magic Engine Scripts', () => {
     test('release-changelog.js rotation restores per-window bullet distinguishability (R11 §4.1/§4.2)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { appendBullet, releaseUnreleased } = require(path.join(tempDir, '.magic', 'scripts', 'lib', 'changelog-writer.js'));
+            const { appendBullet, releaseUnreleased } = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'changelog-writer.js'),
+            );
             const changelogPath = path.join(tempDir, 'CHANGELOG.md');
 
             const bullet = 'Updated task plan and task index (engine)';
@@ -4880,18 +6782,32 @@ describe('Magic Engine Scripts', () => {
 
             // Same bullet, no rotation yet — the closed-vocabulary suppression §4.1 documents.
             const r2 = appendBullet(changelogPath, 'Changed', bullet);
-            assert.strictEqual(r2.deduped, true, 'identical bullet within the same window is correctly deduped');
+            assert.strictEqual(
+                r2.deduped,
+                true,
+                'identical bullet within the same window is correctly deduped',
+            );
 
             const rot = releaseUnreleased(changelogPath, '1.0.0', '2026-02-01');
             assert.strictEqual(rot.written, true, 'rotation must actually write');
 
             // Same bullet, new window — must be writable again, not permanently suppressed.
             const r3 = appendBullet(changelogPath, 'Changed', bullet);
-            assert.strictEqual(r3.written, true, 'the same real-work bullet must be writable again after rotation');
+            assert.strictEqual(
+                r3.written,
+                true,
+                'the same real-work bullet must be writable again after rotation',
+            );
 
             const escaped = bullet.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-            const occurrences = (fs.readFileSync(changelogPath, 'utf8').match(new RegExp(escaped, 'g')) || []).length;
-            assert.strictEqual(occurrences, 2, 'the bullet must appear once in the released section and once in the fresh Unreleased');
+            const occurrences = (
+                fs.readFileSync(changelogPath, 'utf8').match(new RegExp(escaped, 'g')) || []
+            ).length;
+            assert.strictEqual(
+                occurrences,
+                2,
+                'the bullet must appear once in the released section and once in the fresh Unreleased',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4900,8 +6816,15 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js no longer references releaseUnreleased — rotation is opt-in only (R11 §4.4)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const src = fs.readFileSync(path.join(tempDir, '.magic', 'scripts', 'finalize.js'), 'utf8');
-            assert.doesNotMatch(src, /releaseUnreleased/, 'finalize.js must not import or call releaseUnreleased');
+            const src = fs.readFileSync(
+                path.join(tempDir, '.magic', 'scripts', 'finalize.js'),
+                'utf8',
+            );
+            assert.doesNotMatch(
+                src,
+                /releaseUnreleased/,
+                'finalize.js must not import or call releaseUnreleased',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4910,38 +6833,88 @@ describe('Magic Engine Scripts', () => {
     test("finalize.js's deduped CHANGELOG row names release-changelog as the remedy (§4.5)", () => {
         const tempDir = createTempWorkspace(true);
         try {
-            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main', autoChangelog: true });
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, {
+                workspace: 'main',
+                autoChangelog: true,
+            });
             const tasksDir = path.join(wsDir, 'tasks');
             fs.mkdirSync(tasksDir, { recursive: true });
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '- [ ] [T-1A01] Task', '',
-            ].join('\n'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '- [ ] [T-1A01] Task',
+                    '',
+                ].join('\n'),
+            );
             commitFixture(tempDir);
 
             // First run: the bullet is genuinely new — must append normally,
             // no hint. Control case for the second assertion below.
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '- [x] [T-1A01] Task', '',
-            ].join('\n'));
-            const firstOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '- [x] [T-1A01] Task',
+                    '',
+                ].join('\n'),
+            );
+            const firstOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
             const firstRow = firstOut.split('\n').find((l) => l.startsWith('| CHANGELOG |'));
-            assert.match(firstRow, /appended to \[Unreleased\] § Changed/, 'first run: bullet is new, must append normally');
-            assert.doesNotMatch(firstRow, /release-changelog/, 'first run: no hint when nothing was deduped');
+            assert.match(
+                firstRow,
+                /appended to \[Unreleased\] § Changed/,
+                'first run: bullet is new, must append normally',
+            );
+            assert.doesNotMatch(
+                firstRow,
+                /release-changelog/,
+                'first run: no hint when nothing was deduped',
+            );
 
             // Second run: same shape (one /tasks/ file changed) reproduces the
             // identical bullet ("Completed task (main)") — the exact §4.1
             // vocabulary-exhaustion scenario the field report reproduced.
             commitFixture(tempDir);
-            fs.writeFileSync(path.join(tasksDir, 'phase-1.md'), [
-                '---', 'phase: 1', 'status: Done', '---', '',
-                '- [x] [T-1A01] Task', '- [x] [T-1A02] Another', '',
-            ].join('\n'));
-            const secondOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, { cwd: tempDir, encoding: 'utf8' });
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: Done',
+                    '---',
+                    '',
+                    '- [x] [T-1A01] Task',
+                    '- [x] [T-1A02] Another',
+                    '',
+                ].join('\n'),
+            );
+            const secondOut = execSync(`node "${finalizePath}" --workflow=run --workspace=main`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
             const secondRow = secondOut.split('\n').find((l) => l.startsWith('| CHANGELOG |'));
-            assert.match(secondRow, /skipped \(duplicate/, 'second run: identical bullet shape must dedupe exactly as §4.1 documents');
-            assert.match(secondRow, /release-changelog/, 'second run: the deduped row must name the remedy (§4.5)');
+            assert.match(
+                secondRow,
+                /skipped \(duplicate/,
+                'second run: identical bullet shape must dedupe exactly as §4.1 documents',
+            );
+            assert.match(
+                secondRow,
+                /release-changelog/,
+                'second run: the deduped row must name the remedy (§4.5)',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -4961,25 +6934,53 @@ describe('Magic Engine Scripts', () => {
             mk('src/main.rs', 'fn main() {}\n');
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
-            const out = JSON.parse(execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }));
+            const out = JSON.parse(
+                execSync(`node "${scriptPath}" --json`, { cwd: tempDir, encoding: 'utf8' }),
+            );
             const byFile = new Map(out.coverage.map((c) => [c.file, c]));
 
-            assert.strictEqual(byFile.get('.design/PLAN.md').confidence, 'EXEMPT', 'PLAN.md must classify EXEMPT');
-            assert.strictEqual(byFile.get('.design/STATE.md').confidence, 'EXEMPT', 'STATE.md must classify EXEMPT');
-            assert.strictEqual(byFile.get('.design/archives/tasks/phase-1.md').confidence, 'EXEMPT', 'an archived phase journal must classify EXEMPT');
-            assert.notStrictEqual(byFile.get('.design/specifications/l1-core.md').confidence, 'EXEMPT', 'specifications/ itself must NOT be exempted — unaffected by this change');
-            assert.strictEqual(byFile.get('src/main.rs').confidence, 'EXTRACTED', 'genuine source coverage classification is unaffected');
+            assert.strictEqual(
+                byFile.get('.design/PLAN.md').confidence,
+                'EXEMPT',
+                'PLAN.md must classify EXEMPT',
+            );
+            assert.strictEqual(
+                byFile.get('.design/STATE.md').confidence,
+                'EXEMPT',
+                'STATE.md must classify EXEMPT',
+            );
+            assert.strictEqual(
+                byFile.get('.design/archives/tasks/phase-1.md').confidence,
+                'EXEMPT',
+                'an archived phase journal must classify EXEMPT',
+            );
+            assert.notStrictEqual(
+                byFile.get('.design/specifications/l1-core.md').confidence,
+                'EXEMPT',
+                'specifications/ itself must NOT be exempted — unaffected by this change',
+            );
+            assert.strictEqual(
+                byFile.get('src/main.rs').confidence,
+                'EXTRACTED',
+                'genuine source coverage classification is unaffected',
+            );
 
-            assert.ok(out.summary.exempt >= 3, 'summary.exempt must count at least the three exempted fixture files');
+            assert.ok(
+                out.summary.exempt >= 3,
+                'summary.exempt must count at least the three exempted fixture files',
+            );
             assert.strictEqual(
                 out.summary.total,
-                out.summary.extracted + out.summary.inferred + out.summary.ambiguous + out.summary.uncovered,
-                'total must be computed from the four non-exempt buckets only'
+                out.summary.extracted +
+                    out.summary.inferred +
+                    out.summary.ambiguous +
+                    out.summary.uncovered,
+                'total must be computed from the four non-exempt buckets only',
             );
             assert.strictEqual(
                 out.coverage.length,
                 out.summary.total + out.summary.exempt,
-                'every scanned file must land in either the denominator or the exempt count, with no overlap'
+                'every scanned file must land in either the denominator or the exempt count, with no overlap',
             );
         } finally {
             cleanup(tempDir);
@@ -4992,22 +6993,44 @@ describe('Magic Engine Scripts', () => {
             const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
             writeCanonicalCoreSpec(tempDir);
             mk('src/main.rs', 'fn main() {}\n'); // EXTRACTED — establishes a non-zero, non-100% baseline
-            mk('orphan.js', 'var x;\n');          // genuinely UNCOVERED — no spec references it
+            mk('orphan.js', 'var x;\n'); // genuinely UNCOVERED — no spec references it
 
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'analyze-coverage.js');
             const scope = '--scope=src,orphan.js,.design';
-            const before = JSON.parse(execSync(`node "${scriptPath}" --json ${scope}`, { cwd: tempDir, encoding: 'utf8' }));
+            const before = JSON.parse(
+                execSync(`node "${scriptPath}" --json ${scope}`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                }),
+            );
 
             // Add EXEMPT-eligible bookkeeping files after the baseline read —
             // a wrongly-classified UNCOVERED would shift coverage_percent.
             mk('.design/PLAN.md', '# Plan\n');
             mk('.design/STATE.md', '# State\n');
             mk('.design/archives/tasks/phase-1.md', '# Phase 1\n');
-            const after = JSON.parse(execSync(`node "${scriptPath}" --json ${scope}`, { cwd: tempDir, encoding: 'utf8' }));
+            const after = JSON.parse(
+                execSync(`node "${scriptPath}" --json ${scope}`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                }),
+            );
 
-            assert.strictEqual(after.summary.coverage_percent, before.summary.coverage_percent, 'adding EXEMPT files must not change coverage_percent');
-            assert.strictEqual(after.summary.total, before.summary.total, 'adding EXEMPT files must not change the denominator');
-            assert.strictEqual(after.summary.exempt, before.summary.exempt + 3, 'the three new bookkeeping files must be counted as exempt');
+            assert.strictEqual(
+                after.summary.coverage_percent,
+                before.summary.coverage_percent,
+                'adding EXEMPT files must not change coverage_percent',
+            );
+            assert.strictEqual(
+                after.summary.total,
+                before.summary.total,
+                'adding EXEMPT files must not change the denominator',
+            );
+            assert.strictEqual(
+                after.summary.exempt,
+                before.summary.exempt + 3,
+                'the three new bookkeeping files must be counted as exempt',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5040,7 +7063,14 @@ describe('Magic Engine Scripts', () => {
             const validatorScript = path.join(tempDir, 'dev', 'scripts', 'validate-hardlinks.js');
             const run = () => {
                 try {
-                    return { failed: false, output: execSync(`node "${validatorScript}"`, { cwd: tempDir, encoding: 'utf8', stdio: 'pipe' }) };
+                    return {
+                        failed: false,
+                        output: execSync(`node "${validatorScript}"`, {
+                            cwd: tempDir,
+                            encoding: 'utf8',
+                            stdio: 'pipe',
+                        }),
+                    };
                 } catch (e) {
                     return { failed: true, output: `${e.stdout || ''}${e.stderr || ''}` };
                 }
@@ -5049,8 +7079,16 @@ describe('Magic Engine Scripts', () => {
             // Control — an intact pair must pass, and the workflows/ group
             // must actually run (guards against a vacuous "group skipped").
             const intact = run();
-            assert.strictEqual(intact.failed, false, 'an intact workflows/ pair must pass validation');
-            assert.match(intact.output, /Validating hardlinks for workflows/, 'the workflows/ group must actually run, not be silently absent');
+            assert.strictEqual(
+                intact.failed,
+                false,
+                'an intact workflows/ pair must pass validation',
+            );
+            assert.match(
+                intact.output,
+                /Validating hardlinks for workflows/,
+                'the workflows/ group must actually run, not be silently absent',
+            );
             assert.match(intact.output, /all 1 file\(s\) linked/);
 
             // The reproduction: an inode-replacing edit (unlink + rewrite —
@@ -5059,11 +7097,23 @@ describe('Magic Engine Scripts', () => {
             // would pass silently, since workflows/ was never scanned at all.
             fs.unlinkSync(src);
             fs.writeFileSync(src, '# Example (edited)\n');
-            assert.notStrictEqual(fs.statSync(src).ino, fs.statSync(link).ino, 'fixture precondition: the edit must actually delink the pair');
+            assert.notStrictEqual(
+                fs.statSync(src).ino,
+                fs.statSync(link).ino,
+                'fixture precondition: the edit must actually delink the pair',
+            );
 
             const broken = run();
-            assert.strictEqual(broken.failed, true, 'the fix: a broken workflows/ pair must fail validation');
-            assert.match(broken.output, /Drift.*magic\.example\.md/, 'the specific drifted file must be named');
+            assert.strictEqual(
+                broken.failed,
+                true,
+                'the fix: a broken workflows/ pair must fail validation',
+            );
+            assert.match(
+                broken.output,
+                /Drift.*magic\.example\.md/,
+                'the specific drifted file must be named',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5082,7 +7132,10 @@ describe('Magic Engine Scripts', () => {
 
         const start = content.indexOf('## 1. Engine Upgrade Detection');
         const end = content.indexOf('### Exemptions');
-        assert.ok(start !== -1 && end !== -1 && end > start, 'fixture precondition: §1 section must be found');
+        assert.ok(
+            start !== -1 && end !== -1 && end > start,
+            'fixture precondition: §1 section must be found',
+        );
         const section = content.slice(start, end);
 
         // The historical defect: both causes collapsed into one `unknown`
@@ -5091,19 +7144,39 @@ describe('Magic Engine Scripts', () => {
         assert.doesNotMatch(
             section,
             /Missing file \(fresh project\) or missing field[\s\S]*?treat as `unknown`/,
-            'the collapsed fresh+unknown wording must not reappear — that was the defect'
+            'the collapsed fresh+unknown wording must not reappear — that was the defect',
         );
 
         // Step 2: two named, distinct outcomes.
-        assert.match(section, /Missing `\.design\/INDEX\.md`[\s\S]*?treat as `fresh`/, 'step 2 must name `fresh` for a missing registry file');
-        assert.match(section, /field missing[\s\S]*?treat as `unknown`/, 'step 2 must keep `unknown` for a present-but-fieldless registry');
+        assert.match(
+            section,
+            /Missing `\.design\/INDEX\.md`[\s\S]*?treat as `fresh`/,
+            'step 2 must name `fresh` for a missing registry file',
+        );
+        assert.match(
+            section,
+            /field missing[\s\S]*?treat as `unknown`/,
+            'step 2 must keep `unknown` for a present-but-fieldless registry',
+        );
 
         // Step 3: `fresh` joins the silent-proceed branch, not just an exact version match.
-        assert.match(section, /local_engine == snapshot_engine`, or the result is `fresh`[\s\S]*?proceed silently/, 'step 3 must proceed silently on `fresh` too');
+        assert.match(
+            section,
+            /local_engine == snapshot_engine`, or the result is `fresh`[\s\S]*?proceed silently/,
+            'step 3 must proceed silently on `fresh` too',
+        );
 
         // Step 4: narration fires on a real mismatch or `unknown`, never on `fresh`.
-        assert.match(section, /On mismatch, or `unknown`, narrate/, 'step 4 must narrate on mismatch or `unknown`');
-        assert.doesNotMatch(section, /including `unknown`/, 'the old "(including unknown)" phrasing must be gone — fresh is now excluded from narration');
+        assert.match(
+            section,
+            /On mismatch, or `unknown`, narrate/,
+            'step 4 must narrate on mismatch or `unknown`',
+        );
+        assert.doesNotMatch(
+            section,
+            /including `unknown`/,
+            'the old "(including unknown)" phrasing must be gone — fresh is now excluded from narration',
+        );
     });
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -5114,22 +7187,45 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
 
     // A `### [T-…]` tracking entry the way a phase workbook writes it.
-    const trackingEntry = (id, title, status, extra = []) => [
-        `### [${id}] ${title}`, '',
-        `- **Status:** ${status}`, '- **Assignment:** Agent', ...extra, '',
-    ].join('\n');
+    const trackingEntry = (id, title, status, extra = []) =>
+        [
+            `### [${id}] ${title}`,
+            '',
+            `- **Status:** ${status}`,
+            '- **Assignment:** Agent',
+            ...extra,
+            '',
+        ].join('\n');
 
-    const resumeStateText = (status, nextAction) => [
-        '# Project State', '',
-        '**Workspace:** engine', '**Updated:** 2026-01-01 00:00', '**Phase:** 1 — Test', `**Status:** ${status}`, '',
-        '## Current Position', '',
-        '- **Task:** none', '- **Spec:** none', `- **Next Action:** ${nextAction}`, '',
-        '## Session Continuity', '', '**Handoff File:** none', '**Bootstrap Mode:** false', '',
-    ].join('\n');
+    const resumeStateText = (status, nextAction) =>
+        [
+            '# Project State',
+            '',
+            '**Workspace:** engine',
+            '**Updated:** 2026-01-01 00:00',
+            '**Phase:** 1 — Test',
+            `**Status:** ${status}`,
+            '',
+            '## Current Position',
+            '',
+            '- **Task:** none',
+            '- **Spec:** none',
+            `- **Next Action:** ${nextAction}`,
+            '',
+            '## Session Continuity',
+            '',
+            '**Handoff File:** none',
+            '**Bootstrap Mode:** false',
+            '',
+        ].join('\n');
 
     // Writes the tree resume-state.js reads: a registry plus, per workspace, a
     // STATE.md and (when given) one phase workbook of tracking entries.
-    const writeResumeFixture = (tempDir, workspaces, { eol = '\n', defaultWorkspace = null } = {}) => {
+    const writeResumeFixture = (
+        tempDir,
+        workspaces,
+        { eol = '\n', defaultWorkspace = null } = {},
+    ) => {
         const designDir = path.join(tempDir, '.design');
         const toEol = (text) => text.replace(/\n/g, eol);
         const registry = {};
@@ -5137,28 +7233,51 @@ describe('Magic Engine Scripts', () => {
             registry[name] = { description: name, scope: ['.design'] };
             const wsDir = path.join(designDir, name);
             fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
-            fs.writeFileSync(path.join(wsDir, 'STATE.md'), toEol(resumeStateText(
-                def.status || 'Active', def.nextAction || 'Execute T-1A01 Thing via /magic.run engine'
-            )));
+            fs.writeFileSync(
+                path.join(wsDir, 'STATE.md'),
+                toEol(
+                    resumeStateText(
+                        def.status || 'Active',
+                        def.nextAction || 'Execute T-1A01 Thing via /magic.run engine',
+                    ),
+                ),
+            );
             if (def.entries) {
-                fs.writeFileSync(path.join(wsDir, 'tasks', 'phase-1.md'), toEol([
-                    '---', 'phase: 1', 'status: In Progress', '---', '',
-                    '## Detailed Tracking', '', ...def.entries,
-                ].join('\n')));
+                fs.writeFileSync(
+                    path.join(wsDir, 'tasks', 'phase-1.md'),
+                    toEol(
+                        [
+                            '---',
+                            'phase: 1',
+                            'status: In Progress',
+                            '---',
+                            '',
+                            '## Detailed Tracking',
+                            '',
+                            ...def.entries,
+                        ].join('\n'),
+                    ),
+                );
             }
-            if (def.staleHandoff) fs.writeFileSync(path.join(wsDir, 'HANDOFF.json'), '{"schema_version":"1.1"}');
+            if (def.staleHandoff)
+                fs.writeFileSync(path.join(wsDir, 'HANDOFF.json'), '{"schema_version":"1.1"}');
         }
-        fs.writeFileSync(path.join(designDir, 'workspace.json'), JSON.stringify({
-            default: defaultWorkspace || Object.keys(workspaces)[0], workspaces: registry,
-        }));
+        fs.writeFileSync(
+            path.join(designDir, 'workspace.json'),
+            JSON.stringify({
+                default: defaultWorkspace || Object.keys(workspaces)[0],
+                workspaces: registry,
+            }),
+        );
         return designDir;
     };
 
-    const runResumeState = (tempDir, args = []) => spawnSync(
-        process.execPath,
-        [path.join(tempDir, '.magic', 'scripts', 'executor.js'), 'resume-state', ...args],
-        { cwd: tempDir, encoding: 'utf8' }
-    );
+    const runResumeState = (tempDir, args = []) =>
+        spawnSync(
+            process.execPath,
+            [path.join(tempDir, '.magic', 'scripts', 'executor.js'), 'resume-state', ...args],
+            { cwd: tempDir, encoding: 'utf8' },
+        );
 
     // Path → digest of every file under `root` (`.git` excluded); a directory is
     // its own entry, so a directory turning up where a file was is visible.
@@ -5174,7 +7293,10 @@ describe('Magic Engine Scripts', () => {
                     digest[`${rel}/`] = 'dir';
                     walk(full);
                 } else {
-                    digest[rel] = crypto.createHash('sha256').update(fs.readFileSync(full)).digest('hex');
+                    digest[rel] = crypto
+                        .createHash('sha256')
+                        .update(fs.readFileSync(full))
+                        .digest('hex');
                 }
             }
         };
@@ -5187,27 +7309,38 @@ describe('Magic Engine Scripts', () => {
         try {
             writeResumeFixture(tempDir, {
                 engine: {
-                    status: 'Active', staleHandoff: true,
-                    entries: [trackingEntry('T-1A01', 'Finished', 'Done'), trackingEntry('T-1A02', 'Later', 'Todo')],
+                    status: 'Active',
+                    staleHandoff: true,
+                    entries: [
+                        trackingEntry('T-1A01', 'Finished', 'Done'),
+                        trackingEntry('T-1A02', 'Later', 'Todo'),
+                    ],
                 },
             });
             assert.ok(
                 fs.existsSync(path.join(tempDir, '.design', 'engine', 'HANDOFF.json')),
-                'fixture precondition: the stale snapshot is on disk'
+                'fixture precondition: the stale snapshot is on disk',
             );
 
             const quiet = runResumeState(tempDir, ['--workspace=engine']);
             assert.strictEqual(quiet.status, 0);
             assert.strictEqual(
-                quiet.stdout, '',
-                `a leftover snapshot with nothing in flight must not trigger a resume — the file's presence is not a trigger → "${quiet.stdout}"`
+                quiet.stdout,
+                '',
+                `a leftover snapshot with nothing in flight must not trigger a resume — the file's presence is not a trigger → "${quiet.stdout}"`,
             );
 
             // Control: the same tree with `Status: Paused` does speak, so the
             // silence above is a decision and not a script that says nothing.
-            fs.writeFileSync(path.join(tempDir, '.design', 'engine', 'STATE.md'), resumeStateText('Paused', 'Pick up T-1A02'));
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'engine', 'STATE.md'),
+                resumeStateText('Paused', 'Pick up T-1A02'),
+            );
             const paused = runResumeState(tempDir, ['--workspace=engine']);
-            assert.match(paused.stdout, /^▶ Resume \[engine\]: paused snapshot\. Next: Pick up T-1A02\n$/);
+            assert.match(
+                paused.stdout,
+                /^▶ Resume \[engine\]: paused snapshot\. Next: Pick up T-1A02\n$/,
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5220,16 +7353,24 @@ describe('Magic Engine Scripts', () => {
             try {
                 // Both the title and the Next Action carry a code span: stripping
                 // deletes those, so each must be read back from the raw line.
-                writeResumeFixture(tempDir, {
-                    engine: {
-                        nextAction: 'Execute T-1A01 Extract `finalize.js` via /magic.run engine',
-                        entries: [
-                            trackingEntry('T-1A01', 'Extract `finalize.js`', 'In Progress',
-                                ['- **Attempts:**', '  - tried a global regex → it swallowed the next entry', '  - tried a line scan → it split on CRLF']),
-                            trackingEntry('T-1A02', 'Later', 'Todo'),
-                        ],
+                writeResumeFixture(
+                    tempDir,
+                    {
+                        engine: {
+                            nextAction:
+                                'Execute T-1A01 Extract `finalize.js` via /magic.run engine',
+                            entries: [
+                                trackingEntry('T-1A01', 'Extract `finalize.js`', 'In Progress', [
+                                    '- **Attempts:**',
+                                    '  - tried a global regex → it swallowed the next entry',
+                                    '  - tried a line scan → it split on CRLF',
+                                ]),
+                                trackingEntry('T-1A02', 'Later', 'Todo'),
+                            ],
+                        },
                     },
-                }, { eol });
+                    { eol },
+                );
                 commitFixture(tempDir);
 
                 // One tracked edit and one untracked file are product changes; the
@@ -5238,7 +7379,10 @@ describe('Magic Engine Scripts', () => {
                 fs.appendFileSync(path.join(tempDir, 'README.md'), 'edit\n');
                 fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
                 fs.writeFileSync(path.join(tempDir, 'src', 'feature.js'), '// new\n');
-                fs.appendFileSync(path.join(tempDir, '.design', 'engine', 'tasks', 'phase-1.md'), 'edited\n');
+                fs.appendFileSync(
+                    path.join(tempDir, '.design', 'engine', 'tasks', 'phase-1.md'),
+                    'edited\n',
+                );
 
                 const result = runResumeState(tempDir, ['--workspace=engine']);
                 assert.strictEqual(result.status, 0);
@@ -5248,12 +7392,16 @@ describe('Magic Engine Scripts', () => {
             }
         }
 
-        assert.strictEqual(printed['\r\n'], printed['\n'], 'the line must not depend on the workbook\'s line endings');
+        assert.strictEqual(
+            printed['\r\n'],
+            printed['\n'],
+            "the line must not depend on the workbook's line endings",
+        );
         assert.strictEqual(
             printed['\n'],
             '▶ Resume [engine]: T-1A01 Extract `finalize.js` in flight — 2 dead end(s) recorded, 2 file(s) modified. ' +
-            'Next: Execute T-1A01 Extract `finalize.js` via /magic.run engine\n',
-            'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)'
+                'Next: Execute T-1A01 Extract `finalize.js` via /magic.run engine\n',
+            'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)',
         );
     });
 
@@ -5267,18 +7415,23 @@ describe('Magic Engine Scripts', () => {
             assert.match(
                 runResumeState(tempDir, ['--workspace=engine']).stdout,
                 /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two in flight — 0 dead end\(s\) recorded\. Next: /,
-                'two tasks in flight: both named'
+                'two tasks in flight: both named',
             );
 
             writeResumeFixture(tempDir, {
                 engine: {
-                    entries: [inFlight('T-1A01', 'One'), inFlight('T-1B01', 'Two'), inFlight('T-1C01', 'Three'), inFlight('T-1D01', 'Four')],
+                    entries: [
+                        inFlight('T-1A01', 'One'),
+                        inFlight('T-1B01', 'Two'),
+                        inFlight('T-1C01', 'Three'),
+                        inFlight('T-1D01', 'Four'),
+                    ],
                 },
             });
             assert.match(
                 runResumeState(tempDir, ['--workspace=engine']).stdout,
                 /^▶ Resume \[engine\]: T-1A01 One; T-1B01 Two; T-1C01 Three \+1 more in flight — /,
-                'four tasks in flight: three named, one counted'
+                'four tasks in flight: three named, one counted',
             );
 
             writeResumeFixture(tempDir, {
@@ -5287,7 +7440,7 @@ describe('Magic Engine Scripts', () => {
             assert.match(
                 runResumeState(tempDir, ['--workspace=engine']).stdout,
                 /T-1A01 One in flight \(paused snapshot\) — /,
-                'a paused workspace that also has a task in flight says so'
+                'a paused workspace that also has a task in flight says so',
             );
         } finally {
             cleanup(tempDir);
@@ -5297,20 +7450,41 @@ describe('Magic Engine Scripts', () => {
     test('resume-state omits the file count outside a repository and before the first commit, without an error (SC-9(e), H5)', () => {
         const tempDir = createTempWorkspace();
         try {
-            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] } });
+            writeResumeFixture(tempDir, {
+                engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] },
+            });
 
             const outside = runResumeState(tempDir, ['--workspace=engine']);
             assert.strictEqual(outside.status, 0);
-            assert.match(outside.stdout, /^▶ Resume \[engine\]: T-1A01 Only in flight — 0 dead end\(s\) recorded\. Next: /);
-            assert.doesNotMatch(outside.stdout, /modified/, 'not a repository: there is nothing to count');
-            assert.strictEqual(outside.stderr, '', 'git\'s own diagnostics must not leak into a script that is silent by default');
+            assert.match(
+                outside.stdout,
+                /^▶ Resume \[engine\]: T-1A01 Only in flight — 0 dead end\(s\) recorded\. Next: /,
+            );
+            assert.doesNotMatch(
+                outside.stdout,
+                /modified/,
+                'not a repository: there is nothing to count',
+            );
+            assert.strictEqual(
+                outside.stderr,
+                '',
+                "git's own diagnostics must not leak into a script that is silent by default",
+            );
 
             // A repository whose first commit has not happened yet: "changed since HEAD" has no meaning.
             execSync('git init -b master', { cwd: tempDir, stdio: 'ignore' });
             const uncommitted = runResumeState(tempDir, ['--workspace=engine']);
             assert.strictEqual(uncommitted.status, 0);
-            assert.doesNotMatch(uncommitted.stdout, /modified/, 'no commit yet: the count must be omitted, not guessed');
-            assert.strictEqual(uncommitted.stderr, '', 'a repository with no commit must not print git\'s "fatal:" line');
+            assert.doesNotMatch(
+                uncommitted.stdout,
+                /modified/,
+                'no commit yet: the count must be omitted, not guessed',
+            );
+            assert.strictEqual(
+                uncommitted.stderr,
+                '',
+                'a repository with no commit must not print git\'s "fatal:" line',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5319,16 +7493,22 @@ describe('Magic Engine Scripts', () => {
     test('resume-state writes nothing on a clean run and records exactly one finding for an unreadable STATE.md (read-only, DG-1, H6)', () => {
         const tempDir = createTempWorkspace();
         try {
-            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] } });
+            writeResumeFixture(tempDir, {
+                engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] },
+            });
 
             const before = treeDigest(tempDir);
             const clean = runResumeState(tempDir, ['--workspace=engine']);
             assert.strictEqual(clean.status, 0);
             assert.strictEqual(clean.stdout, '');
-            assert.deepStrictEqual(treeDigest(tempDir), before, 'a clean run must leave every file byte-identical');
+            assert.deepStrictEqual(
+                treeDigest(tempDir),
+                before,
+                'a clean run must leave every file byte-identical',
+            );
             assert.ok(
                 !fs.existsSync(path.join(tempDir, '.design', '.cache')),
-                'a clean run must not even create the diagnostics directory'
+                'a clean run must not even create the diagnostics directory',
             );
 
             // A STATE.md that exists but cannot be read is the script's one non-fatal condition.
@@ -5338,12 +7518,24 @@ describe('Magic Engine Scripts', () => {
             const beforeFault = treeDigest(tempDir);
 
             const faulty = runResumeState(tempDir, ['--workspace=engine']);
-            assert.strictEqual(faulty.status, 0, 'a fault here must never become a halt in someone else\'s workflow');
+            assert.strictEqual(
+                faulty.status,
+                0,
+                "a fault here must never become a halt in someone else's workflow",
+            );
             assert.strictEqual(faulty.stdout, '');
-            assert.match(faulty.stderr, /cannot be read/, 'printed, and recorded (DG-1: the record is in addition to the print)');
+            assert.match(
+                faulty.stderr,
+                /cannot be read/,
+                'printed, and recorded (DG-1: the record is in addition to the print)',
+            );
 
             const sinkPath = path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl');
-            const findings = fs.readFileSync(sinkPath, 'utf8').split('\n').filter(Boolean).map((line) => JSON.parse(line));
+            const findings = fs
+                .readFileSync(sinkPath, 'utf8')
+                .split('\n')
+                .filter(Boolean)
+                .map((line) => JSON.parse(line));
             assert.strictEqual(findings.length, 1, 'exactly one finding');
             assert.strictEqual(findings[0].code, 'RESUME_STATE_UNREADABLE');
             assert.strictEqual(findings[0].severity, 'warning');
@@ -5352,7 +7544,11 @@ describe('Magic Engine Scripts', () => {
             const after = treeDigest(tempDir);
             delete after['.design/.cache/diagnostics.jsonl'];
             delete after['.design/.cache/'];
-            assert.deepStrictEqual(after, beforeFault, 'the finding is the only thing the run may have written');
+            assert.deepStrictEqual(
+                after,
+                beforeFault,
+                'the finding is the only thing the run may have written',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5365,13 +7561,22 @@ describe('Magic Engine Scripts', () => {
             writeResumeFixture(tempDir, { engine: {} });
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
 
-            const workbook = (entries) => [
-                '---', 'phase: 1', 'status: In Progress', '---', '',
-                '## Atomic Checklist', '',
-                '- [ ] [T-1A01] First task',
-                '- [ ] [T-1A02] Second task', '',
-                '## Detailed Tracking', '', ...entries,
-            ].join('\n');
+            const workbook = (entries) =>
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] First task',
+                    '- [ ] [T-1A02] Second task',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    ...entries,
+                ].join('\n');
 
             const plain = [
                 trackingEntry('T-1A01', 'First task', 'In Progress'),
@@ -5383,11 +7588,18 @@ describe('Magic Engine Scripts', () => {
             // would find these first), and inside an `Attempts` item.
             const quoting = [
                 [
-                    '### [T-1A01] First task', '',
-                    '```plaintext', '- **Status:** Blocked', '- **Assignment:** User', '```', '',
-                    '- **Status:** In Progress', '- **Assignment:** Agent',
+                    '### [T-1A01] First task',
+                    '',
+                    '```plaintext',
+                    '- **Status:** Blocked',
+                    '- **Assignment:** User',
+                    '```',
+                    '',
+                    '- **Status:** In Progress',
+                    '- **Assignment:** Agent',
                     '- **Attempts:**',
-                    '  - tried `**Status:** Blocked` and **Assignment:** User → rejected', '',
+                    '  - tried `**Status:** Blocked` and **Assignment:** User → rejected',
+                    '',
                 ].join('\n'),
                 trackingEntry('T-1A02', 'Second task', 'Todo'),
             ];
@@ -5400,14 +7612,27 @@ describe('Magic Engine Scripts', () => {
             const nextQuoting = finalize.computeNextAction('run', 'engine', wsDir);
             const lineQuoting = runResumeState(tempDir, ['--workspace=engine']).stdout;
 
-            assert.match(nextPlain, /^Execute T-1A01 /, 'fixture precondition: the in-flight first task is the next action');
-            assert.strictEqual(nextQuoting, nextPlain, 'quoted labels must not change which task the Next Action names');
+            assert.match(
+                nextPlain,
+                /^Execute T-1A01 /,
+                'fixture precondition: the in-flight first task is the next action',
+            );
+            assert.strictEqual(
+                nextQuoting,
+                nextPlain,
+                'quoted labels must not change which task the Next Action names',
+            );
             assert.match(linePlain, /T-1A01 First task in flight — 0 dead end\(s\) recorded/);
             assert.match(
-                lineQuoting, /T-1A01 First task in flight — 1 dead end\(s\) recorded/,
-                'the entry is still read as In Progress, and its one Attempts item is counted'
+                lineQuoting,
+                /T-1A01 First task in flight — 1 dead end\(s\) recorded/,
+                'the entry is still read as In Progress, and its one Attempts item is counted',
             );
-            assert.doesNotMatch(lineQuoting, /T-1A02/, 'the Todo task must not be listed as in flight');
+            assert.doesNotMatch(
+                lineQuoting,
+                /T-1A02/,
+                'the Todo task must not be listed as in flight',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5416,14 +7641,20 @@ describe('Magic Engine Scripts', () => {
     test('resume-state scope: the workspace the executor resolved by default, one workspace on --workspace, every registered one only under --all (l2-session-checkpoint §5.3)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const inFlight = (title) => ({ entries: [trackingEntry('T-1A01', title, 'In Progress')] });
-            writeResumeFixture(tempDir, {
-                alpha: inFlight('Alpha task'),
-                beta: inFlight('Beta task'),
-                gamma: inFlight('Gamma task'),
-                delta: inFlight('Delta task'),
-                quiet: { entries: [trackingEntry('T-1A01', 'Quiet task', 'Done')] },
-            }, { defaultWorkspace: 'alpha' });
+            const inFlight = (title) => ({
+                entries: [trackingEntry('T-1A01', title, 'In Progress')],
+            });
+            writeResumeFixture(
+                tempDir,
+                {
+                    alpha: inFlight('Alpha task'),
+                    beta: inFlight('Beta task'),
+                    gamma: inFlight('Gamma task'),
+                    delta: inFlight('Delta task'),
+                    quiet: { entries: [trackingEntry('T-1A01', 'Quiet task', 'Done')] },
+                },
+                { defaultWorkspace: 'alpha' },
+            );
 
             // executor.js consumes --workspace and substitutes the registry
             // default when it is absent, handing the result on only as
@@ -5439,20 +7670,29 @@ describe('Magic Engine Scripts', () => {
             const all = runResumeState(tempDir, ['--all']).stdout.trim().split('\n');
             assert.strictEqual(all.length, 4, 'three workspace lines and one overflow line');
             assert.match(all[3], /^▶ Resume: \+1 more workspace\(s\) with work in flight$/);
-            assert.doesNotMatch(all.join('\n'), /Quiet/, 'a workspace with nothing in flight is not reported');
+            assert.doesNotMatch(
+                all.join('\n'),
+                /Quiet/,
+                'a workspace with nothing in flight is not reported',
+            );
 
             // Direct invocation (no executor): faults are silence, and an explicit
             // --workspace narrows --all.
-            const direct = (args) => spawnSync(
-                process.execPath, [path.join(tempDir, '.magic', 'scripts', 'resume-state.js'), ...args],
-                { cwd: tempDir, encoding: 'utf8' }
-            );
+            const direct = (args) =>
+                spawnSync(
+                    process.execPath,
+                    [path.join(tempDir, '.magic', 'scripts', 'resume-state.js'), ...args],
+                    { cwd: tempDir, encoding: 'utf8' },
+                );
             for (const args of [['--workspace=nope'], ['--workspace']]) {
                 const result = direct(args);
                 assert.strictEqual(result.status, 0, `${args.join(' ')}: never a non-zero exit`);
                 assert.strictEqual(result.stdout, '', `${args.join(' ')}: silence`);
             }
-            assert.match(direct(['--all', '--workspace=gamma']).stdout, /^▶ Resume \[gamma\]: .*\n$/);
+            assert.match(
+                direct(['--all', '--workspace=gamma']).stdout,
+                /^▶ Resume \[gamma\]: .*\n$/,
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -5463,23 +7703,38 @@ describe('Magic Engine Scripts', () => {
         try {
             writeResumeFixture(tempDir, {
                 engine: {
-                    entries: [trackingEntry('T-1A01', 'Only', 'In Progress', ['- **Attempts:**', '  - tried X → failed'])],
+                    entries: [
+                        trackingEntry('T-1A01', 'Only', 'In Progress', [
+                            '- **Attempts:**',
+                            '  - tried X → failed',
+                        ]),
+                    ],
                 },
             });
-            const parsed = JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout);
+            const parsed = JSON.parse(
+                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+            );
             assert.strictEqual(parsed.in_flight, true);
             assert.strictEqual(parsed.workspaces.length, 1);
             const entry = parsed.workspaces[0];
-            assert.deepStrictEqual(Object.keys(entry).sort(), ['changed_files', 'next_action', 'source', 'tasks', 'workspace']);
+            assert.deepStrictEqual(Object.keys(entry).sort(), [
+                'changed_files',
+                'next_action',
+                'source',
+                'tasks',
+                'workspace',
+            ]);
             assert.strictEqual(entry.source, 'in-progress');
             assert.deepStrictEqual(entry.tasks, [{ id: 'T-1A01', title: 'Only', attempts: 1 }]);
             assert.strictEqual(entry.changed_files, null, 'not a repository: null, not zero');
             assert.strictEqual(entry.next_action, 'Execute T-1A01 Thing via /magic.run engine');
 
-            writeResumeFixture(tempDir, { engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] } });
+            writeResumeFixture(tempDir, {
+                engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] },
+            });
             assert.deepStrictEqual(
                 JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
-                { in_flight: false, workspaces: [] }
+                { in_flight: false, workspaces: [] },
             );
         } finally {
             cleanup(tempDir);
@@ -5499,12 +7754,12 @@ describe('Magic Engine Scripts', () => {
     // no longer carries. `update-state.js` keeps its own field map private, so
     // the check is driven through behavior — patch each field, read the file back.
     const STATE_FIELD_WRITERS = {
-        'Workspace': 'workspace',
-        'Updated': 'updated',
-        'Phase': 'phase',
-        'Status': 'status',
-        'Task': 'task',
-        'Spec': 'spec',
+        Workspace: 'workspace',
+        Updated: 'updated',
+        Phase: 'phase',
+        Status: 'status',
+        Task: 'task',
+        Spec: 'spec',
         'Next Action': 'nextAction',
         'Handoff File': 'handoff',
         'Bootstrap Mode': 'bootstrap',
@@ -5514,16 +7769,22 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace();
         try {
             copyStateTemplate(tempDir);
-            const template = fs.readFileSync(path.join(tempDir, '.magic', 'templates', 'state.md'), 'utf8');
-            const declared = [...template.matchAll(/^(?:- )?\*\*([^*\n]+):\*\*/gm)].map((match) => match[1]);
+            const template = fs.readFileSync(
+                path.join(tempDir, '.magic', 'templates', 'state.md'),
+                'utf8',
+            );
+            const declared = [...template.matchAll(/^(?:- )?\*\*([^*\n]+):\*\*/gm)].map(
+                (match) => match[1],
+            );
 
             assert.ok(
                 !declared.includes('Last Session Ended'),
-                'the retired field must not return: nothing ever wrote it after the first bootstrap'
+                'the retired field must not return: nothing ever wrote it after the first bootstrap',
             );
             assert.deepStrictEqual(
-                [...declared].sort(), Object.keys(STATE_FIELD_WRITERS).sort(),
-                'every template field needs a writer row here, and every row a template field'
+                [...declared].sort(),
+                Object.keys(STATE_FIELD_WRITERS).sort(),
+                'every template field needs a writer row here, and every row a template field',
             );
 
             // Each row's key must really write its own label's line.
@@ -5537,13 +7798,13 @@ describe('Magic Engine Scripts', () => {
                 assert.match(
                     fs.readFileSync(statePath, 'utf8'),
                     new RegExp(`^(?:- )?\\*\\*${label}:\\*\\* ${value}$`, 'm'),
-                    `patch key '${key}' must write the '${label}' line`
+                    `patch key '${key}' must write the '${label}' line`,
                 );
             }
             assert.match(
                 fs.readFileSync(statePath, 'utf8'),
                 /^\*\*Updated:\*\* \d{4}-\d{2}-\d{2} \d{2}:\d{2}$/m,
-                'Updated is stamped by every call, so the template placeholder must be gone'
+                'Updated is stamped by every call, so the template placeholder must be gone',
             );
         } finally {
             cleanup(tempDir);
@@ -5560,20 +7821,34 @@ describe('Magic Engine Scripts', () => {
         const tempDir = createTempWorkspace(true);
         try {
             const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
-            fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n');
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [x] [T-1A01] Done\n',
+            );
             commitFixture(tempDir);
             if (change) {
-                fs.writeFileSync(path.join(wsDir, 'TASKS.md'), '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] More\n');
+                fs.writeFileSync(
+                    path.join(wsDir, 'TASKS.md'),
+                    '## Active Phases\n\n- [x] [T-1A01] Done\n- [x] [T-1A02] More\n',
+                );
             }
             const statePath = path.join(wsDir, 'STATE.md');
             if (stateBlocked) fs.mkdirSync(statePath);
 
             const result = spawnSync(
                 process.execPath,
-                [finalizePath, '--workflow=task', '--workspace=main', ...(dryRun ? ['--dry-run'] : [])],
-                { cwd: tempDir, encoding: 'utf8' }
+                [
+                    finalizePath,
+                    '--workflow=task',
+                    '--workspace=main',
+                    ...(dryRun ? ['--dry-run'] : []),
+                ],
+                { cwd: tempDir, encoding: 'utf8' },
             );
-            return { result, stateWritten: fs.existsSync(statePath) && fs.statSync(statePath).isFile() };
+            return {
+                result,
+                stateWritten: fs.existsSync(statePath) && fs.statSync(statePath).isFile(),
+            };
         } finally {
             cleanup(tempDir);
         }
@@ -5587,8 +7862,9 @@ describe('Magic Engine Scripts', () => {
         const significant = runFinalizeCheckpoint({ change: true });
         assert.strictEqual(significant.result.status, 0);
         assert.match(
-            significant.result.stdout, /^\| STATE\.md \|[^\n]*checkpoint saved/m,
-            'significant path: the STATE.md row carries the claim'
+            significant.result.stdout,
+            /^\| STATE\.md \|[^\n]*checkpoint saved/m,
+            'significant path: the STATE.md row carries the claim',
         );
         assert.ok(significant.stateWritten, 'the claim must be backed by a STATE.md on disk');
 
@@ -5596,8 +7872,9 @@ describe('Magic Engine Scripts', () => {
         const skipped = runFinalizeCheckpoint({ change: false });
         assert.strictEqual(skipped.result.status, 0);
         assert.match(
-            skipped.result.stdout, /^\[state\] STATE\.md updated — checkpoint saved\.$/m,
-            'skip path: the claim follows the update'
+            skipped.result.stdout,
+            /^\[state\] STATE\.md updated — checkpoint saved\.$/m,
+            'skip path: the claim follows the update',
         );
         assert.ok(skipped.stateWritten, 'the claim must be backed by a STATE.md on disk');
 
@@ -5606,22 +7883,36 @@ describe('Magic Engine Scripts', () => {
             const preview = runFinalizeCheckpoint({ change, dryRun: true });
             assert.strictEqual(preview.result.status, 0);
             assert.doesNotMatch(
-                preview.result.stdout, claim,
-                `--dry-run (${path_(change)} path) must not claim a save`
+                preview.result.stdout,
+                claim,
+                `--dry-run (${path_(change)} path) must not claim a save`,
             );
-            assert.strictEqual(preview.stateWritten, false, `--dry-run (${path_(change)} path) must not write STATE.md`);
+            assert.strictEqual(
+                preview.stateWritten,
+                false,
+                `--dry-run (${path_(change)} path) must not write STATE.md`,
+            );
         }
 
         // A failed update is not a saved checkpoint, and does not block finalize.
         for (const change of [true, false]) {
             const failed = runFinalizeCheckpoint({ change, stateBlocked: true });
             assert.strictEqual(failed.result.status, 0, 'a STATE.md failure is non-blocking');
-            assert.match(failed.result.stderr, /STATE\.md update skipped/, 'the failure must be announced');
-            assert.doesNotMatch(
-                failed.result.stdout + failed.result.stderr, claim,
-                `an unwritable STATE.md (${path_(change)} path) must not be reported as a saved checkpoint`
+            assert.match(
+                failed.result.stderr,
+                /STATE\.md update skipped/,
+                'the failure must be announced',
             );
-            assert.strictEqual(failed.stateWritten, false, 'the blocked path must not have become a file');
+            assert.doesNotMatch(
+                failed.result.stdout + failed.result.stderr,
+                claim,
+                `an unwritable STATE.md (${path_(change)} path) must not be reported as a saved checkpoint`,
+            );
+            assert.strictEqual(
+                failed.stateWritten,
+                false,
+                'the blocked path must not have become a file',
+            );
         }
     });
 
@@ -5685,32 +7976,43 @@ describe('Magic Engine Scripts', () => {
     test('shipped text advertises no phantom command, and the scan flags one when it is planted (H10a)', () => {
         // The detector, on synthetic text.
         const wrappers = new Set(['run', 'task']);
-        const sample = [{
-            rel: 'sample.md',
-            text: [
-                'Run `/magic.pause` to stop.',
-                'Say "/magic.context" first.',
-                'Use /magic.retrospective now',
-                'See rules/magic.md and .agents/workflows/magic.run.md.',
-                'The `/magic.run`-executable flag and /magic.task both resolve.',
-                'Developer-facing: `/magic.dev.init`.',
-                '/magic.pause at a line start',
-            ].join('\n'),
-        }];
+        const sample = [
+            {
+                rel: 'sample.md',
+                text: [
+                    'Run `/magic.pause` to stop.',
+                    'Say "/magic.context" first.',
+                    'Use /magic.retrospective now',
+                    'See rules/magic.md and .agents/workflows/magic.run.md.',
+                    'The `/magic.run`-executable flag and /magic.task both resolve.',
+                    'Developer-facing: `/magic.dev.init`.',
+                    '/magic.pause at a line start',
+                ].join('\n'),
+            },
+        ];
         assert.deepStrictEqual(
             phantomCommands(sample, wrappers),
-            ['sample.md:1: /magic.pause', 'sample.md:2: /magic.context', 'sample.md:3: /magic.retrospective', 'sample.md:7: /magic.pause'],
-            'flags a mention after a backtick, a quote, whitespace and a line start; spares paths, resolving commands, a hyphen-ended token and magic.dev.*'
+            [
+                'sample.md:1: /magic.pause',
+                'sample.md:2: /magic.context',
+                'sample.md:3: /magic.retrospective',
+                'sample.md:7: /magic.pause',
+            ],
+            'flags a mention after a backtick, a quote, whitespace and a line start; spares paths, resolving commands, a hyphen-ended token and magic.dev.*',
         );
 
         // The shipped tree: `.magic/` (bodies, scripts, templates), docs, wrappers, rules, README.
         const resolved = new Set(
-            fs.readdirSync(path.join(shippedRoot, 'workflows'))
+            fs
+                .readdirSync(path.join(shippedRoot, 'workflows'))
                 .map((name) => name.match(/^magic\.([a-z]+)\.md$/))
                 .filter(Boolean)
-                .map((match) => match[1])
+                .map((match) => match[1]),
         );
-        assert.ok(resolved.has('run') && resolved.has('task'), 'the wrapper set is read from workflows/');
+        assert.ok(
+            resolved.has('run') && resolved.has('task'),
+            'the wrapper set is read from workflows/',
+        );
         const scanned = [
             ...listShipped('.magic', ['.md', '.js', '.json']),
             ...listShipped('docs', ['.md']),
@@ -5718,17 +8020,22 @@ describe('Magic Engine Scripts', () => {
             ...listShipped('rules', ['.md']),
             ...(fs.existsSync(path.join(shippedRoot, 'README.md')) ? ['README.md'] : []),
         ].map((rel) => ({ rel, text: readShipped(rel) }));
-        assert.ok(scanned.length > 30, `the scan must actually see the shipped tree (saw ${scanned.length} files)`);
+        assert.ok(
+            scanned.length > 30,
+            `the scan must actually see the shipped tree (saw ${scanned.length} files)`,
+        );
 
         assert.deepStrictEqual(
-            phantomCommands(scanned, resolved), [],
-            'a /magic.{cmd} mention must resolve to workflows/magic.{cmd}.md — internal modules must not be advertised as commands'
+            phantomCommands(scanned, resolved),
+            [],
+            'a /magic.{cmd} mention must resolve to workflows/magic.{cmd}.md — internal modules must not be advertised as commands',
         );
         // The pause module stays a module: no shipped text names it as a command,
         // whether or not a wrapper ever appears for it.
         assert.deepStrictEqual(
-            phantomCommands(scanned, new Set()).filter((hit) => hit.endsWith('/magic.pause')), [],
-            '/magic.pause is not a command'
+            phantomCommands(scanned, new Set()).filter((hit) => hit.endsWith('/magic.pause')),
+            [],
+            '/magic.pause is not a command',
         );
     });
 
@@ -5749,34 +8056,49 @@ describe('Magic Engine Scripts', () => {
     };
 
     test('shipped text carries no context-fill percentage tier or narration in any engine body (H10b)', () => {
-        const retired = [{
-            rel: 'retired.md',
-            text: [
-                '| **PEAK** | 0–40% | Full files, parallel spec scans. |',
-                '| **DEGRADING** | 50-70% | Read only relevant spec sections. |',
-                '| **POOR** | 75%+ | Halt new reads. |',
-                '| **POOR** | >70% | Skip full spec reads. |',
-                'Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`).',
-                'Narrate `at {n}%` when a tier is crossed.',
-            ].join('\n'),
-        }];
+        const retired = [
+            {
+                rel: 'retired.md',
+                text: [
+                    '| **PEAK** | 0–40% | Full files, parallel spec scans. |',
+                    '| **DEGRADING** | 50-70% | Read only relevant spec sections. |',
+                    '| **POOR** | 75%+ | Halt new reads. |',
+                    '| **POOR** | >70% | Skip full spec reads. |',
+                    'Crossing a tier → narrate one line (e.g. `[Budget] NORMAL → DEGRADED at 63%`).',
+                    'Narrate `at {n}%` when a tier is crossed.',
+                ].join('\n'),
+            },
+        ];
         assert.deepStrictEqual(
             fillTiers(retired),
-            ['retired.md:1', 'retired.md:2', 'retired.md:3', 'retired.md:4', 'retired.md:5', 'retired.md:6'],
-            'every shape the retired tier tables used must be flagged'
+            [
+                'retired.md:1',
+                'retired.md:2',
+                'retired.md:3',
+                'retired.md:4',
+                'retired.md:5',
+                'retired.md:6',
+            ],
+            'every shape the retired tier tables used must be flagged',
         );
-        const legitimate = [{
-            rel: 'legitimate.md',
-            text: [
-                '**RESCUE (AOP)**: name, title, or semantic similarity >80% → propose rename/sync.',
-                '🟢 = <5% uncovered/drift AND <3 shadow logic files.',
-                "2. ≥1 existing workspace's lexicon overlaps the signal token by ≥30% (prefix or stem match).",
-                '| Threshold | 80% similarity | rename |',
-                'Overall: [2/3] ██░░ 66%',
-                'Look at 100 files before deciding.',
-            ].join('\n'),
-        }];
-        assert.deepStrictEqual(fillTiers(legitimate), [], 'thresholds and shares inside prose are not tiers');
+        const legitimate = [
+            {
+                rel: 'legitimate.md',
+                text: [
+                    '**RESCUE (AOP)**: name, title, or semantic similarity >80% → propose rename/sync.',
+                    '🟢 = <5% uncovered/drift AND <3 shadow logic files.',
+                    "2. ≥1 existing workspace's lexicon overlaps the signal token by ≥30% (prefix or stem match).",
+                    '| Threshold | 80% similarity | rename |',
+                    'Overall: [2/3] ██░░ 66%',
+                    'Look at 100 files before deciding.',
+                ].join('\n'),
+            },
+        ];
+        assert.deepStrictEqual(
+            fillTiers(legitimate),
+            [],
+            'thresholds and shares inside prose are not tiers',
+        );
 
         // The shipped engine bodies: `.magic/*.md`, not only `context.md` — a
         // narrower scan passed while `task.md` still shipped its own tier table.
@@ -5785,8 +8107,9 @@ describe('Magic Engine Scripts', () => {
             .map((rel) => ({ rel, text: readShipped(rel) }));
         assert.ok(bodies.length >= 8, `the scan must see the engine bodies (saw ${bodies.length})`);
         assert.deepStrictEqual(
-            fillTiers(bodies), [],
-            'the agent has no reading of its own context fill: no body may key behavior to a percentage tier'
+            fillTiers(bodies),
+            [],
+            'the agent has no reading of its own context fill: no body may key behavior to a percentage tier',
         );
     });
 
@@ -5797,7 +8120,10 @@ describe('Magic Engine Scripts', () => {
         // "3."), so the steps are looked up inside their own section only.
         const stepsStart = run.indexOf('\n### Steps');
         const stepsEnd = run.indexOf('\n### Dead-End Record');
-        assert.ok(stepsStart !== -1 && stepsEnd > stepsStart, 'run.md must carry the Steps section followed by the Dead-End Record section');
+        assert.ok(
+            stepsStart !== -1 && stepsEnd > stepsStart,
+            'run.md must carry the Steps section followed by the Dead-End Record section',
+        );
         const steps = run.slice(stepsStart, stepsEnd);
 
         // Task Start sits between Select and Execute — the record must exist
@@ -5805,42 +8131,103 @@ describe('Magic Engine Scripts', () => {
         const select = steps.indexOf('\n2. **Select**');
         const start = steps.indexOf('\n2b. **Task Start**');
         const execute = steps.indexOf('\n3. **Execute**');
-        assert.ok(select !== -1 && start !== -1 && execute !== -1, 'run.md must carry Select, Task Start and Execute steps');
-        assert.ok(select < start && start < execute, 'Task Start must sit between Select and Execute');
+        assert.ok(
+            select !== -1 && start !== -1 && execute !== -1,
+            'run.md must carry Select, Task Start and Execute steps',
+        );
+        assert.ok(
+            select < start && start < execute,
+            'Task Start must sit between Select and Execute',
+        );
         const taskStart = stepBlock(steps, '2b.');
         assert.match(taskStart, /`In Progress`/, 'Task Start records the task as in flight');
         assert.match(taskStart, /- \[ \]/, 'Task Start states that the checklist line stays open');
-        assert.match(taskStart, /Attempts/, 'Task Start reads the recorded dead ends before an approach is chosen');
+        assert.match(
+            taskStart,
+            /Attempts/,
+            'Task Start reads the recorded dead ends before an approach is chosen',
+        );
 
         // The three moments a dead end is recorded, each at its own step.
-        assert.match(stepBlock(steps, '3.'), /Attempts/, 'an approach discarded or reverted in Step 3 is recorded');
-        assert.match(stepBlock(steps, '3.4.'), /FAIL[^\n]*Attempts/, 'a Diff Review return is recorded');
-        assert.match(stepBlock(steps, '3.4b.'), /FAIL[^\n]*Attempts/, 'an Instruction Diff Review return is recorded');
+        assert.match(
+            stepBlock(steps, '3.'),
+            /Attempts/,
+            'an approach discarded or reverted in Step 3 is recorded',
+        );
+        assert.match(
+            stepBlock(steps, '3.4.'),
+            /FAIL[^\n]*Attempts/,
+            'a Diff Review return is recorded',
+        );
+        assert.match(
+            stepBlock(steps, '3.4b.'),
+            /FAIL[^\n]*Attempts/,
+            'an Instruction Diff Review return is recorded',
+        );
         const qa = stepBlock(steps, '3.5.');
         assert.ok(
-            qa.includes('Attempts') && qa.includes('Blocked [!]') && qa.indexOf('Attempts') < qa.indexOf('Blocked [!]'),
-            'a Verify or QA failure is recorded before the task is set Blocked'
+            qa.includes('Attempts') &&
+                qa.includes('Blocked [!]') &&
+                qa.indexOf('Attempts') < qa.indexOf('Blocked [!]'),
+            'a Verify or QA failure is recorded before the task is set Blocked',
         );
 
         // The closed list and the cap, stated once.
-        const section = run.match(/^### Dead-End Record \(`Attempts`\)\n([\s\S]*?)(?=\n### |\n## |(?![\s\S]))/m);
+        const section = run.match(
+            /^### Dead-End Record \(`Attempts`\)\n([\s\S]*?)(?=\n### |\n## |(?![\s\S]))/m,
+        );
         assert.ok(section, 'run.md must carry the Dead-End Record section');
         assert.match(section[1], /^1\. .*(Verify|QA)/m, 'event 1: a Verify or QA failure');
-        assert.match(section[1], /^2\. .*review/im, 'event 2: a review verdict that returns work to Step 3');
-        assert.match(section[1], /^3\. .*(discard|revert)/im, 'event 3: an approach discarded or reverted');
-        assert.match(section[1], /At most \*\*five\*\* entries/, 'the dead-end list is capped at five');
+        assert.match(
+            section[1],
+            /^2\. .*review/im,
+            'event 2: a review verdict that returns work to Step 3',
+        );
+        assert.match(
+            section[1],
+            /^3\. .*(discard|revert)/im,
+            'event 3: an approach discarded or reverted',
+        );
+        assert.match(
+            section[1],
+            /At most \*\*five\*\* entries/,
+            'the dead-end list is capped at five',
+        );
 
         assert.match(run, /☐ Task Start:/, 'the Run Completion Checklist verifies Task Start');
-        assert.match(run, /☐ Dead-End Record:/, 'the Run Completion Checklist verifies the dead-end record');
+        assert.match(
+            run,
+            /☐ Dead-End Record:/,
+            'the Run Completion Checklist verifies the dead-end record',
+        );
     });
 
     test('shipped text: rules/magic.md carries the session resume check and its opt-out (H10d)', () => {
         const rules = readShipped('rules/magic.md');
-        assert.match(rules, /^## 10\. Session Resume Check/m, 'rules/magic.md must carry section 10');
-        assert.ok(rules.indexOf('\n## 9. ') < rules.indexOf('\n## 10. '), 'section 10 follows section 9');
-        assert.match(rules, /executor\.js resume-state --all/, 'the rule runs the shared predicate over every workspace');
+        assert.match(
+            rules,
+            /^## 10\. Session Resume Check/m,
+            'rules/magic.md must carry section 10',
+        );
+        assert.ok(
+            rules.indexOf('\n## 9. ') < rules.indexOf('\n## 10. '),
+            'section 10 follows section 9',
+        );
+        assert.match(
+            rules,
+            /executor\.js resume-state --all/,
+            'the rule runs the shared predicate over every workspace',
+        );
         assert.match(rules, /MAGIC_RESUME_CHECK=0/, 'the rule states its opt-out');
-        assert.match(rules, /verify §1–§10 were honored/, 'the completion protocol counts section 10');
-        assert.match(rules, /\*\*§10 Session Resume Check\*\*/, 'the completion protocol carries a section 10 item');
+        assert.match(
+            rules,
+            /verify §1–§10 were honored/,
+            'the completion protocol counts section 10',
+        );
+        assert.match(
+            rules,
+            /\*\*§10 Session Resume Check\*\*/,
+            'the completion protocol carries a section 10 item',
+        );
     });
 });

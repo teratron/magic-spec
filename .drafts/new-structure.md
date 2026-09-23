@@ -265,6 +265,7 @@ magic-spec/
 │       ├── references/           # Additional specs, documentation, or schemas
 │       └── SKILL.md
 ├── ...
+├── package.json                  # [DEV]
 ├── AGENTS.md                     # [DEV] или CLAUDE.md, или CODEX.md в зависимости от того каким ИИ пользуемся
 └── README.md                     # [DEV]
 ```

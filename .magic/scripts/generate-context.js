@@ -55,7 +55,7 @@ contextContent += '\n## Core Project Structure\n\n```plaintext\n';
 
 /**
  * Recursively builds a directory tree representation.
- * 
+ *
  * @param {string} dir Source directory path.
  * @param {string} prefix Line prefix for indentation.
  * @param {number} currentDepth Current recursion level.
@@ -65,13 +65,22 @@ contextContent += '\n## Core Project Structure\n\n```plaintext\n';
  * @param {function(string): boolean} [isIgnored] Gitignore predicate over root-relative paths.
  * @returns {string} Markdown-formatted directory tree.
  */
-function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = null, isIgnored = () => false) {
+function buildTree(
+    dir,
+    prefix,
+    currentDepth,
+    maxDepth,
+    ignores,
+    validScopes = null,
+    isIgnored = () => false,
+) {
     if (currentDepth > maxDepth) return '';
     let result = '';
     let files;
     try {
-        files = fs.readdirSync(dir)
-            .filter(f => {
+        files = fs
+            .readdirSync(dir)
+            .filter((f) => {
                 // Landmark roots bypass every hiding mechanism at depth 1 —
                 // including a user project that gitignores its design dir.
                 if (currentDepth === 1 && FORCE_VISIBLE_ROOTS.has(f)) return true;
@@ -81,12 +90,15 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
             .sort();
         // If at root and validScopes is provided, filter allowed top-level directories
         if (currentDepth === 1 && validScopes && validScopes.length > 0) {
-            files = files.filter(f => {
+            files = files.filter((f) => {
                 if (FORCE_VISIBLE_ROOTS.has(f)) return true;
-                return validScopes.includes(f) || validScopes.some(s => s.startsWith(f + '/') || s.startsWith(f + '\\'));
+                return (
+                    validScopes.includes(f) ||
+                    validScopes.some((s) => s.startsWith(f + '/') || s.startsWith(f + '\\'))
+                );
             });
         }
-    } catch (e) {
+    } catch {
         return '';
     }
 
@@ -96,7 +108,11 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
         const fullPath = path.join(dir, file);
 
         let stat;
-        try { stat = fs.statSync(fullPath); } catch (e) { continue; }
+        try {
+            stat = fs.statSync(fullPath);
+        } catch {
+            continue;
+        }
 
         const branch = isLast ? '└── ' : '├── ';
         const name = stat.isDirectory() ? file + '/' : file;
@@ -105,7 +121,15 @@ function buildTree(dir, prefix, currentDepth, maxDepth, ignores, validScopes = n
 
         if (stat.isDirectory()) {
             const nextPrefix = prefix + (isLast ? '    ' : '│   ');
-            result += buildTree(fullPath, nextPrefix, currentDepth + 1, maxDepth, ignores, validScopes, isIgnored);
+            result += buildTree(
+                fullPath,
+                nextPrefix,
+                currentDepth + 1,
+                maxDepth,
+                ignores,
+                validScopes,
+                isIgnored,
+            );
         }
     }
     return result;
@@ -132,8 +156,8 @@ let scopes = null;
 if (process.env.MAGIC_WORKSPACE_SCOPE) {
     try {
         scopes = JSON.parse(process.env.MAGIC_WORKSPACE_SCOPE);
-    } catch (e) {
-        scopes = process.env.MAGIC_WORKSPACE_SCOPE.split(',').map(s => s.trim());
+    } catch {
+        scopes = process.env.MAGIC_WORKSPACE_SCOPE.split(',').map((s) => s.trim());
     }
     if (!Array.isArray(scopes)) scopes = [scopes];
 }
@@ -141,7 +165,7 @@ if (process.env.MAGIC_WORKSPACE_SCOPE) {
 try {
     contextContent += '.\n';
     contextContent += buildTree('.', '', 1, 2, ignoreList, scopes, isGitignored);
-} catch (err) {
+} catch {
     contextContent += `- Project root\n  - ${designDir}/\n  - .magic/\n`;
 }
 

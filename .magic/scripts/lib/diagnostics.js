@@ -61,7 +61,10 @@ function normalize(finding) {
 
     // A finding is one JSONL line — an embedded newline would corrupt the
     // format the sink's append-safety and bounded-corruption guarantees rest on.
-    const oneLine = (s) => String(s).replace(/[\r\n]+/g, ' ').trim();
+    const oneLine = (s) =>
+        String(s)
+            .replace(/[\r\n]+/g, ' ')
+            .trim();
 
     const value = {
         ts: new Date().toISOString(),
@@ -80,7 +83,7 @@ function normalize(finding) {
         value.recheck = {
             script: oneLine(recheck.script),
             args: Array.isArray(recheck.args) ? recheck.args.map(String) : [],
-            env: (recheck.env && typeof recheck.env === 'object') ? recheck.env : {},
+            env: recheck.env && typeof recheck.env === 'object' ? recheck.env : {},
         };
     }
     return { ok: true, value };
@@ -95,7 +98,10 @@ function normalize(finding) {
  */
 function readSinkLines() {
     if (!fs.existsSync(sinkPath)) return [];
-    return fs.readFileSync(sinkPath, 'utf8').split(/\r?\n/).filter((l) => l.trim() !== '');
+    return fs
+        .readFileSync(sinkPath, 'utf8')
+        .split(/\r?\n/)
+        .filter((l) => l.trim() !== '');
 }
 
 /**
@@ -132,7 +138,8 @@ function record(finding) {
             // One overflow marker, not one per subsequent record() call — the
             // marker's own presence is the last line once the cap holds, so a
             // repeat check is exactly "is the sink already saying this".
-            const alreadyMarked = lines.length > 0 && lines[lines.length - 1].includes(OVERFLOW_CODE);
+            const alreadyMarked =
+                lines.length > 0 && lines[lines.length - 1].includes(OVERFLOW_CODE);
             if (!alreadyMarked) {
                 const marker = normalize({
                     severity: 'warning',
@@ -222,15 +229,20 @@ function runRecheck(recheck) {
 
         const args = Array.isArray(recheck.args) ? recheck.args.slice() : [];
         if (!args.includes('--json')) args.push('--json');
-        const env = Object.assign({}, process.env, recheck.env || {}, { MAGIC_DIAGNOSTICS_SUPPRESS: '1' });
+        const env = Object.assign({}, process.env, recheck.env || {}, {
+            MAGIC_DIAGNOSTICS_SUPPRESS: '1',
+        });
 
         const stdout = execFileSync('node', [scriptPath, ...args], {
-            cwd: projectRoot, env, encoding: 'utf8', timeout: RECHECK_TIMEOUT_MS,
+            cwd: projectRoot,
+            env,
+            encoding: 'utf8',
+            timeout: RECHECK_TIMEOUT_MS,
         });
         const parsed = JSON.parse(stdout);
         const warnings = Array.isArray(parsed.warnings) ? parsed.warnings : [];
         return new Set(warnings.map((w) => w.type));
-    } catch (e) {
+    } catch {
         return null;
     }
 }
@@ -258,12 +270,14 @@ function revalidate(findings) {
     const groups = new Map();
 
     for (const f of findings) {
-        if (!f || !f.recheck || typeof f.recheck !== 'object') {
+        if (!f?.recheck || typeof f.recheck !== 'object') {
             passthrough.push(f);
             continue;
         }
         const key = JSON.stringify({
-            script: f.recheck.script, args: f.recheck.args || [], env: f.recheck.env || {},
+            script: f.recheck.script,
+            args: f.recheck.args || [],
+            env: f.recheck.env || {},
         });
         if (!groups.has(key)) groups.set(key, { recheck: f.recheck, items: [] });
         groups.get(key).items.push(f);
@@ -354,16 +368,13 @@ function formatDigest(findings) {
     for (const g of groups) counts[g.severity] += 1;
 
     const summaryParts = [];
-    if (counts.error > 0) summaryParts.push(`${counts.error} error${counts.error !== 1 ? 's' : ''}`);
-    if (counts.warning > 0) summaryParts.push(`${counts.warning} warning${counts.warning !== 1 ? 's' : ''}`);
+    if (counts.error > 0)
+        summaryParts.push(`${counts.error} error${counts.error !== 1 ? 's' : ''}`);
+    if (counts.warning > 0)
+        summaryParts.push(`${counts.warning} warning${counts.warning !== 1 ? 's' : ''}`);
     if (counts.fix > 0) summaryParts.push(`${counts.fix} fix${counts.fix !== 1 ? 'es' : ''}`);
 
-    const lines = [
-        '### Engine diagnostics',
-        '',
-        `**${summaryParts.join(' · ')}**`,
-        '',
-    ];
+    const lines = ['### Engine diagnostics', '', `**${summaryParts.join(' · ')}**`, ''];
 
     const capped = groups.slice(0, MAX_RENDERED_FINDINGS);
     const omitted = groups.length - capped.length;
