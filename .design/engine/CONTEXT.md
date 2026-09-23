@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-09-21
+**Generated:** 2026-09-23
 
 ## Active Technologies
 
@@ -44,6 +44,7 @@
 ├── CONTRIBUTING.md
 ├── README.md
 ├── dev/
+│   ├── package.json
 │   ├── scripts/
 │   └── tests/
 ├── docs/
