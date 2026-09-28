@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-23 14:31
-**Phase:** 32 — Automatic Session Checkpoints (SC-6..SC-9)
+**Updated:** 2026-09-28 11:24
+**Phase:** 33 — Significance Read-Failure Fix & Confirmed Self-Containment Cleanup
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-32T04 Cognitive suite: cold start, re-grounding, dead end, claim honesty (T220–T224)
-- **Spec:** l1-engine-diagnostics.md (DG-10 Revalidation Before Render) · l2-engine-diagnostics.md (§4.10 implementation)
+- **Task:** [T-33T02] Validation: full suite green + Track B citation removal confirmed; C14 bump
+- **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
 - **Next Action:** Plan complete — run /magic.task engine to plan new scope
 
 ## Progress
 
 ```
-Overall: [31/31] ████████ 100%
+Overall: [32/32] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-09-28 **Decision:** Phase 33 complete. Provides: lib/significance.js snapshotHashes() 'UNREADABLE' sentinel (l2-engine-finalization.md §9.2); finalize.js SIGNIFICANCE_HASH_UNREADABLE diagnostic; update-state.js free of spec-file citations (RC-8 widened compliance). Engine 2.1.106->2.1.107, harness 138->140. R41/R42/R44 all closed this cycle; R46 (broader SDD_REFERENCE_LEAK inventory of .magic/scripts/) Parked for /magic.analyze. Plan complete.
+- 2026-09-28 **Decision:** Plan sync 2026-09-28 (Phase 33 added): /magic.spec engine closed R44/R41/R42 against INDEX v1.30.0 (4 specs amended: l2-engine-finalization.md 3.3.0 new §9, l2-engine-automation.md 1.17.0 Zero-Prompt forwarding paragraph, l2-test-suite.md 1.19.0 + l2-session-checkpoint.md 1.0.2 reality-sync). Phase 33 plans the one track needing code (R44, lib/significance.js/finalize.js) plus the one confirmed RC-8 reference leak in update-state.js the prior widening left behind; R41/R42 were .design/-only and already complete. PLAN v1.41.0 / TASKS v1.40.0 on INDEX v1.30.0.
 - 2026-09-23 **Decision:** Plan sync 2026-09-23 (no new phase): PLAN v1.40.3 / TASKS v1.39.3 on INDEX v1.29.1 (36 of 36 Stable, no unplanned scope; engine 2.1.104, harness 138/138 at HEAD). Retro L2 Session 13 recommendations triaged against the source: R44 (finalize aborts on an unreadable STATE.md under --workflow=run; reproduced at HEAD), R41 (executor contract) and R42 (recorded test counts, proposed case numbers) queued as three open Backlog items needing a spec pass - the next Pre-flight raises DESIGN_DEBT_PENDING and routes to /magic.spec engine; R43 narrowed (a dev-only hint belongs in the harness message, not the shipped task.md) and Parked with R45.
 - 2026-09-21 **Decision:** Phase 32 complete. Provides: resume-state (the shared read-only resume predicate, --workspace/--all/--json) and lib/tracking-entries.js; the Task Start record and the Attempts dead-end field in run.md; the checkpoint claim in finalize (only after a successful STATE.md update); Post-Compaction Re-grounding in place of the fill-percentage tiers; rules/magic.md §10; Last Session Ended and the phantom /magic.pause removed. Engine 2.1.102->2.1.103, harness 124->138, cognitive T220-T224. Plan complete.
 - 2026-09-20 **Decision:** Spec pass 2026-09-20d (/magic.spec engine): automatic session checkpointing specified with no new command (user directive: everything under the hood). l1-session-continuity.md 2.3.0 adds SC-6 Cold-Start Sufficiency (+SC-6.1 Checkpoint Claim), SC-7 Observable Triggers (fill-percentage tiers and the automatic pause retired), SC-8 Dead-End Record (Attempts field), SC-9 Resume From Recorded State, SC-1.3 No Dead Fields. New l2-session-checkpoint.md 1.0.0 holds the contract, the H1-H10/C1-C5 coverage and a 13-row deployment inventory routed to /magic.task engine. The pause snapshot stays an optional path; its retirement is deferred pending usage evidence.
-- 2026-09-20 **Decision:** Plan sync 2026-09-20b (no new phase): PLAN v1.39.0 / TASKS v1.38.0 re-baselined on INDEX v1.28.0 after the l2-finalize-state-accuracy.md decomposition; the two new specs (l2-update-state-structure.md, l2-update-state-values.md) registered in Completed (Baseline) as retrospec entries — relocated, already-implemented content. Backlog holds no open item; plan complete.
-- 2026-09-20 **Decision:** Spec pass 2026-09-20 (/magic.spec engine): l2-finalize-state-accuracy.md decomposed at 552 lines (SPEC_DECOMPOSE) — the register (2.0.0) keeps the callers' defects (§2/§4/§9/§11); the update-state.js writer's defects moved verbatim to l2-update-state-structure.md and l2-update-state-values.md (1.0.0) under permanent defect numbers, so every §N cited from engine and harness comments still resolves. Backlog item closed; /magic.task engine registers the two new specs in the plan.
 
 ## Blockers
 

@@ -26,7 +26,7 @@ const diagnostics = require('./lib/diagnostics');
  * entries' text through it, and the line-cap prune removes an entry by these
  * offsets instead of looking its text up again in the file — a lookup that
  * never matched a CRLF file or a last entry with no trailing newline, yet was
- * reported as a prune (l2-finalize-state-accuracy.md section 13.2).
+ * reported as a prune.
  *
  * @param {string} block    Section text (heading through the line before the next heading).
  * @param {RegExp} startRe  Pattern matching an entry's first line.
@@ -82,8 +82,8 @@ function collectEntries(block, startRe) {
  * that matches only its first physical line replaces that line alone — the new
  * text lands on the marker line and the old continuation stays behind as
  * orphaned prose under text it no longer belongs to (field report, engine
- * v2.1.95; l2-finalize-state-accuracy.md section 12.1, the scalar-field sibling
- * of the section-rebuild defect `collectEntries` closes).
+ * v2.1.95 — the scalar-field sibling of the section-rebuild defect
+ * `collectEntries` closes).
  *
  * What counts as a continuation is narrower than the "every following
  * non-blank line" rule `collectEntries` applies, on purpose: inside an
@@ -145,8 +145,7 @@ const SECTION_ORDER = [
  * substring search: `content.indexOf('## Recent Decisions')` also hits a line
  * that merely quotes the heading — a constraint naming the section, say — and a
  * rebuild spliced at that offset lands mid-line, destroying the quoting line's
- * tail and creating the section inside the wrong one
- * (l2-finalize-state-accuracy.md section 13). A word boundary, not end-of-line,
+ * tail and creating the section inside the wrong one. A word boundary, not end-of-line,
  * follows the marker so a hand-suffixed heading (`## Recent Decisions (last 5)`)
  * is still the section. Markers are the engine's own literal constants, so they
  * need no regex escaping.
@@ -178,8 +177,8 @@ function locateSection(content, marker) {
  * The two list-section writers (`addDecision`, `addConstraint`) used to guard
  * their whole rebuild with `if (secStart !== -1)` and no alternative, so a
  * STATE.md without the heading — routine for a file agents maintain by hand —
- * took the request, wrote nothing, and still printed `STATE.md updated`
- * (l2-finalize-state-accuracy.md section 13). Creating the section is safe
+ * took the request, wrote nothing, and still printed `STATE.md updated`.
+ * Creating the section is safe
  * because both are wholly engine-owned: the caller's deterministic rebuild
  * fills it exactly as it fills one that was always there, and there is no
  * hand-authored content to protect. The heading goes before the earliest
@@ -187,7 +186,7 @@ function locateSection(content, marker) {
  * file, set off by one blank line on each side. The repair is announced on
  * stderr and recorded as a `fix` diagnostic so it cannot pass unnoticed. The
  * same step creates the container a missing field belongs in (`ensureField`)
- * and a missing `## Progress` (section 13.1).
+ * and a missing `## Progress`.
  *
  * @param {string} content    STATE.md text.
  * @param {string} marker     Section heading; must be one of SECTION_ORDER.
@@ -233,8 +232,8 @@ function ensureSection(content, marker, statePath) {
  * field's first physical line, and the prefix a line is (re)written with. The
  * anchor matters for the reason a heading's does (`headingRe`): a pattern that
  * matches anywhere in a line takes a label merely quoted mid-line for the field
- * and rewrites the quoting line from there on, destroying its tail
- * (l2-finalize-state-accuracy.md section 13.1). The `- ` prefix marks the three
+ * and rewrites the quoting line from there on, destroying its tail. The
+ * `- ` prefix marks the three
  * fields written as Markdown list items (see `wholeEntryRe`).
  */
 const FIELD_MAP = {
@@ -278,8 +277,7 @@ function lineEnding(content) {
  * Adds a field line that the file lacks. The scalar-field loop used to patch a
  * field only when its line was found and to do nothing otherwise, so on a
  * hand-trimmed file a `--next-action`, `--status` or `--handoff` was accepted
- * and dropped while `STATE.md updated` was still printed
- * (l2-finalize-state-accuracy.md section 13.1). The line goes before the
+ * and dropped while `STATE.md updated` was still printed. The line goes before the
  * earliest present field that follows it in template order within its
  * container, else after the container's last non-blank line; a container
  * section the file lacks is created first (`ensureSection`). Field lines stay
@@ -405,12 +403,11 @@ function updateState(designDir, patch, options = {}) {
                 // string replacement, $' expanded to the entire remainder of
                 // STATE.md: the field was truncated and every section below it
                 // duplicated, a stale ## Progress counter among them. Same
-                // defect class as the ## Progress fence rewrite below
-                // (l2-finalize-state-accuracy.md sections 6 and 6.1).
+                // defect class as the ## Progress fence rewrite below.
                 content = content.replace(entryRe, () => line);
             } else if (key !== 'updated') {
                 // Absent: create the line at its template position rather than
-                // drop the write (section 13.1). `updated` is the exception —
+                // drop the write. `updated` is the exception —
                 // no caller requests it, a fresh stamp is injected into every
                 // call — so it is refreshed where present and left absent where
                 // absent, and a call that patches nothing stays a no-op.
@@ -492,7 +489,7 @@ function updateState(designDir, patch, options = {}) {
     // all. Each new constraint piled up there, pushing the comment (and
     // every prior constraint) further down instead of joining the list
     // below it. Unlike decisions, constraints are never pruned — every
-    // entry is kept by design (l1-session-continuity.md SC-1.2) — so the
+    // entry is kept by design (SC-1.2) — so the
     // rebuild carries the full existing list, not a capped slice.
     // ───────────────────────────────────────────────────────────────────────
     if (options.addConstraint && patch.constraint) {
@@ -536,7 +533,7 @@ function updateState(designDir, patch, options = {}) {
                 const existing = content.match(progressRe);
                 if (!existing && !locateSection(content, '## Progress')) {
                     // No section at all: create it holding the counters instead
-                    // of skipping the recompute (section 13.1). Built with plain
+                    // of skipping the recompute. Built with plain
                     // concatenation — the fence carries backticks, and nothing
                     // here may be a replacement string.
                     const section = ensureSection(content, '## Progress', statePath);
@@ -624,8 +621,7 @@ function updateState(designDir, patch, options = {}) {
         // writers use, and the oldest entry removed by its position in the file
         // — not by looking its text up again, which never matched a CRLF file or
         // a last entry with no trailing newline while `pruned` was still set,
-        // and never ran at all when the section was the file's last
-        // (l2-finalize-state-accuracy.md section 13.2).
+        // and never ran at all when the section was the file's last.
         const section = locateSection(content, '## Recent Decisions');
         if (section) {
             const ranges = entryRanges(

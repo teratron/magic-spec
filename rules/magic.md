@@ -290,11 +290,23 @@ GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 
 ### Exemptions
 
-- The `.design/` subtree itself and engine directories (`.magic/`, `workflows/`,
-  `skills/`, `rules/`) — engine-internal cross-references are by design.
+- The `.design/` subtree itself.
+- Engine directories (`.magic/`, `workflows/`, `skills/`, `rules/`) — **in a
+  consumer project only**. There they are a vendored, never-authored drop, so a
+  reference-containment scan over them is noise, not signal.
 - Git metadata — not part of release artifacts.
 - Contributor-facing process docs that document the SDD workflow itself
   (there the reference IS the content).
+
+**In this engine's own repository, the engine-directory exemption above does
+not hold.** `.magic/`, `workflows/`, `skills/`, and `rules/` are the product
+here — the same flip the Structural Rule above already makes for scaffold
+boundary — so a task ID, phase designator, or spec file name inside a shipped
+script's comment is a leak exactly as it would be in any consumer's product
+file, and refusing to introduce one applies to editing `.magic/` itself, not
+only to editing a downstream project. A stable in-text protocol label (`C14`,
+`SC-2`, `WC1`, and siblings such as `RC-n`/`DA-n`/`WI-n`) is not a reference to
+a file or task and stays outside this rule either way.
 
 ### Enforcement
 

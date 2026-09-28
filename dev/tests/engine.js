@@ -7944,6 +7944,76 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // One --workflow=run finalize invocation against a fresh git-backed
+    // fixture with a Done task (so TASKS.md alone would not force the
+    // significant path — the assertions below are about STATE.md's own
+    // whitelisted-hash handling, not about TASKS.md's status-flip filter).
+    // `stateDirBlock: true` puts a directory where STATE.md belongs, the
+    // shape that used to throw uncaught out of the significance snapshot
+    // (R44, l2-engine-finalization.md §9) — `false` leaves it genuinely
+    // absent, the sibling condition that must stay `null`, not `'UNREADABLE'`.
+    const runFinalizeRunWithState = ({ stateDirBlock }) => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { wsDir, finalizePath } = createFinalizeFixture(tempDir, { workspace: 'main' });
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '## Active Phases\n\n- [x] [T-1A01] Done\n',
+            );
+            if (stateDirBlock) fs.mkdirSync(path.join(wsDir, 'STATE.md'));
+            commitFixture(tempDir);
+
+            const result = spawnSync(
+                process.execPath,
+                [finalizePath, '--workflow=run', '--workspace=main'],
+                { cwd: tempDir, encoding: 'utf8' },
+            );
+            return { result };
+        } finally {
+            cleanup(tempDir);
+        }
+    };
+
+    test('finalize.js under --workflow=run survives an unreadable whitelisted STATE.md instead of aborting (R44, l2-engine-finalization.md §9)', () => {
+        // The bug: STATE.md is in magic.run's whitelist (unlike magic.task,
+        // whose own STATE.md write sits behind a separate, already-guarded
+        // try/catch — see runFinalizeCheckpoint above), so a directory at its
+        // path made the significance snapshot's hashFileSafe throw uncaught,
+        // aborting the whole invocation before anything else ran: no version
+        // bump, no archival, no CHANGELOG, no digest.
+        const { result } = runFinalizeRunWithState({ stateDirBlock: true });
+
+        assert.strictEqual(
+            result.status,
+            0,
+            'an unreadable whitelisted file must not crash finalize',
+        );
+        assert.match(
+            result.stdout,
+            /SIGNIFICANCE_HASH_UNREADABLE/,
+            'the read failure must surface as a diagnostic, not pass in silence',
+        );
+        assert.match(
+            result.stdout,
+            /STATE\.md/,
+            'the diagnostic must name the file that could not be read',
+        );
+    });
+
+    test('finalize.js treats a genuinely absent whitelisted file as unchanged, not UNREADABLE (control)', () => {
+        // No STATE.md at all — never created (makeWorkspace only mkdirs the
+        // workspace itself), not a directory either. The two conditions
+        // (absent vs. unreadable) must not collapse into one code path.
+        const { result } = runFinalizeRunWithState({ stateDirBlock: false });
+
+        assert.strictEqual(result.status, 0);
+        assert.doesNotMatch(
+            result.stdout,
+            /SIGNIFICANCE_HASH_UNREADABLE/,
+            'a genuinely absent file hashes to null, not UNREADABLE — no diagnostic',
+        );
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 22. Shipped-text contracts — behavior that is prose (H10). The workflow
     //     bodies and rules are read by an agent, so what they say IS the

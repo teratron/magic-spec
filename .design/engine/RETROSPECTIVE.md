@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-09-18
-**Full Sessions:** 12
-**Snapshots:** 25
+**Last Full Run:** 2026-09-28
+**Full Sessions:** 14
+**Snapshots:** 26
 
 ## Snapshots
 
@@ -36,6 +36,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-17 | Phase 30 | 0/0/33 | 5/0/0 | 24 | 🟢 |
 | 2026-09-17 | Phase 31 | 0/0/33 | 6/0/0 | 24 | 🟢 |
 | 2026-09-21 | Phase 32 | 0/0/36 | 18/0/0 | 24 | 🟡 |
+| 2026-09-28 | Phase 33 | 0/0/36 | 5/0/0 | 24 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -590,3 +591,45 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟡 | ↓ |
 
 > Signal moved to 🟡: the structure is clean — 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage, 0 shadow logic — but two non-critical stale references stand in the registry itself (the recorded test counts in `l2-test-suite.md` and the "proposed T213–T217" in `l2-session-checkpoint.md`), which is the table's "1–2 non-critical drift items" condition. Both are known, routed (R42) and non-blocking; the Signal returns to 🟢 with that sync. The tracked-files red (Finding #4) is working-tree state at the end of a run, not a registry-health matter, and is not scored.
+
+## Session 14 — 2026-09-28
+
+**Scope:** Plan completion (Phase 33 — Significance Read-Failure Fix & Confirmed Self-Containment Cleanup; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from three Session 13 recommendations, R44/R41/R42)
+**Specs in registry:** 36 (all Stable, unchanged count). Four amended via the `/magic.spec engine` pass that preceded this planning invocation: `l2-engine-finalization.md` 3.2.2 → 3.3.0 (new §9), `l2-engine-automation.md` 1.16.0 → 1.17.0, `l2-test-suite.md` 1.18.0 → 1.19.0, `l2-session-checkpoint.md` 1.0.1 → 1.0.2. A fifth, `l1-sdd-reference-containment.md` 1.5.0 → 1.6.0 (RC-8 widened — this repository's own `.magic/` is no longer exempt from reference containment), was amended in the direct-edit pass that preceded even that spec pass — the source of this session's own Track B.
+**Tasks total:** 5 this cycle (Done: 5, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 211 → 212 nodes (+1, the phase node), 452 → 453 edges (+1); engine-workspace coverage held; 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.106 → 2.1.107, one C14 at the closing task, no `--workflow` tag (three scripts changed, no workflow-doc body) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks |
+| **Rework Rate** | 0 corrections / 5 tasks | Manual | Both tracks landed as planned; the only correction (Finding #1) was made at spec time, before any task existed to redo |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **R44's own framing ("absent-with-a-finding") would have reintroduced the exact conflation it exists to prevent.** Session 13 recommended treating an unreadable file as *absent*; the spec pass gave it a distinct sentinel instead (`'UNREADABLE'`, never equal to `null`) after tracing that `null` already carries a specific, depended-on meaning — "does not exist" — so folding a read failure into it would make a broken file indistinguishable from a deleted one. Refined before any code was written, at `/magic.spec`, not discovered mid-implementation. | `l2-engine-finalization.md` §9.2; `snapshotHashes()`'s three-way return (`hash \| null \| 'UNREADABLE'`) |
+| 2 | **The self-containment cleanup's scope was bounded by reading, not by grepping.** A raw pattern scan across `.magic/scripts/` flagged 16 files; reading each before committing to a task found that most implement the task-ID/phase-file/spec-name recognition logic itself — mention, not use (SH-1) — rather than citing a spec as provenance. Only `update-state.js`'s nine citations were confirmed leaks at plan time, and the task was scoped to exactly that file; the remainder was left named, not swept blind, for `/magic.analyze`'s cognitive scan to triage. | Phase 33 Track B task Notes; grep of `l1-\|l2-` across `.magic/scripts/` before vs. after |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R46 | #2 | Run `/magic.analyze`'s `SDD_REFERENCE_LEAK` scan against `.magic/scripts/` now that engine directories are in scope in this repository, to inventory the ~15 files this phase deliberately left untriaged (most likely mention-not-use, but unconfirmed) | `.magic/analyze.md` step 6, next `/magic.analyze` pass |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 36 | 36 | 0 |
+| Specs with version churn this session | 8 | 5 | -3 |
+| Script harness tests | 138 | 140 | +2 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 211 / 452 | 212 / 453 | +1 / +1 |
+| Signal | 🟡 | 🟢 | ↑ |
+
+> Signal returns to 🟢: Session 13's two stale-reference items (R41, R42) that held it at 🟡 are both closed this session, alongside R44. 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, engine-workspace coverage unchanged, 0 shadow logic. R43 and R45 remain Parked (no demand signal); the new R46 is advisory, not a registry defect.

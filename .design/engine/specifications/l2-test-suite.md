@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.18.0
+**Version:** 1.19.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -21,8 +21,8 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 `dev/tests/suite.md` is the canonical regression suite for the engine. Current state:
 
-- **211 tests** (T01–T212; numbering gap at T67) covering all core workflows, guards, and edge cases.
-- **Suite version**: v1.9.76.
+- Covers all core workflows, guards, and edge cases, organized as H3 sections with a numbering gap at T67.
+- **Count and version are not recorded here.** A copied total rots on the next phase that adds a case, and it already had: this document long recorded "211 tests (T01–T212), v1.9.76" while the suite itself had moved to 223 headings (T01–T224) at v1.9.81, and a sibling spec's proposed case IDs had drifted from the ones actually assigned. The suite's own closing line (`**Test Suite Finalized** - v{X} (Last: T{N})`) is the one source that cannot drift from itself — read it there; do not copy the numbers into a second document.
 - **Idea Intake Gate coverage (T209–T212)**: the Step 0.5 E6 gate — silent pass on a coherent idea (IK-1/IK-4), a fired F2 gate asserting intent-only and plain-language questions (IK-3/IK-5), non-convergent termination including the `"you decide"` reply and the close-one-open-two case (IK-6/IK-9), and a technical fork proving no question reaches the user channel (IK-3/IK-8). The gate ships no executor code path, so its coverage is cognitive-only by design — the script harness has no case to add.
 - Tests are organized as H3 sections with `Synthetic State`, `Action`, `Expected`, and `Guards tested` fields.
 - Sprint 1 regression tests (T86–T91) cover Runtime Guards: RE-1, RE-2, RE-3, RE-T71, RE-T74, and the T4/VERSION_DRIFT interaction.
@@ -61,7 +61,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Path | Role |
 | --- | --- |
-| `dev/tests/suite.md` | Cognitive regression test suite (211 tests, v1.9.76) |
+| `dev/tests/suite.md` | Cognitive regression test suite (count/version: see its own closing line, not repeated here) |
 | `dev/tests/engine.js` | Script-level regression harness (node:test); finalize-pipeline coverage mandate |
 | `.agents/skills/magic-dev-simulate/SKILL.md` | Simulation skill that runs cognitive tests |
 
@@ -69,6 +69,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.19.0 | 2026-09-28 | Agent | **Stopped recording the suite's total count and version here** (R42, Retro L2 Session 13): this document's own prior entry ("Recorded counts (harness 124, cognitive 211) update when the cases land," 1.18.0 below) is the exact mechanism that just failed — the cases landed as T220–T224, not the T213–T217 [l2-session-checkpoint.md](l2-session-checkpoint.md) §6 had proposed, and this spec still read "211 tests (T01–T212), v1.9.76" against an actual 223 headings (T01–T224) at v1.9.81. A number copied into a second document has no way to learn that its source moved. Replaced with a pointer to `dev/tests/suite.md`'s own closing line, the one place the count cannot drift from itself; the Canonical References row for that file dropped its own copy of the same numbers. Feature-specific test IDs (T209–T212, Idea Intake Gate) are unaffected — an assigned ID for a named feature does not rot the way a running total does. No change to script-level harness counts or descriptions. Minor (removes a maintenance obligation this spec cannot discharge, adds the sourcing rule); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. |
 | 1.18.0 | 2026-09-20 | Agent | Added the **session-checkpoint coverage** mandate for the automatic-checkpoint contract ([l1-session-continuity.md](l1-session-continuity.md) SC-1.3, SC-6..SC-9). The rationale is recorded in the mandate: the predecessor pause/handoff path shipped with no coverage — only the `Handoff File` pointer's patching was pinned — so nothing could have caught that it was unreachable, unmeasurable and self-contradicting. The case list (harness H1–H10, cognitive C1–C5) is delegated to [l2-session-checkpoint.md](l2-session-checkpoint.md) §6 instead of restated, following the diagnostics-digest precedent. Recorded counts (harness 124, cognitive 211) update when the cases land. Status reverted `Stable → RFC` (Amendment Rule, minor); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.17.0 | 2026-08-28 | Agent | Script harness 69 → 72 tests, closing the two silent-failure defects Phase 27 hit in production (retrospective R25, R26; [l2-agent-surface.md](l2-agent-surface.md) §4, [l2-skill-wrappers.md](l2-skill-wrappers.md) §3.2). Both new cases are negative-controlled — each was confirmed to fail against the pre-fix code before being confirmed to pass against the fix, not merely written and left green. (1) `update-engine-meta.js` (5c/5d): a `workflows/`-only edit must regenerate `skills/*/SKILL.md` even though the `.magic/` checksum verdict reports no change — asserted by editing `workflows/`, re-running, and reading the regenerated wrapper's content; a companion case pins that `--check` still performs zero writes and zero skill regeneration under the identical pending-change condition, so the write-path fix cannot leak into the read-only pre-commit-hook surface. (2) `validate-hardlinks.js` (§19, new top-level section): a fixture with a real hardlinked `workflows/` pair must pass, and the same pair delinked via unlink+rewrite (the inode-replacing shape a write-replace editor produces, matching `[C-001]`) must fail with the specific file named — run a second time against the git-HEAD (pre-fix, two-group) validator source to confirm the identical fixture passes silently there, proving the new group closes a real gap rather than restating existing coverage. |
 | 1.16.0 | 2026-08-28 | Agent | Cognitive suite 206 → 211 tests (T01–T212, gap at T67), v1.9.74 → v1.9.76 — the recorded count was already one behind before this change (T208 shipped with the rule batch-precedence work without a spec sync), so this row corrects that drift as well as adding T209–T212 for the Idea Intake Gate ([l1-idea-intake-gate.md](l1-idea-intake-gate.md) IK-1..IK-9). Coverage: silent pass on a coherent idea, a fired F2 gate asserting intent-only + plain-language questions, non-convergent termination (both the `"you decide"` reply and the close-one-open-two case that the spec's own Post-Update Review caught as non-terminating), and a technical-fork case proving no realization question reaches the user channel. Recorded explicitly that the gate ships no executor code path and is therefore cognitive-only by design — the script harness has nothing to exercise, so its unchanged count is not an omission. |

@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.2.2
+**Version:** 3.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -155,6 +155,24 @@ Two structural consequences for `finalize.js`:
 
 This pipeline is also the diagnostics inventory's largest emitter block — six non-fatal findings across `main()`, `updateSessionState()`, and the CHANGELOG and phase-archival steps. The drain runs once in `main()`, after every other step, so findings produced by those steps are in the sink before the digest is composed.
 
+## 9. Significance Snapshot Read-Failure Handling `[ADDED]`
+
+### 9.1 The Defect
+
+`computeSignificance()` builds `nextSnapshot` by hashing every whitelisted path via `snapshotHashes()` → `utils.hashFileSafe()`. `hashFileSafe` already retries a transient read failure five times over one second, but on the sixth failure it `throw`s — and no caller of `computeSignificance()` catches it. Under `--workflow=run`, `STATE.md` is a whitelisted path (§5.1); if it exists but cannot be read as a file — a directory sits at its path, a lock, a permissions error — the retry window elapses uselessly (the condition is permanent, not transient) and the exception propagates out of `main()`, aborting the whole invocation with exit 1: no version bump, no archival, no CHANGELOG entry, no diagnostics digest, nothing recorded at all. Reproduced live: a directory at the `STATE.md` path (engine 2.1.104).
+
+This is narrower than it first looks: `--workflow=task`'s own `updateSessionState()` step (§5.1) already degrades gracefully on an unreadable `STATE.md`, recording `STATE_UPDATE_SKIPPED` and returning `{ updated: false }` — but that is a **different** read, the state-patch write path, wrapped in its own `try`/`catch`. The **significance snapshot** read that runs before it, common to every `--workflow` value, has no such guard. The two workflows disagreeing about the same broken file is a symptom of the fix living at one call site and not the other, not a designed difference in how `run` and `task` should behave here.
+
+### 9.2 Required Fix
+
+The retry policy in `hashFileSafe` is not the defect and does not change: five retries over one second is a reasonable, cheap allowance for a transient lock, and every other caller of `hashFileSafe` may keep relying on it throwing past that point. The fix is at the call site the throw currently has none of: `snapshotHashes()` catches a per-file hashing failure instead of letting it propagate, and records that file's snapshot value as the literal string `'UNREADABLE'` — a third state distinct from a real hash and from `null` (the existing, already-handled meaning: "file does not exist"). Folding an unreadable-but-present file into the same `null` bucket as a genuinely absent one would let the significance diff treat "could not tell" as "nothing to see," the wrong default for a check whose job is deciding whether to record that something changed.
+
+`computeSignificance()`'s diff against `lastSnapshot` treats any path whose new value is `'UNREADABLE'` as **changed** — significance fails safe (fires) rather than silently under-reporting when it cannot prove otherwise. `finalize.js` records one diagnostic per such path: `severity: 'error'`, `source: 'finalize'`, `code: 'SIGNIFICANCE_HASH_UNREADABLE'`, message naming the file and the underlying read error — the same taxonomy as the existing `STATE_UPDATE_SKIPPED` site, not a new mechanism. The finalize invocation continues on both `--workflow` values: a broken whitelisted file degrades one snapshot entry, never the pipeline.
+
+### 9.3 Regression Coverage
+
+A fixture with a directory at the `STATE.md` path, run under `--workflow=run`: finalize exits 0, a `SIGNIFICANCE_HASH_UNREADABLE` diagnostic is recorded naming `STATE.md`, and the significant-path branch runs (the file reads as changed). A control case with a genuinely absent, never-created whitelisted file confirms it is still treated as `null`/unchanged, not `'UNREADABLE'` — the two conditions must not collapse into one.
+
 ## Canonical References
 
 | Path | Role |
@@ -167,13 +185,14 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival (§6) and the `TASKS.md`/`PLAN.md` index rewrites (§7) |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
 | `.magic/scripts/lib/phase-files.js` | Phase-workbook name recognition, parsing, and ordering (§6.1) |
-| `.magic/scripts/lib/significance.js` | Significance whitelist evaluation |
+| `.magic/scripts/lib/significance.js` | Significance whitelist evaluation; unreadable-file handling (§9) |
 | `.magic/scripts/update-state.js` | STATE.md patch utility invoked by §5.1 |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.3.0 | 2026-09-28 | Agent | New **§9 Significance Snapshot Read-Failure Handling** (R44, Retro L2 Session 13): `computeSignificance()` hashes every whitelisted path with no caller catching `hashFileSafe`'s eventual throw, so an unreadable-but-present `STATE.md` (a directory at its path, a lock, permissions) aborted the whole `finalize` invocation under `--workflow=run` — reproduced live at engine 2.1.104 — while `--workflow=task` degraded gracefully via a *different*, already-guarded call site (`STATE_UPDATE_SKIPPED`). Retry policy in `hashFileSafe` is unchanged; the fix catches per-file at `snapshotHashes()` and records a third sentinel, `'UNREADABLE'`, distinct from a real hash and from `null` ("does not exist") — folding the two would let significance treat "could not tell" as "nothing changed." Diffing treats `'UNREADABLE'` as changed (fail-safe) and `finalize.js` records `SIGNIFICANCE_HASH_UNREADABLE`. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Implementation routed to `/magic.task engine`. |
 | 3.2.2 | 2026-09-20 | Agent | Cross-reference only, no design content (patch, no status transition): §5.1 gained a short paragraph, and Related Specifications an entry, pointing to the checkpoint claim that the state-update step's output now makes ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.5, SC-6.1 of [l1-session-continuity.md](l1-session-continuity.md)). The claim's contract lives there; this spec records only that it belongs to the path-specific output, not to the terminal block of §8. |
 | 3.2.1 | 2026-09-20 | Agent | Cross-reference correction only, no design content (patch, no status transition): the `Status` bullet in §5.1 named [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §10 as the home of its latent-gap record — a Known Gaps section number that had drifted through successive renumberings of that register, §10 now being its Recent-Decisions Archival Promise Defect. Retargeted to the Known Gaps section by name, which survives the register's 2.0.0 decomposition (defect numbers are permanent there; the Known Gaps section is deliberately unnumbered). Found while retargeting live references for that decomposition. |
 | 3.2.0 | 2026-09-17 | Agent | **Write-Side Git Prohibition retired** by explicit user directive, cascading from [l1-session-continuity.md](l1-session-continuity.md) §1.4: §5.2 extended with a second paragraph noting the hard rule it previously described as "unaffected" by the SC-3 retirement is itself now retired — the pipeline (and the agent invoking it) takes no position on whether, when, or how to commit. `finalize.js`'s own read-only-git-probes implementation fact is unchanged and restated as exactly that: a fact about this script, not a policy for the agent. Overview cross-reference added. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |

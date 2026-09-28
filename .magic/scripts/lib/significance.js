@@ -231,9 +231,17 @@ function gitFileNumstat(cwd, relPath) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Computes file hashes for a list of candidate files. Returns map of
- * relPath → sha256 (or null if missing). Used to detect changes when
- * git is unavailable: caller compares against `state.lastSnapshot`.
+ * Computes file hashes for a list of candidate files. Returns a map of
+ * relPath → one of: a sha256 hash, `null` (the file does not exist), or the
+ * literal string `'UNREADABLE'` (the file exists but `hashFileSafe` could not
+ * read it even after its own retries — a directory sitting at the path, a
+ * lock, a permissions error). `'UNREADABLE'` is deliberately distinct from
+ * `null`: folding an unreadable-but-present file into the same bucket as a
+ * genuinely absent one would let a significance diff read "could not tell"
+ * as "nothing to see". `hashFileSafe`'s own retry policy is untouched by this
+ * function — the catch here only stops its eventual throw from escaping past
+ * this one file, so one broken whitelisted path degrades to a single
+ * snapshot entry instead of aborting the caller.
  *
  * @param {string} rootDir - Project root.
  * @param {string[]} relPaths - POSIX-style relative paths.
@@ -243,7 +251,15 @@ function snapshotHashes(rootDir, relPaths) {
     const out = {};
     for (const rel of relPaths) {
         const abs = path.join(rootDir, rel);
-        out[rel] = fs.existsSync(abs) ? hashFileSafe(abs) : null;
+        if (!fs.existsSync(abs)) {
+            out[rel] = null;
+            continue;
+        }
+        try {
+            out[rel] = hashFileSafe(abs);
+        } catch {
+            out[rel] = 'UNREADABLE';
+        }
     }
     return out;
 }

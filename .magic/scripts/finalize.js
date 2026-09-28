@@ -734,6 +734,22 @@ function main() {
         lastSnapshot: state.lastSnapshot || {},
     });
 
+    // §9.2: snapshotHashes() records 'UNREADABLE' instead of throwing when a
+    // whitelisted file exists but cannot be read (a directory at STATE.md's
+    // path, a lock, permissions) — surface it once here, on both branches
+    // below, rather than letting the read failure pass through unremarked.
+    for (const [relPath, hash] of Object.entries(sig.nextSnapshot)) {
+        if (hash === 'UNREADABLE') {
+            diagnostics.record({
+                severity: 'error',
+                source: 'finalize',
+                code: 'SIGNIFICANCE_HASH_UNREADABLE',
+                message: `Whitelisted file could not be read for significance hashing: ${relPath}`,
+                locus: relPath,
+            });
+        }
+    }
+
     if (!sig.significant && !opts.force) {
         emitSkip(opts.workflow, workspace, sig.patterns, currentVersion);
         // SC-2: live memory reflects every completed command, bump or not.
