@@ -32,14 +32,11 @@ Overall:   [{done}/{all}]     ██░░░░░░ {pct}%
 
 <!-- Empty if none. Format: [severity] description -->
 
-- [blocking] {Blocker description and what is needed to unblock}
-
 ## Blocking Constraints
 
 <!-- Anti-patterns discovered through real failures. MANDATORY reading. -->
 <!-- Agent MUST explicitly acknowledge each constraint before working. -->
-
-- [C-001] **{Constraint Title}**: {What must not be done and why}
+<!-- Format: - [C-NNN] **Title**: what must not be done and why -->
 
 ## Session Continuity
 

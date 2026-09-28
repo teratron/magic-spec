@@ -2,6 +2,7 @@
 
 **Version:** 1.0.0
 **Status:** Active
+**Engine Version:** {{ENGINE_VERSION}}
 
 ## Overview
 

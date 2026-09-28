@@ -145,6 +145,24 @@ describe('Magic Engine Scripts', () => {
         }
     };
 
+    // Copies the real global-index.md template into a temp workspace, mirroring
+    // copyStateTemplate above, so init.js's Auto-Init path exercises the real
+    // template instead of the empty-string fallback getTemplate() uses when a
+    // template file is absent.
+    const copyGlobalIndexTemplate = (tempDir) => {
+        const realTemplate = path.resolve(
+            __dirname,
+            '..',
+            '..',
+            '.magic',
+            'templates',
+            'global-index.md',
+        );
+        if (fs.existsSync(realTemplate)) {
+            fs.copyFileSync(realTemplate, path.join(tempDir, '.magic', 'templates', 'global-index.md'));
+        }
+    };
+
     // Creates `.design/{workspace}/` inside a temp workspace.
     const makeWorkspace = (tempDir, workspace = 'engine') => {
         const wsDir = path.join(tempDir, '.design', workspace);
@@ -612,6 +630,7 @@ describe('Magic Engine Scripts', () => {
     test('init.js should initialize .design structure and workspaces', () => {
         const tempDir = createTempWorkspace();
         try {
+            copyGlobalIndexTemplate(tempDir);
             const scriptPath = path.join(tempDir, '.magic', 'scripts', 'init.js');
 
             // 1. Standard init
@@ -622,6 +641,16 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'INDEX.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'RULES.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.design', 'main', 'INDEX.md')));
+
+            // rules/magic.md §1 step 3: Auto-Init seeds a correctly-seeded Engine
+            // Version snapshot on its own, not left for /magic.analyze to add later
+            // (field report, engine v2.1.104: fresh init produced no snapshot at all).
+            const freshIndex = fs.readFileSync(path.join(tempDir, '.design', 'INDEX.md'), 'utf8');
+            assert.match(
+                freshIndex,
+                /\*\*Engine Version:\*\* 1\.0\.0/,
+                'Auto-Init must seed **Engine Version:** from .magic/.version, not leave it missing',
+            );
 
             // 2. Workspace init via MAGIC_DESIGN_DIR (as executor.js would do)
             const wsPath = path.join('.design', 'test-ws');
@@ -2291,10 +2320,9 @@ describe('Magic Engine Scripts', () => {
                 { cwd: tempDir },
             );
             const afterConstraint = fs.readFileSync(statePath, 'utf8');
-            // Template state.md already contains a [C-001] placeholder, so auto-numbering produces C-002
             assert.ok(
-                /\[C-002\].*No Mocks.*Integration tests only/.test(afterConstraint),
-                'Constraint entry should be auto-numbered (C-002 given template placeholder)',
+                /\[C-001\].*No Mocks.*Integration tests only/.test(afterConstraint),
+                'Constraint entry should be auto-numbered starting at C-001 on a fresh template',
             );
             // Structural assertions, not presence-only — same defect class as
             // addDecision above: addConstraint's insertion point used the
@@ -2311,7 +2339,7 @@ describe('Magic Engine Scripts', () => {
             );
             assert.match(
                 afterConstraint,
-                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
+                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-001\] \*\*No Mocks\*\*: Integration tests only/,
                 'the new entry must sit after the comment preamble, not before it',
             );
             assert.doesNotMatch(
@@ -2330,7 +2358,7 @@ describe('Magic Engine Scripts', () => {
             const afterSecondConstraint = fs.readFileSync(statePath, 'utf8');
             assert.match(
                 afterSecondConstraint,
-                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-003\] \*\*No Sleep Loops\*\*: Use condition polling\r?\n- \[C-002\] \*\*No Mocks\*\*: Integration tests only/,
+                /Agent MUST explicitly acknowledge each constraint before working\. -->\r?\n\r?\n- \[C-002\] \*\*No Sleep Loops\*\*: Use condition polling\r?\n- \[C-001\] \*\*No Mocks\*\*: Integration tests only/,
                 'a second constraint must be prepended above the first, both below the comment preamble — newest-first, list never split by the heading',
             );
         } finally {
