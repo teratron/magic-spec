@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.10.0
+**Version:** 1.11.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -243,10 +243,21 @@ Relationship to neighbors: C9 grants the authorization scope, C25 governs output
 
 > **E6 is narrow by construction.** It fires only on the content of a freshly supplied idea, and only after the agent has exhausted what the repository can answer (IK-2). Technical realization — storage, library, schema, naming, algorithm — is never routed to the user (IK-3); Selection and Sequencing forks stay declarative `[DR]` narrations under DA-9. Questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink its open-question set each round or terminate (IK-6).
 
+### C28 — Self-Hosting Engine Repository
+
+This repository **is** the Magic Spec engine's source, and it builds itself: `.design/` specifies the engine, and the engine's own `/magic.*` workflows plan and execute changes to the engine that runs them. `.magic/`, `workflows/`, `skills/`, and `rules/` are installed, read-only, by *other* projects — it is those projects, never this one, that must not modify the engine.
+
+1. **Ordinary work, not an exception.** Changing `.magic/`, `workflows/`, `skills/`, `rules/`, or `dev/` is this repository's normal activity, authorized by the request itself — no "Engine Improvement" keyword, no confirmation gate beyond C27 E1 (destructive or irreversible actions).
+2. **Consumer-facing guards describe someone else.** The `rules/magic.md` CAUTION block, its §9 "do not fix it yourself" bug-reporting protocol, and its §1.1 user contract are written for a project that *installed* the engine. A `MAGIC-SPEC ENGINE BUG REPORT` surfacing here is a work item to reproduce and fix, not a report to forward.
+3. **A workflow's write scope is not a repository boundary.** `/magic.spec` writing only to `.design/` and `/magic.rule` writing only to `RULES.md` describe what each workflow itself writes; they do not mean engine-directed work must be routed into `.design/` when it belongs in `.magic/`, `workflows/`, `rules/`, or `dev/` instead. Carry it out directly, in the same turn.
+4. **Procedure still applies.** C1 (read first, trace impact, atomic update), C14 (`update-engine-meta` after any `.magic/`/`workflows/` change), and `[C-001]` (hardlink recreation) bind every engine change exactly as elsewhere.
+5. **The shipped guard stays intact.** Do not weaken the read-only rules in `rules/magic.md` or `.magic/templates/rules.md` to match this repository's own freedom — a downstream project must keep receiving the stricter contract. A script distinguishing the two checks for `dev/scripts/generate-checksums.js`, the existing dev-repo signal — never an assumption.
+
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.11.0 | 2026-09-28 | Agent | Added **C28 — Self-Hosting Engine Repository**: this project is the Magic Spec engine's own source and builds itself, so the "Engine Improvement" gate and the consumer-facing "do not fix it yourself" guard in `rules/magic.md` describe a *different* project — one that installed the engine — not this one. Prompted by a live misfire this session: a `/magic.rule` request naming `.magic` as its target was routed into `.design/engine/RULES.md` as a self-imposed restriction instead of amending the engine directly, because the engine-directories-are-read-only framing in `AGENTS.md`/`rules/magic.md` carries no exception for the repository that authors them. C28 states the exception once, at the constitution level; `AGENTS.md` §0 carries the same identity for agents reading that file first. The shipped `rules/magic.md` and `.magic/templates/rules.md` are deliberately left unchanged — the stricter read-only contract they state remains correct for every downstream project that installs the engine. |
 | 1.10.0 | 2026-08-28 | Agent | Extended C27's Escalation Whitelist with **E6 — intent incoherence or essence ambiguity in freshly supplied idea input**, governed by `l1-idea-intake-gate.md`. DA-2 declares its own list closed and extension an E4 event; the amendment is discharged by explicit owner directive. Added the narrowing note that bounds E6: it fires only on a freshly supplied idea and only after repository investigation is exhausted (IK-2), technical realization is never routed to the user (IK-3), Selection and Sequencing forks remain declarative under DA-9, questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink each round or terminate (IK-6). Mirrored verbatim in `.magic/templates/rules.md` — the two must not diverge. |
 | 1.9.0 | 2026-07-10 | Agent | Amended C23 §2: quantified External Drift Guard (">5 minutes / context compaction / manual file ops" replacing vague "significant time"), aligning the live constitution with templates/rules.md per C13 vague-term elimination. Recorded C11/C23 §4 simulate-command rename (magic.simulate → magic.dev.simulate) propagated by engine sync v2.1.55. |
 | 1.8.0 | 2026-06-12 | Agent | Added C27 (Autonomous Decision Protocol) per field-feedback T4 rule; amended C13 §3 from halt-and-ask to Bounded Ambiguity Resolution, resolving the C13↔C25 contradiction. |

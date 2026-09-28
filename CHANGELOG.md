@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated task plan and task index (engine)
 - Updated 5 specifications (engine)
 - Completed task (engine)
+- Updated global project rules (engine)
 
 ### Fixed
 

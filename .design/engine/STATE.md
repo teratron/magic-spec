@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-28 11:24
+**Updated:** 2026-09-28 12:09
 **Phase:** 33 — Significance Read-Failure Fix & Confirmed Self-Containment Cleanup
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** [T-33T02] Validation: full suite green + Track B citation removal confirmed; C14 bump
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Next Action:** Run /magic.task engine to revalidate the plan against amended rules
 
 ## Progress
 
