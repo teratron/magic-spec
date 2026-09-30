@@ -1,6 +1,6 @@
 # Role System Engine Tooling
 
-**Version:** 1.0.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -42,8 +42,8 @@ Added to the pre-flight script (`.magic/scripts/check-prerequisites.js` via `exe
 ```json
 {
   "role_registry": {
-    "total": 13,
-    "referenced": 13,
+    "total": 14,
+    "referenced": 14,
     "dormant": 0,
     "missing": [],
     "dangling_handoffs": []
@@ -66,13 +66,13 @@ Added to the pre-flight script (`.magic/scripts/check-prerequisites.js` via `exe
 
 `.magic/scripts/update-engine-meta.js` is extended:
 
-1. `.magic/roles/*.md` files are hashed and registered in `.magic/.checksums` under a new `roles:` section.
+1. `.magic/roles/*.md` files are hashed and registered in `.magic/.checksums` like every other engine file — the manifest is a flat path → hash map, and role cards appear as `roles/{id}.md` keys.
 2. Any modification to a role card triggers the same patch-version bump as modification to workflow files.
-3. The `--workflow` argument gains a `roles` value: `node .magic/scripts/executor.js update-engine-meta --workflow roles` runs when role cards change (synonym-acceptable with `run`/`spec`/etc.).
+3. No dedicated `--workflow` value is needed: role cards live under `.magic/`, so the drift scan sees an edit and a plain `node .magic/scripts/executor.js update-engine-meta` run covers it. The script does not read `--workflow` at all (see [l2-engine-automation.md](l2-engine-automation.md) §Engine Meta Update Flow).
 
-### 2.2 Smart History Classification
+### 2.2 Version History
 
-Role card additions, renames, and semantic changes are recorded in `.magic/history/` with category `roles`. Smart-history deduplication (redundant automated entries skipped) applies as for workflows.
+Role card additions, renames and semantic changes carry no history category of their own: they are versioned like any engine file — the patch bump of §2.1 — and their history is the git log plus `CHANGELOG.md`. The per-workflow history files an earlier revision of this section classified them into no longer exist (see [l2-engine-automation.md](l2-engine-automation.md) §Engine Meta Update Flow).
 
 ## 3. Template File
 
@@ -143,4 +143,6 @@ Automatically invoking `skills_recommended` when a role activates. Rejected: vio
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.1 | 2026-09-30 | Clarification patch, no status transition: the `role_registry` JSON sample showed 13 cards; the registry holds 14 (`check-prerequisites` reports `total: 14`), so the sample now matches a real run. |
+| 1.1.0 | 2026-09-30 | Reality sync (prompt-surface audit follow-up), verified against `update-engine-meta.js` and `.magic/.checksums`. §2.2 "Smart History Classification" assigned role-card changes to a `roles` category in `.magic/history/` — the history mechanism no longer exists (see l2-engine-automation.md 1.18.0 §Engine Meta Update Flow); the section is now "Version History" and states that role cards are versioned like every engine file. §2.1 corrected the same way: the manifest is a flat path → hash map (role cards appear as `roles/{id}.md` keys; there is no `roles:` section), and `--workflow` is not read by `update-engine-meta`, so no `roles` value is needed — a role-card edit is drift the scan already sees. Minor; Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted engine-tooling content (check-prerequisites `role_registry_integrity`, update-engine-meta treatment, role template, tooling drawbacks) verbatim from l2-role-integration.md §5–§7/§9 during the v2.0.0 decomposition. |

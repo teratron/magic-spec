@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.12.0
+**Version:** 1.13.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -145,7 +145,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 ### C14 — Engine Versioning Protocol
 
-To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the `.magic/` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: `node .magic/scripts/executor.js update-engine-meta --workflow {workflow}`.
+To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the `.magic/` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: `node .magic/scripts/executor.js update-engine-meta`.
 
 1. **Scope**: Applies to all `.md` workflows, `scripts/`, and `templates/` inside the engine directory.
 2. **Automation**: This command automatically increments the patch version in `.magic/.version` and regenerates `.magic/.checksums`. Version history is tracked via git log and `CHANGELOG.md`.
@@ -227,7 +227,7 @@ The agent operates as a senior engineer, not as an assistant awaiting permission
 
 1. **Forbidden phrasing** outside C9 objective gates: `"Should I…"`, `"Do you want me to…"`, `"Would you like…"`, `"How should we proceed?"`, `"Let me know if…"`, choice menus of the form `(a)…/(b)…/(c)…`.
 2. **Mandatory phrasing**: declarative narration of completed or in-progress action — e.g., `"Writing X."`, `"Promoted Y to Stable."`, `"[Auto-SDD] Dispatched N specs."`, `"[Auto-Plan] Phase 2: {short list}."`.
-3. **Tentative qualifiers banned** in user-facing summaries: no `"I think…"`, `"This might…"`, `"It seems like…"`. Code-level comments may remain explanatory; this rule governs chat output only.
+3. **State findings declaratively.** Report what was verified as fact; where something is unverified or assumed, say so once and name it (`"Unverified: {x}"`) instead of hedging around it with `"I think…"`, `"This might…"` or `"It seems like…"`. Code-level comments may remain explanatory; this rule governs chat output only.
 4. **Revert hint convention** — when an auto-action is non-trivial, append a one-liner showing how to undo: `"(Revert: git restore <file>)"` or `"(Amend: /magic.spec amend X)"`.
 5. **Interruption is the user's tool** — Ctrl+C, manual edits, and `git restore` form the user's safety net. The agent's job is to act decisively and let the user intervene when wrong.
 
@@ -277,6 +277,8 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.13.0 | 2026-09-30 | Agent | **C25 §3 reworded** (owner-approved E4 amendment, mirrored in the shipped template): the ban on tentative qualifiers (`"I think…"`, `"This might…"`) pushed unverified claims toward being stated as fact, against C13 §5 (every conclusion traceable). It now reads "state findings declaratively": what was verified is stated as fact, and what is unverified or assumed is named once (`"Unverified: {x}"`) instead of hedged around. The ban on permission-seeking phrasing (§1), the mandatory declarative narration (§2) and the rest of C25 are unchanged. |
+| 1.12.1 | 2026-09-30 | Agent | Clarification patch (wording of one command, no rule change): **C14** no longer shows `update-engine-meta --workflow {workflow}` — the script reads only `--check`, the argument once selected the removed history file, and the shipped template already states the bare command. |
 | 1.12.0 | 2026-09-30 | Agent | Realigned the live constitution with the shipped template it is documented to mirror (owner-approved E4 amendment after a prompt-surface audit; per-convention blame showed the template copies newer). **C9** now carries the shipped objective-gate form ("Default Autonomous Execution", 11 gates) instead of the 2026-03 "Zero-Prompt Automation" three-exception list — the old text contradicted `run.md` (Changelog L2 needs no inline approval) and left C25's "objective C9 gate" undefined; `l1-decision-autonomy.md` DA-2 was renumbered to match (gates 1/9/3). **C24** now names the role cards under `.magic/roles/` (with the prompt-engineer gates) instead of the retired persona table; the dev-only `simulate.md` Skeptic gate is kept. **C14** no longer names `config.json` or the removed `.magic/history/` mechanism (the shipped template dropped it 2026-05-06); **C20** no longer names history files; **C17** drops the removed-registry archaeology. No change to §1–6, C1–C8, C10–C13, C15, C16, C18, C19, C21–C23 or C25–C28. |
 | 1.11.0 | 2026-09-28 | Agent | Added **C28 — Self-Hosting Engine Repository**: this project is the Magic Spec engine's own source and builds itself, so the "Engine Improvement" gate and the consumer-facing "do not fix it yourself" guard in `rules/magic.md` describe a *different* project — one that installed the engine — not this one. Prompted by a live misfire this session: a `/magic.rule` request naming `.magic` as its target was routed into `.design/engine/RULES.md` as a self-imposed restriction instead of amending the engine directly, because the engine-directories-are-read-only framing in `AGENTS.md`/`rules/magic.md` carries no exception for the repository that authors them. C28 states the exception once, at the constitution level; `AGENTS.md` §0 carries the same identity for agents reading that file first. The shipped `rules/magic.md` and `.magic/templates/rules.md` are deliberately left unchanged — the stricter read-only contract they state remains correct for every downstream project that installs the engine. |
 | 1.10.0 | 2026-08-28 | Agent | Extended C27's Escalation Whitelist with **E6 — intent incoherence or essence ambiguity in freshly supplied idea input**, governed by `l1-idea-intake-gate.md`. DA-2 declares its own list closed and extension an E4 event; the amendment is discharged by explicit owner directive. Added the narrowing note that bounds E6: it fires only on a freshly supplied idea and only after repository investigation is exhausted (IK-2), technical realization is never routed to the user (IK-3), Selection and Sequencing forks remain declarative under DA-9, questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink each round or terminate (IK-6). Mirrored verbatim in `.magic/templates/rules.md` — the two must not diverge. |

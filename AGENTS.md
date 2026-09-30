@@ -18,7 +18,7 @@ Consequences for an agent working here:
 
 The project creates an SDD (Specification-Driven Development) engine. The repository is strictly divided into two primary layers comprising the core engine, plus a secondary maintenance component.
 
-**AGENT DIRECTIVE**: AI agents must clearly understand this separation. Unless explicitly told to work with the secondary maintenance parts, you must work ONLY with the core layers (Layer 1 and Layer 2).
+**AGENT DIRECTIVE**: Product work targets Layer 1 and Layer 2. The SDD workspace (`.design/`) is read and updated as rules 2.2–2.3 require; other secondary components (`docs/`, drafts, generated files) are touched only when the request names them.
 
 ### 1.1. Layer 1: User Distribution (The Release Kernel)
 
@@ -88,10 +88,10 @@ When in doubt whether a script belongs in `.magic/scripts/` (L1) or `dev/scripts
    - **No `require` from L1 into L2** at module top level — L1 must load and run on a user install with no `dev/` directory present.
    - **The one sanctioned exception**: a runtime `fs.existsSync` guard around an `execFileSync` / lazy `require` of a dev script, with a graceful warning on absence (pattern in `update-engine-meta.js` → `sync-skills.js` / `generate-checksums.js`). The L1 caller must complete its mandatory user-reachable code path **before** reaching the guard.
    - **Before relocating any script** between layers, run the §1.3 Classification Algorithm and document the result (read vs. write path, user entry points, transitive closure). Do not relocate on intuition.
-2. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/specifications/`) and creating a Task breakdown.
+2. **SDD First**: Never write code for new features without first defining them in a Specification (`.design/{workspace}/specifications/`) and creating a Task breakdown.
 3. **Context Awareness**: Always refer to `.design/INDEX.md` (global aggregate) and `.design/{workspace}/INDEX.md` (workspace registry) to understand the current state of specifications. For conventions, load `.design/RULES.md` (global) and `.design/{workspace}/RULES.md` (workspace-specific, if it exists).
 4. **Engine Integrity**: Engine changes are this repository's ordinary work (§0) — make them when the request calls for them, following C1's read-first/trace-impact/atomic-update discipline.
-   - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta --workflow {changed_workflows}` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
+   - **C14 Enforcement**: After ANY modification to content inside `.magic/` or `workflows/` directories, run `node .magic/scripts/executor.js update-engine-meta` **immediately** — before reporting results, running tests, or continuing to the next step. This command bumps the patch version, regenerates checksums, and **automatically synchronizes Skill wrappers**.
 5. **Clean Builds**: Ensure that build artifacts (`dist/`, `__pycache__`, etc.) never escape their respective local scopes or get committed.
 
 ## 3. Development Toolchain
@@ -104,8 +104,7 @@ All development tasks (metadata sync, analysis, simulation) are handled via the 
 
 ```bash
 # Update engine metadata and version (C14)
-# {changed_workflows}: space-separated dotted workflow names, no .md extension (e.g. magic.spec magic.task)
-node .magic/scripts/executor.js update-engine-meta --workflow magic.spec magic.task
+node .magic/scripts/executor.js update-engine-meta
 
 # Run project analysis
 /magic.analyze
@@ -141,7 +140,7 @@ Use consistent Unicode-based separators to improve code readability:
     # ───────────────────────────────────────────────────────────────────────────
     ```
 
-- Avoid standard standard PEP8 horizontal lines or excessive whitespace. Use Unicode box characters to create a clean, modern look.
+- Avoid standard PEP8 horizontal lines or excessive whitespace. Use Unicode box characters to create a clean, modern look.
 
 ## 5. JavaScript/Node.js Coding Style
 
@@ -204,7 +203,7 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 ### 7.1 Pre-read Requirement
 
 - **Mandatory**: Always call `read` on the target file BEFORE making any edits.
-- **Scope**: Read the entire file if it's within tool limits (800 lines) to ensure full context.
+- **Scope**: Read the entire file if it's within the tool's read limit, to ensure full context.
 - **Anti-Pattern**: DO NOT rely on cached or partial information from previous steps.
 
 ### 7.2 Post-verify Requirement
@@ -213,12 +212,16 @@ To prevent accidental data loss or corruption in large documents, the agent MUST
 - **Integrity**: Check that surrounding code or documentation blocks (like diagrams) were NOT affected by the edit.
 - **Recovery**: If data was lost, restore it immediately before proceeding.
 
+## 8. Completion Protocol (Mandatory Checklist)
+
+Before finishing any task, verify:
+
 - [ ] **Validated**: All logic changes verified via simulation:
   - `/magic.dev.simulate`
 - [ ] **Versioned**: Increment the patch version (e.g., `2.0.1` → `2.0.2`) in:
   - `.magic/.version`
   - `CHANGELOG.md`
-  - **Engine**: If content in `.magic/` or `workflows/` was modified, follow **Rule 2.3 (C14)** to update engine meta and version.
+  - **Engine**: If content in `.magic/` or `workflows/` was modified, follow **Rule 2.4 (C14)** to update engine meta and version.
 - [ ] **Documented**:
   - Update `CHANGELOG.md` with a summary of changes.
   - Update `README.md` if public API or features were changed.

@@ -9,7 +9,7 @@ Manages project conventions across a two-tier rules system:
 
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply, Post-Resolution).
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
-3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6) and Constitutional Guard. All other §7 operations are silent-but-narrated.
+3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6), Constitutional Guard and Remove (a destructive action, gate 1). All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
 5. **Versioning (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`. **Rules**: bump Minor (add/amend), Major (remove), Patch (typos). Update Document History in target file. `.design/` changes (including `.design/{workspace}/RULES.md`) do NOT trigger C14 — they are project-manifest, not engine (C14 scope is `.magic/`/`workflows/` only).
 
@@ -19,7 +19,7 @@ Determine target tier on every add/amend/remove:
 
 - **Workspace tier** → `.design/{workspace}/RULES.md`: rule names a workspace, references workspace-scoped paths/tools, or applies to one workspace's domain. Signal words: *"in engine"*, *"for this workspace"*, *"this workspace"*.
 - **Global tier** → `.design/RULES.md`: rule applies uniformly regardless of active workspace, or no workspace is active.
-- **Ambiguous**: resolve autonomously (DA-6) — default to the **workspace tier** when a workspace is active, else **global**. Narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magic.rule with an explicit tier)`. No prompt: rule-tier routing is not an approval gate (gates are Core-Amendment §1–6 and Constitutional Guard only, per Invariant 3).
+- **Ambiguous**: resolve autonomously (DA-6) — default to the **workspace tier** when a workspace is active, else **global**. Narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magic.rule with an explicit tier)`. No prompt: rule-tier routing is not an approval gate (gates are Core-Amendment §1–6, Constitutional Guard and Remove only, per Invariant 3).
 
 ## Workflow: Convention Management
 
@@ -48,11 +48,12 @@ graph TD
    - **Core-Amendment Routing**: if user's target matches §1–6 (not §7) → route as a **core amendment**. Inform: *"This targets core section §{N}. Core amendments require explicit approval and trigger a Major version bump."* Require user confirmation. Confirmed → apply to target core section. Denied → abort.
    - **Constitutional**: if a new §7 rule contradicts §1-6 core → **HALT** + report.
    - **Duplication**: if semantically overlaps with any C{N} in EITHER tier → report the overlap as a non-blocking advisory and merge the change into the existing convention (skip it when identical); never register a duplicate silently.
-5. **Apply (C9 default)**: write the change to the target tier immediately. Output the diff inline. State target tier and version impact in past tense — e.g., `[Auto-Rule] Applied: WC1 → workspace RULES.md, 1.0.0 → 1.1.0. (Revert: git restore .design/{workspace}/RULES.md)`.
+   - **Removal**: deleting a convention is a destructive action (C9 gate 1) — run the Dependency Scan (see Actions), then ask the single confirmation described there. Declined → abort.
+5. **Apply (C9 default)**: write the change to the target tier immediately (a Remove only after its confirmation, Step 4). Output the diff inline. State target tier and version impact in past tense — e.g., `[Auto-Rule] Applied: WC1 → workspace RULES.md, 1.0.0 → 1.1.0. (Revert: git restore .design/{workspace}/RULES.md)`.
    - **Batch**: when user requests multiple §7 changes in one invocation, group into a single atomic update and narrate as one summary line.
    - **Batch Version Precedence**: when a batch mixes actions with different version impacts (Add/Amend = Minor, Remove = Major), apply the single highest-precedence bump (Major > Minor > Patch) for the atomic update — never bump more than once per invocation.
-   - **Batch Guard Failure**: if any single item in the batch triggers an approval-required gate (Core-Amendment routing or Constitutional conflict), the entire atomic batch HALTs — no partial application. Once resolved, re-offer the full batch (including the previously-clean items) in the same atomic proposal.
-   - **Approval-required exceptions** (C9 objective gates): Core-Amendment to §1–6 (Step 4) and Constitutional Guard conflicts — these HALT until user confirms.
+   - **Batch Guard Failure**: if any single item in the batch triggers an approval-required gate (Core-Amendment routing or Constitutional conflict), the entire atomic batch HALTs — no partial application. Once resolved, re-run the full batch (including the previously-clean items) as one atomic update.
+   - **Approval-required exceptions** (C9 objective gates): Core-Amendment to §1–6 (Step 4) and Constitutional Guard conflicts — these HALT until user confirms — and Remove, which waits for its single confirmation and then applies (inside a batch, the batch applies atomically once confirmed).
 
 ### Actions
 
@@ -60,11 +61,11 @@ graph TD
 | --- | --- | --- |
 | **Add** | Global: highest C{N} → append after it in §7. Workspace: highest WC{N} in `## Workspace Conventions` → append; if none yet, start at WC1. | Minor |
 | **Amend** | Match ID/keyword in target tier → replace in place. | Minor |
-| **Remove** | Match ID/keyword in target tier → **Dependency Scan** (below) → delete entry. | Major |
+| **Remove** | Match ID/keyword in target tier → **Dependency Scan** (below) → single confirmation → delete entry. | Major |
 | **List** | Display all §7 entries from global RULES.md; if workspace RULES.md exists, display its conventions separately. | N/A |
 | **Init** | Create `.design/{workspace}/RULES.md` from template if absent. Called automatically before first workspace-tier Add. | N/A |
 
-**Remove — Dependency Scan**: before proposing deletion, scan all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). Found references → include in §5 proposal: *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."* User sees this in the single "Current vs Proposed" approval — no extra confirmation gate. After removal, references become the user's responsibility to update.
+**Remove — Dependency Scan**: before deleting, scan all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). Found references → include them in the confirmation: *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."* Deleting a rule is a destructive action (C9 gate 1), so Remove asks one confirmation — a single DA-5 question showing this list, with no separate approval step. After removal, references become the user's responsibility to update.
 
 **Workspace RULES.md template** (used by Init action):
 
@@ -98,7 +99,7 @@ After the constitutional verdict APPROVE and before the rule is written, activat
 
 ### 6. Write & Sync
 
-Write target `RULES.md` and update history and version per Step 5 approval.
+Write target `RULES.md` and update history and version per Step 5.
 
 ### 7. Post-Write Impact
 

@@ -1,6 +1,6 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.1.2
+**Version:** 1.1.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -154,7 +154,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 3. `export-wiki.js` is independent of cache work — it consumes the already-built graph.
 4. `serve-spec-graph.js` change is isolated to `query_graph` dispatch.
 5. No change to `executor.js` is required — it auto-resolves `{script-name}.js` in `.magic/scripts/`.
-6. Follow C14 after all writes: `node .magic/scripts/executor.js update-engine-meta --workflow build-spec-graph,serve-spec-graph,graph-cache,export-wiki`.
+6. Follow C14 after all writes: `node .magic/scripts/executor.js update-engine-meta`.
 
 ## 6. Drawbacks & Alternatives
 
@@ -175,6 +175,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.3 | 2026-09-30 | Agent | Clarification patch, no status transition: Implementation Notes step 6 passed `--workflow build-spec-graph,serve-spec-graph,graph-cache,export-wiki` to `update-engine-meta`, which reads only `--check`; the command is now bare (see l2-engine-automation.md 1.18.0 §Engine Meta Update Flow). |
 | 1.1.2 | 2026-08-07 | Agent | Normalized `**Layer:**` field from `2` to `implementation` — the only L2 spec in the registry using the numeric form instead of the project convention (15/15 other L2 specs unaffected, all already `implementation`); no logic change (ventilation finding). |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |
 | 1.1.0 | 2026-04-25 | Agent | §4.4 Workflow Integration Triggers: canonical refresh command, write/read/audit/visual classes, anti-trigger policy, failure handling, cache hygiene. |

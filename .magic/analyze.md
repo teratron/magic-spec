@@ -18,8 +18,8 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
 6. **Depth Control (Safety)**: Before scanning:
    - **<50 files**: auto-scan.
-   - **50-500 files**: ask Full or Focused?
-   - **>500 files**: recommend Focused/Quick. HALT for user choice.
+   - **50-500 files**: scan Full; narrate `[DR] Full scan — {N} files. (Override: /magic.analyze "{focus}")`.
+   - **>500 files**: recommend Focused/Quick. HALT for user choice (C9 Depth Control gate).
 7. **Gitignore Safety**: If `.gitignore` exists in project root or active workspace, the agent MUST read and apply its patterns before any scan. Files/directories matching these patterns (e.g., `node_modules/`, `.venv/`, `dist/`) are strictly out-of-scope for all analysis modes (A-D) and Mode C Project Ventilation.
 8. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 
@@ -30,6 +30,7 @@ Parse `[arg]` to determine analysis mode:
 | Input | Detection | Result |
 | --- | --- | --- |
 | *(empty)* | No argument | **Full Analysis**: resolve workspace via §Workspace Resolution, then Mode C → A/B |
+| `first-time` | Reserved keyword, unquoted and not a workspace name (also `{workspace} first-time`) | **First-Time Analysis**: Mode A directly, without the Mode C precedence. If `INDEX.md` already lists specs, Mode B runs instead |
 | `engine` | Matches a workspace name in `workspace.json` | **Workspace Analysis**: Mode C (with Structural Integrity) → A/B scoped to that workspace |
 | `"check API coverage"` | Quoted text or text that does NOT match any workspace name | **Focused Analysis**: Mode D — interpret text as focus directive |
 | `engine "focus on tests"` | First token is workspace + remaining is quoted text | **Workspace + Focus**: Mode D scoped to workspace |
@@ -118,7 +119,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 
 ### [Mode A] First-Time Analysis
 
-*Trigger: INDEX.md is empty.*
+*Trigger: `/magic.analyze first-time` — the next step Mode C narrates when `INDEX.md` is empty.*
 
 0. **Pre-flight** — see Shared Pre-flight above.
 1. Build full project map.
@@ -152,7 +153,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 *Trigger*: `/magic.analyze`, `/magic.analyze {workspace}`, "Ventilate", "Ventilate {workspace}".
 *Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate engine".
 
-> **Mode Precedence**: when `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, offer to continue with Mode A (first-time analysis) to generate initial spec proposals. Do NOT auto-start Mode A — the user may only want the audit.
+> **Mode Precedence**: when `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, narrate `[DR] Next: /magic.analyze first-time — the registry is empty. (Override: stop here)` and stop. Mode A never starts inside the same invocation — the user may only want the audit — and is entered only through the explicit `first-time` argument.
 > **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine, Depth Control (Core Invariant 6 — Mode C is read-only and never pre-scan-HALTs on file count; size is noted, not gated). Report-delivery is the only HALT point.
 
 1. **Self-Check**: compare `.magic/` vs `.checksums`. (Non-halting audit.)

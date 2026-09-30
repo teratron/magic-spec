@@ -26,6 +26,7 @@ Performs a deep "Ventilation" scan: spec/code drift, missing coverage, engine me
 - `{workspace}` — scoped analysis with structural integrity checks
 - `"text"` — focused analysis on a specific area/concern
 - `{workspace} "text"` — focused analysis within a workspace
+- `first-time` — first-time analysis of an existing codebase (Mode A); Mode C recommends it when the registry is empty
 
 Examples: `/magic-analyze`, `/magic-analyze engine`, `/magic-analyze "check API"`, `/magic-analyze docs "focus on examples"`.
 

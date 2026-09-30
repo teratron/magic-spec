@@ -10,7 +10,7 @@ The core logic is handled by the `release` script, which enforces QA gates and t
 
 ## Agent Guidelines
 
-**CRITICAL INSTRUCTIONS FOR AI:**
+**Agent guidelines:**
 
 1. **One-Command Release**: To initiate a release, simply run `node .agents/skills/magic-dev-release/scripts/release.js`.
 2. **Prerequisites**: Ensure `.magic/.version` is incremented and `CHANGELOG.md` has a corresponding entry before running.

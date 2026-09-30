@@ -124,7 +124,7 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 
 1. Scan `INDEX.md` and actual project structure.
 2. Identify "Uncovered" modules or logical next steps in the architecture.
-3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magic.spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9, `l1-decision-autonomy.md`): a blank/no-argument invocation resolves by DA-3, **never** by an `AskUserQuestion` or option menu asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
+3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magic.spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9, `l1-decision-autonomy.md`): a blank/no-argument invocation resolves by DA-3, **never** by a question or option menu (e.g. an `AskUserQuestion` call) asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
 
 ### Mode Transition: Explore → Dispatch
 
@@ -160,7 +160,7 @@ graph TD
 ```
 
 1. **Parse & Map**: identify distinct topics and match to domains.
-2. **Dispatch Notice (Non-Blocking)**: show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question — a declarative proposal surface (DA-9), never an `AskUserQuestion`.
+2. **Dispatch Notice (Non-Blocking)**: show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
 3. **Dispatch**: write to correct spec files. Provisionally mark `Stable`-eligible if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content satisfies MVC criteria (Overview + design section); otherwise keep as `Draft`. The advance to `Stable` is **finalized only after Post-Update Review (Step 4) passes** — a critic or quality-pass failure reverts the spec to `Draft`/`RFC` (see §Post-Update Review).
 4. **Post-Update**:
    - Run **Post-Update Review**.

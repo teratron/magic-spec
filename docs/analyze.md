@@ -29,9 +29,9 @@ The engine enforces 8 mandatory invariants during every analysis:
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Auto-Init** | Silently creates `.design/` structure if missing |
 | 3 | **Read-Only** | Proposals only; never modify project code or `.design/` without user approval |
-| 4 | **Artifact-First** | Write proposals/reports to agent artifacts; dispatch to `.design/` only after approval |
+| 4 | **Artifact-First** | Write proposals/reports to agent artifacts; Modes A/B dispatch new specs to `.design/` immediately (C9), while changes to existing specs need approval (Invariant 3) |
 | 5 | **Bootstrapping Exemption** | Approved specs from existing code can be created directly as Stable L1/L2 |
-| 6 | **Depth Control** | <50 files: auto-scan; 50–500: ask Full/Focused; >500: recommend Focused/Quick |
+| 6 | **Depth Control** | <50 files: auto-scan; 50–500: scan Full, narrated as a Decision Record; >500: recommend Focused/Quick and halt for the choice |
 | 7 | **Gitignore Safety** | Read `.gitignore` before any scan; exclude matched paths from all analysis modes |
 | 8 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
 
@@ -43,6 +43,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 | `{workspace}` | Workspace | Mode C with Structural Integrity, scoped to workspace |
 | `"text"` | Focused (D) | Targeted analysis on a specific area/concern |
 | `{workspace} "text"` | Workspace + Focus | Mode D scoped to workspace |
+| `first-time` | First-time (A) | Mode A directly; Mode C recommends it when INDEX.md is empty |
 
 ```
 /magic.analyze                             # Full project audit
@@ -104,7 +105,7 @@ A deep audit treating the codebase as source of truth:
 7. **Rule Validation**: Check `RULES.md §7` compliance.
 8. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
-> **Mode Precedence**: When `/magic.analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then offers to continue with Mode A (spec generation). Mode A is not auto-started.
+> **Mode Precedence**: When `/magic.analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magic.analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
 
 ### Mode D — Focused Analysis
 
@@ -154,4 +155,4 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-09-30 (v2.1.110).

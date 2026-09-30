@@ -62,16 +62,16 @@ Workspace `RULES.md` files are created on demand. Duplication checks scan **both
 | --- | --- | --- |
 | **Add** | Global: append after highest C{N} in §7. Workspace: append after highest WC{N}. | Minor |
 | **Amend** | Match ID/keyword in target tier → replace in place. | Minor |
-| **Remove** | Match ID/keyword → Dependency Scan → delete entry. | Major |
+| **Remove** | Match ID/keyword → Dependency Scan → single confirmation → delete entry. | Major |
 | **List** | Display all §7 entries from both tiers. | N/A |
 
 ### Remove — Dependency Scan
 
-Before proposing deletion, the engine scans all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → included in the proposal: *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
+Before deleting, the engine scans all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → shown in the single confirmation a Remove asks (deleting a rule is a destructive action, C9 gate 1): *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
 
 ### Batch Operations (Trust Mode)
 
-When the user requests multiple rule changes, all changes are grouped into a single atomic update. In Trust Mode (C9), the engine notifies the user and applies immediately. Only core amendments (§1–6) or conflicting §7 rules require explicit approval.
+When the user requests multiple rule changes, all changes are grouped into a single atomic update. In Trust Mode (C9), the engine notifies the user and applies immediately. Only core amendments (§1–6), conflicting §7 rules and rule removal require explicit approval.
 
 ## 6. Constitutional Reviewer (C24)
 
@@ -108,4 +108,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-09-30 (v2.1.110).

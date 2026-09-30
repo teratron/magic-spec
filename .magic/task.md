@@ -27,13 +27,13 @@ Parse `[arg]` to determine planning mode:
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
-2. **Registry Integrity**: Read ALL specs in `INDEX.md` before planning. No exceptions.
+2. **Registry Integrity**: Account for every spec registered in `INDEX.md` before planning — read the registry entries and the wiki, and open a spec body only where a step needs it. No spec may be left unaccounted for.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
    - **Intent Preservation**: if `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: *"Resuming: '{original intent}'."* Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
    - **No Orphans**: every registered spec must be in `PLAN.md` or `## Backlog`.
    - **Atomic Tasks (C10)**: every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-   - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task amend | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never an `AskUserQuestion`.
+   - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task amend | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
    - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.

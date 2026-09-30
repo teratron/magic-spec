@@ -34,7 +34,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [.magic/context.md](../../.magic/context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
 3. **Surgical Fix & Test**: If friction found → Propose fix (exact lines) + write new regression test in `dev/tests/suite.md`. Show to user for Yes/No (C1).
-4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
+4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **No Metrics**: Real-world history/logs are for `.magic/retrospective.md`.
 6. **Anti-Fabrication Rule**: `0 rough edges` is a VALID and expected outcome. If the Logic Audit finds no vague terms, no divergent duplicates, and all guards pass — report it as a clean result. DO NOT invent findings to fill the report structure. Every finding MUST include: `file` (exact filename), `line` (exact line number), `evidence` (verbatim quote copy-pasted from the file), and `verification` (the grep/read command used to confirm). Findings without evidence are INVALID and must be rejected by any reviewer.
 
@@ -62,7 +62,7 @@ graph TD
 
 1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
     - `ok: true` → proceed to Step 2.
-    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `.magic/init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta --workflow {mismatched_workflow}` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
+    - `checksums_mismatch` or `ENGINE_INTEGRITY` → **C15 Filter** (see `.magic/init.md` §1). If in-scope → **HALT**. Report: "Engine integrity failure (In-Scope) — resolve before simulating. Hint: run `node .magic/scripts/executor.js update-engine-meta` to sync checksums, or restore files from origin." Do NOT fall through to any mode.
     - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
 2. Read `.design/workspace.json` → resolve active workspace(s) per Context invariant.
 3. **Read-Before-Claim Gate** (Grounding Phase): Read ALL workflow files that will be evaluated in the Logic Audit. Record a checklist of files read with their line counts. This phase MUST complete before any analysis begins. Any claim about a file NOT read in this step is automatically INVALID.
@@ -135,7 +135,7 @@ Scan the target workflow(s) for:
   - **Invariant Compliance** (1-10): Score = `Rules_Followed / Rules_Applicable × 10`. Cross-check workflow steps against all applicable Core Invariants from the target `.md` file.
 - **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
 - **Surgical Patch**: Apply precisely after approval.
-- **C14 Enforcement Gate**: After all patches are applied, verify: were any `.magic/` files modified during this `/magic.dev.simulate` invocation? If yes → run `node .magic/scripts/executor.js update-engine-meta --workflow {modified_workflows}` **immediately**, before reporting results. Do NOT defer to end-of-conversation. This is a blocking step — simulation is not complete until checksums match.
+- **C14 Enforcement Gate**: After all patches are applied, verify: were any `.magic/` files modified during this `/magic.dev.simulate` invocation? If yes → run `node .magic/scripts/executor.js update-engine-meta` **immediately**, before reporting results. Do NOT defer to end-of-conversation. This is a blocking step — simulation is not complete until checksums match.
 - **Succession**: Run `/magic.dev.simulate test` post-fix to ensure 0 regressions. **Max 2 rounds**: if a second Succession pass still finds new failures, report remaining issues and stop — do not loop indefinitely.
   - **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For strictly unbiased results, recommend the user start a **new chat session** and run `/magic.dev.simulate test` independently. Always append this note to the final report: `"⚠ Succession ran in-context. For unbiased verification, run /magic.dev.simulate test in a fresh session."`
 

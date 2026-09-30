@@ -20,6 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated 5 specifications (engine)
 - Completed task (engine)
 - Updated global project rules (engine)
+- Updated 2 specifications (engine)
+- Updated 4 specifications (engine)
 
 ### Fixed
 

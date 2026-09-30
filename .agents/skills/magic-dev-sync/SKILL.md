@@ -32,6 +32,6 @@ State files (do not edit by hand):
 - `dev/.cache/.docs-state.json` — last hash + version per workflow (Step 5, dev-only).
 
 // turbo
-6. **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta --workflow sync`.
+6. **Final Meta-Sync**: Wait for file system stability (≈1s) then run `node .magic/scripts/executor.js update-engine-meta`.
 
 Trigger: `/magic-dev-sync`, "Sync project", "Hygiene check"

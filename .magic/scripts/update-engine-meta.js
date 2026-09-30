@@ -122,10 +122,9 @@ function updateEngineMeta() {
             // addition, mirroring generate-checksums.js's manifest-authoring
             // scope. It must NOT apply to a path already listed in `.checksums`:
             // every consumer install is expected to gitignore `.magic/` wholesale
-            // (it's an installed release artifact, never committed — see
-            // CLAUDE.md L1 contract), so treating that as "disowned" would mark
-            // every shipped engine file as missing and fail `--check` on every
-            // single consumer commit.
+            // (it's an installed release artifact, never committed), so treating
+            // that as "disowned" would mark every shipped engine file as missing
+            // and fail `--check` on every single consumer commit.
             const isManifested = Object.hasOwn(oldChecksums, rel);
             if (!isManifested && isGitignored(normalizePath(path.relative(projectRoot, fullPath))))
                 return;

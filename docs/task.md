@@ -44,7 +44,7 @@ The engine enforces 7 mandatory invariants during every task operation:
 | # | Invariant | Summary |
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
-| 2 | **Registry Integrity** | Read ALL specs in `INDEX.md` before planning — no exceptions |
+| 2 | **Registry Integrity** | Account for every spec registered in `INDEX.md` before planning (registry entries and wiki; open a spec body only where a step needs it) |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing; preserves user intent across sub-delegation |
 | 4 | **Logic Guards** | No Orphans, Atomic Tasks (C10), User Gate (C9), Zero-Prompt handoff |
 | 5 | **Rules Parity** | Record current `RULES.md` version in `TASKS.md`; detect and notify on drift |
@@ -155,4 +155,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-09-30 (v2.1.110).

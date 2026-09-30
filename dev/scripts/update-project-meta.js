@@ -21,7 +21,7 @@ const { writeFileSafe, mkdirSafe } = require('../../.magic/scripts/utils');
  *
  *   Now: we hash the index content with the volatile fields stripped
  *   (Version line, Last Updated line, history rows) and store the digest in
- *   `.magic/.project-meta-state.json`. Bump and history append happen only
+ *   `.design/.cache/project-meta-state.json`. Bump and history append happen only
  *   when the structural digest actually changes.
  *
  * Environment variables:
@@ -216,7 +216,7 @@ function stampLastUpdated(content, date) {
 function applyMetaEdits(original, date, msg) {
     const { content: bumped, newVersion } = bumpVersionLine(original);
     const stamped = stampLastUpdated(bumped, date);
-    // Append history entry — with Smart-History dedup (mirrors update-engine-meta.js)
+    // Append history entry — Smart-History dedup: same day + same message condenses the range
     return { content: appendHistoryRow(stamped, newVersion, date, msg), newVersion };
 }
 

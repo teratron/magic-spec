@@ -127,7 +127,7 @@ if (Test-Path "dev\scripts\sync-skills.js") {
 }
 
 # 3.2. Cleanup — must happen BEFORE git rm so `git rm -r --cached` cannot
-#      traverse junctions and physically delete target files (see AGENTS.md §8).
+#      traverse junctions and physically delete target files.
 Write-Host "Removing existing managed links..." -ForegroundColor Cyan
 foreach ($p in $cleanupPaths) { Remove-Link $p }
 

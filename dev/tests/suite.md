@@ -226,7 +226,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight passes
   - [ ] Target identified: C3 — Parallel Task Execution Mode
-  - [ ] Removal proposed with major version bump
+  - [ ] Removal asks one confirmation (destructive action, C9 gate 1); major version bump once confirmed
   - [ ] **Workflow Dependency Check**: C3 is referenced by `run.md` as Mode Guard
   - [ ] Warning: "This rule is used by run.md as Mode Guard. Removing it may break that workflow's logic."
   - [ ] Impact Analysis includes TASKS.md version staleness note
@@ -561,8 +561,8 @@ If any test fails, document the failure reason and propose a fix.
   - **Synthetic State:**
     - 200 source files, `.design/INDEX.md` empty
   - **Expected:**
-    - [ ] Agent offers: Full scan or Focused scan
-    - [ ] Proceeds only after user choice
+    - [ ] Agent scans Full without asking and narrates `[DR] Full scan — 200 files. (Override: /magic.analyze "focus")`
+    - [ ] No question and no option menu are presented
 - **Test C — Large project (>500 files):**
   - **Synthetic State:**
     - 1200 source files across 80 directories, `.design/INDEX.md` empty
@@ -570,7 +570,7 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Agent recommends Focused or Quick scan
     - [ ] Full scan offered as option but not default
     - [ ] Agent does NOT auto-start full scan on large projects
-- **Guards tested:** Depth Control thresholds (<50, 50–500, >500), auto-scan vs prompt
+- **Guards tested:** Depth Control thresholds (<50 auto-scan, 50–500 narrated Full scan, >500 halt for the choice)
 
 ### T32 — Simulate Missing Test Suite (Improv Mode Fallback)
 
@@ -978,7 +978,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Run analysis (e.g. "Analyze project") on each.
 - **Expected:**
   - [ ] **Project A**: Auto-scan (Step 1) starts without prompting.
-  - [ ] **Project B**: Agent HALTs and asks: "Full or Focused scan?".
+  - [ ] **Project B**: Agent scans Full and narrates `[DR] Full scan — 200 files. (Override: /magic.analyze "focus")` — no question.
   - [ ] **Project C**: Agent recommends "Focused/Quick" and HALTs for choice.
 - **Guards tested:** Depth Control (Safety) thresholds.
 
@@ -1318,7 +1318,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight Consistency Check runs: VERSION_DRIFT detected (`api-core.md` header 1.3.0 ≠ INDEX.md 1.2.0)
   - [ ] **Version Drift Guard fires → HALT** before any write to `api-core.md`
-  - [ ] Agent reports: "Version drift on `api-core.md`: file header v1.3.0 ≠ registry v1.2.0. Resolve drift first: (a) sync INDEX.md and apply amendment rule, or (b) revert file header."
+  - [ ] Agent reports one resolution path, no option menu: "Version drift on `api-core.md`: file header v1.3.0 ≠ registry v1.2.0. Run `/magic.spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."
   - [ ] No changes written to `api-core.md` or `INDEX.md`
   - [ ] Execution resumes only after user resolves the drift
 - **Guards tested:** Version Drift Guard (RE-3), update atomicity, HALT before write
@@ -1370,8 +1370,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent scans both workspaces for identically-named spec files
   - [ ] `core.md` found in both: `engine` v2.0.0, `app` v1.5.0 → version mismatch
   - [ ] **Cross-Workspace Parity Guard → HALT**
-  - [ ] Report: "Source of Truth Drift: `core.md` exists in `engine` (v2.0.0) and `app` (v1.5.0)."
-  - [ ] Options presented: (a) Sync from engine, (b) Rename unique per workspace, (c) Force ignore
+  - [ ] Report: "Source of Truth Drift: `core.md` exists in `engine` (v2.0.0) and `app` (v1.5.0). Run `/magic.spec` in `engine` (higher version) to reconcile, then re-run `/magic.task`."
+  - [ ] One recommended path — no option menu
   - [ ] No plan generated until user resolves
 - **Guards tested:** Cross-Workspace Parity Guard (RE-T69), multi-workspace collision detection, HALT before planning
 
@@ -1388,9 +1388,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Mode A condition is also true (INDEX.md empty) — but Mode A does NOT auto-start
   - [ ] Mode C runs to completion: self-check, registry audit, coverage check, rule validation, report
   - [ ] Report delivered: "Registry empty — no specs registered. Coverage: 100% gap."
-  - [ ] After report: agent offers "Would you like to run first-time analysis to generate spec proposals?"
-  - [ ] Mode A starts only if user says yes
-- **Guards tested:** Mode Precedence (RE-A1), Mode C completeness before Mode A offer
+  - [ ] After report: agent narrates `[DR] Next: /magic.analyze first-time — the registry is empty. (Override: stop here)` — no question
+  - [ ] Mode A starts only when the user runs `/magic.analyze first-time`
+- **Guards tested:** Mode Precedence (RE-A1), Mode C completeness before the Mode A next-step recommendation
 
 ### T88 — Analyze Mode C Bypasses All Intermediate HALTs
 
@@ -1467,9 +1467,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Pre-flight detects `auth.md` exists in both `engine` (v2.0.0) and `app` (v1.5.0) — version mismatch
   - [ ] Agent **HALTs** before writing any updates to `app/auth.md`
-  - [ ] Report: "Source of Truth Drift: `auth.md` exists in `engine` (v2.0.0) and `app` (v1.5.0)."
-  - [ ] Three resolution options presented: (a) sync from canonical, (b) rename unique per workspace, (c) force ignore
-  - [ ] No spec content written until user selects a resolution option
+  - [ ] Report: "Source of Truth Drift: `auth.md` exists in `engine` (v2.0.0) and `app` (v1.5.0). Run `/magic.spec` in `engine` (higher version) to reconcile, then re-run the update."
+  - [ ] One recommended path — no option menu
+  - [ ] No spec content written until the drift is reconciled
 - **Guards tested:** RE-A6 (Cross-Workspace Parity in `spec.md` Pre-flight)
 
 ### T93 — RE-3 Drift Resolution Validation (Registry-Only Bump Without Review)
@@ -1669,9 +1669,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] spec.md §Creating Pre-flight fires Cross-Workspace Parity check
   - [ ] Detects `auth.md` already exists in `engine` (v2.0.0)
-  - [ ] **HALT** before creating `app/auth.md`
-  - [ ] Report: "Name collision: `auth.md` already exists in `engine` (v2.0.0). Resolve before creating: (a) unique name, (b) promote existing as canonical, (c) force ignore."
-  - [ ] `app/auth.md` NOT created until user resolves
+  - [ ] Does **not** HALT and presents no option menu — workspace-prefix naming is auto-applied
+  - [ ] Narration: `[Auto-SDD] Name collision on 'auth.md' (exists in 'engine'): creating as 'app-auth.md'. (Override: /magic.spec amend to rename)`
+  - [ ] `app/app-auth.md` is created; `engine/auth.md` is untouched
 - **Guards tested:** RE-E1 (Cross-Workspace Parity in spec.md §Creating)
 
 ### T107 — Mode B Logic Evolution Triggers Amendment Cascade
@@ -1698,12 +1698,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `.design/` initialized, `INDEX.md` empty (0 specs)
   - Project has 300 source files
-- **Action:** `/magic.analyze`
+- **Action:** `/magic.analyze`, then `/magic.analyze first-time`
 - **Expected:**
-  - [ ] Mode C runs first (Mode Precedence), then user accepts Mode A
+  - [ ] Mode C runs first (Mode Precedence), then the user runs `/magic.analyze first-time`
   - [ ] Mode A Step 0 fires: `check-prerequisites` called
-  - [ ] Depth Control applied: 300 files → agent asks "Full or Focused?"
-  - [ ] Agent does NOT start "Build full project map" until user responds
+  - [ ] Depth Control applied: 300 files → agent scans Full and narrates `[DR] Full scan — 300 files. (Override: /magic.analyze "focus")`
+  - [ ] Agent builds the full project map without asking
 - **Guards tested:** Mode A Step 0 Pre-flight, Depth Control enforcement in operational steps
 
 ### T109 — Analyze Mode B Pre-flight Step 0 Enforcement
@@ -2262,12 +2262,12 @@ If any test fails, document the failure reason and propose a fix.
   - `ok: true` → proceed.
   - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
   - Missing `.design/` → auto-run `.magic/init.md`, then resume.
-  - [ ] Before proposing, agent scans `.magic/*.md` and `.design/` for `C5` references
+  - [ ] Before asking, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
-  - [ ] Propose step includes dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
-  - [ ] Single "Current vs Proposed" approval — no additional confirmation gate
-  - [ ] If approved → C5 deleted, Major version bump
-- **Guards tested:** Remove Dependency Scan integrated into Propose step (no extra gate)
+  - [ ] The confirmation includes the dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
+  - [ ] Exactly one confirmation (DA-5 single question) showing the dependency list — no separate approval step
+  - [ ] If confirmed → C5 deleted, Major version bump
+- **Guards tested:** Remove Dependency Scan integrated into the single Remove confirmation (no extra gate)
 
 ### T141 — Run Handoff Collapses to /magic.task (Post-Task Replan)
 
@@ -3231,7 +3231,7 @@ If any test fails, document the failure reason and propose a fix.
   - No Core-Amendment or Constitutional conflicts present.
 - **Action A:** `"Remove rule C3, and add a new rule: all API responses must include a request-id header."`
 - **Expected A:**
-  - [ ] Dependency Scan on C3 removal surfaces the `run.md` Mode Guard reference as a non-blocking advisory (per T13).
+  - [ ] Dependency Scan on C3 removal surfaces the `run.md` Mode Guard reference in the Remove confirmation (per T13).
   - [ ] Batch groups both changes into a single atomic update (per existing Batch clause).
   - [ ] **Batch Version Precedence** fires: Remove = Major, Add = Minor → single bump applied is **Major** (highest precedence), not two sequential bumps and not Minor.
   - [ ] Document History records exactly one version row for the combined change.
@@ -3244,7 +3244,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The new rule ("runnable code samples") fails the **Constitutional Guard** — contradicts core §5.
   - [ ] **Batch Guard Failure** fires: the entire atomic batch **HALTs** — C4 is NOT removed despite passing its own guards individually.
   - [ ] Report names both the blocking item (contradicts §5) and that the clean item (C4 removal) is held pending resolution, not silently applied.
-  - [ ] After the user drops or revises the offending item, the full batch (including C4 removal) is re-offered as one atomic proposal — not auto-split.
+  - [ ] After the user drops or revises the offending item, the full batch (including C4 removal) is re-run as one atomic update — not auto-split.
 - **Guards tested:** Batch Version Precedence, Batch Guard Failure (no partial atomic application); regression for "The Recursive Quarantine" crisis (Improv Mode 2026-08-07).
 
 ### T209 — Idea Intake Gate Stays Silent on a Coherent Idea (IK-1/IK-4)
@@ -3393,7 +3393,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `update-engine-meta.js --check` (pre-commit hook, consumer install)
 - **Synthetic State:**
-  - Consumer project (e.g. `metaquant`) installs the engine from a release archive and follows the documented L1 contract: its own `.gitignore` contains `.magic/` (engine is "installed from a release archive, not committed" — CLAUDE.md §1.1).
+  - Consumer project (e.g. `metaquant`) installs the engine from a release archive and follows the documented L1 contract: its own `.gitignore` contains `.magic/` (engine is "installed from a release archive, not committed").
   - `.magic/.checksums` lists all shipped engine files, unmodified on disk.
 - **Action:** run `node .magic/scripts/executor.js update-engine-meta --check` (as the pre-commit hook does).
 - **Expected:**

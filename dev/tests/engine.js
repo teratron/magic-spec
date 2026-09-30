@@ -594,7 +594,7 @@ describe('Magic Engine Scripts', () => {
 
     // Real-world regression: a consumer project (e.g. metaquant) follows the
     // documented L1 contract and gitignores `.magic/` wholesale ("installed
-    // from a release archive, not committed" — CLAUDE.md §1.1). Before this
+    // from a release archive, not committed"). Before this
     // fix, the Invariant 7 exclusion applied unconditionally, so every single
     // manifested file read as "disowned" by the consumer's own .gitignore and
     // was reported missing — failing the pre-commit hook on every commit.

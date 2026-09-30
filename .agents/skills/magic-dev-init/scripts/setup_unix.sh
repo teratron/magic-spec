@@ -144,7 +144,7 @@ if [ -f "dev/scripts/sync-skills.js" ]; then
     node dev/scripts/sync-skills.js
 fi
 
-# 3.2. Cleanup (must precede git rm for parity with Windows; see AGENTS.md §8)
+# 3.2. Cleanup (must precede git rm for parity with Windows)
 echo "Removing existing managed links..."
 for p in "${cleanup_paths[@]}"; do remove_link "$p"; done
 
