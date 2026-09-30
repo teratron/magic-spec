@@ -77,7 +77,7 @@ When the user requests multiple rule changes, all changes are grouped into a sin
 
 Before committing the rule, the engine adopts a **Constitutional Reviewer** persona and evaluates:
 
-- **Core Conflict**: Does this rule create a practical conflict with any existing logic (C1–C23)?
+- **Core Conflict**: Does this rule create a practical conflict with any existing convention?
 - **Cognitive Consistency**: Is the phrasing unquantified (hallucination risk) or redundant with a global rule?
 - **Operational Friction**: Will this rule cause excessive HALT points in standard Parallel workflows (C3)?
 - **Retroactive Impact**: If applied to the last 3 completed tasks, would any have halted or produced different output?

@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -39,7 +39,7 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Audit specs after creation or update. Migrated verbatim from C24 "Project Critic" with preserved gate position and semantics.
+**Mission:** Audit specs after creation or update.
 
 **Operating Protocol:**
 
@@ -77,7 +77,7 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Pre-advisory audit for `magic.analyze` workflow. Migrated from C24 "Auditor" with preserved gate and semantics. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
+**Mission:** Pre-advisory audit for `magic.analyze` workflow. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
 
 **Operating Protocol:**
 
@@ -107,19 +107,19 @@ triggers:
     gate: "Impact Analysis"
 outputs:
   - type: constitutional-review
-    scope: "verdict on whether proposed rule conflicts with §1-6 or existing C1-C23"
+    scope: "verdict on whether proposed rule conflicts with §1-6 or existing conventions"
 handoff: []
 skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Review proposed `RULES.md` updates before they are committed. Migrated from C24 "Constitutional Reviewer" with preserved gate and semantics.
+**Mission:** Review proposed `RULES.md` updates before they are committed.
 
 **Operating Protocol:**
 
 1. Load the proposed rule text.
 2. Check §1-6 (universal rules) for direct contradiction. Contradiction → HALT.
-3. Check C1-C23 (and WC1+ for workspace rules) for practical conflict: would the new rule cause an existing rule to fail or behave inconsistently in any live workflow?
+3. Check every existing C{N} (and WC{N} for workspace rules) for practical conflict: would the new rule cause an existing rule to fail or behave inconsistently in any live workflow?
 4. Check duplication: does the new rule semantically overlap an existing one? If yes, propose merge or replace rather than additive registration.
 5. Check scope: is the rule universal (global `RULES.md`) or workspace-specific (workspace `RULES.md`)?
 6. Emit verdict: APPROVE (proceed to write), AMEND (propose rewording), or REJECT (constitutional conflict).
@@ -149,7 +149,7 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Perform retrospective Signal calculation with a spec-quality lens rather than a pure execution-stats lens. Migrated from C24 "Independent Analyst".
+**Mission:** Perform retrospective Signal calculation with a spec-quality lens rather than a pure execution-stats lens.
 
 **Operating Protocol:**
 
@@ -245,6 +245,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Card text describes each role as it is: the four "Migrated … with preserved gate and semantics" mission sentences (a diff against a C24 version the reading agent never saw) are dropped — the migration guarantee stays in the Overview (R7). Constitutional-reviewer no longer names a `C1-C23` range (the constitution outgrew it; the check is "every existing convention"). Deployed cards carry the same wording. |
 | 1.1.1 | 2026-08-13 | Corrected stale citation in Project-auditor §2 step 5: "Invariant 6 from analyze.md" named Depth Control (file-count HALT thresholds), not anti-fabrication — no invariant of that name exists in `analyze.md`; the concept is `.design/RULES.md` C13 §5 (Anti-Hallucination Audit) (field report, engine 2.1.71). Deployed `.magic/roles/project-auditor.md` carries the identical stale text and requires the matching correction — Engine Improvement, out of this spec's write scope. Typo-only patch (spec.md Amendment rule); no status transition. |
 | 1.2.0 | 2026-08-28 | `prompt-engineer` card gains the conditional **Idea Intake Gate Audit (E6)**: a six-row check table (IK-2 investigation discharged, IK-3 intent-only domain, IK-4 firing justified, IK-5 plain-language wording, IK-6 convergence, IK-7 chat-only residency) that runs only when a `magic.spec` invocation actually fired the Step 0.5 gate, plus the matching anti-pattern barring audit of a silent gate. Implements `l1-idea-intake-gate.md` §4.5. Whitelist reference widened E1-E5 → E1-E6 on the deployed card. Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-06-11 | Added §5 `prompt-engineer` card (reviewer): five-workflow trigger set, six-dimension PQ-3 protocol, PQ-6 verdict semantics. Implements l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9). |

@@ -62,5 +62,5 @@ Findings here follow the same PQ-4 bar and PQ-6 verdict grammar as the six stand
 - Re-running domain checks already owned by spec-critic, planner, or constitutional-reviewer (violates PQ-7).
 - Rewriting the artifact directly instead of returning findings to the producing role (violates PQ-6).
 - Reviewing exempt artifacts: registries, changelogs, archives, typo-level patches (violates PQ-1/PQ-2).
-- Elective questions outside the C27 escalation whitelist (E1-E6) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.
 - Auditing an intake gate that never fired, or treating a silent gate as a missing step (violates IK-1).

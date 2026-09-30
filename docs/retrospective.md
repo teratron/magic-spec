@@ -52,7 +52,7 @@ Data is organized into four categories:
 - **Efficiency**: Spec revisions-to-Stable ratio.
 - **Friction**: Recurrent blocking reasons in phase notes.
 - **Shadow Logic**: Cross-reference specifications with actual codebase — detect implemented logic without a Stable spec.
-- **DORA Metrics**: Deployment Frequency and Change Failure Rate (manual input / external hook).
+- **DORA Metrics**: Deployment Frequency and Change Failure Rate (recorded when a CI hook or the user's notes supply them; otherwise `n/a`).
 
 ## 5. Independent Analyst Review (C24)
 

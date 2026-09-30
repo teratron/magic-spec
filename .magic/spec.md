@@ -170,7 +170,7 @@ graph TD
 
 **Constraints**:
 
-- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), T4 tier routing, existence/parent guards, hard-fork, and the Step 0.5 Idea Intake Gate (E6) — remain permitted per their own rules.) The E6 carve-out is narrow by construction: it resolves at Step 0.5, **before** dispatch, and covers only intent incoherence (F1) or essence ambiguity (F2). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
+- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), existence/parent guards, hard-fork, and the Step 0.5 Idea Intake Gate (E6) — remain permitted per their own rules.) The E6 carve-out is narrow by construction: it resolves at Step 0.5, **before** dispatch, and covers only intent incoherence (F1) or essence ambiguity (F2). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
 - **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
 - **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
@@ -283,8 +283,8 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 **T4 Inline Guards** (applied before writing, preserving "Apply Immediately" semantics):
 
-1. **Tier Routing**: determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for docs", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. Ambiguous → ask user.
-2. **Duplication Check**: read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → surface the overlap and ask: merge, replace, or add separately. Do NOT silently duplicate.
+1. **Tier Routing**: determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for docs", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. Ambiguous → default to the **workspace tier** when a workspace is active, else **global**; narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magic.rule with an explicit tier)`. No prompt.
+2. **Duplication Check**: read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → report the overlap as a non-blocking advisory and merge into the existing convention (skip it when identical). Do NOT silently duplicate.
 3. **Constitutional Guard**: if proposed rule contradicts §1–6 → **HALT**. Same as `rule.md`.
 
 ### Periodic Registry Audit

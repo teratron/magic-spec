@@ -22,7 +22,7 @@ deprecated: false
 
 ## Mission
 
-Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. Absorbs the legacy "Planning Skeptic" persona from C24 — the skeptical review is an intrinsic step, not a separate gate.
+Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 ## Operating Protocol
 
@@ -39,4 +39,4 @@ Own plan construction in `task.md`. Produces phase breakdown and task dependency
 - Skipping the adversarial pass because the plan "looks fine".
 - Treating soft links (`Related Specifications`) as hard dependencies (only `Implements` and file-level conflicts are hard).
 - Creating phases so fine-grained that orchestration cost exceeds execution cost.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

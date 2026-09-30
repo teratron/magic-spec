@@ -18,7 +18,7 @@ deprecated: false
 
 ## Mission
 
-Audit specs after creation or update. Migrated verbatim from C24 "Project Critic" with preserved gate position and semantics.
+Audit specs after creation or update.
 
 ## Operating Protocol
 
@@ -36,4 +36,4 @@ Audit specs after creation or update. Migrated verbatim from C24 "Project Critic
 - Permitting implementation code in an L1 spec because "it clarifies the concept".
 - Passing an L2 with placeholder `Invariant Compliance` rows.
 - Skipping `RULES.md` cross-check.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

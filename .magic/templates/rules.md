@@ -145,7 +145,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the `.magic/` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: `node .magic/scripts/executor.js update-engine-meta`.
 
-1. **Scope**: Applies to all `.md` workflows, `scripts/`, `templates/`, and `config.json` inside the engine directory.
+1. **Scope**: Applies to all `.md` workflows, `scripts/`, and `templates/` inside the engine directory.
 2. **Automation**: This command automatically increments the patch version in `.magic/.version` and regenerates `.magic/.checksums`. Version history is tracked via git log and `CHANGELOG.md`.
 3. **Exclusion**: Modifications to `.design/` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in `.magic/.version` should stay aligned with the latest meaningful change to the engine's functional logic.
@@ -165,7 +165,7 @@ All supported IDE/Agent adapters and their target directories must be documented
 
 ### C20 — Auto-Heal Recovery
 
-The engine must proactively identify and repair its own metadata. If `executor.js` detects missing history files or corrupted checksums during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
+The engine must proactively identify and repair its own metadata. If `executor.js` detects missing or corrupted metadata (`.version`, `.checksums`) during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
 
 ### C21 — Project Ventilation (Analyze)
 

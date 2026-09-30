@@ -70,7 +70,7 @@ graph TD
     G --> H{Phase Complete?}
     H -->|Yes| I[Retro L1 + Changelog L1 + Archive]
     I --> J{Plan Complete?}
-    J -->|Yes| K[Retro L2 + Changelog L2 approval + Version Bump + CONTEXT.md]
+    J -->|Yes| K[Retro L2 + Changelog L2 shown verbatim + Version Bump + CONTEXT.md]
     J -->|No| C
     H -->|No| C
 ```

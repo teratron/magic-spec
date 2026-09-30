@@ -47,7 +47,7 @@ graph TD
 4. **Guards**:
    - **Core-Amendment Routing**: if user's target matches §1–6 (not §7) → route as a **core amendment**. Inform: *"This targets core section §{N}. Core amendments require explicit approval and trigger a Major version bump."* Require user confirmation. Confirmed → apply to target core section. Denied → abort.
    - **Constitutional**: if a new §7 rule contradicts §1-6 core → **HALT** + report.
-   - **Duplication**: if semantically overlaps with any C{N} in EITHER tier → propose merge/replace.
+   - **Duplication**: if semantically overlaps with any C{N} in EITHER tier → report the overlap as a non-blocking advisory and merge the change into the existing convention (skip it when identical); never register a duplicate silently.
 5. **Apply (C9 default)**: write the change to the target tier immediately. Output the diff inline. State target tier and version impact in past tense — e.g., `[Auto-Rule] Applied: WC1 → workspace RULES.md, 1.0.0 → 1.1.0. (Revert: git restore .design/{workspace}/RULES.md)`.
    - **Batch**: when user requests multiple §7 changes in one invocation, group into a single atomic update and narrate as one summary line.
    - **Batch Version Precedence**: when a batch mixes actions with different version impacts (Add/Amend = Minor, Remove = Major), apply the single highest-precedence bump (Major > Minor > Patch) for the atomic update — never bump more than once per invocation.
@@ -88,7 +88,7 @@ Workspace-local conventions for `{workspace}`. Supplements (never overrides) the
 
 Activate `@role:constitutional-reviewer` to review the proposed rule before commitment. Interrogative hooks:
 
-- **Core Conflict**: does this rule create a practical conflict with any existing core logic (C1-C23)? (e.g. C2 Minimalism vs. a rule that adds mandatory manual steps).
+- **Core Conflict**: does this rule create a practical conflict with any existing convention? (e.g. C2 Minimalism vs. a rule that adds mandatory manual steps).
 - **Cognitive Consistency**: is the phrasing unquantified (hallucination risk) or redundant with a global rule?
 - **Operational Friction**: will this rule cause a "Cascade Failure" or excessive HALT points if applied in a standard Parallel workflow (C3)?
 
@@ -112,7 +112,7 @@ Convention nodes change when rule entries are added or removed, invalidating the
 
 **Constitutional Review (Post-Write)**: before notifying the user, activate `@role:constitutional-reviewer` again with these hooks:
 
-- Does the new rule create a **practical conflict** with any C1–C23 in currently running workflows — not a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
+- Does the new rule create a **practical conflict** with any existing convention in currently running workflows — not a formal contradiction, but a situation where two rules would give an agent contradictory instructions in the same step?
 - Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
 - If applied retroactively to the last 3 completed tasks, would any of them have halted or produced different output?
 
@@ -139,7 +139,7 @@ Rule Checklist — {operation}
   ☐ Tier routing: target file confirmed (global RULES.md or workspace RULES.md)
   ☐ Scope: only §7 target (unless core amendment requested)
   ☐ Guards: no semantic duplication across both tiers; no core contradiction
-  ☐ Constitutional Review: `@role:constitutional-reviewer` activated; practical conflicts with C1–C23 checked
+  ☐ Constitutional Review: `@role:constitutional-reviewer` activated; practical conflicts with existing conventions checked
   ☐ Version bumped (Major/Minor/Patch); Document History updated in target file
   ☐ Rules Parity: User notified if TASKS.md requires update/sync
   ☐ Graph: export-wiki run after Add/Amend/Remove (skip for List and patch-only typo fixes)

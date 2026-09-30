@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.11.0
+**Version:** 1.12.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -94,13 +94,25 @@ Direct calls to `.sh` or `.ps1` scripts are not permitted in workflow instructio
 
 On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` to `$DESIGN_DIR/archives/tasks/`. The link in `TASKS.md` is updated to point to the archive location. This keeps the active workspace small while preserving full history.
 
-### C9 — Zero-Prompt Automation (Trust Mode)
+### C9 — Default Autonomous Execution
 
-Once the user provides high-level intent (ideation), the agent is authorized to proceed through the entire lifecycle (Draft → RFC → Stable → Plan → Task → Run) without further confirmation prompts, provided the logic is clear and non-conflicting. Silent operations include: status auto-promotion, planning, retrospective Level 1, changelog Level 1, and CONTEXT.md regeneration. Critical exceptions requiring explicit user approval:
+**Default behavior**: the agent executes the full SDD lifecycle (Draft → RFC → Stable → Plan → Task → Run) autonomously — including status promotion, planning, dispatch, retrospective L1, changelog L1, and CONTEXT.md regeneration. User input is solicited **only** at the closed list of objective gates below. Outside this list, asking for confirmation, presenting choice menus, or hesitating is forbidden (see C25 Engineer Posture).
 
-1. **Changelog Level 2** (external release artifacts).
-2. **Destructive Actions** (deleting files or specifications).
-3. **Ambiguous Triggers** (where >1 architectural path exists).
+**Objective gates requiring user input or HALT**:
+
+1. **Destructive Actions** — deleting specs, rules, files, or rewriting git history.
+2. **Core Constitution Amendment** — modifying `RULES.md §1–6` (Universal Constitution).
+3. **Architectural Hard Fork** — multiple incompatible paths exist with no objective tiebreaker (e.g., user must declare a stack preference). Present **decisions**, not browsing menus.
+4. **Cross-Workspace Parity Collision** — same spec name with version mismatch across workspaces; canonical source not derivable.
+5. **Drift HALT** — `VERSION_DRIFT` or `STATUS_DRIFT` between file header and `INDEX.md` (objective inconsistency requiring user resolution).
+6. **Engine Integrity Failure** — `checksums_mismatch` or `GHOST_REGISTRY` blocks in-scope files (C15 Filter).
+7. **Depth Control Limit** — analysis scope exceeds the depth threshold (>500 source files); user picks Focused or Quick mode.
+8. **Pause / STATE.md Acknowledgment** — `Blocking Constraints` displayed before resuming work; informational, not a question.
+9. **Changelog Level 2 / Release Artifacts** — public release entries; user reviews independently afterward, not inline.
+10. **Constitutional Guard** — proposed §7 rule contradicts §1–6 → HALT.
+11. **Hard-Dependency Cycle** — circular `Implements:` chain (soft `Related Specifications` cycles do NOT block).
+
+For all other operations: act, narrate the action declaratively, log to `STATE.md` / `CONTEXT.md` / `CHANGELOG.md`, append a one-liner revert hint where the action is non-trivial.
 
 ### C10 — Task Architecture & Status Truth
 
@@ -135,8 +147,8 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 To ensure accurate engine state tracking and reliable updates, any modification to the core engine/kernel files (anything inside the `.magic/` directory, including workflows and templates) MUST be accompanied by an automated engine metadata update: `node .magic/scripts/executor.js update-engine-meta --workflow {workflow}`.
 
-1. **Scope**: Applies to all `.md` workflows, `scripts/`, `templates/`, and `config.json` inside the engine directory.
-2. **Automation**: This command automatically increments the patch version in `.magic/.version`, updates the relevant history file in `.magic/history/`, and regenerates `.magic/.checksums`. **Smart History**: Redundant automated entries are skipped if the last entry matches.
+1. **Scope**: Applies to all `.md` workflows, `scripts/`, and `templates/` inside the engine directory.
+2. **Automation**: This command automatically increments the patch version in `.magic/.version` and regenerates `.magic/.checksums`. Version history is tracked via git log and `CHANGELOG.md`.
 3. **Exclusion**: Modifications to `.design/` files (project content) do NOT trigger an engine version bump; they trigger project manifest bumps instead.
 4. **Synchronization**: The version in `.magic/.version` should stay aligned with the latest meaningful change to the engine's functional logic.
 5. **Simulation Exemption**: Purely cognitive simulations, dry runs, or audit tasks that do not modify files MUST NOT trigger a C14 version bump to avoid metadata noise.
@@ -151,11 +163,11 @@ For minor features, simple bugfixes, or changes expected to be under 50 lines of
 
 ### C17 — Adapter Distribution Reference
 
-All supported IDE/Agent adapters and their target directories must be documented in `docs/distribution.md`. This file is the reference for users performing manual installation from GitHub Releases. It replaces the legacy adapter registry removed in v2.0.0.
+All supported IDE/Agent adapters and their target directories must be documented in `docs/distribution.md`. This file is the reference for users performing manual installation from GitHub Releases.
 
 ### C20 — Auto-Heal Recovery
 
-The engine must proactively identify and repair its own metadata. If `executor.js` detects missing history files or corrupted checksums during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
+The engine must proactively identify and repair its own metadata. If `executor.js` detects missing or corrupted metadata (`.version`, `.checksums`) during non-critical operations, it should attempt to "Auto-Heal" (restore defaults or regenerate) before Proceeding or Halting.
 
 ### C21 — Project Ventilation (Analyze)
 
@@ -187,19 +199,27 @@ To minimize redundant resource usage and improve performance, the agent may opti
 
 ### C24 — Role-Switching Gates
 
-At critical decision points, the agent MUST adopt a specific adversarial persona before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
+At critical decision points, the agent MUST activate the designated role card from `.magic/roles/` before finalizing output. This prevents confirmation bias and "glazed eye" failures where the agent that produced work also approves it.
 
-| Workflow | Gate | Persona | Key Questions |
+| Workflow | Gate | Role | Card |
 | --- | --- | --- | --- |
-| `spec.md` | Before `Post-Update Review` | **Project Critic** | L1 purity? Invariant completeness? L2 compliance substantive? |
-| `task.md` | Before `Plan Write-back` | **Planning Skeptic** | Optimism bias? Hidden dependencies? Cascade risk? |
-| `run.md` | Before marking task `Done` | **Tester** | Spec boundary? Edge cases? Side effects? Regression risk? |
-| `retrospective.md` | Before Signal calculation | **Independent Analyst** | Does Signal reflect spec quality, not just execution stats? |
-| `analyze.md` | Before Advisory Report | **Auditor** | Severity correct? Systemic pattern behind findings? |
-| `rule.md` | Before Impact Analysis | **Constitutional Reviewer** | Practical conflict with C1–C23 in running workflows? |
-| `simulate.md` | During Logic Audit | **Skeptic** | Are guards enforceable (HALT) vs. just LLM compliance? |
+| `spec.md` | Before `Post-Update Review` | `@role:spec-critic` | `.magic/roles/spec-critic.md` |
+| `task.md` | Before `Plan Write-back` | `@role:planner` | `.magic/roles/planner.md` |
+| `run.md` | Before marking task `Done` | `@role:test-engineer` | `.magic/roles/test-engineer.md` |
+| `retrospective.md` | Before Signal calculation | `@role:retrospective-analyst` | `.magic/roles/retrospective-analyst.md` |
+| `analyze.md` | Before Advisory Report | `@role:project-auditor` | `.magic/roles/project-auditor.md` |
+| `rule.md` | Before Impact Analysis | `@role:constitutional-reviewer` | `.magic/roles/constitutional-reviewer.md` |
+| `spec.md` | Instruction Quality Pass (after spec-critic PASS) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `task.md` | Task Instruction Review (before Plan Write-back) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `rule.md` | Rule Wording Review (after APPROVE verdict) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `analyze.md` | Prompt Quality Audit (Mode C) | `@role:prompt-engineer` | `.magic/roles/prompt-engineer.md` |
+| `simulate.md` | During Logic Audit | Skeptic persona (dev-only; no role card) | — |
 
-Switching is mandatory — it is not skipped in Trust Mode (C9). The persona switch takes one internal reasoning pass; it does not require user interaction.
+**Opt-in conditional gate:** `prompt-engineer` also fires in `run.md` Step 3.4b when the diff touches AI-facing instruction artifacts (specifications, rules, plan/task units, role cards, workflow bodies, templates, adapter instructions); diffs touching only non-instruction code or data skip it silently.
+
+Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
+
+Full registry: `.magic/roles/` — 14 registered role cards; each card is self-contained and defines its own gates and invariants.
 
 ### C25 — Engineer Posture (Narrate-and-Act)
 
@@ -257,6 +277,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.12.0 | 2026-09-30 | Agent | Realigned the live constitution with the shipped template it is documented to mirror (owner-approved E4 amendment after a prompt-surface audit; per-convention blame showed the template copies newer). **C9** now carries the shipped objective-gate form ("Default Autonomous Execution", 11 gates) instead of the 2026-03 "Zero-Prompt Automation" three-exception list — the old text contradicted `run.md` (Changelog L2 needs no inline approval) and left C25's "objective C9 gate" undefined; `l1-decision-autonomy.md` DA-2 was renumbered to match (gates 1/9/3). **C24** now names the role cards under `.magic/roles/` (with the prompt-engineer gates) instead of the retired persona table; the dev-only `simulate.md` Skeptic gate is kept. **C14** no longer names `config.json` or the removed `.magic/history/` mechanism (the shipped template dropped it 2026-05-06); **C20** no longer names history files; **C17** drops the removed-registry archaeology. No change to §1–6, C1–C8, C10–C13, C15, C16, C18, C19, C21–C23 or C25–C28. |
 | 1.11.0 | 2026-09-28 | Agent | Added **C28 — Self-Hosting Engine Repository**: this project is the Magic Spec engine's own source and builds itself, so the "Engine Improvement" gate and the consumer-facing "do not fix it yourself" guard in `rules/magic.md` describe a *different* project — one that installed the engine — not this one. Prompted by a live misfire this session: a `/magic.rule` request naming `.magic` as its target was routed into `.design/engine/RULES.md` as a self-imposed restriction instead of amending the engine directly, because the engine-directories-are-read-only framing in `AGENTS.md`/`rules/magic.md` carries no exception for the repository that authors them. C28 states the exception once, at the constitution level; `AGENTS.md` §0 carries the same identity for agents reading that file first. The shipped `rules/magic.md` and `.magic/templates/rules.md` are deliberately left unchanged — the stricter read-only contract they state remains correct for every downstream project that installs the engine. |
 | 1.10.0 | 2026-08-28 | Agent | Extended C27's Escalation Whitelist with **E6 — intent incoherence or essence ambiguity in freshly supplied idea input**, governed by `l1-idea-intake-gate.md`. DA-2 declares its own list closed and extension an E4 event; the amendment is discharged by explicit owner directive. Added the narrowing note that bounds E6: it fires only on a freshly supplied idea and only after repository investigation is exhausted (IK-2), technical realization is never routed to the user (IK-3), Selection and Sequencing forks remain declarative under DA-9, questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink each round or terminate (IK-6). Mirrored verbatim in `.magic/templates/rules.md` — the two must not diverge. |
 | 1.9.0 | 2026-07-10 | Agent | Amended C23 §2: quantified External Drift Guard (">5 minutes / context compaction / manual file ops" replacing vague "significant time"), aligning the live constitution with templates/rules.md per C13 vague-term elimination. Recorded C11/C23 §4 simulate-command rename (magic.simulate → magic.dev.simulate) propagated by engine sync v2.1.55. |

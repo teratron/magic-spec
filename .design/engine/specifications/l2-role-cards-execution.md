@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -43,7 +43,7 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. Absorbs the legacy "Planning Skeptic" persona from C24 — the skeptical review is an intrinsic step, not a separate gate.
+**Mission:** Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 **Operating Protocol:**
 
@@ -221,7 +221,7 @@ related_rules: [C2]
 1. Load the passed diff and identify docs-affecting changes: public API signatures, exported symbols, user-visible behavior, configuration options, CLI flags.
 2. Update `README.md` for feature-level changes.
 3. Update `CHANGELOG.md` with the task's `Changes` field (L1 phase entry — per `run.md` Step 5).
-4. Update in-codebase docstrings / JSDoc if signatures changed (per `CLAUDE.md §6` / §7 style).
+4. Update in-codebase docstrings / JSDoc if signatures changed (per the project's documented docstring conventions).
 5. Hand back to Test-engineer to finalize `Done` transition.
 
 **Anti-patterns:**
@@ -247,6 +247,7 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Planner card: the "Absorbs the legacy Planning Skeptic persona from C24" sentence is dropped (migration-relative phrasing). Docs-specialist step 4 no longer cites `CLAUDE.md §6` / §7 — those sections are this repository's junction-safety and file-protocol rules, not a docstring style guide, and the file does not exist in a consumer installation. Deployed cards carry the same wording. |
 | 1.2.0 | 2026-08-06 | Coder card: RC-2.1 notation guidance added to the authoring gate — re-scan added lines for bare `T-d+[A-Z]d+` and prose `[Pp]hase[-s]d+`, the forms that leak while the bracketed checklist form does not. Field evidence: the write-time gate was itself the source of several leaks in a consumer project (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Coder card: added RC-5 authoring gate (protocol step 5 + anti-pattern) per l1-sdd-reference-containment.md — no SDD-artifact references in product files. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted execution-pipeline cards (planner, orchestrator, coder, debugger, docs-specialist) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

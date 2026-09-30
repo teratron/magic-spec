@@ -18,7 +18,7 @@ deprecated: false
 
 ## Mission
 
-Perform retrospective Signal calculation with a spec-quality lens rather than a pure execution-stats lens. Migrated from C24 "Independent Analyst".
+Perform retrospective Signal calculation with a spec-quality lens rather than a pure execution-stats lens.
 
 ## Operating Protocol
 
@@ -32,4 +32,4 @@ Perform retrospective Signal calculation with a spec-quality lens rather than a 
 - Reporting high Signal based on throughput alone while ignoring spec-revision frequency.
 - Conflating execution overhead with spec ambiguity.
 - Producing a number without a framing paragraph.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

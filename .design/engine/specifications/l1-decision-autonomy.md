@@ -1,6 +1,6 @@
 # Autonomous Decision Protocol
 
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Status:** Stable
 **Layer:** concept
 
@@ -55,13 +55,13 @@ Every elective decision point inside the SDD lifecycle MUST be resolved autonomo
 
 ### DA-2 — Closed Escalation Whitelist
 
-User input may be solicited ONLY when the fork matches one of these entries (consolidating C9 exceptions, C26, and constitutional triggers):
+User input may be solicited ONLY when the fork matches one of these entries (consolidating the C9 objective gates, C26, and constitutional triggers):
 
 | # | Entry | Source |
 | --- | --- | --- |
-| E1 | Destructive / irreversible actions (deleting files, specs, history) | C9 exception 2 |
-| E2 | External release artifacts (Changelog Level 2, publishing) | C9 exception 1 |
-| E3 | Hard-fork architectural ambiguity: >1 incompatible path, no objective tiebreaker after DA-3 exhausts all criteria | C9 exception 3 |
+| E1 | Destructive / irreversible actions (deleting files, specs, history) | C9 gate 1 |
+| E2 | External release artifacts (Changelog Level 2, publishing) | C9 gate 9 |
+| E3 | Hard-fork architectural ambiguity: >1 incompatible path, no objective tiebreaker after DA-3 exhausts all criteria | C9 gate 3 |
 | E4 | Constitutional amendments via T1–T3 triggers (Propose & Wait) | RULES.md trigger table |
 | E5 | Workspace-routing ambiguity gate (WI-4 three-option menu) | C26 |
 | E6 | Intent incoherence (F1) or essence ambiguity (F2) in freshly supplied idea input, after repository investigation is exhausted | [l1-idea-intake-gate.md](l1-idea-intake-gate.md) |
@@ -110,7 +110,7 @@ Objective integrity guards (checksum mismatch, STATUS/VERSION_DRIFT, parity viol
 
 ### DA-9 — Proposal Surfaces Are Declarative
 
-Workflow steps that surface candidate options to the user — Explore Mode "Creative Sparks" (Blank Trigger), the Dispatch Notice, Mode-Transition "auto-transfer" prompts, and any "which of N" selection — are **declarative DR narrations**, not questions. They are Selection-class forks (§4.1): rank by DA-3 and emit a DR the same turn, then proceed; the user's redirect arrives as an interrupt (C25 §5), never as a solicited answer. The `AskUserQuestion` form — or any inline option menu — is reserved for a **firing** E1–E5 gate (DA-2).
+Workflow steps that surface candidate options to the user — Explore Mode "Creative Sparks" (Blank Trigger), the Dispatch Notice, Mode-Transition "auto-transfer" prompts, and any "which of N" selection — are **declarative DR narrations**, not questions. They are Selection-class forks (§4.1): rank by DA-3 and emit a DR the same turn, then proceed; the user's redirect arrives as an interrupt (C25 §5), never as a solicited answer. The `AskUserQuestion` form — or any inline option menu — is reserved for a **firing** E1–E6 gate (DA-2).
 
 Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no arguments resolves its scope by DA-3 (highest-coverage gap, per the Blank Trigger contract), not by asking which gap to pursue.
 
@@ -133,7 +133,7 @@ Presenting a proposal as a question, even a single well-formatted one with a mar
 
 ```mermaid
 graph TD
-    A[Fork detected] --> B{Matches E1-E5?}
+    A[Fork detected] --> B{Matches E1-E6?}
     B -- no --> C[Rank candidates per DA-3]
     C --> D[Act + emit DR]
     B -- yes --> E[Compose single question per DA-5]
@@ -153,7 +153,7 @@ Constraints: one line; no tentative qualifiers (C25 §3); the Override hint is m
 
 ### 4.4 Constitutional Placement
 
-The protocol is anchored as convention **C27 — Autonomous Decision Protocol** in the constitution (project `RULES.md` and the engine template `rules.md`), containing: DA-1 mandate, the E1–E5 table, the DA-3 criteria list, DR grammar, DA-5 format, DA-6 persistence, DA-8 exemption. C27 references C9 (authorization scope), C25 (output phrasing), and C26 (E5) instead of duplicating them.
+The protocol is anchored as convention **C27 — Autonomous Decision Protocol** in the constitution (project `RULES.md` and the engine template `rules.md`), containing: DA-1 mandate, the E1–E6 table, the DA-3 criteria list, DR grammar, DA-5 format, DA-6 persistence, DA-8 exemption. C27 references C9 (authorization scope), C25 (output phrasing), and C26 (E5) instead of duplicating them.
 
 C13 §3 amended wording (normative):
 
@@ -164,7 +164,7 @@ C13 §3 amended wording (normative):
 1. **Project constitution** (`.design/RULES.md`): amend C13 §3, add C27 — done atomically with this spec's dispatch (T4, user-mandated).
 2. **Engine template** (`.magic/templates/rules.md`): mirror the C13 §3 amendment and C27 — Engine Improvement task (C14 applies).
 3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. (c) **Drift-revalidation offers** — the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1 — bind to DA-8/DA-9: narrate the drift with one recommended path (`/magic.analyze`) and proceed; the pre-C27 `[y/n]` prompt (with `On y` / `On n` branches) is replaced with the single-path informational form (SC-4 reference). Engine Improvement — C14 applies.
-4. **Role system**: role template and card `Anti-patterns` sections gain one advisory line — "elective questions outside C27 E1–E5 are a protocol violation". No new role card (§6.2).
+4. **Role system**: role template and card `Anti-patterns` sections gain one advisory line — "elective questions outside the closed C27 escalation whitelist are a protocol violation". No new role card (§6.2).
 5. **User-side rules** (`rules/magic.md`): add a compact C27 section so watching-process agents inherit session-level posture (DA-6).
 6. **Simulation**: `magic.dev.simulate` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question; feed a Blank-Trigger Explore invocation (no arguments), assert a DA-3 [DR] auto-pick (DA-9) rather than an `AskUserQuestion` survey.
 
@@ -202,6 +202,7 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.1 | 2026-09-30 | Clarification patch, no status transition. The 1.3.0 whitelist widening left four E1–E5 remnants — the DA-9 firing-gate clause, the §4.2 diagram, the §4.4 table reference and the §5.4 role-card advisory — now all E1–E6; the advisory line drops the range so it cannot drift again. DA-2's Source column no longer numbers "C9 exceptions": that three-item list was replaced by the objective-gate list the shipped constitution carries, so E1 → C9 gate 1, E2 → gate 9, E3 → gate 3. Typo-level patch (spec.md Amendment rule). |
 | 1.3.0 | 2026-08-28 | DA-2 whitelist extended with **E6 — intent incoherence (F1) or essence ambiguity (F2) in freshly supplied idea input**, governed by [l1-idea-intake-gate.md](l1-idea-intake-gate.md); closure clause rescoped E1–E5 → E1–E6. Added the containment note establishing that E6 does not loosen DA-1: it recovers information no investigation can produce (intent), explicitly excludes technical realization, and leaves Selection/Sequencing forks and every proposal surface declarative under DA-9. Registration was itself the E4 event the closure clause anticipates, discharged by explicit owner directive. Reciprocal `Related Specifications` link added. Amendment Rule applied — reverted to `RFC` for re-review, re-promoted to `Stable` after the 5-lens Post-Update Review and Instruction Quality Pass passed within the same invocation. |
 | 1.2.0 | 2026-06-13 | DA-9 extended to drift-revalidation offers: the Engine Upgrade Detection prompt (`rules/MAGIC.md` §1) binds to DA-8/DA-9 — narrate one recommended path (`/magic.analyze`) and proceed, never `[y/n]`. §5.3(c) deployment touch-point added. Closes the DA-9 deployment tail Phase 9 missed (§1 still carried a `[y/n]` menu — the recurring drift friction). |
 | 1.1.0 | 2026-06-13 | Added DA-9 (Proposal Surfaces Are Declarative): Explore Creative Sparks / Dispatch Notice / Mode Transition are DR narrations, never `AskUserQuestion`; a blank invocation is a Selection fork, not an Escalation. Closes the §5.3 deployment gap that permitted a non-whitelisted selection question (field evidence: live violation in a `/magic.spec` Blank Trigger). §4.1 taxonomy note, §5.3 proposal-surface touch-points, and §5.6 simulation extended. Re-reviewed under Trust Mode (C9). |

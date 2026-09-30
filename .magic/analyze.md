@@ -14,7 +14,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only for user specs and project code**: never modify spec content (`.design/specifications/**/*.md`, `PLAN.md`, `TASKS.md`, `RULES.md`) or project source code without explicit user approval. Engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may be auto-repaired for deterministic mechanical drift — narrate each fix with a `(Revert: git restore {file})` note.
-4. **Artifact-First**: Write proposals/reports to agent artifacts. Only dispatch to `.design/` after approval.
+4. **Artifact-First**: Write proposals/reports to agent artifacts. Modes A/B dispatch **new** specs to `.design/` immediately (C9 default, Mode A step 3); changes to existing specs go through the approval gates of Invariant 3.
 5. **Bootstrapping Exemption**: Approved specs from existing code can be created directly as **Stable** L1/L2.
 6. **Depth Control (Safety)**: Before scanning:
    - **<50 files**: auto-scan.
@@ -124,7 +124,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 1. Build full project map.
 2. Inferred stack + architecture style.
 3. **Auto-Dispatch (C9 default)**: generate the table of paired L1/L2 specs + RULES.md entries, narrate as an action log, and dispatch all proposed items immediately as `Draft` (or `Stable` if MVC criteria pass per `spec.md` Trust Mode). Output: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y) + M rules. (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`. The user reviews the action log and amends as needed — no inline approval gate.
-4. **Registry Healing Proposal**: if `INDEX.md` is blank/corrupted or mismatches `specifications/` (Ghost/Zombie entries) → include **Registry Healing** (re-mapping disk files) as a mandatory part of the unified proposal in Step 3. Do NOT execute healing until the full proposal is approved.
+4. **Registry Healing Proposal**: if `INDEX.md` is blank/corrupted or mismatches `specifications/` (Ghost/Zombie entries) → include **Registry Healing** (re-mapping disk files) as part of the Step 3 dispatch. Healing runs before the specs are dispatched and is narrated with `(Revert: git restore .design/{ws}/INDEX.md)`.
 5. **Advisory**: generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
 ### [Mode B] Re-Analysis (Delta Mode)
@@ -182,7 +182,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - **Precondition (SH-1, `l1-scan-input-hygiene.md`)**: in a markdown product file, an occurrence inside a fenced code block or inline code span is a mention, not a reference — it does not match any class below. This governs the markdown case only; it does not reach a token quoted as a string literal in source (e.g. fixture data a test writes into a temporary workspace) or an example filename in plain prose — those are semantic, not syntactic, and stay judged by the self-containment test (does the sentence still make sense once `.design/` is gone?) rather than by any stripping step.
    - Match classes (unconditional): `.design/…` paths; task IDs `T-\d+[A-Z]\d+(\.\d+)?` — **bracketed and bare alike**, since checklists bracket the ID but prose and code do not, and phase numbers reach two digits; phase file references `phase-\d+(\.md)?`; SDD system file names (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`); spec file names registered in `INDEX.md`.
    - Match class (contextual): prose phase designators `[Pp]hase[-\s]\d+` (`Phase 20 Track B`, `Phase 22's closing validation`). Many domains own the word, so apply the self-containment test before reporting: if the sentence stops making sense with `.design/` absent, it denotes the plan's phase → leak; if it reads fine, it is domain vocabulary → skip. Report contextual hits in a separate sub-list so the user can triage them apart from unconditional ones.
-   - **Do NOT bind the scan to a fixed-width or bracket-only literal.** Matching only `[T-XXXX]` misses every bare reference and every two-digit phase — the failure mode that let 121 leaks accumulate unreported in a consumer project.
+   - **Do NOT bind the scan to a fixed-width or bracket-only literal.** Matching only `[T-XXXX]` misses every bare reference and every two-digit phase.
    - Exemptions: git metadata and contributor-facing docs that document the SDD workflow itself (the reference IS the content).
    - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited here: ventilation is read-only and owns detection, not repair.
    - **Remediation path** (state it whenever the finding count > 0): `→ /magic.task {ws}` to plan a containment-cleanup task, executed by `/magic.run` under the Coder role — the same role that owns the write-time gate. A leak report without this path is incomplete: the finding is otherwise unowned and re-accumulates.
@@ -207,13 +207,13 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Compare detected communities against `workspace.json` boundaries (Jaccard alignment score).
    - Any community Jaccard score < 0.3 → include `BOUNDARY_DRIFT` warning: community members are misaligned with their declared workspace.
    - Any community exceeds the oversized threshold (>25% of graph) and BFS partitioning reveals sub-clusters → suggest workspace split with proposed names.
-10. **Documentation & Version Audit**:
+10. **Documentation & Version Audit** (the engine's own repository only — skip when `dev/scripts/generate-checksums.js` is absent):
     - Check `CONTRIBUTING.md` exists and contains all active workflows from `.agents/workflows/`.
     - Verify `README.md` version badge matches `.magic/.version`.
     - Verify `rules/magic.md` points users to GitHub Releases and the current manual update folders.
     - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 11. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
-12. **Rule Validation**: check `RULES.md §7` compliance (e.g., C15 adapter registry check).
+12. **Rule Validation**: check `RULES.md §7` compliance (e.g., C16: a Micro-spec that outgrew 50 lines must be promoted to the Standard template).
 13. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
     - **Workspace layout drift** (specs on disk differ from configured workspace path in `workspace.json`) → update `workspace.json` to reflect the actual spec location on disk; narrate `[Auto-Repair] Workspace layout fixed: '{ws}' path updated to {actual-path}. (Revert: git restore .design/workspace.json)`. Do NOT present A/B/C variant options.
     - **Registry healing** (Ghost/Zombie entries in `INDEX.md`) → auto-execute registry repair; narrate `[Auto-Repair] Registry healed: {N} Ghost/Zombie entries resolved. (Revert: git restore .design/{ws}/INDEX.md)`.
@@ -279,31 +279,6 @@ After every successful `/magic.analyze` run (Modes A, B, C, and D — including 
 This is the contract consumed by [`rules/magic.md` §1](../rules/magic.md): the rule **narrates one informational drift line** recommending `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version` (it never emits a `[y/n]` prompt). Skipping this step causes that drift line to re-narrate every session — by design, until `/magic.analyze` runs.
 
 This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
-
-## Analysis Completion Checklist
-
-```
-Mode A/B Checklist — {scope}
-  ☐ Pre-flight check passed (no invalid registry/meta drift)
-  ☐ Multi-Pass Scan complete (Mode A meta -> Mode B structure)
-  ☐ Coverage: all files mapped to spec status; Drift detection run
-  ☐ Advisory Report generated with Signal and Sync Paths
-  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
-
-Mode C Checklist — Ventilation
-  ☐ Self-check + Registry audit completed
-  ☐ Wrapper-Body Parity: each `workflows/` pointer wrapper has its `.magic/{cmd}.md` body; WRAPPER_BODY_DRIFT reported for phantoms (self-contained wrappers exempt)
-  ☐ Coverage Check: analyze-coverage.js executed, confidence breakdown included
-  ☐ Rationale Audit: extract-rationale.js executed, Shadow Logic section included
-  ☐ Containment Scan: SDD_REFERENCE_LEAK findings reported (advisory; product files untouched); bare + bracketed task IDs and two-digit phases both covered; remediation path `→ /magic.task {ws}` stated when count > 0
-  ☐ Scaffold Boundary: five-point SDD_SCAFFOLD_COUPLING inspection run (build/CI/packaging/source/toolchain); consumer-only scope and the pre-commit-hook exemption honored; remediation path stated when count > 0
-  ☐ Prompt Quality Audit: @role:prompt-engineer sweep over PQ-1 artifacts; findings routed to pre-advisory pool
-  ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
-  ☐ Canonical References: All `Stable` specs checked for `## Canonical References` section.
-     Flag `CANONICAL_MISSING` for any `Stable` spec lacking this section. Advisory: promote to Stable only after filling it.
-  ☐ Advisory Report includes Confidence Breakdown and Shadow Logic advisory
-  ☐ Engine Snapshot: `**Engine Version:**` in `.design/INDEX.md` updated to `.magic/.version`
-```
 
 ## Advisory Report — Recommendations Format
 
@@ -384,6 +359,7 @@ Mode C Checklist — Ventilation
 
 ```
 Analysis Checklist — Mode A/B
+  ☐ Pre-flight check passed (no invalid registry/meta drift)
   ☐ Depth Control obeyed; size-assessed before scanning
   ☐ Stack/Arch inferred; modules identified
   ☐ Mode correct (Analysis vs Re-Analysis Gap Report)
@@ -411,6 +387,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
+  ☐ Canonical References: all `Stable` specs checked for `## Canonical References`; `CANONICAL_MISSING` flagged (advisory — promote to Stable only after filling it)
   ☐ Bloat Advisory: check-bloat.js executed; SPEC_BLOAT/TASK_BLOAT signals included in Advisory Report
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed
   ☐ Auto-Repair: deterministic fixes applied (workspace layout, registry, wiki); single `→ /cmd` for ambiguous issues; zero option menus presented

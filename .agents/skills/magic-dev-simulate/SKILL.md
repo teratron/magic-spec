@@ -10,7 +10,7 @@ handoffs:
     prompt: "If simulation found convention issues, use the Rule workflow to amend RULES.md."
   - label: "Run regression tests"
     workflow: magic-dev-simulate
-    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic-dev-simulate test` to ensure tests run against fresh files without context bleed (Rule C17)."
+    prompt: "MANDATORY HARD STOP: Recommend starting a NEW chat session and running `/magic-dev-simulate test` to ensure tests run against fresh files without context bleed."
 ---
 
 <!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.simulate.md (relative to workspace root) -->
@@ -36,7 +36,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [.magic/context.md](../../.magic/context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
 3. **Surgical Fix & Test**: If friction found → Propose fix (exact lines) + write new regression test in `dev/tests/suite.md`. Show to user for Yes/No (C1).
-4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate` (Smart History: redundant automated entries are skipped).
+4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta --workflow simulate`.
 5. **No Metrics**: Real-world history/logs are for `.magic/retrospective.md`.
 6. **Anti-Fabrication Rule**: `0 rough edges` is a VALID and expected outcome. If the Logic Audit finds no vague terms, no divergent duplicates, and all guards pass — report it as a clean result. DO NOT invent findings to fill the report structure. Every finding MUST include: `file` (exact filename), `line` (exact line number), `evidence` (verbatim quote copy-pasted from the file), and `verification` (the grep/read command used to confirm). Findings without evidence are INVALID and must be rejected by any reviewer.
 
@@ -86,7 +86,7 @@ Every synthesized crisis **must** satisfy all of the following structural requir
 | CR-1 | **Workflows affected** | ≥2 distinct workflows from {spec, task, run, analyze, rule, init} |
 | CR-2 | **Full chain walkthrough** | Trace the crisis through Spec→Task→Run in sequence; do not skip a link |
 | CR-3 | **Cross-workspace scope** | If `workspace.json` has >1 workspace, crisis must span ≥2 workspaces |
-| CR-4 | **Guard stress** | Crisis must attempt to bypass ≥3 distinct guards (C1–C22) |
+| CR-4 | **Guard stress** | Crisis must attempt to bypass ≥3 distinct guards (§7 conventions) |
 | CR-5 | **Drift vector** | Include ≥1 out-of-band mutation (manual file edit, external tool, or missing file) |
 | CR-6 | **Named scenario** | Assign a short descriptive name (e.g., "The Phantom Cascade") for traceability |
 

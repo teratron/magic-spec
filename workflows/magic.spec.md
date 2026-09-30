@@ -27,6 +27,6 @@ handoffs:
 - **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
 - **Finalization**: after dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
 
-> **Full implementation:** `.magic/spec.md` · Skill: `skills/magic.spec/SKILL.md`. Read `.magic/spec.md` before proceeding.
+> **Full implementation:** `.magic/spec.md` · Skill: `skills/magic-spec/SKILL.md`. Read `.magic/spec.md` before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.
 > **Anti-Hallucination Guard:** do not invent ad-hoc scripts (`.js`, `.sh`, etc.) for internal engine operations. Magic SDD steps are evaluated cognitively unless an executor script is explicitly provided.

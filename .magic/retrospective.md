@@ -58,7 +58,7 @@ Signal must reflect the **health of the specification system**, not just deliver
 | 🟡 **Yellow** | `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches) |
 | 🔴 **Red** | `Blocked / Total > 0.2` OR any shadow logic OR any critical registry inconsistency |
 
-**DORA Metrics**: collect `Deployment Frequency` and `Change Failure Rate` (manual input / external hook required).
+**DORA Metrics**: collect `Deployment Frequency` and `Change Failure Rate` (record them when a CI hook or the user's notes supply them; otherwise `n/a` — never solicit them).
 
 ### 5. Report
 

@@ -64,7 +64,7 @@ Every synthesized crisis must satisfy all structural requirements:
 | CR-1 | **Workflows affected** | >=2 distinct workflows |
 | CR-2 | **Full chain walkthrough** | Trace through Spec → Task → Run in sequence |
 | CR-3 | **Cross-workspace scope** | If >1 workspace, crisis must span >=2 |
-| CR-4 | **Guard stress** | Attempt to bypass >=3 distinct guards (C1–C22) |
+| CR-4 | **Guard stress** | Attempt to bypass >=3 distinct guards (§7 conventions) |
 | CR-5 | **Drift vector** | Include >=1 out-of-band mutation (manual edit, missing file) |
 | CR-6 | **Named scenario** | Assign a short descriptive name for traceability |
 

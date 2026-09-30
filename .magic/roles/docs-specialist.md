@@ -27,7 +27,7 @@ Active role triggered after Test-engineer passes a task whose diff changed publi
 1. Load the passed diff and identify docs-affecting changes: public API signatures, exported symbols, user-visible behavior, configuration options, CLI flags.
 2. Update `README.md` for feature-level changes.
 3. Update `CHANGELOG.md` with the task's `Changes` field (L1 phase entry — per `run.md` Step 5).
-4. Update in-codebase docstrings / JSDoc if signatures changed (per `CLAUDE.md §6` / §7 style).
+4. Update in-codebase docstrings / JSDoc if signatures changed (per the project's documented docstring conventions).
 5. Hand back to Test-engineer to finalize `Done` transition.
 
 ## Anti-patterns
@@ -35,4 +35,4 @@ Active role triggered after Test-engineer passes a task whose diff changed publi
 - Modifying specs (`.design/`) directly — that is `spec.md` workflow's domain.
 - Writing docs for internal changes not visible to users.
 - Updating `CHANGELOG.md` L2 entries (release-level) — those are handled by `run.md` Plan Completion step.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

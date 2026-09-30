@@ -93,7 +93,7 @@ Per Workspace Intent Routing WI-6 the script atomically: (1) validates `{name}` 
 Init Checklist
   ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
-  ☐ RULES.md (C1-C22) & INDEX.md headers present
+  ☐ RULES.md & INDEX.md headers present
   ☐ Workspace subtree provisioned (specifications/, tasks/, archives/tasks/)
   ☐ Existing codebase check performed; analyzer suggested if applicable
 ```
