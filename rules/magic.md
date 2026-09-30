@@ -118,7 +118,7 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 
 | Workflow | Paths that count |
 | --- | --- |
-| `magic.spec` | `.design/{ws}/specifications/**/*.md`, `.design/{ws}/INDEX.md` |
+| `magic.spec` | `.design/{ws}/specifications/**/*.md`, `.design/{ws}/INDEX.md`, `.design/RULES.md`, `.design/{ws}/RULES.md` |
 | `magic.task` | `.design/{ws}/PLAN.md`, `TASKS.md`, `tasks/**/*.md` |
 | `magic.run` | `.design/{ws}/TASKS.md` (status-line changes only), `STATE.md`, `archives/**`, `tasks/**/*.md` |
 | `magic.rule` | `.design/RULES.md`, `.design/{ws}/RULES.md` |

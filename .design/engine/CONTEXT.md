@@ -29,7 +29,6 @@
 │   ├── analyze.md
 │   ├── context.md
 │   ├── init.md
-│   ├── pause.md
 │   ├── retrospective.md
 │   ├── roles/
 │   ├── rule.md

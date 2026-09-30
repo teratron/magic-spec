@@ -6,7 +6,7 @@
 **Workspace:** {workspace-name}
 **Updated:** {YYYY-MM-DD HH:MM}
 **Phase:** {N} — {Phase Name}
-**Status:** {Active | Paused | Blocked | Complete}
+**Status:** {Active | Blocked}
 
 ## Current Position
 
@@ -40,5 +40,4 @@ Overall:   [{done}/{all}]     ██░░░░░░ {pct}%
 
 ## Session Continuity
 
-**Handoff File:** {.design/{workspace}/HANDOFF.json | none}
 **Bootstrap Mode:** {true | false}

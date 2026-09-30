@@ -39,6 +39,8 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-28 | Phase 33 | 0/0/36 | 5/0/0 | 24 | 🟢 |
 | 2026-09-30 | Phase 34 | 0/0/37 | 17/0/0 | 25 | 🟢 |
 | 2026-09-30 | Phase 35 | 0/0/37 | 8/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 36 | 0/0/37 | 10/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 37 | 0/0/37 | 15/0/0 | 25 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -723,3 +725,92 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 0 shadow logic. R47, R48 (Session 15) remain open and advisory; R49 is advisory.
+
+## Session 17 — 2026-09-30
+
+**Scope:** Plan completion (Phase 36 — Backlog Sweep; single phase from the owner's request to work the whole Backlog in order)
+**Specs in registry:** 37 (all Stable, no spec changed this session).
+**Tasks total:** 10 this cycle (Done: 10, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 217 → 218 nodes (+1, the phase), 468 → 469 edges (+1); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.112 → 2.1.113, one C14 tagged with three workflow bodies |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 143/143 before and after C14 |
+| **Rework Rate** | 1 correction / 10 tasks | Manual | One phrase duplicated by a mechanical rewrite in a workflow body (T-36A01), caught by the task's own re-read |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The parked containment item overstated the problem in one direction and understated it in another.** The feared class (task IDs and phase designators in shipped text) was all format documentation; the real class — 36 registered-spec filenames in 16 files — was mechanical to fix and to pin, and the release notes carried 46 more references the Backlog item never mentioned because it was scoped to `.magic/`. | plan-time scan; T-36A05 |
+| 2 | **Two "revisit on evidence" items had never been given a way to get evidence.** Their audits took minutes: `Status` has one reproducible stale transition and a template vocabulary conflict; the pause snapshot has zero uses in 7 projects. Both parked notes were true only because nobody had looked. | T-36C01, T-36C02 |
+| 3 | **A batch of tool calls failed on an unrelated infrastructure fault mid-phase** (the auto-mode classifier returned no verdict for every mutating call for several attempts, then recovered); nothing was retried blindly and no state was half-written — the workbook status and the files agreed after recovery, and the run continued from the recorded `In Progress` entry. | T-36B01 start/close |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R50 | #2 | Open the two audited items for `/magic.spec`: per-task update clearing a stale `Blocked` (and the template's `Complete`), and retirement of the pause snapshot with the 0-of-7 count as the evidence | PLAN.md Backlog |
+| R51 | #1 | Consider a docs-level guard for user-facing files (README, CHANGELOG): the same registered-name scan, exempting only content-documenting pages | `dev/tests/engine.js` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 141 | 143 | +2 |
+| Registered-spec citations in shipped text | 36 | 0 | -36 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 217 / 468 | 218 / 469 | +1 / +1 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. R47–R49 (earlier this session) remain advisory; R50 is the routing of this phase's own findings.
+
+## Session 18 — 2026-09-30
+
+**Scope:** Plan completion (Phase 37 — Backlog Deployment; the four design-debt items decided by the preceding `/magic.spec` pass)
+**Specs in registry:** 37 (all Stable, no spec changed this session).
+**Tasks total:** 15 this cycle (Done: 15, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 217 nodes, 467 edges; 0 orphaned files, 0 missing `Implements`; the graph tool lists one rule node (C28) with no spec referencing it — a constitution node, not a file, present since the rule was added.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.113 → 2.1.114, one C14 tagged with three workflow bodies |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 146/146 before and after C14; two intentional red windows (B02, B03) closed by B06 as planned |
+| **Rework Rate** | 2 corrections / 15 tasks | Manual | A regex escaped away inside a generated template literal (caught by the first probe); the driver's first "a case ran" test, fixed after its self-test proved it wrong |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A refactor that must not change behavior was proved by differential, not only by the suite.** The old and new `computeNextAction` were run over both real workspaces and four workflows: 0 diffs, on top of 143/143. | T-37A01 |
+| 2 | **The driver's first idea of "the case ran" was wrong, and only its own self-test showed it.** For a pattern matching nothing, `node --test` still reports one passing "test" — the file — so counting tests read an empty match as a pass. Deciding from named results fixed it. Controlling the controller (eight mutations of the driver, all caught) is what surfaced this. | T-37D02 |
+| 3 | **Writing the case for a whitelist change found a defect the change would have introduced.** A rules-only spec finalize would have been worded "Updated spec registry" in the release notes. | T-37C02 |
+| 4 | **A stray `.design/main/` workspace appeared in the working tree** (template placeholders, a next action naming a workspace this repository does not have). It was traced to an earlier scratch audit that ran this repository's finalize script against a throwaway fixture: the script binds to its own repository root by location, not by working directory, so the fixture's workspace name was written into the real `.design/`. Removed; the executor rejects an unregistered workspace, the harness does not recreate it (146/146 clean). | user report; executor probe |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R52 | #4 | Scratch fixtures that exercise engine scripts must run a **copy** of the engine inside the fixture, never the repository's own scripts with a different working directory | audit practice |
+| R53 | #4 | Consider a direct-invocation guard in `finalize.js` and `update-state.js` matching the executor's: refuse a workspace name absent from `workspace.json` instead of creating its directory | `.magic/scripts` (advisory) |
+| R54 | #2 | Keep the by-hand mutation lists (Phases 33–37) as JSON next to the cases they control, so the driver can re-run them at any later change | `dev/tests` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 143 | 146 | +3 |
+| Shipped files naming the pause snapshot | 4 workflow bodies, 3 docs, 2 scripts | 0 | removed |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. R47–R49 (earlier) remain advisory; R52–R54 are this phase's own findings.

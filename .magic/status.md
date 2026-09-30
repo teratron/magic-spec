@@ -44,7 +44,7 @@ Read-only resume briefing for returning users. Composes current position, progre
 ### 3. Degraded States
 
 - **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magic.task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
-- **In-flight or paused session** → add the resume line printed by `node .magic/scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`, or `**Status:** Paused` (then also the handoff `required_reading`, per the pause contract). A `HANDOFF.json` whose `Handoff File` pointer in `STATE.md` reads `none` is inert and is not, by itself, a paused session. A missing or failing script adds no line.
+- **In-flight session** → add the resume line printed by `node .magic/scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
 
@@ -57,5 +57,5 @@ Status Checklist
   ☐ Blocking Constraints surfaced (mandatory reading)
   ☐ Engine line rendered: in-sync or informational drift (no prompt, no auto-analyze)
   ☐ Exactly one next command recommended as [DR] (DA-6)
-  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; in-flight or paused → resume line)
+  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; in-flight → resume line)
 ```

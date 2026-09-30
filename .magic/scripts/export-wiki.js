@@ -13,7 +13,7 @@ const { resolveDesignRoot } = require('./utils');
 // Generates a Wikipedia-style, agent-navigable Markdown wiki from the
 // Specification Knowledge Graph.
 //
-// Implements l2-spec-graph-memory.md §4.2.
+// Exports the spec graph as a navigable wiki, reading through the extraction cache.
 //
 // Outputs (under $designDir/wiki/):
 //   index.md                                 — entry point

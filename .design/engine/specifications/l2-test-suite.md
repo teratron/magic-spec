@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.21.0
+**Version:** 1.22.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -58,6 +58,17 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 - **RC-2.1 notation independence** — `rules/magic.md`, `.magic/analyze.md`, and both containment role cards must state the notation-independent task-ID and phase patterns. Pinning the bracketed literal `[T-XXXX]` or the `phase-{n}` file form matches only the SDD layer's internal spellings; a reference leaks by being quoted out of them. This narrowing went unnoticed until a consumer project had accumulated 121 leaks.
 - **Executor-parsable `--workspace` forms** — no shipped workflow body passes a directory to a flag that accepts a bare name.
 
+## Mutation-Control Driver
+
+Every harness case added for a fix is only as trustworthy as the proof that it fails without the fix. Producing that proof by hand — one exact replacement, run the case, expect red, restore, verify the restore — was done in three consecutive phases through a throwaway script, which is the signal that it is tooling. `dev/scripts/mutation-check.js` (Layer 2, never shipped) makes it repeatable.
+
+- **Input**: a JSON file, a list of `{ "name", "file", "needle", "replacement", "test" }`. `test` is a harness name pattern; `file` is repository-relative.
+- **Per mutation**: refuse unless `needle` occurs exactly once in `file`; apply the replacement; run only the named case; expect a failure; restore the original bytes; verify the restore by hash.
+- **Guarantees**: the file is restored on every exit path — a failed run, an exception, an interrupt — and a restore that does not match its hash is reported loudly and fails the run.
+- **Output and exit**: one line per mutation (`CAUGHT` / `SURVIVED` / `REFUSED` / `RESTORE FAILED`) and a summary; the exit code is non-zero if any mutation survived, was refused or failed to restore.
+- **Scope**: it never edits a specification or a file outside the repository, and it does not itself decide which mutations matter — that stays with the task that adds the case.
+- **Coverage of the driver itself**: a self-test drives it over a throwaway fixture with one mutation the case catches and one it does not, asserting `CAUGHT`/`SURVIVED`, a byte-identical restore in both, and a restore after a run that throws.
+
 ## Canonical References
 
 | Path | Role |
@@ -70,6 +81,7 @@ A finalize-pipeline change merged without harness coverage of the touched branch
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.22.0 | 2026-09-30 | Agent | New **Mutation-Control Driver** section: the negative-control procedure three phases ran through a throwaway script becomes `dev/scripts/mutation-check.js` — a JSON list of exact single-occurrence replacements, each run against one named case, expected red, restored and hash-verified on every exit path. Layer 2, never shipped. Its trigger (a second phase needing the same controls) fired in the plan after it was parked. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.21.0 | 2026-09-30 | Agent | The SC-2.1 coverage bullet follows the split plan-complete branch ([l1-session-continuity.md](l1-session-continuity.md) 2.4.0): pending work → funnel, nothing pending → no command, a Parked item not counted. Harness cases for the two branches and the Parked control are listed by the deploying task, not recorded here. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.20.0 | 2026-09-30 | Agent | Added the **Rule Admission Gate coverage** mandate ([l1-rule-admission-gate.md](l1-rule-admission-gate.md)): six cognitive cases with controls, and the re-targeting of the T4 cases whose named guard set the deployment removes. IDs are not recorded — they are assigned when the cases land, the exact drift 1.19.0 removed for the suite's totals. Cognitive-only by design, following the Idea Intake Gate precedent. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.19.0 | 2026-09-28 | Agent | **Stopped recording the suite's total count and version here** (R42, Retro L2 Session 13): this document's own prior entry ("Recorded counts (harness 124, cognitive 211) update when the cases land," 1.18.0 below) is the exact mechanism that just failed — the cases landed as T220–T224, not the T213–T217 [l2-session-checkpoint.md](l2-session-checkpoint.md) §6 had proposed, and this spec still read "211 tests (T01–T212), v1.9.76" against an actual 223 headings (T01–T224) at v1.9.81. A number copied into a second document has no way to learn that its source moved. Replaced with a pointer to `dev/tests/suite.md`'s own closing line, the one place the count cannot drift from itself; the Canonical References row for that file dropped its own copy of the same numbers. Feature-specific test IDs (T209–T212, Idea Intake Gate) are unaffected — an assigned ID for a named feature does not rot the way a running total does. No change to script-level harness counts or descriptions. Minor (removes a maintenance obligation this spec cannot discharge, adds the sourcing rule); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. |

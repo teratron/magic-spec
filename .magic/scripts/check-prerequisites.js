@@ -34,7 +34,7 @@ const verifyHeaders = args.includes('--verify-headers');
 const missing = [];
 const warnings = [];
 
-// l1-engine-diagnostics.md DG-10: the exact flag vector that reproduces this
+// DG-10: the exact flag vector that reproduces this
 // invocation's own check, forced to include --json regardless of whether
 // this run itself was asked to emit JSON — a recheck always needs parseable
 // output. Every `warn()` finding is a condition (an assessment of current
@@ -207,7 +207,7 @@ const pending = planExists ? findPendingWork(designDir) : null;
 
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
-    // l1-scan-input-hygiene.md SH-1/SH-4: a spec filename quoted in a code
+    // SH-1/SH-4: a spec filename quoted in a code
     // span or fence (e.g. a Backlog entry illustrating a template placeholder)
     // is a mention, not a reference — strip before matching, and bound the
     // capture to the filename grammar so one match can't span several
@@ -319,7 +319,7 @@ if (planExists && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DESIGN-DEBT BACKLOG (SC-2.4 / l1-session-continuity.md)
+// DESIGN-DEBT BACKLOG (SC-2.4)
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // A plan can go mechanically clean — every check above passes — while still
@@ -334,7 +334,7 @@ if (planExists && indexExists) {
 // A complete plan is recognized by positive reads only (a marker, all-terminal
 // rows, or a vacant section), and Backlog bullets carrying a trailing Parked
 // marker are not open — both rules live in lib/pending-work.js.
-if (pending && pending.planComplete && pending.openBacklogItems.length > 0) {
+if (pending?.planComplete && pending.openBacklogItems.length > 0) {
     const workspaceName = normalizePath(designDir).split('/').pop();
     warn(
         'DESIGN_DEBT_PENDING',
@@ -410,7 +410,7 @@ if (verifyHeaders && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ROLE REGISTRY INTEGRITY (R9 / l2-role-integration.md §5)
+// ROLE REGISTRY INTEGRITY
 // ═══════════════════════════════════════════════════════════════════════════
 
 const rolesDir = path.join('.magic', 'roles');

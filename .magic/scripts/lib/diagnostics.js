@@ -10,7 +10,7 @@ const { mkdirSafe, appendFileSafe } = require('../utils');
 // DIAGNOSTICS COLLECTOR (Engine Findings Sink)
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Implements l1-engine-diagnostics.md DG-1..DG-9: every non-fatal finding an
+// Implements DG-1..DG-9: every non-fatal finding an
 // engine script produces is recorded here, in addition to whatever it prints
 // at the point of occurrence. `rules/magic.md` §3 binds the agent to relay
 // finalize's **stdout** verbatim; every `console.warn`/`console.error` in the
@@ -211,7 +211,7 @@ function drain() {
  * non-zero exit, timeout, or unparseable stdout — so the caller degrades to
  * rendering the finding as recorded (DG-9 extends: fail toward showing more,
  * never less). Spawns the L1 script directly, never through `executor.js`
- * (l1-engine-diagnostics.md §5 Drawbacks: `executor.js` re-resolves
+ * (`executor.js` re-resolves
  * `MAGIC_DESIGN_DIR` from ambient `--workspace`/`workspace.json`, which can
  * diverge from the workspace `recheck.env` captured at record time). Forces
  * `MAGIC_DIAGNOSTICS_SUPPRESS=1` on the child so its own findings are never

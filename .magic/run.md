@@ -26,7 +26,7 @@ Parse `[arg]` to determine execution mode:
 2.5. **Live Memory (STATE.md)**: Before any execution, read `.design/{workspace}/STATE.md`.
    - `Blockers` non-empty → display blockers before proceeding.
    - `Blocking Constraints` non-empty → list each `[C-NNN]` and confirm acknowledgment.
-   - Work recorded in flight — a task whose tracking entry reads `In Progress`, or `**Status:** Paused` → Resume Detection applies (see `context.md §4`); this workflow states no detection rule of its own.
+   - Work recorded in flight — a task whose tracking entry reads `In Progress` → Resume Detection applies (see `context.md §4`); this workflow states no detection rule of its own.
    - After each task transitions to `Done` or `Blocked` → update STATE.md via:
      `node .magic/scripts/executor.js update-state --workspace={active-workspace} --task="{T-ID} {Task Title}" --next-action="{next task title}"`
      Pass **no** `--status=` here. That flag targets the top-level `**Status:**` field, whose vocabulary is `Active | Blocked | Paused` and whose scope is the phase, not a task; a task's own state is already authoritative in its checklist line and Detailed Tracking entry.

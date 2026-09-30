@@ -188,10 +188,12 @@ const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
  * @param {string} workflow - `spec|task|run|rule`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @param {Object} [plan] - A {@link classifyPlanState} result already read by the
+ *   caller, so `Next Action` and `Status` share one ledger read.
  * @returns {string}
  */
-function computeNextAction(workflow, workspace, wsDir) {
-    const next = synthesizeNextAction(workflow, workspace, wsDir);
+function computeNextAction(workflow, workspace, wsDir, plan) {
+    const next = synthesizeNextAction(workflow, workspace, wsDir, plan);
     if (RESERVED_COMMAND_RE.test(next)) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
@@ -284,7 +286,7 @@ function isPhaseBlocked(phaseContent, tasksContent, phaseNo) {
  * A phase in good standing can still have, as an open checklist line, a task
  * whose own tracking entry marks it `Status: Blocked` or `Assignment: User`
  * — the same class of contradiction `isPhaseBlocked` guards against, one
- * level down (l1-session-continuity.md SC-2.1(c)). Absence of either field,
+ * level down (SC-2.1(c)). Absence of either field,
  * or an `Assignment` value outside `Agent | User`, defaults to
  * agent-actionable: the defect this closes is a missing check on tasks that
  * positively declare themselves off-limits, not grounds for a stricter
@@ -306,36 +308,35 @@ function isTaskExcluded(content, taskId) {
 }
 
 /**
- * Derives the raw recommendation from the plan ledger, following pipeline
- * order (spec → task → run). Plan-state-aware per SC-2.1
- * (l1-session-continuity.md): for task/run the recommendation comes from the
- * actual plan state (open tasks → run; plan complete → replan), never a fixed
- * "execute the active phase" against an empty plan.
+ * Reads the plan ledger once and classifies where the plan stands. Both
+ * `Next Action` (the string) and `Status` (the reconciliation) derive from this
+ * one result, so the two fields cannot describe different plans.
  *
- * Callers should use {@link computeNextAction}, which applies the §5 guard.
+ * Three-tier lookup: inline TASKS.md → phase files → registry table. Kinds:
+ * - `inline-open` — an open checkbox in TASKS.md itself (`id`, `title`).
+ * - `blocked-phase` — the first open phase file is Blocked (`id` of its first
+ *   open task).
+ * - `actionable` — an open, agent-executable task in a phase in good standing
+ *   (`id`, `title`).
+ * - `all-excluded` — open tasks exist but every one is Blocked or
+ *   `Assignment: User` (`id` of the first excluded task).
+ * - `registry-open` — no open checkbox, but the registry shows a phase that is
+ *   not Done (`phase`).
+ * - `complete` — no open work anywhere.
+ * - `unreadable` — the ledger could not be read; never thrown, so callers
+ *   degrade to the planning funnel.
  *
- * @param {string} workflow - `spec|task|run|rule`.
- * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
- * @returns {string}
+ * @returns {{kind: string, id?: string, title?: string, phase?: string}}
  */
-function synthesizeNextAction(workflow, workspace, wsDir) {
-    // spec/rule changes require (re)planning before execution — the plan must
-    // absorb the amended specs/rules first (pipeline order).
-    if (workflow === 'spec') return `Run /magic.task ${workspace} to update the plan`;
-    if (workflow === 'rule')
-        return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
-
-    // task/run: derive the next step from the actual plan state (SC-2.1).
-    // Three-tier lookup: inline TASKS.md → phase files → registry table.
+function classifyPlanState(wsDir) {
     const openTaskRe = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m;
     try {
         const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
 
         // 1. Inline checkboxes in TASKS.md (legacy / flat format).
         const inlineOpen = tasks.match(openTaskRe);
-        if (inlineOpen)
-            return `Execute ${inlineOpen[1]} ${inlineOpen[2]} via /magic.run ${workspace}`;
+        if (inlineOpen) return { kind: 'inline-open', id: inlineOpen[1], title: inlineOpen[2] };
 
         // 2. Phase files — canonical two-level format (tasks/phase-N.md,
         //    track splits included). listPhaseFiles owns both the name shape
@@ -349,7 +350,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
             // checkbox syntax must not be read as a task in force, and the
             // per-item scan below (unlike the old single-match lookup)
             // widens that exposure by examining every line, not only the
-            // first (l1-scan-input-hygiene.md SH-1/SH-5).
+            // first (SH-1/SH-5).
             let firstExcludedTask = null;
             for (const { file, number } of phaseFiles) {
                 const rawContent = fs.readFileSync(path.join(tasksDir, file), 'utf8');
@@ -362,10 +363,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                 // Dispatching a resuming session into the very blocker the same
                 // STATE.md records would make the file contradict itself.
                 if (isPhaseBlocked(content, tasks, phaseNo)) {
-                    return (
-                        `Resolve blocker on ${anyOpen[1]} (${workspace}) — ` +
-                        `see STATE.md ## Blockers, then run /magic.run ${workspace}`
-                    );
+                    return { kind: 'blocked-phase', id: anyOpen[1] };
                 }
                 // The phase itself is not Blocked, but the first-matched line
                 // alone is still not licence to recommend it: that exact
@@ -394,7 +392,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                     }
                     const rawMatch = rawLines[i]?.match(openTaskRe);
                     const title = rawMatch ? rawMatch[2] : openTask[2];
-                    return `Execute ${openTask[1]} ${title} via /magic.run ${workspace}`;
+                    return { kind: 'actionable', id: openTask[1], title };
                 }
                 // Every open item in this phase file was excluded — keep
                 // scanning subsequent phase files before giving up.
@@ -405,11 +403,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
                 // is not complete — tasks remain — so this must not fall
                 // through to the plan-complete branch below (tier 3), and
                 // must not name the excluded task as /magic.run-executable.
-                return (
-                    `${firstExcludedTask} and any other open tasks need user or blocker ` +
-                    `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
-                    `then run /magic.run ${workspace}`
-                );
+                return { kind: 'all-excluded', id: firstExcludedTask };
             }
         }
 
@@ -417,18 +411,104 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
         const activePhase = tasks.match(
             /\| \[Phase (\d+)\]\([^)]+\) \|[^|]+\| `(?!Done)([^`]+)` \|/,
         );
-        if (activePhase) return `Continue Phase ${activePhase[1]} via /magic.run ${workspace}`;
+        if (activePhase) return { kind: 'registry-open', phase: activePhase[1] };
 
-        // No open tasks anywhere → plan complete. The recommendation is
-        // uniform across workflows (SC-2.1 + rules/magic.md §5): new scope
-        // enters through the /magic.task funnel, whose Pre-flight raises the
-        // HALT that sanctions spec authoring. Naming /magic.spec here would
-        // short-circuit that funnel — and, because /magic.status replays this
-        // field verbatim, would resurface after /magic.run where §5 forbids it.
-        return planCompleteNextAction(workspace, wsDir);
+        return { kind: 'complete' };
     } catch {
-        return `Run /magic.task ${workspace} to plan`;
+        return { kind: 'unreadable' };
     }
+}
+
+/**
+ * Derives the raw recommendation from the plan ledger, following pipeline
+ * order (spec → task → run). Plan-state-aware per SC-2.1: for task/run the
+ * recommendation comes from the actual plan state (open tasks → run; plan
+ * complete → replan), never a fixed "execute the active phase" against an
+ * empty plan.
+ *
+ * Callers should use {@link computeNextAction}, which applies the §5 guard.
+ *
+ * @param {string} workflow - `spec|task|run|rule`.
+ * @param {string} workspace
+ * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @param {Object} [classified] - A pre-read {@link classifyPlanState} result.
+ * @returns {string}
+ */
+function synthesizeNextAction(workflow, workspace, wsDir, classified) {
+    // spec/rule changes require (re)planning before execution — the plan must
+    // absorb the amended specs/rules first (pipeline order).
+    if (workflow === 'spec') return `Run /magic.task ${workspace} to update the plan`;
+    if (workflow === 'rule')
+        return `Run /magic.task ${workspace} to revalidate the plan against amended rules`;
+
+    // task/run: derive the next step from the actual plan state (SC-2.1).
+    const plan = classified || classifyPlanState(wsDir);
+    switch (plan.kind) {
+        case 'inline-open':
+        case 'actionable':
+            return `Execute ${plan.id} ${plan.title} via /magic.run ${workspace}`;
+        case 'blocked-phase':
+            return (
+                `Resolve blocker on ${plan.id} (${workspace}) — ` +
+                `see STATE.md ## Blockers, then run /magic.run ${workspace}`
+            );
+        case 'all-excluded':
+            return (
+                `${plan.id} and any other open tasks need user or blocker ` +
+                `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
+                `then run /magic.run ${workspace}`
+            );
+        case 'registry-open':
+            return `Continue Phase ${plan.phase} via /magic.run ${workspace}`;
+        case 'complete':
+            // No open tasks anywhere → plan complete. The recommendation is
+            // uniform across workflows (SC-2.1 + rules/magic.md §5): new scope
+            // enters through the /magic.task funnel, whose Pre-flight raises the
+            // HALT that sanctions spec authoring. Naming /magic.spec here would
+            // short-circuit that funnel — and, because /magic.status replays this
+            // field verbatim, would resurface after /magic.run where §5 forbids it.
+            return planCompleteNextAction(workspace, wsDir);
+        default:
+            return `Run /magic.task ${workspace} to plan`;
+    }
+}
+
+/**
+ * Reads the top-level `Status` value from STATE.md, through the shared
+ * quote-strip so a quoted label is never read as the field.
+ *
+ * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @returns {string|null} The trimmed value, or null when unreadable or absent.
+ */
+function readTopStatus(wsDir) {
+    try {
+        const content = stripQuoted(fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8'));
+        const match = content.match(/^\*\*Status:\*\* (.+)$/m);
+        return match ? match[1].trim() : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Decides the checkpoint's `Status` write from the same classification that
+ * produced `Next Action` (SC-1.4): `Active` becomes `Blocked` when nothing
+ * agent-executable is left in a blocked phase, and a stale `Blocked` returns
+ * to `Active` when work can proceed or the plan is complete. Every other case
+ * — an unreadable ledger, a registry-only row, a value outside
+ * `Active | Blocked` (a hand-set `Paused`), a missing field — writes nothing.
+ *
+ * @param {{kind: string}} plan - A {@link classifyPlanState} result.
+ * @param {string|null} current - The current top-level `Status` value.
+ * @returns {'Active'|'Blocked'|null} The value to write, or null for no write.
+ */
+function reconcileStatus(plan, current) {
+    const blocked = plan.kind === 'blocked-phase' || plan.kind === 'all-excluded';
+    const workable =
+        plan.kind === 'actionable' || plan.kind === 'inline-open' || plan.kind === 'complete';
+    if (blocked && current === 'Active') return 'Blocked';
+    if (workable && current === 'Blocked') return 'Active';
+    return null;
 }
 
 /**
@@ -468,15 +548,19 @@ function resolveWorkspaceDir(cliWorkspace, workspace, designAbs) {
  * @returns {{updated: boolean, dryRun?: boolean, nextAction?: string}}
  */
 function updateSessionState(opts, workspace, wsDir) {
-    const nextAction = computeNextAction(opts.workflow, workspace, wsDir);
+    // One ledger read feeds both fields, so they cannot describe different plans.
+    const plan = classifyPlanState(wsDir);
+    const nextAction = computeNextAction(opts.workflow, workspace, wsDir, plan);
+    const status = reconcileStatus(plan, readTopStatus(wsDir));
     if (opts.dryRun) {
+        const statusPart = status ? `, Status=${status}` : '';
         console.log(
-            `[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}", auto-progress recompute.`,
+            `[state] (dry-run) Would patch STATE.md: Updated=<now>, Next Action="${nextAction}"${statusPart}, auto-progress recompute.`,
         );
         return { updated: false, dryRun: true, nextAction };
     }
     try {
-        updateState(wsDir, { nextAction }, { autoProgress: true });
+        updateState(wsDir, status ? { nextAction, status } : { nextAction }, { autoProgress: true });
         return { updated: true, nextAction };
     } catch (e) {
         console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);
@@ -691,7 +775,7 @@ function emitSuccess(ctx) {
 
 /**
  * Renders the terminal block shared by both finalize exit paths, in a fixed
- * order (l1-engine-diagnostics.md DG-5): the engine diagnostics digest
+ * order (DG-5): the engine diagnostics digest
  * (omitted entirely when there is nothing to report — DG-7), then the next
  * step (DG-6) — the exact string this invocation persisted to STATE.md,
  * never recomputed. Neither `emitSkip()` nor `emitSuccess()` may render
@@ -761,7 +845,7 @@ function main() {
     // reused by every step below that writes inside the workspace — never
     // recomputed independently, which is what let a stale MAGIC_DESIGN_DIR
     // diverge from an explicit --workspace at one call site while another
-    // stayed correct (l2-finalize-state-accuracy.md, workspace-scoping defect).
+    // stayed correct (a workspace-scoping defect).
     const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
 
     const versionPath = path.resolve(projectRoot, config.versionPath);
@@ -942,6 +1026,8 @@ function main() {
 module.exports = {
     main,
     computeNextAction,
+    classifyPlanState,
+    reconcileStatus,
     updateSessionState,
     resolveWorkspaceDir,
     collectChangedFiles,

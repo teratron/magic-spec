@@ -60,7 +60,7 @@ STATE.md is a live project state digest read before every execution session:
 
 - **Blockers**: If non-empty, displayed before proceeding.
 - **Blocking Constraints**: Each `[C-NNN]` confirmed before execution.
-- **Work in flight** (a task marked `In Progress`, or a paused session): Triggers Resume Detection for seamless session continuity — automatically, with no command to type.
+- **Work in flight** (a task marked `In Progress`): Triggers Resume Detection for seamless session continuity — automatically, with no command to type.
 - **Updates**: STATE.md is updated after every task transition (`Done` / `Blocked`) and phase completion.
 - **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task.
 - **Dead ends**: An approach tried and abandoned (a failed check, a review that sent the work back, a reverted change) is recorded as one line in the task's `Attempts` field, so a fresh session does not repeat it.

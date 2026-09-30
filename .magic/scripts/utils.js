@@ -40,7 +40,7 @@ const VOLATILE_STATE_FILES = new Set([
  * "can this installation bless an engine change by regenerating `.checksums`?"
  * — and decides which remedy an integrity failure may name: C14
  * (`update-engine-meta`) in the developer repo, a restore from the release
- * archive everywhere else (l2-engine-automation.md, Engine Meta Update Flow).
+ * archive everywhere else.
  *
  * @returns {boolean} True in the developer repository, false in a user installation.
  */

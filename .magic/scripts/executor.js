@@ -87,7 +87,7 @@ if (fs.existsSync(workspaceJsonPath)) {
             if (workspaceEntry) {
                 const targetPath = path.join(process.cwd(), '.design', workspaceName);
                 if (!fs.existsSync(targetPath)) {
-                    // WI-9 (l1-workspace-intent-routing.md): Auto-mkdir the standard
+                    // WI-9: Auto-mkdir the standard
                     // subtree instead of silently falling back to .design/ root.
                     // The previous fallback caused spec/task artifacts to accumulate
                     // at the global registry level, breaking per-workspace isolation.

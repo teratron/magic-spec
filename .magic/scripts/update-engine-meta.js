@@ -44,8 +44,9 @@ for (let i = 0; i < args.length; i++) {
  * Regenerates skill wrappers from `workflows/` (and `.agents/workflows/`).
  *
  * Deliberately callable independent of the `.magic/` checksum verdict —
- * `workflows/` is excluded from that manifest by design (l2-skill-wrappers.md
- * §3.2), so the checksum scan can never observe a workflows/-only edit.
+ * `workflows/` is excluded from that manifest by design (wrappers are
+ * user-customizable and partial installs must stay supported), so the
+ * checksum scan can never observe a workflows/-only edit.
  * Idempotent: rewrites identical bytes when `workflows/` also didn't change,
  * so calling it unconditionally on every write invocation is safe.
  */
@@ -96,7 +97,7 @@ function updateEngineMeta() {
     // workflows/, skills/, rules/ are user-customizable wrappers — not
     // protected by checksum so partial installations stay supported.
     const scanZones = [{ dir: magicDir, relBase: magicDir }];
-    // Invariant 7 parity (l2-engine-automation.md §Scan Hygiene) — must stay
+    // Invariant 7 parity (the shared scan-hygiene rule) — must stay
     // in sync with generate-checksums.js's identical floor/gitignore union,
     // or the two can disagree about what belongs in the manifest.
     const scanIgnoreDirs = ['history', ...BUILD_NOISE_DIRS];
@@ -191,7 +192,7 @@ function updateEngineMeta() {
         // this project", while the drift it claims to resolve is untouched: the
         // manifest is unchanged, so the next check reports the same files again
         // and every retry bumps the version once more. Refuse before anything
-        // is touched (l2-engine-automation.md, Engine Meta Update Flow).
+        // is touched.
         if (!hasEngineWriteTooling()) refuseUserInstallWrite();
 
         bumpVersion();
@@ -204,8 +205,7 @@ function updateEngineMeta() {
         // Dev-repo-only: keep .design/INDEX.md's Engine Version snapshot current
         // with every C14 bump. Consumer installs never reach this branch — the
         // external-drift signal Engine Upgrade Detection (rules/magic.md §1)
-        // provides to them is untouched (l1-engine-core.md §Known Process Gaps —
-        // Dev-Repo Engine-Version Snapshot Sync).
+        // provides to them is untouched.
         const syncSnapshotPath = path.join(__dirname, '../../dev/scripts/sync-engine-snapshot.js');
         if (fs.existsSync(syncSnapshotPath)) {
             const syncEngineSnapshot = require(syncSnapshotPath);
@@ -232,7 +232,7 @@ function updateEngineMeta() {
         console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core).');
     } else {
         // .magic/ itself is unchanged, but workflows/ is deliberately excluded
-        // from this checksum manifest (l2-skill-wrappers.md §3.2) — the scan
+        // from this checksum manifest (user-customizable wrappers, partial installs) — the scan
         // above is structurally blind to a workflows/-only edit. Skill
         // regeneration reads workflows/ directly, so it must run regardless
         // of this verdict rather than being skipped alongside a version bump

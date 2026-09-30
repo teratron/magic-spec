@@ -125,10 +125,8 @@ After resolution, load **in this exact order** — the sequence forms the sessio
    - Fields `Current Position`, `Blockers`, `Blocking Constraints` take precedence over inferences from TASKS.md / PLAN.md when determining next action.
    - If `Blocking Constraints` is non-empty, the agent MUST acknowledge each `[C-NNN]` entry explicitly before proceeding.
 4. **Resume Detection** — run `node .magic/scripts/executor.js resume-state --workspace={workspace}`, the one shared predicate for "work is in flight" (SC-9):
-   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`, or `**Status:** Paused`. A missing or failing script counts as nothing in flight: never a halt. A leftover `HANDOFF.json` whose `Handoff File` pointer in `STATE.md` reads `none` is inert; the presence of the file is not a trigger.
-   - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
-   - `**Status:** Paused` with the `Handoff File` pointer set → read `required_reading` from that snapshot and load those files; acknowledge its `blocking_constraints` before the first action. Once `required_reading` is read, and before the recorded `Next Action` runs, the snapshot is **consumed**: `node .magic/scripts/executor.js update-state --workspace={workspace} --status=Active --handoff=none`. The file stays on disk (the pause merge rule needs it) and is inert once the pointer reads `none`. Read-only workflows (`magic.status`, `magic.analyze`, `magic.graph`) report the line but never consume a snapshot.
-   - **Memory Fence**: Loaded HANDOFF / STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with `next_action` or any `blocking_constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
+   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`. A missing or failing script counts as nothing in flight: never a halt.   - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
+   - **Memory Fence**: Loaded STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with the recorded `Next Action` or any `Blocking Constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
    - A cold context that does not open with a `/magic.*` command runs the same check through the session-start rule in `rules/magic.md`.
 
 ## Context Budget Guard
@@ -141,7 +139,7 @@ Applies to every workflow. Read economy is guidance, not a measurement: the agen
 ### Read Hygiene
 
 - **Stale tool output** — results from workflow steps older than N-2 of the active workflow: refer by step number or one-line summary; do **not** re-cite verbatim.
-- **Evidence Capsule** — when persisting a tool result into `STATE.md` / `HANDOFF.json` / phase frontmatter, store only: `command`, `exit_code`, `key_findings` (≤3 lines), `errors`, `next_action`. Never full stdout.
+- **Evidence Capsule** — when persisting a tool result into `STATE.md` / phase frontmatter, store only: `command`, `exit_code`, `key_findings` (≤3 lines), `errors`, `next_action`. Never full stdout.
 - **Cache-Prefix Invariant** — the Post-Resolution load order (global `RULES.md` → workspace `RULES.md` → `STATE.md`) is fixed; it forms the session prompt-cache prefix. Reordering or interleaving wide reads ahead of it invalidates cache hits — preserve the order.
 
 ### Post-Compaction Re-grounding

@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.14.0
+**Version:** 1.15.0
 **Status:** Active
-**Engine Version:** 2.1.112
+**Engine Version:** 2.1.114
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.15.0 | 2026-09-30 | Agent | No spec-count change (37/37 Stable). The four Backlog items left as design debt are resolved: l1-session-continuity.md 2.4.0 → 2.5.0 (SC-1.4 Status Reconciliation between Active and Blocked; SC-9(g) the pause snapshot retired on zero use in seven projects), l2-finalize-state-accuracy.md 2.1.0 (§16), l2-session-checkpoint.md 1.1.0 (§5.8), l2-status-command.md 1.4.0, l2-workflow-wrappers.md 1.3.1, l2-engine-finalization.md 3.5.0 (§10: spec-side rule capture is significant), l2-test-suite.md 1.22.0 (Mutation-Control Driver). Specification only; engine deployment routed to `/magic.task engine`. |
 | 1.14.0 | 2026-09-30 | Agent | No spec-count change (37/37 Stable). Owner request: no explicit next-command suggestion when nothing is left to do. l1-session-continuity.md 2.3.0 → 2.4.0 (plan-complete `Next Action` split into work-pending → funnel and nothing-pending → a command-free statement; "exactly one command" → "at most one"; pending defined as the Pre-flight signals through one shared predicate, failing toward the funnel), with l2-engine-finalization.md 3.4.0, l2-status-command.md 1.3.0 and l2-test-suite.md 1.21.0 following. Specification only; engine deployment routed to `/magic.task engine`. |
 | 1.13.1 | 2026-09-30 | Agent | Clarification patch: l1-rule-admission-gate.md 1.1.0 → 1.1.1 adds the two reciprocal `Related Specifications` links its amendment created. No requirement or count change (37/37 Stable). |
 | 1.13.0 | 2026-09-30 | Agent | No spec-count change (37/37 Stable). `/magic.spec amend l1-rule-admission-gate`: the specification was read against the engine files its deployment targets, and the gaps that reading found are closed. l1-rule-admission-gate.md 1.0.0 → 1.1.0 (RA-8 write reach: the gate writes only what the running workflow may, so `/magic.rule` redirects a specification-placed outcome instead of writing it; an origin tie-break; observable evidence for the deadlock retirement kind; every review must precede the write; the `docs/` counterparts row; shipped text self-contained). l2-role-integration.md 2.1.0 → 2.2.0 and l2-test-suite.md 1.19.0 → 1.20.0 carry the matching wiring and coverage mandate. Specification only; the deployment plan is re-baselined by `/magic.task engine`. |

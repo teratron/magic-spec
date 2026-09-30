@@ -11,7 +11,7 @@
  *
  * This module previously also composed a suggested Conventional Commits
  * message; that responsibility was retired 2026-08-27 by explicit user
- * directive (SC-3 retirement, l1-session-continuity.md v2.0.0) — the engine
+ * directive (SC-3 retirement) — the engine
  * no longer composes or prints a commit message on any finalize path.
  */
 
@@ -53,7 +53,16 @@ function buildChangelogBullet(workflow, workspace, files) {
     switch (workflow) {
         case 'spec': {
             const specs = files.filter((f) => f.path.includes('/specifications/'));
-            if (specs.length === 0) return `Updated spec registry (${workspace})`;
+            if (specs.length === 0) {
+                // A rule captured during a spec session changes RULES.md and
+                // nothing else; "spec registry" would misdescribe it.
+                if (files.length > 0 && files.every((f) => f.path.endsWith('RULES.md'))) {
+                    return files.some((f) => f.path === '.design/RULES.md')
+                        ? `Updated global project rules (${workspace})`
+                        : `Updated workspace rules (${workspace})`;
+                }
+                return `Updated spec registry (${workspace})`;
+            }
             const verb = specs.every((f) => f.status === 'added') ? 'Added' : 'Updated';
             // This string is written verbatim into the product's root
             // CHANGELOG.md by the pipeline — nobody authors it, nobody reviews

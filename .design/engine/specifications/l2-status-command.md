@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -36,7 +36,7 @@ After a break the user must be able to run one command and learn: where the proj
 | SC-2 (Universal Post-Workflow Update) | Status is on the read-only exemption list; it performs no state writes. |
 | SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command, or — when `Next Action` states that nothing is pending (SC-2.4 addendum) — that statement and no command. |
 | SC-5 (C2 Exception) | Registered as the single authorized wrapper addition; inventory tracked in l2-workflow-wrappers.md. |
-| SC-9 (Resume From Recorded State) | The in-flight and paused branch of §5.3 calls the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): read-only, no writes, no diagnostics record. A snapshot file alone is not a paused session. |
+| SC-9 (Resume From Recorded State) | The in-flight branch of §5.3 calls the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): read-only, no writes, no diagnostics record. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert (the snapshot flow is retired, SC-9(g)). |
 
 ## 5. Detailed Design
 
@@ -66,7 +66,7 @@ Rendered in this fixed order:
 
 - **Workspace resolution**: standard resolution chain (context load order, Priority 1-4). Optional argument `{workspace}` overrides. With multiple workspaces and no argument, render the resolved workspace and append a one-line `Other workspaces: {name} ({status}), ...` footer.
 - **`STATE.md` missing** (fresh or partially initialized project): emit a bootstrap briefing — registry summary from `INDEX.md` (spec counts, statuses) plus the recommendation to run the planning workflow, whose auto-init provisions `STATE.md`. Never create files from the status command.
-- **In-flight or paused session**: the resume line comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3), never from this command's own reading of the files — a task recorded `In Progress` in the active phase, or `Status: Paused` (then the handoff `next_action` and required reading, per the pause contract). A handoff file whose `STATE.md` pointer reads `none` is inert and is not, by itself, a paused session (SC-9(b)).
+- **In-flight session**: the resume line comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3), never from this command's own reading of the files — a task recorded `In Progress` in the active phase. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert and is not a paused session (SC-9(b), SC-9(g)).
 - **Unreadable artifacts**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})` instead of aborting the whole briefing.
 
 ### 5.4 Engine Upgrade Detection Interplay
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-09-30 | Agent | The paused-session branch of §5.3 and the SC-9 row are removed with the pause snapshot ([l1-session-continuity.md](l1-session-continuity.md) 2.5.0 SC-9(g)): the resume line reports in-flight tasks only; a stray `HANDOFF.json` or a hand-set `Paused` is inert. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.3.0 | 2026-09-30 | Agent | §5.2 item 7 and the SC-4 row follow [l1-session-continuity.md](l1-session-continuity.md) 2.4.0: a `Next Action` that states nothing is pending is rendered as that statement, not as a recommended command — the briefing replays `Next Action` verbatim, so without this the new command-free value would be reformatted back into a recommendation. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.2.0 | 2026-09-20 | Agent | The paused-session bullet of §5.3 no longer reads "a handoff file present" as a trigger. The resume line now comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): a task recorded `In Progress`, or `Status: Paused` (SC-9(b) of [l1-session-continuity.md](l1-session-continuity.md) 2.3.0). §2's "no writes" is clarified to mean no artifact writes: a script the briefing calls may record to the diagnostics sink, which is runtime state ([l1-engine-diagnostics.md](l1-engine-diagnostics.md) §2). §4 gained the SC-9 row. The briefing layout and the read-only contract are otherwise unchanged. Status reverted `Stable → RFC` by the C12 Cascade from the parent; Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.1.0 | 2026-08-27 | Agent | §4 Invariant Compliance table dropped the SC-3 row: SC-3 (Commit Suggestion Guarantee) was retired in full in [l1-session-continuity.md](l1-session-continuity.md), so there is no longer an invariant for this read-only command to be exempt from. No behavioral change to the status command itself. |

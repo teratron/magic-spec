@@ -32,7 +32,12 @@ const { hashFileSafe, normalizePath } = require('../utils');
  * `.design/` paths are workspace-rooted; `.design/RULES.md` is global.
  */
 const WHITELIST = {
-    'magic.spec': ['.design/{ws}/specifications/**/*.md', '.design/{ws}/INDEX.md'],
+    'magic.spec': [
+        '.design/{ws}/specifications/**/*.md',
+        '.design/{ws}/INDEX.md',
+        '.design/RULES.md',
+        '.design/{ws}/RULES.md',
+    ],
     'magic.task': ['.design/{ws}/PLAN.md', '.design/{ws}/TASKS.md', '.design/{ws}/tasks/**/*.md'],
     'magic.run': [
         '.design/{ws}/TASKS.md',

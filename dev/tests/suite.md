@@ -3409,7 +3409,7 @@ If any test fails, document the failure reason and propose a fix.
   - A new session: the context holds no `STATE.md`. `.design/engine/` initialized, `MAGIC_RESUME_CHECK` unset.
   - `tasks/phase-3.md`: task `T-3A02` "Extract the parser" has its tracking entry `**Status:** In Progress`; its checklist line still reads `- [ ]`. Its `Attempts` field holds two indented lines: `tried a global regex → it swallowed the next entry` and `tried a line scan → it split on CRLF`.
   - Three product files are modified in the working tree (outside `.design/`).
-  - `STATE.md`: `Status: Active`, `Handoff File: none`, `Next Action: Execute T-3A02 Extract the parser via /magic.run engine`.
+  - `STATE.md`: `Status: Active`, `Next Action: Execute T-3A02 Extract the parser via /magic.run engine`.
 - **Action:** The first user message has nothing to do with the recorded work: `"rename the constant MAX_RETRIES to RETRY_LIMIT in src/net.js"`.
 - **Expected:**
   - [ ] Before its first tool call the agent — holding no `STATE.md` — runs `node .magic/scripts/executor.js resume-state --all` once (§10), not a wider read of the design tree.
@@ -3425,12 +3425,12 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `rules/magic.md` §10 + `context.md` Post-Resolution step 4 + `run.md` Task Start (resume branch)
 - **Synthetic State:**
-  - The state of T220 (`T-3A02` `In Progress`, two dead ends, `Handoff File: none`).
-  - A leftover `.design/engine/HANDOFF.json` from a session weeks earlier, whose `next_action` names a different task, `T-2B05`.
+  - The state of T220 (`T-3A02` `In Progress`, two dead ends).
+  - A leftover `.design/engine/HANDOFF.json` from a retired snapshot mechanism, whose `next_action` names a different task, `T-2B05`.
 - **Action:** The user types only `continue`.
 - **Expected:**
   - [ ] Resume detection runs **exactly once** in the turn — through the run workflow's context load, not again from the session-start rule (§10: a `/magic.*` invocation performs the check itself).
-  - [ ] The printed line names `T-3A02`. The stale snapshot is **not** a trigger: its pointer reads `none`, so it is neither read, nor consumed, nor mentioned as pending work (SC-9(b)).
+  - [ ] The printed line names `T-3A02`. The leftover file is **not** a trigger: nothing reads it, so it is neither consumed nor mentioned as pending work (SC-9(b), SC-9(g)).
   - [ ] `continue` is taken as "execute the recorded `Next Action`": the agent starts the run workflow on `T-3A02` in the same turn.
   - [ ] Task Start finds the entry already `In Progress` and treats it as **resumed**: it leaves the status unchanged, and reads `Attempts` and `Handoff` before an approach is chosen.
   - [ ] The checklist line stays `- [ ]` until the task is `Done`.
@@ -3449,7 +3449,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The agent treats the context as **cold**: it runs resume detection and re-reads `STATE.md` and the active task's tracking entry before making any edit.
   - [ ] Constraints, dead ends and position are taken from those files: `[C-004]` is acknowledged before the first action, and the global-regex approach is not retried (or a one-line `retry:` states what differs) — although the summary says it worked.
   - [ ] Where the summary and the files disagree, the files are followed.
-  - [ ] **No fill percentage is cited or acted on** ("context at 63%"), no tier is narrated, and `/magic.pause` is neither invoked nor recommended.
+  - [ ] **No fill percentage is cited or acted on** ("context at 63%") and no tier is narrated.
 - **Guards tested:** SC-7 observable triggers — a visible compaction is an event, a fill percentage is not measurable; Post-Compaction Re-grounding; the retired Budget Guard tiers stay retired; SC-6 (recorded state outranks recollection).
 - **Regression for:** the retired POOR auto-pause that fired on a guessed percentage, and a summary that silently drops the constraints and dead ends a resuming session most needs.
 

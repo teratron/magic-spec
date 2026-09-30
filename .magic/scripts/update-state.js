@@ -244,7 +244,6 @@ const FIELD_MAP = {
     task: { re: /^- \*\*Task:\*\* .*/m, prefix: '- **Task:** ' },
     spec: { re: /^- \*\*Spec:\*\* .*/m, prefix: '- **Spec:** ' },
     nextAction: { re: /^- \*\*Next Action:\*\* .*/m, prefix: '- **Next Action:** ' },
-    handoff: { re: /^\*\*Handoff File:\*\* .*/m, prefix: '**Handoff File:** ' },
     bootstrap: { re: /^\*\*Bootstrap Mode:\*\* .*/m, prefix: '**Bootstrap Mode:** ' },
 };
 
@@ -256,7 +255,7 @@ const FIELD_MAP = {
 const FIELD_CONTAINERS = [
     { section: null, keys: ['workspace', 'updated', 'phase', 'status'] },
     { section: '## Current Position', keys: ['task', 'spec', 'nextAction'] },
-    { section: '## Session Continuity', keys: ['handoff', 'bootstrap'] },
+    { section: '## Session Continuity', keys: ['bootstrap'] },
 ];
 
 /** A line that is itself a field: `**Label:** …` or `- **Label:** …`. */
@@ -276,7 +275,7 @@ function lineEnding(content) {
 /**
  * Adds a field line that the file lacks. The scalar-field loop used to patch a
  * field only when its line was found and to do nothing otherwise, so on a
- * hand-trimmed file a `--next-action`, `--status` or `--handoff` was accepted
+ * hand-trimmed file a `--next-action` or `--status` was accepted
  * and dropped while `STATE.md updated` was still printed. The line goes before the
  * earliest present field that follows it in template order within its
  * container, else after the container's last non-blank line; a container
@@ -776,7 +775,7 @@ function runCli() {
                 '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
                 '[--next-action=<text>] [--decision=<text>] ' +
                 '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
-                '[--handoff=<path>] [--bootstrap=<true|false>]',
+                '[--bootstrap=<true|false>]',
         );
         process.exit(1);
     }
@@ -792,7 +791,6 @@ function runCli() {
             '--status',
             '--phase',
             '--next-action',
-            '--handoff',
             '--bootstrap',
             '--decision',
             '--constraint-title',
@@ -822,7 +820,6 @@ function runCli() {
     if (values['--status'] !== undefined) parsed.status = values['--status'];
     if (values['--phase'] !== undefined) parsed.phase = values['--phase'];
     if (values['--next-action'] !== undefined) parsed.nextAction = values['--next-action'];
-    if (values['--handoff'] !== undefined) parsed.handoff = values['--handoff'];
     if (values['--bootstrap'] !== undefined) parsed.bootstrap = values['--bootstrap'];
     if (flags['--auto-progress']) opts.autoProgress = true;
 

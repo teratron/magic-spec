@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.0.2
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -110,11 +110,10 @@ node .magic/scripts/executor.js resume-state [--workspace=<name> | --all] [--jso
 ```plaintext
 for each workspace in scope (the resolved workspace, or every registered one under --all):
     read STATE.md                      absent -> skipped; unreadable -> skipped + finding
-    paused  = (Status == Paused)
     flight  = tracking entries with Status == In Progress in the live phase
               workbooks (tasks/; archived phases hold no open work), or in
               TASKS.md for the legacy flat layout - read through the SH-1 strip
-    if not paused and flight is empty: skip this workspace          # silence
+    if flight is empty: skip this workspace                          # silence
     changed = read-only change listing (git diff --name-only HEAD + untracked),
               excluding .design/ (the bookkeeping this line already reports);
               null when the directory is not a repository
@@ -127,16 +126,16 @@ Output is nothing when no workspace has work in flight; otherwise one line per w
 ▶ Resume [{workspace}]: {T-ID} {title} in flight — {k} dead end(s) recorded, {m} file(s) modified. Next: {next action}
 ```
 
-Variants: several in-flight tasks name at most three, then `+{n} more`; `Status: Paused` appends `(paused snapshot)`; a paused workspace with nothing else reads `▶ Resume [{workspace}]: paused snapshot. Next: {next action}`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress" | "paused" | "both", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magic.*` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
+Variants: several in-flight tasks name at most three, then `+{n} more`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magic.*` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
 
 Call sites, each replacing prose that decides the same question independently:
 
 | Surface | Obligation |
 | --- | --- |
-| `context.md` §4 Resume Detection | Run the script with `--workspace`; relay its line; load a snapshot's `required_reading` only when `Status` is `Paused` and the pointer is set; keep the Memory Fence. A snapshot is consumed when it is loaded: once it has read `required_reading` and before it executes the recorded `Next Action`, the resume step calls `update-state --status=Active --handoff=none`. One definition, replacing "after successful resume" and "after the first successful task step". The file stays on disk (the pause merge rule needs it) and is inert once the pointer reads `none`. |
+| `context.md` §4 Resume Detection | Run the script with `--workspace`; relay its line; keep the Memory Fence. No snapshot is loaded or consumed: the snapshot flow is retired (§5.8). |
 | `rules/magic.md` §10 | §5.4. |
-| `status.md` degraded states | The paused/in-flight branch calls the script (read-only); [l2-status-command.md](l2-status-command.md) §5.3 is amended accordingly. |
-| `pause.md` Resume Protocol | Defers to `context.md` §4 and states no detection rule of its own. |
+| `status.md` degraded states | The in-flight branch calls the script (read-only); [l2-status-command.md](l2-status-command.md) §5.3 is amended accordingly. |
+| `pause.md` | Deleted (§5.8); no surface states a resume rule there any more. |
 
 ### 5.4 Session-Start Rule (SC-9(c))
 
@@ -159,7 +158,11 @@ Call sites, each replacing prose that decides the same question independently:
 
 - `.magic/templates/state.md` drops `**Last Session Ended:**`. Existing `STATE.md` files keep the line until their next structural rewrite; the engine never reads it. The implementing task removes it from this repository's own file.
 - `/magic.pause` stops being advertised. `context.md` (two lines) and `task.md` are rewritten by §5.6; the Trigger line of `pause.md` becomes "Trigger: an explicit user statement that the session is ending or being cleared", so the fill-percentage trigger goes (SC-7); the Pause Propagation notice in `run.md` loses "(Pause: /magic.pause)"; the `description` in `templates/handoff.json` no longer names a command; `docs/run.md` and `docs/task.md` are corrected. The check that keeps this from recurring is `PHANTOM_COMMAND` ([l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6.1).
-- The pause snapshot (`pause.md`, `HANDOFF.json`, `Status: Paused`) is kept as an optional, agent-initiated path with unchanged content. No guarantee in this contract depends on it.
+- The pause snapshot is retired, not kept: §5.8.
+
+### 5.8 Retirement of the Pause Snapshot (SC-9(g))
+
+The decision and its evidence are in SC-9(g). What is removed: `.magic/pause.md`; `.magic/templates/handoff.json`; `update-state.js`'s `--handoff` flag (the `Handoff File` pointer is no longer patched — an existing line is left untouched and never read); the `Handoff File` line of `templates/state.md`; `resume-state.js`'s paused branch (`Status: Paused` is no longer an input); `context.md` §4's snapshot-loading and consumption bullets; `status.md`'s paused bullet; the `pause.md` entry in the internal-module list of [l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6 item 3 and any `docs/` mention; and the harness cases that pin the pointer field's patching and the paused variant. Ending a session needs no act: SC-6 carries it. Compatibility: no project has produced a snapshot, and an existing `HANDOFF.json` or `Status: Paused` is inert; the checksum manifest regeneration drops the two deleted files. Deployment is a deletion and is verified by a repository-wide search for the removed names (`pause.md`, `HANDOFF`, `--handoff`, `Handoff File`) returning only the specification history and this section.
 
 ## 6. Regression Coverage
 
@@ -170,7 +173,7 @@ Harness (`dev/tests/engine.js`), deterministic:
 | H1 | `Status: Active`, pointer `none`, no in-flight entry, a stale `HANDOFF.json` present → empty stdout, exit 0. Negative control: the shipped presence trigger fires here. | SC-9(b) |
 | H2 | One task `In Progress`, two-level layout → one line naming its ID and title, its dead-end count and the modified-file count (`.design/` excluded); identical for LF and CRLF fixtures. | SC-9(d), (e) |
 | H3 | Two tasks in flight → both named; four → three named plus `+1 more`. | SC-9(f) |
-| H4 | `Status: Paused` alone → snapshot line; `Active` with pointer `none` → silent. | SC-9(b) |
+| H4 | `Status: Paused` alone (a hand-set value) → silent; a stale `HANDOFF.json` with pointer `none` → silent; `update-state --handoff` → refused like any unknown flag. | SC-9(b), SC-9(g) |
 | H5 | Fixture outside a repository → line without a file count, exit 0. | SC-9(e) |
 | H6 | A clean run leaves every file in the fixture, including `.design/.cache`, byte-identical; a fixture with an unreadable `STATE.md` records exactly one `RESUME_STATE_UNREADABLE` warning and writes nothing else. | read-only, DG-1 |
 | H7 | Fixture pair identical except one entry whose `Attempts` quotes `**Status:** Blocked` and `**Assignment:** User` → `computeNextAction` output identical for both; `resume-state` counts the attempt and does not treat the task as Blocked. | SC-8 parser safety |
@@ -198,11 +201,11 @@ Deployment inventory, routed to `/magic.task engine`; every row outside `.design
 | --- | --- | --- |
 | 1 | `.magic/scripts/lib/` (new module) | Extract the tracking-entry block reader from `finalize.js`; `finalize.js` imports it (§5.2). |
 | 2 | `.magic/scripts/resume-state.js` (new) | §5.3. |
-| 3 | `.magic/run.md` | Task Start step (§5.1); the `Attempts` events at 3.4, 3.4b, 3.5 and on discard; Invariant 2.5's Paused line defers to `resume-state`; the Pause Propagation notice loses the phantom hint. |
+| 3 | `.magic/run.md` | Task Start step (§5.1); the `Attempts` events at 3.4, 3.4b, 3.5 and on discard; Invariant 2.5's Paused clause is removed (§5.8); the Pause Propagation notice loses the phantom hint. |
 | 4 | `.magic/context.md` | §4 rewrite; Budget Guard rewrite (§5.6). |
-| 5 | `.magic/pause.md`, `.magic/status.md` | §5.3, §5.7. |
+| 5 | `.magic/status.md`; `.magic/pause.md` deleted | §5.3, §5.8. |
 | 6 | `.magic/task.md` | The `DEGRADING/POOR` tier note **and** the file's own separate four-row percentage table (§5.6) — both retired, not only the note; verify that plan regeneration preserves `Attempts` and `In Progress` (§5.2) and amend it if it rewrites entries. |
-| 7 | `.magic/templates/state.md`, `phase.md`, `handoff.json` | §5.7; document the optional `Attempts` in the phase template without a live line. |
+| 7 | `.magic/templates/state.md`, `phase.md`; `handoff.json` deleted | §5.7; document the optional `Attempts` in the phase template without a live line. |
 | 8 | `.magic/scripts/finalize.js` | §5.5. |
 | 9 | `.magic/analyze.md` | `PHANTOM_COMMAND` ([l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6.1). |
 | 10 | `rules/magic.md` and `.agents/rules/magic.md` | §10 and the §8 item; validate the hardlink pair afterwards. |
@@ -227,7 +230,6 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 | `[RESUME]` | `.magic/scripts/resume-state.js` | The shared detection predicate (implementation deliverable) |
 | `[RUN]` | `.magic/run.md` | Task Start step and the `Attempts` events (SC-8, SC-9(a)) |
 | `[CONTEXT]` | `.magic/context.md` | Resume Detection, Budget Guard, Read Hygiene |
-| `[PAUSE]` | `.magic/pause.md` | Optional agent-initiated snapshot flow |
 | `[STATUS]` | `.magic/status.md` | Read-only briefing; in-flight branch |
 | `[STATE-TPL]` | `.magic/templates/state.md` | STATE.md structure contract (SC-1.3) |
 | `[PHASE-TPL]` | `.magic/templates/phase.md` | Tracking-entry schema |
@@ -241,6 +243,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-09-30 | Agent | **§5.8 Retirement of the Pause Snapshot** implementing [l1-session-continuity.md](l1-session-continuity.md) 2.5.0 SC-9(g): the resume predicate loses its paused branch (pseudo-code, variants line, `--json` `source`), the `context.md`/`status.md`/`pause.md` call-site rows and deployment rows 3, 5 and 7 follow, H4 is restated (a hand-set `Paused` is silent; `--handoff` refused), `[PAUSE]` leaves the Canonical References and §5.7's last bullet points at §5.8. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.0.2 | 2026-09-28 | Agent | Reality-sync corrections, patch, no status transition (R42, Retro L2 Session 13): §5.6 and §7 row 6 named only `task.md`'s single `DEGRADING/POOR` note as the thing SC-7 retires there, when `task.md` also carried its own separate four-row percentage table (already-drifted thresholds from `context.md`'s) — both are named now, since both were in fact retired. §6's proposed case range `T213–T217` is removed rather than corrected to the range actually assigned (`T220–T224`): [l2-test-suite.md](l2-test-suite.md) v1.19.0 stopped recording specific ranges here for the same reason a range proposed at plan time cannot be trusted at read time — cases land wherever the suite's IDs are free when they're written, and this very entry exists because the first guess was wrong once already. |
 | 1.0.1 | 2026-09-21 | Agent | Correction found while implementing §5.3, patch, no status transition: the all-workspace scope is now the explicit `--all` flag, not the absence of `--workspace`. The executor consumes `--workspace` and defaults the workspace when it is absent, handing the result on only as `MAGIC_DESIGN_DIR`, so the script cannot distinguish "omitted" from "defaulted" — the 1.0.0 wording (§5.3 usage, pseudo-code header and C15 scope paragraph; §5.4 action) described a behavior no script behind `executor.js` can have. The rule that a caller with a resolved workspace stays inside it, and that only the session-start rule reads every workspace, is unchanged; only its spelling moved. The planning-time note that the derived variable "must be ignored" was the same misreading in the other direction: it is precisely how a resolved workspace reaches the script. |
 | 1.0.0 | 2026-09-20 | Agent | Initial version. Implementation contract for the automatic-checkpoint invariants of [l1-session-continuity.md](l1-session-continuity.md) 2.3.0 (SC-1.3, SC-6, SC-6.1, SC-7, SC-8, SC-9), written after the user ruled out any new command and asked for everything to run under the hood. Deliverables: a task-start record in `run.md` (no step recorded a task as in flight); the `Attempts` field, the one section of the external six-section handoff practice with no carrier; a single read-only `resume-state` script replacing three prose copies of the resume rule that disagreed about when a resume completes; a cold-context session rule in `rules/magic.md`; a checkpoint claim in finalize output that is made only when the state update succeeded; retirement of the fill-percentage tiers in favor of post-compaction re-grounding; removal of the dead `Last Session Ended` field and the eight advertisements of the non-command `/magic.pause`. §6 fixes the coverage the previous pause/handoff path never had (harness H1–H10, cognitive C1–C5) and §7 the thirteen-row deployment inventory routed to `/magic.task engine`. Post-Update Review (5-lens) and Instruction Quality Pass found defects in the first draft, all fixed before promotion: the script's all-workspace default would have read outside a resolved workspace (C15), now scoped by `--workspace` except at session start; the claim that it records no diagnostics contradicted DG-1, now stated as one recorded warning with a clean run writing nothing; the resume-completion moment was ambiguous, now consumption at load; H8 asserted an init-provisioning exception the field map does not need, H9's fixture was platform-fragile (an unwritable file, now a directory at the state path); the session-start trigger said "first substantive action", now the first tool call; a line-number reference into `pause.md` would have gone stale. Status `Draft → Stable` via Trust Mode (C9) after the L1 parent was promoted. |

@@ -8,7 +8,7 @@ const fs = require('fs');
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Canonical phase-workbook filename shape, per l2-engine-finalization.md §6.1.
+ * Canonical phase-workbook filename shape.
  *
  * `phase-{N}[{track}].md` — the number is the phase, the optional trailing
  * letters are a track split (`phase-10a.md`, `phase-10b.md`), the same track
@@ -89,7 +89,7 @@ function listPhaseFiles(tasksDir) {
  * workbooks. These are never archived — but they must be reportable, so a
  * caller can distinguish "not seen" from "seen and found ineligible". A
  * name-based exclusion that leaves no trace is the defect this exists to
- * prevent recurring (l2-engine-finalization.md §6.1).
+ * prevent recurring.
  *
  * @param {string} tasksDir - Absolute path to the workspace `tasks/` directory.
  * @returns {string[]} Sorted filenames, empty when the directory does not exist.

@@ -18,10 +18,9 @@ const diagnostics = require('./lib/diagnostics');
  * Reports, from recorded state alone, which work a session would be resuming.
  *
  * Work is in flight when a task's tracking entry reads `Status: In Progress`
- * in a live phase workbook (or in the legacy flat `TASKS.md`), or when
- * `STATE.md` records `Status: Paused`. Nothing else counts: in particular the
- * mere presence of a handoff file is not a trigger, because a snapshot outlives
- * the state it described.
+ * in a live phase workbook (or in the legacy flat `TASKS.md`). Nothing else
+ * counts: the record of work in flight is the tracking entry, written when the
+ * task starts, so no separate notes have to be kept in step with it.
  *
  * Silent when nothing is in flight. Read-only — it writes no artifact, and its
  * one non-fatal condition (a `STATE.md` that exists but cannot be read) is
@@ -200,7 +199,7 @@ function collectInFlight(wsDir) {
  *
  * @param {{ name: string, dir: string }} workspace
  * @returns {{ workspace: string, source: string, tasks: Object[], attempts: number,
- *             nextAction: string|null, paused: boolean, changedFiles: number|null }|null}
+ *             nextAction: string|null, changedFiles: number|null }|null}
  *          `null` when nothing is in flight or the workspace has no readable
  *          `STATE.md`. `changedFiles` is filled in by the caller.
  */
@@ -223,18 +222,15 @@ function inspectWorkspace(workspace) {
     if (state.text === undefined) return null;
 
     const stripped = stripQuoted(state.text);
-    const status = readStateField(stripped, state.text, /^\*\*Status:\*\*[ \t]+(.+)$/);
-    const paused = status !== null && /^Paused\b/i.test(status);
     const tasks = collectInFlight(workspace.dir);
-    if (!paused && tasks.length === 0) return null;
+    if (tasks.length === 0) return null;
 
     return {
         workspace: workspace.name,
-        source: paused && tasks.length > 0 ? 'both' : paused ? 'paused' : 'in-progress',
+        source: 'in-progress',
         tasks,
         attempts: tasks.reduce((sum, task) => sum + task.attempts, 0),
         nextAction: readStateField(stripped, state.text, /^- \*\*Next Action:\*\*[ \t]+(.+)$/),
-        paused,
         changedFiles: null,
     };
 }
@@ -268,19 +264,14 @@ function countModifiedFiles() {
  * @returns {string}
  */
 function formatLine(summary) {
-    let body;
-    if (summary.tasks.length > 0) {
-        const named = summary.tasks
-            .slice(0, MAX_TASKS_PER_WORKSPACE)
-            .map((task) => `${task.id} ${task.title}`.trim());
-        const extra = summary.tasks.length - named.length;
-        body =
-            `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
-            `${summary.paused ? ' (paused snapshot)' : ''} — ${summary.attempts} dead end(s) recorded` +
-            `${summary.changedFiles === null ? '' : `, ${summary.changedFiles} file(s) modified`}`;
-    } else {
-        body = 'paused snapshot';
-    }
+    const named = summary.tasks
+        .slice(0, MAX_TASKS_PER_WORKSPACE)
+        .map((task) => `${task.id} ${task.title}`.trim());
+    const extra = summary.tasks.length - named.length;
+    const body =
+        `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
+        ` — ${summary.attempts} dead end(s) recorded` +
+        `${summary.changedFiles === null ? '' : `, ${summary.changedFiles} file(s) modified`}`;
     const next = summary.nextAction ? ` Next: ${summary.nextAction}` : '';
     return `▶ Resume [${summary.workspace}]: ${body}.${next}`;
 }

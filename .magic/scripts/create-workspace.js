@@ -6,7 +6,7 @@ const path = require('path');
 const { normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CREATE-WORKSPACE (l1-workspace-intent-routing.md WI-6)
+// CREATE-WORKSPACE (WI-6)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**

@@ -485,7 +485,7 @@ describe('Magic Engine Scripts', () => {
         assert.deepStrictEqual(
             untracked,
             [],
-            `.magic/.checksums references untracked path(s) — a release archive can never contain them, so every consumer's first commit would fail: ${untracked.join(', ')}`,
+            `.magic/.checksums references untracked path(s) — a release archive can never contain them, so every consumer's first commit would fail: ${untracked.join(', ')}. Run: git add ${untracked.map((rel) => '.magic/' + rel).join(' ')}`,
         );
     });
 
@@ -3071,6 +3071,140 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('finalize.js reconciles Status between Active and Blocked at the checkpoint, and only there (SC-1.4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            const { updateState } = require(
+                path.join(tempDir, '.magic', 'scripts', 'update-state.js'),
+            );
+            const statePath = path.join(wsDir, 'STATE.md');
+
+            const setStatus = (value) => {
+                if (!fs.existsSync(statePath)) updateState(wsDir, {});
+                const text = fs.readFileSync(statePath, 'utf8');
+                fs.writeFileSync(
+                    statePath,
+                    text.replace(/^\*\*Status:\*\* .*/m, `**Status:** ${value}`),
+                );
+            };
+            const readStatus = () =>
+                fs
+                    .readFileSync(statePath, 'utf8')
+                    .match(/^\*\*Status:\*\* (.+)$/m)[1]
+                    .trim();
+            const checkpoint = () =>
+                finalize.updateSessionState({ workflow: 'run', dryRun: false }, 'engine', wsDir);
+
+            const phaseFile = (phaseStatus, trackStatus, trackAssignment) =>
+                [
+                    '---',
+                    'phase: 1',
+                    `status: ${phaseStatus}`,
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [ ] [T-1A01] Scaffold the app',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    '### [T-1A01] Scaffold the app',
+                    '',
+                    `- **Status:** ${trackStatus}`,
+                    `- **Assignment:** ${trackAssignment}`,
+                    '',
+                ].join('\n');
+            const writeLedger = (registryStatus, phase) => {
+                fs.writeFileSync(tasksPath, registryTable(registryStatus));
+                const phasePath = path.join(tasksDir, 'phase-1.md');
+                if (phase) fs.writeFileSync(phasePath, phaseFile(...phase));
+                else fs.rmSync(phasePath, { force: true });
+            };
+
+            // ledger → [start value → value after the checkpoint]. `Paused` is a
+            // hand-set value outside the engine's two, so it must survive every
+            // ledger state; that column is the (e) control of the reconciliation.
+            const ledgers = {
+                'open agent task in a healthy phase (a)': {
+                    build: () => writeLedger('In Progress', ['In Progress', 'Todo', 'Agent']),
+                    expect: { Active: 'Active', Blocked: 'Active', Paused: 'Paused' },
+                },
+                'Blocked phase with an open task (b)': {
+                    build: () => writeLedger('In Progress', ['Blocked', 'Todo', 'Agent']),
+                    expect: { Active: 'Blocked', Blocked: 'Blocked', Paused: 'Paused' },
+                },
+                'every open item Blocked (c)': {
+                    build: () => writeLedger('In Progress', ['In Progress', 'Blocked', 'Agent']),
+                    expect: { Active: 'Blocked', Blocked: 'Blocked', Paused: 'Paused' },
+                },
+                'every open item assigned to the user (c)': {
+                    build: () => writeLedger('In Progress', ['In Progress', 'Todo', 'User']),
+                    expect: { Active: 'Blocked', Blocked: 'Blocked', Paused: 'Paused' },
+                },
+                'plan complete (d)': {
+                    build: () => writeLedger('Done', null),
+                    expect: { Active: 'Active', Blocked: 'Active', Paused: 'Paused' },
+                },
+                'registry row not Done, no workbook to read': {
+                    build: () => writeLedger('In Progress', null),
+                    expect: { Active: 'Active', Blocked: 'Blocked', Paused: 'Paused' },
+                },
+            };
+
+            for (const [label, ledger] of Object.entries(ledgers)) {
+                for (const [start, want] of Object.entries(ledger.expect)) {
+                    ledger.build();
+                    setStatus(start);
+                    const result = checkpoint();
+                    assert.strictEqual(result.updated, true, `${label}: the checkpoint wrote`);
+                    assert.strictEqual(
+                        readStatus(),
+                        want,
+                        `${label}: Status ${start} should read ${want} after the checkpoint`,
+                    );
+                }
+            }
+
+            // One read, two derivations: the two fields cannot describe different plans.
+            ledgers['Blocked phase with an open task (b)'].build();
+            setStatus('Active');
+            checkpoint();
+            assert.match(
+                fs.readFileSync(statePath, 'utf8'),
+                /Next Action:\*\* Resolve blocker on T-1A01/,
+            );
+            assert.strictEqual(readStatus(), 'Blocked', 'Status and Next Action agree');
+
+            // A preview reports the decision but writes nothing.
+            setStatus('Active');
+            const before = fs.readFileSync(statePath, 'utf8');
+            const originalLog = console.log;
+            const logged = [];
+            console.log = (...args) => logged.push(args.join(' '));
+            try {
+                finalize.updateSessionState({ workflow: 'run', dryRun: true }, 'engine', wsDir);
+            } finally {
+                console.log = originalLog;
+            }
+            assert.strictEqual(fs.readFileSync(statePath, 'utf8'), before, 'dry-run wrote nothing');
+            assert.match(logged.join('\n'), /Status=Blocked/, 'dry-run names the decision');
+
+            // (f) The per-task call is not the reconciliation point: a task
+            // transition with no --status leaves a stale Blocked alone.
+            ledgers['open agent task in a healthy phase (a)'].build();
+            setStatus('Blocked');
+            updateState(wsDir, { task: 'T-1A01 Scaffold the app', nextAction: 'Continue' });
+            assert.strictEqual(
+                readStatus(),
+                'Blocked',
+                'a per-task update must never write Status (SC-1.1)',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js computeNextAction preserves code spans in task titles while still ignoring quoted checklist lines', () => {
         const tempDir = createTempWorkspace();
         try {
@@ -3137,6 +3271,169 @@ describe('Magic Engine Scripts', () => {
             assert.doesNotMatch(next, /T-9Z99/, `quoted task ID must not be named → "${next}"`);
         } finally {
             cleanup(tempDir);
+        }
+    });
+
+    test('mutation-check.js reports CAUGHT, SURVIVED and REFUSED correctly and always restores the mutated file (mutation-control driver)', () => {
+        const crypto = require('crypto');
+        const digest = (file) =>
+            crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+        const driverPath = path.join(__dirname, '..', 'scripts', 'mutation-check.js');
+        const driver = require(driverPath);
+
+        const tempDir = createTempWorkspace();
+        const outsideDir = fs.mkdtempSync(path.join(os.tmpdir(), 'mutation-outside-'));
+        try {
+            // Files a mutation must never touch, present so that only the guard refuses them.
+            const outsideFile = path.join(outsideDir, 'elsewhere.js');
+            fs.writeFileSync(outsideFile, 'a');
+            const specFile = path.join(tempDir, '.design', 'engine', 'specifications', 'l1-x.md');
+            fs.mkdirSync(path.dirname(specFile), { recursive: true });
+            fs.writeFileSync(specFile, 'a');
+
+            // A throwaway project: one source file and one tiny node:test file
+            // that guards its value and nothing else.
+            fs.mkdirSync(path.join(tempDir, 'src'), { recursive: true });
+            const source = path.join(tempDir, 'src', 'target.js');
+            fs.writeFileSync(
+                source,
+                [
+                    "'use strict';",
+                    "const unguarded = 1; // no case reads this",
+                    "const twin = 'x';",
+                    "const twin2 = 'x';",
+                    "module.exports = () => 'good';",
+                    '',
+                ].join('\n'),
+            );
+            const fixtureHarness = path.join(tempDir, 'fixture.test.js');
+            fs.writeFileSync(
+                fixtureHarness,
+                [
+                    "const { test } = require('node:test');",
+                    "const assert = require('node:assert');",
+                    "test('guards the value', () => {",
+                    "    assert.strictEqual(require('./src/target.js')(), 'good');",
+                    '});',
+                    "test('an unrelated case', () => {",
+                    '    assert.ok(true);',
+                    '});',
+                    '',
+                ].join('\n'),
+            );
+            const original = digest(source);
+
+            const list = [
+                { name: 'caught', file: 'src/target.js', needle: "'good'", replacement: "'bad'", test: 'guards the value' },
+                { name: 'survived', file: 'src/target.js', needle: 'const unguarded = 1;', replacement: 'const unguarded = 2;', test: 'guards the value' },
+                { name: 'needle twice', file: 'src/target.js', needle: "= 'x';", replacement: "= 'y';", test: 'guards the value' },
+                { name: 'needle absent', file: 'src/target.js', needle: 'not in the file', replacement: 'x', test: 'guards the value' },
+                { name: 'no such case', file: 'src/target.js', needle: "'good'", replacement: "'bad'", test: 'a case that does not exist' },
+                { name: 'outside the root', file: path.relative(tempDir, outsideFile), needle: 'a', replacement: 'b', test: 'guards the value' },
+                { name: 'a specification', file: '.design/engine/specifications/l1-x.md', needle: 'a', replacement: 'b', test: 'guards the value' },
+                { name: 'malformed', file: 'src/target.js' },
+            ];
+            const specPath = path.join(tempDir, 'mutations.json');
+            fs.writeFileSync(specPath, JSON.stringify(list));
+
+            // Through the command line, exactly as a task would use it.
+            const cli = spawnSync(
+                process.execPath,
+                [driverPath, specPath, `--root=${tempDir}`, `--harness=${fixtureHarness}`],
+                { cwd: tempDir, encoding: 'utf8' },
+            );
+            const verdictOf = (name) =>
+                (cli.stdout.split('\n').find((line) => line.includes(` ${name}`)) || '').split(/\s{2,}| — /)[0];
+            assert.strictEqual(cli.status, 1, 'a survivor or a refusal fails the run');
+            assert.strictEqual(verdictOf('caught'), 'CAUGHT');
+            assert.strictEqual(verdictOf('survived'), 'SURVIVED');
+            for (const name of ['needle twice', 'needle absent', 'no such case', 'outside the root', 'a specification', 'malformed']) {
+                assert.strictEqual(verdictOf(name), 'REFUSED', name);
+            }
+            assert.match(cli.stdout, /8 mutation\(s\): 1 CAUGHT, 1 SURVIVED, 6 REFUSED, 0 RESTORE FAILED/);
+            assert.strictEqual(digest(source), original, 'the file is byte-identical after the run');
+            assert.strictEqual(fs.readFileSync(outsideFile, 'utf8'), 'a', 'a file outside the root is untouched');
+            assert.strictEqual(fs.readFileSync(specFile, 'utf8'), 'a', 'a specification is untouched');
+
+            // A list in which every entry is caught exits 0.
+            fs.writeFileSync(specPath, JSON.stringify([list[0]]));
+            const clean = spawnSync(
+                process.execPath,
+                [driverPath, specPath, `--root=${tempDir}`, `--harness=${fixtureHarness}`],
+                { cwd: tempDir, encoding: 'utf8' },
+            );
+            assert.strictEqual(clean.status, 0, clean.stdout);
+
+            // A run that throws mid-mutation still leaves the file as it was, and
+            // the replacement reached the file literally ("$&" is not a pattern).
+            let seen = '';
+            const lines = [];
+            const results = driver.checkMutations(
+                [{ name: 'boom', file: 'src/target.js', needle: "'good'", replacement: "'$&'", test: 'x' }],
+                {
+                    root: tempDir,
+                    harness: fixtureHarness,
+                    log: (line) => lines.push(line),
+                    run: () => {
+                        seen = fs.readFileSync(source, 'utf8');
+                        throw new Error('boom');
+                    },
+                },
+            );
+            assert.match(seen, /module\.exports = \(\) => '\$&';/, 'the replacement was applied verbatim');
+            assert.strictEqual(results[0].verdict, 'REFUSED');
+            assert.match(results[0].detail, /boom/);
+            assert.strictEqual(digest(source), original, 'a throwing run is restored byte for byte');
+        } finally {
+            cleanup(tempDir);
+            fs.rmSync(outsideDir, { recursive: true, force: true });
+        }
+    });
+
+    test('finalize.js counts a RULES.md-only change as significant under magic.spec and not under magic.task (spec-side rule capture)', () => {
+        // A T1–T4 capture during /magic.spec writes the constitution and nothing
+        // else, so the spec workflow's whitelist has to see RULES.md itself.
+        for (const rulesRel of ['.design/RULES.md', '.design/main/RULES.md']) {
+            const tempDir = createTempWorkspace(true);
+            try {
+                const { versionPath, finalizePath } = createFinalizeFixture(tempDir, {
+                    workspace: 'main',
+                    autoChangelog: true,
+                });
+                commitFixture(tempDir);
+                fs.writeFileSync(
+                    path.join(tempDir, rulesRel),
+                    '# Rules\n\n- A rule captured during a spec session.\n',
+                );
+                const run = (workflow) =>
+                    execSync(`node "${finalizePath}" --workflow=${workflow} --workspace=main`, {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    });
+
+                // Control: the same change is not a plan change, so it counts for no one but the rule and spec workflows.
+                const asTask = run('task');
+                assert.match(asTask, /No significant changes/, `${rulesRel}: task workflow`);
+                assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '0.1.0');
+
+                const asSpec = run('spec');
+                assert.match(asSpec, /Finalization complete/, `${rulesRel}: spec workflow`);
+                assert.match(asSpec, /RULES\.md/, `${rulesRel}: the changed file is listed`);
+                assert.strictEqual(
+                    fs.readFileSync(versionPath, 'utf8').trim(),
+                    '0.1.1',
+                    `${rulesRel}: the project version is bumped`,
+                );
+                assert.match(
+                    fs.readFileSync(path.join(tempDir, 'CHANGELOG.md'), 'utf8'),
+                    rulesRel === '.design/RULES.md'
+                        ? /Updated global project rules \(main\)/
+                        : /Updated workspace rules \(main\)/,
+                    `${rulesRel}: a changelog entry describing the rules is written`,
+                );
+            } finally {
+                cleanup(tempDir);
+            }
         }
     });
 
@@ -5008,43 +5305,60 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('--handoff on a file without Session Continuity creates the section and the field, and a quoted label is left alone (SC-2)', () => {
-        // The pointer `pause.md` leaves for a later session. The second case is
-        // §13's second manifestation in the field patterns: the unanchored
-        // pattern took the label quoted in a decision for the field itself and
-        // rewrote that entry from the label onward.
-        const cases = [
-            { name: 'no line and no section', entry: 'an existing entry' },
-            {
-                name: 'the label quoted mid-line in a decision',
-                entry: 'set **Handoff File:** to none when the session ends',
-            },
+    test('update-state no longer knows the handoff pointer: an existing line is left untouched and the flag is refused like any unknown one (SC-9(g))', () => {
+        // (e) A STATE.md written before the snapshot was retired still carries
+        // the line. No update rewrites, moves or removes it, and a patch key
+        // for it has no writer, so it changes nothing.
+        const existing = [
+            ...trimmedState,
+            '## Session Continuity',
+            '',
+            '**Handoff File:** none',
+            '**Bootstrap Mode:** false',
+            '',
         ];
+        const before = withoutVolatile(existing.join('\n'));
+        for (const patch of [{ handoff: '.design/docs/HANDOFF.json' }, { nextAction: 'Continue' }]) {
+            const { after } = patchState(existing, patch);
+            assert.match(after, /^\*\*Handoff File:\*\* none$/m, 'the old line survives an update');
+            if (patch.handoff) {
+                assert.strictEqual(withoutVolatile(after), before, 'a handoff patch key writes nothing');
+            }
+        }
 
-        for (const { name, entry } of cases) {
-            const existing = [
-                ...trimmedState,
-                '## Recent Decisions',
-                '',
-                `- 2026-01-02 **Decision:** ${entry}`,
-                '',
-            ];
-            const { after, codes } = patchState(existing, { handoff: '.design/docs/HANDOFF.json' });
-
-            assert.strictEqual(
-                withoutVolatile(after),
-                withoutVolatile(
+        // (d) The flag goes down the ordinary unknown-argument path: same
+        // message shape and same exit as a made-up flag, and no line is created.
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const { wsDir } = requireUpdateState(tempDir);
+            const run = (flag) =>
+                spawnSync(
+                    process.execPath,
                     [
-                        ...existing,
-                        '## Session Continuity',
-                        '',
-                        '**Handoff File:** .design/docs/HANDOFF.json',
-                        '',
-                    ].join('\n'),
-                ),
-                `${name}: the decision must survive whole and the pointer must land in a real section`,
+                        path.join(tempDir, '.magic', 'scripts', 'update-state.js'),
+                        `--workspace=${wsDir}`,
+                        '--next-action=Continue',
+                        flag,
+                    ],
+                    { cwd: tempDir, encoding: 'utf8' },
+                );
+            const retired = run('--handoff=x');
+            const madeUp = run('--handoof=x');
+            assert.match(retired.stderr, /Unknown argument: --handoff=x/);
+            assert.strictEqual(retired.status, madeUp.status, 'the same exit as any unknown flag');
+            assert.strictEqual(
+                retired.stderr.replace('--handoff', '--handoof'),
+                madeUp.stderr,
+                'the same message as any unknown flag',
             );
-            assert.deepStrictEqual(codes, ['STATE_SECTION_CREATED', 'STATE_FIELD_CREATED'], name);
+            assert.doesNotMatch(
+                fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8'),
+                /Handoff File/,
+                'the retired field is not created on a fresh file',
+            );
+        } finally {
+            cleanup(tempDir);
         }
     });
 
@@ -7455,7 +7769,7 @@ describe('Magic Engine Scripts', () => {
         return digest;
     };
 
-    test('resume-state stays silent when nothing is recorded in flight, even beside a stale handoff file (SC-9(b), H1)', () => {
+    test('resume-state stays silent when nothing is recorded in flight, even beside a stale handoff file or a hand-set Paused (SC-9(b), SC-9(g), H1)', () => {
         const tempDir = createTempWorkspace();
         try {
             writeResumeFixture(tempDir, {
@@ -7481,16 +7795,31 @@ describe('Magic Engine Scripts', () => {
                 `a leftover snapshot with nothing in flight must not trigger a resume — the file's presence is not a trigger → "${quiet.stdout}"`,
             );
 
-            // Control: the same tree with `Status: Paused` does speak, so the
-            // silence above is a decision and not a script that says nothing.
+            // (a) A hand-set `Status: Paused` is inert: nothing is in flight, so nothing is said.
             fs.writeFileSync(
                 path.join(tempDir, '.design', 'engine', 'STATE.md'),
                 resumeStateText('Paused', 'Pick up T-1A02'),
             );
             const paused = runResumeState(tempDir, ['--workspace=engine']);
-            assert.match(
+            assert.strictEqual(paused.status, 0);
+            assert.strictEqual(
                 paused.stdout,
-                /^▶ Resume \[engine\]: paused snapshot\. Next: Pick up T-1A02\n$/,
+                '',
+                `a hand-set Paused with nothing in flight must not trigger a resume → "${paused.stdout}"`,
+            );
+
+            // Control: the same tree with a task recorded In Progress does speak,
+            // so the silence above is a decision and not a script that says nothing.
+            writeResumeFixture(tempDir, {
+                engine: {
+                    status: 'Paused',
+                    staleHandoff: true,
+                    entries: [trackingEntry('T-1A02', 'Later', 'In Progress')],
+                },
+            });
+            assert.match(
+                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                /^▶ Resume \[engine\]: T-1A02 Later in flight — 0 dead end\(s\) recorded\. Next: /,
             );
         } finally {
             cleanup(tempDir);
@@ -7556,7 +7885,7 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
-    test('resume-state names every task in flight up to three, then counts the rest, and marks a paused snapshot that also has work in flight (SC-9(f), H3, H4)', () => {
+    test('resume-state names every task in flight up to three, then counts the rest, and reads a workspace with a hand-set Paused exactly as any other (SC-9(f), SC-9(g), H3, H4)', () => {
         const tempDir = createTempWorkspace();
         try {
             const inFlight = (id, title) => trackingEntry(id, title, 'In Progress');
@@ -7588,10 +7917,20 @@ describe('Magic Engine Scripts', () => {
             writeResumeFixture(tempDir, {
                 engine: { status: 'Paused', entries: [inFlight('T-1A01', 'One')] },
             });
+            const withPaused = runResumeState(tempDir, ['--workspace=engine']).stdout;
             assert.match(
+                withPaused,
+                /^▶ Resume \[engine\]: T-1A01 One in flight — 0 dead end\(s\) recorded\. Next: /,
+                'a hand-set Paused adds no marker: the line is the plain in-flight one',
+            );
+            assert.doesNotMatch(withPaused, /paused|snapshot/i);
+            writeResumeFixture(tempDir, {
+                engine: { status: 'Active', entries: [inFlight('T-1A01', 'One')] },
+            });
+            assert.strictEqual(
                 runResumeState(tempDir, ['--workspace=engine']).stdout,
-                /T-1A01 One in flight \(paused snapshot\) — /,
-                'a paused workspace that also has a task in flight says so',
+                withPaused,
+                'the line does not depend on the Status value',
             );
         } finally {
             cleanup(tempDir);
@@ -7912,7 +8251,6 @@ describe('Magic Engine Scripts', () => {
         Task: 'task',
         Spec: 'spec',
         'Next Action': 'nextAction',
-        'Handoff File': 'handoff',
         'Bootstrap Mode': 'bootstrap',
     };
 
@@ -8449,6 +8787,68 @@ describe('Magic Engine Scripts', () => {
             rules,
             /\*\*§10 Session Resume Check\*\*/,
             'the completion protocol carries a section 10 item',
+        );
+    });
+
+    // A registered specification's file name in shipped text is a dead pointer
+    // on every consumer install (the specifications do not ship) and leaks this
+    // repository's own workspace into the product. The class is unconditional
+    // and mechanically decidable, so it is pinned here; task IDs and phase
+    // designators need a mention-versus-use judgment (format documentation is
+    // legitimate) and stay with the ventilation scan.
+    const specCitations = (text, registered) => {
+        const re = new RegExp(`\\b(${registered.join('|')})\\.md\\b`, 'g');
+        const hits = [];
+        text.split(/\r?\n/).forEach((line, i) => {
+            for (const m of line.matchAll(re)) hits.push({ line: i + 1, name: m[0] });
+        });
+        return hits;
+    };
+
+    test('shipped text: the registered-specification citation detector flags and spares correctly', () => {
+        const registered = ['l1-alpha', 'l2-beta-gamma'];
+        const flagged = specCitations(
+            'ok\nsee `l2-beta-gamma.md` §3 and l1-alpha.md.\n',
+            registered,
+        );
+        assert.deepStrictEqual(
+            flagged.map((h) => `${h.line}:${h.name}`),
+            ['2:l2-beta-gamma.md', '2:l1-alpha.md'],
+            'a registered name is flagged wherever it stands, with its line',
+        );
+        assert.deepStrictEqual(
+            specCitations('an example name l1-api.md and l2-alpha-extra.md and l1-alpha.txt', registered),
+            [],
+            'an unregistered example filename, a longer name and another extension are spared',
+        );
+    });
+
+    test('shipped text names no specification registered in this workspace', (t) => {
+        const specsDir = path.join(shippedRoot, '.design', 'engine', 'specifications');
+        if (!fs.existsSync(specsDir)) {
+            t.skip('no engine workspace specifications in this checkout');
+            return;
+        }
+        const registered = fs
+            .readdirSync(specsDir)
+            .filter((f) => f.endsWith('.md'))
+            .map((f) => f.slice(0, -'.md'.length));
+        const files = [
+            ...listShipped('.magic', ['.md', '.js']),
+            ...listShipped('workflows', ['.md']),
+            ...listShipped('skills', ['.md']),
+            ...listShipped('rules', ['.md']),
+        ];
+        const found = [];
+        for (const rel of files) {
+            for (const h of specCitations(readShipped(rel), registered))
+                found.push(`${rel}:${h.line} → ${h.name}`);
+        }
+        assert.deepStrictEqual(
+            found,
+            [],
+            'shipped text must not cite a specification file — restate the rationale in plain language and keep only the protocol label:\n' +
+                found.join('\n'),
         );
     });
 });

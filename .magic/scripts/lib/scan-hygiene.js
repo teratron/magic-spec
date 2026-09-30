@@ -5,7 +5,7 @@
 // SCAN HYGIENE (Shared Library)
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Implements l1-scan-input-hygiene.md SH-2/SH-5: one shared strip-before-match
+// Implements SH-2/SH-5: one shared strip-before-match
 // step for every scan that must not read a quoted token as a token in force.
 // Two independent copies of this exact pair of regexes existed before this
 // module (phase-archiver.js, update-state.js) and had not yet drifted apart —

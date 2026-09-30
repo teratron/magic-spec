@@ -1,6 +1,6 @@
 # Workflow Wrappers
 
-**Version:** 1.3.0
+**Version:** 1.3.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -65,7 +65,7 @@ The wrapper↔body relationship is **one-directional**:
 
 1. **Pointer wrappers** — a wrapper that references an engine body (the `> **Full implementation:** \`.magic/{cmd}.md\`` pointer) MUST have that file present on disk. A dangling pointer is a phantom mapping.
 2. **Self-contained wrappers** — a wrapper with no body pointer carries the full workflow itself (e.g., `magic.graph.md`); it requires no `.magic/{cmd}.md`.
-3. **Bodies without wrappers are allowed** — internal engine modules (`context.md`, `init.md`, `pause.md`, `retrospective.md`) are invoked internally and intentionally have no user-facing wrapper. The invariant does NOT require a wrapper per body. Because they are not commands, user-facing text (workflow bodies, templates, docs) MUST NOT advertise them as `/magic.*` commands: a hint that names a non-command sends the user to a dead end. Field evidence: `/magic.pause` was advertised on eight shipped lines while `pause.md` has no wrapper (see [l1-session-continuity.md](l1-session-continuity.md) §1.5).
+3. **Bodies without wrappers are allowed** — internal engine modules (`context.md`, `init.md`, `retrospective.md`) are invoked internally and intentionally have no user-facing wrapper. The invariant does NOT require a wrapper per body. Because they are not commands, user-facing text (workflow bodies, templates, docs) MUST NOT advertise them as `/magic.*` commands: a hint that names a non-command sends the user to a dead end. Field evidence: `/magic.pause` was advertised on eight shipped lines while `pause.md` has no wrapper (see [l1-session-continuity.md](l1-session-continuity.md) §1.5).
 
 ### 6.1 Automated Verification
 
@@ -91,6 +91,7 @@ The converse direction is checked the same way. `magic.analyze` Mode C MUST scan
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.1 | 2026-09-30 | Clarification patch, no status transition: the internal-module list in §6 item 3 drops `pause.md`, retired by [l1-session-continuity.md](l1-session-continuity.md) 2.5.0. No requirement changes. Typo-level patch (spec.md Amendment rule). |
 | 1.3.0 | 2026-09-20 | Added the converse of the §6 parity check: internal-module bodies (`pause.md` and its siblings) MUST NOT be advertised as `/magic.*` commands in user-facing text, and `magic.analyze` Mode C gains an advisory `PHANTOM_COMMAND` scan over shipped engine and documentation text — own-word tokens only, so paths such as `rules/magic.md` are never read as commands, and `magic.dev.*` names are exempt. Field evidence: `/magic.pause` was advertised on eight shipped lines while `pause.md` has no wrapper ([l1-session-continuity.md](l1-session-continuity.md) §1.5). Engine deployment (the analyze check) is routed to `/magic.task engine` through [l2-session-checkpoint.md](l2-session-checkpoint.md) §7. Status reverted `Stable → RFC` (Amendment Rule, minor); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-06-13 | Added §6 Wrapper-Body Parity Invariant & Verification (R4): one-directional parity (pointer wrappers need a body; self-contained do not; bodies may lack wrappers) + a deterministic `magic.analyze` Mode C `WRAPPER_BODY_DRIFT` check. Field evidence: phantom `magic.graph` mapping survived 13 registry versions. |
 | 1.1.1 | 2026-06-12 | Factual fix: `magic.graph.md` is self-contained (no `.magic/graph.md` body exists); §2 exception documented. |

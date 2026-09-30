@@ -14,7 +14,7 @@ const crypto = require('crypto');
 // so that metadata-only edits (Version / Last Updated / Status) do not
 // invalidate cached extractions.
 //
-// Implements l2-spec-graph-memory.md §4.1.
+// Extraction cache for the spec graph: one entry per spec content hash.
 //
 // Storage: $designDir/.graph-cache/{hash}.json
 // Value:   { refs: [...], parent: "..." | null, conventions: [14, 23] }

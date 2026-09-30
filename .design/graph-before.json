@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 85
+      "degree": 86
     },
     {
       "id": "file:.magic",
@@ -1470,8 +1470,8 @@
       "degree": 1
     },
     {
-      "id": "phase:engine/phase-35",
-      "label": "Phase 35: Nothing-Pending Next Action — shared pending-work predicate (`lib/pending-work.js`), `check-prerequisites.js` and `finalize.js` consume it, `status.md` renders the command-free statement, harness cases and scenario T231",
+      "id": "phase:engine/phase-36",
+      "label": "Phase 36: Backlog Sweep — reference-containment cleanup (workflow bodies, scripts, library, product files) with a harness guard, tracked-files failure hint, audits of the `Status` writers and of the pause snapshot",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -1481,6 +1481,15 @@
     {
       "id": "phase:engine/phase-33",
       "label": "Phase 33: Significance Read-Failure Fix (R44, `lib/significance.js`/`finalize.js`) & Confirmed Self-Containment Cleanup (`update-state.js`, RC-8)",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-35",
+      "label": "Phase 35: Nothing-Pending Next Action — shared pending-work predicate (`lib/pending-work.js`), `check-prerequisites.js` and `finalize.js` consume it, `status.md` renders the command-free statement, harness cases and scenario T231",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -3949,12 +3958,17 @@
     },
     {
       "from": "ws:engine",
-      "to": "phase:engine/phase-35",
+      "to": "phase:engine/phase-36",
       "relation": "contains"
     },
     {
       "from": "ws:engine",
       "to": "phase:engine/phase-33",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-35",
       "relation": "contains"
     },
     {
@@ -4124,7 +4138,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 85
+        "degree": 86
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -4194,13 +4208,13 @@
       }
     },
     "summary": {
-      "total_nodes": 217,
-      "total_edges": 468,
+      "total_nodes": 218,
+      "total_edges": 469,
       "workspaces": 1,
       "specs": 37,
       "files": 120,
       "conventions": 25,
-      "phases": 34
+      "phases": 35
     }
   }
 }

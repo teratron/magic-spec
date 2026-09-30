@@ -55,7 +55,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | State | Behavior |
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
-| **In-flight or paused session** | A task recorded `In Progress`, or a paused status, surfaces the resume line — the recorded next action and, for a paused session, its required reading. A leftover handoff file whose pointer reads `none` is not, by itself, a paused session. |
+| **In-flight session** | A task recorded `In Progress` surfaces the resume line — the recorded next action and the dead ends already recorded against the task. |
 | **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
@@ -75,7 +75,6 @@ With no argument the workspace resolves through the standard priority chain. Pas
 | **Run** (`run.md`) | Primary source — status reports the position `run` last wrote |
 | **Task** (`task.md`) | Primary source — the active phase and its checklist |
 | **Analyze** (`analyze.md`) | Referenced — the engine line points at analysis when the snapshot has drifted |
-| **Pause** (`pause.md`) | Complement — `pause` writes the handoff, `status` reads it back |
 
 ## Sync Note
 

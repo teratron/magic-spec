@@ -29,8 +29,8 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Returns true when all Atomic Checklist items are checked. Per
- * l2-engine-finalization.md §6, an unchecked item is a checklist *line*
+ * Returns true when all Atomic Checklist items are checked. An unchecked
+ * item is a checklist *line*
  * (`- [ ]` at line start, optional indent) — NOT a `- [ ]` sequence quoted
  * in prose, Notes, or code. Inline code-spans and fenced blocks are stripped
  * first so a phase that merely documents checkbox syntax stays archivable.
@@ -127,8 +127,8 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
  * only the leftover generic pass may touch a target whose label is
  * something else (descriptive prose), which correctly needs no rewrite.
  * Prose mentions of the bare path (no surrounding `[...](...)`) are never
- * matched by either pass and are left untouched — l2-engine-finalization.md
- * §7.3 is explicit that a broader replace would corrupt historical prose.
+ * matched by either pass and are left untouched — a broader replace would
+ * corrupt historical prose.
  *
  * @param {string} planPath - Absolute path to PLAN.md.
  * @param {string[]} archivedFiles - Array of filenames that were archived.
