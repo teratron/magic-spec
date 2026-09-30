@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-30 09:40
-**Phase:** 33 — Significance Read-Failure Fix & Confirmed Self-Containment Cleanup
+**Updated:** 2026-09-30 11:31
+**Phase:** 34 — Rule Admission Gate Deployment (RA-1..RA-9)
 **Status:** Active
 
 ## Current Position
 
 - **Task:** [T-33T02] Validation: full suite green + Track B citation removal confirmed; C14 bump
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [32/32] ████████ 100%
+Overall: [34/34] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
-- 2026-09-30 **Decision:** Plan sync 2026-09-30d (no new phase): constitution 1.13.0 (C25 §3) and engine 2.1.110 — owner-polled decisions applied: 50-500-file scan narrated (not asked), explicit first-time argument for Mode A, single Remove confirmation, registry-integrity wording. No spec/registry change; PLAN v1.41.5 / TASKS v1.40.5 re-baselined.
-- 2026-09-30 **Decision:** Plan sync 2026-09-30c (no new phase): registry v1.31.2 (3 patch clarifications: l2-role-tooling 1.1.1, l2-role-cards 2.1.1, l2-spec-graph-memory 1.1.3), engine 2.1.109, constitution 1.12.1; small-debt sweep of stale comments, --workflow uses and suite scenarios. No unplanned scope; PLAN v1.41.4 / TASKS v1.40.4 re-baselined.
-- 2026-09-30 **Decision:** Plan sync 2026-09-30b (no new phase): registry v1.31.0 — l2-engine-automation 1.18.0 and l2-role-tooling 1.1.0 retire the description of the removed engine history mechanism (reality sync, no code). 36 of 36 Stable, no phase written; PLAN v1.41.3 / TASKS v1.40.3 re-baselined.
-- 2026-09-30 **Decision:** Plan sync 2026-09-30 (no new phase): registry v1.30.1 (4 patch amendments — l1-decision-autonomy 1.3.1, l2-role-cards-governance/execution/review 1.2.1; deployed cards/workflows/templates aligned, engine 2.1.108); constitution 1.12.0 (C9/C24/C14/C20/C17 realigned with the shipped template). 36 of 36 Stable, no unplanned scope, no phase written; TASKS Based on RULES re-baselined v1.10.0 -> v1.12.0.
-- 2026-09-28 **Decision:** Phase 33 complete. Provides: lib/significance.js snapshotHashes() 'UNREADABLE' sentinel (l2-engine-finalization.md §9.2); finalize.js SIGNIFICANCE_HASH_UNREADABLE diagnostic; update-state.js free of spec-file citations (RC-8 widened compliance). Engine 2.1.106->2.1.107, harness 138->140. R41/R42/R44 all closed this cycle; R46 (broader SDD_REFERENCE_LEAK inventory of .magic/scripts/) Parked for /magic.analyze. Plan complete.
+- 2026-09-30 **Decision:** Phase 35 complete. Provides: nothing-pending Next Action — lib/pending-work.js shared predicate, check-prerequisites refactor (identical warnings), finalize plan-complete value without a command, status.md/docs follow. Engine 2.1.111->2.1.112, harness 141/141.
+- 2026-09-30 **Decision:** Phase 35 planned (nothing-pending Next Action, 8 tasks, 3 tracks): PLAN v1.43.0 / TASKS v1.42.0 on registry v1.34.0; shared pending-work predicate, one C14 tagged magic.status; planning found status.md would reformat the new value back into a recommendation (carried by l2-status-command 1.3.0).
+- 2026-09-30 **Decision:** Phase 34 complete. Provides: rule admission gate deployed — reviewer cards (Admission, DECLINE), rule.md Admission step with review-before-write order and self-contained tests, spec/task capture delegated to it, analyze retirement findings, wrappers, docs, suite T225-T230. Engine 2.1.110->2.1.111, harness 140/140. R47/R48 recorded.
+- 2026-09-30 **Decision:** Plan sync 2026-09-30g (no change to Phase 34): registry v1.33.1 (gate spec 1.1.1, two reciprocal links); PLAN v1.42.2 / TASKS v1.41.2 re-baselined.
+- 2026-09-30 **Decision:** Phase 34 re-baselined on registry v1.33.0 (gate spec 1.1.0): 17 tasks — T-34B01 split (B01.1 states the Admission tests in words so shipped text is self-contained), scenario T230 added for the rung-1/2 write-reach outcome from /magic.rule; no task had started. PLAN v1.42.1 / TASKS v1.41.1.
 
 ## Blockers
 

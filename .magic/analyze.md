@@ -63,7 +63,7 @@ Identify tech stack via config files (`package.json`, `pyproject.toml`, `Cargo.t
 
 ### 3. Module & Convention Detection
 
-Group code by domain. Extract implicit rules from configs (`.eslintrc`, `tsconfig.json`, `ruff`, etc.) for `RULES.md §7`.
+Group code by domain. Extract implicit conventions from configs (`.eslintrc`, `tsconfig.json`, `ruff`, etc.) and record them as observed conventions in the owning implementation-layer specification, not in `RULES.md`.
 
 ## Confidence Taxonomy
 
@@ -124,7 +124,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 0. **Pre-flight** — see Shared Pre-flight above.
 1. Build full project map.
 2. Inferred stack + architecture style.
-3. **Auto-Dispatch (C9 default)**: generate the table of paired L1/L2 specs + RULES.md entries, narrate as an action log, and dispatch all proposed items immediately as `Draft` (or `Stable` if MVC criteria pass per `spec.md` Trust Mode). Output: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y) + M rules. (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`. The user reviews the action log and amends as needed — no inline approval gate.
+3. **Auto-Dispatch (C9 default)**: generate the table of paired L1/L2 specs, narrate as an action log, and dispatch all proposed items immediately as `Draft` (or `Stable` if MVC criteria pass per `spec.md` Trust Mode). Output: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y). (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`. Conventions observed in the code are recorded descriptively in the owning implementation-layer specification; analysis never writes `RULES.md`. The user reviews the action log and amends as needed — no inline approval gate.
 4. **Registry Healing Proposal**: if `INDEX.md` is blank/corrupted or mismatches `specifications/` (Ghost/Zombie entries) → include **Registry Healing** (re-mapping disk files) as part of the Step 3 dispatch. Healing runs before the specs are dispatched and is narrated with `(Revert: git restore .design/{ws}/INDEX.md)`.
 5. **Advisory**: generate Advisory Report (see §Advisory Report) for the analyzed scope.
 
@@ -215,6 +215,8 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
     - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magic.dev.sync`."*
 11. **Scope Blind-Spot Check** (multi-workspace projects): compare the union of all workspace `scope` arrays against top-level project directories. Report any directories not covered by any workspace as `UNSCOPED` warnings.
 12. **Rule Validation**: check `RULES.md §7` compliance (e.g., C16: a Micro-spec that outgrew 50 lines must be promoted to the Standard template).
+    - **Rule Retirement (RA-7)**: report read-only advisories — `RULE_RETIRE_CANDIDATE {id}: {a|b|c}`: (a) the file or component named in an agent-originated rule's cited evidence no longer exists; (b) superseded: duplicated by a higher tier, a rule shipped in `rules/magic.md` or a regulation in a specification; (c) deadlock: a Blocked task or a `STATE.md` blocker names the rule as a condition the agent cannot satisfy with the tools, access and artifacts it has (RA-3). And `RULE_BLOAT {id}` for a rule body over 10 non-empty lines. Next step: `→ /magic.rule remove {id}`, or for RULE_BLOAT `→ /magic.rule amend {id}`.
+    - A user-stated rule, and a rule with no origin record in its Document History, is checked on (b), (c) and the bloat test only. Engine-owned conventions are excluded, matched by heading text against `.magic/templates/rules.md` — never by ID, since a consumer's own C25-C27 collide numerically with the template's. Ventilation edits nothing (Actionable Guard); Remove keeps its single confirmation.
 13. **Auto-Repair**: apply deterministic fixes immediately and narrate; for ambiguous cases emit one recommended command — never an option menu. Each fix ends with `(Revert: git restore {file})`.
     - **Workspace layout drift** (specs on disk differ from configured workspace path in `workspace.json`) → update `workspace.json` to reflect the actual spec location on disk; narrate `[Auto-Repair] Workspace layout fixed: '{ws}' path updated to {actual-path}. (Revert: git restore .design/workspace.json)`. Do NOT present A/B/C variant options.
     - **Registry healing** (Ghost/Zombie entries in `INDEX.md`) → auto-execute registry repair; narrate `[Auto-Repair] Registry healed: {N} Ghost/Zombie entries resolved. (Revert: git restore .design/{ws}/INDEX.md)`.
@@ -264,6 +266,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 | **Shadow Logic** | Files containing rationale comments (NOTE/WHY/HACK/etc.) not captured by any specification. |
 | **SDD Leak** | Product files referencing SDD artifacts (`.design/` paths, task IDs, spec/plan file names) — dead references once a release excludes `.design/`. |
 | **Scaffold Coupling** | `SDD_SCAFFOLD_COUPLING` — the product's build, CI, packaging, source, or toolchain depends on the SDD or engine directories, so it stops working once the scaffold is removed. Invisible to the SDD Leak scan: structural coupling names no SDD artifact. Consumer projects only. |
+| **Rule Retirement** | `RULE_RETIRE_CANDIDATE` / `RULE_BLOAT` — a rule whose cause is gone, that a higher tier or specification already covers, that deadlocks the agent, or whose body exceeds 10 lines. Advisory; user-stated and engine-owned rules are checked only as stated in Mode C step 12. |
 | **Wrapper Drift** | `WRAPPER_BODY_DRIFT` — a `workflows/` wrapper points to a `.magic/{cmd}.md` body that is missing on disk (phantom mapping). Self-contained wrappers and body-less internal modules are exempt (`l2-workflow-wrappers.md` §6). |
 
 ### Advisory Report Criteria
@@ -302,14 +305,14 @@ This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
 3. **Structural Improvements**
    - Workspace candidates: independent subdirectories that could benefit from their own workspace.
-   - Rule consolidation: repeated patterns across workspace RULES.md → suggest promoting to global §6.
+   - Rule retirement: rules the Mode C step 12 check finds obsolete, superseded, deadlocking or oversized → `RULE_RETIRE_CANDIDATE` / `RULE_BLOAT` findings with their next step.
    - Naming inconsistencies: spec filenames that don't match their title or covered module.
 
 4. **Action Proposals**
    - Each advisory item ends with a concrete next step:
      - `→ /magic.spec create {name}` for missing specs.
      - `→ /magic.spec amend {name}` for outdated specs.
-     - `→ /magic.rule add "{convention}"` for uncodified patterns.
+     - `→ /magic.rule add "{convention}"` only for a candidate that cites an occurrence of divergence, passed the admission gate (RA-2, RA-3) and is placed at rung 3 or 4 (RA-4) — never for an "uncodified pattern" alone; a candidate placed at rung 0-2 is not surfaced as a rule (ventilation writes nothing).
      - `→ /magic.analyze {workspace}` for deeper focused checks.
    - **Auto-Dispatch (C9 default)**: all advisory items are surfaced as a single action log in the Advisory Report. The agent does NOT prompt for per-item approval — items requiring action are batch-dispatched immediately where applicable, or surfaced as `→` next-step links the user can run on demand. Hard-fork ambiguities and Core-Amendment proposals (per C9 gates) are the only exceptions that pause for explicit user input.
 
@@ -328,8 +331,8 @@ This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
   → /magic.spec create engine-scripts
 
 ### Structural Improvements
-- 🔧 Workspace `engine` RULES.md repeats 3 rules from global §6
-  → /magic.rule promote "C15 scope isolation"
+- 🔧 Workspace `engine` WC2 duplicates global C15 (`RULE_RETIRE_CANDIDATE`, superseded)
+  → /magic.rule remove WC2
 
 ### No Action Needed
 - ✅ All L1 specs have L2 children
@@ -342,13 +345,12 @@ This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
 - **Stack/Arch**: detected style + confidence.
 - **Spec Matrix**: `# | Proposed Spec | Layer | Based On`.
-- **Rules Matrix**: `# | Convention | Source`.
+- **Observed Conventions**: `# | Convention | Source` — destination: the owning specification.
 
 ### Dispatch Logic (Approved)
 
 1. **Specs**: call `spec.md` "Creating a New Specification" (direct to Stable).
-2. **Rules**: apply via T4 protocol to `RULES.md §7`.
-3. **Dispatch**:
+2. **Dispatch**:
    - Registry Sync: update `INDEX.md`. Bump Registry version.
    - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/magic.md` §1](../rules/magic.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
    - Post-Update Review: run on all created specs before closing.
@@ -365,7 +367,7 @@ Analysis Checklist — Mode A/B
   ☐ Stack/Arch inferred; modules identified
   ☐ Mode correct (Analysis vs Re-Analysis Gap Report)
   ☐ RESCUE logic applied for renamed directories
-  ☐ Auto-Dispatch (C9): proposed items created as Draft/Stable per MVC; RULES.md §7 updated; action log surfaced
+  ☐ Auto-Dispatch (C9): proposed items created as Draft/Stable per MVC; action log surfaced
   ☐ Graph: export-wiki run after dispatch (skip if no dispatch occurred)
   ☐ Advisory Report appended to output
   ☐ Engine Meta: C14 bump if .magic/ or workflows/ files modified
@@ -388,6 +390,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
   ☐ Rule validation: RULES.md §7 compliance checked
+  ☐ Rule retirement (RA-7): RULE_RETIRE_CANDIDATE / RULE_BLOAT findings reported as advisory with their next step; nothing edited
   ☐ Canonical References: all `Stable` specs checked for `## Canonical References`; `CANONICAL_MISSING` flagged (advisory — promote to Stable only after filling it)
   ☐ Bloat Advisory: check-bloat.js executed; SPEC_BLOAT/TASK_BLOAT signals included in Advisory Report
   ☐ Pre-Advisory Audit: `@role:project-auditor` applied; severity and patterns reviewed

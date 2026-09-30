@@ -138,11 +138,11 @@ The transition from Specification to Task Planning is protected by a **Hard Stop
 
 ### 6.5 T4 Rule Capture with Tier Routing
 
-When user input contains a standing-rule signal ("remember that...", "project rule:"), the Spec workflow captures it as a T4 trigger and applies three inline guards before writing to `RULES.md`:
+When user input contains a standing-rule signal ("remember that...", "project rule:"), the Spec workflow captures it as a T4 trigger and hands it to the Rule workflow's pipeline (see [rule.md](rule.md)) instead of guarding it itself:
 
 1. **Tier Routing**: Global vs. workspace-scoped target file selection.
-2. **Duplication Check**: Semantic overlap detection with existing conventions.
-3. **Constitutional Guard**: Contradictions with §1–6 → **HALT**.
+2. **Admission**: a rule the user wrote is recorded at the strength stated; a rule the agent composed is admitted only on evidence.
+3. **Guards and reviews**: duplication, the §1–6 Constitutional Guard (contradiction → **HALT**), then the constitutional and wording reviews — all before anything is written.
 
 ## 7. Maintenance
 

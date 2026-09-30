@@ -24,6 +24,7 @@ handoffs:
 
 **Pipeline context:** `magic.rule` governs conventions used across `magic.spec` → `magic.task` → `magic.run`.
 
+- **Admission**: an agent-originated rule must cite an observed occurrence and survive a with/without comparison; a user-stated rule is written at the strength stated. See `.magic/rule.md §Operational Logic`.
 - **Finalization**: after writing RULES.md, run `node .magic/scripts/executor.js finalize --workflow=rule` and display output verbatim. Never auto-commit. See `.magic/rule.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/rule.md`. Read it before proceeding.

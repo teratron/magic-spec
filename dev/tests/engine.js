@@ -2498,6 +2498,129 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    // A complete plan with nothing waiting must say so and name no command; any
+    // pending signal — or any inability to tell — keeps the /magic.task funnel.
+    // The fixtures carry INDEX/PLAN/TASKS: the plan-complete fixture above has
+    // no PLAN, so it resolves to the funnel through the cannot-evaluate path.
+    test('finalize.js plan-complete Next Action names no command only when nothing is pending', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir } = requireFinalizeWorkspace(tempDir);
+            const pendingWork = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'pending-work.js'),
+            );
+            const diagnostics = require(
+                path.join(tempDir, '.magic', 'scripts', 'lib', 'diagnostics.js'),
+            );
+            const FUNNEL = /Plan complete — run \/magic\.task engine to plan new scope/;
+            const NOTHING = 'Plan complete — nothing pending';
+            const indexPath = path.join(wsDir, 'INDEX.md');
+            const planPath = path.join(wsDir, 'PLAN.md');
+            const tasksPath = path.join(wsDir, 'TASKS.md');
+
+            const write = ({ registered = ['l1-a.md'], planned = ['l1-a.md'], basedOn = '1.0.0', backlog = '*None.*' } = {}) => {
+                fs.rmSync(planPath, { recursive: true, force: true });
+                fs.writeFileSync(
+                    indexPath,
+                    [
+                        '# Index',
+                        '',
+                        '**Version:** 1.0.0',
+                        '',
+                        ...registered.map((f) => `| [${f}](specifications/${f}) | d | Stable | 1 | 1.0.0 |`),
+                        '',
+                    ].join('\n'),
+                );
+                fs.writeFileSync(
+                    planPath,
+                    [
+                        '# Plan',
+                        '',
+                        `**Based on:** .design/engine/INDEX.md v${basedOn}`,
+                        '',
+                        ...planned.map((f) => `- [x] A ([${f}](specifications/${f}))`),
+                        '',
+                        '## Backlog',
+                        '',
+                        backlog,
+                        '',
+                    ].join('\n'),
+                );
+                fs.writeFileSync(tasksPath, '## Active Phases\n\n*None — plan complete.*\n');
+            };
+
+            // (1) In sync, empty Backlog → the fact, and no command at all.
+            write();
+            let next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.strictEqual(next, NOTHING, 'nothing pending → a command-free statement');
+            assert.doesNotMatch(next, /\/magic\./, 'the statement must name no /magic.* command');
+
+            // (2) An open, unparked Backlog bullet → the funnel.
+            write({ backlog: '- **Design item** that needs a spec pass.' });
+            next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.match(next, FUNNEL, 'an open Backlog item is pending work → funnel');
+
+            // (3) Control: the same bullet with the trailing Parked marker is not pending.
+            write({ backlog: '- **Design item** that needs a spec pass. *(Parked — waiting on evidence)*' });
+            assert.strictEqual(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                NOTHING,
+                'a Parked bullet is deliberately not open work',
+            );
+
+            // (4) A registered spec the plan never mentions → funnel.
+            write({ registered: ['l1-a.md', 'l1-b.md'] });
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                FUNNEL,
+                'an orphaned spec is pending work → funnel',
+            );
+
+            // (5) A plan built on an older registry version → funnel.
+            write({ basedOn: '0.9.0' });
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                FUNNEL,
+                'a registry ahead of the plan is pending work → funnel',
+            );
+
+            // (6) Cannot tell (PLAN.md is a directory) → funnel, and it is recorded.
+            write();
+            fs.rmSync(planPath, { force: true });
+            fs.mkdirSync(planPath);
+            diagnostics.drain();
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                FUNNEL,
+                'an unreadable plan is not evidence that nothing is pending',
+            );
+            assert.ok(
+                diagnostics.read().some((f) => f.code === 'PENDING_WORK_UNEVALUABLE'),
+                'the fall-back to the funnel must be visible as a recorded finding',
+            );
+
+            // (7) The predicate itself, so the two callers cannot disagree.
+            write({ registered: ['l1-a.md', 'l1-b.md'], basedOn: '0.9.0', backlog: '- open item' });
+            const found = pendingWork.findPendingWork(wsDir);
+            assert.deepStrictEqual(found.orphanedSpecs, ['l1-b.md'], 'the unplanned spec is named');
+            assert.deepStrictEqual(
+                found.syncGap,
+                { planBasedOn: '0.9.0', indexVersion: '1.0.0' },
+                'the version gap is reported with both sides',
+            );
+            assert.strictEqual(found.planComplete, true, 'the marker reads as a complete plan');
+            assert.deepStrictEqual(found.openBacklogItems, ['- open item'], 'the open bullet is listed');
+            assert.ok(found.registryEvaluated && found.backlogEvaluated, 'both checks ran');
+
+            fs.rmSync(planPath, { force: true });
+            const missing = pendingWork.findPendingWork(wsDir);
+            assert.strictEqual(missing.registryEvaluated, false, 'no plan → registry check did not run');
+            assert.strictEqual(missing.backlogEvaluated, false, 'no plan → backlog check did not run');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js computeNextAction never names a reserved command (§5)', () => {
         const tempDir = createTempWorkspace();
         try {

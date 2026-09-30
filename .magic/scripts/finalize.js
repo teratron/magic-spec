@@ -16,6 +16,7 @@ const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases } = require('./lib/phase-archiver');
 const { listPhaseFiles } = require('./lib/phase-files');
+const { findPendingWork } = require('./lib/pending-work');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
@@ -209,6 +210,49 @@ function computeNextAction(workflow, workspace, wsDir) {
 }
 
 /**
+ * The value for a plan with no open tasks. When work is waiting — an open
+ * Backlog item, a spec the plan has not caught up with, a registry ahead of
+ * the plan — the planning funnel is the true recommendation. When nothing is,
+ * naming any command would invite a run that can only report no changes, and
+ * the value would be persisted and replayed by the briefing every session, so
+ * it states the fact and names none.
+ *
+ * "Nothing pending" is only ever concluded from checks that actually ran and
+ * came back empty: a missing input, an unreadable one, or any error resolves
+ * to the funnel. A wrongly silent line hides work; a wrongly present one costs
+ * one command.
+ *
+ * @param {string} workspace - Workspace name, for the funnel command.
+ * @param {string} wsDir - The workspace design directory.
+ * @returns {string} A one-line `Next Action` value.
+ */
+function planCompleteNextAction(workspace, wsDir) {
+    const funnel = `Plan complete — run /magic.task ${workspace} to plan new scope`;
+    try {
+        const pending = findPendingWork(wsDir);
+        const nothingPending =
+            pending.registryEvaluated &&
+            pending.backlogEvaluated &&
+            pending.planComplete &&
+            pending.orphanedSpecs.length === 0 &&
+            pending.syncGap === null &&
+            pending.openBacklogItems.length === 0;
+        return nothingPending ? 'Plan complete — nothing pending' : funnel;
+    } catch (err) {
+        diagnostics.record({
+            severity: 'warning',
+            source: 'finalize',
+            code: 'PENDING_WORK_UNEVALUABLE',
+            message:
+                `Could not tell whether work is pending (${err.message}); ` +
+                'recommending the planning funnel instead of concluding nothing is.',
+            locus: 'STATE.md',
+        });
+        return funnel;
+    }
+}
+
+/**
  * Reports whether a phase is blocked, reading its two independent signals: the
  * phase file's own frontmatter `status:` and its registry row in TASKS.md.
  *
@@ -381,7 +425,7 @@ function synthesizeNextAction(workflow, workspace, wsDir) {
         // HALT that sanctions spec authoring. Naming /magic.spec here would
         // short-circuit that funnel — and, because /magic.status replays this
         // field verbatim, would resurface after /magic.run where §5 forbids it.
-        return `Plan complete — run /magic.task ${workspace} to plan new scope`;
+        return planCompleteNextAction(workspace, wsDir);
     } catch {
         return `Run /magic.task ${workspace} to plan`;
     }

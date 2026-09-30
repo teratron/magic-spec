@@ -22,7 +22,7 @@ Universal process for managing project specifications in `.design/specifications
 8. **Ventilation**: use `magic.analyze` to trigger a deep consistency check. See `.magic/analyze.md` Mode C.
 9. **Delta-Editing**: for spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 10. **Closure**: every task ends with a mandatory "Task Completion Checklist".
-11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
+11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4. Rules enter only through the admission gate (RA-1).
 12. **Anti-Stall**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity. **Suspended only during an active IK-6 convergent dialogue** (Step 0.5 Idea Intake Gate) — and the moment that gate terminates, by empty set or by non-convergence, this invariant resumes at full force. A gate that fired without an IK-4 condition, or that continued past a non-convergent round, is an Anti-Stall violation, not an exemption.
 
 ## Directory Structure
@@ -172,7 +172,7 @@ graph TD
 
 - **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), existence/parent guards, hard-fork, and the Step 0.5 Idea Intake Gate (E6) — remain permitted per their own rules.) The E6 carve-out is narrow by construction: it resolves at Step 0.5, **before** dispatch, and covers only intent incoherence (F1) or essence ambiguity (F2). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
 - **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
-- **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
+- **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Hand the rule to the Operational Logic of `rule.md` (§Updating RULES.md) before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 
 ### Creating a New Specification
@@ -202,11 +202,11 @@ graph TD
    - Update `Version`, `Status`, `Layer` in `INDEX.md`.
    - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magic.spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
      - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the file header was updated without review, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed — confirm before proceeding."* After confirmed resolution, **re-evaluate all Sync guards from the top, scoped to the amendment target** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine applied to the amendment target's upward chain — its L1 parents only, not its downstream dependents nor the drift-resolved file that triggered the HALT) before writing.
-     - **T4 Queue**: if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: *"T4 rule detected — queued pending drift resolution."* Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
+     - **T4 Queue**: if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: *"T4 rule detected — queued pending drift resolution."* Do NOT write to `RULES.md` until the drift is resolved. Hand the queued rule to the Operational Logic of `rule.md` immediately after.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run the update."* One path, no option menu.
    - **Existence Guard**: target file in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
    - **Parent Existence Guard**: target is L2, verify its L1 parent (defined in `Implements:`) exists on disk in the specified (or resolved) workspace. Parent missing → **HALT**. Report: *"L2 Orphan: Parent spec `{parent-file}` is missing from disk. Restore parent before updating L2."*
-     - **T4 Queue**: if the triggering input also contained a T4 rule, acknowledge it: *"T4 rule detected — queued pending file resolution."* Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file (and parent) is restored or remapped.
+     - **T4 Queue**: if the triggering input also contained a T4 rule, acknowledge it: *"T4 rule detected — queued pending file resolution."* Do NOT write to `RULES.md` until the Existence Guard is resolved. Hand the queued rule to the Operational Logic of `rule.md` immediately after the target file (and parent) is restored or remapped.
    - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
    - **C12 (Quarantine)**: if L1 status drops (Stable → RFC/Draft):
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
@@ -248,7 +248,7 @@ Activate `@role:spec-critic` to audit the changes. *(C24 pattern analog: Plannin
 **Spec Council (Multi-Angle Evaluation, MA-2)**:
 For major specification edits, RFC/Stable transitions, or high-stakes architectural changes, `@role:spec-critic` evaluates the spec across 5 contrasting lenses:
 
-1. **Safety & Boundary Lens (Contrarian)**: Are all edge cases, failure states, and error boundaries fully specified? What breaks under malformed inputs or unexpected execution halts?
+1. **Safety & Boundary Lens (Contrarian)**: Are all edge cases, failure states, and error boundaries fully specified? What breaks under malformed inputs or unexpected execution halts? For every regulation the change introduces (a blocking gate, mandatory check, required approval or record): does it cite an observed occurrence, and what does it cost the agent's autonomy (RA-2, RA-3)? A regulation justified only by a scenario that could happen is a finding.
 2. **Layer Purity Lens (First Principles)**: Are L1 invariants strictly technology-neutral? Is L2 bound to a valid `Implements:` reference?
 3. **Ecosystem & Extensibility Lens (Expansionist)**: Does the spec compose cleanly with `Related Specifications`? Is future extensibility supported without breaking current invariants?
 4. **Execution & Testability Lens (Executor)**: Are invariant compliance criteria concrete and verifiable by unit/integration tests?
@@ -278,14 +278,12 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 | # | Trigger | Approval |
 | --- | --- | --- |
-| T1-T3 | "Always/never", repeated pattern, or audit find | Propose & Wait |
+| T1 | "Always/never" wording that governs how work is done (a statement about product behavior stays in the specification) | Propose & Wait |
+| T2 | A repeated pattern with at least two cited instances | Propose & Wait |
+| T3 | An audit finding whose class recurs after being fixed where it occurred | Propose & Wait |
 | T4 | User rule: "remember that...", "project rule:" | Apply Immediately |
 
-**T4 Inline Guards** (applied before writing, preserving "Apply Immediately" semantics):
-
-1. **Tier Routing**: determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for docs", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. Ambiguous → default to the **workspace tier** when a workspace is active, else **global**; narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magic.rule with an explicit tier)`. No prompt.
-2. **Duplication Check**: read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → report the overlap as a non-blocking advisory and merge into the existing convention (skip it when identical). Do NOT silently duplicate.
-3. **Constitutional Guard**: if proposed rule contradicts §1–6 → **HALT**. Same as `rule.md`.
+**Rule capture (T1-T4)**: hand the rule to the Operational Logic of `rule.md` (Tier Routing → Admission → Guards → reviews → write); this file does not restate its guards. Each T1-T3 proposal carries the admission record and offers "do not adopt" among its at most three options (DA-5). A user-stated T4 rule is recorded at the strength stated. A rung-1 note or rung-2 regulation (the placement ladder in `rule.md`) is written into the specification under edit.
 
 ### Periodic Registry Audit
 
@@ -339,6 +337,7 @@ Checklist — {task description}
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Rules: RULES.md triggers (T1-T4) checked/applied
+  ☐ Admission (RA): each agent-originated rule candidate passed the admission gate or was narrated as declined; a user-stated rule recorded at its stated strength
   ☐ Canonical References: If promoting to `Stable`, `## Canonical References` should be filled.
      Empty or stub rows → flag `CANONICAL_MISSING` (advisory, non-blocking — does NOT block promotion; matches `analyze.md` Mode C). MVC remains the sole batch/stabilization gate.
   ☐ Engine: update-engine-meta run if .magic/ or workflows/ modified (C14)

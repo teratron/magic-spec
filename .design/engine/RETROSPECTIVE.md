@@ -37,6 +37,8 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-17 | Phase 31 | 0/0/33 | 6/0/0 | 24 | 🟢 |
 | 2026-09-21 | Phase 32 | 0/0/36 | 18/0/0 | 24 | 🟡 |
 | 2026-09-28 | Phase 33 | 0/0/36 | 5/0/0 | 24 | 🟢 |
+| 2026-09-30 | Phase 34 | 0/0/37 | 17/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 35 | 0/0/37 | 8/0/0 | 25 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -633,3 +635,91 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟡 | 🟢 | ↑ |
 
 > Signal returns to 🟢: Session 13's two stale-reference items (R41, R42) that held it at 🟡 are both closed this session, alongside R44. 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, engine-workspace coverage unchanged, 0 shadow logic. R43 and R45 remain Parked (no demand signal); the new R46 is advisory, not a registry defect.
+
+## Session 15 — 2026-09-30
+
+**Scope:** Plan completion (Phase 34 — Rule Admission Gate Deployment; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.spec amend` → `/magic.task` → `/magic.run` from an owner directive on rule rot in consumer projects)
+**Specs in registry:** 37 (all Stable; +1: [l1-rule-admission-gate.md](specifications/l1-rule-admission-gate.md), authored this session and amended twice before execution — 1.0.0 → 1.1.1). Two L2 specs amended alongside: `l2-role-cards-governance.md` 1.2.1 → 1.3.0, `l2-role-integration.md` 2.1.0 → 2.2.0, `l2-test-suite.md` 1.19.0 → 1.20.0.
+**Tasks total:** 17 this cycle (Done: 17, Blocked: 0, Cancelled: 0) — one more than first planned: T-34B01 was split at re-baseline.
+**RULES.md §7 entries:** 25 (the Session 14 count of 24 predates C28; unchanged by this phase — the gate is deliberately not a convention)
+**Graph:** 211 → 216 nodes (+5: the spec, its file, C28 and two phases), 452 → 467 edges (+15); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.110 → 2.1.111, one C14 at the closing task tagged with four workflow bodies; skills regenerated for two wrappers |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 140/140 before and after C14 |
+| **Rework Rate** | 0 corrections / 17 tasks after start | Manual | The corrections happened before any task started: two spec amendments and one task split at re-baseline |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A specification written before reading the files it targets was wrong in three ways, all found by the planning pass.** `rule.md` wrote before its own "pre-commitment" reviews (so a decline could not prevent a write); the outcome for a specification-placed rule run from `/magic.rule` was undefined; and the shipped text would have been labels (RA-n) meaning nothing to a consumer without the specification. The gate that regulates rules had the same defect it treats: rules written from a hypothesis rather than an observed occurrence. | Spec history 1.1.0; `rule.md` Operational Logic order; Admission Tests section |
+| 2 | **Editing a hardlinked wrapper with an in-place write keeps the twin linked.** `[C-001]` records that the Write and Edit tools replace the inode; a `node` `fs.writeFileSync` on the existing path did not — `fsutil` listed two links per wrapper after the edit and `validate-hardlinks.js` passed, so the recreate-the-link step was not needed. | `workflows/magic.spec.md`, `workflows/magic.rule.md` link counts |
+| 3 | **The phase's only executable validation is cognitive, and the author evaluated it.** The script harness pins none of the changed prose (140/140 both sides of C14), so T225–T230 are the whole safety net, and they were walked against the final text by the same agent that wrote them. | `dev/tests/suite.md` T225–T230; harness run |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R47 | #2 | Verify the in-place-write behavior on a second machine/editor, then record it in the `[C-001]` constraint as the safe way to edit a linked file | `.design/engine/STATE.md` Blocking Constraints |
+| R48 | #3 | Run `/magic.dev.simulate` over T225–T230 in a fresh session so the scenarios are evaluated by an agent that did not write them | `dev/tests/suite.md` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 36 | 37 | +1 |
+| Specs with version churn this session | 5 | 5 | 0 |
+| Script harness tests | 140 | 140 | 0 |
+| Cognitive scenarios (last ID) | T224 | T230 | +6 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 211 / 452 | 216 / 467 | +5 / +15 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 0 shadow logic. R47 and R48 are advisory, not registry defects; the two parked items recorded this session (T4 capture invisible to the spec finalize whitelist; spec-file citations in workflow bodies) are unchanged.
+
+## Session 16 — 2026-09-30
+
+**Scope:** Plan completion (Phase 35 — Nothing-Pending Next Action; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from an owner request in the same session as Session 15)
+**Specs in registry:** 37 (all Stable, unchanged count). Four amended by the `/magic.spec` pass: `l1-session-continuity.md` 2.3.0 → 2.4.0, `l2-engine-finalization.md` 3.3.0 → 3.4.0, `l2-status-command.md` 1.2.0 → 1.3.0, `l2-test-suite.md` 1.20.0 → 1.21.0.
+**Tasks total:** 8 this cycle (Done: 8, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 216 → 217 nodes (+1, the phase), 467 → 468 edges (+1); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.111 → 2.1.112, one C14 tagged `magic.status` |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; one transient red in the first full harness run (below), green on two reruns and after C14 |
+| **Rework Rate** | 0 corrections / 8 tasks | Manual | Two fixture-script defects fixed in scratch tooling, none in shipped files |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A plan-complete recommendation is itself a signal that needs a predicate.** The line said "run /magic.task" whenever no task was open, without asking whether the run could find anything; the answer was already computed, separately, by three Pre-flight checks. Extracting them into one module and refusing to conclude "nothing" from a check that did not run (evaluated-flags) is what made a silent line safe. | `lib/pending-work.js`; `planCompleteNextAction()` |
+| 2 | **A briefing that replays a stored value verbatim silently defeats a change to that value.** `status.md` recommended `Next Action` "verbatim" and reformatted it as a command line; the new command-free value would have been turned back into a recommendation. Caught by the spec-time Post-Update Review, not in execution. | `status.md` Step 7; T231 |
+| 3 | **One transient red on `validate-hardlinks.js covers workflows/…` in the first full run of the phase** (124 ms), green alone, on two reruns and after C14; not reproduced, cause unidentified. The test builds a hardlink fixture and races nothing this phase touched, but the run followed a `git add`. | harness runs, T-35T03 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R49 | #3 | If the hardlink test goes red again, capture its assertion message on the first failure (the run above discarded it) before rerunning | `dev/tests/engine.js` hardlink case |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 140 | 141 | +1 |
+| Cognitive scenarios (last ID) | T230 | T231 | +1 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 216 / 467 | 217 / 468 | +1 / +1 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 0 shadow logic. R47, R48 (Session 15) remain open and advisory; R49 is advisory.

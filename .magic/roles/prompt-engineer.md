@@ -64,3 +64,4 @@ Findings here follow the same PQ-4 bar and PQ-6 verdict grammar as the six stand
 - Reviewing exempt artifacts: registries, changelogs, archives, typo-level patches (violates PQ-1/PQ-2).
 - Elective questions outside the closed C27 escalation whitelist are a protocol violation.
 - Auditing an intake gate that never fired, or treating a silent gate as a missing step (violates IK-1).
+- Widening an admitted regulation's scope, strength or cases through a semantic-coverage rewrite — a widening is a new admission candidate, not a wording fix (RA-9).

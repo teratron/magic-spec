@@ -12,13 +12,13 @@ const {
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
+const { findPendingWork, SPEC_FILENAME_SRC } = require('./lib/pending-work');
 
-// l1-scan-input-hygiene.md SH-4/SH-5: single shared pattern source for every
-// `specifications/{file}.md` extraction site in this script — the filename
-// grammar (not an unrelated closing paren) bounds the capture, so one
-// definition backs both the `matchAll()` site and the single-match `.match()`
-// sites instead of four independent copies of the same literal.
-const SPEC_FILENAME_SRC = 'specifications\\/([a-z0-9][a-z0-9-]*\\.md)';
+// The `specifications/{file}.md` filename grammar is defined once, in
+// lib/pending-work.js, and shared by every extraction site in this script
+// and by the pending-work predicate: the grammar (not an unrelated closing
+// paren) bounds the capture, so one definition backs the `matchAll()` site
+// and the single-match `.match()` sites instead of independent copies.
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -200,6 +200,11 @@ if (draftCount > 0)
     warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
 if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magic.spec');
 
+// One predicate answers all three pending-work questions (orphaned spec,
+// registry ahead of the plan, open Backlog item on a complete plan) for this
+// script and for the next-step line finalize prints, so the two cannot disagree.
+const pending = planExists ? findPendingWork(designDir) : null;
+
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
     // l1-scan-input-hygiene.md SH-1/SH-4: a spec filename quoted in a code
@@ -234,7 +239,7 @@ if (planExists && indexExists) {
             );
         }
 
-        if (!planContentForMatch.includes(spec)) {
+        if (pending.orphanedSpecs.includes(spec)) {
             warn(
                 'ORPHANED_SPEC',
                 `'${spec}' is in INDEX.md but missing from PLAN.md.`,
@@ -256,19 +261,12 @@ if (planExists && indexExists) {
         }
     }
 
-    const indexVersionMatch = indexContent.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
-    const planBasedOnMatch = planContent.match(/^\*\*Based on:\*\*\s+.*?v([0-9.]+)/m);
-
-    if (indexVersionMatch && planBasedOnMatch) {
-        const indexVersion = indexVersionMatch[1];
-        const planBasedOn = planBasedOnMatch[1];
-        if (indexVersion !== planBasedOn) {
-            warn(
-                'SYNC_GAP',
-                `PLAN.md is based on INDEX.md v${planBasedOn}, but registry is at v${indexVersion}.`,
-                'magic.task update',
-            );
-        }
+    if (pending.syncGap) {
+        warn(
+            'SYNC_GAP',
+            `PLAN.md is based on INDEX.md v${pending.syncGap.planBasedOn}, but registry is at v${pending.syncGap.indexVersion}.`,
+            'magic.task update',
+        );
     }
 
     // Rule 57: Layer Integrity
@@ -333,83 +331,16 @@ if (planExists && indexExists) {
 // check gives Pre-flight the one signal it was missing to raise that HALT
 // through the door rules/magic.md §5 already sanctions.
 
-if (planExists && tasksExists) {
-    const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
-    const activePhasesMatch = tasksContentForBacklog.match(
-        /## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/,
+// A complete plan is recognized by positive reads only (a marker, all-terminal
+// rows, or a vacant section), and Backlog bullets carrying a trailing Parked
+// marker are not open — both rules live in lib/pending-work.js.
+if (pending && pending.planComplete && pending.openBacklogItems.length > 0) {
+    const workspaceName = normalizePath(designDir).split('/').pop();
+    warn(
+        'DESIGN_DEBT_PENDING',
+        `Plan complete with no active phase, but ## Backlog holds ${pending.openBacklogItems.length} open item(s) needing design input.`,
+        `magic.spec ${workspaceName}`,
     );
-
-    // A complete plan is recognized three ways, all of them positive reads
-    // (l1-session-continuity.md §Terminal-Row Recognition):
-    //
-    //   1. the italicized `*None — ...*` marker this engine's own workflows
-    //      write for an exhausted section;
-    //   2. a phase table whose every row already carries a terminal status —
-    //      phase-archiver.js rewrites a finished row's status to
-    //      `Done (Archived)` in place and never relocates the row, so under
-    //      the canonical single-table tasks.md template the literal-marker
-    //      form can never reappear once any phase has ever been archived;
-    //   3. a *vacant* section — zero phase rows and nothing but table
-    //      scaffolding (header/separator) or whitespace left in it. This is
-    //      the spec's zero-row case ("a workspace that has never had a
-    //      phase, or whose table was manually cleared"), and it is the shape
-    //      a hand-split `## Active Phases` + `## Completed Phases` layout
-    //      leaves behind once every row has been moved across.
-    //
-    // Vacancy is deliberately narrower than "nothing matched": content that
-    // is present but unrecognized still resolves to "cannot determine", not
-    // to "complete". A gate that can raise a HALT must fire on input it
-    // positively read as empty, never on input it merely failed to parse.
-    const activeSectionTrimmed = activePhasesMatch ? activePhasesMatch[1].trim() : '';
-    const isEmptyMarker = /^\*None\b/m.test(activeSectionTrimmed);
-    const isTableScaffold = (t) => /^\|\s*-+\s*\|/.test(t) || /^\|\s*Phase\s*\|/i.test(t);
-    const activePhaseRows = activeSectionTrimmed.split(/\r?\n/).filter((l) => {
-        const t = l.trim();
-        return t.startsWith('|') && !isTableScaffold(t);
-    });
-    const isAllTerminal =
-        activePhaseRows.length > 0 &&
-        activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
-    const isVacant = activeSectionTrimmed.split(/\r?\n/).every((l) => {
-        const t = l.trim();
-        return t === '' || isTableScaffold(t);
-    });
-    const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal || isVacant);
-
-    if (planComplete) {
-        // Read independently rather than reuse the `planContent` above — that
-        // binding is scoped inside the separate `planExists && indexExists`
-        // block and this check must not depend on INDEX.md being present.
-        const planContentForBacklog = fs.readFileSync(planPath, 'utf8');
-        const backlogMatch = planContentForBacklog.match(/## Backlog\r?\n([\s\S]*?)(?=\r?\n## |$)/);
-        if (backlogMatch) {
-            // SH-1/SH-2: strip fenced/inline-quoted spans before matching, so a
-            // Backlog entry illustrating `- {example}` syntax in a code span is
-            // not counted as an open item.
-            const backlogBody = stripQuoted(backlogMatch[1]);
-            // Top-level bullets only (`- `, not `  - ` sub-bullets). A bullet
-            // whose design question is already answered but is kept visible
-            // on purpose carries a trailing `*(Parked — {reason})*` marker
-            // (l1-session-continuity.md SC-2.4 addendum, Backlog Disposition
-            // Convention) — that is a deliberate, explicit signal, not a
-            // wording guess, so it is the one exclusion this count applies.
-            // Closed items (resolved/rejected/superseded) are expected to be
-            // folded into the Backlog's own intro note and their bullet
-            // deleted, not marked — so no separate "Closed" pattern to match.
-            const openItems = backlogBody
-                .split(/\r?\n/)
-                .filter((l) => /^-\s+\S/.test(l) && !/\*\(Parked\b/.test(l));
-
-            if (openItems.length > 0) {
-                const workspaceName = normalizePath(designDir).split('/').pop();
-                warn(
-                    'DESIGN_DEBT_PENDING',
-                    `Plan complete with no active phase, but ## Backlog holds ${openItems.length} open item(s) needing design input.`,
-                    `magic.spec ${workspaceName}`,
-                );
-            }
-        }
-    }
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

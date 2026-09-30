@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -34,7 +34,7 @@ After a break the user must be able to run one command and learn: where the proj
 | --- | --- |
 | SC-1 (Live Memory Contract) | Reads `STATE.md` as the primary source; treats its `Next Action` as the resume point. |
 | SC-2 (Universal Post-Workflow Update) | Status is on the read-only exemption list; it performs no state writes. |
-| SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command. |
+| SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command, or — when `Next Action` states that nothing is pending (SC-2.4 addendum) — that statement and no command. |
 | SC-5 (C2 Exception) | Registered as the single authorized wrapper addition; inventory tracked in l2-workflow-wrappers.md. |
 | SC-9 (Resume From Recorded State) | The in-flight and paused branch of §5.3 calls the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): read-only, no writes, no diagnostics record. A snapshot file alone is not a paused session. |
 
@@ -60,7 +60,7 @@ Rendered in this fixed order:
 4. **Blockers & Blocking Constraints** — both sections surfaced; constraints are mandatory reading before resuming work.
 5. **Recent Decisions** — last 3 entries.
 6. **Engine line** — local engine version vs. registry snapshot: `Engine: {version} (in sync)` or `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`. Informational only.
-7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magic.* command)`.
+7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magic.* command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one.
 
 ### 5.3 Resolution & Degraded States
 
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-09-30 | Agent | §5.2 item 7 and the SC-4 row follow [l1-session-continuity.md](l1-session-continuity.md) 2.4.0: a `Next Action` that states nothing is pending is rendered as that statement, not as a recommended command — the briefing replays `Next Action` verbatim, so without this the new command-free value would be reformatted back into a recommendation. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.2.0 | 2026-09-20 | Agent | The paused-session bullet of §5.3 no longer reads "a handoff file present" as a trigger. The resume line now comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): a task recorded `In Progress`, or `Status: Paused` (SC-9(b) of [l1-session-continuity.md](l1-session-continuity.md) 2.3.0). §2's "no writes" is clarified to mean no artifact writes: a script the briefing calls may record to the diagnostics sink, which is runtime state ([l1-engine-diagnostics.md](l1-engine-diagnostics.md) §2). §4 gained the SC-9 row. The briefing layout and the read-only contract are otherwise unchanged. Status reverted `Stable → RFC` by the C12 Cascade from the parent; Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.1.0 | 2026-08-27 | Agent | §4 Invariant Compliance table dropped the SC-3 row: SC-3 (Commit Suggestion Guarantee) was retired in full in [l1-session-continuity.md](l1-session-continuity.md), so there is no longer an invariant for this read-only command to be exempt from. No behavioral change to the status command itself. |
 | 1.0.0 (quarantine reversed) | 2026-08-07 | Agent | **C12 Cascade, then reversed**: L1 parent [l1-session-continuity.md](l1-session-continuity.md) momentarily dropped Stable → RFC (v1.9.0, SC-2.4 Backlog Disposition Convention addendum), quarantining this file to RFC. The parent's Post-Update Review (5-lens) found no blocking issues and Trust Mode (C9) auto-promoted it back to `Stable` within the same invocation, which lifts this file's quarantine in step — content and version unchanged throughout, no defect here. |

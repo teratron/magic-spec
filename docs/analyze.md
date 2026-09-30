@@ -68,7 +68,7 @@ Scans the codebase and generates specification proposals:
 | **Tech Stack** | Config file detection (`package.json`, `pyproject.toml`, etc.) | Stack summary |
 | **Architecture** | Directory pattern matching (`controllers/`, `models/`, etc.) | Architecture style + confidence |
 | **Modules** | Entry point analysis, import patterns | Module list with dependencies |
-| **Conventions** | Linter/formatter configs, test patterns | RULES.md proposals |
+| **Conventions** | Linter/formatter configs, test patterns | Observed conventions, recorded in the owning specification |
 
 Output: a **Proposal Document** with detected stack, proposed L1/L2 specs, RULES.md entries, and coverage summary. User reviews and chooses: approve all, select specific items, adjust, or cancel.
 
@@ -102,7 +102,7 @@ A deep audit treating the codebase as source of truth:
 4. **Coverage Check**: Scan project directories within active workspace scope (C15). Identify folders with no corresponding spec.
 5. **Documentation & Version Audit**: Check `CONTRIBUTING.md`, `README.md` version badge, version parity across manifests.
 6. **Scope Blind-Spot Check** (multi-workspace): Report directories not covered by any workspace scope.
-7. **Rule Validation**: Check `RULES.md §7` compliance.
+7. **Rule Validation**: Check `RULES.md §7` compliance, and report retirement candidates as read-only advisories — `RULE_RETIRE_CANDIDATE` (cause gone, superseded, or deadlocking the agent) and `RULE_BLOAT` (body over 10 lines). Analysis never edits a rule.
 8. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
 > **Mode Precedence**: When `/magic.analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magic.analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
@@ -151,7 +151,7 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 | **Spec** (`spec.md`) | Partner — analysis results are dispatched via the Spec workflow |
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created, tasks can be planned |
-| **Rule** (`rule.md`) | Consumer — detected conventions are proposed for RULES.md |
+| **Rule** (`rule.md`) | Consumer — analysis writes no rules; it only links `/magic.rule` for a candidate that passed the admission gate, and reports retirement candidates |
 
 ## Sync Note
 

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.81
+**Version:** 1.9.83
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -279,7 +279,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] T4 trigger detected: "from now on" is a standing-rule signal
   - [ ] Agent writes spec changes AND proposes new §7 convention
   - [ ] Convention proposed: `C7 — gRPC-Only API Standard`
-  - [ ] Trust Mode (C9) + T4 "Apply Immediately": T4 Inline Guards run (duplication check, constitutional guard, tier routing); if all pass — RULES.md §7 updated and version bumped without a separate approval gate
+  - [ ] Trust Mode (C9) + T4 "Apply Immediately": the Operational Logic of `rule.md` runs (tier routing, admission — a user-stated rule is recorded at its stated strength — duplication check, constitutional guard, reviews); if all pass — RULES.md §7 updated and version bumped without a separate approval gate
   - [ ] `api.md` updated with gRPC requirement
   - [ ] Summary narrated: `[Auto-Rule] Applied: C7 → RULES.md §7 (via T4).`
 - **Guards tested:** T4 standing-rule detection, dual write (spec + rule), C9 Apply-Immediately (no approval gate)
@@ -2443,7 +2443,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T153 — Spec T4 Tier Routing: Workspace Signal Detected
 
-- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Workflow:** `spec.md` (Dispatching from Raw Input → rule capture via the Operational Logic of `rule.md`)
 - **Synthetic State:**
   - Active workspace: `docs` (resolved via Zero-Prompt).
   - `.design/RULES.md`: §7 has C1–C10.
@@ -2455,11 +2455,11 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Duplication Check**: scans both global C1–C10 and workspace WC1 for overlap → none found
   - [ ] Rule written to `.design/docs/RULES.md` as WC2 (NOT to global RULES.md)
   - [ ] Spec update and rule write grouped in single atomic proposal
-- **Guards tested:** T4 Inline Tier Routing, workspace signal detection, atomic proposal
+- **Guards tested:** Rule-capture Tier Routing, workspace signal detection, atomic proposal
 
 ### T154 — Spec T4 Duplication Check Catches Overlap
 
-- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Workflow:** `spec.md` (Dispatching from Raw Input → rule capture via the Operational Logic of `rule.md`)
 - **Synthetic State:**
   - Active workspace: `engine`.
   - `.design/RULES.md` §7 has C7: "Universal Script Executor — all automation via `executor.js`."
@@ -2470,11 +2470,11 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **Duplication Check**: proposed rule semantically overlaps with existing C7
   - [ ] Trust Mode (C9) → Overlap reported as non-blocking advisory; write proceeds via merge
   - [ ] Spec update proceeds atomically with rule synchronization
-- **Guards tested:** T4 Inline Duplication Check, Zero-Prompt rule sync
+- **Guards tested:** Rule-capture Duplication Check, Zero-Prompt rule sync
 
 ### T155 — Spec T4 Constitutional Guard Blocks Contradicting Rule
 
-- **Workflow:** `spec.md` (Dispatching from Raw Input → T4 Inline Guards)
+- **Workflow:** `spec.md` (Dispatching from Raw Input → rule capture via the Operational Logic of `rule.md`)
 - **Synthetic State:**
   - `.design/RULES.md` §5: "No implementation code — pseudo-code only."
 - **Action:** `"Add Python examples to database spec. Remember that all specs must include runnable code samples."`
@@ -2484,7 +2484,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] **HALT** on rule write: "Proposed rule contradicts §5 (Content Rules). Cannot apply."
   - [ ] Spec update (adding Python examples) also flagged as §5 violation
   - [ ] Neither rule nor spec change written
-- **Guards tested:** T4 Inline Constitutional Guard, §1–6 protection
+- **Guards tested:** Rule-capture Constitutional Guard, §1–6 protection
 
 ### T156 — Spec T4 Atomic Intent with Drift Resolution
 
@@ -3108,7 +3108,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight Cross-Workspace Parent Header Parity detects STATUS_DRIFT + VERSION_DRIFT on `engine/l1-core.md`
   - [ ] **HALT** before plan generation
   - [ ] T4 trigger detected in directive arg ("Remember that...")
-  - [ ] Agent acknowledges T4: "T4 rule detected — queued pending cross-workspace parent drift resolution. Will be applied via `spec.md` T4 Inline Guards after resolution."
+  - [ ] Agent acknowledges T4: "T4 rule detected — queued pending cross-workspace parent drift resolution. Will be handed to the Operational Logic of `rule.md` after resolution."
   - [ ] No write to `RULES.md`, no plan generation
   - [ ] After user resolves drift via `/magic.spec`: rule applied, plan generation re-attempted on subsequent `/magic.task` invocation
 - **Guards tested:** T4 Queue (Cross-Workflow), Cross-Workspace Parent Header Parity, atomic HALT preserves embedded T4
@@ -3489,6 +3489,128 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** SC-6.1 claim honesty (the guarantee is no stronger than the script's output); verbatim relay of finalize output; non-blocking semantics of a `STATE.md` failure.
 - **Regression for:** a comforting "all saved, you can clear" said over a failed write, after which the next cold context resumes from stale state.
 
+### T225 — An Agent-Originated Rule With No Cited Occurrence Is Declined; With Evidence It Is Admitted Soft (RA-2/RA-8)
+
+- **Workflow:** `rule.md` (Operational Logic → Admission)
+- **Synthetic State (Test A — no evidence):**
+  - `.design/RULES.md` §7 holds C1–C9. During spec work the agent itself proposes a convention: "all specs must list at least three alternatives in Drawbacks". No file, commit or session failure is cited; nothing has gone wrong.
+- **Action A:** `/magic.rule add "all specs must list at least three alternatives in Drawbacks"`, composed by the agent (origin: agent-originated).
+- **Expected A:**
+  - [ ] Origin is classified agent-originated; the evidence test finds no cited occurrence and the candidate is not an irreversible-class harm.
+  - [ ] Exactly one line is narrated: `[DR] Not codified: … — no evidence. (Override: /magic.rule add "…")`.
+  - [ ] `RULES.md` is not written, its version is not bumped, and no question is asked.
+- **Synthetic State (Test B — control):**
+  - The same candidate, now with a cited occurrence: two Stable specs in the workspace (file and line named) were promoted with a single alternative and a downstream task was planned against the weaker one; nothing in the constitution, the shipped rules or a workflow gate catches it; the harm is reversible (an amend).
+- **Action B:** the same `/magic.rule add`.
+- **Expected B:**
+  - [ ] The candidate passes the without-rule questions (cause persists, uncovered, reversible) and no disqualifying hazard remains after rewording to the evidence scope.
+  - [ ] It is admitted at the workspace rung as a **soft** convention; the admission record is at most seven lines.
+  - [ ] It reaches the user through the E4 proposal, whose at most three options include "do not adopt".
+- **Guards tested:** RA-2 evidence anchor; RA-8 one-line Decision Record; no question outside the whitelist; the gate is not a blanket refusal.
+- **Regression for:** a non-conflicting rule approved only because nothing conflicts with it — the exact path that produced rules the agent later had to obey.
+
+### T226 — A Candidate an Existing Rule Already Covers Is Declined Naming It (RA-3)
+
+- **Workflow:** `rule.md` (Operational Logic → Admission, without-rule coverage question)
+- **Synthetic State (Test A):**
+  - The shipped rules already forbid writing task IDs, phase designators and spec file names into product files, and ventilation already reports `SDD_REFERENCE_LEAK`. The agent proposes a convention: "never write task IDs into source comments", citing one comment that does so.
+- **Action A:** `/magic.rule add` for that convention, agent-originated.
+- **Expected A:**
+  - [ ] The coverage question finds the shipped containment rule and the ventilation advisory.
+  - [ ] One Decision Record: `[DR] Not codified: … — covered by {that rule}. (Override: /magic.rule add "…")`, naming the covering rule.
+  - [ ] Nothing is written; the one cited comment is a finding to fix where it occurs, not a rule.
+- **Synthetic State (Test B — control):**
+  - A candidate about a different concern that no shipped rule, convention, workflow gate, specification regulation, test or hook covers.
+- **Expected B:**
+  - [ ] The coverage question finds nothing; the candidate is not declined on that ground.
+- **Guards tested:** RA-3 existing-coverage check reaching the engine's shipped rules, not only the two `RULES.md` tiers; duplication reach.
+- **Regression for:** a duplicate of an engine rule registered because the check compared only the project's own tiers.
+
+### T227 — A User-Stated Rule Is Written as Stated; Unstated Strengthenings Are Not Added (RA-5/RA-6)
+
+- **Workflow:** `rule.md` (Operational Logic → Admission, user-stated branch) via `/magic.spec` T4 capture
+- **Synthetic State (Test A):**
+  - Active workspace with a Stable spec. No convention about verification exists.
+- **Action A:** `"Remember that every artifact of kind K is checked on every configuration the platform offers."`
+- **Expected A:**
+  - [ ] Origin is user-stated; the rule is not declined on necessity grounds.
+  - [ ] It is written with scope *artifacts of kind K* and strength *checked*; the body is at most 10 non-empty lines and carries no Decision Record text.
+  - [ ] Each unstated strengthening — a promotion block, a repeat for every artifact composing K, a retroactive trigger — is narrated as one "not added" Decision Record and is not written.
+  - [ ] The deadlock hazard (the check needs a running platform the agent may not reach) is reported as an advisory beside the write, not as a question.
+  - [ ] The Document History row records the origin `user-stated`.
+- **Synthetic State (Test B — control):**
+  - The user states the blocking form: `"Remember that a kind-K artifact must not be promoted until it passes on every configuration."`
+- **Expected B:**
+  - [ ] The blocking form is written as stated; nothing further is added or removed.
+- **Guards tested:** RA-5 fidelity; RA-6 body bound and history origin; advisory instead of question.
+- **Regression for:** a one-sentence operator rule inflated into a fail-closed gate with an enumeration, a cascade and a retroactive trigger.
+
+### T228 — A Hard Form for Reversible Harm Is Admitted Soft (RA-4)
+
+- **Workflow:** `rule.md` (Operational Logic → Admission, form and placement)
+- **Synthetic State (Test A):**
+  - The agent proposes a convention with a cited, persisting, uncovered occurrence whose harm is reversible (a mis-formatted table caught and fixed in the next commit), and drafts it as a blocking gate: "no task may be marked Done until every table passes a formatter".
+- **Action A:** `/magic.rule add` for the blocking gate, agent-originated.
+- **Expected A:**
+  - [ ] The harm class is reversible, the soft form has never been violated, and the user did not state the hard form: the hard form is not admissible.
+  - [ ] The rule is admitted only as a **soft** convention (a violation is an advisory finding); the blocking condition is dropped, and the deadlock hazard is named as the reason.
+- **Synthetic State (Test B — control):**
+  - The harm is in the irreversible class (a release artifact published with a wrong file).
+- **Expected B:**
+  - [ ] The hard form may be admitted for that class.
+- **Guards tested:** RA-4 soft-by-default form; the three conditions that admit the hard form.
+- **Regression for:** blocking gates written for problems a later commit fixes, which then stop the agent's own work.
+
+### T229 — Ventilation Reports a Rule Whose Cause Is Gone and Edits Nothing (RA-7)
+
+- **Workflow:** `analyze.md` (Mode C step 12 → Rule Retirement)
+- **Synthetic State (Test A):**
+  - Workspace `RULES.md` holds WC1, agent-originated, whose Document History row cites `scripts/legacy/export.sh` as its evidence; that file no longer exists.
+- **Action A:** `/magic.analyze {workspace}`
+- **Expected A:**
+  - [ ] `RULE_RETIRE_CANDIDATE WC1: a` with the next step `→ /magic.rule remove WC1`.
+  - [ ] No rule is edited or removed; Remove would still ask its single confirmation.
+- **Synthetic State (Test B — controls):**
+  - WC2 is user-stated and cites a missing file; C7 is an engine-owned convention (its heading matches the shipped template).
+- **Expected B:**
+  - [ ] WC2 is not flagged as cause-gone (only agent-originated rules carry cited evidence); it is still checked for superseded, deadlock and size.
+  - [ ] C7 is never flagged.
+- **Guards tested:** RA-7 kinds (a)–(d) and their exclusions; ventilation stays read-only.
+- **Regression for:** a rule set that only ever grows because nothing proposes a removal.
+
+### T230 — A Specification-Placed Outcome From `/magic.rule` Is Redirected, Not Written (RA-8)
+
+- **Workflow:** `rule.md` (Operational Logic → Admission, write reach) as `/magic.rule` and on behalf of `/magic.spec`
+- **Synthetic State (Test A):**
+  - An agent-originated candidate with a cited, persisting, uncovered, reversible occurrence whose lowest sufficient placement is a regulation inside one specification (it binds only work on that specification).
+- **Action A:** `/magic.rule add …` for it.
+- **Expected A:**
+  - [ ] One Decision Record: `[DR] Not codified: … — placed at rung 2. (Override: /magic.spec amend {spec})`, naming the governing specification.
+  - [ ] `RULES.md` is not written; no question is asked. The same holds for a rung-1 note.
+- **Synthetic State (Test B — control):**
+  - The same candidate arises while `/magic.spec` edits that specification.
+- **Expected B:**
+  - [ ] The regulation is written into the specification under edit and narrated as an admission record; `RULES.md` is untouched.
+- **Guards tested:** RA-8 write reach; the rule workflow never exceeds its write scope.
+- **Regression for:** a spec-scoped regulation promoted into the global constitution because the rule workflow could not place it anywhere else.
+
+### T231 — The Status Briefing Renders "Nothing Pending" as a Statement, Never as a Recommended Command (SC-2.4 addendum)
+
+- **Workflow:** `status.md` (Step 7 — Next)
+- **Synthetic State (Test A — nothing pending):**
+  - `STATE.md` reads `Next Action: Plan complete — nothing pending`, `Blockers` is empty, the plan is complete and in sync with the registry, and the Backlog holds only Parked items.
+- **Action A:** `/magic.status`
+- **Expected A:**
+  - [ ] The Next section reads `Next: nothing pending — Plan complete — nothing pending` (or the same statement in one clause) and recommends **no command**.
+  - [ ] No `[DR] Next: /magic.…` line is emitted, and the briefing does not fall through to the pipeline-order fallback (which would name `/magic.task` or `/magic.spec`).
+  - [ ] The briefing stays read-only and asks no question.
+- **Synthetic State (Test B — control):**
+  - `Next Action: Execute T-2A01 Wire the exporter via /magic.run engine`.
+- **Expected B:**
+  - [ ] The `[DR] Next: /magic.run engine — …` form is rendered exactly as before; only a `Next Action` that names no command changes the rendering.
+- **Guards tested:** the nothing-pending rendering; the fallback applies only when `Next Action` is absent; the recommendation form is untouched for every value that names a command.
+- **Regression for:** the briefing replaying a command-free `Next Action` as a recommendation — reformatting the statement back into `/magic.task …` and inviting a run that can only report no changes.
+
 ```
-**Test Suite Finalized** - v1.9.81 (Last: T224)
+**Test Suite Finalized** - v1.9.83 (Last: T231)
 ```

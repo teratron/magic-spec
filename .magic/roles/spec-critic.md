@@ -7,7 +7,7 @@ triggers:
     gate: "Post-Update Review"
 outputs:
   - type: spec-review
-    scope: "pass/fail verdict on L1 purity, invariant completeness, L2 substantive compliance"
+    scope: "pass/fail verdict on L1 purity, invariant completeness, L2 substantive compliance, regulation necessity"
 handoff: []
 skills_recommended: []
 related_rules: [C24]
@@ -28,12 +28,14 @@ Audit specs after creation or update.
 4. **Coherence:** Does the document read consistently after edits?
 5. **Links:** `Related Specifications` and `Implements` accurate?
 6. **Rules:** Any contradiction with `RULES.md`? Flag, do not ignore.
-7. **Sync Check:** `check-prerequisites` status.
-8. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision.
+7. **Regulation Necessity (RA-1):** every regulation the change introduces — a blocking gate, mandatory check, required approval or record — cites an observed occurrence (RA-2), survives the with/without comparison (RA-3) and takes the weakest form that covers its evidence (RA-4). Product invariants are outside this step; their completeness stays with step 2.
+8. **Sync Check:** `check-prerequisites` status.
+9. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision.
 
 ## Anti-patterns
 
 - Permitting implementation code in an L1 spec because "it clarifies the concept".
 - Passing an L2 with placeholder `Invariant Compliance` rows.
 - Skipping `RULES.md` cross-check.
+- Accepting a blocking gate justified only by a scenario that could happen.
 - Elective questions outside the closed C27 escalation whitelist are a protocol violation.

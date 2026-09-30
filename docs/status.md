@@ -16,7 +16,7 @@ Key Goals:
 
 - **Position**: what was last done, which spec is active, what phase the plan is in.
 - **Obstruction**: blockers and blocking constraints surfaced before you resume, not after you hit them.
-- **Direction**: exactly one recommended next command, with the reason it was chosen.
+- **Direction**: exactly one recommended next command, with the reason it was chosen — or, when the plan is complete and no work is waiting, a one-clause statement that nothing is pending and no command.
 - **Purity**: the command changes nothing — no writes, no version bump, no finalize.
 
 ## 2. Read-Only Guarantee

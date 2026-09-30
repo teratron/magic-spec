@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.2.1
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -19,6 +19,7 @@ Cards in this spec: `spec-critic`, `project-auditor`, `constitutional-reviewer`,
 - [l2-role-cards-review.md](l2-role-cards-review.md) - Sibling: run.md inline review-gate cards.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side integration of all role cards (C24 rewrite).
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Concept authority for the `prompt-engineer` card (§5): artifact classes, review taxonomy, verdict semantics.
+- [l1-rule-admission-gate.md](l1-rule-admission-gate.md) - Concept authority for the constitutional-reviewer admission step (§3), the spec-critic regulation check (§1) and the prompt-engineer no-widening bar (§5).
 
 ## 1. Spec-critic (migrated from C24 Project Critic)
 
@@ -33,7 +34,7 @@ triggers:
     gate: "Post-Update Review"
 outputs:
   - type: spec-review
-    scope: "pass/fail verdict on L1 purity, invariant completeness, L2 substantive compliance"
+    scope: "pass/fail verdict on L1 purity, invariant completeness, L2 substantive compliance, regulation necessity"
 handoff: []
 skills_recommended: []
 related_rules: [C24]
@@ -49,14 +50,16 @@ related_rules: [C24]
 4. **Coherence:** Does the document read consistently after edits?
 5. **Links:** `Related Specifications` and `Implements` accurate?
 6. **Rules:** Any contradiction with `RULES.md`? Flag, do not ignore.
-7. **Sync Check:** `check-prerequisites` status.
-8. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision.
+7. **Regulation Necessity (RA-1):** every regulation the change introduces — a blocking gate, a mandatory check, a required approval or record — cites an observed occurrence (RA-2), survives the with/without comparison (RA-3) and takes the weakest form that covers its evidence (RA-4). Product invariants are out of this step; their completeness stays with step 2.
+8. **Sync Check:** `check-prerequisites` status.
+9. Emit PASS or FAIL with itemized issues. FAIL returns control to `spec.md` for revision.
 
 **Anti-patterns:**
 
 - Permitting implementation code in an L1 spec because "it clarifies the concept".
 - Passing an L2 with placeholder `Invariant Compliance` rows.
 - Skipping `RULES.md` cross-check.
+- Accepting a blocking gate justified only by a scenario that could happen.
 
 ## 2. Project-auditor (migrated from C24 Auditor)
 
@@ -107,28 +110,31 @@ triggers:
     gate: "Impact Analysis"
 outputs:
   - type: constitutional-review
-    scope: "verdict on whether proposed rule conflicts with §1-6 or existing conventions"
+    scope: "admission verdict (necessity, fidelity, form) and conflict review of a proposed rule"
 handoff: []
 skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Review proposed `RULES.md` updates before they are committed.
+**Mission:** Decide whether a proposed `RULES.md` rule should exist, then review it before it is committed.
 
 **Operating Protocol:**
 
-1. Load the proposed rule text.
-2. Check §1-6 (universal rules) for direct contradiction. Contradiction → HALT.
-3. Check every existing C{N} (and WC{N} for workspace rules) for practical conflict: would the new rule cause an existing rule to fail or behave inconsistently in any live workflow?
-4. Check duplication: does the new rule semantically overlap an existing one? If yes, propose merge or replace rather than additive registration.
-5. Check scope: is the rule universal (global `RULES.md`) or workspace-specific (workspace `RULES.md`)?
-6. Emit verdict: APPROVE (proceed to write), AMEND (propose rewording), or REJECT (constitutional conflict).
+1. Load the proposed rule text and its origin: *user-stated* (the user wrote the normative text) or *agent-originated* (the agent composed it, including clauses added to a user's rule).
+2. **Admission.** Agent-originated: require a cited occurrence (RA-2), run the with/without comparison — persisting cause, existing coverage, harm class against friction, deadlock, over-reach, cascade, conflict, opened hole (RA-3) — and choose the weakest form and lowest placement that covers the evidence (RA-4). User-stated: keep its stated strength and scope, split every unstated strengthening into a separate agent-originated candidate, and report hazards as advisory (RA-5). Either origin: body within 10 non-empty lines, no process narration in it (RA-6).
+3. Check §1-6 (universal rules) for direct contradiction. Contradiction → HALT.
+4. Check every existing C{N} (and WC{N} for workspace rules) for practical conflict: would the new rule cause an existing rule to fail or behave inconsistently in any live workflow?
+5. Check duplication against both `RULES.md` tiers, the engine's shipped adapter rules and the regulations inside specifications. On overlap, propose merge or replace rather than additive registration.
+6. Check scope: is the rule universal (global `RULES.md`) or workspace-specific (workspace `RULES.md`)?
+7. Emit verdict: APPROVE (proceed to write), AMEND (propose rewording — fidelity, form or placement), DECLINE (agent-originated rule fails admission; narrated as one Decision Record, nothing written), or REJECT (constitutional conflict).
 
 **Anti-patterns:**
 
 - Approving a duplicate because "the wording is slightly different".
 - Scope confusion: permitting a universal rule into a workspace file or vice versa.
 - Skipping practical-conflict check when direct contradiction is absent.
+- Approving an agent-originated rule because nothing conflicts with it — absence of conflict is not necessity.
+- Declining a user-stated rule on necessity grounds, or writing it stronger or wider than the user stated.
 
 ## 4. Retrospective-analyst (migrated from C24 Independent Analyst)
 
@@ -224,6 +230,7 @@ related_rules: [C13, C24]
 - Rewriting the artifact directly instead of returning findings to the producing role (violates PQ-6).
 - Reviewing exempt artifacts: registries, changelogs, archives, typo-level patches (violates PQ-1/PQ-2).
 - Auditing an intake gate that never fired, or treating a silent gate as a missing step (violates IK-1).
+- Widening an admitted regulation's scope, strength or cases through a semantic-coverage rewrite — a widening is a new admission candidate, not a wording fix (RA-9).
 
 ## Canonical References
 
@@ -236,6 +243,7 @@ related_rules: [C13, C24]
 | `[RETRO-ANALYST]` | `.magic/roles/retrospective-analyst.md` | Deployed retrospective-analyst card. |
 | `[PROMPT-ENGINEER]` | `.magic/roles/prompt-engineer.md` | Deployed prompt-engineer card. |
 | `[PQ-GATE]` | `.design/engine/specifications/l1-prompt-quality-gate.md` | Concept authority for the §5 card. |
+| `[RA-GATE]` | `.design/engine/specifications/l1-rule-admission-gate.md` | Concept authority for the §3 admission step and the RA checks in §1 and §5. |
 | `[SPEC]` | `.magic/spec.md` | Consumer of spec-critic. |
 | `[ANALYZE]` | `.magic/analyze.md` | Consumer of project-auditor. |
 | `[RULE]` | `.magic/rule.md` | Consumer of constitutional-reviewer. |
@@ -245,6 +253,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.0 | 2026-09-30 | Implements `l1-rule-admission-gate.md`. Constitutional-reviewer (§3) now decides whether a rule should exist before reviewing it: loads the rule's origin, runs the admission step (RA-2–RA-6), widens the duplication check to engine adapter rules and specification regulations, and gains the DECLINE verdict — previously a non-conflicting rule could only be approved. Spec-critic (§1) gains step 7 Regulation Necessity as the counterweight to Invariant Completeness, scoped to regulations so product invariants are unaffected. Prompt-engineer (§5) gains the no-widening anti-pattern (RA-9). Deployed cards change in the matching engine task. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review and Instruction Quality Pass passed in the same invocation. |
 | 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Card text describes each role as it is: the four "Migrated … with preserved gate and semantics" mission sentences (a diff against a C24 version the reading agent never saw) are dropped — the migration guarantee stays in the Overview (R7). Constitutional-reviewer no longer names a `C1-C23` range (the constitution outgrew it; the check is "every existing convention"). Deployed cards carry the same wording. |
 | 1.1.1 | 2026-08-13 | Corrected stale citation in Project-auditor §2 step 5: "Invariant 6 from analyze.md" named Depth Control (file-count HALT thresholds), not anti-fabrication — no invariant of that name exists in `analyze.md`; the concept is `.design/RULES.md` C13 §5 (Anti-Hallucination Audit) (field report, engine 2.1.71). Deployed `.magic/roles/project-auditor.md` carries the identical stale text and requires the matching correction — Engine Improvement, out of this spec's write scope. Typo-only patch (spec.md Amendment rule); no status transition. |
 | 1.2.0 | 2026-08-28 | `prompt-engineer` card gains the conditional **Idea Intake Gate Audit (E6)**: a six-row check table (IK-2 investigation discharged, IK-3 intent-only domain, IK-4 firing justified, IK-5 plain-language wording, IK-6 convergence, IK-7 chat-only residency) that runs only when a `magic.spec` invocation actually fired the Step 0.5 gate, plus the matching anti-pattern barring audit of a silent gate. Implements `l1-idea-intake-gate.md` §4.5. Whitelist reference widened E1-E5 → E1-E6 on the deployed card. Stable retained via Trust Mode re-review (C9). |
