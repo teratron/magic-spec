@@ -100,7 +100,7 @@ Before the review, the reviewer decides whether the rule should exist at all —
 After a rule is written to disk:
 
 1. **Notify**: Detect if `TASKS.md` is now based on a stale version of the rules.
-2. **Next step**: exactly one narrated next command — `magic.task update` by default, `magic.spec audit` only when the rule changes verification or compliance obligations.
+2. **Next step**: exactly one narrated next command — `/magic.task {workspace} update` by default, `/magic.spec audit` only when the rule changes verification or compliance obligations.
 
 ## 8. Trigger Types
 

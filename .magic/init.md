@@ -31,7 +31,7 @@ graph TD
 Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. Branch on result:
 
 - `ok: true` → skip silently; return control to caller.
-- `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below).
+- `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below). `checksums_mismatch`, the name the constitution uses for an engine-checksum failure, is the `ENGINE_INTEGRITY` warning — `check-prerequisites` prints no token of that name.
 - `ok: false` + missing system files (no integrity warnings) → proceed to Step 2 (Init).
 - `ok: false` + unrecognized reason → **HALT**. Report: `"Unexpected pre-flight failure: {raw output}. Investigate manually."`
 - Output contains `CONFIG_DRIFT` (any branch) → log non-blocking advisory `"RULES.md was modified outside workflow."` Auto-proceed; do NOT halt or prompt.

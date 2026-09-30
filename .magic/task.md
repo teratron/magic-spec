@@ -15,13 +15,14 @@ Parse `[arg]` to determine planning mode:
 
 | Input | Detection | Result |
 | --- | --- | --- |
-| *(empty)* | No argument | **Full Planning**: resolve workspace via §Workspace Resolution, then plan all specs |
+| *(empty)* | No argument | **Full Planning**: resolve workspace via `context.md` §Workspace Resolution Chain, then plan all specs |
 | `engine` | Matches a workspace name in `workspace.json` | **Scoped Planning**: plan only specs registered in that workspace's `INDEX.md` |
-| `"decompose phase-2"` | Quoted text or text that does NOT match any workspace name | **Guided Planning**: interpret text as planning directive (focus, instruction, filter) |
+| `update` | Reserved keyword, unquoted and not a workspace name (also `engine update`) | **Plan Update**: Full (or Scoped) Planning with no directive — re-evaluates the existing plan against the current registry and rules (Step 8, Update Mode). This is the command the engine names wherever a plan has gone stale; it is a mode, not a planning directive, so the Guided Planning Filter never applies to it |
+| `"decompose phase-2"` | Quoted text, or text that matches neither a workspace name nor `update` | **Guided Planning**: interpret text as planning directive (focus, instruction, filter) |
 | `engine "only new specs"` | First token is workspace + remaining is quoted text | **Scoped + Guided**: planning directive applied within workspace scope |
 
-> **Workspace Fallback (Modes A, C)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the planning directive. The directive text filters or guides planning but does not replace workspace resolution.
-> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magic.task "engine"`.
+> **Workspace Fallback (Modes A, C, and `update`)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the planning directive. The plan is written for that one workspace; Step 2 (Pre-Planning Stabilization) still iterates every registered workspace, default first. The directive text filters or guides planning but does not replace workspace resolution.
+> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magic.task "engine"`. The same quoting turns `update` into a directive: `/magic.task "update"`.
 > **Handoff Propagation**: when recommending `/magic.run` after planning, propagate the workspace context: `/magic.run {workspace}`.
 
 ## Core Invariants (Mandatory)
@@ -33,7 +34,7 @@ Parse `[arg]` to determine planning mode:
 4. **Logic Guards**:
    - **No Orphans**: every registered spec must be in `PLAN.md` or `## Backlog`.
    - **Atomic Tasks (C10)**: every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-   - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task amend | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
+   - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task "{adjustment}" | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
    - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
@@ -67,7 +68,7 @@ graph TD
 ### Steps
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --verify-headers --workspace={active-workspace}`.
-   - **C15 Filter**: `checksums_mismatch` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
+   - **C15 Filter**: `ENGINE_INTEGRITY` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
    - **File-Header Parity**: for each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. Either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`."* Catches manual edits that bypassed the spec workflow.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. Any name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run `/magic.task`."* One recommended path — no option menu.
    - **Cross-Workspace Parent Header Parity** (Pre-flight gate): for every L2 spec in the active workspace whose `Implements:` field references an L1 spec in a **different** workspace, read that parent's file header (`Status:`, `Version:`) and compare against the parent workspace's own `INDEX.md` entry. Mismatch → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Cross-workspace parent drift: `{parent-file}` in `{parent-ws}` — file header `{field}: {file_val}` ≠ registry `{index_val}`. Run `/magic.spec` in `{parent-ws}` to reconcile, then re-run `/magic.task`."* Runs in Pre-flight (Step 1) — not deferred to Step 8 — to prevent planning against a drifted L1 parent before any artifacts are written.

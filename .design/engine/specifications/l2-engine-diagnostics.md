@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.2.2
+**Version:** 1.2.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -137,7 +137,7 @@ A condition finding additionally carries `recheck` (§4.10), the DG-10 revalidat
 {"ts":"<ISO-8601>","severity":"warning","source":"check-prerequisites",
  "code":"SYNC_GAP",
  "message":"PLAN.md is based on INDEX.md v1.27.0, but registry is at v1.27.1.",
- "remedy":"magic.task update",
+ "remedy":"/magic.task engine update",
  "recheck":{"script":"check-prerequisites",
             "args":["--json","--require-specs","--verify-headers"],
             "env":{"MAGIC_DESIGN_DIR":".design/engine"}}}
@@ -380,6 +380,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.3 | 2026-09-30 | Agent | Clarification patch, no status transition: the §4.3 sample finding's `remedy` read a bare `magic.task update`; the emitter now names the workspace it reported on (`/magic.task {workspace} update`, bare `/magic.task update` for the flat layout), so the sample reads `/magic.task engine update`. No contract change. |
 | 1.2.2 | 2026-09-20 | Agent | Inventory rows only, no contract change: §5.2 lists the three findings `update-state.js` gained with the missing-section and missing-field self-repairs of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §13–§13.2 — `STATE_SECTION_CREATED` and `STATE_FIELD_CREATED` (`fix`) and `PROGRESS_BLOCK_UNRECOGNISED` (`warning`) — and notes that they postdate the 2.1.65 inventory. The table stays a migration checklist, not the contract: new emitters are covered by DG-1 directly (§5.5). Patch, no status transition. |
 | 1.2.1 | 2026-09-19 | Agent | Source-hygiene fix, no contract change: `lib/diagnostics.js`'s dedup key (§4.6) joined `severity`, `source` and `code` with two literal NUL bytes instead of the `\0` escape. Runtime-identical, but git classified the file `-text` (the repository's `eol=lf` normalisation never applied to it) and GNU grep answered `Binary file matches` instead of the matching lines — the only NUL in the 88 files of the engine kernel. Fixed by writing the escape; a 600-set differential (deliberately including findings whose `source` and `code` concatenate identically) confirmed identical summaries and digests. §4.6 now names the separator and forbids the raw byte; two Regression Coverage cases added (§6.16 dedup separator, §6.17 no raw NUL anywhere in the kernel), `dev/tests/engine.js` 105 → 107, mutation-checked (3 of 3 weakenings caught). No change to DG-1..DG-10, the sink format or any finding. No status transition — `Stable` retained. |
 | 1.2.0 | 2026-09-17 | Agent | Implements l1-engine-diagnostics.md DG-10 (Revalidation Before Render). New `revalidate(findings)` in the collector contract (§4.2) and its detailed design (§4.10): groups findings by recheck signature (`script` + `args` + `env`), spawns each signature's L1 script at most once via direct invocation (not through `executor.js` — rejected in §8, see Drawbacks), and drops findings whose `code` no longer appears in the recheck's `warnings[].type`. Wired into `finalize.js` between drain()/read() and `emitTail()` on both paths (§4.7 amended); flow diagram (§4.9) updated. `check-prerequisites.js`'s `warn()` (§5.4) now attaches `recheck` to every finding — the only current emitter, since every one of its warnings is a condition, never an event. Invariant Compliance table (§3) gained the DG-10 row. Seven new Regression Coverage cases (§6.10-15) and one new Implementation Notes step (§7.6). Three new Drawbacks entries: direct-script-invocation-over-executor.js rationale, added per-digest spawn cost, and (Post-Update Review finding, fixed before promotion) a self-reference gap — spawning a recheck runs the emitter's own `warn()`, which would otherwise `record()` its result straight back into the sink revalidation is reading, silently re-queuing a still-open condition regardless of this render's outcome. Closed by `MAGIC_DIAGNOSTICS_SUPPRESS=1` on every recheck spawn and a matching early-return guard in `record()` (§4.2), per l1-engine-diagnostics.md DG-10's self-reference-guard clause. No change to DG-1..DG-9's implementation, to the sink format, or to any finding lacking `recheck` — additive only. Amendment rule applied: Stable → RFC → Stable in this pass (Post-Update Review PASS after the self-reference fix, no objective conflicts). |

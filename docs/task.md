@@ -24,17 +24,19 @@ Key Goals:
 | --- | --- | --- |
 | *(empty)* | Full | Resolve workspace automatically, plan all specs |
 | `{workspace}` | Scoped | Plan only specs registered in that workspace's `INDEX.md` |
+| `update` | Plan Update | Reserved keyword (also `{workspace} update`): full or scoped planning with no directive — re-evaluates the existing plan against the current registry and rules; the command the engine names when a plan has gone stale |
 | `"text"` | Guided | Interpret text as planning directive (focus, instruction, filter) |
 | `{workspace} "text"` | Scoped + Guided | Directive applied within workspace scope |
 
 ```
-/magic.task                              # Full planning across all workspaces
+/magic.task                              # Full planning for the resolved workspace
 /magic.task engine                       # Scoped planning for "engine" workspace
+/magic.task update                       # Re-plan against the current registry and rules (no directive)
 /magic.task "decompose phase-2"          # Guided planning with focus
 /magic.task docs "only new specs"        # Scoped + guided planning
 ```
 
-> **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
+> **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation (this also turns `update` into a directive).
 > **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope.
 
 ## 3. Core Invariants
@@ -155,4 +157,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-30 (v2.1.110).
+Synchronized with engine workflows on 2026-09-30 (v2.1.115).

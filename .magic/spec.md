@@ -179,8 +179,7 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
-   - `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches.
-   - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
+   - Any other result → branch per `init.md §1`: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → C15 Filter (**HALT** only if in-scope); missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume; unrecognized failure → **HALT**.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed. Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{active-workspace}-{file}'. (Override: /magic.spec amend to rename)`. Do NOT HALT; do NOT present option menus.
 2. **Creation**:
    - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec per C16).
@@ -191,7 +190,7 @@ graph TD
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. Any `ok: false` → branch per `init.md §1` (C15 Filter; **HALT** only if in-scope). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
 2. **Versioning**:
    - `patch` (0.0.X) — typos, no logic change.
    - `minor` (0.X.0) — extensions.

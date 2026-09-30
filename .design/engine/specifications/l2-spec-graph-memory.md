@@ -1,6 +1,6 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.1.3
+**Version:** 1.1.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -145,7 +145,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 **Failure handling:** the refresh call is best-effort. If `export-wiki` fails (e.g., malformed spec frontmatter), the workflow MUST log the failure as a non-blocking warning and continue. Stale wiki is a degraded but functional state — blocking the workflow on graph refresh would convert a warning into an outage.
 
-**Cache hygiene:** the per-file extraction cache accumulates orphaned entries when specs are renamed or deleted. `analyze.md` Mode C registry-healing path (`magic.spec --audit --fix`) calls `graphCache.clearCache()` after ghost/zombie removal to reclaim disk and prevent stale-hash false hits.
+**Cache hygiene:** the per-file extraction cache accumulates orphaned entries when specs are renamed or deleted. `graph-cache.js` exports `clearCache(designAbs)` to reclaim that disk, but no workflow step calls it, so reclaiming is a manual act. Entries are keyed by the hash of the file body, so an orphaned entry costs disk only and never produces a stale hit.
 
 ## 5. Implementation Notes
 
@@ -175,6 +175,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.4 | 2026-09-30 | Agent | Clarification patch, no status transition: the cache-hygiene paragraph named a `magic.spec --audit --fix` healing path that calls `clearCache()`; neither exists — `--fix` is not an argument and no workflow step calls `clearCache()`. The paragraph now states what is true: the function is exported, reclaiming is manual, and entries keyed by body hash cannot yield a stale hit. No contract change. |
 | 1.1.3 | 2026-09-30 | Agent | Clarification patch, no status transition: Implementation Notes step 6 passed `--workflow build-spec-graph,serve-spec-graph,graph-cache,export-wiki` to `update-engine-meta`, which reads only `--check`; the command is now bare (see l2-engine-automation.md 1.18.0 §Engine Meta Update Flow). |
 | 1.1.2 | 2026-08-07 | Agent | Normalized `**Layer:**` field from `2` to `implementation` — the only L2 spec in the registry using the numeric form instead of the project convention (15/15 other L2 specs unaffected, all already `implementation`); no logic change (ventilation finding). |
 | 1.0.0 | 2026-04-24 | Agent | Initial spec. Adapts mechanisms: extraction cache, wiki export, token-budget MCP. |

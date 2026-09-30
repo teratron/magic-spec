@@ -112,7 +112,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 `node .magic/scripts/executor.js check-prerequisites --json`.
 
 - `ok: true` → proceed.
-- `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → C15 Filter (`init.md §1`). In-scope → **HALT**: *"Registry/engine integrity failure. Run `magic.spec --audit` or `update-engine-meta` to resolve."* Out-of-scope → proceed silently.
+- `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → C15 Filter (`init.md §1`). In-scope → **HALT**: *"Registry/engine integrity failure. Run `/magic.spec audit` or `update-engine-meta` to resolve."* Out-of-scope → proceed silently.
 - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
 - Unrecognized failure (`ok: false` with no matching category above) → **HALT**: *"Unexpected pre-flight failure: {raw output}. Investigate manually."*
 - Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
@@ -154,7 +154,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 *Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate engine".
 
 > **Mode Precedence**: when `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, narrate `[DR] Next: /magic.analyze first-time — the registry is empty. (Override: stop here)` and stop. Mode A never starts inside the same invocation — the user may only want the audit — and is entered only through the explicit `first-time` argument.
-> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `checksums_mismatch`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine, Depth Control (Core Invariant 6 — Mode C is read-only and never pre-scan-HALTs on file count; size is noted, not gated). Report-delivery is the only HALT point.
+> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `ENGINE_INTEGRITY`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine, Depth Control (Core Invariant 6 — Mode C is read-only and never pre-scan-HALTs on file count; size is noted, not gated). Report-delivery is the only HALT point.
 
 1. **Self-Check**: compare `.magic/` vs `.checksums`. (Non-halting audit.)
 2. **Design Registry Audit**:
@@ -379,6 +379,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Self-check complete: engine integrity status noted (non-halting)
   ☐ Registry audit: orphans and unregistered files identified
   ☐ Wrapper-Body Parity: WRAPPER_BODY_DRIFT check run over `workflows/` (phantom body pointers flagged; self-contained wrappers and body-less internal modules exempt)
+  ☐ Phantom Commands: PHANTOM_COMMAND check run over `.magic/`, `docs/`, `workflows/`, `rules/` and `README.md` (every `/magic.{cmd}` mention resolves to a wrapper; `magic.dev.*` exempt)
   ☐ Structural Integrity checked (if workspace specified)
   ☐ Coverage check: gaps and RESCUE opportunities reported (scope-bounded by C15)
   ☐ Confidence Taxonomy: analyze-coverage.js executed; EXTRACTED/INFERRED/AMBIGUOUS/UNCOVERED breakdown included
@@ -389,6 +390,8 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Spec Knowledge Graph: build-spec-graph.js executed; God Nodes and Orphaned files reported
   ☐ Wiki Staleness: WIKI_STALE check performed; advisory emitted if wiki/index.md older than spec sources
   ☐ Workspace Boundary Analysis: detect-communities.js --include-md executed; Jaccard alignment and split suggestions reported
+  ☐ Documentation & Version Audit: DOC_SYNC check run (this engine's own repository only; skipped when `dev/scripts/generate-checksums.js` is absent)
+  ☐ Scope Blind-Spot: UNSCOPED check run for multi-workspace projects (top-level directories outside every workspace `scope`)
   ☐ Rule validation: RULES.md §7 compliance checked
   ☐ Rule retirement (RA-7): RULE_RETIRE_CANDIDATE / RULE_BLOAT findings reported as advisory with their next step; nothing edited
   ☐ Canonical References: all `Stable` specs checked for `## Canonical References`; `CANONICAL_MISSING` flagged (advisory — promote to Stable only after filling it)

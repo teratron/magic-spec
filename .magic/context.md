@@ -125,7 +125,8 @@ After resolution, load **in this exact order** — the sequence forms the sessio
    - Fields `Current Position`, `Blockers`, `Blocking Constraints` take precedence over inferences from TASKS.md / PLAN.md when determining next action.
    - If `Blocking Constraints` is non-empty, the agent MUST acknowledge each `[C-NNN]` entry explicitly before proceeding.
 4. **Resume Detection** — run `node .magic/scripts/executor.js resume-state --workspace={workspace}`, the one shared predicate for "work is in flight" (SC-9):
-   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`. A missing or failing script counts as nothing in flight: never a halt.   - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
+   - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`. A missing or failing script counts as nothing in flight: never a halt.
+   - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
    - **Memory Fence**: Loaded STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with the recorded `Next Action` or any `Blocking Constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
    - A cold context that does not open with a `/magic.*` command runs the same check through the session-start rule in `rules/magic.md`.
 

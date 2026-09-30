@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.15.0
+**Version:** 1.15.1
 **Status:** Active
-**Engine Version:** 2.1.114
+**Engine Version:** 2.1.117
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.15.1 | 2026-09-30 | Agent | Clarification patch, no count change (37/37 Stable): l2-engine-diagnostics.md 1.2.2 → 1.2.3 (sample `remedy` names the workspace) and l2-spec-graph-memory.md 1.1.3 → 1.1.4 (cache-hygiene paragraph no longer names a healing path and a `--fix` argument that do not exist). No requirement changed. |
 | 1.15.0 | 2026-09-30 | Agent | No spec-count change (37/37 Stable). The four Backlog items left as design debt are resolved: l1-session-continuity.md 2.4.0 → 2.5.0 (SC-1.4 Status Reconciliation between Active and Blocked; SC-9(g) the pause snapshot retired on zero use in seven projects), l2-finalize-state-accuracy.md 2.1.0 (§16), l2-session-checkpoint.md 1.1.0 (§5.8), l2-status-command.md 1.4.0, l2-workflow-wrappers.md 1.3.1, l2-engine-finalization.md 3.5.0 (§10: spec-side rule capture is significant), l2-test-suite.md 1.22.0 (Mutation-Control Driver). Specification only; engine deployment routed to `/magic.task engine`. |
 | 1.14.0 | 2026-09-30 | Agent | No spec-count change (37/37 Stable). Owner request: no explicit next-command suggestion when nothing is left to do. l1-session-continuity.md 2.3.0 → 2.4.0 (plan-complete `Next Action` split into work-pending → funnel and nothing-pending → a command-free statement; "exactly one command" → "at most one"; pending defined as the Pre-flight signals through one shared predicate, failing toward the funnel), with l2-engine-finalization.md 3.4.0, l2-status-command.md 1.3.0 and l2-test-suite.md 1.21.0 following. Specification only; engine deployment routed to `/magic.task engine`. |
 | 1.13.1 | 2026-09-30 | Agent | Clarification patch: l1-rule-admission-gate.md 1.1.0 → 1.1.1 adds the two reciprocal `Related Specifications` links its amendment created. No requirement or count change (37/37 Stable). |

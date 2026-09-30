@@ -17,12 +17,13 @@ handoffs:
 
 **Trigger:** `/magic.task [arg]`. Arguments:
 
-- *(empty)* — full planning across all workspaces
+- *(empty)* — full planning for the resolved workspace
 - `{workspace}` — scoped planning for a specific workspace
+- `update` — re-plan against the current registry and rules with no directive (`{workspace} update` scopes it); the command the engine names when a plan has gone stale
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magic.task`, `/magic.task engine`, `/magic.task "decompose phase-2 in more detail"`, `/magic.task docs "only new specs"`.
+Examples: `/magic.task`, `/magic.task engine`, `/magic.task update`, `/magic.task "decompose phase-2 in more detail"`, `/magic.task docs "only new specs"`.
 
 **Scope:**
 

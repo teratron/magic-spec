@@ -205,6 +205,13 @@ if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status
 // script and for the next-step line finalize prints, so the two cannot disagree.
 const pending = planExists ? findPendingWork(designDir) : null;
 
+// A stale-plan remedy names the workspace this check ran for, so following it
+// re-plans that workspace and not whichever one happens to be the default.
+// The flat legacy layout (.design/ itself) has no workspace to name.
+const planWorkspace = path.basename(designDir);
+const planRemedy =
+    planWorkspace === '.design' ? '/magic.task update' : `/magic.task ${planWorkspace} update`;
+
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
     // SH-1/SH-4: a spec filename quoted in a code
@@ -243,7 +250,7 @@ if (planExists && indexExists) {
             warn(
                 'ORPHANED_SPEC',
                 `'${spec}' is in INDEX.md but missing from PLAN.md.`,
-                'magic.task update',
+                planRemedy,
             );
         }
     }
@@ -256,7 +263,7 @@ if (planExists && indexExists) {
             warn(
                 'REGISTRY_MISMATCH',
                 `'${pSpec}' is referenced in PLAN.md but missing from INDEX.md.`,
-                'magic.spec --audit',
+                '/magic.spec audit',
             );
         }
     }
@@ -265,7 +272,7 @@ if (planExists && indexExists) {
         warn(
             'SYNC_GAP',
             `PLAN.md is based on INDEX.md v${pending.syncGap.planBasedOn}, but registry is at v${pending.syncGap.indexVersion}.`,
-            'magic.task update',
+            planRemedy,
         );
     }
 
@@ -304,7 +311,7 @@ if (planExists && indexExists) {
                                             warn(
                                                 'RULE_57_VIOLATION',
                                                 `L2 spec '${specFile}' is ${status}, but its L1 parent '${parent}' is ${parentStatus} (Must be Stable).`,
-                                                'magic.task update',
+                                                planRemedy,
                                             );
                                         }
                                     }

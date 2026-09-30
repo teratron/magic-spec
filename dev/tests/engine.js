@@ -1924,6 +1924,75 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b-quater. check-prerequisites.js — a stale-plan remedy names the workspace
+    //            it reported on, and the audit command has one spelling
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js names the reported workspace in a stale-plan remedy and spells audit one way', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir, specsDir } = makeRegistryScanWorkspace(tempDir);
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                [
+                    '# Index',
+                    '',
+                    '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
+                    '',
+                ].join('\n'),
+            );
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            // The plan omits the registered spec (orphaned) and names one the
+            // registry lacks (mismatch), so both remedies are emitted.
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                '# Plan\n- unquoted mention: specifications/ghost.md in prose\n',
+            );
+
+            // A second workspace directory holding the same registry.
+            const wsDir = path.join(designDir, 'docs');
+            fs.mkdirSync(wsDir, { recursive: true });
+            fs.cpSync(specsDir, path.join(wsDir, 'specifications'), { recursive: true });
+            for (const f of ['INDEX.md', 'RULES.md', 'PLAN.md']) {
+                fs.copyFileSync(path.join(designDir, f), path.join(wsDir, f));
+            }
+            generateChecksums(tempDir);
+
+            const remedies = (result, type) =>
+                result.warnings.filter((w) => w.type === type).map((w) => w.fix);
+
+            // Flat legacy layout: there is no workspace to name.
+            const flat = runCheckPrerequisites(tempDir, '--require-specs');
+            assert.deepStrictEqual(
+                remedies(flat, 'ORPHANED_SPEC'),
+                ['/magic.task update'],
+                'the flat layout invents no workspace',
+            );
+            assert.deepStrictEqual(
+                remedies(flat, 'REGISTRY_MISMATCH'),
+                ['/magic.spec audit'],
+                'the audit command is spelled the way the workflows spell it',
+            );
+
+            // Workspace layout: the remedy re-plans the workspace it reported on.
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const scoped = JSON.parse(
+                execSync(`node "${scriptPath}" --json --require-specs`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                    env: { ...process.env, MAGIC_DESIGN_DIR: '.design/docs' },
+                }),
+            );
+            assert.deepStrictEqual(
+                remedies(scoped, 'ORPHANED_SPEC'),
+                ['/magic.task docs update'],
+                'a remedy without the workspace would re-plan the default workspace instead',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6b2. check-prerequisites.js — design-debt backlog signal (SC-2.4)
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js reports DESIGN_DEBT_PENDING only when plan-complete meets an open Backlog (SC-2.4)', () => {

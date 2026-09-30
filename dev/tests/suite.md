@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.83
+**Version:** 1.9.85
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -948,11 +948,11 @@ If any test fails, document the failure reason and propose a fix.
   - Phase 1 has 3 Todo tasks.
 - **Action:** Run `/magic.run`
 - **Expected:**
-  - [ ] Agent reads both versions during Pre-flight (Step 0).
+  - [ ] Agent reads both versions before execution (Core Invariant 4, Sync guard).
   - [ ] **Mismatch Detected**: 1.4.6 vs 1.4.7.
-  - [ ] Agent alerts user: "Project conventions have changed since these tasks were generated. Proceed or run `magic.task update` to synchronize?".
-  - [ ] No execution begins until user chooses to proceed.
-- **Guards tested:** Convention Sync Guard (Version Mismatch), Task-Rules parity.
+  - [ ] Agent auto-runs `/magic.task {workspace} update` and narrates `[Auto-Sync] RULES drift resolved: TASKS.md updated to RULES v1.4.7. Proceeding with execution. (Revert: git restore .design/{ws}/TASKS.md)` — no question is asked (C25).
+  - [ ] `TASKS.md` header now reads `Based on RULES: 1.4.7`; execution then begins without a prompt.
+- **Guards tested:** Convention Sync Guard auto-resolution (`run.md` Core Invariant 4), Task-Rules parity, C25 (no inline approval).
 
 ### T58 — Init: Workspace Initialized
 
@@ -1110,7 +1110,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent identifies name collision across workspaces.
   - [ ] **Parity Guard** triggers: Version mismatch detected (2.0.0 vs 1.5.0).
   - [ ] **HALT**: Agent warns about "Source of Truth Drift".
-  - [ ] Options: (A) Sync from engine, (B) Unique rename, (C) Force ignore.
+  - [ ] One recommended path, no option menu: run `/magic.spec` in `engine` (higher version) to reconcile, then re-run `/magic.task` (same state as T86).
 - **Guards tested:** Cross-Workspace Parity Guard.
 
 ### T70 — Local Rule Constitutional Conflict (Hierarchy Guard)
@@ -1202,7 +1202,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent writes `RULES.md`.
   - [ ] **Rules Parity Check**: Agent detects `TASKS.md` is now stale.
   - [ ] Agent alerts user: "`TASKS.md` is based on rules v1.4.0 but project is now v1.5.0."
-  - [ ] Agent offers to run `magic.task update` to synchronize the plan.
+  - [ ] Agent narrates exactly one next command, `/magic.task {workspace} update`, to synchronize the plan.
 - **Guards tested:** Rules Parity (Stale check), Sync Offer.
 
 ### T76 — Spec T4 Rule with Missing Target File (HALT Persistence)
@@ -1297,13 +1297,13 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User runs `/magic.run`
 - **Expected:**
   - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace={active-workspace}`.
-    - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
+    - [ ] **C15 Filter**: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
   - [ ] Pre-flight: `check-prerequisites` passes (no engine mismatch)
   - [ ] **Spec Stability Spot-Check**: Agent reads `INDEX.md` for all Todo-task specs in current phase
   - [ ] `auth-impl.md` found with status `RFC` (not Stable)
   - [ ] **HALT** — execution does NOT begin
-  - [ ] Message: "Spec `auth-impl.md` is no longer Stable (current: RFC). Run `magic.task update` to re-evaluate the plan."
+  - [ ] Message: "Spec `auth-impl.md` is no longer Stable (current: RFC). Run `/magic.task {workspace} update` to re-evaluate the plan."
   - [ ] C12 Quarantine guard does NOT fire (L1 parent is Stable — this is a different, complementary guard)
 - **Guards tested:** Spec Stability Spot-Check (RE-2), direct spec demotion detection, guard independence from C12
 
@@ -1450,7 +1450,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Mode C completes and agent presents checklist
 - **Expected:**
   - [ ] Agent presents **Mode C: Ventilation** checklist (not Mode A/B checklist)
-  - [ ] All 8 Mode C checklist items evaluated: self-check, registry audit, structural integrity (if workspace), coverage, rule validation, report delivery, advisory report, C14 not triggered
+  - [ ] Every Mode C checklist item is evaluated — among them: self-check, registry audit, structural integrity (if workspace), coverage, rule validation, report delivery, advisory report, C14 not triggered
   - [ ] C14 not triggered (Mode C is read-only — C1 §7 confirmed)
   - [ ] No Mode A/B items (Depth Control, Stack/Arch, Dispatch) appear as pending items
 - **Guards tested:** Mode C checklist separation (RE-A5), C14 exemption for read-only mode
@@ -1638,7 +1638,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Before committing `Done`, Track A re-reads `INDEX.md`
   - [ ] Detects `auth.md` is now RFC (demoted since dispatch)
-  - [ ] **HALT**: "Spec `auth.md` demoted to RFC during execution of `T-1A01`. Task output suspended — run `magic.task update` to re-evaluate."
+  - [ ] **HALT**: "Spec `auth.md` demoted to RFC during execution of `T-1A01`. Task output suspended — run `/magic.task {workspace} update` to re-evaluate."
   - [ ] `T-1A01` NOT marked Done; left as In Progress
   - [ ] Manager notified of suspension
 - **Guards tested:** RE-D1 (Mid-Run Stability Check before committing Done)
@@ -1655,7 +1655,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Detects `auth.md` is RFC — not Stable
   - [ ] Does NOT assign `T-1A02`
   - [ ] Reports: "Spec `auth.md` is no longer Stable. Halting new assignments for dependent tasks."
-  - [ ] Suggests: run `magic.task update` to re-evaluate the plan
+  - [ ] Suggests: run `/magic.task {workspace} update` to re-evaluate the plan
 - **Guards tested:** RE-D2 (Manager INDEX.md re-read cadence between assignments)
 
 ### T106 — Analyze Dispatch Cross-Workspace Name Collision on Create
@@ -1998,9 +1998,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 1: Generate tasks (`task.md`)**
 - **Expected 1:**
   - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace={active-workspace}`.
-    - [ ] **C15 Filter**: `checksums_mismatch` → **HALT** ONLY if in-scope files are mismatched.
+    - [ ] **C15 Filter**: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`." This catches manual edits that bypassed the spec workflow.
-    - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y})." Options: (a) Sync from canonical source workspace, (b) Rename to unique name per workspace, (c) Force ignore (document reason).
+    - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run `/magic.task`." One recommended path — no option menu.
   - [ ] `PLAN.md` created: contains high-level entries for `auth.md` and `api.md` with single `[ ]` checkboxes. **No nested atomic tasks.**
   - [ ] `TASKS.md` created: contains **Phase Checklist** with atomic items prefixed with `[T-XXXX]` (e.g., `[ ] [T-1A01] Implement auth login`).
   - [ ] `TASKS.md` details section contains full task blocks.
@@ -2183,8 +2183,7 @@ If any test fails, document the failure reason and propose a fix.
   - **Expected:**
     1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
     - `ok: true` → proceed.
-    - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
-    - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+    - Any other result → branch per `init.md` §1: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **C15 Filter** (**HALT** only if in-scope); missing `.design/` → auto-run `.magic/init.md`, then resume; unrecognized failure → **HALT**.
     - [ ] `INDEX.md` updated: `docs-node.md` status set to `RFC`
     - [ ] File header of `docs-node.md` updated to match
     - [ ] Report: "C12 Cascade: 1 dependent quarantined: [docs-node.md]."
@@ -2260,8 +2259,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   1. Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
   - `ok: true` → proceed.
-  - `checksums_mismatch` → **C15 Filter** (see `init.md` §1) → **HALT** ONLY if in-scope files are mismatched.
-  - Missing `.design/` → auto-run `.magic/init.md`, then resume.
+  - Any other result → branch per `init.md` §1: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **C15 Filter** (**HALT** only if in-scope); missing `.design/` → auto-run `.magic/init.md`, then resume; unrecognized failure → **HALT**.
   - [ ] Before asking, agent scans `.magic/*.md` and `.design/` for `C5` references
   - [ ] Reference found in `analyze.md`
   - [ ] The confirmation includes the dependency warning: "Convention `C5` is referenced by: [analyze.md: Mode C Structural Integrity]. Removing it may break workflow logic or spec compliance."
@@ -2584,7 +2582,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] `CONFIG_DRIFT` warning present in JSON output for `.design/RULES.md`.
   - [ ] Warning message includes file path and "modified outside workflow".
   - [ ] Warning is non-blocking: `ok` field is NOT affected by CONFIG_DRIFT alone.
-  - [ ] Agent displays advisory with options: show diff / proceed / restore.
+  - [ ] Agent logs the non-blocking advisory "RULES.md was modified outside workflow." and auto-proceeds — no halt, no prompt, no option menu (`init.md` Step 1).
 - **Guards tested:** Config Drift Guard, non-blocking advisory pattern.
 
 ### T163 — Config Drift Detection (No Git)
@@ -2817,7 +2815,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight Step 0 runs `check-prerequisites --json`
   - [ ] `GHOST_REGISTRY` warning detected in output
   - [ ] **C15 Filter** applied: agent checks if `phantom.md` is in active workspace scope
-  - [ ] If in-scope → **HALT**: "Registry/engine integrity failure. Run `magic.spec --audit` or `update-engine-meta` to resolve."
+  - [ ] If in-scope → **HALT**: "Registry/engine integrity failure. Run `/magic.spec audit` or `update-engine-meta` to resolve."
   - [ ] Agent does NOT proceed to "Build full project map" (Step 1)
   - [ ] Agent does NOT attempt to read `phantom.md` from disk
 - **Guards tested:** GHOST_REGISTRY in analyze.md Mode A (RE-1 fix), C15 Filter application, anti-hallucination
@@ -3611,6 +3609,129 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** the nothing-pending rendering; the fallback applies only when `Next Action` is absent; the recommendation form is untouched for every value that names a command.
 - **Regression for:** the briefing replaying a command-free `Next Action` as a recommendation — reformatting the statement back into `/magic.task …` and inviting a run that can only report no changes.
 
+### T232 — A Verb the Engine Tells the User to Run Resolves to a Declared Argument Form (The Undeclared Verb)
+
+- **Workflow:** `task.md` (Argument Routing) + `run.md` (Core Invariant 4 Sync, Spec Stability, Mid-Run Stability Check) + `check-prerequisites.js` (`remedy` strings)
+- **Synthetic State (Test A — routing):**
+  - `workspace.json` registers `engine` (default) and `docs`. `engine` holds 5 `Stable` specs; none has a filename or title naming an update; a plan exists.
+  - `RULES.md` is v1.4.7; `TASKS.md` records `Based on RULES: 1.4.6`.
+- **Action A:** `/magic.run engine` — the Sync guard auto-runs `/magic.task {workspace} update`.
+- **Expected A:**
+  - [ ] `update` is matched by the reserved-keyword row of Argument Routing, which precedes the Guided Planning row: the mode is **Plan Update**, not Guided Planning.
+  - [ ] No directive filter runs — no `Could not map planning directive 'update'` HALT, and no narrowing of the pass to specs matching the word.
+  - [ ] All 5 `Stable` specs are re-evaluated (C12 quarantine, phantom specs, Rules Parity); `TASKS.md` records `Based on RULES: 1.4.7`; `/magic.run` proceeds.
+- **Synthetic State (Test B — scope and quoting):** the same project.
+- **Action B:** `/magic.task docs update`, then `/magic.task "update"`.
+- **Expected B:**
+  - [ ] `docs update` is Plan Update scoped to `docs` (workspace token first, keyword second); `engine` is untouched.
+  - [ ] The quoted `"update"` is a Guided Planning directive — the quote forces directive interpretation — and, matching no spec, ends in the zero-match HALT.
+- **Synthetic State (Test C — static scan):** shipped text and script output.
+- **Action C:** scan `.magic/*.md`, `workflows/*.md`, `rules/*.md` and `docs/*.md`, and the `remedy` strings in `.magic/scripts/check-prerequisites.js`, for `/magic.task {word}` and `magic.task {word}` forms.
+- **Expected C:**
+  - [ ] Every `{word}` is a declared argument form: none, a workspace name, `update`, or a quoted directive. No undeclared unquoted word (`amend`, `sync`, …) is advertised.
+  - [ ] The `task.md` routing table, `workflows/magic.task.md` and `docs/task.md` list the same argument forms.
+- **Guards tested:** Argument Routing reserved keyword (same pattern as `first-time` in `analyze.md`); Guided Planning Filter reach; verb-to-interface parity between the engine's own remedies and its declared arguments; C13 (no reliance on agent judgment for an undeclared token).
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — once the Guided Planning Filter was wired into routing (T213/T214), the remedy the engine itself names for a stale plan (`magic.task update`: three `run.md` lines, one `rule.md` line, three script remedies) became a directive that matches no spec — a zero-match HALT on the recovery path; `(Adjust: /magic.task amend)` in the auto-plan narration was the same defect.
+
+### T233 — Steps 3.4, 3.6 and 3.4b Route Every Trigger: a Flagged Task Reaches the Simplify Pass After a Clean Review, and the Simplify Pass Does Not Skip the Instruction Review
+
+- **Workflow:** `run.md` (Steps 3.4, 3.4b, 3.6)
+- **Synthetic State (Test A — flag after a clean review):**
+  - The selected task is flagged `requires-simplify: true`. Step 3.4 Diff Review returns a clean PASS (no complexity notes). The diff touches only product code.
+- **Expected A:**
+  - [ ] Step 3.4 routes to 3.6 because of the flag, although the review emitted no complexity notes.
+  - [ ] `@role:code-simplifier` runs; a revised diff returns to 3.4.
+  - [ ] With no simplification needed the flow continues to 3.4b — whose gate skips a diff with no instruction artifact silently — and then to 3.5.
+- **Synthetic State (Test B — complexity notes on an instruction diff):**
+  - The diff changes a workflow body (an AI-facing instruction artifact). Step 3.4 returns PASS with complexity notes; Step 3.6 finds nothing to simplify.
+- **Expected B:**
+  - [ ] After 3.6 the flow passes through 3.4b before 3.5: `@role:prompt-engineer` reviews the changed instruction text.
+  - [ ] A FAIL at 3.4b records one `Attempts` line and returns to Step 3.
+- **Synthetic State (Test C — control):** an unflagged task, a clean PASS, an instruction-artifact diff.
+- **Expected C:**
+  - [ ] The flow is 3.4 → 3.4b → 3.5, as before; Step 3.6 is not entered.
+- **Guards tested:** routing convergence — every trigger named at Step 3.6 has an inbound edge, and no path reaches 3.5 past a conditional gate the diff qualifies for.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — `requires-simplify` had no inbound edge from a clean PASS, and the complexity-notes path skipped 3.4b.
+
+### T234 — Shipped Workflow Text Stays Structurally Sound: Section References Resolve, List Items Keep Their Own Lines, Every Ventilation Finding Code Has a Checklist Line
+
+- **Workflow:** `context.md`, `task.md`, `run.md`, `analyze.md` (static scan)
+- **Synthetic State:** static text scan of `.magic/*.md` (no runtime state).
+- **Action:** review named-section references, list structure and the Mode C Completion Checklist.
+- **Expected:**
+  - [ ] Every `§{Section}` reference names a heading that exists in the file it points to: `task.md` and `run.md` send workspace resolution to `context.md` §Workspace Resolution Chain, not to a `§Workspace Resolution` heading they do not own (`analyze.md` owns one).
+  - [ ] No list item shares a physical line with another: `context.md` Post-Resolution step 4 renders two bullets.
+  - [ ] Every Mode C step that defines its own finding code has a line in the Mode C Completion Checklist — including the three that once lacked one: `PHANTOM_COMMAND` (step 2), `DOC_SYNC` (step 10), `UNSCOPED` (step 11).
+- **Guards tested:** Broken Loops — a checklist that does not cover the work; dangling cross-references; list integrity.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30).
+
+### T235 — `checksums_mismatch` Names the `ENGINE_INTEGRITY` Warning: the Script Prints No Separate Token
+
+- **Workflow:** `init.md` §1 (C15 Filter) + `task.md` and `run.md` Pre-flight (they branch on `ENGINE_INTEGRITY`) + the constitution's C9 gate 6 and C23 §3 (they still say `checksums_mismatch`)
+- **Synthetic State:**
+  - `.magic/run.md` is modified locally (hash mismatch). `check-prerequisites --json` returns `ok: false` with a warning `{"type": "ENGINE_INTEGRITY", …}` and no field or value named `checksums_mismatch`.
+  - Workspace `engine` scope covers `.magic`.
+- **Action:** `/magic.task` and `/magic.run` reach their Pre-flight.
+- **Expected:**
+  - [ ] The pre-flight of `task.md` and `run.md` matches the `ENGINE_INTEGRITY` warning literally and applies the C15 Filter; reading C9 gate 6 or C23 §3, the agent maps `checksums_mismatch` to that same warning (declared in `init.md` §1).
+  - [ ] The mismatch is in scope → **HALT** with the `update-engine-meta` / restore-from-origin hint; an out-of-scope mismatch would proceed silently.
+  - [ ] The agent does not conclude "no checksum mismatch" from the absence of a literal `checksums_mismatch` token in the JSON.
+- **Guards tested:** Primary Source Principle (C13 §1) — a branch named in workflow text must be reachable from the script's actual vocabulary; C15 Filter.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — ten lines of workflow, constitution and template text branch on a token `check-prerequisites.js` never prints.
+
+### T236 — A Completed Phase Continues Into the Next Phase When It Has Todo Tasks, and Otherwise Ends With One `/magic.task` Recommendation
+
+- **Workflow:** `run.md` (Step 4 Handoff, Step 5 Phase Completion, Step 2 Select) + `rules/magic.md` §5
+- **Synthetic State (Test A — next phase is ready):**
+  - Phase 1: its last task is marked `Done`. Phase 2 holds 3 `Todo` tasks whose parents are `Done`. No drift signal, no spec ambiguity.
+- **Expected A:**
+  - [ ] Step 5 runs in the same invocation: Retro L1, Changelog L1, frontmatter update.
+  - [ ] "Phase complete" is not a HALT: the Handoff bullet lists only spec ambiguity and drift signals.
+  - [ ] Select picks the first `Todo` task of Phase 2 without a question; `[Auto-Run] Phase 1 complete. …` is narrated.
+  - [ ] No "Post-task drift detected" note is emitted; the closing next step names exactly one command, `/magic.run {workspace}`.
+- **Synthetic State (Test B — nothing decomposed behind the phase):**
+  - Phase 1 is complete; the plan's next phase has no `Todo` task (its work sits in `## Backlog`).
+- **Expected B:**
+  - [ ] Phase Completion runs; Select reaches *Backlog-Only* and halts.
+  - [ ] Exactly one command is recommended: `/magic.task {workspace}` (the `rules/magic.md` §5 trigger "phase complete with nothing to run next").
+- **Synthetic State (Test C — control):** during the run `RULES.md` moves ahead of the `TASKS.md` base.
+- **Expected C:**
+  - [ ] HALT as before, with the single recommendation `/magic.task {workspace}`; the drift list in the Handoff bullet is unchanged for `STATUS_DRIFT`, `VERSION_DRIFT` and `RULES > TASKS base`.
+- **Guards tested:** Handoff HALT list limited to ambiguity and drift; one recommended command per stop; diagram edge J→C reachable; agreement of `run.md`, `rules/magic.md` §5, T21 and T205.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — the Handoff bullet listed "phase complete" as a halt while the diagram and T21/T205 continued into the next phase.
+
+### T237 — `spec.md` and `rule.md` Pre-flight Branch Through `init.md` §1, the Single Source
+
+- **Workflow:** `spec.md` (Creating, Updating), `rule.md` (Operational Logic 1), `init.md` §1
+- **Synthetic State (Test A — ghost entry):**
+  - `check-prerequisites --json` returns `ok: false` with a `GHOST_REGISTRY` warning for an in-scope spec other than the target.
+- **Action A:** `/magic.spec` amends a different spec; then `/magic.rule add "…"`.
+- **Expected A:**
+  - [ ] Both workflows branch per `init.md` §1: `GHOST_REGISTRY` → C15 Filter → in scope → **HALT** before any write.
+  - [ ] No branch is left undefined because the workflow text lists fewer cases than `init.md`.
+- **Synthetic State (Test B — unrecognized failure):** `{"ok": false, "unknown_error": "disk_full"}`.
+- **Expected B:**
+  - [ ] **HALT**: "Unexpected pre-flight failure: {raw output}. Investigate manually." — the same outcome as T138, reached from `spec.md` and `rule.md`.
+- **Guards tested:** single-source branching; parity of the Pre-flight failure cases across `init.md`, `spec.md`, `rule.md`, `task.md`, `run.md`, `analyze.md`.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — two workflows enumerated 3 branches while four others knew 5.
+
+### T238 — A Stale-Plan Remedy Names the Workspace It Reported On, and Audit Has One Spelling
+
+- **Workflow:** `check-prerequisites.js` (remedy strings) + `run.md` (Spec Stability, Mid-Run Stability) + `rule.md` (Next step) + `analyze.md` (Pre-flight)
+- **Synthetic State:**
+  - `workspace.json` registers `engine` (default) and `docs`. The `docs` plan is based on an older registry version (`SYNC_GAP`); a `docs` spec is listed in `INDEX.md` but absent from `PLAN.md` (`ORPHANED_SPEC`).
+- **Action A:** `MAGIC_DESIGN_DIR=.design/docs node .magic/scripts/executor.js check-prerequisites --json`.
+- **Expected A:**
+  - [ ] The `SYNC_GAP`, `ORPHANED_SPEC` and `RULE_57_VIOLATION` remedies read `/magic.task docs update`, not a bare `magic.task update` that would re-plan `engine`.
+  - [ ] With the flat legacy layout (`MAGIC_DESIGN_DIR` unset, `.design/`) the remedy is `/magic.task update` — no workspace is invented.
+  - [ ] The `REGISTRY_MISMATCH` remedy reads `/magic.spec audit`.
+- **Action B:** static scan of `run.md`, `rule.md`, `analyze.md`, `docs/rule.md`.
+- **Expected B:**
+  - [ ] Every halt message and next step that sends the user to re-plan reads `/magic.task {workspace} update`.
+  - [ ] The audit command is spelled `/magic.spec audit` everywhere; `--audit` appears nowhere.
+- **Guards tested:** Handoff Propagation (`run.md` Argument Routing note), verb-to-interface parity, one spelling per command.
+- **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — a remedy without a workspace re-planned the default workspace in a multi-workspace project.
+
 ```
-**Test Suite Finalized** - v1.9.83 (Last: T231)
+**Test Suite Finalized** - v1.9.85 (Last: T238)
 ```

@@ -169,7 +169,7 @@ NEVER proactively offered after `/magic.run`.
 ### Triggers (any one)
 
 - **Spec ambiguity** — agent surfaced unclear / conflicting / missing spec content during execution
-- **Phase complete** — full phase finished (new scope or edge cases may have emerged)
+- **Phase complete with nothing to run next** — the finished phase leaves no `Todo` task behind it (a next phase that has one continues without a halt)
 - **RULES drift** — `RULES.md` version > `TASKS.md` base detected mid-run
 - **Header drift** — `STATUS_DRIFT` / `VERSION_DRIFT` reported by Pre-flight
 

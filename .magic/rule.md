@@ -43,8 +43,7 @@ graph TD
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed.
-   - `checksums_mismatch` → **C15 Filter** (`init.md §1`) → **HALT** ONLY if in-scope mismatches.
-   - Missing `.design/` → silently execute `.magic/init.md`, then resume.
+   - Any other result → branch per `init.md §1`: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **C15 Filter** (**HALT** only if in-scope); missing `.design/` → silently execute `.magic/init.md`, then resume; unrecognized failure → **HALT**.
 2. **Read**: load global `.design/RULES.md`. If workspace is active and `.design/{workspace}/RULES.md` exists, load it too. Parse user intent into a declarative statement.
 3. **Tier Routing**: apply Rule Tier Routing logic to determine target file.
 4. **Admission**: activate `@role:constitutional-reviewer` (protocol steps 1-2) to decide whether the rule should exist before asking whether it conflicts. Applies to Add and Amend (Amend: its delta only); Remove and List skip it.
@@ -148,7 +147,7 @@ Convention nodes change when rule entries are added or removed, invalidating the
 Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Resolve before writing."*
 
 - **Notify**: inform user if `TASKS.md` is now stale.
-- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `magic.task update` (propagate the rule into the plan); choose `magic.spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
+- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magic.task {workspace} update` (propagate the rule into the plan); choose `/magic.spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
 
 ## Finalization Protocol (Mandatory)
 
