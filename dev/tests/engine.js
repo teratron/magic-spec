@@ -9510,4 +9510,50 @@ describe('Magic Engine Scripts', () => {
             'Bootstrap Tasks must come before Demoted Spec, the rule it limits',
         );
     });
+
+    test('shipped text: /magic.dev.simulate adjudicates and fixes its findings itself — no approval gate, an evidence ladder, one outcome per finding (T252)', () => {
+        // Detector: wording that makes a fix wait for the user. C9 allows a question only at its
+        // closed gate list, C28 removes every other gate in this repository, and DA-9 calls a
+        // proposal with a marked default redundant by construction.
+        const approvalGate = /show to user|for yes\/no|after (?:user )?approval|\|approve\|/i;
+        for (const gated of [
+            'Show to user for Yes/No (C1).',
+            'Surgical Patch: Apply precisely after approval.',
+            'Changes applied only after user approval.',
+            'H -->|Approve| I[C14 Enforcement Gate]',
+        ]) {
+            assert.ok(approvalGate.test(gated), `the detector must flag: ${gated}`);
+        }
+        for (const clean of [
+            'No approval prompt: only a C27 whitelist entry stops the run for a question.',
+            'Apply the winner in the same run.',
+        ]) {
+            assert.ok(!approvalGate.test(clean), `the detector must spare: ${clean}`);
+        }
+
+        const workflow = '.agents/workflows/magic.dev.simulate.md';
+        const skill = '.agents/skills/magic-dev-simulate/SKILL.md';
+        const docs = 'docs/simulate.md';
+        for (const rel of [workflow, skill, docs]) {
+            assert.ok(!approvalGate.test(readShipped(rel)), `${rel} must not make a fix wait for approval`);
+        }
+
+        // The workflow and the skill generated from it state the ladder, the selection and the record.
+        for (const rel of [workflow, skill]) {
+            const text = readShipped(rel);
+            for (const needle of [
+                '**Adjudication**',
+                '*Reproduction*',
+                '*Dead end*',
+                '*Contradiction*',
+                '*Reading test*',
+                '**Fix Selection**',
+                'Exactly one outcome',
+                '[DR] {finding}',
+            ]) {
+                assert.ok(text.includes(needle), `${rel} must state ${needle}`);
+            }
+        }
+        assert.ok(readShipped(docs).includes('Adjudication'), 'the docs page must describe the adjudication');
+    });
 });

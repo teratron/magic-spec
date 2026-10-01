@@ -33,7 +33,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 
 1. **Context (Zero-Prompt)**: Apply the full workspace resolution chain from [.magic/context.md](../../.magic/context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
-3. **Surgical Fix & Test**: If friction found → Propose fix (exact lines) + write new regression test in `dev/tests/suite.md`. Show to user for Yes/No (C1).
+3. **Surgical Fix & Test (C9, C27, C28)**: If friction found → adjudicate it (§5), then apply the fix and write the regression test in `dev/tests/suite.md` in the same run, following the C1 procedure (read first, trace impact, update atomically). No approval prompt: only a C27 whitelist entry stops the run for a question.
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **No Metrics**: Real-world history/logs are for `.magic/retrospective.md`.
 6. **Anti-Fabrication Rule**: `0 rough edges` is a VALID and expected outcome. If the Logic Audit finds no vague terms, no divergent duplicates, and all guards pass — report it as a clean result. DO NOT invent findings to fill the report structure. Every finding MUST include: `file` (exact filename), `line` (exact line number), `evidence` (verbatim quote copy-pasted from the file), and `verification` (the grep/read command used to confirm). Findings without evidence are INVALID and must be rejected by any reviewer.
@@ -48,8 +48,8 @@ graph TD
     C -->|target| E[Cognitive Walkthrough: workflow]
     C -->|empty| F[Improv Mode: Crisis Synthesis]
     D & E & F --> G[Identify Rough Edges & Ambiguity]
-    G --> H[Propose Fix + Append Regression Test]
-    H -->|Approve| I[C14 Enforcement Gate]
+    G --> H[Adjudicate, Fix + Append Regression Test]
+    H --> I[C14 Enforcement Gate]
     I --> J{Succession: regression?}
     J -->|clean| K[Report & Complete]
     J -->|new issues, round ≤2| H
@@ -118,7 +118,7 @@ Scan the target workflow(s) for:
 
 ### 4. Next Steps
 
-- Propose fixes if failing.
+- Adjudicate and fix every failing finding (§5).
 - If logic is sound, explicitly state: "Simulation confirms core guards are robust (Skeptic Persona approved)."
 
 ### 5. Reporting & Fixes
@@ -133,8 +133,16 @@ Scan the target workflow(s) for:
     - **Instructional guard**: Enforced only by LLM instruction text (e.g., C7 "Direct calls to `.sh` not permitted"). Test: does the workflow text contain an explicit **HALT** keyword with a concrete condition? Score: PASS if the HALT condition is unambiguous and testable. Score: PARTIAL if the instruction exists but has no HALT and relies on LLM compliance alone.
     - Report both categories separately: `"Mechanical: {X}/{Y}, Instructional: {A}/{B} ({C} partial)"`.
   - **Invariant Compliance** (1-10): Score = `Rules_Followed / Rules_Applicable × 10`. Cross-check workflow steps against all applicable Core Invariants from the target `.md` file.
-- **Logic Refinement**: Propose fixes for any `FAIL` or `ROUGH EDGE` outcomes.
-- **Surgical Patch**: Apply precisely after approval.
+- **Adjudication** (per `FAIL` or `ROUGH EDGE` finding, before any edit; evidence decides, not opinion — the first conclusive rung ends the ladder):
+  1. *Reproduction*: a script, fixture or static harness check fails today → **DEFECT**.
+  2. *Dead end*: a path the engine itself plans is halted by one of its own guards, or a documented outcome cannot be reached → **DEFECT**.
+  3. *Contradiction*: two shipped statements, or a statement and its specification, test or documentation page, cannot both hold → **DEFECT**.
+  4. *Reading test*: predict the next action for the synthetic state twice — from the literal text alone, and from the intent the specification states (the nearest documented precedent when the specification is silent). Different actions → **AMBIGUITY** (a wording defect); the same action → **NOT A DEFECT**: no change. When the session allows multi-agent runs, the literal reading is taken by a fresh agent that sees only the text and the state.
+  No conclusive rung → **NOT A DEFECT**. A finding that also crosses a trust boundary — a write outside the workflow's scope, external text treated as an instruction, a bypassed integrity check, data lost without a user action — is a **VULNERABILITY**: it is fixed like a defect and named in the report.
+- **Fix Selection**: the candidates are *no change*, the *smallest wording patch* and a *structural rule*. Rank them by fixed criteria, stopping at the first that discriminates: (1) passes the reproducing case and the whole harness, (2) keeps every guarantee the text had before, (3) touches the fewest sites, (4) reuses an existing mechanism, (5) listed first. Exactly one outcome — "cannot decide" is not permitted. When no patch candidate passes (1), the defect is reported with the failing evidence and nothing is changed. Before the patch, search the exact guard phrase over `.magic/` (including `roles/`), `docs/` and the specifications for sibling sites; a sibling that repeats the defect belongs to the same patch.
+- **Surgical Patch**: apply the winner in the same run; a finding is never handed to the user as a proposal (C9, C28, DA-9). Prove it: the reproducing case fails before the patch and passes after it, `dev/scripts/mutation-check.js` catches each new assertion, and the harness stays green. Running the harness and that driver verifies a fix; it is not a simulation script (Invariant 2).
+- **Decision Record (DA-4)**: one line per finding in the report: `[DR] {finding} → {DEFECT | AMBIGUITY | VULNERABILITY | NOT A DEFECT}: {decision} — {winning criterion}. (Override: git restore {files})`.
+- **Escalation**: only C27 DA-2 entries stop the run for a question — in this repository chiefly E1 (a destructive or irreversible action) and E4: a fix that needs an amendment of the core constitution (§1–6) is reported with its one recommended wording and is not applied. A fix to a §7 convention goes through the Rule handoff above.
 - **C14 Enforcement Gate**: After all patches are applied, verify: were any `.magic/` files modified during this `/magic.dev.simulate` invocation? If yes → run `node .magic/scripts/executor.js update-engine-meta` **immediately**, before reporting results. Do NOT defer to end-of-conversation. This is a blocking step — simulation is not complete until checksums match.
 - **Succession**: Run `/magic.dev.simulate test` post-fix to ensure 0 regressions. **Max 2 rounds**: if a second Succession pass still finds new failures, report remaining issues and stop — do not loop indefinitely.
   - **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For strictly unbiased results, recommend the user start a **new chat session** and run `/magic.dev.simulate test` independently. Always append this note to the final report: `"⚠ Succession ran in-context. For unbiased verification, run /magic.dev.simulate test in a fresh session."`
@@ -150,6 +158,7 @@ Simulation Checklist — {target}
   ☐ Confirmation Bias (C24): Skeptic persona applied to re-verify all PASS results
   ☐ Cog-only: Only logic report; no scripts written or executed
   ☐ Cognitive Coverage: Density, Resilience (Mechanical + Instructional), and Compliance metrics reported
+  ☐ Adjudication: every finding carries a verdict, its evidence and a [DR] line; no fix waited for approval
   ☐ Suite Integrity: validated (test/improv modes); or skipped (direct mode)
   ☐ C14 Enforcement Gate: checksums regenerated BEFORE reporting (blocking)
   ☐ Succession: ≤2 rounds, 0 regressions on final pass

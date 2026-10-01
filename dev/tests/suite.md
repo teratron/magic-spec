@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.90
+**Version:** 1.9.91
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -3969,6 +3969,21 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Bootstrap Tasks in Step 8 placed before the rule it limits; C12 Quarantine and Demoted Spec unchanged for tasks without the marker; the exception ends with `Draft`.
 - **Regression for:** `/magic.dev.simulate test` (2026-10-01) — Step 8 read "L1 parent is not `Stable`", which by the letter matches every L2 spec of a Bootstrap plan, so `/magic.task update` would have returned the tentative plan's L2 tasks to Backlog as blocked.
 
+### T252 — A Simulation Finding Is Adjudicated and Fixed in the Same Run; No Approval Prompt
+
+- **Workflow:** `magic.dev.simulate` (Core Invariant 3; §5 Adjudication, Fix Selection, Surgical Patch, Decision Record, Escalation)
+- **Synthetic State:**
+  - A `test`-mode run has read the engine bodies and reached §5 with three findings: (1) `run.md` halts a task the plan itself produced — a guard demands a `Stable` spec for a task whose purpose is to stabilize it; (2) a sentence whose literal text and whose specified intent resolve to the same action; (3) two §7 conventions conflict and resolving it would need a change to a core rule (§1–6).
+- **Action:** the run adjudicates the three findings.
+- **Expected:**
+  - [ ] Finding 1: rung 2 (*Dead end*) is conclusive → **DEFECT**. The candidates (no change, the smallest wording patch, a structural rule) are ranked by the fixed criteria and exactly one wins; the exact guard phrase is searched across the engine bodies, role cards, documentation pages and specifications first; the winner is applied in the same run with its regression test, the reproducing case fails before it and passes after it, and one `[DR]` line reports it. No Yes/No prompt and no "shall I apply it?".
+  - [ ] Finding 2: rung 4 (*Reading test*) — the literal reading and the intended reading predict the same action → **NOT A DEFECT**: no edit, one `[DR]` line.
+  - [ ] Finding 3: the fix needs an amendment of the core constitution (§1–6) → E4: reported with its one recommended wording and not applied; it is the only question-worthy item, and it is asked as a single question.
+  - [ ] The report carries the Context Bleed note, and the C14 gate runs before it when `.magic/` was edited.
+- **Control — no candidate passes:** every fix candidate for finding 1 fails the harness → the defect is reported with the failing evidence and the tree is left unchanged.
+- **Guards tested:** Core Invariant 3 without an approval gate (C9, C28, DA-9); the first-conclusive-rung rule; the single outcome of Fix Selection; Escalation limited to E1 and E4.
+- **Regression for:** owner feedback (2026-10-01) — the workflow told the agent to show each fix for approval and apply it afterwards, so findings reached the owner as proposals and every poll was answered with the marked default.
+
 ```
-**Test Suite Finalized** - v1.9.90 (Last: T251)
+**Test Suite Finalized** - v1.9.91 (Last: T252)
 ```

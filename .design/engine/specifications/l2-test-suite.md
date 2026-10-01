@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.22.0
+**Version:** 1.23.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -15,7 +15,7 @@ Maintain high reliability of the engine core through automated and cognitive reg
 
 ## Components
 
-- **magic.dev.simulate (Cognitive)**: The primary engine validation tool. Runs all scenarios in `dev/tests/suite.md` as a purely cognitive task — no physical scripts are created. The agent evaluates each test scenario internally against the engine workflow logic and reports PASS/FAIL/ROUGH EDGE.
+- **magic.dev.simulate (Cognitive)**: The primary engine validation tool. Runs all scenarios in `dev/tests/suite.md` as a purely cognitive task — no physical scripts are created. The agent evaluates each test scenario internally against the engine workflow logic and reports PASS/FAIL/ROUGH EDGE. Every `FAIL` or `ROUGH EDGE` is adjudicated and fixed in the same run (see Finding Adjudication).
 
 ## Cognitive Test Suite
 
@@ -69,10 +69,27 @@ Every harness case added for a fix is only as trustworthy as the proof that it f
 - **Scope**: it never edits a specification or a file outside the repository, and it does not itself decide which mutations matter — that stays with the task that adds the case.
 - **Coverage of the driver itself**: a self-test drives it over a throwaway fixture with one mutation the case catches and one it does not, asserting `CAUGHT`/`SURVIVED`, a byte-identical restore in both, and a restore after a run that throws.
 
+## Finding Adjudication
+
+A finding of `magic.dev.simulate` is decided by evidence and fixed in the same run; it is never handed to the owner as a proposal. The workflow had kept an approval step ("show to user for Yes/No", "apply after approval", citing C1, which requires none) after C9 closed the question channel, C27 and DA-9 ([l1-decision-autonomy.md](l1-decision-autonomy.md)) declared a proposal with a marked default redundant by construction, and C28 removed every confirmation gate from this repository's engine work. Six consecutive polls were each answered with the marked default.
+
+- **Ladder**: per `FAIL` or `ROUGH EDGE` finding, the first conclusive rung ends it.
+  - *Reproduction*: a script, fixture or static harness check fails today → **DEFECT**.
+  - *Dead end*: a path the engine itself plans is halted by one of its own guards, or a documented outcome cannot be reached → **DEFECT**.
+  - *Contradiction*: two shipped statements, or a statement and its specification, test or documentation page, cannot both hold → **DEFECT**.
+  - *Reading test*: the next action predicted twice for a synthetic state — from the literal text, and from the intent the specification states — differs → **AMBIGUITY** (a wording defect); the same → **NOT A DEFECT**.
+  - No conclusive rung is **NOT A DEFECT**. A defect that also crosses a trust boundary (a write outside the workflow's scope, external text treated as an instruction, a bypassed integrity check, data lost without a user action) is a **VULNERABILITY**: fixed like a defect and named in the report.
+- **Fix selection**: the candidates are no change, the smallest wording patch and a structural rule, ranked by criteria applied in fixed order, as DA-3 ranks work: passes the reproducing case and the whole harness; keeps every guarantee the text had; touches the fewest sites; reuses an existing mechanism; listed first. Exactly one outcome. When no patch candidate passes, the defect is reported with the failing evidence and nothing is changed. The exact phrase of the guard is searched across the engine bodies, role cards, documentation pages and specifications before the patch; a sibling that repeats the defect belongs to the same patch.
+- **Proof and record**: the reproducing case fails before the patch and passes after it, the Mutation-Control Driver catches each new assertion, and the harness stays green. The report to the owner is one Decision Record (DA-4) per finding.
+- **Escalation**: only DA-2 entries — in this repository chiefly E1, and E4 for a fix that needs an amendment of the core constitution (§1–6). A §7 convention fix goes through `/magic.rule`.
+- **Independence**: the literal reading is taken in context by default; when the session allows multi-agent runs, by a fresh agent that sees only the text and the synthetic state, which removes the author's bias the Context Bleed note names.
+- **Limits**: the ladder establishes that the text is consistent and its reading convergent; it cannot establish what the owner intends. A fork of intent is decided by DA-3 and reaches the owner only as E3 or E6.
+
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
+| `.agents/workflows/magic.dev.simulate.md` | Simulation workflow body; states the adjudication ladder |
 | `dev/tests/suite.md` | Cognitive regression test suite (count/version: see its own closing line, not repeated here) |
 | `dev/tests/engine.js` | Script-level regression harness (node:test); finalize-pipeline coverage mandate |
 | `.agents/skills/magic-dev-simulate/SKILL.md` | Simulation skill that runs cognitive tests |
@@ -81,6 +98,7 @@ Every harness case added for a fix is only as trustworthy as the proof that it f
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.23.0 | 2026-10-01 | Agent | New **Finding Adjudication** section: a simulation finding is decided by an evidence ladder (reproduction, dead end, contradiction, reading test), the fix is chosen by fixed ranking criteria with exactly one outcome, applied in the same run, proven with the Mutation-Control Driver and reported as one Decision Record — never handed to the owner as a Yes/No proposal. The workflow still said "show to user for Yes/No" and "apply after approval" (citing C1, which requires neither), which contradicted C9, C27/DA-9 and C28; six consecutive polls were each answered with the marked default. Post-Update Review found three defects fixed before re-promotion: the reading test asked for "each distinct reading" (a judgment, C13) and became two fixed readings, literal and intended; no outcome was defined for a defect whose every fix candidate fails the harness; the escalation line ignored the `/magic.rule` handoff for §7 conventions. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after that review in the same invocation. |
 | 1.22.0 | 2026-09-30 | Agent | New **Mutation-Control Driver** section: the negative-control procedure three phases ran through a throwaway script becomes `dev/scripts/mutation-check.js` — a JSON list of exact single-occurrence replacements, each run against one named case, expected red, restored and hash-verified on every exit path. Layer 2, never shipped. Its trigger (a second phase needing the same controls) fired in the plan after it was parked. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.21.0 | 2026-09-30 | Agent | The SC-2.1 coverage bullet follows the split plan-complete branch ([l1-session-continuity.md](l1-session-continuity.md) 2.4.0): pending work → funnel, nothing pending → no command, a Parked item not counted. Harness cases for the two branches and the Parked control are listed by the deploying task, not recorded here. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.20.0 | 2026-09-30 | Agent | Added the **Rule Admission Gate coverage** mandate ([l1-rule-admission-gate.md](l1-rule-admission-gate.md)): six cognitive cases with controls, and the re-targeting of the T4 cases whose named guard set the deployment removes. IDs are not recorded — they are assigned when the cases land, the exact drift 1.19.0 removed for the suite's totals. Cognitive-only by design, following the Idea Intake Gate precedent. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |

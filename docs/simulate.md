@@ -26,7 +26,7 @@ The engine enforces 6 mandatory invariants:
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Cognitive Execution ONLY** | Never write/run physical simulation scripts; evaluate logic internally (LLM task) |
-| 3 | **Surgical Fix & Test** | If friction found → propose exact fix + write new regression test in `suite.md` |
+| 3 | **Surgical Fix & Test** | If friction found → adjudicate it, then apply the fix and write the regression test in `suite.md` in the same run — no approval prompt |
 | 4 | **Engine Integrity (C14)** | Checksums updated after `.magic/` modifications — blocking gate before reporting |
 | 5 | **No Metrics** | Real-world history/logs are for `retrospective.md`, not simulation |
 | 6 | **Anti-Fabrication** | `0 rough edges` is a valid outcome; every finding must include file, line, evidence, and verification command |
@@ -117,13 +117,15 @@ Three quantified metrics are reported:
 
 ## 8. Rough Edge Correction
 
-If simulation reveals a logical flaw:
+If simulation reveals a logical flaw, the engine decides and fixes it in the same run — a finding is never handed to you as a proposal:
 
-1. Engine proposes a "surgical fix" (exact lines) for the affected `.magic/` file.
-2. A new regression test is written into `dev/tests/suite.md`.
-3. Changes applied only after user approval.
+1. **Adjudication**: evidence decides, rung by rung, until one is conclusive — *Reproduction* (a script, fixture or harness check fails today), *Dead end* (the engine's own plan is halted by its own guard), *Contradiction* (two statements, or a statement and its specification, test or page, cannot both hold), *Reading test* (the literal text and the specification's intent predict different actions). The outcome is **DEFECT**, **AMBIGUITY**, **NOT A DEFECT** (no change) or **VULNERABILITY** (a trust-boundary crossing, named in the report).
+2. **Fix Selection**: *no change*, the smallest wording patch and a structural rule are ranked by fixed criteria — passes the reproducing case and the harness, keeps every earlier guarantee, touches the fewest sites, reuses an existing mechanism, listed first — and exactly one wins. Sibling sites are searched before the patch.
+3. The winner is applied together with a new regression test in `dev/tests/suite.md`, and proven: the reproducing case fails before the patch and passes after it, mutation controls catch each assertion, the harness stays green.
 4. **C14 Enforcement Gate**: Checksums must be regenerated **before** reporting (blocking step).
 5. **Succession**: Run `/magic.dev.simulate test` post-fix. Max 2 rounds — if second pass still finds new failures, report remaining issues and stop.
+
+Each finding is reported as one Decision Record line, `[DR] {finding} → {verdict}: {decision} — {criterion}. (Override: git restore {files})`. When no fix candidate passes the harness, the defect is reported with the failing evidence and nothing is changed. Only a destructive or irreversible action, or a fix that needs an amendment of the core constitution, stops the run for a question.
 
 > **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For unbiased verification, the engine recommends starting a new chat session and running `/magic.dev.simulate test` independently.
 

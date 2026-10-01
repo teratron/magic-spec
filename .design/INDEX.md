@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.15.3
+**Version:** 1.16.0
 **Status:** Active
 **Engine Version:** 2.1.125
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.16.0 | 2026-10-01 | Agent | Minor amendment, no count change (37/37 Stable): l2-test-suite.md 1.22.0 → 1.23.0 (new Finding Adjudication section — the simulation workflow decides and fixes its findings by an evidence ladder instead of proposing them for approval, as C9, C27/DA-9 and C28 already require). Raised by the owner's feedback on repeated polls; no engine file changed. |
 | 1.15.3 | 2026-10-01 | Agent | Clarification patch, no count change (37/37 Stable): l1-engine-core.md 1.8.1 → 1.8.2 (RE-2: the C12.1 exception belongs only to a task flagged `stabilizes: {spec-file}` and holds end to end, and so does the C6 Bootstrap Exception; RE-3: a T4 rule is queued behind any HALT of the Sync step), l2-role-cards-execution.md 1.2.1 → 1.2.2 (the orchestrator's between-dispatch re-read and the planner's first step follow the same exceptions). RULES.md 1.13.0 → 1.14.0: C12.1 amended with that flag (the owner's choice in a poll; mirrored verbatim in the shipped template). Found by a `/magic.dev.simulate test` run; no spec requirement added. |
 | 1.15.2 | 2026-10-01 | Agent | Clarification patch, no count change (37/37 Stable): l1-engine-core.md 1.8.0 → 1.8.1 (RE-2 names its planning-side counterpart; RE-T74's stale "three resolution options" corrected and the creation-time collision rename recorded), l2-engine-finalization.md 3.5.0 → 3.5.1 (§3 documents `--workspace`), l1-config-drift-guard.md 1.0.1 → 1.0.2 (global plus workspace `RULES.md`; the sample message states the non-blocking behavior). Found by a `/magic.dev.simulate test` run; no requirement added. |
 | 1.15.1 | 2026-09-30 | Agent | Clarification patch, no count change (37/37 Stable): l2-engine-diagnostics.md 1.2.2 → 1.2.3 (sample `remedy` names the workspace) and l2-spec-graph-memory.md 1.1.3 → 1.1.4 (cache-hygiene paragraph no longer names a healing path and a `--fix` argument that do not exist). No requirement changed. |
