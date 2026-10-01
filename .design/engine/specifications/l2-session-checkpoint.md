@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -78,7 +78,7 @@ graph TD
 
 `.magic/run.md` gains a **Task Start** step, executed after Step 2 (Select) and before Step 3 activates the executor:
 
-1. Set the selected task's tracking entry `Status` to `In Progress`. A task whose entry already reads `In Progress` is being resumed, not started: the step changes nothing.
+1. Set the selected task's tracking entry `Status` to `In Progress`. A task whose entry already reads `In Progress` is being resumed, not started: the step changes nothing. Step 2 (Select) reaches such a task first — it takes a task left `In Progress` by an earlier session, one no track of the current invocation is executing, before any `Todo` task — so the resume line and the task the run starts are the same task.
 2. Read the entry's `Attempts` (§5.2) and its `Handoff` field before an approach is chosen.
 
 The checklist line stays `- [ ]`. The `Next Action` computation and archival eligibility both key on the open checkbox, and a `[/]` marker would make an in-flight task invisible to both (no shipped workbook uses one). C10 names `[/]` as an example marker, not a requirement, and SC-1.1 already makes the tracking entry's `Status` authoritative beside the checklist, so this does not amend C10. The `Done`, `Blocked [!]` and `Cancelled` transitions are unchanged and each leaves the in-flight state; `STATE.md` writes keep their existing moments (STATE Sync, Step 4). In Parallel mode (C3) several entries may read `In Progress` at once, and Task Start writes are edits to the shared workbook, so they fall under the existing Parallel Constraint (serialize tasks that modify the same file).
@@ -243,6 +243,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-10-01 | Agent | Clarification patch, Stable retained (descriptions follow behavior; no requirement added). §5.1 records that Step 2 (Select) takes a task left `In Progress` by an earlier session before any `Todo` task: before this, `run.md` Select located only a `Todo` task, so a run that started next to an independent `Todo` task would pass over the very task the resume line had just named, and a phase whose last open task was the in-flight one matched no Select branch. Found by a `/magic.dev.simulate` Improv run (engine 2.1.129). |
 | 1.1.0 | 2026-09-30 | Agent | **§5.8 Retirement of the Pause Snapshot** implementing [l1-session-continuity.md](l1-session-continuity.md) 2.5.0 SC-9(g): the resume predicate loses its paused branch (pseudo-code, variants line, `--json` `source`), the `context.md`/`status.md`/`pause.md` call-site rows and deployment rows 3, 5 and 7 follow, H4 is restated (a hand-set `Paused` is silent; `--handoff` refused), `[PAUSE]` leaves the Canonical References and §5.7's last bullet points at §5.8. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.0.2 | 2026-09-28 | Agent | Reality-sync corrections, patch, no status transition (R42, Retro L2 Session 13): §5.6 and §7 row 6 named only `task.md`'s single `DEGRADING/POOR` note as the thing SC-7 retires there, when `task.md` also carried its own separate four-row percentage table (already-drifted thresholds from `context.md`'s) — both are named now, since both were in fact retired. §6's proposed case range `T213–T217` is removed rather than corrected to the range actually assigned (`T220–T224`): [l2-test-suite.md](l2-test-suite.md) v1.19.0 stopped recording specific ranges here for the same reason a range proposed at plan time cannot be trusted at read time — cases land wherever the suite's IDs are free when they're written, and this very entry exists because the first guess was wrong once already. |
 | 1.0.1 | 2026-09-21 | Agent | Correction found while implementing §5.3, patch, no status transition: the all-workspace scope is now the explicit `--all` flag, not the absence of `--workspace`. The executor consumes `--workspace` and defaults the workspace when it is absent, handing the result on only as `MAGIC_DESIGN_DIR`, so the script cannot distinguish "omitted" from "defaulted" — the 1.0.0 wording (§5.3 usage, pseudo-code header and C15 scope paragraph; §5.4 action) described a behavior no script behind `executor.js` can have. The rule that a caller with a resolved workspace stays inside it, and that only the session-start rule reads every workspace, is unchanged; only its spelling moved. The planning-time note that the derived variable "must be ignored" was the same misreading in the other direction: it is precisely how a resolved workspace reaches the script. |

@@ -35,7 +35,7 @@ Parse `[arg]` to determine planning mode:
    - **No Orphans**: every registered spec must be in `PLAN.md` or `## Backlog`.
    - **Atomic Tasks (C10)**: every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
    - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magic.task "{adjustment}" | Revert: git restore .design/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
-   - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode if applicable (subject to wrapper constraints).
+   - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode when the current phase holds a `Todo` or `In Progress` task (subject to wrapper constraints). A phase left with only `Blocked [!]` tasks would Stall `/magic.run` at once and send the user back here, so Step 8 ends the run with its Stalled Plan report instead.
 5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 7. **Architectural Logic**:
@@ -109,6 +109,7 @@ graph TD
    - **Phantom Parent Guard**: L2 spec's parent missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: *"Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2). Run `/magic.spec` to author the missing parent, then re-run `/magic.task`."* Move L2 to `## Backlog` with reason: *"Missing L1 Parent (Phantom)."*
    - **Structural Refactor**: if sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
    - **Renames**: global search-and-replace on filename changes (exclude archives). Ensure new names follow the `l1-`/`l2-` prefix convention.
+   - **Stalled Plan**: after the rules above, the current phase has no `Todo` or `In Progress` task but ≥1 `Blocked [!]` task → **HALT** after the plan is written, with no handoff to `/magic.run` (it would only Stall). Report each blocked task with its recorded reason, then exactly ONE next step, the one for the first blocked task in checklist order: a reason that names a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing) ends *"Spec `{file}` requires design input: `{reason}`. Run `/magic.spec`, then re-run `/magic.task`."* (`rules/magic.md §5`); any other reason ends with the resolution its `Notes` or `Handoff` names. This workflow releases only the blocks it owns (C12, Demoted Spec, Phantom Specs) — a block it does not own is lifted by setting its task's `Status` to `Todo` once the cause is resolved, and `/magic.run` then selects it.
 
 ### Plan Write-back
 
@@ -165,6 +166,7 @@ Task Workflow Checklist — {operation}
   ☐ Stabilization Review: batch-promoted specs passed `spec.md` Post-Update Review gate; review failures reverted (not left Stable)
   ☐ Circular Guard: hard-dependency cycles checked (Implements chains); soft reference cycles logged
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
+  ☐ Stalled Plan: a phase left with only `Blocked [!]` tasks ended with the report and one next step, not a handoff to `/magic.run`
   ☐ Verify Lines: Every atomic task has a concrete command/check/evidence criterion
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid

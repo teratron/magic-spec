@@ -37,7 +37,7 @@ Key Goals:
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation (this also turns `update` into a directive).
-> **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope.
+> **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope — when the current phase holds a task to run; a phase with only blocked tasks ends with the Stalled Plan report instead (§6.4).
 
 ## 3. Core Invariants
 
@@ -120,6 +120,7 @@ After drafting the plan, the engine adopts a **Planning Skeptic** persona to rev
 - **Bootstrap Tasks**: A task marked `[Bootstrap]` is exempt from C12 Quarantine and Demoted Spec while its spec is `Draft` — a Bootstrap plan is tentative, so a spec and its `Draft` L1 parent are planned together. Once the spec leaves `Draft`, both rules judge its tasks like any other.
 - **Demoted Spec**: A spec that has tasks but is no longer `Stable` moves to Backlog; its `Done` tasks keep their entries and every other task not already blocked becomes `Blocked [!]` ("Spec `{file}` is `{status}`").
 - **Quarantine Release**: When a spec held by C12 or by Demoted Spec is `Stable` again, it returns to the active plan and the tasks blocked by that quarantine return to `Todo`. Tasks blocked for any other reason are untouched.
+- **Stalled Plan**: If, after those rules, the current phase has no `Todo` or `In Progress` task but at least one `Blocked [!]` task, the plan is still written, then the engine **HALTs** instead of handing off to `/magic.run` — it would only stall. It reports each blocked task with its reason and exactly one next step: `/magic.spec` when the first blocked task's reason is a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing), otherwise the resolution the task's notes name. A block `/magic.task` does not own is lifted by setting the task's `Status` to `Todo` once its cause is resolved.
 - **Stabilizing Tasks (C12.1)**: Only a task flagged `stabilizes: {spec-file}` — set when you explicitly ask to stabilize or fix that spec — may bypass quarantine, and only for the spec the flag names. The flag is never inferred from a title; every other task stays quarantined. It holds through the whole run: `/magic.run` lets the flagged task past its own Quarantine and Spec Stability guards, and a planning directive that asks to stabilize a spec (`/magic.task "stabilize {spec-file}"`) plans that spec whatever its status instead of halting because it is not `Stable`.
 - **Phantom Guards**: Missing-from-disk specs cause task cancellation; missing L1 parents cause **HALT**.
 

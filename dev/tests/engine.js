@@ -9691,4 +9691,150 @@ describe('Magic Engine Scripts', () => {
             'analyze.md must choose the scan mode by the forecast',
         );
     });
+
+    test('shipped text: run.md Select takes a task left In Progress by an earlier session before any Todo task, and never one a live track owns (T256)', () => {
+        const select = runStep('2.');
+        assert.ok(select, 'Step 2 (Select) must be found');
+        const rule = select.split(/\r?\n/)[0];
+
+        // The order is the contract: the task left in flight is named first, the Todo search is the
+        // fallback, and only then do the three halting branches apply.
+        const inFlightAt = rule.indexOf('reads `In Progress`');
+        const todoAt = rule.indexOf('locate a `Todo` task');
+        assert.notStrictEqual(inFlightAt, -1, 'Select must name the `In Progress` task it takes first');
+        assert.notStrictEqual(todoAt, -1, 'Select must keep locating a `Todo` task when nothing is in flight');
+        assert.ok(inFlightAt < todoAt, 'the task left in flight must be taken before any `Todo` task');
+        assert.ok(
+            rule.indexOf('*Stalled*') > todoAt,
+            'the halting branches must be evaluated after the selection, not instead of it',
+        );
+        for (const needle of [
+            'no track of this invocation is executing',
+            'earlier session',
+            'Task Start (2b)',
+            'the scope the invocation selects',
+        ]) {
+            assert.ok(rule.includes(needle), `Select must state ${needle}`);
+        }
+
+        // The other half of the contract: Task Start treats an entry already `In Progress` as resumed.
+        assert.match(
+            runStep('2b.'),
+            /already reads `In Progress`[^\n]*resumed/,
+            'Task Start must treat an entry that already reads `In Progress` as a task being resumed',
+        );
+    });
+
+    test('shipped text: task.md ends a phase left with only blocked tasks with the Stalled Plan report instead of a handoff to /magic.run (T257)', () => {
+        const task = readShipped('.magic/task.md');
+
+        // The handoff is conditional on something to run, and names the report it falls back to.
+        const handoff = lineWith(task, '**Zero-Prompt handoff**');
+        assert.ok(handoff, 'task.md must carry the Zero-Prompt handoff guard');
+        for (const needle of ['`Todo` or `In Progress` task', '`Blocked [!]`', 'Stalled Plan']) {
+            assert.ok(handoff.includes(needle), `the handoff must state ${needle}`);
+        }
+
+        // Step 8 defines the report: its trigger, the single next step, the line a spec gap ends with
+        // and the one block the workflow does not lift itself.
+        const sync = stepBlock(task.slice(task.indexOf('\n### Steps')), '8.');
+        assert.ok(sync, 'Step 8 must be found');
+        const stalled = lineWith(sync, '**Stalled Plan**');
+        assert.ok(stalled, 'Step 8 must define the Stalled Plan outcome');
+        assert.ok(
+            sync.indexOf('**Stalled Plan**') > sync.indexOf('**Quarantine Release**'),
+            'the outcome must follow the release rule: it judges what the rules above left',
+        );
+        for (const needle of [
+            'no `Todo` or `In Progress` task',
+            '≥1 `Blocked [!]`',
+            '**HALT** after the plan is written',
+            'no handoff to `/magic.run`',
+            'exactly ONE next step',
+            'first blocked task in checklist order',
+            'requires design input',
+            '`/magic.spec`',
+            '(C12, Demoted Spec, Phantom Specs)',
+            "setting its task's `Status` to `Todo`",
+        ]) {
+            assert.ok(stalled.includes(needle), `Stalled Plan must state ${needle}`);
+        }
+        assert.ok(
+            task.includes('☐ Stalled Plan:'),
+            'the Completion Checklist must cover the Stalled Plan outcome',
+        );
+
+        // The recommendation that sends the user here stays the single one, and the run still never
+        // names the specification workflow itself.
+        const run = readShipped('.magic/run.md');
+        assert.ok(
+            lineWith(run, '*Stalled*:')?.includes('exactly ONE next step: `/magic.task {workspace}`'),
+            'run.md *Stalled* must keep recommending /magic.task as its one next step',
+        );
+        assert.ok(
+            lineWith(run, '*Stalled*:')?.includes('only inside a `/magic.task` HALT'),
+            'run.md *Stalled* must say the specification workflow surfaces only inside a /magic.task HALT',
+        );
+        assert.ok(
+            !/Pre-flight only/.test(run),
+            'run.md must not say a blocked spec surfaces in /magic.task Pre-flight only: the Stalled Plan HALT of Step 8 is a second surface',
+        );
+    });
+
+    test('shipped text: a spec ambiguity found in a run takes one route — the single /magic.task recommendation — in the debugger card, its mirror and the run page (T258)', () => {
+        const card = cardLine('.magic/roles/debugger.md', '4. For (b)');
+        assert.ok(card, 'the debugger card must carry its step for a spec ambiguity');
+        for (const needle of [
+            '`Notes`',
+            '`run.md` Step 4',
+            '`/magic.task {workspace}`',
+            'only inside a `/magic.task` HALT',
+        ]) {
+            assert.ok(card.includes(needle), `the debugger step must state ${needle}`);
+        }
+
+        // The stale wordings: a handoff of the session to the specification workflow.
+        const toSpec = /hand off to `spec\.md`|via `magic\.spec`|delegate to `magic\.spec`|jumps to the Spec Workflow/;
+        assert.ok(!toSpec.test(card), 'the debugger card must not hand the session to the specification workflow');
+        for (const stale of [
+            'For (b): hand off to `spec.md` workflow via `magic.spec` to resolve the ambiguity.',
+            'If spec is ambiguous → **HALT** and delegate to `magic.spec` for update.',
+            'A delegated handoff jumps to the Spec Workflow (Explore Mode) where specifications are formally updated.',
+        ]) {
+            assert.ok(toSpec.test(stale), `the detector must flag: ${stale}`);
+        }
+
+        // The card spec carries the deployed card word for word.
+        assert.strictEqual(
+            lineWith(readShipped('.design/engine/specifications/l2-role-cards-execution.md'), '4. For (b)'),
+            card,
+            'the mirror in l2-role-cards-execution.md must match the deployed card word for word',
+        );
+
+        // The run page agrees with the workflow body: one command, never the specification workflow.
+        const page = readShipped('docs/run.md');
+        assert.ok(!toSpec.test(page), 'docs/run.md must not route a run to the specification workflow');
+        assert.ok(
+            lineWith(page, '- **Handoff**:')?.includes('`/magic.task {workspace}`'),
+            'the run page must name /magic.task as the one handoff',
+        );
+    });
+
+    test('shipped text: the post-write constitutional conflict report names the rule that is already written and one way to resolve it (T259)', () => {
+        const rule = readShipped('.magic/rule.md');
+        const review = rule.slice(
+            rule.indexOf('**Constitutional Review (Post-Write)**'),
+            rule.indexOf('## Finalization Protocol'),
+        );
+        assert.notStrictEqual(review, '', 'the post-write review section must be found');
+        const halt = lineWith(review, 'Practical conflict found');
+        assert.ok(halt, 'the post-write review must define its HALT');
+        for (const needle of ['**HALT**', '(already written)', '`/magic.rule amend C{N}`']) {
+            assert.ok(halt.includes(needle), `the post-write HALT must state ${needle}`);
+        }
+        assert.ok(
+            !/resolve before writing/i.test(rule),
+            'a review that runs after the write must not tell the agent to resolve before writing',
+        );
+    });
 });

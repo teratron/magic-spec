@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.93
+**Version:** 1.9.94
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -615,7 +615,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent records `Blocked [!]` status and the specific reason in `TASKS.md` Notes.
   - [ ] Per `rules/MAGIC.md §5` Post-Task Replan, agent recommends **exactly ONE** command: `/magic.task {workspace}`.
   - [ ] Agent does NOT proactively propose `/magic.analyze` or `/magic.spec` from `run.md` (per `run.md` Step 4 Handoff explicit prohibition).
-  - [ ] `/magic.spec` recommendation surfaces ONLY inside `/magic.task` Pre-flight HALT when mechanical auto-fix cannot resolve the gap.
+  - [ ] `/magic.spec` recommendation surfaces ONLY inside a `/magic.task` HALT — its Pre-flight, or the Stalled Plan HALT of its Sync step (T257) — when mechanical auto-fix cannot resolve the gap.
   - [ ] After spec resolution + re-run of `/magic.task`, dependencies are rebuilt before resuming execution.
 - **Guards tested:** Post-Task Replan §5 collapse (run → task → optional HALT → spec → task → run); single user-facing command per HALT.
 
@@ -2273,11 +2273,11 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `TASKS.md` Phase 1 task `T-1A01` mapped to `auth.md`
   - During execution, spec is ambiguous → HALT triggered
-- **Action:** Agent halts and recommends exactly ONE command — `/magic.task {workspace}` — per `rules/MAGIC.md §5` Post-Task Replan. Inside `/magic.task`, Pre-flight HALTs with a single `/magic.spec` recommendation; user runs `/magic.spec`, then re-runs `/magic.task`.
+- **Action:** Agent halts and recommends exactly ONE command — `/magic.task {workspace}` — per `rules/MAGIC.md §5` Post-Task Replan. Inside `/magic.task`, a HALT (its Pre-flight, or the Stalled Plan HALT of its Sync step — T257) carries a single `/magic.spec` recommendation; user runs `/magic.spec`, then re-runs `/magic.task`.
 - **Expected:**
   - [ ] Agent records Blocked status with reason in TASKS.md
   - [ ] Agent recommends `/magic.task` (with workspace context); does NOT proactively propose `/magic.analyze` or `/magic.spec`
-  - [ ] `/magic.task` Pre-flight surfaces the `/magic.spec` recommendation on substantive spec gap
+  - [ ] `/magic.task` surfaces the `/magic.spec` recommendation on a substantive spec gap — at its Pre-flight, or, for a blocked task, at its Stalled Plan HALT (T257)
   - [ ] After spec update + re-run of `/magic.task`, dependencies rebuilt and task validity re-verified before resuming execution
 - **Guards tested:** Post-Task Replan collapse (run → task → optional HALT → spec → task → run); never two user-facing commands in sequence
 
@@ -4054,6 +4054,82 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** IK-4 F3 and its grounding test; the comprehension-before-sufficiency order; one question per failed anchor (IK-5); IK-1 silence when every anchor is grounded.
 - **Regression for:** owner correction (2026-10-01) — intake had no sufficiency check, so a thin idea was specified on invented users and boundaries; the owner's intake flowchart asks "is the input enough?" as a separate step after "understood?".
 
+### T256 — Select Takes a Task Left `In Progress` by an Earlier Session Before Any `Todo` Task (Resume Order)
+
+- **Workflow:** `run.md` (Step 2 Select, Step 2b Task Start) + `context.md` §Post-Resolution step 4 (Resume Detection)
+- **Synthetic State (Test A — an independent `Todo` task beside the in-flight one):**
+  - Phase 2: `T-2A02` has its tracking entry `**Status:** In Progress`, its checklist line `- [ ]` and one `Attempts` line, left by a session that ended mid-task. `T-2B01` is `Todo`, with no parent, in another track.
+  - `STATE.md` `Next Action` names `T-2A02`; `resume-state` printed its resume line at the context load. No track of this invocation is running.
+- **Action A:** `/magic.run`.
+- **Expected A:**
+  - [ ] Select takes `T-2A02`, the task left in flight, before the `Todo` task `T-2B01`: the task the run starts is the task the resume line named.
+  - [ ] Task Start finds the entry already `In Progress` and treats it as **resumed**: the status is unchanged, the checklist line stays `- [ ]`, and `Attempts` and `Handoff` are read before an approach is chosen.
+  - [ ] `T-2B01` is not started before `T-2A02` is `Done` or `Blocked [!]`.
+- **Synthetic State (Test B — nothing else is left):** the phase's last open task is `T-2A02` (`In Progress`); `T-2A03` is `Todo` with parent `T-2A02`; nothing is `Blocked`.
+- **Expected B:**
+  - [ ] Select takes `T-2A02`: no branch — *Stalled*, *Backlog-Only* or *Complete* — is evaluated, Phase Completion does not run, and nothing halts.
+- **Synthetic State (Test C — control, a live track):** Parallel mode (C3); `T-2A02` was started a moment ago by a track of this invocation (`In Progress`) and `@role:orchestrator` looks for the next task.
+- **Expected C:**
+  - [ ] Select does not take `T-2A02` a second time: only a task no track of this invocation is executing counts as left in flight, so the orchestrator locates a `Todo` task as before.
+- **Action D (control — targeted):** `/magic.run "T-2B01"` in the state of Test A.
+- **Expected D:**
+  - [ ] The invocation executes `T-2B01`: the in-flight `T-2A02` lies outside the scope the invocation selects, so it is not taken ahead of the named task.
+- **Guards tested:** Select order (resume before fresh work) agreeing with SC-9(a)/(d), T221 and the Task Start step; the live-track exclusion in Parallel mode; the scope of targeted execution.
+- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — Select located only a `Todo` task, so a run that started beside an independent `Todo` task passed over the very task the resume line had just named, and a phase whose last open task was the in-flight one matched no Select branch.
+
+### T257 — A Phase Left With Only Blocked Tasks Ends `/magic.task` With the Stalled Plan Report, Not a Handoff Back to `/magic.run`
+
+- **Workflow:** `task.md` (Core Invariant 4 Zero-Prompt handoff, Step 8 Stalled Plan) + `run.md` (Step 2 *Stalled*) + `rules/magic.md` §5
+- **Synthetic State (Test A — a spec gap):**
+  - A single workspace `engine`. `l1-billing.md` was amended and is `Stable` again; its L2 child `l2-billing-ledger.md` was set to `RFC` by the C12 cascade and nothing has promoted it (Pre-Planning Stabilization iterates `Draft` specs only). `l2-billing-api.md` is `Stable`.
+  - Phase 2: `T-2A01` `Done`; `T-2A02` (`l2-billing-api.md`) `Blocked [!]` with the reason "Spec `l2-billing-api.md` §3 is ambiguous: the rounding rule is unstated"; `T-2B01` (`l2-billing-ledger.md`) `Blocked [!]` "Spec `l2-billing-ledger.md` is `RFC`". No `Todo` and no `In Progress` task. Every file header equals its `INDEX.md` entry.
+- **Action A:** `/magic.run engine` halts in *Stalled* and recommends exactly one command, `/magic.task engine`; the user runs it.
+- **Expected A:**
+  - [ ] Pre-flight passes; Step 2 promotes nothing (no `Draft` spec); Step 8 releases nothing — `l2-billing-ledger.md` is still `RFC`, and `T-2A02`'s block is not one this workflow owns.
+  - [ ] The plan is written with every recorded status unchanged, and the run **HALTs there**: no handoff to `/magic.run`, so the two commands do not alternate.
+  - [ ] The report lists `T-2A02` and `T-2B01` with their recorded reasons, then exactly **one** next step, the one for the first blocked task in checklist order (`T-2A02`): *"Spec `l2-billing-api.md` requires design input: `{reason}`. Run `/magic.spec`, then re-run `/magic.task`."* — no option menu.
+  - [ ] It states that a block the workflow does not own is lifted by setting the task's `Status` to `Todo` once its cause is resolved.
+- **Synthetic State (Test B — control, something runnable):** the same phase plus one `Todo` task whose parents are all `Done`.
+- **Expected B:**
+  - [ ] The handoff to `/magic.run` happens as before; no Stalled Plan report is printed.
+- **Synthetic State (Test C — control, released):** the state of Test A after `l2-billing-ledger.md` returned to `Stable`.
+- **Expected C:**
+  - [ ] Quarantine Release returns `T-2B01` to `Todo`; a `Todo` task exists, so the handoff happens and the Stalled Plan report does not fire.
+- **Synthetic State (Test D — control, in flight):** the phase's only open task is `In Progress` (an interrupted session).
+- **Expected D:**
+  - [ ] The handoff to `/magic.run` happens (it resumes the task — T256); the report does not fire.
+- **Guards tested:** the applicability condition of the Zero-Prompt handoff; one recommended next step per stop (DA-8); the claim in `run.md` that blocked specs surface inside `/magic.task` made true; Quarantine Release and the "other blocks are untouched" rule unchanged.
+- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — `run.md` *Stalled* sent the user to `/magic.task` on the claim that blocked specs surface in its Pre-flight, while `task.md` had no step that read a blocked task and nothing that stopped its handoff back to `/magic.run`: a task blocked for a specification gap, or a child spec the C12 cascade left `RFC`, cycled between the two commands with no exit.
+
+### T258 — A Spec Ambiguity Found During a Run Ends at Step 4 With the Single `/magic.task` Recommendation: No Card, Page or Step Routes the Run to `/magic.spec`
+
+- **Workflow:** `run.md` (Step 3.5, Step 4 Handoff) + `roles/debugger.md` (Operating Protocol 4) + `docs/run.md` §5.4–5.5 + `rules/magic.md` §5 + `l2-role-cards-execution.md` (the card's mirror)
+- **Synthetic State:**
+  - `T-1A01` failed its QA review because the spec section it implements is ambiguous. It is set `Blocked [!]` and `@role:debugger` is activated on the Blocked Branch.
+- **Action:** the debugger classifies the blocker as (b), a spec ambiguity.
+- **Expected:**
+  - [ ] The debugger records the ambiguity in the task's `Notes` and stops: it does not hand the session off to the specification workflow.
+  - [ ] `run.md` Step 4 ends the run with exactly **one** command, `/magic.task {workspace}`; `/magic.spec` is not named by the run, by the card or by the run documentation page — it appears only inside a `/magic.task` HALT — its Pre-flight, or the Stalled Plan HALT (T257).
+  - [ ] The deployed card and its mirror in `l2-role-cards-execution.md` carry the same step 4, word for word.
+- **Control (an implementation bug):** the debugger classifies (a): it produces a fix diff and hands it to the test engineer, as before.
+- **Guards tested:** card ↔ workflow body ↔ ambient rules ↔ documentation agreement on the one route a spec ambiguity takes; verbatim parity between a deployed card and its mirror.
+- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — the debugger card and the run page said "hand off to `spec.md`" / "delegate to `magic.spec`" while `run.md` Step 4, `rules/magic.md` §5 and T34/T141 allow the run only the single `/magic.task` recommendation.
+
+### T259 — The Post-Write Constitutional Conflict Report Names the Rule That Is Already Written and One Way to Resolve It
+
+- **Workflow:** `rule.md` (Post-Write Impact → Constitutional Review (Post-Write))
+- **Synthetic State (Test A):**
+  - `/magic.rule add "…"` passed admission and both pre-commitment reviews and was written: `RULES.md` holds the new convention `C7` and its version is bumped. The post-write review then finds that `C7` and `C3` would give the agent contradictory instructions at `run.md` Select.
+- **Action A:** the post-write review reaches its HALT.
+- **Expected A:**
+  - [ ] **HALT** before the user is told the next step.
+  - [ ] The report says the rule is **already written**, names the conflicting convention and the step, and gives exactly one way to resolve it, `/magic.rule amend C7` — no "resolve before writing", no silent undo of the write, no option menu.
+- **Synthetic State (Test B — control):** the conflict is found by the pre-commitment review (Operational Logic step 6), before anything is written.
+- **Expected B:**
+  - [ ] The proposal returns to its author and nothing is written, so there is nothing to amend.
+- **Guards tested:** one resolution path per HALT (DA-8); the post-write review's report agreeing with its position after the write.
+- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — the post-write HALT told the agent to "resolve before writing" a rule the file already held and named no way to resolve it.
+
 ```
-**Test Suite Finalized** - v1.9.93 (Last: T255)
+**Test Suite Finalized** - v1.9.94 (Last: T259)
 ```

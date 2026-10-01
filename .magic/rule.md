@@ -144,7 +144,7 @@ Convention nodes change when rule entries are added or removed, invalidating the
 - Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
 - If applied retroactively to the last 3 completed tasks, would any of them have halted or produced different output?
 
-Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Resolve before writing."*
+Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` (already written) creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Run `/magic.rule amend C{N}` to resolve it."*
 
 - **Notify**: inform user if `TASKS.md` is now stale.
 - **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magic.task {workspace} update` (propagate the rule into the plan); choose `/magic.spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.

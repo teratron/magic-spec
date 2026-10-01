@@ -62,7 +62,7 @@ STATE.md is a live project state digest read before every execution session:
 - **Blocking Constraints**: Each `[C-NNN]` confirmed before execution.
 - **Work in flight** (a task marked `In Progress`): Triggers Resume Detection for seamless session continuity — automatically, with no command to type.
 - **Updates**: STATE.md is updated after every task transition (`Done` / `Blocked`) and phase completion.
-- **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task.
+- **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task: Select takes a task left in flight — one no track of the current invocation is executing — before any `Todo` task.
 - **Dead ends**: An approach tried and abandoned (a failed check, a review that sent the work back, a reverted change) is recorded as one line in the task's `Attempts` field, so a fresh session does not repeat it.
 - **Checkpoint**: When a workflow reports `checkpoint saved`, ending the session loses nothing — a new one resumes from STATE.md.
 
@@ -112,11 +112,11 @@ After each task completes:
 - **Task Status**: The tracking entry moves `In Progress` → `Done` (or `Blocked [!]`); the TASKS.md Phase Checklist line is ticked when `Done`.
 - **Plan Sync**: Completed specs/phases → `[x]` in `PLAN.md`.
 - **Change Record**: 1-line summary in the task's `Changes` field.
-- **Handoff**: If spec is ambiguous → **HALT** and delegate to `magic.spec` for update.
+- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magic.task {workspace}`. `/magic.spec` is never named from the run; it surfaces only when `/magic.task` itself cannot resolve the gap.
 
 ### 5.5 Blocked Task Escalation
 
-If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked` and halts. A delegated handoff jumps to the Spec Workflow (Explore Mode) where specifications are formally updated before resuming.
+If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magic.task {workspace}` recommendation. `/magic.task` then ends with the one `/magic.spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
 
 **Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magic.task {workspace}` to revalidate the plan.
 
