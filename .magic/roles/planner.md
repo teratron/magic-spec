@@ -26,7 +26,7 @@ Own plan construction in `task.md`. Produces phase breakdown and task dependency
 
 ## Operating Protocol
 
-1. Read all `Stable` specs referenced by active-phase tasks.
+1. Read all specs referenced by active-phase tasks.
 2. Construct a dependency graph with edges as `Implements` / `Related Specifications` / file-level-conflict links.
 3. Group tasks into phases that minimize cross-phase dependencies.
 4. Draft `PLAN.md` with phase summaries and task lists.

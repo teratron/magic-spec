@@ -50,7 +50,7 @@ The engine enforces 6 mandatory invariants during every execution:
 | 2 | **Rules First** | Read `RULES.md` before any code edit; adhere to project conventions |
 | 2.5 | **Live Memory (STATE.md)** | Read STATE.md before execution; display blockers; update after every task transition |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
-| 4 | **Logic Guards** | Dependency, Mode, Sync, Quarantine (C12), Spec Stability, Phantom Spec, Pause Propagation |
+| 4 | **Logic Guards** | Dependency, Mode, Sync, Quarantine (C12), Spec Stability, Phantom Spec, Stabilizing exception (C12.1), Bootstrap exception, Pause Propagation |
 | 5 | **Zero-Prompt Automation (C9)** | Skip all routine confirmations; execute sequences autonomously |
 | 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
 
@@ -85,8 +85,8 @@ Default is **Parallel mode (C3)**. If mode is absent from `RULES.md §7`, Parall
 Validates project state before execution:
 
 - **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
-- **Bootstrap Detection**: If `PLAN.md` contains `[Bootstrap]` markers, warns that specs are not yet Stable.
-- **Spec Stability Spot-Check**: For each spec referenced by a `Todo` task, confirms status = `Stable` in `INDEX.md`.
+- **Bootstrap Detection**: If `PLAN.md` contains `[Bootstrap]` markers, warns that specs are not yet Stable. A `[Bootstrap]` task runs against its `Draft` spec: the guards that demand `Stable` (Quarantine, Spec Stability, the Mid-Run check, the orchestrator's re-read) hold it to the status the spec and its L1 parent had when the task started (Bootstrap exception).
+- **Spec Stability Spot-Check**: For each spec referenced by a `Todo` task, confirms status = `Stable` in `INDEX.md`. A task flagged `stabilizes:` is exempt for the spec its flag names (Stabilizing exception, C12.1) — its work is what makes that spec `Stable`.
 - **File-Header Parity**: Spec file headers must match `INDEX.md` (status, version). For L2 specs, verification includes L1 parent headers (including cross-workspace parents).
 
 ### 5.2 Execute & QA Review (C24 — Tester Persona)
@@ -102,7 +102,7 @@ If any check fails → task status set to `Blocked [!]` with reason. Execution d
 
 ### 5.3 Mid-Run Stability Check
 
-Before committing any task as `Done`, the engine re-verifies the target spec is still `Stable` in `INDEX.md` and confirms file header parity. This also recursively includes the spec's L1 parent. Demotion or drift → **HALT** that track.
+Before committing any task as `Done`, the engine re-verifies the target spec is still `Stable` in `INDEX.md` and confirms file header parity. This also recursively includes the spec's L1 parent. Demotion or drift → **HALT** that track. A task flagged `stabilizes:` or marked `[Bootstrap]` is held to the status its spec had when the task started, instead of `Stable`; reaching `Stable` does not halt it.
 
 ### 5.4 Update
 
@@ -144,7 +144,7 @@ Major transitions within or out of the Run Workflow are protected by a **Hard St
 
 After every execution cycle, the engine verifies:
 
-- Spec Stability: all active-phase specs confirmed Stable before execution
+- Spec Stability: all active-phase specs confirmed Stable before execution (the spec a `stabilizes:` task names and the `Draft` specs of `[Bootstrap]` tasks excepted)
 - Rules Parity: current RULES.md version matches TASKS.md base
 - TASKS.md read first; execution bound to spec section
 - C24 QA Review: internal "Tester" audit performed before marking tasks Done

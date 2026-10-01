@@ -32,7 +32,7 @@ Examples: `/magic.task`, `/magic.task engine`, `/magic.task update`, `/magic.tas
 - Plan generation, task decomposition, and execution orchestration. Execution is handled by `magic.run`. Specification authoring by `magic.spec`. Rule governance by `magic.rule`.
 - **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
 - **Post-Run Entry (`rules/magic.md §5`)**: when invoked after `/magic.run` for drift recovery, Pre-Planning Stabilization auto-fixes mechanical drift (Draft→Stable promotion, field normalization, phantom backlog moves); Pre-flight HALTs with a single `/magic.spec` recommendation only on substantive gaps requiring human design input.
-- **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
+- **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/task.md`. Read it before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.

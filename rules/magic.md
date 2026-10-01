@@ -97,8 +97,12 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 1. Execute:
 
    ```bash
-   node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule>
+   node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule> --workspace={active-workspace}
    ```
+
+   `--workspace` names the workspace the workflow ran for. Without it the script
+   finalizes the default workspace, so an explicit workspace argument would be
+   lost: significance would be judged, and `STATE.md` written, for the wrong one.
 
 2. The script detects significant changes to whitelisted artifacts. On hit, it
    bumps `.design/.version` and appends a Keep-a-Changelog entry to root `CHANGELOG.md`.
@@ -376,7 +380,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
       navigated `.design/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.design/` change this session.
 - [ ] **§3 Finalization** — after `/magic.spec|task|run|rule`, ran
-      `node .magic/scripts/executor.js finalize --workflow=<...>` and displayed its stdout **verbatim**.
+      `node .magic/scripts/executor.js finalize --workflow=<...> --workspace={active-workspace}` and displayed its stdout **verbatim**.
 - [ ] **§4 Phase Archival** — for `/magic.run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
       references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.

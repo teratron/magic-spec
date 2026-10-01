@@ -32,7 +32,7 @@ The engine enforces 6 mandatory invariants:
 | Level | Name | Trigger | Action |
 | --- | --- | --- | --- |
 | **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table |
-| **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, recommendations, and actionable advice |
+| **Level 2** | Full Retro | Plan Completion (`run.md`) | Deep analysis of trends, recommendations, and actionable advice |
 
 > **Context Economy**: Retrospectives are "read-often, write-once" records. L1 snapshots are strictly metadata updates to minimize context window consumption.
 

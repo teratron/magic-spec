@@ -129,7 +129,7 @@ All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` c
 
 If a Layer 1 (Concept) specification loses its `Stable` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to `RFC` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in `INDEX.md`.
 
-**C12.1 — Stabilization Exception**: Tasks explicitly intended to stabilize or fix mismatches to regain `Stable` status for the parent may bypass this quarantine.
+**C12.1 — Stabilization Exception**: A task may bypass this quarantine only when it carries the `stabilizes: {spec-file}` flag the planning workflow sets on an explicit request to stabilize or fix that spec; a task without the flag stays quarantined.
 
 ### C13 — Agent Cognitive Discipline
 

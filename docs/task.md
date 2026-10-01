@@ -68,7 +68,7 @@ Magic uses three file levels to manage project state:
 - **`TASKS.md`**: Master Phase Index — phase registry and status tracking.
 - **`tasks/phase-{N}.md`**: Tactical execution workbooks — atomic checklists with `T-XXXX` IDs.
 
-When a plan is updated, a task that survives keeps its recorded state (`Status`, `Changes`, `Attempts`) verbatim — regeneration never resets work already done or attempted.
+When a plan is updated, a task that survives keeps its recorded state (`Status`, `Changes`, `Attempts`) verbatim — regeneration never resets work already done or attempted. Only the explicit transitions of §6.4 (quarantine, demotion, release) change a surviving task's status.
 
 ### Task ID Format
 
@@ -93,6 +93,7 @@ Validates project state before planning:
 - **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
 - **File-Header Parity**: Spec file headers must match `INDEX.md` entries (status, version).
 - **Cross-Workspace Parity**: Detects identically-named spec files across workspaces with version mismatches → **HALT**.
+- **Stable-Spec Requirement**: A registry holding only Draft or RFC specs is not a HALT — Pre-Planning Stabilization and the Bootstrap Exception handle it. An empty registry is a **HALT** with one recommendation: `/magic.spec`, or `/magic.analyze first-time` when the project already has code. The report keeps your original request.
 
 ### 6.2 Pre-Planning Stabilization (Trust Mode Batch)
 
@@ -109,13 +110,17 @@ After drafting the plan, the engine adopts a **Planning Skeptic** persona to rev
 
 - **Optimism Bias**: Have task sizes been underestimated?
 - **Hidden Dependencies**: Are parallel tracks truly independent?
-- **Cascade Risk**: If a critical Phase 1 spec fails, how many Phase 2 tasks are blocked?
+- **Cascade Risk**: If a critical Phase 1 spec fails, which Phase 2 tasks are blocked?
 
 ### 6.4 Autonomous Selection & Quarantine
 
 - **C6 Selection**: All `Stable` specs auto-pulled into `PLAN.md`. `Draft`/`RFC` moved to Backlog.
 - **C6 Bootstrap Exception**: If zero specs are Stable and no prior plan exists, Draft specs passing MVC are treated as plannable with a `[Bootstrap]` marker.
 - **C12 Quarantine**: If an L1 parent drops from Stable, dependent L2 tasks are marked `Blocked [!]` and moved to Backlog.
+- **Bootstrap Tasks**: A task marked `[Bootstrap]` is exempt from C12 Quarantine and Demoted Spec while its spec is `Draft` — a Bootstrap plan is tentative, so a spec and its `Draft` L1 parent are planned together. Once the spec leaves `Draft`, both rules judge its tasks like any other.
+- **Demoted Spec**: A spec that has tasks but is no longer `Stable` moves to Backlog; its `Done` tasks keep their entries and every other task not already blocked becomes `Blocked [!]` ("Spec `{file}` is `{status}`").
+- **Quarantine Release**: When a spec held by C12 or by Demoted Spec is `Stable` again, it returns to the active plan and the tasks blocked by that quarantine return to `Todo`. Tasks blocked for any other reason are untouched.
+- **Stabilizing Tasks (C12.1)**: Only a task flagged `stabilizes: {spec-file}` — set when you explicitly ask to stabilize or fix that spec — may bypass quarantine, and only for the spec the flag names. The flag is never inferred from a title; every other task stays quarantined. It holds through the whole run: `/magic.run` lets the flagged task past its own Quarantine and Spec Stability guards, and a planning directive that asks to stabilize a spec (`/magic.task "stabilize {spec-file}"`) plans that spec whatever its status instead of halting because it is not `Stable`.
 - **Phantom Guards**: Missing-from-disk specs cause task cancellation; missing L1 parents cause **HALT**.
 
 ### 6.5 Decomposition

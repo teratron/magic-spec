@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.13.0
+**Version:** 1.14.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -131,7 +131,7 @@ All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` c
 
 If a Layer 1 (Concept) specification loses its `Stable` status or is removed, all dependent Layer 2/3 (Implementation) specifications must automatically and transparently be treated as demoted to `RFC` or moved to the Backlog by the Task workflow. The system must quarantine dependent specifications to prevent "orphaned" task scheduling without requiring manual status edits for every child in `INDEX.md`.
 
-**C12.1 — Stabilization Exception**: Tasks explicitly intended to stabilize or fix mismatches to regain `Stable` status for the parent may bypass this quarantine.
+**C12.1 — Stabilization Exception**: A task may bypass this quarantine only when it carries the `stabilizes: {spec-file}` flag the planning workflow sets on an explicit request to stabilize or fix that spec; a task without the flag stays quarantined.
 
 ### C13 — Agent Cognitive Discipline
 
@@ -277,6 +277,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.14.0 | 2026-10-01 | Agent | **C12.1 amended** (origin `user-stated`: the owner chose the explicit-flag option in a poll after a `/magic.dev.simulate test` run; wording composed by the agent and mirrored verbatim in the shipped template): the Stabilization Exception had no data trigger — "tasks explicitly intended to stabilize" left the agent to judge intent, against C13 (an ambiguity resolved by judgment, scenario T71). It now requires the `stabilizes: {spec-file}` flag, which the planning workflow sets only on an explicit request to stabilize or fix that spec; a task without the flag stays quarantined. No change to §1–6, to C12 itself or to any other convention. |
 | 1.13.0 | 2026-09-30 | Agent | **C25 §3 reworded** (owner-approved E4 amendment, mirrored in the shipped template): the ban on tentative qualifiers (`"I think…"`, `"This might…"`) pushed unverified claims toward being stated as fact, against C13 §5 (every conclusion traceable). It now reads "state findings declaratively": what was verified is stated as fact, and what is unverified or assumed is named once (`"Unverified: {x}"`) instead of hedged around. The ban on permission-seeking phrasing (§1), the mandatory declarative narration (§2) and the rest of C25 are unchanged. |
 | 1.12.1 | 2026-09-30 | Agent | Clarification patch (wording of one command, no rule change): **C14** no longer shows `update-engine-meta --workflow {workflow}` — the script reads only `--check`, the argument once selected the removed history file, and the shipped template already states the bare command. |
 | 1.12.0 | 2026-09-30 | Agent | Realigned the live constitution with the shipped template it is documented to mirror (owner-approved E4 amendment after a prompt-surface audit; per-convention blame showed the template copies newer). **C9** now carries the shipped objective-gate form ("Default Autonomous Execution", 11 gates) instead of the 2026-03 "Zero-Prompt Automation" three-exception list — the old text contradicted `run.md` (Changelog L2 needs no inline approval) and left C25's "objective C9 gate" undefined; `l1-decision-autonomy.md` DA-2 was renumbered to match (gates 1/9/3). **C24** now names the role cards under `.magic/roles/` (with the prompt-engineer gates) instead of the retired persona table; the dev-only `simulate.md` Skeptic gate is kept. **C14** no longer names `config.json` or the removed `.magic/history/` mechanism (the shipped template dropped it 2026-05-06); **C20** no longer names history files; **C17** drops the removed-registry archaeology. No change to §1–6, C1–C8, C10–C13, C15, C16, C18, C19, C21–C23 or C25–C28. |

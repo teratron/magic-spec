@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.1
+**Version:** 1.2.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -47,7 +47,7 @@ related_rules: [C24]
 
 **Operating Protocol:**
 
-1. Read all `Stable` specs referenced by active-phase tasks.
+1. Read all specs referenced by active-phase tasks.
 2. Construct a dependency graph with edges as `Implements` / `Related Specifications` / file-level-conflict links.
 3. Group tasks into phases that minimize cross-phase dependencies.
 4. Draft `PLAN.md` with phase summaries and task lists.
@@ -92,7 +92,7 @@ related_rules: [C3]
 2. Build a shared-resource map: for each task, list files it will modify (from spec body, not just TASKS.md).
 3. Group tasks into tracks such that no two tasks in parallel tracks modify the same file. Tasks with file-level conflict MUST be serialized into one track.
 4. Dispatch the first task of each track to its track owner.
-5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable`. If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
+5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable` — a spec named by a dispatched task's `stabilizes:` flag, or targeted by a `[Bootstrap]` task, is held to the status it had at that dispatch instead (`run.md` Logic Guards). If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
 6. Receive `Done` / `Blocked [!]` signals from track owners; dispatch next task in the track.
 7. On phase completion, yield back to `run.md` Step 5.
 
@@ -247,6 +247,7 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.2 | 2026-10-01 | Clarification patch, no status transition (descriptions follow behavior; no requirement added). Orchestrator card: the between-dispatch re-read holds a spec named by a dispatched task's `stabilizes:` flag, or targeted by a `[Bootstrap]` task, to the status it had at that dispatch instead of `Stable` (constitution C12.1, the C6 Bootstrap Exception, `run.md` Logic Guards) — in Parallel mode, the default, the old wording halted a stabilizing or Bootstrap task's track with `SPEC_DEMOTED` before any `run.md` guard ran. Planner card: step 1 reads every spec the active-phase tasks reference, not only `Stable` ones, so the spec a stabilizing task targets is part of the audit. Found by a `/magic.dev.simulate test` run (engine 2.1.125). |
 | 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Planner card: the "Absorbs the legacy Planning Skeptic persona from C24" sentence is dropped (migration-relative phrasing). Docs-specialist step 4 no longer cites `CLAUDE.md §6` / §7 — those sections are this repository's junction-safety and file-protocol rules, not a docstring style guide, and the file does not exist in a consumer installation. Deployed cards carry the same wording. |
 | 1.2.0 | 2026-08-06 | Coder card: RC-2.1 notation guidance added to the authoring gate — re-scan added lines for bare `T-d+[A-Z]d+` and prose `[Pp]hase[-s]d+`, the forms that leak while the bracketed checklist form does not. Field evidence: the write-time gate was itself the source of several leaks in a consumer project (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Coder card: added RC-5 authoring gate (protocol step 5 + anti-pattern) per l1-sdd-reference-containment.md — no SDD-artifact references in product files. |

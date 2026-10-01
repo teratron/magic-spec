@@ -16,13 +16,13 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 | Level | Goal | Trigger | Output |
 | --- | --- | --- | --- |
 | **L1** | Mini-snapshot | Phase Complete (all tasks Done) | Snapshots table row (archival is owned by `finalize`, see §7) |
-| **L2** | Full audit | Plan Complete or manual command | Deep analysis + recommendations |
+| **L2** | Full audit | Plan Complete (`run.md` Plan Completion) | Deep analysis + recommendations |
 
 ## Steps (L1 & L2)
 
 ### 1. Pre-flight
 
-`node .magic/scripts/executor.js check-prerequisites --json`.
+`node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
 
 ### 2. Collect
 

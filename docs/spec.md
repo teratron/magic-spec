@@ -121,8 +121,9 @@ Before any plan is generated, the workflow verifies:
 - **Registry Sync**: Spec is registered in `INDEX.md`.
 - **Version Drift (RE-1)**: Spec `Version:` header matches `INDEX.md` record.
 - **Engine Integrity**: `.magic/` checksums are valid (C15 Filter).
-- **Cross-Workspace Parity**: Detects spec name collisions across workspaces.
+- **Cross-Workspace Parity**: Detects spec name collisions across workspaces. At creation a colliding name is renamed with the workspace after the layer prefix (`l1-auth.md` → `l1-{workspace}-auth.md`).
 - **File-Header Parity**: Status and version in file header match `INDEX.md`.
+- **Stale References**: A `Related Specifications` or `Implements` link to a `Deprecated` spec is reported as `STALE_REFERENCE` — an advisory, never a HALT.
 
 ### 6.2 Version Drift Guard (RE-3)
 
@@ -143,6 +144,8 @@ When user input contains a standing-rule signal ("remember that...", "project ru
 1. **Tier Routing**: Global vs. workspace-scoped target file selection.
 2. **Admission**: a rule the user wrote is recorded at the strength stated; a rule the agent composed is admitted only on evidence.
 3. **Guards and reviews**: duplication, the §1–6 Constitutional Guard (contradiction → **HALT**), then the constitutional and wording reviews — all before anything is written.
+
+If the update halts first (version drift, cross-workspace parity, or a missing file), the T4 rule is queued behind that HALT by a single rule and handed to the Rule workflow once the HALT is resolved — never written early, never dropped.
 
 ## 7. Maintenance
 

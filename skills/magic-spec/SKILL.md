@@ -27,7 +27,7 @@ handoffs:
 - **Delta Edits**: use surgical search-and-replace for specs >200 lines.
 - **T4 Capture**: input contains "remember that..." / "project rule:" → the rule is handed to `rule.md`'s Operational Logic, which records a user-stated rule at the strength stated and admits an agent-originated one only on evidence (see `.magic/spec.md §Updating RULES.md`).
 - **Pipeline**: `magic-spec` → `magic-task` → `magic-run`.
-- **Finalization**: after dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
+- **Finalization**: after dispatch, run `node .magic/scripts/executor.js finalize --workflow=spec --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `.magic/spec.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/spec.md` · Skill: `skills/magic-spec/SKILL.md`. Read `.magic/spec.md` before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.

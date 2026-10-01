@@ -1993,6 +1993,132 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 6b-quinquies. check-prerequisites.js — the registry-vs-disk scan needs only
+    //               INDEX.md, never a plan (T240)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js reports GHOST_REGISTRY and NAMING_VIOLATION before any PLAN.md exists (T240)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir } = makeRegistryScanWorkspace(tempDir);
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                [
+                    '# Index',
+                    '',
+                    '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
+                    '| [l1-missing.md](specifications/l1-missing.md) | y | Stable | 1 | 1.0.0 |',
+                    '| [legacy.md](specifications/legacy.md) | z | Stable | 1 | 1.0.0 |',
+                    '',
+                ].join('\n'),
+            );
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            generateChecksums(tempDir);
+
+            const named = (result, type) =>
+                result.warnings
+                    .filter((w) => w.type === type)
+                    .map((w) => w.message.match(/^'([^']+)'/)[1])
+                    .sort();
+
+            // No plan yet: the state between the first spec and the first /magic.task.
+            const noPlan = runCheckPrerequisites(tempDir, '--require-specs');
+            assert.deepStrictEqual(
+                named(noPlan, 'GHOST_REGISTRY'),
+                ['l1-missing.md', 'legacy.md'],
+                'a registered spec that is missing from disk must be reported with no plan present',
+            );
+            assert.deepStrictEqual(
+                named(noPlan, 'NAMING_VIOLATION'),
+                ['legacy.md'],
+                'the Layer Prefix rule needs no plan either',
+            );
+            assert.strictEqual(noPlan.ok, false, 'GHOST_REGISTRY is an integrity failure');
+            for (const planOnly of [
+                'ORPHANED_SPEC',
+                'REGISTRY_MISMATCH',
+                'SYNC_GAP',
+                'RULE_57_VIOLATION',
+            ]) {
+                assert.deepStrictEqual(
+                    named(noPlan, planOnly),
+                    [],
+                    `${planOnly} compares against the plan, so it cannot fire without one`,
+                );
+            }
+
+            // Control: a plan changes nothing about what the registry-vs-disk scan reports.
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                '# Plan\n- [x] real spec ([l1-real.md](specifications/l1-real.md))\n',
+            );
+            const withPlan = runCheckPrerequisites(tempDir, '--require-specs');
+            assert.deepStrictEqual(
+                named(withPlan, 'GHOST_REGISTRY'),
+                named(noPlan, 'GHOST_REGISTRY'),
+            );
+            assert.deepStrictEqual(
+                named(withPlan, 'NAMING_VIOLATION'),
+                named(noPlan, 'NAMING_VIOLATION'),
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6b-sexies. check-prerequisites.js — CONFIG_DRIFT watches the global RULES.md
+    //            beside a workspace RULES.md (T243)
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js watches the global RULES.md beside a workspace RULES.md (T243)', () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const designDir = path.join(tempDir, '.design');
+            const wsDir = path.join(designDir, 'docs');
+            fs.mkdirSync(wsDir, { recursive: true });
+            fs.writeFileSync(path.join(designDir, 'INDEX.md'), '# Index');
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            fs.writeFileSync(path.join(wsDir, 'INDEX.md'), '# Index');
+            fs.writeFileSync(path.join(wsDir, 'RULES.md'), '# Workspace Rules');
+            generateChecksums(tempDir);
+            execSync('git add -A && git commit -m "baseline"', { cwd: tempDir, stdio: 'ignore' });
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'check-prerequisites.js');
+            const drifted = () =>
+                JSON.parse(
+                    execSync(`node "${scriptPath}" --json`, {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                        env: { ...process.env, MAGIC_DESIGN_DIR: '.design/docs' },
+                    }),
+                )
+                    .warnings.filter((w) => w.type === 'CONFIG_DRIFT')
+                    .map((w) => w.message.match(/^'([^']+)'/)[1])
+                    .sort();
+
+            assert.deepStrictEqual(drifted(), [], 'a committed tree has no drift');
+
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules (edited by hand)');
+            assert.deepStrictEqual(
+                drifted(),
+                ['.design/RULES.md'],
+                'the global constitution is monitored even when a workspace RULES.md exists',
+            );
+
+            fs.writeFileSync(path.join(wsDir, 'RULES.md'), '# Workspace Rules (edited by hand)');
+            assert.deepStrictEqual(drifted(), ['.design/RULES.md', '.design/docs/RULES.md']);
+
+            execSync('git checkout -- .design/RULES.md', { cwd: tempDir, stdio: 'ignore' });
+            assert.deepStrictEqual(
+                drifted(),
+                ['.design/docs/RULES.md'],
+                'the workspace RULES.md stays monitored on its own',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6b2. check-prerequisites.js — design-debt backlog signal (SC-2.4)
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js reports DESIGN_DEBT_PENDING only when plan-complete meets an open Backlog (SC-2.4)', () => {
@@ -8572,6 +8698,12 @@ describe('Magic Engine Scripts', () => {
         return found.sort();
     };
 
+    // The shipped engine bodies (`.magic/*.md`), not the templates and role cards beneath them.
+    const engineBodies = () =>
+        listShipped('.magic', ['.md'])
+            .filter((rel) => !rel.slice('.magic/'.length).includes('/'))
+            .map((rel) => ({ rel, text: readShipped(rel) }));
+
     // The text of one numbered workflow step: its own line plus the indented
     // lines beneath it, up to the next step or heading.
     const stepBlock = (text, label) => {
@@ -8582,6 +8714,29 @@ describe('Magic Engine Scripts', () => {
         while (end < lines.length && /^\s/.test(lines[end])) end++;
         return lines.slice(start, end).join('\n');
     };
+
+    // The first line of `text` that carries `label`. A guard or a step bullet is one
+    // line, so asserting on that line keeps a phrase elsewhere in the file from
+    // satisfying a check about this bullet. A missing text yields undefined.
+    const lineWith = (text, label) => (text ?? '').split(/\r?\n/).find((line) => line.includes(label));
+
+    // The Logic Guards of `run.md` (Core Invariant 4): the block its guard bullets live in.
+    const runGuards = () => {
+        const run = readShipped('.magic/run.md');
+        return run.slice(run.indexOf('4. **Logic Guards**'), run.indexOf('5. **Zero-Prompt Automation**'));
+    };
+
+    // Numbered step `label` (e.g. `'4.'`) of the `### Steps` list of `run.md`.
+    const runStep = (label) => {
+        const run = readShipped('.magic/run.md');
+        return stepBlock(run.slice(run.indexOf('\n### Steps')), label);
+    };
+
+    // The first line of the role card `rel` that starts with `prefix` (an Operating Protocol step).
+    const cardLine = (rel, prefix) =>
+        readShipped(rel)
+            .split(/\r?\n/)
+            .find((line) => line.startsWith(prefix));
 
     // The own-word rule `analyze.md` states for PHANTOM_COMMAND: a `/magic.{cmd}`
     // token is a command mention only when nothing but whitespace, a backtick or
@@ -8730,9 +8885,7 @@ describe('Magic Engine Scripts', () => {
 
         // The shipped engine bodies: `.magic/*.md`, not only `context.md` — a
         // narrower scan passed while `task.md` still shipped its own tier table.
-        const bodies = listShipped('.magic', ['.md'])
-            .filter((rel) => !rel.slice('.magic/'.length).includes('/'))
-            .map((rel) => ({ rel, text: readShipped(rel) }));
+        const bodies = engineBodies();
         assert.ok(bodies.length >= 8, `the scan must see the engine bodies (saw ${bodies.length})`);
         assert.deepStrictEqual(
             fillTiers(bodies),
@@ -8918,6 +9071,443 @@ describe('Magic Engine Scripts', () => {
             [],
             'shipped text must not cite a specification file — restate the rationale in plain language and keep only the protocol label:\n' +
                 found.join('\n'),
+        );
+    });
+
+    // A script command in workflow text names the workspace it runs for: `executor.js`
+    // resolves a missing `--workspace` to the default workspace, so an explicit workspace
+    // argument reaches the script only through the flag.
+    const bareWorkspaceCommands = (files, script) => {
+        const command = new RegExp('executor\\.js ' + script + '\\b[^`\\n]*', 'g');
+        const seen = [];
+        const bare = [];
+        for (const { rel, text } of files) {
+            text.split(/\r?\n/).forEach((line, index) => {
+                for (const match of line.matchAll(command)) {
+                    seen.push(`${rel}:${index + 1}`);
+                    if (!match[0].includes('--workspace={active-workspace}')) {
+                        bare.push(`${rel}:${index + 1}`);
+                    }
+                }
+            });
+        }
+        return { seen, bare };
+    };
+
+    test('shipped text: every check-prerequisites command in an engine body names its workspace, and the scan flags a bare one when it is planted (T239)', () => {
+        const planted = bareWorkspaceCommands(
+            [
+                {
+                    rel: 'planted.md',
+                    text: [
+                        '`node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.',
+                        '`node .magic/scripts/executor.js check-prerequisites --json`.',
+                        '`node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace={active-workspace}`.',
+                        'Prose that merely names check-prerequisites is not an invocation.',
+                    ].join('\n'),
+                },
+            ],
+            'check-prerequisites',
+        );
+        assert.deepStrictEqual(planted.seen, ['planted.md:1', 'planted.md:2', 'planted.md:3']);
+        assert.deepStrictEqual(
+            planted.bare,
+            ['planted.md:2'],
+            'only the command without the flag may be flagged',
+        );
+
+        const { seen, bare } = bareWorkspaceCommands(engineBodies(), 'check-prerequisites');
+        assert.ok(
+            seen.length >= 8,
+            `the scan must see every Pre-flight command (saw ${seen.length})`,
+        );
+        assert.deepStrictEqual(
+            bare,
+            [],
+            'a Pre-flight without --workspace validates the default workspace in place of the one the workflow was given:\n' +
+                bare.join('\n'),
+        );
+    });
+
+    test('shipped text: every finalize command names its workspace, and the scan flags a bare one when it is planted (T241)', () => {
+        const planted = bareWorkspaceCommands(
+            [
+                {
+                    rel: 'planted.md',
+                    text: [
+                        '1. Run `node .magic/scripts/executor.js finalize --workflow=task --workspace={active-workspace}`.',
+                        '1. Run `node .magic/scripts/executor.js finalize --workflow=run`.',
+                        '   node .magic/scripts/executor.js finalize --workflow=<spec|task|run|rule>',
+                        'Prose that merely mentions finalize is not an invocation.',
+                    ].join('\n'),
+                },
+            ],
+            'finalize',
+        );
+        assert.deepStrictEqual(planted.seen, ['planted.md:1', 'planted.md:2', 'planted.md:3']);
+        assert.deepStrictEqual(
+            planted.bare,
+            ['planted.md:2', 'planted.md:3'],
+            'a command in a fenced block counts too, and only the flagged one may pass',
+        );
+
+        // Workflow bodies, their command wrappers and the ambient rules all carry the command.
+        const read = (rel) => ({ rel, text: readShipped(rel) });
+        const { seen, bare } = bareWorkspaceCommands(
+            [
+                ...engineBodies(),
+                ...listShipped('workflows', ['.md']).map(read),
+                ...listShipped('rules', ['.md']).map(read),
+            ],
+            'finalize',
+        );
+        assert.ok(
+            seen.length >= 10,
+            `the scan must see every finalize command (saw ${seen.length})`,
+        );
+        assert.deepStrictEqual(
+            bare,
+            [],
+            'finalize without --workspace computes significance and writes STATE.md for the default workspace, not the one the workflow ran for:\n' +
+                bare.join('\n'),
+        );
+    });
+
+    test('shipped text: task.md defines the Stable-spec branch of Pre-flight, the demoted-spec rule and the quarantine release (T242, T244)', () => {
+        const task = readShipped('.magic/task.md');
+        const steps = task.slice(task.indexOf('\n### Steps'));
+
+        // Pre-flight runs `--require-specs` before Step 2 can promote anything, so the
+        // script's `Stable specs` finding is the normal state of a Draft-only registry.
+        const preflight = stepBlock(steps, '1.');
+        assert.ok(preflight, 'Step 1 must be found');
+        const branchAt = preflight.indexOf('**Stable-Spec Requirement**');
+        assert.notStrictEqual(branchAt, -1, 'Pre-flight must define the Stable-Spec Requirement');
+        assert.ok(
+            branchAt < preflight.indexOf('**T4 Queue'),
+            'it must precede the T4 Queue bullet, which covers the gates above it',
+        );
+        const branch = preflight.slice(branchAt, preflight.indexOf('\n', branchAt));
+        for (const needle of [
+            '`Stable specs`',
+            'Pre-Planning Stabilization',
+            'Bootstrap',
+            '`Stable specs (0 specs found)`',
+            '`/magic.spec`',
+            '`/magic.analyze first-time`',
+            '**HALT**',
+        ]) {
+            assert.ok(branch.includes(needle), `the branch must state ${needle}`);
+        }
+
+        // Update mode: a spec demoted after the plan was written, and the way back out.
+        const sync = stepBlock(steps, '8.');
+        assert.ok(sync, 'Step 8 must be found');
+        const demoted = sync.slice(
+            sync.indexOf('**Demoted Spec**'),
+            sync.indexOf('**Quarantine Release**'),
+        );
+        assert.ok(demoted.length > 0, 'Step 8 must define Demoted Spec before Quarantine Release');
+        for (const needle of ['## Backlog', '`Done`', '`Blocked [!]`', 'Spec `{file}` is `{status}`']) {
+            assert.ok(demoted.includes(needle), `Demoted Spec must state ${needle}`);
+        }
+        const release = sync.slice(sync.indexOf('**Quarantine Release**'));
+        for (const needle of ['C12', 'Demoted Spec', '`Stable`', 'return to `Todo`']) {
+            assert.ok(release.includes(needle), `Quarantine Release must state ${needle}`);
+        }
+        assert.ok(
+            /Preserve recorded task state[^\n]*Quarantine Release/.test(task),
+            'the rule that survivors keep their recorded status must name Quarantine Release among the explicit transitions',
+        );
+    });
+
+    test('the collision rename spec.md prescribes keeps the layer prefix first, so check-prerequisites accepts it (T106)', () => {
+        const spec = readShipped('.magic/spec.md');
+        const documented = spec.match(/`(l1-\{active-workspace\}-auth\.md)`/);
+        assert.ok(documented, 'spec.md must show the renamed file with the layer prefix first');
+        assert.ok(
+            !spec.includes("'{active-workspace}-{file}'"),
+            'the workspace name must not lead the file name',
+        );
+
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir, specsDir } = makeSpecWorkspace(tempDir);
+            const prescribed = documented[1].replace('{active-workspace}', 'app');
+            const legacyForm = 'app-l1-auth.md';
+            for (const name of [prescribed, legacyForm]) {
+                fs.writeFileSync(
+                    path.join(specsDir, name),
+                    '# Auth\n\n**Version:** 1.0.0\n**Status:** Stable\n',
+                );
+            }
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                [
+                    '# Index',
+                    '',
+                    `| [${prescribed}](specifications/${prescribed}) | x | Stable | 1 | 1.0.0 |`,
+                    `| [${legacyForm}](specifications/${legacyForm}) | y | Stable | 1 | 1.0.0 |`,
+                    '',
+                ].join('\n'),
+            );
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules');
+            fs.writeFileSync(
+                path.join(designDir, 'PLAN.md'),
+                `# Plan\n- [ ] ([${prescribed}](specifications/${prescribed}), [${legacyForm}](specifications/${legacyForm}))\n`,
+            );
+            generateChecksums(tempDir);
+
+            const flagged = runCheckPrerequisites(tempDir)
+                .warnings.filter((w) => w.type === 'NAMING_VIOLATION')
+                .map((w) => w.message.match(/^'([^']+)'/)[1]);
+            assert.deepStrictEqual(
+                flagged,
+                [legacyForm],
+                'the name the workflow prescribes passes the Layer Prefix rule; the workspace-first form it replaces does not',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('shipped text: no engine body promises a manual command it has no wrapper for, and Retro L2 names the step that fires it (T247)', () => {
+        const promisesManualCommand = (text) => /\bmanual command\b/i.test(text);
+        assert.ok(
+            promisesManualCommand('| **L2** | Full audit | Plan Complete or manual command |'),
+            'the detector must flag the retired wording',
+        );
+        assert.ok(
+            !promisesManualCommand('| **L2** | Full audit | Plan Complete (`run.md` Plan Completion) |'),
+            'and spare a trigger that names a step',
+        );
+
+        for (const { rel, text } of engineBodies()) {
+            assert.ok(
+                !promisesManualCommand(text),
+                `${rel} advertises a "manual command" that no workflow wrapper provides`,
+            );
+        }
+        const l2 = readShipped('.magic/retrospective.md')
+            .split(/\r?\n/)
+            .find((line) => line.startsWith('| **L2**'));
+        assert.ok(l2, 'the Levels table must carry an L2 row');
+        assert.match(
+            l2,
+            /Plan Complete[^|]*`run\.md` Plan Completion/,
+            'the L2 trigger must name the step that fires it',
+        );
+    });
+
+    test('shipped text: the Consistency Check flags a reference to a Deprecated spec as an advisory, never a HALT (T246)', () => {
+        const spec = readShipped('.magic/spec.md');
+        const table = spec.slice(
+            spec.indexOf('### Consistency Check (Pre-flight)'),
+            spec.indexOf('## Finalization Protocol'),
+        );
+        const rows = table.split(/\r?\n/);
+        const stale = rows.find((line) => line.startsWith('| **Stale References**'));
+        assert.ok(stale, 'the table must carry a Stale References row');
+        for (const needle of [
+            '`Related Specifications`',
+            '`Implements`',
+            '`Deprecated`',
+            '`STALE_REFERENCE`',
+            'advisory',
+        ]) {
+            assert.ok(stale.includes(needle), `the row must state ${needle}`);
+        }
+        assert.ok(
+            !stale.includes('**HALT**'),
+            'a stale reference is reported, never a HALT — it mirrors the Deprecation Cascade report',
+        );
+        const layer = rows.find((line) => line.startsWith('| Layer Integrity'));
+        assert.ok(
+            layer?.includes('`Stable`'),
+            'Layer Integrity must say the L1 parent has to be Stable, not merely valid (T25)',
+        );
+    });
+
+    test('shipped text: the C12.1 stabilization exception has a data trigger — the stabilizes flag — in the planning workflow, the constitution and its template (T71)', (t) => {
+        const task = readShipped('.magic/task.md');
+        const steps = task.slice(task.indexOf('\n### Steps'));
+
+        const decompose = stepBlock(steps, '7.');
+        assert.ok(decompose, 'Step 7 must be found');
+        const setting = decompose.slice(decompose.indexOf('**Stabilizing Tasks'));
+        assert.ok(setting.startsWith('**Stabilizing Tasks'), 'Step 7 must define Stabilizing Tasks');
+        assert.ok(
+            setting.includes('`stabilizes: {spec-file}`'),
+            'Step 7 must define how the flag is set',
+        );
+        assert.ok(
+            /explicit/i.test(setting.slice(0, setting.indexOf('\n'))),
+            'the flag is set only on an explicit request, never inferred from a title',
+        );
+
+        const sync = stepBlock(steps, '8.');
+        assert.ok(sync, 'Step 8 must be found');
+        const c12 = sync.split(/\r?\n/).find((line) => line.includes('**C12 Quarantine**'));
+        assert.ok(c12, 'Step 8 must carry the C12 Quarantine bullet');
+        const exception = c12.slice(c12.indexOf('**C12.1 Stabilization Exception**'));
+        assert.ok(
+            exception.includes('`stabilizes: {spec-file}`') && exception.includes('stays quarantined'),
+            'C12.1 in Step 8 must require the flag and keep every other task quarantined',
+        );
+
+        // The constitution and the template shipped to consumers state the same exception.
+        const clauses = {};
+        for (const rel of ['.design/RULES.md', '.magic/templates/rules.md']) {
+            if (!fs.existsSync(path.join(shippedRoot, rel))) {
+                t.skip(`${rel} is not part of this checkout`);
+                return;
+            }
+            clauses[rel] = readShipped(rel)
+                .split(/\r?\n/)
+                .find((line) => line.startsWith('**C12.1'));
+            assert.ok(
+                clauses[rel]?.includes('`stabilizes: {spec-file}`'),
+                `${rel} C12.1 must name the flag`,
+            );
+        }
+        assert.strictEqual(
+            clauses['.design/RULES.md'],
+            clauses['.magic/templates/rules.md'],
+            'the constitution and the shipped template must not diverge on C12.1',
+        );
+    });
+
+    test('shipped text: spec.md queues a T4 rule once, for every HALT of the Sync step (T245)', () => {
+        const spec = readShipped('.magic/spec.md');
+        const updating = spec.slice(spec.indexOf('### Updating an Existing Specification'));
+        const sync = stepBlock(updating, '3.');
+        assert.ok(sync, 'the Sync step must be found');
+
+        assert.strictEqual(
+            sync.split('**T4 Queue**').length - 1,
+            1,
+            'one T4 Queue statement — a single source, not a copy per guard',
+        );
+        const queueAt = sync.indexOf('**T4 Queue**');
+        assert.ok(queueAt < sync.indexOf('**Version Drift Guard**'), 'it must precede the guards');
+        const queue = sync.slice(queueAt, sync.indexOf('\n', queueAt));
+        for (const needle of [
+            'every HALT',
+            'queued pending {reason} resolution',
+            '`drift`',
+            '`parity`',
+            '`file`',
+            'RULES.md',
+            'rule.md',
+        ]) {
+            assert.ok(queue.includes(needle), `the T4 Queue rule must state ${needle}`);
+        }
+        assert.ok(
+            !/queued pending (drift|file) resolution/.test(sync),
+            'no guard may keep its own copy of the message',
+        );
+    });
+
+    test('shipped text: the stabilizes flag is honored end to end — by every run guard and role card that demands a Stable spec, and by the Guided Planning Filter (T248, T249)', () => {
+        const exception = lineWith(runGuards(), '**Stabilizing exception (C12.1)**');
+        assert.ok(exception, 'run.md must define the Stabilizing exception among its Logic Guards');
+        for (const needle of [
+            '`stabilizes: {spec-file}`',
+            'Quarantine (C12)',
+            'Spec Stability',
+            'Spot-Check',
+            'Mid-Run',
+            'File-Header Parity',
+            'Phantom Spec',
+        ]) {
+            assert.ok(exception.includes(needle), `the exception must name ${needle}`);
+        }
+
+        // The two steps that repeat a guard point back to the exception instead of contradicting it.
+        const spot = lineWith(runStep('1.'), '**Spec Stability Spot-Check**');
+        assert.ok(spot?.includes('`stabilizes:`'), 'the Spot-Check must except the named spec');
+        const midRun = lineWith(runStep('4.'), '**Mid-Run Stability Check**');
+        assert.ok(midRun?.includes('`stabilizes:`'), 'the Mid-Run check must use the dispatch baseline');
+
+        const filter = lineWith(readShipped('.magic/task.md'), '**Guided Planning Filter**');
+        assert.ok(filter, 'task.md must carry the Guided Planning Filter');
+        for (const needle of [
+            '**Stabilization interaction (C12.1)**',
+            'whatever its status',
+            '`stabilizes:`',
+        ]) {
+            assert.ok(filter.includes(needle), `the filter must state ${needle}`);
+        }
+
+        // The role cards that repeat a Stable demand follow the same exception — in
+        // Parallel mode (the default) the orchestrator's re-read runs before any guard
+        // above — and the cards spec carries the two lines verbatim.
+        const reread = cardLine('.magic/roles/orchestrator.md', '5. Between dispatches');
+        assert.ok(
+            reread?.includes('`stabilizes:`'),
+            'the orchestrator re-read must hold a stabilization task to its status at dispatch',
+        );
+        const readStep = cardLine('.magic/roles/planner.md', '1. Read all');
+        assert.ok(readStep, 'the planner card must open with a Read step');
+        assert.ok(
+            !readStep.includes('`Stable`'),
+            'the planner must read the spec a stabilization task targets, not only Stable ones',
+        );
+        const cardsSpec = readShipped('.design/engine/specifications/l2-role-cards-execution.md');
+        for (const line of [reread, readStep]) {
+            assert.ok(cardsSpec.includes(line), `the cards spec must carry the card line verbatim: ${line}`);
+        }
+    });
+
+    test('shipped text: a [Bootstrap] task passes every guard that demands a Stable spec — in run, in the orchestrator re-read and in the Sync step (T250, T251)', () => {
+        const exception = lineWith(runGuards(), '**Bootstrap exception**');
+        assert.ok(exception, 'run.md must define the Bootstrap exception among its Logic Guards');
+        for (const needle of [
+            '`[Bootstrap]`',
+            'Task Start',
+            'Quarantine (C12)',
+            'Spec Stability',
+            'Mid-Run',
+            'orchestrator',
+            'File-Header Parity',
+            'Phantom Spec',
+        ]) {
+            assert.ok(exception.includes(needle), `the exception must name ${needle}`);
+        }
+
+        // Step 4 points back to the exception instead of demanding a spec that never was Stable.
+        const midRun = lineWith(runStep('4.'), '**Mid-Run Stability Check**');
+        assert.ok(
+            midRun?.includes('`[Bootstrap]`'),
+            'the Mid-Run check must use the Task Start baseline for a Bootstrap task',
+        );
+
+        // The orchestrator re-read runs before every guard above in Parallel mode (the default).
+        const reread = cardLine('.magic/roles/orchestrator.md', '5. Between dispatches');
+        assert.ok(
+            reread?.includes('`[Bootstrap]`'),
+            'the orchestrator re-read must hold a Bootstrap task to its status at dispatch',
+        );
+        const cardsSpec = readShipped('.design/engine/specifications/l2-role-cards-execution.md');
+        assert.ok(cardsSpec.includes(reread), `the cards spec must carry the card line verbatim: ${reread}`);
+
+        // Planning side: the Sync step must not return a tentative plan's tasks to Backlog.
+        const task = readShipped('.magic/task.md');
+        const sync = stepBlock(task.slice(task.indexOf('\n### Steps')), '8.');
+        const bootstrapTasks = lineWith(sync, '**Bootstrap Tasks**');
+        assert.ok(bootstrapTasks, 'task.md Step 8 must define Bootstrap Tasks beside C12 and Demoted Spec');
+        for (const needle of [
+            '`[Bootstrap]`',
+            'C12 Quarantine',
+            'Demoted Spec',
+            'while its spec is `Draft`',
+            'leaves `Draft`',
+        ]) {
+            assert.ok(bootstrapTasks.includes(needle), `Bootstrap Tasks must state ${needle}`);
+        }
+        assert.ok(
+            sync.indexOf('**Bootstrap Tasks**') < sync.indexOf('**Demoted Spec**'),
+            'Bootstrap Tasks must come before Demoted Spec, the rule it limits',
         );
     });
 });

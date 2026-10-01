@@ -180,7 +180,7 @@ graph TD
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
    - Any other result → branch per `init.md §1`: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → C15 Filter (**HALT** only if in-scope); missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume; unrecognized failure → **HALT**.
-   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed. Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{active-workspace}-{file}'. (Override: /magic.spec amend to rename)`. Do NOT HALT; do NOT present option menus.
+   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed: the workspace name goes right after the layer prefix, so the layer prefix stays first (`l1-auth.md` becomes `l1-{active-workspace}-auth.md`). Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{layer-prefix}{active-workspace}-{name}'. (Override: /magic.spec amend to rename)`. Do NOT HALT; do NOT present option menus.
 2. **Creation**:
    - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec per C16).
    - **Naming**: apply layer prefix (`l1-` Concept, `l2-` Impl) to the filename (e.g., `l1-api.md`).
@@ -199,13 +199,12 @@ graph TD
    - **Template Promotion (C16)**: if a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
    - Update `Version`, `Status`, `Layer` in `INDEX.md`.
+   - **T4 Queue** (every HALT below): if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly — *"T4 rule detected — queued pending {reason} resolution."*, with `{reason}` = `drift` (Version Drift Guard), `parity` (Cross-Workspace Parity) or `file` (Existence Guard, Parent Existence Guard). Do NOT write to `RULES.md` until the HALT is resolved, then hand the queued rule to the Operational Logic of `rule.md` immediately — after the Resolution Validation re-evaluation for `drift`, once the copies are reconciled for `parity`, and once the target file (and parent) is restored or remapped for `file`.
    - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magic.spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
      - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the file header was updated without review, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed — confirm before proceeding."* After confirmed resolution, **re-evaluate all Sync guards from the top, scoped to the amendment target** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine applied to the amendment target's upward chain — its L1 parents only, not its downstream dependents nor the drift-resolved file that triggered the HALT) before writing.
-     - **T4 Queue**: if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: *"T4 rule detected — queued pending drift resolution."* Do NOT write to `RULES.md` until the drift is resolved. Hand the queued rule to the Operational Logic of `rule.md` immediately after.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run the update."* One path, no option menu.
    - **Existence Guard**: target file in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
    - **Parent Existence Guard**: target is L2, verify its L1 parent (defined in `Implements:`) exists on disk in the specified (or resolved) workspace. Parent missing → **HALT**. Report: *"L2 Orphan: Parent spec `{parent-file}` is missing from disk. Restore parent before updating L2."*
-     - **T4 Queue**: if the triggering input also contained a T4 rule, acknowledge it: *"T4 rule detected — queued pending file resolution."* Do NOT write to `RULES.md` until the Existence Guard is resolved. Hand the queued rule to the Operational Logic of `rule.md` immediately after the target file (and parent) is restored or remapped.
    - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
    - **C12 (Quarantine)**: if L1 status drops (Stable → RFC/Draft):
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
@@ -307,8 +306,9 @@ Compares specs vs. project filesystem and engine integrity.
 | Check | Action |
 | --- | --- |
 | Path Validity | Referenced files exist? |
-| Layer Integrity | L2 has valid L1 parent? |
+| Layer Integrity | L2 has an existing, `Stable` L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
+| **Stale References** | `Related Specifications` or `Implements` pointing at a `Deprecated` spec? Report `STALE_REFERENCE` (advisory, no HALT — the finding the Deprecation Cascade raises when a spec is deprecated, here for the references that predate or escaped it) → `→ /magic.spec amend {file}`. |
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | Project configuration files match declared spec metadata? |
 | **Engine Integrity** | `.magic/` matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `magic.analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
@@ -317,7 +317,7 @@ Compares specs vs. project filesystem and engine integrity.
 
 After all workflow steps (incl. Graph Refresh) and **before** the Completion Checklist:
 
-1. Run `node .magic/scripts/executor.js finalize --workflow=spec`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
+1. Run `node .magic/scripts/executor.js finalize --workflow=spec --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
 2. **Display the entire script output verbatim** in a fenced block.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 

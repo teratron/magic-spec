@@ -153,7 +153,7 @@ Practical conflict found → **HALT** before notifying user. Report: *"C24 Const
 
 After all workflow steps (incl. Graph Refresh + Constitutional Review) and **before** the Completion Checklist:
 
-1. Run `node .magic/scripts/executor.js finalize --workflow=rule`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
+1. Run `node .magic/scripts/executor.js finalize --workflow=rule --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
 2. **Display the entire script output verbatim** in a fenced block.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 

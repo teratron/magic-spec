@@ -30,7 +30,7 @@ Coordinate parallel-track execution within a single phase. Active only when `run
 2. Build a shared-resource map: for each task, list files it will modify (from spec body, not just TASKS.md).
 3. Group tasks into tracks such that no two tasks in parallel tracks modify the same file. Tasks with file-level conflict MUST be serialized into one track.
 4. Dispatch the first task of each track to its track owner.
-5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable`. If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
+5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable` — a spec named by a dispatched task's `stabilizes:` flag, or targeted by a `[Bootstrap]` task, is held to the status it had at that dispatch instead (`run.md` Logic Guards). If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
 6. Receive `Done` / `Blocked [!]` signals from track owners; dispatch next task in the track.
 7. On phase completion, yield back to `run.md` Step 5.
 

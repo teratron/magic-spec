@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.85
+**Version:** 1.9.90
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -183,7 +183,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight: check-prerequisites → ok
   - [ ] Mode Guard: execution mode NOT found in RULES.md §7
   - [ ] **Auto-recover (C3)**: Parallel mode assumed as default; proceeded without halt
-  - [ ] Warning logged: "Execution mode was not defined. Parallel mode applied by default (C3)."
+  - [ ] No warning prompt and no question: Parallel is assumed per C3 (`run.md` Logic Guard: "assume Parallel (do not HALT)")
   - [ ] Task execution begins autonomously
 - **Guards tested:** Mode Guard Auto-Recovery (C3)
 
@@ -249,8 +249,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Signal: 🟢 (0 Blocked, 100% coverage)
   - [ ] RETROSPECTIVE.md created from `.magic/templates/retrospective.md`
   - [ ] Snapshot row appended (Snapshots section only — no Session for Level 1)
-  - [ ] Phase file archived to `archives/tasks/`
-- **Guards tested:** Template creation on missing file, signal calculation, archival
+  - [ ] No task or archival write: archival is owned by `finalize --workflow=run` / `archive-phases` (`retrospective.md` §7, C8)
+- **Guards tested:** Template creation on missing file, signal calculation, archival delegation
 
 ### T15 — Simulate Checksums Mismatch HALT
 
@@ -342,10 +342,10 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Phase 2 completion detected → Level 1 retro auto-snapshot
   - [ ] **Full plan completion** detected → Level 2 retrospective triggered
   - [ ] Level 2 retro: structured analysis with metrics across all phases
-  - [ ] Changelog Level 2 compiled and displayed verbatim; approval gate is the git commit step (Finalization Protocol) — no inline Yes/No prompt
+  - [ ] Changelog Level 2 compiled and displayed verbatim; the user reviews it independently afterward (`run.md` Plan Completion §2) — no inline Yes/No prompt
   - [ ] CONTEXT.md regenerated
   - [ ] TASKS.md summary updated
-- **Guards tested:** Plan completion detection, Level 2 retro trigger, Changelog L2 git-commit gate (C9)
+- **Guards tested:** Plan completion detection, Level 2 retro trigger, Changelog L2 independent-review gate (C9 gate 9)
 
 ### T21 — Run Phase 1→2 Transition
 
@@ -379,14 +379,13 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Trends: improving velocity Phase 1→3
   - [ ] Recommendations section generated
   - [ ] Session entry appended to RETROSPECTIVE.md (not snapshot)
-  - [ ] External changelog compiled and displayed; approval is via git commit step — no inline "Generate external changelog?" prompt
-- **Guards tested:** Multi-phase analysis, trend detection, git-commit gate for Level 2 changelog (C9)
+- **Guards tested:** Multi-phase analysis, trend detection (the Level 2 changelog belongs to `run.md` Plan Completion — see T20, T195)
 
 ### T23 — Task Selective Planning (C6) with Mixed Statuses
 
 - **Workflow:** `task.md` (Updating Tasks & Plan)
 - **Synthetic State:**
-  - INDEX.md: 10 specs total — 3 Draft, 4 RFC, 3 Stable
+  - INDEX.md: 10 specs total — 3 Draft (each fails MVC, so Pre-Planning Stabilization leaves it Draft), 4 RFC, 3 Stable
   - No existing PLAN.md
   - RULES.md §7: C6 active
 - **Expected:**
@@ -406,12 +405,11 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** `"Change rule: RFC specs can go Stable with one approval instead of full review"`
 - **Expected:**
   - [ ] Agent identifies target: §2 (core section, not §7)
-  - [ ] Convention-not-found in §7 handler triggers
   - [ ] Agent informs: "This is a core section (§2). Amending requires explicit approval."
   - [ ] Constitutional implications surfaced: relaxing quality gate
   - [ ] User must explicitly confirm core amendment
   - [ ] If approved: §2 updated, RULES.md major version bump
-- **Guards tested:** Convention-not-found handler, core section amendment gate
+- **Guards tested:** Core-Amendment Routing (target is in §1–6, not §7), core section amendment gate
 
 ### T25 — Spec Full Consistency Audit
 
@@ -424,8 +422,8 @@ If any test fails, document the failure reason and propose a fix.
   - `ui.md` version in file = 2.1.0, version in INDEX.md = 1.5.0
 - **Expected:**
   - [ ] Orphaned file detected: `orphan.md` in filesystem but not in INDEX.md
-  - [ ] Stale reference: `api.md` → `legacy.md` (Deprecated) flagged
-  - [ ] Layer violation: `auth-impl.md` (L2) references non-Stable L1 parent
+  - [ ] Stale reference: `api.md` → `legacy.md` (Deprecated) flagged as `STALE_REFERENCE` (advisory — the Stale References row of the Consistency Check, T246)
+  - [ ] Layer violation: `auth-impl.md` (L2) references non-Stable L1 parent (Layer Integrity requires an existing, `Stable` parent)
   - [ ] Version mismatch: `ui.md` file vs INDEX.md discrepancy flagged
   - [ ] Consistency Report generated with all 4 issues
   - [ ] No automatic fixes — all surfaced for user decision
@@ -462,16 +460,17 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User says: "Analyze this project"
 - **Expected:**
   - [ ] `spec.md` Explore Mode triggered → delegation rule fires → `analyze.md` read
-  - [ ] INDEX.md empty → First-Time Analysis mode selected (not Re-Analysis)
+  - [ ] INDEX.md empty → `/magic.analyze` runs Mode C first and narrates `[DR] Next: /magic.analyze first-time — the registry is empty. (Override: stop here)`; First-Time Analysis (Mode A) starts only on that explicit argument (Mode Precedence, T87)
+  - [ ] Mode A Depth Control: ~80 files → Full scan, narrated `[DR] Full scan — 80 files. (Override: /magic.analyze "focus")` — no question
   - [ ] Step 1: Structure scan identifies `src/components/`, `src/pages/`, `src/api/`, `src/lib/`
   - [ ] Step 2: Stack detected — Next.js + TypeScript + Tailwind
   - [ ] Step 3: Architecture inferred — Frontend SPA (pages/ + components/) with API routes
   - [ ] Step 4: Conventions detected from `.eslintrc.json`, `tsconfig.json`
-  - [ ] Step 5: Proposal generated to **agent artifacts** (NOT `.design/`)
-  - [ ] Proposal contains: ≥3 proposed L1 specs, ≥3 proposed L2 specs, ≥1 RULES.md §7 convention
-  - [ ] Step 6: C9 Trust Mode → auto-dispatch "Apply Immediately": spec stubs created without a separate approval prompt; agent narrates: "[Auto-Analyze] 3 L1 specs + 3 L2 specs registered."
+  - [ ] Step 5: Proposal (Spec Matrix + Observed Conventions) generated to **agent artifacts** (NOT `.design/`)
+  - [ ] Proposal contains: ≥3 proposed L1 specs, ≥3 proposed L2 specs, ≥1 observed convention whose destination is the owning implementation-layer specification — never `RULES.md` (`analyze.md` Operational Logic §3, Mode A step 3)
+  - [ ] Step 6: C9 Auto-Dispatch (Mode A step 3): spec stubs created without a separate approval prompt; agent narrates `[Auto-Analyze] Dispatched 6 specs (L1: 3, L2: 3). (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`
   - [ ] Hard-fork exception: if agent flags architectural uncertainty → explicit options presented before write
-- **Guards tested:** Delegation routing, First-Time detection, read-only scan, C9 auto-dispatch (Apply Immediately), hard-fork exception
+- **Guards tested:** Delegation routing, Mode Precedence (Mode C before the explicit first-time run), read-only scan, C9 Auto-Dispatch, hard-fork exception
 
 ### T28 — Analyze Re-Analysis Gap Detection
 
@@ -501,7 +500,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Gap Report generated to agent artifacts with L1/L2 paired Coverage Matrix
   - [ ] 2 new L1 specs proposed (`payments.md`, `notifications.md`) + 2 paired L2 specs
   - [ ] 2 spec updates proposed (path fixes in `auth.md`, `database.md`)
-  - [ ] User prompted before any live modifications
+  - [ ] New specs (`payments.md`, `notifications.md` + paired L2) are auto-dispatched (C9, Invariant 4) with a narrated action log; the 2 changes to existing specs (path fixes in `auth.md`, `database.md`) wait for explicit approval (Invariant 3)
 - **Guards tested:** Re-Analysis mode detection, delta comparison, drift detection, uncovered module detection
 
 ### T29 — Analyze Delegation Routing from spec.md
@@ -552,6 +551,7 @@ If any test fails, document the failure reason and propose a fix.
 ### T31 — Analyze Depth Control for Large Projects
 
 - **Workflow:** `analyze.md` (Depth Control)
+- **Action (all tests):** `/magic.analyze first-time` — Depth Control gates Modes A, B and D; plain `/magic.analyze` is Mode C, where size is noted and never gated (`analyze.md` Audit Policy)
 - **Test A — Small project (<50 files):**
   - **Synthetic State:**
     - 30 source files, `.design/INDEX.md` empty
@@ -642,7 +642,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action 1:** Workflow triggered with no environment variables or CLI flags.
 - **Expected 1:**
   - [ ] Agent reads `.design/workspace.json`.
-  - [ ] Agent silently identifies `default` = `engine`.
+  - [ ] Agent uses `default` = `engine` without prompting and prints `Active workspace: engine.` (`context.md` Priority 3, multiple + default).
   - [ ] Agent uses `.design/engine/` for all file operations (reading `INDEX.md`, `RULES.md`, etc.).
   - [ ] User is NOT prompted to select a workspace.
 - **Action 2:** Workflow triggered with `MAGIC_WORKSPACE=docs`
@@ -665,8 +665,8 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Agent creates `/docs/RETROSPECTIVE.md` from `.magic/templates/retrospective.md` exactly as is without removing the "Session" sections.
   - [ ] Agent appends a row to the Snapshots table.
-  - [ ] Agent archives the phase file purely relatively: `tasks/phase-1.md` → `archives/tasks/`
-  - [ ] Agent does NOT write anything to `.design/` root.
+  - [ ] Agent performs no archival (`retrospective.md` §7); any move `finalize` later performs is workspace-relative: `tasks/phase-1.md` → `archives/tasks/`
+  - [ ] Agent writes `RETROSPECTIVE.md` only inside `.design/docs/`; the one root-level write is the derived `.design/graph-snapshot.json` (`retrospective.md` Step 2, Invariant 2)
 - **Guards tested:** Workspace path adherence, Level 1 template fidelity.
 
 ### T38 — Analyze Auto-Init Guard and Markdown List Integrity
@@ -676,7 +676,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User prompts *"Analyze my codebase"* (triggers analyze).
 - **Expected:**
   - [ ] Agent intercepts execution and triggers `.magic/init.md` pre-flight before scanning.
-  - [ ] Agent processes all 7 Re-Analysis steps linearly without sequence restart.
+  - [ ] Agent processes the Mode C steps (1–15, including 6a) linearly without sequence restart.
 - **Guards tested:** Auto-Init Delegation, Markdown List Continuity.
 
 ### T39 — Run Phase Completion with Cancelled Tasks Guard
@@ -701,7 +701,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Agent reads `.agents/workflows/magic.dev.simulate.md`.
   - [ ] Agent does NOT ask the user to "pick a workflow".
-  - [ ] Agent explicitly engages Step 1.5 "Improv Mode (Live Simulation)".
+  - [ ] Agent explicitly engages Improv Mode (Live Simulation) through §1 Mode Selection ("Improv: Default if 0 args") and the §1a Crisis Template.
   - [ ] Agent invents a crisis scenario and proceeds autonomously.
 - **Guards tested:** Zero-prompt fallback rule, prompt ambiguity block.
 
@@ -737,7 +737,7 @@ If any test fails, document the failure reason and propose a fix.
   - Spec `auth-draft.md` is registered and partially completed in `PLAN.md` / `TASKS.md`.
 - **Action:** User requests to rename `auth-draft.md` to `authentication.md`.
 - **Expected:**
-  - [ ] Agent performs a global search-and-replace across all `.design/` files.
+  - [ ] Agent performs a global search-and-replace across the active `.design/` files (INDEX, PLAN, TASKS, active phase files, Related Specifications / Implements links); `archives/` and `RETROSPECTIVE.md` are excluded (T51).
   - [ ] Running `magic.task` after rename does NOT trigger a Phantom Spec reset.
   - [ ] Existing tasks in `TASKS.md` retain progress but point to the new spec name.
 - **Guards tested:** Spec Renaming Protocol, Task Continuity.
@@ -750,10 +750,10 @@ If any test fails, document the failure reason and propose a fix.
   - The spec receives heavy modifications and is downgraded to `RFC`.
 - **Action:** User runs `/magic.task` to update the plan.
 - **Expected:**
-  - [ ] Agent moves `api.md` to Backlog in `PLAN.md`.
-  - [ ] Agent does NOT delete active tasks.
-  - [ ] Pending tasks are marked `Blocked [!]` with "Awaiting spec stabilization".
-- **Guards tested:** Stability Downgrade Guard, Backlog Placement, Active Task Preservation.
+  - [ ] Agent moves `api.md` to Backlog in `PLAN.md` (Demoted Spec, `task.md` Step 8).
+  - [ ] Agent does NOT delete tasks: the `Done` ones keep their tracking entries verbatim; `INDEX.md` is not modified (the demotion was made by `spec.md`).
+  - [ ] Every other task is marked `Blocked [!]` with reason "Spec `api.md` is `RFC`"; C12.1 still lets a stabilizing task through.
+- **Guards tested:** Demoted Spec (`task.md` Step 8), Backlog Placement, Active Task Preservation, C12.1 bypass; release in T244.
 
 ### T45 — Automation Handoff Validation (Init)
 
@@ -776,7 +776,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - Project contains > 500 files.
   - No existing specs.
-- **Action:** User runs command to analyze project.
+- **Action:** `/magic.analyze first-time` (plain `/magic.analyze` is Mode C: size is noted and never gated — `analyze.md` Audit Policy).
 - **Expected:**
   - [ ] Agent executes Step 0 (Size Assessment) *before* Step 1.
   - [ ] Agent detects `> 500 files` using an optimal scanning command (`list_dir`, `find`, or OS equiv).
@@ -786,19 +786,19 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T47 — Manual Rename Rescue (Improv Mode)
 
-- **Workflow:** `spec.md`
+- **Workflow:** `analyze.md` (Mode C — RESCUE) + `spec.md` (Spec Renaming Protocol)
 - **Synthetic State:**
   - `INDEX.md` references `core-api.md`.
   - `core-api.md` is missing from the disk.
   - `core-auth.md` exists on disk but is not registered.
   - Both files share 90% content similarity (same title and structure).
-- **Action:** User runs command to sync specs or update the active plan.
+- **Action:** User runs `/magic.analyze`, then applies the proposed registry sync through `/magic.spec`.
 - **Expected:**
-  - [ ] Agent detects the missing spec and the unregistered spec.
-  - [ ] Agent compares the content/title of the two specs.
-  - [ ] Agent determines it is a **Manual Rename** (>80% similarity).
-  - [ ] Agent successfully cascades the rename in `INDEX.md`, `PLAN.md`, and `TASKS.md` via the Spec Renaming Protocol without deleting tasks.
-- **Guards tested:** Manual Rename Rescue (AOP), Spec Renaming Protocol.
+  - [ ] Agent detects the missing spec and the unregistered spec (Registry Audit, Ghost/Zombie check).
+  - [ ] Agent compares the name, title or semantic content of the two specs.
+  - [ ] Similarity >80% → one `RESCUE` finding (**Manual Rename**), not a separate Gap + Orphan pair. `spec.md` RESCUE alone would not match: its path-distance rule (≤20%) is exceeded by `core-api` → `core-auth` (distance 3).
+  - [ ] Once the sync is applied, the Spec Renaming Protocol cascades the rename through `INDEX.md`, `PLAN.md`, `TASKS.md` and active phase files without deleting tasks.
+- **Guards tested:** Manual Rename Rescue (AOP) in `analyze.md`, Spec Renaming Protocol.
 
 ### T48 — Analyze Smart Sync (AOP)
 
@@ -871,7 +871,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Agent scans for dependencies and identifies `auth-impl.md` is a dependent L2 child.
   - [ ] **Quarantine Cascade**: Agent flags `auth-impl.md` during Post-Update Review.
   - [ ] **Status Drop Enforced**: Agent MUST drop status of `auth-impl.md` (L2) to RFC or Draft and update INDEX.md.
-  - [ ] Agent alerts user: "L1 parent `auth-concept.md` is no longer Stable. `auth-impl.md` (L2) status dropped to maintain invariant §52."
+  - [ ] Agent reports: "C12 Cascade: 1 dependent quarantined: [auth-impl.md]." (`spec.md` Updating → Sync)
 - **Guards tested:** Quarantine Cascade (C12) surfacing, Layer Integrity.
 
 ### T53 — Task Quarantine Cascade (C12)
@@ -887,7 +887,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Agent identifies that `auth-concept.md` (L1) is not Stable.
   - [ ] **Quarantine Cascade (C12)**: `auth-impl.md` is moved to `## Backlog` in `PLAN.md`.
-  - [ ] Task T-1A01 for `auth-impl.md` (Todo) → marked `Blocked [!]` with note: "Awaiting spec stabilization (C12 Quarantine)".
+  - [ ] Task T-1A01 for `auth-impl.md` (Todo) → marked `Blocked [!]` with reason: "L1 parent `auth-concept.md` is `RFC` (C12)" (`task.md` Step 8).
   - [ ] User is notified of the quarantine.
 - **Guards tested:** Quarantine Cascade (C12) execution, Downgrade Policy.
 
@@ -975,14 +975,14 @@ If any test fails, document the failure reason and propose a fix.
   - Project A: 40 files.
   - Project B: 200 files.
   - Project C: 600 files.
-- **Action:** Run analysis (e.g. "Analyze project") on each.
+- **Action:** Run `/magic.analyze first-time` on each (plain `/magic.analyze` is Mode C, which never gates on size).
 - **Expected:**
   - [ ] **Project A**: Auto-scan (Step 1) starts without prompting.
   - [ ] **Project B**: Agent scans Full and narrates `[DR] Full scan — 200 files. (Override: /magic.analyze "focus")` — no question.
   - [ ] **Project C**: Agent recommends "Focused/Quick" and HALTs for choice.
 - **Guards tested:** Depth Control (Safety) thresholds.
 
-### T60 — Retro: Snapshot Archival (C8)
+### T60 — Retro: Snapshot Row, Archival Delegated to finalize (C8)
 
 - **Workflow:** `retrospective.md` (Level 1 Snapshot)
 - **Synthetic State:**
@@ -994,9 +994,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `RETROSPECTIVE.md` (metadata) read or created.
   - [ ] Row appended to `RETROSPECTIVE.md` Snapshots table.
-  - [ ] **Archival (C8)** executed: `phase-3.md` moved to `.design/api-v2/archives/tasks/phase-3.md`.
-  - [ ] `TASKS.md` link updated to: `[Phase 3](archives/tasks/phase-3.md)`.
-- **Guards tested:** C8 Archival, Workspace-relative pathing logic.
+  - [ ] The retrospective moves nothing (`retrospective.md` §7); `finalize --workflow=run` later applies **Archival (C8)**: `phase-3.md` → `.design/api-v2/archives/tasks/phase-3.md`.
+  - [ ] That same finalize step rewrites the `TASKS.md` link row to `[Phase 3](archives/tasks/phase-3.md)` (`Done (Archived)`).
+- **Guards tested:** C8 Archival delegation (the retrospective writes no archive), Workspace-relative pathing logic.
 
 ### T61 — Spec Registry-Filesystem Desync
 
@@ -1006,7 +1006,7 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/specifications/auth.md` is **missing** from disk.
 - **Action:** User says: "Update auth spec to include JWT."
 - **Expected:**
-  - [ ] `check-prerequisites` returns warning about missing file.
+  - [ ] `check-prerequisites` returns `GHOST_REGISTRY` for the missing file, with or without a `PLAN.md` (T240).
   - [ ] **Existence Guard** triggers.
   - [ ] **HALT** — Agent does not attempt to read `auth.md`.
   - [ ] Message: "Specification `auth.md` is registered in INDEX but missing from disk. Please restore or unregister before updating."
@@ -1070,32 +1070,31 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T66 — Task Primary Intent Propagation (Cold Start Memory)
 
-- **Workflow:** `task.md` -> `init.md` -> `analyze.md`
+- **Workflow:** `task.md` -> `init.md` (Intent Preservation, Stable-Spec Requirement)
 - **Synthetic State:**
   - `.design/` missing.
   - Projects has code.
 - **Action:** User prompts: "Plan feature X" (starting magic.task).
 - **Expected:**
-  - [ ] `task.md` triggers `init.md`.
-  - [ ] Agent suggests and runs `analyze.md`.
-  - [ ] **Crucial**: After specs are approved, the agent automatically proposes a Plan/Task for "Feature X" using the newly generated specs.
-  - [ ] Intent "Feature X" is NOT lost during the mapping/bootstrapping of existing code.
-- **Guards tested:** Context Continuity, Intent Preservation.
+  - [ ] `task.md` triggers `init.md`; the original intent is memoized before the delegation and the run resumes with "Resuming: 'Plan feature X'" (Core Invariant 3).
+  - [ ] The registry is empty after init: Pre-flight reports `Stable specs (0 specs found)` and HALTs (Stable-Spec Requirement) instead of planning an empty registry.
+  - [ ] The project has code, so the single recommendation is `/magic.analyze first-time` (the `init.md` Step 4 indicators), not `/magic.spec`.
+  - [ ] **Crucial**: the HALT report restates the request "Plan feature X", so the intent is NOT lost across the HALT.
+- **Guards tested:** Context Continuity, Intent Preservation, Stable-Spec Requirement (T242).
 
 ### T68 — Ghost Registry Repair Priority (Non-Destructive Boot)
 
-- **Workflow:** `analyze.md` (Mode: Registry Repair)
+- **Workflow:** `analyze.md` (Mode C — Registry Audit + Auto-Repair)
 - **Synthetic State:**
   - `.design/INDEX.md` is blank.
   - `.design/specifications/` has 3 files: `auth.md`, `db.md`, `api.md`.
 - **Action:** User prompts: "Analyze project and suggest new specs".
 - **Expected:**
-  - [ ] Ghost Registry Guard (§52) triggers.
-  - [ ] Agent explicitly ignores "suggest new specs" intent for now.
-  - [ ] Agent proposes ONLY to map existing 3 files to `INDEX.md`.
-  - [ ] Agent explains that new analysis is suspended until the registry is consistent.
-  - [ ] Report: "Registry inconsistency found — repairing before analysis".
-- **Guards tested:** Ghost Registry Guard, Intent Block (Safety).
+  - [ ] "Analyze project" is `/magic.analyze` → Mode C; Mode A never starts in the same invocation (Mode Precedence), so "suggest new specs" is not acted on in this run.
+  - [ ] Registry Audit finds 3 files on disk that the blank `INDEX.md` does not list (Ghost/Zombie check).
+  - [ ] Auto-Repair maps the 3 files into `INDEX.md` and narrates `[Auto-Repair] Registry healed: 3 Ghost/Zombie entries resolved. (Revert: git restore .design/{ws}/INDEX.md)`.
+  - [ ] No new-spec proposal is produced in this invocation; later analysis runs against the healed registry (a `first-time` run would take Mode B, since `INDEX.md` now lists specs — `analyze.md` Argument Routing).
+- **Guards tested:** Registry healing before any dispatch, Mode Precedence (no same-invocation Mode A).
 
 ### T69 — Cross-Workspace Name Collision (Source of Truth Guard)
 
@@ -1130,19 +1129,20 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T71 — Quarantine Deadlock (Stabilization Exception)
 
-- **Workflow:** `task.md` / `run.md` (C12 Enforcement)
+- **Workflow:** `task.md` (Step 7 Stabilizing Tasks, Step 8 C12.1)
 - **Synthetic State:**
   - Parent `core-l1.md` (RFC).
   - Child `core-l2.md` (RFC, Quarantined by C12).
   - All tasks for `core-l2.md` are in Backlog/Blocked.
-- **Action:** User prompts: "Pull tasks for core-l2.md into Phase 1 to fix implementation mismatches with Parent."
-- **Expected:**
-  - [ ] Agent identifies the intent is **Stabilization**, not new implementation.
-  - [ ] **Stabilization Exception (C12.1)** triggers.
-  - [ ] Agent allows pulling these tasks into Phase 1 despite non-stable parent.
-  - [ ] Task notes explicitly state: "Exception C12.1 applied: Stabilization Mode".
-  - [ ] **HALT** if the user tries to add NEW features to `core-l2.md` while it's in quarantine.
-- **Guards tested:** C12.1 Stabilization Exception, Context-Aware Planning.
+- **Action A:** the user writes "stabilize core-l2.md — fix the implementation mismatches with its parent", then runs `/magic.task update`.
+- **Expected A:**
+  - [ ] The request explicitly asks to stabilize `core-l2.md`, so every task that targets it carries `stabilizes: core-l2.md` (Step 7).
+  - [ ] **C12.1** applies to the flagged tasks only, and only for the spec the flag names: they are pulled into Phase 1 despite the non-Stable parent.
+  - [ ] The flag is the trigger — not a task title and not the agent's reading of intent (C13).
+- **Action B:** the user writes "add pagination to core-l2.md" (a new feature on the quarantined spec), then runs `/magic.task update`.
+- **Expected B:**
+  - [ ] The tasks carry no `stabilizes:` flag, so they stay quarantined (Backlog, `Blocked [!]` with the C12 reason); nothing is pulled in on the strength of a plausible-sounding title and no question is asked.
+- **Guards tested:** C12.1 data trigger (C13), Context-Aware Planning. Planning side of an update only — the `run.md` guards that must let a flagged task through are T248, and the Guided Planning Filter's admission of a spec named by a quoted directive is T249.
 
 ### T72 — Spec Merge Refactor (Section Re-mapping)
 
@@ -1229,9 +1229,8 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/workspace.json` is missing.
 - **Action:** User runs `/magic.run`
 - **Expected:**
-  - [ ] Agent falls back to root `.design/`.
-  - [ ] Agent does not trigger an infinite loop of `init`.
-  - [ ] `executor.js` identifies that `workspace.json` is missing and proceeds with root directory.
+  - [ ] Agent reads root `.design/` transiently only (`context.md` Priority 4), then auto-init bootstraps `workspace.json` and `.design/{default}/` without overwriting existing files — nothing is written to flat root `.design/` (WI-10).
+  - [ ] Agent does not trigger an infinite loop of `init`: init is non-overwriting and idempotent, and resolution re-runs once at Priority 3.
 - **Guards tested:** Workspace Fallback (missing workspace.json), Init Loop Prevention.
 
 ### T78 — Micro-spec Promotion Guard
@@ -1249,7 +1248,7 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `init.md` (Migration Mode)
 - **Synthetic State:** Project with old `.design/INDEX.md` but no `workspace.json`.
-- **Action:** User runs `/magic.init` or Auto-Init trigger.
+- **Action:** Auto-Init trigger (any `/magic.*` workflow; `init.md` is internal — there is no `/magic.init` command).
 - **Expected:**
   - [ ] Agent creates `workspace.json`.
   - [ ] **Guard**: Agent DOES NOT overwrite existing `INDEX.md` with default template.
@@ -1291,12 +1290,12 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `TASKS.md` Phase 1: T-1A01 (Todo, maps to `auth-impl.md`)
   - `INDEX.md` at plan generation: `auth-impl.md` (Stable L2)
-  - Between plan generation and run, user demotes `auth-impl.md` → RFC externally (edited INDEX.md directly)
+  - Between plan generation and run, user demotes `auth-impl.md` → RFC externally in both its file header and `INDEX.md` (a one-sided edit would HALT earlier with STATUS_DRIFT — see T126)
   - `RULES.md §7` has C3: Parallel mode
   - No C12 violation (L1 parent `auth.md` is still Stable — this is NOT a parent-layer issue)
 - **Action:** User runs `/magic.run`
 - **Expected:**
-  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --workspace={active-workspace}`.
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-tasks --verify-headers --workspace={active-workspace}`.
     - [ ] **C15 Filter**: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **Spec Stability Spot-Check**: Read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. Any non-Stable spec → **HALT** before execution begins (see Logic Guard above).
   - [ ] Pre-flight: `check-prerequisites` passes (no engine mismatch)
@@ -1342,7 +1341,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T85 — Intent Preservation Through Cold-Start Delegation Chain
 
-- **Workflow:** `task.md` → `init.md` → `analyze.md` (Intent Preservation)
+- **Workflow:** `task.md` → `init.md` (Intent Preservation, Stable-Spec Requirement)
 - **Synthetic State:**
   - `.design/` missing
   - Project has existing source code
@@ -1350,11 +1349,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] `task.md` detects missing `.design/` → memos intent: "Plan the payment gateway feature"
   - [ ] Delegates to `init.md` → `.design/` created
-  - [ ] Delegates to `analyze.md` → specs generated and approved
-  - [ ] After delegation chain resolves: agent resumes explicitly: "Resuming: 'Plan the payment gateway feature'"
-  - [ ] Agent generates tasks scoped to payment-related specs (intent NOT lost)
-  - [ ] Intent "payment gateway feature" is visible in the final plan output
-- **Guards tested:** Intent Preservation (RE-T66), cross-workflow context continuity
+  - [ ] After the delegation resolves: agent resumes explicitly: "Resuming: 'Plan the payment gateway feature'"
+  - [ ] Pre-flight finds no registered spec (`Stable specs (0 specs found)`) → HALT with one recommendation: `/magic.analyze first-time` (existing codebase)
+  - [ ] The HALT report restates the original request, so the intent is NOT lost
+- **Guards tested:** Intent Preservation (RE-T66), Stable-Spec Requirement (T242), cross-workflow context continuity
 
 ### T86 — Cross-Workspace Name Collision Parity Guard
 
@@ -1549,10 +1547,11 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + no default)
 - **Synthetic State:**
   - `workspace.json` registers two workspaces: `engine`, `docs`. **No default field.**
+  - The current directory's files fall under neither workspace `scope` at ≥50% (`context.md` Workspace Disambiguation, step 4).
 - **Action:** `/magic.analyze` (no argument)
 - **Expected:**
   - [ ] Agent detects multiple workspaces with no default and no explicit arg
-  - [ ] Agent asks: "Which workspace to analyze? [engine, docs]"
+  - [ ] Quick-scan finds no scope covering ≥50% of the cwd's files → the agent HALTs with one question: "Multiple workspaces found: [engine, docs]. Which one?"
   - [ ] Does NOT auto-pick either workspace
   - [ ] Does NOT start scanning before user responds
 - **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → ask)
@@ -1618,9 +1617,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `cache-layer.md` registered in INDEX.md (Stable)
   - `cache-layer.md` is manually deleted from the `.design/specifications/` folder.
+  - No `PLAN.md` exists yet (the first `/magic.task` is about to write it); the outcome is the same with a plan.
 - **Action:** Any engine script/workflow triggered (e.g. `magic.task`)
 - **Expected:**
-  - [ ] `check-prerequisites.js` detects missing file while scanning `INDEX.md`.
+  - [ ] `check-prerequisites.js` detects missing file while scanning `INDEX.md` — with or without a `PLAN.md` (T240).
   - [ ] `GHOST_REGISTRY` violation recorded.
   - [ ] **HALT** triggered: `ok: false` due to `GHOST_REGISTRY` failing `integrity_ok` check.
   - [ ] Workflow does not proceed to `view_file` or plan generation, preventing cascading hallucinations.
@@ -1663,15 +1663,16 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `spec.md` (§Creating — Cross-Workspace Parity)
 - **Synthetic State:**
   - `workspace.json`: `engine` (default), `app`.
-  - `engine/auth.md` — Stable, v2.0.0.
+  - `engine/l1-auth.md` — Stable, v2.0.0.
   - `app/` INDEX.md: empty (0 specs).
-- **Action:** `/magic.analyze app` → Mode A proposes `auth.md` for `app/` workspace → user approves → dispatch calls `spec.md` §Creating for `auth.md`
+- **Action:** `/magic.analyze app first-time` → Mode A proposes `l1-auth.md` for `app/` workspace → Auto-Dispatch (C9) calls `spec.md` §Creating for `l1-auth.md`
 - **Expected:**
   - [ ] spec.md §Creating Pre-flight fires Cross-Workspace Parity check
-  - [ ] Detects `auth.md` already exists in `engine` (v2.0.0)
+  - [ ] Detects `l1-auth.md` already exists in `engine` (v2.0.0)
   - [ ] Does **not** HALT and presents no option menu — workspace-prefix naming is auto-applied
-  - [ ] Narration: `[Auto-SDD] Name collision on 'auth.md' (exists in 'engine'): creating as 'app-auth.md'. (Override: /magic.spec amend to rename)`
-  - [ ] `app/app-auth.md` is created; `engine/auth.md` is untouched
+  - [ ] Narration: `[Auto-SDD] Name collision on 'l1-auth.md' (exists in 'engine'): creating as 'l1-app-auth.md'. (Override: /magic.spec amend to rename)`
+  - [ ] `app/l1-app-auth.md` is created; `engine/l1-auth.md` is untouched
+  - [ ] The layer prefix stays first, so `check-prerequisites` raises no `NAMING_VIOLATION` for the new file (T106 harness case)
 - **Guards tested:** RE-E1 (Cross-Workspace Parity in spec.md §Creating)
 
 ### T107 — Mode B Logic Evolution Triggers Amendment Cascade
@@ -1831,9 +1832,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Structural Integrity fires (workspace specified)
   - [ ] STRUCTURE violation: `INDEX.md` missing (required)
   - [ ] STRUCTURE violation: `My Spec.md` — not kebab-case
-  - [ ] STRUCTURE violation: `orphan-spec.md` — file exists but no INDEX entry (cross-reference mismatch)
+  - [ ] Registry Audit (step 2, not step 3): `orphan-spec.md` — file exists but no INDEX entry → Orphan finding
   - [ ] STRUCTURE violation: scope path `src/legacy/` does not exist on disk
-  - [ ] All violations reported under `STRUCTURE` category (separate from Drift/Gap/Orphan)
+  - [ ] The step 3 violations (missing `INDEX.md`, non-kebab-case name, missing scope path) are reported under the `STRUCTURE` category, separate from Drift/Gap/Orphan
   - [ ] Mode C continues to subsequent steps (coverage, rules) after structural report
 - **Guards tested:** Structural Integrity all 6 sub-checks, STRUCTURE category separation
 
@@ -1858,12 +1859,12 @@ If any test fails, document the failure reason and propose a fix.
     - [ ] Spec Quality: `core.md` flagged as bare L1 (no L2 children)
     - [ ] Spec Quality: `utils.md` flagged as orphan L2 (no parent L1)
     - [ ] Coverage Strategy: `src/tests/` flagged (15 files, no spec) → suggest `test-suite.md`
-    - [ ] Structural Improvements: 2 rule duplicates flagged → suggest promoting to global
+    - [ ] Structural Improvements: 2 workspace rules duplicated by a higher tier → `RULE_RETIRE_CANDIDATE {id}: b` with `→ /magic.rule remove {id}`
     - [ ] Each finding has concrete Action Proposal (`→ /magic.spec ...` or `→ /magic.rule ...`)
 - **Test C — Mode C generates Advisory:**
   - **Action:** `/magic.analyze app` → Mode C completes → Advisory step fires
   - **Expected:**
-    - [ ] Advisory Report appended after Mode C report (step 9)
+    - [ ] Advisory Report appended after Mode C report (step 15)
     - [ ] Same findings as Test B (spec quality + coverage + structural)
 - **Guards tested:** Advisory generation in all modes (not just Mode D), Action Proposals format
 
@@ -1895,7 +1896,7 @@ If any test fails, document the failure reason and propose a fix.
   - None of these extra directories are in any workspace scope
 - **Action:** `/magic.analyze api`
 - **Expected:**
-  - [ ] Mode C step 5 fires: union of all workspace scopes = `packages/api/` + `packages/web/`
+  - [ ] Mode C step 11 fires: union of all workspace scopes = `packages/api/` + `packages/web/`
   - [ ] `packages/shared/`, `infra/`, `scripts/` detected as not in any scope
   - [ ] Report includes `UNSCOPED` warnings for each: "Directory 'packages/shared/' is not in any workspace scope — invisible to scoped analysis."
   - [ ] Warnings are non-halting (informational, included in consolidated report)
@@ -1997,7 +1998,7 @@ If any test fails, document the failure reason and propose a fix.
   - templates/plan.md and templates/tasks.md updated
 - **Action 1: Generate tasks (`task.md`)**
 - **Expected 1:**
-  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --workspace={active-workspace}`.
+  - [ ] **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --require-specs --verify-headers --workspace={active-workspace}`.
     - [ ] **C15 Filter**: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → **HALT** ONLY if in-scope files are mismatched.
     - [ ] **File-Header Parity**: For each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. If either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: "Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magic.spec` to reconcile spec headers, then re-run `/magic.task`." This catches manual edits that bypassed the spec workflow.
     - [ ] **Cross-Workspace Parity**: If `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. If any name collision with version mismatch is found → **HALT**. Report: "Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run `/magic.task`." One recommended path — no option menu.
@@ -2101,14 +2102,14 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `simulate.md` (§3 Cognitive Coverage Report — Guard Resilience)
 - **Synthetic State:**
   - Target: `run.md`
-  - Guards applicable: C12 (mechanical — INDEX.md check), C7 (instructional — no HALT keyword), C14 (mechanical — checksums), C3 (instructional — RULES.md §7 with HALT)
+  - Guards applicable: C12 (mechanical — INDEX.md check), C7 (instructional — no HALT keyword), C14 (mechanical — checksums), Spec Stability (instructional — explicit HALT in `run.md` Logic Guard)
 - **Action:** Agent evaluates Guard Resilience metric for `run.md`
 - **Expected:**
   - [ ] Each guard classified as **Mechanical** or **Instructional** before testing
   - [ ] Mechanical guards tested against script output behavior (PASS/FAIL)
   - [ ] Instructional guards tested for explicit HALT keyword presence (PASS/PARTIAL)
   - [ ] C7 scored as PARTIAL (instruction exists, no HALT keyword, relies on LLM compliance)
-  - [ ] C3 scored as PASS (explicit HALT in run.md: "If missing → **HALT**")
+  - [ ] Spec Stability scored as PASS (explicit HALT in `run.md` Logic Guard: "Demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**")
   - [ ] Final report uses format: `"Mechanical: X/Y, Instructional: A/B (C partial)"`
   - [ ] Single combined score calculated but breakdown visible
 - **Guards tested:** Guard Resilience metric decomposition, Mechanical vs Instructional classification
@@ -2166,7 +2167,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Agent processes raw input dispatch in Trust Mode
 - **Expected:**
   - [ ] All references to autonomous operation cite "Trust Mode (C9)" — not "Autonomous Mode"
-  - [ ] Auto-promotion to Stable requires all 4 conditions: (a) no RULES.md conflicts, (b) no circular deps, (c) layer constraints satisfied, (d) spec content complete per template
+  - [ ] Auto-promotion to Stable requires all 4 conditions: (a) no RULES.md conflicts, (b) no circular deps, (c) layer constraints satisfied, (d) MVC satisfied (Overview + at least one substantive design section)
   - [ ] No vague qualifiers ("crystal clear", "high-confidence") used in decision logic
   - [ ] Summary appended: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 - **Guards tested:** Trust Mode (C9) terminology consistency, quantified promotion criteria
@@ -2308,18 +2309,18 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If confirmed → §3 updated, RULES.md Major version bump
 - **Guards tested:** Core-Amendment Routing gate, explicit approval requirement
 
-### T144 — Analyze Mode A Proposal Shows Explicit Options
+### T144 — Analyze Mode A Auto-Dispatches; Explicit Options Only at a Hard Fork
 
 - **Workflow:** `analyze.md` (Mode A — Proposal step)
 - **Synthetic State:**
   - `.design/INDEX.md` empty, project has `src/` with 30 files
-- **Action:** `/magic.analyze` → Mode A generates proposal with 4 L1 specs and 3 RULES.md entries
+- **Action:** `/magic.analyze` (Mode C, then `[DR] Next: /magic.analyze first-time`), then `/magic.analyze first-time` → Mode A generates a proposal with 4 L1 specs and 3 observed conventions
 - **Expected:**
-  - [ ] C9 Trust Mode → auto-dispatch "Apply Immediately": 4 L1 spec stubs + 3 RULES.md entries written without inline approval prompt
-  - [ ] Agent narrates action log: "[Auto-Analyze] Applied: 4 L1 specs registered, 3 RULES.md §7 entries added."
+  - [ ] C9 Auto-Dispatch: 4 L1 spec stubs written without an inline approval prompt; the 3 observed conventions are recorded in the owning implementation-layer specifications (analysis never writes `RULES.md`)
+  - [ ] Agent narrates the action log: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y). (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`
   - [ ] Hard-fork exception: if agent flags structural ambiguity → explicit options (a) Approve / (b) Adjust / (c) Cancel presented before write
   - [ ] If hard-fork cancelled → no files created, no INDEX.md changes
-- **Guards tested:** C9 auto-dispatch (Apply Immediately), hard-fork exception gate, no spurious approval prompts
+- **Guards tested:** C9 Auto-Dispatch, hard-fork exception gate, no spurious approval prompts
 
 ### T145 — Analyze Priority 1 Prints Workspace Confirmation
 
@@ -2501,13 +2502,13 @@ If any test fails, document the failure reason and propose a fix.
 
 - **Workflow:** `simulate.md`, `init.md`
 - **Synthetic State:**
-  - Workspace `engine` active (`Scope: .magic, .agents, ...`).
-  - Manual drift in `docs/config.json` (OUT OF SCOPE).
-  - `.magic/` files are clean and match checksums.
+  - Workspace `docs` active (`scope: docs/, package.json` — excludes `.magic`).
+  - `.magic/run.md` modified locally (hash mismatch) — a file outside the active workspace's scope.
+  - Every other `.magic/` file matches its checksum.
 - **Action:** Run `/magic.dev.simulate`
 - **Expected:**
-  - [ ] check-prerequisites called with `--workspace=engine`.
-  - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `docs/config.json`.
+  - [ ] check-prerequisites called with `--workspace=docs`.
+  - [ ] Check returns `ok: false`, warning `ENGINE_INTEGRITY` for `.magic/run.md` (the manifest lists `.magic/` files only, so no other path can be flagged).
   - [ ] **C15 Filter** applied: agent recognizes mismatch is out-of-scope.
   - [ ] Agent logs drift but does NOT HALT.
   - [ ] Simulation proceeds to Mode Selection.
@@ -2725,7 +2726,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Warning emitted: `"⚠ Bootstrap Plan detected — specs are not yet Stable."`
   - [ ] Execution proceeds (no HALT for Draft specs with Bootstrap marker).
   - [ ] Generated artifacts include `[Bootstrap]` suffix.
-- **Guards tested:** Bootstrap Detection in run.md, Spec Stability Bootstrap Exception.
+- **Guards tested:** Bootstrap Detection in run.md, Spec Stability Bootstrap Exception. Pre-flight only — the guards that follow it (Quarantine C12, Spec Stability, the Mid-Run check, the orchestrator's re-read) are T250, and the Sync step of `/magic.task update` is T251.
 
 ### T175 — Retrospective Context Resolution Full Priority Chain
 
@@ -2853,7 +2854,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `task.md` (C6 — Autonomous Selective Planning)
 - **Synthetic State:**
   - `RULES.md` v1.4.0+ (C6 without "Strong/Weak Tier" qualifier)
-  - 3 Stable specs, 2 Draft specs
+  - 3 Stable specs, 2 Draft specs (each fails MVC, so Pre-Planning Stabilization leaves it Draft)
 - **Action:** `/magic.task`
 - **Expected:**
   - [ ] C6 applied: 3 Stable → active plan, 2 Draft → Backlog
@@ -3004,7 +3005,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] "significant revision" replaced with "revision affecting ≥1 core section" (line 21)
   - [ ] "appropriate implementation" replaced with "platform-matching implementation" (line 89)
-  - [ ] "significant time" replaced with ">5 minutes" quantified threshold (line 190)
+  - [ ] "significant time" replaced with ">5 minutes" quantified threshold (line 194)
   - [ ] Zero vague terms from the closed list remain in `templates/rules.md`
 - **Guards tested:** C13 Ambiguity elimination, Instruction Density improvement
 
@@ -3033,7 +3034,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Planning proceeds without prompting about mode
 - **Guards tested:** Mode assumption semantics (simulate fix v1.5.146), task.md §6 compliance
 
-### T195 — Run Changelog L2 Gate Is Git Commit, Not Inline Yes/No (C25)
+### T195 — Run Changelog L2 Is Reviewed Independently, Not Through an Inline Yes/No (C25)
 
 - **Workflow:** `run.md` (Plan Completion — Conclusion Cascade)
 - **Synthetic State:**
@@ -3041,10 +3042,10 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** Plan completion detected
 - **Expected:**
   - [ ] Changelog Level 2 compiled and **displayed verbatim** in the agent's output.
-  - [ ] Agent does NOT issue an inline Yes/No approval prompt for the changelog (per C25 Engineer Posture in `run.md` Run Completion Checklist: *"no Yes/No approval prompts inline (release gate is git commit)"*).
-  - [ ] The user-facing approval gate for release artifacts is the standard git commit step (Finalization Protocol), not the agent.
-  - [ ] Trust Mode (C9) §9 release-artifact gate preserved via git commit deferral, not via inline interaction.
-- **Guards tested:** C25 Engineer Posture (no inline release prompts), Finalization Protocol as the sole release gate, `run.md` Plan Completion §2 compliance.
+  - [ ] Agent does NOT issue an inline Yes/No approval prompt for the changelog (per C25 Engineer Posture in `run.md` Run Completion Checklist: *"no Yes/No approval prompts inline (user reviews release artifacts independently afterward)"*).
+  - [ ] The release artifact is reviewed by the user independently afterward (`run.md` Plan Completion §2); the agent adds no gate of its own.
+  - [ ] The C9 gate 9 release-artifact gate is preserved through that independent review, not through inline interaction.
+- **Guards tested:** C25 Engineer Posture (no inline release prompts), independent post-hoc review as the release gate, `run.md` Plan Completion §2 compliance.
 
 ### T196 — Pre-Advisory Audit Execution (C24)
 
@@ -3063,7 +3064,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `retrospective.md`
 - **Synthetic State:**
   - A sprint has concluded with several task files closed.
-- **Action:** `/magic.retrospective`
+- **Action:** Retro Level 2 runs (`run.md` Plan Completion step 1; `retrospective.md` has no wrapper command)
 - **Expected:**
   - [ ] Agent executes Level 2 (Deep State) retrospective, analyzing SDD integrity.
   - [ ] Agent analyzes `RULES.md` drifts and spec modifications, not just mechanical file diffs.
@@ -3074,7 +3075,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `retrospective.md`
 - **Synthetic State:**
   - Source code contains a newly added authentication handler that is NOT documented in `auth.md` or any spec in `INDEX.md`.
-- **Action:** `/magic.retrospective`
+- **Action:** Retro Level 2 runs (`run.md` Plan Completion step 1; `retrospective.md` has no wrapper command)
 - **Expected:**
   - [ ] Agent identifies the undocumented authentication handler as "Shadow Logic".
   - [ ] Agent highlights the specific file and logic block as an SDD invariant violation.
@@ -3086,7 +3087,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Workflow:** `retrospective.md`
 - **Synthetic State:**
   - A component implemented recently has drifted from its `Stable` spec due to a bypassed code edit.
-- **Action:** `/magic.retrospective`
+- **Action:** Retro Level 2 runs (`run.md` Plan Completion step 1; `retrospective.md` has no wrapper command)
 - **Expected:**
   - [ ] Agent spots the gap between the implemented code and the canonical spec.
   - [ ] Anomaly is registered in the retrospective structural analysis.
@@ -3156,7 +3157,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] T34 expectation cites `rules/MAGIC.md §5` Post-Task Replan collapse to `/magic.task` — does NOT claim direct `run.md → /magic.spec` handoff.
   - [ ] T58 expectation reads `default: main` — does NOT contain the literal string `default: root` (WI-10 contract).
-  - [ ] T195 expectation requires verbatim changelog display + git-commit gate — does NOT contain the phrase `Yes/No` as an inline approval gate.
+  - [ ] T195 expectation requires verbatim changelog display + independent post-hoc review — does NOT contain the phrase `Yes/No` as an inline approval gate.
   - [ ] T36 expectation describes the WI-10 bootstrap fallback (auto-init provisions `.design/{default}/`; root `.design/` read transiently) — does NOT claim root `.design/` is used "for all operations".
   - [ ] T190 expectation uses the hyphenated skill projection convention (`skills/magic-test/`, `name: magic-test`) — does NOT contain a dotted `skills/magic.test/` path.
   - [ ] Simulate scenarios invoke `/magic.dev.simulate` and reference `.agents/workflows/magic.dev.simulate.md` — no scenario uses the legacy pre-rename command form.
@@ -3659,7 +3660,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:** static text scan of `.magic/*.md` (no runtime state).
 - **Action:** review named-section references, list structure and the Mode C Completion Checklist.
 - **Expected:**
-  - [ ] Every `§{Section}` reference names a heading that exists in the file it points to: `task.md` and `run.md` send workspace resolution to `context.md` §Workspace Resolution Chain, not to a `§Workspace Resolution` heading they do not own (`analyze.md` owns one).
+  - [ ] Every `§{Section}` reference names a heading that exists in the file it points to: `task.md` and `run.md` send workspace resolution to `context.md` §Workspace Resolution Chain, not to a `§Workspace Resolution` heading they do not own (`analyze.md` owns one); a list item is cited by its section and step (`context.md §Post-Resolution` step 4), never as a bare `§4` that no heading carries.
   - [ ] No list item shares a physical line with another: `context.md` Post-Resolution step 4 renders two bullets.
   - [ ] Every Mode C step that defines its own finding code has a line in the Mode C Completion Checklist — including the three that once lacked one: `PHANTOM_COMMAND` (step 2), `DOC_SYNC` (step 10), `UNSCOPED` (step 11).
 - **Guards tested:** Broken Loops — a checklist that does not cover the work; dangling cross-references; list integrity.
@@ -3732,6 +3733,242 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Handoff Propagation (`run.md` Argument Routing note), verb-to-interface parity, one spelling per command.
 - **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — a remedy without a workspace re-planned the default workspace in a multi-workspace project.
 
+### T239 — Every Pre-flight Names the Workspace It Runs For (an Explicit Workspace Argument Is Not Silently Replaced by the Default)
+
+- **Workflow:** `analyze.md` (Shared Pre-flight), `retrospective.md` (Step 1), `executor.js` (workspace resolution)
+- **Synthetic State (Test A — behavior):**
+  - `workspace.json` registers `engine` (default) and `docs`; `MAGIC_WORKSPACE` is unset. `docs` holds specs and a plan; `engine` is clean.
+- **Action A:** `/magic.analyze docs` reaches the Mode B Shared Pre-flight; later `/magic.run docs` finishes a phase and Retro L1 reaches its Step 1.
+- **Expected A:**
+  - [ ] The command run is `check-prerequisites --json --workspace=docs`; `executor.js` lets the explicit flag outrank the default, so every finding concerns `.design/docs/` and the C15 Filter reads the `docs` scope.
+  - [ ] A defect that exists only in `docs` (a `GHOST_REGISTRY` entry for a `docs` spec) is not hidden by the clean `engine` workspace.
+- **Synthetic State (Test B — static scan):** shipped text.
+- **Action B:** list every `executor.js check-prerequisites` invocation in `.magic/*.md`.
+- **Expected B:**
+  - [ ] All eight invocations (`init.md`, `spec.md` ×2, `rule.md`, `task.md`, `run.md`, `analyze.md`, `retrospective.md`) carry `--workspace={active-workspace}`.
+- **Guards tested:** Context resolution reaching the script (Core Invariant 1 of every workflow); flag-over-default precedence in `executor.js`; parity of the Pre-flight command across workflows.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — two of the eight Pre-flight commands omitted the flag, so in a multi-workspace project the default workspace was validated in place of the one the user named.
+
+### T240 — The Registry-vs-Disk Scan Needs No Plan: a Deleted or Misnamed Spec Is Reported Between the First Spec and the First Plan
+
+- **Workflow:** `check-prerequisites.js` (registry scan), `task.md` / `spec.md` Pre-flight
+- **Synthetic State:**
+  - `INDEX.md` registers `l1-real.md`, `l1-missing.md` and `legacy.md`, all `Stable`; only `l1-real.md` exists on disk.
+  - No `PLAN.md` exists yet (the first `/magic.task` has not run).
+- **Action A:** `check-prerequisites --json --require-specs`.
+- **Expected A:**
+  - [ ] `GHOST_REGISTRY` is reported for `l1-missing.md` and `legacy.md`; `NAMING_VIOLATION` for `legacy.md`.
+  - [ ] `ok: false` — the C15 Filter then decides (in scope → **HALT** before any planning).
+  - [ ] No plan-dependent finding (`ORPHANED_SPEC`, `REGISTRY_MISMATCH`, `SYNC_GAP`, `RULE_57_VIOLATION`) appears: each compares against a plan that does not exist.
+- **Action B:** the same state with a `PLAN.md` that lists only `l1-real.md`.
+- **Expected B:**
+  - [ ] The same `GHOST_REGISTRY` and `NAMING_VIOLATION` findings: a plan changes nothing about what the registry-vs-disk scan reports.
+- **Guards tested:** Mechanical registry guard independence from the plan; `--verify-headers` can rely on `GHOST_REGISTRY` to cover a spec file that is missing.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the ghost scan sat inside the plan-dependent block of `check-prerequisites.js`, so a spec deleted before the first plan raised nothing, and header parity skipped the missing file on the strength of a finding that could not fire.
+
+### T241 — Every Finalize Command Names the Workspace the Workflow Ran For
+
+- **Workflow:** `spec.md`, `task.md`, `run.md`, `rule.md` (Finalization Protocol), their `workflows/` wrappers, `rules/magic.md` §3, `executor.js` and `finalize.js` (workspace resolution)
+- **Synthetic State (Test A — behavior):**
+  - `workspace.json` registers `engine` (default) and `docs`; `MAGIC_WORKSPACE` is unset. `/magic.task docs` has just written the `docs` plan.
+- **Action A:** the agent runs the Finalization Protocol.
+- **Expected A:**
+  - [ ] The command is `finalize --workflow=task --workspace=docs`: `executor.js` consumes the flag and exports `MAGIC_DESIGN_DIR=.design/docs`, so `finalize.js` judges significance against the `docs` whitelist and writes the `docs` `STATE.md`.
+  - [ ] The `engine` workspace's `STATE.md` is untouched; a bare command would have finalized `engine` and reported "No significant changes" for the `docs` plan.
+- **Synthetic State (Test B — static scan):** shipped text.
+- **Action B:** list every `executor.js finalize` command in `.magic/*.md`, `workflows/*.md` and `rules/*.md`.
+- **Expected B:**
+  - [ ] All ten (four bodies, four wrappers, two lines of `rules/magic.md`) carry `--workspace={active-workspace}`.
+- **Guards tested:** Context resolution reaching the script (Core Invariant 1 of every workflow); the explicit flag outranking the default in `executor.js`; parity of the finalize command across bodies, wrappers and rules.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — no finalize command passed the flag, so after `/magic.task docs` (or any explicit workspace argument) the default workspace was finalized instead.
+
+### T242 — Pre-flight Treats a Draft-Only Registry as Plannable and an Empty One as a Single-Recommendation HALT (Stable-Spec Requirement)
+
+- **Workflow:** `task.md` (Step 1 — `--require-specs`, Step 2, C6 Bootstrap Exception), `check-prerequisites.js`
+- **Synthetic State (Test A — Draft-only):**
+  - 4 specs, all `Draft`, all passing MVC; no prior `PLAN.md`.
+- **Action A:** `/magic.task`
+- **Expected A:**
+  - [ ] `check-prerequisites --require-specs` reports `missing_required: ["Stable specs (only Draft/RFC found)"]` and `ok: false` — and this is **not** a HALT.
+  - [ ] Step 2 runs: the specs that pass the Trust Mode criteria are promoted; if none reach `Stable`, the C6 Bootstrap Exception plans them with `[Bootstrap]` (T170).
+- **Synthetic State (Test B — empty registry, greenfield):**
+  - `INDEX.md` lists no spec; the project has no `package.json`, `pyproject.toml`, `src/` or `lib/`.
+- **Action B:** `/magic.task "plan the billing module"`
+- **Expected B:**
+  - [ ] `Stable specs (0 specs found)` → **HALT** with "No specifications are registered. Run `/magic.spec` to author the first one, then re-run `/magic.task`." — exactly one recommended command.
+  - [ ] The report restates the request ("plan the billing module").
+  - [ ] No `PLAN.md` or `TASKS.md` is written.
+- **Synthetic State (Test C — empty registry, existing codebase):** as Test B, but the project has `package.json` and `src/`.
+- **Expected C:**
+  - [ ] The same HALT with the single recommendation `/magic.analyze first-time`; `/magic.spec` is not named.
+- **Guards tested:** the Stable-Spec Requirement branch of Pre-flight; DA-8 (one recommended path per HALT); Intent Preservation across a HALT.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — Step 1 asked for `Stable specs` before Step 2 could create any and defined no branch for the answer, so Draft-only registries (the Bootstrap case by construction) and empty ones had no defined outcome.
+
+### T243 — Config Drift Watches the Global Constitution Beside a Workspace One
+
+- **Workflow:** `check-prerequisites.js` (CONFIG_DRIFT), `init.md` Step 1
+- **Synthetic State:**
+  - A git repository. `.design/RULES.md` (global) and `.design/docs/RULES.md` (workspace, C22) are both committed. `MAGIC_DESIGN_DIR=.design/docs`.
+- **Action:** edit the global file by hand and run `check-prerequisites --json`; edit the workspace file too and run it again; restore the global file and run it a third time.
+- **Expected:**
+  - [ ] Global edit only → one `CONFIG_DRIFT` finding, for `.design/RULES.md`.
+  - [ ] Both edited → two findings (`.design/RULES.md`, `.design/docs/RULES.md`).
+  - [ ] Workspace edit only → one finding, for `.design/docs/RULES.md`.
+  - [ ] Every finding is non-blocking (`ok` is unaffected); the workflow logs the advisory and proceeds without a prompt (`init.md` Step 1).
+- **Guards tested:** Config Drift scope — the global and every workspace `RULES.md` (C22); advisory, never a HALT.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the workspace `RULES.md` replaced the global one in the watch list, so hand edits to the project constitution went unreported in any project that has a workspace-level rules file.
+
+### T244 — A Demoted Spec Is Backlogged With Its Open Tasks Blocked, and a Re-Stabilized One Gets Them Back (Demoted Spec, Quarantine Release)
+
+- **Workflow:** `task.md` (Step 8 — Demoted Spec, Quarantine Release; Plan Write-back), `run.md` (Step 2 Select)
+- **Synthetic State:**
+  - `payments.md` (Stable) is planned in Phase 1: `T-1A01` `Done`, `T-1A02` `Todo`, `T-1A03` `Blocked [!]` for an unrelated reason ("waiting for a vendor key"). `payments.md` is then amended to `RFC` through `spec.md`.
+- **Action 1:** `/magic.task update`
+- **Expected 1:**
+  - [ ] `payments.md` moves to `## Backlog`; `INDEX.md` is not modified.
+  - [ ] `T-1A01` keeps its `Done` entry, `Changes` and `Attempts` verbatim.
+  - [ ] `T-1A02` becomes `Blocked [!]` with reason "Spec `payments.md` is `RFC`"; `T-1A03` keeps its own reason.
+- **Action 2:** `payments.md` is amended and returns to `Stable`; `/magic.task update` runs again.
+- **Expected 2:**
+  - [ ] `payments.md` returns to the active plan under C6.
+  - [ ] `T-1A02` returns to `Todo` (only the quarantine reason releases); `T-1A03` stays `Blocked [!]`.
+  - [ ] Nothing else in a surviving entry changes: other statuses, `Changes` and `Attempts` stay verbatim.
+  - [ ] `/magic.run` then selects `T-1A02` instead of halting in the *Stalled* branch for good.
+- **Guards tested:** Demoted Spec; Quarantine Release as the way back out of a Step 8 block (`task.md` lists it beside C12, Demoted Spec and Phantom Specs as the only status transitions of a surviving entry); the Select *Stalled* branch is not a dead end.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — `task.md` handled a demoted parent (C12) but not a demoted spec itself, and nothing ever released a quarantined task, so a spec that regained `Stable` kept its tasks `Blocked` and `/magic.run` halted on them for good.
+
+### T245 — A T4 Rule Is Queued Behind Every HALT of the Update Sync Step, Through One Rule
+
+- **Workflow:** `spec.md` (Updating an Existing Specification — Sync: T4 Queue, Version Drift Guard, Cross-Workspace Parity, Existence Guard)
+- **Synthetic State:**
+  - `workspace.json` registers `engine` and `app` (active); `RULES.md` has no rate-limiting convention.
+- **Action A (parity):** "Update core.md to add a rate-limit section, and remember that all endpoints must send rate-limit headers." — `core.md` exists in `engine` (v2.0.0) and in `app` (v1.5.0).
+- **Expected A:**
+  - [ ] Cross-Workspace Parity → **HALT** with the single-path report (T92).
+  - [ ] The agent acknowledges the T4 rule: "T4 rule detected — queued pending parity resolution."
+  - [ ] Nothing is written to `RULES.md` or `core.md`.
+  - [ ] Once the copies are reconciled and the update re-run, the queued rule is handed to the Operational Logic of `rule.md` — not silently dropped.
+- **Action B (file):** the same input, with `core.md` registered in `INDEX.md` but missing from disk.
+- **Expected B:**
+  - [ ] Existence Guard → **HALT**; the acknowledgment reads "… queued pending file resolution." (T76); the rule is written only after the file (and its parent) is restored or remapped.
+- **Action C (drift — control):** `core.md` header v1.3.0 against registry v1.2.0.
+- **Expected C:**
+  - [ ] Version Drift Guard → **HALT**; the acknowledgment reads "… queued pending drift resolution." (T84); the rule is handed over after the Resolution Validation re-evaluation.
+- **Guards tested:** the single T4 Queue rule covering all three HALTs, with no per-guard copy to drift apart; atomic write integrity.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the T4 Queue note sat under two guards only, so a standing rule given together with an update that hit the parity HALT had no stated fate.
+
+### T246 — The Consistency Check Reports a Reference to a Deprecated Spec as an Advisory
+
+- **Workflow:** `spec.md` (Consistency Check — Stale References row), Deprecation Cascade
+- **Synthetic State:**
+  - `legacy.md` is `Deprecated`. `api.md` (Stable) lists it under `Related Specifications`; `auth-impl.md` (L2) has `Implements: legacy.md`. Both references predate the deprecation, or the deprecation was an external edit that skipped the cascade. `billing.md` lists the `Stable` `auth.md` under `Related Specifications` (control).
+- **Action:** "Verify specs".
+- **Expected:**
+  - [ ] `api.md` and `auth-impl.md` are reported as `STALE_REFERENCE` with `→ /magic.spec amend {file}` (for `auth-impl.md`, Layer Integrity also reports that its parent is not `Stable`).
+  - [ ] The report is advisory: no HALT, no automatic edit of either file, no status change.
+  - [ ] `billing.md` is not reported.
+- **Guards tested:** Stale References row; parity with the Deprecation Cascade report (non-blocking); Layer Integrity requires an existing, `Stable` parent.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — T25 expected the finding, but no audit step named it; the Deprecation Cascade reports it only at the moment of deprecation.
+
+### T247 — Retro L2 Is Fired by Plan Completion; No Engine Body Promises a Manual Command It Has No Wrapper For
+
+- **Workflow:** `retrospective.md` (Levels), `run.md` (Plan Completion), `analyze.md` (Mode C step 2 — PHANTOM_COMMAND, Wrapper-Body Parity)
+- **Synthetic State:** static text scan of `.magic/*.md` and `workflows/`.
+- **Action:** read the Levels table of `retrospective.md` and search the engine bodies for a trigger the user is told they can invoke by hand.
+- **Expected:**
+  - [ ] The L2 trigger reads "Plan Complete (`run.md` Plan Completion)": the step that fires it is named.
+  - [ ] No engine body says "manual command"; `retrospective.md` stays a wrapper-less internal module (no `workflows/magic.retrospective.md`, no `/magic.retrospective` mention), as `analyze.md` Mode C step 2 requires.
+  - [ ] T197–T199 reach Retro L2 through Plan Completion, not through a command.
+- **Guards tested:** no advertised trigger without a wrapper (the PHANTOM_COMMAND rule's spirit); C2 (no new command without an explicit exception).
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the Levels table promised a "manual command" for Retro L2 that no wrapper provides.
+
+### T248 — A Stabilizing Task Runs Past the Guards That Demand a Stable Spec; Parity and Phantom Checks Still Apply
+
+- **Workflow:** `run.md` (Logic Guards — Stabilizing exception, Step 1 Spec Stability Spot-Check and File-Header Parity, Step 4 Mid-Run Stability Check)
+- **Synthetic State:**
+  - `core-l1.md` (Stable); `core-l2.md` (RFC, `Implements: core-l1.md`), demoted by an amendment after its plan was written. Both file headers equal their `INDEX.md` entries.
+  - Phase 1 holds one `Todo` task, `T-1A01`, targeting `core-l2.md` and carrying `stabilizes: core-l2.md` (planned by T71 Action A).
+- **Action A:** `/magic.run`.
+- **Expected A:**
+  - [ ] Quarantine (C12), Spec Stability and the Step 1 Spot-Check do not halt `T-1A01`, though `core-l2.md` is `RFC`: the flag names that spec.
+  - [ ] File-Header Parity is still evaluated, and passes.
+  - [ ] `T-1A01` is selected and executed; at Step 4 the Mid-Run check takes the status at Task Start (`RFC`) as its baseline, finds it unchanged, and the task goes `Done`. The spec reaching `Stable` during the task would not halt it either.
+- **Action B (control — no flag):** the same state, but `T-1A01` carries no `stabilizes:` flag.
+- **Expected B:**
+  - [ ] The Step 1 Spot-Check → **HALT** before execution: "Spec `core-l2.md` is no longer `Stable`. Run `/magic.task {workspace} update` to re-evaluate the plan." The exception follows the flag, not the spec.
+- **Action C (control — parity):** `T-1A01` carries the flag, but the `core-l2.md` header reads `Status: Draft` while `INDEX.md` reads `RFC`.
+- **Expected C:**
+  - [ ] File-Header Parity → **HALT** with `STATUS_DRIFT`; the exception does not reach registry integrity.
+- **Action D (control — drift mid-run):** as Action A, but an external edit sets `core-l2.md` to `Deprecated` while `T-1A01` executes.
+- **Expected D:**
+  - [ ] Step 4 Mid-Run check → **HALT** that track: any change since Task Start other than reaching `Stable` halts. Report: "Spec `core-l2.md` (or its parent) demoted or drifted since task began. Task output suspended — run `/magic.task {workspace} update` to re-evaluate." `T-1A01` is not set `Done`.
+- **Action E (Parallel mode — the default):** as Action A, with `@role:orchestrator` dispatching tracks.
+- **Expected E:**
+  - [ ] The orchestrator's between-dispatch re-read of `INDEX.md` holds `core-l2.md` to its status at the dispatch of `T-1A01` (`RFC`) instead of `Stable`: the track is dispatched, with no `SPEC_DEMOTED` notification.
+  - [ ] A dispatch of an unflagged task on a spec that is not `Stable` still halts its track with `SPEC_DEMOTED`.
+- **Guards tested:** Stabilizing exception (C12.1) on the execution side, per task and per named spec; File-Header Parity and Phantom Spec stay in force; Mid-Run baseline for a flagged task; the orchestrator's re-read follows the same exception (Parallel is the default mode).
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the `stabilizes:` flag bypassed C12 only while planning; `run.md` then halted the flagged task on its own Quarantine, Spec Stability, Spot-Check and Mid-Run guards, and the orchestrator card's re-read did the same in Parallel mode, so a stabilizing task could be planned but never executed.
+
+### T249 — The Guided Planning Filter Admits a Spec Named for Stabilization Whatever Its Status
+
+- **Workflow:** `task.md` (Step 1 Autonomous Selection — Guided Planning Filter, Stabilization interaction; Step 7 Stabilizing Tasks)
+- **Synthetic State:**
+  - `engine` workspace: `auth-l2.md` (Stable, in Phase 1 of `PLAN.md`) and `core-l2.md` (RFC, in `## Backlog`), both registered in `INDEX.md`; `PLAN.md` exists, so Bootstrap is not eligible.
+- **Action A:** `/magic.task engine "stabilize core-l2.md — fix its mismatches with the parent"`.
+- **Expected A:**
+  - [ ] The directive is the explicit request to stabilize `core-l2.md` (Step 7), so the filter admits that spec although it is `RFC`: no "Could not map planning directive" HALT.
+  - [ ] The tasks planned for `core-l2.md` carry `stabilizes: core-l2.md`; `auth-l2.md` does not match the directive and stays untouched in its Phase 1 placement.
+- **Action B (control — not a stabilization request):** `/magic.task engine "add pagination to core-l2.md"`.
+- **Expected B:**
+  - [ ] The directive names `core-l2.md` but does not ask to stabilize or fix it, so no status is overridden: the filter matches `Stable` specs only, finds none, and **HALT**s with "Could not map planning directive 'add pagination to core-l2.md' to any registered spec." A spec's name in a directive never admits it on its own (C13).
+- **Action C (control — unregistered spec):** `/magic.task engine "stabilize ghost.md"` — `ghost.md` is in no `INDEX.md`.
+- **Expected C:**
+  - [ ] Admission waives the status, not registration: zero matches → the same **HALT**.
+- **Guards tested:** Stabilization interaction (C12.1) of the Guided Planning Filter; the zero-match HALT stays for non-stabilization directives and unregistered specs; C13 (the flag trigger is an explicit request, never a title or a filename match).
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the filter matched `Stable` specs only, so a directive naming a non-Stable spec to stabilize hit the zero-match HALT before any flagged task could be planned.
+
+### T250 — A `[Bootstrap]` Task Runs Past the Guards That Demand a Stable Spec; Drift and Missing Marker Still Halt
+
+- **Workflow:** `run.md` (Logic Guards — Bootstrap exception, Quarantine C12, Spec Stability; Step 1 Spot-Check; Step 4 Mid-Run Stability Check), `roles/orchestrator.md` (Operating Protocol 5)
+- **Synthetic State:**
+  - Bootstrap plan, no spec `Stable`: `core-l1.md` (Draft) and `core-l2.md` (Draft, `Implements: core-l1.md`); both file headers equal their `INDEX.md` entries.
+  - Phase 1 holds one `Todo` task, `T-1A01`, targeting `core-l2.md` and carrying the `[Bootstrap]` marker; its dependencies are `Done`.
+- **Action A:** `/magic.run`.
+- **Expected A:**
+  - [ ] The Bootstrap Detection warning is emitted and execution continues (T174).
+  - [ ] Quarantine (C12) and Spec Stability do not halt `T-1A01`, although its L1 parent `core-l1.md` is not `Stable`: the task is held to the status the spec and its parent had at Task Start (`Draft`).
+  - [ ] At Step 4 the Mid-Run check finds both statuses unchanged and the task goes `Done`; generated artifacts carry the `[Bootstrap]` suffix.
+- **Action B (control — no marker):** the same state, but `T-1A01` carries no `[Bootstrap]` marker.
+- **Expected B:**
+  - [ ] Quarantine (C12) → **HALT** (the parent is not `Stable`); the Step 1 Spot-Check halts it too. The exception follows the marker, not the spec's status.
+- **Action C (control — drift mid-run):** as Action A, but an external edit moves `core-l1.md` from `Draft` to `RFC` while `T-1A01` executes.
+- **Expected C:**
+  - [ ] Mid-Run check → **HALT** that track: any change since Task Start other than reaching `Stable` halts. Report: "Spec `core-l2.md` (or its parent) demoted or drifted since task began. Task output suspended — run `/magic.task {workspace} update` to re-evaluate." `T-1A01` is not set `Done`.
+- **Action D (Parallel mode — the default):** as Action A, with `@role:orchestrator` dispatching tracks.
+- **Expected D:**
+  - [ ] The orchestrator's between-dispatch re-read holds `core-l2.md` to its status at the dispatch of `T-1A01` (`Draft`): the track is dispatched, with no `SPEC_DEMOTED` notification.
+  - [ ] A dispatch of a task without the marker on a spec that is not `Stable` still halts its track with `SPEC_DEMOTED`.
+- **Guards tested:** Bootstrap exception on the execution side, per task and by marker; File-Header Parity and Phantom Spec stay in force; Mid-Run baseline; the orchestrator's re-read follows the same exception.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — the Bootstrap Exception was stated only in the Step 1 Spot-Check, so an L2 `[Bootstrap]` task was halted by the Quarantine (C12) guard (its `Draft` L1 parent is not `Stable`), and the Mid-Run check and the orchestrator's re-read demanded "still `Stable`" of a spec that never was; T174 passed because it exercised Pre-flight only.
+
+### T251 — The Sync Step Leaves a `[Bootstrap]` Task Alone While Its Spec Is Draft
+
+- **Workflow:** `task.md` (Step 8 — Bootstrap Tasks, C12 Quarantine, Demoted Spec)
+- **Synthetic State:**
+  - A Bootstrap plan exists: `core-l1.md` (Draft) and `core-l2.md` (Draft, `Implements: core-l1.md`), their Phase 1 tasks carrying the `[Bootstrap]` marker; no spec is `Stable`.
+- **Action A:** `/magic.task update`.
+- **Expected A:**
+  - [ ] Pre-Planning Stabilization evaluates the Draft specs as usual (Trust Mode criteria).
+  - [ ] Step 8 does not apply C12 Quarantine to the tasks of `core-l2.md` (its parent is `Draft`, the tasks carry the marker) and does not apply Demoted Spec: they stay `Todo` in Phase 1, nothing moves to `## Backlog`, nothing is set `Blocked [!]`.
+- **Action B (control — the spec leaves Draft):** an amendment moves `core-l2.md` to `RFC`.
+- **Expected B:**
+  - [ ] Demoted Spec applies: `core-l2.md` moves to `## Backlog` and its tasks not already blocked become `Blocked [!]` ("Spec `core-l2.md` is `RFC`") — the exception ended when the spec left `Draft`.
+- **Action C (control — no marker):** a plan that is not a Bootstrap plan (another spec is `Stable`); a `core-l2.md` task without the marker has the `Draft` parent `core-l1.md`.
+- **Expected C:**
+  - [ ] C12 Quarantine applies as before: Backlog, `Blocked [!]` with "L1 parent `core-l1.md` is `Draft` (C12)".
+- **Guards tested:** Bootstrap Tasks in Step 8 placed before the rule it limits; C12 Quarantine and Demoted Spec unchanged for tasks without the marker; the exception ends with `Draft`.
+- **Regression for:** `/magic.dev.simulate test` (2026-10-01) — Step 8 read "L1 parent is not `Stable`", which by the letter matches every L2 spec of a Bootstrap plan, so `/magic.task update` would have returned the tentative plan's L2 tasks to Backlog as blocked.
+
 ```
-**Test Suite Finalized** - v1.9.85 (Last: T238)
+**Test Suite Finalized** - v1.9.90 (Last: T251)
 ```

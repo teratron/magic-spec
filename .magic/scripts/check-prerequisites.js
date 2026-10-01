@@ -212,6 +212,37 @@ const planWorkspace = path.basename(designDir);
 const planRemedy =
     planWorkspace === '.design' ? '/magic.task update' : `/magic.task ${planWorkspace} update`;
 
+// The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
+// exists: a spec that is registered but absent from disk (or misnamed) is as much a
+// defect between the first spec and the first plan as after it, and that window is where
+// specs are created and deleted most. Only the checks that compare against the plan
+// wait for one.
+//
+// SH-1 + SH-4: read from the stripped copy, bound to the filename grammar — the
+// pre-fix `[^)]*` capture doesn't exclude newlines, so a bare `specifications/` mention
+// in prose (no immediate closing `)`) could run the match past the paragraph it started in.
+const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
+const indexSpecs = [...new Set(indexSpecMatches.map((m) => m[1]))];
+
+for (const spec of indexSpecs) {
+    if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
+        warn(
+            'GHOST_REGISTRY',
+            `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
+            'magic.analyze',
+        );
+    }
+
+    // §1 Naming Convention Check
+    if (!spec.startsWith('l1-') && !spec.startsWith('l2-')) {
+        warn(
+            'NAMING_VIOLATION',
+            `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
+            'Rename file and update INDEX.md references',
+        );
+    }
+}
+
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
     // SH-1/SH-4: a spec filename quoted in a code
@@ -221,31 +252,7 @@ if (planExists && indexExists) {
     // comma-separated tokens up to an unrelated closing paren.
     const planContentForMatch = stripQuoted(planContent);
 
-    // SH-1 + SH-4: read from the stripped copy, bound to the filename grammar
-    // — the pre-fix `[^)]*` capture doesn't exclude newlines, so a bare
-    // `specifications/` mention in prose (no immediate closing `)`) could run
-    // the match past the paragraph it started in.
-    const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const indexSpecs = [...new Set(indexSpecMatches.map((m) => m[1]))];
-
     for (const spec of indexSpecs) {
-        if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
-            warn(
-                'GHOST_REGISTRY',
-                `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
-                'magic.analyze',
-            );
-        }
-
-        // §1 Naming Convention Check
-        if (!spec.startsWith('l1-') && !spec.startsWith('l2-')) {
-            warn(
-                'NAMING_VIOLATION',
-                `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
-                'Rename file and update INDEX.md references',
-            );
-        }
-
         if (pending.orphanedSpecs.includes(spec)) {
             warn(
                 'ORPHANED_SPEC',
@@ -539,14 +546,13 @@ function checkConfigDrift() {
         return; // No git or not a repo — skip silently
     }
 
-    const rulesToCheck = [rulesPath];
+    // The global constitution is always monitored; a workspace RULES.md (C22) is monitored
+    // in addition — it never stands in for the global one.
+    const rulesToCheck = [path.join('.design', 'RULES.md')];
 
-    // C22: Also check workspace-specific RULES.md if it exists
     if (designDir !== '.design') {
         const wsRulesPath = path.join(designDir, 'RULES.md');
-        if (fs.existsSync(wsRulesPath) && !rulesToCheck.includes(wsRulesPath)) {
-            rulesToCheck.push(wsRulesPath);
-        }
+        if (fs.existsSync(wsRulesPath)) rulesToCheck.push(wsRulesPath);
     }
 
     for (const rPath of rulesToCheck) {

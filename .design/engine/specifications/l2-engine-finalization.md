@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.5.0
+**Version:** 3.5.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -42,8 +42,10 @@ The finalization protocol (§3 of `rules/magic.md`) requires several coordinated
 All modules are internal — they export functions consumed only by `finalize.js`. No workflow or spec file should reference individual `lib/` modules directly. The public API is:
 
 ```plaintext
-executor.js finalize --workflow=<spec|task|run|rule> [--dry-run] [--no-bump] [--no-changelog]
+executor.js finalize --workflow=<spec|task|run|rule> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
 ```
+
+`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magic.task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `rules/magic.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
 
 `--no-commit-msg` was removed 2026-08-27 alongside the commit-suggestion feature it toggled (SC-3 retirement) — there is no longer a commit message to opt out of.
 
@@ -206,6 +208,7 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.5.1 | 2026-10-01 | Agent | Clarification patch, Stable retained (no requirement added — the flag already existed in `finalize.js`). §3's invocation line now lists `--workspace=<name>` and states what it carries: the executor consumes the flag and falls back to the default workspace without it, so an explicit workspace argument of the calling workflow reached the pipeline only through the flag — and no workflow passed it. After `/magic.task docs` the significance whitelist and the SC-2 state update were therefore evaluated for the default workspace. Found by a `/magic.dev.simulate test` run; the workflow bodies, their wrappers and `rules/magic.md` §3 now pass `--workspace={active-workspace}` (engine 2.1.120). |
 | 3.5.0 | 2026-09-30 | Agent | New **§10 Spec-Side Rule Capture in the Significance Whitelist**: `magic.spec` whitelists `RULES.md` (global and workspace) so a T4 capture that changes only the constitution is counted, closing the asymmetry with `magic.rule`; finalizing a capture as `rule` is rejected. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 3.4.0 | 2026-09-30 | Agent | Plan-complete `Next Action` split per [l1-session-continuity.md](l1-session-continuity.md) 2.4.0: funnel when work is pending, a command-free statement when nothing is; the screen at the single exit allows zero commands in that one case; the pending predicate is shared with Pre-flight, not duplicated. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 3.3.0 | 2026-09-28 | Agent | New **§9 Significance Snapshot Read-Failure Handling** (R44, Retro L2 Session 13): `computeSignificance()` hashes every whitelisted path with no caller catching `hashFileSafe`'s eventual throw, so an unreadable-but-present `STATE.md` (a directory at its path, a lock, permissions) aborted the whole `finalize` invocation under `--workflow=run` — reproduced live at engine 2.1.104 — while `--workflow=task` degraded gracefully via a *different*, already-guarded call site (`STATE_UPDATE_SKIPPED`). Retry policy in `hashFileSafe` is unchanged; the fix catches per-file at `snapshotHashes()` and records a third sentinel, `'UNREADABLE'`, distinct from a real hash and from `null` ("does not exist") — folding the two would let significance treat "could not tell" as "nothing changed." Diffing treats `'UNREADABLE'` as changed (fail-safe) and `finalize.js` records `SIGNIFICANCE_HASH_UNREADABLE`. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Implementation routed to `/magic.task engine`. |
