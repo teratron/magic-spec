@@ -9556,4 +9556,139 @@ describe('Magic Engine Scripts', () => {
         }
         assert.ok(readShipped(docs).includes('Adjudication'), 'the docs page must describe the adjudication');
     });
+
+    test('shipped text: a fork the evidence does not settle is forecast, never asked — no surface hands the user a choice of route, workspace, scan mode or architecture (DA-10)', () => {
+        // Detector: the wordings by which a workflow handed such a fork to the user. Each gate
+        // now resolves by the Consequence Forecast. Consent questions (E1, E2, E4) and the idea
+        // intake survey (E6) are not in the list and must stay untouched.
+        const choiceGate = new RegExp(
+            [
+                'ask (?:the|one) (?:WI-4|multiple-choice)',
+                'WI-4 three-option question',
+                'HALTs? for (?:user|the) choice',
+                'user picks Focused or Quick',
+                'Question Only at Ambiguity Gate',
+                'single specification-authoring exception',
+                'Engineer Posture \\(C25\\) exception',
+                'Step 0 ambiguity question',
+                'only condition that pauses for user input',
+                'Hard-fork ambiguities and Core-Amendment proposals',
+            ].join('|'),
+            'i',
+        );
+        for (const gated of [
+            'On `ambiguous` → ask the WI-4 three-option question.',
+            '>500 files: recommend Focused/Quick. HALT for user choice (C9 Depth Control gate).',
+            'Hard-fork ambiguity is the only condition that pauses for user input.',
+            'Re-enter the Step 0 ambiguity question (same three-option menu).',
+        ]) {
+            assert.ok(choiceGate.test(gated), `the detector must flag: ${gated}`);
+        }
+        for (const clean of [
+            'On `ambiguous` → resolve it by the Consequence Forecast (DA-10); nothing is asked.',
+            'Core-Amendment proposals (C27 E4) are the only exception that pauses for explicit user input.',
+            'Deleting a spec (E1) asks one consent question.',
+            '`/magic.spec {idea}` may ask before writing specs — one survey round, options from the forecast.',
+        ]) {
+            assert.ok(!choiceGate.test(clean), `the detector must spare: ${clean}`);
+        }
+
+        // A document's history records what used to be true; only its body is shipped behavior.
+        const body = (rel) => readShipped(rel).split(/\n## (?:Document History|Sync Note)\b/)[0];
+        const surfaces = [
+            ...engineBodies().map(({ rel }) => rel),
+            ...listShipped('.magic/roles', ['.md']),
+            '.magic/templates/rules.md',
+            'rules/magic.md',
+            ...listShipped('workflows', ['.md']),
+            ...listShipped('skills', ['.md']),
+            '.design/RULES.md',
+            ...listShipped('docs', ['.md']),
+        ];
+        for (const rel of surfaces) {
+            const hit = body(rel)
+                .split(/\r?\n/)
+                .find((line) => choiceGate.test(line));
+            assert.ok(!hit, `${rel} still hands a fork to the user: ${hit}`);
+        }
+    });
+
+    test('shipped text: the Consequence Forecast (DA-10) is stated where those forks used to be asked — constitution and template word for word, user rules, routing, intake and scan depth', () => {
+        // C27 in the project constitution and in the template every consumer project receives.
+        for (const prefix of ['2. **Escalation Whitelist (DA-2)**', '8. **Consequence Forecast (DA-10)**']) {
+            const project = lineWith(readShipped('.design/RULES.md'), prefix);
+            assert.ok(project, `RULES.md C27 must carry ${prefix}`);
+            assert.strictEqual(
+                lineWith(readShipped('.magic/templates/rules.md'), prefix),
+                project,
+                `the shipped template must mirror RULES.md word for word: ${prefix}`,
+            );
+        }
+        const forecast = lineWith(readShipped('.design/RULES.md'), '8. **Consequence Forecast (DA-10)**');
+        for (const needle of [
+            'status quo',
+            'hedge',
+            'Expected',
+            'Wrong premise',
+            'Boundary',
+            'Adversarial',
+            'Change later',
+            'worst-case',
+            'Assumption (forecast)',
+            'except at intake',
+        ]) {
+            assert.ok(forecast.includes(needle), `C27 DA-10 must name ${needle}`);
+        }
+        const whitelist = lineWith(readShipped('.design/RULES.md'), '2. **Escalation Whitelist (DA-2)**');
+        assert.ok(/consent/.test(whitelist), 'DA-2 must ask for consent');
+        assert.ok(whitelist.includes('at intake, through E6'), 'DA-2 must keep the intake survey (E6)');
+        assert.ok(/E3[^.]*E5[^.]*Consequence Forecast/.test(whitelist), 'DA-2 must send E3 and E5 to the forecast');
+
+        // C9: the hard fork and the scan-depth gate resolve by the forecast in both constitutions.
+        for (const rel of ['.design/RULES.md', '.magic/templates/rules.md']) {
+            for (const gate of ['3. **Architectural Hard Fork**', '7. **Depth Control Limit**']) {
+                assert.ok(lineWith(readShipped(rel), gate)?.includes('DA-10'), `${rel} ${gate} must resolve by DA-10`);
+            }
+        }
+
+        // The user rules carry the procedure to watching-process agents.
+        const rules = readShipped('rules/magic.md');
+        const start = rules.indexOf('**DA-10 (Consequence Forecast)**');
+        assert.ok(start !== -1, 'rules/magic.md §7 must state DA-10');
+        const bullet = rules.slice(start, rules.indexOf('\n- ', start));
+        for (const needle of ['hedge', 'Wrong premise', 'Adversarial', 'worst-case', 'Assumption (forecast)']) {
+            assert.ok(bullet.includes(needle), `rules/magic.md DA-10 must name ${needle}`);
+        }
+
+        // Routing, intake and scan depth now resolve by the forecast.
+        assert.ok(
+            lineWith(readShipped('.magic/context.md'), '- `ambiguous` →')?.includes('Consequence Forecast'),
+            'context.md must route an ambiguous signal to the forecast',
+        );
+        // The intake survey (E6): two gates, forecast-written options with an Other, re-checked free
+        // text, a convergent dialogue, delegated answers recorded as premises, the intent statement.
+        const spec = readShipped('.magic/spec.md');
+        const intake = spec.slice(spec.indexOf('### Step 0.5'), spec.indexOf('### Explore Mode'));
+        for (const needle of [
+            'Gate 1 — comprehension',
+            'Gate 2 — sufficiency',
+            'Consequence Forecast',
+            'hedge',
+            '**Other: …**',
+            'goes back through Gates 1 and 2',
+            'strictly smaller',
+            '**Assumption (forecast):**',
+            '`[Intake] Understood as:',
+        ]) {
+            assert.ok(intake.includes(needle), `spec.md Step 0.5 must state ${needle}`);
+        }
+        const e6 = rules.slice(rules.indexOf('**E6 (Idea Intake Gate)**'), rules.indexOf('### Exemptions', rules.indexOf('**E6 (Idea Intake Gate)**')));
+        for (const needle of ['may ask before writing', 'Other', 'you decide', 'Assumption (forecast)', 'never asked']) {
+            assert.ok(e6.includes(needle), `rules/magic.md E6 must state ${needle}`);
+        }
+        assert.ok(
+            lineWith(readShipped('.magic/analyze.md'), '**>500 files**')?.includes('Consequence Forecast'),
+            'analyze.md must choose the scan mode by the forecast',
+        );
+    });
 });

@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.3.0
+**Version:** 1.4.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -215,12 +215,12 @@ related_rules: [C13, C24]
 
 | Check | Violation |
 | --- | --- |
-| IK-2 discharged | A question whose answer was available in the repository |
+| IK-2 discharged | A question the repository could have answered |
 | IK-3 respected | A technical-realization question routed to the user |
-| IK-4 justified | The gate fired with neither F1 nor F2 demonstrable |
-| IK-5 wording | Jargon, mechanism-framed options, missing consequence, >3 questions or >3 options |
-| IK-6 convergence | A round continued after the open-question set failed to shrink |
-| IK-7 residency | A `Clarifications` section or brief artifact was written |
+| IK-4 justified | The gate fired with none of F1, F2, F3 demonstrable |
+| IK-5 wording | Jargon, mechanism-framed options, missing consequence, no "Other", a recommended option that is not the forecast's winner, >3 questions or >3 options |
+| IK-6 convergence | A round continued after the open set failed to shrink; an "Other" answer not re-checked; a delegated question left open instead of answered by the forecast |
+| IK-7 residency | A `Clarifications` section or brief artifact written; a forecast answer without its premise; no intent statement before dispatch |
 
 **Anti-patterns:**
 
@@ -253,6 +253,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.0 | 2026-10-01 | `prompt-engineer` card: the Idea Intake Gate Audit follows [l1-idea-intake-gate.md](l1-idea-intake-gate.md) 2.0.0 — two gates (F1–F3) and a survey written by the Consequence Forecast — so IK-4 accepts F3, IK-5 checks for the "Other" option and a recommended option equal to the forecast's winner, IK-6 for re-checked "Other" answers and delegated questions answered by the forecast, and IK-7 for the forecast premise and the intent statement before dispatch. Card and spec rows identical. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation; no finding. |
 | 1.3.0 | 2026-09-30 | Implements `l1-rule-admission-gate.md`. Constitutional-reviewer (§3) now decides whether a rule should exist before reviewing it: loads the rule's origin, runs the admission step (RA-2–RA-6), widens the duplication check to engine adapter rules and specification regulations, and gains the DECLINE verdict — previously a non-conflicting rule could only be approved. Spec-critic (§1) gains step 7 Regulation Necessity as the counterweight to Invariant Completeness, scoped to regulations so product invariants are unaffected. Prompt-engineer (§5) gains the no-widening anti-pattern (RA-9). Deployed cards change in the matching engine task. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review and Instruction Quality Pass passed in the same invocation. |
 | 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Card text describes each role as it is: the four "Migrated … with preserved gate and semantics" mission sentences (a diff against a C24 version the reading agent never saw) are dropped — the migration guarantee stays in the Overview (R7). Constitutional-reviewer no longer names a `C1-C23` range (the constitution outgrew it; the check is "every existing convention"). Deployed cards carry the same wording. |
 | 1.1.1 | 2026-08-13 | Corrected stale citation in Project-auditor §2 step 5: "Invariant 6 from analyze.md" named Depth Control (file-count HALT thresholds), not anti-fabrication — no invariant of that name exists in `analyze.md`; the concept is `.design/RULES.md` C13 §5 (Anti-Hallucination Audit) (field report, engine 2.1.71). Deployed `.magic/roles/project-auditor.md` carries the identical stale text and requires the matching correction — Engine Improvement, out of this spec's write scope. Typo-only patch (spec.md Amendment rule); no status transition. |

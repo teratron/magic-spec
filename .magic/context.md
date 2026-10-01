@@ -21,7 +21,7 @@ Detection produces exactly one outcome for the calling workflow:
 
 - `existing:{name}` → enter Resolution Chain with `{name}` resolved.
 - `create:{name}` → invoke `create-workspace --name={name}` first, then enter Resolution Chain.
-- `ambiguous` → ask one multiple-choice question (WI-4) before continuing.
+- `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) before continuing — nothing is asked.
 
 ### Signal Classes (closed set, WI-2)
 
@@ -35,21 +35,18 @@ A workspace's **lexicon** = union of `description`, `scope` path segments (from 
 
 ### Ambiguity Gate (WI-4)
 
-Emit `ambiguous` and prompt only when **all three** hold:
+Emit `ambiguous` only when **all three** hold — or when an explicit creation token (class 1) carries no inferable name:
 
 1. A creation signal (class 1, 2, or 3) is present.
 2. ≥1 existing workspace's lexicon overlaps the signal token by ≥30% (prefix or stem match).
 3. No explicit creation token (class 1) was used.
 
-The question is a fixed three-option menu — no free-text follow-up:
+The route is then chosen by the **Consequence Forecast** (C27 DA-10) among `create:{X}`, `existing:{Y}` and no dispatch — never a menu:
 
-> Detected scope mismatch: input mentions `{X}` but workspace `{Y}` overlaps.
->
-> 1. Create new workspace `{X}` and dispatch there.
-> 2. Dispatch to existing workspace `{Y}`.
-> 3. Cancel — I want to clarify first.
-
-This is the **single** Engineer Posture (C25) exception during specification authoring; justified by the high cost of silent mis-routing vs the cost of one prompt.
+- **Default `existing:{Y}`**: undoing a creation removes a directory and a registry entry, a deletion that needs consent (E1); moving a misrouted spec later is one rename and two registry rows. Between existing workspaces, the higher lexicon fit wins.
+- **Probe once**: read the Overview of the overlapping spec. A name collision only removes the overlap — the case is then a clear signal (class 2 or 3) and creates without the gate.
+- **Explicit creation without a name**: `existing:{Y}` contradicts the request (a Blocker), so create under a name inferred from the surrounding turns or the topic being dispatched, else `workspace-{n}`.
+- **Narrate** `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magic.spec {runner-up-workspace} …)` and record the routing premise as an `Assumption (forecast)` bullet in the dispatched spec's `Constraints & Assumptions`.
 
 ### Skip Conditions
 
@@ -66,7 +63,7 @@ Skip Step 0 entirely on any of:
 | --- | --- |
 | `existing:{name}` | Enter Resolution Chain. After resolution, run Workspace Fit Validation (WI-7) before dispatching artifacts. |
 | `create:{name}` | Invoke `node .magic/scripts/executor.js create-workspace --name={name}`. Narrate: `[Workspace] Created '{name}' for {reason}. Dispatching {artifact} now.` Then enter Resolution Chain with `{name}`. |
-| `ambiguous` | Ask the WI-4 question. User picks option 1, 2, or 3 — workflow follows the corresponding branch. |
+| `ambiguous` | Run the WI-4 forecast and follow the winner's branch (`create:{X}` or `existing:{Y}`); the routing premise goes into the dispatched spec. |
 
 ## Workspace Resolution Chain
 
@@ -90,7 +87,7 @@ When multiple workspaces exist and no default is set:
 1. **Quick-scan** current directory/context (one-turn logic).
 2. **Select** most likely workspace by path matches, project markers (e.g., `src/` → `main`), or `scope` array coverage.
 3. **Notify** user (Zero-Prompt): `"Found {marker} — selecting {workspace}. Proceeding..."`
-4. **HALT** only if no workspace `scope` array covers ≥50% of current directory's files.
+4. No workspace `scope` array covers ≥50% of the current directory's files → choose by the Consequence Forecast (C27 DA-10) among the registered workspaces: every wrong pick costs the same (a later move), so the highest coverage wins, then the first in `workspace.json` order. Narrate `[DR] Selecting {workspace} — {criterion}. (Override: /magic.{cmd} {other})`. Nothing is asked.
 
 ## Scope Auto-Apply
 
@@ -103,7 +100,7 @@ After resolution returns `existing:{Y}` (Priorities 1–3), validate fit before 
 1. Compute domain match score between the artifact's filename / overview / user input terms and `{Y}`'s lexicon (same lexicon definition as Step 0).
 2. `workspace.json` registers ≥2 workspaces AND score < 0.30:
    - Narrate: `[Workspace Fit Warning] Dispatching '{artifact}' to '{Y}', but lexicon overlap is below threshold ({score}). {Y} covers: {top-3-terms}.`
-   - Re-enter the Step 0 ambiguity question (same three-option menu).
+   - Re-enter the Step 0 forecast (same candidates): the best-fitting existing workspace wins unless the input carries a creation signal.
 3. `workspace.json` registers exactly 1 workspace AND score < 0.30:
    - Narrate informational only — single-workspace projects always have one valid target by definition. Do NOT block.
 4. Score ≥ 0.30 → proceed silently.

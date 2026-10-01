@@ -19,7 +19,7 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 6. **Depth Control (Safety)**: Before scanning:
    - **<50 files**: auto-scan.
    - **50-500 files**: scan Full; narrate `[DR] Full scan — {N} files. (Override: /magic.analyze "{focus}")`.
-   - **>500 files**: recommend Focused/Quick. HALT for user choice (C9 Depth Control gate).
+   - **>500 files**: choose Focused or Quick by the Consequence Forecast (C9 gate 7, C27 DA-10) — either one, if wrong, costs one re-run, so the evidence decides: Focused when the invocation, the workspace `scope` or the spec graph's largest uncovered module names a focus under 500 files, Quick otherwise. Narrate `[DR] {Focused|Quick} scan — {N} files (DA-10); worst case if wrong: one re-run. (Override: /magic.analyze "{focus}")` and proceed. Nothing is asked.
 7. **Gitignore Safety**: If `.gitignore` exists in project root or active workspace, the agent MUST read and apply its patterns before any scan. Files/directories matching these patterns (e.g., `node_modules/`, `.venv/`, `dist/`) are strictly out-of-scope for all analysis modes (A-D) and Mode C Project Ventilation.
 8. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 
@@ -115,7 +115,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 - `ENGINE_INTEGRITY` or `GHOST_REGISTRY` warnings → C15 Filter (`init.md §1`). In-scope → **HALT**: *"Registry/engine integrity failure. Run `/magic.spec audit` or `update-engine-meta` to resolve."* Out-of-scope → proceed silently.
 - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
 - Unrecognized failure (`ok: false` with no matching category above) → **HALT**: *"Unexpected pre-flight failure: {raw output}. Investigate manually."*
-- Apply Depth Control (Invariant 6): count source files and HALT per thresholds before scanning.
+- Apply Depth Control (Invariant 6): count source files and apply its thresholds before scanning.
 
 ### [Mode A] First-Time Analysis
 
@@ -154,7 +154,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 *Examples*: `/magic.analyze`, `/magic.analyze engine`, "Ventilate engine".
 
 > **Mode Precedence**: when `/magic.analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, narrate `[DR] Next: /magic.analyze first-time — the registry is empty. (Override: stop here)` and stop. Mode A never starts inside the same invocation — the user may only want the audit — and is entered only through the explicit `first-time` argument.
-> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `ENGINE_INTEGRITY`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine, Depth Control (Core Invariant 6 — Mode C is read-only and never pre-scan-HALTs on file count; size is noted, not gated). Report-delivery is the only HALT point.
+> **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `ENGINE_INTEGRITY`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine. Depth Control does not apply either (Core Invariant 6 — Mode C is read-only; size is noted, not used to choose a scan mode). Report-delivery is the only HALT point.
 
 1. **Self-Check**: compare `.magic/` vs `.checksums`. (Non-halting audit.)
 2. **Design Registry Audit**:
@@ -314,7 +314,7 @@ This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
      - `→ /magic.spec amend {name}` for outdated specs.
      - `→ /magic.rule add "{convention}"` only for a candidate that cites an occurrence of divergence, passed the admission gate (RA-2, RA-3) and is placed at rung 3 or 4 (RA-4) — never for an "uncodified pattern" alone; a candidate placed at rung 0-2 is not surfaced as a rule (ventilation writes nothing).
      - `→ /magic.analyze {workspace}` for deeper focused checks.
-   - **Auto-Dispatch (C9 default)**: all advisory items are surfaced as a single action log in the Advisory Report. The agent does NOT prompt for per-item approval — items requiring action are batch-dispatched immediately where applicable, or surfaced as `→` next-step links the user can run on demand. Hard-fork ambiguities and Core-Amendment proposals (per C9 gates) are the only exceptions that pause for explicit user input.
+   - **Auto-Dispatch (C9 default)**: all advisory items are surfaced as a single action log in the Advisory Report. The agent does NOT prompt for per-item approval — items requiring action are batch-dispatched immediately where applicable, or surfaced as `→` next-step links the user can run on demand. Core-Amendment proposals (C27 E4) are the only exception that pauses for explicit user input; a hard-fork ambiguity is resolved by the Consequence Forecast (C27 DA-10), its premise recorded.
 
 ### Output Format (Chat)
 

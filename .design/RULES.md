@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.14.0
+**Version:** 1.15.0
 **Status:** Stable
 **Based on:** `.magic/spec.md`
 
@@ -98,15 +98,15 @@ On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` 
 
 **Default behavior**: the agent executes the full SDD lifecycle (Draft → RFC → Stable → Plan → Task → Run) autonomously — including status promotion, planning, dispatch, retrospective L1, changelog L1, and CONTEXT.md regeneration. User input is solicited **only** at the closed list of objective gates below. Outside this list, asking for confirmation, presenting choice menus, or hesitating is forbidden (see C25 Engineer Posture).
 
-**Objective gates requiring user input or HALT**:
+**Objective gates** — a consent question, a HALT, or, for gates 3 and 7, a forecast (C27 DA-10):
 
 1. **Destructive Actions** — deleting specs, rules, files, or rewriting git history.
 2. **Core Constitution Amendment** — modifying `RULES.md §1–6` (Universal Constitution).
-3. **Architectural Hard Fork** — multiple incompatible paths exist with no objective tiebreaker (e.g., user must declare a stack preference). Present **decisions**, not browsing menus.
+3. **Architectural Hard Fork** — multiple incompatible paths exist with no objective tiebreaker (e.g., a stack preference the repository does not reveal): resolved by the Consequence Forecast (C27 DA-10) and narrated as a Decision Record, its premise recorded — never a question.
 4. **Cross-Workspace Parity Collision** — same spec name with version mismatch across workspaces; canonical source not derivable.
 5. **Drift HALT** — `VERSION_DRIFT` or `STATUS_DRIFT` between file header and `INDEX.md` (objective inconsistency requiring user resolution).
 6. **Engine Integrity Failure** — `checksums_mismatch` or `GHOST_REGISTRY` blocks in-scope files (C15 Filter).
-7. **Depth Control Limit** — analysis scope exceeds the depth threshold (>500 source files); user picks Focused or Quick mode.
+7. **Depth Control Limit** — analysis scope exceeds the depth threshold (>500 source files): Focused or Quick is chosen by the Consequence Forecast (C27 DA-10) and narrated — never a question.
 8. **Pause / STATE.md Acknowledgment** — `Blocking Constraints` displayed before resuming work; informational, not a question.
 9. **Changelog Level 2 / Release Artifacts** — public release entries; user reviews independently afterward, not inline.
 10. **Constitutional Guard** — proposed §7 rule contradicts §1–6 → HALT.
@@ -139,7 +139,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 1. **Primary Source Principle**: Always read original `.magic/` and `.design/` files. Never rely on cached memory or interpretive assumptions.
 2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
-3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Halt-and-ask is permitted only when the ambiguity matches the C27 Escalation Whitelist.
+3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Where readings diverge materially, the C27 Consequence Forecast (DA-10) chooses and records the premise. Halt-and-ask is permitted only for a C27 consent entry (E1, E2, E4) or the intake survey (E6).
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
 5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
 
@@ -235,14 +235,14 @@ C25 scope is chat output. It does NOT alter HALT logic or any objective C9 gate.
 
 ### C26 — Workspace Intent Routing
 
-Workspace dispatch is the **single** specification-authoring exception to C25 Engineer Posture: a multiple-choice question is permitted when intent and existing workspace lexicons are demonstrably inconsistent. The cost of silent mis-routing (specs accumulating in the wrong workspace, registry fragmentation) outweighs the cost of one prompt.
+Workspace dispatch asks nothing. When intent and existing workspace lexicons are demonstrably inconsistent, the route is chosen by the C27 Consequence Forecast (DA-10): the cost of a wrong route — a spec moved later — is bounded by recording the routing premise in the dispatched spec and by the second contour (item 4).
 
 Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
 
 1. **Pre-Resolution Detection**: Every workflow that creates or amends specs / tasks / rules MUST run Workspace Intent Detection (per `.magic/context.md` §Step 0) BEFORE the existing Workspace Resolution Chain. Read-only workflows (`magic.analyze`, `magic.graph`) are exempt.
 2. **Auto-Create on Clear Signal**: When detection emits `create:{name}` (explicit creation intent, or unambiguous stack/domain delta with no overlap against existing workspaces), the agent invokes `node .magic/scripts/executor.js create-workspace --name={name}` without prompting. The new workspace becomes the dispatch target for the current operation.
-3. **Question Only at Ambiguity Gate**: A multiple-choice question is asked only when all three hold: (a) a creation signal is present, (b) ≥1 existing workspace lexicon overlaps the signal token by ≥30%, (c) no explicit creation token was used. The question is a fixed three-option menu — no free-text follow-up.
-4. **Second Contour at Dispatch**: After resolution returns `existing:{Y}`, validate fit before writing files. Match score below 0.30 in a multi-workspace project triggers re-entry of the question; in a single-workspace project the warning is informational only.
+3. **Forecast at the Ambiguity Gate**: Detection emits `ambiguous` only when all three hold: (a) a creation signal is present, (b) ≥1 existing workspace lexicon overlaps the signal token by ≥30%, (c) no explicit creation token was used — or when an explicit creation token names no workspace. The route is then chosen by DA-10 among `create`, `existing` and no dispatch: `existing` by default, `create` when creation was explicitly requested; narrated as a `[DR]`, its premise recorded in the dispatched spec — never a menu.
+4. **Second Contour at Dispatch**: After resolution returns `existing:{Y}`, validate fit before writing files. Match score below 0.30 in a multi-workspace project triggers re-entry of the forecast; in a single-workspace project the warning is informational only.
 5. **Atomic Creation**: `create-workspace` mutates `workspace.json` and provisions `.design/{name}/{specifications,tasks,archives/tasks,INDEX.md}` atomically; rollback on any failure. The new workspace does NOT auto-promote to `default` unless `--default` is passed.
 6. **Doc/Code Parity**: `.magic/init.md` "Structure Created" diagram MUST match the layout produced by `init.js` and `create-workspace.js`. Divergence is a release blocker.
 7. **Executor Auto-mkdir**: When `executor.js` encounters a workspace registered in `workspace.json` whose directory is missing, it provisions the standard subtree before dispatching — replacing the legacy silent fallback to `.design/` root.
@@ -252,16 +252,17 @@ Governed in full by `l1-workspace-intent-routing.md`. Operational summary:
 Governed in full by `l1-decision-autonomy.md`. Operational summary:
 
 1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
-2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for — E1 destructive/irreversible actions, E2 external release artifacts, E3 hard-fork architectural ambiguity with no objective tiebreaker, E4 constitutional amendments (T1–T3), E5 workspace-routing ambiguity (C26), E6 intent incoherence or essence ambiguity in freshly supplied idea input (`l1-idea-intake-gate.md`). The list is closed; extending it is itself an E4 event.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for consent — E1 destructive/irreversible actions, E2 external release artifacts, E4 constitutional amendments (T1–T3) — and at intake, through E6, the Idea Intake Gate's survey, for intent only the requester holds when a freshly supplied idea is incoherent, ambiguous in essence or too thin to ground. E3 hard-fork architectural ambiguity and E5 workspace-routing ambiguity (C26) keep their detection rules but resolve by the Consequence Forecast (DA-10), never by a question. The list is closed; adding an entry, or moving one between question and forecast, is itself an E4 event.
 3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
 4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
-5. **Single-Question Format (DA-5)**: at whitelist gates — exactly one question, at most three fixed options, recommended default marked. Open-ended question batteries are forbidden in every mode, including Explore.
+5. **Single-Question Format (DA-5)**: at consent gates — exactly one question, at most three fixed options, the DA-10 winner marked as the default with its one-line forecast; the intake survey asks at most three questions per round, each with at most three options plus a free-text "Other", the forecast's winner marked. Open-ended question batteries are forbidden in every mode, including Explore.
 6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
 7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
+8. **Consequence Forecast (DA-10)**: a fork the evidence does not settle — a reading, a route, a scan mode, an architecture, a fix — is decided by simulating its candidates (status quo, primary, each alternative, and a hedge that does the shared part now and defers the divergent part) through five scenarios (Expected, Wrong premise, Boundary, Adversarial, Change later): a candidate meeting a dead end, a contradiction, a lost guarantee or a harm is dropped; then the lowest worst-case cost of being wrong wins, then the lowest cost in Expected (a question counts as a stall — above any reversible rework, below irreversible harm — except at intake, where a question about intent only the requester holds costs one turn). A premise only the requester can confirm is written where the work lands as `Assumption (forecast)`, with its override.
 
-Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies whitelist entry E5, the Idea Intake Gate supplies E6 — C27 adds the decision procedure itself.
+Relationship to neighbors: C9 grants the authorization scope, C25 governs output phrasing, C26 supplies the forecast-resolved fork class E5 and the Idea Intake Gate the intake survey E6 — C27 adds the decision procedure itself.
 
-> **E6 is narrow by construction.** It fires only on the content of a freshly supplied idea, and only after the agent has exhausted what the repository can answer (IK-2). Technical realization — storage, library, schema, naming, algorithm — is never routed to the user (IK-3); Selection and Sequencing forks stay declarative `[DR]` narrations under DA-9. Questions must be answerable without engineering expertise (IK-5), and the dialogue must shrink its open-question set each round or terminate (IK-6).
+> **E6 is narrow by construction.** It fires only on the content of a freshly supplied idea — incoherent or ambiguous in essence (comprehension), or too thin to ground who it is for, what it must do or where it stops (sufficiency) — and only after the agent has exhausted what the repository can answer (IK-2). Its survey asks only for intent, in plain language (IK-3, IK-5): the forecast's candidates are the options, its winner is marked, and every question ends with a free-text "Other". Rounds must shrink the open set or end; whatever the requester delegates, the forecast answers and records as a premise (IK-6, IK-7). Technical realization — storage, library, schema, naming, algorithm — is never asked; Selection and Sequencing forks stay declarative `[DR]` narrations under DA-9.
 
 ### C28 — Self-Hosting Engine Repository
 
@@ -277,6 +278,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.d
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.15.0 | 2026-10-01 | Agent | **C9 gates 3 and 7, C13 §3, C26 and C27 amended** (origin `user-stated`: the owner directives of 2026-10-01 — "there is not a single unresolvable case you could not solve … if you make simulative forecasts of how it would work if…", given after six consecutive polls were each answered with the marked default, and the same day's correction "`/magic.spec` can indeed ask clarifying questions, because an AI cannot always understand vague human text, and sometimes there is simply too little input"; wording composed by the agent and mirrored in the shipped template, C27 items 2 and 8 word for word): a fork the evidence does not settle is decided by the Consequence Forecast (C27 item 8, `l1-decision-autonomy.md` 2.0.0 DA-10) — status quo, primary, each alternative and a least-commitment hedge, walked through five scenarios, the lowest worst-case cost of being wrong winning. The hard fork (gate 3), the scan-depth choice (gate 7) and workspace routing (C26) no longer ask. The idea intake survey (E6) keeps its question — the owner's correction — now with a sufficiency check and options written by the forecast. Questions remain for consent (E1, E2, E4) and at intake (E6). |
 | 1.14.0 | 2026-10-01 | Agent | **C12.1 amended** (origin `user-stated`: the owner chose the explicit-flag option in a poll after a `/magic.dev.simulate test` run; wording composed by the agent and mirrored verbatim in the shipped template): the Stabilization Exception had no data trigger — "tasks explicitly intended to stabilize" left the agent to judge intent, against C13 (an ambiguity resolved by judgment, scenario T71). It now requires the `stabilizes: {spec-file}` flag, which the planning workflow sets only on an explicit request to stabilize or fix that spec; a task without the flag stays quarantined. No change to §1–6, to C12 itself or to any other convention. |
 | 1.13.0 | 2026-09-30 | Agent | **C25 §3 reworded** (owner-approved E4 amendment, mirrored in the shipped template): the ban on tentative qualifiers (`"I think…"`, `"This might…"`) pushed unverified claims toward being stated as fact, against C13 §5 (every conclusion traceable). It now reads "state findings declaratively": what was verified is stated as fact, and what is unverified or assumed is named once (`"Unverified: {x}"`) instead of hedged around. The ban on permission-seeking phrasing (§1), the mandatory declarative narration (§2) and the rest of C25 are unchanged. |
 | 1.12.1 | 2026-09-30 | Agent | Clarification patch (wording of one command, no rule change): **C14** no longer shows `update-engine-meta --workflow {workflow}` — the script reads only `--check`, the argument once selected the removed history file, and the shipped template already states the bare command. |

@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.91
+**Version:** 1.9.93
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magic.dev.simulate test`
 
@@ -469,8 +469,8 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Step 5: Proposal (Spec Matrix + Observed Conventions) generated to **agent artifacts** (NOT `.design/`)
   - [ ] Proposal contains: ≥3 proposed L1 specs, ≥3 proposed L2 specs, ≥1 observed convention whose destination is the owning implementation-layer specification — never `RULES.md` (`analyze.md` Operational Logic §3, Mode A step 3)
   - [ ] Step 6: C9 Auto-Dispatch (Mode A step 3): spec stubs created without a separate approval prompt; agent narrates `[Auto-Analyze] Dispatched 6 specs (L1: 3, L2: 3). (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`
-  - [ ] Hard-fork exception: if agent flags architectural uncertainty → explicit options presented before write
-- **Guards tested:** Delegation routing, Mode Precedence (Mode C before the explicit first-time run), read-only scan, C9 Auto-Dispatch, hard-fork exception
+  - [ ] Hard fork: if the agent finds architectural uncertainty, it resolves it by the Consequence Forecast (C9 gate 3, DA-10) and narrates a `[DR]`, the premise recorded in the dispatched spec — no options are presented before the write
+- **Guards tested:** Delegation routing, Mode Precedence (Mode C before the explicit first-time run), read-only scan, C9 Auto-Dispatch, hard fork resolved by forecast (DA-10)
 
 ### T28 — Analyze Re-Analysis Gap Detection
 
@@ -567,10 +567,10 @@ If any test fails, document the failure reason and propose a fix.
   - **Synthetic State:**
     - 1200 source files across 80 directories, `.design/INDEX.md` empty
   - **Expected:**
-    - [ ] Agent recommends Focused or Quick scan
-    - [ ] Full scan offered as option but not default
-    - [ ] Agent does NOT auto-start full scan on large projects
-- **Guards tested:** Depth Control thresholds (<50 auto-scan, 50–500 narrated Full scan, >500 halt for the choice)
+    - [ ] Agent does NOT start a Full scan of 1200 files
+    - [ ] Agent chooses Focused or Quick by the Consequence Forecast (C9 gate 7, DA-10): the registry is empty, so the spec graph names no uncovered module, and no argument or workspace `scope` gives a focus under 500 files → Quick, narrated `[DR] Quick scan — 1200 files (DA-10); worst case if wrong: one re-run. (Override: /magic.analyze "{focus}")`
+    - [ ] No question and no option menu; the scan proceeds
+- **Guards tested:** Depth Control thresholds (<50 auto-scan, 50–500 narrated Full scan, >500 mode chosen by forecast)
 
 ### T32 — Simulate Missing Test Suite (Improv Mode Fallback)
 
@@ -780,9 +780,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] Agent executes Step 0 (Size Assessment) *before* Step 1.
   - [ ] Agent detects `> 500 files` using an optimal scanning command (`list_dir`, `find`, or OS equiv).
-  - [ ] Agent halts and asks the user for scanning scope (Full, Focused, or Quick).
-  - [ ] Agent does not proceed to deep scan until scope is clarified.
-- **Guards tested:** Depth Control (Scan Protection).
+  - [ ] Agent does not start a deep Full scan of > 500 files.
+  - [ ] Agent chooses the scope by the Consequence Forecast (DA-10) — Focused when a focus under 500 files can be derived, Quick otherwise — narrates the `[DR]` and proceeds; nothing is asked.
+- **Guards tested:** Depth Control (Scan Protection), with the mode chosen by forecast.
 
 ### T47 — Manual Rename Rescue (Improv Mode)
 
@@ -979,7 +979,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] **Project A**: Auto-scan (Step 1) starts without prompting.
   - [ ] **Project B**: Agent scans Full and narrates `[DR] Full scan — 200 files. (Override: /magic.analyze "focus")` — no question.
-  - [ ] **Project C**: Agent recommends "Focused/Quick" and HALTs for choice.
+  - [ ] **Project C**: Agent chooses Focused or Quick by the Consequence Forecast (DA-10) and narrates the `[DR]` — no HALT, no question.
 - **Guards tested:** Depth Control (Safety) thresholds.
 
 ### T60 — Retro: Snapshot Row, Archival Delegated to finalize (C8)
@@ -1542,7 +1542,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Analysis scoped to `engine` workspace paths
 - **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces + default)
 
-### T98 — Analyze Asks When Multiple Workspaces and No Default
+### T98 — Analyze Selects a Workspace by Forecast When Multiple Workspaces Have No Default
 
 - **Workflow:** `analyze.md` (§Workspace Resolution — Priority 3, multiple + no default)
 - **Synthetic State:**
@@ -1551,10 +1551,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** `/magic.analyze` (no argument)
 - **Expected:**
   - [ ] Agent detects multiple workspaces with no default and no explicit arg
-  - [ ] Quick-scan finds no scope covering ≥50% of the cwd's files → the agent HALTs with one question: "Multiple workspaces found: [engine, docs]. Which one?"
-  - [ ] Does NOT auto-pick either workspace
-  - [ ] Does NOT start scanning before user responds
-- **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → ask)
+  - [ ] Quick-scan finds no scope covering ≥50% of the cwd's files → the agent chooses by the Consequence Forecast (`context.md` Workspace Disambiguation, step 4): every wrong pick costs the same later move, so the higher coverage wins, then the first in `workspace.json` order
+  - [ ] Narrates `[DR] Selecting {workspace} — {criterion}. (Override: /magic.analyze {other})` and proceeds — no question, no HALT
+- **Guards tested:** Workspace Resolution Priority 3 (multiple workspaces, no default → forecast, not a question)
 
 ### T99 — Analyze with Invalid MAGIC_WORKSPACE Env Var
 
@@ -1716,8 +1715,8 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** "Re-analyze project"
 - **Expected:**
   - [ ] Mode B Step 0 fires: `check-prerequisites` called
-  - [ ] Depth Control applied: 800 files → agent recommends Focused/Quick, HALTs for choice
-  - [ ] Agent does NOT start reading specs (Step 1) until user responds
+  - [ ] Depth Control applied: 800 files → Focused or Quick chosen by the Consequence Forecast (DA-10); with 5 active specs the spec graph names the largest uncovered module, and if it holds fewer than 500 files the scan is Focused on it, narrated as a `[DR]`
+  - [ ] No question: the scan proceeds after the narration
 - **Guards tested:** Mode B Step 0 Pre-flight, Depth Control enforcement for large projects
 
 ### T110 — Analyze Direct Trigger Auto-Init
@@ -1883,8 +1882,8 @@ If any test fails, document the failure reason and propose a fix.
   - **Action:** `/magic.analyze "all components"`
   - **Expected:**
     - [ ] Focus matches `src/` (600+ files)
-    - [ ] Depth Control fallback triggers: agent recommends Focused/Quick, HALTs for choice
-    - [ ] Agent does NOT auto-scan 600+ files
+    - [ ] Depth Control fallback triggers: the named focus itself covers 600+ files, so no focus under 500 can be derived → the forecast chooses Quick (DA-10) and narrates the `[DR]`
+    - [ ] Agent does NOT deep-scan 600+ files, and asks nothing
 - **Guards tested:** Mode D Depth Control exemption for narrow focus, fallback for wide focus (>500 files)
 
 ### T119 — Analyze Mode C: Scope Blind-Spot Detection
@@ -2309,7 +2308,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] If confirmed → §3 updated, RULES.md Major version bump
 - **Guards tested:** Core-Amendment Routing gate, explicit approval requirement
 
-### T144 — Analyze Mode A Auto-Dispatches; Explicit Options Only at a Hard Fork
+### T144 — Analyze Mode A Auto-Dispatches, a Hard Fork Included
 
 - **Workflow:** `analyze.md` (Mode A — Proposal step)
 - **Synthetic State:**
@@ -2318,9 +2317,9 @@ If any test fails, document the failure reason and propose a fix.
 - **Expected:**
   - [ ] C9 Auto-Dispatch: 4 L1 spec stubs written without an inline approval prompt; the 3 observed conventions are recorded in the owning implementation-layer specifications (analysis never writes `RULES.md`)
   - [ ] Agent narrates the action log: `[Auto-Analyze] Dispatched N specs (L1: X, L2: Y). (Adjust: /magic.spec amend {name} | Revert: git restore .design/)`
-  - [ ] Hard-fork exception: if agent flags structural ambiguity → explicit options (a) Approve / (b) Adjust / (c) Cancel presented before write
-  - [ ] If hard-fork cancelled → no files created, no INDEX.md changes
-- **Guards tested:** C9 Auto-Dispatch, hard-fork exception gate, no spurious approval prompts
+  - [ ] Hard fork: if the agent finds structural ambiguity, the Consequence Forecast (C9 gate 3, DA-10) chooses — the hedge (dispatch what every structure shares, defer the divergent part behind a recorded premise) whenever deferral is possible — and the write proceeds with a `[DR]`; no (a)/(b)/(c) options
+  - [ ] The premise sits in the dispatched spec's Constraints & Assumptions with its override; reverting everything is `git restore .design/`
+- **Guards tested:** C9 Auto-Dispatch, hard fork resolved by forecast, no approval prompts
 
 ### T145 — Analyze Priority 1 Prints Workspace Confirmation
 
@@ -2882,8 +2881,8 @@ If any test fails, document the failure reason and propose a fix.
   - **Synthetic State:** Current directory has 10 files, 3 in `packages/api/` scope, 3 in `packages/web/` scope, 4 outside both
   - **Expected:**
     - [ ] `api` covers 30%, `web` covers 30% — both below ≥50%
-    - [ ] Agent **halts** and asks: "Multiple workspaces found: [api, web]. Which one?"
-- **Guards tested:** Quantified disambiguation threshold (RE-6 fix), deterministic halt vs auto-select
+    - [ ] The Consequence Forecast decides (`context.md` Workspace Disambiguation, step 4): every wrong pick costs the same later move and coverage ties, so the first in `workspace.json` order wins — `[DR] Selecting api — coverage tie, first in workspace.json order (DA-10). (Override: /magic.task web)`; nothing is asked
+- **Guards tested:** Quantified disambiguation threshold (RE-6 fix); deterministic selection above the threshold, deterministic forecast below it
 
 ### T185 — Spec Explore Mode Write Isolation Enforcement
 
@@ -3262,40 +3261,52 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** IK-1 silent-by-default evaluation; IK-4 closed firing conditions; the materiality test discriminating detail-level from essence-level ambiguity.
 - **Regression for:** intake gate degenerating into a mandatory user-visible stage on every invocation.
 
-### T210 — Essence Ambiguity Fires the Gate with Intent-Only, Plain-Language Questions (IK-3/IK-4/IK-5)
+### T210 — The Comprehension Gate Opens One Survey Round: Forecast Options, the Hedge Recommended, an "Other" (IK-3/IK-4/IK-5)
 
 - **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate)
 - **Synthetic State:**
-  - `.design/engine/` initialized; **no** notification subsystem exists in specs, `RULES.md`, or source.
-- **Action:** User runs `/magic.spec users should be notified about important changes`.
-- **Expected:**
+  - `.design/engine/` initialized; **no** notification subsystem and no saving behaviour exist in specs, `RULES.md`, or source.
+- **Action A (essence ambiguity, F2):** User runs `/magic.spec users should be notified about important changes`.
+- **Expected A:**
   - [ ] IK-2 investigation runs first and finds no precedent — the ambiguity is not resolvable from the repository.
-  - [ ] F2 holds: "in-app badge" and "email digest" produce different one-sentence Overviews.
-  - [ ] Gate fires with ≤3 questions, ≤3 options each, one option marked recommended (IK-5.5/IK-5.6).
-  - [ ] Question text is outcome-framed ("see these inside the app" / "get a message when the app is closed"), free of jargon, and states each option's consequence.
+  - [ ] Gate 1 fires on F2: "in-app badge" and "email digest" produce different one-sentence Overviews.
+  - [ ] At intake, asking costs one turn — the cheapest worst case in the forecast (the hedge's is a multi-file revert) — so one survey round opens instead of a premise (DA-10).
+  - [ ] ≤3 questions; each question's options are the forecast's candidates — inside the app only, by email as well, and the hedge (inside the app now, email later) — with the hedge marked recommended, each option's consequence stated, and a free-text **Other: …** last (IK-5).
+  - [ ] Question text is outcome-framed ("see these inside the app" / "get a message when the app is closed") and free of jargon.
   - [ ] **No technical question is asked** — storage format, queue technology, template engine, and schema never reach the user (IK-3).
   - [ ] Question asks what the user wants **built**, never what the agent **should do** — `"Should I build the email version?"` is a C25 violation even at a fired gate.
-- **Guards tested:** IK-3 intent-only question domain; IK-4 F2 materiality test; IK-5 plain-language mandate; C25 form prohibition surviving inside an objective gate.
-- **Regression for:** the C27 §1.1 failure mode — surveys a non-specialist cannot answer.
+  - [ ] No Draft is written while the round is open: Anti-Stall is suspended during a convergent dialogue (IK-9).
+- **Action B (contradiction, F1):** `/magic.spec save everything instantly, and always ask before saving`.
+- **Expected B:**
+  - [ ] Gate 1 fires on F1 — the two requirements cannot both hold, and the repository has no precedent for which one wins.
+  - [ ] One question asks which behaviour matters more. Its options are the forecast's: the hedge — keep every change at once as a draft and ask before it replaces the saved version — marked recommended (no work is lost either way); *save instantly, never ask* (an accidental edit can overwrite good data); *ask first, save nothing until confirmed* (unconfirmed work is lost if the browser closes); then **Other: …**.
+- **Guards tested:** IK-3 intent-only question domain; IK-4 F1 and the F2 materiality test; IK-5 forecast-written options, the winner marked, "Other"; DA-10 intake cost; C25 form prohibition surviving inside an objective gate.
+- **Regression for:** the C27 §1.1 failure mode — surveys a non-specialist cannot answer — and a forecast-only intake that wrote down a guess about what the requester meant instead of asking them (owner correction, 2026-10-01).
 
-### T211 — Non-Convergent Reply Terminates the Gate Immediately (IK-6/IK-9)
+### T211 — Replies Converge or End the Gate: an Option Closes, "Other" Is Re-checked, "You Decide" Hands the Rest to the Forecast (IK-6/IK-7/IK-9)
 
 - **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate + Core Invariant 12 Anti-Stall)
 - **Synthetic State:**
-  - A gate fired under F2 with three open intent questions.
+  - A gate fired with three open intent questions, each offered with forecast options, the winner marked, and **Other: …**.
 - **Action (Test A — delegation):** User replies `"you decide"`.
 - **Expected A:**
   - [ ] Gate terminates on that turn — **no second round is composed**.
-  - [ ] All three open questions become `<!-- TBD: … -->` markers in the Draft.
-  - [ ] Anti-Stall resumes at full force: the Draft spec is written on that same turn (IK-9).
+  - [ ] Each open question takes the forecast's winner — the option marked recommended — and is recorded in the Draft's Constraints & Assumptions as `- **Assumption (forecast):** {premise}. Runner-up: {other reading}. Override: /magic.spec amend {file} "{runner-up}"` (IK-7).
+  - [ ] `[Intake] Understood as: …` is narrated once and the Draft is written on that same turn — Anti-Stall resumes at full force (IK-9).
   - [ ] Delegation is treated as a first-class reply, not an error or a re-prompt.
-- **Action (Test B — set fails to shrink):** User answers one question but the answer opens two consequent questions.
+- **Action (Test B — set fails to shrink):** User answers one question under **Other**, and that free text opens two consequent questions.
 - **Expected B:**
-  - [ ] Round is **not** convergent — the open set did not get strictly smaller (closing one while opening two fails IK-6.2).
-  - [ ] Gate terminates; residual questions become TBD markers; dispatch proceeds.
-  - [ ] A follow-up may be admitted only when the same round closes more than it opens.
-- **Guards tested:** IK-6 strict-shrink termination (the finiteness proof for an uncapped dialogue); IK-9 Anti-Stall reconciliation; Mode Transition Auto-Transfer rebound to non-convergence rather than a round count.
-- **Regression for:** an uncapped dialogue with a "closes ≥1 question" test that admits a non-terminating loop — the defect caught by the spec's own Post-Update Review before promotion.
+  - [ ] The **Other** text goes back through Gates 1 and 2 before it closes anything — it is new human text, not the agent's own option.
+  - [ ] Round is **not** convergent — the open set did not get strictly smaller (closing one while opening two fails IK-6).
+  - [ ] Gate terminates; the questions still open are answered by the forecast and recorded as premises; dispatch proceeds.
+- **Action (Test C — convergent round):** User picks an option for two questions and answers the third under **Other** with text the re-check finds coherent and grounded.
+- **Expected C:**
+  - [ ] The set is empty — the gate ends by convergence. Nothing was delegated, so no `Assumption (forecast)` bullet is written: the answers appear in the spec's own voice, with no trace of the questions (IK-7).
+- **Action (Test D — more than three delegated points):** the gate opened with five intent questions — three asked in the first round, two waiting — and the user replies `"you decide"`.
+- **Expected D:**
+  - [ ] At most three `Assumption (forecast)` bullets; the remaining two points are marked `<!-- TBD: … -->` (IK-7) — never a fourth premise, never a second round.
+- **Guards tested:** IK-6 strict-shrink termination and the **Other** re-check; IK-7 premise residency, the three-premise cap and its TBD overflow; IK-9 Anti-Stall reconciliation; Mode Transition Auto-Transfer rebound to non-convergence rather than a round count.
+- **Regression for:** an uncapped dialogue with a "closes ≥1 question" test that admits a non-terminating loop — the defect caught by the spec's own Post-Update Review before promotion — and a delegated essence question left as a bare TBD while the surrounding prose silently committed to one reading.
 
 ### T212 — Technical Fork Never Reaches the User Channel (IK-3/DA-9)
 
@@ -3304,12 +3315,12 @@ If any test fails, document the failure reason and propose a fix.
   - `.design/engine/` initialized; idea is coherent and single-reading, but its realization admits several defensible technical paths.
 - **Action:** User runs `/magic.spec store user drafts so they survive a page reload`.
 - **Expected:**
-  - [ ] F1 and F2 both fail — one coherent reading, one Overview sentence. Gate stays silent.
+  - [ ] Gate 1 passes — one coherent reading, one Overview sentence. Gate 2 passes — every anchor is grounded: it is for the people writing drafts, it must keep them across a reload, and it stops there (keeping them across devices is not the default any engineer would assume, so it is not invented). Gate stays silent.
   - [ ] Storage mechanism, serialization format, eviction policy, and key naming are resolved by the agent via DA-3, recorded as `[DR]` or TBD — **never** surfaced as questions.
   - [ ] No `AskUserQuestion` and no inline option menu appears at any point.
-  - [ ] Whitelist reasoning is explicit: no E1–E6 entry fires, so DA-1 decide-by-default governs.
-  - [ ] A `Clarifications` section or brief file is **not** created anywhere (IK-7), including on a silent gate.
-- **Guards tested:** IK-3 boundary test (derivable from repository or ordinary engineering judgment → not askable); IK-8 scope containment keeping E6 off Selection/Sequencing forks; IK-7 chat-only residency.
+  - [ ] Whitelist reasoning is explicit: no consent entry (E1, E2, E4) fires and no F1–F3 condition holds, so DA-1 decide-by-default governs.
+  - [ ] A `Clarifications` section, a brief file or an `Assumption (forecast)` bullet is **not** created anywhere (IK-7) — a silent gate records nothing.
+- **Guards tested:** IK-3 boundary test (derivable from repository or ordinary engineering judgment → never asked, never a premise); IK-4 grounding test for F3; IK-8 scope containment keeping E6 off Selection/Sequencing forks; IK-7 premise residency.
 - **Regression for:** E6 widening from an intent gate back into a general clarification channel.
 
 ### T213 — Task Guided Planning Directive Filter Enforcement
@@ -3984,6 +3995,65 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** Core Invariant 3 without an approval gate (C9, C28, DA-9); the first-conclusive-rung rule; the single outcome of Fix Selection; Escalation limited to E1 and E4.
 - **Regression for:** owner feedback (2026-10-01) — the workflow told the agent to show each fix for approval and apply it afterwards, so findings reached the owner as proposals and every poll was answered with the marked default.
 
+### T253 — An Unsettled Fork Is Decided by the Consequence Forecast; Only Consent and the Intake Survey Ask (DA-10, DA-2)
+
+- **Workflow:** `l1-decision-autonomy.md` DA-10 (C27 item 8) as `spec.md` applies it to a hard fork (C9 gate 3); the deletion consent (E1)
+- **Synthetic State:**
+  - One workspace `web` with Stable specs for the public site; nothing in the repository says how administration is delivered.
+- **Action A (hard fork):** `/magic.spec add an admin area`.
+- **Expected A:**
+  - [ ] The Idea Intake Gate stays silent: who it is for (administrators of this site) and what it must do (manage what the public-site specs define) are grounded, and where the admin screens live is realization, not intent (IK-3) — so nothing reaches the intake survey.
+  - [ ] A separate admin application versus a section inside the main application is a hard fork (E3) with no DA-3 tiebreaker — resolved by the forecast, never by a question.
+  - [ ] Candidates: separate app (primary), section of the main app (alternative), the status quo (ask), and the hedge — the admin capabilities (who may do what) specified now, the delivery surface deferred behind a premise.
+  - [ ] Worst cases across the five scenarios: either surface → re-plan (*Wrong premise*: the other one was meant); status quo → stall; hedge → multi-file revert. No Blocker anywhere → the hedge wins on the lowest worst case.
+  - [ ] One `[DR]` line with the worst case and the runner-up; the spec's Constraints & Assumptions records the premise in outcome terms ("administrators work inside the main application for now"), runner-up named, one-command override.
+- **Action B (consent — control):** the requester later says "remove the old notifications spec".
+- **Expected B:**
+  - [ ] Deleting a spec is E1: exactly one DA-5 question asks for consent — at most three options, the forecast's winner marked as the default with its one-line forecast.
+- **Action C (cost scale — control):** a fork met mid-pipeline — while planning or executing, long after the idea was supplied — whose every non-question candidate has a re-plan as its worst case.
+- **Expected C:**
+  - [ ] The status quo (asking) does not win: a stall ranks above every reversible cost. A question wins only when every other candidate's worst case is irreversible or outward — which is what the consent entries describe.
+  - [ ] Control: the same fork about intent, met at intake (Step 0.5, the requester present, nothing built) — asking costs one turn and ranks with one revert, so the intake survey opens (T210).
+- **Guards tested:** DA-10 candidates (incl. the hedge), scenarios and decision order; the cost scale placing a stall between re-plan and irreversible, and the intake question beside one revert; DA-2 consent plus the intake survey; DA-5 consent format.
+- **Regression for:** owner directive (2026-10-01) — six consecutive polls were each answered with the marked default, and the hard-fork and routing forks (E3, E5) still escalated as questions.
+
+### T254 — A Workspace Route Is Forecast, Not Asked (WI-4, WI-7, C26)
+
+- **Workflow:** `context.md` §Ambiguity Gate (WI-4) and §Workspace Fit Validation (WI-7); `spec.md` Step 0
+- **Synthetic State:**
+  - `workspace.json`: `engine` (default) and `docs`; `docs` owns `l1-doc-dashboard.md`, a spec about a dashboard of documentation statistics.
+- **Action A (overlap, no explicit creation):** "Spec out a dashboard of documentation page views." — class 3 signal `dashboard`, overlapping the `docs` lexicon (`doc-dashboard`) by ≥30%; no explicit creation token.
+- **Expected A:**
+  - [ ] `ambiguous` → forecast; the probe reads `l1-doc-dashboard.md` and finds the same subject — a real overlap, not a name collision.
+  - [ ] `existing:docs` wins: moving a misrouted spec later is one rename and two registry rows, while undoing a workspace removes a directory — a deletion that needs consent (E1).
+  - [ ] `[DR] Routed 'documentation page views' to 'docs' — lowest worst case (DA-10); worst case if wrong: multi-file revert; runner-up: create:dashboard. (Override: …)`; the routing premise is recorded in the dispatched spec. No menu.
+- **Action B (explicit creation, no name):** "Let's add a separate workspace for this."
+- **Expected B:**
+  - [ ] `existing:*` contradicts the explicit request — a Blocker — so `create` wins, under a name inferred from the topic being dispatched, else `workspace-3`; the name is the recorded premise, a rename its override. No question.
+- **Action C (second contour):** a request with no signal class whose fit is below 0.30 against `engine` and 0.20 against `docs`.
+- **Expected C:**
+  - [ ] The fit warning is narrated and the WI-4 forecast re-entered over the existing workspaces: `docs` fits no better, so `engine` stays; no creation without a creation signal; the premise is recorded. No question.
+- **Guards tested:** WI-4 forecast defaults (existing by default, create on an explicit request, a name-collision probe turning D2 into D1); WI-7 re-entry of the forecast; WI-5 narration instead of a menu; the DA-10 tie-break by *Expected* between existing workspaces.
+- **Regression for:** owner directive (2026-10-01) — the WI-4 three-option menu, whose marked default was the answer every time.
+
+### T255 — Thin Input Fires the Sufficiency Gate Only for the Anchors That Would Be Invented (IK-4 F3, IK-5)
+
+- **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate, Gate 2)
+- **Synthetic State:**
+  - An empty repository: `.design/` freshly initialized, no specs, no source tree.
+- **Action A (thin input):** `/magic.spec make a CRM`.
+- **Expected A:**
+  - [ ] IK-2 investigation runs first and finds nothing to ground the idea on.
+  - [ ] Gate 1 passes — the idea is understood (a system for keeping track of customers); no F1, no F2.
+  - [ ] Gate 2 tests each anchor by writing the Draft's sentence for it: *what it must do* is grounded by convention (contacts, deals, a sales pipeline — the default any engineer would assume); *who it is for* and *where it stops* would be invented (a sales team or a support desk? contacts and deals only, or invoices and email as well?).
+  - [ ] F3 fires twice: one round asks exactly those **two** questions — never a third about what is already grounded — each with the forecast's options, the least-commitment one marked recommended, and **Other: …**.
+  - [ ] Storage, framework, hosting and data model are never asked (IK-3).
+- **Action B (grounded control):** `/magic.spec make a CRM for our three-person sales team: contacts, deals and a pipeline board; no invoicing`.
+- **Expected B:**
+  - [ ] All three anchors can be quoted from the input — Gate 2 passes, the gate stays silent, and dispatch proceeds in the same turn with no narration (IK-1).
+- **Guards tested:** IK-4 F3 and its grounding test; the comprehension-before-sufficiency order; one question per failed anchor (IK-5); IK-1 silence when every anchor is grounded.
+- **Regression for:** owner correction (2026-10-01) — intake had no sufficiency check, so a thin idea was specified on invented users and boundaries; the owner's intake flowchart asks "is the input enough?" as a separate step after "understood?".
+
 ```
-**Test Suite Finalized** - v1.9.91 (Last: T252)
+**Test Suite Finalized** - v1.9.93 (Last: T255)
 ```

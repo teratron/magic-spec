@@ -46,12 +46,12 @@ Runs **only** when a `magic.spec` invocation actually fired the Step 0.5 gate. A
 
 | Check | Violation |
 | --- | --- |
-| IK-2 discharged | A question whose answer was available in the repository |
+| IK-2 discharged | A question the repository could have answered |
 | IK-3 respected | A technical-realization question routed to the user |
-| IK-4 justified | The gate fired with neither F1 nor F2 demonstrable |
-| IK-5 wording | Jargon, mechanism-framed options, missing consequence, >3 questions or >3 options |
-| IK-6 convergence | A round continued after the open-question set failed to shrink |
-| IK-7 residency | A `Clarifications` section or brief artifact was written |
+| IK-4 justified | The gate fired with none of F1, F2, F3 demonstrable |
+| IK-5 wording | Jargon, mechanism-framed options, missing consequence, no "Other", a recommended option that is not the forecast's winner, >3 questions or >3 options |
+| IK-6 convergence | A round continued after the open set failed to shrink; an "Other" answer not re-checked; a delegated question left open instead of answered by the forecast |
+| IK-7 residency | A `Clarifications` section or brief artifact written; a forecast answer without its premise; no intent statement before dispatch |
 
 Findings here follow the same PQ-4 bar and PQ-6 verdict grammar as the six standard dimensions.
 

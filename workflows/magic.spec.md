@@ -20,7 +20,7 @@ handoffs:
 
 **Hints:**
 
-- **Idea Intake Gate (E6)**: raw idea input passes a silent Step 0.5 check before dispatch. Clarify ONLY when the idea is self-contradictory or admits two readings yielding materially different specs — and only after exhausting the repository. Never ask technical questions (storage, library, naming, algorithm); phrase for a non-specialist; each round must close more than it opens or the gate ends. See `.magic/spec.md §Step 0.5`.
+- **Idea Intake Gate (E6)**: raw idea input passes a silent Step 0.5 check before dispatch. Ask ONLY when the idea is self-contradictory, admits two readings yielding materially different specs, or leaves who it is for, what it must do or where it stops to be invented — and only after exhausting the repository. One survey round at a time: plain words, the forecast's options with its winner marked, a free-text Other; never technical questions; each round must close more than it opens, and whatever is delegated the forecast answers. See `.magic/spec.md §Step 0.5`.
 - **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation, suspended during an active intake dialogue).
 - **Delta Edits**: use surgical search-and-replace for specs >200 lines.
 - **T4 Capture**: input contains "remember that..." / "project rule:" → the rule is handed to `rule.md`'s Operational Logic, which records a user-stated rule at the strength stated and admits an agent-originated one only on evidence (see `.magic/spec.md §Updating RULES.md`).

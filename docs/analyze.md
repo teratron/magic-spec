@@ -31,7 +31,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 | 3 | **Read-Only** | Proposals only; never modify project code or `.design/` without user approval |
 | 4 | **Artifact-First** | Write proposals/reports to agent artifacts; Modes A/B dispatch new specs to `.design/` immediately (C9), while changes to existing specs need approval (Invariant 3) |
 | 5 | **Bootstrapping Exemption** | Approved specs from existing code can be created directly as Stable L1/L2 |
-| 6 | **Depth Control** | <50 files: auto-scan; 50–500: scan Full, narrated as a Decision Record; >500: recommend Focused/Quick and halt for the choice |
+| 6 | **Depth Control** | <50 files: auto-scan; 50–500: scan Full, narrated as a Decision Record; >500: Focused or Quick chosen by forecast — Focused when a focus under 500 files can be derived, Quick otherwise — narrated, nothing asked |
 | 7 | **Gitignore Safety** | Read `.gitignore` before any scan; exclude matched paths from all analysis modes |
 | 8 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
 

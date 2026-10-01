@@ -1,15 +1,17 @@
 # Simulation — Workspace Intent Routing
 
-**Spec:** `l1-workspace-intent-routing.md` v1.0.0
+**Spec:** `l1-workspace-intent-routing.md` v2.0.0
 **Status:** Active
-**Last Run:** 2026-05-07
+**Last Run:** 2026-10-01
 
 ## Purpose
 
 Cognitive simulation matrix for the Workspace Intent Routing chain. Walks
 through every canonical outcome (A1 – F2 from the spec §5) plus four
 field-relevant user phrasings to confirm the agent reaches the documented
-outcome without prompting outside the WI-4 ambiguity gate.
+outcome without prompting at all: since 2.0.0 the WI-4 ambiguity gate is
+resolved by the Consequence Forecast (C27 DA-10), narrated as a `[DR]`,
+with the routing premise recorded in the dispatched spec.
 
 Conducted as a thought experiment — no scripts run. Each row represents the
 agent's reasoning path from user input to dispatch. The simulation passes
@@ -32,15 +34,15 @@ Three baseline configurations are referenced below:
 | **A1** | Baseline-Z | "Specify a payments module." | none | n/a (no `workspace.json`) | A1 | no | Write to `.design/specifications/` (Priority 4 root). Init bootstrap may run first. |
 | **A2** | Baseline-S | "Add an audit-log spec." | none | n/a | A2 | no | Resolve `web` silently (sole workspace). Dispatch to `.design/web/specifications/`. |
 | **A3** | Baseline-M | "Add a metrics spec." | none | n/a | A3 | no | Resolve `engine` (default). Dispatch to `.design/engine/specifications/`. |
-| **A4** | Baseline-M minus `default` | "Add a metrics spec." | none | n/a | A4 | no (Disambiguation auto-picks ≥50% scope match) | Resolve via Disambiguation, dispatch silently per `context.md` §Workspace Disambiguation. |
+| **A4** | Baseline-M minus `default` | "Add a metrics spec." | none | n/a | A4 | no (Disambiguation picks the ≥50% scope match, or forecasts below it) | Resolve via Disambiguation, dispatch per `context.md` §Workspace Disambiguation. |
 | **B1** | Baseline-S | "Create a new workspace `mobile` for the iOS rewrite." | class 1 (creation token + name) | n/a | B1 | no | `create-workspace --name=mobile`, narrate, dispatch to `.design/mobile/specifications/`. |
-| **B2** | Baseline-S | "Let's add a separate workspace." | class 1 (token, no name) | n/a | B2 | yes (WI-4) | Ask 3-option menu with inferred candidates from prior turns. User picks 1 → create; 2 → use `web`; 3 → cancel. |
+| **B2** | Baseline-S | "Let's add a separate workspace." | class 1 (token, no name) | n/a | B2 | no (WI-4 forecast) | `existing:web` contradicts the explicit request (Blocker) → `create` under a name inferred from the surrounding turns or the topic being dispatched, else `workspace-2`; the name is the recorded premise, a rename its override. |
 | **C1** | Baseline-S | "Spec out auth for the iOS app." | class 2 (`iOS` not in `web` lexicon) | none | C1 | no | `create-workspace --name=ios`, dispatch to `.design/ios/specifications/`. |
-| **C2** | Baseline-S where `web` already covers an `l2-mobile-web.md` spec (lexicon now includes `mobile`) | "Spec out the mobile auth flow." | class 2 (`mobile`) | ≥30% (matches `mobile-web`) | C2 | yes (WI-4) | Ask menu: (1) create `mobile` · (2) dispatch to `web` · (3) cancel. |
+| **C2** | Baseline-S where `web` already covers an `l2-mobile-web.md` spec (lexicon now includes `mobile`) | "Spec out the mobile auth flow." | class 2 (`mobile`) | ≥30% (matches `mobile-web`) | C2 | no (WI-4 forecast) | Probe: `l2-mobile-web.md` is about the mobile web client — a real overlap. `existing:web` wins: moving the spec later is cheaper than undoing a workspace, whose removal needs a deletion consent. `[DR] Routed 'mobile auth' to 'web' — lowest worst case (DA-10); worst case if wrong: multi-file revert; runner-up: create:mobile.`; the premise is recorded in the spec. |
 | **D1** | Baseline-M | "Document the analytics API." | class 3 (`analytics` absent from both lexicons) | none | D1 | no | `create-workspace --name=analytics`, dispatch to `.design/analytics/specifications/`. |
-| **D2** | Baseline-M where `engine` has a spec named `l1-doc-analytics.md` | "Document the analytics API." | class 3 (`analytics`) | ≥30% (matches `doc-analytics`) | D2 | yes (WI-4) | Ask menu: (1) create `analytics` · (2) dispatch to `engine` · (3) cancel. |
+| **D2** | Baseline-M where `engine` has a spec named `l1-doc-analytics.md` | "Document the analytics API." | class 3 (`analytics`) | ≥30% (matches `doc-analytics`) | D2 → D1 | no (WI-4 probe) | Probe: `l1-doc-analytics.md` covers documentation page analytics, not an analytics API — a name collision only. The overlap is removed, the case is D1: `create-workspace --name=analytics` without the gate. |
 | **E1** | Baseline-S | "Add an `l2-cache.md` for the web tier." | class 2 (`web` matches existing) | ≥0.30 | E1 | no | Resolve `web`, fit ≥ 0.30 → dispatch silently. |
-| **E2** | Baseline-M (default `engine`) | "Add a landing-page hero spec." | class 3 (`landing-page` absent) | <0.30 against `engine` | E2 | yes (WI-7 → WI-4) | Fit warning emitted, then ask 3-option menu including `create:landing` and `existing:engine` and `existing:docs`. |
+| **E2** | Baseline-M (default `engine`) | "Add the onboarding-checklist spec." | none (a feature, not a stack or surface) | <0.30 against `engine`, 0.20 against `docs` | E2 | no (WI-7 → WI-4 forecast) | Fit warning emitted. Candidates `existing:engine`, `existing:docs`; no creation signal, so `create` has no basis. `docs` fits no better → `existing:engine` kept, premise recorded, runner-up `existing:docs`. |
 | **F1** | Baseline-M | "/magic.spec docs add the contributor guide spec." | n/a (Priority 1 override) | n/a | F1 | no | Skip Step 0, dispatch to `.design/docs/specifications/`. |
 | **F2** | Baseline-M, env `MAGIC_WORKSPACE=engine` | "Add a metrics spec." | n/a (Priority 2 override) | n/a | F2 | no | Skip Step 0, dispatch to `.design/engine/specifications/`. |
 
@@ -66,8 +68,8 @@ canonical English form.
 | **X2** | Baseline-M | "Refactor the engine for performance." | none (`engine` already in lexicon) | E1 | Term `engine` matches existing workspace lexicon → fit OK → dispatch to `engine`. No spurious creation. |
 | **X3** | Baseline-Z | "/magic.spec add an iOS auth spec." | n/a (no `workspace.json`) | A1 + Init | Init bootstrap creates `.design/{default}/`, then dispatch. iOS detection deferred until next invocation when `workspace.json` exists. |
 | **X4** | Baseline-S, `mobile` registered in `workspace.json` but `.design/mobile/` directory missing | `/magic.spec --workspace=mobile "add auth"` | n/a (Priority 1) | F1 + WI-9 | Skip Step 0; executor.js auto-mkdirs `.design/mobile/{specifications,tasks,archives/tasks}`; spec lands in `.design/mobile/specifications/`. **Field-bug-1 second cause fixed.** |
-| **X5** | Baseline-S, no name in current or prior 3 turns | "Add a separate workspace." | class 1 (token, no name) | B2 | WI-4 question: `(1) Create new workspace [need name from you] · (2) Use existing 'web' · (3) Cancel`. User reply with a name resolves to B1. |
-| **X6** | Baseline-M, one workspace owns `l1-product-analytics.md` | "Add a spec about analytics." | class 3 (`analytics`, overlap ≥30%) | D2 | WI-4 question: `(1) Create 'analytics' · (2) Dispatch to '{matching-ws}' · (3) Cancel`. |
+| **X5** | Baseline-S, no name in current or prior 3 turns | "Add a separate workspace." | class 1 (token, no name) | B2 | WI-4 forecast: `create:workspace-2` — nothing names it, and `existing:web` contradicts the request. The name is the recorded premise; the override is a rename. No question. |
+| **X6** | Baseline-M, one workspace owns `l1-product-analytics.md` | "Add a spec about analytics." | class 3 (`analytics`, overlap ≥30%) | D2 | WI-4 forecast: the probe finds a real overlap (product analytics) → `existing:{matching-ws}`, premise recorded, runner-up `create:analytics`. No question. |
 | **X7** | Baseline-S, `web` already registered | manual `create-workspace --name=web` | n/a (manual call) | HALT (script-side) | Script halts: `HALT: Workspace 'web' already registered`. No partial state. |
 | **X8** | Baseline-S, partial directory `.design/mobile/` exists but unregistered | manual `create-workspace --name=mobile` | n/a (manual call) | HALT (script-side) | Script halts: `HALT: Directory '.design/mobile/' already exists but is not registered. Resolve manually before retry.` |
 
@@ -106,4 +108,5 @@ Total: 28 simulation rows, all matching their expected resolution path.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.0.0 | 2026-10-01 | Agent | Re-run against Workspace Intent Routing v2.0.0: no row asks a question. B2, C2, D2, E2, X5 and X6 resolve by the WI-4 forecast — `create` under an inferred or placeholder name when creation was explicitly requested, `existing` by default, a name-collision probe turning D2 into D1. E2's former input ("Add a landing-page hero spec.") was a D1 case — a domain delta absent from every lexicon creates at Step 0 — and is replaced by an input with no signal and a low fit. A4 follows the forecasted Workspace Disambiguation. |
 | 1.0.0 | 2026-05-07 | Agent | Initial simulation matrix for Workspace Intent Routing v1.0.0. |

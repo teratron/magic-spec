@@ -347,19 +347,34 @@ does not revert to host-assistant defaults at workflow boundaries.
   elective fork is narrated as exactly one line:
   `[DR] {decision} — {criterion}. (Override: {command})` — the override hint
   preserves the user's control point.
-- Questions are reserved for the closed escalation whitelist (destructive
-  actions, external release artifacts, hard-fork ambiguity, constitutional
-  amendments, workspace-routing ambiguity, and idea-intake incoherence).
-  One question, at most three fixed options, recommended default marked.
-- **E6 (Idea Intake Gate)**: `/magic.spec {idea}` may clarify before writing
+- Questions are reserved for consent — destructive or irreversible actions,
+  external release artifacts, and constitutional amendments — and for the
+  idea intake survey (E6). A consent question is one question with at most
+  three fixed options, the forecast's winner marked as the default.
+- **DA-10 (Consequence Forecast)**: a fork the evidence does not settle —
+  which workspace, which scan mode, which architecture, which fix — is
+  decided by walking each candidate (status quo, primary, each alternative,
+  and a hedge that does the shared part now and defers the rest) through
+  five scenarios: Expected, Wrong premise, Boundary, Adversarial, Change
+  later. A candidate that meets a dead end, a contradiction, a lost
+  guarantee or a harm is dropped; then the lowest worst-case cost of being
+  wrong wins — waiting for an answer counts as a stall, costlier than any
+  reversible rework, except at intake (E6). The winner is narrated as a
+  `[DR]`, and a premise only the requester can confirm is written into the
+  spec as `Assumption (forecast)` with its override.
+- **E6 (Idea Intake Gate)**: `/magic.spec {idea}` may ask before writing
   specs — but only after the agent has exhausted what the repository can
-  answer, and only when the idea is internally contradictory or admits two
-  readings that would produce materially different specifications. Technical
-  realization (storage, library, schema, naming, algorithm) is **never**
-  asked — the agent decides and records a `[DR]` or a `<!-- TBD: … -->`
-  marker. Questions must be answerable without engineering expertise, and
-  each round must close more questions than it opens or the gate ends and
-  drafting proceeds.
+  answer, and only when the idea is internally contradictory, admits two
+  readings that would produce materially different specifications, or
+  leaves who it is for, what it must do or where it stops to be invented.
+  The survey asks only for intent, in plain words: the forecast's
+  candidates are the options, its winner is marked, and every question
+  ends with a free-text "Other". Each round must close more questions than
+  it opens or the gate ends; whatever is left open or delegated
+  ("you decide"), the forecast answers and records as
+  `Assumption (forecast)`. Technical realization (storage, library, schema,
+  naming, algorithm) is never asked — the agent decides and records a
+  `[DR]` or a `<!-- TBD: … -->` marker.
 
 ### Exemptions
 
@@ -395,8 +410,9 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
       restated in plain language where needed.
 - [ ] **§7 Decision Autonomy** — elective forks resolved as `[DR]` one-liners
       (never questions); the post-workflow next step was computed and narrated
-      per DA-6; questions appeared only at whitelist gates, single-question,
-      ≤3 fixed options.
+      per DA-6; unsettled forks were forecast (DA-10); questions appeared only
+      for consent (E1, E2, E4) — single-question, ≤3 fixed options — or in the
+      intake survey (E6).
 - [ ] **§9 Bug Reporting** — if any engine-level bug, unexpected behavior, or crash was
       encountered in the engine files (`.magic/`, `workflows/`, `skills/`, `rules/`),
       did NOT attempt to self-repair the engine; generated a formatted

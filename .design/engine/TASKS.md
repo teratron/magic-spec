@@ -3,7 +3,7 @@
 **Version:** 1.44.0
 **Generated:** 2026-09-30
 **Based on PLAN:** .design/engine/PLAN.md v1.45.0
-**Based on RULES:** .design/RULES.md v1.14.0
+**Based on RULES:** .design/RULES.md v1.15.0
 **Execution Mode:** Parallel
 **Status:** Active
 

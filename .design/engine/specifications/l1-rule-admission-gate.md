@@ -1,6 +1,6 @@
 # Rule Admission Gate
 
-**Version:** 1.1.1
+**Version:** 1.1.2
 **Status:** Stable
 **Layer:** concept
 
@@ -64,7 +64,7 @@ It adds what the draft omits: the exit path (RA-7), the form bound (RA-6), and t
 - **Product invariant** — normative text about *what the product does*: behavior, data, interfaces. Out of scope; its completeness remains the spec-critic's concern. An "always/never" statement about product behavior is a product invariant and belongs in the specification, never in `RULES.md`.
 - **Origin** — *user-stated* when the user supplied the normative text in their own words; *agent-originated* when the agent composed it (T1–T3 proposals, analysis dispatch and advisories, audit findings, regulations the agent introduces into a spec, clauses the agent adds to a user-stated rule). The author of the normative text decides the origin, not who ran the command. Where the origin cannot be established from the input, the candidate is agent-originated; the Decision Record's override restates it as the user's own.
 - **Rule-governance pipeline** — the `/magic.rule` workflow's operational logic: tier routing, admission, guards, constitutional and wording review, write. Shipped text calls it `rule.md`'s Operational Logic.
-- No new command (C2), no new artifact file, no new question channel (C27 E1–E6 unchanged), no new constitutional convention (RA-9).
+- No new command (C2), no new artifact file, no new question channel (the C27 consent entries E1, E2 and E4 and the E6 intake survey unchanged), no new constitutional convention (RA-9).
 - Conventions shipped in the engine's constitution template are engine-owned: this gate governs project-authored regulations.
 
 ## 3. Core Invariants
@@ -257,6 +257,7 @@ The constitution template ships the engine's own conventions (engine safety, eng
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.2 | 2026-10-01 | Clarification patch, no status transition. The constraint "no new question channel (C27 E1–E6 unchanged)" named a list that changed in [l1-decision-autonomy.md](l1-decision-autonomy.md) 2.0.0: only the consent entries E1, E2 and E4 and the E6 intake survey still ask, while E3 and E5 resolve by the Consequence Forecast. The gate itself is unchanged — it still adds no question. |
 | 1.1.1 | 2026-09-30 | Clarification patch, no status transition. `Related Specifications` gains the two reciprocal links its own amendment created — [l2-role-integration.md](l2-role-integration.md) 2.2.0 and [l2-test-suite.md](l2-test-suite.md) 1.20.0 both cite this specification, which did not cite them back (Links check). No requirement changes. Typo-level patch (spec.md Amendment rule). |
 | 1.1.0 | 2026-09-30 | Amendment from the planning of the deployment phase, which read the specification against the engine files it targets. **RA-8** gains a write-reach rule: the gate writes only what the running workflow may — `/magic.spec` writes specification text and, through the pipeline, `RULES.md`; `/magic.rule` writes `RULES.md` only — so a rung-1 or rung-2 outcome in `/magic.rule` is the DO NOT CREATE record with `placed at rung {n}` and the override `/magic.spec amend {spec}` (the first version enumerated rung {0\|1} and left rung 2 undefined for the rule workflow); the flow diagram follows. **§2** gains a tie-break — an origin that cannot be established is agent-originated, the Decision Record's override being the user's way to restate it — and the shipped name of the pipeline. **RA-7(c)** names its evidence (a Blocked task or a `STATE.md` blocker) instead of an unobservable "observed in the project". **§5**: row 1 no longer cites a heading number the deployment renumbers and adds the requirement that every review precede the write (the workflow ordered its write before its own pre-commitment reviews, so "a declined rule writes nothing" could not hold); row 8 adds the `docs/` counterparts the first table omitted (VIO-2); a new paragraph requires shipped text to be self-contained (labels alone define nothing in a consumer project) and keeps the W/H codes out of it; the ordering line now matches the dependency the plan found. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the 5-lens Post-Update Review and Instruction Quality Pass. |
 | 1.0.0 | 2026-09-30 | Initial Stable. Owner directive plus research draft on rule rot in consumer projects: careful, non-excessive rule generation with a with/without safety comparison, after the agent — working by the engine's own procedure — created rules that restricted its own autonomy. Field evidence from five consumer projects (anonymized); six root causes verified against engine source. RA-1..RA-9. Promoted via Trust Mode after the Post-Update Review and Instruction Quality Pass. |
