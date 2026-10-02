@@ -48,7 +48,7 @@
   "scripts/lib/tracking-entries.js": "33d5e103bc6d2a74e2aff02f5a634708eed06c468fc11a7894e53703fa3a2ee7",
   "scripts/package.json": "8005a3491db7d92f36ac66369861589f9c47123d3a7c71e643fc2c06168cd45a",
   "scripts/record-diagnostic.js": "39c234b9686c4c2a43799a233e8cdee81917f09325ec14c7251faf551bb46937",
-  "scripts/release-changelog.js": "07497e6b6b5d809ef4d9c70663becd25feae9d68e7934bcbce00a6d2fca24f4f",
+  "scripts/release-changelog.js": "3060b23741045063d76b0fbb6ab105744f259140e8acc084118840bd074b8052",
   "scripts/resume-state.js": "d526956752407172456ffd02e70ac42a8c7e414b05f93c4e38f10437da7051d7",
   "scripts/serve-spec-graph.js": "d8de7aca1b07eb2b87997e9b9df0be7334d1e4f26386fabcbfa7635d138c8448",
   "scripts/update-engine-meta.js": "2b26c1b30a155463f485abde5afbbfcbc4ff75406326585a7d95a62f3c99b01e",

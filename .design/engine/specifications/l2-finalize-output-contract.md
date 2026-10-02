@@ -1,6 +1,6 @@
 # Finalize Pipeline — Output Contract
 
-**Version:** 2.0.0
+**Version:** 2.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -149,6 +149,10 @@ Changed: finalize.js drops its unused `releaseUnreleased` import (§4.2's
 
 This satisfies all four constraints: RC-11 is untouched (no bullet-shape change); idempotence holds within a rotation window exactly as it does today (`bulletExists()`'s dedup scope is unaffected); distinguishability is restored across windows (a fresh `[Unreleased]` reopens the closed vocabulary — the same real-work shape can appear once per release instead of once per project lifetime); and the maintainer decides when a "release" happens, which is the only place that decision can correctly live. For this project's own dev repo, the natural pairing is running `release-changelog` immediately before pushing the `v*` tag that [l2-release-pipeline.md](l2-release-pipeline.md) §5.1 triggers on.
 
+#### CLI Safety
+
+`release-changelog` MUST treat `--help` as a read-only request: print the usage syntax and exit successfully before reading or writing the root `CHANGELOG.md`. It MUST reject any unrecognized option or positional argument with a non-zero exit before calling `releaseUnreleased()`. Supported arguments are `--version` and `--date` in either `--name=value` or `--name value` form, plus `--help`.
+
 ### 4.5 Field Confirmation & Discoverability Gap (field report, engine 2.1.73)
 
 A field report against a consumer workspace named `engine` reproduced exactly the §4.1 vocabulary-exhaustion defect through the `run` case's single-item branch: root `CHANGELOG.md` already held the literal bullet `Completed task (engine)` from an earlier completion; the next single-task-file `magic.run` finalize produced the identical string, `bulletExists()` correctly suppressed it, and finalize's own stdout reported only `CHANGELOG | skipped (duplicate)` — no further signal.
@@ -178,6 +182,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
   - `release-changelog`'s CLI, given a `CHANGELOG.md` fixture with bullets under `[Unreleased]`, must rotate them under a `## [X.Y.Z] - {date}` heading and leave a fresh empty `[Unreleased]` behind — asserted via `releaseUnreleased()` directly (it is not new logic, just newly invoked).
   - Two `appendBullet()` calls with identical bullet text separated by a `releaseUnreleased()` rotation must both land in the file (once in the now-released section, once in the fresh `[Unreleased]`) — the regression this fix targets: distinguishability restored across rotation windows.
   - `finalize.js` must not reference `releaseUnreleased` anywhere in its source (import removal, §4.4) — grep-based assertion, not a behavioral one.
+  - `release-changelog --help` must print usage and leave a fixture `CHANGELOG.md` unchanged; an unknown argument must exit non-zero and also leave the fixture unchanged.
 - A `magic.run` fixture where the produced bullet already exists in `[Unreleased]` must assert the CHANGELOG stdout row names `release-changelog` (§4.5) — a string-content assertion on `emitSuccess()`'s output.
 
 ## Canonical References
@@ -186,7 +191,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 | --- | --- |
 | `.magic/scripts/lib/commit-suggester.js` | Composes the CHANGELOG bullet text (§2, §4.1); commit-message composition retired 2026-08-27 (SC-3 retirement) |
 | `.magic/scripts/lib/changelog-writer.js` | `appendBullet()` dedup and `releaseUnreleased()` rotation (§4.1, §4.2, §4.4) |
-| `.magic/scripts/release-changelog.js` | New (§4.4) — explicit, opt-in CLI invoking `releaseUnreleased()`; not called from `finalize.js` |
+| `.magic/scripts/release-changelog.js` | Explicit, opt-in CLI invoking `releaseUnreleased()`; validates its arguments before any rotation and handles `--help` without side effects (§4.4, CLI Safety) |
 | `.magic/scripts/finalize.js` | Success-path file-set input (§3.2); no longer imports `releaseUnreleased` (§4.4); deduped-CHANGELOG hint surfacing (§4.5) |
 | `.magic/scripts/lib/significance.js` | Whitelist evaluation — the set §3 must stop conflating with the full diff |
 | `CHANGELOG.md` | The product file all of the above writes into; carries the §2 historical leaks and the §4.3 historical duplicate heading |
@@ -195,6 +200,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.1.0 | 2026-10-02 | Agent | Added the §4 CLI Safety contract: `--help` prints usage without touching `CHANGELOG.md`, and unsupported arguments fail before rotation. §5 now requires regression coverage for both cases. |
 | 2.0.0 | 2026-08-27 | Agent | **Commit-message composition retired** by explicit user directive, alongside SC-3/SC-3.1 in [l1-session-continuity.md](l1-session-continuity.md). Overview and §1 Motivation reworded to drop the suggested commit message from this spec's scope. §2's RC-11 defect record annotated: `buildSummary()`'s commit-message-header `artifactId()` usage no longer exists, retained as historical record only. §3 renamed from "Non-Whitelisted File Visibility (SC-3.1)" to "Stdout Listing Completeness"; its Required Fix rescoped to `emitSuccess()`'s stdout listing alone, dropping `buildCommitMessage()`. §5 Regression Coverage's §3 bullet dropped its commit-body assertion. Canonical References' `commit-suggester.js` row updated to CHANGELOG-bullet composition only. Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.2.0 | 2026-08-22 | Agent | §4.5 added — a field report (engine 2.1.73) against a consumer workspace named `engine` confirmed the §4.1 vocabulary-exhaustion defect surfaces exactly as predicted, via the `run` case's single-item branch. The report's proposed fix (interpolate a phase/task differentiator into the bullet) was rejected as a direct RC-11 violation already barred by §4.4 constraint 1. The actual gap: §4.4's `release-changelog` remedy already exists and is reachable via `executor.js`'s generic dispatch convention, but finalize's `CHANGELOG \| skipped (duplicate)` stdout row never names it, leaving operators with no way to discover the fix from the tool's own output — confirmed against this repository's own unrotated `[Unreleased]` section (lines 8-201, unchanged since 2026-05-07). Required Fix: the deduped stdout row must append an actionable hint naming `release-changelog`; no change to bullet content, dedup logic, or RC-11 compliance. §5 gained the corresponding regression-coverage obligation. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 1.1.0 | 2026-08-07 | Agent | §4.3 root-caused: both `### Changed` headings inside `[Unreleased]` trace via `git blame`/`git show` to two direct, human-authored commits a week apart (`aea88015` 2026-05-07, `07f2fb96` 2026-05-14), predating any automated writer involvement in the section — not a live defect in `insertIntoUnreleased()`. §4.4 converted from stated constraints to a `Required Fix`: rotation MUST be an explicit, opt-in `release-changelog` executor subcommand rather than an automatic side effect of `finalize`, because magic-spec has no signal it can observe (`.design/.version`, `.magic/.version`) that reliably means "a downstream consumer released their product" — only the maintainer triggering a real release event knows that. `finalize.js` drops its now-dead `releaseUnreleased` import. §5 gained the corresponding regression-coverage obligations. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |

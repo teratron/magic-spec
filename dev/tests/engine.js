@@ -7371,6 +7371,56 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
     // 17. release-changelog.js — explicit opt-in CHANGELOG rotation (R11)
     // ───────────────────────────────────────────────────────────────────────────
+    test('release-changelog.js handles --help and rejects unknown arguments without rotating (R11 CLI contract)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const changelogPath = path.join(tempDir, 'CHANGELOG.md');
+            const original = [
+                '# Changelog',
+                '',
+                '## [Unreleased]',
+                '',
+                '### Added',
+                '',
+                '- Keep this entry in place.',
+                '',
+            ].join('\n');
+            fs.writeFileSync(changelogPath, original);
+            const executorPath = path.join(tempDir, '.magic', 'scripts', 'executor.js');
+
+            const help = execSync(`node "${executorPath}" release-changelog --help`, {
+                cwd: tempDir,
+                encoding: 'utf8',
+            });
+            assert.match(help, /Usage: node \.magic\/scripts\/executor\.js release-changelog/);
+            assert.strictEqual(
+                fs.readFileSync(changelogPath, 'utf8'),
+                original,
+                '--help must leave CHANGELOG.md byte-for-byte unchanged',
+            );
+
+            assert.throws(
+                () =>
+                    execSync(`node "${executorPath}" release-changelog --unknown`, {
+                        cwd: tempDir,
+                        encoding: 'utf8',
+                    }),
+                (error) => {
+                    assert.strictEqual(error.status, 1, 'unknown arguments exit non-zero');
+                    assert.match(error.stderr.toString(), /Unknown argument '--unknown'/);
+                    return true;
+                },
+            );
+            assert.strictEqual(
+                fs.readFileSync(changelogPath, 'utf8'),
+                original,
+                'an unknown argument must leave CHANGELOG.md byte-for-byte unchanged',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('release-changelog.js rotates [Unreleased] into a dated version heading, defaulting version/date (R11 §4.4)', () => {
         const tempDir = createTempWorkspace();
         try {
