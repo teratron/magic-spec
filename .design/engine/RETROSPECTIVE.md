@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-09-28
-**Full Sessions:** 14
-**Snapshots:** 26
+**Last Full Run:** 2026-10-05
+**Full Sessions:** 19
+**Snapshots:** 32
 
 ## Snapshots
 
@@ -41,6 +41,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-30 | Phase 35 | 0/0/37 | 8/0/0 | 25 | 🟢 |
 | 2026-09-30 | Phase 36 | 0/0/37 | 10/0/0 | 25 | 🟢 |
 | 2026-09-30 | Phase 37 | 0/0/37 | 15/0/0 | 25 | 🟢 |
+| 2026-10-05 | Phase 38 | 0/0/37 | 12/0/0 | 25 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -814,3 +815,56 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. R47–R49 (earlier) remain advisory; R52–R54 are this phase's own findings.
+
+## Session 19 — 2026-10-05
+
+**Scope:** Plan completion (Phase 38 — Skill-Wrapper Contract & Body Navigation Deployment; the three specification amendments of the `/magic.spec amend` pass that immediately preceded planning)
+**Specs in registry:** 37 (all Stable; none changed this session — the three amended by the preceding pass are skill wrappers 1.6.0, workflow wrappers 1.5.0 and test suite 1.25.0).
+**Tasks total:** 12 this cycle (Done: 12, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 221 nodes, 479 edges (against the rolling baseline: 218 → 221, 469 → 479); 0 orphaned files, 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.133 → 2.1.134, one C14 covering the `.magic/` and `workflows/` edits; fourteen wrappers regenerated across both outputs, none refused |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 167 at phase start, 174 after the bump, 174/174 on the final run |
+| **Rework Rate** | 5 corrections / 12 tasks | Manual | U+FFFD characters pasted into the harness from truncated tool output; a third placeholder-description fixture that went red once the generator refused it; a mutation entry whose replacement broke the file's syntax (refused by the driver); a markdownlint MD036 on the contents label; the whole-module pointer's side effect, found by QA |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A fixed list of sites undercounts; a scan over every site does not.** The spec and the plan named "the two existing generator fixtures"; a third case with placeholder descriptions (`sync.js propagation`) existed and went red the moment the generator refused it. The pointer rule likewise missed three sibling sites (`init.md`, `retrospective.md`, `status.md`). Both were found by running a check over every site, not by reading the list. | T-38A03, T-38A05 (`l2-test-suite.md` Coverage), T-38B02 |
+| 2 | **"Apply the module as a whole" was a behavior change in disguise.** Rewriting the pointers that named only part of `context.md` would have pulled Workspace Fit Validation — a section only `spec.md` calls, from its own step — into run, task, analyze and status. QA caught it; the section now states its own applicability and the contents list marks it. A whole-module pointer is safe only when each section says whom it applies to. | T-38B02 (QA) |
+| 3 | **A refusal that stops the C14 flow midway is worse than the defect it refuses.** Review of the amendment found that a generator exiting on the first bad wrapper would leave the engine version bumped and the manifest stale. The deployed flow reports the refusal, finishes the snapshot and the manifest, then fails; a probe on throwaway copies showed output and exit code identical to the previous script when nothing is refused. | T-38A04 |
+| 4 | **The phase's headline control — a fresh, lower-tier reader — could not be run by the phase that introduced it.** Spawning an agent needs an explicit request in the session, so T260–T263 were resolved by the author reading its own text (the Context Bleed note applies in full). The measurable half holds: the first 100 lines of each of the six bodies name every `##` section (12/12, 7/7, 6/6, 6/6, 5/5, 8/8). The reader half is unverified; the two spots a weaker reader could misread are the anaphoric "the plan" (task wrapper) and "the task list" (run wrapper). | T-38T02 |
+| 5 | **Two self-inflicted hazards were caught by a check, not by care.** Banner lines copied from truncated tool output carried U+FFFD into the harness (found by a scan of the added lines). Running `update-state.js --help` directly wrote a stray `.design/STATE.md` — the script did not reject the unsupported flag; this is the class R53 describes. The file was removed and the incident reported in the session. | session; harness diff scan |
+| 6 | **This file's own bookkeeping had drifted, and the graph baseline lagged a cycle.** The header read 14 sessions and 26 snapshots where the file held 18 and 31 (corrected now). The graph diff listed Phase 37 as *added* and Phase 36 as `Todo → Done (Archived)`, so the previous cycle's snapshot was never rolled into the baseline and this diff spans two phases. | file header; `diff-spec-graph` output |
+| 7 | **The 42 mutation controls pass, and the lists that produced them live outside the repository.** A05 24, B03 10 plus 2 for the fence handling, C01 6: 42 CAUGHT, 0 SURVIVED, 0 REFUSED, the 39 modified files byte-identical afterwards. One entry was refused mid-authoring because its replacement broke the file's syntax — the driver rejecting an invalid mutation instead of counting it caught. The lists are scratch files, so R54 now covers Phases 33–38 and is still open. | T-38T01 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R55 | #4 | Re-run T260–T263 in a fresh session on the lowest-capability tier the host offers, with the second-reader noise filter; patch "the plan" / "the task list" only if a reader misses the antecedent | `dev/tests/suite.md` (cognitive) |
+| R56 | #5 | R53 recurred: promote it from advisory — `update-state.js` and `finalize.js` should reject an unknown flag and an unregistered workspace instead of creating files | `.magic/scripts` |
+| R57 | #6 | Derive this file's header counters (`Full Sessions`, `Snapshots`, `Last Full Run`) from its own content when appending, instead of editing them by hand | `.magic/retrospective.md` (advisory) |
+| R58 | #1 | Where the test-suite spec says "the two existing generator fixtures", state the rule (every generator fixture carries a compliant description) instead of a count; three existed | `l2-test-suite.md` wording |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 146 | 174 | +28 (+21 between sessions, +7 this phase) |
+| Cognitive suite cases | T259 | T263 | +4 |
+| Wrappers checked by the generator | 0 (no validation) | 14, 0 refused | +14 |
+| Engine bodies over 100 lines with a contents list | 0 of 6 | 6 of 6 | +6 |
+| Shipped pointers to `context.md` pinned as whole-module | 0 of 10 | 10 of 10 | +10 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 217 / 467 (Session 18) | 221 / 479 | +4 / +12 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are one class — a check that ran over every site found what a list of sites missed (#1, #2, #5, #7) — not a defect recurring in one specification, and the extra sessions this week follow from every phase closing the plan, not from compensating for an unfixed root cause. R47–R49 (earlier) remain advisory; R55 is the one open verification this phase leaves.

@@ -49,12 +49,17 @@ for (let i = 0; i < args.length; i++) {
  * checksum scan can never observe a workflows/-only edit.
  * Idempotent: rewrites identical bytes when `workflows/` also didn't change,
  * so calling it unconditionally on every write invocation is safe.
+ *
+ * @returns {Array<{ workflow: string, field: string, rule: string }>} The wrappers the
+ *   generator refused for breaking the frontmatter contract; empty when none, and
+ *   empty when the generator is absent (user installation).
  */
 function syncSkillWrappers() {
     const syncSkillsPath = path.join(__dirname, '../../dev/scripts/sync-skills.js');
     if (fs.existsSync(syncSkillsPath)) {
         const syncSkills = require(syncSkillsPath);
-        syncSkills();
+        const result = syncSkills();
+        return Array.isArray(result?.refused) ? result.refused : [];
     } else {
         console.warn(
             '⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).',
@@ -65,7 +70,28 @@ function syncSkillWrappers() {
             code: 'SKILL_SYNC_UNAVAILABLE',
             message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
         });
+        return [];
     }
+}
+
+/**
+ * Ends the run in failure when the generator refused any wrapper — after the
+ * caller has finished the rest of its flow, never in place of it. Every refusal
+ * is already named on the generator's own output and recorded as an `error`
+ * finding; this adds the one line that says the metadata step did not succeed
+ * and sets the exit status, so a refused wrapper is never reported as success.
+ *
+ * @param {Array<{ workflow: string }>} refused - The generator's refusals.
+ * @returns {boolean} True when the run was marked failed.
+ */
+function failOnRefusedWrappers(refused) {
+    if (refused.length === 0) return false;
+    const workflows = [...new Set(refused.map((entry) => entry.workflow))].join(', ');
+    console.error(
+        `❌ Skill wrapper(s) refused: ${workflows}. Fix the workflow frontmatter and re-run update-engine-meta.`,
+    );
+    process.exitCode = 1;
+    return true;
 }
 
 /**
@@ -198,9 +224,12 @@ function updateEngineMeta() {
         bumpVersion();
 
         // Ensure Skill wrappers are also in sync (C14 §3 Compatibility).
-        // Fail-fast: if projection breaks, the engine state is inconsistent —
-        // surface the error to the caller instead of silently bumping checksums.
-        syncSkillWrappers();
+        // A wrapper the generator refuses (it breaks the frontmatter contract) is
+        // reported back and this flow still finishes — the manifest covers .magic/
+        // only, so withholding it would protect nothing and leave the metadata
+        // describing a half-finished run — and the run then fails below. An
+        // exception (an I/O failure) is not a refusal and still aborts here.
+        const refusedWrappers = syncSkillWrappers();
 
         // Dev-repo-only: keep .design/INDEX.md's Engine Version snapshot current
         // with every C14 bump. Consumer installs never reach this branch — the
@@ -224,7 +253,9 @@ function updateEngineMeta() {
         }
 
         runGenerateChecksums();
-        console.log('✅ Engine metadata and version updated.');
+        if (!failOnRefusedWrappers(refusedWrappers)) {
+            console.log('✅ Engine metadata and version updated.');
+        }
     } else if (checkOnly) {
         // Read-only verification path (the user's pre-commit hook). Scope is
         // exactly what was scanned above — .magic/ against its checksum
@@ -240,7 +271,7 @@ function updateEngineMeta() {
         console.log(
             'ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.',
         );
-        syncSkillWrappers();
+        failOnRefusedWrappers(syncSkillWrappers());
     }
 }
 

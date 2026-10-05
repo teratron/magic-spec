@@ -5,9 +5,17 @@ Manages project conventions across a two-tier rules system:
 - **Global**: `.design/RULES.md` — Universal Constitution (§1–6) + cross-workspace §7 conventions.
 - **Workspace**: `.design/{workspace}/RULES.md` — workspace-local §7 conventions only; inherits global, never overrides §1–6.
 
+**Contents:**
+
+- Core Invariants (Mandatory)
+- Rule Tier Routing
+- Workflow: Convention Management
+- Finalization Protocol (Mandatory)
+- Rule Completion Checklist
+
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply, Post-Resolution).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6), Constitutional Guard and Remove (a destructive action, gate 1). All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.

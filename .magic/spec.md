@@ -10,9 +10,19 @@ Universal process for managing project specifications in `.design/specifications
 > **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic-spec/SKILL.md`](../skills/magic-spec/SKILL.md)
 > **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
 
+**Contents:**
+
+- Core Invariants (Mandatory)
+- Directory Structure
+- Specification Layers
+- Status Lifecycle
+- Workflow Steps
+- Finalization Protocol (Mandatory)
+- Templates
+
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.

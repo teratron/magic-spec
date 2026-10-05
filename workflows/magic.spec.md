@@ -1,6 +1,6 @@
 ---
 name: magic.spec
-description: Workflow for creating and managing project specifications.
+description: Creates, amends and checks the specifications and the specification registry (INDEX.md), from a raw idea through status promotion. Use when the user asks to create or update a spec, to explore or brainstorm a specification, or to check, verify or review the registry entries, versions and statuses of the specs themselves.
 handoffs:
   - label: "Generate tasks"
     workflow: magic.task

@@ -1,6 +1,6 @@
 ---
 name: magic-task
-description: Workflow for orchestrating tasks and generating the implementation plan.
+description: Turns the Stable specifications into the implementation plan (PLAN.md) and the atomic task list (TASKS.md with phase workbooks), and re-syncs them when the registry or the rules change. Use when the user asks to create, generate, update or sync the plan or the task list.
 handoffs:
   - label: "Generate plan"
     workflow: magic-task

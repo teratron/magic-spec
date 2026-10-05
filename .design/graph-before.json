@@ -6,7 +6,7 @@
       "type": "workspace",
       "group": "workspace",
       "workspace": "engine",
-      "degree": 86
+      "degree": 88
     },
     {
       "id": "file:.magic",
@@ -158,7 +158,7 @@
       "type": "convention",
       "group": "convention",
       "num": 6,
-      "degree": 1
+      "degree": 2
     },
     {
       "id": "conv:C7",
@@ -206,7 +206,7 @@
       "type": "convention",
       "group": "convention",
       "num": 12,
-      "degree": 6
+      "degree": 7
     },
     {
       "id": "conv:C13",
@@ -214,7 +214,7 @@
       "type": "convention",
       "group": "convention",
       "num": 13,
-      "degree": 2
+      "degree": 3
     },
     {
       "id": "conv:C14",
@@ -294,7 +294,7 @@
       "type": "convention",
       "group": "convention",
       "num": 25,
-      "degree": 6
+      "degree": 7
     },
     {
       "id": "conv:C26",
@@ -310,7 +310,7 @@
       "type": "convention",
       "group": "convention",
       "num": 27,
-      "degree": 3
+      "degree": 5
     },
     {
       "id": "conv:C28",
@@ -318,7 +318,7 @@
       "type": "convention",
       "group": "convention",
       "num": 28,
-      "degree": 0
+      "degree": 1
     },
     {
       "id": "spec:engine/l1-engine-core",
@@ -328,7 +328,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.8.0",
+      "version": "1.8.4",
       "degree": 36
     },
     {
@@ -350,7 +350,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "3.4.0",
+      "version": "3.5.1",
       "degree": 14
     },
     {
@@ -361,7 +361,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "2.0.0",
+      "version": "2.1.0",
       "degree": 9
     },
     {
@@ -394,7 +394,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "2.0.0",
+      "version": "2.1.0",
       "degree": 10
     },
     {
@@ -405,8 +405,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.21.0",
-      "degree": 11
+      "version": "1.25.0",
+      "degree": 16
     },
     {
       "id": "spec:engine/l1-documentation-system",
@@ -427,8 +427,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.0.1",
-      "degree": 8
+      "version": "1.0.2",
+      "degree": 9
     },
     {
       "id": "spec:engine/l2-workflow-wrappers",
@@ -438,8 +438,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.3.0",
-      "degree": 13
+      "version": "1.5.0",
+      "degree": 14
     },
     {
       "id": "spec:engine/l2-skill-wrappers",
@@ -449,8 +449,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.4.0",
-      "degree": 10
+      "version": "1.6.0",
+      "degree": 11
     },
     {
       "id": "spec:engine/l2-engine-templates",
@@ -515,8 +515,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.1",
-      "degree": 13
+      "version": "1.2.3",
+      "degree": 15
     },
     {
       "id": "spec:engine/l2-role-cards-review",
@@ -537,7 +537,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.3.0",
+      "version": "1.4.0",
       "degree": 19
     },
     {
@@ -570,7 +570,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.1.3",
+      "version": "1.1.4",
       "degree": 10
     },
     {
@@ -581,8 +581,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.1.1",
-      "degree": 14
+      "version": "2.0.0",
+      "degree": 15
     },
     {
       "id": "spec:engine/l1-decision-autonomy",
@@ -592,7 +592,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.3.1",
+      "version": "2.0.0",
       "degree": 16
     },
     {
@@ -614,8 +614,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "2.4.0",
-      "degree": 18
+      "version": "2.5.0",
+      "degree": 16
     },
     {
       "id": "spec:engine/l2-session-checkpoint",
@@ -625,8 +625,8 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.0.2",
-      "degree": 24
+      "version": "1.1.1",
+      "degree": 23
     },
     {
       "id": "spec:engine/l2-status-command",
@@ -636,7 +636,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.3.0",
+      "version": "1.4.0",
       "degree": 11
     },
     {
@@ -702,7 +702,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 2,
-      "version": "1.2.2",
+      "version": "1.2.3",
       "degree": 10
     },
     {
@@ -713,7 +713,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.0.0",
+      "version": "2.0.0",
       "degree": 13
     },
     {
@@ -724,7 +724,7 @@
       "workspace": "engine",
       "status": "Stable",
       "layer": 1,
-      "version": "1.1.1",
+      "version": "1.1.2",
       "degree": 11
     },
     {
@@ -973,25 +973,11 @@
       "degree": 5
     },
     {
-      "id": "file:.magic/pause.md",
-      "label": ".magic/pause.md",
-      "type": "file",
-      "group": "file",
-      "degree": 2
-    },
-    {
       "id": "file:.magic/templates/phase.md",
       "label": ".magic/templates/phase.md",
       "type": "file",
       "group": "file",
       "degree": 4
-    },
-    {
-      "id": "file:.magic/templates/handoff.json",
-      "label": ".magic/templates/handoff.json",
-      "type": "file",
-      "group": "file",
-      "degree": 1
     },
     {
       "id": "file:.magic/scripts/init.js",
@@ -1386,6 +1372,13 @@
       "degree": 1
     },
     {
+      "id": "file:dev/scripts/sync-skills.js",
+      "label": "dev/scripts/sync-skills.js",
+      "type": "file",
+      "group": "file",
+      "degree": 2
+    },
+    {
       "id": "file:.magic/scripts/graph-cache.js",
       "label": ".magic/scripts/graph-cache.js",
       "type": "file",
@@ -1419,6 +1412,13 @@
       "type": "file",
       "group": "file",
       "degree": 2
+    },
+    {
+      "id": "file:.agents/workflows/magic.dev.simulate.md",
+      "label": ".agents/workflows/magic.dev.simulate.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
     },
     {
       "id": "file:.agents/skills/magic-dev-simulate/SKILL.md",
@@ -1470,8 +1470,15 @@
       "degree": 1
     },
     {
-      "id": "phase:engine/phase-36",
-      "label": "Phase 36: Backlog Sweep — reference-containment cleanup (workflow bodies, scripts, library, product files) with a harness guard, tracked-files failure hint, audits of the `Status` writers and of the pause snapshot",
+      "id": "file:.magic/*.md",
+      "label": ".magic/*.md",
+      "type": "file",
+      "group": "file",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-38",
+      "label": "Phase 38: Skill-Wrapper Contract & Body Navigation Deployment — nine workflow descriptions in the Selection Signal form, generator validation and the C14 flow that finishes before failing, contents lists and whole-module pointers in the engine bodies, harness and cognitive coverage with a reader tier",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -1479,8 +1486,26 @@
       "degree": 1
     },
     {
+      "id": "phase:engine/phase-37",
+      "label": "Phase 37: Backlog Deployment — `Status` reconciliation from one shared ledger classification, pause-snapshot retirement (files, flag, field, resume branch) with a residue search, `RULES.md` in the spec whitelist, `dev/scripts/mutation-check.js` with self-test",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
       "id": "phase:engine/phase-33",
       "label": "Phase 33: Significance Read-Failure Fix (R44, `lib/significance.js`/`finalize.js`) & Confirmed Self-Containment Cleanup (`update-state.js`, RC-8)",
+      "type": "phase",
+      "group": "phase",
+      "workspace": "engine",
+      "status": "Done (Archived)",
+      "degree": 1
+    },
+    {
+      "id": "phase:engine/phase-36",
+      "label": "Phase 36: Backlog Sweep — reference-containment cleanup (workflow bodies, scripts, library, product files) with a harness guard, tracked-files failure hint, audits of the `Status` writers and of the pause snapshot",
       "type": "phase",
       "group": "phase",
       "workspace": "engine",
@@ -2077,6 +2102,11 @@
       "relation": "enforces"
     },
     {
+      "from": "spec:engine/l1-config-drift-guard",
+      "to": "conv:C25",
+      "relation": "enforces"
+    },
+    {
       "from": "spec:engine/l1-decision-autonomy",
       "to": "file:.magic/templates/rules.md",
       "relation": "covers"
@@ -2663,17 +2693,7 @@
     },
     {
       "from": "spec:engine/l1-session-continuity",
-      "to": "file:.magic/pause.md",
-      "relation": "covers"
-    },
-    {
-      "from": "spec:engine/l1-session-continuity",
       "to": "file:.magic/templates/phase.md",
-      "relation": "covers"
-    },
-    {
-      "from": "spec:engine/l1-session-continuity",
-      "to": "file:.magic/templates/handoff.json",
       "relation": "covers"
     },
     {
@@ -2769,6 +2789,11 @@
     {
       "from": "spec:engine/l1-workspace-intent-routing",
       "to": "conv:C25",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l1-workspace-intent-routing",
+      "to": "conv:C27",
       "relation": "enforces"
     },
     {
@@ -3278,6 +3303,16 @@
     },
     {
       "from": "spec:engine/l2-role-cards-execution",
+      "to": "conv:C6",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
+      "to": "conv:C12",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-role-cards-execution",
       "to": "conv:C24",
       "relation": "enforces"
     },
@@ -3558,11 +3593,6 @@
     },
     {
       "from": "spec:engine/l2-session-checkpoint",
-      "to": "file:.magic/pause.md",
-      "relation": "covers"
-    },
-    {
-      "from": "spec:engine/l2-session-checkpoint",
       "to": "file:.magic/status.md",
       "relation": "covers"
     },
@@ -3693,6 +3723,11 @@
     },
     {
       "from": "spec:engine/l2-skill-wrappers",
+      "to": "file:dev/scripts/sync-skills.js",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-skill-wrappers",
       "to": "spec:engine/l1-engine-core",
       "relation": "implements"
     },
@@ -3798,6 +3833,11 @@
     },
     {
       "from": "spec:engine/l2-test-suite",
+      "to": "file:.agents/workflows/magic.dev.simulate.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
       "to": "file:dev/tests/suite.md",
       "relation": "covers"
     },
@@ -3809,6 +3849,11 @@
     {
       "from": "spec:engine/l2-test-suite",
       "to": "file:.agents/skills/magic-dev-simulate/SKILL.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "file:dev/scripts/sync-skills.js",
       "relation": "covers"
     },
     {
@@ -3843,7 +3888,22 @@
     },
     {
       "from": "spec:engine/l2-test-suite",
+      "to": "conv:C13",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
       "to": "conv:C15",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C27",
+      "relation": "enforces"
+    },
+    {
+      "from": "spec:engine/l2-test-suite",
+      "to": "conv:C28",
       "relation": "enforces"
     },
     {
@@ -3933,6 +3993,11 @@
     },
     {
       "from": "spec:engine/l2-workflow-wrappers",
+      "to": "file:.magic/*.md",
+      "relation": "covers"
+    },
+    {
+      "from": "spec:engine/l2-workflow-wrappers",
       "to": "spec:engine/l1-engine-core",
       "relation": "implements"
     },
@@ -3958,12 +4023,22 @@
     },
     {
       "from": "ws:engine",
-      "to": "phase:engine/phase-36",
+      "to": "phase:engine/phase-38",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-37",
       "relation": "contains"
     },
     {
       "from": "ws:engine",
       "to": "phase:engine/phase-33",
+      "relation": "contains"
+    },
+    {
+      "from": "ws:engine",
+      "to": "phase:engine/phase-36",
       "relation": "contains"
     },
     {
@@ -4138,7 +4213,7 @@
         "id": "ws:engine",
         "label": "engine",
         "type": "workspace",
-        "degree": 86
+        "degree": 88
       },
       {
         "id": "spec:engine/l1-engine-core",
@@ -4156,7 +4231,7 @@
         "id": "spec:engine/l2-session-checkpoint",
         "label": "l2-session-checkpoint.md",
         "type": "spec",
-        "degree": 24
+        "degree": 23
       },
       {
         "id": "spec:engine/l2-engine-automation",
@@ -4192,11 +4267,10 @@
         "conv:C24",
         "conv:C25",
         "conv:C26",
-        "conv:C27"
-      ],
-      "orphaned": [
+        "conv:C27",
         "conv:C28"
-      ]
+      ],
+      "orphaned": []
     },
     "bridge_specs": [],
     "coverage_stats": {
@@ -4208,13 +4282,13 @@
       }
     },
     "summary": {
-      "total_nodes": 218,
-      "total_edges": 469,
+      "total_nodes": 221,
+      "total_edges": 479,
       "workspaces": 1,
       "specs": 37,
-      "files": 120,
+      "files": 121,
       "conventions": 25,
-      "phases": 35
+      "phases": 37
     }
   }
 }

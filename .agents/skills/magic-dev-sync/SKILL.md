@@ -1,6 +1,6 @@
 ---
 name: magic-dev-sync
-description: Project Sync & Hygiene — synchronizes versions, documentation, and engine metadata
+description: Synchronizes the engine repository in one idempotent pass covering engine metadata and checksums, skill wrappers, the README version line, hardlink validation, the registry metadata, and the generated CONTRIBUTING.md and docs pages. Use when the maintainer asks to sync the project, run a hygiene check, or refresh the metadata and generated documentation after an engine or workflow change.
 ---
 
 <!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: .agents/workflows/magic.dev.sync.md (relative to workspace root) -->

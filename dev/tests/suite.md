@@ -4130,6 +4130,75 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** one resolution path per HALT (DA-8); the post-write review's report agreeing with its position after the write.
 - **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — the post-write HALT told the agent to "resolve before writing" a rule the file already held and named no way to resolve it.
 
+### T260 — Session Briefing Against Execution: The Descriptions Alone Separate "Where Am I" From "Do the Next Task"
+
+- **Workflow:** the `description` of `skills/magic-status/SKILL.md` and `skills/magic-run/SKILL.md` (skill-wrapper selection; no body is loaded)
+- **Synthetic State:**
+  - The host lists every shipped skill wrapper by `name` and `description` only, plus one unrelated third-party skill whose description is about PDF files. The agent has read nothing else.
+- **Action:** resolve each request to exactly one listed skill, or to none, from the descriptions alone:
+  1. "Where does the project stand, and what is the recorded next step?"
+  2. "Give me a resume briefing after the break."
+  3. "Resume the planned work from where it stopped."
+  4. "What's the next train to Berlin?"
+- **Expected:**
+  - [ ] (1) selects `magic-status`; (2) selects `magic-status` — "resume" appears in the description of `magic-run` too, but the `Use when` sentence of `magic-status` names a briefing and says no work is to be done.
+  - [ ] (3) selects `magic-run` — the near-miss of (2): the same verb, a request to do the work.
+  - [ ] (4) selects none: "next" alone is not a cue, because both `Use when` sentences name an artifact (the recorded position; the task list of the active phase).
+  - [ ] No decision needed the body of either wrapper.
+- **Control (what-only descriptions):** the descriptions the wrappers shipped with before the contract — "session resume briefing" and "executing tasks from the project plan" — leave (2) and (3) to the verb alone; a probe that resolves to both wrappers is an **AMBIGUITY** of the descriptions.
+- **Guards tested:** the Selection Signal — a `Use when` sentence that names the artifact or state, never a bare verb; one wrapper per request from the descriptions as a set.
+- **Regression for:** none yet — the first selection case; the overlap was measured in the shipped trigger lists ("What's next" and "Next task"; "Continue" and "Resume briefing").
+
+### T261 — Specification Check Modes Against Ventilation: A Check of the Specs Themselves Is Not an Audit of the Project
+
+- **Workflow:** the `description` of `skills/magic-spec/SKILL.md` and `skills/magic-analyze/SKILL.md` (skill-wrapper selection; no body is loaded)
+- **Synthetic State:** as in T260 — every shipped wrapper by `name` and `description` only, plus an unrelated third-party skill.
+- **Action:** resolve each request from the descriptions alone:
+  1. "Check the registry entries, versions and statuses of the specifications."
+  2. "Compare the code with the specifications and tell me where they drift."
+  3. "Check the tires on my bicycle."
+- **Expected:**
+  - [ ] (1) selects `magic-spec`: the check is of the specs themselves.
+  - [ ] (2) selects `magic-analyze` — the near-miss of (1): the same registry, but the request is the project against it.
+  - [ ] (3) selects none: "check" is shared by both wrappers and by ordinary requests, and neither `Use when` sentence names a bicycle.
+- **Control:** a request that names no artifact — "check everything" — resolves to **both** wrappers; it is reported as an **AMBIGUITY** of the request, not forced onto one.
+- **Guards tested:** the Selection Signal's discriminating rule (a bare verb is never the only cue); the overlap between the `magic.spec` check modes ("Check specs", "Review registry") and `magic.analyze` ventilation.
+- **Regression for:** none yet — the overlap was measured in the shipped trigger lists.
+
+### T262 — Planning Against Execution: "Update the Plan" Names the Plan and Task List, Not Any Plan
+
+- **Workflow:** the `description` of `skills/magic-task/SKILL.md` and `skills/magic-run/SKILL.md` (skill-wrapper selection; no body is loaded)
+- **Synthetic State:** as in T260.
+- **Action:** resolve each request from the descriptions alone:
+  1. "Update the plan and the task list now that the registry changed."
+  2. "Implement a named task from the task list."
+  3. "Update the plan for next week's team offsite."
+- **Expected:**
+  - [ ] (1) selects `magic-task`; (2) selects `magic-run` — the near-miss of (1): the same task list, executed instead of written.
+  - [ ] (3) selects none: "plan" alone is not a cue — the description names the implementation plan (`PLAN.md`) and the task list (`TASKS.md`), the `Use when` sentence's "the plan" refers back to them, and an offsite plan is neither.
+- **Guards tested:** the Selection Signal — the artifact named in the `Use when` sentence is what keeps a generic noun from selecting a wrapper; `magic.task` and `magic.run` separated by produce against execute.
+- **Regression for:** none yet — the overlap was measured in the shipped trigger lists ("Update tasks" and "Next task").
+
+### T263 — A Mandatory Section Below the Preview Is a Structure Finding, Not a Wording Finding (Reader Tier)
+
+- **Workflow:** `magic.dev.simulate` (the reading test, adjudication rung 4) + the contents-list rule for engine bodies
+- **Synthetic State (Test A):**
+  - A synthetic engine body of 150 lines with four `##` sections and no contents list. Its mandatory step — load the live-memory file and run the resume check — sits in the last section, from line 120. A shared module it points to is read through that pointer.
+  - The host exposes a model choice for a run: a stronger tier and a lower one.
+- **Action A:** the reading test for "the next action of a fresh session", the literal reading taken by a fresh agent.
+- **Expected A:**
+  - [ ] The fresh agent runs on the **lower** tier, not the session's own, and returns its predicted action together with the files it opened and the line range it read of each (here: lines 1–100).
+  - [ ] The prediction omits the load. The cause is a mandatory section the agent never reached, so the finding is a **structure** finding — the fix candidate is a contents list in the body (or a pointer that applies the module as a whole) — not a wording patch.
+  - [ ] The divergence was seen only at the lower tier, so it counts once a second fresh agent of that tier reproduces it; a second agent that reads past line 100 and predicts the load ends the case as **NOT A DEFECT**.
+- **Synthetic State (Test B — control):** the same body with a contents list in its first 40 lines naming all four sections.
+- **Expected B:**
+  - [ ] The fresh agent sees that a fourth section exists, reads it, predicts the load, and no finding is raised.
+- **Synthetic State (Test C — control):** the host exposes no model choice.
+- **Expected C:**
+  - [ ] The reading test runs on the session's own tier; nothing is required of the tier and no finding is raised on that ground.
+- **Guards tested:** independence of context is not capability; the structure/wording split of a divergence; the noise filter of a second reader at the lowest tier; the contents-list rule for engine bodies.
+- **Regression for:** none yet — measured on the shipped bodies: six over 100 lines with no contents list, and the Post-Resolution load of the shared module at line 114.
+
 ```
-**Test Suite Finalized** - v1.9.94 (Last: T259)
+**Test Suite Finalized** - v1.9.95 (Last: T263)
 ```

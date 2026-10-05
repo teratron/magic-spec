@@ -1,6 +1,6 @@
 ---
 name: magic.rule
-description: Workflow for manually adding or amending project conventions in RULES.md.
+description: Adds, amends or removes project conventions in the RULES.md constitution, global or per workspace. Use when the user states a project rule or convention to record, or asks to amend or remove a convention in RULES.md.
 handoffs:
   - label: "Create spec"
     workflow: magic.spec

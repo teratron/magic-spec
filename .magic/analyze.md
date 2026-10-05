@@ -9,9 +9,24 @@ Audits project health, syncs registries, and reverse-engineers code into `.desig
 **Triggers**: `/magic.analyze [arg]`, "Ventilate", "Analyze project", "Scan project", "Re-analyze".
 **Examples**: `/magic.analyze`, `/magic.analyze engine`, `/magic.analyze "check API coverage"`, `/magic.analyze engine "focus on tests"`.
 
+**Contents:**
+
+- Core Invariants (Mandatory)
+- Argument Routing
+- Workspace Resolution
+- Operational Logic: Scan & Infer
+- Confidence Taxonomy
+- Rationale Extraction
+- Modes: Analysis vs. Re-Analysis
+- Advisory Report — Findings Schema
+- Engine Snapshot Update (Mandatory, All Modes)
+- Advisory Report — Recommendations Format
+- Reporting & Dispatch
+- Task Completion Checklist
+
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 3. **Read-Only for user specs and project code**: never modify spec content (`.design/specifications/**/*.md`, `PLAN.md`, `TASKS.md`, `RULES.md`) or project source code without explicit user approval. Engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may be auto-repaired for deterministic mechanical drift — narrate each fix with a `(Revert: git restore {file})` note.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Modes A/B dispatch **new** specs to `.design/` immediately (C9 default, Mode A step 3); changes to existing specs go through the approval gates of Invariant 3.
@@ -39,7 +54,7 @@ Parse `[arg]` to determine analysis mode:
 
 ## Workspace Resolution
 
-> See [context.md](context.md) for the full resolution chain (Priority 1-4, Disambiguation, Scope Auto-Apply).
+> See [context.md](context.md), which applies as a whole.
 > After resolution, the workspace's `scope` array from `workspace.json` is applied as the scan boundary (equivalent to `MAGIC_WORKSPACE_SCOPE`). No `scope` field → scan the full project.
 
 ## Operational Logic: Scan & Infer

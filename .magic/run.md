@@ -2,6 +2,15 @@
 
 Executes `TASKS.md` atomic tasks. Input: `.design/TASKS.md`.
 
+**Contents:**
+
+- Argument Routing
+- Core Invariants (Mandatory)
+- Execution Setup
+- Workflow: Task Execution
+- Finalization Protocol (Mandatory)
+- Run Completion Checklist
+
 ## Argument Routing
 
 Parse `[arg]` to determine execution mode:
@@ -21,7 +30,7 @@ Parse `[arg]` to determine execution mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 2.5. **Live Memory (STATE.md)**: Before any execution, read `.design/{workspace}/STATE.md`.
    - `Blockers` non-empty → display blockers before proceeding.

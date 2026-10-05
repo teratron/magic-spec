@@ -1,6 +1,6 @@
 ---
 name: magic.run
-description: Workflow for executing tasks from the project plan.
+description: Executes the planned tasks of the active phase from the task list, in parallel tracks when they are independent. Use when the user asks to start, continue or resume the planned work, to run the next task of the plan, or to implement a named task or phase from TASKS.md.
 handoffs:
   - label: "Replan"
     workflow: magic.task

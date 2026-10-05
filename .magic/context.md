@@ -2,6 +2,17 @@
 
 Shared workspace resolution logic referenced by all workflows. Every workflow MUST apply this chain before any operation.
 
+**Contents:**
+
+- Step 0: Workspace Intent Detection (Pre-Resolution) — `magic.spec` only
+- Workspace Resolution Chain
+- Workspace Disambiguation
+- Scope Auto-Apply
+- Workspace Fit Validation (WI-7, Second Contour) — `magic.spec` only
+- Argument Disambiguation
+- Post-Resolution
+- Context Budget Guard
+
 ## Step 0: Workspace Intent Detection (Pre-Resolution)
 
 > Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for `magic.spec` — the sole workflow that authors new topical spec content and can therefore require workspace-creation routing. Read-only workflows (`magic.analyze`, `magic.graph`) and `task.md`/`rule.md` (operate only on already-registered specs/rules and never introduce a new domain topic) skip this step.
@@ -95,7 +106,7 @@ After workspace resolves, apply its `scope` array from `workspace.json` as the s
 
 ## Workspace Fit Validation (WI-7, Second Contour)
 
-After resolution returns `existing:{Y}` (Priorities 1–3), validate fit before dispatching artifacts. Catches mis-routes that Step 0 detection missed.
+After resolution returns `existing:{Y}` (Priorities 1–3), validate fit before dispatching artifacts. Catches mis-routes that Step 0 detection missed. Applies to `magic.spec`, which calls it just before its file write; no other workflow dispatches a specification, so the others skip it.
 
 1. Compute domain match score between the artifact's filename / overview / user input terms and `{Y}`'s lexicon (same lexicon definition as Step 0).
 2. `workspace.json` registers ≥2 workspaces AND score < 0.30:

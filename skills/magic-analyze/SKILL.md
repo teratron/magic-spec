@@ -1,6 +1,6 @@
 ---
 name: magic-analyze
-description: Project Ventilation — audits health, registry, and rule compliance
+description: Audits the health of a project against its specification registry, rules and engine integrity, and reverse-engineers specifications from existing code. Use when the user asks to ventilate or analyze the project, to compare the code with the registry for gaps and drift, or to scan an existing codebase for missing specifications.
 handoffs:
   - label: "Create specifications"
     workflow: magic-spec

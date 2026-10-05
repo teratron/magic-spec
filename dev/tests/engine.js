@@ -702,7 +702,7 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(workflowsDir);
             fs.writeFileSync(
                 path.join(workflowsDir, 'magic.test-wf.md'),
-                '---\ndescription: test\n---\n**Triggers:** `new-trigger`, `another-trigger`',
+                '---\nname: magic.test-wf\ndescription: Tests the sync of a workflow into its doc. Use when the sync case needs a source workflow.\n---\n**Triggers:** `new-trigger`, `another-trigger`',
             );
 
             // Second doc/workflow pair: pins the "[arg]" slash-command suffix
@@ -714,7 +714,7 @@ describe('Magic Engine Scripts', () => {
             );
             fs.writeFileSync(
                 path.join(workflowsDir, 'magic.arg-wf.md'),
-                '---\ndescription: arg test\n---\n',
+                '---\nname: magic.arg-wf\ndescription: Tests the argument suffix of a slash command. Use when the sync case needs an argument workflow.\n---\n',
             );
 
             // A doc with no matching workflows/magic.{name}.md — pins the
@@ -1580,7 +1580,7 @@ describe('Magic Engine Scripts', () => {
             const workflowPath = path.join(workflowsDir, 'magic.example.md');
             fs.writeFileSync(
                 workflowPath,
-                '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n',
+                '---\nname: magic.example\ndescription: Does the original thing to the plan. Use when the user asks for the original thing.\n---\n\n# Example\n\nOriginal body.\n',
             );
 
             const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
@@ -1610,7 +1610,7 @@ describe('Magic Engine Scripts', () => {
             // The reproduction: workflows/ changes, .magic/ does not.
             fs.writeFileSync(
                 workflowPath,
-                '---\ndescription: updated\n---\n\n# Example\n\nUpdated body.\n',
+                '---\nname: magic.example\ndescription: Does the updated thing to the plan. Use when the user asks for the updated thing.\n---\n\n# Example\n\nUpdated body.\n',
             );
             const secondRun = execSync(`node "${metaScript}"`, { cwd: tempDir, encoding: 'utf8' });
             assert.strictEqual(
@@ -1649,7 +1649,7 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(workflowsDir, { recursive: true });
             fs.writeFileSync(
                 path.join(workflowsDir, 'magic.example.md'),
-                '---\ndescription: original\n---\n\n# Example\n\nOriginal body.\n',
+                '---\nname: magic.example\ndescription: Does the original thing to the plan. Use when the user asks for the original thing.\n---\n\n# Example\n\nOriginal body.\n',
             );
 
             const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
@@ -1683,6 +1683,510 @@ describe('Magic Engine Scripts', () => {
         } finally {
             cleanup(tempDir);
         }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5e. skills/ — the frontmatter contract on the shipped wrappers.
+    //     A host reads `name` and `description` before anything else in a
+    //     wrapper, and chooses among every installed skill from the
+    //     description alone. Each shipped wrapper must meet the format's
+    //     limits and say, in the third person, what it does and when to use
+    //     it. The assertions are written out here rather than borrowed from the
+    //     generator, so the generator is not graded by its own validator. The
+    //     wording of the descriptions is not pinned — only the contract.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('skill wrappers: every shipped wrapper satisfies the frontmatter contract (name grammar, description limits, Use when sentence, third person)', () => {
+        const syncSkills = require(path.join(devScriptsDir, 'sync-skills.js'));
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const skillsDir = path.join(repoRoot, 'skills');
+
+        // The workflow a wrapper comes from: its file name without `.md`, every `.` replaced by `-`.
+        const sourceNames = new Set(
+            fs
+                .readdirSync(path.join(repoRoot, 'workflows'))
+                .filter((f) => f.endsWith('.md'))
+                .map((f) => path.basename(f, '.md').replace(/\./g, '-')),
+        );
+
+        const dirs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter((d) => d.isDirectory());
+        assert.ok(dirs.length > 0, 'skills/ must hold at least one wrapper');
+
+        for (const dirent of dirs) {
+            const text = fs.readFileSync(path.join(skillsDir, dirent.name, 'SKILL.md'), 'utf8');
+            const block = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+            assert.ok(block, `${dirent.name}: SKILL.md must open with a frontmatter block`);
+
+            // A top-level scalar, with any indented continuation lines folded in.
+            const field = (key) => {
+                const lines = block[1].split(/\r?\n/);
+                const at = lines.findIndex((l) => l.startsWith(`${key}:`));
+                if (at === -1) return '';
+                const parts = [lines[at].slice(key.length + 1).trim()];
+                for (let i = at + 1; i < lines.length && /^\s/.test(lines[i]); i++) {
+                    parts.push(lines[i].trim());
+                }
+                return parts.filter(Boolean).join(' ');
+            };
+            const name = field('name');
+            const description = field('description');
+
+            assert.match(name, /^[a-z0-9-]{1,64}$/, `${dirent.name}: name must be 1-64 characters of lowercase letters, digits and hyphens`);
+            assert.ok(
+                syncSkills.RESERVED_NAME_WORDS.every((word) => !name.includes(word)),
+                `${dirent.name}: name must not contain a word the target skill format reserves`,
+            );
+            assert.ok(sourceNames.has(name), `${dirent.name}: name "${name}" must be the hyphenated file name of a workflow`);
+            assert.strictEqual(name, dirent.name, `${dirent.name}: name must equal its directory`);
+
+            assert.ok(description.length > 0, `${name}: description must not be blank`);
+            assert.ok(description.length <= 1024, `${name}: description is ${description.length} characters, limit 1,024`);
+            assert.doesNotMatch(description, /[<>]/, `${name}: description must not contain "<" or ">"`);
+            assert.match(description, /(^|[.!?]\s+)Use when\b/, `${name}: description must carry a "Use when" sentence`);
+            assert.doesNotMatch(description, /\b(I|we|my|you|your)\b/i, `${name}: description must be third person`);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5f. sync-skills.js — the generator refuses what the contract forbids.
+    //     One fixture per rule, each breaking exactly that rule, so a
+    //     mutation of one check turns exactly its own fixture red. A refusal
+    //     writes nothing, leaves an earlier valid wrapper byte-identical,
+    //     records an `error` finding, and fails the run — while every other
+    //     wrapper, from both sources, is still checked and projected.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('sync-skills.js refuses a wrapper that breaks the frontmatter contract, writes nothing for it, records an error and exits non-zero while a valid sibling is still projected', () => {
+        const syncSkills = require(path.join(devScriptsDir, 'sync-skills.js'));
+        const reserved = syncSkills.RESERVED_NAME_WORDS[0];
+        const tempDir = createTempWorkspace();
+        try {
+            const workflowsDir = path.join(tempDir, 'workflows');
+            const devWorkflowsDir = path.join(tempDir, '.agents', 'workflows');
+            fs.mkdirSync(workflowsDir, { recursive: true });
+            fs.mkdirSync(devWorkflowsDir, { recursive: true });
+
+            const valid = 'Does a thing to the plan. Use when the user asks for the thing.';
+            const write = (dir, file, frontmatter) =>
+                fs.writeFileSync(
+                    path.join(dir, file),
+                    frontmatter === null
+                        ? '# No frontmatter\n\nA first body line.\n'
+                        : `---\n${frontmatter}\n---\n\n# Body\n\nBody text.\n`,
+                );
+
+            // Valid: projected. The folded one pins that a multi-line value is measured as its text.
+            write(workflowsDir, 'magic.good.md', `name: magic.good\ndescription: ${valid}`);
+            write(
+                workflowsDir,
+                'magic.fold.md',
+                'name: magic.fold\ndescription: >\n  Does a folded thing to the plan.\n  Use when the user asks for the folded thing.',
+            );
+            write(devWorkflowsDir, 'magic.devgood.md', `name: magic.devgood\ndescription: ${valid}`);
+
+            // One rule each.
+            write(
+                workflowsDir,
+                'magic.long.md',
+                `name: magic.long\ndescription: Does a thing. Use when the user asks. ${'x'.repeat(1100)}`,
+            );
+            write(workflowsDir, 'magic.nowhen.md', 'name: magic.nowhen\ndescription: Does a thing to the plan.');
+            write(
+                workflowsDir,
+                'magic.person.md',
+                'name: magic.person\ndescription: Does a thing to the plan. Use when the user asks for the thing, so you can proceed.',
+            );
+            write(
+                workflowsDir,
+                'magic.angle.md',
+                'name: magic.angle\ndescription: Does a <b>thing</b> to the plan. Use when the user asks for the thing.',
+            );
+            write(workflowsDir, 'magic.blank.md', 'name: magic.blank\ndescription:');
+            write(workflowsDir, 'magic.nofront.md', null);
+            write(workflowsDir, 'magic.Upper.md', `name: magic.Upper\ndescription: ${valid}`);
+            write(workflowsDir, 'magic.mismatch.md', `name: magic.other\ndescription: ${valid}`);
+            write(
+                workflowsDir,
+                `magic.${reserved}-helper.md`,
+                `name: magic.${reserved}-helper\ndescription: ${valid}`,
+            );
+            write(devWorkflowsDir, 'magic.devbad.md', 'name: magic.devbad\ndescription: Does a thing to the plan.');
+
+            // A wrapper generated earlier for a workflow that is refused now, and a hand-crafted skill.
+            const previous =
+                '---\nname: magic-long\ndescription: Earlier valid wrapper. Use when the user wants the earlier thing.\n---\n\n<!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: workflows/magic.long.md (relative to workspace root) -->\n\nEarlier body.\n';
+            fs.mkdirSync(path.join(tempDir, 'skills', 'magic-long'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'skills', 'magic-long', 'SKILL.md'), previous);
+            const handMade = '---\nname: hand-made\ndescription: Hand crafted.\n---\n\nHand crafted body.\n';
+            fs.mkdirSync(path.join(tempDir, 'skills', 'hand-made'), { recursive: true });
+            fs.writeFileSync(path.join(tempDir, 'skills', 'hand-made', 'SKILL.md'), handMade);
+
+            const generator = path.join(tempDir, 'dev', 'scripts', 'sync-skills.js');
+            const run = spawnSync(process.execPath, [generator], { cwd: tempDir, encoding: 'utf8' });
+
+            const expected = [
+                ['magic.long', 'description', /[\d,]+ characters, limit 1,024/],
+                ['magic.nowhen', 'description', /no "Use when" sentence/],
+                ['magic.person', 'description', /first- or second-person word "you"/],
+                ['magic.angle', 'description', /contains a "<" or ">" character/],
+                ['magic.blank', 'description', /missing or blank/],
+                ['magic.nofront', 'description', /synthesized by the generator: the workflow has no frontmatter block/],
+                ['magic.Upper', 'name', /only lowercase letters, digits and hyphens are allowed/],
+                ['magic.mismatch', 'name', /differs from the workflow file name \(expected magic-mismatch\)/],
+                [`magic.${reserved}-helper`, 'name', /contains a word the target skill format reserves/],
+                ['magic.devbad', 'description', /no "Use when" sentence/],
+            ];
+
+            assert.strictEqual(run.status, 1, `a refusal must fail the run; stderr: ${run.stderr}`);
+            assert.strictEqual(
+                (run.stderr.match(/Wrapper refused:/g) || []).length,
+                expected.length,
+                `exactly one refusal line per broken rule; stderr: ${run.stderr}`,
+            );
+            for (const [workflow, field, rule] of expected) {
+                const line = run.stderr.split('\n').find((l) => l.includes(`Wrapper refused: ${workflow} — ${field}:`));
+                assert.ok(line, `the refusal of ${workflow} must name the workflow and the field; stderr: ${run.stderr}`);
+                assert.match(line, rule, `the refusal of ${workflow} must name the rule`);
+            }
+
+            // Nothing is written for a refused wrapper; valid siblings from both sources are.
+            for (const refused of ['nowhen', 'person', 'angle', 'blank', 'nofront', 'Upper', 'mismatch']) {
+                assert.ok(!fs.existsSync(path.join(tempDir, 'skills', `magic-${refused}`)), `no wrapper may be written for ${refused}`);
+            }
+            assert.ok(!fs.existsSync(path.join(tempDir, 'skills', `magic-${reserved}-helper`)), 'no wrapper for the reserved-word name');
+            assert.ok(!fs.existsSync(path.join(tempDir, '.agents', 'skills', 'magic-devbad')), 'no dev-facing wrapper for a refused dev workflow');
+            assert.ok(fs.existsSync(path.join(tempDir, 'skills', 'magic-good', 'SKILL.md')), 'a valid sibling is still projected');
+            assert.ok(fs.existsSync(path.join(tempDir, 'skills', 'magic-fold', 'SKILL.md')), 'a folded multi-line description is measured as its text and projected');
+            assert.ok(fs.existsSync(path.join(tempDir, '.agents', 'skills', 'magic-devgood', 'SKILL.md')), 'a valid dev-facing wrapper is projected');
+
+            // An earlier valid wrapper survives a refusal byte for byte, and a hand-crafted skill is never touched.
+            assert.strictEqual(
+                fs.readFileSync(path.join(tempDir, 'skills', 'magic-long', 'SKILL.md'), 'utf8'),
+                previous,
+                'a refused workflow leaves its previous wrapper exactly as it was',
+            );
+            assert.strictEqual(
+                fs.readFileSync(path.join(tempDir, 'skills', 'hand-made', 'SKILL.md'), 'utf8'),
+                handMade,
+                'a hand-crafted skill is outside the contract',
+            );
+
+            // Each refusal is an `error` finding in the diagnostics sink.
+            const sink = fs
+                .readFileSync(path.join(tempDir, '.design', '.cache', 'diagnostics.jsonl'), 'utf8')
+                .trim()
+                .split('\n')
+                .map((l) => JSON.parse(l))
+                .filter((f) => f.code === 'SKILL_WRAPPER_REFUSED');
+            assert.strictEqual(sink.length, expected.length, 'one recorded finding per refusal');
+            assert.ok(sink.every((f) => f.severity === 'error'), 'a refusal is recorded as an error');
+            for (const [workflow, field] of expected) {
+                assert.ok(
+                    sink.some((f) => f.message.startsWith(`${workflow}: ${field}: `)),
+                    `the finding for ${workflow} must name the workflow and the field`,
+                );
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+
+        // A dry run checks, reports and exits as a real run would, and writes nothing.
+        const dryDir = createTempWorkspace();
+        try {
+            fs.mkdirSync(path.join(dryDir, 'workflows'), { recursive: true });
+            fs.writeFileSync(
+                path.join(dryDir, 'workflows', 'magic.good.md'),
+                '---\nname: magic.good\ndescription: Does a thing to the plan. Use when the user asks for the thing.\n---\n\n# Body\n',
+            );
+            fs.writeFileSync(
+                path.join(dryDir, 'workflows', 'magic.nowhen.md'),
+                '---\nname: magic.nowhen\ndescription: Does a thing to the plan.\n---\n\n# Body\n',
+            );
+            const dry = spawnSync(process.execPath, [path.join(dryDir, 'dev', 'scripts', 'sync-skills.js')], {
+                cwd: dryDir,
+                encoding: 'utf8',
+                env: { ...process.env, MAGIC_DRY_RUN: '1' },
+            });
+            assert.strictEqual(dry.status, 1, 'a dry run exits as a real run does');
+            assert.match(dry.stderr, /Wrapper refused: magic\.nowhen/);
+            assert.ok(!fs.existsSync(path.join(dryDir, 'skills')), 'a dry run writes nothing');
+        } finally {
+            cleanup(dryDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5g. update-engine-meta.js — a refusal does not abort the C14 flow.
+    //     The manifest covers .magic/ only and a skill wrapper is outside it, so
+    //     a refused wrapper must not leave the version bumped and the manifest
+    //     stale: the flow finishes, then the run fails without its success line.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('update-engine-meta.js: a refused wrapper does not abort the flow — the manifest is still regenerated — and the run then fails without its success line', () => {
+        for (const engineDrift of [true, false]) {
+            const tempDir = createTempWorkspace();
+            try {
+                fs.mkdirSync(path.join(tempDir, 'workflows'), { recursive: true });
+                fs.writeFileSync(
+                    path.join(tempDir, 'workflows', 'magic.example.md'),
+                    '---\nname: magic.example\ndescription: Does a thing to the plan.\n---\n\n# Example\n\nBody.\n',
+                );
+                generateChecksums(tempDir);
+
+                const metaScript = path.join(tempDir, '.magic', 'scripts', 'update-engine-meta.js');
+                const checksumsPath = path.join(tempDir, '.magic', '.checksums');
+                const versionPath = path.join(tempDir, '.magic', '.version');
+                const before = fs.readFileSync(checksumsPath, 'utf8');
+                if (engineDrift) {
+                    fs.appendFileSync(path.join(tempDir, '.magic', 'scripts', 'utils.js'), '\n// drift\n');
+                }
+
+                const label = engineDrift ? 'with engine drift' : 'on a workflows-only edit';
+                const run = spawnSync(process.execPath, [metaScript], { cwd: tempDir, encoding: 'utf8' });
+
+                assert.strictEqual(run.status, 1, `${label}: a refused wrapper must fail the run; output: ${run.stdout}${run.stderr}`);
+                assert.doesNotMatch(run.stdout, /Engine metadata and version updated/, `${label}: no success line over a refusal`);
+                assert.match(run.stderr, /Skill wrapper\(s\) refused: magic\.example/, `${label}: the failure line names the refused workflow`);
+                assert.ok(
+                    !fs.existsSync(path.join(tempDir, 'skills', 'magic-example', 'SKILL.md')),
+                    `${label}: nothing is written for the refused wrapper`,
+                );
+
+                const after = fs.readFileSync(checksumsPath, 'utf8');
+                if (engineDrift) {
+                    assert.notStrictEqual(after, before, `${label}: the manifest is still regenerated`);
+                    assert.strictEqual(fs.readFileSync(versionPath, 'utf8').trim(), '1.0.1', `${label}: the version bump stands`);
+                    const check = spawnSync(process.execPath, [metaScript, '--check'], { cwd: tempDir, encoding: 'utf8' });
+                    assert.strictEqual(check.status, 0, `${label}: the regenerated manifest matches the tree`);
+                } else {
+                    assert.strictEqual(after, before, `${label}: nothing under .magic/ changed, so the manifest is untouched`);
+                }
+            } finally {
+                cleanup(tempDir);
+            }
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5h. .magic/*.md — body navigation. A wrapper points to a body and a body to
+    //     the shared modules it applies, and an agent may preview a file it
+    //     reaches through such a chain instead of reading it through. A body over
+    //     100 lines therefore opens with a contents list that names every `##`
+    //     section, and a pointer to a shared module applies the module as a
+    //     whole: a section list silently excludes each section it omits.
+    // ───────────────────────────────────────────────────────────────────────────
+
+    /** A body longer than this many lines needs a contents list, within its first CONTENTS_WINDOW lines. */
+    const LONG_BODY_LINES = 100;
+    const CONTENTS_WINDOW = 40;
+    /** A wrapper is loaded whole when a host selects it. */
+    const WRAPPER_MAX_LINES = 500;
+
+    /** Newline-terminated lines, as `wc -l` counts them. */
+    const countLines = (text) => text.split('\n').length - (text.endsWith('\n') ? 1 : 0);
+
+    /** The `##` headings of a body outside fenced code blocks, in file order. */
+    const h2Headings = (text) => {
+        const found = [];
+        let fence = null;
+        for (const line of text.split('\n')) {
+            const f = line.match(/^\s*(```+|~~~+)/);
+            if (f) {
+                if (fence === null) fence = f[1][0];
+                else if (f[1][0] === fence) fence = null;
+                continue;
+            }
+            if (fence) continue;
+            const m = line.match(/^## (.+?)\s*$/);
+            if (m) found.push(m[1]);
+        }
+        return found;
+    };
+
+    /** The list items within the first 40 lines, with the bullet stripped. */
+    const contentsItems = (text) =>
+        text
+            .split('\n')
+            .slice(0, CONTENTS_WINDOW)
+            .filter((line) => /^\s*[-*]\s+/.test(line))
+            .map((line) => line.replace(/^\s*[-*]\s+/, '').trim());
+
+    /**
+     * A body of at most 100 lines needs nothing; a longer one needs the text of
+     * every `##` heading as a list item within its first 40 lines, in file order.
+     * An entry may carry a trailing note after an em dash.
+     */
+    const contentsProblems = (text) => {
+        if (countLines(text) <= LONG_BODY_LINES) return [];
+        const items = contentsItems(text);
+        const problems = [];
+        let from = 0;
+        for (const heading of h2Headings(text)) {
+            const at = items.findIndex(
+                (item, i) => i >= from && (item === heading || item.startsWith(`${heading} —`)),
+            );
+            if (at === -1) {
+                problems.push(`no contents entry, in file order, for "${heading}"`);
+                continue;
+            }
+            from = at + 1;
+        }
+        return problems;
+    };
+
+    /**
+     * Sections the shared module itself marks as one workflow's alone — a
+     * contents entry that ends with an em dash, a backticked name and "only".
+     */
+    const narrowerSections = (moduleText) =>
+        new Set(
+            h2Headings(moduleText).filter((heading) =>
+                contentsItems(moduleText).some(
+                    (item) => item.startsWith(`${heading} —`) && /— `[^`]+` only$/.test(item),
+                ),
+            ),
+        );
+
+    /**
+     * Every link to the shared module in a body: with no section list after it
+     * the pointer applies the module as a whole; with one, the list must carry
+     * the heading text of every section the module does not mark as narrower.
+     */
+    const pointerProblems = (bodyText, moduleText) => {
+        const problems = [];
+        const required = h2Headings(moduleText).filter((h) => !narrowerSections(moduleText).has(h));
+        for (const line of bodyText.split('\n')) {
+            const link = line.match(/\]\((?:[./]*(?:\.magic\/)?)context\.md\)/);
+            if (!link) continue;
+            const listed = line.slice(link.index + link[0].length).match(/^\s*\(([^)]*)\)/);
+            if (!listed) continue;
+            const items = listed[1].split(',').map((s) => s.trim());
+            for (const heading of required) {
+                if (!items.some((item) => item === heading)) {
+                    problems.push(`pointer lists sections but omits "${heading}": ${line.trim().slice(0, 90)}`);
+                }
+            }
+        }
+        return problems;
+    };
+
+    test('body navigation: every shipped body over 100 lines carries a contents list of its ## headings, and no wrapper is over 500 lines', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const bodies = fs.readdirSync(path.join(repoRoot, '.magic')).filter((f) => f.endsWith('.md'));
+        assert.ok(bodies.length >= 9, 'the engine bodies and shared modules must be found');
+
+        let checked = 0;
+        for (const file of bodies) {
+            const text = fs.readFileSync(path.join(repoRoot, '.magic', file), 'utf8');
+            if (countLines(text) > LONG_BODY_LINES) checked++;
+            assert.deepStrictEqual(contentsProblems(text), [], `.magic/${file}`);
+        }
+        assert.ok(checked >= 6, 'at least the six long bodies must be subject to the contents-list rule');
+
+        for (const file of fs.readdirSync(path.join(repoRoot, 'workflows')).filter((f) => f.endsWith('.md'))) {
+            const lines = countLines(fs.readFileSync(path.join(repoRoot, 'workflows', file), 'utf8'));
+            assert.ok(lines <= WRAPPER_MAX_LINES, `workflows/${file} is ${lines} lines, limit ${WRAPPER_MAX_LINES}`);
+        }
+    });
+
+    test('body navigation: the scans flag a body without a contents list, a list that omits a heading, a list out of order or past line 40, and a pointer that omits a section', () => {
+        // A throwaway body of well over 100 lines with three sections, one of them
+        // marked as another workflow's alone, and a fenced block holding a `##` line
+        // that is not a section.
+        const make = (contents, before = 0) => {
+            const lines = ['# Title', '', 'Intro.', ''];
+            for (let i = 0; i < before; i++) lines.push(`filler ${i}`);
+            lines.push(...contents, '');
+            for (const name of ['Alpha', 'Beta', 'Gamma']) {
+                lines.push(`## ${name}`, '');
+                for (let i = 0; i < 30; i++) lines.push(`${name} line ${i}`);
+                if (name === 'Beta') lines.push('```', '## Not a section', '```');
+            }
+            return lines.join('\n') + '\n';
+        };
+        const full = ['**Contents:**', '', '- Alpha', '- Beta — `magic.spec` only', '- Gamma'];
+
+        assert.ok(countLines(make(full)) > 100, 'the fixture must be over 100 lines');
+        assert.deepStrictEqual(contentsProblems(make(full)), [], 'a complete list passes, and a fenced `##` line is not a section');
+        assert.strictEqual(contentsProblems(make([])).length, 3, 'a body with no contents list is flagged for every heading');
+        assert.strictEqual(
+            contentsProblems(make(['- Alpha', '- Gamma'])).length,
+            1,
+            'a list that omits one heading is flagged for exactly that heading',
+        );
+        assert.ok(contentsProblems(make(['- Beta', '- Alpha', '- Gamma'])).length >= 1, 'a list out of file order is flagged');
+        assert.strictEqual(contentsProblems(make(full, 45)).length, 3, 'a list that starts past line 40 is not a contents list');
+        assert.deepStrictEqual(contentsProblems('# Short\n\n## One\n\nText.\n'), [], 'a body of at most 100 lines needs no list');
+
+        // Pointers to the module that body describes.
+        const moduleText = make(full);
+        assert.deepStrictEqual(pointerProblems('1. Apply [context.md](context.md) as a whole.', moduleText), []);
+        assert.deepStrictEqual(
+            pointerProblems('1. Apply [context.md](context.md) (Alpha, Gamma).', moduleText),
+            [],
+            'a list that carries every section not marked narrower passes',
+        );
+        assert.strictEqual(
+            pointerProblems('1. Apply [context.md](context.md) (Alpha).', moduleText).length,
+            1,
+            'a list that omits one section is flagged for exactly that section',
+        );
+        assert.strictEqual(
+            pointerProblems('1. Apply [context.md](../../.magic/context.md) (Priority 1-4, Disambiguation).', moduleText).length,
+            2,
+            'a list of other names carries none of the sections',
+        );
+    });
+
+    test('body navigation: every pointer to context.md applies the module as a whole', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const moduleText = fs.readFileSync(path.join(repoRoot, '.magic', 'context.md'), 'utf8');
+        const sites = fs
+            .readdirSync(path.join(repoRoot, '.magic'))
+            .filter((f) => f.endsWith('.md') && f !== 'context.md')
+            .map((f) => path.join('.magic', f));
+        sites.push(path.join('.agents', 'workflows', 'magic.dev.simulate.md'));
+
+        let pointers = 0;
+        for (const rel of sites) {
+            const text = fs.readFileSync(path.join(repoRoot, rel), 'utf8');
+            pointers += text.split('\n').filter((l) => /\]\((?:[./]*(?:\.magic\/)?)context\.md\)/.test(l)).length;
+            assert.deepStrictEqual(pointerProblems(text, moduleText), [], rel);
+        }
+        assert.ok(pointers >= 10, `the shipped text points to context.md in at least ten places (found ${pointers})`);
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5i. magic.dev.simulate — the reader tier of the fresh literal reader.
+    //     The reading test is only as strong as its reader: independence of
+    //     context was already stated, capability was not. The workflow is
+    //     instruction text with no script behind it, so the harness pins its
+    //     shipped wording — in the workflow and in the skill generated from it.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('simulation workflow: the fresh literal reader takes the lowest tier the host offers, reports the files it opened, and a lowest-tier-only divergence needs a second reader (reader tier)', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const workflow = fs.readFileSync(
+            path.join(repoRoot, '.agents', 'workflows', 'magic.dev.simulate.md'),
+            'utf8',
+        );
+        const skill = fs.readFileSync(
+            path.join(repoRoot, '.agents', 'skills', 'magic-dev-simulate', 'SKILL.md'),
+            'utf8',
+        );
+        const rung = workflow.split('\n').find((line) => line.includes('*Reading test*'));
+        assert.ok(rung, 'the adjudication ladder must carry the reading test');
+
+        const statements = [
+            'takes the lowest-capability tier it offers',
+            'where the host exposes none, nothing more is required',
+            'returns its predicted action with the engine files it opened and the line range it read of each',
+            'is a **structure** finding',
+            'a second fresh agent of the same tier reproduces it',
+        ];
+        for (const statement of statements) {
+            assert.ok(rung.includes(statement), `the reading test must state: ${statement}`);
+        }
+        assert.ok(
+            skill.includes('takes the lowest-capability tier it offers'),
+            'the generated skill must carry the reader tier too',
+        );
     });
 
     // ───────────────────────────────────────────────────────────────────────────

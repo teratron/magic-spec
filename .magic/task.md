@@ -2,6 +2,15 @@
 
 Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.design/specifications/`.
 
+**Contents:**
+
+- Context Quality Guidance
+- Argument Routing
+- Core Invariants (Mandatory)
+- Workflow: Planning & Orchestration
+- Finalization Protocol (Mandatory)
+- Task Completion Checklist
+
 ## Context Quality Guidance
 
 Read economy is guidance, not a measurement: the agent has no reliable reading of its own context-window fill, so no tier or percentage is used here (see `context.md` §Context Budget Guard).
@@ -27,7 +36,7 @@ Parse `[arg]` to determine planning mode:
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Registry Integrity**: Account for every spec registered in `INDEX.md` before planning — read the registry entries and the wiki, and open a spec body only where a step needs it. No spec may be left unaccounted for.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
    - **Intent Preservation**: if `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: *"Resuming: '{original intent}'."* Intent MUST NOT be silently dropped across workflow boundaries.

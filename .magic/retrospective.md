@@ -4,7 +4,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Writes are limited to `RETROSPECTIVE.md` and derived diagnostic snapshots (`graph-snapshot.json` / `graph-before.json`). These are not graph sources, so **no `export-wiki`** is required (graph-refresh exemption). Phase archival is NOT performed here — see §7.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.

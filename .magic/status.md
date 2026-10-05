@@ -12,7 +12,7 @@ Read-only resume briefing for returning users. Composes current position, progre
 ## Core Invariants (Mandatory)
 
 1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.design/.cache/`; the sink is not an artifact and that is not a write in this sense.)
-2. **Context (Zero-Prompt)**: resolve the workspace via the resolution chain in [context.md](context.md) (Priority 1-4). Optional `{workspace}` argument overrides.
+2. **Context (Zero-Prompt)**: apply [context.md](context.md) as a whole — every section applies unless it names other workflows. Optional `{workspace}` argument overrides.
 3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, it ends with that statement and no command; the briefing never invents one.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
 5. **Graceful Degradation**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})`, never a crash of the whole briefing.

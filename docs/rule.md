@@ -119,4 +119,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-30 (v2.1.110).
+Synchronized with engine workflows on 2026-10-05 (v2.1.134).
