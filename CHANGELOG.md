@@ -39,6 +39,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Updated 7 specifications (engine)
 - Completed 2 tasks (engine)
 - Updated task execution state (main)
+- Updated 3 specifications (engine)
 
 ### Fixed
 

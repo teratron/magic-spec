@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.16.2
+**Version:** 1.17.0
 **Status:** Active
 **Engine Version:** 2.1.133
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.17.0 | 2026-10-05 | Agent | No spec-count change (37/37 Stable). `/magic.spec amend` from a reference-mining pass over an external skill-authoring guide: `l2-skill-wrappers.md` 1.4.0 → 1.5.0 (Frontmatter Contract: validity limits plus the Selection Signal form of a wrapper's `description`; Generation-Time Validation in two tiers — refusal for a validity limit, `warning` for a form shortfall), `l2-workflow-wrappers.md` 1.3.1 → 1.4.0 (the description is authored in the wrapper alone; Body Navigation Contract — a contents list for every engine body over 100 lines), `l2-test-suite.md` 1.23.1 → 1.24.0 (shipped-text and cognitive selection coverage; a reader tier for the fresh reader). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
 | 1.16.2 | 2026-10-02 | Agent | No spec-count change (37/37 Stable). `l2-finalize-output-contract.md` 2.0.0 → 2.1.0 defines safe `release-changelog` CLI behavior: `--help` is read-only, and unknown arguments fail before rotation. |
 | 1.16.1 | 2026-10-01 | Agent | Clarification patch, no count change (37/37 Stable): l2-session-checkpoint.md 1.1.0 → 1.1.1 (§5.1: Select takes a task left `In Progress` by an earlier session before any `Todo` task), l1-engine-core.md 1.8.3 → 1.8.4 (RE-2: a phase left with only blocked tasks ends `/magic.task` with the Stalled Plan report instead of a handoff; the debugger card and the run page agree with the single `/magic.task` route), l2-role-cards-execution.md 1.2.2 → 1.2.3 (the debugger card's step 4, mirrored), l2-test-suite.md 1.23.0 → 1.23.1 (T256–T259). No requirement changed; no constitution change. Found by a `/magic.dev.simulate` Improv run (engine 2.1.129 → 2.1.132). |
 | 1.16.0 | 2026-10-01 | Agent | Major amendment batch, no count change (37/37 Stable): l1-decision-autonomy.md 1.3.1 → 2.0.0 (DA-10 Consequence Forecast; DA-2 reduced to consent and the intake survey — E3 and E5 are forecast, not asked), l1-idea-intake-gate.md 1.0.0 → 2.0.0 (two gates, comprehension and sufficiency, and a survey whose options the forecast writes), l1-workspace-intent-routing.md 1.1.1 → 2.0.0 (resolves by the forecast), l2-role-cards-governance.md 1.3.0 → 1.4.0, l2-test-suite.md 1.22.0 → 1.23.0 (Finding Adjudication — the simulation workflow decides and fixes its findings), l1-engine-core.md 1.8.3, l1-rule-admission-gate.md 1.1.2. RULES.md 1.14.0 → 1.15.0 (C9 gates 3 and 7, C13 §3, C26, C27; origin user-stated — the owner directives of 2026-10-01: decide instead of polling, after six polls were each answered with the marked default; keep the intake questions, after a first draft had replaced them with the forecast). |
