@@ -214,11 +214,13 @@ If everything is clean:
 If the user asks to fix (e.g. *"fix them"*, *"apply suggestions"*), apply each diagnostic's suggestion directly to the file.
 
 **Edit discipline:**
+
 - Use the suggestion from each diagnostic; preserve the file's overall structure, tone, and intent.
 - Change only what is necessary to resolve the diagnostic. Do **not** add new sections or remove instructions unless a diagnostic specifically calls for it (e.g. resolving a contradiction).
 - If two diagnostics conflict, prefer the fix that keeps the prompt clearer and more consistent.
 
 **Never edit (report findings, but leave the file):**
+
 - Files that declare themselves **generated / do-not-edit** (e.g. contain a `GENERATED FILE`, `DO NOT EDIT`, `@generated`, or `AUTO-GENERATED` marker) — fix the source of truth instead, and tell the user where it is.
 - Files **outside the explicitly requested scope**.
 - Read-only / vendored / build directories, and any path the project marks as protected. When unsure whether a file is safe to edit, **ask before editing**.
