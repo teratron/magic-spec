@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.45.0
-**Generated:** 2026-10-05
-**Based on PLAN:** .design/engine/PLAN.md v1.46.0
+**Version:** 1.46.0
+**Generated:** 2026-10-06
+**Based on PLAN:** .design/engine/PLAN.md v1.47.0
 **Based on RULES:** .design/RULES.md v1.15.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -21,6 +21,7 @@ Tactical registry of all phases and their statuses. **Phase 37 (Backlog Deployme
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 39](tasks/phase-39.md) | Registry Text Contract & Question Routing Deployment — the routing clause in the always-on rules, the registry `Description` and ledger-overview form in `spec.md`, `task.md`, three templates and the docs, harness pins and cognitive cases, then a one-time rewrite of this workspace's registry and ledger | `Todo` |
 | [Phase 38](archives/tasks/phase-38.md) | Skill-Wrapper Contract & Body Navigation Deployment — nine workflow descriptions in the Selection Signal form, generator validation and the C14 flow that finishes before failing, contents lists and whole-module pointers in the engine bodies, harness and cognitive coverage with a reader tier | `Done (Archived)` |
 | [Phase 37](archives/tasks/phase-37.md) | Backlog Deployment — `Status` reconciliation from one shared ledger classification, pause-snapshot retirement (files, flag, field, resume branch) with a residue search, `RULES.md` in the spec whitelist, `dev/scripts/mutation-check.js` with self-test | `Done (Archived)` |
 

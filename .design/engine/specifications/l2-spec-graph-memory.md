@@ -1,18 +1,20 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.1.4
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
 ## Overview
 
-Three adapters that reduce token cost and rebuild time for the Specification Knowledge Graph subsystem, ported from the external reference project: per-file extraction cache with frontmatter-aware hashing, Wikipedia-style wiki export for agent navigation, and token-budget truncation on the MCP `query_graph` tool.
+Three adapters that reduce token cost and rebuild time for the Specification Knowledge Graph subsystem, ported from the external reference project: per-file extraction cache with frontmatter-aware hashing, Wikipedia-style wiki export for agent navigation, and token-budget truncation on the MCP `query_graph` tool. The subsystem describes how specifications relate and holds none of their wording, so the specification also states which questions it answers and which it does not (§4.5).
 
 ## Related Specifications
 
 - [l1-engine-core.md](l1-engine-core.md) — Parent L1 contract for the engine.
 - [l2-engine-automation.md](l2-engine-automation.md) — Automation scripts registry (extended by this spec).
+- [l2-engine-templates.md](l2-engine-templates.md) — The registry `Description` is a router, not an index of contents (§5.3 there); §4.5 here is the route for content questions.
+- [l2-test-suite.md](l2-test-suite.md) — Coverage of the §4.5 routing sentence and its cognitive cases.
 
 ## 1. Motivation
 
@@ -24,8 +26,11 @@ The Spec Graph subsystem (`build-spec-graph.js`, `serve-spec-graph.js`) already 
 
 The three mechanisms below address each gap independently and compose cleanly — all three are opt-in and do not affect existing graph consumers.
 
+A fourth gap shows only on a large corpus. The graph and the wiki are structural by design, yet shipped text sends every "what covers Z" question to them. A question about content cannot be answered from structure, and in a consumer project of 325 specifications the hand-written registry `Description` had become the substitute: an inventory of each specification's mechanics, far longer than the registry can carry (§4.5, [l2-engine-templates.md](l2-engine-templates.md) §1).
+
 ## 2. Constraints & Assumptions
 
+- The graph and the wiki carry structure — nodes, layers, status, versions, references, enforced conventions, edges — and no specification text. No field of a graph node or wiki article holds a specification's wording, and §4 adds none (§6).
 - Pure-Node, zero new npm dependencies (stays aligned with `l2-engine-automation.md`).
 - Cache lives under `$designDir/.graph-cache/` (workspace-scoped, not committed).
 - Wiki output lives under `$designDir/wiki/` (deterministic, regenerable).
@@ -104,7 +109,7 @@ node .magic/scripts/executor.js export-wiki --from-file .design/spec-graph.json
 node .magic/scripts/executor.js export-wiki --out .design/wiki    # explicit out dir
 ```
 
-**Agent contract:** after this spec lands, `CLAUDE.md` and `magic.analyze` can recommend "read `.design/wiki/index.md` before scanning raw specs".
+**Agent contract:** after this spec lands, `CLAUDE.md` and `magic.analyze` can recommend "read `.design/wiki/index.md` before scanning raw specs" — for structural questions; a content question takes the route of §4.5.
 
 ### 4.3 Token-Budget Truncation on `query_graph`
 
@@ -133,7 +138,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 | Class | When | Workflows | Action |
 | --- | --- | --- | --- |
 | **Write-side** | After any mutation of `.design/` artifacts that contribute graph nodes/edges (specs, PLAN.md phases, RULES.md conventions, INDEX.md entries) | `spec.md` (Creating, Updating, Batch Stabilization), `task.md` (after writing PLAN/TASKS), `analyze.md` (Mode A/B/D after dispatch), `rule.md` (after RULES.md write) | Run canonical refresh **once per workflow invocation**, post-dispatch, before the Task Completion Checklist. |
-| **Read-side** | Before architectural reasoning (impact analysis, planning, audit) | `task.md` (planning), `run.md` (impact check), `analyze.md` (Mode C) | Prefer reading `$designDir/wiki/index.md` over scanning raw `.design/specifications/`. If the MCP graph server is running (see [`l2-spec-graph-memory.md` §4.3](#43-token-budget-truncation-on-query_graph)), use `query_graph` with a bounded `token_budget`. |
+| **Read-side** | Before architectural reasoning (impact analysis, planning, audit) | `task.md` (planning), `run.md` (impact check), `analyze.md` (Mode C) | For structural questions (§4.5) prefer reading `$designDir/wiki/index.md` over scanning raw `.design/specifications/`. If the MCP graph server is running (see [`l2-spec-graph-memory.md` §4.3](#43-token-budget-truncation-on-query_graph)), use `query_graph` with a bounded `token_budget`. |
 | **Audit-side** | Periodic consistency checks | `analyze.md` Mode C step 6 | Already runs `build-spec-graph` (full mode). Additionally compares `wiki/index.md` mtime against `.design/specifications/**/*.md` and `.design/{ws}/PLAN.md` mtimes; if any source is newer → emit `WIKI_STALE` advisory. |
 | **Visual** | Explicit user request | `analyze.md` (`--html` flag), future `magic.dev.graph` skill | Run `build-spec-graph --html [path]`. Never auto-generated. |
 
@@ -146,6 +151,23 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 **Failure handling:** the refresh call is best-effort. If `export-wiki` fails (e.g., malformed spec frontmatter), the workflow MUST log the failure as a non-blocking warning and continue. Stale wiki is a degraded but functional state — blocking the workflow on graph refresh would convert a warning into an outage.
 
 **Cache hygiene:** the per-file extraction cache accumulates orphaned entries when specs are renamed or deleted. `graph-cache.js` exports `clearCache(designAbs)` to reclaim that disk, but no workflow step calls it, so reclaiming is a manual act. Entries are keyed by the hash of the file body, so an orphaned entry costs disk only and never produces a stale hit.
+
+### 4.5 Question Routing: Structure Versus Content
+
+The graph, the wiki and the MCP tools describe how specifications relate and hold none of their wording (§2). Two kinds of question therefore take different routes:
+
+| Question | Route |
+| --- | --- |
+| **Structure** — what depends on X, how X relates to Y, which specifications are load-bearing, what is orphaned, what implements an L1 specification | The graph and the wiki (§4.2, §4.4). |
+| **Content** — which specification covers mechanic M, where parameter P is defined, whether a mechanism already exists (whether a *rule* exists is checked in `RULES.md`, as `rule.md` already requires) | Search the specification text (`.design/{workspace}/specifications/`) for M, then read the matching section. Neither the graph, the wiki nor the registry `Description` is an index of contents ([l2-engine-templates.md](l2-engine-templates.md) §5.3). |
+
+Nothing here changes what `export-wiki` or `build-spec-graph` write. Measured on a consumer project's registries (325 specifications), the hand-written cell had become an inventory of mechanics with a median of 87 distinct terms: 94% of those terms are found in the specification's own text, but only 12% in its `Overview` paragraph and 20% in the `Overview` plus its headings. A search of the text therefore recovers what the cell carried, with the current wording instead of a copy that goes stale; a summary derived from the `Overview` and the headings would not (§6).
+
+Surfaces that carry the routing when it is deployed:
+
+| Surface | What it states |
+| --- | --- |
+| `rules/magic.md` §2 Auto-Use (and its hardlinked twin, **[C-001]**) | The clause that today sends "what covers Z" to the graph gains the split above: structure to the graph and the wiki, a mechanic named in the question to the specification text. `rules/` is outside C14's version and checksum tracking |
 
 ## 5. Implementation Notes
 
@@ -160,6 +182,8 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 - **Cache storage under `$designDir`** — alternative was `/.graph-cache/` at repo root. Chose workspace-scope for parity with `.design/spec-graph.html` and to keep cache invalidation local to workspace resets.
 - **Obsidian-style `[[links]]`** — alternative was standard Markdown links.
+- **A summary generated into each wiki article (rejected)** — the first paragraph of the `Overview`, optionally with the section headings, written by `export-wiki` so the registry cell can stay short. Measured recall of the registry-cell vocabulary (§4.5): 12% from the paragraph, 20% with the headings, against 94% for the text itself. It would add a field to the extraction cache's value shape — and, because entries are keyed by body hash and never invalidated, every unchanged specification would keep its old entry without the field until it was edited — and a text field to every graph consumer's payload, to recover a fifth of what a search recovers whole.
+- **Specification text in graph nodes (rejected)** — the graph is read by agents for structure; adding wording to every specification node (325 in the corpus measured) would enlarge every `build-spec-graph --json` read and make `diff-spec-graph` report every wording edit.
 - **Token-budget as JSON truncation** — arguably produces invalid JSON. Alternative was structured pagination. Chose truncation because `query_graph` results are already agent-consumed prose-style; invalid JSON is still informative text for an LLM and the truncation sentinel is explicit.
 
 ## Canonical References
@@ -175,6 +199,7 @@ This single call internally invokes `build-spec-graph --json`, which transparent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-10-06 | Agent | New §4.5 **Question Routing**: the graph and the wiki answer structural questions and hold no specification text; a content question — which specification covers a mechanic — is answered by searching the specification text, and the registry `Description` is not an index of contents. Measured on a consumer project (325 specifications): the vocabulary of the hand-written registry cells is 94% in the specifications' text, 12% in their `Overview` paragraph, 20% with the headings, so a summary generated into the wiki is rejected (§6) and `export-wiki` and `build-spec-graph` are unchanged. Shipped-text change deferred to deployment: the "what covers Z" clause of `rules/magic.md` §2. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.1.4 | 2026-09-30 | Agent | Clarification patch, no status transition: the cache-hygiene paragraph named a `magic.spec --audit --fix` healing path that calls `clearCache()`; neither exists — `--fix` is not an argument and no workflow step calls `clearCache()`. The paragraph now states what is true: the function is exported, reclaiming is manual, and entries keyed by body hash cannot yield a stale hit. No contract change. |
 | 1.1.3 | 2026-09-30 | Agent | Clarification patch, no status transition: Implementation Notes step 6 passed `--workflow build-spec-graph,serve-spec-graph,graph-cache,export-wiki` to `update-engine-meta`, which reads only `--check`; the command is now bare (see l2-engine-automation.md 1.18.0 §Engine Meta Update Flow). |
 | 1.1.2 | 2026-08-07 | Agent | Normalized `**Layer:**` field from `2` to `implementation` — the only L2 spec in the registry using the numeric form instead of the project convention (15/15 other L2 specs unaffected, all already `implementation`); no logic change (ventilation finding). |

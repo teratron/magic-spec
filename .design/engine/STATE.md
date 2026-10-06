@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-05 08:06
-**Phase:** 38 — Skill-Wrapper Contract & Body Navigation Deployment
+**Updated:** 2026-10-06 08:37
+**Phase:** 39 — Registry Text Contract & Question Routing Deployment
 **Status:** Active
 
 ## Current Position
 
 - **Task:** T-38T02 Validation: run the new cognitive cases against the shipped descriptions
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Plan complete — nothing pending
+- **Next Action:** Execute T-39A01 `rules/magic.md` §2: a content question goes to the specification text, a structural one to the graph ([C-001]) via /magic.run engine
 
 ## Progress
 
 ```
-Overall: [37/37] ████████ 100%
+Phase 39: [0/13] ░░░░░░░░ 0%
+Overall: [37/38] ████████ 97%
 ```
 
 ## Recent Decisions

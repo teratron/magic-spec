@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.18.0
+**Version:** 1.20.0
 **Status:** Active
 **Engine Version:** 2.1.134
 
@@ -24,6 +24,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.20.0 | 2026-10-06 | Agent | No spec-count change (37/37 Stable). The registry text contract re-measured on a consumer project's registries: `l2-engine-templates.md` 1.2.0 → 1.3.0 (content questions go to the specification text; the ledger overview describes the ledger; size signal sequenced after deployment), `l2-spec-graph-memory.md` 1.1.4 → 1.2.0 (§4.5 Question Routing), `l2-test-suite.md` 1.26.0 → 1.27.0 (coverage). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
+| 1.19.0 | 2026-10-06 | Agent | No spec-count change (37/37 Stable). `/magic.spec` pass on the authoring of registry text: `l2-engine-templates.md` 1.1.0 → 1.2.0 (§5.3 Registry Text Contract — a registry `Description` says what and when and is replaced only when that changes; the task-ledger overview states the plan's present state; guidance, not a gate), `l2-test-suite.md` 1.25.0 → 1.26.0 (coverage for it). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
 | 1.18.0 | 2026-10-05 | Agent | No spec-count change (37/37 Stable). Two owner overrides of the first pass's Decision Records: `l2-skill-wrappers.md` 1.5.0 → 1.6.0 (§3.3 refuses a wrapper that breaks a mechanically decidable Selection Signal rule, as it does a validity-limit violation; order of adoption), `l2-workflow-wrappers.md` 1.4.0 → 1.5.0 (§7 pointer completeness — a body's pointer to a shared module lists no sections or every applicable one), `l2-test-suite.md` 1.24.0 → 1.25.0 (one refusal outcome in the generator fixtures; the pointer scan). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
 | 1.17.0 | 2026-10-05 | Agent | No spec-count change (37/37 Stable). `/magic.spec amend` from a reference-mining pass over an external skill-authoring guide: `l2-skill-wrappers.md` 1.4.0 → 1.5.0 (Frontmatter Contract: validity limits plus the Selection Signal form of a wrapper's `description`; Generation-Time Validation in two tiers — refusal for a validity limit, `warning` for a form shortfall), `l2-workflow-wrappers.md` 1.3.1 → 1.4.0 (the description is authored in the wrapper alone; Body Navigation Contract — a contents list for every engine body over 100 lines), `l2-test-suite.md` 1.23.1 → 1.24.0 (shipped-text and cognitive selection coverage; a reader tier for the fresh reader). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
 | 1.16.2 | 2026-10-02 | Agent | No spec-count change (37/37 Stable). `l2-finalize-output-contract.md` 2.0.0 → 2.1.0 defines safe `release-changelog` CLI behavior: `--help` is read-only, and unknown arguments fail before rotation. |
