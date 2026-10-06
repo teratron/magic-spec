@@ -4199,6 +4199,63 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** independence of context is not capability; the structure/wording split of a divergence; the noise filter of a second reader at the lowest tier; the contents-list rule for engine bodies.
 - **Regression for:** none yet — measured on the shipped bodies: six over 100 lines with no contents list, and the Post-Resolution load of the shared module at line 114.
 
+### T264 — Registry Description: An Amendment That Changes Nothing About Purpose Leaves the Cell Byte-Identical
+
+- **Workflow:** `magic.spec` (Creating and Updating an Existing Specification, Sync) + the registry text contract
+- **Synthetic State (Test A):**
+  - A workspace registry with a row for a Stable L2 specification whose `Description` reads: "Retries and backoff for the outbound queue. Open it before changing delivery guarantees." The specification's Document History holds rows up to 1.3.0.
+  - The user asks for a wording change with no change of scope.
+- **Action A:** `/magic.spec amend {spec} "tighten the wording of the backoff section; it still covers the same ground"`.
+- **Expected A:**
+  - [ ] The version is bumped (patch) and one row is appended to the specification's own Document History.
+  - [ ] In the registry row the `Version` cell moves; the `Description` cell is **byte-identical** to before.
+  - [ ] No sentence about the amendment appears anywhere in the registry row.
+- **Synthetic State (Test B — control):** the same specification, and the amendment now makes it also own dead-letter handling.
+- **Expected B:**
+  - [ ] The whole `Description` cell is **rewritten** as a new text of at most two sentences that says what the specification is for and when to open it (it now names failed deliveries); the old sentence is gone and nothing is appended to it.
+  - [ ] The Document History row still records the amendment.
+- **Synthetic State (Test C — control):** a new specification is created in the same workspace.
+- **Expected C:**
+  - [ ] The registration writes a `Description` of at most two sentences that says what the specification is for and when to open it — no list of its sections or invariants, no version, no date.
+- **Guards tested:** a registry cell is replaced, never appended to; change history belongs to the specification's own Document History; registration writes the cell in its form; the rule is not a ban on editing the cell when the purpose moved.
+- **Regression for:** none yet — measured on registries: the engine's own workspace has a median description of 387 characters, a consumer project's two workspaces 1,578 and 2,086, and 46% of the cells of the larger one carry a version or a date.
+
+### T265 — Task Ledger Overview: Planning a Phase and Finishing One Leave It Untouched
+
+- **Workflow:** `magic.task` (Plan Write-back) + `magic.run` (Phase Completion)
+- **Synthetic State (Test A):**
+  - A `TASKS.md` whose `## Overview` reads: "Tactical registry of all phases and their statuses. Check individual phase files in `tasks/` for atomic checklists." Its phase table holds Phase 1 `Done` and Phase 2 `In Progress`.
+- **Action A:** `/magic.task` plans a Phase 3; later `/magic.run` finishes Phase 2.
+- **Expected A:**
+  - [ ] The phase table gains a Phase 3 row and Phase 2's status moves to its terminal value.
+  - [ ] The `## Overview` is **byte-identical** after both steps; no sentence naming a phase, a date or a count is added to it.
+- **Synthetic State (Test B — control):** after Phase 2 finishes the user asks: "Record what Phase 2 produced."
+- **Expected B:**
+  - [ ] It is recorded where it belongs — the phase file's `provides` and the workspace changelog entry for the phase — and not in the `Overview`.
+- **Synthetic State (Test C — control):** a ledger carried over from before the contract, whose `Overview` is a long narrative of earlier phases.
+- **Expected C:**
+  - [ ] Planning and finishing a phase neither extend that narrative nor rewrite it as a side effect; shrinking it is a deliberate one-time task, not part of an ordinary run.
+- **Guards tested:** the overview describes the ledger and tracks nothing; status is the phase table's; a phase's outcome has a home elsewhere; no step rewrites the overview as the plan moves.
+- **Regression for:** none yet — measured on a consumer project: one workspace's overview is 20.8 KB of per-phase narrative, the other's a 0.1 KB description of the file.
+
+### T266 — A Mechanic Named in a Question Is Searched in the Specification Text; a Structural Question Goes to the Graph
+
+- **Workflow:** ambient rule `rules/magic.md` §2 (Specification Knowledge Graph, Auto-Use)
+- **Synthetic State (Test A):**
+  - A workspace of 60 specifications whose registry descriptions are two sentences each. One L2 specification defines "idempotency keys" in a section of its own. The wiki and the graph exist; their nodes and articles carry layers, versions, references and edges, and no specification text.
+- **Action A:** the user asks: "Which specification covers idempotency keys?"
+- **Expected A:**
+  - [ ] The agent searches `.design/{workspace}/specifications/` for the term and reads the matching section of the specification that defines it.
+  - [ ] It does not answer from the registry descriptions alone, and it does not look for the term in the graph or the wiki.
+- **Synthetic State (Test B — control):** the same workspace; the user asks: "What depends on the queue specification, and which specifications are the load-bearing ones?"
+- **Expected B:**
+  - [ ] The agent runs `build-spec-graph` and navigates the wiki; no text search over the specifications is needed to answer it.
+- **Synthetic State (Test C — control):** a fresh clone with no `.design/wiki/` yet.
+- **Expected C:**
+  - [ ] The content question is answered by the same text search; the structural question is answered with `build-spec-graph` alone, since the wiki is optional.
+- **Guards tested:** the split between structural and content questions; the graph and the wiki hold no specification text; the registry description is a router, not an index of contents.
+- **Regression for:** none yet — measured on a consumer project's registries: the vocabulary of the hand-written descriptions is found in the specification text for 94% of its terms and in the `Overview` plus the headings for 20%, so a text search recovers what the cell carried and a generated summary would not.
+
 ```
-**Test Suite Finalized** - v1.9.95 (Last: T263)
+**Test Suite Finalized** - v1.9.96 (Last: T266)
 ```

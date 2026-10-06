@@ -72,10 +72,13 @@ The Specification Knowledge Graph is managed by `magic.graph`.
 
 ### Auto-Use
 
-- Before architectural / cross-module / "how does X relate to Y" / "what covers Z"
-  questions, run `node .magic/scripts/executor.js build-spec-graph` (add `--json`
-  for structured traversal). Read its god nodes, communities, coverage stats.
-- If `.design/wiki/index.md` exists, navigate it instead of raw spec files.
+- Before architectural / cross-module / "how does X relate to Y" questions, run
+  `node .magic/scripts/executor.js build-spec-graph` (add `--json` for structured
+  traversal). Read its god nodes, communities, coverage stats.
+- If `.design/wiki/index.md` exists, navigate it instead of raw spec files for
+  structure. The graph and the wiki hold no specification text: a question that
+  names a mechanic ("what covers Z", "where is P defined") is answered by searching
+  `.design/{workspace}/specifications/` for it and reading the matching section.
 - After creating or modifying any file in `.design/` during this session, run
   `node .magic/scripts/executor.js export-wiki` to refresh the graph.
 

@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-10-05
-**Full Sessions:** 19
-**Snapshots:** 32
+**Last Full Run:** 2026-10-06
+**Full Sessions:** 20
+**Snapshots:** 33
 
 ## Snapshots
 
@@ -42,6 +42,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-30 | Phase 36 | 0/0/37 | 10/0/0 | 25 | 🟢 |
 | 2026-09-30 | Phase 37 | 0/0/37 | 15/0/0 | 25 | 🟢 |
 | 2026-10-05 | Phase 38 | 0/0/37 | 12/0/0 | 25 | 🟢 |
+| 2026-10-06 | Phase 39 | 0/0/37 | 13/0/0 | 25 | 🟢 |
 
 ## Session 1 — 2026-06-12
 
@@ -868,3 +869,54 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are one class — a check that ran over every site found what a list of sites missed (#1, #2, #5, #7) — not a defect recurring in one specification, and the extra sessions this week follow from every phase closing the plan, not from compensating for an unfixed root cause. R47–R49 (earlier) remain advisory; R55 is the one open verification this phase leaves.
+
+## Session 20 — 2026-10-06
+
+**Scope:** Plan completion (Phase 39 — Registry Text Contract & Question Routing Deployment; the three specification amendments of the two `/magic.spec` passes of the same day, the second after a consumer project's registries were measured)
+**Specs in registry:** 37 (all Stable; none changed this session — the three amended by the preceding passes are engine templates 1.3.0, spec graph memory 1.2.0 and test suite 1.27.0).
+**Tasks total:** 13 this cycle (Done: 13, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 225 nodes, 483 edges (against the rolling baseline: 221 → 225, 479 → 483); 0 orphaned files, 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 2 engine-version bumps | Manual | Engine 2.1.134 → 2.1.135 (one C14 for every `.magic/` edit) → 2.1.136 (a wording fix found by the cognitive run); the plan had said one |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 174 → 178, 178/178 before and after each bump; 20 mutation controls, all caught |
+| **Rework Rate** | 2 corrections / 13 tasks | Manual | The Sync clause of `spec.md` shipped without "never append" (found by T-39T02, second C14); two cognitive cases asked for behavior no shipped sentence states (corrected in the case text) |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **Reading the shipped text, not the specification, found what the harness pin would have passed.** The specification's rule said a cell is "replaced, never appended"; the shipped Sync step said only "change … only when", with the two-sentence form living in another section. The pin over the Sync step was green without the missing clause. A literal reader of the Updating section could append a clause. Fixed by eight words and one more pinned statement. | T-39T02 (T264 B), T-39B01 |
+| 2 | **A cognitive case written from the specification over-specifies the shipped text.** Three Expected lines named behaviors no shipped sentence asks for (a plan's execution outcome, "says so when the search finds nothing", a fallback to registry headers where the rule runs `build-spec-graph`). A case is an assertion about the text that ships; running it against that text, not against the intent, is what trimmed them. | T-39T02 (T265 B, T266 A and C) |
+| 3 | **The one-time rewrite met its form at scale and moved nothing else.** 36 of 37 cells rewritten (median 387 → 211 characters, maximum 1,448 → 272), every other cell of every row byte-identical, the graph the same with the old registry swapped in and with the new one; the registry 63.9 → 56.0 KB, the ledger 39.6 → 12.8 KB (the overview 27,260 → 449 characters). | T-39D02, T-39D03, T-39D04, T-39D01 |
+| 4 | **Two screens for information loss disagreed, and the weaker was the comfortable one.** All 61 checkable claims of the old overview had a home (engine ranges, harness counts, phase completions, sync dates, sessions), but only 38% of its prose had a near-verbatim one; the rest was the plan's own overview reworded, confirmed by hand on seven distinctive facts. Either screen alone would have misled — one into false comfort, the other into re-homing 54 sentences. | T-39D01 |
+| 5 | **A Canonical References cell that lists several paths becomes one bogus file node.** The row added to the test-suite specification names six files in one cell; the graph diff shows a single added node whose name is the whole list (the `.magic/*.md` node of the previous phase is the same class). Recorded as a diagnostic. | `diff-spec-graph`; `CANONICAL_REF_MULTI_PATH` |
+| 6 | **A hardlink pair broke on schedule and was repaired on schedule.** The twin of `rules/magic.md` held the old bytes after the edit (hashes differed) and was recreated as a link; the plan had named it **[C-001]** and the verification, so nothing was found late. One slip of mine: T-39T02 went `Todo` → `Done` in one write, without its `In Progress` record. | T-39A01; T-39T02 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R59 | #1 | Pin each clause a specification states as a separate rule word ("replaced", "never appended"), not the section it sits in, and restate an amendment-time rule in the update step itself rather than only in the creation step | `dev/tests/engine.js` practice |
+| R60 | #5 | Give a Canonical References row one path, or let the extractor split or ignore a cell that is not a single path | test-suite specification wording; `.magic/scripts/build-spec-graph.js` (advisory) |
+| R61 | #3 | The release condition of the Backlog weight item is met — the contract is deployed and one registry has been rewritten: a compliant registry is 56.0 KB for 37 specifications and the ledger 12.8 KB, while `PLAN.md` (131 KB, its overview 27.6 KB of appended narrative) is the remaining outlier and lies outside the contract; calibrate the thresholds on these numbers | PLAN.md Backlog |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 174 | 178 | +4 |
+| Cognitive suite cases | T263 | T266 | +3 |
+| Registry size, engine workspace | 63.9 KB | 56.0 KB | -7.9 KB |
+| Registry description median / maximum, characters | 387 / 1,448 | 211 / 272 | -176 / -1,176 |
+| Task ledger size | 39.6 KB | 12.8 KB | -26.8 KB |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 221 / 479 | 225 / 483 | +4 / +4 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are again one class — a check that reads the text that ships found what the specification's intent hid (#1, #2, #4) — and the second C14 was the cost of that check working, not of a recurring defect. R47–R49 remain advisory; R55 is still the open verification, now covering the cases T260–T266 (the Phase 39 run was also an author's own reading).

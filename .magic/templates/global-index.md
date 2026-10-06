@@ -20,6 +20,7 @@ Global registry aggregating all project specifications across workspaces.
 | [main](main/INDEX.md) | Primary project workspace |
 
 <!-- Add your workspaces here -->
+<!-- Description: what the workspace is for and when to open it, in two sentences at most; no change history. -->
 
 ## Meta Information
 

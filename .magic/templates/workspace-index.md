@@ -13,6 +13,7 @@ Local registry of specifications for this workspace.
 | --- | --- | --- | --- | --- |
 
 <!-- Add your specifications here -->
+<!-- Description: what the specification is for and when to open it, in two sentences at most; no change history (that goes in the specification's Document History). -->
 
 ## Meta Information
 

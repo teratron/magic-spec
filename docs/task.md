@@ -65,7 +65,7 @@ Read economy is guidance, not a measurement: the agent has no reliable reading o
 Magic uses three file levels to manage project state:
 
 - **`PLAN.md`**: Strategic overview — Phases, assigned Specifications, and their current status.
-- **`TASKS.md`**: Master Phase Index — phase registry and status tracking.
+- **`TASKS.md`**: Master Phase Index — phase registry and status tracking. Its Overview describes the file and tracks nothing; status lives in the phase table.
 - **`tasks/phase-{N}.md`**: Tactical execution workbooks — atomic checklists with `T-XXXX` IDs.
 
 When a plan is updated, a task that survives keeps its recorded state (`Status`, `Changes`, `Attempts`) verbatim — regeneration never resets work already done or attempted. Only the explicit transitions of §6.4 (quarantine, demotion, release) change a surviving task's status.
@@ -163,4 +163,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-05 (v2.1.134).
+Synchronized with engine workflows on 2026-10-06 (v2.1.136).

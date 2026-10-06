@@ -33,7 +33,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [.magic/context.md](../../../.magic/context.md) as a whole — every section applies unless it names other workflows.
+1. **Context (Zero-Prompt)**: Apply [.magic/context.md](../../.magic/context.md) as a whole — every section applies unless it names other workflows.
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
 3. **Surgical Fix & Test (C9, C27, C28)**: If friction found → adjudicate it (§5), then apply the fix and write the regression test in `dev/tests/suite.md` in the same run, following the C1 procedure (read first, trace impact, update atomically). No approval prompt: only a C27 whitelist entry stops the run for a question.
 4. **Engine Integrity (C14)**: If engine files (`.magic/`) modified → `node .magic/scripts/executor.js update-engine-meta`.

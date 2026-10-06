@@ -124,7 +124,7 @@ graph TD
 
 - Use `.magic/templates/plan.md`, `.magic/templates/tasks.md`, and `.magic/templates/phase.md`.
 - PLAN.md: strategic overview (Phases & Specifications). No atomic checklist items.
-- TASKS.md: master Phase Index. Contains phase registry and status tracking.
+- TASKS.md: master Phase Index. Contains phase registry and status tracking. Its `Overview` says what the file is and how to read it and tracks nothing: the active phase is the phase table's status column, and what a finished phase produced lives in its phase file, the workspace changelog and the archive. Nobody appends to the `Overview` or rewrites it as the plan moves.
 - tasks/phase-{n}.md: tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
 - **Preserve recorded task state (Update mode)**: when a phase workbook is regenerated or updated, every task ID that survives the rewrite keeps its tracking entry's `Status` (including `In Progress`), `Changes` and `Attempts` **verbatim** — they record work already done or attempted, and a rewrite that resets them erases exactly what a resuming session needs. Only new task IDs receive fresh template entries; a removed ID leaves with its entry. Only Step 8's explicit transitions change a surviving entry's `Status` — C12, Demoted Spec, Phantom Specs, and the way back, Quarantine Release.
 - **Phase Frontmatter**: when creating `tasks/phase-{N}.md`, populate the YAML frontmatter from the draft PLAN.md. At minimum fill: `phase`, `name`, `status: Todo`, `subsystem` (inferred from touched directories/specs), `requires` (from dependency graph built in Step 3). Leave `provides`, `key_files`, `patterns_established`, `duration_minutes` empty — filled by `run.md` on phase completion.

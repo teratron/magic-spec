@@ -2190,6 +2190,113 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 5j. Registry text contract and question routing.
+    //     Both are instruction text with no script behind them, so the shipped
+    //     prose is the implementation and can regress silently. The harness pins
+    //     the concept each sentence carries, in every place it ships.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('registry text contract: spec.md registers a Description with its form, changes it only when what or when changed, and the checklist names it', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const lines = fs.readFileSync(path.join(repoRoot, '.magic', 'spec.md'), 'utf8').split('\n');
+
+        const register = lines.find((l) => l.includes('Register in `INDEX.md`'));
+        assert.ok(register, 'the creation step must register the specification in the registry');
+        assert.ok(
+            register.includes('(Name, Status, Layer, Version, Description)'),
+            'registration must list the Description among the fields it writes',
+        );
+        for (const statement of [
+            'what the specification is for and when to open it',
+            'at most two sentences',
+            'a router, not an index of contents',
+            'is answered by searching the specification text',
+        ]) {
+            assert.ok(register.includes(statement), `the registration step must state: ${statement}`);
+        }
+
+        const sync = lines.find((l) => l.includes('Update `Version`, `Status`, `Layer` in `INDEX.md`'));
+        assert.ok(sync, 'the Sync step must update the registry row');
+        for (const statement of [
+            'Change the `Description` only when',
+            'rewrite the whole cell in the form above, never append to it',
+            'byte-identical',
+            "the amendment goes to the specification's `Document History`",
+        ]) {
+            assert.ok(sync.includes(statement), `the Sync step must state: ${statement}`);
+        }
+
+        const checklist = lines.find((l) => l.includes('Registry: INDEX.md updated'));
+        assert.ok(checklist && checklist.includes('Description only if what or when changed'), 'the checklist registry line must name the Description and its condition');
+    });
+
+    test('registry text contract: task.md says the ledger overview describes the ledger and is not appended to', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const lines = fs.readFileSync(path.join(repoRoot, '.magic', 'task.md'), 'utf8').split('\n');
+        const bullet = lines.find((l) => l.startsWith('- TASKS.md: master Phase Index'));
+        assert.ok(bullet, 'Plan Write-back must describe TASKS.md');
+        for (const statement of [
+            'says what the file is and how to read it and tracks nothing',
+            "the phase table's status column",
+            'its phase file, the workspace changelog and the archive',
+            'Nobody appends to the `Overview`',
+        ]) {
+            assert.ok(bullet.includes(statement), `the TASKS.md bullet must state: ${statement}`);
+        }
+    });
+
+    test('registry text contract: each registry and ledger template carries its comment at the placeholder, outside any table', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const expected = [
+            ['workspace-index.md', '<!-- Description: what the specification is for and when to open it'],
+            ['global-index.md', '<!-- Description: what the workspace is for and when to open it'],
+            ['tasks.md', '<!-- Describes this file, not the plan'],
+        ];
+        for (const [file, comment] of expected) {
+            const lines = fs
+                .readFileSync(path.join(repoRoot, '.magic', 'templates', file), 'utf8')
+                .split('\n');
+            const at = lines.findIndex((l) => l.startsWith(comment));
+            assert.ok(at >= 0, `${file} must carry the comment: ${comment}`);
+            assert.ok(
+                !lines[at - 1]?.startsWith('|') && !lines[at + 1]?.startsWith('|'),
+                `${file}: the comment must stand outside any table row`,
+            );
+        }
+    });
+
+    test('question routing: rules/magic.md sends a mechanic named in a question to the specification text and a structural one to the graph, in both copies', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const text = fs.readFileSync(path.join(repoRoot, 'rules', 'magic.md'), 'utf8');
+        const start = text.indexOf('## 2. Specification Knowledge Graph');
+        const end = text.indexOf('\n## 3.', start);
+        assert.ok(start >= 0 && end > start, 'rules/magic.md must carry the graph section');
+        const bullets = text.slice(start, end).split('\n- ');
+
+        const graphBullet = bullets.find((b) => b.includes('build-spec-graph'));
+        assert.ok(graphBullet, 'a bullet must send structural questions to the graph');
+        assert.ok(
+            !graphBullet.includes('what covers Z'),
+            'a question about what covers a mechanic must not be sent to the graph',
+        );
+
+        const contentBullet = bullets.find((b) => b.includes('hold no specification text'));
+        assert.ok(contentBullet, 'a bullet must say the graph and the wiki hold no specification text');
+        for (const statement of [
+            'names a mechanic',
+            '.design/{workspace}/specifications/',
+            'reading the matching section',
+        ]) {
+            assert.ok(
+                contentBullet.replace(/\s+/g, ' ').includes(statement),
+                `the routing bullet must state: ${statement}`,
+            );
+        }
+
+        const twin = fs.readFileSync(path.join(repoRoot, '.agents', 'rules', 'magic.md'), 'utf8');
+        assert.strictEqual(twin, text, 'the copy under .agents/rules must carry the same routing');
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 6. check-prerequisites.js
     // ───────────────────────────────────────────────────────────────────────────
     test('check-prerequisites.js should validate whole structure', () => {

@@ -195,7 +195,7 @@ graph TD
    - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec per C16).
    - **Naming**: apply layer prefix (`l1-` Concept, `l2-` Impl) to the filename (e.g., `l1-api.md`).
    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}` using the prefixed name.
-   - Register in `INDEX.md` (Name, Status, Layer, Version).
+   - Register in `INDEX.md` (Name, Status, Layer, Version, Description). The `Description` says what the specification is for and when to open it, in at most two sentences — no change history, no list of sections or invariants, no figure that goes stale. It is a router, not an index of contents: which specification covers a mechanic is answered by searching the specification text.
 3. **Closure**: Post-Update Review → Checklist.
 
 ### Updating an Existing Specification
@@ -208,7 +208,7 @@ graph TD
    - Append row to `Document History`.
    - **Template Promotion (C16)**: if a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
-   - Update `Version`, `Status`, `Layer` in `INDEX.md`.
+   - Update `Version`, `Status`, `Layer` in `INDEX.md`. Change the `Description` only when what the specification is for, or when to open it, has changed — then rewrite the whole cell in the form above, never append to it; otherwise leave it byte-identical — the amendment goes to the specification's `Document History` (Versioning above), never into the registry cell.
    - **T4 Queue** (every HALT below): if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly — *"T4 rule detected — queued pending {reason} resolution."*, with `{reason}` = `drift` (Version Drift Guard), `parity` (Cross-Workspace Parity) or `file` (Existence Guard, Parent Existence Guard). Do NOT write to `RULES.md` until the HALT is resolved, then hand the queued rule to the Operational Logic of `rule.md` immediately — after the Resolution Validation re-evaluation for `drift`, once the copies are reconciled for `parity`, and once the target file (and parent) is restored or remapped for `file`.
    - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magic.spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
      - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the file header was updated without review, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed — confirm before proceeding."* After confirmed resolution, **re-evaluate all Sync guards from the top, scoped to the amendment target** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine applied to the amendment target's upward chain — its L1 parents only, not its downstream dependents nor the drift-resolved file that triggered the HALT) before writing.
@@ -342,7 +342,7 @@ After all workflow steps (incl. Graph Refresh) and **before** the Completion Che
 ```
 Checklist — {task description}
   ☐ No implementation code in specs (pseudo-code for logic; contracts & references permitted)
-  ☐ Registry: INDEX.md updated (Status, Layer, Version)
+  ☐ Registry: INDEX.md updated (Status, Layer, Version; Description only if what or when changed)
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Rules: RULES.md triggers (T1-T4) checked/applied

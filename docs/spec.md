@@ -97,6 +97,7 @@ The engine parses unstructured user chat and maps it to specification domains.
 - **Multi-topic Dispatch**: A single user prompt can trigger multiple spec operations simultaneously.
 - **Conflict Guard**: Contradictory requirements in one request are settled at intake (§5.0) — asked, with a middle path offered where one exists, or decided and recorded if you leave it to the agent. A conflict with `RULES.md` or an existing Stable spec is flagged.
 - **Auto-Stabilization**: Specs that pass all checks (no RULES.md conflicts, no circular dependencies, MVC satisfied) are auto-promoted to Stable.
+- **Registry Entry**: A spec's row in `INDEX.md` carries a short description: what the spec is for and when to open it, in at most two sentences. An amendment leaves it unchanged unless that purpose changed; the change history stays in the spec's own Document History. To find which spec covers a mechanic, search the spec text.
 
 ### 5.3 Post-Update Review (C24 — Critic Persona)
 
@@ -156,4 +157,4 @@ If the update halts first (version drift, cross-workspace parity, or a missing f
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-05 (v2.1.134).
+Synchronized with engine workflows on 2026-10-06 (v2.1.136).
