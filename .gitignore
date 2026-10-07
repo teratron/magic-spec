@@ -85,13 +85,10 @@ copilot-instructions.md
 # Dev-only state cache (sync-docs.js)
 dev/.cache/
 
-# Generated graph artifacts
-.design/spec-graph.html
-.design/spec-graph.json
-.design/graph-before.json
-.design/.graph-cache/
-.design/.cache/
-.design/wiki/
+## Generated graph artifacts
+/.design/*graph*.*
+/.design/*cache*/
+/.design/wiki/
 
 # Local settings (never commit)
 */settings.json
