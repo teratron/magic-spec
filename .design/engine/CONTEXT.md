@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-10-06
+**Generated:** 2026-10-11
 
 ## Active Technologies
 
@@ -20,6 +20,7 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
+│   ├── main/
 │   └── workspace.json
 ├── .github/
 │   └── workflows/
