@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.5.1
+**Version:** 3.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -17,7 +17,7 @@ This spec owns the **pipeline contract**: module inventory, invocation surface, 
 - [l1-session-continuity.md](l1-session-continuity.md) — SC-2 invariant carried by this pipeline (§5); SC-3 retired.
 - [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) — Child: STATE.md accuracy defects and their required fixes.
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Child: emitted-artifact defects (RC-11 containment, stdout-listing completeness, CHANGELOG suppression).
-- [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
+- [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library. Its §Setting Parity owns the rule that a shipped setting needs a reader, which §4 applies to the archival opt-out.
 - [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Diagnostics digest that this pipeline drains and renders in its terminal block (§8).
 - [l2-session-checkpoint.md](l2-session-checkpoint.md) — Owns the checkpoint claim that the state-update step's output makes (§5.5 there).
 
@@ -52,6 +52,10 @@ executor.js finalize --workflow=<spec|task|run|rule> [--workspace=<name>] [--dry
 ## 4. Opt-Out Mechanism
 
 Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `workspace.json`. When disabled, all `lib/` modules are skipped and `executor.js` exits with `⏭️ No significant changes detected`.
+
+**Archival opt-out `[ADDED]`.** `archival.enabled: false` in `workspace.json` skips the phase-archival step of `finalize --workflow=run` and nothing else: no `Done` workbook is moved, `TASKS.md` and `PLAN.md` keep their links, and the output has no archived-phases block, while the version bump, the changelog entry and the state update run as usual. Only the value `false` disables it; an absent key, or any other value, leaves archival on. When eligible workbooks exist, one informational line names the setting, so a skipped step is distinguishable from nothing to archive (the principle of the Zero-Match Guard, [l2-engine-automation.md](l2-engine-automation.md) §Path Matching Contract). The explicit `archive-phases` command is unaffected — it is the user's own request, and its `--dry-run` previews as before. The archive location is not a setting: `archives/tasks/` under the workspace is what §7 and `rules/magic.md` §4 assume, and `archival.archiveDir` is withdrawn from the template. Origin: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity, whose first cited case this resolves.
+
+**Regression coverage**: a fixture with `archival.enabled: false` and a `Done`, fully checked workbook — `finalize --workflow=run` leaves the workbook in `tasks/`, prints the informational line, and runs the rest of the pipeline as it would without the key (a significant change still bumps the version and writes the changelog entry, and `STATE.md` is updated); the same fixture with the key absent archives the workbook; the explicit `archive-phases` command archives it in both. The case that proves the setting is read is the one with the key present, so it fails against a script that ignores the section.
 
 ## 5. Session-Continuity Integration
 
@@ -208,6 +212,7 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.6.0 | 2026-10-11 | Agent | §4 gains the **archival opt-out**: `archival.enabled: false` skips the archival step of `finalize --workflow=run` and nothing else (the explicit `archive-phases` command is unaffected), one informational line names the setting when eligible workbooks exist, and `archival.archiveDir` is withdrawn from the template because the location is fixed. The shipped template defined both keys and `rules/magic.md` §4 told users to set the first to `false`, but no script read the `archival` section (evidence and reproduction: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity); the only other switch, `finalization.enabled`, skips the whole pipeline, so a user who wanted archival alone off had no way to say so. The resolution is that section's `Assumption (forecast)`, which carries the runner-up and the override; this section gives it a contract and a regression case. Related Specifications gained the cross-reference. Source: a reference-mining pass over an external collection of agent configurations, recorded here by class only. Engine deployment is routed to `/magic.task engine`. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 3.5.1 | 2026-10-01 | Agent | Clarification patch, Stable retained (no requirement added — the flag already existed in `finalize.js`). §3's invocation line now lists `--workspace=<name>` and states what it carries: the executor consumes the flag and falls back to the default workspace without it, so an explicit workspace argument of the calling workflow reached the pipeline only through the flag — and no workflow passed it. After `/magic.task docs` the significance whitelist and the SC-2 state update were therefore evaluated for the default workspace. Found by a `/magic.dev.simulate test` run; the workflow bodies, their wrappers and `rules/magic.md` §3 now pass `--workspace={active-workspace}` (engine 2.1.120). |
 | 3.5.0 | 2026-09-30 | Agent | New **§10 Spec-Side Rule Capture in the Significance Whitelist**: `magic.spec` whitelists `RULES.md` (global and workspace) so a T4 capture that changes only the constitution is counted, closing the asymmetry with `magic.rule`; finalizing a capture as `rule` is rejected. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 3.4.0 | 2026-09-30 | Agent | Plan-complete `Next Action` split per [l1-session-continuity.md](l1-session-continuity.md) 2.4.0: funnel when work is pending, a command-free statement when nothing is; the screen at the single exit allows zero commands in that one case; the pending predicate is shared with Pre-flight, not duplicated. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
