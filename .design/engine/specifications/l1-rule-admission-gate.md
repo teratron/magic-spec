@@ -1,6 +1,6 @@
 # Rule Admission Gate
 
-**Version:** 1.1.2
+**Version:** 1.1.3
 **Status:** Stable
 **Layer:** concept
 
@@ -239,7 +239,13 @@ A count cannot tell a needed rule from an unneeded one, forces the removal of go
 
 Silently removing rules after a period is a destructive action (E1) that would delete still-needed rules. RA-7 proposes; the user removes.
 
-### 6.5 Adjacent Finding, Out of Scope
+### 6.5 Rejected: a measured with/without trial before admission
+
+The owner's draft says to compare the system with and without each rule (§1.3); RA-3 makes that a written comparison. A trial in real sessions was considered as the stronger form and rejected on the evidence of the one rigorous attempt known: an external study of a blocking pre-edit gate, 336 billed sessions over three designs, with arms for no gate, the gate, the gate without its targeted question and a placebo gate, hidden graders, and hypotheses, sample and primary outcome fixed before each run. The first design measured nothing: every trap hid its deciding fact in the repository, the one-shot setup forbade the very question the gate exists to provoke, and the pass criterion was written in the gate's own vocabulary, so every arm passed every trial. The redesigned runs showed an effect of 15 to 29 points that never reached the pre-registered significance level (p = 0.21 on the confirmatory run, about 180 pairs needed to settle it), and a later headline of p = 0.021 came from the baseline arm falling while the gated arm did not move. What held in every run was the cost, 35 to 45 % more turns and spend. A rule's cost is measurable and recurring; its benefit rarely is. RA-2 and RA-3 take that asymmetry as given: they ask for an occurrence of the harm, which can be checked at the moment of decision, and they count the friction the rule adds (H1, H2). A trial would add its own cost without changing either answer.
+
+Where a measurement is still wanted, for instance to settle a disputed wording, the study's validity conditions apply to it: the control must be able to fail, the check must not be phrased in the vocabulary of the instruction under test, and "not shown" is reported as untested rather than as refuted.
+
+### 6.6 Adjacent Finding, Out of Scope
 
 The constitution template ships the engine's own conventions (engine safety, engine versioning, simulation workflow, adapter distribution) into every consumer's `RULES.md`, and project conventions share the same `C{N}` numbering. Project B's C25–C27 collide with the template's later C25–C27, so workflow text citing "C27" resolves to a different rule there. This is a template-structure defect, not a rule-admission one, and needs its own specification.
 
@@ -257,6 +263,7 @@ The constitution template ships the engine's own conventions (engine safety, eng
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.3 | 2026-10-11 | Clarification patch, Stable retained; no requirement changes. §6 gains **6.5, Rejected: a measured with/without trial before admission**, recording why RA-3's comparison is a written one: the one controlled study known of an instruction-level gate (an external blocking pre-edit gate, 336 billed sessions) could not establish a benefit across three designs, its first design measured nothing because the checks could not fail, and its cost, 35 to 45 % more turns and spend, was the only stable number — the asymmetry RA-2 (an occurrence, checked at decision time) and RA-3 (friction counted) already take as given. The adjacent finding moves to 6.6; nothing cites its number. Source: a reference-mining pass over an external collection of agent configurations, recorded here by class only. |
 | 1.1.2 | 2026-10-01 | Clarification patch, no status transition. The constraint "no new question channel (C27 E1–E6 unchanged)" named a list that changed in [l1-decision-autonomy.md](l1-decision-autonomy.md) 2.0.0: only the consent entries E1, E2 and E4 and the E6 intake survey still ask, while E3 and E5 resolve by the Consequence Forecast. The gate itself is unchanged — it still adds no question. |
 | 1.1.1 | 2026-09-30 | Clarification patch, no status transition. `Related Specifications` gains the two reciprocal links its own amendment created — [l2-role-integration.md](l2-role-integration.md) 2.2.0 and [l2-test-suite.md](l2-test-suite.md) 1.20.0 both cite this specification, which did not cite them back (Links check). No requirement changes. Typo-level patch (spec.md Amendment rule). |
 | 1.1.0 | 2026-09-30 | Amendment from the planning of the deployment phase, which read the specification against the engine files it targets. **RA-8** gains a write-reach rule: the gate writes only what the running workflow may — `/magic.spec` writes specification text and, through the pipeline, `RULES.md`; `/magic.rule` writes `RULES.md` only — so a rung-1 or rung-2 outcome in `/magic.rule` is the DO NOT CREATE record with `placed at rung {n}` and the override `/magic.spec amend {spec}` (the first version enumerated rung {0\|1} and left rung 2 undefined for the rule workflow); the flow diagram follows. **§2** gains a tie-break — an origin that cannot be established is agent-originated, the Decision Record's override being the user's way to restate it — and the shipped name of the pipeline. **RA-7(c)** names its evidence (a Blocked task or a `STATE.md` blocker) instead of an unobservable "observed in the project". **§5**: row 1 no longer cites a heading number the deployment renumbers and adds the requirement that every review precede the write (the workflow ordered its write before its own pre-commitment reviews, so "a declined rule writes nothing" could not hold); row 8 adds the `docs/` counterparts the first table omitted (VIO-2); a new paragraph requires shipped text to be self-contained (labels alone define nothing in a consumer project) and keeps the W/H codes out of it; the ordering line now matches the dependency the plan found. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the 5-lens Post-Update Review and Instruction Quality Pass. |
