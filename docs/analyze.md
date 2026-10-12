@@ -101,9 +101,10 @@ A deep audit treating the codebase as source of truth:
 3. **Structural Integrity** (when workspace specified): Verify workspace folder, required contents, `workspace.json` entry, file naming, link integrity.
 4. **Coverage Check**: Scan project directories within active workspace scope (C15). Identify folders with no corresponding spec.
 5. **Documentation & Version Audit**: Check `CONTRIBUTING.md`, `README.md` version badge, version parity across manifests.
-6. **Scope Blind-Spot Check** (multi-workspace): Report directories not covered by any workspace scope.
-7. **Rule Validation**: Check `RULES.md §7` compliance, and report retirement candidates as read-only advisories — `RULE_RETIRE_CANDIDATE` (cause gone, superseded, or deadlocking the agent) and `RULE_BLOAT` (body over 10 lines). Analysis never edits a rule.
-8. **Report**: Consolidated list of errors, warnings, and suggested repairs.
+6. **Setting Parity**: Check that every setting the `workspace.json` template defines, or the shipped text names, has a script that reads it; a setting nobody reads is reported as `PHANTOM_SETTING` (advisory).
+7. **Scope Blind-Spot Check** (multi-workspace): Report directories not covered by any workspace scope.
+8. **Rule Validation**: Check `RULES.md §7` compliance, and report retirement candidates as read-only advisories — `RULE_RETIRE_CANDIDATE` (cause gone, superseded, or deadlocking the agent) and `RULE_BLOAT` (body over 10 lines). Analysis never edits a rule.
+9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
 > **Mode Precedence**: When `/magic.analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magic.analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
 
@@ -155,4 +156,4 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-06 (v2.1.136).
+Synchronized with engine workflows on 2026-10-12 (v2.1.138).

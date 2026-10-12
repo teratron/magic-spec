@@ -138,7 +138,7 @@ Tasks are organized into Execution Tracks (Track A, Track B, etc.):
 ## 8. Maintenance
 
 - **Plan Synchronization**: When specifications change, the plan and tasks are updated via the "Sync tasks" command.
-- **Archival (C8)**: Completed phases are moved to `.design/archives/tasks/`.
+- **Archival (C8)**: Completed phases are moved to `.design/archives/tasks/`. Set `archival.enabled` to `false` in `workspace.json` to keep finished phases in `tasks/`; the explicit `archive-phases` command still archives them.
 - **STATE.md Update**: After plan write-back, STATE.md is updated with the new phase and next action.
 - **Context Regeneration**: `CONTEXT.md` is regenerated after every plan write.
 
@@ -163,4 +163,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-06 (v2.1.136).
+Synchronized with engine workflows on 2026-10-12 (v2.1.138).

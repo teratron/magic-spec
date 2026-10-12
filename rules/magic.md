@@ -161,9 +161,6 @@ node .magic/scripts/executor.js archive-phases            # archive all eligible
 node .magic/scripts/executor.js archive-phases --dry-run  # preview only
 ```
 
-The pre-commit hook issues a non-blocking notice if unarchived Done phases are
-detected — reminds the user to run `/magic.run` or `archive-phases` directly.
-
 ## 5. Post-Task Replan
 
 After `/magic.run` finishes a task or phase, drift signals may have surfaced new
@@ -255,8 +252,8 @@ without editing a single product manifest.
 
 **Exempt**: the git pre-commit hook installed during setup. It lives in
 `.git/hooks/` — never committed, never packaged — and gating a *commit* is not
-gating a *build*; it goes away with the scaffold instead of surviving in the
-product.
+gating a *build*. It stays behind when the scaffold is deleted, so it disarms
+itself: with `.magic/` absent it says so once and lets the commit through.
 
 ### Reference Rule
 

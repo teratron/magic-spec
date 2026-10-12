@@ -1410,6 +1410,92 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 5b-bis. A manifested engine file that is gone is drift, reported by the
+    //         pre-flight as the update check already reports it.
+    //
+    //     The two checks read the same manifest and disagreed: the pre-flight
+    //     hashed only the files that exist, so a deleted one produced no finding
+    //     while `--check` failed on it.
+    // ───────────────────────────────────────────────────────────────────────────
+    const INTEGRITY_STATES = ['untouched', 'modified', 'deleted'];
+
+    // A layout whose manifest matches the engine, then put in one of three
+    // states. `.design/` is present so that `ok` reflects the integrity story
+    // alone: true for the untouched layout.
+    const makeIntegrityLayout = (tempDir, { userInstallation, state }) => {
+        fs.writeFileSync(path.join(tempDir, '.magic', 'spec.md'), '# spec\n');
+        fs.writeFileSync(path.join(tempDir, '.magic', 'task.md'), '# task\n');
+        fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+        fs.writeFileSync(path.join(tempDir, '.design', 'INDEX.md'), '# Index\n');
+        fs.writeFileSync(path.join(tempDir, '.design', 'RULES.md'), '# Rules\n');
+        generateChecksums(tempDir);
+        if (userInstallation) fs.rmSync(path.join(tempDir, 'dev'), { recursive: true, force: true });
+        if (state === 'modified') fs.appendFileSync(path.join(tempDir, '.magic', 'spec.md'), '<!-- local note -->\n');
+        if (state === 'deleted') fs.rmSync(path.join(tempDir, '.magic', 'task.md'));
+    };
+
+    const integrityVerdicts = (tempDir) => {
+        const pre = runCheckPrerequisites(tempDir);
+        return {
+            ok: pre.ok,
+            findings: pre.warnings.filter((w) => w.type === 'ENGINE_INTEGRITY'),
+            checkStatus: runMeta(tempDir, 'update-engine-meta.js', '--check').status,
+        };
+    };
+
+    test('pre-flight and update-engine-meta --check agree on an untouched, a modified and a deleted layout, in a developer repository and in a user installation', () => {
+        for (const userInstallation of [false, true]) {
+            for (const state of INTEGRITY_STATES) {
+                const tempDir = createTempWorkspace();
+                try {
+                    makeIntegrityLayout(tempDir, { userInstallation, state });
+                    const verdict = integrityVerdicts(tempDir);
+                    const label = `${userInstallation ? 'user installation' : 'developer repository'}, ${state}`;
+                    if (state === 'untouched') {
+                        assert.deepStrictEqual(verdict.findings, [], `${label}: no integrity finding`);
+                        assert.strictEqual(verdict.ok, true, `${label}: the pre-flight is clean`);
+                        assert.strictEqual(verdict.checkStatus, 0, `${label}: --check is clean`);
+                    } else {
+                        assert.strictEqual(verdict.findings.length, 1, `${label}: exactly one finding`);
+                        assert.strictEqual(verdict.ok, false, `${label}: the pre-flight reports drift`);
+                        assert.notStrictEqual(verdict.checkStatus, 0, `${label}: --check reports drift`);
+                    }
+                } finally {
+                    cleanup(tempDir);
+                }
+            }
+        }
+    });
+
+    test('pre-flight names a deleted engine file as missing, with the remedy of the installation kind, and keeps the modified-file wording', () => {
+        const devDir = createTempWorkspace();
+        const userDir = createTempWorkspace();
+        const editedDir = createTempWorkspace();
+        try {
+            makeIntegrityLayout(devDir, { userInstallation: false, state: 'deleted' });
+            makeIntegrityLayout(userDir, { userInstallation: true, state: 'deleted' });
+            makeIntegrityLayout(editedDir, { userInstallation: false, state: 'modified' });
+
+            const [dev] = integrityVerdicts(devDir).findings;
+            assert.match(dev.message, /^'\.magic\/task\.md' is missing locally\./, 'the file is named as missing');
+            assert.match(dev.fix, /update-engine-meta/, 'developer repository: the C14 command is the remedy');
+            assert.doesNotMatch(dev.message, /release archive/, 'developer repository: no restore instruction');
+
+            const [user] = integrityVerdicts(userDir).findings;
+            assert.match(user.message, /^'\.magic\/task\.md' is missing locally\./, 'the file is named as missing');
+            assert.match(user.message, /release archive/, 'user installation: the remedy is a restore');
+            assert.strictEqual(user.fix, null, 'user installation: there is no automated fix to suggest');
+
+            const [edited] = integrityVerdicts(editedDir).findings;
+            assert.match(edited.message, /^'\.magic\/spec\.md' has been modified locally/, 'a modified file keeps its own wording');
+        } finally {
+            cleanup(devDir);
+            cleanup(userDir);
+            cleanup(editedDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 5b-ter. An integrity finding must say HOW a file differs, not only that it
     //         does.
     //
@@ -2294,6 +2380,575 @@ describe('Magic Engine Scripts', () => {
 
         const twin = fs.readFileSync(path.join(repoRoot, '.agents', 'rules', 'magic.md'), 'utf8');
         assert.strictEqual(twin, text, 'the copy under .agents/rules must carry the same routing');
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5k. Setting parity and the archival opt-out.
+    //     A setting that a shipped file defines or names is a promise to whoever
+    //     writes its value; a setting with no reader breaks it silently. The rule
+    //     is decided here over a tree root, so one function judges both a
+    //     throwaway fixture and the shipped tree.
+    // ───────────────────────────────────────────────────────────────────────────
+    const SETTING_FILE_EXTENSIONS = new Set([
+        'md', 'js', 'json', 'sh', 'ps1', 'yml', 'yaml', 'txt', 'html', 'css', 'mjs', 'cjs',
+    ]);
+
+    const listFilesUnder = (dir, accept) => {
+        if (!fs.existsSync(dir)) return [];
+        const found = [];
+        for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) found.push(...listFilesUnder(full, accept));
+            else if (accept(full)) found.push(full);
+        }
+        return found;
+    };
+
+    // Splits JavaScript into the part that executes and the part that only says
+    // things: comments are dropped, and the contents of string and template
+    // literals are blanked, so a message that names a key cannot read as an
+    // access to it. `withStrings` keeps the literals, so a bracket access by
+    // name stays visible.
+    const splitJavaScript = (source) => {
+        let code = '';
+        let withStrings = '';
+        let i = 0;
+        while (i < source.length) {
+            const c = source[i];
+            const next = source[i + 1];
+            if (c === '/' && next === '/') {
+                while (i < source.length && source[i] !== '\n') i++;
+            } else if (c === '/' && next === '*') {
+                const end = source.indexOf('*/', i + 2);
+                i = end < 0 ? source.length : end + 2;
+            } else if (c === '"' || c === "'" || c === '`') {
+                let j = i + 1;
+                while (j < source.length && source[j] !== c) j += source[j] === '\\' ? 2 : 1;
+                const literal = source.slice(i, j + 1);
+                withStrings += literal;
+                code += c + ' '.repeat(Math.max(0, literal.length - 2)) + c;
+                i = j + 1;
+            } else {
+                code += c;
+                withStrings += c;
+                i++;
+            }
+        }
+        return { code, withStrings };
+    };
+
+    // The names a script reads off an object: `.name`, and `['name']`.
+    const accessedNames = (source) => {
+        const { code, withStrings } = splitJavaScript(source);
+        const names = new Set();
+        for (const m of code.matchAll(/\.\s*([A-Za-z_$][\w$]*)/g)) names.add(m[1]);
+        for (const m of withStrings.matchAll(/\[\s*(['"])([^'"\\]+)\1\s*\]/g)) names.add(m[2]);
+        return names;
+    };
+
+    // A reader is a script under `.magic/scripts/` that takes the section off the
+    // parsed file and the key off the section — directly, or through a defaults
+    // table merged over it. A comment, a string or a message that only names the
+    // key is not a read, and a script anywhere else does not count.
+    const settingReaders = (root) =>
+        listFilesUnder(path.join(root, '.magic', 'scripts'), (f) => f.endsWith('.js')).map((file) =>
+            accessedNames(fs.readFileSync(file, 'utf8')),
+        );
+
+    const hasSettingReader = (key, readers) => {
+        const segments = key.split('.');
+        return readers.some((names) => segments.every((segment) => names.has(segment)));
+    };
+
+    // Every key of the workspace template outside the workspace registry.
+    const templateSettings = (root) => {
+        const rel = '.magic/templates/workspace.json';
+        const text = fs.readFileSync(path.join(root, rel), 'utf8');
+        const lines = text.split('\n');
+        const leaves = [];
+        const walkValue = (value, parts) => {
+            if (value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length > 0) {
+                for (const [k, v] of Object.entries(value)) walkValue(v, [...parts, k]);
+            } else {
+                leaves.push(parts);
+            }
+        };
+        for (const [k, v] of Object.entries(JSON.parse(text))) {
+            if (k === 'default' || k === 'workspaces') continue;
+            walkValue(v, [k]);
+        }
+        return leaves.map((parts) => {
+            const from = lines.findIndex((l) => l.includes(`"${parts[0]}"`));
+            const at = lines.findIndex((l, i) => i >= from && l.includes(`"${parts[parts.length - 1]}"`));
+            return { file: rel, line: at + 1, key: parts.join('.') };
+        });
+    };
+
+    // Every dotted key path that a line of shipped text names together with
+    // `workspace.json`. File names (`a.md`, `b.js`) are not paths.
+    const textSettings = (root) => {
+        const files = ['.magic', 'docs', 'workflows', 'rules'].flatMap((d) =>
+            listFilesUnder(path.join(root, d), (f) => f.endsWith('.md')),
+        );
+        const readme = path.join(root, 'README.md');
+        if (fs.existsSync(readme)) files.push(readme);
+        const found = [];
+        for (const file of files) {
+            const rel = path.relative(root, file).split(path.sep).join('/');
+            fs.readFileSync(file, 'utf8')
+                .split('\n')
+                .forEach((line, index) => {
+                    if (!line.includes('workspace.json')) return;
+                    const paths = line.matchAll(
+                        /(?<![\w./-])([a-z][A-Za-z0-9]+(?:\.[a-zA-Z][A-Za-z0-9]+)+)(?![\w/-])/g,
+                    );
+                    for (const m of paths) {
+                        if (SETTING_FILE_EXTENSIONS.has(m[1].split('.').pop())) continue;
+                        found.push({ file: rel, line: index + 1, key: m[1] });
+                    }
+                });
+        }
+        return found;
+    };
+
+    const settingParityFindings = (root) => {
+        const readers = settingReaders(root);
+        return [...templateSettings(root), ...textSettings(root)].filter(
+            (setting) => !hasSettingReader(setting.key, readers),
+        );
+    };
+
+    const writeTreeFiles = (root, files) => {
+        for (const [rel, content] of Object.entries(files)) {
+            const full = path.join(root, rel);
+            fs.mkdirSync(path.dirname(full), { recursive: true });
+            fs.writeFileSync(full, content);
+        }
+    };
+
+    const makeSettingTree = (files) => {
+        const root = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-setting-'));
+        writeTreeFiles(root, files);
+        return root;
+    };
+
+    const describeFinding = (f) => `${f.file}:${f.line} → ${f.key}`;
+
+    // A throwaway git project with one finished phase and one uncommitted change
+    // to its workbook, so a `magic.run` finalize counts the change as significant.
+    const makeArchivalProject = (archival, { done = true } = {}) => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-archival-'));
+        fs.cpSync(path.join(repoRoot, '.magic'), path.join(dir, '.magic'), { recursive: true });
+        const ws = path.join(dir, '.design', 'ws');
+        fs.mkdirSync(path.join(ws, 'tasks'), { recursive: true });
+        const config = { default: 'ws', workspaces: { ws: { description: 'fixture' } } };
+        if (archival !== undefined) config.archival = archival;
+        writeTreeFiles(dir, {
+            '.gitignore': '.magic/\n',
+            '.design/workspace.json': JSON.stringify(config, null, 2),
+            '.design/ws/INDEX.md': '# Index\n\n**Version:** 1.0.0\n',
+            '.design/ws/PLAN.md': '# Plan\n\n- Tasks: [tasks/phase-1.md](tasks/phase-1.md)\n',
+            '.design/ws/TASKS.md':
+                '# Master Task Index\n\n| Phase | Description | Status |\n| --- | --- | --- |\n' +
+                `| [Phase 1](tasks/phase-1.md) | Alpha | \`${done ? 'Done' : 'Todo'}\` |\n`,
+            '.design/ws/STATE.md':
+                '# Project State\n\n**Workspace:** ws\n**Phase:** 1 — Alpha\n**Status:** Active\n\n' +
+                '## Current Position\n\n- **Task:** none\n- **Next Action:** none\n\n' +
+                '## Recent Decisions\n\n## Blockers\n\n## Blocking Constraints\n',
+            '.design/ws/tasks/phase-1.md':
+                `---\nphase: 1\nname: "Alpha"\nstatus: ${done ? 'Done' : 'Todo'}\n---\n\n` +
+                `## Atomic Checklist\n\n- [${done ? 'x' : ' '}] [T-1A01] Do it\n`,
+        });
+        const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        git('init', '-b', 'master');
+        git('config', 'user.email', 'test@example.com');
+        git('config', 'user.name', 'Test User');
+        git('add', '.');
+        git('commit', '-m', 'init');
+        fs.appendFileSync(path.join(ws, 'tasks', 'phase-1.md'), '\n<!-- touched -->\n');
+        return { dir, ws };
+    };
+
+    const runEngine = (dir, ...args) =>
+        spawnSync('node', ['.magic/scripts/executor.js', ...args], { cwd: dir, encoding: 'utf8' });
+
+    test('archival opt-out: archival.enabled false keeps a finished phase in tasks/ and says so, while the version bump, the changelog entry and the state update still run', () => {
+        const kept = makeArchivalProject({ enabled: false });
+        const idle = makeArchivalProject({ enabled: false }, { done: false });
+        try {
+            const result = runEngine(kept.dir, 'finalize', '--workflow=run', '--workspace=ws');
+            const out = result.stdout + result.stderr;
+            assert.strictEqual(result.status, 0, out);
+            assert.ok(fs.existsSync(path.join(kept.ws, 'tasks', 'phase-1.md')), 'the workbook must stay in tasks/');
+            assert.ok(!fs.existsSync(path.join(kept.ws, 'archives', 'tasks', 'phase-1.md')), 'nothing may be archived');
+            assert.ok(
+                fs.readFileSync(path.join(kept.ws, 'TASKS.md'), 'utf8').includes('(tasks/phase-1.md)'),
+                'the TASKS.md link must stay',
+            );
+            assert.ok(
+                fs.readFileSync(path.join(kept.ws, 'PLAN.md'), 'utf8').includes('(tasks/phase-1.md)'),
+                'the PLAN.md link must stay',
+            );
+            assert.ok(!out.includes('### Archived phases'), 'there is no archived-phases block');
+            assert.strictEqual(
+                out.split('\n').filter((l) => l.includes('archival.enabled')).length,
+                1,
+                'exactly one informational line names the setting',
+            );
+            assert.strictEqual(
+                fs.readFileSync(path.join(kept.dir, '.design', '.version'), 'utf8').trim(),
+                '0.1.1',
+                'the version bump still runs',
+            );
+            assert.match(fs.readFileSync(path.join(kept.dir, 'CHANGELOG.md'), 'utf8'), /\[Unreleased\]/, 'the changelog entry is still written');
+            assert.match(out, /STATE\.md \| updated/, 'the state update still runs');
+
+            // Control: with no finished phase waiting, a skipped step is not announced.
+            const quiet = runEngine(idle.dir, 'finalize', '--workflow=run', '--workspace=ws');
+            assert.strictEqual(quiet.status, 0, quiet.stdout + quiet.stderr);
+            assert.ok(
+                !(quiet.stdout + quiet.stderr).includes('archival.enabled'),
+                'nothing waiting means nothing to announce',
+            );
+        } finally {
+            cleanup(kept.dir);
+            cleanup(idle.dir);
+        }
+    });
+
+    test('archival opt-out: archival stays on for an absent key, a section without the key, true, the string "false" and null, and the explicit archive-phases command archives with the key off', () => {
+        const variants = [undefined, {}, { enabled: true }, { enabled: 'false' }, null];
+        for (const archival of variants) {
+            const project = makeArchivalProject(archival);
+            try {
+                const result = runEngine(project.dir, 'finalize', '--workflow=run', '--workspace=ws');
+                const out = result.stdout + result.stderr;
+                const label = JSON.stringify(archival) ?? 'absent';
+                assert.strictEqual(result.status, 0, out);
+                assert.ok(
+                    fs.existsSync(path.join(project.ws, 'archives', 'tasks', 'phase-1.md')),
+                    `archival must stay on for ${label}`,
+                );
+                assert.ok(out.includes('### Archived phases'), `the archived-phases block is printed for ${label}`);
+                assert.ok(!out.includes('archival.enabled'), `no opt-out line for ${label}`);
+            } finally {
+                cleanup(project.dir);
+            }
+        }
+
+        const off = makeArchivalProject({ enabled: false });
+        try {
+            const preview = runEngine(off.dir, 'archive-phases', '--dry-run', '--workspace=ws');
+            assert.strictEqual(preview.status, 0, preview.stdout + preview.stderr);
+            assert.match(preview.stdout, /would archive/, 'the dry run previews as before');
+            assert.ok(fs.existsSync(path.join(off.ws, 'tasks', 'phase-1.md')), 'the dry run moves nothing');
+
+            const explicit = runEngine(off.dir, 'archive-phases', '--workspace=ws');
+            assert.strictEqual(explicit.status, 0, explicit.stdout + explicit.stderr);
+            assert.ok(
+                fs.existsSync(path.join(off.ws, 'archives', 'tasks', 'phase-1.md')),
+                'the explicit command is the user\'s own request and archives with the key off',
+            );
+        } finally {
+            cleanup(off.dir);
+        }
+    });
+
+    test('setting parity: a key read through its section (with or without a defaults table) has a reader; a key named only in a comment, a string or a message does not, nor one read outside .magic/scripts or one whose section is never read', () => {
+        const root = makeSettingTree({
+            '.magic/templates/workspace.json': JSON.stringify(
+                {
+                    default: 'main',
+                    workspaces: { main: { description: 'x' } },
+                    alpha: { on: true, level: 1 },
+                    beta: { x: 1 },
+                    gamma: { g: 1 },
+                    epsilon: { enabled: true },
+                },
+                null,
+                2,
+            ),
+            '.magic/scripts/reads.js':
+                "'use strict';\n" +
+                'const data = JSON.parse(text);\n' +
+                'const defaults = { level: 1 };\n' +
+                'const config = Object.assign({}, defaults, data.alpha || {});\n' +
+                'if (data.alpha.on) use(config.level);\n' +
+                '// data.beta.x is read somewhere else\n' +
+                "const note = 'then read data.beta.x here';\n" +
+                "console.log('data.beta.x is not read here');\n" +
+                'if (other.enabled) use(1);\n',
+            'dev/scripts/elsewhere.js': 'const v = data.gamma.g;\n',
+        });
+        try {
+            assert.deepStrictEqual(
+                settingParityFindings(root).map((f) => f.key).sort(),
+                ['beta.x', 'epsilon.enabled', 'gamma.g'],
+                'the commented, quoted, out-of-tree and section-less keys are flagged, and the two read keys are not',
+            );
+
+            // A flagged key stops being flagged once a shipped script reads it.
+            writeTreeFiles(root, { '.magic/scripts/later.js': 'const v = data.beta.x;\n' });
+            assert.deepStrictEqual(
+                settingParityFindings(root).map((f) => f.key).sort(),
+                ['epsilon.enabled', 'gamma.g'],
+                'a shipped reader clears beta.x',
+            );
+        } finally {
+            cleanup(root);
+        }
+    });
+
+    test('setting parity: a dotted path that shipped text names with workspace.json needs a reader, reported with its file and line', () => {
+        const root = makeSettingTree({
+            '.magic/templates/workspace.json': JSON.stringify(
+                { default: 'main', workspaces: { main: {} }, alpha: { on: true } },
+                null,
+                2,
+            ),
+            '.magic/scripts/reads.js': 'if (data.alpha.on) use(1);\n',
+            'docs/page.md':
+                'Set `alpha.on` to false in `.design/workspace.json`.\n' +
+                'Use `alpha.off` in `.design/workspace.json`.\n' +
+                'The executor.js script and `workspace.json` are unrelated to keys.\n' +
+                'A key `ghost.setting` that no line ties to the file.\n',
+            'README.md': 'Edit workspace.json and set `ghost.thing` there.\n',
+        });
+        try {
+            assert.deepStrictEqual(
+                settingParityFindings(root).map(describeFinding).sort(),
+                ['README.md:1 → ghost.thing', 'docs/page.md:2 → alpha.off'],
+                'a path with no reader is reported where it is named; file names and untied keys are not paths',
+            );
+        } finally {
+            cleanup(root);
+        }
+    });
+
+    test('setting parity: every setting of the shipped workspace.json template and every path the shipped text names with it has a reader (standing check)', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const findings = settingParityFindings(repoRoot);
+        assert.deepStrictEqual(
+            findings.map((f) => `PHANTOM_SETTING ${describeFinding(f)} has no reader`),
+            [],
+            'a setting a shipped file defines or names must be given its reader or removed in the change that finds it',
+        );
+        const known = templateSettings(repoRoot).map((s) => s.key);
+        assert.ok(
+            known.includes('archival.enabled') && known.includes('finalization.enabled'),
+            'the check reads the shipped template (archival.enabled and finalization.enabled are in it)',
+        );
+    });
+
+    test('shipped text: ventilation carries the setting-parity check and its checklist entry', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const lines = fs.readFileSync(path.join(repoRoot, '.magic', 'analyze.md'), 'utf8').split('\n');
+
+        const step = lines.find((l) => l.includes('**Setting Parity** (`PHANTOM_SETTING`)'));
+        assert.ok(step, 'Mode C step 2 must carry the setting-parity check');
+        for (const statement of [
+            'PHANTOM_SETTING {file}:{line} → {key} has no reader',
+            'a key of the `workspace.json` template outside the workspace registry',
+            '`.magic/`, `docs/`, `workflows/`, `rules/`, `README.md`',
+            'a script under `.magic/scripts/`',
+            'only names the key is not a read',
+            '(advisory, non-blocking)',
+            'Environment variables and executor flags are outside this check',
+        ]) {
+            assert.ok(step.includes(statement), `the check must state: ${statement}`);
+        }
+
+        const checklistAt = lines.findIndex((l) => l.startsWith('Analysis Checklist — Mode C'));
+        assert.ok(checklistAt >= 0, 'the Mode C checklist must exist');
+        const entry = lines.slice(checklistAt).find((l) => l.startsWith('  ☐ Setting Parity: PHANTOM_SETTING'));
+        assert.ok(entry, 'the Mode C checklist must carry the setting-parity entry');
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5l. Containment quoting boundary. The ventilation scan for SDD references is
+    //     a cognitive grep whose rules are prose, so the prose is the
+    //     implementation. A blanket "a quoted occurrence is a mention" ahead of the
+    //     match classes hid 92 of 279 matches in measured consumer projects; the
+    //     harness pins who the precondition covers and what a consumer's quoted
+    //     occurrence becomes. The hook sentence is pinned beside it: the hook
+    //     stays behind when the scaffold is deleted, so the text may not say it
+    //     goes with it.
+    // ───────────────────────────────────────────────────────────────────────────
+    test('shipped text: the containment scan keeps the quoting precondition for the engine\'s own files only, and reports a code-quoted occurrence in a consumer\'s product markdown', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const lines = fs.readFileSync(path.join(repoRoot, '.magic', 'analyze.md'), 'utf8').split('\n');
+
+        const bullet = lines.find((l) => l.includes('**Precondition (SH-1)'));
+        assert.ok(bullet, 'step 6 must carry the quoting precondition');
+        for (const statement of [
+            "the engine's own authored files in this engine's own repository only",
+            'In a consumer project the precondition does not apply',
+            'an occurrence inside a code span or a fence in a markdown product file is **reported**',
+            'in the contextual sub-list when the passage reads as an illustration of a forbidden form rather than a use of it',
+            'A passage that stops making sense uses the reference; one that reads the same only shows what a leak looks like',
+            'is never silently skipped',
+            'When it is unclear which, report it',
+        ]) {
+            assert.ok(bullet.includes(statement), `the precondition must state: ${statement}`);
+        }
+        assert.ok(
+            !bullet.includes('**Precondition (SH-1)**: in a markdown product file'),
+            'the precondition must not be stated for every markdown product file',
+        );
+
+        // The bullet sits ahead of the match classes: whatever it says reaches them.
+        const bulletAt = lines.indexOf(bullet);
+        const classesAt = lines.findIndex((l) => l.includes('Match classes (unconditional)'));
+        assert.ok(bulletAt >= 0 && classesAt > bulletAt, 'the precondition precedes the match classes it qualifies');
+    });
+
+    test('shipped text: the scaffold-removal exemption says the pre-commit hook disarms itself and never that it is removed with the scaffold, in step 6a and in the rules (both copies)', () => {
+        const repoRoot = path.resolve(__dirname, '..', '..');
+        const stepLine = fs
+            .readFileSync(path.join(repoRoot, '.magic', 'analyze.md'), 'utf8')
+            .split('\n')
+            .find((l) => l.includes('**Exempt**: the git pre-commit hook'));
+        assert.ok(stepLine, 'step 6a must exempt the hook');
+
+        const rules = fs.readFileSync(path.join(repoRoot, 'rules', 'magic.md'), 'utf8');
+        const start = rules.indexOf('**Exempt**: the git pre-commit hook');
+        assert.ok(start >= 0, 'the rules must exempt the hook');
+        const paragraph = rules.slice(start, rules.indexOf('\n\n', start)).replace(/\s+/g, ' ');
+
+        for (const [where, text] of [['step 6a', stepLine], ['rules/magic.md', paragraph]]) {
+            assert.doesNotMatch(text, /removed with|goes away with/, `${where}: the hook does not go with the scaffold`);
+            assert.match(text, /it disarms itself/, `${where}: the hook disarms itself`);
+            assert.match(text, /with `\.magic\/` absent it says so once and lets the commit through/, `${where}: what disarming means`);
+            assert.match(text, /stays behind when the scaffold is deleted/, `${where}: why it must`);
+        }
+
+        const twin = fs.readFileSync(path.join(repoRoot, '.agents', 'rules', 'magic.md'), 'utf8');
+        assert.strictEqual(twin, rules, 'the copy under .agents/rules must carry the same text');
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 5m. check-bloat.js — the thresholds are advisory defaults a project may
+    //     change in workspace.json, and specifications are scanned in every
+    //     subdirectory of specifications/.
+    // ───────────────────────────────────────────────────────────────────────────
+    const makeBloatProject = (config, files) => {
+        const tempDir = createTempWorkspace();
+        const wsDir = path.join(tempDir, '.design', 'ws');
+        fs.mkdirSync(path.join(wsDir, 'specifications', 'sub'), { recursive: true });
+        fs.mkdirSync(path.join(wsDir, 'tasks'), { recursive: true });
+        if (config !== null) {
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'workspace.json'),
+                typeof config === 'string' ? config : JSON.stringify(config),
+            );
+        }
+        for (const [rel, lines] of Object.entries(files)) {
+            fs.writeFileSync(path.join(wsDir, rel), `${'line\n'.repeat(lines - 1)}line`);
+        }
+        return tempDir;
+    };
+
+    const bloatSignals = (tempDir) => {
+        const result = spawnSync(
+            'node',
+            [path.join(tempDir, '.magic', 'scripts', 'check-bloat.js'), '--json'],
+            { cwd: tempDir, encoding: 'utf8', env: { ...process.env, MAGIC_DESIGN_DIR: '.design/ws' } },
+        );
+        assert.strictEqual(result.status, 0, result.stdout + result.stderr);
+        return JSON.parse(result.stdout).issues.map((i) => `${i.type} ${i.file} ${i.lines}/${i.limit}`);
+    };
+
+    test('check-bloat: the bloat override is honored for specifications and task files, an omitted key keeps its default, and a threshold of 0 turns off only its own tier', () => {
+        const files = {
+            'specifications/a.md': 25,
+            'specifications/b.md': 45,
+            'tasks/phase-1.md': 260,
+            'tasks/phase-2.md': 60,
+            'tasks/phase-3.md': 120,
+        };
+        const dirs = [];
+        const signalsFor = (config) => {
+            const dir = makeBloatProject(config, files);
+            dirs.push(dir);
+            return bloatSignals(dir);
+        };
+        try {
+            assert.deepStrictEqual(
+                signalsFor({ bloat: { spec: { soft: 20, hard: 40 } } }),
+                [
+                    'SPEC_BLOAT specifications/a.md 25/20',
+                    'SPEC_DECOMPOSE specifications/b.md 45/40',
+                    'TASK_BLOAT tasks/phase-1.md 260/250',
+                ],
+                'the spec override applies; the task thresholds keep 250/400 because their keys are omitted',
+            );
+            assert.deepStrictEqual(
+                signalsFor({ bloat: { task: { soft: 50, hard: 100 } } }),
+                [
+                    'TASK_DECOMPOSE tasks/phase-1.md 260/100',
+                    'TASK_BLOAT tasks/phase-2.md 60/50',
+                    'TASK_DECOMPOSE tasks/phase-3.md 120/100',
+                ],
+                'the task override applies to task files',
+            );
+            assert.deepStrictEqual(
+                signalsFor({ bloat: { spec: { soft: 0, hard: 40 } } }),
+                ['SPEC_DECOMPOSE specifications/b.md 45/40', 'TASK_BLOAT tasks/phase-1.md 260/250'],
+                'a soft threshold of 0 turns off the soft signal and leaves the hard one',
+            );
+            assert.deepStrictEqual(
+                signalsFor({ bloat: { spec: { soft: 20, hard: 0 } } }),
+                [
+                    'SPEC_BLOAT specifications/a.md 25/20',
+                    'SPEC_BLOAT specifications/b.md 45/20',
+                    'TASK_BLOAT tasks/phase-1.md 260/250',
+                ],
+                'a hard threshold of 0 turns off the hard signal and leaves the soft one',
+            );
+
+            // Control: with no override the defaults decide, so the override is read and not merely tolerated.
+            assert.deepStrictEqual(
+                signalsFor({ finalization: { enabled: true } }),
+                ['TASK_BLOAT tasks/phase-1.md 260/250'],
+                'no bloat section: the defaults 300/500 and 250/400 apply',
+            );
+        } finally {
+            dirs.forEach(cleanup);
+        }
+    });
+
+    test('check-bloat: a specification in a subdirectory of specifications/ is scanned, and a missing, unparsable or non-numeric configuration leaves the default thresholds', () => {
+        const files = {
+            'specifications/exactly-300.md': 300,
+            'specifications/over.md': 301,
+            'specifications/sub/deep.md': 501,
+            'tasks/phase-1.md': 250,
+            'tasks/phase-2.md': 251,
+        };
+        const expected = [
+            'SPEC_BLOAT specifications/over.md 301/300',
+            'SPEC_DECOMPOSE specifications/sub/deep.md 501/500',
+            'TASK_BLOAT tasks/phase-2.md 251/250',
+        ];
+        const dirs = [];
+        try {
+            for (const config of [
+                null,
+                '{ not json',
+                { bloat: { spec: { soft: 'ten', hard: -5 }, task: null } },
+            ]) {
+                const dir = makeBloatProject(config, files);
+                dirs.push(dir);
+                assert.deepStrictEqual(
+                    bloatSignals(dir),
+                    expected,
+                    `defaults stand for ${typeof config === 'string' ? 'an unparsable file' : config === null ? 'no file' : 'non-numeric values'}; a file at the threshold is not flagged, a nested specification is`,
+                );
+            }
+        } finally {
+            dirs.forEach(cleanup);
+        }
     });
 
     // ───────────────────────────────────────────────────────────────────────────
@@ -6509,6 +7164,215 @@ describe('Magic Engine Scripts', () => {
             );
         } finally {
             cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 9a. install-hooks.js — ownership, truthful outcome, disarm without the
+    //     engine. Each case drives the installer, and the hook it writes, over a
+    //     throwaway repository made with `git init`.
+    // ───────────────────────────────────────────────────────────────────────────
+    const HOOK_MARKER_LINE = '# Magic Spec Pre-commit Hook';
+    const HOOK_CHAIN_LINE = 'node .magic/scripts/executor.js update-engine-meta --check || exit 1';
+
+    const gitIn = (dir, ...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+    const outputOf = (result) => result.stdout + result.stderr;
+    const hookFileOf = (dir) => path.join(dir, '.git', 'hooks', 'pre-commit');
+    const installHookIn = (dir) =>
+        spawnSync('node', [path.join(scriptsDir, 'install-hooks.js')], { cwd: dir, encoding: 'utf8' });
+
+    const makeHookRepo = () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-hook-'));
+        gitIn(dir, 'init', '-b', 'master');
+        gitIn(dir, 'config', 'user.email', 'test@example.com');
+        gitIn(dir, 'config', 'user.name', 'Test User');
+        return dir;
+    };
+
+    // A repository that carries a copy of the engine with a manifest that matches it.
+    const makeEngineHookRepo = () => {
+        const dir = createTempWorkspace(true);
+        generateChecksums(dir);
+        return dir;
+    };
+
+    const commitIn = (dir) => {
+        fs.writeFileSync(path.join(dir, 'staged.txt'), `${Date.now()}\n`);
+        gitIn(dir, 'add', 'staged.txt');
+        return gitIn(dir, 'commit', '-m', 'probe');
+    };
+
+    test('git hook: a fresh repository gets the hook with the marker, and a second run leaves it byte for byte', () => {
+        const dir = makeHookRepo();
+        try {
+            const first = installHookIn(dir);
+            assert.strictEqual(first.status, 0, outputOf(first));
+            const written = fs.readFileSync(hookFileOf(dir));
+            assert.ok(written.toString('utf8').split(/\r?\n/).includes(HOOK_MARKER_LINE), 'the hook carries the marker line');
+            assert.match(outputOf(first), /installed successfully/, 'the success line follows a write');
+            if (process.platform !== 'win32') {
+                assert.ok((fs.statSync(hookFileOf(dir)).mode & 0o111) !== 0, 'the hook is executable where the platform has the bit');
+            }
+
+            const second = installHookIn(dir);
+            assert.strictEqual(second.status, 0, outputOf(second));
+            assert.strictEqual(Buffer.compare(written, fs.readFileSync(hookFileOf(dir))), 0, 'a reinstall changes nothing');
+            assert.ok(!fs.existsSync(`${hookFileOf(dir)}.magic-spec.bak`), 'a reinstall saves no copy');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('git hook: a pre-existing hook without the marker survives byte for byte, the run fails and the output carries the line that chains the check', () => {
+        const dir = makeHookRepo();
+        try {
+            const own = '#!/bin/sh\necho "my own hook"\n';
+            fs.writeFileSync(hookFileOf(dir), own);
+            const result = installHookIn(dir);
+            assert.notStrictEqual(result.status, 0, 'a hook the installer did not write is a failure to install');
+            assert.strictEqual(fs.readFileSync(hookFileOf(dir), 'utf8'), own, 'the user\'s hook is untouched');
+            assert.ok(outputOf(result).includes(HOOK_CHAIN_LINE), 'the output names the line to add');
+            assert.doesNotMatch(outputOf(result), /installed successfully/, 'no success line for a hook that was not written');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('git hook: a hook that carries the marker but another body is replaced only after its bytes are saved beside it, and no earlier copy is overwritten', () => {
+        const dir = makeHookRepo();
+        try {
+            const older = `#!/bin/sh\n${HOOK_MARKER_LINE}\necho "older engine"\n`;
+            fs.writeFileSync(hookFileOf(dir), older);
+            const first = installHookIn(dir);
+            assert.strictEqual(first.status, 0, outputOf(first));
+            const copy = `${hookFileOf(dir)}.magic-spec.bak`;
+            assert.strictEqual(fs.readFileSync(copy, 'utf8'), older, 'the copy is byte-identical to the original');
+            assert.notStrictEqual(fs.readFileSync(hookFileOf(dir), 'utf8'), older, 'the hook was replaced');
+            assert.ok(outputOf(first).includes('pre-commit.magic-spec.bak'), 'the output names the copy');
+
+            const extended = `#!/bin/sh\n${HOOK_MARKER_LINE}\necho "extended by hand"\n`;
+            fs.writeFileSync(hookFileOf(dir), extended);
+            const second = installHookIn(dir);
+            assert.strictEqual(second.status, 0, outputOf(second));
+            assert.strictEqual(fs.readFileSync(copy, 'utf8'), older, 'the first copy is not overwritten');
+            assert.strictEqual(fs.readFileSync(`${copy}.1`, 'utf8'), extended, 'the next copy takes a numbered name');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('git hook: with core.hooksPath pointing elsewhere nothing is written under .git/hooks and the run fails; a path that is .git/hooks itself installs', () => {
+        const redirected = makeHookRepo();
+        const same = makeHookRepo();
+        try {
+            gitIn(redirected, 'config', 'core.hooksPath', '../elsewhere');
+            const result = installHookIn(redirected);
+            assert.notStrictEqual(result.status, 0, 'a hook git never reads is not an installed hook');
+            assert.ok(!fs.existsSync(hookFileOf(redirected)), 'nothing is written under .git/hooks');
+            assert.ok(outputOf(result).includes(HOOK_CHAIN_LINE), 'the output names the line to add');
+            assert.doesNotMatch(outputOf(result), /installed successfully/, 'no success line');
+
+            gitIn(same, 'config', 'core.hooksPath', '.git/hooks');
+            const control = installHookIn(same);
+            assert.strictEqual(control.status, 0, outputOf(control));
+            assert.ok(fs.existsSync(hookFileOf(same)), 'a hooksPath that names .git/hooks is not a redirect');
+        } finally {
+            cleanup(redirected);
+            cleanup(same);
+        }
+    });
+
+    test('git hook: a symbolic-link pre-commit and a symbolic-link .git/hooks are left untouched and the run fails', (t) => {
+        const linkedHook = makeHookRepo();
+        const linkedDir = makeHookRepo();
+        try {
+            // The target carries the marker and another body, so an installer that
+            // followed the link would treat it as its own old hook and write through it.
+            const target = path.join(linkedHook, 'tracked-hook.sh');
+            const content = `#!/bin/sh\n${HOOK_MARKER_LINE}\necho tracked\n`;
+            fs.writeFileSync(target, content);
+            const shared = path.join(linkedDir, 'shared-hooks');
+            fs.mkdirSync(shared);
+            const hooksDir = path.join(linkedDir, '.git', 'hooks');
+            fs.rmSync(hooksDir, { recursive: true, force: true });
+            try {
+                fs.symlinkSync(target, hookFileOf(linkedHook));
+                fs.symlinkSync(shared, hooksDir, 'dir');
+            } catch (e) {
+                t.skip(`this platform cannot create symbolic links here (${e.code})`);
+                return;
+            }
+
+            const one = installHookIn(linkedHook);
+            assert.notStrictEqual(one.status, 0, 'a linked hook belongs to someone else');
+            assert.ok(fs.lstatSync(hookFileOf(linkedHook)).isSymbolicLink(), 'the link is still a link');
+            assert.strictEqual(fs.readFileSync(target, 'utf8'), content, 'the target is untouched');
+            assert.ok(outputOf(one).includes(HOOK_CHAIN_LINE), 'the output names the line to add');
+
+            const two = installHookIn(linkedDir);
+            assert.notStrictEqual(two.status, 0, 'a linked hooks directory belongs to someone else');
+            assert.deepStrictEqual(fs.readdirSync(shared), [], 'nothing is written into the link target');
+        } finally {
+            cleanup(linkedHook);
+            cleanup(linkedDir);
+        }
+    });
+
+    test('git hook: a pre-commit that is a directory makes the run fail, the exit code init.js records its finding from', () => {
+        const dir = makeHookRepo();
+        try {
+            fs.mkdirSync(hookFileOf(dir));
+            const result = installHookIn(dir);
+            assert.notStrictEqual(result.status, 0, 'a write failure is a failure to install');
+            assert.match(result.stderr, /Failed to install Git hook/, 'the error is reported');
+            assert.doesNotMatch(outputOf(result), /installed successfully/, 'no success line');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('git hook: with no .magic/ the hook prints one line and lets the commit through; with the engine present it still blocks drift and a partly deleted engine', () => {
+        const bare = makeHookRepo();
+        const synced = makeEngineHookRepo();
+        const drifted = makeEngineHookRepo();
+        const partial = makeEngineHookRepo();
+        try {
+            for (const dir of [bare, synced, drifted, partial]) {
+                const installed = installHookIn(dir);
+                assert.strictEqual(installed.status, 0, outputOf(installed));
+            }
+
+            const lone = commitIn(bare);
+            const loneText = outputOf(lone);
+            assert.strictEqual(lone.status, 0, `the commit goes through without the engine: ${loneText}`);
+            assert.strictEqual(
+                loneText.split('\n').filter((l) => l.includes('[Magic Sync]')).length,
+                1,
+                'the hook prints exactly one line',
+            );
+            assert.match(loneText, /not installed here, so nothing was checked/, 'the line says the engine is absent and nothing was checked');
+            assert.match(loneText, /Delete \.git\/hooks\/pre-commit/, 'the line says the file can be deleted');
+            assert.doesNotMatch(loneText, /Engine drift detected/, 'an absent engine is not called drift');
+            assert.doesNotMatch(loneText, /MODULE_NOT_FOUND|node:internal/, 'no stack trace');
+
+            // Controls: the guard is not a blanket pass.
+            const ok = commitIn(synced);
+            assert.strictEqual(ok.status, 0, outputOf(ok));
+            assert.match(outputOf(ok), /Engine in sync/, 'an engine in sync is checked and passes');
+            assert.doesNotMatch(outputOf(ok), /not installed here/, 'the disarm line is not printed when the engine is there');
+
+            fs.appendFileSync(path.join(drifted, '.magic', 'scripts', 'check-bloat.js'), ' ');
+            const drift = commitIn(drifted);
+            assert.notStrictEqual(drift.status, 0, 'a modified manifested file blocks the commit');
+            assert.match(outputOf(drift), /Engine drift detected in \.magic\//, 'the drift message');
+
+            fs.rmSync(path.join(partial, '.magic', 'scripts', 'executor.js'));
+            const half = commitIn(partial);
+            assert.notStrictEqual(half.status, 0, 'a partly deleted engine still blocks the commit');
+            assert.match(outputOf(half), /restore \.magic\/ from the magic-spec release archive/, 'and still says restore');
+            assert.doesNotMatch(outputOf(half), /not installed here/, 'a partly deleted engine is not an absent one');
+        } finally {
+            for (const dir of [bare, synced, drifted, partial]) cleanup(dir);
         }
     });
 

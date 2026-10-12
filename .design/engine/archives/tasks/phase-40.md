@@ -1,47 +1,70 @@
 ---
 phase: 40
 name: "Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment"
-status: Todo
+status: Done
 subsystem: ".magic (scripts, analyze.md, templates), rules, docs, dev/tests"
 requires:
   - "The setting parity rule, the git hook contract, the deleted-file pre-flight fix and the bloat reader (l2-engine-automation 1.21.0), the archival opt-out (l2-engine-finalization 3.6.0), SH-6 (l1-scan-input-hygiene 1.3.0), RC-2.2 and the RC-12 hook exemption (l1-sdd-reference-containment 1.7.0) and their coverage (l2-test-suite 1.30.0): all Stable at registry 1.43.0"
   - "The body navigation contract (Phase 38): analyze.md keeps a contents list naming every ## heading, so edits to its steps add or remove no heading"
   - "dev/scripts/mutation-check.js (Phase 37): the driver that controls every new assertion"
   - "The routing clause of Phase 39: rules/magic.md is 501 lines and always-on, so this phase must not lengthen it"
-provides: []
+provides:
+  - "Archival opt-out with its reader: finalize.js skips phase archival only for archival.enabled === false (any other value, an absent key or an unreadable file leave it on) and prints one informational line when a finished phase waits; archiveDir withdrawn from the template and the hook-notice sentence from rules/magic.md section 4; the explicit archive-phases command is unaffected"
+  - "Setting parity: /magic.analyze Mode C reports PHANTOM_SETTING (advisory), and the harness holds a standing check over the shipped tree that fails on any setting without a reader"
+  - "Git hook lifecycle: install-hooks.js owns only a hook it wrote (marker, byte-identical reinstall, a changed body saved beside the file under a free name), leaves a foreign hook, a symbolic link and a core.hooksPath redirect alone with the chain line and a non-zero exit, exits non-zero on every failure to install; the written hook tests for .magic/ first (ENOENT only) and, with it absent, prints one line and lets the commit through; the claim that the hook is removed with the scaffold is gone from analyze.md and rules/magic.md"
+  - "Pre-flight deletion: check-prerequisites.js reports a manifested engine file absent from disk as ENGINE_INTEGRITY with the remedy of the installation kind, so it agrees with update-engine-meta --check on untouched, modified and deleted layouts"
+  - "Quoted notation: analyze.md step 6 keeps the quoting precondition for the engine's own files in this repository only and reports a code-quoted occurrence in a consumer's product markdown (contextual sub-list for an illustration, with the direction of the self-containment test stated); cognitive case T267"
+  - "Bloat reader: check-bloat.js honours the bloat override (0 turns off its own tier, bad values keep the default) and scans specifications recursively"
+  - "Harness 178 -> 197 (19 cases), 70 mutation entries all caught; cognitive suite T267; engine 2.1.136 -> 2.1.138 (two C14)"
 key_files:
   created: []
-  modified: []
-patterns_established: []
+  modified:
+    - ".magic/scripts/finalize.js"
+    - ".magic/scripts/install-hooks.js"
+    - ".magic/scripts/check-prerequisites.js"
+    - ".magic/scripts/check-bloat.js"
+    - ".magic/templates/workspace.json"
+    - ".magic/analyze.md"
+    - "rules/magic.md"
+    - "docs/analyze.md"
+    - "docs/task.md"
+    - "dev/tests/engine.js"
+    - "dev/tests/suite.md"
+patterns_established:
+  - "A fixture for a text-versus-code distinction must make the mention look like the thing it is told apart from (a comment saying data.beta.x), or the substring-search mutant survives"
+  - "A symlink fixture whose target would be taken for the installer's own file proves the link is not followed; one whose target is foreign proves nothing"
+  - "Where a doubt rule needs a distinction POSIX test cannot make (missing versus uninspectable), probe with the runtime the check already depends on"
+  - "A test named in two bullets with opposite outcomes (reads fine -> skip, reads fine -> report) needs its direction stated at each use; a cognitive run against the shipped text finds it, a pin does not"
+  - "A first run that is green on a standing check is not evidence; the mutation that restores the defect is"
 duration_minutes: ~
 ---
 
 # Stage 40 Tasks — Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment
 
 **Phase:** 40
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** Deploy the three 2026-10-11 amendments that a reference-mining pass produced and that no engine file carries yet (registry 1.40.0 → 1.43.0): a setting that a shipped file defines or names has a reader, with the archival opt-out as its first case ([l2-engine-automation.md](../specifications/l2-engine-automation.md) 1.21.0 §Setting Parity, [l2-engine-finalization.md](../specifications/l2-engine-finalization.md) 3.6.0 §4); the installed pre-commit hook is owned, truthful and disarms itself when the engine is gone (§Git Hook Lifecycle, with [l1-sdd-reference-containment.md](../specifications/l1-sdd-reference-containment.md) 1.7.0 RC-12); the pre-flight reports a deleted engine file as the update check already does (§Engine Meta Update Flow, Deleted engine files); the containment scan reports a code-quoted occurrence in a consumer's product markdown ([l1-scan-input-hygiene.md](../specifications/l1-scan-input-hygiene.md) 1.3.0 SH-6, RC-2.2); and the bloat advisory reads the override and the recursive scan it was specified with. Coverage follows in [l2-test-suite.md](../specifications/l2-test-suite.md) 1.30.0. Order matters twice: a text claim lands only after the behavior it states (the hook disarms before any file says so; the reader exists before the standing parity check runs), and the harness cases follow the code they pin.
 
 ## Atomic Checklist
 
-- [ ] [T-40A01] `finalize.js`: `archival.enabled: false` skips phase archival and nothing else
-- [ ] [T-40A02] Workspace template and docs: `archiveDir` withdrawn, the opt-out named
-- [ ] [T-40A03] `.magic/analyze.md` Mode C: the `PHANTOM_SETTING` line, its checklist entry and the docs line
-- [ ] [T-40A04] Validation: archival opt-out cases and the standing setting-parity check, with mutation controls
-- [ ] [T-40B01] `install-hooks.js`: ownership, protection of a foreign hook and a truthful exit code
-- [ ] [T-40B02] `install-hooks.js`: the written hook disarms itself when `.magic/` is absent
-- [ ] [T-40B03] `rules/magic.md`: the §4 notice withdrawn, the §6 hook exemption restated ([C-001])
-- [ ] [T-40B04] `.magic/analyze.md` step 6a: the hook exemption restated
-- [ ] [T-40B05] Validation: git-hook cases over throwaway repositories, with mutation controls
-- [ ] [T-40C01] `check-prerequisites.js`: a manifested engine file absent from disk is an `ENGINE_INTEGRITY` finding
-- [ ] [T-40C02] Validation: the pre-flight and `--check` agree on untouched, modified and deleted layouts
-- [ ] [T-40D01] `.magic/analyze.md` step 6: a code-quoted occurrence in a consumer's product markdown is reported
-- [ ] [T-40D02] Validation: shipped-text pin for the quoting boundary and the hook restatement
-- [ ] [T-40D03] Validation: cognitive case T267 with two controls
-- [ ] [T-40E01] `check-bloat.js`: read the `bloat` override and walk `specifications/` recursively
-- [ ] [T-40E02] Validation: bloat override and recursion cases
-- [ ] [T-40T01] Validation: harness, mutation lists, scans, hardlinks, docs sync; single C14 bump
-- [ ] [T-40T02] Validation: run the new cognitive case against the shipped text
+- [x] [T-40A01] `finalize.js`: `archival.enabled: false` skips phase archival and nothing else
+- [x] [T-40A02] Workspace template and docs: `archiveDir` withdrawn, the opt-out named
+- [x] [T-40A03] `.magic/analyze.md` Mode C: the `PHANTOM_SETTING` line, its checklist entry and the docs line
+- [x] [T-40A04] Validation: archival opt-out cases and the standing setting-parity check, with mutation controls
+- [x] [T-40B01] `install-hooks.js`: ownership, protection of a foreign hook and a truthful exit code
+- [x] [T-40B02] `install-hooks.js`: the written hook disarms itself when `.magic/` is absent
+- [x] [T-40B03] `rules/magic.md`: the §4 notice withdrawn, the §6 hook exemption restated ([C-001])
+- [x] [T-40B04] `.magic/analyze.md` step 6a: the hook exemption restated
+- [x] [T-40B05] Validation: git-hook cases over throwaway repositories, with mutation controls
+- [x] [T-40C01] `check-prerequisites.js`: a manifested engine file absent from disk is an `ENGINE_INTEGRITY` finding
+- [x] [T-40C02] Validation: the pre-flight and `--check` agree on untouched, modified and deleted layouts
+- [x] [T-40D01] `.magic/analyze.md` step 6: a code-quoted occurrence in a consumer's product markdown is reported
+- [x] [T-40D02] Validation: shipped-text pin for the quoting boundary and the hook restatement
+- [x] [T-40D03] Validation: cognitive case T267 with two controls
+- [x] [T-40E01] `check-bloat.js`: read the `bloat` override and walk `specifications/` recursively
+- [x] [T-40E02] Validation: bloat override and recursion cases
+- [x] [T-40T01] Validation: harness, mutation lists, scans, hardlinks, docs sync; single C14 bump
+- [x] [T-40T02] Validation: run the new cognitive case against the shipped text
 
 ## Detailed Tracking
 
@@ -53,7 +76,8 @@ duration_minutes: ~
 ### [T-40A01] `finalize.js`: `archival.enabled: false` skips phase archival and nothing else
 
 - **Spec:** l2-engine-finalization.md §4 (Archival opt-out); l2-engine-automation.md §Setting Parity item 1 and the resolution of the cited cases
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/scripts/finalize.js`: `isArchivalEnabled()` is false only for `archival.enabled === false` (missing or unreadable file, absent section or key, any other value leave archival on) and `noteArchivalOff()` returns an empty archival result and prints one informational line when `findArchiveCandidates()` is non-empty; the archival step calls one or the other, and the import gains `findArchiveCandidates` (+43 −2). Scratch fixture (throwaway git project, `finalize --workflow=run`, 7 variants): key `false` → workbook stays in `tasks/`, TASKS and PLAN links unchanged, no archived-phases block, exactly 1 info line, version bump, changelog entry and state update still run; key absent, `true`, the string `"false"` and `null` → archived; `false` with no eligible workbook → no line; explicit `archive-phases` archives with the key `false`, `--dry-run` previews and moves nothing. Harness 178/178; the added-line scan matches only a `.design/workspace.json` path literal identical to the existing config loader's.
 - **Assignment:** Agent
 - **Verify:** In a throwaway project whose `.design/workspace.json` holds `"archival": { "enabled": false }` and whose workspace holds a `Done`, fully checked workbook `tasks/phase-1.md`, `node .magic/scripts/executor.js finalize --workflow=run --workspace=<ws>` after a significant change (a) leaves `phase-1.md` in `tasks/` and the links in `TASKS.md` and `PLAN.md` unchanged, (b) prints no archived-phases block and exactly one informational line that contains `archival.enabled`, and (c) still bumps the version, writes the changelog entry and updates `STATE.md`. The same fixture with the `archival` key absent, with `"enabled": true` and with `"enabled": "false"` (a string, which is not the value `false`) moves the workbook to `archives/tasks/` and prints no such line. `node .magic/scripts/executor.js archive-phases` archives the workbook with the key `false` and with it absent, and `archive-phases --dry-run` previews as before. With the key `false` and no eligible workbook, no informational line is printed.
 - **Handoff:** T-40A04 pins these cases; T-40A02 withdraws the sibling key.
@@ -62,7 +86,8 @@ duration_minutes: ~
 ### [T-40A02] Workspace template and docs: `archiveDir` withdrawn, the opt-out named
 
 - **Spec:** l2-engine-finalization.md §4 (the archive location is not a setting); l2-engine-automation.md §Setting Parity (resolution of the cited cases)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/templates/workspace.json`: the `archiveDir` line and the comma before it removed, `archival` now holds the single key `enabled: true` (`git diff -U0`: 1 line added, 2 removed; the file parses). `docs/task.md`: the Archival bullet gains one sentence saying that `archival.enabled: false` in `workspace.json` keeps finished phases in `tasks/` and that the explicit `archive-phases` command still archives them. `grep -rn archiveDir .magic docs workflows rules README.md` prints only the five local-variable lines of `phase-archiver.js`. `sync-docs.js` run twice: the second run reports every page current; the first also moved the generated date stamp on seven other pages and `CONTRIBUTING.md` (no content change).
 - **Assignment:** Agent
 - **Verify:** `.magic/templates/workspace.json` still parses (`node -e "JSON.parse(require('fs').readFileSync('.magic/templates/workspace.json','utf8'))"` exits 0); its `archival` object has exactly one key, `enabled`, with the value `true`; `git diff -U0` on the file shows the `archiveDir` line and the comma before it removed and nothing else. `grep -rn "archiveDir" .magic docs workflows rules README.md` prints only the two local variable names in `.magic/scripts/lib/phase-archiver.js` (a variable, not a read of a configuration key). The Archival bullet of `docs/task.md` gains one clause saying that finished phases stay in `tasks/` when `archival.enabled` is `false` in `workspace.json`; no heading changes; `node dev/scripts/sync-docs.js` run twice reports every page current on the second run.
 - **Handoff:** T-40A04's standing check needs this edit before it can be green on the tree.
@@ -71,7 +96,8 @@ duration_minutes: ~
 ### [T-40A03] `.magic/analyze.md` Mode C: the `PHANTOM_SETTING` line, its checklist entry and the docs line
 
 - **Spec:** l2-engine-automation.md §Setting Parity items 1, 3 and 4
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/analyze.md`: Mode C step 2 gains the **Setting Parity** (`PHANTOM_SETTING`) bullet after Phantom Commands — what a setting and a reader are, the five-path shipped text set, the finding format `PHANTOM_SETTING {file}:{line} → {key} has no reader` (advisory, non-blocking), the converse allowed, environment variables and executor flags outside — and the Mode C Completion Checklist gains its entry (`grep -n PHANTOM_SETTING` prints exactly 2 lines, 182 and 399; file 432 → 434 lines; the `##`/`###` heading list is identical to HEAD). `docs/analyze.md`: a new item 6 in the Mode C list names the check in plain words; the three items after it are renumbered 7–9. Harness 178/178 (contents-list and pointer cases included). The added-line scan matches only the renumbered, pre-existing "Rule Validation" line of the docs page.
 - **Assignment:** Agent
 - **Verify:** `grep -n "PHANTOM_SETTING" .magic/analyze.md` prints exactly two lines: one in Mode C step 2, beside Wrapper-Body Parity and Phantom Commands, and one in the Mode C Completion Checklist. The step-2 line states the finding format `PHANTOM_SETTING {file}:{line} → {key} has no reader` (advisory, non-blocking); that a *setting* is a key of the `workspace.json` template outside `default` and `workspaces`, or a dotted key path that a line of shipped text names together with `workspace.json`; that the shipped text is `.magic/`, `docs/`, `workflows/`, `rules/` and `README.md`; that a *reader* is a script under `.magic/scripts/` that consumes the value, so a comment, a string or a message that only names the key is not a read; and that environment variables and executor flags are outside the check. `docs/analyze.md` gains one clause in the Mode C list that names the check in plain words (`grep -n -i "setting" docs/analyze.md` shows it); no `##` heading is added or removed in either file, so `node --test dev/tests/engine.js --test-name-pattern "contents"` stays green; the added-line containment scan prints nothing.
 - **Handoff:** T-40A04 pins the line and the checklist entry; T-40B04 and T-40D01 edit other steps of the same file next.
@@ -80,7 +106,8 @@ duration_minutes: ~
 ### [T-40A04] Validation: archival opt-out cases and the standing setting-parity check, with mutation controls
 
 - **Spec:** l2-test-suite.md (Shipped-text contract coverage, setting parity); l2-engine-finalization.md §4 (regression coverage)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/engine.js`, new section 5k after the question-routing case: six cases and their helpers (`splitJavaScript`, `accessedNames`, `settingReaders`, `templateSettings`, `textSettings`, `settingParityFindings`, a throwaway-project builder). Two archival cases over a throwaway git project (key `false` keeps the workbook, links and no archived block, exactly one `archival.enabled` line, the version bump, the changelog entry and the state update still run, and a Todo phase with the key off prints no line; absent key, `{}`, `true`, the string `"false"` and `null` all archive, `archive-phases` previews with `--dry-run` and archives with the key off). Two parity cases over fixtures (a key read through its section with or without a defaults table is clean; a key named only in a comment, a string or a message, one read by a script outside `.magic/scripts/`, and one whose section is never read are flagged; a shipped reader clears a flagged key; a dotted path named with `workspace.json` is reported with its file and line, while file names and keys not tied to the file are not). The standing check over the shipped tree reports 0 findings. One pin on `.magic/analyze.md` (the Mode C step and its checklist entry). Harness 178 → 184. Mutation list of 19 entries: 19 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED — one entry survived the first fixture (it named the key as `beta.x` where a read is `.beta`) and was caught after the fixture's comment and messages were changed to `data.beta.x`.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/engine.js` gains at least four cases. (a) The archival opt-out, over the fixture of T-40A01: key `false` leaves the workbook and prints the informational line while the version bump, the changelog entry and the state update still run; key absent archives it; the explicit `archive-phases` archives it in both. (b) The setting-parity rule over throwaway fixtures: a key that a fixture script reads through the section object (with and without a defaults table merged over it) is not flagged; a key named only in a comment, a string or a message is flagged; a dotted path named in a fixture text file and absent from the fixture template is flagged with its file and line; a key that only a script outside `.magic/scripts/` reads is flagged; a flagged key stops being flagged once a shipped script reads it. (c) The same rule as a standing check over the shipped tree: zero findings, failing the suite on any. (d) `.magic/analyze.md` Mode C step 2 carries the `PHANTOM_SETTING` line and the checklist carries its entry. A mutation list with one entry per assertion (at least 10), run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED, and the modified files are byte-identical afterwards. The entry that replaces the reader test with a substring search turns the comment-only case red; the entry that puts `archiveDir` back into the template turns the standing check red.
 - **Handoff:** T-40T01 re-runs the harness after the bump.
@@ -89,7 +116,8 @@ duration_minutes: ~
 ### [T-40B01] `install-hooks.js`: ownership, protection of a foreign hook and a truthful exit code
 
 - **Spec:** l2-engine-automation.md §Git Hook Lifecycle, Required Fix items 1 and 2
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/scripts/install-hooks.js` rewritten around an `install()` that returns the exit code: the marker (`# Magic Spec Pre-commit Hook`) and the chain line are constants; a symbolic-link `.git/hooks`, a `core.hooksPath` that names another directory (probed with `git config --get core.hooksPath`, equal-to-`.git/hooks` counts as no redirect) and a symbolic-link `pre-commit` are left alone; no file → written; marker + identical body → left, exit 0; marker + another body → bytes copied to `pre-commit.magic-spec.bak` (`.bak.1`, `.bak.2`, … when taken, copy made with `COPYFILE_EXCL` so none is overwritten) then replaced, the output names the copy; no marker → left alone; every thrown error (a directory at `pre-commit`) prints `Failed to install Git hook:` and exits 1; the success line only follows a write. Decision Record: the `core.hooksPath` probe fails open — when git cannot answer (not a repository, no git) the setting counts as unset, which keeps the existing mkdir-only case green. Scratch run over throwaway repositories, 11 checks: fresh and idempotent, foreign hook, changed body twice (second copy numbered), `hooksPath` elsewhere and `hooksPath` equal to `.git/hooks`, symlinked `pre-commit`, symlinked `.git/hooks`, directory `pre-commit`, mkdir-only — all pass (symlinks were creatable here). The existing case `install-hooks.js should install functional hooks` stays green; the added-line containment scan prints nothing.
 - **Assignment:** Agent
 - **Verify:** Over throwaway repositories made with `git init`, running `node .magic/scripts/install-hooks.js` from the repository root: (1) no hook → the hook is written, its text contains the line `# Magic Spec Pre-commit Hook`, the success line is printed, exit 0; a second run leaves the file byte-identical and exits 0. (2) A hook without the marker → the file is byte-identical afterwards, the output contains the line `node .magic/scripts/executor.js update-engine-meta --check || exit 1`, exit non-zero, no success line. (3) A hook with the marker and a different body → the original bytes are saved beside it as `pre-commit.magic-spec.bak` (a numbered name when that one exists, never overwriting an existing copy), the output names the copy, the copy is byte-identical to the original, the hook is replaced, exit 0. (4) `git config core.hooksPath <dir>` set → nothing is written under `.git/hooks/`, the chain line is printed, exit non-zero, no success line. (5) `pre-commit` is a symbolic link → the link and its target are untouched, exit non-zero. (6) `.git/hooks` is a symbolic link → untouched, exit non-zero. (7) `pre-commit` is a directory → exit non-zero with the error on stderr. (8) A directory whose `.git/hooks` was made with `mkdir` only (not a repository) → the hook is written and the exit is 0, so the existing case `install-hooks.js should install functional hooks` stays green. Scenarios 5 and 6 may be skipped on a platform that cannot create links; Changes records the skip.
 - **Handoff:** T-40B02 changes the hook body in the same file; T-40B05 pins the scenarios.
@@ -98,7 +126,8 @@ duration_minutes: ~
 ### [T-40B02] `install-hooks.js`: the written hook disarms itself when `.magic/` is absent
 
 - **Spec:** l2-engine-automation.md §Git Hook Lifecycle, Required Fix item 3 and its resolution
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/scripts/install-hooks.js`: the hook text opens with a guard before anything else runs — `node -e "try{require('fs').statSync('.magic')}catch(e){process.exit(e.code==='ENOENT'?3:0)}"`, and exit code 3 prints one line (`[Magic Sync] The engine (.magic/) is not installed here, so nothing was checked. Delete .git/hooks/pre-commit if you removed the engine on purpose.`) and exits 0; every other path falls through to the unchanged check and its three guidance lines. Decision Record (Code-skeptic gate, DA-10): `[ -d .magic ]` was the rejected simpler alternative — POSIX `test` is false for a missing path and for one that cannot be inspected alike, so it would disarm the check on doubt, against the specification's rule; the probe through `node` (already a dependency of the check) calls the directory absent only on ENOENT; worst case if wrong is the same one-line hook text. Real commits through git's own shell, in four throwaway repositories: no `.magic/` → commit succeeds, exactly one `[Magic Sync]` line, no stack trace, no drift text; `.magic/` in sync → `Engine in sync` and the commit succeeds; one manifested file modified → blocked with the drift message and the restore guidance; `.magic/` present with `executor.js` deleted → blocked, still says restore, and does not print the disarm line. The 11 installer checks of the previous task still pass against the new body; added-line scan clean.
 - **Assignment:** Agent
 - **Verify:** The hook text begins its work with a test for the `.magic/` directory, before the integrity check runs. In a repository where `.magic/` does not exist, running `.git/hooks/pre-commit` (as `sh .git/hooks/pre-commit` and through `git commit`) prints exactly one line saying that the engine is not installed here, that nothing was checked and that the file can be deleted if the removal was intended, exits 0, and prints no stack trace and no `Engine drift detected` text. Three controls, each in its own repository with the written hook: `.magic/` present with one manifested file modified → exit 1 and the three existing guidance lines; `.magic/` present with `.magic/scripts/executor.js` deleted → non-zero exit and output that tells the user to restore `.magic/`; `.magic/` present and in sync → exit 0 and the existing `Engine in sync` line.
 - **Handoff:** T-40B03 and T-40B04 state the behavior in shipped text after this lands; T-40B05 pins it.
@@ -107,7 +136,8 @@ duration_minutes: ~
 ### [T-40B03] `rules/magic.md`: the §4 notice withdrawn, the §6 hook exemption restated ([C-001])
 
 - **Spec:** l2-engine-automation.md §Setting Parity (resolution: the notice is withdrawn) and §Git Hook Lifecycle (deployment); l1-sdd-reference-containment.md RC-12
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `rules/magic.md`: §4 lost the sentence that promised a non-blocking pre-commit notice for unarchived phases (the generated hook never carried it); the §6 Exempt paragraph now ends "…gating a *build*. It stays behind when the scaffold is deleted, so it disarms itself: with `.magic/` absent it says so once and lets the commit through." — same four lines, no "goes away with". File 501 → 498 lines. The edit broke the hardlink as expected (**[C-001]**: hashes differed, `validate-hardlinks.js` drift on `rules/`); `.agents/rules/magic.md` was removed and recreated as a hardlink: hashes equal, `fsutil hardlink list` shows both paths, the validator reports all groups linked. `grep -n "non-blocking notice\|goes away with\|removed with" rules/magic.md` prints nothing; the CAUTION block (lines 1–13) and §9 are byte-identical to HEAD; the added-line scan prints nothing. No C14: `rules/` is outside it.
 - **Assignment:** Agent
 - **Verify:** In `rules/magic.md` §4 the sentence that begins "The pre-commit hook issues a non-blocking notice" is gone (`grep -n "non-blocking notice" rules/magic.md` prints nothing) and the rest of §4 is unchanged. The §6 Exempt paragraph no longer says the hook "goes away with the scaffold" (`grep -n "goes away with\|removed with" rules/magic.md` prints nothing); it says the hook disarms itself when the engine is absent and keeps its statements that the hook lives in `.git/hooks/`, is never committed or packaged, and that gating a commit is not gating a build. The line count does not grow (`wc -l rules/magic.md` is at most 501). The CAUTION block, §9 and the other consumer guards are untouched. The twin under `.agents/rules/` is the same file: `fsutil hardlink list rules\magic.md` lists both paths, `Get-FileHash` of the two is equal and `node dev/scripts/validate-hardlinks.js` exits 0 after the edit; a write that replaced the inode is repaired by recreating the link (**[C-001]**). The added lines name no specification file, section, phase or task ID. No C14 bump: `rules/` is outside it.
 - **Handoff:** T-40D02 pins the §6 sentence.
@@ -116,7 +146,8 @@ duration_minutes: ~
 ### [T-40B04] `.magic/analyze.md` step 6a: the hook exemption restated
 
 - **Spec:** l1-sdd-reference-containment.md RC-12 and §5 item 7; l2-engine-automation.md §Git Hook Lifecycle (deployment)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/analyze.md` step 6a: the Exempt line now ends "…not gating a *build*. It stays behind when the scaffold is deleted, so it disarms itself: with `.magic/` absent it says so once and lets the commit through." One line changed; `grep -n "removed with" .magic/analyze.md` prints nothing; the `##`/`###` heading list is identical to HEAD; the five-point inspection and the report format of step 6a are untouched.
 - **Assignment:** Agent
 - **Verify:** The Exempt line of step 6a no longer says the hook "is removed with the scaffold" (`grep -n "removed with" .magic/analyze.md` prints nothing); it says the hook disarms itself when the engine is absent and keeps its statements about `.git/hooks/` being neither committed nor packaged and a commit not being a build. `git diff -U0 .magic/analyze.md` for this task is one hunk on that line; no `##` heading changes; the contents-list case stays green.
 - **Handoff:** T-40D01 edits step 6 of the same file next; T-40D02 pins this line.
@@ -125,7 +156,8 @@ duration_minutes: ~
 ### [T-40B05] Validation: git-hook cases over throwaway repositories, with mutation controls
 
 - **Spec:** l2-test-suite.md (Git-hook coverage)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/engine.js`, new section 9a after the existing installer case: seven cases over throwaway `git init` repositories, with helpers for the repository, the installer run, a commit through git's own shell and an engine-carrying fixture with a matching manifest. Fresh install with the marker and a byte-identical second run (executable bit asserted off Windows); a foreign hook kept byte for byte with a non-zero exit, the chain line in the output and no success line; a marker with another body replaced after a byte-identical copy, the copy named in the output, the next change taking a numbered name while the first copy survives; `core.hooksPath` elsewhere writes nothing and fails, `core.hooksPath` equal to `.git/hooks` installs; a symlinked `pre-commit` (its target carries the marker so a followed link would be written through) and a symlinked `.git/hooks`, both untouched with a non-zero exit, skipped via `t.skip` where links cannot be made; a directory at `pre-commit` fails with the error on stderr; the hook in a repository with no `.magic/` lets a real commit through with exactly one `[Magic Sync]` line, no drift text and no stack trace, against three controls — engine in sync passes, a modified manifested file blocks with the drift message, the executor deleted still blocks and still says restore. Harness 184 → 191. Mutation list of 19 entries over `install-hooks.js`: 19 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED, including the entry that turns the directory test into an executor test (the partly-deleted-engine control goes red). Not exercised: the uninspectable-directory branch of the guard (`EACCES` rather than `ENOENT`), which cannot be produced portably.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/engine.js` gains at least seven cases, one per bullet of the specification's git-hook list, over throwaway repositories made with `git init`: the fresh install with the marker and an idempotent second run; the foreign hook kept byte for byte with a non-zero exit and the chain line in the output; the marker with a different body replaced after its bytes are saved beside it, the copy byte-identical to the original; `core.hooksPath` set, nothing written under `.git/hooks/`, non-zero exit; a symbolic-link `pre-commit` and a symbolic-link `.git/hooks` untouched with a non-zero exit; a `pre-commit` that is a directory giving a non-zero exit; the hook run in a repository with no `.magic/` printing its one line and exiting 0 with no stack trace, with its two controls (`.magic/` present with one manifested file modified → exit 1 and the drift message; `.magic/` present with the executor deleted → non-zero and still saying restore). A mutation list with one entry per assertion, run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED; the entry that turns the directory test of the hook into an executor test turns the partly-deleted-engine control red. The existing case `install-hooks.js should install functional hooks` is still green.
 - **Handoff:** T-40T01 re-runs the harness after the bump.
@@ -134,7 +166,8 @@ duration_minutes: ~
 ### [T-40C01] `check-prerequisites.js`: a manifested engine file absent from disk is an `ENGINE_INTEGRITY` finding
 
 - **Spec:** l2-engine-automation.md §Engine Meta Update Flow, Deleted engine files (Required fix)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/scripts/check-prerequisites.js`: the integrity loop over the manifest keys gains an `else` branch that collects a listed file absent from disk, and a second loop warns `'.magic/{file}' is missing locally.` with the same remedy split as the modified-file warning (the restore hint and `fix: null` where `hasEngineWriteTooling()` is false, the C14 command as `fix` where it is true); no tree walk and no change to the exclusions. Probe over a copy of the live `.magic/` with a regenerated manifest, dev and user layout each: untouched → 0 integrity warnings, `ok: true`, `--check` exit 0; `templates/plan.md` deleted → 1 warning with the new message, `ok: false`, `--check` exit 1; `templates/spec.md` with a space appended → 1 warning in the existing modified wording, `ok: false`, `--check` exit 1. The user layout names the restore hint with `fix: null`, the dev layout the C14 command. The 28 existing harness cases on `ENGINE_INTEGRITY`, the pre-flight and the diagnostics recheck pass; added-line scan clean.
 - **Assignment:** Agent
 - **Verify:** On a throwaway copy of the live `.magic/` with its `.checksums`, in three states: (a) untouched — `check-prerequisites --json` has no `ENGINE_INTEGRITY` warning and `node .magic/scripts/executor.js update-engine-meta --check` exits 0; (b) `.magic/templates/plan.md` deleted — the pre-flight has a warning whose message is `'.magic/templates/plan.md' is missing locally.` followed, in a user installation (no `dev/scripts/generate-checksums.js`), by the restore-from-archive hint with `fix: null`, and in the developer repository by the C14 command as `fix`; `ok` is false; `--check` exits non-zero; (c) a space appended to `.magic/templates/spec.md` — the existing modified-file wording is unchanged, `ok` is false, `--check` exits non-zero. In every state the two checks agree on clean-versus-drift.
 - **Handoff:** T-40C02 pins the three states.
@@ -143,7 +176,8 @@ duration_minutes: ~
 ### [T-40C02] Validation: the pre-flight and `--check` agree on untouched, modified and deleted layouts
 
 - **Spec:** l2-test-suite.md (Pre-flight deletion coverage)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/engine.js`, new section 5b-bis before the line-endings cases: a layout builder that writes two stub engine files, a minimal `.design/` (so `ok` reflects integrity alone), regenerates the manifest, optionally removes `dev/` (user installation) and puts the layout in one of three states, plus a verdict helper that runs the pre-flight and `update-engine-meta --check`. Two cases: the two checks agree on untouched, modified and deleted layouts in both installation kinds (untouched → no finding, `ok` true, `--check` 0; modified and deleted → exactly one finding, `ok` false, `--check` non-zero); the deleted file is named `'.magic/task.md' is missing locally.` with the C14 command as `fix` in a developer repository and the restore instruction with `fix: null` in a user installation, while a modified file keeps its own wording. Harness 191 → 193. Mutation list of 10 entries over `check-prerequisites.js` and `update-engine-meta.js`: 10 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED, including the entry that restores the skip of a missing file, a blanket-warning entry, and one that makes `--check` ignore deletions.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/engine.js` gains at least two cases that run both checks over one throwaway extracted layout in the three states and assert agreement in each (both clean, both reporting drift, both reporting drift). The deleted state is also asserted on the pre-flight alone: `ENGINE_INTEGRITY` names the file as missing, `ok` is false, and the remedy is the installation kind's — the user-installation fixture gets the restore instruction, the developer fixture the C14 command. The untouched state is the control that shows the new finding is not a blanket warning, and the modified state keeps its own wording. A mutation list with one entry per assertion, run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED; the entry that restores the `existsSync` skip turns the deleted-state case red.
 - **Handoff:** T-40T01 re-runs the harness after the bump.
@@ -152,7 +186,8 @@ duration_minutes: ~
 ### [T-40D01] `.magic/analyze.md` step 6: a code-quoted occurrence in a consumer's product markdown is reported
 
 - **Spec:** l1-scan-input-hygiene.md SH-6 and §6 item 7; l1-sdd-reference-containment.md RC-2.2 and §5 item 7
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/analyze.md` step 6: the "Precondition (SH-1)" bullet now holds, headed as such, only for the engine's own authored files in this engine's own repository (an occurrence inside a fenced block or code span there is a mention); for a consumer project it says the precondition does not apply, that an occurrence inside a code span or a fence in a markdown product file is reported — in the contextual sub-list when the passage reads as an illustration of a forbidden form rather than a use of it, judged by the self-containment test — never silently skipped, and that when it is unclear which it is reported; the closing sentence about string literals in source and plain-prose filenames is kept, pointing at that same test. One hunk (line 198 → 199); the three match-class bullets and the `##`/`###` heading list are byte-identical to HEAD; the added-line scan prints nothing. Read literally for a consumer project, a README line telling the reader to open a code-quoted `.design/…` specification path is a finding. Full harness 193/193 (the first full run since the track A–C changes).
 - **Assignment:** Agent
 - **Verify:** In step 6 the "Precondition (SH-1)" bullet states three things: (i) in this engine's own repository, for the engine's own authored files, an occurrence inside a fenced code block or inline code span is a mention (the present text, kept for that population); (ii) in a consumer project, an occurrence inside a code span or a fence in a markdown product file is reported — in the contextual sub-list when the passage reads as an illustration of a forbidden form and not a use of it, judged by the self-containment test — and never silently skipped; (iii) when it is unclear which, the occurrence is reported. The match-class bullets are unchanged. Reading step 6 for a consumer project turns a README line that tells the reader to open a code-quoted `.design/…` specification path into a finding. `git diff -U0 .magic/analyze.md` for this task has hunks only in that bullet; no heading changes; the contents-list case stays green; the added-line containment scan prints nothing.
 - **Handoff:** T-40D02 pins it; T-40D03 adds the cognitive case.
@@ -161,7 +196,8 @@ duration_minutes: ~
 ### [T-40D02] Validation: shipped-text pin for the quoting boundary and the hook restatement
 
 - **Spec:** l2-test-suite.md (Shipped-text contract coverage, containment quoting boundary)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/engine.js`, new section 5l after the setting-parity pin: two shipped-text cases. The first reads step 6 of `.magic/analyze.md` and pins that the quoting precondition is stated for the engine's own authored files in this engine's own repository only, that it does not apply in a consumer project, that a code-quoted occurrence in a markdown product file is **reported** in the contextual sub-list when it reads as an illustration and is never silently skipped, that an unclear occurrence is reported, that the old blanket form ("in a markdown product file, an occurrence…") is gone, and that the bullet precedes the match classes. The second pins step 6a's exemption line and the `rules/magic.md` §6 paragraph (whitespace-normalized) for "disarms itself", "with `.magic/` absent it says so once and lets the commit through", "stays behind when the scaffold is deleted" and the absence of "removed with"/"goes away with", and the byte-equality of the `.agents/rules/` copy. Harness 193 → 195. Mutation list of 11 entries over `analyze.md` and `rules/magic.md`: 11 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED; the driver writes in place, so `validate-hardlinks.js` still reports all groups linked afterwards.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/engine.js` gains at least two cases that read the shipped text. (a) `.magic/analyze.md` step 6 states the SH-1 precondition as holding for the engine's own authored files and states that in a consumer project a code-quoted occurrence in a product markdown file is reported; a blanket precondition ahead of the match classes turns the case red. (b) The step 6a exemption line and `rules/magic.md` §6 contain neither "removed with" nor "goes away with" and say the hook disarms itself; the copy under `.agents/rules/` is byte-equal to `rules/magic.md`. A mutation list with one entry per pinned fragment (at least 6), run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED, and `node dev/scripts/validate-hardlinks.js` still exits 0 afterwards.
 - **Handoff:** T-40T01 re-runs the harness after the bump.
@@ -170,7 +206,8 @@ duration_minutes: ~
 ### [T-40D03] Validation: cognitive case T267 with two controls
 
 - **Spec:** l2-test-suite.md (Shipped-text contract coverage, containment quoting boundary — the cognitive case)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/suite.md`: case T267 after T266 in the `### T{N} — {name}` form with `Workflow`, `Synthetic State`/`Action`/`Expected` for the case and two controls, `Guards tested` and `Regression for`. Case: a consumer project's `README.md` line that tells the reader to open a code-quoted `.design/…` specification path yields an `SDD_REFERENCE_LEAK` among the unconditional findings, with the remediation path and no product edit. Control B: a contributor page that documents the SDD workflow itself yields none. Control C: a line inside a fence that shows what a task-ID leak looks like is reported in the contextual sub-list, not among the unconditional findings. Each Expected line asks only for behavior a shipped sentence states. The closing line moved to `v1.9.97 (Last: T267)`. Scratch check: 266 case headers numbered consecutively apart from the documented gap at T67, the two non-case headers (`Pass Criteria`, `Report Format`) pre-exist, all ten fields present in the new case, no carriage return or U+FFFD.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/suite.md` gains one case, T267, after T266 in the `### T{N} — {name}` form with `Synthetic State`, `Action`, `Expected` and `Guards tested`, and two controls. Case: in a consumer project a README line that tells the reader to open a code-quoted `.design/` specification path yields an `SDD_REFERENCE_LEAK` finding. Control B: a contributor page that documents the SDD workflow itself yields none (the reference is the content). Control C: a line that shows what a task-ID leak looks like, inside a fence, lands in the contextual sub-list and not among the unconditional findings. A scratch check prints every case header in the expected form, numbered consecutively, the closing line moved to `v1.9.97 (Last: T267)`, and no carriage return or U+FFFD in the file.
 - **Handoff:** T-40T02 runs it.
@@ -179,7 +216,8 @@ duration_minutes: ~
 ### [T-40E01] `check-bloat.js`: read the `bloat` override and walk `specifications/` recursively
 
 - **Spec:** l2-engine-automation.md §Bloat Advisory Configuration; §Setting Parity (deployment)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `.magic/scripts/check-bloat.js`: `loadThresholds()` reads `bloat` from `.design/workspace.json` over the defaults (300/500 for specifications, 250/400 for task files; an absent key, a value that is not a non-negative number, and a missing or unparsable file keep the default); `scanDir()` takes the thresholds for its kind and a flag, a threshold of 0 turns off its own tier (`soft` 0 → no soft signal, `hard` 0 → no hard signal, read one-to-one as the specification's "signal class"); `listFiles()` walks `specifications/` recursively, reporting nested files with their subdirectory, while the task scan stays flat. +83 −13. Scratch run over throwaway projects, 8 checks: this repository without an override → output byte-identical to the capture taken before the edit (the same two `SPEC_BLOAT` signals); `{spec:{soft:20,hard:40}}` → a 25-line spec soft, 45-line ones hard, task thresholds still 250/400; `soft:0` and `hard:0` each silence only their tier; a nested specification is scanned; no `workspace.json`, an unparsable one, and non-numeric or negative values all leave the defaults. The existing bloat case passes; the added-line scan prints nothing.
 - **Assignment:** Agent
 - **Verify:** (a) With no `bloat` key, `node .magic/scripts/executor.js check-bloat --json` on this repository prints output identical to its output before the edit (capture it first). (b) In a throwaway project, `"bloat": { "spec": { "soft": 20, "hard": 40 } }` in `.design/workspace.json` makes a 25-line specification a soft signal and a 45-line one a hard signal, while the `task` thresholds stay 250 and 400 because their keys are omitted. (c) A `soft` of 0 produces no soft-tier signal for that kind and a `hard` of 0 no hard-tier signal. (d) A specification placed in a subdirectory of `specifications/` is scanned and flagged when over a threshold. (e) A missing or unparsable `workspace.json` leaves the defaults 300/500 and 250/400.
 - **Handoff:** T-40E02 pins these cases.
@@ -188,7 +226,8 @@ duration_minutes: ~
 ### [T-40E02] Validation: bloat override and recursion cases
 
 - **Spec:** l2-engine-automation.md §Bloat Advisory Configuration (the contract the cases pin); task.md Step 7 (every feature track carries a Validation Task)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** `dev/tests/engine.js`, new section 5m after the containment pins: a throwaway-project builder and a signal reader, and two cases. The override: `bloat.spec` 20/40 flags a 25-line specification soft and a 45-line one hard while task files keep 250/400 because their keys are omitted; a `bloat.task` override changes task files; `soft: 0` leaves only the hard signal and `hard: 0` only the soft one; a workspace.json without a `bloat` section is the no-override control and produces exactly the default signals. The scan and the defaults: a specification in a subdirectory is flagged with its subdirectory, files of exactly 300 lines and 250 lines are not flagged and 301 and 251 are, and no file, an unparsable file and non-numeric values all leave the defaults. Harness 195 → 197. Mutation list of 9 entries over `check-bloat.js`: 9 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED.
 - **Assignment:** Agent
 - **Verify:** `dev/tests/engine.js` gains at least two cases over a throwaway workspace: the override is honored for specifications and for task phase files, omitted keys fall back to the defaults, a threshold of 0 disables only its own tier, a nested specification is scanned, and the no-override control reports exactly the signals the defaults produce. A mutation list with one entry per assertion (at least 5), run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED.
 - **Handoff:** T-40T01 re-runs the harness after the bump.
@@ -197,7 +236,8 @@ duration_minutes: ~
 ### [T-40T01] Validation: harness, mutation lists, scans, hardlinks, docs sync; single C14 bump
 
 - **Spec:** l2-test-suite.md; l2-engine-automation.md §Engine Meta Update Flow
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** (1) Harness 178 → 197 (A04 +6, B05 +7, C02 +2, D02 +2, E02 +2), 197/197 before and after the bump. (2) All five mutation lists re-run in one pass before the bump: 19 + 19 + 10 + 11 + 9 = 68 entries, 68 CAUGHT, 0 SURVIVED, 0 REFUSED, 0 RESTORE FAILED; `git status` afterwards shows no file changed except the intended edits. (3) `validate-hardlinks.js` exit 0 (all groups linked), `fsutil hardlink list AGENTS.md` shows 5 paths (CLAUDE, GEMINI, QWEN, CODEX, AGENTS), the `rules`/`.agents/rules` hashes are equal. (4) The added-line scan over `.magic`, `rules`, `docs` and `workflows` prints one line: the pre-existing "Rule Validation" item of `docs/analyze.md`, renumbered 7 → 8 by the new Setting Parity item (it names `RULES.md §7` as before); no task ID, phase designator, specification file name or `.design/engine` path is added. (5) `sync-docs.js` after the bump re-stamped seven pages and `CONTRIBUTING.md` with the new engine version; a second run reports every page current. (6) One `update-engine-meta`: `.magic/.version` 2.1.136 → 2.1.137, 72 files in the manifest, the dev snapshot synced; `--check` exits 0 and the pre-flight reports `ok: true` with no warnings. The skill generator re-wrote nine wrappers that differ from the committed ones only by the final newline (no `workflows/` file or description changed, and two of the nine are dev-only wrappers this phase never touched), so they were restored to the committed versions; the skill and wrapper harness cases stay green. (7) Three `SPEC_DEPLOYMENT_STATE_STALE` warnings recorded for a `/magic.spec engine` patch pass: the bloat section's "specified, not built" line, the scan-hygiene enforcement-surface row for the containment scan, and the test-suite sentence that leaves the cognitive case's IDs "assigned when it lands" (it landed as T267).
 - **Assignment:** Agent
 - **Verify:** (1) `node --test dev/tests/engine.js` is green before and after the bump, and its count equals 178 plus the cases recorded by T-40A04, T-40B05, T-40C02, T-40D02 and T-40E02. (2) Each of those tasks' mutation lists, re-run with `node dev/scripts/mutation-check.js`, reports every entry CAUGHT with 0 SURVIVED, 0 REFUSED and 0 RESTORE FAILED, and the modified files are restored byte-identical. (3) `node dev/scripts/validate-hardlinks.js` exits 0 and `fsutil hardlink list AGENTS.md` shows 5 paths. (4) The added-line containment scan over the diff of `.magic/`, `rules/`, `docs/` and `workflows/` prints no task ID, phase designator, `PLAN.md`, `TASKS.md`, `INDEX.md` or `RULES.md` name, specification file name or `.design/engine` path. (5) `node dev/scripts/sync-docs.js` run twice: the second run reports every page current. (6) One `node .magic/scripts/executor.js update-engine-meta`: `.magic/.version` moves by one patch step from its value when this task starts, `update-engine-meta --check` exits 0, and `check-prerequisites --json --verify-headers --workspace=engine` reports `ok: true` with no `ENGINE_INTEGRITY` warning. (7) Two stale statements are recorded with `record-diagnostic` for a `/magic.spec engine` patch pass: the bloat section's "specified, not built" status line, and the enforcement-surface row of the scan-hygiene specification that reads "Non-compliant" for the containment scan.
 - **Handoff:** T-40T02 follows.
@@ -206,7 +246,8 @@ duration_minutes: ~
 ### [T-40T02] Validation: run the new cognitive case against the shipped text
 
 - **Spec:** l2-test-suite.md (Cognitive Test Suite)
-- **Status:** Todo
+- **Status:** Done
+- **Changes:** T267 and its controls read against `.magic/analyze.md` step 6 and `rules/magic.md` §6 as shipped after the first bump, literally, with no specification open — by the author of the text, so the Context Bleed note applies in full (no fresh reader was run; an agent spawn needs an explicit request). A passes: a README line that tells the reader to open a code-quoted `.design/…` path is not skipped for being in a code span (the precondition is stated for the engine's own files only), the path is a match class, the passage stops making sense without `.design/` so it is a use and stands among the unconditional findings, and the finding format, the remediation path and the no-edit rule are stated. B passes: the contributor-page exemption ("the reference IS the content") covers it. C was an AMBIGUITY of the shipped wording: the self-containment test was named without saying which answer means "use" and which "illustration", and the next bullet maps the same answer ("reads fine") to "skip" for prose phase designators, so a literal reader reaching a fenced `// Implements T-2B03` by analogy could skip it, against "never silently skipped". Fixed in the shipped sentence, not in the case: `.magic/analyze.md` step 6 now adds "A passage that stops making sense uses the reference; one that reads the same only shows what a leak looks like" inside the test's parenthesis. The pin (`dev/tests/engine.js`, the containment-precondition case) gained that statement, with two mutation entries (the sentence removed, and its direction reversed): 2 CAUGHT; the earlier D02 list re-run: 11 CAUGHT. Because `.magic/` changed, the C14 step of T-40T01 was repeated: `.magic/.version` 2.1.137 → 2.1.138, `--check` exit 0, pre-flight `ok: true` with no warnings, docs sync current on the second run, the nine regenerated skill wrappers (final-newline noise only) restored again, hardlinks all linked, harness 197/197.
 - **Assignment:** Agent
 - **Verify:** T267, its control B and its control C are run against `.magic/analyze.md` step 6 and `rules/magic.md` §6 as shipped after the bump, read literally with no specification open: each probe resolves as its `Expected` says, with each control resolving the other way. A probe that resolves wrongly or ambiguously is adjudicated as a finding of the shipped wording (Finding Adjudication) and fixed in this phase before the task is marked Done; a fix that changes `.magic/` repeats step (6) of T-40T01. The result records that the author read its own text unless a fresh reader was run, so the Context Bleed note applies.
 - **Handoff:** None.

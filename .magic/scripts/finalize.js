@@ -14,7 +14,7 @@ const {
 } = require('./lib/significance');
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
-const { archiveCompletedPhases } = require('./lib/phase-archiver');
+const { archiveCompletedPhases, findArchiveCandidates } = require('./lib/phase-archiver');
 const { listPhaseFiles } = require('./lib/phase-files');
 const { findPendingWork } = require('./lib/pending-work');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
@@ -156,6 +156,45 @@ function loadConfig() {
     } catch {
         return defaults;
     }
+}
+
+/**
+ * Reports whether phase archival is on. Archival stays on unless the
+ * `archival.enabled` setting of workspace.json is exactly `false`: a missing
+ * file, an unreadable one, an absent section or key, and any other value
+ * (the string "false" included) all leave it on.
+ *
+ * @returns {boolean} False only when workspace.json sets `archival.enabled` to `false`.
+ */
+function isArchivalEnabled() {
+    const workspaceJson = path.join(projectRoot, '.design', 'workspace.json');
+    if (!fs.existsSync(workspaceJson)) return true;
+    try {
+        const data = JSON.parse(fs.readFileSync(workspaceJson, 'utf8'));
+        return !(data.archival && data.archival.enabled === false);
+    } catch {
+        return true;
+    }
+}
+
+/**
+ * Stands in for the archival step when `archival.enabled` is `false`. Nothing
+ * is moved. One informational line says why, and it is printed only when a
+ * finished phase is waiting, so a skipped step can be told from nothing to
+ * archive.
+ *
+ * @param {string} wsDir - Absolute path to the workspace design directory.
+ * @returns {{ archived: never[], skipped: never[], unrecognized: never[] }} An empty archival result.
+ */
+function noteArchivalOff(wsDir) {
+    const waiting = findArchiveCandidates(wsDir);
+    if (waiting.length > 0) {
+        console.log(
+            `ℹ  Phase archival is off (archival.enabled = false in workspace.json): ` +
+                `${waiting.length} finished phase(s) stay in tasks/.`,
+        );
+    }
+    return { archived: [], skipped: [], unrecognized: [] };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -951,7 +990,9 @@ function main() {
     let archivedPhases = [];
     if (opts.workflow === 'run') {
         try {
-            const archiveResult = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
+            const archiveResult = isArchivalEnabled()
+                ? archiveCompletedPhases(wsDir, { dryRun: opts.dryRun })
+                : noteArchivalOff(wsDir);
             archivedPhases = archiveResult.archived;
             if (archiveResult.skipped.length > 0) {
                 console.warn(

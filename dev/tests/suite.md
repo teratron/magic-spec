@@ -4256,6 +4256,25 @@ If any test fails, document the failure reason and propose a fix.
 - **Guards tested:** the split between structural and content questions; the graph and the wiki hold no specification text; the registry description is a router, not an index of contents.
 - **Regression for:** none yet — measured on a consumer project's registries: the vocabulary of the hand-written descriptions is found in the specification text for 94% of its terms and in the `Overview` plus the headings for 20%, so a text search recovers what the cell carried and a generated summary would not.
 
+### T267 — A Code-Quoted Reference in a Consumer's Product Markdown Is Reported; Quoting Does Not Un-Ship a Token
+
+- **Workflow:** `/magic.analyze` Mode C step 6 (SDD Reference Containment Scan) with the ambient rule `rules/magic.md` §6
+- **Synthetic State (Test A):**
+  - A consumer project that installed the engine; the engine directories are vendored and the project's own code and documents are product files. Its `README.md` contains the line: "Before changing the login flow, open `.design/main/specifications/l1-auth.md` to see how it is specified." The path is inside an inline code span.
+- **Action A:** the user runs `/magic.analyze` and the ventilation reaches step 6.
+- **Expected A:**
+  - [ ] The scan does not drop the occurrence for sitting inside a code span: it reports `SDD_REFERENCE_LEAK README.md:{line} → ".design/main/specifications/l1-auth.md"`.
+  - [ ] The line tells the reader to open the path, which is a use of it, so the finding stands among the unconditional ones and not in the contextual sub-list.
+  - [ ] The report states the remediation path `→ /magic.task {ws}` and edits no product file.
+- **Synthetic State (Test B — control):** the same project has a contributor page `docs/contributing.md` that documents the SDD workflow itself: "Specifications live under `.design/{workspace}/specifications/`; the plan is `PLAN.md`."
+- **Expected B:**
+  - [ ] The scan yields no finding for that page, since there the reference is the content; the finding of Test A is unchanged.
+- **Synthetic State (Test C — control):** the project's `docs/style.md` shows what not to write, in a fenced block: `// Implements T-2B03`.
+- **Expected C:**
+  - [ ] The occurrence is reported, not skipped for being fenced, and it lands in the contextual sub-list because the passage illustrates a forbidden form instead of using it; it is not among the unconditional findings.
+- **Guards tested:** quoting does not un-ship a token (the quoting precondition holds for the engine's own authored files in the engine's own repository, not in a consumer project); a use of a path and an illustration of a forbidden form are told apart by the self-containment test, not by syntax; a contributor page about the SDD workflow is exempt; an unclear occurrence is reported.
+- **Regression for:** none yet — measured on five consumer projects' tracked product markdown: 92 of 279 matches sat inside code spans or fences, and in two of the five every match did, so a blanket "a quoted occurrence is a mention" made the scan report nothing there.
+
 ```
-**Test Suite Finalized** - v1.9.96 (Last: T266)
+**Test Suite Finalized** - v1.9.97 (Last: T267)
 ```

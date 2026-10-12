@@ -111,6 +111,7 @@ if (fs.existsSync(checksumsFile)) {
     try {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
         const mismatchedFiles = [];
+        const missingFiles = [];
         for (const [relPath, storedHash] of Object.entries(checksums)) {
             if (relPath === '.checksums') continue;
             const normalizedRelPath = normalizePath(relPath);
@@ -123,12 +124,23 @@ if (fs.existsSync(checksumsFile)) {
                         delta: describeManifestDelta(fullPath, storedHash),
                     });
                 }
+            } else {
+                // A listed file that is gone is drift of the same kind as an edited
+                // one — the update check already reports it, so the two must agree.
+                missingFiles.push(normalizedRelPath);
             }
         }
         for (const { file, delta } of mismatchedFiles) {
             warn(
                 'ENGINE_INTEGRITY',
                 `'.magic/${file}' has been modified locally${integrityDetail(delta)}${canRunC14 ? '' : RESTORE_HINT}`,
+                canRunC14 ? C14_FIX : null,
+            );
+        }
+        for (const file of missingFiles) {
+            warn(
+                'ENGINE_INTEGRITY',
+                `'.magic/${file}' is missing locally.${canRunC14 ? '' : RESTORE_HINT}`,
                 canRunC14 ? C14_FIX : null,
             );
         }

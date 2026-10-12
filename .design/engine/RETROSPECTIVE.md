@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-10-06
-**Full Sessions:** 20
-**Snapshots:** 33
+**Last Full Run:** 2026-10-12
+**Full Sessions:** 21
+**Snapshots:** 34
 
 ## Snapshots
 
@@ -43,6 +43,7 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-09-30 | Phase 37 | 0/0/37 | 15/0/0 | 25 | 🟢 |
 | 2026-10-05 | Phase 38 | 0/0/37 | 12/0/0 | 25 | 🟢 |
 | 2026-10-06 | Phase 39 | 0/0/37 | 13/0/0 | 25 | 🟢 |
+| 2026-10-12 | Phase 40 | 0/0/37 | 18/0/0 | 25 | 🟡 |
 
 ## Session 1 — 2026-06-12
 
@@ -920,3 +921,55 @@ Manual input / external hook still required — same gap as Session 1.
 | Signal | 🟢 | 🟢 | → |
 
 > Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are again one class — a check that reads the text that ships found what the specification's intent hid (#1, #2, #4) — and the second C14 was the cost of that check working, not of a recurring defect. R47–R49 remain advisory; R55 is still the open verification, now covering the cases T260–T266 (the Phase 39 run was also an author's own reading).
+
+## Session 21 — 2026-10-12
+
+**Scope:** Plan completion (Phase 40 — Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment; the three specification amendments of 2026-10-11, registry 1.40.0 → 1.43.0)
+**Specs in registry:** 37 (all Stable; none changed this session — the six amended by the preceding passes are engine automation 1.21.0, engine finalization 3.6.0, scan input hygiene 1.3.0, reference containment 1.7.0, test suite 1.30.0 and rule admission gate 1.1.3, the last with nothing to deploy).
+**Tasks total:** 18 this cycle (Done: 18, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 230 nodes, 490 edges (against the figures of Session 20: 225 → 230, 483 → 490; no `graph-before.json` existed, so no `diff-spec-graph` run); 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 2 engine-version bumps | Manual | Engine 2.1.136 → 2.1.137 (one C14 for nine `.magic/` edits) → 2.1.138 (a wording fix found by the cognitive run); the plan had named both |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 178 → 197, 197/197 before and after each bump; 70 mutation entries, all caught |
+| **Rework Rate** | 3 corrections / 18 tasks | Manual | A fixture that let the substring-search mutant survive (T-40A04); a symlink case that passed against the defect (T-40B05); an ambiguous shipped sentence found by the cognitive run (T-40T02, second C14) |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A green first run proved nothing; the mutation that restores the defect did.** The six setting-parity cases, the standing check included, passed on the shipped tree at once. The 19-entry mutation list then showed one survivor — the substring-search mutant the specification names — because the fixture wrote the unread key as `beta.x` while a read is detected as `.beta`: the mention did not look like a read. Writing it as `data.beta.x` in the comment and the messages caught it. | T-40A04 |
+| 2 | **A negative control has to make the wrong implementation do something observable.** The symlinked `pre-commit` case passed against an installer that followed links, because its target carried no marker and the installer refused it for that reason. With the marker in the target, a followed link is written through and the case turns red. | T-40B05 (mutation "a symbolic-link pre-commit is followed") |
+| 3 | **Reading the shipped text found what the pin would have passed — again.** The self-containment test was named without saying which answer is a use and which an illustration, and the next bullet maps the same answer ("reads fine") to "skip" for prose phase designators; a literal reader could skip a fenced leak example, against "never silently skipped". Fixed in the sentence, pinned with two mutations, one more C14 — the cost Phase 39's session recorded and this plan predicted. | T-40T02 (T267 C), T-40D02 |
+| 4 | **The hook guard's doubt rule needed a runtime probe, not a shell test.** `test -d` is false for a missing path and for one that cannot be read alike; the guard asks `node` (already required by the check) and treats only ENOENT as absent. The uninspectable-directory branch has no case, because it cannot be produced portably. Unverified: its behavior under `EACCES`. | T-40B02 |
+| 5 | **The planning predictions held.** The probe found exactly two first findings for the parity check; the existing installer case, which builds `.git/hooks` with `mkdir` only, stayed green because the `core.hooksPath` probe fails open; **[C-001]** fired once and was repaired with the verification the plan had named; `check-bloat` output on this repository is byte-identical to before. | T-40A04, T-40B01, T-40B03, T-40E01 |
+| 6 | **The skill generator and the committed wrappers differ by the final newline.** After each C14, nine wrappers — two of them dev-only wrappers this phase never touched — differed from the committed ones by one trailing newline (LF count one lower per file) and were restored by hand twice. Unverified: whether earlier phases left the same noise. | `git diff` of `skills/` after T-40T01 |
+| 7 | **Three specification statements now describe the undeployed state.** The bloat section's "specified, not built", the enforcement-surface row of the scan-hygiene specification that reads "Non-compliant" for the containment scan, and the test-suite sentence that leaves the cognitive case's IDs "assigned when it lands" (T267). Recorded as `SPEC_DEPLOYMENT_STATE_STALE`; specification edits are outside `/magic.run`. | T-40T01 (7) |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R62 | #6 | End a generated skill wrapper with a single newline, so a C14 run leaves no diff against the committed wrappers | `dev/scripts/sync-skills.js` (advisory) |
+| R63 | #7 | Patch the three stale statements: mark the bloat section deployed, the containment row compliant, and name T267 | `l2-engine-automation.md`, `l1-scan-input-hygiene.md`, `l2-test-suite.md` |
+| R64 | #1 | State in the parity helper's comment what it cannot see by construction — a key read by destructuring, a regex literal that holds a quote — or extend `accessedNames`; today a green run on the shipped tree is the only evidence the tokenizer handles every script | `dev/tests/engine.js` (advisory) |
+| R65 | #3 | R55 stays open and now covers T260–T267, every one read by the author of the text: run one on the lowest tier the host offers | verification (open) |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 178 | 197 | +19 |
+| Cognitive suite cases | T266 | T267 | +1 |
+| Mutation entries run in the phase | 20 | 70 | +50 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 225 / 483 | 230 / 490 | +5 / +7 |
+| Engine version | 2.1.136 | 2.1.138 | +2 |
+| Signal | 🟢 | 🟡 | ↓ |
+
+> Signal moves to 🟡: 0 Blocked tasks, 0 orphans, 0 shadow logic, but three non-critical stale references in the specification layer (finding 7) — one above the Yellow band's two, with no Red condition holding. They close with one `/magic.spec` patch pass (R63). Through the spec-quality lens the findings are one class again — a check that reads what ships, or a mutation that restores a defect, finds what the intent and a green run hide (#1–#3) — and the second C14 was the cost of that check working. R47–R49 remain advisory.

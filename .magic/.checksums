@@ -1,5 +1,5 @@
 {
-  "analyze.md": "1b3fcb3db67488b5eefc7be15bd01a32a21c1152bb581570701a219b0ee4f7f4",
+  "analyze.md": "362136a70fbf9485ee5d0488f8b0ad7e53bd63ebfbdd3763036bca0a8f3dd4b7",
   "context.md": "14b2e40f29f203b512d6e2be554a34949994c0c009ca5f68ffb9be9a39d9cbdc",
   "init.md": "1b9a5871b70fa4d73ebd4bdc0c63fbd6a0fb1c1e5428e9d5cba62e339650da67",
   "retrospective.md": "82858a3c4e47aa76508b8373179d8c9f1ff19a29e03f3b0fd36971e92caccfa9",
@@ -22,19 +22,19 @@
   "scripts/analyze-coverage.js": "0e918e8f57ec19380c88084f5d211b6d9152df84e502e727a5930b6fa5ca991f",
   "scripts/archive-phases.js": "25e9725203536f30727b717b0eea429efe21755feb5b73012cf1728dd88829bd",
   "scripts/build-spec-graph.js": "1c3b6998ebe8e56ee289269c7735fb12636507ccf73423d5c5247fc98c05e934",
-  "scripts/check-bloat.js": "b54e430172d0ef307f563dc135609af0a49bdeb406b5f79093a1f8f49c6bf9aa",
-  "scripts/check-prerequisites.js": "ac7d7d911046ecc1f273603c8f4c9e824640a612d6bb8d08a103e34db574ebfb",
+  "scripts/check-bloat.js": "de539cbbb5a8cc619dc7b3173f787a926afa300de599e0c1818197f61b404a58",
+  "scripts/check-prerequisites.js": "92236f0a54d0bd3bccd2885487d7dd276a2938e7feb9c343c2476414bc86aaa7",
   "scripts/create-workspace.js": "be63d511b9be6d76ab9139664bc0403c60619095fc3a605c9b6a34d844c0f2e2",
   "scripts/detect-communities.js": "e3c854b9a18369ffe3e45b2886d159e4e55cf93dca46bdf45fe31d2bf0afff7e",
   "scripts/diff-spec-graph.js": "ab89d0c6817f720d7ae1dc2a309ee824984066accc0a3612b5d16c9cf08e12fa",
   "scripts/executor.js": "c818268404c452473462f646b350418c2ec17ec24bf372ff7ef4a53aaea2062e",
   "scripts/export-wiki.js": "98a0230fbe7ff1bcf4823f69c822a4344516f1c05b08cbbda879fddbe9a74c6d",
   "scripts/extract-rationale.js": "ca1940b1a601d032a3079f68cbf83e5a22a7436fbb179463589a8f165ec7aa7e",
-  "scripts/finalize.js": "d903adb3b2fb4656af41c470da562b500b0d6a88b4b4aa3d952f941d86bd7434",
+  "scripts/finalize.js": "089b17f404b2d071ce06f198c25ab7c5d547fb7870a9c54aecde0a5ff043ca1f",
   "scripts/generate-context.js": "79d564d4aabda128bdb74ade422bb69f625dc3efea9341081a0db7c4085bb170",
   "scripts/graph-cache.js": "72733f4b0242bff0b901bb2f4201bde12ad1bd4c6b11bbd969c4a653b32821e1",
   "scripts/init.js": "9e9170813f4d2ab8398b69b804025c8ff3f895b6f793be702d407c89158084f2",
-  "scripts/install-hooks.js": "3f1eb92dcd31bb27898b39aad25ec9124ab564e12b8bc1c8cb0ff44f8804967c",
+  "scripts/install-hooks.js": "30c1f8945415437a09e929308e0d4b49df6184392d41e5c09753429a21e28f40",
   "scripts/lib/changelog-writer.js": "b016fdcf3122002052f10a302e188be8f716f552d694506097e4c5dfbd9b791c",
   "scripts/lib/commit-suggester.js": "6295460000efcb6085f9b6eb21e6e8db7dfbbac0a20ee3d2609147302601bdd5",
   "scripts/lib/diagnostics.js": "ac762d21ba60891b0ffd3fcc9a07824813cbfa7a15b18ecf7b428cd68bf0b1d2",
@@ -70,5 +70,5 @@
   "templates/state.md": "52ffaa4f92f9aca912217f9517169d7fb0d1e773bbf32083edd628fac1136169",
   "templates/tasks.md": "a822c724e23ee748b504862f72a4ccc15439be6bdc9fa90822213dd78b2bf6f1",
   "templates/workspace-index.md": "3393a9e42536e312c3315701041a1d8efff8b3e1b2553dde2a16587953b514af",
-  "templates/workspace.json": "9f6fec17dff5610399a244d82e73e1c1d297de22f80b8fc4d8df8303c52149ec"
+  "templates/workspace.json": "b1dd3fc282c77d020113612f9e713013e7a9430902e6bc582d8fe4aa8c178158"
 }
