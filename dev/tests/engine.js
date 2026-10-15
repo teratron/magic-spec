@@ -4532,6 +4532,223 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('finalize.js reads a "- [!]" checklist line as an unfinished, blocked task, never as a finished phase (§17)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+
+            const trackingBlock = (id, status) =>
+                [
+                    `### [${id}] Task ${id}`,
+                    '',
+                    `- **Status:** ${status}`,
+                    '- **Assignment:** Agent',
+                    '',
+                ].join('\n');
+            const phaseFile = (items, tracking) =>
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    ...items,
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    ...tracking,
+                ].join('\n');
+            const phasePath = path.join(tasksDir, 'phase-1.md');
+
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
+
+            // (i) the reported shape: every open task written `- [!]`, each
+            // tracking entry `Status: Blocked`. Neither glyph was a task to the
+            // old reader, so the phase read as finished and the registry row
+            // alone produced "Continue Phase 1 via /magic.run".
+            fs.writeFileSync(
+                phasePath,
+                phaseFile(
+                    ['- [!] [T-1A01] First task', '- [!] [T-1A02] Second task'],
+                    [trackingBlock('T-1A01', 'Blocked'), trackingBlock('T-1A02', 'Blocked')],
+                ),
+            );
+            const plan = finalize.classifyPlanState(wsDir);
+            assert.deepStrictEqual(
+                { kind: plan.kind, id: plan.id },
+                { kind: 'all-excluded', id: 'T-1A01' },
+                'a phase holding only "- [!]" tasks has open work, none of it executable',
+            );
+            const next = finalize.computeNextAction('run', 'engine', wsDir);
+            assert.doesNotMatch(next, /^Continue Phase/, `registry fallback leaked → "${next}"`);
+            assert.doesNotMatch(next, /^Execute T-/, `blocked task offered → "${next}"`);
+            assert.doesNotMatch(next, /Plan complete/, `tasks remain → "${next}"`);
+            assert.match(next, /T-1A01/, 'the terminal message should still name a task');
+            assert.strictEqual(
+                (next.match(/\/magic\.[a-z.]+/g) || []).length,
+                1,
+                `exactly one command expected → "${next}"`,
+            );
+            assert.strictEqual(
+                finalize.reconcileStatus(plan, 'Active'),
+                'Blocked',
+                'the checkpoint Status must agree with the Next Action it was derived with',
+            );
+
+            // (ii) the glyph alone is the declaration: a tracking entry that
+            // still says Todo does not turn a `- [!]` line back into work.
+            fs.writeFileSync(
+                phasePath,
+                phaseFile(['- [!] [T-1A01] First task'], [trackingBlock('T-1A01', 'Todo')]),
+            );
+            assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
+
+            // (iii) a blocked line is skipped, not fatal: the next open line in
+            // the same phase is named.
+            fs.writeFileSync(
+                phasePath,
+                phaseFile(
+                    ['- [!] [T-1A01] First task', '- [ ] [T-1A02] Second task'],
+                    [trackingBlock('T-1A01', 'Blocked'), trackingBlock('T-1A02', 'Todo')],
+                ),
+            );
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                /^Execute T-1A02/,
+                'an open task behind a blocked one must still dispatch',
+            );
+
+            // (iv) ...and so is a later phase file's task.
+            fs.writeFileSync(
+                phasePath,
+                phaseFile(['- [!] [T-1A01] First task'], [trackingBlock('T-1A01', 'Blocked')]),
+            );
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-2.md'),
+                phaseFile(['- [ ] [T-2A01] Later task'], [trackingBlock('T-2A01', 'Todo')]),
+            );
+            assert.match(
+                finalize.computeNextAction('run', 'engine', wsDir),
+                /^Execute T-2A01/,
+                'an actionable task in a later phase file must still dispatch',
+            );
+            fs.rmSync(path.join(tasksDir, 'phase-2.md'));
+
+            // (v) negative control: a `- [!]` quoted in a code span is prose,
+            // not a task (SH-1) — a finished plan stays finished.
+            fs.writeFileSync(tasksPath, registryTable('Done'));
+            fs.writeFileSync(
+                phasePath,
+                phaseFile(
+                    ['- [x] [T-1A01] First task'],
+                    [
+                        '### [T-1A01] Task T-1A01',
+                        '',
+                        '- **Status:** Done',
+                        '- **Notes:** a blocked line reads `- [!] [T-1A09] quoted` here.',
+                        '',
+                    ],
+                ),
+            );
+            assert.strictEqual(
+                finalize.classifyPlanState(wsDir).kind,
+                'complete',
+                'a quoted "- [!]" must not be read as a task in force',
+            );
+
+            // (vi) legacy inline layout: the same two outcomes without a phase file.
+            fs.rmSync(phasePath);
+            fs.writeFileSync(tasksPath, '# Tasks\n\n- [!] [T-1A01] Only task\n');
+            const inlineBlocked = finalize.classifyPlanState(wsDir);
+            assert.deepStrictEqual(
+                { kind: inlineBlocked.kind, id: inlineBlocked.id },
+                { kind: 'all-excluded', id: 'T-1A01' },
+                'an inline "- [!]" must not be recommended as executable',
+            );
+            fs.writeFileSync(
+                tasksPath,
+                '# Tasks\n\n- [!] [T-1A01] Blocked one\n- [ ] [T-1A02] Open one\n',
+            );
+            const inlineOpen = finalize.classifyPlanState(wsDir);
+            assert.deepStrictEqual(
+                { kind: inlineOpen.kind, id: inlineOpen.id },
+                { kind: 'inline-open', id: 'T-1A02' },
+                'an inline open task behind a blocked one must still dispatch',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a "- [!]" checklist line holds its phase back from archival and stays in the progress total (§17)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { archiver, wsDir, tasksDir } = requirePhaseArchiverWorkspace(tempDir);
+
+            // Done by frontmatter, but one task is unresolved → stays in tasks/.
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-30.md'),
+                '---\nphase: 30\nname: "Held"\nstatus: Done\n---\n\n' +
+                    '## Atomic Checklist\n\n- [x] [T-30A01] Done\n- [!] [T-30A02] Blocked\n',
+            );
+            // Negative control: the same glyph quoted in a code span is prose.
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-31.md'),
+                '---\nphase: 31\nname: "Quoting"\nstatus: Done\n---\n\n' +
+                    '## Atomic Checklist\n\n- [x] [T-31A01] Done\n\n' +
+                    '## Detailed Tracking\n\n### [T-31A01]\n- **Notes:** blocked reads `- [!]` here.\n',
+            );
+            const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
+            assert.ok(
+                !candidates.includes('phase-30.md'),
+                'a phase with a "- [!]" task is unfinished and must not be archived',
+            );
+            assert.ok(
+                candidates.includes('phase-31.md'),
+                'a quoted "- [!]" must not block archival',
+            );
+
+            // Progress: one done, one blocked, one open → 1 of 3, not 1 of 1.
+            const { updateState, wsDir: stateDir } = requireUpdateState(tempDir);
+            fs.writeFileSync(
+                path.join(stateDir, 'TASKS.md'),
+                [
+                    '### Phase 1 Checklist',
+                    '',
+                    '- [x] [T-1A01] Done',
+                    '- [!] [T-1A02] Blocked',
+                    '- [ ] [T-1A03] Open',
+                    '',
+                ].join('\n'),
+            );
+            fs.writeFileSync(
+                path.join(stateDir, 'STATE.md'),
+                [
+                    '# Project State',
+                    '',
+                    '**Phase:** 1',
+                    '**Status:** Active',
+                    '',
+                    '## Progress',
+                    '',
+                    '```',
+                    'Phase 1: [0/0] ░░░░░░░░ 0%',
+                    '```',
+                    '',
+                ].join('\n'),
+            );
+            assert.match(
+                autoProgressState(updateState, stateDir),
+                /Phase 1: \[1\/3\]/,
+                'a blocked task is unfinished work and belongs in the total',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js reconciles Status between Active and Blocked at the checkpoint, and only there (SC-1.4)', () => {
         const tempDir = createTempWorkspace();
         try {

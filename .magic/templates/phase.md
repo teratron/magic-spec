@@ -20,6 +20,8 @@ duration_minutes: ~
 
 ## Atomic Checklist
 
+<!-- A line is `- [ ]` (open) or `- [x]` (done). A Blocked task keeps `- [ ]`: it is blocked by its `Status` in Detailed Tracking, and the `[!]` the workflows write after "Blocked" spells that status — it is not a checkbox state. -->
+
 - [ ] [T-{ID}] {Task Title}
 - [ ] [T-{ID}] {Task Title}
 - [ ] [T-{ID}.1] {Split Sub-task Title} <!-- ID Splitting: .N suffix for decomposed tasks -->

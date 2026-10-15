@@ -6,6 +6,7 @@ const path = require('path');
 const { writeFileSafe, mkdirSafe, isDryRun } = require('../utils');
 const { stripQuoted } = require('./scan-hygiene');
 const { listPhaseFiles, listUnrecognizedTaskFiles } = require('./phase-files');
+const { hasUnfinishedItem } = require('./checklist');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PHASE ARCHIVER (Shared Library)
@@ -35,11 +36,15 @@ function parseFrontmatter(content) {
  * in prose, Notes, or code. Inline code-spans and fenced blocks are stripped
  * first so a phase that merely documents checkbox syntax stays archivable.
  *
+ * A `- [!]` line is a blocked task written as a checkbox state
+ * (lib/checklist.js): unfinished work, so it holds the phase back like `- [ ]`
+ * does. Archiving it away would bury a task nobody resolved.
+ *
  * @param {string} content - File body content.
  * @returns {boolean}
  */
 function allChecked(content) {
-    return !/^\s*- \[ \]/m.test(stripQuoted(content));
+    return !hasUnfinishedItem(stripQuoted(content));
 }
 
 /**

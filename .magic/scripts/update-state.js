@@ -9,6 +9,7 @@ const fs = require('fs');
 const path = require('path');
 const { parseFlags } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
+const { countItems } = require('./lib/checklist');
 const diagnostics = require('./lib/diagnostics');
 
 /**
@@ -743,9 +744,11 @@ function computeProgress(designDir, stateContent) {
         // block silently degrades to the aggregate `Overall` counter alone.
         const checklist = section ? section[1] : readPhaseChecklist(designDir, n);
         if (checklist) {
-            const done = (checklist.match(/^- \[x\]/gim) || []).length;
-            const open = (checklist.match(/^- \[ \]/gm) || []).length;
-            if (done + open > 0) lines.push(progressLine(`Phase ${n}`, done, done + open));
+            // A blocked item is unfinished work: leaving it out of the total
+            // would read 100% over a phase that still holds one.
+            const { done, open, blocked } = countItems(checklist);
+            const total = done + open + blocked;
+            if (total > 0) lines.push(progressLine(`Phase ${n}`, done, total));
         }
     }
 

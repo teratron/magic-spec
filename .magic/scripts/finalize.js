@@ -16,6 +16,7 @@ const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
 const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
 const { archiveCompletedPhases, findArchiveCandidates } = require('./lib/phase-archiver');
 const { listPhaseFiles } = require('./lib/phase-files');
+const { OPEN_TASK_RE, parseOpenTask } = require('./lib/checklist');
 const { findPendingWork } = require('./lib/pending-work');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
@@ -357,7 +358,8 @@ function isTaskExcluded(content, taskId) {
  *   open task).
  * - `actionable` — an open, agent-executable task in a phase in good standing
  *   (`id`, `title`).
- * - `all-excluded` — open tasks exist but every one is Blocked or
+ * - `all-excluded` — open tasks exist but every one is Blocked (by its
+ *   Detailed Tracking entry, or by being written as a `- [!]` line) or
  *   `Assignment: User` (`id` of the first excluded task).
  * - `registry-open` — no open checkbox, but the registry shows a phase that is
  *   not Done (`phase`).
@@ -369,13 +371,29 @@ function isTaskExcluded(content, taskId) {
  * @returns {{kind: string, id?: string, title?: string, phase?: string}}
  */
 function classifyPlanState(wsDir) {
-    const openTaskRe = /^- \[ \] \[(T-[A-Za-z0-9.]+)\] (.+)$/m;
     try {
         const tasks = fs.readFileSync(path.join(wsDir, 'TASKS.md'), 'utf8');
 
+        // The first open task that is excluded from an agent-executable
+        // recommendation, across every tier. An item whose checklist line is
+        // written `- [!]` excludes itself (lib/checklist.js): the line is an
+        // unfinished task that declares itself blocked, so it is neither
+        // recommended nor invisible. Reading it as neither open nor done let
+        // a phase holding only such lines fall through to the registry
+        // fallback below, which recommends continuing the phase — a
+        // recommendation that can only stall.
+        let firstExcludedTask = null;
+
         // 1. Inline checkboxes in TASKS.md (legacy / flat format).
-        const inlineOpen = tasks.match(openTaskRe);
-        if (inlineOpen) return { kind: 'inline-open', id: inlineOpen[1], title: inlineOpen[2] };
+        for (const line of tasks.split(/\r?\n/)) {
+            const inlineOpen = parseOpenTask(line);
+            if (!inlineOpen) continue;
+            if (inlineOpen.blocked) {
+                firstExcludedTask = firstExcludedTask || inlineOpen.id;
+                continue;
+            }
+            return { kind: 'inline-open', id: inlineOpen.id, title: inlineOpen.title };
+        }
 
         // 2. Phase files — canonical two-level format (tasks/phase-N.md,
         //    track splits included). listPhaseFiles owns both the name shape
@@ -390,19 +408,18 @@ function classifyPlanState(wsDir) {
             // per-item scan below (unlike the old single-match lookup)
             // widens that exposure by examining every line, not only the
             // first (SH-1/SH-5).
-            let firstExcludedTask = null;
             for (const { file, number } of phaseFiles) {
                 const rawContent = fs.readFileSync(path.join(tasksDir, file), 'utf8');
                 const content = stripQuoted(rawContent);
                 const phaseNo = String(number);
-                const anyOpen = content.match(openTaskRe);
+                const anyOpen = content.match(OPEN_TASK_RE);
                 if (!anyOpen) continue;
                 // Blocked is not Done, so a blocked phase still has open
                 // checklist lines — matching one is not licence to recommend it.
                 // Dispatching a resuming session into the very blocker the same
                 // STATE.md records would make the file contradict itself.
                 if (isPhaseBlocked(content, tasks, phaseNo)) {
-                    return { kind: 'blocked-phase', id: anyOpen[1] };
+                    return { kind: 'blocked-phase', id: anyOpen[2] };
                 }
                 // The phase itself is not Blocked, but the first-matched line
                 // alone is still not licence to recommend it: that exact
@@ -423,27 +440,28 @@ function classifyPlanState(wsDir) {
                 const strippedLines = content.split(/\r?\n/);
                 const rawLines = rawContent.split(/\r?\n/);
                 for (let i = 0; i < strippedLines.length; i++) {
-                    const openTask = strippedLines[i].match(openTaskRe);
+                    const openTask = parseOpenTask(strippedLines[i]);
                     if (!openTask) continue;
-                    if (isTaskExcluded(content, openTask[1])) {
-                        firstExcludedTask = firstExcludedTask || openTask[1];
+                    if (openTask.blocked || isTaskExcluded(content, openTask.id)) {
+                        firstExcludedTask = firstExcludedTask || openTask.id;
                         continue;
                     }
-                    const rawMatch = rawLines[i]?.match(openTaskRe);
-                    const title = rawMatch ? rawMatch[2] : openTask[2];
-                    return { kind: 'actionable', id: openTask[1], title };
+                    const rawTask = parseOpenTask(rawLines[i] ?? '');
+                    const title = rawTask ? rawTask.title : openTask.title;
+                    return { kind: 'actionable', id: openTask.id, title };
                 }
                 // Every open item in this phase file was excluded — keep
                 // scanning subsequent phase files before giving up.
             }
-            if (firstExcludedTask) {
-                // At least one open task exists, but every one found across
-                // every phase file is Blocked or Assignment: User. The plan
-                // is not complete — tasks remain — so this must not fall
-                // through to the plan-complete branch below (tier 3), and
-                // must not name the excluded task as /magic.run-executable.
-                return { kind: 'all-excluded', id: firstExcludedTask };
-            }
+        }
+
+        if (firstExcludedTask) {
+            // At least one open task exists, but every one found across the
+            // inline list and every phase file is Blocked or Assignment: User.
+            // The plan is not complete — tasks remain — so this must not fall
+            // through to the plan-complete branch below (tier 3), and must not
+            // name the excluded task as /magic.run-executable.
+            return { kind: 'all-excluded', id: firstExcludedTask };
         }
 
         // 3. Registry table fallback — non-Done phase means work remains.
