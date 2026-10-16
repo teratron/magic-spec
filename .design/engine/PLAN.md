@@ -2,7 +2,7 @@
 
 **Version:** 1.48.0
 **Generated:** 2026-10-11
-**Based on:** .design/engine/INDEX.md v1.44.0
+**Based on:** .design/engine/INDEX.md v1.45.0
 **Status:** Active
 
 ## Overview

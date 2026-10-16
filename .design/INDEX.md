@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.24.0
+**Version:** 1.25.0
 **Status:** Active
-**Engine Version:** 2.1.139
+**Engine Version:** 2.1.140
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.25.0 | 2026-10-16 | Agent | No spec-count change (37/37 Stable). MAGIC-SPEC ENGINE BUG REPORT direct repair: l2-update-state-structure.md 1.0.0 → 1.1.0 (§18 The Template-Placeholder Defect — a STATE.md created by update-state was a byte copy of the template, placeholders and all; the template is now instantiated at creation) with l2-finalize-state-accuracy.md 2.2.0 → 2.3.0 (register entry; the filing rule's next free number moves to §19). Specification amended together with the engine fix. |
 | 1.24.0 | 2026-10-15 | Agent | No spec-count change (37/37 Stable). MAGIC-SPEC ENGINE BUG REPORT direct repair: l2-finalize-state-accuracy.md 2.1.0 → 2.2.0 (§17 The Blocked-Glyph Defect — a blocked task written `- [!]` in a phase checklist matched neither box glyph any reader knew, so finalize's Next Action recommended continuing a phase that held only blocked tasks; archival and the progress counter shared the blind spot; the rule is stated where blocked is set and the spelling is read through one shared definition). Specification amended together with the engine fix. |
 | 1.23.0 | 2026-10-11 | Agent | No spec-count change (37/37 Stable). `/magic.spec amend` from a second reference-mining pass over the current build of the collection of agent configurations mined earlier the same day: `l2-engine-automation.md` 1.20.0 → 1.21.0 (hook ownership no longer rests on the marker alone — a changed body is saved beside before it is replaced, a symbolic link is foreign; and a Deleted engine files paragraph: the pre-flight `ENGINE_INTEGRITY` is blind to a deleted manifested file that `update-engine-meta --check` reports; reproduced), `l2-test-suite.md` 1.29.0 → 1.30.0 (hook cases; pre-flight deletion coverage where both checks must agree), `l1-rule-admission-gate.md` 1.1.2 → 1.1.3 (§6.5: why RA-3's comparison is written, not measured). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |
 | 1.22.0 | 2026-10-11 | Agent | No spec-count change (37/37 Stable). `/magic.spec amend` from a reference-mining pass over an external security scanner for agent configurations: `l1-scan-input-hygiene.md` 1.2.0 → 1.3.0 (new SH-6 — quoting does not un-ship a token; SH-1 rescoped to scans that decide whether a construct is in force), `l1-sdd-reference-containment.md` 1.6.0 → 1.7.0 (new RC-2.2 Quoted Notation, measured on five consumer projects; RC-12's hook exemption restated — the hook does not vanish with the scaffold), `l2-engine-automation.md` 1.19.0 → 1.20.0 (new §Git Hook Lifecycle: marker, truthful outcome, a hook that disarms when the engine is absent; each failure reproduced), `l2-test-suite.md` 1.28.0 → 1.29.0 (git-hook coverage with controls; the containment quoting pin). Specification only; engine deployment routed to `/magic.task engine`. No constitution change. |

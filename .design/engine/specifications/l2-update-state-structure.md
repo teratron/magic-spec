@@ -1,13 +1,13 @@
 # update-state.js — Structure Defects (Locating, Grouping, Creating)
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
 
 ## Overview
 
-Defect record and required-fix contract for the ways `update-state.js` has misjudged the **shape of the file it writes into**: how it finds a section by its heading, groups a list section's wrapped entries, rebuilds the two engine-owned list sections, patches a scalar field whole, and creates what is absent (`headingRe()`/`locateSection()`, `collectEntries()`/`entryRanges()`, `wholeEntryRe()`, `ensureSection()`/`ensureField()`). Seven defects — §8, §8.5, §12, §12.1, §13, §13.1, §13.2 — with one root shape: each assumed a file that a `STATE.md` maintained by hand does not honour (a preamble that lets an insertion offset be computed, one physical line per entry, a heading and field lines that are always present and only ever at a line's start). Extracted from [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) at that register's 2.0.0 decomposition; the sections below are relocated verbatim, and the per-defect provenance narrative stays in the register's Overview.
+Defect record and required-fix contract for the ways `update-state.js` has misjudged the **shape of the file it writes into**: how it finds a section by its heading, groups a list section's wrapped entries, rebuilds the two engine-owned list sections, patches a scalar field whole, and creates what is absent (`headingRe()`/`locateSection()`, `collectEntries()`/`entryRanges()`, `wholeEntryRe()`, `ensureSection()`/`ensureField()`). Eight defects — §8, §8.5, §12, §12.1, §13, §13.1, §13.2, §18; the first seven share one root shape: each assumed a file that a `STATE.md` maintained by hand does not honour (a preamble that lets an insertion offset be computed, one physical line per entry, a heading and field lines that are always present and only ever at a line's start). Extracted from [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) at that register's 2.0.0 decomposition; the sections below are relocated verbatim, and the per-defect provenance narrative stays in the register's Overview. §18 is the odd one out and came later: it concerns the file's own creation, not a file already in the shape described above.
 
 ## Related Specifications
 
@@ -23,7 +23,7 @@ Defect record and required-fix contract for the ways `update-state.js` has misju
 
 ## Section Map
 
-This file holds §8 (with §8.1–§8.5), §12 (with §12.1) and §13 (with §13.1 and §13.2). Defect numbers are permanent identifiers across the whole register ([l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), Defect Register), so the gaps in the numbering are not omissions. A `§N` in the sections below that is not defined here resolves as: §5, §6, §6.1, §7, §10 → [l2-update-state-values.md](l2-update-state-values.md).
+This file holds §8 (with §8.1–§8.5), §12 (with §12.1), §13 (with §13.1 and §13.2) and §18. Defect numbers are permanent identifiers across the whole register ([l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md), Defect Register), so the gaps in the numbering are not omissions. A `§N` in the sections below that is not defined here resolves as: §5, §6, §6.1, §7, §10 → [l2-update-state-values.md](l2-update-state-values.md).
 
 ## 8. The Decision-Section Structural Defect (SC-2) `[ADDED]`
 
@@ -229,10 +229,32 @@ The guard (§7, §10, §12) located `## Recent Decisions` with the same `indexOf
 
 **Required fix**: locate with `locateSection()` (§13: anchored, bounded by the end of the file) and remove by **position**, not by text. `entryRanges(block, startRe)` is the entry grouping `collectEntries()` performs, returning each entry's `{start, end}` offsets within the block; it becomes the single grouping primitive and `collectEntries()` is derived from it, so the section rebuilds and the prune cannot disagree about where an entry ends. The guard deletes exactly the last range — the oldest entry, entries being newest-first — with its continuation lines and line terminators, and reports a prune only when it removed one.
 
+## 18. The Template-Placeholder Defect (SC-1, SC-2) `[ADDED]`
+
+### 18.1 The Defect
+
+`updateState()` created an absent `STATE.md` by copying `templates/state.md` byte for byte, while `init.md` leaves the template's instantiation — "placeholder substitution, default field values" — to exactly that step ([l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) records the same ownership). The step did neither. The field-patch loop fills only the fields a caller passes, and a finalize call passes `Next Action` alone, so a workspace's first `STATE.md` read `**Workspace:** {workspace-name}`, `**Phase:** {N} — {Phase Name}`, `**Status:** {Active | Blocked}`, `[{T-ID}] {Task Title}`, `{spec-file.md} §{section}`, `**Bootstrap Mode:** {true | false}`, two example progress counters and two example decisions — and `/magic.status` replays the file as live memory. A second effect: with `**Phase:** {N}` holding no digit, no active phase could be read from the file, so the recompute could not emit its `Phase` counter. Field report against engine 2.1.139, which was HEAD; reproduced directly: a finalize-shaped call on a fresh workspace left ten placeholder lines.
+
+The state does not arise through a hand edit: every `STATE.md` the engine creates carries it.
+
+### 18.2 Required Fix
+
+At creation, the template is instantiated (`instantiateStateTemplate()`), never copied:
+
+- **Workspace.** The `**Workspace:**` field takes the last segment of the design directory; a dot-name — the root-level `.design` of the single-workspace layout — reads `unknown`, as the minimal fallback file already does.
+- **Defaults.** Every other scalar placeholder takes a "nothing yet" value: `Phase` `0`, `Status` `Active`, `Task` and `Spec` `none`, `Next Action` `Initialize project`, `Bootstrap Mode` `false`. A caller's patch overwrites whichever it supplies, through the same loop as for any file.
+- **Examples removed.** The two example counters go, and the progress fence keeps one blank line inside — the recompute recognises a block by an opening fence, a body and a closing fence on its own line, and an empty fence has no body. The example decision entries go with the blank line that set them off, so the section does not end in a double blank.
+- A file that already exists is never rewritten; the template itself is unchanged, and the `Template not found` fallback is untouched.
+
+### 18.3 Regression Coverage
+
+One harness case against the real script, mutation-checked: after a finalize-shaped creation no line holds a `{…}` placeholder, the workspace name is filled, the caller's value wins and no double blank remains; the first decision is the section's only entry; the counters recompute into the fence; a root-level design directory reads `unknown`.
+
 ## Regression Coverage
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix needs a harness case:
 
+- A `STATE.md` created from the template must carry no placeholder line, with the workspace name filled in, and the writers (decision, progress recompute) must still work on it (§18).
 - `addDecision`'s emitted section must be asserted by **shape**, not presence: the heading followed by a blank line, the comment preamble above the entries rather than below them, no consecutive blank runs, and template placeholder rows absent after the first real entry. The presence-only assertion this replaced must not return — leaving one in place preserves a test that passes under the defect it is meant to exclude (§8; closed by Phase 19, R12).
 - `addDecision`/`addConstraint`, given an existing entry with an indented continuation line, must preserve that continuation intact and attached to its own entry across a rebuild; the line-cap guard's prune, given a wrapped oldest `## Recent Decisions` entry, must remove its continuation line along with its marker line, leaving no orphaned fragment (§12).
 - `updateState()`'s scalar-field patch, given a field whose value is wrapped onto continuation lines, must replace the marker line **and** those continuation lines with the single new line — indented lines for every field, and additionally unindented (lazy) lines for the `- **Task:**` / `- **Spec:**` / `- **Next Action:**` list-item fields. The assertion must be whole-file equality (modulo the volatile `**Updated:**` timestamp), not a presence check: only equality fails on a surviving orphan *and* on a patch that swallowed a neighbouring line. Boundary cases must pin both edges: a header field leaves an unindented line under it untouched, and a list-item field stops at a blank line and at every stop-set member (bullet, ordered item, `**Label:**` field, heading, quote, table row, comment, code fence, thematic break) — a table-driven case, so that dropping any one member fails it. A CRLF fixture must be replaced whole without a bare LF appearing (§12.1).
@@ -251,12 +273,13 @@ None open. The register's one closure record for this file's defects is kept:
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/update-state.js` | Host of the decision-section rebuild and its sibling in `addConstraint` (§8, §8.5), `collectEntries()`, the entry-level grouping shared by both section rebuilds and the line-cap prune (§12), `wholeEntryRe()`, the whole-entry widening every scalar-field patch goes through (§12.1), `locateSection()`/`ensureSection()`, the line-anchored locator and create-if-absent step both list-section writers go through (§13), `ensureField()`, its counterpart for the scalar fields and the `## Progress` block (§13.1), and `entryRanges()`, the single entry-grouping primitive `collectEntries()` is derived from and the line-cap prune removes by (§13.2) |
-| `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2, and of the section order §13 creates an absent section by |
-| `dev/tests/engine.js` | Regression harness carrying §12's, §12.1's, §13's, §13.1's and §13.2's cases and §8's structural assertions |
+| `.magic/scripts/update-state.js` | Host of the decision-section rebuild and its sibling in `addConstraint` (§8, §8.5), `collectEntries()`, the entry-level grouping shared by both section rebuilds and the line-cap prune (§12), `wholeEntryRe()`, the whole-entry widening every scalar-field patch goes through (§12.1), `locateSection()`/`ensureSection()`, the line-anchored locator and create-if-absent step both list-section writers go through (§13), `ensureField()`, its counterpart for the scalar fields and the `## Progress` block (§13.1), and `entryRanges()`, the single entry-grouping primitive `collectEntries()` is derived from and the line-cap prune removes by (§13.2), and `instantiateStateTemplate()`, which turns the template into a new file without placeholders (§18) |
+| `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2 and §18, and of the section order §13 creates an absent section by |
+| `dev/tests/engine.js` | Regression harness carrying §12's, §12.1's, §13's, §13.1's, §13.2's and §18's cases and §8's structural assertions |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-10-16 | Agent | New **§18 — The Template-Placeholder Defect**, the register's twentieth defect: a `STATE.md` created by `updateState()` was a byte copy of the template, so a workspace's first file read `{workspace-name}`, `{N} — {Phase Name}`, `[{T-ID}]`, two example counters and two example decisions, although `init.md` assigns placeholder substitution and default values to that step. Field report against engine 2.1.139 (HEAD), reproduced directly. Required fix: instantiate the template at creation — workspace name from the design directory (`unknown` for a root-level one), "nothing yet" defaults for the other scalars, examples removed, the progress fence kept recognisable. Sections Overview, Section Map, Regression Coverage and Canonical References extended. A direct repair of a field report, specified in the same cycle as the fix; no status transition — `Stable` retained. |
 | 1.0.0 | 2026-09-20 | Agent | Initial Stable version. Extracted verbatim from [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) 1.8.0 at that register's 2.0.0 decomposition (`SPEC_DECOMPOSE`: 552 lines against the 500-line hard threshold): §8 (with §8.1–§8.5), §12 (with §12.1) and §13 (with §13.1, §13.2) under their permanent defect numbers, with the Regression Coverage bullets and the Known Gap closure record that belong to them. Per-defect history — the register's versions 1.0.0–1.8.0, in which each of these defects was found, specified and fixed — stays in the register's Document History. Reworded for the move: two place-bound phrases ("in this file" → "in the register", §8.1 and §12), and §8's Regression Coverage bullet restated as the requirement it is, its "Open obligation" label having been stale since Phase 19 (R12) closed it. Added: Overview, Motivation and Section Map, which the register carried once for all seventeen defects. `Stable` on creation via Trust Mode (C9) after Post-Update Review. |

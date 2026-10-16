@@ -5632,6 +5632,67 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('a STATE.md created from the template carries no placeholder, and the writers still work on it (§18)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const { updateState } = require(
+                path.join(tempDir, '.magic', 'scripts', 'update-state.js'),
+            );
+            const wsDir = makeWorkspace(tempDir, 'main');
+            const statePath = path.join(wsDir, 'STATE.md');
+            const stateText = () => fs.readFileSync(statePath, 'utf8');
+
+            // The finalize shape: a Next Action and a progress recompute, and
+            // nothing else — every other field keeps whatever the bootstrap gave it.
+            warnedBy(() =>
+                updateState(wsDir, { nextAction: 'Do the thing' }, { autoProgress: true }),
+            );
+            const fresh = stateText();
+            assert.deepStrictEqual(
+                fresh.split('\n').filter((line) => /\{[^}]*\}/.test(line)),
+                [],
+                'no line of a fresh STATE.md may still hold a template placeholder',
+            );
+            assert.match(fresh, /^\*\*Workspace:\*\* main$/m, 'the workspace name is filled in');
+            assert.match(fresh, /^\*\*Status:\*\* Active$/m);
+            assert.match(fresh, /^- \*\*Next Action:\*\* Do the thing$/m, 'the caller value wins');
+            assert.doesNotMatch(fresh, /\n\n\n/, 'removing examples must not leave a double blank');
+
+            // The decision examples are gone, so the first real decision is the only entry.
+            warnedBy(() => updateState(wsDir, { decision: 'first' }, { addDecision: true }));
+            assert.strictEqual(
+                (stateText().match(/^- \d{4}-\d{2}-\d{2} /gm) || []).length,
+                1,
+                'the first decision is the only one in the section',
+            );
+
+            // The progress block is still recognised: counters land inside its fence.
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '| Phase | Description | Status |\n| --- | --- | --- |\n' +
+                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
+            );
+            warnedBy(() => updateState(wsDir, { phase: '1' }, { autoProgress: true }));
+            assert.match(
+                stateText(),
+                /```\nOverall: \[1\/1\][^\n]*\n```/,
+                'counters recompute into the fence',
+            );
+
+            // A root-level design directory is no workspace name.
+            const rootDir = path.join(tempDir, '.design');
+            fs.rmSync(path.join(rootDir, 'main'), { recursive: true });
+            warnedBy(() => updateState(rootDir, {}));
+            assert.match(
+                fs.readFileSync(path.join(rootDir, 'STATE.md'), 'utf8'),
+                /^\*\*Workspace:\*\* unknown$/m,
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('computeProgress emits a phase counter for the two-level task layout (SC-2.3)', () => {
         const tempDir = createTempWorkspace();
         try {

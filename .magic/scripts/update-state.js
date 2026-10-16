@@ -323,6 +323,71 @@ function ensureField(content, key, line, statePath) {
     return `${content.slice(0, start)}${updated}${content.slice(end)}`;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Template Instantiation
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * What a STATE.md created from the template holds before any caller patches
+ * it: one entry per placeholder line of `templates/state.md`. Copying the
+ * template verbatim left every `{…}` in place — a workspace called
+ * `{workspace-name}`, a task `[{T-ID}]`, two example decisions — which the
+ * briefing then replayed as live memory. A field no caller patches keeps its
+ * default, so the defaults say "nothing yet" in the same words the minimal
+ * fallback file uses.
+ */
+const TEMPLATE_DEFAULTS = [
+    { re: /^\*\*Phase:\*\* .*/m, line: '**Phase:** 0' },
+    { re: /^\*\*Status:\*\* .*/m, line: '**Status:** Active' },
+    { re: /^- \*\*Task:\*\* .*/m, line: '- **Task:** none' },
+    { re: /^- \*\*Spec:\*\* .*/m, line: '- **Spec:** none' },
+    { re: /^- \*\*Next Action:\*\* .*/m, line: '- **Next Action:** Initialize project' },
+    { re: /^\*\*Bootstrap Mode:\*\* .*/m, line: '**Bootstrap Mode:** false' },
+];
+
+/**
+ * Turns the STATE.md template into the file a fresh workspace starts with:
+ * the workspace name is filled in, every other scalar placeholder takes its
+ * default (`TEMPLATE_DEFAULTS`), and the illustrative lines — the example
+ * decision entries and the example progress counters — are removed. The
+ * progress block keeps its fence, with one blank line inside, because the
+ * recompute (`autoProgress`) recognises a block by an opening fence, a body
+ * and a closing fence on its own line; an empty one would not match.
+ *
+ * Replacements use the function form so a value is spliced in verbatim.
+ *
+ * @param {string} template   Text of `templates/state.md`.
+ * @param {string} workspace  Workspace name for the `**Workspace:**` field.
+ * @returns {string} STATE.md text without template placeholders.
+ */
+function instantiateStateTemplate(template, workspace) {
+    let content = template.replace(/^\*\*Workspace:\*\* .*/m, () => `**Workspace:** ${workspace}`);
+    for (const { re, line } of TEMPLATE_DEFAULTS) content = content.replace(re, () => line);
+    content = content.replace(
+        /(^## Progress\s*\n+```\r?\n)[\s\S]*?(\r?\n```)/m,
+        (_match, open, close) => `${open}${close}`,
+    );
+    // The blank line that set the examples off goes with them, so the section
+    // does not end in a double blank (markdownlint MD012).
+    return content.replace(
+        /(\r?\n)\r?\n(?:- \{YYYY-MM-DD\} .*\r?\n?)+/g,
+        (_match, eol) => eol,
+    );
+}
+
+/**
+ * Names the workspace a design directory belongs to: its last path segment. A
+ * root-level `.design` (the single-workspace layout) or any dot-name is not a
+ * workspace name, so those read `unknown`, as the minimal fallback file does.
+ *
+ * @param {string} designDir  Path to the `.design/{workspace}` directory.
+ * @returns {string}
+ */
+function workspaceNameOf(designDir) {
+    const name = path.basename(path.resolve(designDir));
+    return name.startsWith('.') ? 'unknown' : name;
+}
+
 /**
  * Updates STATE.md with provided key-value patches.
  * Reads the existing state file, applies changes, and writes back.
@@ -369,7 +434,14 @@ function updateState(designDir, patch, options = {}) {
             fs.writeFileSync(statePath, minimal, 'utf8');
         } else {
             fs.mkdirSync(path.dirname(statePath), { recursive: true });
-            fs.copyFileSync(templatePath, statePath);
+            fs.writeFileSync(
+                statePath,
+                instantiateStateTemplate(
+                    fs.readFileSync(templatePath, 'utf8'),
+                    workspaceNameOf(designDir),
+                ),
+                'utf8',
+            );
         }
     }
 

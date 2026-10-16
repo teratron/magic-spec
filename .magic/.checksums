@@ -53,7 +53,7 @@
   "scripts/resume-state.js": "d526956752407172456ffd02e70ac42a8c7e414b05f93c4e38f10437da7051d7",
   "scripts/serve-spec-graph.js": "d8de7aca1b07eb2b87997e9b9df0be7334d1e4f26386fabcbfa7635d138c8448",
   "scripts/update-engine-meta.js": "70812b1604ace551fef22e21c1e4d74de8d84818f9fb84fa8caec576e588a9a6",
-  "scripts/update-state.js": "455d56f54165c32a2068af875aaecc8eeccb362f4c692bd3b976202d8cadfc23",
+  "scripts/update-state.js": "67a9cba9f0757f54c45cbbd26f4ae9c4e6de57d65d698c879e790cf425ef5317",
   "scripts/utils.js": "2ed8bd97651334e06517b830f1af9f3351d7f2a4967393f9329a6913bb52b65e",
   "spec.md": "71ff24a91665d9cd65d11880d6c44aede860936701865577115290d56facf6b4",
   "status.md": "706adfb407977863747335655447d5bdd873718bc1f5e539edf77eb35b72e210",
