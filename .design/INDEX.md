@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.25.0
+**Version:** 1.25.2
 **Status:** Active
-**Engine Version:** 2.1.140
+**Engine Version:** 2.1.141
 
 ## Overview
 

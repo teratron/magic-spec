@@ -266,11 +266,7 @@ if (planExists && indexExists) {
 
     for (const spec of indexSpecs) {
         if (pending.orphanedSpecs.includes(spec)) {
-            warn(
-                'ORPHANED_SPEC',
-                `'${spec}' is in INDEX.md but missing from PLAN.md.`,
-                planRemedy,
-            );
+            warn('ORPHANED_SPEC', `'${spec}' is in INDEX.md but missing from PLAN.md.`, planRemedy);
         }
     }
 

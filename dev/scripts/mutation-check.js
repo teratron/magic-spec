@@ -196,7 +196,10 @@ function checkOne(entry, { root, harness, run }) {
     let failure = null;
     try {
         // The function form keeps `$&`, `$1` and friends in a replacement literal.
-        fs.writeFileSync(target.abs, source.replace(entry.needle, () => entry.replacement));
+        fs.writeFileSync(
+            target.abs,
+            source.replace(entry.needle, () => entry.replacement),
+        );
         outcome = run(harness, entry.test, root);
     } catch (err) {
         failure = err;

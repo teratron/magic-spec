@@ -369,10 +369,7 @@ function instantiateStateTemplate(template, workspace) {
     );
     // The blank line that set the examples off goes with them, so the section
     // does not end in a double blank (markdownlint MD012).
-    return content.replace(
-        /(\r?\n)\r?\n(?:- \{YYYY-MM-DD\} .*\r?\n?)+/g,
-        (_match, eol) => eol,
-    );
+    return content.replace(/(\r?\n)\r?\n(?:- \{YYYY-MM-DD\} .*\r?\n?)+/g, (_match, eol) => eol);
 }
 
 /**

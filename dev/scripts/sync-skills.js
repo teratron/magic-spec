@@ -284,7 +284,9 @@ function projectWorkflow(source, file) {
 
     // Extract body (strip original frontmatter if exists)
     const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-    const rawBody = frontmatterMatch ? content.replace(frontmatterMatch[0], '').trim() : content.trim();
+    const rawBody = frontmatterMatch
+        ? content.replace(frontmatterMatch[0], '').trim()
+        : content.trim();
 
     // Normalize skill trigger references in body: /magic.a.b → /magic-a-b
     const body = normalizeMagicReferences(rawBody);
@@ -310,7 +312,8 @@ ${frontmatter}
 
 <!-- ⚠️ GENERATED FILE - DO NOT EDIT MANUALLY. SOURCE: ${sourceMarker} (relative to workspace root) -->
 
-${body}`;
+${body}
+`;
 
     return {
         file,
@@ -367,12 +370,18 @@ function checkProjection(projection) {
 
     const text = description.value;
     if (text.length > DESCRIPTION_MAX_LENGTH) {
-        refuse('description', `${count(text.length)} characters, limit ${count(DESCRIPTION_MAX_LENGTH)}`);
+        refuse(
+            'description',
+            `${count(text.length)} characters, limit ${count(DESCRIPTION_MAX_LENGTH)}`,
+        );
     }
     if (/[<>]/.test(text)) refuse('description', 'contains a "<" or ">" character');
 
     if (projection.synthesized) {
-        refuse('description', 'synthesized by the generator: the workflow has no frontmatter block');
+        refuse(
+            'description',
+            'synthesized by the generator: the workflow has no frontmatter block',
+        );
     } else {
         if (!USE_WHEN_SENTENCE.test(text)) refuse('description', 'no "Use when" sentence');
         const person = text.match(PERSON_WORD);
@@ -460,7 +469,9 @@ function sync() {
     });
 
     if (refused.length > 0) {
-        console.error(`❌ ${refused.length} wrapper rule violation(s); the refused wrappers were not written.`);
+        console.error(
+            `❌ ${refused.length} wrapper rule violation(s); the refused wrappers were not written.`,
+        );
     } else {
         console.log('✨ Sync complete.');
     }

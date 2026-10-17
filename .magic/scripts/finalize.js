@@ -617,7 +617,9 @@ function updateSessionState(opts, workspace, wsDir) {
         return { updated: false, dryRun: true, nextAction };
     }
     try {
-        updateState(wsDir, status ? { nextAction, status } : { nextAction }, { autoProgress: true });
+        updateState(wsDir, status ? { nextAction, status } : { nextAction }, {
+            autoProgress: true,
+        });
         return { updated: true, nextAction };
     } catch (e) {
         console.warn(`⚠  STATE.md update skipped (non-blocking): ${e.message}`);

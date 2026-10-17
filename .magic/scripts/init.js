@@ -26,7 +26,9 @@ if (!fs.existsSync('.git')) {
 const date = new Date().toISOString().split('T')[0];
 
 const versionPath = path.join(__dirname, '..', '.version');
-const engineVersion = fs.existsSync(versionPath) ? fs.readFileSync(versionPath, 'utf8').trim() : 'unknown';
+const engineVersion = fs.existsSync(versionPath)
+    ? fs.readFileSync(versionPath, 'utf8').trim()
+    : 'unknown';
 
 const templatesDir = path.join(__dirname, '..', 'templates');
 
@@ -68,7 +70,10 @@ function createGlobalFiles() {
 
     const indexPath = path.join(designDir, 'INDEX.md');
     if (!fs.existsSync(indexPath)) {
-        const content = getTemplate('global-index.md', { DATE: date, ENGINE_VERSION: engineVersion });
+        const content = getTemplate('global-index.md', {
+            DATE: date,
+            ENGINE_VERSION: engineVersion,
+        });
         fs.writeFileSync(indexPath, content);
         console.log(`✅ Created ${normalizePath(indexPath)}`);
     }

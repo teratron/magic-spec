@@ -167,7 +167,9 @@ function install() {
         return leaveAlone(`core.hooksPath points git at ${redirect}, which is not .git/hooks`);
     }
     if (isSymbolicLink(preCommitPath)) {
-        return leaveAlone('.git/hooks/pre-commit is a symbolic link, so its target belongs to someone else');
+        return leaveAlone(
+            '.git/hooks/pre-commit is a symbolic link, so its target belongs to someone else',
+        );
     }
 
     if (!fs.existsSync(preCommitPath)) {
@@ -188,7 +190,9 @@ function install() {
     const copy = freeCopyPath();
     fs.copyFileSync(preCommitPath, copy, fs.constants.COPYFILE_EXCL);
     writeHook();
-    console.log(`Git pre-commit hook updated. The previous hook is kept as ${path.relative(projectRoot, copy)}.`);
+    console.log(
+        `Git pre-commit hook updated. The previous hook is kept as ${path.relative(projectRoot, copy)}.`,
+    );
     return 0;
 }
 

@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [2.1.141] - 2026-10-17
+
 ### Fixed
 
 - **A new `STATE.md` no longer starts with the template's placeholders** (engine v2.1.139 → v2.1.140): the first state update of a workspace copied the template as it stood, so the file read `{workspace-name}`, `{N} — {Phase Name}`, `[{T-ID}]`, two example progress counters and two example decisions, and the status briefing replayed them as the project's live memory. The file is now created from the template with the workspace name filled in, "nothing yet" values in the other fields (phase `0`, status `Active`, task and spec `none`, bootstrap mode `false`) and the examples removed; the progress counters still recompute into their block. A `STATE.md` that already exists is not rewritten.
@@ -24,6 +26,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **`release-changelog --help` no longer rotates the changelog, and unknown arguments are rejected** (engine v2.1.132 → v2.1.133): the release CLI now prints usage before any file write and rejects unsupported options or positional arguments; one harness case protects both behaviors.
 
 ### Added
+
+- **AI-assisted installation prompt and multi-agent setup in README.md & distribution guide**: Added an interactive AI prompt to README installation section supporting release vs. master selection, target agent environment detection (`.agents/`, `.claude/`, `.codex/`, `.cursor/`), automatic `.gitignore` configuration for engine and generated artifacts, and clarified interchangeability of `workflows/` and `skills/` across AI agents.
 
 - **`/magic.analyze` reports a setting nobody reads** (engine v2.1.136 → v2.1.138): a new advisory check, `PHANTOM_SETTING`, flags a key of the `workspace.json` template — or a key the shipped text names together with `workspace.json` — that no engine script reads, so a documented setting can no longer be accepted and silently ignored.
 
