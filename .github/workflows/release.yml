@@ -39,11 +39,12 @@ jobs:
 
           # Distribution rule: .magic/, workflows/, skills/, rules/ are kept
           # clean — volatile state and dev-only artifacts live under
-          # dev/.cache/ and .design/.cache/, which we never walk here. No
-          # per-path exclusions are needed at build time.
+          # dev/.cache/ and .design/.cache/, which we never walk here.
+          # Root files: README.md and LICENSE only (AGENTS.md is a dev-repo
+          # identity file and is not part of the user distribution kernel).
 
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
-              for f in ("AGENTS.md", "README.md", "LICENSE"):
+              for f in ("README.md", "LICENSE"):
                   if os.path.exists(f):
                       zf.write(f, prefix + f)
               for top in (".magic", "workflows", "skills", "rules"):
