@@ -10,18 +10,21 @@
 `magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack. It acts as a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude Code, Gemini CLI, and others), enforcing a deterministic process that ensures the AI fully understands the problem before writing code.
 
 ```plaintext
-💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
+💡 Idea  →  📋 Specification  →  🗺️ Plan & Task →  ⚡ Run  →  🚀 Code
 ```
 
 ### What Gets Installed
 
 ```plaintext
 your-project/
-├── .agents/workflows/   # Slash commands (magic.spec, magic.task, magic.run, ...)
+├── .agents/workflows/   # Workflows/slash commands (or .claude/commands/, .codex/prompts/, etc.)
 ├── .magic/              # SDD Engine (workflow logic and scripts — read-only)
 └── .design/             # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
 
+> [!NOTE]
+> **Agent Command Directories**: The workflow path depends on your AI assistant or IDE — for example, `.claude/commands/` for Claude Code, `.codex/prompts/` for OpenAI Codex/CLI, `.cursor/rules/` for Cursor, or `.agents/workflows/` (default/cross-agent standard).
+>
 > [!TIP]
 > **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [SDD Philosophy](./docs/conception.md) for details.
 
@@ -29,7 +32,50 @@ your-project/
 
 Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
 
-### Option A: Download from GitHub Releases (Recommended)
+### 🤖 Install via AI Agent (Recommended)
+
+Copy and paste this prompt directly into your AI coding assistant (Cursor, Windsurf, Claude Code, Antigravity, Gemini CLI, Codex, etc.) in your target project:
+
+````markdown
+Install and configure Magic Spec in this project from https://github.com/teratron/magic-spec:
+
+1. Ask me before proceeding:
+   - Version: Stable release (from GitHub Releases) or latest current (from the master branch)?
+   - Target AI Environment: Which assistant directory to configure for skills or workflow wrappers (e.g., `.agents/`, `.claude/`, `.codex/`, `.cursor/`, etc.)?
+
+2. Fetch and unpack the required engine directories into the project root:
+   - `.magic/` (engine core scripts and runtime)
+   - `workflows/` (slash command workflows)
+   - `skills/` (modular agent skills)
+   - `rules/` (engine and watching-process rules)
+
+3. Integrate into the selected AI environment:
+   - For skill-based agents (e.g., Claude Code, Antigravity): copy/symlink `skills/` to `<target-dir>/skills/`.
+   - For workflow/slash-command agents (e.g., Cursor, Windsurf): copy/symlink `workflows/` to `<target-dir>/workflows/`.
+   - Copy or symlink `rules/` to `<target-dir>/rules/`.
+
+4. Automatically add the following entries to `.gitignore`:
+
+# SDD engine (installed from a release archive, not committed)
+/.magic/
+/.*/skills/magic-*/
+/.*/*/magic*.md
+
+## Generated graph artifacts
+/.design/*graph*.*
+/.design/*cache*/
+/.design/wiki/
+
+5. Initialize the SDD workspace and verify prerequisites:
+   Run `node .magic/scripts/executor.js check-prerequisites`
+   Run `node .magic/scripts/executor.js init`
+````
+
+### Manual Installation
+
+If you prefer installing manually without an AI assistant:
+
+#### Option A: Download from GitHub Releases
 
 1. Go to [Releases](https://github.com/teratron/magic-spec/releases/latest).
 2. Download `magic-spec-vX.Y.Z.zip`.
@@ -45,7 +91,7 @@ Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything el
 
 4. Integrate workflows or skills into your AI agent's environment (see [Integration](#-integration)).
 
-### Option B: Manual Clone
+#### Option B: Manual Clone
 
 ```bash
 # Clone just the needed folders
@@ -58,10 +104,16 @@ rm -rf _magic_tmp
 
 Add these entries to your `.gitignore` — the engine files are installed dependencies, like `node_modules/`:
 
-```
-.magic/
-skills/
-.agents/
+```gitignore
+# SDD engine (installed from a release archive, not committed)
+/.magic/
+/.*/skills/magic-*/
+/.*/*/magic*.md
+
+## Generated graph artifacts
+/.design/*graph*.*
+/.design/*cache*/
+/.design/wiki/
 ```
 
 > [!TIP]
@@ -81,8 +133,8 @@ To update:
 
 Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/` or `skills/` to your agent's specific configuration directory.
 
-- **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor, Windsurf, GitHub Copilot).
-- **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code, Antigravity).
+- **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor `.cursor/rules/`, Claude Code `.claude/commands/`, Codex `.codex/prompts/`, Windsurf, GitHub Copilot).
+- **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code `.claude/skills/`, Antigravity `.agents/skills/`, Gemini CLI).
 
 > [!TIP]
 > **Flexibility**: You can choose to use either directory or both, depending on your agent's requirements. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
@@ -153,15 +205,6 @@ Each command accepts optional arguments to scope the operation to a specific **w
 ## 🛟 Support
 
 If you encounter issues or have questions — open an [Issue](https://github.com/teratron/magic-spec/issues) on GitHub.
-
-## 🗺️ Roadmap
-
-- [x] Multi-agent integration system.
-- [x] Phased implementation planning.
-- [x] GitHub-based manual distribution.
-- [ ] Extended support for local-first LLM agents.
-- [ ] Advanced visual dashboard for project health.
-- [ ] Integration with CI/CD for automated spec validation.
 
 ## 🏗️ Contributing
 
