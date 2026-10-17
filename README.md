@@ -58,12 +58,12 @@ Install and configure Magic Spec in this project from https://github.com/teratro
 
 4. Automatically add the following entries to `.gitignore`:
 
-# SDD engine (installed from a release archive, not committed)
+# SDD engine
 /.magic/
 /.*/skills/magic-*/
 /.*/*/magic*.md
 
-## Generated graph artifacts
+## Generated artifacts
 /.design/*graph*.*
 /.design/*cache*/
 /.design/wiki/
@@ -107,12 +107,12 @@ rm -rf _magic_tmp
 Add these entries to your `.gitignore` — the engine files are installed dependencies, like `node_modules/`:
 
 ```gitignore
-# SDD engine (installed from a release archive, not committed)
+# SDD engine
 /.magic/
 /.*/skills/magic-*/
 /.*/*/magic*.md
 
-## Generated graph artifacts
+## Generated artifacts
 /.design/*graph*.*
 /.design/*cache*/
 /.design/wiki/
