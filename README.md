@@ -41,7 +41,7 @@ Install and configure Magic Spec in this project from https://github.com/teratro
 
 1. Ask me before proceeding:
    - Version: Stable release (from GitHub Releases) or latest current (from the master branch)?
-   - Target AI Environment: Which assistant directory to configure for skills or workflow wrappers (e.g., `.agents/`, `.claude/`, `.codex/`, `.cursor/`, etc.)?
+   - Target AI Environment: Select one assistant directory to configure for skills or workflow wrappers (e.g., `.agents/`, `.claude/`, `.codex/`, `.cursor/`, etc.).
 
 2. Fetch and unpack the required engine directories into the project root:
    - `.magic/` (engine core scripts and runtime)
