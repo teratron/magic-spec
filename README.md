@@ -17,13 +17,15 @@
 
 ```plaintext
 your-project/
-├── .agents/workflows/   # Workflows/slash commands (or .claude/commands/, .codex/prompts/, etc.)
-├── .magic/              # SDD Engine (workflow logic and scripts — read-only)
-└── .design/             # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
+├── .agents/
+│   ├── workflows/    # Workflows/slash commands (interchangeable with skills/)
+│   └── rules/        # Engine and watching-process rules
+├── .magic/           # SDD Engine (workflow logic and scripts — read-only)
+└── .design/          # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
 
 > [!NOTE]
-> **Agent Command Directories**: The workflow path depends on your AI assistant or IDE — for example, `.claude/commands/` for Claude Code, `.codex/prompts/` for OpenAI Codex/CLI, `.cursor/rules/` for Cursor, or `.agents/workflows/` (default/cross-agent standard).
+> **Workflows vs Skills (Interchangeable)**: For the user, `workflows/` (slash commands) and `skills/` (modular tools) are fully interchangeable interfaces to the same engine logic — choose whichever your agent prefers, or use both. The exact location also varies by agent: for example, `.agents/workflows/` (or `.agents/skills/`), `.claude/commands/` (or `.claude/skills/`), `.codex/prompts/`, or `.cursor/rules/`. Rules are placed in the agent's rules folder (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
 >
 > [!TIP]
 > **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [SDD Philosophy](./docs/conception.md) for details.
@@ -131,13 +133,14 @@ To update:
 
 ## 🔗 Integration
 
-Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/` or `skills/` to your agent's specific configuration directory.
+Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/`, `skills/`, or `rules/` to your agent's specific configuration directory.
 
 - **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor `.cursor/rules/`, Claude Code `.claude/commands/`, Codex `.codex/prompts/`, Windsurf, GitHub Copilot).
 - **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code `.claude/skills/`, Antigravity `.agents/skills/`, Gemini CLI).
+- **Rules (`rules/`)**: Behavioral instructions and watching processes loaded into the agent's context (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
 
 > [!TIP]
-> **Flexibility**: You can choose to use either directory or both, depending on your agent's requirements. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
+> **Interchangeability & Flexibility**: For the user, `workflows/` and `skills/` are fully interchangeable interfaces to the same engine logic. You can install workflows (slash commands) or skills (modular tools) — or both — depending on which format your AI assistant supports. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
 
 ## 💬 Usage
 
