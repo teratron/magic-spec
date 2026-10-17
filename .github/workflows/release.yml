@@ -33,7 +33,7 @@ jobs:
           python3 - <<'EOF'
           import zipfile, os
 
-          version = open(".magic/.version").read().strip()
+          version  = open(".magic/.version").read().strip()
           zip_name = f"magic-spec-v{version}.zip"
           prefix   = f"magic-spec-v{version}/"
 
