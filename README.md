@@ -26,7 +26,7 @@ your-project/
 
 > [!NOTE]
 > **Workflows vs Skills (Interchangeable)**: For the user, `workflows/` (slash commands) and `skills/` (modular tools) are fully interchangeable interfaces to the same engine logic — choose whichever your agent prefers, or use both. The exact location also varies by agent: for example, `.agents/workflows/` (or `.agents/skills/`), `.claude/commands/` (or `.claude/skills/`), `.codex/prompts/`, or `.cursor/rules/`. Rules are placed in the agent's rules folder (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
->
+
 > [!TIP]
 > **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [SDD Philosophy](./docs/conception.md) for details.
 
