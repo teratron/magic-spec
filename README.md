@@ -1,7 +1,7 @@
 # 🪄 Magic Spec
 
 ![GitHub Release](https://img.shields.io/github/v/release/teratron/magic-spec)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 ## 📖 Description
 
@@ -220,7 +220,7 @@ We welcome contributions! See the [**Contributing Guide**](./CONTRIBUTING.md) fo
 
 ## 📄 License
 
-Distributed under the [Apache License 2.0](./LICENSE).
+Distributed under the [MIT](./LICENSE).
 
 ## 📊 Project Status
 
