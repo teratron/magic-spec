@@ -8917,6 +8917,36 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
+    // 15b. generate-context.js — embedded changelog nests under "Recent Changes"
+    // ───────────────────────────────────────────────────────────────────────────
+    test('generate-context.js demotes the embedded changelog headings (single H1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            fs.mkdirSync(path.join(tempDir, '.design'), { recursive: true });
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'CHANGELOG.md'),
+                '# Journal\n\nIntro.\n\n## Phase 3\n\n```sh\n# not a heading\n```\n\n- item\n',
+            );
+
+            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
+            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+            const context = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+
+            let inFence = false;
+            const h1 = context.split('\n').filter((l) => {
+                if (l.startsWith('```')) inFence = !inFence;
+                return !inFence && /^# /.test(l);
+            });
+            assert.deepStrictEqual(h1, ['# Project Context'], 'only the document title may be H1');
+            assert.ok(context.includes('\n### Journal\n'), 'changelog title nests under Recent Changes');
+            assert.ok(context.includes('\n#### Phase 3\n'), 'relative heading depth is preserved');
+            assert.ok(context.includes('\n# not a heading\n'), 'fenced content is left untouched');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
     // 16a. lib/diagnostics.js — collector contract (DG-1..DG-9)
     // ───────────────────────────────────────────────────────────────────────────
 

@@ -175,11 +175,44 @@ try {
 
 contextContent += '```\n\n## Recent Changes\n\n';
 
+/**
+ * Nests an embedded Markdown excerpt under the host section.
+ *
+ * Headings are shifted so the shallowest one lands on `baseLevel` (capped at
+ * H6); the excerpt's own `# Title` would otherwise become a second top-level
+ * heading in the host document (MD025) and a tail cut can start on any level.
+ * Lines inside fenced code blocks are left alone.
+ *
+ * @param {string[]} lines Excerpt lines.
+ * @param {number} baseLevel Heading level the shallowest excerpt heading gets.
+ * @returns {string[]} Lines with shifted headings.
+ */
+function nestHeadings(lines, baseLevel) {
+    let fence = null;
+    const headingAt = (line) => {
+        const fenceMatch = line.match(/^ {0,3}(`{3,}|~{3,})/);
+        if (fenceMatch) {
+            if (!fence) fence = fenceMatch[1][0];
+            else if (fenceMatch[1][0] === fence) fence = null;
+            return null;
+        }
+        return fence ? null : line.match(/^(#{1,6})(?=\s|$)/);
+    };
+
+    const marks = lines.map(headingAt);
+    const levels = marks.filter(Boolean).map((m) => m[1].length);
+    if (levels.length === 0) return lines;
+
+    const shift = baseLevel - Math.min(...levels);
+    return lines.map((line, i) =>
+        marks[i] ? '#'.repeat(Math.min(6, marks[i][1].length + shift)) + line.slice(marks[i][1].length) : line,
+    );
+}
+
 if (fs.existsSync(changelogPath)) {
     const changelogText = fs.readFileSync(changelogPath, 'utf8');
     const lines = changelogText.trimEnd().split(/\r?\n/);
-    const last15 = lines.slice(-15).join('\n');
-    contextContent += last15;
+    contextContent += nestHeadings(lines.slice(-15), 3).join('\n');
 } else {
     contextContent += 'No recent changelog found.';
 }

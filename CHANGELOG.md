@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **`CONTEXT.md` no longer gets a second top-level heading** (engine v2.1.141 → v2.1.142): the "Recent Changes" section pasted the last lines of the changelog verbatim, so the changelog's own `# …` title landed in the middle of the document (markdownlint MD025). The excerpt's headings are now nested under "Recent Changes", keeping their relative depth; lines inside fenced code blocks are left untouched.
+
 ## [2.1.141] - 2026-10-17
 
 ### Fixed
