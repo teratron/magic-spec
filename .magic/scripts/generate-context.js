@@ -212,7 +212,11 @@ function nestHeadings(lines, baseLevel) {
 if (fs.existsSync(changelogPath)) {
     const changelogText = fs.readFileSync(changelogPath, 'utf8');
     const lines = changelogText.trimEnd().split(/\r?\n/);
-    contextContent += nestHeadings(lines.slice(-15), 3).join('\n');
+    // The tail cut can begin on a blank line; the section header already ends
+    // with one, so a leading blank would double it (MD012).
+    const tail = lines.slice(-15);
+    while (tail.length > 0 && tail[0].trim() === '') tail.shift();
+    contextContent += nestHeadings(tail, 3).join('\n');
 } else {
     contextContent += 'No recent changelog found.';
 }

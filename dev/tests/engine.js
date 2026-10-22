@@ -111,6 +111,25 @@ describe('Magic Engine Scripts', () => {
         }
     };
 
+    // STATE.md "Blocking Constraints" body: `count` numbered anti-pattern bullets.
+    const antiPatternLines = (count) =>
+        Array.from(
+            { length: count },
+            (_, i) =>
+                `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
+        );
+
+    // Runs generate-context.js in a temp workspace and returns the CONTEXT.md text.
+    const generateContext = (tempDir) => {
+        const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
+        execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
+        return fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+    };
+
+    // Loads the changelog writer from a temp workspace's engine copy.
+    const loadChangelogWriter = (tempDir) =>
+        require(path.join(tempDir, '.magic', 'scripts', 'lib', 'changelog-writer.js'));
+
     // Runs the developer-only checksum manifest builder inside a temp workspace,
     // so scripts gated on engine integrity (check-prerequisites, update-engine-meta)
     // see a consistent .magic/.checksums.
@@ -6359,11 +6378,7 @@ describe('Magic Engine Scripts', () => {
                     '',
                     '## Blocking Constraints',
                     '',
-                    ...Array.from(
-                        { length: 95 },
-                        (_, i) =>
-                            `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
-                    ),
+                    ...antiPatternLines(95),
                     '',
                 ].join('\n');
 
@@ -6485,11 +6500,7 @@ describe('Magic Engine Scripts', () => {
                 '',
                 '## Blocking Constraints',
                 '',
-                ...Array.from(
-                    { length: 95 },
-                    (_, i) =>
-                        `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
-                ),
+                ...antiPatternLines(95),
                 '',
             ].join('\n');
             fs.writeFileSync(path.join(wsDir, 'STATE.md'), state);
@@ -7699,11 +7710,7 @@ describe('Magic Engine Scripts', () => {
             '',
             '## Blocking Constraints',
             '',
-            ...Array.from(
-                { length: 90 },
-                (_, i) =>
-                    `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
-            ),
+            ...antiPatternLines(90),
             '',
             '## Recent Decisions',
             '',
@@ -7749,11 +7756,7 @@ describe('Magic Engine Scripts', () => {
             '',
             '## Blocking Constraints',
             '',
-            ...Array.from(
-                { length: 90 },
-                (_, i) =>
-                    `- [C-${String(i + 1).padStart(3, '0')}] **Anti-pattern ${i + 1}**: never do this.`,
-            ),
+            ...antiPatternLines(90),
             '',
         ];
         const { after, warnings } = patchState(lines, {}, {}, { eol: '\r\n' });
@@ -8928,9 +8931,7 @@ describe('Magic Engine Scripts', () => {
                 '# Journal\n\nIntro.\n\n## Phase 3\n\n```sh\n# not a heading\n```\n\n- item\n',
             );
 
-            const scriptPath = path.join(tempDir, '.magic', 'scripts', 'generate-context.js');
-            execSync(`node "${scriptPath}"`, { cwd: tempDir, stdio: 'pipe' });
-            const context = fs.readFileSync(path.join(tempDir, '.design', 'CONTEXT.md'), 'utf8');
+            const context = generateContext(tempDir);
 
             let inFence = false;
             const h1 = context.split('\n').filter((l) => {
@@ -8941,6 +8942,15 @@ describe('Magic Engine Scripts', () => {
             assert.ok(context.includes('\n### Journal\n'), 'changelog title nests under Recent Changes');
             assert.ok(context.includes('\n#### Phase 3\n'), 'relative heading depth is preserved');
             assert.ok(context.includes('\n# not a heading\n'), 'fenced content is left untouched');
+
+            // A changelog whose 15-line tail starts on a blank line must not
+            // leave two blank lines under the section header (MD012).
+            fs.writeFileSync(
+                path.join(tempDir, '.design', 'CHANGELOG.md'),
+                'line\n'.repeat(20) + '\n' + 'tail\n'.repeat(14),
+            );
+            const tailed = generateContext(tempDir);
+            assert.ok(!/\n\n\n/.test(tailed), 'no consecutive blank lines in CONTEXT.md');
         } finally {
             cleanup(tempDir);
         }
@@ -9837,6 +9847,85 @@ describe('Magic Engine Scripts', () => {
                 2,
                 'the bullet must appear once in the released section and once in the fresh Unreleased',
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('release-changelog.js rotation keeps a blank line under the renamed version heading', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { appendBullet, releaseUnreleased } = loadChangelogWriter(tempDir);
+            const changelogPath = path.join(tempDir, 'CHANGELOG.md');
+            appendBullet(changelogPath, 'Added', 'first');
+            releaseUnreleased(changelogPath, '1.0.0', '2026-02-01');
+            appendBullet(changelogPath, 'Added', 'second');
+
+            const text = fs.readFileSync(changelogPath, 'utf8');
+            assert.ok(
+                text.includes('## [1.0.0] - 2026-02-01\n\n### Added\n\n- first\n'),
+                'the released heading must stay separated from its first sub-heading (MD022)',
+            );
+            assert.ok(!/\n\n\n/.test(text), 'no consecutive blank lines (MD012)');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('export-wiki.js pages keep blank lines around headings and lists, even for an empty workspace', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const graph = {
+                nodes: [
+                    { id: 'workspace:full', type: 'workspace', label: 'full' },
+                    { id: 'workspace:empty', type: 'workspace', label: 'empty' },
+                    {
+                        id: 'spec:full/a.md',
+                        type: 'spec',
+                        label: 'a.md',
+                        workspace: 'full',
+                        layer: 1,
+                        status: 'Stable',
+                        version: '1.0.0',
+                    },
+                ],
+                edges: [{ from: 'workspace:full', to: 'spec:full/a.md', relation: 'contains' }],
+                analysis: {
+                    god_nodes: [{ id: 'spec:full/a.md', type: 'spec', label: 'a.md', degree: 3 }],
+                    orphaned_files: ['x.js'],
+                },
+            };
+            const graphPath = path.join(tempDir, 'graph.json');
+            fs.writeFileSync(graphPath, JSON.stringify(graph));
+            execSync(
+                `node "${path.join(tempDir, '.magic', 'scripts', 'executor.js')}" export-wiki --from-file graph.json --out wiki`,
+                { cwd: tempDir, stdio: 'pipe' },
+            );
+
+            const wikiDir = path.join(tempDir, 'wiki');
+            const pages = fs.readdirSync(wikiDir).filter((f) => f.endsWith('.md'));
+            assert.ok(pages.length >= 3, 'index, both workspaces and the spec are exported');
+            for (const page of pages) {
+                const lines = fs.readFileSync(path.join(wikiDir, page), 'utf8').split('\n');
+                lines.forEach((line, i) => {
+                    const prev = lines[i - 1];
+                    const next = lines[i + 1];
+                    const where = `${page}:${i + 1}`;
+                    if (/^#{1,6} /.test(line)) {
+                        assert.ok(i === 0 || prev === '', `${where}: blank line above heading`);
+                        assert.ok(next === '', `${where}: blank line below heading`);
+                    }
+                    if (/^- /.test(line)) {
+                        assert.ok(prev === '' || /^- /.test(prev), `${where}: blank line above list`);
+                        assert.ok(next === '' || /^- /.test(next), `${where}: blank line below list`);
+                    }
+                    assert.ok(!(line === '' && prev === ''), `${where}: consecutive blank lines`);
+                });
+                assert.ok(
+                    !/^\*\*[^*]+\*\*$/m.test(lines.join('\n')),
+                    `${page}: bold-only line reads as a heading (MD036)`,
+                );
+            }
         } finally {
             cleanup(tempDir);
         }

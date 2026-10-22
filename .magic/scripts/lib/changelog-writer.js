@@ -200,7 +200,9 @@ function releaseUnreleased(filePath, version, date) {
     const original = fs.readFileSync(filePath, 'utf8');
     if (!isKeepAChangelog(original)) return { written: false, hadUnreleased: false };
 
-    const unreleasedRe = /^##\s+\[Unreleased\]\s*$/m;
+    // `[ \t]*`, not `\s*`: the latter would swallow the blank line(s) after the
+    // heading, gluing the renamed version heading to its first sub-heading.
+    const unreleasedRe = /^##\s+\[Unreleased\][ \t]*$/m;
     if (!unreleasedRe.test(original)) return { written: false, hadUnreleased: false };
 
     const next =
