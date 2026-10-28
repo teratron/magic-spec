@@ -6,6 +6,7 @@ const path = require('path');
 const { writeFileSafe, mkdirSafe, isDryRun } = require('../utils');
 const { stripQuoted } = require('./scan-hygiene');
 const { listPhaseFiles, listUnrecognizedTaskFiles } = require('./phase-files');
+const { hasUnfinishedItem } = require('./checklist');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // PHASE ARCHIVER (Shared Library)
@@ -29,17 +30,21 @@ function parseFrontmatter(content) {
 }
 
 /**
- * Returns true when all Atomic Checklist items are checked. Per
- * l2-engine-finalization.md §6, an unchecked item is a checklist *line*
+ * Returns true when all Atomic Checklist items are checked. An unchecked
+ * item is a checklist *line*
  * (`- [ ]` at line start, optional indent) — NOT a `- [ ]` sequence quoted
  * in prose, Notes, or code. Inline code-spans and fenced blocks are stripped
  * first so a phase that merely documents checkbox syntax stays archivable.
+ *
+ * A `- [!]` line is a blocked task written as a checkbox state
+ * (lib/checklist.js): unfinished work, so it holds the phase back like `- [ ]`
+ * does. Archiving it away would bury a task nobody resolved.
  *
  * @param {string} content - File body content.
  * @returns {boolean}
  */
 function allChecked(content) {
-    return !/^\s*- \[ \]/m.test(stripQuoted(content));
+    return !hasUnfinishedItem(stripQuoted(content));
 }
 
 /**
@@ -100,14 +105,17 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
         const escaped = file.replace(/\./g, '\\.');
         content = content.replace(
             new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
-            `(archives/tasks/${file})`
+            `(archives/tasks/${file})`,
         );
-        content = content.split('\n').map(line => {
-            if (line.includes(`(archives/tasks/${file})`)) {
-                return line.replace(/`(Done|In Progress|Blocked|Todo)`/, '`Done (Archived)`');
-            }
-            return line;
-        }).join('\n');
+        content = content
+            .split('\n')
+            .map((line) => {
+                if (line.includes(`(archives/tasks/${file})`)) {
+                    return line.replace(/`(Done|In Progress|Blocked|Todo)`/, '`Done (Archived)`');
+                }
+                return line;
+            })
+            .join('\n');
     }
     writeFileSafe(tasksIndexPath, content);
 }
@@ -124,8 +132,8 @@ function updateTasksIndex(tasksIndexPath, archivedFiles) {
  * only the leftover generic pass may touch a target whose label is
  * something else (descriptive prose), which correctly needs no rewrite.
  * Prose mentions of the bare path (no surrounding `[...](...)`) are never
- * matched by either pass and are left untouched — l2-engine-finalization.md
- * §7.3 is explicit that a broader replace would corrupt historical prose.
+ * matched by either pass and are left untouched — a broader replace would
+ * corrupt historical prose.
  *
  * @param {string} planPath - Absolute path to PLAN.md.
  * @param {string[]} archivedFiles - Array of filenames that were archived.
@@ -140,14 +148,14 @@ function updatePlanIndex(planPath, archivedFiles) {
         // rewritten together so neither can drift from the other.
         content = content.replace(
             new RegExp(`\\[tasks/${escaped}\\]\\(tasks/${escaped}\\)`, 'g'),
-            `[archives/tasks/${file}](archives/tasks/${file})`
+            `[archives/tasks/${file}](archives/tasks/${file})`,
         );
         // Any remaining target-only occurrence (a descriptive, non-path
         // label) still needs its destination corrected — its label makes no
         // claim about location, so it needs no companion rewrite.
         content = content.replace(
             new RegExp(`\\(tasks/${escaped}\\)`, 'g'),
-            `(archives/tasks/${file})`
+            `(archives/tasks/${file})`,
         );
     }
     writeFileSafe(planPath, content);
@@ -215,11 +223,21 @@ function archiveCompletedPhases(wsDir, opts = {}) {
         const tasksIndexPath = path.join(wsDir, 'TASKS.md');
         const planPath = path.join(wsDir, 'PLAN.md');
         if (!dryRun) {
-            updateTasksIndex(tasksIndexPath, archived.map(a => a.file));
-            updatePlanIndex(planPath, archived.map(a => a.file));
+            updateTasksIndex(
+                tasksIndexPath,
+                archived.map((a) => a.file),
+            );
+            updatePlanIndex(
+                planPath,
+                archived.map((a) => a.file),
+            );
         } else {
-            console.log(`  🧪 [dry-run] would update TASKS.md links for: ${archived.map(a => a.file).join(', ')}`);
-            console.log(`  🧪 [dry-run] would update PLAN.md links for: ${archived.map(a => a.file).join(', ')}`);
+            console.log(
+                `  🧪 [dry-run] would update TASKS.md links for: ${archived.map((a) => a.file).join(', ')}`,
+            );
+            console.log(
+                `  🧪 [dry-run] would update PLAN.md links for: ${archived.map((a) => a.file).join(', ')}`,
+            );
         }
     }
 

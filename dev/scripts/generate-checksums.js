@@ -3,7 +3,15 @@
 
 const fs = require('fs');
 const path = require('path');
-const { hashFileSafe, getAllFiles, normalizePath, writeFileSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS } = require('../../.magic/scripts/utils');
+const {
+    hashFileSafe,
+    getAllFiles,
+    normalizePath,
+    writeFileSafe,
+    VOLATILE_STATE_FILES,
+    loadGitignore,
+    BUILD_NOISE_DIRS,
+} = require('../../.magic/scripts/utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CHECKSUM GENERATOR (Kernel Integrity)
@@ -50,17 +58,15 @@ function run() {
     // Integrity scope: engine kernel only (.magic/). Surface artifacts in
     // workflows/, skills/, rules/ are user-customizable wrappers — not
     // protected by checksum so partial installations stay supported.
-    const scanZones = [
-        { dir: MAGIC_DIR, relBase: MAGIC_DIR }
-    ];
+    const scanZones = [{ dir: MAGIC_DIR, relBase: MAGIC_DIR }];
 
     const checksums = {};
 
     const entries = [];
-    scanZones.forEach(zone => {
+    scanZones.forEach((zone) => {
         if (!fs.existsSync(zone.dir)) return;
 
-        getAllFiles(zone.dir, IGNORE_DIRS).forEach(fullPath => {
+        getAllFiles(zone.dir, IGNORE_DIRS).forEach((fullPath) => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === CHECKSUMS_FILE) return;
             if (IGNORE_REL_FILES.has(rel)) return;
@@ -70,9 +76,11 @@ function run() {
     });
 
     // Sort entries by relative path for reproducibility
-    entries.sort((a, b) => a.rel.localeCompare(b.rel)).forEach(entry => {
-        checksums[entry.rel] = hashFileSafe(entry.fullPath);
-    });
+    entries
+        .sort((a, b) => a.rel.localeCompare(b.rel))
+        .forEach((entry) => {
+            checksums[entry.rel] = hashFileSafe(entry.fullPath);
+        });
 
     // Write to .checksums
     const output = JSON.stringify(checksums, null, 2);

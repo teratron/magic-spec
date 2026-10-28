@@ -39,22 +39,34 @@ This directory contains workflow wrappers in the **Skills** format (each command
 - Auto-generated from `.md` files in `workflows/`.
 - Allow agents to discover available tools as structured "skills" without parsing raw markdown files.
 
+### 1.4. Watching Rules (`rules/`)
+
+This directory contains behavioral and watching-process rules loaded into the agent's context.
+
+- `magic.md` — watching-process rules (engine upgrade detection, drift warnings, integrity protection).
+- Copy or link into your agent's rules directory (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
+
 ## 2. Choosing Your Integration Path
 
-Magic Spec provides two primary ways to expose its logic to your AI agent. You can choose the one that matches your agent's capabilities, or use both simultaneously:
+Magic Spec provides flexible ways to expose its logic to your AI agent. You can choose the format that matches your agent's capabilities, or use them simultaneously:
 
 1. **Option A: Slash Commands (via `workflows/`)**
    - Best for: Cursor, Windsurf, Roo Code, GitHub Copilot.
-   - Setup: Link or copy `.md` files from `workflows/` to your agent's command path (e.g., `.cursor/rules/`).
+   - Setup: Link or copy `.md` files from `workflows/` to your agent's command path (e.g., `.cursor/rules/`, `.claude/commands/`, `.codex/prompts/`).
    - Usage: Trigger via `/magic.spec`, `/magic.task`, etc.
 
 2. **Option B: Modular Tools (via `skills/`)**
    - Best for: Claude Code, Antigravity IDE, agents supporting the MCP-like Skill protocol.
-   - Setup: Link or copy folders from `skills/` to your agent's skill/tool path.
+   - Setup: Link or copy folders from `skills/` to your agent's skill/tool path (e.g., `.agents/skills/`, `.claude/skills/`).
    - Usage: The agent discovers these as built-in tools (e.g., `magic-spec`, `magic-task`).
 
+3. **Option C: Context Rules (via `rules/`)**
+   - Best for: All supported agents.
+   - Setup: Link or copy `rules/magic.md` to your agent's rule path (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
+   - Usage: Automatically loaded by the agent to guide engine conventions and upgrades.
+
 > [!NOTE]
-> Regardless of the integration path chosen, the underlying logic remains consistent as both `workflows/` and `skills/` are synchronized with the `.magic/` engine core.
+> Regardless of the integration path chosen, the underlying logic remains consistent as `workflows/`, `skills/`, and `rules/` are synchronized with the `.magic/` engine core.
 
 ## 3. Dev Instruments
 

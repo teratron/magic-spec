@@ -30,7 +30,7 @@ Opt-in review gate focused on minimalism without behavior drift. Triggered when 
 1. Load the reviewed diff.
 2. Ask: "Can this be shorter or flatter without losing correctness, readability, or the `Verify` criterion? Which abstraction, option, or branch is justified by current requirements rather than possible future ones?"
 3. Remove or propose removal of one-use abstractions, speculative knobs, duplicate flow, and defensive handling for impossible states. Keep defensive checks at external boundaries.
-4. Optionally invoke the `simplify` skill as a helper (advisory only, per R6).
+4. Optionally invoke the `simplify` skill as a helper (advisory only; never auto-invoked).
 5. If simplifications identified, propose a revised diff and hand back to Code-reviewer for re-verification.
 6. If no simplifications needed, hand off to Test-engineer.
 
@@ -40,4 +40,4 @@ Opt-in review gate focused on minimalism without behavior drift. Triggered when 
 - Refactoring beyond the current task's scope (simplification must stay within the diff being reviewed).
 - Removing defensive code at external system boundaries (those exist by design).
 - Trading explicit, readable control flow for clever compression.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

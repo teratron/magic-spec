@@ -1,6 +1,6 @@
 ---
 name: magic.run
-description: Workflow for executing tasks from the project plan.
+description: Executes the planned tasks of the active phase from the task list, in parallel tracks when they are independent. Use when the user asks to start, continue or resume the planned work, to run the next task of the plan, or to implement a named task or phase from TASKS.md.
 handoffs:
   - label: "Replan"
     workflow: magic.task
@@ -25,7 +25,7 @@ Examples: `/magic.run`, `/magic.run engine`, `/magic.run "T-1A01"`, `/magic.run 
 
 - **Rules Parity**: always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
 - **Pipeline**: `magic.spec` → `magic.task` → `magic.run`.
-- **Finalization**: after task/phase completion, run `node .magic/scripts/executor.js finalize --workflow=run` and display output verbatim. Never auto-commit. See `.magic/run.md §Finalization Protocol`.
+- **Finalization**: after task/phase completion, run `node .magic/scripts/executor.js finalize --workflow=run --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `.magic/run.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/run.md`. Read it before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.

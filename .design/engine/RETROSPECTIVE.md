@@ -1,8 +1,8 @@
 # SDD Retrospective
 
-**Last Full Run:** 2026-09-17
-**Full Sessions:** 11
-**Snapshots:** 24
+**Last Full Run:** 2026-10-12
+**Full Sessions:** 21
+**Snapshots:** 34
 
 ## Snapshots
 
@@ -34,6 +34,16 @@ Auto-collected after each phase completion. Lightweight metrics only — no anal
 | 2026-08-28 | Phase 28 | 0/0/33 | 7/0/0 | 24 | 🟢 |
 | 2026-09-13 | Phase 29 | 0/0/33 | 4/0/2 | 24 | 🟢 |
 | 2026-09-17 | Phase 30 | 0/0/33 | 5/0/0 | 24 | 🟢 |
+| 2026-09-17 | Phase 31 | 0/0/33 | 6/0/0 | 24 | 🟢 |
+| 2026-09-21 | Phase 32 | 0/0/36 | 18/0/0 | 24 | 🟡 |
+| 2026-09-28 | Phase 33 | 0/0/36 | 5/0/0 | 24 | 🟢 |
+| 2026-09-30 | Phase 34 | 0/0/37 | 17/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 35 | 0/0/37 | 8/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 36 | 0/0/37 | 10/0/0 | 25 | 🟢 |
+| 2026-09-30 | Phase 37 | 0/0/37 | 15/0/0 | 25 | 🟢 |
+| 2026-10-05 | Phase 38 | 0/0/37 | 12/0/0 | 25 | 🟢 |
+| 2026-10-06 | Phase 39 | 0/0/37 | 13/0/0 | 25 | 🟢 |
+| 2026-10-12 | Phase 40 | 0/0/37 | 18/0/0 | 25 | 🟡 |
 
 ## Session 1 — 2026-06-12
 
@@ -492,4 +502,474 @@ Manual input / external hook still required — same gap as Session 1.
 
 > Signal held at 🟢: zero Blocked tasks, zero orphans, and the one mid-session correction (Finding #1) was resolved by the user before any task reached `Done` against the wrong wording — Track B's `Done` status reflects only the final, corrected state. [C-001]'s recurring hardlink drift (Finding #3) is flagged in Recommendations rather than the Signal score, matching Session 10's precedent for mid-session friction that was fully resolved before this snapshot.
 
+## Session 12 — 2026-09-18
+
+**Scope:** Plan completion (Phase 31 — Diagnostics Revalidation Before Render, DG-10; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from a field bug report)
+**Specs in registry:** 33 (all Stable; unchanged count — 2 amended for content this session: `l1-engine-diagnostics.md` 1.0.1 → 1.1.0 (new DG-10 invariant + §1.6 Motivation), `l2-engine-diagnostics.md` 1.1.0 → 1.2.0 (§4.10 `revalidate()` implementation))
+**Tasks total:** 6 this cycle (Done: 6, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 202 → 205 nodes (+3), 404 → 408 edges (+4); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements` — see Finding #2: this diff spans both Phase 30 and Phase 31, not Phase 31 alone
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.93 → 2.1.94, single C14 bump after all four tracks (A/B/C/T) landed — no `--workflow` tag, matching the Phase 21 precedent (script-only change, no dotted workflow-doc body touched) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks. One implementation defect (Finding #3) was caught by a manual smoke test *before* the regression suite was even written, let alone before any task reached `Done` — no `Done` task was ever built on the broken intermediate state |
+| **Rework Rate** | 1 correction / 6 tasks | Manual | `normalize()`'s missing `recheck` passthrough (Finding #3), caught inside T-31A02 itself via `node -e` inspection of the live sink, fixed in the same pass — no task was reopened after being marked `Done` |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The defect this phase fixes reproduced itself against its own author, twice, before the fix even existed — the strongest form of field evidence a bug report can get.** The originating report showed `finalize --workflow=task` rendering a stale `SYNC_GAP`; during this session's own `/magic.spec`/`/magic.task` Pre-flight calls against this repository's own `INDEX.md`/`PLAN.md` version pointers, the identical class fired twice more, independent of the downstream report. The eventual fix (T-31C01) was verified with a live, self-contained reproduction against this repository — not only a synthetic fixture — forcing the exact stale-pointer condition, observing it recorded with a `recheck`, resolving it, then confirming the digest no longer rendered it while a genuinely-still-open `ENGINE_INTEGRITY` correctly survived in the same run. | `tasks/phase-31.md` T-31C01 Verify line; this session's own two Pre-flight `SYNC_GAP` warnings, both citing `INDEX.md` versions this same session had already moved past by the time `finalize` drained them |
+| 2 | **The retrospective's own rolling-baseline step (`retrospective.md` §2, "rename snapshot to graph-before.json after use") did not run at the close of Session 11** — `graph-before.json` still reflected pre-Phase-30 state, so this session's `diff-spec-graph` conflates two phases' worth of structural change (Phase 30's `l2-engine-automation.md`/checksum-scanner edge plus Phase 31's own two new phase nodes and two spec-version edges) into one diff with no way to attribute deltas to either phase individually from the diff alone. Not a design defect — the diff itself is accurate for the window it actually covers — but it silently widened that window without saying so. | `diff-spec-graph` output this session: `l2-engine-automation` shows `version: 1.12.0 → 1.14.0` (two versions, not one) and a new edge to `dev/scripts/generate-checksums.js` neither of which this session's own work touched — both are Phase 30 carryover |
+| 3 | **A single-purpose field-allowlist function silently dropped a newly-added optional field, because the field's producer and its allowlist were edited in two different places and only one was updated first.** `check-prerequisites.js`'s `warn()` was given a `recheck` field to attach to every finding (T-31B01), but `lib/diagnostics.js`'s `normalize()` — which explicitly destructures only the fields it knows about before building the stored record — had no matching update, so `recheck` reached `record()` and was silently discarded before ever touching the sink. Caught by direct inspection of the sink's own JSONL content immediately after the first live test run, not by the type system or any static check (neither exists for this boundary). | Live `cat .design/.cache/diagnostics.jsonl` output showing two `ENGINE_INTEGRITY` entries with no `recheck` key, immediately after `check-prerequisites.js` was edited to attach one; `lib/diagnostics.js` `normalize()`'s pre-fix destructuring line, confirmed via `git show HEAD` to have listed only the original five DG-3 fields |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R39 | #2 | Add a cheap self-check to the retrospective's own Collect step: before running `diff-spec-graph`, compare `graph-before.json`'s embedded node/edge counts (or a stored phase-tag) against the *previous* Snapshots-table row rather than assuming the baseline is current: if they disagree, name the gap explicitly in the session's Scope line (as this session had to do manually for Finding #2) instead of presenting a multi-phase diff as if it were single-phase | `retrospective.md` §2 (Collect) / §7 rolling-baseline step; route via `/magic.task engine` |
+| R40 | #3 | When a collector-style function enumerates the exact fields it forwards (`lib/diagnostics.js` `normalize()` is the concrete instance, but the shape recurs anywhere a "known fields only" allowlist exists), add one comment at the allowlist site itself naming it as the single point every new optional field must also touch — not a process change, a two-line comment that turns a silent-drop failure mode into a place a future editor is already looking when they add the field to its producer | `lib/diagnostics.js` `normalize()`, next time either function is touched; no standalone task warranted for a comment-only addition |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 33 | 0 |
+| Specs with version churn this session | 4 | 2 | -2 |
+| Cognitive suite tests | 211 | 211 | 0 |
+| Script harness tests | 86 | 92 | +6 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 202 / 404 | 205 / 408 | +3 / +4 (spans Phase 30+31 — Finding #2) |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal held at 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage held. The one implementation defect this session (Finding #3) was caught and fixed before any task reached `Done`, and the stale graph baseline (Finding #2) is a retrospective-tooling gap, not a registry-health signal — both routed to Recommendations rather than affecting the score.
+>
 > Signal held at 🟢: the session's four VERSION_DRIFT instances (Finding #3) and one mis-targeted spec (Finding #1) were both caught and fully resolved within the same session, before this snapshot — 0 Blocked tasks, 0 orphans, 0 shadow logic, 0 registry inconsistency remaining at close. Flagged in Recommendations (R32, R34) rather than the Signal score, since Score & Signal reflects current state, not mid-session friction already resolved.
+
+## Session 13 — 2026-09-21
+
+**Scope:** Plan completion (Phase 32 — Automatic Session Checkpoints, SC-6..SC-9; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from an external recommendation, with the standing directive that nothing new is added for the user to type)
+**Specs in registry:** 36 (all Stable). Three are new since Session 12: `l2-update-state-structure.md` and `l2-update-state-values.md` (the 2026-09-20 decomposition of `l2-finalize-state-accuracy.md`) and `l2-session-checkpoint.md` (1.0.0 → 1.0.1 during this phase); eight more moved version across the window (`l1-session-continuity.md` 2.2.0 → 2.3.0, `l2-status-command.md` 1.1.0 → 1.2.0, `l2-workflow-wrappers.md` 1.2.0 → 1.3.0, `l2-test-suite.md` 1.17.0 → 1.18.0, `l2-engine-finalization.md` 3.2.0 → 3.2.2, `l2-engine-automation.md` 1.14.0 → 1.16.0, `l2-engine-diagnostics.md` 1.2.0 → 1.2.2, `l2-finalize-state-accuracy.md` 1.4.0 → 2.0.0)
+**Tasks total:** 18 this cycle (Done: 18, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 205 → 211 nodes (+6), 408 → 452 edges (+44); engine-workspace coverage held at 100%; 0 orphaned files, 0 missing `Implements`, 24 conventions enforced and none orphaned. The baseline was current (it matches Session 12's close, so R39's check passed), which means this diff spans exactly the window since that session — the decomposition pair, the checkpoint spec, `resume-state.js`, `handoff.json` and the Phase 32 node — rather than two phases at once.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.102 → 2.1.103, a single C14 at the closing task after every track landed, tagged `magic.run magic.task magic.status magic.analyze`; the regenerated skill wrappers came out identical, so no `skills/` change |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; nothing marked `Done` was reopened. Five corrections were made, each inside the task that surfaced it (Findings #1–#3) |
+| **Rework Rate** | 5 corrections / 18 tasks | Manual | The `--all` scope (spec 1.0.1), git stderr leaking through `git-utils`, a fixture gap in H2, a step-lookup collision in the H10 test, and the cognitive-case numbering — all caught by the task's own probe, negative control or first test run |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The plan assumed a property of the executor that does not exist, and only running the script through the executor showed it.** The spec said "no flag = every workspace", but `executor.js` consumes `--workspace`, substitutes the registry default when it is absent and forwards nothing but `MAGIC_DESIGN_DIR`, so a script cannot tell "omitted" from "defaulted". Direct invocation, which is how the first probes ran, hid it. Fixed by an explicit `--all` flag and a spec correction before any consumer depended on the wrong reading | `l2-session-checkpoint.md` §5.3 and its 1.0.1 history row; the harness scope case; mutations M10 and M22 turn it red |
+| 2 | **The recorded test counts were stale before the phase began, and the plan built on them.** The plan, the checkpoint spec and `l2-test-suite.md` all said "211 cognitive tests, next free T213", while the suite already held T213–T219 (218 headings); its own header read 1.9.78 against a footer of 1.9.80. The collision surfaced only when the cases were written, and the new ones took T220–T224 | `grep -c "^### T[0-9]" dev/tests/suite.md` printed 218 before and prints 223 now; `l2-session-checkpoint.md` §6 still says "proposed T213–T217" |
+| 3 | **Negative controls exposed two tests that were green for the wrong reason.** One needle, passed through the shell, lost its backslashes and matched a comment instead of the regex, so the case stayed green; and the H2 fixture's Next Action carried no code span, so a "read the value from the stripped line" mutation passed. A control that cannot fail proves nothing. Both were closed before their tasks were marked `Done`, and the method was made routine: a driver applies one-line mutations to the real files, maps each to the case it must turn red, and verifies every restore by hash — 48 mutations, 48 caught | Mutation M23 (H2), the first control on the tracking-entry extraction; the driver's three suites |
+| 4 | **A phase that adds an engine file cannot reach an all-green harness until the file is tracked.** C14 writes the new files into `.checksums` at once, and the tracked-files invariant compares the manifest against `git ls-files`, so it stays red while they are untracked — correctly, since a release archive built from a fresh checkout would lack them. The task's Verify said "all green" and could not be met without a git write the run does not make | `every .magic/.checksums entry must be a git-tracked file` names `scripts/resume-state.js` and `scripts/lib/tracking-entries.js`; it passes against a temporary index holding them |
+| 5 | **A failure fixture found an adjacent defect in a different path.** Under `--workflow=run`, `finalize` aborts with exit 1 when `STATE.md` exists but cannot be read: the run whitelist includes `STATE.md`, the significance snapshot hashes it, and `hashFileSafe` retries five times and rethrows — whereas `--workflow=task` degrades to `STATE_UPDATE_SKIPPED`. The checkpoint claim stays honest either way (none is printed). Recorded, not repaired: it is outside this phase | Diagnostic `FINALIZE_RUN_ABORTS_ON_UNREADABLE_STATE`; `lib/significance.js` `snapshotHashes()` |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R41 | #1 | State in the executor contract, in one sentence, that a script sees the resolved workspace only through `MAGIC_DESIGN_DIR` and never receives `--workspace`, so a spec for a new subcommand cannot key behavior to that flag's absence | `l2-engine-automation.md` executor section, next `/magic.spec` pass |
+| R42 | #2 | Sync `l2-test-suite.md`'s recorded counts (harness 138, cognitive 223) and the checkpoint spec's "proposed T213–T217"; then make the suite's own footer (`Last: T224`) the single source so the count stops being copied into a spec that cannot follow it | `l2-test-suite.md`, `l2-session-checkpoint.md` §6, next `/magic.spec` pass |
+| R43 | #4 | When a phase adds an engine file, have its closing task's Verify say that the tracked-files invariant is green only once the file is added, so the red reads as a to-do and not a defect; git writes stay with the user | Planning guidance in `.magic/task.md`, next `/magic.task` |
+| R44 | #5 | Make `snapshotHashes()` treat an unreadable whitelisted file as absent-with-a-finding, matching how the state update degrades, so an unreadable `STATE.md` cannot abort a `run` finalize | `lib/significance.js`, via `/magic.spec engine` then `/magic.task engine` |
+| R45 | #3 | Promote the mutation driver from a scratch file to `dev/scripts/` (Layer 2), so a task's negative controls are repeatable by the next agent and not only narrated | `dev/scripts/`, a future task |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 33 | 36 | +3 |
+| Specs with version churn this session | 2 | 8 | +6 (the window spans eight direct-repair releases and two spec passes) |
+| Cognitive suite tests | 211 (recorded; the suite held 218) | 223 | +12 recorded / +5 actual |
+| Script harness tests | 92 | 138 | +46 (124 when the phase began; +14 in it) |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 205 / 408 | 211 / 452 | +6 / +44 |
+| Signal | 🟢 | 🟡 | ↓ |
+
+> Signal moved to 🟡: the structure is clean — 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 100% engine-workspace coverage, 0 shadow logic — but two non-critical stale references stand in the registry itself (the recorded test counts in `l2-test-suite.md` and the "proposed T213–T217" in `l2-session-checkpoint.md`), which is the table's "1–2 non-critical drift items" condition. Both are known, routed (R42) and non-blocking; the Signal returns to 🟢 with that sync. The tracked-files red (Finding #4) is working-tree state at the end of a run, not a registry-health matter, and is not scored.
+
+## Session 14 — 2026-09-28
+
+**Scope:** Plan completion (Phase 33 — Significance Read-Failure Fix & Confirmed Self-Containment Cleanup; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from three Session 13 recommendations, R44/R41/R42)
+**Specs in registry:** 36 (all Stable, unchanged count). Four amended via the `/magic.spec engine` pass that preceded this planning invocation: `l2-engine-finalization.md` 3.2.2 → 3.3.0 (new §9), `l2-engine-automation.md` 1.16.0 → 1.17.0, `l2-test-suite.md` 1.18.0 → 1.19.0, `l2-session-checkpoint.md` 1.0.1 → 1.0.2. A fifth, `l1-sdd-reference-containment.md` 1.5.0 → 1.6.0 (RC-8 widened — this repository's own `.magic/` is no longer exempt from reference containment), was amended in the direct-edit pass that preceded even that spec pass — the source of this session's own Track B.
+**Tasks total:** 5 this cycle (Done: 5, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 24 (unchanged)
+**Graph:** 211 → 212 nodes (+1, the phase node), 452 → 453 edges (+1); engine-workspace coverage held; 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.106 → 2.1.107, one C14 at the closing task, no `--workflow` tag (three scripts changed, no workflow-doc body) |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks |
+| **Rework Rate** | 0 corrections / 5 tasks | Manual | Both tracks landed as planned; the only correction (Finding #1) was made at spec time, before any task existed to redo |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **R44's own framing ("absent-with-a-finding") would have reintroduced the exact conflation it exists to prevent.** Session 13 recommended treating an unreadable file as *absent*; the spec pass gave it a distinct sentinel instead (`'UNREADABLE'`, never equal to `null`) after tracing that `null` already carries a specific, depended-on meaning — "does not exist" — so folding a read failure into it would make a broken file indistinguishable from a deleted one. Refined before any code was written, at `/magic.spec`, not discovered mid-implementation. | `l2-engine-finalization.md` §9.2; `snapshotHashes()`'s three-way return (`hash \| null \| 'UNREADABLE'`) |
+| 2 | **The self-containment cleanup's scope was bounded by reading, not by grepping.** A raw pattern scan across `.magic/scripts/` flagged 16 files; reading each before committing to a task found that most implement the task-ID/phase-file/spec-name recognition logic itself — mention, not use (SH-1) — rather than citing a spec as provenance. Only `update-state.js`'s nine citations were confirmed leaks at plan time, and the task was scoped to exactly that file; the remainder was left named, not swept blind, for `/magic.analyze`'s cognitive scan to triage. | Phase 33 Track B task Notes; grep of `l1-\|l2-` across `.magic/scripts/` before vs. after |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R46 | #2 | Run `/magic.analyze`'s `SDD_REFERENCE_LEAK` scan against `.magic/scripts/` now that engine directories are in scope in this repository, to inventory the ~15 files this phase deliberately left untriaged (most likely mention-not-use, but unconfirmed) | `.magic/analyze.md` step 6, next `/magic.analyze` pass |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 36 | 36 | 0 |
+| Specs with version churn this session | 8 | 5 | -3 |
+| Script harness tests | 138 | 140 | +2 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 211 / 452 | 212 / 453 | +1 / +1 |
+| Signal | 🟡 | 🟢 | ↑ |
+
+> Signal returns to 🟢: Session 13's two stale-reference items (R41, R42) that held it at 🟡 are both closed this session, alongside R44. 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, engine-workspace coverage unchanged, 0 shadow logic. R43 and R45 remain Parked (no demand signal); the new R46 is advisory, not a registry defect.
+
+## Session 15 — 2026-09-30
+
+**Scope:** Plan completion (Phase 34 — Rule Admission Gate Deployment; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.spec amend` → `/magic.task` → `/magic.run` from an owner directive on rule rot in consumer projects)
+**Specs in registry:** 37 (all Stable; +1: [l1-rule-admission-gate.md](specifications/l1-rule-admission-gate.md), authored this session and amended twice before execution — 1.0.0 → 1.1.1). Two L2 specs amended alongside: `l2-role-cards-governance.md` 1.2.1 → 1.3.0, `l2-role-integration.md` 2.1.0 → 2.2.0, `l2-test-suite.md` 1.19.0 → 1.20.0.
+**Tasks total:** 17 this cycle (Done: 17, Blocked: 0, Cancelled: 0) — one more than first planned: T-34B01 was split at re-baseline.
+**RULES.md §7 entries:** 25 (the Session 14 count of 24 predates C28; unchanged by this phase — the gate is deliberately not a convention)
+**Graph:** 211 → 216 nodes (+5: the spec, its file, C28 and two phases), 452 → 467 edges (+15); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase / session, 1 engine-version bump | Manual | Engine 2.1.110 → 2.1.111, one C14 at the closing task tagged with four workflow bodies; skills regenerated for two wrappers |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 140/140 before and after C14 |
+| **Rework Rate** | 0 corrections / 17 tasks after start | Manual | The corrections happened before any task started: two spec amendments and one task split at re-baseline |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A specification written before reading the files it targets was wrong in three ways, all found by the planning pass.** `rule.md` wrote before its own "pre-commitment" reviews (so a decline could not prevent a write); the outcome for a specification-placed rule run from `/magic.rule` was undefined; and the shipped text would have been labels (RA-n) meaning nothing to a consumer without the specification. The gate that regulates rules had the same defect it treats: rules written from a hypothesis rather than an observed occurrence. | Spec history 1.1.0; `rule.md` Operational Logic order; Admission Tests section |
+| 2 | **Editing a hardlinked wrapper with an in-place write keeps the twin linked.** `[C-001]` records that the Write and Edit tools replace the inode; a `node` `fs.writeFileSync` on the existing path did not — `fsutil` listed two links per wrapper after the edit and `validate-hardlinks.js` passed, so the recreate-the-link step was not needed. | `workflows/magic.spec.md`, `workflows/magic.rule.md` link counts |
+| 3 | **The phase's only executable validation is cognitive, and the author evaluated it.** The script harness pins none of the changed prose (140/140 both sides of C14), so T225–T230 are the whole safety net, and they were walked against the final text by the same agent that wrote them. | `dev/tests/suite.md` T225–T230; harness run |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R47 | #2 | Verify the in-place-write behavior on a second machine/editor, then record it in the `[C-001]` constraint as the safe way to edit a linked file | `.design/engine/STATE.md` Blocking Constraints |
+| R48 | #3 | Run `/magic.dev.simulate` over T225–T230 in a fresh session so the scenarios are evaluated by an agent that did not write them | `dev/tests/suite.md` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 36 | 37 | +1 |
+| Specs with version churn this session | 5 | 5 | 0 |
+| Script harness tests | 140 | 140 | 0 |
+| Cognitive scenarios (last ID) | T224 | T230 | +6 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 211 / 452 | 216 / 467 | +5 / +15 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 0 shadow logic. R47 and R48 are advisory, not registry defects; the two parked items recorded this session (T4 capture invisible to the spec finalize whitelist; spec-file citations in workflow bodies) are unchanged.
+
+## Session 16 — 2026-09-30
+
+**Scope:** Plan completion (Phase 35 — Nothing-Pending Next Action; single phase, dispatched via `/magic.spec` → `/magic.task` → `/magic.run` from an owner request in the same session as Session 15)
+**Specs in registry:** 37 (all Stable, unchanged count). Four amended by the `/magic.spec` pass: `l1-session-continuity.md` 2.3.0 → 2.4.0, `l2-engine-finalization.md` 3.3.0 → 3.4.0, `l2-status-command.md` 1.2.0 → 1.3.0, `l2-test-suite.md` 1.20.0 → 1.21.0.
+**Tasks total:** 8 this cycle (Done: 8, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 216 → 217 nodes (+1, the phase), 467 → 468 edges (+1); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.111 → 2.1.112, one C14 tagged `magic.status` |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; one transient red in the first full harness run (below), green on two reruns and after C14 |
+| **Rework Rate** | 0 corrections / 8 tasks | Manual | Two fixture-script defects fixed in scratch tooling, none in shipped files |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A plan-complete recommendation is itself a signal that needs a predicate.** The line said "run /magic.task" whenever no task was open, without asking whether the run could find anything; the answer was already computed, separately, by three Pre-flight checks. Extracting them into one module and refusing to conclude "nothing" from a check that did not run (evaluated-flags) is what made a silent line safe. | `lib/pending-work.js`; `planCompleteNextAction()` |
+| 2 | **A briefing that replays a stored value verbatim silently defeats a change to that value.** `status.md` recommended `Next Action` "verbatim" and reformatted it as a command line; the new command-free value would have been turned back into a recommendation. Caught by the spec-time Post-Update Review, not in execution. | `status.md` Step 7; T231 |
+| 3 | **One transient red on `validate-hardlinks.js covers workflows/…` in the first full run of the phase** (124 ms), green alone, on two reruns and after C14; not reproduced, cause unidentified. The test builds a hardlink fixture and races nothing this phase touched, but the run followed a `git add`. | harness runs, T-35T03 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R49 | #3 | If the hardlink test goes red again, capture its assertion message on the first failure (the run above discarded it) before rerunning | `dev/tests/engine.js` hardlink case |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 140 | 141 | +1 |
+| Cognitive scenarios (last ID) | T230 | T231 | +1 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 216 / 467 | 217 / 468 | +1 / +1 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 missing `Implements`, 0 shadow logic. R47, R48 (Session 15) remain open and advisory; R49 is advisory.
+
+## Session 17 — 2026-09-30
+
+**Scope:** Plan completion (Phase 36 — Backlog Sweep; single phase from the owner's request to work the whole Backlog in order)
+**Specs in registry:** 37 (all Stable, no spec changed this session).
+**Tasks total:** 10 this cycle (Done: 10, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 217 → 218 nodes (+1, the phase), 468 → 469 edges (+1); 0 orphaned files, 0 missing `Implements`.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.112 → 2.1.113, one C14 tagged with three workflow bodies |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 143/143 before and after C14 |
+| **Rework Rate** | 1 correction / 10 tasks | Manual | One phrase duplicated by a mechanical rewrite in a workflow body (T-36A01), caught by the task's own re-read |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **The parked containment item overstated the problem in one direction and understated it in another.** The feared class (task IDs and phase designators in shipped text) was all format documentation; the real class — 36 registered-spec filenames in 16 files — was mechanical to fix and to pin, and the release notes carried 46 more references the Backlog item never mentioned because it was scoped to `.magic/`. | plan-time scan; T-36A05 |
+| 2 | **Two "revisit on evidence" items had never been given a way to get evidence.** Their audits took minutes: `Status` has one reproducible stale transition and a template vocabulary conflict; the pause snapshot has zero uses in 7 projects. Both parked notes were true only because nobody had looked. | T-36C01, T-36C02 |
+| 3 | **A batch of tool calls failed on an unrelated infrastructure fault mid-phase** (the auto-mode classifier returned no verdict for every mutating call for several attempts, then recovered); nothing was retried blindly and no state was half-written — the workbook status and the files agreed after recovery, and the run continued from the recorded `In Progress` entry. | T-36B01 start/close |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R50 | #2 | Open the two audited items for `/magic.spec`: per-task update clearing a stale `Blocked` (and the template's `Complete`), and retirement of the pause snapshot with the 0-of-7 count as the evidence | PLAN.md Backlog |
+| R51 | #1 | Consider a docs-level guard for user-facing files (README, CHANGELOG): the same registered-name scan, exempting only content-documenting pages | `dev/tests/engine.js` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 141 | 143 | +2 |
+| Registered-spec citations in shipped text | 36 | 0 | -36 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 217 / 468 | 218 / 469 | +1 / +1 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. R47–R49 (earlier this session) remain advisory; R50 is the routing of this phase's own findings.
+
+## Session 18 — 2026-09-30
+
+**Scope:** Plan completion (Phase 37 — Backlog Deployment; the four design-debt items decided by the preceding `/magic.spec` pass)
+**Specs in registry:** 37 (all Stable, no spec changed this session).
+**Tasks total:** 15 this cycle (Done: 15, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 217 nodes, 467 edges; 0 orphaned files, 0 missing `Implements`; the graph tool lists one rule node (C28) with no spec referencing it — a constitution node, not a file, present since the rule was added.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.113 → 2.1.114, one C14 tagged with three workflow bodies |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 146/146 before and after C14; two intentional red windows (B02, B03) closed by B06 as planned |
+| **Rework Rate** | 2 corrections / 15 tasks | Manual | A regex escaped away inside a generated template literal (caught by the first probe); the driver's first "a case ran" test, fixed after its self-test proved it wrong |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A refactor that must not change behavior was proved by differential, not only by the suite.** The old and new `computeNextAction` were run over both real workspaces and four workflows: 0 diffs, on top of 143/143. | T-37A01 |
+| 2 | **The driver's first idea of "the case ran" was wrong, and only its own self-test showed it.** For a pattern matching nothing, `node --test` still reports one passing "test" — the file — so counting tests read an empty match as a pass. Deciding from named results fixed it. Controlling the controller (eight mutations of the driver, all caught) is what surfaced this. | T-37D02 |
+| 3 | **Writing the case for a whitelist change found a defect the change would have introduced.** A rules-only spec finalize would have been worded "Updated spec registry" in the release notes. | T-37C02 |
+| 4 | **A stray `.design/main/` workspace appeared in the working tree** (template placeholders, a next action naming a workspace this repository does not have). It was traced to an earlier scratch audit that ran this repository's finalize script against a throwaway fixture: the script binds to its own repository root by location, not by working directory, so the fixture's workspace name was written into the real `.design/`. Removed; the executor rejects an unregistered workspace, the harness does not recreate it (146/146 clean). | user report; executor probe |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R52 | #4 | Scratch fixtures that exercise engine scripts must run a **copy** of the engine inside the fixture, never the repository's own scripts with a different working directory | audit practice |
+| R53 | #4 | Consider a direct-invocation guard in `finalize.js` and `update-state.js` matching the executor's: refuse a workspace name absent from `workspace.json` instead of creating its directory | `.magic/scripts` (advisory) |
+| R54 | #2 | Keep the by-hand mutation lists (Phases 33–37) as JSON next to the cases they control, so the driver can re-run them at any later change | `dev/tests` |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 143 | 146 | +3 |
+| Shipped files naming the pause snapshot | 4 workflow bodies, 3 docs, 2 scripts | 0 | removed |
+| Blocked task rate | 0% | 0% | 0 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. R47–R49 (earlier) remain advisory; R52–R54 are this phase's own findings.
+
+## Session 19 — 2026-10-05
+
+**Scope:** Plan completion (Phase 38 — Skill-Wrapper Contract & Body Navigation Deployment; the three specification amendments of the `/magic.spec amend` pass that immediately preceded planning)
+**Specs in registry:** 37 (all Stable; none changed this session — the three amended by the preceding pass are skill wrappers 1.6.0, workflow wrappers 1.5.0 and test suite 1.25.0).
+**Tasks total:** 12 this cycle (Done: 12, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 221 nodes, 479 edges (against the rolling baseline: 218 → 221, 469 → 479); 0 orphaned files, 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 1 engine-version bump | Manual | Engine 2.1.133 → 2.1.134, one C14 covering the `.magic/` and `workflows/` edits; fourteen wrappers regenerated across both outputs, none refused |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 167 at phase start, 174 after the bump, 174/174 on the final run |
+| **Rework Rate** | 5 corrections / 12 tasks | Manual | U+FFFD characters pasted into the harness from truncated tool output; a third placeholder-description fixture that went red once the generator refused it; a mutation entry whose replacement broke the file's syntax (refused by the driver); a markdownlint MD036 on the contents label; the whole-module pointer's side effect, found by QA |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A fixed list of sites undercounts; a scan over every site does not.** The spec and the plan named "the two existing generator fixtures"; a third case with placeholder descriptions (`sync.js propagation`) existed and went red the moment the generator refused it. The pointer rule likewise missed three sibling sites (`init.md`, `retrospective.md`, `status.md`). Both were found by running a check over every site, not by reading the list. | T-38A03, T-38A05 (`l2-test-suite.md` Coverage), T-38B02 |
+| 2 | **"Apply the module as a whole" was a behavior change in disguise.** Rewriting the pointers that named only part of `context.md` would have pulled Workspace Fit Validation — a section only `spec.md` calls, from its own step — into run, task, analyze and status. QA caught it; the section now states its own applicability and the contents list marks it. A whole-module pointer is safe only when each section says whom it applies to. | T-38B02 (QA) |
+| 3 | **A refusal that stops the C14 flow midway is worse than the defect it refuses.** Review of the amendment found that a generator exiting on the first bad wrapper would leave the engine version bumped and the manifest stale. The deployed flow reports the refusal, finishes the snapshot and the manifest, then fails; a probe on throwaway copies showed output and exit code identical to the previous script when nothing is refused. | T-38A04 |
+| 4 | **The phase's headline control — a fresh, lower-tier reader — could not be run by the phase that introduced it.** Spawning an agent needs an explicit request in the session, so T260–T263 were resolved by the author reading its own text (the Context Bleed note applies in full). The measurable half holds: the first 100 lines of each of the six bodies name every `##` section (12/12, 7/7, 6/6, 6/6, 5/5, 8/8). The reader half is unverified; the two spots a weaker reader could misread are the anaphoric "the plan" (task wrapper) and "the task list" (run wrapper). | T-38T02 |
+| 5 | **Two self-inflicted hazards were caught by a check, not by care.** Banner lines copied from truncated tool output carried U+FFFD into the harness (found by a scan of the added lines). Running `update-state.js --help` directly wrote a stray `.design/STATE.md` — the script did not reject the unsupported flag; this is the class R53 describes. The file was removed and the incident reported in the session. | session; harness diff scan |
+| 6 | **This file's own bookkeeping had drifted, and the graph baseline lagged a cycle.** The header read 14 sessions and 26 snapshots where the file held 18 and 31 (corrected now). The graph diff listed Phase 37 as *added* and Phase 36 as `Todo → Done (Archived)`, so the previous cycle's snapshot was never rolled into the baseline and this diff spans two phases. | file header; `diff-spec-graph` output |
+| 7 | **The 42 mutation controls pass, and the lists that produced them live outside the repository.** A05 24, B03 10 plus 2 for the fence handling, C01 6: 42 CAUGHT, 0 SURVIVED, 0 REFUSED, the 39 modified files byte-identical afterwards. One entry was refused mid-authoring because its replacement broke the file's syntax — the driver rejecting an invalid mutation instead of counting it caught. The lists are scratch files, so R54 now covers Phases 33–38 and is still open. | T-38T01 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R55 | #4 | Re-run T260–T263 in a fresh session on the lowest-capability tier the host offers, with the second-reader noise filter; patch "the plan" / "the task list" only if a reader misses the antecedent | `dev/tests/suite.md` (cognitive) |
+| R56 | #5 | R53 recurred: promote it from advisory — `update-state.js` and `finalize.js` should reject an unknown flag and an unregistered workspace instead of creating files | `.magic/scripts` |
+| R57 | #6 | Derive this file's header counters (`Full Sessions`, `Snapshots`, `Last Full Run`) from its own content when appending, instead of editing them by hand | `.magic/retrospective.md` (advisory) |
+| R58 | #1 | Where the test-suite spec says "the two existing generator fixtures", state the rule (every generator fixture carries a compliant description) instead of a count; three existed | `l2-test-suite.md` wording |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 146 | 174 | +28 (+21 between sessions, +7 this phase) |
+| Cognitive suite cases | T259 | T263 | +4 |
+| Wrappers checked by the generator | 0 (no validation) | 14, 0 refused | +14 |
+| Engine bodies over 100 lines with a contents list | 0 of 6 | 6 of 6 | +6 |
+| Shipped pointers to `context.md` pinned as whole-module | 0 of 10 | 10 of 10 | +10 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 217 / 467 (Session 18) | 221 / 479 | +4 / +12 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are one class — a check that ran over every site found what a list of sites missed (#1, #2, #5, #7) — not a defect recurring in one specification, and the extra sessions this week follow from every phase closing the plan, not from compensating for an unfixed root cause. R47–R49 (earlier) remain advisory; R55 is the one open verification this phase leaves.
+
+## Session 20 — 2026-10-06
+
+**Scope:** Plan completion (Phase 39 — Registry Text Contract & Question Routing Deployment; the three specification amendments of the two `/magic.spec` passes of the same day, the second after a consumer project's registries were measured)
+**Specs in registry:** 37 (all Stable; none changed this session — the three amended by the preceding passes are engine templates 1.3.0, spec graph memory 1.2.0 and test suite 1.27.0).
+**Tasks total:** 13 this cycle (Done: 13, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 225 nodes, 483 edges (against the rolling baseline: 221 → 225, 479 → 483); 0 orphaned files, 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 2 engine-version bumps | Manual | Engine 2.1.134 → 2.1.135 (one C14 for every `.magic/` edit) → 2.1.136 (a wording fix found by the cognitive run); the plan had said one |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 174 → 178, 178/178 before and after each bump; 20 mutation controls, all caught |
+| **Rework Rate** | 2 corrections / 13 tasks | Manual | The Sync clause of `spec.md` shipped without "never append" (found by T-39T02, second C14); two cognitive cases asked for behavior no shipped sentence states (corrected in the case text) |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **Reading the shipped text, not the specification, found what the harness pin would have passed.** The specification's rule said a cell is "replaced, never appended"; the shipped Sync step said only "change … only when", with the two-sentence form living in another section. The pin over the Sync step was green without the missing clause. A literal reader of the Updating section could append a clause. Fixed by eight words and one more pinned statement. | T-39T02 (T264 B), T-39B01 |
+| 2 | **A cognitive case written from the specification over-specifies the shipped text.** Three Expected lines named behaviors no shipped sentence asks for (a plan's execution outcome, "says so when the search finds nothing", a fallback to registry headers where the rule runs `build-spec-graph`). A case is an assertion about the text that ships; running it against that text, not against the intent, is what trimmed them. | T-39T02 (T265 B, T266 A and C) |
+| 3 | **The one-time rewrite met its form at scale and moved nothing else.** 36 of 37 cells rewritten (median 387 → 211 characters, maximum 1,448 → 272), every other cell of every row byte-identical, the graph the same with the old registry swapped in and with the new one; the registry 63.9 → 56.0 KB, the ledger 39.6 → 12.8 KB (the overview 27,260 → 449 characters). | T-39D02, T-39D03, T-39D04, T-39D01 |
+| 4 | **Two screens for information loss disagreed, and the weaker was the comfortable one.** All 61 checkable claims of the old overview had a home (engine ranges, harness counts, phase completions, sync dates, sessions), but only 38% of its prose had a near-verbatim one; the rest was the plan's own overview reworded, confirmed by hand on seven distinctive facts. Either screen alone would have misled — one into false comfort, the other into re-homing 54 sentences. | T-39D01 |
+| 5 | **A Canonical References cell that lists several paths becomes one bogus file node.** The row added to the test-suite specification names six files in one cell; the graph diff shows a single added node whose name is the whole list (the `.magic/*.md` node of the previous phase is the same class). Recorded as a diagnostic. | `diff-spec-graph`; `CANONICAL_REF_MULTI_PATH` |
+| 6 | **A hardlink pair broke on schedule and was repaired on schedule.** The twin of `rules/magic.md` held the old bytes after the edit (hashes differed) and was recreated as a link; the plan had named it **[C-001]** and the verification, so nothing was found late. One slip of mine: T-39T02 went `Todo` → `Done` in one write, without its `In Progress` record. | T-39A01; T-39T02 |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R59 | #1 | Pin each clause a specification states as a separate rule word ("replaced", "never appended"), not the section it sits in, and restate an amendment-time rule in the update step itself rather than only in the creation step | `dev/tests/engine.js` practice |
+| R60 | #5 | Give a Canonical References row one path, or let the extractor split or ignore a cell that is not a single path | test-suite specification wording; `.magic/scripts/build-spec-graph.js` (advisory) |
+| R61 | #3 | The release condition of the Backlog weight item is met — the contract is deployed and one registry has been rewritten: a compliant registry is 56.0 KB for 37 specifications and the ledger 12.8 KB, while `PLAN.md` (131 KB, its overview 27.6 KB of appended narrative) is the remaining outlier and lies outside the contract; calibrate the thresholds on these numbers | PLAN.md Backlog |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 174 | 178 | +4 |
+| Cognitive suite cases | T263 | T266 | +3 |
+| Registry size, engine workspace | 63.9 KB | 56.0 KB | -7.9 KB |
+| Registry description median / maximum, characters | 387 / 1,448 | 211 / 272 | -176 / -1,176 |
+| Task ledger size | 39.6 KB | 12.8 KB | -26.8 KB |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 221 / 479 | 225 / 483 | +4 / +4 |
+| Signal | 🟢 | 🟢 | → |
+
+> Signal stays 🟢: 0 Blocked tasks, 0 orphaned files, 0 shadow logic. Through the spec-quality lens the findings are again one class — a check that reads the text that ships found what the specification's intent hid (#1, #2, #4) — and the second C14 was the cost of that check working, not of a recurring defect. R47–R49 remain advisory; R55 is still the open verification, now covering the cases T260–T266 (the Phase 39 run was also an author's own reading).
+
+## Session 21 — 2026-10-12
+
+**Scope:** Plan completion (Phase 40 — Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment; the three specification amendments of 2026-10-11, registry 1.40.0 → 1.43.0)
+**Specs in registry:** 37 (all Stable; none changed this session — the six amended by the preceding passes are engine automation 1.21.0, engine finalization 3.6.0, scan input hygiene 1.3.0, reference containment 1.7.0, test suite 1.30.0 and rule admission gate 1.1.3, the last with nothing to deploy).
+**Tasks total:** 18 this cycle (Done: 18, Blocked: 0, Cancelled: 0)
+**RULES.md §7 entries:** 25 (unchanged)
+**Graph:** 230 nodes, 490 edges (against the figures of Session 20: 225 → 230, 483 → 490; no `graph-before.json` existed, so no `diff-spec-graph` run); 0 orphaned conventions (25 of 25 enforced), coverage 14 of 14 scoped files.
+
+### 🚀 DORA Metrics (L2 Implementation)
+
+| Metric | Value | Source | Details |
+| --- | --- | --- | --- |
+| **Deployment Frequency** | 1 phase, 2 engine-version bumps | Manual | Engine 2.1.136 → 2.1.137 (one C14 for nine `.magic/` edits) → 2.1.138 (a wording fix found by the cognitive run); the plan had named both |
+| **Change Failure Rate** | 0% | Manual | 0 Blocked tasks; harness 178 → 197, 197/197 before and after each bump; 70 mutation entries, all caught |
+| **Rework Rate** | 3 corrections / 18 tasks | Manual | A fixture that let the substring-search mutant survive (T-40A04); a symlink case that passed against the defect (T-40B05); an ambiguous shipped sentence found by the cognitive run (T-40T02, second C14) |
+
+### 🔍 Findings
+
+| # | Finding | Evidence |
+| --- | --- | --- |
+| 1 | **A green first run proved nothing; the mutation that restores the defect did.** The six setting-parity cases, the standing check included, passed on the shipped tree at once. The 19-entry mutation list then showed one survivor — the substring-search mutant the specification names — because the fixture wrote the unread key as `beta.x` while a read is detected as `.beta`: the mention did not look like a read. Writing it as `data.beta.x` in the comment and the messages caught it. | T-40A04 |
+| 2 | **A negative control has to make the wrong implementation do something observable.** The symlinked `pre-commit` case passed against an installer that followed links, because its target carried no marker and the installer refused it for that reason. With the marker in the target, a followed link is written through and the case turns red. | T-40B05 (mutation "a symbolic-link pre-commit is followed") |
+| 3 | **Reading the shipped text found what the pin would have passed — again.** The self-containment test was named without saying which answer is a use and which an illustration, and the next bullet maps the same answer ("reads fine") to "skip" for prose phase designators; a literal reader could skip a fenced leak example, against "never silently skipped". Fixed in the sentence, pinned with two mutations, one more C14 — the cost Phase 39's session recorded and this plan predicted. | T-40T02 (T267 C), T-40D02 |
+| 4 | **The hook guard's doubt rule needed a runtime probe, not a shell test.** `test -d` is false for a missing path and for one that cannot be read alike; the guard asks `node` (already required by the check) and treats only ENOENT as absent. The uninspectable-directory branch has no case, because it cannot be produced portably. Unverified: its behavior under `EACCES`. | T-40B02 |
+| 5 | **The planning predictions held.** The probe found exactly two first findings for the parity check; the existing installer case, which builds `.git/hooks` with `mkdir` only, stayed green because the `core.hooksPath` probe fails open; **[C-001]** fired once and was repaired with the verification the plan had named; `check-bloat` output on this repository is byte-identical to before. | T-40A04, T-40B01, T-40B03, T-40E01 |
+| 6 | **The skill generator and the committed wrappers differ by the final newline.** After each C14, nine wrappers — two of them dev-only wrappers this phase never touched — differed from the committed ones by one trailing newline (LF count one lower per file) and were restored by hand twice. Unverified: whether earlier phases left the same noise. | `git diff` of `skills/` after T-40T01 |
+| 7 | **Three specification statements now describe the undeployed state.** The bloat section's "specified, not built", the enforcement-surface row of the scan-hygiene specification that reads "Non-compliant" for the containment scan, and the test-suite sentence that leaves the cognitive case's IDs "assigned when it lands" (T267). Recorded as `SPEC_DEPLOYMENT_STATE_STALE`; specification edits are outside `/magic.run`. | T-40T01 (7) |
+
+### 🛠 Recommendations
+
+| # | From | Recommendation | Target |
+| --- | --- | --- | --- |
+| R62 | #6 | End a generated skill wrapper with a single newline, so a C14 run leaves no diff against the committed wrappers | `dev/scripts/sync-skills.js` (advisory) |
+| R63 | #7 | Patch the three stale statements: mark the bloat section deployed, the containment row compliant, and name T267 | `l2-engine-automation.md`, `l1-scan-input-hygiene.md`, `l2-test-suite.md` |
+| R64 | #1 | State in the parity helper's comment what it cannot see by construction — a key read by destructuring, a regex literal that holds a quote — or extend `accessedNames`; today a green run on the shipped tree is the only evidence the tokenizer handles every script | `dev/tests/engine.js` (advisory) |
+| R65 | #3 | R55 stays open and now covers T260–T267, every one read by the author of the text: run one on the lowest tier the host offers | verification (open) |
+
+### 📈 Trends (from Snapshots)
+
+| Metric | Previous Snapshot | Current | Δ |
+| --- | --- | --- | --- |
+| Specs in registry | 37 | 37 | 0 |
+| Script harness tests | 178 | 197 | +19 |
+| Cognitive suite cases | T266 | T267 | +1 |
+| Mutation entries run in the phase | 20 | 70 | +50 |
+| Blocked task rate | 0% | 0% | 0 |
+| Graph nodes / edges | 225 / 483 | 230 / 490 | +5 / +7 |
+| Engine version | 2.1.136 | 2.1.138 | +2 |
+| Signal | 🟢 | 🟡 | ↓ |
+
+> Signal moves to 🟡: 0 Blocked tasks, 0 orphans, 0 shadow logic, but three non-critical stale references in the specification layer (finding 7) — one above the Yellow band's two, with no Red condition holding. They close with one `/magic.spec` patch pass (R63). Through the spec-quality lens the findings are one class again — a check that reads what ships, or a mutation that restores a defect, finds what the intent and a green run hide (#1–#3) — and the second C14 was the cost of that check working. R47–R49 remain advisory.

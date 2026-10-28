@@ -1,26 +1,59 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 1.4.0
+**Version:** 2.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
 
 ## Overview
 
-Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file owns the `update-state.js` correctness surface, its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
+Defect record and required-fix contract for every way the finalize pipeline's SC-2 state-update step has made `STATE.md` **less** accurate than it was before the update meant to refresh it. Extracted from [l2-engine-finalization.md](l2-engine-finalization.md) §8/§10 at v2.0.0, when that spec crossed the `SPEC_BLOAT` threshold; this file is the register of record for the `STATE.md` correctness surface and owns the defects in what **calls** the state writer, the writer's own defects living in its two children ([l2-update-state-structure.md](l2-update-state-structure.md), [l2-update-state-values.md](l2-update-state-values.md)); its sibling [l2-finalize-output-contract.md](l2-finalize-output-contract.md) owns what the pipeline emits, and the parent retains the pipeline contract itself.
 
-Twelve defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. The eleventh (§8.5) is §8's own fix reopened in its sibling call site (`addConstraint`), never audited when §8 landed — found and fixed in the same cycle, reproduced directly against engine 2.1.82. The twelfth (§11) is a workspace-directory resolution defect in `finalize.js` itself rather than in `update-state.js`'s section logic — found via a field report against engine 2.1.80 describing two outwardly different symptoms across a two-workspace project, reproduced directly against a synthetic two-workspace fixture, and fixed in the same cycle per the §8/§6.1 retrospec precedent. All twelve are now implemented.
+Twenty defects, one root symptom. Six were found across field reports against engine 2.1.58-2.1.62 and are implemented; the seventh (§8) was found and fixed out of band at 2.1.67 and is recorded here retroactively. The eighth (§9) and ninth (§10) were found via a single field report against engine 2.1.72, reproduced directly against that version, and implemented within the same planning-and-execution cycle that closed the report. The tenth (§6.1) is the §6 replacement-string defect reopened in the scalar-field loop that §6's own sweep wrongly cleared — found via a field report against engine 2.1.76, reproduced directly, and fixed in the same cycle, retrospec'd here per the §8 precedent. The eleventh (§8.5) is §8's own fix reopened in its sibling call site (`addConstraint`), never audited when §8 landed — found and fixed in the same cycle, reproduced directly against engine 2.1.82. The twelfth (§11) is a workspace-directory resolution defect in `finalize.js` itself rather than in `update-state.js`'s section logic — found via a field report against engine 2.1.80 describing two outwardly different symptoms across a two-workspace project, reproduced directly against a synthetic two-workspace fixture, and fixed in the same cycle per the §8/§6.1 retrospec precedent. The thirteenth (§12) is a field report against engine 2.1.93 describing existing multi-line `## Recent Decisions` entries silently truncated to their first line whenever the section's capped window was rebuilt — reproduced directly, and fixed in the same cycle per the §8/§6.1/§11 retrospec precedent. The fourteenth (§12.1) is §12's own fix reopened in the scalar-field loop (§6.1), which §12 never audited — a wrapped `- **Task:**` / `- **Next Action:**` value had only its first line replaced, leaving the old continuation lines behind as orphaned prose; found via a field report against engine 2.1.95 that blamed the line-cap guard, which investigation cleared. Reproduced directly and against the reporter's own committed `STATE.md` history, and fixed in the same cycle per the §8.5/§11/§12 retrospec precedent. The fifteenth (§13) is a field report against engine 2.1.100 describing `update-state --decision` printing `STATE.md updated` while writing nothing when the file has no `## Recent Decisions` heading — reproduced directly, with its sibling call site (`addConstraint`) dropping its write the same way and the substring search both rely on corrupting the file when the heading's text is merely quoted elsewhere; specified before it was fixed, and fixed in the same cycle. The sixteenth (§13.1) and seventeenth (§13.2) are §13's own fix reopened in the other places `updateState()` locates what it writes — the scalar-field and `## Progress` writers, and the line-cap guard — found by auditing the sites §13 left and recorded there as Known Gaps; reproduced directly against engine 2.1.101, specified first, and fixed in a follow-up cycle per the §8.5/§12.1 precedent. The eighteenth (§16) is the checkpoint's own `Status` field going stale — a phase left `Blocked` after its blocker cleared kept saying so while `Next Action` said to continue — reproduced against engine 2.1.112 and fixed by reconciling at the same single exit. The nineteenth (§17) is a defect in how the ledger itself is read rather than written: a blocked task spelled `- [!]` matched neither checklist glyph, so a phase holding only such lines read as finished and `Next Action` recommended continuing it — a field report against engine 2.1.138, reproduced directly; the audit of the other readers of that line found two more (archival and the progress counter), fixed in the same cycle. The twentieth (§18) is the creation of the file itself: `update-state` copied the template with every placeholder in place, so a workspace's first `STATE.md` read `{workspace-name}` and `[{T-ID}]` — a field report against engine 2.1.139, reproduced directly and filed with the writer's other creation defects. All twenty are now implemented.
+
+**Decomposed at 2.0.0 (2026-09-20).** At 552 lines against the 500-line `SPEC_DECOMPOSE` threshold this register had become what its parent was when the parent was decomposed: accretion across successive cycles and across concerns. It splits along the seam its defects already show. What **calls** the state writer stays here — §2, §4, §9 and §11: `finalize.js`'s Next Action synthesis and workspace resolution, `run.md`'s per-task call. The `update-state.js` writer's own defects moved verbatim to [l2-update-state-structure.md](l2-update-state-structure.md) (locating, grouping, creating: §8, §8.5, §12, §12.1, §13, §13.1, §13.2) and [l2-update-state-values.md](l2-update-state-values.md) (progress, replacement-string safety, the line cap: §3, §5, §6, §6.1, §7, §10). Defect numbers are permanent — see the Defect Register — so every citation of `§N` in the engine, the harness and other specifications still resolves.
 
 ## Related Specifications
 
 - [l1-session-continuity.md](l1-session-continuity.md) — Parent concept: SC-1 live-memory contract, SC-1.1/SC-1.2, SC-2/SC-2.1/SC-2.2/SC-2.3.
 - [l2-engine-finalization.md](l2-engine-finalization.md) — Parent spec: pipeline contract, module inventory, §5 session-continuity integration that invokes this step.
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Sibling: the emitted-artifact surface (stdout listings, CHANGELOG bullets; commit-message composition retired 2026-08-27).
+- [l2-update-state-structure.md](l2-update-state-structure.md) — Child: how `update-state.js` locates, groups and creates what it writes (§8, §8.5, §12, §12.1, §13, §13.1, §13.2, §18).
+- [l2-update-state-values.md](l2-update-state-values.md) — Child: what `update-state.js` computes and bounds — the progress recompute, replacement-string safety, the line cap (§3, §5, §6, §6.1, §7, §10).
 - [l2-test-suite.md](l2-test-suite.md) — Carries the finalize-pipeline regression-coverage mandate these fixes are pinned by.
 
 ## 1. Motivation
 
-`STATE.md` is live memory: SC-1 designates it the authoritative resume point, and SC-4's briefing replays its fields verbatim. An update step that degrades it is therefore worse than no update at all — a stale file is merely old, while a corrupted one actively misdirects the returning session. Every defect below shares that shape, which is why they are recorded together rather than as isolated bugs.
+`STATE.md` is live memory: SC-1 designates it the authoritative resume point, and SC-4's briefing replays its fields verbatim. An update step that degrades it is therefore worse than no update at all — a stale file is merely old, while a corrupted one actively misdirects the returning session. Every defect in this register shares that shape, which is why they are recorded together rather than as isolated bugs.
+
+## Defect Register `[ADDED]`
+
+Every defect this register has recorded, by its permanent number. **A defect keeps its number when its text moves between files:** engine code comments, harness comments and other specifications cite defects as `l2-finalize-state-accuracy.md §N`, and those citations must keep resolving after a decomposition. Numbers are identifiers, not ordinals — a file that holds §8, §12 and §13 is not missing §9–§11, they live where the table below says — and a `§N` inside a section that is not defined in the same file resolves through this table. §14 and §15 were this file's Regression Coverage and Known Gaps before the split and are retired, never reused.
+
+**Filing rule.** A new defect takes the next free number, §19 (`§19.1`, `§19.2` for a reopening in a sibling call site), and is filed with the write surface it concerns: what calls the state writer here; how `update-state.js` locates, groups and creates what it writes in [l2-update-state-structure.md](l2-update-state-structure.md); what it computes and bounds — progress, replacement-string safety, the line cap — in [l2-update-state-values.md](l2-update-state-values.md). A defect that spans surfaces is filed where its Required Fix lands. A file that would cross the 500-line hard threshold is decomposed again along the same seam rather than allowed to accrete.
+
+| § | Defect | Invariant | Lives in |
+| --- | --- | --- | --- |
+| 2 | The Next Action Defect | SC-2.1(a) | this file |
+| 3 | The Progress-Granularity Defect | SC-2.3 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 4 | The Status Field Collision | SC-1.1 | this file |
+| 5 | The Progress Over-Classification Defect | SC-2 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 6 | The Progress Replacement-String Injection Defect | SC-2 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 6.1 | The Same Defect in the Field-Patch Loop | SC-2 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 7 | Line-Cap Guard Defeat by Unbounded Blocking Constraints | SC-1.2 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 8 | The Decision-Section Structural Defect | SC-2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 8.5 | The Same Defect, Unfixed in the Sibling Call Site | SC-2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 9 | The Task-Level Blocking & Assignment Precedence Defect | SC-2.1 | this file |
+| 10 | The Recent-Decisions Archival Promise Defect | SC-1.2 | [l2-update-state-values.md](l2-update-state-values.md) |
+| 11 | The Workspace-Scoping Defect | SC-2 | this file |
+| 12 | The Multi-Line Entry Truncation Defect | SC-1.2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 12.1 | The Same Defect, Unfixed in the Scalar-Field Loop | SC-1.2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 13 | The Missing-Section Silent-Drop Defect | SC-1, SC-2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 13.1 | The Same Defect, Unfixed in the Scalar-Field Loop and the Progress Recompute | SC-2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 13.2 | The Same Defect, Unfixed in the Line-Cap Guard | SC-1.2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
+| 16 | The Stale-Blocked Status Defect | SC-1.4 | this file |
+| 17 | The Blocked-Glyph Defect | SC-2.1(c) | this file |
+| 18 | The Template-Placeholder Defect | SC-1, SC-2 | [l2-update-state-structure.md](l2-update-state-structure.md) |
 
 ## 2. The Next Action Defect (SC-2.1(a))
 
@@ -38,19 +71,6 @@ A phase recorded `status: Blocked` in its own frontmatter still has an open (`- 
 
 **Required fix** (SC-2.1(a)): before returning a phase's open-task match, check that phase's `status:` frontmatter (already available in `content`) and its `TASKS.md` registry row. Either reading `Blocked` MUST redirect the return value away from an execute-style recommendation — e.g. `` `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magic.run ${workspace}` `` — rather than either silently falling through to the next phase (which would recommend a *different*, possibly out-of-order phase) or leaving the field untouched (which would go stale the next time the blocker's own detail changes). The redirected value still passes through the SC-2.2 single-exit screen unchanged.
 
-## 3. The Progress-Granularity Defect (SC-2.3)
-
-`computeProgress()` in `update-state.js` derives the active phase's counter line from an inline heading inside `TASKS.md` itself:
-
-```js
-const section = tasks.match(new RegExp(`### Phase ${n} Checklist\\n([\\s\\S]*?)(?=\\n#|$)`));
-if (section) { /* only path that produces a Phase-N line */ }
-```
-
-That heading exists only in the legacy single-file task layout. The canonical two-level layout (`tasks/phase-{N}.md`, the format this engine's own workspace uses) never contains it, so `section` is always `null` and the phase-line branch never fires — for **every** project on the modern layout, not only Blocked ones. Verified by direct reproduction: a healthy, non-Blocked, 2-of-5-done phase in two-level format loses its `Phase 1: [2/5] …` counter on the very next `autoProgress` recompute, leaving only the aggregate `Overall: [0/1]` (phase-count, not task-count) line. This engine's own `.design/engine/STATE.md` carried an `Overall`-only `## Progress` block for its entire history as a silent instance of the same gap.
-
-**Required fix** (SC-2.3): `computeProgress()`'s phase-line branch must fall back to reading `tasks/{active-phase-file}.md` directly — mirroring the file lookup `synthesizeNextAction()`'s tier-2 already performs — and count `- [x]`/`- [ ]` lines across that file, when no inline `### Phase {N} Checklist` section is found in `TASKS.md`. The two-level lookup is the common case and should not depend on locating an inline heading that layout never has.
-
 ## 4. The Status Field Collision (SC-1.1)
 
 `run.md` §2.5 documented two call sites for `--status=`, and they disagreed about what the flag means:
@@ -66,207 +86,6 @@ update-state --workspace={ws} --phase="{N+1} — {Phase Name}" --status=Active
 `update-state.js` has exactly one `status` handler (`fieldMap.status`, mapped to the top-level `**Status:**` field) — there is no separate task-status field in the `STATE.md` schema for the first call site to target. Verified by direct reproduction against engine 2.1.62: invoking the documented per-task form (`--task="T-1A01 Scaffold the app" --status=Done`) against a `STATE.md` with `**Phase:** 1` / `**Status:** Active` produces `**Status:** Done` — a value the field's own confirmed vocabulary (`Active | Blocked | Paused`, SC-1.1) does not even contain — after exactly one task of a five-task phase completed. `run.md`'s *own* Pause Propagation logic (a different call site, firing only when the whole phase stalls) already scopes `--status=Blocked` correctly to the phase; §2.5's per-task call was the outlier.
 
 **Required fix**: drop `--status={Done|Blocked}` from the per-task update-state invocation entirely. A single task's completion is already tracked authoritatively by its checklist line and Detailed Tracking entry in `tasks/phase-{N}.md` — `STATE.md` needs no redundant, and here actively harmful, copy of it. The per-task call becomes `update-state --workspace={ws} --task="{T-ID} {Title}" --next-action="..."`; the phase-level `Status` field changes only at its own documented transition points (phase start, Pause Propagation, phase completion).
-
-## 5. The Progress Over-Classification Defect (SC-2)
-
-`update-state.js`'s merge-not-clobber classifier (`counterRe`, referenced in [l2-engine-finalization.md](l2-engine-finalization.md) §5.1) was:
-
-```js
-const counterRe = /^[^:\n]+:\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/;
-```
-
-`[^:\n]+` accepts **any** label, but `computeProgress()` only ever emits two: `Overall` and `Phase {N}`. A hand-authored line using the same `{Label}: [n/m]` shape for a different purpose — the field report used `Specification: [3/3] complete`, `Plan: [1/1] complete`, `Implementation: [1/5] in progress — see notes below` — matches `counterRe`, is excluded from `preserved`, and is never regenerated (`computeProgress()` doesn't know those labels), so it is simply gone. Verified by direct reproduction: a `## Progress` fence with those three custom lines plus `Phase 1: […]` and `Overall: […]` was recomputed down to `Overall: […]` alone — four of five lines lost, three of them lines the "merge, never clobbers" contract explicitly promises to preserve as narrative.
-
-**Required fix**: narrow `counterRe` to the exact label set `computeProgress()` currently produces, rather than an open label class:
-
-```plaintext
-BAD : /^[^:\n]+:\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/
-GOOD: /^(?:Overall|Phase (?:\d+|\{[^}]*\})):\s+\[(?:\d+\/\d+|\{[^}]*\}\/\{[^}]*\})\]/
-```
-
-The placeholder alternation is needed in **both** halves, and for the same reason. The value half (`{filled}/{total}`) is the familiar one. The label half is easy to miss: the state template ships its phase counter as `Phase {N}: …`, so a label pattern of `Phase \d+` alone does not match a freshly bootstrapped `STATE.md` — the line is demoted to narrative and the placeholder survives the recompute that exists to replace it. Both forms are engine-owned; only the runtime form has a digit.
-
-Any line whose label is not `Overall` or a phase counter in either form is narrative by definition, however counter-shaped it looks — the classifier's job is to recognize what the engine itself writes, not to guess at operator intent from formatting.
-
-## 6. The Progress Replacement-String Injection Defect (SC-2)
-
-The fence rewrite itself, independent of §5's classification bug, was:
-
-```js
-content = content.replace(progressRe, `$1${body}$3`);
-```
-
-`progressRe` has three capture groups (opening fence, fence body, closing fence). `.replace(regex, replacementString)` scans the **entire final replacement string** for JavaScript's special patterns (`$1`-`$9`, `` $` ``, `$'`, `$&`, `$$`) — including inside `${body}`, which is built from arbitrary, engine-uncontrolled narrative text (the preserved hand-authored lines). A narrative line containing a literal `$` followed by a digit is therefore re-interpreted as a capture-group backreference, splicing a **fragment of the surrounding STATE.md structure into the middle of the narrative**, not merely corrupting the counter it was never near.
-
-Verified by direct reproduction against engine 2.1.62: a preserved two-line narrative note —
-
-```plaintext
-Budget check: spend is $1,200 of the
-$3,000 sprint allocation — on track.
-```
-
-— recomputed to (note this block uses four backticks so the injected triple-backtick below renders as literal text, not a fence break):
-
-````plaintext
-Overall: [0/1] ░░░░░░░░ 0%
-Budget check: spend is ## Progress
-
-```
-,200 of the
-
-```,000 sprint allocation — on track.
-````
-
-`$1` was replaced with capture group 1 (`## Progress\n` + the fence opener) and `$3` with capture group 3 (the fence closer), **injecting a spurious closing fence mid-document** — the file's triple-backtick count goes from balanced (2) to unbalanced (3), so every section after the injection point is at the mercy of the renderer's fence-recovery behavior. This is more severe than the value-level defects above: they misplace or lose *values*; this one corrupts *markdown structure*, and the visible symptom — a two-line entry that reads as torn, its first line truncated mid-word — is exactly what a `$`-digit sequence anywhere in a multi-line narrative note produces, not only in a dollar-amount example.
-
-**Required fix**: replace the string-form replacement with a function-form replacement. A function's return value is used verbatim by `.replace()` — none of `$1`/`$3`'s content is re-scanned for special patterns, because the function *receives* the captured groups as arguments instead of the engine writing them as `$`-syntax into a string the interpreter re-parses:
-
-```plaintext
-BAD : content.replace(progressRe, `$1${body}$3`);
-GOOD: content.replace(progressRe, (_match, open, _oldBody, close) => `${open}${body}${close}`);
-```
-
-`changelog-writer.js` and `phase-archiver.js` are clear — their capture-group-bearing `.replace()` calls interpolate engine-controlled values only (semver strings, ISO dates, generated filenames) or use regexes with no capture groups. The original sweep's conclusion that `update-state.js` was likewise clear was **wrong**, because it looked only for `$`-*digit* backreferences: it missed that `` $` ``, `$'`, and `$&` fire with **no capture group at all**. §6.1 records the call site it wrongly exonerated.
-
-### 6.1 The Same Defect in the Field-Patch Loop (SC-2) `[ADDED]`
-
-`updateState()`'s `fieldMap` loop — the step that refreshes the scalar lines (`**Phase:**`, `**Status:**`, `- **Task:**`, `- **Next Action:**`, …) — used the same string-form `.replace()` §6 corrected for the `## Progress` fence:
-
-```js
-content = content.replace(re, `${prefix}${patch[key]}`);
-```
-
-`re` has no capture groups, so the original sweep waved it through. But `.replace()` with a string replacement re-scans that string for `` $` `` (everything **before** the match), `$'` (everything **after** the match), `$&` (the whole match), and `$$` — **none of which need a capture group**. And `patch[key]` is not engine-controlled here: `nextAction` is `finalize.js`'s `synthesizeNextAction()` output, which embeds an arbitrary task **title**, and `--task` carries the raw title. Task titles about shell tooling routinely contain bash ANSI-C quoting (`$'…\n…'`) or a backtick-wrapped `` $`command` ``.
-
-Verified by direct reproduction against engine 2.1.76: a `STATE.md` patched via `updateState(wsDir, { nextAction }, { autoProgress: true })` where `nextAction` is `` Execute T-8B04 Handle `$'refund'` edge case via /magic.run demo `` — the `$'` is expanded to the **entire remainder of `STATE.md` after the `Next Action` line**, so the field is truncated at `` Handle ` `` and every section below it (Progress, Recent Decisions, Blockers, Blocking Constraints, Session Continuity) is duplicated. The duplicate `## Progress` carries the pre-recompute `Phase {N}` counter, so the file now holds two Progress fences disagreeing on the active phase's numbers — the field report's "spoiled the Next Action and the Phase {N} line in `## Progress`" is these two halves of one string-replace expansion, not two separate bugs.
-
-**Required fix**: the §6 fix, applied to this loop too — a function-form replacement, whose return value `.replace()` uses verbatim with no re-scan:
-
-```plaintext
-BAD : content.replace(re, `${prefix}${patch[key]}`);
-GOOD: const line = `${prefix}${patch[key]}`;
-      content.replace(re, () => line);
-```
-
-The two loops now share one rule: **no engine-uncontrolled text is ever the second argument of a string-form `.replace()`** anywhere in `update-state.js`. This one shipped ahead of its spec (a reported field defect with a known root cause and a sibling already fixed in §6), recorded here as the retrospec — the §8 precedent.
-
-## 7. Line-Cap Guard Defeat by Unbounded Blocking Constraints (SC-1.2)
-
-### 7.1 The Defect
-
-`update-state.js`'s line-count guard ran unconditionally at the end of `updateState()`:
-
-```js
-const lines = content.split('\n');
-if (lines.length > 100) {
-    console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruning oldest decision.`);
-    // ... removes exactly one `## Recent Decisions` line, only if decLines.length > 1
-}
-```
-
-This is the file's **only** line-cap enforcement, and it targets exactly one section: `## Recent Decisions`, which already has its own independent 5-entry cap enforced at insert time. `## Blocking Constraints` is structurally different — the template marks it "MANDATORY reading", every discovered anti-pattern is appended with an auto-incrementing `[C-NNN]` ID, and nothing in `update-state.js` ever removes an entry from it. The guard was written as if `## Recent Decisions` were the file's dominant growth source; `## Blocking Constraints` is the one section explicitly designed to grow monotonically over a workspace's lifetime.
-
-Reproduced directly (synthetic workspace, `updateState()` called in a loop with `{ addConstraint: true }`):
-
-| Constraints added | Total lines | `## Recent Decisions` entries remaining | Guard engaged? |
-| --- | --- | --- | --- |
-| 20 | 74 | n/a (below threshold) | No — never crossed 100 |
-| 60 | **110** | 1 (its floor — cannot go lower) | Yes, every call — but nothing left to remove |
-
-At 60 accumulated constraints the file sits **10 lines over the documented ceiling**, `## Recent Decisions` is already pruned down to its 1-entry floor, and every further `addConstraint` call grows the file further while the guard's `console.warn` — unconditional on `lines.length > 100`, not on whether a line was actually removed — keeps printing "Pruning oldest decision" as if the cap were being restored. There is no code path that reports "cap exceeded and nothing left to prune" differently from "cap exceeded, pruned successfully".
-
-### 7.2 Required Fix
-
-Silently auto-pruning `## Blocking Constraints` the way `## Recent Decisions` is pruned is **not** an acceptable mirror-fix: a Decision is disposable narrative (the template already says older ones "archived to PLAN.md"), but a Blocking Constraint exists specifically because it is safety-critical — deleting the oldest one to make room could silently remove the one anti-pattern warning that prevents a future incident, with the operator never told which entry vanished or why.
-
-The guard must instead distinguish two states it currently reports identically:
-
-1. **Cap restored** — `## Recent Decisions` had an entry above its floor to remove; the file is now ≤ 100 lines (or closer). Current behavior and message are correct here.
-2. **Cap exhausted** — `## Recent Decisions` is already at its 1-entry floor and the file remains over 100 lines. This state MUST emit a distinct, non-silent warning (not the reused "Pruning oldest decision" line) directing the operator to manually review and archive stale `## Blocking Constraints` entries. The write still proceeds (`updateState()` must not become a HALT point over a line count), but the operator is told the cap is not actually being held, rather than being told a prune happened when none did.
-
-```plaintext
-BAD : console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruning oldest decision.`);
-      // fires identically whether or not decLines.length > 1, i.e. whether or not anything was pruned
-GOOD: if (decLines.length > 1) {
-          console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}). Pruned oldest decision.`);
-          // ... remove as today
-      } else {
-          console.warn(`[update-state] STATE.md exceeds 100 lines (${lines.length}) and ## Recent Decisions ` +
-              `is already at its floor — nothing was pruned. Review ## Blocking Constraints for entries to archive.`);
-      }
-```
-
-## 8. The Decision-Section Structural Defect (SC-2) `[ADDED]`
-
-### 8.1 Provenance — Recorded After the Fix, Not Before
-
-Unlike every other defect in this file, this one was fixed in code **before** it was specified: the operator reported markdownlint findings against a live `STATE.md` and asked for a direct repair, so the work bypassed the spec-first pipeline that `Required Fix` blocks exist to feed. Engine 2.1.66 → 2.1.67 carries the fix; this section is the retrospec. It is recorded in full rather than as a one-line note because the reasoning below constrains future edits to the same function, and because a defect that reached `Stable` code with no spec section is precisely the kind of gap the debt-ceiling convention is being drafted to catch.
-
-### 8.2 The Defect
-
-`addDecision`'s insertion step located its insert point by skipping the section's blank-line-and-comment preamble:
-
-```js
-const afterMarker = content.indexOf('\n', idx) + 1;
-let insertAt = afterMarker;
-const remaining = content.slice(afterMarker);
-const commentEnd = remaining.search(/^[^<]/m);   // "first line not starting a comment"
-if (commentEnd > 0) {
-    insertAt = afterMarker + commentEnd;
-}
-```
-
-The intent of `/^[^<]/m` is "the first line that does not begin an HTML comment". The character class `[^<]` means *any character other than `<`* — and a **blank line's own terminating newline satisfies it**. The section's first line after the heading is blank, so the search matches at offset 0, `commentEnd > 0` is false, `insertAt` never advances, and every decision is inserted **immediately after the `## Recent Decisions` heading** — before the blank line and the `<!-- ... -->` comment, not after them.
-
-Two consequences compound over a workspace's lifetime:
-
-1. **Structural.** The heading is followed directly by a list item (markdownlint `MD022`, headings must be surrounded by blank lines; `MD032`, lists must be surrounded by blank lines), while the displaced blank line and comment migrate below the entries, accumulating an `MD012` run of consecutive blanks. Reproduced directly against a temp copy of the engine before any edit: three successive `addDecision` calls, each landing at the same wrong offset.
-2. **Pruning.** A second reproduction showed the same step never removes the template's own `{YYYY-MM-DD} **Decision:** {What was decided and why}` placeholder rows, because the prune step filters on `/^- \d{4}-\d{2}-\d{2}/` and a literal `{YYYY-MM-DD}` does not match. A workspace bootstrapped from the template therefore carries its placeholders indefinitely, below the real entries.
-
-### 8.3 Required Fix
-
-Rebuild the section deterministically on every call rather than computing an insertion offset into existing bytes:
-
-```plaintext
-BAD : locate an offset past the preamble, splice the entry in at that offset
-GOOD: parse the existing dated entries out of the section, prepend the new one,
-      truncate to the 5-entry cap, and re-emit the whole section from a fixed
-      template (heading, blank, comment, blank, entries, blank)
-```
-
-A full rebuild is legitimate **here specifically** and must not be generalized to `## Progress`: this section is entirely engine-owned, so there is no hand-authored narrative to preserve, whereas §5's merge-not-clobber contract exists precisely because `## Progress` interleaves operator content. The rebuild also self-heals drift already on disk — both the displaced preamble and the stale placeholder rows — instead of requiring a correctly-shaped preamble as a precondition for correct behavior.
-
-### 8.4 Why Existing Coverage Could Not Catch It
-
-The harness case exercising this path asserts only:
-
-```js
-assert.ok(/## Recent Decisions[\s\S]*Adopt SDD workflow/.test(afterDecision), …)
-```
-
-`[\s\S]*` matches any distance, so the assertion holds whether the entry lands immediately after the heading (defective) or after the preamble (correct) — verified by running it against both. A presence assertion cannot express a structural contract; the replacement must assert the section's **shape**, not merely that the entry appears somewhere beneath the heading.
-
-### 8.5 The Same Defect, Unfixed in the Sibling Call Site `[ADDED]`
-
-§8.3's rebuild was applied to `addDecision` only. `addConstraint` — the function immediately below it in `update-state.js`, prepending into `## Blocking Constraints` rather than `## Recent Decisions` — kept the exact insertion-offset code §8.2 diagnosed, unchanged:
-
-```js
-const afterMarker = content.indexOf('\n', idx) + 1;
-let insertAt = afterMarker;
-const remaining = content.slice(afterMarker);
-const contentStart = remaining.search(/^[^<]/m);
-if (contentStart > 0) {
-    insertAt = afterMarker + contentStart;
-}
-```
-
-Same regex, same reasoning failure, same result: every constraint landed immediately after the `## Blocking Constraints` heading, above its two-line MANDATORY-reading comment, instead of joining the entry list below it. Reproduced directly (temp workspace, three successive `addConstraint` calls before any edit): each new entry stacked at the top, pushing the comment block — and every previously-added constraint — further down each time, growing a pile of misplaced lines right under the heading.
-
-The two functions are adjacent in the file and §8's own fix (2.1.67) touched only one of them; nothing then or since re-examined the sibling for the same pattern, matching the recurring shape in this codebase where a fix lands at one call site of a shared defect and the audit that would have caught the rest never runs (cf. l1-scan-input-hygiene.md's SH-1 gap across multiple scan sites). Unlike §8.2's decision case, this one carries no pruning consequence (constraints are never capped or pruned — SC-1.2, §7) — the defect here is purely positional and cumulative.
-
-**Required fix**: the same rebuild §8.3 specifies, adapted for `addConstraint`'s two differences from `addDecision`: the comment preamble is two lines, not one, and the entry list carries no 5-entry cap (every constraint is kept, by design). Auto-numbering is scoped to entries found inside the rebuilt block, not a whole-file scan for `[C-\d{3}]` — a constraint id mentioned in passing elsewhere (e.g. a Recent Decisions note referencing one) must not inflate the next number, a stricter guarantee than the pre-fix code provided incidentally.
-
-Regression coverage extends the existing `dev/tests/engine.js` decision-structure case (§8.4) with the parallel assertion for constraints: heading followed by a blank line, both comment lines, then entries newest-first, no consecutive-blank runs — plus a second `addConstraint` call asserting the list rebuilds correctly rather than only the first insertion. Field-observed (this engine's own session tooling, not a downstream report): reproduced directly against 2.1.82 before either the test or the fix were written.
 
 ## 9. The Task-Level Blocking & Assignment Precedence Defect (SC-2.1) `[ADDED]`
 
@@ -292,34 +111,9 @@ Verified by direct reproduction against engine 2.1.72: a synthetic phase file wi
 
 Tracked in [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c).
 
-## 10. The Recent-Decisions Archival Promise Defect (SC-1.2) `[ADDED]`
-
-The line-cap guard's routine prune path — the "Cap restored" branch §7.2 above leaves unchanged — removes the oldest `## Recent Decisions` entry by deleting its line outright:
-
-```js
-if (decLines.length > 1) {
-    content = content.replace(decLines[decLines.length - 1] + '\n', '');
-    pruned = true;
-}
-```
-
-No code path in `update-state.js` writes to `PLAN.md`, or to any file other than `STATE.md` itself, anywhere in this function. This contradicts the section's own template comment, re-emitted by `addDecision` on every call that adds a decision:
-
-```plaintext
-<!-- Last 3-5 locked decisions. Older entries → archived to PLAN.md -->
-```
-
-The comment is not aspirational prose in a design doc the operator never sees — it is written into the live `STATE.md` file itself, read by whoever opens the file, and it describes behavior the guard has never implemented at any point in this section's history (§7's fix corrected the guard's *signaling* when nothing could be pruned; it left the routine-prune path — where the promise is actually broken every time it fires — unexamined). An operator who takes the comment's own claim at face value ("where did the fourth decision go — it should be in PLAN.md") finds nothing there, with no diagnostic recording the loss either.
-
-Verified by direct reproduction against engine 2.1.72: a synthetic `STATE.md` with 5 `## Recent Decisions` entries and enough `## Blocking Constraints` padding to cross the 100-line cap was passed through `updateState()`. The guard fired (`Pruned oldest decision`), the oldest entry (`Decision number 5`) was confirmed absent from `STATE.md` afterward, and no `PLAN.md` was created or written anywhere in the workspace directory at any point during the call.
-
-**Required fix**: either (a) implement the promise — append the pruned entry to a dated log section in `PLAN.md` before removing it from `STATE.md`, in the same call, so no window exists where the decision is in neither file; or (b) if archival is deliberately out of scope for a key-value patch utility, remove the comment's specific claim and replace it with what the guard actually does (prune with no retention). Silently choosing (b) by leaving the code as-is is not an acceptable resolution here: the comment is regenerated by `addDecision` on every decision write, so doing nothing keeps re-asserting the false promise into every workspace's live `STATE.md` going forward, rather than merely leaving a stale doc uncorrected once.
-
-Tracked as a new obligation; no existing invariant names it directly — [l1-session-continuity.md](l1-session-continuity.md) SC-1.2 governs the line-cap mechanism this defect lives inside.
-
 ## 11. The Workspace-Scoping Defect (SC-2) `[ADDED]`
 
-Every defect above lives inside `update-state.js`'s section-rewrite logic, operating correctly on whichever `STATE.md` it is handed. This one is upstream of all of them: `finalize.js`'s own resolution of *which* `STATE.md` to hand `update-state()` in the first place.
+Every defect the two `update-state.js` children record ([l2-update-state-structure.md](l2-update-state-structure.md), [l2-update-state-values.md](l2-update-state-values.md)) lives inside `update-state.js`'s section-rewrite logic, operating correctly on whichever `STATE.md` it is handed. This one is upstream of all of them: `finalize.js`'s own resolution of *which* `STATE.md` to hand `update-state()` in the first place.
 
 `updateSessionState()` computed its target directory independently of the `workspace` name the rest of the same invocation already used for the version bump, the CHANGELOG bullet, and the printed `Workspace` field:
 
@@ -362,42 +156,89 @@ GOOD: const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
 
 Tracked under the existing SC-2 update-completeness contract ([l1-session-continuity.md](l1-session-continuity.md): "a workflow invocation that mutated artifacts but left `STATE.md` stale is incomplete") — no new sub-clause is needed; SC-2 already requires the *correct* workspace's `STATE.md` to receive the update, this defect is simply the first one found in the step that decides which file that is, rather than in what gets written to it once resolved.
 
-## 12. Regression Coverage
+## 16. The Stale-Blocked Status Defect (SC-1.4) `[ADDED]`
 
-Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix above needs a harness case:
+### 16.1 The Defect
+
+The top-level `Status` field is written only by explicit `--status=` calls (`task.md` at phase start, `run.md` at Pause Propagation and Phase Complete) — §4 correctly keeps the per-task call away from it — and `finalize.js` never writes it. A phase marked `Blocked` whose blocker is cleared without `/magic.task` (the task returned to `Todo`, or retried to `Done`, while the phase continues) therefore keeps reading `Blocked` until the phase completes, while the same finalize recomputes a `Next Action` that says to continue. Reproduced 2026-09-30 against engine 2.1.112: `Status: Blocked`, phase `In Progress`, one open agent-actionable task — a real per-task `update-state` call and a `finalize --workflow=run` both leave `Blocked`. The mirror case (a Blocked phase, `Status: Active`, because the agent skipped Pause Propagation) reproduces the same way. Both are the SC-2.1(a) defect — the file contradicting itself — one field over. Also found: `templates/state.md` offered `Complete`, a value no path writes.
+
+### 16.2 Required Fix
+
+Reconcile in the SC-2 step, from the ledger reads `computeNextAction()` already makes:
+
+- After the `Next Action` value is computed and before the single `update-state` call, derive `blocked` — the active phase is Blocked (`isPhaseBlocked`), or every open item in it is excluded by the per-task screen (§9) while at least one open item exists — and `actionable` — an open, agent-actionable item exists in a phase that is not Blocked.
+- Pass `--status=Blocked` when `blocked` and the current value is `Active`; pass `--status=Active` when `actionable` and the current value is `Blocked`; otherwise pass no status. A value outside `Active | Blocked` (a hand-set `Paused`) is never overwritten, and on a plan-complete workspace `Active` is left alone while a stale `Blocked` is reset to `Active`.
+- The derivation reuses the functions `synthesizeNextAction()` uses — no second reading of the ledger — and runs at the same single exit, so `Next Action` and `Status` come from one read and cannot disagree (SC-2.2's lesson).
+- `.magic/templates/state.md` offers `{Active | Blocked}`.
+- The per-task `update-state` call in `run.md` is unchanged (§4): reconciliation belongs to the checkpoint, not to the task call.
+
+### 16.3 Regression Coverage
+
+Fixtures against the real scripts: (a) `Blocked` with an open agent-actionable task in a non-Blocked phase → `Active` after finalize; (b) `Active` with a Blocked phase and an open task → `Blocked`; (c) `Blocked` with every open item Blocked or `Assignment: User` → stays `Blocked`; (d) plan complete, `Active` → unchanged, and plan complete with a stale `Blocked` → `Active`; (e) a hand-set `Paused` → unchanged in every ledger state; (f) §4's case — a per-task `update-state` with no `--status` — still leaves `Status` unchanged. Each case is mutation-checked.
+
+## 17. The Blocked-Glyph Defect (SC-2.1(c)) `[ADDED]`
+
+### 17.1 The Defect
+
+Every reader of a phase checklist knew two box glyphs: `- [ ]` open and `- [x]` done. The workflows spell a blocked task `Blocked [!]` — a `Status` value in its Detailed Tracking entry — and an agent updating a ledger by hand carried that spelling into the checklist as `- [!]`. Nothing in the engine asks for it and nothing forbids it: `run.md` Step 2b states the rule for an in-flight task (leave the line `- [ ]`, because an in-flight marker there would hide the very task a resuming session must find) and never states it for a blocked one. To a reader that knows two glyphs a `- [!]` line is neither open nor done, so the task vanishes from three of them:
+
+- **`classifyPlanState()`** in `finalize.js` — the reported defect. A phase whose open tasks were all `- [!]` had no open line, so tier 2 passed over it and the registry-row tier returned `Continue Phase {N} via /magic.run {ws}` — a recommendation that can only Stall at once (`run.md` Select, *Stalled*). Field report against engine 2.1.138, which was HEAD; reproduced directly: a two-task phase, both lines `- [!]`, both entries `Status: Blocked`, registry row `In Progress`, returned `Continue Phase 1 via /magic.run`, where the same state written `- [ ]` returns §9's terminal message.
+- **`allChecked()`** in `phase-archiver.js` — found by auditing the other readers of the line. A phase with `status: Done` and a `- [!]` line read as fully checked and was archived, filing an unresolved task away.
+- **`computeProgress()`** in `update-state.js` — same audit. The line was left out of the total, so one done, one blocked and one open read `[1/2]` where the plan holds three tasks.
+
+**How the state arises.** Not through an engine writer: no script writes `- [!]`, and the templates and workflow bodies either spell a blocked checklist line `- [ ]` or say nothing. It is an agent reading the `[!]` notation as a checkbox state, so it keeps arising — which is why the fix reads the spelling as well as stating the rule.
+
+### 17.2 Required Fix
+
+Both halves, because either alone leaves the defect:
+
+- **Write side — state the rule.** `run.md` Step 4 says a `Blocked [!]` task keeps its checklist line `- [ ]`, like an `In Progress` one, and that `[!]` spells the `Status` value; `task.md`'s C12 Quarantine bullet says the same where it sets the status; `templates/phase.md` carries the sentence at the checklist, where an agent editing it reads it.
+- **Read side — accept the spelling.** One shared definition, `lib/checklist.js` — as `lib/phase-files.js` owns the workbook name shape — reads `- [!] [T-…]` as an **unfinished, blocked** task, and every reader above uses it. `classifyPlanState()` skips a `- [!]` line exactly as it skips a task whose entry says `Status: Blocked`, in the inline `TASKS.md` list as in phase files: the glyph is itself the declaration (§9's principle — a task that positively declares itself off-limits is believed), so a tracking entry still saying `Todo` does not turn it back into work, a plan whose every open line is blocked is `all-excluded`, and an open task behind a blocked one still dispatches. `allChecked()` holds the phase back; `computeProgress()` counts the line in the total. A `- [!]` quoted in a code span or fence stays prose (SH-1), as `- [ ]` does.
+- The writers are unchanged: no engine path emits `- [!]`.
+
+### 17.3 Regression Coverage
+
+Two harness cases against the real scripts, each mutation-checked (each fails on the unfixed scripts). (a) A phase of only `- [!]` tasks is `all-excluded` with a `Next Action` that is not `Continue Phase`, `Execute` or plan-complete and names one command, and `reconcileStatus` writes `Blocked`; the glyph alone excludes (entry `Todo`); a blocked line is skipped for the next open line in its phase and for a later phase file; a quoted `- [!]` in a finished plan stays `complete`; the inline layout gives both outcomes. (b) A `status: Done` phase with a `- [!]` line is not an archive candidate while the same phase with the glyph only quoted is; one done, one blocked and one open count `[1/3]`.
+
+## Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix needs a harness case. This file carries the cases for the defects it holds (§2, §4, §9, §11); each child carries its own — [l2-update-state-structure.md](l2-update-state-structure.md) and [l2-update-state-values.md](l2-update-state-values.md):
 
 - `synthesizeNextAction()`/`computeNextAction()` against a Blocked two-level-format fixture must not return an execute-style recommendation naming the blocked task's ID (§2).
-- `computeProgress()` against a healthy two-level-format fixture must produce a `Phase {N}: […]` line, not aggregate-only (§3).
 - A per-task `update-state` call (`--task=`, no `--status=`) must leave the phase-level `Status` field unchanged (§4).
-- `computeProgress()`'s merge step, given a fence containing `Specification:`/`Plan:`/`Implementation:`-style custom counter-shaped lines alongside `Overall`/`Phase {N}`, must preserve the custom lines and regenerate only `Overall`/`Phase {N}` (§5).
-- `updateState()` with `autoProgress: true` against a preserved narrative line containing a literal `$1`/`$2`/`$3` sequence must leave that line byte-for-byte unchanged and must not alter the fence's triple-backtick count (§6).
-- `updateState()` given a `nextAction` / `task` value containing `$'`, `` $` ``, or `$&` must write that value into the field byte-for-byte, and must not duplicate any `##`-level section or unbalance the `## Progress` fence count (§6.1). The value-level assertion and the structural (`^## Progress$` occurrence count, fence count) assertion are both required — a string-form `.replace()` regression fails the structural one even where the field text happens to look intact.
-- A fixture driven past 100 lines purely via repeated `addConstraint` calls, with `## Recent Decisions` pre-seeded at its 1-entry floor, must produce guard output observably different from the routine-prune case (§7).
-- **Open obligation (§8):** `addDecision` has no structural coverage. A case must assert the emitted section's shape — heading followed by a blank line, the comment preamble above the entries rather than below them, no consecutive blank runs, and template placeholder rows absent after the first real entry. The existing presence-only assertion must be replaced, not supplemented: leaving it in place preserves a test that passes under the defect it is meant to exclude.
-- **Open obligation (§9):** `synthesizeNextAction()`/`computeNextAction()`'s tier-2 loop, given a non-Blocked phase whose first open checklist item has Detailed Tracking `Status: Blocked` or `Assignment: User` and a later item in the same phase is agent-actionable, must skip the excluded task and name the later one — never the excluded task's ID.
-- **Open obligation (§10):** `updateState()`'s line-cap guard, given a fixture that crosses 100 lines and successfully prunes the oldest `## Recent Decisions` entry, must leave that entry recoverable from `PLAN.md` after the call — or, if archival is intentionally not implemented, a case must assert the section's comment no longer claims it.
+- `synthesizeNextAction()`/`computeNextAction()`'s tier-2 loop, given a non-Blocked phase whose first open checklist item has Detailed Tracking `Status: Blocked` or `Assignment: User` and a later item in the same phase is agent-actionable, must skip the excluded task and name the later one — never the excluded task's ID (§9; closed by Phase 23).
+- `classifyPlanState()` must read a `- [!]` checklist line as an unfinished, blocked task — never as an absent one — and `phase-archiver.js` and the progress counter must treat it as unfinished work (§17).
 - `finalize.js`'s `resolveWorkspaceDir()` must return the `designAbs`/`workspace` path whenever an explicit `--workspace` flag or `MAGIC_WORKSPACE` is given, even when `MAGIC_DESIGN_DIR` is simultaneously set to a different workspace's directory, and must return the resolved `MAGIC_DESIGN_DIR` path only when neither of those was given (§11). An end-to-end case must additionally drive `finalize.js` against a two-workspace fixture with a disagreeing `MAGIC_DESIGN_DIR` and assert the unrelated workspace's `STATE.md` is left byte-for-byte untouched while the explicitly-requested one receives the real computed `Next Action`.
 
-## 13. Known Gaps Not Closed Here
+## Known Gaps Not Closed Here
 
-- **`Status` is never holistically recomputed.** [l2-engine-finalization.md](l2-engine-finalization.md) §5.1 documents that no code path in the SC-2 step recomputes `Status` — it is only ever set by explicit `--status=` calls in `task.md`/`run.md`. §4 above fixes one of those call sites (the per-task one, which should not touch `Status` at all); the broader claim that `Status` is ever holistically recomputed from plan/task state remains false, and is not addressed here — noted so it is not mistaken for closed.
-- **§8's coverage obligation is closed** `[MODIFIED]` — corrected from a prior claim that it was open. Phase 19 (R12) added the structural assertions §8.4 calls for: `dev/tests/engine.js`'s decision case now asserts the emitted section's shape (heading followed by a blank line, entries after the comment preamble, no consecutive-blank runs, no surviving `{YYYY-MM-DD}` placeholder rows), replacing the presence-only assertion that could not distinguish the defect from its fix. This entry previously read "open, not merely pending" — that was already false by the time it was written; both the fix (2.1.67) and its coverage (Phase 19) predate this correction.
+- The former gap — `Status` is never holistically recomputed — is closed for the `Active | Blocked` pair by §16; recomputing any other value is deliberately out of scope (SC-1.4).
+- `significance.js`'s marker-flip heuristic for `TASKS.md` under `magic.run` still matches the box glyphs `[x ]` only, so an edit whose only change is `- [ ]` ↔ `- [!]` on the legacy inline checklist is not read as a flip. Found by §17's audit of the other readers and left: it concerns only that layout, and the invocation's earlier per-task `update-state` call has usually changed `STATE.md`, which the whitelist counts wholesale.
 
 ## Canonical References
 
 | Path | Role |
 | --- | --- |
-| `.magic/scripts/update-state.js` | Host of the progress recompute (§3, §5, §6), the scalar-field patch loop (§6.1), the line-cap guard incl. the unimplemented archival promise (§7, §10), and the decision-section rebuild (§8) |
 | `.magic/scripts/finalize.js` | Hosts `synthesizeNextAction()`/`computeNextAction()`/`isPhaseBlocked()` (§2, §9), the SC-2 state-update step that invokes the above, and `resolveWorkspaceDir()`, the single workspace-directory resolution both write sites now share (§11) |
-| `.magic/templates/state.md` | Structure contract the rebuilt sections must match; source of the placeholder rows named in §8.2 |
-| `.magic/templates/phase.md` | Source of the per-task `Detailed Tracking` `Status`/`Assignment` fields §9's fix must read |
-| `.magic/run.md` | Hosts the per-task and phase-transition `update-state` call sites corrected by §4 |
-| `dev/tests/engine.js` | Regression harness carrying §11's cases, including the open §8, §9, and §10 obligations |
+| `.magic/scripts/lib/checklist.js` | The one definition of a checklist task line — open, done, or blocked written `- [!]` — shared by `classifyPlanState()`, `allChecked()` in `lib/phase-archiver.js` and the progress counter in `update-state.js` (§17) |
+| `.magic/scripts/update-state.js` | The state writer the callers above invoke. Its own defects are catalogued in the two children — see the Canonical References of [l2-update-state-structure.md](l2-update-state-structure.md) and [l2-update-state-values.md](l2-update-state-values.md) |
+| `.magic/templates/phase.md` | Source of the per-task `Detailed Tracking` `Status`/`Assignment` fields §9's fix must read, and carrier of §17's checklist-glyph rule |
+| `.magic/run.md` | Hosts the per-task and phase-transition `update-state` call sites corrected by §4, and states the Blocked-keeps-`- [ ]` rule of §17 |
+| `dev/tests/engine.js` | Regression harness carrying §11's cases and the caller-side cases of §2, §4 and §9; the writer's are listed in the children |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.3.0 | 2026-10-16 | Agent | Register entry for **§18 — The Template-Placeholder Defect** (the twentieth defect), filed in [l2-update-state-structure.md](l2-update-state-structure.md) 1.1.0 where its Required Fix lands: a `STATE.md` created by `update-state` was a byte copy of the template, placeholders and all. Field report against engine 2.1.139 (HEAD), reproduced directly. Overview count nineteen → twenty; the filing rule's next free number moves §18 → §19; the child's section list extended. A direct repair of a field report; no status transition — `Stable` retained. |
+| 2.2.0 | 2026-10-15 | Agent | New **§17 — The Blocked-Glyph Defect** (the nineteenth defect): the workflows spell a blocked task `Blocked [!]`, an agent carried that into the checklist as `- [!]`, and every reader knew only `- [ ]` and `- [x]` — so a phase holding only such lines read as finished and finalize's `Next Action` recommended `Continue Phase {N} via /magic.run`, a run that can only Stall. Field report against engine 2.1.138 (HEAD), reproduced directly; the audit of the other readers found archival filing away a phase with an unresolved task and the progress counter leaving it out of the total. Required fix: state the rule where blocked is set (`run.md` Step 4, `task.md` C12 Quarantine, `templates/phase.md`) and read the spelling through one shared definition (`lib/checklist.js`) as an unfinished, blocked task. One Known Gap recorded: the `TASKS.md` marker-flip heuristic in `significance.js`. Defect Register row added; the filing rule's next free number moves §16 → §18 (it still named §16 after §16 was filed); Overview count and closing sentence corrected eighteen → nineteen. A direct repair of a field report, specified in the same cycle as the fix; no status transition — `Stable` retained. |
+| 2.1.0 | 2026-09-30 | Agent | New **§16 — The Stale-Blocked Status Defect** (the eighteenth defect, filed under the register's next free number): finalize never writes `Status`, so a phase left `Blocked` when its blocker is cleared outside `/magic.task` stays `Blocked` while the same finalize prints a `Next Action` that says to continue; reproduced against engine 2.1.112. Required fix: reconcile `Active`/`Blocked` in the SC-2 step from the ledger reads `computeNextAction()` already makes, write no other value, never overwrite a hand-set one, and drop the template's unused `Complete`. The Known Gaps entry it closes is replaced. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
+| 2.0.0 | 2026-09-20 | Agent | **Decomposed** at 552 lines against the 500-line `SPEC_DECOMPOSE` threshold (476 lines when the day began — already past the 300-line soft threshold — and 1.8.0's own §13.1/§13.2 took it through the hard one), following the [l2-engine-finalization.md](l2-engine-finalization.md) 2.0.0 and `l2-role-cards` precedents. This file stays the register of record and keeps the defects in what **calls** the state writer — §2 and §9 (`finalize.js`'s Next Action synthesis), §4 (`run.md`'s per-task call), §11 (`finalize.js`'s workspace resolution) — while the `update-state.js` writer's defects move to two children: [l2-update-state-structure.md](l2-update-state-structure.md) (locating, grouping and creating: §8, §8.5, §12, §12.1, §13, §13.1, §13.2) and [l2-update-state-values.md](l2-update-state-values.md) (progress, replacement-string safety and the line cap: §3, §5, §6, §6.1, §7, §10). **Defect numbers are permanent**, unlike the parent's own 2.0.0 decomposition, which renumbered: engine code comments, harness comments and other specifications cite `§N` of this file, and a specification pass cannot retarget them (its write scope is `.design/`), so the new **Defect Register** maps every number to its file, and §14/§15 — formerly Regression Coverage and Known Gaps — are retired and never reused; new defects start at §16 under a filing rule. Sections moved verbatim by line range, and the move was audited as a multiset of lines against 1.8.0: the only lines that differ are those reworded or retired here — no requirement added, removed or changed. Reworded: four place-bound phrases ("in this file" → "in the register" in §8.1 and §12; §11's "every defect above" → the two children; §1's "every defect below" → "in this register"); three Regression Coverage bullets whose "Open obligation" labels were stale — §8 closed by Phase 19 (R12), §9 and §10 by Phase 23, harness cases at `dev/tests/engine.js` — restated as the requirements they are; the Canonical References rows, split with the defects they describe. Retired: the §14 and §15 headings and the coverage intro. Each moved defect's Regression Coverage bullets and Known Gap travelled with it; the register keeps the one gap that concerns the callers (`Status` is never holistically recomputed). Major bump, `Stable` retained: `Stable → RFC → Stable` within this pass via Trust Mode (C9) after Post-Update Review (five-lens council and instruction-quality pass). No specification `Implements:` this file, so no C12 cascade. |
+| 1.8.0 | 2026-09-20 | Agent | Closes the three items 1.7.0 and 1.6.0 recorded as Known Gaps, as **§13.1** and **§13.2** — the sixteenth and seventeenth defects, both §13's fix reopened in a site it left (Overview's count fifteen → seventeen, all implemented). §13.1: the scalar-field loop patched a field only when its line was found (`if (entryRe.test(content))`, nothing otherwise) and the `## Progress` recompute only when its fence was found — both silent, both under an unconditional success line — so on a hand-trimmed file a `--next-action`, `--status` or `--handoff` (the pointer `pause.md` leaves for resume) was accepted and dropped, breaking SC-2's minimum-update guarantee; and every field pattern was unanchored, so a label quoted mid-line was rewritten from the label onward (verified against 2.1.101: a decision entry's tail destroyed, the value recorded where no reader looks). Fix: line-anchored `FIELD_MAP`; `ensureField()` creates an absent field at its template position within its container (header block, `## Current Position`, `## Session Continuity`), creating the container through `ensureSection()` when that is gone too, in the file's own line ending; `Updated` deliberately not created (no caller requests it); an absent `## Progress` is created holding the counters, while a heading with no recognisable fence is left untouched and announced; new diagnostics `STATE_FIELD_CREATED` (`fix`) and `PROGRESS_BLOCK_UNRECOGNISED` (`warning`). §13.2: the line-cap guard located its section with the same `indexOf`, required a following heading (a last-position `## Recent Decisions` was never pruned yet reported exhausted) and removed the oldest entry by looking its text up again — which never matched a CRLF file or an entry with no trailing newline while `pruned = true` was set unconditionally (the CRLF gap recorded at 1.6.0, closed here). Fix: `locateSection()` plus removal by position through `entryRanges()`, now the single grouping primitive `collectEntries()` is derived from (differentially fuzzed against the old implementation: 80 000 comparisons, no difference). All three Known Gaps removed from §15; Regression Coverage §14 gains three bullets; `ensureSection()`'s notice reworded from "entry" to "write" as it now serves more than the list sections. `dev/tests/engine.js` 114 → 124, mutation-checked (12 mutations, each caught). No status transition — `Stable` retained. |
+| 1.7.0 | 2026-09-20 | Agent | New **§13 — The Missing-Section Silent-Drop Defect**, the fifteenth defect: `addDecision`/`addConstraint` located their section with `content.indexOf('## …')` and guarded the whole rebuild with `if (secStart !== -1)` and no alternative branch, so a `STATE.md` without the heading took the request and wrote nothing while the CLI still printed `STATE.md updated` — no warning, no diagnostic. Field report against engine 2.1.100 (no version lag: its file/line reference matched HEAD) named `--decision`; the sibling `--constraint-*` was found by reading the adjacent code and reproduced identically. A second manifestation of the same root, found while verifying: `indexOf` is a substring test, so with the heading absent but its text quoted mid-line elsewhere the rebuild was spliced into that line — destroying its tail and creating a decisions section inside `## Blocking Constraints`. The reporter's committed history shows how a heading goes missing in practice — whole-block hand edits (a 45-line tail deleted in one hunk; a heading line replaced by an entry) that no `update-state` writer can produce — so the engine has to expect the state rather than assume it away. Fix: a line-anchored `locateSection()` and a create-if-absent `ensureSection()` shared by both call sites, template-order placement, and a stderr notice plus a `fix`-severity `STATE_SECTION_CREATED` diagnostic. Specified before it was fixed, not retrospec'd. Regression Coverage and Known Gaps renumbered §13/§14 → §14/§15 to make room (1.1.0 precedent). Two Known Gaps found while verifying and deliberately not closed: every other write whose anchor is absent (scalar fields, the `## Progress` fence) is still skipped silently, and the line-cap prune never runs when `## Recent Decisions` is the last section. Overview's defect count fourteen → fifteen, all implemented. `dev/tests/engine.js` 107 → 114, mutation-checked. No status transition — `Stable` retained. |
+| 1.6.1 | 2026-09-19 | Agent | **§12.1's Required Fix widened** — closes the lazy-continuation gap 1.6.0 recorded: `wholeEntryRe()` now takes an `isListItem` flag, and for the `- **Task:**` / `- **Spec:**` / `- **Next Action:**` fields an unindented, non-blank line continues the entry (CommonMark lazy continuation) unless it opens a new block — a bullet, `**Label:**` field or thematic-break marker (`-`, `+`, `*`), an ordered-list marker, a heading (`#`), a quote (`>`), a table row, HTML or a comment (`<`), or a code fence; a blank line always ends it. The stop-set errs toward stopping (an incomplete set deletes, an early stop only leaves the orphan) and is closed, not inferred. Header fields keep the indented-only rule. The naive "every non-blank line" variant, built first as the red step, observably swallowed the neighbouring bullets; the boundary case that catches it is table-driven over every stop-set member and mutation-checked. Validated against every committed `STATE.md` version of seven real projects (1025 versions): output byte-identical to the indented-only rule, no structure consumed — safe, but no file wraps lazily, so the extension is prophylactic. `dev/tests/engine.js` 97 → 99. §12.1's paragraph on the continuation rule, its regression-coverage paragraph, and §13's §12.1 bullet rewritten to match. No status transition — `Stable` retained. |
+| 1.6.0 | 2026-09-19 | Agent | New **§12.1 — The Same Defect, Unfixed in the Scalar-Field Loop**, the fourteenth defect: §12's entry-level grouping reached the section rebuilds and the line-cap prune but not `updateState()`'s scalar-field loop (§6.1), whose single-line `.*` patterns matched only a wrapped value's marker line — replacing it left the old indented continuation lines behind as orphans under the new text. Field report against engine 2.1.95 ("observed 3 times") attributed it to the line-cap guard's auto-pruning; investigation cleared the guard (§12's prune fix holds, and the orphans appear at any file length) and pinned the per-task `--task`/`--next-action` patch as the mechanism. Reproduced directly, and confirmed against the reporter's own committed `STATE.md` history: replaying an earlier committed version through the unfixed engine yields the reporter's next committed `## Current Position` byte-for-byte. Fixed at the loop's single exit by `wholeEntryRe()`, which widens each field's line pattern over its indented continuation lines — deliberately stricter than `collectEntries()`'s rule, since a field sits directly against its neighbours and "every non-blank line" would swallow the next field; lazily-wrapped (unindented) continuation remains a documented gap. `dev/tests/engine.js` gained three cases (94 → 97). §14 gains one Known Gap found during the investigation and not addressed here: the line-cap prune never matches in a CRLF file yet reports success. Overview's defect count corrected thirteen → fourteen, all implemented. No status transition — `Stable` retained. |
+| 1.5.0 | 2026-09-18 | Agent | New **§12 — The Multi-Line Entry Truncation Defect**, the thirteenth defect: `addDecision`/`addConstraint` located their capped entry window with a line-level filter (`/^- \d{4}-\d{2}-\d{2}/` / `/^- \[C-\d{3}\]/`) that matched only an entry's marker line — a wrapped list item's indented continuation lines matched neither pattern and were silently dropped every time the section rebuilt, and the line-cap guard's routine prune (§7.2, §10) carried the identical assumption on its removal side, deleting only a wrapped oldest entry's marker line and leaving its continuation orphaned in the file. Reported and reproduced directly against engine 2.1.93. Fixed by extracting `collectEntries(block, startRe)`, which groups each entry-start line together with its following continuation lines before any windowing, capping, or pruning runs; `addDecision`, `addConstraint`, and the line-cap prune step all consume its output instead of a raw line filter. `dev/tests/engine.js` gained two cases (92 → 94): a pre-existing wrapped decision and constraint both survive a rebuild with their continuation intact, and the line-cap guard's prune removes a wrapped oldest entry's marker and continuation together. Overview's defect count corrected twelve → thirteen, all implemented. No status transition — `Stable` retained. |
 | 1.4.0 | 2026-09-12 | Agent | New **§11 — The Workspace-Scoping Defect**, the twelfth defect and the first found in `finalize.js`'s own workspace-directory resolution rather than in `update-state.js`'s section logic. `updateSessionState()` (and, independently, the `workflow === 'run'` phase-archival block) computed `wsDir` by checking `process.env.MAGIC_DESIGN_DIR` first and falling back to `designAbs`/`workspace` only when the env var was entirely absent — inverting `resolveWorkspace()`'s own precedence in the same file, where an explicit `--workspace` flag or `MAGIC_WORKSPACE` outranks `MAGIC_DESIGN_DIR`. A `MAGIC_DESIGN_DIR` left over from an earlier command in the same shell/process environment, naming a different workspace than an explicit `--workspace` flag, silently redirected the `STATE.md` write. Field report against engine 2.1.80 described two outwardly different symptoms in a two-workspace project — an unrelated workspace's `STATE.md` overwritten with a foreign `Next Action`, and the actually-targeted workspace's `STATE.md` left looking "reverted" — both reproduced directly here as one defect: which workspace absorbs the stale env var's redirection depends only on which one it happened to name at the time. Fixed by extracting `resolveWorkspaceDir()`, computed once in `main()` and consumed by both write sites, honoring `resolveWorkspace()`'s exact precedence (`MAGIC_DESIGN_DIR` trusted as the literal directory only when it was itself the sole naming signal). Regression coverage added to `dev/tests/engine.js`: a precedence unit test against the exported `resolveWorkspaceDir()`, plus an end-to-end two-workspace fixture asserting the unrelated workspace's `STATE.md` is left byte-for-byte untouched. Overview's defect count corrected eleven → twelve, all implemented. No status transition — `Stable` retained. |
 | 1.3.0 | 2026-09-11 | Agent | New **§8.5 — The Same Defect, Unfixed in the Sibling Call Site**, the eleventh defect: §8's rebuild fix (engine 2.1.67) was applied to `addDecision` only. `addConstraint` — its immediate neighbor in `update-state.js`, prepending into `## Blocking Constraints` — kept the exact pre-fix insertion-offset code (`/^[^<]/m` matching a blank line's own newline at position 0), never audited when §8 landed. Every constraint was inserted directly after the heading, above its two-line MANDATORY-reading comment, piling misplaced entries there across calls instead of joining the list below it — reproduced directly (three successive `addConstraint` calls, temp workspace). No pruning consequence (constraints are never capped, SC-1.2 §7): the defect is purely positional and cumulative, not a data-loss one. Fixed with the same rebuild §8.3 specifies, adapted for the two-line comment and the uncapped entry list; auto-numbering rescoped to the rebuilt block rather than a whole-file `[C-\d{3}]` scan. `dev/tests/engine.js`'s constraint case extended with the structural assertions §8.4 established for decisions, plus a second-call case pinning the rebuilt list order. Field-observed in this engine's own session tooling while auditing document/artifact generators for accumulating-line defects; reproduced directly against 2.1.82 before either the fix or its regression were written. Overview's defect count corrected ten → eleven, all implemented. No status transition — `Stable` retained. |
 | 1.2.0 | 2026-08-27 | Agent | New **§6.1 — The Same Defect in the Field-Patch Loop**, the tenth defect and the retrospec (§8 precedent) of a fix that shipped ahead of its spec. `updateState()`'s `fieldMap` loop patched scalar lines with a string-form `.replace()` whose second argument was the interpolated field value; `re` has no capture groups, so §6's original sweep cleared it — but `` $` `` / `$'` / `$&` fire with no group, and `patch.nextAction` / `patch.task` carry engine-uncontrolled task titles. A title with bash ANSI-C quoting (`$'…'`) expanded `$'` to the entire remainder of `STATE.md`, truncating `Next Action` and duplicating every section below it, the pre-recompute `## Progress` counter among them (field report, engine 2.1.76, reproduced directly). Fixed to the function-form replacement §6 already uses; §6's closing paragraph corrected to retract the false "no other call site" claim; one regression bullet added to §11 (value-level **and** structural assertions). Coverage landed with the fix in `dev/tests/engine.js` (68 → 69). No status transition — `Stable` retained. |

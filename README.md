@@ -1,7 +1,7 @@
 # 🪄 Magic Spec
 
 ![GitHub Release](https://img.shields.io/github/v/release/teratron/magic-spec)
-[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](./LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 ## 📖 Description
 
@@ -10,17 +10,22 @@
 `magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack. It acts as a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude Code, Gemini CLI, and others), enforcing a deterministic process that ensures the AI fully understands the problem before writing code.
 
 ```plaintext
-💡 Idea  →  📋 Specification  →  🗺️ Task & Plan  →  ⚡ Run  →  🚀 Code
+💡 Idea  →  📋 Specification  →  🗺️ Plan & Task →  ⚡ Run  →  🚀 Code
 ```
 
 ### What Gets Installed
 
 ```plaintext
 your-project/
-├── .agents/workflows/   # Slash commands (magic.spec, magic.task, magic.run, ...)
-├── .magic/              # SDD Engine (workflow logic and scripts — read-only)
-└── .design/             # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
+├── .agents/
+│   ├── workflows/    # Workflows/slash commands (interchangeable with skills/)
+│   └── rules/        # Engine and watching-process rules
+├── .magic/           # SDD Engine (workflow logic and scripts — read-only)
+└── .design/          # Your Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
+
+> [!NOTE]
+> **Workflows vs Skills (Interchangeable)**: For the user, `workflows/` (slash commands) and `skills/` (modular tools) are fully interchangeable interfaces to the same engine logic — choose whichever your agent prefers, or use both. The exact location also varies by agent: for example, `.agents/workflows/` (or `.agents/skills/`), `.claude/commands/` (or `.claude/skills/`), `.codex/prompts/`, or `.cursor/rules/`. Rules are placed in the agent's rules folder (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
 
 > [!TIP]
 > **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.design/engine/`, `.design/web/`). See [SDD Philosophy](./docs/conception.md) for details.
@@ -29,7 +34,50 @@ your-project/
 
 Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. No runtime lock-in.
 
-### Option A: Download from GitHub Releases (Recommended)
+### 🤖 Install via AI Agent (Recommended)
+
+Copy and paste this prompt directly into your AI coding assistant (Cursor, Windsurf, Claude Code, Antigravity, Gemini CLI, Codex, etc.) in your target project:
+
+````markdown
+Install and configure Magic Spec in this project from https://github.com/teratron/magic-spec:
+
+1. Ask me before proceeding:
+   - Version: Stable release (from GitHub Releases) or latest current (from the master branch)?
+   - Target AI Environment: Select one assistant directory to configure for skills or workflow wrappers (e.g., `.agents/`, `.claude/`, `.codex/`, `.cursor/`, etc.).
+
+2. Fetch and unpack the required engine directories into the project root:
+   - `.magic/` (engine core scripts and runtime)
+   - `workflows/` (slash command workflows)
+   - `skills/` (modular agent skills)
+   - `rules/` (engine and watching-process rules)
+
+3. Integrate into the selected AI environment:
+   - For skill-based agents (e.g., Claude Code, Antigravity): copy/symlink `skills/` to `<target-dir>/skills/`.
+   - For workflow/slash-command agents (e.g., Cursor, Windsurf): copy/symlink `workflows/` to `<target-dir>/workflows/`.
+   - Copy or symlink `rules/` to `<target-dir>/rules/`.
+
+4. Automatically add the following entries to `.gitignore`:
+
+# SDD engine
+/.magic/
+/.*/skills/magic-*/
+/.*/*/magic*.md
+
+## Generated artifacts
+/.design/*graph*.*
+/.design/*cache*/
+/.design/wiki/
+
+5. Initialize the SDD workspace and verify prerequisites:
+   Run `node .magic/scripts/executor.js check-prerequisites`
+   Run `node .magic/scripts/executor.js init`
+````
+
+### Manual Installation
+
+If you prefer installing manually without an AI assistant:
+
+#### Option A: Download from GitHub Releases
 
 1. Go to [Releases](https://github.com/teratron/magic-spec/releases/latest).
 2. Download `magic-spec-vX.Y.Z.zip`.
@@ -45,7 +93,7 @@ Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything el
 
 4. Integrate workflows or skills into your AI agent's environment (see [Integration](#-integration)).
 
-### Option B: Manual Clone
+#### Option B: Manual Clone
 
 ```bash
 # Clone just the needed folders
@@ -58,10 +106,16 @@ rm -rf _magic_tmp
 
 Add these entries to your `.gitignore` — the engine files are installed dependencies, like `node_modules/`:
 
-```
-.magic/
-skills/
-.agents/
+```gitignore
+# SDD engine
+/.magic/
+/.*/skills/magic-*/
+/.*/*/magic*.md
+
+## Generated artifacts
+/.design/*graph*.*
+/.design/*cache*/
+/.design/wiki/
 ```
 
 > [!TIP]
@@ -79,13 +133,14 @@ To update:
 
 ## 🔗 Integration
 
-Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/` or `skills/` to your agent's specific configuration directory.
+Magic Spec is designed to be agent-agnostic. You can integrate the engine's capabilities by linking or copying files from `workflows/`, `skills/`, or `rules/` to your agent's specific configuration directory.
 
-- **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor, Windsurf, GitHub Copilot).
-- **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code, Antigravity).
+- **Workflows (`workflows/`)**: Standard Markdown files for agents that support "slash commands" or prompt-based rules (e.g., Cursor `.cursor/rules/`, Claude Code `.claude/commands/`, Codex `.codex/prompts/`, Windsurf, GitHub Copilot).
+- **Skills (`skills/`)**: Structured tool directories for agents that support modular "tools" or "skills" (e.g., Claude Code `.claude/skills/`, Antigravity `.agents/skills/`, Gemini CLI).
+- **Rules (`rules/`)**: Behavioral instructions and watching processes loaded into the agent's context (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
 
 > [!TIP]
-> **Flexibility**: You can choose to use either directory or both, depending on your agent's requirements. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
+> **Interchangeability & Flexibility**: For the user, `workflows/` and `skills/` are fully interchangeable interfaces to the same engine logic. You can install workflows (slash commands) or skills (modular tools) — or both — depending on which format your AI assistant supports. For detailed integration patterns and directory mappings, see the [Distribution Guide](./docs/distribution.md).
 
 ## 💬 Usage
 
@@ -154,15 +209,6 @@ Each command accepts optional arguments to scope the operation to a specific **w
 
 If you encounter issues or have questions — open an [Issue](https://github.com/teratron/magic-spec/issues) on GitHub.
 
-## 🗺️ Roadmap
-
-- [x] Multi-agent integration system.
-- [x] Phased implementation planning.
-- [x] GitHub-based manual distribution.
-- [ ] Extended support for local-first LLM agents.
-- [ ] Advanced visual dashboard for project health.
-- [ ] Integration with CI/CD for automated spec validation.
-
 ## 🏗️ Contributing
 
 We welcome contributions! See the [**Contributing Guide**](./CONTRIBUTING.md) for details.
@@ -174,8 +220,8 @@ We welcome contributions! See the [**Contributing Guide**](./CONTRIBUTING.md) fo
 
 ## 📄 License
 
-Distributed under the [Apache License 2.0](./LICENSE).
+Distributed under the [MIT](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v2.1.92). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v2.1.141). We are constantly refining the SDD engine based on real-world usage.

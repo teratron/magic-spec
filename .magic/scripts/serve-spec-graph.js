@@ -35,8 +35,11 @@ const readline = require('readline');
 const SERVER_INFO = {
     name: 'sdd-graph',
     version: (() => {
-        try { return fs.readFileSync(path.join(__dirname, '../.version'), 'utf8').trim(); }
-        catch (_) { return '0.0.0'; }
+        try {
+            return fs.readFileSync(path.join(__dirname, '../.version'), 'utf8').trim();
+        } catch (_) {
+            return '0.0.0';
+        }
     })(),
 };
 const PROTOCOL_VERSION = '2024-11-05';
@@ -55,18 +58,22 @@ function loadGraph() {
     let raw;
 
     try {
-        const stdout = execFileSync(process.execPath, [executorPath, 'build-spec-graph', '--json'], {
-            cwd: process.cwd(),
-            env: process.env,
-            timeout: 30000,
-        });
+        const stdout = execFileSync(
+            process.execPath,
+            [executorPath, 'build-spec-graph', '--json'],
+            {
+                cwd: process.cwd(),
+                env: process.env,
+                timeout: 30000,
+            },
+        );
         raw = JSON.parse(stdout.toString('utf8'));
     } catch (err) {
         process.stderr.write(`[sdd-graph] Failed to build graph: ${err.message}\n`);
         process.exit(1);
     }
 
-    const nodes = new Map(raw.nodes.map(n => [n.id, n]));
+    const nodes = new Map(raw.nodes.map((n) => [n.id, n]));
     const edges = raw.edges;
 
     // Build adjacency list: id → [{id, relation}]
@@ -74,8 +81,10 @@ function loadGraph() {
     for (const n of nodes.keys()) adjacency.set(n, []);
 
     for (const edge of edges) {
-        if (adjacency.has(edge.from)) adjacency.get(edge.from).push({ id: edge.to, relation: edge.relation });
-        if (adjacency.has(edge.to)) adjacency.get(edge.to).push({ id: edge.from, relation: edge.relation });
+        if (adjacency.has(edge.from))
+            adjacency.get(edge.from).push({ id: edge.to, relation: edge.relation });
+        if (adjacency.has(edge.to))
+            adjacency.get(edge.to).push({ id: edge.from, relation: edge.relation });
     }
 
     return { nodes, edges, analysis: raw.analysis || {}, adjacency };
@@ -99,7 +108,8 @@ function queryGraph(nodes, query, type, limit) {
     const results = [];
     for (const node of nodes.values()) {
         if (type && node.type !== type) continue;
-        if (q && !node.label.toLowerCase().includes(q) && !node.id.toLowerCase().includes(q)) continue;
+        if (q && !node.label.toLowerCase().includes(q) && !node.id.toLowerCase().includes(q))
+            continue;
         results.push(node);
         if (results.length >= limit) break;
     }
@@ -162,7 +172,7 @@ function shortestPath(adjacency, fromId, toId) {
  */
 function godNodes(nodes, topN) {
     return [...nodes.values()]
-        .filter(n => typeof n.degree === 'number')
+        .filter((n) => typeof n.degree === 'number')
         .sort((a, b) => b.degree - a.degree)
         .slice(0, topN);
 }
@@ -174,20 +184,39 @@ function godNodes(nodes, topN) {
 const TOOLS = [
     {
         name: 'query_graph',
-        description: 'Search the SDD graph nodes by label substring and optional type filter. Returns matching nodes with their metadata. Output is truncated at `token_budget` (approx chars = tokens × 4).',
+        description:
+            'Search the SDD graph nodes by label substring and optional type filter. Returns matching nodes with their metadata. Output is truncated at `token_budget` (approx chars = tokens × 4).',
         inputSchema: {
             type: 'object',
             properties: {
-                query: { type: 'string', description: 'Case-insensitive substring to match against node label or id. Empty string returns all.' },
-                type: { type: 'string', enum: ['workspace', 'spec', 'file', 'convention', 'phase'], description: 'Filter by node type (optional).' },
-                limit: { type: 'number', description: 'Max results to return (default: 20).', default: 20 },
-                token_budget: { type: 'number', description: 'Approximate token budget for serialized output (default: 2000). Uses chars = tokens × 4 heuristic; output truncated with explicit sentinel.', default: 2000 },
+                query: {
+                    type: 'string',
+                    description:
+                        'Case-insensitive substring to match against node label or id. Empty string returns all.',
+                },
+                type: {
+                    type: 'string',
+                    enum: ['workspace', 'spec', 'file', 'convention', 'phase'],
+                    description: 'Filter by node type (optional).',
+                },
+                limit: {
+                    type: 'number',
+                    description: 'Max results to return (default: 20).',
+                    default: 20,
+                },
+                token_budget: {
+                    type: 'number',
+                    description:
+                        'Approximate token budget for serialized output (default: 2000). Uses chars = tokens × 4 heuristic; output truncated with explicit sentinel.',
+                    default: 2000,
+                },
             },
         },
     },
     {
         name: 'get_node',
-        description: 'Returns full details for a specific node by its id (e.g. "spec:engine/l1-engine-core", "ws:engine", "conv:C1").',
+        description:
+            'Returns full details for a specific node by its id (e.g. "spec:engine/l1-engine-core", "ws:engine", "conv:C1").',
         inputSchema: {
             type: 'object',
             required: ['id'],
@@ -198,7 +227,8 @@ const TOOLS = [
     },
     {
         name: 'get_neighbors',
-        description: 'Returns all nodes adjacent to a given node, with their edge relation types (contains, covers, implements, enforces, scopes, plans).',
+        description:
+            'Returns all nodes adjacent to a given node, with their edge relation types (contains, covers, implements, enforces, scopes, plans).',
         inputSchema: {
             type: 'object',
             required: ['id'],
@@ -209,7 +239,8 @@ const TOOLS = [
     },
     {
         name: 'find_gaps',
-        description: 'Returns the current gap analysis: orphaned files (scoped but not covered by any spec), L2 specs missing an Implements link, and convention orphans (conventions not referenced in any spec).',
+        description:
+            'Returns the current gap analysis: orphaned files (scoped but not covered by any spec), L2 specs missing an Implements link, and convention orphans (conventions not referenced in any spec).',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -217,7 +248,8 @@ const TOOLS = [
     },
     {
         name: 'shortest_path',
-        description: 'Finds the shortest path between two nodes in the SDD graph (BFS). Useful for tracing spec-to-code or task-to-spec relationships.',
+        description:
+            'Finds the shortest path between two nodes in the SDD graph (BFS). Useful for tracing spec-to-code or task-to-spec relationships.',
         inputSchema: {
             type: 'object',
             required: ['from', 'to'],
@@ -229,7 +261,8 @@ const TOOLS = [
     },
     {
         name: 'get_coverage',
-        description: 'Returns per-workspace coverage statistics: number of specs, files covered, total scope, and coverage percentage.',
+        description:
+            'Returns per-workspace coverage statistics: number of specs, files covered, total scope, and coverage percentage.',
         inputSchema: {
             type: 'object',
             properties: {},
@@ -237,11 +270,16 @@ const TOOLS = [
     },
     {
         name: 'god_nodes',
-        description: 'Returns the top-N nodes by degree (most connected). These are architectural hotspots that should have prioritized spec coverage.',
+        description:
+            'Returns the top-N nodes by degree (most connected). These are architectural hotspots that should have prioritized spec coverage.',
         inputSchema: {
             type: 'object',
             properties: {
-                top_n: { type: 'number', description: 'Number of top nodes to return (default: 10).', default: 10 },
+                top_n: {
+                    type: 'number',
+                    description: 'Number of top nodes to return (default: 10).',
+                    default: 10,
+                },
             },
         },
     },
@@ -260,32 +298,48 @@ const TOOLS = [
  * @returns {{content: Array<{type: string, text: string}>, isError?: boolean}}
  */
 function dispatchTool(name, args, graph) {
-    const { nodes, edges, analysis, adjacency } = graph;
+    const { nodes, analysis, adjacency } = graph;
 
     try {
         switch (name) {
             case 'query_graph': {
-                const results = queryGraph(nodes, args.query || '', args.type || null, args.limit || 20);
-                const budget = Number.isFinite(args.token_budget) && args.token_budget > 0
-                    ? Math.floor(args.token_budget)
-                    : 2000;
+                const results = queryGraph(
+                    nodes,
+                    args.query || '',
+                    args.type || null,
+                    args.limit || 20,
+                );
+                const budget =
+                    Number.isFinite(args.token_budget) && args.token_budget > 0
+                        ? Math.floor(args.token_budget)
+                        : 2000;
                 const charBudget = budget * 4;
                 let text = JSON.stringify(results, null, 2);
                 if (text.length > charBudget) {
-                    text = text.slice(0, charBudget) + `\n... (truncated to ~${budget} tokens; tighten \`query\`, lower \`limit\`, or raise \`token_budget\`)`;
+                    text =
+                        text.slice(0, charBudget) +
+                        `\n... (truncated to ~${budget} tokens; tighten \`query\`, lower \`limit\`, or raise \`token_budget\`)`;
                 }
                 return { content: [{ type: 'text', text }] };
             }
 
             case 'get_node': {
                 const node = nodes.get(args.id);
-                if (!node) return { content: [{ type: 'text', text: `Node not found: ${args.id}` }], isError: true };
+                if (!node)
+                    return {
+                        content: [{ type: 'text', text: `Node not found: ${args.id}` }],
+                        isError: true,
+                    };
                 return { content: [{ type: 'text', text: JSON.stringify(node, null, 2) }] };
             }
 
             case 'get_neighbors': {
                 const result = getNeighbors(nodes, adjacency, args.id);
-                if (!result) return { content: [{ type: 'text', text: `Node not found: ${args.id}` }], isError: true };
+                if (!result)
+                    return {
+                        content: [{ type: 'text', text: `Node not found: ${args.id}` }],
+                        isError: true,
+                    };
                 return { content: [{ type: 'text', text: JSON.stringify(result, null, 2) }] };
             }
 
@@ -293,7 +347,7 @@ function dispatchTool(name, args, graph) {
                 const gaps = {
                     orphaned_files: analysis.orphaned_files || [],
                     missing_implements: analysis.missing_implements || [],
-                    orphaned_conventions: (analysis.convention_coverage && analysis.convention_coverage.orphaned) || [],
+                    orphaned_conventions: analysis.convention_coverage?.orphaned || [],
                     bridge_specs: analysis.bridge_specs || [],
                 };
                 return { content: [{ type: 'text', text: JSON.stringify(gaps, null, 2) }] };
@@ -302,17 +356,42 @@ function dispatchTool(name, args, graph) {
             case 'shortest_path': {
                 const pathResult = shortestPath(adjacency, args.from, args.to);
                 if (!pathResult) {
-                    return { content: [{ type: 'text', text: `No path found between ${args.from} and ${args.to}` }] };
+                    return {
+                        content: [
+                            {
+                                type: 'text',
+                                text: `No path found between ${args.from} and ${args.to}`,
+                            },
+                        ],
+                    };
                 }
-                const steps = pathResult.map(id => {
+                const steps = pathResult.map((id) => {
                     const n = nodes.get(id);
                     return { id, label: n ? n.label : id, type: n ? n.type : 'unknown' };
                 });
-                return { content: [{ type: 'text', text: JSON.stringify({ length: pathResult.length - 1, path: steps }, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(
+                                { length: pathResult.length - 1, path: steps },
+                                null,
+                                2,
+                            ),
+                        },
+                    ],
+                };
             }
 
             case 'get_coverage': {
-                return { content: [{ type: 'text', text: JSON.stringify(analysis.coverage_stats || {}, null, 2) }] };
+                return {
+                    content: [
+                        {
+                            type: 'text',
+                            text: JSON.stringify(analysis.coverage_stats || {}, null, 2),
+                        },
+                    ],
+                };
             }
 
             case 'god_nodes': {
@@ -321,7 +400,10 @@ function dispatchTool(name, args, graph) {
             }
 
             default:
-                return { content: [{ type: 'text', text: `Unknown tool: ${name}` }], isError: true };
+                return {
+                    content: [{ type: 'text', text: `Unknown tool: ${name}` }],
+                    isError: true,
+                };
         }
     } catch (err) {
         return { content: [{ type: 'text', text: `Tool error: ${err.message}` }], isError: true };
@@ -362,7 +444,9 @@ function respondError(id, code, message) {
 function main() {
     process.stderr.write('[sdd-graph] Building graph...\n');
     const graph = loadGraph();
-    process.stderr.write(`[sdd-graph] Ready — ${graph.nodes.size} nodes, ${graph.edges.length} edges\n`);
+    process.stderr.write(
+        `[sdd-graph] Ready — ${graph.nodes.size} nodes, ${graph.edges.length} edges\n`,
+    );
 
     const rl = readline.createInterface({ input: process.stdin, crlfDelay: Infinity });
 
@@ -371,8 +455,12 @@ function main() {
         if (!line) return;
 
         let req;
-        try { req = JSON.parse(line); }
-        catch (_) { respondError(null, -32700, 'Parse error'); return; }
+        try {
+            req = JSON.parse(line);
+        } catch (_) {
+            respondError(null, -32700, 'Parse error');
+            return;
+        }
 
         const { id, method, params } = req;
 
@@ -393,10 +481,13 @@ function main() {
         }
 
         if (method === 'tools/call') {
-            const toolName = params && params.name;
-            const toolArgs = (params && params.arguments) || {};
+            const toolName = params?.name;
+            const toolArgs = params?.arguments || {};
 
-            if (!toolName) { respondError(id, -32602, 'Missing tool name'); return; }
+            if (!toolName) {
+                respondError(id, -32602, 'Missing tool name');
+                return;
+            }
 
             const result = dispatchTool(toolName, toolArgs, graph);
             respond(id, result);

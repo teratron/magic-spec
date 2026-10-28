@@ -63,7 +63,7 @@ duration_minutes: ~
 - **Assignment:** Agent
 - **Track:** A (generator)
 - **Files:** `dev/scripts/sync-skills.js`
-- **Verify:** `node -e "const s='rules/magic.md';const {normalizeBody}=require('./dev/scripts/sync-skills.js');" ` is not required — instead assert behaviour end-to-end in T-14A02. Direct check: `grep -n 'endsWith(.\.md.)' dev/scripts/sync-skills.js` returns a hit inside the **body** normalizer block (currently the guard exists only in the frontmatter block near line 133).
+- **Verify:** `node -e "const s='rules/magic.md';const {normalizeBody}=require('./dev/scripts/sync-skills.js');"` is not required — instead assert behaviour end-to-end in T-14A02. Direct check: `grep -n 'endsWith(.\.md.)' dev/scripts/sync-skills.js` returns a hit inside the **body** normalizer block (currently the guard exists only in the frontmatter block near line 133).
 - **Handoff:** Gates T-14A02 and the whole of Track B.
 - **Notes:** The body path applies `.replace(/\bmagic(\.[a-z][a-z0-9-]*)+(?=\b)/gi, m => m.replace(/\./g, '-'))`. For the input `rules/magic.md` it matches `magic.md` and emits `magic-md`, destroying the extension — the exact case the comment on the preceding line claims to avoid. Reuse the `.md`-preserving branch already present in the frontmatter normalizer rather than writing a second variant; two divergent implementations of the same rule are how this drifted. The rewrite must remain correct for genuine command references (`/magic.run` → `/magic-run`) and for dotted dev commands (`magic.dev.sync` → `magic-dev-sync`).
 

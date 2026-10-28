@@ -3,6 +3,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const { spawnSync } = require('child_process');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION
@@ -25,9 +26,24 @@ const preCommitPath = path.join(gitHooksDir, 'pre-commit');
 // HOOK CONTENT DEFINITION
 // ═══════════════════════════════════════════════════════════════════════════
 
+/** The line that shows which hooks this installer wrote. */
+const HOOK_MARKER = '# Magic Spec Pre-commit Hook';
+
+/** The one line a user adds to a hook of their own to run the same check. */
+const CHAIN_LINE = 'node .magic/scripts/executor.js update-engine-meta --check || exit 1';
+
 const hookContent = `#!/bin/sh
-# Magic Spec Pre-commit Hook
+${HOOK_MARKER}
 # Ensures engine integrity and metadata sync before commit.
+
+# Without the engine directory there is nothing to check: say so and let the commit through.
+# Only a directory that does not exist counts as absent; one that cannot be inspected counts
+# as present, so the check below still runs.
+node -e "try{require('fs').statSync('.magic')}catch(e){process.exit(e.code==='ENOENT'?3:0)}" 2>/dev/null
+if [ $? -eq 3 ]; then
+  echo "[Magic Sync] The engine (.magic/) is not installed here, so nothing was checked. Delete .git/hooks/pre-commit if you removed the engine on purpose."
+  exit 0
+fi
 
 echo "[Magic Sync] Checking engine integrity..."
 node .magic/scripts/executor.js update-engine-meta --check
@@ -44,22 +60,145 @@ exit 0
 `;
 
 // ═══════════════════════════════════════════════════════════════════════════
+// OWNERSHIP
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Tells whether a path is a symbolic link, without following it.
+ *
+ * @param {string} target - Path to inspect.
+ * @returns {boolean} True only for a symbolic link; false for anything else, including a missing path.
+ */
+function isSymbolicLink(target) {
+    try {
+        return fs.lstatSync(target).isSymbolicLink();
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * Asks git where it reads hooks from when that is not `.git/hooks`.
+ * Fails open: when git cannot answer (not a repository, git not installed),
+ * the setting counts as unset and the hook is written where it always was.
+ *
+ * @returns {string|null} The redirecting directory, or null when git reads `.git/hooks`.
+ */
+function redirectedHooksPath() {
+    const result = spawnSync('git', ['config', '--get', 'core.hooksPath'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+    });
+    if (result.error || result.status !== 0) return null;
+    const configured = result.stdout.trim();
+    if (configured === '') return null;
+    try {
+        const resolved = fs.realpathSync(path.resolve(projectRoot, configured));
+        if (resolved === fs.realpathSync(gitHooksDir)) return null;
+    } catch {
+        // The configured directory does not exist: git is still pointed elsewhere.
+    }
+    return configured;
+}
+
+/**
+ * Names a free place beside the hook to keep a copy of the file it replaces.
+ * Never returns a name that is already taken, so no earlier copy is overwritten.
+ *
+ * @returns {string} Absolute path of the copy.
+ */
+function freeCopyPath() {
+    const base = `${preCommitPath}.magic-spec.bak`;
+    if (!fs.existsSync(base)) return base;
+    let n = 1;
+    while (fs.existsSync(`${base}.${n}`)) n++;
+    return `${base}.${n}`;
+}
+
+/**
+ * Reports a hook the installer will not touch, prints the one line that chains
+ * the check into it, and gives the caller a non-zero exit code.
+ *
+ * @param {string} reason - Why nothing was written.
+ * @returns {number} Exit code 1.
+ */
+function leaveAlone(reason) {
+    console.error(`Git pre-commit hook not installed: ${reason}.`);
+    console.error('To run the integrity check from your own hook, add this line to it:');
+    console.error(`  ${CHAIN_LINE}`);
+    return 1;
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // INSTALLATION LOGIC
 // ═══════════════════════════════════════════════════════════════════════════
 
-try {
-    // Write the hook file and make it executable (on Unix)
+/**
+ * Writes the hook and makes it executable where the platform has the bit.
+ *
+ * @returns {void}
+ */
+function writeHook() {
     fs.writeFileSync(preCommitPath, hookContent);
 
-    // In Windows, the execute permission is handled differently, 
+    // In Windows, the execute permission is handled differently,
     // but Git Bash follows the #! header regardless.
     try {
         fs.chmodSync(preCommitPath, 0o755);
-    } catch (chmodErr) {
+    } catch {
         // Ignore chmod errors on some Windows setups if they occur
     }
+}
 
-    console.log('Git pre-commit hook installed successfully.');
+/**
+ * Installs the pre-commit hook without destroying one it did not write.
+ * No file: write it. The marker with exactly this body: nothing to do. The
+ * marker with another body: keep the old bytes beside it, then replace it.
+ * Anything else belongs to the user's tooling and is left alone.
+ *
+ * @returns {number} Process exit code: 0 when the hook is in place, 1 otherwise.
+ */
+function install() {
+    if (isSymbolicLink(gitHooksDir)) {
+        return leaveAlone('.git/hooks is a symbolic link, so its target belongs to someone else');
+    }
+    const redirect = redirectedHooksPath();
+    if (redirect !== null) {
+        return leaveAlone(`core.hooksPath points git at ${redirect}, which is not .git/hooks`);
+    }
+    if (isSymbolicLink(preCommitPath)) {
+        return leaveAlone(
+            '.git/hooks/pre-commit is a symbolic link, so its target belongs to someone else',
+        );
+    }
+
+    if (!fs.existsSync(preCommitPath)) {
+        writeHook();
+        console.log('Git pre-commit hook installed successfully.');
+        return 0;
+    }
+
+    const current = fs.readFileSync(preCommitPath, 'utf8');
+    if (!current.split(/\r?\n/).includes(HOOK_MARKER)) {
+        return leaveAlone('a pre-commit hook that this installer did not write is already there');
+    }
+    if (current === hookContent) {
+        console.log('Git pre-commit hook is already installed.');
+        return 0;
+    }
+
+    const copy = freeCopyPath();
+    fs.copyFileSync(preCommitPath, copy, fs.constants.COPYFILE_EXCL);
+    writeHook();
+    console.log(
+        `Git pre-commit hook updated. The previous hook is kept as ${path.relative(projectRoot, copy)}.`,
+    );
+    return 0;
+}
+
+try {
+    process.exitCode = install();
 } catch (e) {
     console.error('Failed to install Git hook:', e.message);
+    process.exitCode = 1;
 }

@@ -38,4 +38,4 @@ Adversarial review of implementation-level decisions before code is written. Tri
 - Proposing alternatives without trade-off analysis.
 - Escalating to Planner for in-task issues that Coder can resolve.
 - Treating all uncertainty as a user prompt; only material ambiguity blocks execution.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

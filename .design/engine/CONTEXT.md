@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-09-17
+**Generated:** 2026-10-12
 
 ## Active Technologies
 
@@ -20,6 +20,7 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
+│   ├── main/
 │   └── workspace.json
 ├── .github/
 │   └── workflows/
@@ -29,7 +30,6 @@
 │   ├── analyze.md
 │   ├── context.md
 │   ├── init.md
-│   ├── pause.md
 │   ├── retrospective.md
 │   ├── roles/
 │   ├── rule.md
@@ -44,6 +44,7 @@
 ├── CONTRIBUTING.md
 ├── README.md
 ├── dev/
+│   ├── package.json
 │   ├── scripts/
 │   └── tests/
 ├── docs/

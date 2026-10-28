@@ -16,7 +16,7 @@ Key Goals:
 
 - **Position**: what was last done, which spec is active, what phase the plan is in.
 - **Obstruction**: blockers and blocking constraints surfaced before you resume, not after you hit them.
-- **Direction**: exactly one recommended next command, with the reason it was chosen.
+- **Direction**: exactly one recommended next command, with the reason it was chosen — or, when the plan is complete and no work is waiting, a one-clause statement that nothing is pending and no command.
 - **Purity**: the command changes nothing — no writes, no version bump, no finalize.
 
 ## 2. Read-Only Guarantee
@@ -55,7 +55,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | State | Behavior |
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
-| **Paused session** | A paused status or a handoff file present surfaces the resume line — the recorded next action and its required reading. |
+| **In-flight session** | A task recorded `In Progress` surfaces the resume line — the recorded next action and the dead ends already recorded against the task. |
 | **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
@@ -75,8 +75,7 @@ With no argument the workspace resolves through the standard priority chain. Pas
 | **Run** (`run.md`) | Primary source — status reports the position `run` last wrote |
 | **Task** (`task.md`) | Primary source — the active phase and its checklist |
 | **Analyze** (`analyze.md`) | Referenced — the engine line points at analysis when the snapshot has drifted |
-| **Pause** (`pause.md`) | Complement — `pause` writes the handoff, `status` reads it back |
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-10-17 (v2.1.141).

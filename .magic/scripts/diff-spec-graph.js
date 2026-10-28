@@ -31,7 +31,7 @@ const path = require('path');
 // INPUT PARSING
 // ═══════════════════════════════════════════════════════════════════════════
 
-const args = process.argv.slice(2).filter(a => !a.startsWith('--'));
+const args = process.argv.slice(2).filter((a) => !a.startsWith('--'));
 const JSON_OUTPUT = process.argv.includes('--json');
 
 const [beforePath, afterPath] = args;
@@ -81,11 +81,11 @@ function loadSnapshot(filePath) {
  * @returns {{added: GraphNode[], removed: GraphNode[], changed: Array<{id: string, before: object, after: object, delta: object}>}}
  */
 function diffNodes(before, after) {
-    const beforeMap = new Map(before.map(n => [n.id, n]));
-    const afterMap = new Map(after.map(n => [n.id, n]));
+    const beforeMap = new Map(before.map((n) => [n.id, n]));
+    const afterMap = new Map(after.map((n) => [n.id, n]));
 
-    const added = after.filter(n => !beforeMap.has(n.id));
-    const removed = before.filter(n => !afterMap.has(n.id));
+    const added = after.filter((n) => !beforeMap.has(n.id));
+    const removed = before.filter((n) => !afterMap.has(n.id));
 
     const changed = [];
     for (const [id, bNode] of beforeMap) {
@@ -138,8 +138,8 @@ function diffEdges(before, after) {
     const afterSet = new Set(after.map(edgeKey));
 
     return {
-        added: after.filter(e => !beforeSet.has(edgeKey(e))),
-        removed: before.filter(e => !afterSet.has(edgeKey(e))),
+        added: after.filter((e) => !beforeSet.has(edgeKey(e))),
+        removed: before.filter((e) => !afterSet.has(edgeKey(e))),
     };
 }
 
@@ -156,10 +156,10 @@ function diffEdges(before, after) {
  */
 function topByDegree(nodes, topN = 5) {
     return [...nodes]
-        .filter(n => typeof n.degree === 'number')
+        .filter((n) => typeof n.degree === 'number')
         .sort((a, b) => b.degree - a.degree)
         .slice(0, topN)
-        .map(n => ({ id: n.id, label: n.label, type: n.type, degree: n.degree }));
+        .map((n) => ({ id: n.id, label: n.label, type: n.type, degree: n.degree }));
 }
 
 /**
@@ -170,8 +170,8 @@ function topByDegree(nodes, topN = 5) {
  * @returns {object} Coverage delta per workspace.
  */
 function diffCoverage(beforeAnalysis, afterAnalysis) {
-    const bStats = (beforeAnalysis && beforeAnalysis.coverage_stats) || {};
-    const aStats = (afterAnalysis && afterAnalysis.coverage_stats) || {};
+    const bStats = beforeAnalysis?.coverage_stats || {};
+    const aStats = afterAnalysis?.coverage_stats || {};
     const allWs = new Set([...Object.keys(bStats), ...Object.keys(aStats)]);
     const result = {};
 
@@ -203,8 +203,8 @@ function setDiff(before, after) {
     const bSet = new Set(before);
     const aSet = new Set(after);
     return {
-        gained: after.filter(x => !bSet.has(x)),
-        lost: before.filter(x => !aSet.has(x)),
+        gained: after.filter((x) => !bSet.has(x)),
+        lost: before.filter((x) => !aSet.has(x)),
     };
 }
 
@@ -219,18 +219,15 @@ function diffAnalysis(ba, aa) {
     ba = ba || {};
     aa = aa || {};
 
-    const orphanDiff = setDiff(
-        (ba.orphaned_files || []),
-        (aa.orphaned_files || []),
-    );
+    const orphanDiff = setDiff(ba.orphaned_files || [], aa.orphaned_files || []);
 
     const missingImplDiff = setDiff(
-        (ba.missing_implements || []).map(m => m.id || m),
-        (aa.missing_implements || []).map(m => m.id || m),
+        (ba.missing_implements || []).map((m) => m.id || m),
+        (aa.missing_implements || []).map((m) => m.id || m),
     );
 
-    const bConvOrphan = (ba.convention_coverage && ba.convention_coverage.orphaned) || [];
-    const aConvOrphan = (aa.convention_coverage && aa.convention_coverage.orphaned) || [];
+    const bConvOrphan = ba.convention_coverage?.orphaned || [];
+    const aConvOrphan = aa.convention_coverage?.orphaned || [];
     const convDiff = setDiff(bConvOrphan, aConvOrphan);
 
     return { orphanDiff, missingImplDiff, convDiff };
@@ -265,7 +262,9 @@ function printReport(diff) {
     console.log('═══════════════════════════════════════════════════════════════');
     console.log(`Before : ${summary.before_nodes} nodes, ${summary.before_edges} edges`);
     console.log(`After  : ${summary.after_nodes} nodes, ${summary.after_edges} edges`);
-    console.log(`Delta  : nodes ${fmtDelta(summary.node_delta)}, edges ${fmtDelta(summary.edge_delta)}`);
+    console.log(
+        `Delta  : nodes ${fmtDelta(summary.node_delta)}, edges ${fmtDelta(summary.edge_delta)}`,
+    );
     console.log('');
 
     // Node changes
@@ -332,9 +331,10 @@ function printReport(diff) {
     console.log('  After:');
     for (const n of godNodes.after) {
         const bNode = diff.beforeNodesMap.get(n.id);
-        const degDelta = bNode && typeof bNode.degree === 'number'
-            ? ` (${fmtDelta(n.degree - bNode.degree)})`
-            : ' (new)';
+        const degDelta =
+            bNode && typeof bNode.degree === 'number'
+                ? ` (${fmtDelta(n.degree - bNode.degree)})`
+                : ' (new)';
         console.log(`    ${n.label} [${n.type}] degree=${n.degree}${degDelta}`);
     }
     console.log('');
@@ -346,7 +346,9 @@ function printReport(diff) {
         const pct = delta.coverage_pct_delta;
         const trend = pct > 0 ? '↑' : pct < 0 ? '↓' : '=';
         console.log(`  ${ws}: ${trend} ${fmtDelta(delta.coverage_pct_delta, '%')} coverage`);
-        console.log(`    specs ${fmtDelta(delta.specs_delta)}, files covered ${fmtDelta(delta.covered_delta)}`);
+        console.log(
+            `    specs ${fmtDelta(delta.specs_delta)}, files covered ${fmtDelta(delta.covered_delta)}`,
+        );
         console.log(`    ${delta.before.coverage_pct}% → ${delta.after.coverage_pct}%`);
     }
     console.log('');
@@ -362,8 +364,14 @@ function printReport(diff) {
             console.log(`  ${label}: no change`);
             return;
         }
-        if (d.lost.length) d.lost.forEach(x => console.log(`    ✓ resolved: ${x}`));
-        if (d.gained.length) d.gained.forEach(x => console.log(`    ✗ new:      ${x}`));
+        if (d.lost.length)
+            d.lost.forEach((x) => {
+                console.log(`    ✓ resolved: ${x}`);
+            });
+        if (d.gained.length)
+            d.gained.forEach((x) => {
+                console.log(`    ✗ new:      ${x}`);
+            });
     };
 
     console.log('  Orphaned files:');
@@ -388,7 +396,7 @@ function main() {
     const coverage = diffCoverage(before.analysis, after.analysis);
     const analysis = diffAnalysis(before.analysis, after.analysis);
 
-    const beforeNodesMap = new Map(before.nodes.map(n => [n.id, n]));
+    const beforeNodesMap = new Map(before.nodes.map((n) => [n.id, n]));
 
     const diff = {
         summary: {

@@ -64,7 +64,7 @@ function parseArgs() {
 function reportUnrecognized(unrecognized) {
     if (!unrecognized || unrecognized.length === 0) return;
     console.log(
-        "[Archive] Not phase workbooks, so not considered (expected phase-{N}[{track}].md):"
+        '[Archive] Not phase workbooks, so not considered (expected phase-{N}[{track}].md):',
     );
     for (const file of unrecognized) {
         console.log(`  ↷ ${file}`);
@@ -88,14 +88,18 @@ function main() {
         if (candidates.length > 0) {
             console.log(
                 `[Archive] Notice: ${candidates.length} completed phase(s) pending archival: ` +
-                candidates.map(c => c.file).join(', ')
+                    candidates.map((c) => c.file).join(', '),
             );
-            console.log('[Archive] Run /magic.run or: node .magic/scripts/executor.js archive-phases');
+            console.log(
+                '[Archive] Run /magic.run or: node .magic/scripts/executor.js archive-phases',
+            );
         }
         return 0;
     }
 
-    const { archived, skipped, unrecognized } = archiveCompletedPhases(wsDir, { dryRun: opts.dryRun });
+    const { archived, skipped, unrecognized } = archiveCompletedPhases(wsDir, {
+        dryRun: opts.dryRun,
+    });
 
     if (archived.length === 0 && skipped.length === 0) {
         console.log('[Archive] No completed phases to archive.');

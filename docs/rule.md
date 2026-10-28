@@ -26,7 +26,7 @@ The engine enforces 5 mandatory invariants during every rule operation:
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Scope Guard** | Only modify §7; sections §1–6 are the Universal Constitution (amend only if explicitly targeted) |
-| 3 | **No Silent Writes** | Always show proposed diff/statement before committing |
+| 3 | **Narrate Writes (C25)** | Apply immediately and show the diff inline as the write happens; approval only at objective gates (core amendment, constitutional conflict, removal) |
 | 4 | **Auto-Init** | Silently creates `.design/` and workspace `RULES.md` if missing |
 | 5 | **Versioning (C14)** | Engine integrity after `.magic/` changes; rules versioned Major/Minor/Patch |
 
@@ -52,9 +52,9 @@ The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 | --- | --- |
 | *"in engine"*, *"for docs"*, *"this workspace"* | Workspace `RULES.md` |
 | Universal rule, no workspace context | Global `RULES.md` |
-| Ambiguous | Engine asks: "Global or workspace-scoped?" |
+| Ambiguous | Resolved autonomously: workspace tier when a workspace is active, else global; narrated as a Decision Record |
 
-Workspace `RULES.md` files are created on demand. Duplication checks scan **both tiers** to prevent redundancy.
+Workspace `RULES.md` files are created on demand. Duplication checks scan both tiers, the rules the engine ships in `rules/magic.md` and the regulations inside specifications.
 
 ## 5. Rule Actions
 
@@ -62,43 +62,54 @@ Workspace `RULES.md` files are created on demand. Duplication checks scan **both
 | --- | --- | --- |
 | **Add** | Global: append after highest C{N} in §7. Workspace: append after highest WC{N}. | Minor |
 | **Amend** | Match ID/keyword in target tier → replace in place. | Minor |
-| **Remove** | Match ID/keyword → Dependency Scan → delete entry. | Major |
+| **Remove** | Match ID/keyword → Dependency Scan → single confirmation → delete entry. | Major |
 | **List** | Display all §7 entries from both tiers. | N/A |
 
 ### Remove — Dependency Scan
 
-Before proposing deletion, the engine scans all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → included in the proposal: *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
+Before deleting, the engine scans all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → shown in the single confirmation a Remove asks (deleting a rule is a destructive action, C9 gate 1): *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
 
 ### Batch Operations (Trust Mode)
 
-When the user requests multiple rule changes, all changes are grouped into a single atomic update. In Trust Mode (C9), the engine notifies the user and applies immediately. Only core amendments (§1–6) or conflicting §7 rules require explicit approval.
+When the user requests multiple rule changes, all changes are grouped into a single atomic update. In Trust Mode (C9), the engine notifies the user and applies immediately. Only core amendments (§1–6), conflicting §7 rules and rule removal require explicit approval.
 
 ## 6. Constitutional Reviewer (C24)
 
 Before committing the rule, the engine adopts a **Constitutional Reviewer** persona and evaluates:
 
-- **Core Conflict**: Does this rule create a practical conflict with any existing logic (C1–C23)?
+- **Core Conflict**: Does this rule create a practical conflict with any existing convention?
 - **Cognitive Consistency**: Is the phrasing unquantified (hallucination risk) or redundant with a global rule?
 - **Operational Friction**: Will this rule cause excessive HALT points in standard Parallel workflows (C3)?
 - **Retroactive Impact**: If applied to the last 3 completed tasks, would any have halted or produced different output?
 
 If a practical conflict is found → **HALT** before writing.
 
+### 6.1 Admission Gate
+
+Before the review, the reviewer decides whether the rule should exist at all — a rule that conflicts with nothing is not thereby needed.
+
+- **Origin**: a rule the user wrote is recorded at the strength and scope they stated and is never declined; a rule the agent composed (T1–T3, analysis output, a clause added to the user's rule) must pass the tests below. An origin that cannot be established counts as agent-originated.
+- **Evidence**: an observed occurrence of the harm — a file and line, a commit, or a failure reproduced in the session; two instances for a repeated pattern. A scenario that could happen is not evidence. Harm in the irreversible class is the one exception.
+- **With/without comparison**: does the cause persist, what already catches it, is the harm reversible — and which hazards the rule itself opens (friction, deadlock, over-reach, cascade, conflict, opened hole).
+- **Form and placement**: the lowest rung that covers the evidence (no artifact, a note in a specification, a regulation in a specification, a workspace convention, a global convention); soft by default, hard only for irreversible harm, after a cited violation, or when the user stated it.
+- **Outcome**: an admitted rule is narrated as a short admission record; a declined one as a single Decision Record (`[DR] Not codified: …`) with an override, and nothing is written. A rule that belongs in a specification is redirected to `/magic.spec amend` instead of written to `RULES.md`.
+- **Size and history**: a rule body is at most 10 non-empty lines, and its Document History row records the origin (`user-stated`, or `agent` with the evidence). During ventilation `/magic.analyze` reports rules whose cause is gone, that something else already covers, that deadlock the agent or that exceed the bound (`RULE_RETIRE_CANDIDATE`, `RULE_BLOAT`); it edits nothing.
+
 ## 7. Post-Write Impact
 
 After a rule is written to disk:
 
 1. **Notify**: Detect if `TASKS.md` is now based on a stale version of the rules.
-2. **Offer Sync**: Propose `magic.task update` to propagate the rule change.
-3. **Compliance**: For critical rules, suggest `magic.spec audit` to verify existing specs comply.
+2. **Next step**: exactly one narrated next command — `/magic.task {workspace} update` by default, `/magic.spec audit` only when the rule changes verification or compliance obligations.
 
 ## 8. Trigger Types
 
 Rules are captured via multiple triggers:
 
-- **T1**: Universally-scoped language ("always", "never").
-- **T2**: Recurring patterns found across multiple specifications.
-- **T4**: Explicit user declarations ("From now on, use..."). Also captured inline by the Spec Workflow (see [spec.md §6.5](spec.md#65-t4-rule-capture-with-tier-routing)).
+- **T1**: "Always/never" wording that governs how work is done (a statement about product behavior stays in the specification).
+- **T2**: A repeated pattern with at least two cited instances.
+- **T3**: An audit finding whose class recurs after being fixed where it occurred.
+- **T4**: Explicit user declarations ("From now on, use..."). Also captured during Spec Workflow work, which hands it to this workflow (see [spec.md §6.5](spec.md#65-t4-rule-capture-with-tier-routing)).
 
 ## 9. Maintenance
 
@@ -108,4 +119,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-10-17 (v2.1.141).

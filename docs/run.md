@@ -50,7 +50,7 @@ The engine enforces 6 mandatory invariants during every execution:
 | 2 | **Rules First** | Read `RULES.md` before any code edit; adhere to project conventions |
 | 2.5 | **Live Memory (STATE.md)** | Read STATE.md before execution; display blockers; update after every task transition |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
-| 4 | **Logic Guards** | Dependency, Mode, Sync, Quarantine (C12), Spec Stability, Phantom Spec, Pause Propagation |
+| 4 | **Logic Guards** | Dependency, Mode, Sync, Quarantine (C12), Spec Stability, Phantom Spec, Stabilizing exception (C12.1), Bootstrap exception, Pause Propagation |
 | 5 | **Zero-Prompt Automation (C9)** | Skip all routine confirmations; execute sequences autonomously |
 | 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
 
@@ -60,8 +60,11 @@ STATE.md is a live project state digest read before every execution session:
 
 - **Blockers**: If non-empty, displayed before proceeding.
 - **Blocking Constraints**: Each `[C-NNN]` confirmed before execution.
-- **Paused state**: Triggers Resume Detection for seamless session continuity.
+- **Work in flight** (a task marked `In Progress`): Triggers Resume Detection for seamless session continuity — automatically, with no command to type.
 - **Updates**: STATE.md is updated after every task transition (`Done` / `Blocked`) and phase completion.
+- **Task Start**: Before execution begins, the selected task's tracking entry is marked `In Progress`, so an interrupted session leaves a visible trace and a resuming one finds the task: Select takes a task left in flight — one no track of the current invocation is executing — before any `Todo` task.
+- **Dead ends**: An approach tried and abandoned (a failed check, a review that sent the work back, a reverted change) is recorded as one line in the task's `Attempts` field, so a fresh session does not repeat it.
+- **Checkpoint**: When a workflow reports `checkpoint saved`, ending the session loses nothing — a new one resumes from STATE.md.
 
 ## 4. Execution Modes
 
@@ -82,8 +85,8 @@ Default is **Parallel mode (C3)**. If mode is absent from `RULES.md §7`, Parall
 Validates project state before execution:
 
 - **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
-- **Bootstrap Detection**: If `PLAN.md` contains `[Bootstrap]` markers, warns that specs are not yet Stable.
-- **Spec Stability Spot-Check**: For each spec referenced by a `Todo` task, confirms status = `Stable` in `INDEX.md`.
+- **Bootstrap Detection**: If `PLAN.md` contains `[Bootstrap]` markers, warns that specs are not yet Stable. A `[Bootstrap]` task runs against its `Draft` spec: the guards that demand `Stable` (Quarantine, Spec Stability, the Mid-Run check, the orchestrator's re-read) hold it to the status the spec and its L1 parent had when the task started (Bootstrap exception).
+- **Spec Stability Spot-Check**: For each spec referenced by a `Todo` task, confirms status = `Stable` in `INDEX.md`. A task flagged `stabilizes:` is exempt for the spec its flag names (Stabilizing exception, C12.1) — its work is what makes that spec `Stable`.
 - **File-Header Parity**: Spec file headers must match `INDEX.md` (status, version). For L2 specs, verification includes L1 parent headers (including cross-workspace parents).
 
 ### 5.2 Execute & QA Review (C24 — Tester Persona)
@@ -99,23 +102,23 @@ If any check fails → task status set to `Blocked [!]` with reason. Execution d
 
 ### 5.3 Mid-Run Stability Check
 
-Before committing any task as `Done`, the engine re-verifies the target spec is still `Stable` in `INDEX.md` and confirms file header parity. This also recursively includes the spec's L1 parent. Demotion or drift → **HALT** that track.
+Before committing any task as `Done`, the engine re-verifies the target spec is still `Stable` in `INDEX.md` and confirms file header parity. This also recursively includes the spec's L1 parent. Demotion or drift → **HALT** that track. A task flagged `stabilizes:` or marked `[Bootstrap]` is held to the status its spec had when the task started, instead of `Stable`; reaching `Stable` does not halt it.
 
 ### 5.4 Update
 
 After each task completes:
 
 - **STATE Sync**: STATE.md updated via executor script before touching TASKS.md.
-- **Task Status**: `In Progress` → `Done` (or `Blocked [!]`) in TASKS.md Phase Checklist.
+- **Task Status**: The tracking entry moves `In Progress` → `Done` (or `Blocked [!]`); the TASKS.md Phase Checklist line is ticked when `Done`.
 - **Plan Sync**: Completed specs/phases → `[x]` in `PLAN.md`.
 - **Change Record**: 1-line summary in the task's `Changes` field.
-- **Handoff**: If spec is ambiguous → **HALT** and delegate to `magic.spec` for update.
+- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magic.task {workspace}`. `/magic.spec` is never named from the run; it surfaces only when `/magic.task` itself cannot resolve the gap.
 
 ### 5.5 Blocked Task Escalation
 
-If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked` and halts. A delegated handoff jumps to the Spec Workflow (Explore Mode) where specifications are formally updated before resuming.
+If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magic.task {workspace}` recommendation. `/magic.task` then ends with the one `/magic.spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
 
-**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status with a suggestion to run `/magic.pause` for full handoff.
+**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magic.task {workspace}` to revalidate the plan.
 
 ## 6. Lifecycle & Conclusion
 
@@ -135,13 +138,13 @@ If a task encounters ambiguous instructions or missing details, the agent marks 
 
 ## 7. Session Isolation (Phase Gates — C17)
 
-Major transitions within or out of the Run Workflow are protected by a **Hard Stop**. You must physically open a **New Chat** before starting a new phase or returning to Specification/Planning to eliminate context bleed-over.
+Major transitions within or out of the Run Workflow are protected by a **Hard Stop**. You must physically open a **New Chat** before starting a new phase or returning to Specification/Planning to eliminate context bleed-over. Because state is checkpointed after every workflow, a new chat loses nothing: if work was left in flight, the next session opens with a one-line resume report.
 
 ## 8. Run Completion Checklist
 
 After every execution cycle, the engine verifies:
 
-- Spec Stability: all active-phase specs confirmed Stable before execution
+- Spec Stability: all active-phase specs confirmed Stable before execution (the spec a `stabilizes:` task names and the `Draft` specs of `[Bootstrap]` tasks excepted)
 - Rules Parity: current RULES.md version matches TASKS.md base
 - TASKS.md read first; execution bound to spec section
 - C24 QA Review: internal "Tester" audit performed before marking tasks Done
@@ -152,4 +155,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-10-17 (v2.1.141).

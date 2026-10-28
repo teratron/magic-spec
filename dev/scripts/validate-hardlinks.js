@@ -71,9 +71,9 @@ function fingerprint(stat) {
  */
 function tallyLinkResults(results) {
     return {
-        missing: results.filter(r => r === 'missing').length,
-        drift: results.filter(r => r === 'drift').length,
-        linked: results.filter(r => r === 'linked').length,
+        missing: results.filter((r) => r === 'missing').length,
+        drift: results.filter((r) => r === 'drift').length,
+        linked: results.filter((r) => r === 'linked').length,
     };
 }
 
@@ -121,11 +121,14 @@ function validateAgentsLinks() {
     const anchorFp = fingerprint(anchorStat);
     console.log(`   📎 Anchor: ${ANCHOR} (inode=${anchorFp}, nlink=${anchorStat.nlink})`);
 
-    const { missing, drift, linked } = tallyLinkResults(SIBLINGS.map(sib => classifySibling(sib, anchorFp)));
+    const { missing, drift, linked } = tallyLinkResults(
+        SIBLINGS.map((sib) => classifySibling(sib, anchorFp)),
+    );
 
-    const summary = missing > 0
-        ? `${linked}/${SIBLINGS.length} linked, ${missing} missing`
-        : `all ${SIBLINGS.length} siblings linked to ${ANCHOR}`;
+    const summary =
+        missing > 0
+            ? `${linked}/${SIBLINGS.length} linked, ${missing} missing`
+            : `all ${SIBLINGS.length} siblings linked to ${ANCHOR}`;
     console.log(`   ↳ ${summary}.`);
 
     return { drift, missing, fatal: false };
@@ -171,7 +174,9 @@ function classifyPairedFile(sourceDir, targetDir, file) {
     const targetFp = fingerprint(targetStat);
 
     if (sourceFp !== targetFp) {
-        console.error(`   ❌ Drift: ${sourceDir}/${file} (${sourceFp}) ≠ ${targetDir}/${file} (${targetFp}).`);
+        console.error(
+            `   ❌ Drift: ${sourceDir}/${file} (${sourceFp}) ≠ ${targetDir}/${file} (${targetFp}).`,
+        );
         return 'drift';
     }
     console.log(`   ✅ ${sourceDir}/${file} → ${targetDir}/${file}`);
@@ -184,9 +189,10 @@ function validateDirectoryPairLinks(sourceDir, targetDir, label) {
         return { drift: 0, missing: 0, fatal: false, skipped: true };
     }
 
-    const files = fs.readdirSync(sourcePath, { withFileTypes: true })
-        .filter(d => d.isFile() && d.name.endsWith('.md'))
-        .map(d => d.name);
+    const files = fs
+        .readdirSync(sourcePath, { withFileTypes: true })
+        .filter((d) => d.isFile() && d.name.endsWith('.md'))
+        .map((d) => d.name);
 
     if (files.length === 0) {
         return { drift: 0, missing: 0, fatal: false, skipped: true };
@@ -194,11 +200,14 @@ function validateDirectoryPairLinks(sourceDir, targetDir, label) {
 
     console.log(`\n🔍 Validating hardlinks for ${label} (${sourceDir}/ ↔ ${targetDir}/)...`);
 
-    const { missing, drift, linked } = tallyLinkResults(files.map(file => classifyPairedFile(sourceDir, targetDir, file)));
+    const { missing, drift, linked } = tallyLinkResults(
+        files.map((file) => classifyPairedFile(sourceDir, targetDir, file)),
+    );
 
-    const summary = missing > 0
-        ? `${linked}/${files.length} linked, ${missing} missing`
-        : `all ${files.length} file(s) linked`;
+    const summary =
+        missing > 0
+            ? `${linked}/${files.length} linked, ${missing} missing`
+            : `all ${files.length} file(s) linked`;
     console.log(`   ↳ ${summary}.`);
 
     return { drift, missing, fatal: false };
@@ -219,12 +228,16 @@ function main() {
     const totalMissing = agents.missing + rules.missing + workflows.missing;
 
     if (totalDrift > 0) {
-        console.error(`\n❌ Hardlink validation failed: ${totalDrift} drifted file(s). Run /magic.dev.init to rebuild.`);
+        console.error(
+            `\n❌ Hardlink validation failed: ${totalDrift} drifted file(s). Run /magic.dev.init to rebuild.`,
+        );
         process.exit(1);
     }
 
     if (strict && totalMissing > 0) {
-        console.error(`\n❌ Hardlink validation failed (strict): ${totalMissing} sibling(s) missing.`);
+        console.error(
+            `\n❌ Hardlink validation failed (strict): ${totalMissing} sibling(s) missing.`,
+        );
         process.exit(1);
     }
 

@@ -32,7 +32,7 @@ The engine enforces 6 mandatory invariants:
 | Level | Name | Trigger | Action |
 | --- | --- | --- | --- |
 | **Level 1** | Auto-snapshot | Phase Completion | Silently collects metrics and adds one row to the Snapshots table |
-| **Level 2** | Full Retro | Plan Completion / Manual | Deep analysis of trends, recommendations, and actionable advice |
+| **Level 2** | Full Retro | Plan Completion (`run.md`) | Deep analysis of trends, recommendations, and actionable advice |
 
 > **Context Economy**: Retrospectives are "read-often, write-once" records. L1 snapshots are strictly metadata updates to minimize context window consumption.
 
@@ -52,7 +52,7 @@ Data is organized into four categories:
 - **Efficiency**: Spec revisions-to-Stable ratio.
 - **Friction**: Recurrent blocking reasons in phase notes.
 - **Shadow Logic**: Cross-reference specifications with actual codebase — detect implemented logic without a Stable spec.
-- **DORA Metrics**: Deployment Frequency and Change Failure Rate (manual input / external hook).
+- **DORA Metrics**: Deployment Frequency and Change Failure Rate (recorded when a CI hook or the user's notes supply them; otherwise `n/a`).
 
 ## 5. Independent Analyst Review (C24)
 

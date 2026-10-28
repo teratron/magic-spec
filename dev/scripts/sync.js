@@ -52,7 +52,7 @@ const KNOWN_FLAGS = new Set([
     '--dry-run',
 ]);
 
-const unknown = rawArgs.filter(a => a.startsWith('-') && !KNOWN_FLAGS.has(a));
+const unknown = rawArgs.filter((a) => a.startsWith('-') && !KNOWN_FLAGS.has(a));
 if (unknown.length > 0) {
     console.error(`❌ sync.js: unknown flag(s): ${unknown.join(', ')}`);
     console.error(`   Accepted: ${[...KNOWN_FLAGS].join(', ')}`);
@@ -86,10 +86,10 @@ function runScript(scriptPath, extraArgs = [], opts = {}) {
         return;
     }
 
-    const argString = extraArgs.length ? ' ' + extraArgs.map(a => `"${a}"`).join(' ') : '';
+    const argString = extraArgs.length ? ' ' + extraArgs.map((a) => `"${a}"`).join(' ') : '';
     try {
         execSync(`node "${scriptPath}"${argString}`, { stdio: 'inherit' });
-    } catch (e) {
+    } catch {
         if (opts.tolerant) {
             console.warn(`⚠️  ${path.basename(scriptPath)} exited non-zero (tolerant).`);
             return;
@@ -115,7 +115,7 @@ function main() {
         runScript(
             path.join(devScriptsDir, 'validate-hardlinks.js'),
             strictLinks ? ['--strict'] : [],
-            { tolerant: !strictLinks }
+            { tolerant: !strictLinks },
         );
     }
 

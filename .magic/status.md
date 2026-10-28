@@ -4,16 +4,16 @@ description: Read-only resume briefing — where the project stands and the one 
 
 # Status Workflow
 
-Read-only resume briefing for returning users. Composes current position, progress, blockers, recent decisions, engine state, and exactly one recommended next command — all from existing artifacts.
+Read-only resume briefing for returning users. Composes current position, progress, blockers, recent decisions, engine state, and exactly one recommended next command — or, when nothing is pending, a statement of that — all from existing artifacts.
 
 > **Scope**: presentation only. No file writes, no version bumps, no finalization, no delegation to other workflows.
 > **Executable projections:** [`workflows/magic.status.md`](../workflows/magic.status.md) · [`skills/magic-status/SKILL.md`](../skills/magic-status/SKILL.md)
 
 ## Core Invariants (Mandatory)
 
-1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature.
-2. **Context (Zero-Prompt)**: resolve the workspace via the resolution chain in [context.md](context.md) (Priority 1-4). Optional `{workspace}` argument overrides.
-3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu.
+1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.design/.cache/`; the sink is not an artifact and that is not a write in this sense.)
+2. **Context (Zero-Prompt)**: apply [context.md](context.md) as a whole — every section applies unless it names other workflows. Optional `{workspace}` argument overrides.
+3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, it ends with that statement and no command; the briefing never invents one.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
 5. **Graceful Degradation**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})`, never a crash of the whole briefing.
 
@@ -35,15 +35,16 @@ Read-only resume briefing for returning users. Composes current position, progre
 6. **Engine line** — compare `.magic/.version` against the `**Engine Version:**` snapshot in `.design/INDEX.md`:
    - Match → `Engine: {version} (in sync)`
    - Differ or unknown → `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`
-7. **Next** — exactly one recommended command:
-   - STATE.md `Next Action` present → recommend it verbatim.
-   - Otherwise compute by pipeline order: open `Todo` tasks → `/magic.run {workspace}`; registered specs without a plan → `/magic.task {workspace}`; empty registry → `/magic.spec`.
+7. **Next** — exactly one recommended command, or the nothing-pending statement:
+   - STATE.md `Next Action` states that nothing is pending (it names no command) → render `Next: nothing pending — {the statement}` and recommend no command.
+   - STATE.md `Next Action` present and names a command → recommend it verbatim.
+   - Absent → compute by pipeline order: open `Todo` tasks → `/magic.run {workspace}`; registered specs without a plan → `/magic.task {workspace}`; empty registry → `/magic.spec`.
    - Format: `[DR] Next: {command} — {criterion}. (Override: any /magic.* command)`
 
 ### 3. Degraded States
 
 - **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magic.task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
-- **Paused session** (`**Status:** Paused` or `HANDOFF.json` present) → add a resume line: handoff `next_action` and `required_reading` (pause contract).
+- **In-flight session** → add the resume line printed by `node .magic/scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
 
@@ -56,5 +57,5 @@ Status Checklist
   ☐ Blocking Constraints surfaced (mandatory reading)
   ☐ Engine line rendered: in-sync or informational drift (no prompt, no auto-analyze)
   ☐ Exactly one next command recommended as [DR] (DA-6)
-  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; Paused → resume line)
+  ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; in-flight → resume line)
 ```

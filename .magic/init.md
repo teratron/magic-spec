@@ -4,7 +4,7 @@ Silent pre-flight check for `.design/` setup. Auto-called by Step 0 of all workf
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums / Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skip existing files. Never mutate user state.
@@ -31,7 +31,7 @@ graph TD
 Run `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. Branch on result:
 
 - `ok: true` → skip silently; return control to caller.
-- `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below).
+- `ok: false` + `ENGINE_INTEGRITY` / `GHOST_REGISTRY` warnings → apply **C15 Filter** (below). `checksums_mismatch`, the name the constitution uses for an engine-checksum failure, is the `ENGINE_INTEGRITY` warning — `check-prerequisites` prints no token of that name.
 - `ok: false` + missing system files (no integrity warnings) → proceed to Step 2 (Init).
 - `ok: false` + unrecognized reason → **HALT**. Report: `"Unexpected pre-flight failure: {raw output}. Investigate manually."`
 - Output contains `CONFIG_DRIFT` (any branch) → log non-blocking advisory `"RULES.md was modified outside workflow."` Auto-proceed; do NOT halt or prompt.
@@ -93,7 +93,7 @@ Per Workspace Intent Routing WI-6 the script atomically: (1) validates `{name}` 
 Init Checklist
   ☐ .design/ structure, registry, and workspace.json validated
   ☐ Engine integrity verified (no checksum mismatch)
-  ☐ RULES.md (C1-C22) & INDEX.md headers present
+  ☐ RULES.md & INDEX.md headers present
   ☐ Workspace subtree provisioned (specifications/, tasks/, archives/tasks/)
   ☐ Existing codebase check performed; analyzer suggested if applicable
 ```

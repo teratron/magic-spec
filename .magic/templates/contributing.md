@@ -15,7 +15,7 @@ You can trigger these workflows via your AI agent (Claude, Cursor, Windsurf, etc
 
 ### Development Cycle
 
-1. **Spec First**: Always update or create a specification in `.design/specifications/` before writing code.
+1. **Spec First**: Always update or create a specification in `.design/{workspace}/specifications/` before writing code.
 2. **Task & Plan**: Use `/magic.task` to generate or update the implementation plan.
 3. **Run**: Use `/magic.run` to execute tasks and write implementation code.
 4. **Analyze**: Run `/magic.analyze` regularly to ensure documentation and code stay in sync.

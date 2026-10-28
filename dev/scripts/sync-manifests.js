@@ -132,9 +132,11 @@ function syncManifests() {
     const targetVersion = fs.readFileSync(versionFile, 'utf8').trim();
     console.log(`🔄 Syncing project ecosystem to version ${targetVersion}...`);
 
-    const results = buildTargets(targetVersion).map(target => syncOneTarget(target, targetVersion));
-    const changes = results.filter(r => r === 'updated').length;
-    const alreadyCurrent = results.filter(r => r === 'current').length;
+    const results = buildTargets(targetVersion).map((target) =>
+        syncOneTarget(target, targetVersion),
+    );
+    const changes = results.filter((r) => r === 'updated').length;
+    const alreadyCurrent = results.filter((r) => r === 'current').length;
 
     console.log(`🚀 Manifest Sync: ${changes} updated, ${alreadyCurrent} already current.`);
 }

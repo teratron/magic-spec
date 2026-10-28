@@ -81,9 +81,9 @@ Potential issues and alternative approaches considered.
 
 ## Canonical References
 
-<!-- MANDATORY for Stable status. List the authoritative source files that downstream agents
-     MUST read before implementing this spec. Use relative paths from project root.
-     This section is the agent's contract — do not delete or leave empty on Stable specs. -->
+<!-- Expected on Stable specs (empty or stub rows are flagged CANONICAL_MISSING — advisory, non-blocking).
+     List the authoritative source files that downstream agents must read before implementing this spec.
+     Use relative paths from project root. This section is the agent's contract — keep it filled once the spec is Stable. -->
 
 | Alias | Path | Purpose |
 | --- | --- | --- |

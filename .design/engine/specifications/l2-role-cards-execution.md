@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.0
+**Version:** 1.2.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -43,11 +43,11 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. Absorbs the legacy "Planning Skeptic" persona from C24 — the skeptical review is an intrinsic step, not a separate gate.
+**Mission:** Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 **Operating Protocol:**
 
-1. Read all `Stable` specs referenced by active-phase tasks.
+1. Read all specs referenced by active-phase tasks.
 2. Construct a dependency graph with edges as `Implements` / `Related Specifications` / file-level-conflict links.
 3. Group tasks into phases that minimize cross-phase dependencies.
 4. Draft `PLAN.md` with phase summaries and task lists.
@@ -92,7 +92,7 @@ related_rules: [C3]
 2. Build a shared-resource map: for each task, list files it will modify (from spec body, not just TASKS.md).
 3. Group tasks into tracks such that no two tasks in parallel tracks modify the same file. Tasks with file-level conflict MUST be serialized into one track.
 4. Dispatch the first task of each track to its track owner.
-5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable`. If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
+5. Between dispatches, re-read `INDEX.md` and verify all referenced spec statuses are still `Stable` — a spec named by a dispatched task's `stabilizes:` flag, or targeted by a `[Bootstrap]` task, is held to the status it had at that dispatch instead (`run.md` Logic Guards). If demoted, halt dispatch for affected tracks and emit `SPEC_DEMOTED` notification.
 6. Receive `Done` / `Blocked [!]` signals from track owners; dispatch next task in the track.
 7. On phase completion, yield back to `run.md` Step 5.
 
@@ -182,7 +182,7 @@ related_rules: [C3]
 1. Read the task's `Blocked` reason and all diagnostic artifacts (logs, error messages, stack traces if available).
 2. Classify the blocker: (a) implementation bug, (b) spec ambiguity, (c) environment/dependency issue, (d) dependency on another Blocked task.
 3. For (a): produce a fix diff, hand off to Test-engineer for re-check.
-4. For (b): hand off to `spec.md` workflow via `magic.spec` to resolve the ambiguity.
+4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magic.task {workspace}` recommendation, and `/magic.spec` surfaces only inside a `/magic.task` HALT (`rules/magic.md §5`).
 5. For (c): document the environment fix in task notes; hand off back to Coder.
 6. For (d): update dependency graph; hand off to Planner for re-plan.
 7. Never re-mark a task `Done` directly — always route through Test-engineer.
@@ -221,7 +221,7 @@ related_rules: [C2]
 1. Load the passed diff and identify docs-affecting changes: public API signatures, exported symbols, user-visible behavior, configuration options, CLI flags.
 2. Update `README.md` for feature-level changes.
 3. Update `CHANGELOG.md` with the task's `Changes` field (L1 phase entry — per `run.md` Step 5).
-4. Update in-codebase docstrings / JSDoc if signatures changed (per `CLAUDE.md §6` / §7 style).
+4. Update in-codebase docstrings / JSDoc if signatures changed (per the project's documented docstring conventions).
 5. Hand back to Test-engineer to finalize `Done` transition.
 
 **Anti-patterns:**
@@ -247,6 +247,9 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.3 | 2026-10-01 | Clarification patch, no status transition (descriptions follow behavior; no requirement added). Debugger card, step 4: a spec ambiguity is recorded in the task's `Notes` and the run stops at `run.md` Step 4 with the single `/magic.task {workspace}` recommendation, instead of handing the session off to `spec.md` — the old wording routed the run directly to `/magic.spec`, which `run.md` Step 4 and the Post-Task Replan rules (`rules/magic.md §5`) forbid the run to name. The deployed card carries the same wording. |
+| 1.2.2 | 2026-10-01 | Clarification patch, no status transition (descriptions follow behavior; no requirement added). Orchestrator card: the between-dispatch re-read holds a spec named by a dispatched task's `stabilizes:` flag, or targeted by a `[Bootstrap]` task, to the status it had at that dispatch instead of `Stable` (constitution C12.1, the C6 Bootstrap Exception, `run.md` Logic Guards) — in Parallel mode, the default, the old wording halted a stabilizing or Bootstrap task's track with `SPEC_DEMOTED` before any `run.md` guard ran. Planner card: step 1 reads every spec the active-phase tasks reference, not only `Stable` ones, so the spec a stabilizing task targets is part of the audit. Found by a `/magic.dev.simulate test` run (engine 2.1.125). |
+| 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Planner card: the "Absorbs the legacy Planning Skeptic persona from C24" sentence is dropped (migration-relative phrasing). Docs-specialist step 4 no longer cites `CLAUDE.md §6` / §7 — those sections are this repository's junction-safety and file-protocol rules, not a docstring style guide, and the file does not exist in a consumer installation. Deployed cards carry the same wording. |
 | 1.2.0 | 2026-08-06 | Coder card: RC-2.1 notation guidance added to the authoring gate — re-scan added lines for bare `T-d+[A-Z]d+` and prose `[Pp]hase[-s]d+`, the forms that leak while the bracketed checklist form does not. Field evidence: the write-time gate was itself the source of several leaks in a consumer project (field report, engine 2.1.49). |
 | 1.1.0 | 2026-06-12 | Coder card: added RC-5 authoring gate (protocol step 5 + anti-pattern) per l1-sdd-reference-containment.md — no SDD-artifact references in product files. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted execution-pipeline cards (planner, orchestrator, coder, debugger, docs-specialist) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

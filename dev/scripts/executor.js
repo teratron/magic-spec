@@ -47,4 +47,4 @@ const child = spawn('node', [scriptPath, ...args], {
     env: process.env,
 });
 
-child.on('exit', code => process.exit(code ?? 0));
+child.on('exit', (code) => process.exit(code ?? 0));

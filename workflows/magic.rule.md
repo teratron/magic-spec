@@ -1,6 +1,6 @@
 ---
 name: magic.rule
-description: Workflow for manually adding or amending project conventions in RULES.md.
+description: Adds, amends or removes project conventions in the RULES.md constitution, global or per workspace. Use when the user states a project rule or convention to record, or asks to amend or remove a convention in RULES.md.
 handoffs:
   - label: "Create spec"
     workflow: magic.spec
@@ -24,7 +24,8 @@ handoffs:
 
 **Pipeline context:** `magic.rule` governs conventions used across `magic.spec` → `magic.task` → `magic.run`.
 
-- **Finalization**: after writing RULES.md, run `node .magic/scripts/executor.js finalize --workflow=rule` and display output verbatim. Never auto-commit. See `.magic/rule.md §Finalization Protocol`.
+- **Admission**: an agent-originated rule must cite an observed occurrence and survive a with/without comparison; a user-stated rule is written at the strength stated. See `.magic/rule.md §Operational Logic`.
+- **Finalization**: after writing RULES.md, run `node .magic/scripts/executor.js finalize --workflow=rule --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `.magic/rule.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/rule.md`. Read it before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.

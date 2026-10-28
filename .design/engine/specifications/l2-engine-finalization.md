@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.2.0
+**Version:** 3.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -17,8 +17,9 @@ This spec owns the **pipeline contract**: module inventory, invocation surface, 
 - [l1-session-continuity.md](l1-session-continuity.md) — SC-2 invariant carried by this pipeline (§5); SC-3 retired.
 - [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) — Child: STATE.md accuracy defects and their required fixes.
 - [l2-finalize-output-contract.md](l2-finalize-output-contract.md) — Child: emitted-artifact defects (RC-11 containment, stdout-listing completeness, CHANGELOG suppression).
-- [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library.
+- [l2-engine-automation.md](l2-engine-automation.md) — Covers the top-level automation scripts that consume this library. Its §Setting Parity owns the rule that a shipped setting needs a reader, which §4 applies to the archival opt-out.
 - [l2-engine-diagnostics.md](l2-engine-diagnostics.md) — Diagnostics digest that this pipeline drains and renders in its terminal block (§8).
+- [l2-session-checkpoint.md](l2-session-checkpoint.md) — Owns the checkpoint claim that the state-update step's output makes (§5.5 there).
 
 ## 1. Motivation
 
@@ -41,14 +42,20 @@ The finalization protocol (§3 of `rules/magic.md`) requires several coordinated
 All modules are internal — they export functions consumed only by `finalize.js`. No workflow or spec file should reference individual `lib/` modules directly. The public API is:
 
 ```plaintext
-executor.js finalize --workflow=<spec|task|run|rule> [--dry-run] [--no-bump] [--no-changelog]
+executor.js finalize --workflow=<spec|task|run|rule> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
 ```
+
+`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magic.task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `rules/magic.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
 
 `--no-commit-msg` was removed 2026-08-27 alongside the commit-suggestion feature it toggled (SC-3 retirement) — there is no longer a commit message to opt out of.
 
 ## 4. Opt-Out Mechanism
 
 Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `workspace.json`. When disabled, all `lib/` modules are skipped and `executor.js` exits with `⏭️ No significant changes detected`.
+
+**Archival opt-out `[ADDED]`.** `archival.enabled: false` in `workspace.json` skips the phase-archival step of `finalize --workflow=run` and nothing else: no `Done` workbook is moved, `TASKS.md` and `PLAN.md` keep their links, and the output has no archived-phases block, while the version bump, the changelog entry and the state update run as usual. Only the value `false` disables it; an absent key, or any other value, leaves archival on. When eligible workbooks exist, one informational line names the setting, so a skipped step is distinguishable from nothing to archive (the principle of the Zero-Match Guard, [l2-engine-automation.md](l2-engine-automation.md) §Path Matching Contract). The explicit `archive-phases` command is unaffected — it is the user's own request, and its `--dry-run` previews as before. The archive location is not a setting: `archives/tasks/` under the workspace is what §7 and `rules/magic.md` §4 assume, and `archival.archiveDir` is withdrawn from the template. Origin: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity, whose first cited case this resolves.
+
+**Regression coverage**: a fixture with `archival.enabled: false` and a `Done`, fully checked workbook — `finalize --workflow=run` leaves the workbook in `tasks/`, prints the informational line, and runs the rest of the pipeline as it would without the key (a significant change still bumps the version and writes the changelog entry, and `STATE.md` is updated); the same fixture with the key absent archives the workbook; the explicit `archive-phases` command archives it in both. The case that proves the setting is read is the one with the key present, so it fails against a script that ignores the section.
 
 ## 5. Session-Continuity Integration
 
@@ -59,13 +66,15 @@ Implements SC-2 of [l1-session-continuity.md](l1-session-continuity.md) for ever
 After significance evaluation and phase archival, the pipeline patches the active workspace's `STATE.md` via the `update-state` utility (`.magic/scripts/update-state.js`):
 
 - `Updated` — invocation timestamp.
-- `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. Left accurate only as long as those explicit call sites stay in sync — a latent gap tracked in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §10.
+- `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. Left accurate only as long as those explicit call sites stay in sync — a latent gap tracked in the Known Gaps section of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md).
 - Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect — and so is silently discarding the phase-level counter itself when the recompute cannot locate it.
-- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1, Blocked-phase precedence per SC-2.1(a)). The synthesized value is screened at the computation's single exit against SC-2.2: exactly one command, never `/magic.spec` or `/magic.analyze`. A screened-out value degrades to the `/magic.task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string. SC-2.4 records the boundary condition where that funnel is itself unproductive.
+- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1(d), Blocked-phase precedence per SC-2.1(a)). The synthesized value is screened at the computation's single exit against SC-2.2: at most one command, never `/magic.spec` or `/magic.analyze`. Plan-complete resolves to the `/magic.task` funnel when work is pending and to a command-free statement ("Plan complete — nothing pending") when nothing is; *pending* is decided by the one predicate Pre-flight already uses for `DESIGN_DEBT_PENDING`, `ORPHANED_SPEC` and `SYNC_GAP`, extracted into a single shared module both callers import rather than copied, and a predicate that cannot be evaluated resolves to the funnel (SC-2.4 addendum, Nothing-Pending Resolution). A screened-out value degrades to the `/magic.task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string. SC-2.4 records the boundary condition where that funnel is itself unproductive.
 
 The step runs even when the significance whitelist does not hit — live memory must reflect every completed command, not only version-bumping ones. Failures are non-blocking: a warning is printed and finalize continues.
 
 Defects found against this step, with their required fixes, are catalogued in [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md).
+
+**Checkpoint claim.** On a successful update the step's output states that the checkpoint was written (SC-6.1); a skipped, failed or `--dry-run` update makes no such claim. Contract and wording: [l2-session-checkpoint.md](l2-session-checkpoint.md) §5.5. The claim belongs to the path-specific output, not to the terminal block of §8.
 
 ### 5.2 Retired: Commit Suggestion Guarantee (formerly SC-3)
 
@@ -152,6 +161,38 @@ Two structural consequences for `finalize.js`:
 
 This pipeline is also the diagnostics inventory's largest emitter block — six non-fatal findings across `main()`, `updateSessionState()`, and the CHANGELOG and phase-archival steps. The drain runs once in `main()`, after every other step, so findings produced by those steps are in the sink before the digest is composed.
 
+## 9. Significance Snapshot Read-Failure Handling `[ADDED]`
+
+### 9.1 The Defect
+
+`computeSignificance()` builds `nextSnapshot` by hashing every whitelisted path via `snapshotHashes()` → `utils.hashFileSafe()`. `hashFileSafe` already retries a transient read failure five times over one second, but on the sixth failure it `throw`s — and no caller of `computeSignificance()` catches it. Under `--workflow=run`, `STATE.md` is a whitelisted path (§5.1); if it exists but cannot be read as a file — a directory sits at its path, a lock, a permissions error — the retry window elapses uselessly (the condition is permanent, not transient) and the exception propagates out of `main()`, aborting the whole invocation with exit 1: no version bump, no archival, no CHANGELOG entry, no diagnostics digest, nothing recorded at all. Reproduced live: a directory at the `STATE.md` path (engine 2.1.104).
+
+This is narrower than it first looks: `--workflow=task`'s own `updateSessionState()` step (§5.1) already degrades gracefully on an unreadable `STATE.md`, recording `STATE_UPDATE_SKIPPED` and returning `{ updated: false }` — but that is a **different** read, the state-patch write path, wrapped in its own `try`/`catch`. The **significance snapshot** read that runs before it, common to every `--workflow` value, has no such guard. The two workflows disagreeing about the same broken file is a symptom of the fix living at one call site and not the other, not a designed difference in how `run` and `task` should behave here.
+
+### 9.2 Required Fix
+
+The retry policy in `hashFileSafe` is not the defect and does not change: five retries over one second is a reasonable, cheap allowance for a transient lock, and every other caller of `hashFileSafe` may keep relying on it throwing past that point. The fix is at the call site the throw currently has none of: `snapshotHashes()` catches a per-file hashing failure instead of letting it propagate, and records that file's snapshot value as the literal string `'UNREADABLE'` — a third state distinct from a real hash and from `null` (the existing, already-handled meaning: "file does not exist"). Folding an unreadable-but-present file into the same `null` bucket as a genuinely absent one would let the significance diff treat "could not tell" as "nothing to see," the wrong default for a check whose job is deciding whether to record that something changed.
+
+`computeSignificance()`'s diff against `lastSnapshot` treats any path whose new value is `'UNREADABLE'` as **changed** — significance fails safe (fires) rather than silently under-reporting when it cannot prove otherwise. `finalize.js` records one diagnostic per such path: `severity: 'error'`, `source: 'finalize'`, `code: 'SIGNIFICANCE_HASH_UNREADABLE'`, message naming the file and the underlying read error — the same taxonomy as the existing `STATE_UPDATE_SKIPPED` site, not a new mechanism. The finalize invocation continues on both `--workflow` values: a broken whitelisted file degrades one snapshot entry, never the pipeline.
+
+### 9.3 Regression Coverage
+
+A fixture with a directory at the `STATE.md` path, run under `--workflow=run`: finalize exits 0, a `SIGNIFICANCE_HASH_UNREADABLE` diagnostic is recorded naming `STATE.md`, and the significant-path branch runs (the file reads as changed). A control case with a genuinely absent, never-created whitelisted file confirms it is still treated as `null`/unchanged, not `'UNREADABLE'` — the two conditions must not collapse into one.
+
+## 10. Spec-Side Rule Capture in the Significance Whitelist `[ADDED]`
+
+### 10.1 The Gap
+
+`magic.spec`'s whitelist covers specifications and the registry only, and `RULES.md` is whitelisted for `magic.rule` alone. A T1–T4 capture during `/magic.spec` writes the constitution but finalizes as `spec`, so a capture that changes nothing else bumps no version and writes no changelog entry — an asymmetry between the two workflows that both write `RULES.md`. Impact was bounded (a capture usually rides with counted spec changes), which is why it was parked; it is closed here because the answer is one sentence.
+
+### 10.2 Required Fix
+
+The `magic.spec` whitelist gains `.design/RULES.md` and `.design/{ws}/RULES.md`. Considered and rejected: finalizing a capture as `rule` — finalize runs once per invocation for the invoked workflow, and a spec invocation is not a rule invocation. A path present in both workflows' whitelists counts once per invocation. `rules/magic.md` §3's whitelist table follows (deployment), and the summary line of the finalize output names the whitelisted paths as before.
+
+### 10.3 Regression Coverage
+
+A fixture in which only `RULES.md` changed, run under `--workflow=spec`: significant, version bumped, changelog entry written. Control: the same change under `--workflow=task` stays non-significant.
+
 ## Canonical References
 
 | Path | Role |
@@ -164,13 +205,20 @@ This pipeline is also the diagnostics inventory's largest emitter block — six 
 | `.magic/scripts/lib/phase-archiver.js` | Phase archival (§6) and the `TASKS.md`/`PLAN.md` index rewrites (§7) |
 | `.magic/scripts/lib/project-version.js` | `.design/.version` semver management |
 | `.magic/scripts/lib/phase-files.js` | Phase-workbook name recognition, parsing, and ordering (§6.1) |
-| `.magic/scripts/lib/significance.js` | Significance whitelist evaluation |
+| `.magic/scripts/lib/significance.js` | Significance whitelist evaluation; unreadable-file handling (§9) |
 | `.magic/scripts/update-state.js` | STATE.md patch utility invoked by §5.1 |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.6.0 | 2026-10-11 | Agent | §4 gains the **archival opt-out**: `archival.enabled: false` skips the archival step of `finalize --workflow=run` and nothing else (the explicit `archive-phases` command is unaffected), one informational line names the setting when eligible workbooks exist, and `archival.archiveDir` is withdrawn from the template because the location is fixed. The shipped template defined both keys and `rules/magic.md` §4 told users to set the first to `false`, but no script read the `archival` section (evidence and reproduction: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity); the only other switch, `finalization.enabled`, skips the whole pipeline, so a user who wanted archival alone off had no way to say so. The resolution is that section's `Assumption (forecast)`, which carries the runner-up and the override; this section gives it a contract and a regression case. Related Specifications gained the cross-reference. Source: a reference-mining pass over an external collection of agent configurations, recorded here by class only. Engine deployment is routed to `/magic.task engine`. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
+| 3.5.1 | 2026-10-01 | Agent | Clarification patch, Stable retained (no requirement added — the flag already existed in `finalize.js`). §3's invocation line now lists `--workspace=<name>` and states what it carries: the executor consumes the flag and falls back to the default workspace without it, so an explicit workspace argument of the calling workflow reached the pipeline only through the flag — and no workflow passed it. After `/magic.task docs` the significance whitelist and the SC-2 state update were therefore evaluated for the default workspace. Found by a `/magic.dev.simulate test` run; the workflow bodies, their wrappers and `rules/magic.md` §3 now pass `--workspace={active-workspace}` (engine 2.1.120). |
+| 3.5.0 | 2026-09-30 | Agent | New **§10 Spec-Side Rule Capture in the Significance Whitelist**: `magic.spec` whitelists `RULES.md` (global and workspace) so a T4 capture that changes only the constitution is counted, closing the asymmetry with `magic.rule`; finalizing a capture as `rule` is rejected. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
+| 3.4.0 | 2026-09-30 | Agent | Plan-complete `Next Action` split per [l1-session-continuity.md](l1-session-continuity.md) 2.4.0: funnel when work is pending, a command-free statement when nothing is; the screen at the single exit allows zero commands in that one case; the pending predicate is shared with Pre-flight, not duplicated. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
+| 3.3.0 | 2026-09-28 | Agent | New **§9 Significance Snapshot Read-Failure Handling** (R44, Retro L2 Session 13): `computeSignificance()` hashes every whitelisted path with no caller catching `hashFileSafe`'s eventual throw, so an unreadable-but-present `STATE.md` (a directory at its path, a lock, permissions) aborted the whole `finalize` invocation under `--workflow=run` — reproduced live at engine 2.1.104 — while `--workflow=task` degraded gracefully via a *different*, already-guarded call site (`STATE_UPDATE_SKIPPED`). Retry policy in `hashFileSafe` is unchanged; the fix catches per-file at `snapshotHashes()` and records a third sentinel, `'UNREADABLE'`, distinct from a real hash and from `null` ("does not exist") — folding the two would let significance treat "could not tell" as "nothing changed." Diffing treats `'UNREADABLE'` as changed (fail-safe) and `finalize.js` records `SIGNIFICANCE_HASH_UNREADABLE`. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Implementation routed to `/magic.task engine`. |
+| 3.2.2 | 2026-09-20 | Agent | Cross-reference only, no design content (patch, no status transition): §5.1 gained a short paragraph, and Related Specifications an entry, pointing to the checkpoint claim that the state-update step's output now makes ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.5, SC-6.1 of [l1-session-continuity.md](l1-session-continuity.md)). The claim's contract lives there; this spec records only that it belongs to the path-specific output, not to the terminal block of §8. |
+| 3.2.1 | 2026-09-20 | Agent | Cross-reference correction only, no design content (patch, no status transition): the `Status` bullet in §5.1 named [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §10 as the home of its latent-gap record — a Known Gaps section number that had drifted through successive renumberings of that register, §10 now being its Recent-Decisions Archival Promise Defect. Retargeted to the Known Gaps section by name, which survives the register's 2.0.0 decomposition (defect numbers are permanent there; the Known Gaps section is deliberately unnumbered). Found while retargeting live references for that decomposition. |
 | 3.2.0 | 2026-09-17 | Agent | **Write-Side Git Prohibition retired** by explicit user directive, cascading from [l1-session-continuity.md](l1-session-continuity.md) §1.4: §5.2 extended with a second paragraph noting the hard rule it previously described as "unaffected" by the SC-3 retirement is itself now retired — the pipeline (and the agent invoking it) takes no position on whether, when, or how to commit. `finalize.js`'s own read-only-git-probes implementation fact is unchanged and restated as exactly that: a fact about this script, not a policy for the agent. Overview cross-reference added. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
 | 3.1.0 | 2026-09-11 | Agent | New **§6.1 Workbook Name Recognition**, closing a defect with the same shape as §7's: a behavior with no stated contract. §6 pinned only the content predicate, so the *name* predicate went unexamined and was spelled `/^phase-\d+\.md$/` in three separate scanners. A track-split workbook (`phase-10b.md`) was therefore excluded by filename before its `status: Done` frontmatter was ever read, and the CLI reported "No completed phases to archive" — a silent exclusion indistinguishable from a considered rejection. §6.1 pins the canonical shape `phase-{N}[{track}].md`, requires the recognizer to be a single shared module (`lib/phase-files.js`) rather than three copies, fixes numeric-then-suffix ordering, and adds the accounting rule: an unrecognized `.md` in `tasks/` is reported, never dropped without comment. Minor (new required behavior, no existing contract invalidated); Post-Update Review found no blocking issues, so Trust Mode (C9) holds `Stable`. Field report: engine 2.1.80. |
 | 3.0.0 | 2026-08-27 | Agent | **Commit Suggestion Guarantee (SC-3) retired** by explicit user directive. §5.2 rewritten from "Commit Suggestion Guarantee" to a retirement note; §5 header drops the SC-3 implementation claim. §2 module table's `commit-suggester.js` row rescoped to CHANGELOG-bullet composition only. §3 Invocation Contract drops the `--no-commit-msg` flag. §8 point 1 rewritten: the terminal block no longer includes a commit-suggestion notice at all (previously it deduplicated the notice across paths; now there is no notice to render). Overview, Related Specifications, and Canonical References updated to match. Status reverted `Stable → RFC` (Amendment Rule, major version); Post-Update Review (5-lens) found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |

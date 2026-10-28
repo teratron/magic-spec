@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-09-17 04:55
-**Phase:** 30 — Checksum Scan Hygiene, Git-Commit Scope Retirement, Fresh-Project Drift Silence
+**Updated:** 2026-10-12 07:16
+**Phase:** 40 — Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-28T02 C14 bump and engine integrity verification
-- **Spec:** l2-agent-surface.md (linked-pair inventory, R25) · l2-skill-wrappers.md (regeneration trigger, R26)
-- **Next Action:** Plan complete — run /magic.task engine to plan new scope
+- **Task:** T-40T02 Validation: run the new cognitive case against the shipped text
+- **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
+- **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [29/29] ████████ 100%
+Overall: [39/39] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
-- 2026-09-17 **Decision:** Phase 30 complete. Provides: checksum scanners join Invariant 7 gitignore parity; write-side git prohibition retired from every agent-facing surface; rules/magic.md Engine Upgrade Detection distinguishes fresh vs unknown.
-- 2026-09-13 **Decision:** Phase 29 complete. Provides: l1-engine-core.md 1.7.1 (Concept-Only Classification, Required Fix re-targeted to .magic/analyze.md during Execute), l1-sdd-reference-containment.md 1.5.0 (provisional-boundary assumption), l2-engine-automation.md 1.12.0 (mis-targeted 1.11.0 addition reverted), .magic/analyze.md (Bare-L1-without-L2 advisory skips Concept-Only specs). Engine 2.1.84->2.1.86. Plan complete - Retro L2 run (Session 10), signal held 🟢.
-- 2026-08-28 **Decision:** Phase 28 complete. Provides: l2-agent-surface.md 1.1.0 (SS4 closed 3-group linked-pair inventory), l2-skill-wrappers.md 1.4.0 (SS3.2 regeneration-trigger invariant), validate-hardlinks.js table-driven for rules/+workflows/, STATE.md [C-001] widened to all 3 groups, update-engine-meta.js syncSkillWrappers() called unconditionally on write path. Harness 69->72, all 3 negative-controlled against reverted/pre-fix code (incl. actual git-HEAD validate-hardlinks.js). Engine 2.1.79->2.1.80. Plan complete - Retro L2 run (Session 9), signal restored 🟡->🟢.
-- 2026-08-28 **Decision:** Phase 27 complete. Provides: Idea Intake Gate (E6) deployed — .magic/spec.md Step 0.5 + three reconciled anti-question clauses; E6 registered across DA-2 table, .design/RULES.md 1.10.0, .magic/templates/rules.md, rules/magic.md; prompt-engineer conditional IK audit; docs/spec.md SS5.0; suite T209-T212 (v1.9.76); engine 2.1.79. Two engine defects found and recorded, not fixed: workflows/ hardlink pair is unguarded by validate-hardlinks.js and C-001, and update-engine-meta skips skill regeneration on a workflows-only change.
-- 2026-08-28 **Decision:** Phase 27 planned. Idea Intake Gate (l1-idea-intake-gate.md v1.0.0, IK-1..IK-9) deployment across 7 tracks: E6 registration must land atomically in DA-2 table + .design/RULES.md + .magic/templates/rules.md + rules/magic.md. Planning surfaced a 3rd reconciliation site the spec's SS5 missed — the Mode Transition Auto-Transfer one-round cap contradicting IK-6.
+- 2026-10-12 **Decision:** Phase 40 complete. Provides: the archival opt-out with its reader and a standing setting-parity check, an installer that owns only its own hook and a hook that disarms without .magic/, a pre-flight that reports a deleted engine file, a containment scan that reports code-quoted references in a consumer's markdown, and the bloat override reader; harness 178 to 197, 70 mutation entries all caught, cognitive case T267, engine 2.1.138 (two C14). Three stale specification statements and the lower-tier reader run left open.
+- 2026-10-11 **Decision:** Phase 40 planned (deployment of the three 2026-10-11 reference-mining amendments, registry 1.40.0 to 1.43.0: setting parity with the archival opt-out, git hook lifecycle, deleted engine files in the pre-flight, quoted notation in the containment scan, the bloat reader; 18 tasks, 5 tracks plus closing): hook text follows the hook, harness follows the code, one C14 bump at T-40T01; PLAN v1.48.0 / TASKS v1.47.0.
+- 2026-10-06 **Decision:** Phase 39 complete. Provides: the registry Description form in spec.md (what and when, two sentences, rewritten never appended), the ledger overview rule in task.md, three template comments, docs lines, the content-versus-structure routing in rules/magic.md section 2, and this workspace rewritten once by its own rule (36 of 37 cells, ledger overview 27 KB to under 0.5 KB); harness 178, 20 mutations caught, cognitive suite T264-T266, engine 2.1.136. Lower-tier fresh-reader run left open.
+- 2026-10-05 **Decision:** Phase 38 complete. Provides: generation-time validation of every skill wrapper (refuse, never write) with a C14 flow that finishes before failing; nine descriptions in the Selection Signal form; contents lists in six engine bodies and whole-module pointers to context.md; a reader tier in the simulation workflow; harness 167 to 174, cognitive suite T260-T263, 42 mutation controls caught; engine 2.1.134. Lower-tier fresh-reader run left open.
+- 2026-10-05 **Decision:** Phase 38 planned (deployment of the 2026-10-05 skill-wrapper and body-navigation amendments, 12 tasks, 4 tracks): hardlink pairs restored first (all three groups drifted), descriptions rewritten before the generator refuses them, the C14 flow finishes before failing; PLAN v1.46.0 / TASKS v1.45.0 on registry v1.38.0, one C14 bump at T-38T01.
 
 ## Blockers
 
@@ -43,6 +43,5 @@ Overall: [29/29] ████████ 100%
 
 ## Session Continuity
 
-**Last Session Ended:** 2026-06-12 11:45
 **Handoff File:** none
 **Bootstrap Mode:** false

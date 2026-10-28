@@ -44,7 +44,9 @@ function sync() {
     const content = fs.readFileSync(INDEX_PATH, 'utf8');
 
     if (!FIELD_RE.test(content)) {
-        console.warn('⚠️  .design/INDEX.md has no **Engine Version:** field — skipping snapshot sync.');
+        console.warn(
+            '⚠️  .design/INDEX.md has no **Engine Version:** field — skipping snapshot sync.',
+        );
         return;
     }
 

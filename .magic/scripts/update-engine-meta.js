@@ -4,7 +4,17 @@
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { hashFileSafe, getAllFiles, normalizePath, isDryRun, writeFileSafe, appendFileSafe, mkdirSafe, VOLATILE_STATE_FILES, loadGitignore, BUILD_NOISE_DIRS } = require('./utils');
+const {
+    hashFileSafe,
+    getAllFiles,
+    normalizePath,
+    writeFileSafe,
+    VOLATILE_STATE_FILES,
+    loadGitignore,
+    BUILD_NOISE_DIRS,
+    hasEngineWriteTooling,
+    describeManifestDelta,
+} = require('./utils');
 const diagnostics = require('./lib/diagnostics');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -34,23 +44,54 @@ for (let i = 0; i < args.length; i++) {
  * Regenerates skill wrappers from `workflows/` (and `.agents/workflows/`).
  *
  * Deliberately callable independent of the `.magic/` checksum verdict —
- * `workflows/` is excluded from that manifest by design (l2-skill-wrappers.md
- * §3.2), so the checksum scan can never observe a workflows/-only edit.
+ * `workflows/` is excluded from that manifest by design (wrappers are
+ * user-customizable and partial installs must stay supported), so the
+ * checksum scan can never observe a workflows/-only edit.
  * Idempotent: rewrites identical bytes when `workflows/` also didn't change,
  * so calling it unconditionally on every write invocation is safe.
+ *
+ * @returns {Array<{ workflow: string, field: string, rule: string }>} The wrappers the
+ *   generator refused for breaking the frontmatter contract; empty when none, and
+ *   empty when the generator is absent (user installation).
  */
 function syncSkillWrappers() {
     const syncSkillsPath = path.join(__dirname, '../../dev/scripts/sync-skills.js');
     if (fs.existsSync(syncSkillsPath)) {
         const syncSkills = require(syncSkillsPath);
-        syncSkills();
+        const result = syncSkills();
+        return Array.isArray(result?.refused) ? result.refused : [];
     } else {
-        console.warn('⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).');
+        console.warn(
+            '⚠️  dev/scripts/sync-skills.js not found — skipping skill sync (dev repo only).',
+        );
         diagnostics.record({
-            severity: 'warning', source: 'update-engine-meta', code: 'SKILL_SYNC_UNAVAILABLE',
+            severity: 'warning',
+            source: 'update-engine-meta',
+            code: 'SKILL_SYNC_UNAVAILABLE',
             message: 'dev/scripts/sync-skills.js not found; skill sync skipped (dev repo only).',
         });
+        return [];
     }
+}
+
+/**
+ * Ends the run in failure when the generator refused any wrapper — after the
+ * caller has finished the rest of its flow, never in place of it. Every refusal
+ * is already named on the generator's own output and recorded as an `error`
+ * finding; this adds the one line that says the metadata step did not succeed
+ * and sets the exit status, so a refused wrapper is never reported as success.
+ *
+ * @param {Array<{ workflow: string }>} refused - The generator's refusals.
+ * @returns {boolean} True when the run was marked failed.
+ */
+function failOnRefusedWrappers(refused) {
+    if (refused.length === 0) return false;
+    const workflows = [...new Set(refused.map((entry) => entry.workflow))].join(', ');
+    console.error(
+        `❌ Skill wrapper(s) refused: ${workflows}. Fix the workflow frontmatter and re-run update-engine-meta.`,
+    );
+    process.exitCode = 1;
+    return true;
 }
 
 /**
@@ -81,10 +122,8 @@ function updateEngineMeta() {
     // Integrity scope: engine kernel only (.magic/). Surface artifacts in
     // workflows/, skills/, rules/ are user-customizable wrappers — not
     // protected by checksum so partial installations stay supported.
-    const scanZones = [
-        { dir: magicDir, relBase: magicDir }
-    ];
-    // Invariant 7 parity (l2-engine-automation.md §Scan Hygiene) — must stay
+    const scanZones = [{ dir: magicDir, relBase: magicDir }];
+    // Invariant 7 parity (the shared scan-hygiene rule) — must stay
     // in sync with generate-checksums.js's identical floor/gitignore union,
     // or the two can disagree about what belongs in the manifest.
     const scanIgnoreDirs = ['history', ...BUILD_NOISE_DIRS];
@@ -95,24 +134,41 @@ function updateEngineMeta() {
     /** @type {Set<string>} Manifest-eligible paths actually present on disk. */
     const onDisk = new Set();
 
-    scanZones.forEach(zone => {
+    scanZones.forEach((zone) => {
         if (!fs.existsSync(zone.dir)) return;
 
-        getAllFiles(zone.dir, scanIgnoreDirs).forEach(fullPath => {
+        getAllFiles(zone.dir, scanIgnoreDirs).forEach((fullPath) => {
             const rel = normalizePath(path.relative(zone.relBase, fullPath));
             if (rel === '.checksums') return;
             // State caches written by sync sub-scripts (volatile, not engine logic).
             // Source of truth: utils.VOLATILE_STATE_FILES, also honored by generate-checksums.
             if (VOLATILE_STATE_FILES.has(rel)) return;
-            // A path the project's own .gitignore disowns can never be satisfied
-            // by a real release archive (fresh CI checkout) — see generate-checksums.js.
-            if (isGitignored(normalizePath(path.relative(projectRoot, fullPath)))) return;
+            // Gitignore exclusion only guards *new* (not-yet-manifested) paths —
+            // it exists to keep accidental dev-machine cruft (e.g. a stray
+            // `.fallow/` cache) from being treated as a legitimate engine
+            // addition, mirroring generate-checksums.js's manifest-authoring
+            // scope. It must NOT apply to a path already listed in `.checksums`:
+            // every consumer install is expected to gitignore `.magic/` wholesale
+            // (it's an installed release artifact, never committed), so treating
+            // that as "disowned" would mark every shipped engine file as missing
+            // and fail `--check` on every single consumer commit.
+            const isManifested = Object.hasOwn(oldChecksums, rel);
+            if (!isManifested && isGitignored(normalizePath(path.relative(projectRoot, fullPath))))
+                return;
 
             onDisk.add(rel);
 
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {
-                console.log(`✨ Detected change in: ${rel}`);
+                // A line-endings-only difference is the one cause worth naming on
+                // the line itself: it is common, and invisible in an editor.
+                const delta = isManifested
+                    ? describeManifestDelta(fullPath, oldChecksums[rel])
+                    : null;
+                const note = delta?.lineEndingsOnly
+                    ? ` — only line endings differ (found ${delta.found}, the release ships ${delta.expectedEol})`
+                    : '';
+                console.log(`✨ Detected change in: ${rel}${note}`);
                 anyChanged = true;
             }
         });
@@ -124,7 +180,7 @@ function updateEngineMeta() {
     // script, or one that never made it into the release archive. Exclusion rules
     // here mirror generate-checksums.js exactly (history/, .checksums, volatile
     // caches), so a manifest key absent from `onDisk` is genuinely missing.
-    const missingFiles = Object.keys(oldChecksums).filter(rel => !onDisk.has(rel));
+    const missingFiles = Object.keys(oldChecksums).filter((rel) => !onDisk.has(rel));
 
     for (const rel of missingFiles) {
         console.log(`🗑️  Missing engine file: ${rel}`);
@@ -136,40 +192,70 @@ function updateEngineMeta() {
             if (missingFiles.length > 0) {
                 console.error(
                     `❌ ${missingFiles.length} file(s) listed in .magic/.checksums are absent from disk. ` +
-                    'Restore .magic/ from the release archive.'
+                        'Restore .magic/ from the release archive.',
+                );
+            } else if (hasEngineWriteTooling()) {
+                console.error(
+                    '❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.',
                 );
             } else {
-                console.error('❌ Engine drift detected. Run `node .magic/scripts/executor.js update-engine-meta` to resolve.');
+                // A user installation cannot regenerate the manifest, and must
+                // not: overwriting `.checksums` would mask the very change this
+                // check exists to surface.
+                console.error(
+                    '❌ Engine drift detected. Restore .magic/ from the release archive — ' +
+                        'do not regenerate .checksums (that would mask the change).',
+                );
             }
             process.exit(1);
         }
 
+        // Write mode blesses an intentional engine edit: it bumps the version
+        // and regenerates the manifest. A user installation has no manifest
+        // builder, so it can do neither — and must not do the half it can.
+        // Bumping `.version` there moves the very signal Engine Upgrade
+        // Detection (rules/magic.md §1) reads as "the engine was replaced under
+        // this project", while the drift it claims to resolve is untouched: the
+        // manifest is unchanged, so the next check reports the same files again
+        // and every retry bumps the version once more. Refuse before anything
+        // is touched.
+        if (!hasEngineWriteTooling()) refuseUserInstallWrite();
+
         bumpVersion();
 
         // Ensure Skill wrappers are also in sync (C14 §3 Compatibility).
-        // Fail-fast: if projection breaks, the engine state is inconsistent —
-        // surface the error to the caller instead of silently bumping checksums.
-        syncSkillWrappers();
+        // A wrapper the generator refuses (it breaks the frontmatter contract) is
+        // reported back and this flow still finishes — the manifest covers .magic/
+        // only, so withholding it would protect nothing and leave the metadata
+        // describing a half-finished run — and the run then fails below. An
+        // exception (an I/O failure) is not a refusal and still aborts here.
+        const refusedWrappers = syncSkillWrappers();
 
         // Dev-repo-only: keep .design/INDEX.md's Engine Version snapshot current
         // with every C14 bump. Consumer installs never reach this branch — the
         // external-drift signal Engine Upgrade Detection (rules/magic.md §1)
-        // provides to them is untouched (l1-engine-core.md §Known Process Gaps —
-        // Dev-Repo Engine-Version Snapshot Sync).
+        // provides to them is untouched.
         const syncSnapshotPath = path.join(__dirname, '../../dev/scripts/sync-engine-snapshot.js');
         if (fs.existsSync(syncSnapshotPath)) {
             const syncEngineSnapshot = require(syncSnapshotPath);
             syncEngineSnapshot();
         } else {
-            console.warn('⚠️  dev/scripts/sync-engine-snapshot.js not found — skipping snapshot sync (dev repo only).');
+            console.warn(
+                '⚠️  dev/scripts/sync-engine-snapshot.js not found — skipping snapshot sync (dev repo only).',
+            );
             diagnostics.record({
-                severity: 'warning', source: 'update-engine-meta', code: 'SNAPSHOT_SYNC_UNAVAILABLE',
-                message: 'dev/scripts/sync-engine-snapshot.js not found; Engine Version snapshot sync skipped (dev repo only).',
+                severity: 'warning',
+                source: 'update-engine-meta',
+                code: 'SNAPSHOT_SYNC_UNAVAILABLE',
+                message:
+                    'dev/scripts/sync-engine-snapshot.js not found; Engine Version snapshot sync skipped (dev repo only).',
             });
         }
 
         runGenerateChecksums();
-        console.log('✅ Engine metadata and version updated.');
+        if (!failOnRefusedWrappers(refusedWrappers)) {
+            console.log('✅ Engine metadata and version updated.');
+        }
     } else if (checkOnly) {
         // Read-only verification path (the user's pre-commit hook). Scope is
         // exactly what was scanned above — .magic/ against its checksum
@@ -177,13 +263,15 @@ function updateEngineMeta() {
         console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core).');
     } else {
         // .magic/ itself is unchanged, but workflows/ is deliberately excluded
-        // from this checksum manifest (l2-skill-wrappers.md §3.2) — the scan
+        // from this checksum manifest (user-customizable wrappers, partial installs) — the scan
         // above is structurally blind to a workflows/-only edit. Skill
         // regeneration reads workflows/ directly, so it must run regardless
         // of this verdict rather than being skipped alongside a version bump
         // that genuinely isn't warranted here.
-        console.log('ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.');
-        syncSkillWrappers();
+        console.log(
+            'ℹ️ No changes detected in .magic/ (checksum-tracked engine core). Syncing skill wrappers from workflows/ regardless.',
+        );
+        failOnRefusedWrappers(syncSkillWrappers());
     }
 }
 
@@ -200,7 +288,7 @@ function bumpVersion() {
     const currentVersion = fs.readFileSync(versionPath, 'utf8').trim();
     const parts = currentVersion.split('.');
     if (parts.length === 3) {
-        parts[2] = parseInt(parts[2]) + 1;
+        parts[2] = parseInt(parts[2], 10) + 1;
         const newVersion = parts.join('.');
         if (writeFileSafe(versionPath, newVersion)) {
             console.log(`📈 Version bumped: ${currentVersion} -> ${newVersion}`);
@@ -221,18 +309,40 @@ function bumpVersion() {
  */
 function runGenerateChecksums() {
     const scriptPath = path.join(__dirname, '../../dev/scripts/generate-checksums.js');
-    if (!fs.existsSync(scriptPath)) {
-        console.warn('⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.');
+    if (!hasEngineWriteTooling()) {
+        console.warn(
+            '⚠️  generate-checksums.js not found at dev/scripts/ — this is a user installation.',
+        );
         console.warn('   Engine writes (checksums regeneration) are a developer operation.');
         console.warn('   To clear drift: restore .magic/ from the release archive.');
         diagnostics.record({
-            severity: 'warning', source: 'update-engine-meta', code: 'CHECKSUM_TOOLING_UNAVAILABLE',
-            message: 'dev/scripts/generate-checksums.js not found (user installation); checksum regeneration skipped.',
+            severity: 'warning',
+            source: 'update-engine-meta',
+            code: 'CHECKSUM_TOOLING_UNAVAILABLE',
+            message:
+                'dev/scripts/generate-checksums.js not found (user installation); checksum regeneration skipped.',
             remedy: 'To clear drift: restore .magic/ from the release archive.',
         });
         return;
     }
     execFileSync(process.execPath, [scriptPath], { stdio: 'inherit' });
+}
+
+/**
+ * Refuses the C14 write branch in a user installation: nothing is bumped,
+ * synced or regenerated, and the process exits non-zero. The standard
+ * "this is a user installation" guidance (and its diagnostics finding) comes
+ * from {@link runGenerateChecksums}, which does nothing else there — drift that
+ * cannot be resolved must not read as success.
+ *
+ * @returns {never}
+ */
+function refuseUserInstallWrite() {
+    runGenerateChecksums();
+    console.error(
+        '❌ Engine drift not resolved: nothing was changed (version and .checksums untouched).',
+    );
+    process.exit(1);
 }
 
 // Execute

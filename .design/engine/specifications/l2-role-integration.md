@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.1.0
+**Version:** 2.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -17,6 +17,7 @@ Defines how the role registry defined in [l2-role-cards.md](l2-role-cards.md) is
 - [l2-engine-automation.md](l2-engine-automation.md) - Host spec for `check-prerequisites`, `update-engine-meta`, and checksum logic.
 - [l2-workflow-wrappers.md](l2-workflow-wrappers.md) - User-facing workflow entry points; unchanged but must reflect role references in descriptions.
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Concept mandating the `prompt-engineer` gates wired in §1, §2.8a, and §3.
+- [l1-rule-admission-gate.md](l1-rule-admission-gate.md) - Concept mandating the admission stage the `constitutional-reviewer` gains in §3.4 and the regulation-necessity checks wired in §3.2.
 
 ## Invariant Compliance
 
@@ -147,6 +148,8 @@ Task Completion Checklist line `☐ Review: Post-Update Review performed in Crit
 
 **[ADDED v2.1.0]** Post-Update Review gains a second stage **Instruction Quality Pass**: after `@role:spec-critic` emits PASS, `@role:prompt-engineer` reviews the created/amended spec sections per the six PQ-3 dimensions (PQ-7 ordering — quality pass never runs on critic-rejected specs). Verdict per PQ-6; FAIL blocks status promotion alongside critic findings. Checklist gains `☐ Instruction Quality: dispatched sections reviewed by @role:prompt-engineer`.
 
+**[ADDED v2.2.0]** Rule capture (T1–T4) no longer carries a guard set of its own: the T4 Inline Guards block is removed and capture is handed to the operational logic of `rule.md` (§3.4), so the `constitutional-reviewer` gate covers a rule captured during spec work exactly as it covers one added through `/magic.rule` (RA-1). The `spec-critic` card gains step 7, Regulation Necessity, and the Spec Council's Safety & Boundary lens gains the matching one-sentence counterweight — a regulation justified only by a scenario that could happen is a finding. Checklist gains `☐ Admission (RA)`.
+
 ### 3.3 `analyze.md`
 
 Pre-Advisory Audit section: `Before generating recommendations, adopt an Auditor persona` → `Before generating recommendations, activate @role:project-auditor`.
@@ -160,6 +163,8 @@ Checklist line `☐ Pre-Advisory Audit (C24): Auditor persona applied` (appears 
 §5 Constitutional Reviewer Persona Audit: `Adopt the Constitutional Reviewer persona` → `Activate @role:constitutional-reviewer`. Interrogative hooks remain in the workflow body.
 
 **[ADDED v2.1.0]** After the constitutional verdict APPROVE and before the rule is written, a new gate **Rule Wording Review** activates `@role:prompt-engineer` over the proposed rule text in composition with the existing constitution tiers (rules are the highest-leverage prompts in the system — loaded on every operation). AMEND-level wording findings are applied as PASS-WITH-REWRITES; contradictions with already-registered rule text FAIL back to the proposal step. The constitutional-reviewer owns *conflict of meaning*; the prompt-engineer owns *clarity of wording* — no overlap (PQ-7).
+
+**[ADDED v2.2.0]** The `constitutional-reviewer` gains an **Admission** stage that decides whether the rule should exist before its conflict review runs. It is the fourth step of the workflow's operational logic — after tier routing, before the guards — and a DECLINE verdict ends the run with one Decision Record and no write. The workflow's order also changes so that both reviews (constitutional, then wording) precede the write: the previous text wrote the change at its Apply step before the reviews it labelled "pre-commitment", which left no point at which a rejection could prevent the write. The Rule Wording Review states that it may clarify an admitted rule's wording but never widen its scope, strength or cases. The gate table in §1 is unchanged.
 
 ### 3.5 `retrospective.md`
 
@@ -253,6 +258,7 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.2.0 | 2026-09-30 | Implements [l1-rule-admission-gate.md](l1-rule-admission-gate.md) at the workflow-wiring level. §3.2: rule capture is handed to `rule.md`'s operational logic instead of a guard set of its own; the `spec-critic` Regulation Necessity step and the Spec Council counterweight are wired. §3.4: the `constitutional-reviewer` Admission stage, its position in the workflow, the review-before-write order, and the wording review's no-widening bar. Closes the follow-up the deployment plan recorded — this spec described the reviewer gate without the stage that decides whether a rule exists. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.1.0 | 2026-06-11 | Wired `prompt-engineer` gates per l1-prompt-quality-gate.md: spec.md Instruction Quality Pass, task.md Task Instruction Review, rule.md Rule Wording Review, analyze.md Mode C Prompt Quality Audit, run.md Step 3.4b conditional Instruction Diff Review; C24 pointer-table extended. Stable retained via Trust Mode re-review (C9). |
 | 2.0.0 | 2026-06-10 | Scope narrowed to workflow-body wiring: engine tooling (§5 check-prerequisites integrity, §6 update-engine-meta, §7 template) extracted verbatim to l2-role-tooling.md (SPEC_BLOAT fix). §8 Skill Surface → §5; §9 Drawbacks → §6 (tooling drawbacks moved with their content). Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-05-12 | Added explicit Run QA `Verify Criterion` guard aligned with task `Verify` lines and Test-engineer role card. |

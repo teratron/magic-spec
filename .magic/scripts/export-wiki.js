@@ -13,7 +13,7 @@ const { resolveDesignRoot } = require('./utils');
 // Generates a Wikipedia-style, agent-navigable Markdown wiki from the
 // Specification Knowledge Graph.
 //
-// Implements l2-spec-graph-memory.md §4.2.
+// Exports the spec graph as a navigable wiki, reading through the extraction cache.
 //
 // Outputs (under $designDir/wiki/):
 //   index.md                                 — entry point
@@ -34,7 +34,7 @@ const { resolveDesignRoot } = require('./utils');
 
 const args = process.argv.slice(2);
 const rootDir = process.cwd();
-const { designDir, designAbs } = resolveDesignRoot(rootDir);
+const { designAbs } = resolveDesignRoot(rootDir);
 
 /** Optional pre-built graph.json path (skip running build-spec-graph). */
 const fromFileIdx = args.indexOf('--from-file');
@@ -42,7 +42,8 @@ const fromFile = fromFileIdx !== -1 ? args[fromFileIdx + 1] : null;
 
 /** Optional wiki output directory override. */
 const outIdx = args.indexOf('--out');
-const outDir = outIdx !== -1 ? path.resolve(rootDir, args[outIdx + 1]) : path.join(designAbs, 'wiki');
+const outDir =
+    outIdx !== -1 ? path.resolve(rootDir, args[outIdx + 1]) : path.join(designAbs, 'wiki');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GRAPH LOADING
@@ -89,11 +90,13 @@ function loadGraph() {
  * @returns {string}
  */
 function slugify(raw) {
-    return String(raw)
-        .replace(/[\\/:*?"<>|]/g, '-')
-        .replace(/\s+/g, '_')
-        .replace(/[^\w.\-]/g, '')
-        .slice(0, 120) || 'untitled';
+    return (
+        String(raw)
+            .replace(/[\\/:*?"<>|]/g, '-')
+            .replace(/\s+/g, '_')
+            .replace(/[^\w.-]/g, '')
+            .slice(0, 120) || 'untitled'
+    );
 }
 
 /**
@@ -135,12 +138,31 @@ function groupEdges(edges, nodeId, byId) {
     const incoming = {};
     for (const e of edges) {
         if (e.from === nodeId) {
-            (outgoing[e.relation] = outgoing[e.relation] || []).push(byId.get(e.to));
+            if (!outgoing[e.relation]) outgoing[e.relation] = [];
+            outgoing[e.relation].push(byId.get(e.to));
         } else if (e.to === nodeId) {
-            (incoming[e.relation] = incoming[e.relation] || []).push(byId.get(e.from));
+            if (!incoming[e.relation]) incoming[e.relation] = [];
+            incoming[e.relation].push(byId.get(e.from));
         }
     }
     return { outgoing, incoming };
+}
+
+/**
+ * Joins rendered lines into a document with one trailing newline and no run of
+ * blank lines (markdownlint MD012), so a section that renders empty cannot
+ * double the separator its neighbours already emit.
+ *
+ * @param {string[]} lines
+ * @returns {string}
+ */
+function joinMarkdown(lines) {
+    const out = [];
+    for (const line of lines) {
+        if (line === '' && out[out.length - 1] === '') continue;
+        out.push(line);
+    }
+    return out.join('\n').replace(/\n+$/, '') + '\n';
 }
 
 /**
@@ -165,7 +187,7 @@ function renderSpecArticle(spec, edges, byId) {
     lines.push(meta.join(' · '), '');
 
     // Implements chain
-    if (outgoing.implements && outgoing.implements.length) {
+    if (outgoing.implements?.length) {
         lines.push('## Implements', '');
         for (const t of outgoing.implements) {
             if (!t) continue;
@@ -175,7 +197,7 @@ function renderSpecArticle(spec, edges, byId) {
     }
 
     // Canonical references (covers)
-    if (outgoing.covers && outgoing.covers.length) {
+    if (outgoing.covers?.length) {
         lines.push('## Canonical References', '');
         for (const t of outgoing.covers) {
             if (!t) continue;
@@ -185,7 +207,7 @@ function renderSpecArticle(spec, edges, byId) {
     }
 
     // Enforced conventions
-    if (outgoing.enforces && outgoing.enforces.length) {
+    if (outgoing.enforces?.length) {
         lines.push('## Enforces Conventions', '');
         for (const t of outgoing.enforces) {
             if (!t) continue;
@@ -195,7 +217,7 @@ function renderSpecArticle(spec, edges, byId) {
     }
 
     // Reverse: specs that implement this one
-    if (incoming.implements && incoming.implements.length) {
+    if (incoming.implements?.length) {
         lines.push('## Implemented By', '');
         for (const t of incoming.implements) {
             if (!t) continue;
@@ -205,11 +227,13 @@ function renderSpecArticle(spec, edges, byId) {
     }
 
     if (spec.workspace) {
-        lines.push(`> Part of [[${workspaceSlug({ label: spec.workspace })}|${spec.workspace}]] · See [[index]] to navigate.`);
+        lines.push(
+            `> Part of [[${workspaceSlug({ label: spec.workspace })}|${spec.workspace}]] · See [[index]] to navigate.`,
+        );
     } else {
         lines.push(`> See [[index]] to navigate.`);
     }
-    return lines.join('\n') + '\n';
+    return joinMarkdown(lines);
 }
 
 /**
@@ -241,20 +265,21 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
             const tagStr = tags.length ? ` _(${tags.join(', ')})_` : '';
             lines.push(`- [[${specSlug(s)}|${s.label}]]${tagStr}`);
         }
+        lines.push('');
     }
 
-    const bridges = bridgeSpecs.filter(b => (b.workspaces || []).includes(ws.label));
+    const bridges = bridgeSpecs.filter((b) => (b.workspaces || []).includes(ws.label));
     if (bridges.length) {
         lines.push('## Bridge Specs', '');
         lines.push('_Specs that span multiple workspaces:_', '');
         for (const b of bridges) {
             lines.push(`- ${b.label} → ${b.workspaces.join(', ')}`);
         }
+        lines.push('');
     }
 
-    lines.push('');
     lines.push('> See [[index]] to navigate other workspaces.');
-    return lines.join('\n') + '\n';
+    return joinMarkdown(lines);
 }
 
 /**
@@ -269,42 +294,56 @@ function renderWorkspaceArticle(ws, specs, bridgeSpecs) {
 function renderIndex(workspaces, specs, analysis, specsByWs) {
     const lines = [];
     lines.push('# Specification Knowledge Graph — Wiki Index', '');
-    lines.push('> Auto-generated by `export-wiki`. Start here — read a workspace page for a map, then drill into spec articles for detail.', '');
-    lines.push(`**${specs.length} specs · ${workspaces.length} workspaces**`, '');
+    lines.push(
+        '> Auto-generated by `export-wiki`. Start here — read a workspace page for a map, then drill into spec articles for detail.',
+        '',
+    );
+    lines.push(`${specs.length} specs · ${workspaces.length} workspaces`, '');
 
     lines.push('## Workspaces', '');
     for (const ws of workspaces.sort((a, b) => a.label.localeCompare(b.label))) {
         const count = (specsByWs.get(ws.label) || []).length;
         lines.push(`- [[${workspaceSlug(ws)}|${ws.label}]] — ${count} specs`);
     }
+    lines.push('');
 
     if (analysis && Array.isArray(analysis.god_nodes) && analysis.god_nodes.length) {
         lines.push('## God Nodes', '');
         lines.push('_Most connected nodes — the load-bearing abstractions._', '');
         for (const g of analysis.god_nodes) {
             if (g.type === 'spec') {
-                const match = specs.find(s => s.id === g.id);
-                if (match) { lines.push(`- [[${specSlug(match)}|${g.label}]] — ${g.degree} edges (${g.type})`); continue; }
+                const match = specs.find((s) => s.id === g.id);
+                if (match) {
+                    lines.push(
+                        `- [[${specSlug(match)}|${g.label}]] — ${g.degree} edges (${g.type})`,
+                    );
+                    continue;
+                }
             }
             lines.push(`- ${g.label} — ${g.degree} edges (${g.type})`);
         }
+        lines.push('');
     }
 
     if (analysis && Array.isArray(analysis.orphaned_files) && analysis.orphaned_files.length) {
         lines.push('## Knowledge Gaps', '');
-        lines.push(`- **${analysis.orphaned_files.length} orphaned file(s)** in workspace scope but uncovered by any spec.`);
+        lines.push(
+            `- **${analysis.orphaned_files.length} orphaned file(s)** in workspace scope but uncovered by any spec.`,
+        );
         if (Array.isArray(analysis.missing_implements) && analysis.missing_implements.length) {
-            lines.push(`- **${analysis.missing_implements.length} L2 spec(s)** missing an \`Implements:\` link.`);
+            lines.push(
+                `- **${analysis.missing_implements.length} L2 spec(s)** missing an \`Implements:\` link.`,
+            );
         }
-        const orphanedConv = analysis.convention_coverage && analysis.convention_coverage.orphaned;
+        const orphanedConv = analysis.convention_coverage?.orphaned;
         if (Array.isArray(orphanedConv) && orphanedConv.length) {
             lines.push(`- **${orphanedConv.length} convention(s)** not enforced by any spec.`);
         }
+        lines.push('');
     }
 
-    lines.push('');
     lines.push('> Regenerate with `node .magic/scripts/executor.js export-wiki`.');
-    return lines.join('\n') + '\n';
+    return joinMarkdown(lines);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -321,11 +360,14 @@ function writeAtomic(absPath, content) {
     fs.mkdirSync(path.dirname(absPath), { recursive: true });
     const tmp = `${absPath}.tmp`;
     fs.writeFileSync(tmp, content, 'utf8');
-    try { fs.renameSync(tmp, absPath); }
-    catch (err) {
+    try {
+        fs.renameSync(tmp, absPath);
+    } catch (err) {
         if (err.code === 'EPERM' || err.code === 'EBUSY') {
             fs.copyFileSync(tmp, absPath);
-            try { fs.unlinkSync(tmp); } catch (_) { }
+            try {
+                fs.unlinkSync(tmp);
+            } catch (_) {}
         } else {
             throw err;
         }
@@ -341,7 +383,9 @@ function pruneWiki(dir) {
     if (!fs.existsSync(dir)) return;
     for (const name of fs.readdirSync(dir)) {
         if (name.endsWith('.md')) {
-            try { fs.unlinkSync(path.join(dir, name)); } catch (_) { }
+            try {
+                fs.unlinkSync(path.join(dir, name));
+            } catch (_) {}
         }
     }
 }
@@ -356,9 +400,9 @@ function main() {
     const edges = graph.edges || [];
     const analysis = graph.analysis || {};
 
-    const byId = new Map(nodes.map(n => [n.id, n]));
-    const specs = nodes.filter(n => n.type === 'spec');
-    const workspaces = nodes.filter(n => n.type === 'workspace');
+    const byId = new Map(nodes.map((n) => [n.id, n]));
+    const specs = nodes.filter((n) => n.type === 'spec');
+    const workspaces = nodes.filter((n) => n.type === 'workspace');
 
     /** @type {Map<string, object[]>} */
     const specsByWs = new Map();

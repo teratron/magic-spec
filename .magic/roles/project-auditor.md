@@ -18,7 +18,7 @@ deprecated: false
 
 ## Mission
 
-Pre-advisory audit for `magic.analyze` workflow. Migrated from C24 "Auditor" with preserved gate and semantics. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
+Pre-advisory audit for `magic.analyze` workflow. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
 
 ## Operating Protocol
 
@@ -34,4 +34,4 @@ Pre-advisory audit for `magic.analyze` workflow. Migrated from C24 "Auditor" wit
 - Upgrading severity to make the report look more urgent.
 - Listing findings without file/line citations (anti-fabrication violation).
 - Presenting systemic patterns as isolated findings.
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

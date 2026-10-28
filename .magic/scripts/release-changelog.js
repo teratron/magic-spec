@@ -21,18 +21,34 @@ const { readVersion } = require('./lib/project-version');
  */
 function runCli() {
     const args = process.argv.slice(2);
-    const { values, errors } = parseFlags(args, {
+    const { values, flags, rest, errors } = parseFlags(args, {
         valueFlags: ['--version', '--date'],
+        boolFlags: ['--help'],
     });
+
+    if (flags['--help']) {
+        console.log(
+            'Usage: node .magic/scripts/executor.js release-changelog [--version=<version>] [--date=<YYYY-MM-DD>] [--help]',
+        );
+        process.exit(0);
+    }
 
     if (errors.length > 0) {
         console.error(`HALT: ${errors[0]}`);
         process.exit(1);
     }
 
+    if (rest.length > 0) {
+        console.error(`HALT: Unknown argument '${rest[0]}'.`);
+        console.error(
+            'Usage: node .magic/scripts/executor.js release-changelog [--version=<version>] [--date=<YYYY-MM-DD>] [--help]',
+        );
+        process.exit(1);
+    }
+
     const changelogPath = path.join(process.cwd(), 'CHANGELOG.md');
-    const version = values['--version']
-        || readVersion(path.join(process.cwd(), '.design', '.version')).version;
+    const version =
+        values['--version'] || readVersion(path.join(process.cwd(), '.design', '.version')).version;
     const date = values['--date'] || new Date().toISOString().slice(0, 10);
 
     const result = releaseUnreleased(changelogPath, version, date);
@@ -45,7 +61,9 @@ function runCli() {
         console.log(`[release-changelog] No changes written for [${version}] - ${date} (dry-run).`);
         process.exit(0);
     }
-    console.log(`[release-changelog] Rotated [Unreleased] → [${version}] - ${date}. Fresh [Unreleased] opened.`);
+    console.log(
+        `[release-changelog] Rotated [Unreleased] → [${version}] - ${date}. Fresh [Unreleased] opened.`,
+    );
     process.exit(0);
 }
 

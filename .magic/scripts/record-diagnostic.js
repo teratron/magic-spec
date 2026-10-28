@@ -41,9 +41,11 @@ function runCli() {
     if (values['--remedy']) finding.remedy = values['--remedy'];
 
     const ok = record(finding);
-    console.log(ok
-        ? `[record-diagnostic] Recorded ${finding.severity} ${finding.code} (${finding.source}).`
-        : '[record-diagnostic] Finding not recorded — see warning above.');
+    console.log(
+        ok
+            ? `[record-diagnostic] Recorded ${finding.severity} ${finding.code} (${finding.source}).`
+            : '[record-diagnostic] Finding not recorded — see warning above.',
+    );
     process.exit(0);
 }
 

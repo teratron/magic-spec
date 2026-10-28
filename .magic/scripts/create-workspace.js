@@ -6,7 +6,7 @@ const path = require('path');
 const { normalizePath } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// CREATE-WORKSPACE (l1-workspace-intent-routing.md WI-6)
+// CREATE-WORKSPACE (WI-6)
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
@@ -48,7 +48,9 @@ for (const arg of args) {
 }
 
 if (!name) {
-    console.error('Usage: create-workspace --name=<name> [--description="..."] [--default] [--dry-run]');
+    console.error(
+        'Usage: create-workspace --name=<name> [--description="..."] [--default] [--dry-run]',
+    );
     process.exit(1);
 }
 
@@ -93,7 +95,9 @@ if (workspaceData.workspaces[name]) {
 }
 
 if (fs.existsSync(targetDir)) {
-    console.error(`HALT: Directory '.design/${name}/' already exists but is not registered. Resolve manually before retry.`);
+    console.error(
+        `HALT: Directory '.design/${name}/' already exists but is not registered. Resolve manually before retry.`,
+    );
     process.exit(1);
 }
 
@@ -104,7 +108,7 @@ if (fs.existsSync(targetDir)) {
 const subtree = [
     path.join(targetDir, 'specifications'),
     path.join(targetDir, 'tasks'),
-    path.join(targetDir, 'archives', 'tasks')
+    path.join(targetDir, 'archives', 'tasks'),
 ];
 
 const indexPath = path.join(targetDir, 'INDEX.md');
@@ -155,7 +159,8 @@ try {
 }
 
 // Stage 3: register in workspace.json (last — easiest to roll back)
-const inferredDescription = description || `Workspace '${name}' (auto-created via create-workspace).`;
+const inferredDescription =
+    description || `Workspace '${name}' (auto-created via create-workspace).`;
 workspaceData.workspaces[name] = { description: inferredDescription };
 
 if (makeDefault) {

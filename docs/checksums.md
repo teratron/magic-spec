@@ -34,8 +34,15 @@ The file is located at `.magic/.checksums` and uses a flat JSON structure:
 
 The `check-prerequisites.js` script (executed via the universal `node .magic/scripts/executor.js check-prerequisites` wrapper) automatically verifies these checksums. This check is integrated as **Step 0** into ALL Magic SDD workflows.
 
-If a mismatch is detected, the workflow will **HALT** and surface an error:
-> `WARNING: Engine Integrity: '.magic/file.md' has been modified locally.`
+If a mismatch is detected, the workflow surfaces an `ENGINE_INTEGRITY` warning — a **HALT** when the file is in scope (see the C15 Filter in `.magic/init.md` §1) — that says how the file differs:
+
+> `'.magic/file.md' has been modified locally (sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
+
+When the bytes are the recorded content with other line endings, the warning says so. That difference is common (`core.autocrlf`, an editor's line-ending setting, a tool that rewrites a file) and invisible in an editor:
+
+> `'.magic/file.md' has been modified locally: only its line endings differ (found CRLF, the release ships LF; sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
+
+In a user installation the warning ends with the only real remedy: restore `.magic/` from the release archive. Do **not** regenerate `.checksums` — that would mask the change. `update-engine-meta` is the developer repository's C14 and is refused in a user installation.
 
 ### 3.2 Update Safety
 
@@ -47,13 +54,13 @@ When the engine logic is intentionally modified (e.g., during development or whe
 
 ### How to update checksums (C14)
 
-For **full synchronization** (including automatic version bump in `.magic/.version` and updates to history files):
+For **full synchronization** (including automatic version bump in `.magic/.version` and skill-wrapper regeneration):
 
 ```bash
-node .magic/scripts/executor.js update-engine-meta --workflow {current_workflow}
+node .magic/scripts/executor.js update-engine-meta
 ```
 
-For **manual checksum update only** (without version or history changes, developer install only):
+For **manual checksum update only** (without a version bump, developer install only):
 
 ```bash
 node dev/scripts/generate-checksums.js
@@ -63,7 +70,7 @@ node dev/scripts/generate-checksums.js
 
 ### When to update
 
-- Whenever an engine file (`.magic/*.md`) or history file is intentionally modified.
+- Whenever an engine file (`.magic/*.md`) is intentionally modified.
 - Before committing changes to the project repository.
 - After manually editing `.magic/` artifacts to resolve integrity errors or `MD012` lint warnings.
 - After a global project synchronization (`/magic.dev.sync`).

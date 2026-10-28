@@ -10,9 +10,19 @@ Universal process for managing project specifications in `.design/specifications
 > **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic-spec/SKILL.md`](../skills/magic-spec/SKILL.md)
 > **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
 
+**Contents:**
+
+- Core Invariants (Mandatory)
+- Directory Structure
+- Specification Layers
+- Status Lifecycle
+- Workflow Steps
+- Finalization Protocol (Mandatory)
+- Templates
+
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during "Explore/Analyze" modes.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
@@ -22,8 +32,8 @@ Universal process for managing project specifications in `.design/specifications
 8. **Ventilation**: use `magic.analyze` to trigger a deep consistency check. See `.magic/analyze.md` Mode C.
 9. **Delta-Editing**: for spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 10. **Closure**: every task ends with a mandatory "Task Completion Checklist".
-11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4.
-12. **Anti-Stall**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity. **Suspended only during an active IK-6 convergent dialogue** (Step 0.5 Idea Intake Gate) — and the moment that gate terminates, by empty set or by non-convergence, this invariant resumes at full force. A gate that fired without an IK-4 condition, or that continued past a non-convergent round, is an Anti-Stall violation, not an exemption.
+11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4. Rules enter only through the admission gate (RA-1).
+12. **Anti-Stall**: If user intent is captured and the agent has asked ≥1 clarifying question without writing any spec file, the agent MUST write a Draft spec on the next turn. Mark uncertain sections with `<!-- TBD: {question} -->` inline. Never block file creation on technical ambiguity. **Suspended only during an active IK-6 convergent dialogue** (Step 0.5 Idea Intake Gate) — and the moment that gate terminates, by empty set or by non-convergence, this invariant resumes at full force: the Draft is written on that turn, every open question answered by the forecast. A gate that fired without an IK-4 condition, or that continued past a non-convergent round, is an Anti-Stall violation, not an exemption.
 
 ## Directory Structure
 
@@ -93,26 +103,26 @@ Apply `context.md` §Step 0 Workspace Intent Detection:
 1. Scan the user's most recent input + the workflow argument for signal classes (creation token, stack delta, domain delta).
 2. Resolve to one of `existing:{name}` · `create:{name}` · `ambiguous`.
 3. On `create:{name}` → invoke `create-workspace` BEFORE any spec authoring. Narrate: `[Workspace] Created '{name}' for {reason} (mentioned: {signal-token}). Dispatching new specs to .design/{name}/. (Revert: git restore .design/workspace.json && rm -rf .design/{name})`.
-4. On `ambiguous` → ask the WI-4 three-option question. User picks 1, 2, or 3. Option 3 cancels the entire spec operation; the agent does NOT propose alternatives — it waits for the user's next message.
+4. On `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) over `create:{X}`, `existing:{Y}` and no dispatch, exactly as `context.md` §Ambiguity Gate states; narrate `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magic.spec {runner-up-workspace} …)` and carry the routing premise into the dispatched spec's `Constraints & Assumptions`. Nothing is asked.
 5. On `existing:{name}` → proceed with `{name}` resolved. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below).
 
 The detection result is recorded in the agent's working state for the remainder of the workflow invocation. No subsequent step re-runs Step 0 within the same invocation.
 
 ### Step 0.5: Idea Intake Gate (E6)
 
-> Governed by `l1-idea-intake-gate.md` (IK-1 through IK-9). Runs after Step 0, before any mode branch. Skipped entirely when the invocation carries no idea (blank trigger, `stabilize`, `amend {file}` with no new content).
+> Governed by the Idea Intake Gate protocol (IK-1 through IK-9). Runs after Step 0, before any mode branch. Skipped entirely when the invocation carries no idea (blank trigger, `stabilize`, `amend {file}` with no new content). This is the one place outside consent where the engine asks: the requester has just supplied the idea and is present, nothing is built yet, and the missing piece is intent only they hold. The Consequence Forecast (C27 DA-10) writes the options and answers whatever the requester delegates.
 
 **Silent by default (IK-1)**: this is an evaluation, not a stage. When no firing condition holds — the common case — proceed to dispatch in the same turn with no narration. Never announce that the gate ran clean.
 
 1. **Investigate first (IK-2)**: before composing any question, exhaust what the repository can answer — global + workspace `RULES.md`, workspace `INDEX.md`, specs on the idea's topic, the spec graph, the source tree. A question is legitimate only for what cannot exist in the repository: the user's intent. *"I did not read the specs"* is never grounds to ask.
-2. **Evaluate the two firing conditions (IK-4)** — the list is closed:
+2. **Gate 1 — comprehension (IK-4)**: is the idea understood?
    - **F1 Incoherence** — the idea is internally contradictory, or admits no single coherent reading.
    - **F2 Essence ambiguity** — ≥2 coherent readings yield **materially different** specs. *Test*: draft the one-sentence Overview each reading produces. Same sentence → detail-level, no fire. Different sentence → fire.
-   - Neither holds → record any residual doubt as `<!-- TBD: {question} -->` and dispatch.
-3. **Stay in the intent layer (IK-3)**: ask only what is being built, for whom, where its boundaries are, what "working" looks like, or which of two conflicting requirements wins. **Never** ask storage format, library, schema, naming, algorithm, layer, or test strategy — the engineer decides those via DA-3 and records a TBD or `[DR]`. Routing a technical fork to a user who may lack the expertise to answer is the failure mode C27 exists to prevent.
-4. **Phrase for a non-specialist (IK-5)**: no unexplained jargon; options describe outcomes ("saved even if the browser closes"), not mechanisms ("persisted server-side"); state each option's consequence; ≤3 questions per round, ≤3 options each; mark a recommended option. C25's ban on permission-seeking phrasing still binds the *form*: ask what the user wants **built**, never what the agent **should do**.
-5. **Converge or stop (IK-6)**: rounds are uncapped but must shrink. The open-question set MUST be strictly smaller at each round's end than at its start — closing one while opening two is not convergence. A non-convergent reply (restated intent, `"you decide"`, unmappable or off-topic answer) **terminates the gate immediately**: remaining questions become `<!-- TBD: … -->` markers and dispatch proceeds. This shrink rule is what makes an uncapped dialogue provably finite.
-6. **Leave no trace (IK-7)**: clarifications are conversational. Absorb answers into the spec body in the spec's own voice — no `Clarifications` section, no brief file, no log.
+3. **Gate 2 — sufficiency (IK-4)**: is the input enough? **F3** fires for each intent anchor — who it is for, what it must do, where it stops — whose sentence would have to be invented (*test*: it cannot be quoted from the input, found in the repository, or taken as the default any engineer would assume).
+   - No condition holds in either gate → record any residual doubt as `<!-- TBD: {question} -->` and dispatch.
+4. **Ask one survey round (IK-3, IK-5)**: at most three questions — one per open point — in plain words, about intent only: what is built, for whom, where it stops, what "working" looks like, which conflicting requirement wins. **Never** ask storage format, library, schema, naming, algorithm, layer or test strategy — the engineer decides those via DA-3 and records a TBD or `[DR]`. Each question's options are the Consequence Forecast's candidates — each reading and, where one exists, the **hedge** — with the forecast's winner marked as recommended, each option's consequence stated, and a free-text **Other: …** last. Any question may be skipped or delegated ("you decide"). Ask what the user wants **built**, never what the agent **should do**.
+5. **Converge or stop (IK-6)**: a chosen option closes its question; an **Other** answer is new human text and goes back through Gates 1 and 2 before it closes anything. The open set MUST be strictly smaller at each round's end than at its start — closing one while opening two is not convergence. A non-convergent reply (restated intent, `"you decide"`, an unmappable or off-topic answer) **ends the gate**: every question still open is answered by the forecast's winner and recorded in the Draft's `Constraints & Assumptions` as `- **Assumption (forecast):** {premise}. Runner-up: {other reading}. Override: /magic.spec amend {file} "{runner-up}"` — at most three such bullets, any further point marked TBD.
+6. **State the understood idea, then write (IK-7)**: when the gate fired, narrate once `[Intake] Understood as: {one paragraph}` — the intent statement that seeds the Overview — and write the Draft on that turn. Answers live in the spec's own voice; no `Clarifications` section, no brief file, no log.
 
 **Scope containment (IK-8)**: E6 fires only on the content of a freshly supplied idea. It never covers the agent's own workflow choices (which spec, which phase, which order), proposal surfaces, or drift offers — those remain declarative `[DR]` narrations under DA-9.
 
@@ -124,7 +134,7 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 
 1. Scan `INDEX.md` and actual project structure.
 2. Identify "Uncovered" modules or logical next steps in the architecture.
-3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magic.spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9, `l1-decision-autonomy.md`): a blank/no-argument invocation resolves by DA-3, **never** by an `AskUserQuestion` or option menu asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
+3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magic.spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9): a blank/no-argument invocation resolves by DA-3, **never** by a question or option menu (e.g. an `AskUserQuestion` call) asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
 
 ### Mode Transition: Explore → Dispatch
 
@@ -160,38 +170,37 @@ graph TD
 ```
 
 1. **Parse & Map**: identify distinct topics and match to domains.
-2. **Dispatch Notice (Non-Blocking)**: show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question — a declarative proposal surface (DA-9), never an `AskUserQuestion`.
+2. **Dispatch Notice (Non-Blocking)**: show the mapping as a concise "Dispatch Notice" (spec → file). If no objective conflicts (RULES.md contradiction, Circular Dependencies, VERSION_DRIFT) are found, the agent MUST proceed to write files immediately. In Trust Mode (C9), this is a statement of action, not a question — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
 3. **Dispatch**: write to correct spec files. Provisionally mark `Stable`-eligible if all of: (a) no RULES.md conflicts, (b) no circular dependencies, (c) layer constraints satisfied, (d) spec content satisfies MVC criteria (Overview + design section); otherwise keep as `Draft`. The advance to `Stable` is **finalized only after Post-Update Review (Step 4) passes** — a critic or quality-pass failure reverts the spec to `Draft`/`RFC` (see §Post-Update Review).
 4. **Post-Update**:
    - Run **Post-Update Review**.
    - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
    - Sync `INDEX.md`.
-   - **Zero-Prompt Handoff (C9 default)**: after dispatch completes, automatically invoke `/magic.task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magic.task. (Interrupt: Ctrl+C)`. Hard-fork ambiguity (per C9 §3 — multiple incompatible architectural paths with no objective tiebreaker) is the only condition that pauses for user input.
+   - **Zero-Prompt Handoff (C9 default)**: after dispatch completes, automatically invoke `/magic.task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magic.task. (Interrupt: Ctrl+C)`. A hard fork (C9 gate 3 — incompatible architectural paths with no objective tiebreaker) is resolved by the Consequence Forecast (C27 DA-10) like any other unsettled fork, its premise recorded in the spec; nothing here pauses for user input.
 
 **Constraints**:
 
-- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Objective-gate questions — workspace routing (WI-4), T4 tier routing, existence/parent guards, hard-fork, and the Step 0.5 Idea Intake Gate (E6) — remain permitted per their own rules.) The E6 carve-out is narrow by construction: it resolves at Step 0.5, **before** dispatch, and covers only intent incoherence (F1) or essence ambiguity (F2). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs by editing the Draft or invoking `/magic.spec amend`.
-- **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping. Never guess precedence.
-- **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Apply **T4 Inline Guards** (§Updating RULES.md) to determine target file and check for duplicates before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
+- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Workspace routing (WI-4) and hard forks are forecast, not asked; the Step 0.5 Idea Intake Gate (E6) is the one intake survey; existence and parent guards remain HALTs with one recommended path.) Step 0.5 resolves intake gaps **before** dispatch and covers only incoherence (F1), essence ambiguity (F2) and insufficient intent (F3). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs and forecast premises by editing the Draft or invoking `/magic.spec amend`.
+- **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping; their precedence is settled at Step 0.5 (F1) — asked in the intake survey, or, when the requester delegates, forecast and recorded as a premise; never guessed silently.
+- **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Hand the rule to the Operational Logic of `rule.md` (§Updating RULES.md) before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
 
 ### Creating a New Specification
 
 1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
-   - `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches.
-   - Missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume.
-   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed. Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{active-workspace}-{file}'. (Override: /magic.spec amend to rename)`. Do NOT HALT; do NOT present option menus.
+   - Any other result → branch per `init.md §1`: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → C15 Filter (**HALT** only if in-scope); missing `.design/` → silently execute `.magic/init.md` (do not prompt user), then resume; unrecognized failure → **HALT**.
+   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed: the workspace name goes right after the layer prefix, so the layer prefix stays first (`l1-auth.md` becomes `l1-{active-workspace}-auth.md`). Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{layer-prefix}{active-workspace}-{name}'. (Override: /magic.spec amend to rename)`. Do NOT HALT; do NOT present option menus.
 2. **Creation**:
    - Use `.magic/templates/spec.md` (Standard) or `.magic/templates/micro-spec.md` (Micro-spec per C16).
    - **Naming**: apply layer prefix (`l1-` Concept, `l2-` Impl) to the filename (e.g., `l1-api.md`).
    - Set `Layer` (1: Concept, 2: Impl). If L2, add `Implements: {L1-file}` using the prefixed name.
-   - Register in `INDEX.md` (Name, Status, Layer, Version).
+   - Register in `INDEX.md` (Name, Status, Layer, Version, Description). The `Description` says what the specification is for and when to open it, in at most two sentences — no change history, no list of sections or invariants, no figure that goes stale. It is a router, not an index of contents: which specification covers a mechanic is answered by searching the specification text.
 3. **Closure**: Post-Update Review → Checklist.
 
 ### Updating an Existing Specification
 
-1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. `checksums_mismatch` → C15 Filter (`init.md §1`) → **HALT** ONLY if in-scope mismatches. If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
+1. **Pre-flight**: `node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`. Any `ok: false` → branch per `init.md §1` (C15 Filter; **HALT** only if in-scope). If target spec is >200 lines, use delta-editing (search-replace) for all modifications (Invariant 9) — full rewrites of files >200 lines are NOT permitted.
 2. **Versioning**:
    - `patch` (0.0.X) — typos, no logic change.
    - `minor` (0.X.0) — extensions.
@@ -199,14 +208,13 @@ graph TD
    - Append row to `Document History`.
    - **Template Promotion (C16)**: if a Micro-spec grows beyond 50 lines or requires detailed architectural constraints, it MUST be converted to the Standard template (re-adding missing sections).
 3. **Sync**:
-   - Update `Version`, `Status`, `Layer` in `INDEX.md`.
+   - Update `Version`, `Status`, `Layer` in `INDEX.md`. Change the `Description` only when what the specification is for, or when to open it, has changed — then rewrite the whole cell in the form above, never append to it; otherwise leave it byte-identical — the amendment goes to the specification's `Document History` (Versioning above), never into the registry cell.
+   - **T4 Queue** (every HALT below): if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly — *"T4 rule detected — queued pending {reason} resolution."*, with `{reason}` = `drift` (Version Drift Guard), `parity` (Cross-Workspace Parity) or `file` (Existence Guard, Parent Existence Guard). Do NOT write to `RULES.md` until the HALT is resolved, then hand the queued rule to the Operational Logic of `rule.md` immediately — after the Resolution Validation re-evaluation for `drift`, once the copies are reconciled for `parity`, and once the target file (and parent) is restored or remapped for `file`.
    - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magic.spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
      - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the file header was updated without review, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed — confirm before proceeding."* After confirmed resolution, **re-evaluate all Sync guards from the top, scoped to the amendment target** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine applied to the amendment target's upward chain — its L1 parents only, not its downstream dependents nor the drift-resolved file that triggered the HALT) before writing.
-     - **T4 Queue**: if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly: *"T4 rule detected — queued pending drift resolution."* Do NOT write to `RULES.md` until the drift is resolved. Apply the queued rule immediately after.
    - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magic.spec` in `{ws-a}` (higher version) to reconcile, then re-run the update."* One path, no option menu.
    - **Existence Guard**: target file in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
    - **Parent Existence Guard**: target is L2, verify its L1 parent (defined in `Implements:`) exists on disk in the specified (or resolved) workspace. Parent missing → **HALT**. Report: *"L2 Orphan: Parent spec `{parent-file}` is missing from disk. Restore parent before updating L2."*
-     - **T4 Queue**: if the triggering input also contained a T4 rule, acknowledge it: *"T4 rule detected — queued pending file resolution."* Do NOT write to `RULES.md` until the Existence Guard is resolved. Apply the queued rule immediately after the target file (and parent) is restored or remapped.
    - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
    - **C12 (Quarantine)**: if L1 status drops (Stable → RFC/Draft):
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
@@ -248,7 +256,7 @@ Activate `@role:spec-critic` to audit the changes. *(C24 pattern analog: Plannin
 **Spec Council (Multi-Angle Evaluation, MA-2)**:
 For major specification edits, RFC/Stable transitions, or high-stakes architectural changes, `@role:spec-critic` evaluates the spec across 5 contrasting lenses:
 
-1. **Safety & Boundary Lens (Contrarian)**: Are all edge cases, failure states, and error boundaries fully specified? What breaks under malformed inputs or unexpected execution halts?
+1. **Safety & Boundary Lens (Contrarian)**: Are all edge cases, failure states, and error boundaries fully specified? What breaks under malformed inputs or unexpected execution halts? For every regulation the change introduces (a blocking gate, mandatory check, required approval or record): does it cite an observed occurrence, and what does it cost the agent's autonomy (RA-2, RA-3)? A regulation justified only by a scenario that could happen is a finding.
 2. **Layer Purity Lens (First Principles)**: Are L1 invariants strictly technology-neutral? Is L2 bound to a valid `Implements:` reference?
 3. **Ecosystem & Extensibility Lens (Expansionist)**: Does the spec compose cleanly with `Related Specifications`? Is future extensibility supported without breaking current invariants?
 4. **Execution & Testability Lens (Executor)**: Are invariant compliance criteria concrete and verifiable by unit/integration tests?
@@ -278,14 +286,12 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 
 | # | Trigger | Approval |
 | --- | --- | --- |
-| T1-T3 | "Always/never", repeated pattern, or audit find | Propose & Wait |
+| T1 | "Always/never" wording that governs how work is done (a statement about product behavior stays in the specification) | Propose & Wait |
+| T2 | A repeated pattern with at least two cited instances | Propose & Wait |
+| T3 | An audit finding whose class recurs after being fixed where it occurred | Propose & Wait |
 | T4 | User rule: "remember that...", "project rule:" | Apply Immediately |
 
-**T4 Inline Guards** (applied before writing, preserving "Apply Immediately" semantics):
-
-1. **Tier Routing**: determine target file using the same logic as `rule.md` §Rule Tier Routing — if rule text contains workspace signal words ("in engine", "for docs", etc.) or current workspace context is specific → write to `.design/{workspace}/RULES.md`. If rule is universal → write to `.design/RULES.md`. Ambiguous → ask user.
-2. **Duplication Check**: read both global and workspace RULES.md (if exists). If proposed rule semantically overlaps with any existing C{N} or WC{N} → surface the overlap and ask: merge, replace, or add separately. Do NOT silently duplicate.
-3. **Constitutional Guard**: if proposed rule contradicts §1–6 → **HALT**. Same as `rule.md`.
+**Rule capture (T1-T4)**: hand the rule to the Operational Logic of `rule.md` (Tier Routing → Admission → Guards → reviews → write); this file does not restate its guards. Each T1-T3 proposal carries the admission record and offers "do not adopt" among its at most three options (DA-5). A user-stated T4 rule is recorded at the strength stated. A rung-1 note or rung-2 regulation (the placement ladder in `rule.md`) is written into the specification under edit.
 
 ### Periodic Registry Audit
 
@@ -310,8 +316,9 @@ Compares specs vs. project filesystem and engine integrity.
 | Check | Action |
 | --- | --- |
 | Path Validity | Referenced files exist? |
-| Layer Integrity | L2 has valid L1 parent? |
+| Layer Integrity | L2 has an existing, `Stable` L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
+| **Stale References** | `Related Specifications` or `Implements` pointing at a `Deprecated` spec? Report `STALE_REFERENCE` (advisory, no HALT — the finding the Deprecation Cascade raises when a spec is deprecated, here for the references that predate or escaped it) → `→ /magic.spec amend {file}`. |
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | Project configuration files match declared spec metadata? |
 | **Engine Integrity** | `.magic/` matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `magic.analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
@@ -320,7 +327,7 @@ Compares specs vs. project filesystem and engine integrity.
 
 After all workflow steps (incl. Graph Refresh) and **before** the Completion Checklist:
 
-1. Run `node .magic/scripts/executor.js finalize --workflow=spec`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
+1. Run `node .magic/scripts/executor.js finalize --workflow=spec --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
 2. **Display the entire script output verbatim** in a fenced block.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
@@ -335,20 +342,22 @@ After all workflow steps (incl. Graph Refresh) and **before** the Completion Che
 ```
 Checklist — {task description}
   ☐ No implementation code in specs (pseudo-code for logic; contracts & references permitted)
-  ☐ Registry: INDEX.md updated (Status, Layer, Version)
+  ☐ Registry: INDEX.md updated (Status, Layer, Version; Description only if what or when changed)
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied
   ☐ Batch Stabilization: MVC criteria applied; field normalization done (if batch mode)
   ☐ Rules: RULES.md triggers (T1-T4) checked/applied
+  ☐ Admission (RA): each agent-originated rule candidate passed the admission gate or was narrated as declined; a user-stated rule recorded at its stated strength
   ☐ Canonical References: If promoting to `Stable`, `## Canonical References` should be filled.
      Empty or stub rows → flag `CANONICAL_MISSING` (advisory, non-blocking — does NOT block promotion; matches `analyze.md` Mode C). MVC remains the sole batch/stabilization gate.
   ☐ Engine: update-engine-meta run if .magic/ or workflows/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
   ☐ Instruction Quality: dispatched sections reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
-  ☐ Idea Intake (E6): Step 0.5 evaluated; gate fired only on F1/F2 after IK-2 investigation, questions
-     stayed in the intent layer (IK-3) and plain language (IK-5), dialogue shrank each round (IK-6),
-     no clarification artifact written (IK-7)
-  ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates; ambiguity recorded as TBD-markers
+  ☐ Idea Intake (E6): Step 0.5 evaluated; fired only on F1–F3 after IK-2 investigation; questions stayed
+     in the intent layer and plain language, options from the forecast with its winner marked and an
+     Other (IK-3, IK-5); rounds shrank, Other answers re-checked (IK-6); delegated questions answered
+     by the forecast with premises recorded; intent statement narrated; no clarification artifact (IK-7)
+  ☐ Engineer Posture (C25): no clarifying prompts outside the intake survey (E6) and consent (C27 E1, E2, E4); ambiguity recorded as TBD-markers or forecast premises
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```
 

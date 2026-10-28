@@ -5,7 +5,7 @@
 // SCAN HYGIENE (Shared Library)
 // ═══════════════════════════════════════════════════════════════════════════
 //
-// Implements l1-scan-input-hygiene.md SH-2/SH-5: one shared strip-before-match
+// Implements SH-2/SH-5: one shared strip-before-match
 // step for every scan that must not read a quoted token as a token in force.
 // Two independent copies of this exact pair of regexes existed before this
 // module (phase-archiver.js, update-state.js) and had not yet drifted apart —
@@ -33,9 +33,7 @@ function stripQuoted(content) {
     // started with — matches the original callers' char classes exactly
     // (`[\s\S]*?` for fences, `[^\`]*` for spans, both newline-permissive).
     const blank = (match) => match.replace(/[^\r\n]/g, '');
-    return content
-        .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, blank)
-        .replace(/`[^`]*`/g, blank);
+    return content.replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, blank).replace(/`[^`]*`/g, blank);
 }
 
 module.exports = { stripQuoted };

@@ -32,4 +32,4 @@ deprecated: false
 
 - {What the role MUST NOT do.}
 - {Another anti-pattern.}
-- Elective questions outside the C27 escalation whitelist (E1-E5) are a protocol violation.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.

@@ -24,18 +24,20 @@ Key Goals:
 | --- | --- | --- |
 | *(empty)* | Full | Resolve workspace automatically, plan all specs |
 | `{workspace}` | Scoped | Plan only specs registered in that workspace's `INDEX.md` |
+| `update` | Plan Update | Reserved keyword (also `{workspace} update`): full or scoped planning with no directive — re-evaluates the existing plan against the current registry and rules; the command the engine names when a plan has gone stale |
 | `"text"` | Guided | Interpret text as planning directive (focus, instruction, filter) |
 | `{workspace} "text"` | Scoped + Guided | Directive applied within workspace scope |
 
 ```
-/magic.task                              # Full planning across all workspaces
+/magic.task                              # Full planning for the resolved workspace
 /magic.task engine                       # Scoped planning for "engine" workspace
+/magic.task update                       # Re-plan against the current registry and rules (no directive)
 /magic.task "decompose phase-2"          # Guided planning with focus
 /magic.task docs "only new specs"        # Scoped + guided planning
 ```
 
-> **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
-> **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope.
+> **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation (this also turns `update` into a directive).
+> **Handoff Propagation**: After planning, the engine recommends `/magic.run {workspace}` to preserve scope — when the current phase holds a task to run; a phase with only blocked tasks ends with the Stalled Plan report instead (§6.4).
 
 ## 3. Core Invariants
 
@@ -44,7 +46,7 @@ The engine enforces 7 mandatory invariants during every task operation:
 | # | Invariant | Summary |
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
-| 2 | **Registry Integrity** | Read ALL specs in `INDEX.md` before planning — no exceptions |
+| 2 | **Registry Integrity** | Account for every spec registered in `INDEX.md` before planning (registry entries and wiki; open a spec body only where a step needs it) |
 | 3 | **Auto-Init** | Silently creates `.design/` structure if missing; preserves user intent across sub-delegation |
 | 4 | **Logic Guards** | No Orphans, Atomic Tasks (C10), User Gate (C9), Zero-Prompt handoff |
 | 5 | **Rules Parity** | Record current `RULES.md` version in `TASKS.md`; detect and notify on drift |
@@ -53,22 +55,20 @@ The engine enforces 7 mandatory invariants during every task operation:
 
 ## 4. Context Quality Guidance
 
-The agent adapts operation depth based on context window utilization:
+Read economy is guidance, not a measurement: the agent has no reliable reading of its own context-window fill, so no tier or percentage is used.
 
-| Tier | Context Used | Behavior |
-| --- | --- | --- |
-| **PEAK** | 0–30% | Full reads: complete specs, full TASKS.md, full STATE.md |
-| **GOOD** | 30–50% | Normal operation; prefer summaries over full-file reads |
-| **DEGRADING** | 50–70% | Read only relevant spec sections; use frontmatter summaries |
-| **POOR** | 70%+ | Read STATE.md + phase frontmatter only; trigger `/magic.pause` if needed |
+- Prefer the wiki, `INDEX.md`, STATE.md `Next Action` and the phase files' `provides` frontmatter before broad scans; read the relevant spec sections rather than whole files.
+- Once a context begins with a summary standing in for earlier turns, re-ground on STATE.md and the phase files rather than on the summary.
 
 ## 5. The Planning System
 
 Magic uses three file levels to manage project state:
 
 - **`PLAN.md`**: Strategic overview — Phases, assigned Specifications, and their current status.
-- **`TASKS.md`**: Master Phase Index — phase registry and status tracking.
+- **`TASKS.md`**: Master Phase Index — phase registry and status tracking. Its Overview describes the file and tracks nothing; status lives in the phase table.
 - **`tasks/phase-{N}.md`**: Tactical execution workbooks — atomic checklists with `T-XXXX` IDs.
+
+When a plan is updated, a task that survives keeps its recorded state (`Status`, `Changes`, `Attempts`) verbatim — regeneration never resets work already done or attempted. Only the explicit transitions of §6.4 (quarantine, demotion, release) change a surviving task's status.
 
 ### Task ID Format
 
@@ -93,6 +93,7 @@ Validates project state before planning:
 - **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
 - **File-Header Parity**: Spec file headers must match `INDEX.md` entries (status, version).
 - **Cross-Workspace Parity**: Detects identically-named spec files across workspaces with version mismatches → **HALT**.
+- **Stable-Spec Requirement**: A registry holding only Draft or RFC specs is not a HALT — Pre-Planning Stabilization and the Bootstrap Exception handle it. An empty registry is a **HALT** with one recommendation: `/magic.spec`, or `/magic.analyze first-time` when the project already has code. The report keeps your original request.
 
 ### 6.2 Pre-Planning Stabilization (Trust Mode Batch)
 
@@ -109,13 +110,18 @@ After drafting the plan, the engine adopts a **Planning Skeptic** persona to rev
 
 - **Optimism Bias**: Have task sizes been underestimated?
 - **Hidden Dependencies**: Are parallel tracks truly independent?
-- **Cascade Risk**: If a critical Phase 1 spec fails, how many Phase 2 tasks are blocked?
+- **Cascade Risk**: If a critical Phase 1 spec fails, which Phase 2 tasks are blocked?
 
 ### 6.4 Autonomous Selection & Quarantine
 
 - **C6 Selection**: All `Stable` specs auto-pulled into `PLAN.md`. `Draft`/`RFC` moved to Backlog.
 - **C6 Bootstrap Exception**: If zero specs are Stable and no prior plan exists, Draft specs passing MVC are treated as plannable with a `[Bootstrap]` marker.
 - **C12 Quarantine**: If an L1 parent drops from Stable, dependent L2 tasks are marked `Blocked [!]` and moved to Backlog.
+- **Bootstrap Tasks**: A task marked `[Bootstrap]` is exempt from C12 Quarantine and Demoted Spec while its spec is `Draft` — a Bootstrap plan is tentative, so a spec and its `Draft` L1 parent are planned together. Once the spec leaves `Draft`, both rules judge its tasks like any other.
+- **Demoted Spec**: A spec that has tasks but is no longer `Stable` moves to Backlog; its `Done` tasks keep their entries and every other task not already blocked becomes `Blocked [!]` ("Spec `{file}` is `{status}`").
+- **Quarantine Release**: When a spec held by C12 or by Demoted Spec is `Stable` again, it returns to the active plan and the tasks blocked by that quarantine return to `Todo`. Tasks blocked for any other reason are untouched.
+- **Stalled Plan**: If, after those rules, the current phase has no `Todo` or `In Progress` task but at least one `Blocked [!]` task, the plan is still written, then the engine **HALTs** instead of handing off to `/magic.run` — it would only stall. It reports each blocked task with its reason and exactly one next step: `/magic.spec` when the first blocked task's reason is a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing), otherwise the resolution the task's notes name. A block `/magic.task` does not own is lifted by setting the task's `Status` to `Todo` once its cause is resolved.
+- **Stabilizing Tasks (C12.1)**: Only a task flagged `stabilizes: {spec-file}` — set when you explicitly ask to stabilize or fix that spec — may bypass quarantine, and only for the spec the flag names. The flag is never inferred from a title; every other task stays quarantined. It holds through the whole run: `/magic.run` lets the flagged task past its own Quarantine and Spec Stability guards, and a planning directive that asks to stabilize a spec (`/magic.task "stabilize {spec-file}"`) plans that spec whatever its status instead of halting because it is not `Stable`.
 - **Phantom Guards**: Missing-from-disk specs cause task cancellation; missing L1 parents cause **HALT**.
 
 ### 6.5 Decomposition
@@ -132,7 +138,7 @@ Tasks are organized into Execution Tracks (Track A, Track B, etc.):
 ## 8. Maintenance
 
 - **Plan Synchronization**: When specifications change, the plan and tasks are updated via the "Sync tasks" command.
-- **Archival (C8)**: Completed phases are moved to `.design/archives/tasks/`.
+- **Archival (C8)**: Completed phases are moved to `.design/archives/tasks/`. Set `archival.enabled` to `false` in `workspace.json` to keep finished phases in `tasks/`; the explicit `archive-phases` command still archives them.
 - **STATE.md Update**: After plan write-back, STATE.md is updated with the new phase and next action.
 - **Context Regeneration**: `CONTEXT.md` is regenerated after every plan write.
 
@@ -157,4 +163,4 @@ After every task planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-09-17 (v2.1.92).
+Synchronized with engine workflows on 2026-10-17 (v2.1.141).

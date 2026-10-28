@@ -25,6 +25,11 @@ if (!fs.existsSync('.git')) {
 
 const date = new Date().toISOString().split('T')[0];
 
+const versionPath = path.join(__dirname, '..', '.version');
+const engineVersion = fs.existsSync(versionPath)
+    ? fs.readFileSync(versionPath, 'utf8').trim()
+    : 'unknown';
+
 const templatesDir = path.join(__dirname, '..', 'templates');
 
 /**
@@ -37,8 +42,11 @@ function getTemplate(name, placeholders = {}) {
     if (!fs.existsSync(filePath)) {
         console.warn(`⚠️ Template not found: ${name}. Using empty string.`);
         diagnostics.record({
-            severity: 'fix', source: 'init', code: 'TEMPLATE_MISSING',
-            message: `Template not found: ${name}; used an empty string instead.`, locus: filePath,
+            severity: 'fix',
+            source: 'init',
+            code: 'TEMPLATE_MISSING',
+            message: `Template not found: ${name}; used an empty string instead.`,
+            locus: filePath,
         });
         return '';
     }
@@ -62,7 +70,10 @@ function createGlobalFiles() {
 
     const indexPath = path.join(designDir, 'INDEX.md');
     if (!fs.existsSync(indexPath)) {
-        const content = getTemplate('global-index.md', { DATE: date });
+        const content = getTemplate('global-index.md', {
+            DATE: date,
+            ENGINE_VERSION: engineVersion,
+        });
         fs.writeFileSync(indexPath, content);
         console.log(`✅ Created ${normalizePath(indexPath)}`);
     }
@@ -81,10 +92,10 @@ function initWorkspace(workspaceDir) {
     const dirsToCreate = [
         path.join(workspaceDir, 'specifications'),
         path.join(workspaceDir, 'tasks'),
-        path.join(workspaceDir, 'archives', 'tasks')
+        path.join(workspaceDir, 'archives', 'tasks'),
     ];
 
-    dirsToCreate.forEach(dir => {
+    dirsToCreate.forEach((dir) => {
         if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
     });
 
@@ -112,10 +123,10 @@ if (fs.existsSync('.git')) {
     } catch (e) {
         console.warn('Note: Could not automatically install Git hooks.');
         diagnostics.record({
-            severity: 'warning', source: 'init', code: 'GIT_HOOKS_NOT_INSTALLED',
+            severity: 'warning',
+            source: 'init',
+            code: 'GIT_HOOKS_NOT_INSTALLED',
             message: `Could not automatically install Git hooks: ${e.message}`,
         });
     }
 }
-
-

@@ -1,6 +1,6 @@
 ---
 name: magic-graph
-description: Specification Knowledge Graph — builds, analyzes, and visualizes the SDD artifact graph
+description: Builds, analyzes and visualizes the specification knowledge graph of the SDD artifacts, with god nodes, communities and coverage. Use when the user asks for the spec graph, graph analysis, community detection or workspace discovery, or for an interactive visualization of the specification graph.
 handoffs:
   - label: "Fix spec gaps"
     workflow: magic-spec

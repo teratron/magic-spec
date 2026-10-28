@@ -115,8 +115,11 @@ function ensureInitialized(versionPath) {
             const message = `Corrupted ${path.basename(versionPath)} backed up → ${path.basename(backup)}; resetting to ${INITIAL_VERSION}.`;
             console.warn(`⚠️  ${message}`);
             diagnostics.record({
-                severity: 'fix', source: 'project-version', code: 'VERSION_FILE_HEALED',
-                message, locus: versionPath,
+                severity: 'fix',
+                source: 'project-version',
+                code: 'VERSION_FILE_HEALED',
+                message,
+                locus: versionPath,
             });
         }
     }

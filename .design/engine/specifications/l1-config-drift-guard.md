@@ -1,6 +1,6 @@
 # Config Drift Guard
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -15,9 +15,9 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 ## Proposed Behavior
 
 1. **Trigger**: `check-prerequisites` (called by `init.md` Step 1 at the start of every workflow).
-2. **Mechanism**: If git is available, run `git diff HEAD -- .design/RULES.md` (and `.design/{workspace}/RULES.md` if it exists per C22).
-3. **On drift detected**: Emit a non-blocking warning:
-   - `"RULES.md was modified outside workflow. Review changes? (a) show diff, (b) proceed, (c) restore from HEAD"`
+2. **Mechanism**: If git is available, run `git diff HEAD -- .design/RULES.md` (and, in addition, `.design/{workspace}/RULES.md` if it exists per C22 — the workspace file never stands in for the global one).
+3. **On drift detected**: Emit a non-blocking `CONFIG_DRIFT` finding that names the file:
+   - `'{path}' has uncommitted changes (modified outside workflow).` The workflow logs the advisory and proceeds — no halt, no prompt, no option menu (`init.md` Step 1, C25).
 4. **On no git**: Skip silently (consistent with existing git-optional design).
 5. **Scope**: Global `RULES.md` and all workspace-specific `RULES.md` files (per C15/C22).
 
@@ -44,6 +44,7 @@ Current workflows read `RULES.md` at startup but do not verify whether it was mo
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.0.2 | 2026-10-01 | Clarification patch, Stable retained. Step 2 and the check now agree: the global `RULES.md` is always monitored and a workspace `RULES.md` (C22) is monitored in addition — the implementation had let the workspace file replace the global one in the watch list, so hand edits to the project constitution went unreported wherever a workspace rules file existed (fixed in engine 2.1.120, harness case added). Step 3's sample message, which offered an (a)/(b)/(c) menu, now states what the engine does: a non-blocking finding, logged and proceeded past. |
 | 1.0.1 | 2026-06-10 | Fixed broken Related Specifications links: added layer prefixes (l1-engine-core.md, l2-engine-automation.md) |
 | 0.1.0 | 2026-03-25 | Initial Micro-spec from simulation RE-1 |
 | 1.0.0 | 2026-03-25 | Auto-promoted to Stable (C9 Trust Mode) |

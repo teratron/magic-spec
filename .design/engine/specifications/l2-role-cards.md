@@ -1,6 +1,6 @@
 # Role Card Registry (Implementation)
 
-**Version:** 2.1.0
+**Version:** 2.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -42,7 +42,7 @@ The full canonical authoring source for each card (frontmatter + Mission + Opera
 | **R7 — C24 Backward Compatibility** | 4 legacy personas migrated to cards: `spec-critic`, `project-auditor`, `constitutional-reviewer`, `retrospective-analyst`. Gate positions preserved. `Tester` renamed to `test-engineer`. `Planning Skeptic` absorbed into `planner`. |
 | **R8 — Versioned via Engine** | `.magic/roles/*.md` files are registered in `.magic/.checksums` by `update-engine-meta`. Any card edit bumps the engine patch version. |
 | **R9 — No Silent Dropout** | `check-prerequisites` gains a `role_registry_integrity` check that enumerates triggers referenced by workflows and verifies each `@role:{id}` resolves. Unresolved → `ROLE_MISSING` HALT. |
-| **R10 — Read-Only from Projects** | Cards live under `.magic/` (read-only from user projects per `CLAUDE.md §1.1`). No opt-in extension mechanism in this version; future L2 may define `.design/{ws}/roles/` overlay. |
+| **R10 — Read-Only from Projects** | Cards live under `.magic/` (read-only from user projects, per the L1 user contract). No opt-in extension mechanism in this version; future L2 may define `.design/{ws}/roles/` overlay. |
 
 ## 1. File Format
 
@@ -139,6 +139,7 @@ The original v1.x kept all card content in this one spec (~656 lines), which tri
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.1 | 2026-09-30 | Clarification patch, no status transition: R10 cited `CLAUDE.md §1.1` — a section of a gitignored twin of `AGENTS.md` that a fresh clone does not contain; it now names the L1 user contract in plain words. |
 | 2.1.0 | 2026-06-11 | Inventory 13 → 14: registered `prompt-engineer` (reviewer, governance cluster) with multi-workflow triggers per l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9). |
 | 2.0.0 | 2026-06-10 | Structural decomposition (SPEC_DECOMPOSE fix): §3 full card content extracted verbatim into three focused child specs (l2-role-cards-execution/review/governance). This spec retains the file format (§1), role inventory index (§2, with new Content Spec column), template, and drawbacks. Stable retained via Trust Mode re-review (C9). |
 | 1.1.0 | 2026-05-12 | Integrated coding discipline into executor/reviewer cards: material assumptions, diff traceability, minimal implementation, and verify-line enforcement. |

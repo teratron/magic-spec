@@ -35,22 +35,17 @@ const WHITELIST = {
     'magic.spec': [
         '.design/{ws}/specifications/**/*.md',
         '.design/{ws}/INDEX.md',
+        '.design/RULES.md',
+        '.design/{ws}/RULES.md',
     ],
-    'magic.task': [
-        '.design/{ws}/PLAN.md',
-        '.design/{ws}/TASKS.md',
-        '.design/{ws}/tasks/**/*.md',
-    ],
+    'magic.task': ['.design/{ws}/PLAN.md', '.design/{ws}/TASKS.md', '.design/{ws}/tasks/**/*.md'],
     'magic.run': [
         '.design/{ws}/TASKS.md',
         '.design/{ws}/STATE.md',
         '.design/{ws}/archives/**/*',
         '.design/{ws}/tasks/**/*.md',
     ],
-    'magic.rule': [
-        '.design/RULES.md',
-        '.design/{ws}/RULES.md',
-    ],
+    'magic.rule': ['.design/RULES.md', '.design/{ws}/RULES.md'],
 };
 
 /**
@@ -59,7 +54,7 @@ const WHITELIST = {
  * depending on whether the file is new).
  */
 const DEFAULT_CATEGORIES = {
-    'magic.spec': 'Changed',  // promoted to 'Added' if all matched files are new
+    'magic.spec': 'Changed', // promoted to 'Added' if all matched files are new
     'magic.task': 'Changed',
     'magic.run': 'Changed',
     'magic.rule': 'Changed',
@@ -84,7 +79,7 @@ function compileGlob(pattern) {
             if (pattern[i + 1] === '*') {
                 re += '.*';
                 i++;
-                if (pattern[i + 1] === '/') i++;  // consume trailing slash of `**/`
+                if (pattern[i + 1] === '/') i++; // consume trailing slash of `**/`
             } else {
                 re += '[^/]*';
             }
@@ -182,7 +177,10 @@ function gitChangedPaths(cwd) {
  */
 function gitFileStatus(cwd, relPath) {
     try {
-        const out = execSync(`git status --porcelain -- "${relPath}"`, { cwd, encoding: 'utf8' }).trim();
+        const out = execSync(`git status --porcelain -- "${relPath}"`, {
+            cwd,
+            encoding: 'utf8',
+        }).trim();
         if (!out) return 'unknown';
         const code = out.slice(0, 2);
         if (code.includes('A') || code === '??') return 'added';
@@ -218,7 +216,10 @@ function gitFileDiff(cwd, relPath) {
  */
 function gitFileNumstat(cwd, relPath) {
     try {
-        const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, { cwd, encoding: 'utf8' }).trim();
+        const out = execSync(`git diff --numstat HEAD -- "${relPath}"`, {
+            cwd,
+            encoding: 'utf8',
+        }).trim();
         if (!out) return { added: 0, deleted: 0 };
         const [addStr, delStr] = out.split(/\s+/);
         return {
@@ -235,9 +236,17 @@ function gitFileNumstat(cwd, relPath) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Computes file hashes for a list of candidate files. Returns map of
- * relPath → sha256 (or null if missing). Used to detect changes when
- * git is unavailable: caller compares against `state.lastSnapshot`.
+ * Computes file hashes for a list of candidate files. Returns a map of
+ * relPath → one of: a sha256 hash, `null` (the file does not exist), or the
+ * literal string `'UNREADABLE'` (the file exists but `hashFileSafe` could not
+ * read it even after its own retries — a directory sitting at the path, a
+ * lock, a permissions error). `'UNREADABLE'` is deliberately distinct from
+ * `null`: folding an unreadable-but-present file into the same bucket as a
+ * genuinely absent one would let a significance diff read "could not tell"
+ * as "nothing to see". `hashFileSafe`'s own retry policy is untouched by this
+ * function — the catch here only stops its eventual throw from escaping past
+ * this one file, so one broken whitelisted path degrades to a single
+ * snapshot entry instead of aborting the caller.
  *
  * @param {string} rootDir - Project root.
  * @param {string[]} relPaths - POSIX-style relative paths.
@@ -247,7 +256,15 @@ function snapshotHashes(rootDir, relPaths) {
     const out = {};
     for (const rel of relPaths) {
         const abs = path.join(rootDir, rel);
-        out[rel] = fs.existsSync(abs) ? hashFileSafe(abs) : null;
+        if (!fs.existsSync(abs)) {
+            out[rel] = null;
+            continue;
+        }
+        try {
+            out[rel] = hashFileSafe(abs);
+        } catch {
+            out[rel] = 'UNREADABLE';
+        }
     }
     return out;
 }
@@ -264,7 +281,7 @@ function diffSnapshots(prev, next) {
     const keys = new Set([...Object.keys(prev || {}), ...Object.keys(next || {})]);
     const out = [];
     for (const k of keys) {
-        if ((prev || {})[k] !== (next || {})[k]) out.push(k);
+        if (prev?.[k] !== next?.[k]) out.push(k);
     }
     return out;
 }
@@ -352,7 +369,10 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
 
     // Build next snapshot for state file (always — even when not significant,
     // so non-git mode can pick up future changes).
-    const nextSnapshot = snapshotHashes(cwd, patterns.filter((p) => !p.includes('*')));
+    const nextSnapshot = snapshotHashes(
+        cwd,
+        patterns.filter((p) => !p.includes('*')),
+    );
 
     return {
         significant,
@@ -361,7 +381,11 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
         defaultCategory,
         gitAvailable: probe.available,
         nextSnapshot,
-        reason: significant ? undefined : (probe.available ? 'no-whitelist-matches' : 'no-snapshot-diff'),
+        reason: significant
+            ? undefined
+            : probe.available
+              ? 'no-whitelist-matches'
+              : 'no-snapshot-diff',
     };
 }
 

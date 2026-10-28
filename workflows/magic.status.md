@@ -1,6 +1,6 @@
 ---
 name: magic.status
-description: Session resume briefing — current position, progress, blockers, and the one next command
+description: Briefs a session on where the project stands from STATE.md and the registries, covering the current position, progress, blockers and recorded decisions, and ending with the one next command; read-only. Use when the user asks where the project stands, what the recorded next step is, or for a resume briefing, without asking for any work to be done.
 handoffs:
   - label: "Continue execution"
     workflow: magic.run

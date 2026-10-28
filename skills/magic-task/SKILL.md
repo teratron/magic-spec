@@ -1,6 +1,6 @@
 ---
 name: magic-task
-description: Workflow for orchestrating tasks and generating the implementation plan.
+description: Turns the Stable specifications into the implementation plan (PLAN.md) and the atomic task list (TASKS.md with phase workbooks), and re-syncs them when the registry or the rules change. Use when the user asks to create, generate, update or sync the plan or the task list.
 handoffs:
   - label: "Generate plan"
     workflow: magic-task
@@ -19,12 +19,13 @@ handoffs:
 
 **Trigger:** `/magic-task [arg]`. Arguments:
 
-- *(empty)* — full planning across all workspaces
+- *(empty)* — full planning for the resolved workspace
 - `{workspace}` — scoped planning for a specific workspace
+- `update` — re-plan against the current registry and rules with no directive (`{workspace} update` scopes it); the command the engine names when a plan has gone stale
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 in more detail"`, `/magic-task docs "only new specs"`.
+Examples: `/magic-task`, `/magic-task engine`, `/magic-task update`, `/magic-task "decompose phase-2 in more detail"`, `/magic-task docs "only new specs"`.
 
 **Scope:**
 
@@ -33,7 +34,7 @@ Examples: `/magic-task`, `/magic-task engine`, `/magic-task "decompose phase-2 i
 - Plan generation, task decomposition, and execution orchestration. Execution is handled by `magic-run`. Specification authoring by `magic-spec`. Rule governance by `magic-rule`.
 - **Pipeline**: `magic-spec` → `magic-task` → `magic-run`.
 - **Post-Run Entry (`rules/magic.md §5`)**: when invoked after `/magic-run` for drift recovery, Pre-Planning Stabilization auto-fixes mechanical drift (Draft→Stable promotion, field normalization, phantom backlog moves); Pre-flight HALTs with a single `/magic-spec` recommendation only on substantive gaps requiring human design input.
-- **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
+- **Finalization**: after plan write, run `node .magic/scripts/executor.js finalize --workflow=task --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `.magic/task.md §Finalization Protocol`.
 
 > **Full implementation:** `.magic/task.md`. Read it before proceeding.
 > **Executor:** `node .magic/scripts/executor.js <script>` for all automation.

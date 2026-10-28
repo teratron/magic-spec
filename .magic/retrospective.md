@@ -4,7 +4,7 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply the workspace resolution chain from [context.md](context.md) (Priority 1-4, Disambiguation, Scope Auto-Apply).
+1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
 2. **Read-only Analysis**: Gather data from `.design/` artifacts. NEVER modify specs, plans, or tasks. Writes are limited to `RETROSPECTIVE.md` and derived diagnostic snapshots (`graph-snapshot.json` / `graph-before.json`). These are not graph sources, so **no `export-wiki`** is required (graph-refresh exemption). Phase archival is NOT performed here — see §7.
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Actionable Output**: Recommendations must be concrete (e.g., "Add guard X", "Remove step Y"). No abstract advice.
@@ -16,13 +16,13 @@ Feedback loop for SDD engine health. Diagnoses bottlenecks without altering core
 | Level | Goal | Trigger | Output |
 | --- | --- | --- | --- |
 | **L1** | Mini-snapshot | Phase Complete (all tasks Done) | Snapshots table row (archival is owned by `finalize`, see §7) |
-| **L2** | Full audit | Plan Complete or manual command | Deep analysis + recommendations |
+| **L2** | Full audit | Plan Complete (`run.md` Plan Completion) | Deep analysis + recommendations |
 
 ## Steps (L1 & L2)
 
 ### 1. Pre-flight
 
-`node .magic/scripts/executor.js check-prerequisites --json`.
+`node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
 
 ### 2. Collect
 
@@ -58,7 +58,7 @@ Signal must reflect the **health of the specification system**, not just deliver
 | 🟡 **Yellow** | `0.1 ≤ Blocked / Total ≤ 0.2` OR 1-2 non-critical drift items (stale refs, minor version mismatches) |
 | 🔴 **Red** | `Blocked / Total > 0.2` OR any shadow logic OR any critical registry inconsistency |
 
-**DORA Metrics**: collect `Deployment Frequency` and `Change Failure Rate` (manual input / external hook required).
+**DORA Metrics**: collect `Deployment Frequency` and `Change Failure Rate` (record them when a CI hook or the user's notes supply them; otherwise `n/a` — never solicit them).
 
 ### 5. Report
 

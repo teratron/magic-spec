@@ -49,8 +49,10 @@ const workflowsDir = path.join(projectRoot, 'workflows');
 const skillsDir = path.join(projectRoot, 'skills');
 const docsDir = path.join(projectRoot, 'docs');
 
-const RULES_MISSING_BLOCK = '> [!WARNING]\n> Project constitution (RULES.md) missing. No rules inferred.\n';
-const REGISTRY_EMPTY_BLOCK = '| Workspace | Description |\n| --- | --- |\n| `root` | No workspaces registered |\n';
+const RULES_MISSING_BLOCK =
+    '> [!WARNING]\n> Project constitution (RULES.md) missing. No rules inferred.\n';
+const REGISTRY_EMPTY_BLOCK =
+    '| Workspace | Description |\n| --- | --- |\n| `root` | No workspaces registered |\n';
 
 // ───────────────────────────────────────────────────────────────────────────
 // State Management
@@ -98,9 +100,10 @@ function readIfExists(p) {
  */
 function markdownFilesIn(dir) {
     if (!fs.existsSync(dir)) return [];
-    return fs.readdirSync(dir)
-        .filter(f => f.endsWith('.md'))
-        .map(f => path.join(dir, f));
+    return fs
+        .readdirSync(dir)
+        .filter((f) => f.endsWith('.md'))
+        .map((f) => path.join(dir, f));
 }
 
 /**
@@ -110,9 +113,10 @@ function markdownFilesIn(dir) {
  */
 function skillWrapperFiles() {
     if (!fs.existsSync(skillsDir)) return [];
-    return fs.readdirSync(skillsDir)
-        .map(dir => path.join(skillsDir, dir, 'SKILL.md'))
-        .filter(f => fs.existsSync(f));
+    return fs
+        .readdirSync(skillsDir)
+        .map((dir) => path.join(skillsDir, dir, 'SKILL.md'))
+        .filter((f) => fs.existsSync(f));
 }
 
 /**
@@ -124,7 +128,13 @@ function skillWrapperFiles() {
  * @returns {string[]} Candidate absolute paths.
  */
 function collectContributingSources() {
-    return [templatePath, rulesPath, indexPath, ...markdownFilesIn(workflowsDir), ...skillWrapperFiles()];
+    return [
+        templatePath,
+        rulesPath,
+        indexPath,
+        ...markdownFilesIn(workflowsDir),
+        ...skillWrapperFiles(),
+    ];
 }
 
 /**
@@ -184,7 +194,11 @@ function projectNameFromWorkspaceJson() {
  * @returns {string}
  */
 function getProjectName() {
-    return projectNameFromWorkspaceJson() || process.env.MAGIC_PROJECT_NAME || path.basename(projectRoot);
+    return (
+        projectNameFromWorkspaceJson() ||
+        process.env.MAGIC_PROJECT_NAME ||
+        path.basename(projectRoot)
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -223,7 +237,11 @@ function extractRegistryBlock() {
     const tableStart = indexContent.indexOf('|', start);
     if (tableStart === -1) return REGISTRY_EMPTY_BLOCK;
     const tableEnd = indexContent.indexOf('\n##', tableStart);
-    return (tableEnd !== -1 ? indexContent.substring(tableStart, tableEnd) : indexContent.substring(tableStart)).trim();
+    return (
+        tableEnd !== -1
+            ? indexContent.substring(tableStart, tableEnd)
+            : indexContent.substring(tableStart)
+    ).trim();
 }
 
 /**
@@ -235,7 +253,10 @@ function extractRegistryBlock() {
 function buildWorkflowsTable() {
     let table = '| Command | Description |\n| --- | --- |\n';
     if (!fs.existsSync(workflowsDir)) return table;
-    const wfFiles = fs.readdirSync(workflowsDir).filter(f => f.endsWith('.md')).sort();
+    const wfFiles = fs
+        .readdirSync(workflowsDir)
+        .filter((f) => f.endsWith('.md'))
+        .sort();
     for (const file of wfFiles) {
         const content = fs.readFileSync(path.join(workflowsDir, file), 'utf8');
         const m = content.match(/description:\s*(.*)/);
@@ -267,7 +288,10 @@ function generateContributing(targetVersion, state) {
         .replace(/{{rules_block}}/g, extractRulesBlock())
         .replace(/{{registry_block}}/g, extractRegistryBlock())
         .replace(/{{directory_tree}}/g, directoryTree)
-        .replace(/{{setup_command}}/g, 'node .magic/scripts/executor.js check-prerequisites --json');
+        .replace(
+            /{{setup_command}}/g,
+            'node .magic/scripts/executor.js check-prerequisites --json',
+        );
 
     // Idempotency: skip write if content hasn't changed
     const existing = readIfExists(contributingPath);
@@ -277,7 +301,9 @@ function generateContributing(targetVersion, state) {
     }
 
     if (writeFileSafe(contributingPath, rendered)) {
-        console.log(`  ✅ CONTRIBUTING.md regenerated (sourceDate=${sourceDate}, v${targetVersion})`);
+        console.log(
+            `  ✅ CONTRIBUTING.md regenerated (sourceDate=${sourceDate}, v${targetVersion})`,
+        );
         state.contributing = sha(rendered);
         return true;
     }
@@ -353,7 +379,7 @@ function syncSlashCommandLine(content, command) {
     const slashLine = content.match(/^\*\*Slash command:\*\*\s+`\/[^\s`]+(\s\[[^\]]*\])?`/m);
     if (!slashLine) return content;
     // Preserve any " [arg]" suffix the doc already advertises
-    const suffix = (slashLine[0].match(/\s(\[[^\]]+\])`\s*$/) || [, ''])[1];
+    const suffix = slashLine[0].match(/\s(\[[^\]]+\])`\s*$/)?.[1] ?? '';
     const newSlash = suffix
         ? `**Slash command:** \`/${command} ${suffix}\``
         : `**Slash command:** \`/${command}\``;
@@ -385,11 +411,15 @@ function syncNoteBody(content, shouldRefresh, date, targetVersion) {
  *          `'frontmatter'` when none did (a Triggers/Slash-command-only edit).
  */
 function describeChangeReasons({ wfChanged, skillChanged, versionChanged }) {
-    return [
-        wfChanged ? 'workflow-source' : null,
-        skillChanged ? 'skill-source' : null,
-        versionChanged ? 'version-bump' : null,
-    ].filter(Boolean).join('+') || 'frontmatter';
+    return (
+        [
+            wfChanged ? 'workflow-source' : null,
+            skillChanged ? 'skill-source' : null,
+            versionChanged ? 'version-bump' : null,
+        ]
+            .filter(Boolean)
+            .join('+') || 'frontmatter'
+    );
 }
 
 /**
@@ -404,7 +434,7 @@ function describeChangeReasons({ wfChanged, skillChanged, versionChanged }) {
 function syncDocsFolder(targetVersion, state) {
     if (!fs.existsSync(docsDir)) return;
 
-    const docFiles = fs.readdirSync(docsDir).filter(f => f.endsWith('.md'));
+    const docFiles = fs.readdirSync(docsDir).filter((f) => f.endsWith('.md'));
     const date = new Date().toISOString().split('T')[0];
 
     for (const file of docFiles) {
@@ -412,11 +442,18 @@ function syncDocsFolder(targetVersion, state) {
         const wfName = `magic.${file}`;
         const wfPath = path.join(workflowsDir, wfName);
 
-        if (!fs.existsSync(wfPath)) continue;     // No source → leave doc alone
+        if (!fs.existsSync(wfPath)) continue; // No source → leave doc alone
 
         const skillKey = `magic-${file.replace('.md', '')}`;
         const skillPath = path.join(skillsDir, skillKey, 'SKILL.md');
-        const signals = computeSyncSignals(wfPath, skillPath, targetVersion, state, wfName, skillKey);
+        const signals = computeSyncSignals(
+            wfPath,
+            skillPath,
+            targetVersion,
+            state,
+            wfName,
+            skillKey,
+        );
 
         const original = fs.readFileSync(docPath, 'utf8');
         let content = original;
@@ -425,7 +462,8 @@ function syncDocsFolder(targetVersion, state) {
         content = syncNoteBody(
             content,
             signals.wfChanged || signals.skillChanged || signals.versionChanged,
-            date, targetVersion
+            date,
+            targetVersion,
         );
 
         if (content !== original) {
@@ -438,7 +476,11 @@ function syncDocsFolder(targetVersion, state) {
 
         state.workflows[wfName] = { hash: signals.wfHash, version: targetVersion, syncedAt: date };
         if (signals.skillHash !== null) {
-            state.skills[skillKey] = { hash: signals.skillHash, version: targetVersion, syncedAt: date };
+            state.skills[skillKey] = {
+                hash: signals.skillHash,
+                version: targetVersion,
+                syncedAt: date,
+            };
         }
     }
 }

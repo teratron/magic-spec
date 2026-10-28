@@ -42,7 +42,11 @@ if (!SCRIPT_NAME_RE.test(scriptName)) {
 // is present but valueless HALTs instead of falling back to the default
 // workspace: a silent fallback routed writes and Pre-flight validation at the
 // wrong workspace, and made the Unknown-workspace guard below unreachable.
-const { values: flagValues, rest: passThroughArgs, errors: flagErrors } = parseFlags(args, {
+const {
+    values: flagValues,
+    rest: passThroughArgs,
+    errors: flagErrors,
+} = parseFlags(args, {
     valueFlags: ['--workspace'],
 });
 
@@ -57,7 +61,9 @@ args = passThroughArgs;
 let workspaceName = flagValues['--workspace'] || process.env.MAGIC_WORKSPACE || null;
 
 if (workspaceName && !WORKSPACE_NAME_RE.test(workspaceName)) {
-    console.error(`HALT: Invalid workspace name '${workspaceName}'. Must match ${WORKSPACE_NAME_RE}.`);
+    console.error(
+        `HALT: Invalid workspace name '${workspaceName}'. Must match ${WORKSPACE_NAME_RE}.`,
+    );
     process.exit(1);
 }
 
@@ -73,14 +79,15 @@ if (fs.existsSync(workspaceJsonPath)) {
         }
 
         if (workspaceName) {
-            const workspaceEntry = workspaceData.workspaces &&
+            const workspaceEntry =
+                workspaceData.workspaces &&
                 typeof workspaceData.workspaces === 'object' &&
                 workspaceData.workspaces[workspaceName];
 
             if (workspaceEntry) {
                 const targetPath = path.join(process.cwd(), '.design', workspaceName);
                 if (!fs.existsSync(targetPath)) {
-                    // WI-9 (l1-workspace-intent-routing.md): Auto-mkdir the standard
+                    // WI-9: Auto-mkdir the standard
                     // subtree instead of silently falling back to .design/ root.
                     // The previous fallback caused spec/task artifacts to accumulate
                     // at the global registry level, breaking per-workspace isolation.
@@ -88,14 +95,18 @@ if (fs.existsSync(workspaceJsonPath)) {
                         const subtree = [
                             path.join(targetPath, 'specifications'),
                             path.join(targetPath, 'tasks'),
-                            path.join(targetPath, 'archives', 'tasks')
+                            path.join(targetPath, 'archives', 'tasks'),
                         ];
                         for (const dir of subtree) {
                             fs.mkdirSync(dir, { recursive: true });
                         }
-                        console.log(`Note: Provisioned missing workspace directory '.design/${workspaceName}/' (WI-9 auto-mkdir).`);
+                        console.log(
+                            `Note: Provisioned missing workspace directory '.design/${workspaceName}/' (WI-9 auto-mkdir).`,
+                        );
                     } catch (err) {
-                        console.error(`HALT: Failed to auto-provision workspace '${workspaceName}': ${err.message}`);
+                        console.error(
+                            `HALT: Failed to auto-provision workspace '${workspaceName}': ${err.message}`,
+                        );
                         process.exit(1);
                     }
                 }
@@ -111,14 +122,16 @@ if (fs.existsSync(workspaceJsonPath)) {
     }
 } else if (workspaceName) {
     // Flag or env var provided but no workspace.json
-    console.error(`HALT: Workspace '${workspaceName}' provided, but .design/workspace.json does not exist.`);
+    console.error(
+        `HALT: Workspace '${workspaceName}' provided, but .design/workspace.json does not exist.`,
+    );
     process.exit(1);
 }
 
 // Expose MAGIC_DESIGN_DIR and optional MAGIC_WORKSPACE_SCOPE to child
 const envVars = { MAGIC_DESIGN_DIR: magicDesignDir };
 if (workspaceData) {
-    const workspace = workspaceData.workspaces && workspaceData.workspaces[workspaceName];
+    const workspace = workspaceData.workspaces?.[workspaceName];
     if (workspace && Array.isArray(workspace.scope)) {
         envVars.MAGIC_WORKSPACE_SCOPE = workspace.scope.join(',');
     }

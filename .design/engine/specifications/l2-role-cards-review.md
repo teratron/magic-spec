@@ -1,6 +1,6 @@
 # Role Cards — Review Gates
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -98,7 +98,7 @@ related_rules: [C24]
 1. Load the reviewed diff.
 2. Ask: "Can this be shorter or flatter without losing correctness, readability, or the `Verify` criterion? Which abstraction, option, or branch is justified by current requirements rather than possible future ones?"
 3. Remove or propose removal of one-use abstractions, speculative knobs, duplicate flow, and defensive handling for impossible states. Keep defensive checks at external boundaries.
-4. Optionally invoke the `simplify` skill as a helper (advisory only, per R6).
+4. Optionally invoke the `simplify` skill as a helper (advisory only; never auto-invoked).
 5. If simplifications identified, propose a revised diff and hand back to Code-reviewer for re-verification.
 6. If no simplifications needed, hand off to Test-engineer.
 
@@ -209,6 +209,7 @@ related_rules: [C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Code-simplifier step 4: "advisory only, per R6" → "advisory only; never auto-invoked". R6 is an invariant ID defined only in `l2-role-integration.md`, which a consumer installation does not carry; the deployed card now states the rule itself. |
 | 1.2.0 | 2026-08-06 | Code-reviewer card: RC-6 containment check bound to RC-2.1 notation-independent patterns — task IDs bracketed and bare, phase designators in file and prose form. A bracket-only or fixed-width check passes exactly the forms that leak. |
 | 1.1.0 | 2026-06-12 | Code-reviewer card: added RC-6 containment check (protocol step 4 + anti-pattern) per l1-sdd-reference-containment.md — diff with SDD-artifact references is FAIL. |
 | 1.0.0 | 2026-06-10 | Initial Stable. Extracted run.md inline review-gate cards (code-reviewer, code-simplifier, code-skeptic, test-engineer) verbatim from l2-role-cards.md §3 during the v2.0.0 registry decomposition. |

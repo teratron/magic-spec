@@ -3,17 +3,22 @@
 
 const fs = require('fs');
 const path = require('path');
-const { hashFile, normalizePath } = require('./utils');
+const {
+    hashFile,
+    normalizePath,
+    hasEngineWriteTooling,
+    describeManifestDelta,
+} = require('./utils');
 const { execSync } = require('child_process');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const diagnostics = require('./lib/diagnostics');
+const { findPendingWork, SPEC_FILENAME_SRC } = require('./lib/pending-work');
 
-// l1-scan-input-hygiene.md SH-4/SH-5: single shared pattern source for every
-// `specifications/{file}.md` extraction site in this script — the filename
-// grammar (not an unrelated closing paren) bounds the capture, so one
-// definition backs both the `matchAll()` site and the single-match `.match()`
-// sites instead of four independent copies of the same literal.
-const SPEC_FILENAME_SRC = 'specifications\\/([a-z0-9][a-z0-9-]*\\.md)';
+// The `specifications/{file}.md` filename grammar is defined once, in
+// lib/pending-work.js, and shared by every extraction site in this script
+// and by the pending-work predicate: the grammar (not an unrelated closing
+// paren) bounds the capture, so one definition backs the `matchAll()` site
+// and the single-match `.match()` sites instead of independent copies.
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIGURATION & ARGUMENTS
@@ -28,6 +33,19 @@ const verifyHeaders = args.includes('--verify-headers');
 
 const missing = [];
 const warnings = [];
+
+// DG-10: the exact flag vector that reproduces this
+// invocation's own check, forced to include --json regardless of whether
+// this run itself was asked to emit JSON — a recheck always needs parseable
+// output. Every `warn()` finding is a condition (an assessment of current
+// repository state), never an event, so this is attached unconditionally.
+const RECHECK_ARGS = [
+    '--json',
+    ...(reqPlan ? ['--require-plan'] : []),
+    ...(reqTasks ? ['--require-tasks'] : []),
+    ...(reqSpecs ? ['--require-specs'] : []),
+    ...(verifyHeaders ? ['--verify-headers'] : []),
+];
 
 // ───────────────────────────────────────────────────────────────────────────
 // Helpers
@@ -46,6 +64,16 @@ function warn(type, message, fix) {
     // site already produced DG-3's shape before DG-3 existed.
     const finding = { severity: 'warning', source: 'check-prerequisites', code: type, message };
     if (fix) finding.remedy = fix;
+    // DG-10 recheck reference. MAGIC_DESIGN_DIR is re-read here rather than
+    // closing over the module-scope `designDir` const declared below — the
+    // ENGINE_INTEGRITY checks above call warn() before that line runs, and a
+    // closure over it would throw a TDZ ReferenceError on this script's very
+    // first possible warning.
+    finding.recheck = {
+        script: 'check-prerequisites',
+        args: RECHECK_ARGS,
+        env: { MAGIC_DESIGN_DIR: process.env.MAGIC_DESIGN_DIR || '.design' },
+    };
     diagnostics.record(finding);
 }
 
@@ -55,10 +83,35 @@ function warn(type, message, fix) {
 
 const checksumsFile = path.join('.magic', '.checksums');
 
+// The remedy an integrity failure names depends on what this installation can
+// do. The developer repo can bless an intentional engine edit through C14
+// (`update-engine-meta`). A user installation cannot regenerate the manifest —
+// and must not, since that would mask the change — so its only remedy is a
+// restore, and there is no automated fix to suggest. Naming C14 there sent
+// operators to a command that bumped `.magic/.version` and fixed nothing.
+const canRunC14 = hasEngineWriteTooling();
+const C14_FIX = 'node .magic/scripts/executor.js update-engine-meta';
+const RESTORE_HINT = ' Restore .magic/ from the release archive; do not regenerate .checksums.';
+
+// How a mismatched file differs, in the words of its finding (see
+// utils.describeManifestDelta). `modified locally` on its own was printed alike
+// for an edit, a line-ending conversion and a swapped manifest, and no hash was
+// recorded — so a flagged file later found byte-identical to the release could
+// not be explained. Both short hashes are always given; a difference that is
+// line endings and nothing else says so.
+function integrityDetail(delta) {
+    if (!delta) return '.';
+    const hashes = `sha256 expected ${delta.expected.slice(0, 12)}, found ${delta.actual.slice(0, 12)}`;
+    return delta.lineEndingsOnly
+        ? `: only its line endings differ (found ${delta.found}, the release ships ${delta.expectedEol}; ${hashes}).`
+        : ` (${hashes}).`;
+}
+
 if (fs.existsSync(checksumsFile)) {
     try {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
         const mismatchedFiles = [];
+        const missingFiles = [];
         for (const [relPath, storedHash] of Object.entries(checksums)) {
             if (relPath === '.checksums') continue;
             const normalizedRelPath = normalizePath(relPath);
@@ -66,25 +119,39 @@ if (fs.existsSync(checksumsFile)) {
             if (fs.existsSync(fullPath)) {
                 const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
-                    mismatchedFiles.push(normalizedRelPath);
+                    mismatchedFiles.push({
+                        file: normalizedRelPath,
+                        delta: describeManifestDelta(fullPath, storedHash),
+                    });
                 }
+            } else {
+                // A listed file that is gone is drift of the same kind as an edited
+                // one — the update check already reports it, so the two must agree.
+                missingFiles.push(normalizedRelPath);
             }
         }
-        for (const f of mismatchedFiles) {
+        for (const { file, delta } of mismatchedFiles) {
             warn(
                 'ENGINE_INTEGRITY',
-                `'.magic/${f}' has been modified locally.`,
-                'node .magic/scripts/executor.js update-engine-meta'
+                `'.magic/${file}' has been modified locally${integrityDetail(delta)}${canRunC14 ? '' : RESTORE_HINT}`,
+                canRunC14 ? C14_FIX : null,
             );
         }
-    } catch (e) {
+        for (const file of missingFiles) {
+            warn(
+                'ENGINE_INTEGRITY',
+                `'.magic/${file}' is missing locally.${canRunC14 ? '' : RESTORE_HINT}`,
+                canRunC14 ? C14_FIX : null,
+            );
+        }
+    } catch {
         // Ignore parse errors
     }
 } else {
     warn(
         'ENGINE_INTEGRITY',
-        "'.magic/.checksums' is missing.",
-        'node .magic/scripts/executor.js update-engine-meta'
+        `'.magic/.checksums' is missing.${canRunC14 ? '' : RESTORE_HINT}`,
+        canRunC14 ? C14_FIX : null,
     );
 }
 
@@ -141,78 +208,87 @@ if (reqSpecs && stableCount === 0) {
     else missing.push('Stable specs (only Draft/RFC found)');
 }
 
-if (draftCount > 0) warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
+if (draftCount > 0)
+    warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magic.spec');
 if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magic.spec');
+
+// One predicate answers all three pending-work questions (orphaned spec,
+// registry ahead of the plan, open Backlog item on a complete plan) for this
+// script and for the next-step line finalize prints, so the two cannot disagree.
+const pending = planExists ? findPendingWork(designDir) : null;
+
+// A stale-plan remedy names the workspace this check ran for, so following it
+// re-plans that workspace and not whichever one happens to be the default.
+// The flat legacy layout (.design/ itself) has no workspace to name.
+const planWorkspace = path.basename(designDir);
+const planRemedy =
+    planWorkspace === '.design' ? '/magic.task update' : `/magic.task ${planWorkspace} update`;
+
+// The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
+// exists: a spec that is registered but absent from disk (or misnamed) is as much a
+// defect between the first spec and the first plan as after it, and that window is where
+// specs are created and deleted most. Only the checks that compare against the plan
+// wait for one.
+//
+// SH-1 + SH-4: read from the stripped copy, bound to the filename grammar — the
+// pre-fix `[^)]*` capture doesn't exclude newlines, so a bare `specifications/` mention
+// in prose (no immediate closing `)`) could run the match past the paragraph it started in.
+const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
+const indexSpecs = [...new Set(indexSpecMatches.map((m) => m[1]))];
+
+for (const spec of indexSpecs) {
+    if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
+        warn(
+            'GHOST_REGISTRY',
+            `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
+            'magic.analyze',
+        );
+    }
+
+    // §1 Naming Convention Check
+    if (!spec.startsWith('l1-') && !spec.startsWith('l2-')) {
+        warn(
+            'NAMING_VIOLATION',
+            `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
+            'Rename file and update INDEX.md references',
+        );
+    }
+}
 
 if (planExists && indexExists) {
     const planContent = fs.readFileSync(planPath, 'utf8');
-    // l1-scan-input-hygiene.md SH-1/SH-4: a spec filename quoted in a code
+    // SH-1/SH-4: a spec filename quoted in a code
     // span or fence (e.g. a Backlog entry illustrating a template placeholder)
     // is a mention, not a reference — strip before matching, and bound the
     // capture to the filename grammar so one match can't span several
     // comma-separated tokens up to an unrelated closing paren.
     const planContentForMatch = stripQuoted(planContent);
 
-    // SH-1 + SH-4: read from the stripped copy, bound to the filename grammar
-    // — the pre-fix `[^)]*` capture doesn't exclude newlines, so a bare
-    // `specifications/` mention in prose (no immediate closing `)`) could run
-    // the match past the paragraph it started in.
-    const indexSpecMatches = [...indexContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const indexSpecs = [...new Set(indexSpecMatches.map(m => m[1]))];
-
     for (const spec of indexSpecs) {
-        if (!fs.existsSync(path.join(designDir, 'specifications', spec))) {
-            warn(
-                'GHOST_REGISTRY',
-                `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
-                'magic.analyze'
-            );
-        }
-
-        // §1 Naming Convention Check
-        if (!spec.startsWith('l1-') && !spec.startsWith('l2-')) {
-            warn(
-                'NAMING_VIOLATION',
-                `'${spec}' does not follow the Layer Prefix rule (§1). Must start with 'l1-' or 'l2-'.`,
-                'Rename file and update INDEX.md references'
-            );
-        }
-
-        if (!planContentForMatch.includes(spec)) {
-            warn(
-                'ORPHANED_SPEC',
-                `'${spec}' is in INDEX.md but missing from PLAN.md.`,
-                'magic.task update'
-            );
+        if (pending.orphanedSpecs.includes(spec)) {
+            warn('ORPHANED_SPEC', `'${spec}' is in INDEX.md but missing from PLAN.md.`, planRemedy);
         }
     }
 
     const planSpecMatches = [...planContentForMatch.matchAll(new RegExp(SPEC_FILENAME_SRC, 'g'))];
-    const planSpecs = [...new Set(planSpecMatches.map(m => m[1]))];
+    const planSpecs = [...new Set(planSpecMatches.map((m) => m[1]))];
 
     for (const pSpec of planSpecs) {
         if (!indexSpecs.includes(pSpec)) {
             warn(
                 'REGISTRY_MISMATCH',
                 `'${pSpec}' is referenced in PLAN.md but missing from INDEX.md.`,
-                'magic.spec --audit'
+                '/magic.spec audit',
             );
         }
     }
 
-    const indexVersionMatch = indexContent.match(/^\*\*Version:\*\*\s+([0-9.]+)/m);
-    const planBasedOnMatch = planContent.match(/^\*\*Based on:\*\*\s+.*?v([0-9.]+)/m);
-
-    if (indexVersionMatch && planBasedOnMatch) {
-        const indexVersion = indexVersionMatch[1];
-        const planBasedOn = planBasedOnMatch[1];
-        if (indexVersion !== planBasedOn) {
-            warn(
-                'SYNC_GAP',
-                `PLAN.md is based on INDEX.md v${planBasedOn}, but registry is at v${indexVersion}.`,
-                'magic.task update'
-            );
-        }
+    if (pending.syncGap) {
+        warn(
+            'SYNC_GAP',
+            `PLAN.md is based on INDEX.md v${pending.syncGap.planBasedOn}, but registry is at v${pending.syncGap.indexVersion}.`,
+            planRemedy,
+        );
     }
 
     // Rule 57: Layer Integrity
@@ -224,7 +300,7 @@ if (planExists && indexExists) {
             const specMatch = line.match(new RegExp(SPEC_FILENAME_SRC));
             if (specMatch) {
                 const specFile = specMatch[1];
-                const parts = line.split('|').map(s => s.trim());
+                const parts = line.split('|').map((s) => s.trim());
                 if (parts.length >= 5) {
                     const status = parts[3];
                     if (status === 'Stable' || status === 'RFC') {
@@ -232,19 +308,25 @@ if (planExists && indexExists) {
                         if (fs.existsSync(specPath)) {
                             const specContent = stripQuoted(fs.readFileSync(specPath, 'utf8'));
                             // Extract parent link reliably — SH-1 + SH-4
-                            const parentMatch = specContent.match(new RegExp(`\\*\\*Implements:\\*\\*\\s*(?:\\[.*?\\]\\()?${SPEC_FILENAME_SRC}\\)?`));
+                            const parentMatch = specContent.match(
+                                new RegExp(
+                                    `\\*\\*Implements:\\*\\*\\s*(?:\\[.*?\\]\\()?${SPEC_FILENAME_SRC}\\)?`,
+                                ),
+                            );
                             if (parentMatch) {
                                 const parent = parentMatch[1];
-                                const parentLine = lines.find(l => l.includes(`(specifications/${parent})`));
+                                const parentLine = lines.find((l) =>
+                                    l.includes(`(specifications/${parent})`),
+                                );
                                 if (parentLine) {
-                                    const parentParts = parentLine.split('|').map(s => s.trim());
+                                    const parentParts = parentLine.split('|').map((s) => s.trim());
                                     if (parentParts.length >= 5) {
                                         const parentStatus = parentParts[3];
                                         if (parentStatus && parentStatus !== 'Stable') {
                                             warn(
                                                 'RULE_57_VIOLATION',
                                                 `L2 spec '${specFile}' is ${status}, but its L1 parent '${parent}' is ${parentStatus} (Must be Stable).`,
-                                                'magic.task update'
+                                                planRemedy,
                                             );
                                         }
                                     }
@@ -259,7 +341,7 @@ if (planExists && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// DESIGN-DEBT BACKLOG (SC-2.4 / l1-session-continuity.md)
+// DESIGN-DEBT BACKLOG (SC-2.4)
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // A plan can go mechanically clean — every check above passes — while still
@@ -271,84 +353,16 @@ if (planExists && indexExists) {
 // check gives Pre-flight the one signal it was missing to raise that HALT
 // through the door rules/magic.md §5 already sanctions.
 
-if (planExists && tasksExists) {
-    const tasksContentForBacklog = fs.readFileSync(tasksPath, 'utf8');
-    const activePhasesMatch = tasksContentForBacklog.match(/## Active Phases\r?\n([\s\S]*?)(?=\r?\n## |$)/);
-
-    // A complete plan is recognized three ways, all of them positive reads
-    // (l1-session-continuity.md §Terminal-Row Recognition):
-    //
-    //   1. the italicized `*None — ...*` marker this engine's own workflows
-    //      write for an exhausted section;
-    //   2. a phase table whose every row already carries a terminal status —
-    //      phase-archiver.js rewrites a finished row's status to
-    //      `Done (Archived)` in place and never relocates the row, so under
-    //      the canonical single-table tasks.md template the literal-marker
-    //      form can never reappear once any phase has ever been archived;
-    //   3. a *vacant* section — zero phase rows and nothing but table
-    //      scaffolding (header/separator) or whitespace left in it. This is
-    //      the spec's zero-row case ("a workspace that has never had a
-    //      phase, or whose table was manually cleared"), and it is the shape
-    //      a hand-split `## Active Phases` + `## Completed Phases` layout
-    //      leaves behind once every row has been moved across.
-    //
-    // Vacancy is deliberately narrower than "nothing matched": content that
-    // is present but unrecognized still resolves to "cannot determine", not
-    // to "complete". A gate that can raise a HALT must fire on input it
-    // positively read as empty, never on input it merely failed to parse.
-    const activeSectionTrimmed = activePhasesMatch ? activePhasesMatch[1].trim() : '';
-    const isEmptyMarker = /^\*None\b/m.test(activeSectionTrimmed);
-    const isTableScaffold = (t) => /^\|\s*-+\s*\|/.test(t) || /^\|\s*Phase\s*\|/i.test(t);
-    const activePhaseRows = activeSectionTrimmed
-        .split(/\r?\n/)
-        .filter((l) => {
-            const t = l.trim();
-            return t.startsWith('|') && !isTableScaffold(t);
-        });
-    const isAllTerminal = activePhaseRows.length > 0
-        && activePhaseRows.every((l) => /`(Done|Done \(Archived\)|Cancelled)`/.test(l));
-    const isVacant = activeSectionTrimmed
-        .split(/\r?\n/)
-        .every((l) => {
-            const t = l.trim();
-            return t === '' || isTableScaffold(t);
-        });
-    const planComplete = Boolean(activePhasesMatch) && (isEmptyMarker || isAllTerminal || isVacant);
-
-    if (planComplete) {
-        // Read independently rather than reuse the `planContent` above — that
-        // binding is scoped inside the separate `planExists && indexExists`
-        // block and this check must not depend on INDEX.md being present.
-        const planContentForBacklog = fs.readFileSync(planPath, 'utf8');
-        const backlogMatch = planContentForBacklog.match(/## Backlog\r?\n([\s\S]*?)(?=\r?\n## |$)/);
-        if (backlogMatch) {
-            // SH-1/SH-2: strip fenced/inline-quoted spans before matching, so a
-            // Backlog entry illustrating `- {example}` syntax in a code span is
-            // not counted as an open item.
-            const backlogBody = stripQuoted(backlogMatch[1]);
-            // Top-level bullets only (`- `, not `  - ` sub-bullets). A bullet
-            // whose design question is already answered but is kept visible
-            // on purpose carries a trailing `*(Parked — {reason})*` marker
-            // (l1-session-continuity.md SC-2.4 addendum, Backlog Disposition
-            // Convention) — that is a deliberate, explicit signal, not a
-            // wording guess, so it is the one exclusion this count applies.
-            // Closed items (resolved/rejected/superseded) are expected to be
-            // folded into the Backlog's own intro note and their bullet
-            // deleted, not marked — so no separate "Closed" pattern to match.
-            const openItems = backlogBody
-                .split(/\r?\n/)
-                .filter((l) => /^-\s+\S/.test(l) && !/\*\(Parked\b/.test(l));
-
-            if (openItems.length > 0) {
-                const workspaceName = normalizePath(designDir).split('/').pop();
-                warn(
-                    'DESIGN_DEBT_PENDING',
-                    `Plan complete with no active phase, but ## Backlog holds ${openItems.length} open item(s) needing design input.`,
-                    `magic.spec ${workspaceName}`
-                );
-            }
-        }
-    }
+// A complete plan is recognized by positive reads only (a marker, all-terminal
+// rows, or a vacant section), and Backlog bullets carrying a trailing Parked
+// marker are not open — both rules live in lib/pending-work.js.
+if (pending?.planComplete && pending.openBacklogItems.length > 0) {
+    const workspaceName = normalizePath(designDir).split('/').pop();
+    warn(
+        'DESIGN_DEBT_PENDING',
+        `Plan complete with no active phase, but ## Backlog holds ${pending.openBacklogItems.length} open item(s) needing design input.`,
+        `magic.spec ${workspaceName}`,
+    );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -367,7 +381,7 @@ if (verifyHeaders && indexExists) {
         if (!fs.existsSync(specPath)) continue; // GHOST_REGISTRY handles missing files
 
         // Extract INDEX.md values from table row: | [Name](path) | Status | Layer | Version |
-        const parts = line.split('|').map(s => s.trim());
+        const parts = line.split('|').map((s) => s.trim());
         if (parts.length < 5) continue;
 
         const indexStatus = parts[3];
@@ -387,13 +401,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version is MISSING but INDEX.md declares (${indexVersion}). Spec headers must mirror the registry.`,
-                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                    `Run /magic.spec to restore the header, then re-run /magic.task`,
                 );
             } else if (fileVersionMatch[1] !== indexVersion) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version (${fileVersionMatch[1]}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
-                    `Run /magic.spec to reconcile, then re-run /magic.task`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`,
                 );
             }
         }
@@ -404,13 +418,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status is MISSING but INDEX.md declares (${indexStatus}). Spec headers must mirror the registry.`,
-                    `Run /magic.spec to restore the header, then re-run /magic.task`
+                    `Run /magic.spec to restore the header, then re-run /magic.task`,
                 );
             } else if (fileStatusMatch[1] !== indexStatus) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status (${fileStatusMatch[1]}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
-                    `Run /magic.spec to reconcile, then re-run /magic.task`
+                    `Run /magic.spec to reconcile, then re-run /magic.task`,
                 );
             }
         }
@@ -418,7 +432,7 @@ if (verifyHeaders && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// ROLE REGISTRY INTEGRITY (R9 / l2-role-integration.md §5)
+// ROLE REGISTRY INTEGRITY
 // ═══════════════════════════════════════════════════════════════════════════
 
 const rolesDir = path.join('.magic', 'roles');
@@ -431,55 +445,61 @@ const roleRegistry = {
     referenced: 0,
     dormant: 0,
     missing: [],
-    dangling_handoffs: []
+    dangling_handoffs: [],
 };
 
 if (fs.existsSync(rolesDir)) {
     const cards = {};
     const roleIds = new Set();
 
-    fs.readdirSync(rolesDir).filter(f => f.endsWith('.md')).forEach(cardFile => {
-        const content = fs.readFileSync(path.join(rolesDir, cardFile), 'utf8');
-        const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
-        if (!fmMatch) return;
+    fs.readdirSync(rolesDir)
+        .filter((f) => f.endsWith('.md'))
+        .forEach((cardFile) => {
+            const content = fs.readFileSync(path.join(rolesDir, cardFile), 'utf8');
+            const fmMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+            if (!fmMatch) return;
 
-        const fm = fmMatch[1];
-        const idMatch = fm.match(/^id:\s*(\S+)/m);
-        if (!idMatch) return;
+            const fm = fmMatch[1];
+            const idMatch = fm.match(/^id:\s*(\S+)/m);
+            if (!idMatch) return;
 
-        const id = idMatch[1];
-        roleIds.add(id);
-        cards[id] = {
-            file: cardFile,
-            handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map(m => m[1]),
-            triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map(m => m[1])
-        };
-    });
+            const id = idMatch[1];
+            roleIds.add(id);
+            cards[id] = {
+                file: cardFile,
+                handoffTargets: [...fm.matchAll(/^\s*-\s*to:\s*(\S+)/gm)].map((m) => m[1]),
+                triggerWorkflows: [...fm.matchAll(/^\s*-\s*workflow:\s*(\S+)/gm)].map((m) => m[1]),
+            };
+        });
 
     roleRegistry.total = roleIds.size;
 
     const referencedIds = new Set();
-    const scanRoots = [workflowsRoot, templatesRoot].filter(d => fs.existsSync(d));
+    const scanRoots = [workflowsRoot, templatesRoot].filter((d) => fs.existsSync(d));
 
     for (const root of scanRoots) {
-        fs.readdirSync(root).filter(f => f.endsWith('.md')).forEach(file => {
-            const content = fs.readFileSync(path.join(root, file), 'utf8');
-            for (const match of content.matchAll(roleRefPattern)) {
-                const refId = match[1];
-                referencedIds.add(refId);
-                if (!roleIds.has(refId)) {
-                    const rel = normalizePath(path.join(root, file));
-                    warn(
-                        'ROLE_MISSING',
-                        `'${rel}' references @role:${refId} but card is not in .magic/roles/.`,
-                        'Create role card or correct reference'
-                    );
-                    if (!roleRegistry.missing.some(m => m.location === rel && m.id === refId)) {
-                        roleRegistry.missing.push({ location: rel, id: refId });
+        fs.readdirSync(root)
+            .filter((f) => f.endsWith('.md'))
+            .forEach((file) => {
+                const content = fs.readFileSync(path.join(root, file), 'utf8');
+                for (const match of content.matchAll(roleRefPattern)) {
+                    const refId = match[1];
+                    referencedIds.add(refId);
+                    if (!roleIds.has(refId)) {
+                        const rel = normalizePath(path.join(root, file));
+                        warn(
+                            'ROLE_MISSING',
+                            `'${rel}' references @role:${refId} but card is not in .magic/roles/.`,
+                            'Create role card or correct reference',
+                        );
+                        if (
+                            !roleRegistry.missing.some((m) => m.location === rel && m.id === refId)
+                        ) {
+                            roleRegistry.missing.push({ location: rel, id: refId });
+                        }
                     }
                 }
-            }
-        });
+            });
     }
 
     roleRegistry.referenced = referencedIds.size;
@@ -489,7 +509,7 @@ if (fs.existsSync(rolesDir)) {
             warn(
                 'ROLE_DORMANT',
                 `Role card '${id}' exists but no workflow or template references @role:${id}.`,
-                'Remove card or add workflow trigger reference'
+                'Remove card or add workflow trigger reference',
             );
             roleRegistry.dormant++;
         }
@@ -501,7 +521,7 @@ if (fs.existsSync(rolesDir)) {
                 warn(
                     'ROLE_HANDOFF_DANGLING',
                     `Role '${id}' declares handoff to '${target}' but target card is missing.`,
-                    'Create target role card or fix handoff reference'
+                    'Create target role card or fix handoff reference',
                 );
                 roleRegistry.dangling_handoffs.push({ from: id, to: target });
             }
@@ -511,7 +531,7 @@ if (fs.existsSync(rolesDir)) {
                 warn(
                     'ROLE_TRIGGER_UNRESOLVED',
                     `Role '${id}' triggers on workflow '${wf}' which does not exist in .magic/.`,
-                    'Create workflow or fix trigger'
+                    'Create workflow or fix trigger',
                 );
             }
         }
@@ -534,14 +554,13 @@ function checkConfigDrift() {
         return; // No git or not a repo — skip silently
     }
 
-    const rulesToCheck = [rulesPath];
+    // The global constitution is always monitored; a workspace RULES.md (C22) is monitored
+    // in addition — it never stands in for the global one.
+    const rulesToCheck = [path.join('.design', 'RULES.md')];
 
-    // C22: Also check workspace-specific RULES.md if it exists
     if (designDir !== '.design') {
         const wsRulesPath = path.join(designDir, 'RULES.md');
-        if (fs.existsSync(wsRulesPath) && !rulesToCheck.includes(wsRulesPath)) {
-            rulesToCheck.push(wsRulesPath);
-        }
+        if (fs.existsSync(wsRulesPath)) rulesToCheck.push(wsRulesPath);
     }
 
     for (const rPath of rulesToCheck) {
@@ -549,13 +568,13 @@ function checkConfigDrift() {
         try {
             const diff = execSync(`git diff HEAD -- "${posixPath}"`, {
                 encoding: 'utf8',
-                stdio: ['pipe', 'pipe', 'pipe']
+                stdio: ['pipe', 'pipe', 'pipe'],
             });
             if (diff.trim().length > 0) {
                 warn(
                     'CONFIG_DRIFT',
                     `'${posixPath}' has uncommitted changes (modified outside workflow).`,
-                    `Review changes: git diff HEAD -- ${posixPath}`
+                    `Review changes: git diff HEAD -- ${posixPath}`,
                 );
             }
         } catch {
@@ -566,10 +585,14 @@ function checkConfigDrift() {
 
 checkConfigDrift();
 
-const integrity_ok = !warnings.some(w =>
-    w.type === 'ENGINE_INTEGRITY' || w.type === 'GHOST_REGISTRY' ||
-    w.type === 'VERSION_DRIFT' || w.type === 'STATUS_DRIFT' ||
-    w.type === 'ROLE_MISSING' || w.type === 'ROLE_HANDOFF_DANGLING'
+const integrity_ok = !warnings.some(
+    (w) =>
+        w.type === 'ENGINE_INTEGRITY' ||
+        w.type === 'GHOST_REGISTRY' ||
+        w.type === 'VERSION_DRIFT' ||
+        w.type === 'STATUS_DRIFT' ||
+        w.type === 'ROLE_MISSING' ||
+        w.type === 'ROLE_HANDOFF_DANGLING',
 );
 const ok = missing.length === 0 && integrity_ok;
 
@@ -584,15 +607,15 @@ if (jsonOutput) {
         checked_at: date,
         design_dir: designDir,
         artifacts: {
-            "INDEX.md": { exists: indexExists, path: normalizePath(indexPath) },
-            "RULES.md": { exists: rulesExists, path: normalizePath(rulesPath) },
-            "PLAN.md": { exists: planExists, path: normalizePath(planPath) },
-            "TASKS.md": { exists: tasksExists, path: normalizePath(tasksPath) },
-            "specs": { count: specCount, stable: stableCount, draft: draftCount }
+            'INDEX.md': { exists: indexExists, path: normalizePath(indexPath) },
+            'RULES.md': { exists: rulesExists, path: normalizePath(rulesPath) },
+            'PLAN.md': { exists: planExists, path: normalizePath(planPath) },
+            'TASKS.md': { exists: tasksExists, path: normalizePath(tasksPath) },
+            specs: { count: specCount, stable: stableCount, draft: draftCount },
         },
         role_registry: roleRegistry,
         missing_required: missing,
-        warnings
+        warnings,
     };
     console.log(JSON.stringify(output, null, 2));
     process.exit(0);
@@ -602,7 +625,7 @@ if (jsonOutput) {
     } else {
         let errorMsg = `Missing required artifacts: ${missing.join(', ')}`;
         if (missing.includes('INDEX.md') && missing.includes('RULES.md')) {
-            errorMsg += `. 💡 SDD structure missing. Run '/magic.init' to setup.`;
+            errorMsg += `. 💡 SDD structure missing. Any /magic.* workflow sets it up automatically (Auto-Init), or run: node .magic/scripts/executor.js init`;
         }
         // For non-JSON mode, also print warnings as plain strings for backward compatibility
         for (const w of warnings) {
