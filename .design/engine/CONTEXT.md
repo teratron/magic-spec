@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-10-12
+**Generated:** 2026-10-28
 
 ## Active Technologies
 
@@ -20,7 +20,6 @@
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
-│   ├── main/
 │   └── workspace.json
 ├── .github/
 │   └── workflows/
@@ -84,7 +83,7 @@
 
 ## Recent Changes
 
-## Phase 3 — 2026-04-23
+### Phase 3 — 2026-04-23
 
 - Created `.magic/roles/` directory with 13 role cards: orchestrator, planner, coder, code-reviewer, code-simplifier, code-skeptic, test-engineer, debugger, docs-specialist, spec-critic, project-auditor, constitutional-reviewer, retrospective-analyst
 - Created `.magic/templates/role.md` authoring template with YAML frontmatter schema

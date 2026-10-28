@@ -13,6 +13,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - **The wiki pages and a rotated changelog pass markdownlint** (engine v2.1.142 → v2.1.144): `export-wiki` ran a list straight into the next heading (MD022, MD032) in the index and workspace pages, printed the spec count as a bold-only line (MD036) and doubled a blank line for a workspace without specs (MD012); every page is now joined through one helper that keeps a single blank line between blocks. `release-changelog` swallowed the blank line under the renamed `## [X.Y.Z] - date` heading, so its first `### Added` stuck to it (MD022); the heading match no longer eats the line break.
 
+### Changed
+
+- Added 3 specifications (engine)
+- Updated task plan and task index (engine)
+
 ## [2.1.141] - 2026-10-17
 
 ### Fixed

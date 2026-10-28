@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.47.0
-**Generated:** 2026-10-11
-**Based on PLAN:** .design/engine/PLAN.md v1.48.0
+**Version:** 1.48.0
+**Generated:** 2026-10-28
+**Based on PLAN:** .design/engine/PLAN.md v1.49.0
 **Based on RULES:** .design/RULES.md v1.15.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 42](tasks/phase-42.md) | Graph Artifacts Folder (Single-Skill Step 2) — the extraction cache, wiki, page and snapshot under one `graph/` folder with their paths defined once, legacy locations removed after the first successful write, shipped text and documentation following | `Todo` |
+| [Phase 41](tasks/phase-41.md) | Project-Root & State-Folder Resolvers (Single-Skill Step 1) — every script finds the project from the working context and spells the state folder from one constant; the five depth-bound scripts and the working-directory readers move to the resolver, no file moves | `Todo` |
 | [Phase 40](archives/tasks/phase-40.md) | Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment — the archival opt-out given its reader and `archiveDir` withdrawn with a `PHANTOM_SETTING` check, an installer that owns only its own hook and a hook that disarms without `.magic/`, a pre-flight that reports a deleted engine file, a containment scan that reports code-quoted references in a consumer's product markdown, and the bloat override reader, with harness and cognitive coverage | `Done (Archived)` |
 | [Phase 39](archives/tasks/phase-39.md) | Registry Text Contract & Question Routing Deployment — the routing clause in the always-on rules, the registry `Description` and ledger-overview form in `spec.md`, `task.md`, three templates and the docs, harness pins and cognitive cases, then a one-time rewrite of this workspace's registry and ledger | `Done (Archived)` |
 | [Phase 38](archives/tasks/phase-38.md) | Skill-Wrapper Contract & Body Navigation Deployment — nine workflow descriptions in the Selection Signal form, generator validation and the C14 flow that finishes before failing, contents lists and whole-module pointers in the engine bodies, harness and cognitive coverage with a reader tier | `Done (Archived)` |
@@ -68,5 +70,5 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 ## Meta Information
 
-- **Last Updated**: 2026-10-11
+- **Last Updated**: 2026-10-28
 - **Maintainer**: Core Team
