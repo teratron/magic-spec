@@ -1,0 +1,390 @@
+# Engine Diagnostics Digest — Implementation
+
+**Version:** 1.3.3
+**Status:** Stable
+**Layer:** implementation
+**Implements:** l1-engine-diagnostics.md
+
+## Overview
+
+Concrete realization of the diagnostics contract in the Node engine: a `scripts/lib/diagnostics.js` collector module, a line-delimited sink under `.magicspec/.cache/`, an `executor.js` subcommand giving the agent the same recording surface the scripts use, a single tail emitter in `finalize.js` that drains and renders the digest ahead of the next step, and the migration inventory that maps every existing non-fatal emitter to a severity and a stable code.
+
+## Related Specifications
+
+- [l1-engine-diagnostics.md](l1-engine-diagnostics.md) — Parent concept (DG-1..DG-9).
+- [l2-engine-finalization.md](l2-engine-finalization.md) — Host pipeline; §8 records the tail-emitter restructure this spec specifies.
+- [l2-engine-automation.md](l2-engine-automation.md) — Owns the top-level scripts that make up most of the migration inventory (§5.5).
+- [l2-test-suite.md](l2-test-suite.md) — Carries the regression-coverage mandate for §6.
+- [l1-session-continuity.md](l1-session-continuity.md) — SC-2 owns the `Next Action` value the tail emitter prints (DG-6).
+
+## 1. Motivation
+
+The parent contract states *what* must be collected and *where* it must appear. Three implementation questions decide whether it holds in practice, and each has a wrong answer that looks reasonable:
+
+1. **Transport across process boundaries.** Findings originate in separate node processes (`l1-engine-diagnostics.md` §1.3), so an in-memory collector cannot satisfy DG-4. The sink must be a file, and its format must survive concurrent appends and partial writes.
+2. **Terminal order across paths.** `finalize.js` has two exit paths with independently assembled output (`emitSkip` + fallback suggestion, and `emitSuccess`). DG-5 requires identical terminal order on both. Adding the digest to each path separately is exactly how the order drifts.
+3. **Emitter coverage.** DG-1 binds the emitter, not the reader, so the contract is only as complete as the call sites migrated to it. Leaving that as "apply as you go" produces a digest that is silently partial — worse than none, because it looks complete.
+
+## 2. Constraints & Assumptions
+
+- Node ≥ 18, no new runtime dependencies — the sink is written with `fs` primitives already used across `scripts/`.
+- Multiple engine processes may append concurrently within one workflow invocation; the format must make an interleaved write damage at most one entry.
+- `.magicspec/.cache/` is gitignored and already hosts engine runtime state (`finalize-state.json`, `project-meta-state.json`); the sink joins it and needs no new ignore rule.
+- The collector is `require`d from L1 scripts only (`skills/magicspec/scripts/**`) — it introduces no L1→L2 dependency.
+- Existing print statements are **not** removed by this migration (DG-1 additive clause); each call site gains a recording call alongside its print.
+
+## 3. Invariant Compliance
+
+| L1 Invariant | Implementation |
+| --- | --- |
+| **DG-1** Record, don't only print | `record()` in `lib/diagnostics.js`, called alongside — never instead of — the existing `console.warn`/`console.error` at each site in the §5.5 inventory. |
+| **DG-2** Severity taxonomy | `severity` field constrained to `error \| warning \| fix`; a value outside the set is dropped at record time with a `console.warn` and no throw (§4.2). |
+| **DG-3** Finding shape | JSON object per §4.3 with required `severity`, `source`, `code`, `message` and optional `locus`, `remedy`; a record missing a required field is dropped, not written. |
+| **DG-4** Window + exactly-once | Append-only JSONL sink accumulated across processes; `drain()` reads then unlinks the file in one step (§4.4). Deduplication by `(severity, source, code)` and a `MAX_RENDERED_FINDINGS` cap applied at render (§4.6); sink self-bounded at `MAX_SINK_ENTRIES` (§4.5). |
+| **DG-4.1** Preview does not consume | `--dry-run` calls `read()` instead of `drain()` — same parse, no unlink — so a preview renders the digest and leaves the sink intact (§4.4). |
+| **DG-5** Placement + terminal order | A single `emitTail()` called from `main()` on both exit paths (§4.7) — neither `emitSkip()` nor `emitSuccess()` renders it, so the order cannot diverge per path. |
+| **DG-6** Next-step surfacing | `emitTail()` prints the `nextAction` string returned by `updateSessionState()` — the same value already written to `STATE.md` in that invocation, passed through, never recomputed (§4.7). |
+| **DG-7** Empty state is silence | `emitTail()` renders the digest section only when the drained, deduplicated list is non-empty; the summary-table row in `emitSuccess()` is likewise conditional. |
+| **DG-8** Agent channel | `executor.js record-diagnostic` subcommand (§4.8) writes through the same `record()` path with `source` defaulting to `agent`. |
+| **DG-9** Non-blocking degradation | Every collector entry point is wrapped so no filesystem error escapes; `drain()` parses line-by-line and discards unparseable lines rather than failing the digest (§4.4). |
+| **DG-10** Revalidation before render | `revalidate()` in `lib/diagnostics.js` (§4.10), called by `finalize.js` on both `read()` and `drain()` results before `formatDigest()`; groups by recheck signature, spawns each signature's check at most once, and drops findings whose code no longer reproduces. A recheck failure leaves its findings untouched (extends DG-9). |
+
+## 4. Detailed Design
+
+### 4.1 Module Placement
+
+```plaintext
+skills/magicspec/scripts/
+├── lib/
+│   └── diagnostics.js      # collector: record / drain / format
+├── finalize.js             # drains and renders (emitTail)
+└── executor.js             # dispatches `record-diagnostic` (agent channel)
+```
+
+`lib/` is the established home for finalize-pipeline helpers, but this module is deliberately consumed more widely than the rest of `lib/` — `update-state.js`, `init.js`, `update-engine-meta.js`, and `check-prerequisites.js` all import it, none of which are finalize-internal. The placement is by kind (a helper module), not by consumer.
+
+### 4.2 Collector Contract `[REFERENCE]`
+
+```plaintext
+record(finding, options?) -> boolean
+    finding.severity : 'error' | 'warning' | 'fix'     (required)
+    finding.source   : string                          (required)
+    finding.code     : string, UPPER_SNAKE_CASE        (required)
+    finding.message  : string, single line             (required)
+    finding.locus    : string                          (optional)
+    finding.remedy   : string                          (optional)
+    options.workspace: string                          (optional; resolved as elsewhere)
+
+    First checks process.env.MAGIC_DIAGNOSTICS_SUPPRESS: when set, returns
+    false immediately without touching the sink (§4.10's self-reference
+    guard) — a recheck subprocess runs under this flag so its own findings
+    are never recorded back into the sink revalidation is reading from.
+
+    Returns true when the entry reached the sink, false when it was
+    dropped. NEVER throws — a false return is informational only and
+    no caller is required to branch on it (DG-9).
+
+read(workspace) -> Finding[]
+    Parses the sink and returns findings in append order, leaving it in
+    place. Unparseable lines are discarded silently. A missing sink
+    returns an empty array. NEVER throws.
+
+drain(workspace) -> Finding[]
+    read() followed by removal of the sink. The only consuming entry
+    point; reserved to the mutating finalization path (DG-4.1).
+    NEVER throws.
+
+revalidate(findings) -> Finding[]
+    Groups input findings by recheck signature (the recheck script
+    name plus its serialized argument vector and environment
+    overrides). For each distinct signature present, spawns the named
+    L1 script once, out-of-process, and parses its `--json` output.
+    A finding whose `code` is absent from the recheck result's
+    `warnings[].type` list is dropped from the returned array; every
+    other finding — including every finding with no `recheck` field
+    at all — passes through unchanged. Order is not guaranteed to be
+    preserved (callers feed the result into dedupe() next, which is
+    already order-tolerant). A signature that cannot be spawned,
+    times out, or returns unparseable output leaves its findings in
+    the output untouched (DG-9 extends). Pure with respect to the
+    diagnostics sink — reads nothing from and writes nothing to
+    `diagnostics.jsonl` — but impure with respect to the filesystem
+    /repository state its rechecks inspect. NEVER throws.
+
+formatDigest(findings) -> string[]
+    Pure. Deduplicates, sorts, caps, and renders markdown lines.
+    Returns an empty array for empty input (DG-7).
+```
+
+Validation is total and silent-by-degradation: a finding with a bad severity or a missing required field is dropped with one `console.warn` naming the offending code, because a malformed diagnostic must not become a second defect. Message is truncated to a single line — an embedded newline would corrupt the JSONL invariant.
+
+### 4.3 Finding Record
+
+One JSON object per line:
+
+```plaintext
+{"ts":"<ISO-8601>","severity":"fix","source":"finalize",
+ "code":"NEXT_ACTION_SUBSTITUTED",
+ "message":"Next Action named a reserved command; substituted the /magicspec:task funnel.",
+ "locus":".magicspec/engine/STATE.md","remedy":"→ /magicspec:task engine"}
+```
+
+`ts` is written by the collector, not the caller, and orders findings across processes that finish out of sequence.
+
+A condition finding additionally carries `recheck` (§4.10), the DG-10 revalidation reference:
+
+```plaintext
+{"ts":"<ISO-8601>","severity":"warning","source":"check-prerequisites",
+ "code":"SYNC_GAP",
+ "message":"PLAN.md is based on INDEX.md v1.27.0, but registry is at v1.27.1.",
+ "remedy":"/magicspec:task engine update",
+ "recheck":{"script":"check-prerequisites",
+            "args":["--json","--require-specs","--verify-headers"],
+            "env":{"MAGIC_DESIGN_DIR":".magicspec/engine"}}}
+```
+
+### 4.4 Sink Format and Why JSONL
+
+```plaintext
+.magicspec/.cache/diagnostics.jsonl
+```
+
+Line-delimited JSON, opened in append mode for every write. Three properties the alternatives lack:
+
+- **Append-safe across processes.** A single JSON array would require read-modify-write, so two concurrent emitters race and one loses. An `O_APPEND` write of a short line is atomic in practice on both target platforms.
+- **Damage is bounded to one entry.** DG-9's corollary requires the drain to render what it can. Under a JSON array, one bad byte invalidates the whole document; under JSONL, `JSON.parse` fails for one line and the rest survive.
+- **Drain is a read plus an unlink.** No rewrite step, so the clear cannot half-succeed and leave findings that will be reported twice (DG-4 exactly-once).
+
+Sink path resolution follows the workspace chain already used by `finalize.js` (`--workspace` → `MAGIC_WORKSPACE` → `MAGIC_DESIGN_DIR` → `workspace.json` default). Cache directory creation uses the same `mkdirSafe` guard `finalize.js` applies to its own state file.
+
+### 4.5 Sink Retention Bound
+
+The sink is drained by finalization, but finalization can be disabled (`MAGIC_FINALIZE=0`, `finalization.enabled: false`) while emitters keep firing. Without an independent bound, such a project accumulates findings indefinitely in a file nothing reads.
+
+`record()` therefore enforces `MAX_SINK_ENTRIES = 200`: past that count, further appends are discarded and a single overflow marker entry (`DIAGNOSTICS_SINK_OVERFLOW`, severity `warning`) is retained so a later drain reports that suppression occurred rather than presenting a truncated list as complete. This bound is on the *sink*; DG-4's `MAX_RENDERED_FINDINGS` bound is on the *render*, and the two are independent.
+
+### 4.6 Rendering
+
+Deduplication key is `(severity, source, code)` — deliberately **not** including `message`, since the message carries instance detail (a line count, a filename) that differs between otherwise identical occurrences and would defeat the collapse. The rendered entry shows the first occurrence's message with a count suffix. The key's fields are joined with U+0000 — a character no field can contain — so `(a, BC)` and `(aB, C)` stay two findings. It is written as the `\0` escape, never as a literal NUL byte: a raw byte is runtime-identical, but it makes git classify the whole file `-text` and GNU grep answer "Binary file matches" instead of the matching lines (§6.16–17).
+
+Sort order: severity (`error` → `warning` → `fix`), then `source`, then first-occurrence timestamp. Errors first because they are the only class where something the engine intended did not happen.
+
+Cap: `MAX_RENDERED_FINDINGS = 15`, matching the existing `MAX_LISTED_FILES` convention in `finalize.js`, with an explicit omission line beyond it.
+
+Rendered shape:
+
+```plaintext
+### Engine diagnostics
+
+**1 error · 2 warnings · 1 fix**
+
+- ❌ `STATE_UPDATE_SKIPPED` (finalize) — STATE.md update skipped: ENOENT .magicspec/engine/STATE.md
+  → restore STATE.md or run /magicspec:task engine
+- ⚠️ `STATE_CAP_EXHAUSTED` (update-state) — STATE.md at 110 lines; Recent Decisions at its floor, nothing pruned (×3)
+  → archive stale entries from ## Blocking Constraints
+- 🔧 `NEXT_ACTION_SUBSTITUTED` (finalize) — Next Action named a reserved command; substituted the /magicspec:task funnel
+```
+
+The severity glyphs reuse the engine's existing output vocabulary (`❌`/`⚠️`) and add one for the previously unnamed class. The `→` remedy form matches the Advisory Report's action notation, per DG-3.
+
+### 4.7 Tail Emitter and Terminal Order
+
+`finalize.js` assembled its terminal content separately per path — `emitSkip()` on the non-significant path, `emitSuccess()` on the significant one. Historically each also ended with its own copy of a commit-suggestion notice (`emitFallbackCommitSuggestion()` on the non-significant path); that notice, and the commit-suggestion feature that produced it, was retired 2026-08-27 ([l1-session-continuity.md](l1-session-continuity.md) SC-3 retirement) and is no longer part of the terminal block at all. DG-5 requires one order on both remaining paths, so the terminal block is extracted:
+
+```plaintext
+emitTail({ workspace, nextAction, findings })
+    1. ### Engine diagnostics      (omitted entirely when findings is empty — DG-7)
+    2. ### Next step               (nextAction, verbatim — DG-6)
+```
+
+`main()` calls `emitTail()` exactly once, on both paths, after the path-specific output. Neither `emitSkip()` nor `emitSuccess()` may render any of the three blocks — that prohibition is the whole mechanism by which the order cannot drift, and it is what the §6 coverage asserts.
+
+`nextAction` is threaded from `updateSessionState()`'s existing return value (it already returns `{ updated, dryRun?, nextAction }` on every path) into `emitTail()`. No recomputation: DG-6's guarantee is that the printed string and the persisted string are the same object, and a second call to `computeNextAction()` would satisfy the letter of that while reintroducing the divergence it exists to prevent.
+
+The drain is called once, in `main()`, immediately before `emitTail()` — after every other pipeline step, so findings emitted by phase archival, the state update, and the CHANGELOG write are all in the sink by then. Under `--dry-run` that call is `read()` rather than `drain()` (DG-4.1): the preview shows the digest it would print and leaves the findings for the real invocation, matching how `--dry-run` already previews the `STATE.md` patch without writing it.
+
+`revalidate()` (§4.10) sits between that call and `emitTail()` on both paths: `const findings = diagnostics.revalidate(diagnostics.drain())` (or `read()` under `--dry-run`). It runs last of all — after the drain/read that already runs after every mutating step — so a condition a recheck reproduces or clears reflects the full effect of this invocation's own writes, not a partial one.
+
+### 4.8 Agent Channel Subcommand
+
+```plaintext
+node skills/magicspec/scripts/executor.js record-diagnostic \
+    --severity=<error|warning|fix> \
+    --code=<UPPER_SNAKE_CASE> \
+    --message="<one line>" \
+    [--locus=<path or path:line>] \
+    [--remedy="<one action>"] \
+    [--source=<name>] \
+    [--workspace=<name>]
+```
+
+`--source` defaults to `agent`. The subcommand is a thin wrapper over `record()`: it validates flags via the shared `parseFlags` helper, prints one confirmation line, and exits 0 **even when the record is dropped** — an agent must never see a non-zero exit from reporting a complaint (DG-9).
+
+This is not a `/magicspec:*` workflow command and creates no C2 exception. It is invoked by the agent from the workflow bodies at the points where §9 bug reports and mid-run findings are already produced.
+
+### 4.9 Flow
+
+```mermaid
+graph TD
+    A["update-state.js"] --> S["diagnostics.record()"]
+    B["update-engine-meta.js"] --> S
+    C["init.js / check-prerequisites.js"] --> S
+    D["executor.js record-diagnostic (agent)"] --> S
+    S --> F[".magicspec/.cache/diagnostics.jsonl"]
+    E["finalize.js pipeline steps"] --> S
+    F --> G["drain()/read() in main()"]
+    G --> V["revalidate() (§4.10)"]
+    V --> H["emitTail(): digest → next step"]
+```
+
+### 4.10 Revalidation
+
+`recheck` (DG-10) is an optional field on a finding, attached only by an emitter whose finding is a **condition**, not an event (l1-engine-diagnostics.md §DG-10):
+
+```plaintext
+recheck: {
+    script : string    // L1 script basename under skills/magicspec/scripts/, no extension
+    args   : string[]  // argv the script needs to reproduce the same check
+    env    : object    // env var overrides — at minimum MAGIC_DESIGN_DIR,
+                        // captured at record time so revalidation targets
+                        // the same workspace the original check ran against,
+                        // independent of whatever workspace context happens
+                        // to be ambient when the digest later renders
+}
+```
+
+`check-prerequisites.js` is, as of this version, the only emitter that attaches one (§5.4): its `warn()` helper already runs inside the script's own module scope, where the live `args` (the semantic flags — `--require-plan`, `--require-tasks`, `--require-specs`, `--verify-headers`) and `process.env.MAGIC_DESIGN_DIR` are both already in scope. It forces `--json` onto the recheck's `args` regardless of whether the original invocation passed it, since revalidation needs parseable output and the original caller's own output mode is irrelevant to reverification.
+
+`revalidate(findings)`:
+
+1. Partitions `findings` into those with a `recheck` and those without. The latter pass straight through.
+2. Groups the former by a signature — `script` + JSON-serialized `args` + JSON-serialized `env` — so two findings produced by the identical recheck context spawn one process between them, not one each. (Two occurrences of `SYNC_GAP` from the same Pre-flight call always share a signature; two occurrences from two separate `check-prerequisites` calls earlier in the same invocation — e.g. Pre-flight, then Pre-Planning Stabilization's own re-check — may not, and are revalidated independently, which is correct: one may have since resolved while the other has not.)
+3. For each distinct signature, spawns `node skills/magicspec/scripts/{script}.js {...args}` with `env` — **only the engine's own variables (`MAGIC_` followed by capitals, digits and underscores), string values, no NUL byte, at most 4,096 characters; every other key is dropped when a finding is recorded and again here, because a finding is read back from a file in the project and is data, not a place to put `NODE_OPTIONS`, `PATH` or a loader the spawned `node` would obey** — merged over the current process environment **plus `MAGIC_DIAGNOSTICS_SUPPRESS=1`** (self-reference guard, l1-engine-diagnostics.md DG-10) — the recheck's own `warn()`/`record()` calls no-op for the duration, so a still-open condition is not re-queued into the sink as a side effect of merely checking it. The spawn is out-of-process, read-only with respect to every artifact but the sink-suppression flag, and parses stdout as the same `{ warnings: [{ type, message, fix }] }` shape `check-prerequisites --json` already produces (§5.4's forwarding path is what makes this shape the one to standardize on).
+4. A finding in that signature's group survives if its `code` appears among the recheck result's `warnings[].type`; otherwise it is dropped from the array `revalidate()` returns.
+5. Any failure in steps 3-4 for a given signature — spawn error, non-zero exit outside the script's own documented HALT conditions, timeout, unparseable stdout — leaves every finding in that signature's group in the output, untouched (DG-9 extends: revalidation degrades toward showing more, never less).
+
+`revalidate()` never mutates the sink and never calls `record()` — a dropped finding is simply absent from the array passed to `dedupe()`/`formatDigest()` next; DG-4's "exactly once" guarantee is unaffected because the finding was still drained from the sink exactly once, it is just not selected for rendering.
+
+## 5. Migration Inventory
+
+Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assigned severity and code. HALT-and-exit `console.error` sites are **excluded** by §2 of the parent spec — the run stops and the message is the outcome.
+
+### 5.1 `finalize.js`
+
+| Current message | Severity | Code |
+| --- | --- | --- |
+| `Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5; substituting the /magicspec:task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
+| `STATE.md update skipped (non-blocking): {err}` | `error` | `STATE_UPDATE_SKIPPED` |
+| `CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker.` | `fix` | `CHANGELOG_FORMAT_NONSTANDARD` |
+| `Could not update CHANGELOG.md: {err}` | `error` | `CHANGELOG_WRITE_FAILED` |
+| `Phase archival: skipped {n} already-archived file(s).` | `warning` | `PHASE_ARCHIVE_SKIPPED` |
+| `Phase archival warning: {err}` | `error` | `PHASE_ARCHIVE_FAILED` |
+
+### 5.2 `update-state.js`
+
+| Current message | Severity | Code |
+| --- | --- | --- |
+| `Template not found, creating minimal STATE.md` | `fix` | `STATE_TEMPLATE_MISSING` |
+| `Progress recompute skipped: {err}` | `error` | `PROGRESS_RECOMPUTE_SKIPPED` |
+| `STATE.md exceeds 100 lines ({n}). Pruned oldest decision.` | `fix` | `STATE_DECISION_PRUNED` |
+| `STATE.md exceeds 100 lines ({n}) and ## Recent Decisions is already at its floor — nothing was pruned.` | `warning` | `STATE_CAP_EXHAUSTED` |
+| `Unknown argument: {arg}` | `warning` | `UNKNOWN_ARGUMENT` |
+| `STATE.md had no "{marker}" section; created it so the requested write could be recorded.` | `fix` | `STATE_SECTION_CREATED` |
+| `STATE.md lacked the field line(s) {labels}; created so the requested update could be recorded.` | `fix` | `STATE_FIELD_CREATED` |
+| `STATE.md has a "## Progress" heading with no counter block under it that the recompute recognises; left it untouched.` | `warning` | `PROGRESS_BLOCK_UNRECOGNISED` |
+
+This script is the reason DG-4 mandates deduplication: its guard fires on **every** `updateState()` call once the cap is crossed, so a single `/magicspec:run` phase can contribute the same finding a dozen times.
+
+The last three rows postdate the 2.1.65 inventory (§5.5): they are the `update-state.js` self-repairs of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §13–§13.1. The first two are `fix`-class — the engine altered the file, so a stderr line must not be the only record — and the third is a skip the engine deliberately declined to act on.
+
+### 5.3 `update-engine-meta.js`
+
+| Current message | Severity | Code |
+| --- | --- | --- |
+| `generate-checksums.js not found at scripts/ — this is a user installation.` (3-line block) | `warning` | `CHECKSUM_TOOLING_UNAVAILABLE` |
+
+Both are the sanctioned L1→L2 graceful-fallback guards. They are exactly the class a user installation hits and never sees, since neither reaches stdout.
+
+### 5.4 Remaining scripts
+
+| Script | Current message | Severity | Code |
+| --- | --- | --- | --- |
+| `lib/project-version.js` | `Corrupted {version file} backed up → {backup}; resetting to {initial}` | `fix` | `VERSION_FILE_HEALED` |
+| `init.js` | `Template not found: {name}. Using empty string.` | `fix` | `TEMPLATE_MISSING` |
+| `init.js` | `Note: Could not automatically install Git hooks.` | `warning` | `GIT_HOOKS_NOT_INSTALLED` |
+| `check-prerequisites.js` | `[{w.type}] {w.message}{fixHint}` | `warning` | forwarded from `w.type` |
+
+`check-prerequisites.js` needs no code assignment: it already carries a typed identifier and a fix hint per warning (`l1-engine-diagnostics.md` §1.5). Its migration forwards `w.type` as `code` and `fixHint` as `remedy` unchanged — the site that most closely already satisfies DG-3. Its `warn()` additionally attaches `recheck` (§4.10, DG-10) to every finding it records — every warning this script produces is a condition assessed against current repository state, never an event, so the whole emitter opts in.
+
+### 5.5 Coverage Statement
+
+The inventory above is the complete non-fatal set as of engine 2.1.65: 17 call sites across 6 scripts. `VERSION_FILE_HEALED` is a C20 auto-heal, and `STATE_TEMPLATE_MISSING` / `TEMPLATE_MISSING` are silent substitutions — three of the four `fix`-class findings are cases where the engine altered state and the only existing record is a stderr line, which is the concrete form of the parent spec's §1.2 argument.
+
+New emitters added after this inventory are covered by DG-1 directly; this table is a migration checklist, not the contract.
+
+## 6. Regression Coverage
+
+Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), the harness must add:
+
+1. **Round-trip** — `record()` of one finding of each severity followed by `drain()` returns all three in append order, and a second `drain()` returns empty (DG-4 exactly-once).
+2. **Terminal order, both paths** — a fixture with recorded findings, run through the significant path and the non-significant path, must place `### Engine diagnostics` before `### Next step` on both, with `### Next step` last in stdout (DG-5).
+3. **Next-step identity** — the string printed under `### Next step` must equal the `Next Action` value written to `STATE.md` in the same invocation, byte for byte (DG-6).
+4. **Empty silence** — an invocation with an empty sink must produce stdout containing neither the digest heading nor a diagnostics summary row, while still printing `### Next step` (DG-7).
+5. **Deduplication and cap** — 12 identical findings collapse to one entry with `(×12)`; 20 distinct findings render 15 plus an omission line (DG-4).
+6. **Malformed tolerance** — a sink whose middle line is truncated JSON drains to every other line's findings, with no throw and no lost tail (DG-9 corollary).
+7. **Never-throws** — `record()` against an unwritable sink path returns `false`, prints one warning, and leaves the caller's control flow unchanged (DG-9).
+8. **Agent channel** — `executor.js record-diagnostic` exits 0 both for a valid finding and for one with an invalid severity, and the valid one appears in the next drain (DG-8, §4.8).
+9. **Preview does not consume** — a `--dry-run` finalize over a populated sink renders the digest and leaves the sink byte-identical; the immediately following non-dry-run invocation still reports the same findings (DG-4.1).
+10. **Revalidation drops a resolved condition** — a fixture recording a `check-prerequisites`-shaped finding with `recheck`, where the recheck fixture no longer reports that `type`, must not appear in `revalidate()`'s output or in the rendered digest (DG-10).
+11. **Revalidation keeps an unresolved condition** — the same fixture, where the recheck fixture still reports the `type`, must survive `revalidate()` unchanged and still render (DG-10).
+12. **Revalidation signature collapse** — two findings sharing one `recheck` signature must trigger exactly one recheck invocation, verified by an invocation counter in the test double (§4.10 step 2).
+13. **Revalidation failure renders, not hides** — a `recheck` whose script path does not exist (or whose fixture throws) must leave its findings in `revalidate()`'s output untouched, not drop them (DG-9 extends).
+14. **Event findings bypass revalidation** — a finding with no `recheck` field must reach `formatDigest()` unchanged whether or not any other finding in the same batch has one, confirming §4.10's partition is per-finding, not per-batch.
+15. **Recheck does not feed the sink** — a `record()` call made with `MAGIC_DIAGNOSTICS_SUPPRESS=1` set must return `false` and leave the sink file byte-identical to its pre-call state (including "sink file absent" staying absent); a live `revalidate()` run against a fixture whose recheck script itself calls `record()` must leave the sink empty afterward (DG-10 self-reference guard).
+16. **Dedup separator** — two findings whose `source` and `code` concatenate to the same text but differ at the field boundary (`a` + `BC` versus `aB` + `C`) must remain two digest entries; a key built without a real separator merges them (§4.6).
+17. **No raw NUL in the kernel** — no file under `skills/magicspec/`, `workflows/`, `skills/` or `rules/` may contain a NUL byte; the failure names each file and offset and says to write the `\0` escape (§4.6). The scan is deliberately kernel-wide rather than scoped to this module: the defect class is a raw control byte in a shipped text file, and this module held its only instance.
+
+## 7. Implementation Notes
+
+1. `lib/diagnostics.js` first — every other step depends on its contract.
+2. `finalize.js` tail restructure (`emitTail`, drain call; the terminal block no longer includes a commit-suggestion notice at all, retired 2026-08-27 per SC-3's removal) — independent of the emitter migration and separately testable.
+3. `executor.js record-diagnostic` — independent of step 2, parallelizable.
+4. Emitter migration (§5) — mechanical, one script at a time, safe to land incrementally; each script is complete when every row of its table records alongside its existing print.
+5. `check-prerequisites.js` last: its forwarding path is the only one that maps an existing typed structure rather than assigning new codes, so it benefits from the shape being settled.
+6. `revalidate()` (§4.10) after `check-prerequisites.js`'s migration lands, since it is the only emitter `recheck` initially covers and the function has nothing to revalidate against until that emitter attaches the field. Wired into `finalize.js` between the drain/read call and `emitTail()` (§4.7) in the same change.
+
+## 8. Drawbacks & Alternatives
+
+- **In-memory collector with an exported buffer** — rejected: cannot cross the process boundary (§1.1), which is where most findings originate.
+- **A single JSON array file** — rejected per §4.4: unsafe concurrent append and all-or-nothing corruption.
+- **Emitting the digest from a `process.on('exit')` hook in each script** — rejected: reproduces the scatter it aims to fix and fires for read-only commands that have no report surface.
+- **Deriving severity from the existing glyph (`⚠️` vs `❌`)** — rejected: the glyphs are inconsistent across scripts and cannot express the `fix` class at all, which is the class with the highest reporting value.
+- **Cost**: `MAX_SINK_ENTRIES` suppression means a pathological run can lose findings. Accepted, and made visible by the overflow marker (§4.5) — an honest truncation notice beats an unbounded file nothing reads.
+- **Revalidating through `executor.js` instead of the L1 script directly** — rejected for §4.10's `recheck.script`: `executor.js` re-derives `MAGIC_DESIGN_DIR` from `--workspace`/`workspace.json` at revalidation time, which can disagree with the workspace the original check actually ran against if ambient workspace state shifted mid-invocation. Spawning the L1 script directly with the `env` captured at record time reproduces the exact original context instead of re-resolving a new one.
+- **Cost (DG-10)**: `revalidate()` adds one child-process spawn per distinct recheck signature to every digest render, including preview. Accepted: signatures collapse duplicates (§4.10 step 2), only `check-prerequisites`-sourced findings currently opt in, and DG-9's failure-open default bounds the downside of a spawn that fails to a no-op, never a hang the caller cannot recover from (the spawn is subject to the same timeout discipline as `finalize.js`'s existing git probes).
+
+## Canonical References
+
+| Alias | Path | Purpose |
+| --- | --- | --- |
+| `[FINALIZE]` | `skills/magicspec/scripts/finalize.js` | Tail restructure site (§4.7); `emitSkip`/`emitSuccess`/`updateSessionState` are the functions this spec modifies |
+| `[EXECUTOR]` | `skills/magicspec/scripts/executor.js` | Dispatch of `record-diagnostic` (§4.8) |
+| `[UTILS]` | `skills/magicspec/scripts/utils.js` | `parseFlags`, `mkdirSafe`, `writeFileSafe` reused by the collector and the subcommand |
+| `[STATE]` | `skills/magicspec/scripts/update-state.js` | Largest emitter block (§5.2); source of the deduplication requirement |
+| `[PREREQ]` | `skills/magicspec/scripts/check-prerequisites.js` | Typed-warning forwarding path (§5.4) |
+| `[IGNORE]` | `.gitignore` | Confirms `.magicspec/.cache/` is untracked — the sink needs no new rule |
+
+## Document History
+
+| Version | Date | Author | Description |
+| --- | --- | --- | --- |
+| 1.3.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
+| 1.3.2 | 2026-10-28 | Agent | Reality sync: the `SKILL_SYNC_UNAVAILABLE` finding is retired with the wrapper sync it reported ([l2-engine-automation.md](l2-engine-automation.md) §Engine Meta Update Flow now refreshes projections instead). |
+| 1.3.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
+| 1.3.0 | 2026-10-28 | Agent | §4.10 step 3: a recheck environment is restricted to the engine's own `MAGIC_` variables, at record time and at spawn time. Found by an automated security review of the skill folder (an environment taken from a persisted finding reached a spawned `node` unfiltered); the only key production code records is `MAGIC_DESIGN_DIR`. |
+| 1.2.3 | 2026-09-30 | Agent | Clarification patch, no status transition: the §4.3 sample finding's `remedy` read a bare `magic.task update`; the emitter now names the workspace it reported on (`/magic.task {workspace} update`, bare `/magic.task update` for the flat layout), so the sample reads `/magic.task engine update`. No contract change. |
+| 1.2.2 | 2026-09-20 | Agent | Inventory rows only, no contract change: §5.2 lists the three findings `update-state.js` gained with the missing-section and missing-field self-repairs of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §13–§13.2 — `STATE_SECTION_CREATED` and `STATE_FIELD_CREATED` (`fix`) and `PROGRESS_BLOCK_UNRECOGNISED` (`warning`) — and notes that they postdate the 2.1.65 inventory. The table stays a migration checklist, not the contract: new emitters are covered by DG-1 directly (§5.5). Patch, no status transition. |
+| 1.2.1 | 2026-09-19 | Agent | Source-hygiene fix, no contract change: `lib/diagnostics.js`'s dedup key (§4.6) joined `severity`, `source` and `code` with two literal NUL bytes instead of the `\0` escape. Runtime-identical, but git classified the file `-text` (the repository's `eol=lf` normalisation never applied to it) and GNU grep answered `Binary file matches` instead of the matching lines — the only NUL in the 88 files of the engine kernel. Fixed by writing the escape; a 600-set differential (deliberately including findings whose `source` and `code` concatenate identically) confirmed identical summaries and digests. §4.6 now names the separator and forbids the raw byte; two Regression Coverage cases added (§6.16 dedup separator, §6.17 no raw NUL anywhere in the kernel), `dev/tests/engine.js` 105 → 107, mutation-checked (3 of 3 weakenings caught). No change to DG-1..DG-10, the sink format or any finding. No status transition — `Stable` retained. |
+| 1.2.0 | 2026-09-17 | Agent | Implements l1-engine-diagnostics.md DG-10 (Revalidation Before Render). New `revalidate(findings)` in the collector contract (§4.2) and its detailed design (§4.10): groups findings by recheck signature (`script` + `args` + `env`), spawns each signature's L1 script at most once via direct invocation (not through `executor.js` — rejected in §8, see Drawbacks), and drops findings whose `code` no longer appears in the recheck's `warnings[].type`. Wired into `finalize.js` between drain()/read() and `emitTail()` on both paths (§4.7 amended); flow diagram (§4.9) updated. `check-prerequisites.js`'s `warn()` (§5.4) now attaches `recheck` to every finding — the only current emitter, since every one of its warnings is a condition, never an event. Invariant Compliance table (§3) gained the DG-10 row. Seven new Regression Coverage cases (§6.10-15) and one new Implementation Notes step (§7.6). Three new Drawbacks entries: direct-script-invocation-over-executor.js rationale, added per-digest spawn cost, and (Post-Update Review finding, fixed before promotion) a self-reference gap — spawning a recheck runs the emitter's own `warn()`, which would otherwise `record()` its result straight back into the sink revalidation is reading, silently re-queuing a still-open condition regardless of this render's outcome. Closed by `MAGIC_DIAGNOSTICS_SUPPRESS=1` on every recheck spawn and a matching early-return guard in `record()` (§4.2), per l1-engine-diagnostics.md DG-10's self-reference-guard clause. No change to DG-1..DG-9's implementation, to the sink format, or to any finding lacking `recheck` — additive only. Amendment rule applied: Stable → RFC → Stable in this pass (Post-Update Review PASS after the self-reference fix, no objective conflicts). |
+| 1.1.0 | 2026-08-27 | Agent | **Commit-suggestion notice removed from the terminal block**, following SC-3's retirement in [l1-session-continuity.md](l1-session-continuity.md). §4.7's `emitTail()` shape drops its former step 1 (auto-commit notice); the block now renders only the diagnostics digest and the next step, in that order. Implementation Notes point 2 reworded to match. No change to DG-1..DG-9 themselves, to the collector, sink, or agent channel — this is a terminal-content reduction, not a contract change. |
+| 1.0.0 | 2026-08-07 | Agent | Initial Stable version. Implements DG-1..DG-9: `lib/diagnostics.js` collector, JSONL sink under the already-gitignored `.design/.cache/`, `executor.js record-diagnostic` agent channel, and a single `emitTail()` in `finalize.js` that drains once and renders auto-commit notice → digest → next step identically on both exit paths. Complete migration inventory of the 17 non-fatal emitters across 6 scripts as of engine 2.1.65, each assigned a severity and a stable code; HALT-and-exit sites excluded by the parent spec's scope. JSONL chosen over a JSON array for append safety across concurrent processes and for bounded corruption damage, both required by DG-4/DG-9. Collector API split into `read()` (non-consuming) and `drain()` (`read()` + unlink) so DG-4.1's preview rule is expressed as a choice of entry point rather than a flag threaded through the parser. |

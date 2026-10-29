@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Completed 47 tasks (engine)
+
+## [3.0.0] - 2026-10-28
+
+### Breaking
+
+- **The engine is one skill, `magicspec`.** What 2.x installed as `.magic/`, `workflows/`, `skills/magic-*` and `rules/` is now the single folder `skills/magicspec/`: a router (`SKILL.md`), one workflow body per command, references, role cards, templates, scripts, the always-on rule source (`AGENT-RULES.md`), one version and one integrity manifest covering the whole folder. A project installs it by copying the folder into its host's skills folder and running `init --host=<claude,codex,qwen>`.
+- **Commands are `/magicspec:<command>`** (`spec`, `task`, `run`, `analyze`, `rule`, `status`, `graph`), replacing `/magic.<command>`. Codex, which has no per-project command entry, uses the router: `$magicspec <command>`.
+- **The state folder is `.magicspec/`**, replacing `.design/`. Its contents are unchanged. Everything the graph derives lives in `.magicspec/graph/` (cache, wiki, page, snapshots).
+- **Migration is one command.** `executor.js migrate` prints the plan, `--apply` executes it: it verifies the old engine against its manifest (a changed file is kept), backs up what it removes, installs the projections and the hook, renames the state folder, removes the old engine last, and verifies. It is safe to run again after any interruption and migrates 2.x projects only. See `docs/migration.md`.
+
+### Added
+
+- **Host projections generated from the folder**, each with a marker: the rule copy (`<host>/rules/magicspec.md`, or a pointer block in `AGENTS.md` for Codex), the command entries, the skill link. `init --host` writes them, `remove` deletes exactly them, the pre-flight reports a stale one (`PROJECTION_STALE`), and the C14 flow refreshes the ones that exist. Optional `build-plugin` makes a Claude Code plugin from the same folder.
+- **Project-root resolution**: every script finds the project from the working directory (`--root`, `MAGIC_ROOT`, the nearest state folder, the nearest `.git`), so the engine behaves the same from the root, a subdirectory or through a link.
+- **A release archive with one composition and a smoke check**: the skill folder, `README.md` and `LICENSE`, listed and verified by the same code.
+- **The maintenance layout**: `scripts/`, `tests/` and `package.json` at the repository root and a second skill, `skills/magicspec-dev/`, for the repository's own commands (`/magicspec-dev:init`, `test`, `sync`, `release`).
+
+### Fixed
+
+- **Hardening found by an automated review of the skill folder**: a recheck environment keeps only `MAGIC_` variables; git is asked about a file by argument, never through a shell string; the graph page escapes what it embeds; `build-spec-graph --html` creates its folder.
+- **A default workspace read from `workspace.json` passes the same name check as one given on the command line**, in the executor and in `finalize`, before it names a folder. `check-prerequisites` asks git about the rules files by argument list, and `migrate` ignores old-manifest entries that resolve outside the old engine folder: they are neither hashed nor removed.
+- **A folder reached through a link is compared by its canonical path**: a working directory spelled with a lowercase drive letter (Windows) made the link table report drift and made `init --host` call a correct skill link "another folder".
+
+### Removed
+
+- The per-command wrappers and skills (`workflows/magic.*.md`, `skills/magic-*`), `rules/magic.md`, the two hardlink groups that paired them with `.agents/`, and the wrapper generator.
+
+### Notes
+
+- Engine 3.0.0; the harness holds 238 cases passing, with every case under mutation control. The restructuring was built in six steps on one branch and is released once; no 2.x release carries any part of it.
+
 ### Fixed
 
 - **`CONTEXT.md` no longer gets a second top-level heading** (engine v2.1.141 → v2.1.142): the "Recent Changes" section pasted the last lines of the changelog verbatim, so the changelog's own `# …` title landed in the middle of the document (markdownlint MD025). The excerpt's headings are now nested under "Recent Changes", keeping their relative depth; lines inside fenced code blocks are left untouched. The same excerpt could also begin on a blank line (the 15-line cut landed on one), leaving two blank lines under the section header (MD012); leading blank lines are now dropped.
@@ -17,6 +51,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added 3 specifications (engine)
 - Updated task plan and task index (engine)
+- Completed task (engine)
+- Completed 3 tasks (engine)
+- Updated 5 specifications (engine)
+- Completed 5 tasks (engine)
+- Updated 6 specifications (engine)
+- Completed 6 tasks (engine)
+- Completed 7 tasks (engine)
 
 ## [2.1.141] - 2026-10-17
 

@@ -4,92 +4,73 @@ This document describes which files and tools are included in Magic Spec for reg
 
 ## 1. User Bundle
 
-These files are distributed through GitHub Releases. Download `magic-spec-vX.Y.Z.zip`, extract it, and copy the release folders into the target project. The legacy npm and PyPI packages are frozen at `1.5.207` and are no longer part of the current distribution model.
+The user bundle is one folder, `skills/magicspec/`, distributed through GitHub Releases. Download `magic-spec-vX.Y.Z.zip`, extract it, and copy the folder into your host's skills folder. The legacy npm and PyPI packages are frozen at `1.5.207` and are no longer part of the current distribution model.
 
-### 1.1. Engine Core (`.magic/`)
+### 1.1. The Skill Folder (`skills/magicspec/`)
 
-| File | Description |
+| Path | Description |
 | --- | --- |
-| `analyze.md` | Agent instructions for project health analysis. |
-| `init.md` | Initial project initialization procedure. |
-| `rule.md` | Logic for managing project rules and conventions. |
-| `run.md` | Primary task executor from the implementation plan. |
-| `spec.md` | Specification management and lifecycle control. |
-| `task.md` | Task orchestrator and implementation plan generator. |
-| `.version`, `.checksums` | Service files for version and file integrity control. |
-| `scripts/executor.js` | Proxy script for running tools across different OS environments. |
-| `scripts/check-prerequisites.js` | Environment verification before workflow execution. |
-| `scripts/init.js` | File structure initialization script. |
+| `SKILL.md` | The router: the command grammar `magicspec <command> [args]`, one selection line per command, and a pointer to the workflow body. |
+| `AGENT-RULES.md` | The source of the always-on rule (engine upgrade detection, graph use, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check). |
+| `workflows/` | One body per command: `spec`, `task`, `run`, `analyze`, `rule`, `status`, `graph`. |
+| `references/` | Shared modules the bodies name: `context`, `init`, `retrospective`. |
+| `roles/` | The role cards the workflows activate. |
+| `templates/` | File scaffolds for the state folder. |
+| `scripts/` | The executor and its subcommands (`executor.js`, `check-prerequisites.js`, `init.js`, `finalize.js`, and the rest). |
+| `.version`, `.checksums` | The engine version and the integrity manifest of every other file in the folder. |
 
-### 1.2. Workflows (`workflows/`)
+Every path in the folder is relative to the folder itself, so one copy works wherever a host puts it, and a link to it works the same as the folder.
 
-These are source workflow instructions that users copy into the target command directory for their AI agent.
+### 1.2. What `init --host` Generates
 
-- `magic.analyze.md` — launch a project audit.
-- `magic.rule.md` — add or amend project rules.
-- `magic.run.md` — execute the current task.
-- `magic.spec.md` — create a new specification.
-- `magic.task.md` — decompose specifications into tasks.
+Whatever must exist outside the folder for a host to find it is generated from it, by one command, and carries a marker line that says so:
 
-### 1.3. Skill-based Integration (`skills/`)
+| Generated file | For | Source |
+| --- | --- | --- |
+| `<host>/rules/magicspec.md` | Claude Code, Qwen Code | a byte copy of `AGENT-RULES.md` |
+| a managed block in `AGENTS.md` | Codex | one line pointing at `AGENT-RULES.md` |
+| `<host>/commands/magicspec/<command>.md` | Claude Code, Qwen Code | the router's command table |
+| `<host>/skills/magicspec` | any host that needs its own skills folder | a link to the skill folder |
 
-This directory contains workflow wrappers in the **Skills** format (each command in its own folder with a `SKILL.md`).
+A generated file that differs from its source is reported as `PROJECTION_STALE`, with `init --host=<name>` as the remedy. A file at one of these paths that carries no marker belongs to you and is never overwritten. `remove` deletes exactly the marked files and the links, and leaves your `.magicspec/` workspace untouched.
 
-- Provide compatibility with tool-oriented AI agents (e.g., Claude Code, Antigravity, or Gemini CLI).
-- Auto-generated from `.md` files in `workflows/`.
-- Allow agents to discover available tools as structured "skills" without parsing raw markdown files.
+## 2. Choosing Your Host
 
-### 1.4. Watching Rules (`rules/`)
+The host table was read from each host's own documentation and is the one place to correct if a host changes:
 
-This directory contains behavioral and watching-process rules loaded into the agent's context.
-
-- `magic.md` — watching-process rules (engine upgrade detection, drift warnings, integrity protection).
-- Copy or link into your agent's rules directory (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
-
-## 2. Choosing Your Integration Path
-
-Magic Spec provides flexible ways to expose its logic to your AI agent. You can choose the format that matches your agent's capabilities, or use them simultaneously:
-
-1. **Option A: Slash Commands (via `workflows/`)**
-   - Best for: Cursor, Windsurf, Roo Code, GitHub Copilot.
-   - Setup: Link or copy `.md` files from `workflows/` to your agent's command path (e.g., `.cursor/rules/`, `.claude/commands/`, `.codex/prompts/`).
-   - Usage: Trigger via `/magic.spec`, `/magic.task`, etc.
-
-2. **Option B: Modular Tools (via `skills/`)**
-   - Best for: Claude Code, Antigravity IDE, agents supporting the MCP-like Skill protocol.
-   - Setup: Link or copy folders from `skills/` to your agent's skill/tool path (e.g., `.agents/skills/`, `.claude/skills/`).
-   - Usage: The agent discovers these as built-in tools (e.g., `magic-spec`, `magic-task`).
-
-3. **Option C: Context Rules (via `rules/`)**
-   - Best for: All supported agents.
-   - Setup: Link or copy `rules/magic.md` to your agent's rule path (e.g., `.agents/rules/`, `.cursor/rules/`, `.claude/rules/`).
-   - Usage: Automatically loaded by the agent to guide engine conventions and upgrades.
+| Host | Skills (project) | Always-on rule | Command entries |
+| --- | --- | --- | --- |
+| Claude Code | `.claude/skills/magicspec` | `.claude/rules/magicspec.md` | `.claude/commands/magicspec/<command>.md` gives `/magicspec:<command>` |
+| Codex | `.agents/skills/magicspec` | pointer block in `AGENTS.md` | none per project: use `$magicspec <command>` through the router |
+| Qwen Code | `.agents/skills/magicspec` or `.qwen/skills/magicspec` | `.qwen/rules/magicspec.md` | `.qwen/commands/magicspec/<command>.md` gives `/magicspec:<command>` |
 
 > [!NOTE]
-> Regardless of the integration path chosen, the underlying logic remains consistent as `workflows/`, `skills/`, and `rules/` are synchronized with the `.magic/` engine core.
+> The command namespace needs no plugin: a subfolder of the command folder is the colon namespace. A Claude Code plugin is an optional distribution channel built from the same folder (`build-plugin --out <dir>`); it adds marketplace distribution and updates, not a second engine.
 
 ## 3. Dev Instruments
 
-These files are kept in the main repository for maintainers. They are not part of the regular user release archive unless the release workflow explicitly includes them.
+These files are kept in the main repository for maintainers. They are not part of the release archive.
 
-### 3.1. Additional files in `.magic/`
+### 3.1. Maintenance scripts (`scripts/`)
 
-- `simulate.md` — instructions for engine logic "simulation" (debug mode).
-- `tests/suite.md` — test scenario suite for regression checking.
+- `generate-checksums.js` — builds the folder's `.checksums`.
+- `sync.js` — the lifecycle pipeline: engine metadata, version anchors, link validation, project metadata, documentation.
+- `sync-docs.js`, `sync-manifests.js`, `sync-engine-snapshot.js`, `update-project-meta.js` — the steps of that pipeline.
+- `validate-hardlinks.js` — checks the link inventory of the repository.
+- `mutation-check.js` — proves that a harness case fails without the fix it guards.
+- `tests/engine.js` — the script harness.
 
 ### 3.2. Service Workflows
 
-- `magic.dev.simulate.md` — command to launch simulations or tests.
+- `magicspec-dev:test.md`, `magicspec-dev:sync.md` — maintenance commands, under `.agents/`.
 
-## 4. Internal Repository Files (Engine Core / Maintainer)
+## 4. Internal Repository Files (Maintainer)
 
-These files are **never distributed** to end users. They exist only in the main `magic-spec` repository and are used by maintainers for building, publishing, and synchronization.
+These files are **never distributed** to end users. They exist only in the main `magic-spec` repository.
 
-- `history/` — change archives for all workflows (organized by folder).
-- `scripts/update-engine-meta.js` — automation for version and checksum updates (C14).
-- `scripts/sync-docs.js` — documentation synchronization.
-- `scripts/utils.js` — internal developer utilities.
+- `.magicspec/` — the engine's own SDD workspace (specifications, plan, tasks, rules).
+- `scripts/`, `tests/`, `package.json`, `skills/magicspec-dev/` — maintenance scripts, the harness, the repository manifest and the maintenance workflows.
 - `.agents/` — maintainer-facing development workflows and skills.
 
 > [!TIP]
-> This separation keeps user projects clean from the engine's "meta-logic", providing only the tools necessary for development.
+> This separation keeps user projects clean from the engine's "meta-logic", providing only the folder and what is generated from it.

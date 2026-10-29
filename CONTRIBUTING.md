@@ -13,28 +13,27 @@ You can trigger these workflows via your AI agent (Claude, Cursor, Windsurf, etc
 
 | Command | Description |
 | --- | --- |
-| `/magic.analyze` | Audits the health of a project against its specification registry, rules and engine integrity, and reverse-engineers specifications from existing code. Use when the user asks to ventilate or analyze the project, to compare the code with the registry for gaps and drift, or to scan an existing codebase for missing specifications. |
-| `/magic.graph` | Builds, analyzes and visualizes the specification knowledge graph of the SDD artifacts, with god nodes, communities and coverage. Use when the user asks for the spec graph, graph analysis, community detection or workspace discovery, or for an interactive visualization of the specification graph. |
-| `/magic.rule` | Adds, amends or removes project conventions in the RULES.md constitution, global or per workspace. Use when the user states a project rule or convention to record, or asks to amend or remove a convention in RULES.md. |
-| `/magic.run` | Executes the planned tasks of the active phase from the task list, in parallel tracks when they are independent. Use when the user asks to start, continue or resume the planned work, to run the next task of the plan, or to implement a named task or phase from TASKS.md. |
-| `/magic.spec` | Creates, amends and checks the specifications and the specification registry (INDEX.md), from a raw idea through status promotion. Use when the user asks to create or update a spec, to explore or brainstorm a specification, or to check, verify or review the registry entries, versions and statuses of the specs themselves. |
-| `/magic.status` | Briefs a session on where the project stands from STATE.md and the registries, covering the current position, progress, blockers and recorded decisions, and ending with the one next command; read-only. Use when the user asks where the project stands, what the recorded next step is, or for a resume briefing, without asking for any work to be done. |
-| `/magic.task` | Turns the Stable specifications into the implementation plan (PLAN.md) and the atomic task list (TASKS.md with phase workbooks), and re-syncs them when the registry or the rules change. Use when the user asks to create, generate, update or sync the plan or the task list. |
+| `/magicspec:spec` | Creates, amends and checks specifications and the registry, from a raw idea through status promotion |
+| `/magicspec:task` | Turns the Stable specifications into the plan and the atomic task list, and re-syncs them |
+| `/magicspec:run` | Executes the planned tasks of the active phase, in parallel tracks when they are independent |
+| `/magicspec:analyze` | Audits the project against its registry, rules and engine integrity; reverse-engineers specifications from existing code |
+| `/magicspec:rule` | Adds, amends or removes a project convention in the constitution, global or per workspace |
+| `/magicspec:status` | Briefs a session on where the project stands, read-only |
+| `/magicspec:graph` | Builds, analyzes and visualizes the specification knowledge graph |
 
 ### Development Cycle
 
-1. **Spec First**: Always update or create a specification in `.design/{workspace}/specifications/` before writing code.
-2. **Task & Plan**: Use `/magic.task` to generate or update the implementation plan.
-3. **Run**: Use `/magic.run` to execute tasks and write implementation code.
-4. **Analyze**: Run `/magic.analyze` regularly to ensure documentation and code stay in sync.
+1. **Spec First**: Always update or create a specification in `.magicspec/{workspace}/specifications/` before writing code.
+2. **Task & Plan**: Use `/magicspec:task` to generate or update the implementation plan.
+3. **Run**: Use `/magicspec:run` to execute tasks and write implementation code.
+4. **Analyze**: Run `/magicspec:analyze` regularly to ensure documentation and code stay in sync.
 
 ## 📂 Project Structure
 
 ```plaintext
 root-project/
-├── .agents/workflows/        # Slash commands wrapper (e.g., magic.spec, magic.task)
-├── .magic/                   # The SDD Engine (workflow logic and scripts - read-only)
-└── .design/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)
+├── .agents/skills/magicspec/ # The SDD Engine skill (workflows, scripts - read-only)
+└── .magicspec/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)
 ```
 
 ## 🏷️ Conventions & Standards
@@ -83,20 +82,20 @@ This project adheres to the following constitutional rules (defined in `RULES.md
 
 | Workspace | Description | Specs | Registry |
 | --- | --- | --- | --- |
-| engine | Magic SDD core engine logic, workflows, rules, and history. | 37 | [engine/INDEX.md](engine/INDEX.md) |
+| engine | Magic SDD core engine logic, workflows, rules, and history. | 40 | [engine/INDEX.md](engine/INDEX.md) |
 
 ## 🛠️ Getting Started
 
 1. **Verify Prerequisites**:
 
     ```bash
-    node .magic/scripts/executor.js check-prerequisites --json
+    node .agents/skills/magicspec/scripts/executor.js check-prerequisites --json
     ```
 
 2. **Verify Integrity**:
 
     ```bash
-    /magic.analyze
+    /magicspec:analyze
     ```
 
-*Generated by Magic Spec Engine* (v2.1.141) on 2026-10-17
+*Generated by Magic Spec Engine* (v3.0.0) on 2026-10-28

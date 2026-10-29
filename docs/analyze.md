@@ -6,11 +6,11 @@ This document explains the Project Analysis workflow for auditing project health
 
 The Analyze workflow bridges the gap between an existing project and the SDD system. It scans the codebase, generates specification proposals, and performs deep audits of registry integrity and spec-to-code coverage.
 
-**Triggers:** `/magic.analyze [arg]`, *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*.
+**Triggers:** `/magicspec:analyze [arg]`, *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*.
 
-**Slash command:** `/magic.analyze [arg]`
+**Slash command:** `/magicspec:analyze [arg]`
 
-> **Full implementation:** `.magic/analyze.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/workflows/analyze.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -18,7 +18,7 @@ Key Goals:
 - **Bootstrapping**: Generate initial Layer 1/L2 specification proposals based on actual project structure.
 - **Re-Analysis**: Compare evolved code against existing specs to find coverage gaps and drift.
 - **Ventilation**: Deep audit of registry integrity, structural consistency, and engine health.
-- **Safety**: All analysis output is a proposal — no live `.design/` files are modified until explicitly approved.
+- **Safety**: All analysis output is a proposal — no live `.magicspec/` files are modified until explicitly approved.
 
 ## 2. Core Invariants
 
@@ -27,13 +27,13 @@ The engine enforces 8 mandatory invariants during every analysis:
 | # | Invariant | Summary |
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
-| 2 | **Auto-Init** | Silently creates `.design/` structure if missing |
-| 3 | **Read-Only** | Proposals only; never modify project code or `.design/` without user approval |
-| 4 | **Artifact-First** | Write proposals/reports to agent artifacts; Modes A/B dispatch new specs to `.design/` immediately (C9), while changes to existing specs need approval (Invariant 3) |
+| 2 | **Auto-Init** | Silently creates `.magicspec/` structure if missing |
+| 3 | **Read-Only** | Proposals only; never modify project code or `.magicspec/` without user approval |
+| 4 | **Artifact-First** | Write proposals/reports to agent artifacts; Modes A/B dispatch new specs to `.magicspec/` immediately (C9), while changes to existing specs need approval (Invariant 3) |
 | 5 | **Bootstrapping Exemption** | Approved specs from existing code can be created directly as Stable L1/L2 |
 | 6 | **Depth Control** | <50 files: auto-scan; 50–500: scan Full, narrated as a Decision Record; >500: Focused or Quick chosen by forecast — Focused when a focus under 500 files can be derived, Quick otherwise — narrated, nothing asked |
 | 7 | **Gitignore Safety** | Read `.gitignore` before any scan; exclude matched paths from all analysis modes |
-| 8 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 8 | **Engine Integrity (C14)** | Checksums validated and updated after any `skills/magicspec/` modification |
 
 ## 3. Argument Routing
 
@@ -46,10 +46,10 @@ The engine enforces 8 mandatory invariants during every analysis:
 | `first-time` | First-time (A) | Mode A directly; Mode C recommends it when INDEX.md is empty |
 
 ```
-/magic.analyze                             # Full project audit
-/magic.analyze engine                      # Scoped to "engine" workspace
-/magic.analyze "check API coverage"        # Focused analysis on APIs
-/magic.analyze docs "focus on examples"    # Focused analysis within workspace
+/magicspec:analyze                             # Full project audit
+/magicspec:analyze engine                      # Scoped to "engine" workspace
+/magicspec:analyze "check API coverage"        # Focused analysis on APIs
+/magicspec:analyze docs "focus on examples"    # Focused analysis within workspace
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force focus interpretation.
@@ -92,11 +92,11 @@ Compares current codebase against existing specs to produce a **Gap Report**:
 
 ### Mode C — Project Ventilation (Deep Audit)
 
-*Trigger: `/magic.analyze`, `/magic.analyze {workspace}`, "Ventilate"*
+*Trigger: `/magicspec:analyze`, `/magicspec:analyze {workspace}`, "Ventilate"*
 
 A deep audit treating the codebase as source of truth:
 
-1. **Self-Check**: Compare `.magic/` vs `.checksums` (non-halting audit).
+1. **Self-Check**: Compare `skills/magicspec/` vs `.checksums` (non-halting audit).
 2. **Registry Audit**: Cross-reference `INDEX.md` vs files on disk. Detect ghosts, zombies, case-sensitivity issues, metadata parity.
 3. **Structural Integrity** (when workspace specified): Verify workspace folder, required contents, `workspace.json` entry, file naming, link integrity.
 4. **Coverage Check**: Scan project directories within active workspace scope (C15). Identify folders with no corresponding spec.
@@ -106,7 +106,7 @@ A deep audit treating the codebase as source of truth:
 8. **Rule Validation**: Check `RULES.md §7` compliance, and report retirement candidates as read-only advisories — `RULE_RETIRE_CANDIDATE` (cause gone, superseded, or deadlocking the agent) and `RULE_BLOAT` (body over 10 lines). Analysis never edits a rule.
 9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
-> **Mode Precedence**: When `/magic.analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magic.analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
+> **Mode Precedence**: When `/magicspec:analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magicspec:analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
 
 ### Mode D — Focused Analysis
 
@@ -135,7 +135,7 @@ Appended to every analysis report (Modes A–D). Chat-only output with actionabl
 - **Spec Quality**: Oversized specs for splitting, incomplete stubs, bare L1 without L2 children.
 - **Coverage Strategy**: High-churn directories without specs, test areas without suite specs.
 - **Structural Improvements**: Workspace candidates, rule consolidation, naming inconsistencies.
-- **Action Proposals**: Direct commands (e.g., `→ /magic.spec create {name}`) for immediate execution.
+- **Action Proposals**: Direct commands (e.g., `→ /magicspec:spec create {name}`) for immediate execution.
 
 **Signal**: 🟢 = <5% uncovered/drift. 🔴 = any core engine drift or >25% project drift.
 
@@ -152,8 +152,8 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 | **Spec** (`spec.md`) | Partner — analysis results are dispatched via the Spec workflow |
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created, tasks can be planned |
-| **Rule** (`rule.md`) | Consumer — analysis writes no rules; it only links `/magic.rule` for a candidate that passed the admission gate, and reports retirement candidates |
+| **Rule** (`rule.md`) | Consumer — analysis writes no rules; it only links `/magicspec:rule` for a candidate that passed the admission gate, and reports retirement candidates |
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).

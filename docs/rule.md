@@ -4,13 +4,13 @@ This document explains the management of the project's central constitution and 
 
 ## 1. Overview
 
-The Rule Workflow manages the `.design/RULES.md` file, which acts as the project's "Living Constitution." It governs all development decisions, architectural constraints, and workflow preferences.
+The Rule Workflow manages the `.magicspec/RULES.md` file, which acts as the project's "Living Constitution." It governs all development decisions, architectural constraints, and workflow preferences.
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*.
 
-**Slash command:** `/magic.rule`
+**Slash command:** `/magicspec:rule`
 
-> **Full implementation:** `.magic/rule.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/workflows/rule.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -27,10 +27,10 @@ The engine enforces 5 mandatory invariants during every rule operation:
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Scope Guard** | Only modify §7; sections §1–6 are the Universal Constitution (amend only if explicitly targeted) |
 | 3 | **Narrate Writes (C25)** | Apply immediately and show the diff inline as the write happens; approval only at objective gates (core amendment, constitutional conflict, removal) |
-| 4 | **Auto-Init** | Silently creates `.design/` and workspace `RULES.md` if missing |
-| 5 | **Versioning (C14)** | Engine integrity after `.magic/` changes; rules versioned Major/Minor/Patch |
+| 4 | **Auto-Init** | Silently creates `.magicspec/` and workspace `RULES.md` if missing |
+| 5 | **Versioning (C14)** | Engine integrity after `skills/magicspec/` changes; rules versioned Major/Minor/Patch |
 
-> **C14 Exemption**: Modifying `.design/{workspace}/RULES.md` does NOT trigger a C14 engine bump — `.design/` modifications are project manifest bumps, not engine bumps.
+> **C14 Exemption**: Modifying `.magicspec/{workspace}/RULES.md` does NOT trigger a C14 engine bump — `.magicspec/` modifications are project manifest bumps, not engine bumps.
 
 ## 3. The Constitutional Guard (§1–6)
 
@@ -45,8 +45,8 @@ The `RULES.md` file is divided into two major zones:
 
 The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 
-- **Global tier** → `.design/RULES.md`: Universal Constitution (§1–6) + cross-workspace §7 conventions (C1, C2, ...).
-- **Workspace tier** → `.design/{workspace}/RULES.md`: Workspace-local §7 conventions only (WC1, WC2, ...). Inherits all global rules; never overrides §1–6.
+- **Global tier** → `.magicspec/RULES.md`: Universal Constitution (§1–6) + cross-workspace §7 conventions (C1, C2, ...).
+- **Workspace tier** → `.magicspec/{workspace}/RULES.md`: Workspace-local §7 conventions only (WC1, WC2, ...). Inherits all global rules; never overrides §1–6.
 
 | Signal | Target |
 | --- | --- |
@@ -54,7 +54,7 @@ The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 | Universal rule, no workspace context | Global `RULES.md` |
 | Ambiguous | Resolved autonomously: workspace tier when a workspace is active, else global; narrated as a Decision Record |
 
-Workspace `RULES.md` files are created on demand. Duplication checks scan both tiers, the rules the engine ships in `rules/magic.md` and the regulations inside specifications.
+Workspace `RULES.md` files are created on demand. Duplication checks scan both tiers, the rules the engine ships in `skills/magicspec/AGENT-RULES.md` and the regulations inside specifications.
 
 ## 5. Rule Actions
 
@@ -67,7 +67,7 @@ Workspace `RULES.md` files are created on demand. Duplication checks scan both t
 
 ### Remove — Dependency Scan
 
-Before deleting, the engine scans all `.magic/*.md` workflow files and `.design/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → shown in the single confirmation a Remove asks (deleting a rule is a destructive action, C9 gate 1): *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
+Before deleting, the engine scans all `skills/magicspec/{workflows,references}/*.md` workflow files and `.magicspec/` spec files for references to the target convention ID (e.g., `C3`, `WC1`). If references found → shown in the single confirmation a Remove asks (deleting a rule is a destructive action, C9 gate 1): *"Convention `{ID}` is referenced by: [{file}: {context}]. Removing it may break workflow logic or spec compliance."*
 
 ### Batch Operations (Trust Mode)
 
@@ -92,15 +92,15 @@ Before the review, the reviewer decides whether the rule should exist at all —
 - **Evidence**: an observed occurrence of the harm — a file and line, a commit, or a failure reproduced in the session; two instances for a repeated pattern. A scenario that could happen is not evidence. Harm in the irreversible class is the one exception.
 - **With/without comparison**: does the cause persist, what already catches it, is the harm reversible — and which hazards the rule itself opens (friction, deadlock, over-reach, cascade, conflict, opened hole).
 - **Form and placement**: the lowest rung that covers the evidence (no artifact, a note in a specification, a regulation in a specification, a workspace convention, a global convention); soft by default, hard only for irreversible harm, after a cited violation, or when the user stated it.
-- **Outcome**: an admitted rule is narrated as a short admission record; a declined one as a single Decision Record (`[DR] Not codified: …`) with an override, and nothing is written. A rule that belongs in a specification is redirected to `/magic.spec amend` instead of written to `RULES.md`.
-- **Size and history**: a rule body is at most 10 non-empty lines, and its Document History row records the origin (`user-stated`, or `agent` with the evidence). During ventilation `/magic.analyze` reports rules whose cause is gone, that something else already covers, that deadlock the agent or that exceed the bound (`RULE_RETIRE_CANDIDATE`, `RULE_BLOAT`); it edits nothing.
+- **Outcome**: an admitted rule is narrated as a short admission record; a declined one as a single Decision Record (`[DR] Not codified: …`) with an override, and nothing is written. A rule that belongs in a specification is redirected to `/magicspec:spec amend` instead of written to `RULES.md`.
+- **Size and history**: a rule body is at most 10 non-empty lines, and its Document History row records the origin (`user-stated`, or `agent` with the evidence). During ventilation `/magicspec:analyze` reports rules whose cause is gone, that something else already covers, that deadlock the agent or that exceed the bound (`RULE_RETIRE_CANDIDATE`, `RULE_BLOAT`); it edits nothing.
 
 ## 7. Post-Write Impact
 
 After a rule is written to disk:
 
 1. **Notify**: Detect if `TASKS.md` is now based on a stale version of the rules.
-2. **Next step**: exactly one narrated next command — `/magic.task {workspace} update` by default, `/magic.spec audit` only when the rule changes verification or compliance obligations.
+2. **Next step**: exactly one narrated next command — `/magicspec:task {workspace} update` by default, `/magicspec:spec audit` only when the rule changes verification or compliance obligations.
 
 ## 8. Trigger Types
 
@@ -119,4 +119,4 @@ Rules are captured via multiple triggers:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).

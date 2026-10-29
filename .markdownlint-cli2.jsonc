@@ -5,7 +5,7 @@
     "CHANGELOG.md",
     "node_modules/**",
     "docs/generated/**",
-    ".magic/templates/changelog.md"
+    "skills/magicspec/templates/changelog.md"
   ],
   "config": {
     "MD013": false, // Line length

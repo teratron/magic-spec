@@ -26,37 +26,32 @@ jobs:
 
       - name: Read version
         id: version
-        run: echo "value=$(cat .magic/.version)" >> "$GITHUB_OUTPUT"
+        run: echo "value=$(cat skills/magicspec/.version)" >> "$GITHUB_OUTPUT"
 
       - name: Build release archive
         run: |
+          # The files that go in are decided by scripts/archive-composition.js and nowhere else.
+          node scripts/archive-composition.js list > release-files.txt
           python3 - <<'EOF'
           import zipfile, os
 
-          version  = open(".magic/.version").read().strip()
+          version  = open("skills/magicspec/.version").read().strip()
           zip_name = f"magic-spec-v{version}.zip"
           prefix   = f"magic-spec-v{version}/"
 
-          # Distribution rule: .magic/, workflows/, skills/, rules/ are kept
-          # clean — volatile state and dev-only artifacts live under
-          # dev/.cache/ and .design/.cache/, which we never walk here.
-          # Root files: README.md and LICENSE only (AGENTS.md is a dev-repo
-          # identity file and is not part of the user distribution kernel).
-
           with zipfile.ZipFile(zip_name, "w", zipfile.ZIP_DEFLATED) as zf:
-              for f in ("README.md", "LICENSE"):
-                  if os.path.exists(f):
-                      zf.write(f, prefix + f)
-              for top in (".magic", "workflows", "skills", "rules"):
-                  for root, _, files in os.walk(top):
-                      arc_root = root.replace(os.sep, "/")
-                      for f in files:
-                          arc = f"{arc_root}/{f}"
-                          zf.write(arc, prefix + arc)
+              for f in open("release-files.txt").read().split():
+                  zf.write(f, prefix + f)
 
           names = zipfile.ZipFile(zip_name).namelist()
           print(f"Created {zip_name}: {len(names)} files, {os.path.getsize(zip_name)/1024:.1f} KB")
           EOF
+
+      - name: Smoke-check the archive
+        run: |
+          VERSION="${{ steps.version.outputs.value }}"
+          # Fails when any path lies outside the composition or a required file is missing.
+          unzip -Z1 "magic-spec-v${VERSION}.zip" | node scripts/archive-composition.js check --prefix "magic-spec-v${VERSION}/"
 
       - name: Create GitHub Release
         env:
@@ -75,13 +70,11 @@ jobs:
 
           \`\`\`
           your-project/
-          ├── .magic/
-          ├── workflows/
-          ├── skills/
-          └── rules/
+          └── skills/
+              └── magicspec/
           \`\`\`
 
-          Then place the workflow files in your AI agent's commands directory — see [Adapter Paths](https://github.com/${{ github.repository }}#%EF%B8%8F-adapter-paths) in the README.
+          Then run `node skills/magicspec/scripts/executor.js init --host=<claude,codex,qwen>` from the project root — see the install section of the README.
 
           Full changelog: [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/master/CHANGELOG.md)
           EOF

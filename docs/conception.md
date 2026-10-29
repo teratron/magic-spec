@@ -17,7 +17,7 @@ The core design goal is to **keep humans out of the loop as much as possible** �
 Magic Spec is designed to support two fundamental modes of operation:
 
 - **Type A — "AI Trust" (High Velocity)**: The user provides a high-level idea or intent. The engine handles the internal lifecycle (`Draft -> RFC -> Stable -> Plan -> Task`) silently under the hood. The user only sees a final "Actionable Outcome" and a single "Go" gate before execution. Internal statuses are **encapsulated**.
-- **Type B — "Expert Audit" (High Rigor)**: The user is a senior engineer who wants full transparency. They can inspect the `.design/` workspace at any time to review specifications, plans, and rules. The internal statuses provide the audit trail and structural integrity they require.
+- **Type B — "Expert Audit" (High Rigor)**: The user is a senior engineer who wants full transparency. They can inspect the `.magicspec/` workspace at any time to review specifications, plans, and rules. The internal statuses provide the audit trail and structural integrity they require.
 
 #### Trust Mode & Auto-Stabilization
 

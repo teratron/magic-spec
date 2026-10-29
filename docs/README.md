@@ -4,9 +4,9 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🧭 Core Philosophy
 
-1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.design/specifications/*.md`).
+1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.magicspec/specifications/*.md`).
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
-3. **Governance via Rules**: All logic is governed by a central rulebook (`.design/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
+3. **Governance via Rules**: All logic is governed by a central rulebook (`.magicspec/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
 4. **Resilience & Integrity**: Continuous validation via SHA256 checksums and automated versioning (C14).
 5. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data after every phase.
 
@@ -19,8 +19,8 @@ Magic operates through **3 core workflows** and **1 auxiliary workflow**, formin
 ```mermaid
 graph TD
     IDEA["💡 Idea"] --> INIT{"🏗️ Auto-Init"}
-    INIT -->|.design/ exists| SPEC
-    INIT -->|.design/ missing| CREATE["Create .design/ structure"] --> SPEC
+    INIT -->|.magicspec/ exists| SPEC
+    INIT -->|.magicspec/ missing| CREATE["Create .magicspec/ structure"] --> SPEC
     INIT -.->|"existing code detected"| ANALYZE["🔬 Analyze"]
     ANALYZE -->|"proposals approved"| SPEC
     SPEC["📋 Specification"] <--> RULE["📜 Rule"]
@@ -52,7 +52,7 @@ graph TD
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 | **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
-| **Graph** | `magic.graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
+| **Graph** | `workflows/graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -60,12 +60,11 @@ Once installed, Magic Spec sets up a clear separation of concerns in your projec
 
 ```plaintext
 your-project/
-├── .agents/workflows/      # 🎯 Agent Entry Points (Slash Commands)
-│   └── magic.spec.md       #    → (Link or copy to your agent's command path)
-├── .magic/                 # ⚙️ SDD Engine (Workflow logic & Scripts)
-│   ├── spec.md, task.md    #    Core logic definitions
+├── .agents/skills/magicspec/ # ⚙️ SDD Engine, one skill (a host reads its own folder: a link to it)
+│   ├── SKILL.md            #    Router: command grammar and command table
+│   ├── workflows/          #    One body per command (spec, task, run, ...)
 │   └── scripts/            #    Initialization & health-check scripts
-└── .design/                # 📦 Project State & Artifacts (Generated)
+└── .magicspec/                # 📦 Project State & Artifacts (Generated)
     ├── workspace.json      #    (Optional) Multi-workspace routing config
     ├── INDEX.md            #    Specification registry
     ├── RULES.md            #    Project constitution (The Rules)
@@ -74,7 +73,7 @@ your-project/
     └── specifications/     #    Directory for all .md spec files
 ```
 
-> **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.design/core/`, `.design/web/`) that all share the same `.magic/` engine without colliding.
+> **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.magicspec/core/`, `.magicspec/web/`) that all share the same `skills/magicspec/` engine without colliding.
 >
 > ```json
 > {
@@ -86,9 +85,9 @@ your-project/
 > }
 > ```
 >
-> `default` selects the workspace when a command is given no argument. `scope` bounds every scan — analysis, coverage, and community detection ignore paths outside it. Omit `scope` to let a workspace see the whole project. Every command accepts a workspace name as its first argument to override the default (`/magic.task web`).
+> `default` selects the workspace when a command is given no argument. `scope` bounds every scan — analysis, coverage, and community detection ignore paths outside it. Omit `scope` to let a workspace see the whole project. Every command accepts a workspace name as its first argument to override the default (`/magicspec:task web`).
 
-**`.gitignore`**: When Magic Spec is used as an installed dependency, add `.magic/`, `workflows/`, `skills/`, and `rules/` to your `.gitignore`. To vendor the engine instead, omit those entries.
+**`.gitignore`**: When Magic Spec is used as an installed dependency, add the skill folder and the files `init --host` generated from it (the lines `init` prints) to your `.gitignore`. To vendor the engine instead, omit those entries.
 
 ## 🚀 Usage Guide
 
@@ -97,7 +96,7 @@ Talk to your AI agent (Cursor, Windsurf, Claude, etc.) using the following natur
 ### 1. Authoring Specifications
 >
 > *"Analyze this idea and create a new specification."*
-The agent will run the **Specification** workflow, creating a file in `.design/specifications/` and updating the `INDEX.md`.
+The agent will run the **Specification** workflow, creating a file in `.magicspec/specifications/` and updating the `INDEX.md`.
 
 ### 2. Planning Implementation
 >
@@ -112,18 +111,18 @@ The agent will run the **Run** workflow, picking the most prioritized task and i
 All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
 
 ```bash
-/magic.spec engine "new features"      # Author specs in "engine" workspace
-/magic.task engine                     # Plan only for the "engine" workspace
-/magic.task "decompose phase-2"        # Guided planning with focus
-/magic.run engine "phase-1"            # Execute phase 1 in "engine" workspace
-/magic.analyze "check API coverage"    # Focused analysis on a specific area
+/magicspec:spec engine "new features"      # Author specs in "engine" workspace
+/magicspec:task engine                     # Plan only for the "engine" workspace
+/magicspec:task "decompose phase-2"        # Guided planning with focus
+/magicspec:run engine "phase-1"            # Execute phase 1 in "engine" workspace
+/magicspec:analyze "check API coverage"    # Focused analysis on a specific area
 ```
 
 ## ⚖️ Consistency & Safety
 
 Magic Spec includes built-in "Pre-flight" checks:
 
-- **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration. **After updating the engine, it is highly recommended to run the `/magic.analyze` command to ensure full synchronization.**
+- **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration. **After updating the engine, it is highly recommended to run the `/magicspec:analyze` command to ensure full synchronization.**
 - **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
 - **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
 - **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.

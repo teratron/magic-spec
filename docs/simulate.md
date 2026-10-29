@@ -6,10 +6,10 @@ This document explains the workflow for validating and stress-testing the Magic 
 
 The Simulation Workflow acts as the "Debugger" for the Magic SDD engine itself. It runs synthetic "war games" against current workflow definitions to find logical gaps, contradictions, or friction points.
 
-**Slash command:** `/magic.dev.simulate [target]`
+**Slash command:** `/magicspec-dev:test [target]`
 
-> **Full implementation:** `.agents/workflows/magic.dev.simulate.md` — repository-only file, NOT shipped to end users.
-> **Dev-only**: This workflow is for engine maintainers; the runtime engine in `.magic/` does not contain it.
+> **Full implementation:** `skills/magicspec-dev/workflows/test.md` — repository-only file, NOT shipped to end users.
+> **Dev-only**: This workflow is for engine maintainers; the runtime engine in `skills/magicspec/` does not contain it.
 
 Key Goals:
 
@@ -27,7 +27,7 @@ The engine enforces 6 mandatory invariants:
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Cognitive Execution ONLY** | Never write/run physical simulation scripts; evaluate logic internally (LLM task) |
 | 3 | **Surgical Fix & Test** | If friction found → adjudicate it, then apply the fix and write the regression test in `suite.md` in the same run — no approval prompt |
-| 4 | **Engine Integrity (C14)** | Checksums updated after `.magic/` modifications — blocking gate before reporting |
+| 4 | **Engine Integrity (C14)** | Checksums updated after `skills/magicspec/` modifications — blocking gate before reporting |
 | 5 | **No Metrics** | Real-world history/logs are for `retrospective.md`, not simulation |
 | 6 | **Anti-Fabrication** | `0 rough edges` is a valid outcome; every finding must include file, line, evidence, and verification command |
 
@@ -38,9 +38,9 @@ The engine enforces 6 mandatory invariants:
 Simulate a specific workflow by name:
 
 ```
-/magic.dev.simulate spec
-/magic.dev.simulate task
-/magic.dev.simulate run
+/magicspec-dev:test spec
+/magicspec-dev:test task
+/magicspec-dev:test run
 ```
 
 The agent creates a synthetic scenario, "executes" the workflow logic step-by-step, and identifies rough edges. Also accepts file paths (e.g., `@/path/to/workflow.md`).
@@ -50,7 +50,7 @@ The agent creates a synthetic scenario, "executes" the workflow logic step-by-st
 Run an unpredictable, end-to-end stress test across all workflows:
 
 ```
-/magic.dev.simulate
+/magicspec-dev:test
 ```
 
 The agent synthesizes a crisis scenario following the **Crisis Template** and performs a Cognitive Walkthrough of the full SDD chain (Spec → Task → Run).
@@ -73,10 +73,10 @@ Every synthesized crisis must satisfy all structural requirements:
 Run the full predefined regression test suite:
 
 ```
-/magic.dev.simulate test
+/magicspec-dev:test test
 ```
 
-Reads `dev/tests/suite.md` and executes all predefined scenarios. If missing, falls back to Improv Mode automatically.
+Reads `tests/suite.md` and executes all predefined scenarios. If missing, falls back to Improv Mode automatically.
 
 ## 4. Pre-flight (Mandatory — All Modes)
 
@@ -121,19 +121,19 @@ If simulation reveals a logical flaw, the engine decides and fixes it in the sam
 
 1. **Adjudication**: evidence decides, rung by rung, until one is conclusive — *Reproduction* (a script, fixture or harness check fails today), *Dead end* (the engine's own plan is halted by its own guard), *Contradiction* (two statements, or a statement and its specification, test or page, cannot both hold), *Reading test* (the literal text and the specification's intent predict different actions). The outcome is **DEFECT**, **AMBIGUITY**, **NOT A DEFECT** (no change) or **VULNERABILITY** (a trust-boundary crossing, named in the report).
 2. **Fix Selection**: the Consequence Forecast (DA-10) walks *no change*, the smallest wording patch and a structural rule through five scenarios — expected, wrong root cause, boundary, adversarial, change later. A candidate that fails the reproducing case or the harness, or loses an earlier guarantee, is dropped; then the lowest worst-case cost of being wrong wins, and exactly one does. Sibling sites are searched before the patch.
-3. The winner is applied together with a new regression test in `dev/tests/suite.md`, and proven: the reproducing case fails before the patch and passes after it, mutation controls catch each assertion, the harness stays green.
+3. The winner is applied together with a new regression test in `tests/suite.md`, and proven: the reproducing case fails before the patch and passes after it, mutation controls catch each assertion, the harness stays green.
 4. **C14 Enforcement Gate**: Checksums must be regenerated **before** reporting (blocking step).
-5. **Succession**: Run `/magic.dev.simulate test` post-fix. Max 2 rounds — if second pass still finds new failures, report remaining issues and stop.
+5. **Succession**: Run `/magicspec-dev:test test` post-fix. Max 2 rounds — if second pass still finds new failures, report remaining issues and stop.
 
 Each finding is reported as one Decision Record line, `[DR] {finding} → {verdict}: {decision} — {criterion}. (Override: git restore {files})`. When no fix candidate passes the harness, the defect is reported with the failing evidence and nothing is changed. Only a destructive or irreversible action, or a fix that needs an amendment of the core constitution, stops the run for a question.
 
-> **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For unbiased verification, the engine recommends starting a new chat session and running `/magic.dev.simulate test` independently.
+> **Context Bleed Warning**: The LLM that just wrote fixes has inherent bias toward confirming they work. For unbiased verification, the engine recommends starting a new chat session and running `/magicspec-dev:test test` independently.
 
 ## 9. Maintenance
 
-- **Post-Change Verification**: Simulation is mandatory after any significant `.magic/` modification.
+- **Post-Change Verification**: Simulation is mandatory after any significant `skills/magicspec/` modification.
 - **Cross-Platform Check**: Every simulation verifies script calls use the universal `node executor.js` wrapper.
-- **Regression Suite**: After major engine changes, run `/magic.dev.simulate test` to verify all scenarios pass.
+- **Regression Suite**: After major engine changes, run `/magicspec-dev:test test` to verify all scenarios pass.
 
 ## Sync Note
 

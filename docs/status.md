@@ -6,11 +6,11 @@ This document explains the Status workflow, the read-only command that tells you
 
 After a break — a new session, a context reset, a week away — the question is always the same: what was I doing, what blocks me, what do I run now. Answering it by hand means reading `STATE.md`, `TASKS.md`, `PLAN.md`, and `INDEX.md` and reconciling them. The Status workflow does that reconciliation and renders a single briefing.
 
-**Triggers:** `/magic.status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
+**Triggers:** `/magicspec:status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
 
-**Slash command:** `/magic.status [workspace]`
+**Slash command:** `/magicspec:status [workspace]`
 
-> **Full implementation:** `.magic/status.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/workflows/status.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -21,7 +21,7 @@ Key Goals:
 
 ## 2. Read-Only Guarantee
 
-Status is the only workflow with no write path at all. It does not touch `.design/`, `.magic/`, or any project file; it suggests no commit; it never creates `STATE.md` even when one is missing.
+Status is the only workflow with no write path at all. It does not touch `.magicspec/`, `skills/magicspec/`, or any project file; it suggests no commit; it never creates `STATE.md` even when one is missing.
 
 Two consequences follow from that purity:
 
@@ -39,13 +39,13 @@ The briefing always renders in this fixed order. A section whose source is unrea
 | 3 | **Progress** — phase and overall progress bars | `STATE.md` Progress |
 | 4 | **Blockers & Blocking Constraints** — both surfaced; constraints are mandatory reading | `STATE.md` |
 | 5 | **Recent Decisions** — last three entries | `STATE.md` |
-| 6 | **Engine line** — local engine version against the registry snapshot | `.magic/.version`, `INDEX.md` |
+| 6 | **Engine line** — local engine version against the registry snapshot | `skills/magicspec/.version`, `INDEX.md` |
 | 7 | **Next** — one command with a one-line rationale | computed |
 
 The final line follows the Decision Record format:
 
 ```
-[DR] Next: {command} — {criterion}. (Override: any /magic.* command)
+[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)
 ```
 
 One command, never a menu. If you disagree, you run something else — the override hint says so explicitly.
@@ -56,7 +56,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
 | **In-flight session** | A task recorded `In Progress` surfaces the resume line — the recorded next action and the dead ends already recorded against the task. |
-| **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magic.analyze revalidates)`. Informational; the briefing proceeds. |
+| **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magicspec:analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
 ## 5. Workspace Targeting
@@ -64,8 +64,8 @@ One command, never a menu. If you disagree, you run something else — the overr
 With no argument the workspace resolves through the standard priority chain. Pass a name to override:
 
 ```
-/magic.status                # Resolved workspace
-/magic.status engine         # Explicit workspace
+/magicspec:status                # Resolved workspace
+/magicspec:status engine         # Explicit workspace
 ```
 
 ## 6. Relationship to Other Workflows
@@ -78,4 +78,4 @@ With no argument the workspace resolves through the standard priority chain. Pas
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).
