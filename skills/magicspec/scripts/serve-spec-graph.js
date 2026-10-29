@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('serve-spec-graph', module);
+
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -66,6 +69,8 @@ function loadGraph() {
                 cwd: resolveProjectRoot(),
                 env: process.env,
                 timeout: 30000,
+                // The graph arrives on stdout; the default 1 MiB buffer is too small for a large registry.
+                maxBuffer: 256 * 1024 * 1024,
             },
         );
         raw = JSON.parse(stdout.toString('utf8'));
@@ -301,6 +306,24 @@ const TOOLS = [
 function dispatchTool(name, args, graph) {
     const { nodes, analysis, adjacency } = graph;
 
+    /**
+     * @param {...string} required - Names of string arguments the tool cannot run without.
+     * @returns {{content: Array<{type: string, text: string}>, isError: true}|null} An error result, or null.
+     */
+    const missingArgs = (...required) => {
+        const absent = required.filter((key) => typeof args[key] !== 'string' || args[key] === '');
+        if (absent.length === 0) return null;
+        return {
+            content: [
+                {
+                    type: 'text',
+                    text: `Missing argument${absent.length > 1 ? 's' : ''}: ${absent.map((a) => `'${a}'`).join(', ')} (string${absent.length > 1 ? 's' : ''}); node ids come from query_graph.`,
+                },
+            ],
+            isError: true,
+        };
+    };
+
     try {
         switch (name) {
             case 'query_graph': {
@@ -325,6 +348,7 @@ function dispatchTool(name, args, graph) {
             }
 
             case 'get_node': {
+                if (missingArgs('id')) return missingArgs('id');
                 const node = nodes.get(args.id);
                 if (!node)
                     return {
@@ -335,6 +359,7 @@ function dispatchTool(name, args, graph) {
             }
 
             case 'get_neighbors': {
+                if (missingArgs('id')) return missingArgs('id');
                 const result = getNeighbors(nodes, adjacency, args.id);
                 if (!result)
                     return {
@@ -355,6 +380,7 @@ function dispatchTool(name, args, graph) {
             }
 
             case 'shortest_path': {
+                if (missingArgs('from', 'to')) return missingArgs('from', 'to');
                 const pathResult = shortestPath(adjacency, args.from, args.to);
                 if (!pathResult) {
                     return {

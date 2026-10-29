@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.38.0
+**Version:** 1.39.0
 **Status:** Active
-**Engine Version:** 3.0.0
+**Engine Version:** 3.0.9
 
 ## Overview
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.39.0 | 2026-10-29 | Agent | No spec-count change (40/40 Stable). Deployment of a simulation pass over the shipped engine: 11 specifications amended together with the code that fixes what the pass reproduced (the command line contract, provisioning, line endings in the integrity check, the path matching contract as built, the release script, the migration's state-folder paths, the graph page, the concurrent STATE.md writer, argument validation, an owner's note as a `Next Action`). l2-engine-automation 1.26.0, l2-release-pipeline 2.3.0, l2-skill-distribution 1.6.0, l2-spec-graph-memory 1.4.1, l2-update-state-structure 1.2.0, l2-finalize-state-accuracy 2.4.0, l2-finalize-output-contract 2.2.0, l2-engine-finalization 3.7.0, l2-status-command 1.5.0, l1-session-continuity 2.5.3, l2-test-suite 1.37.0. |
 | 1.38.0 | 2026-10-28 | Agent | No spec-count change (40/40 Stable). Step 5 recorded as built: the migration, the unmigrated-project guard, the archive composition and smoke step, version 3.0.0. l2-skill-distribution 1.5.0, l2-skill-layout 1.6.0, l2-release-pipeline 2.2.0, l2-test-suite 1.36.0. Engine 3.0.0. |
 | 1.37.0 | 2026-10-28 | Agent | No spec-count change (40/40 Stable). The state folder is .magicspec/ in all engine, maintenance and workspace text: 33 specifications received their patch bump and a history row, constitution 1.17.0. Engine 2.1.151. |
 | 1.36.0 | 2026-10-28 | Agent | No spec-count change (40/40 Stable). The maintenance-layout reality sync completed: nine more specifications that name the maintenance folders received their patch bump (engine-core 1.9.1, reference-containment 1.8.1, release-pipeline 2.0.1 and six others). |

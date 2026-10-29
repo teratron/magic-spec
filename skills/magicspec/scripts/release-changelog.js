@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('release-changelog', module);
+
 const path = require('path');
 const { parseFlags, resolveProjectRoot, statePath, executorHint } = require('./utils');
 const { releaseUnreleased } = require('./lib/changelog-writer');
@@ -50,6 +53,21 @@ function runCli() {
     const changelogPath = path.join(projectRoot, 'CHANGELOG.md');
     const version = values['--version'] || readVersion(statePath(projectRoot, '.version')).version;
     const date = values['--date'] || new Date().toISOString().slice(0, 10);
+
+    // A malformed value would be written into the changelog heading before anyone saw it.
+    if (!/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/.test(version)) {
+        console.error(`HALT: '${version}' is not a version (expected X.Y.Z).`);
+        process.exit(1);
+    }
+    const parsedDate = new Date(`${date}T00:00:00Z`);
+    const isCalendarDate =
+        /^\d{4}-\d{2}-\d{2}$/.test(date) &&
+        !Number.isNaN(parsedDate.getTime()) &&
+        parsedDate.toISOString().slice(0, 10) === date;
+    if (!isCalendarDate) {
+        console.error(`HALT: '${date}' is not a calendar date (expected YYYY-MM-DD).`);
+        process.exit(1);
+    }
 
     const result = releaseUnreleased(changelogPath, version, date);
 

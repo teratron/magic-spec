@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('check-bloat', module);
+
 const fs = require('fs');
 const path = require('path');
 const { resolveProjectRoot, statePath, STATE_DIR_NAME } = require('./utils');

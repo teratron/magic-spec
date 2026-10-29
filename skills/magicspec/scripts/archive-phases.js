@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('archive-phases', module);
+
 const path = require('path');
 const { resolveProjectRoot, executorHint, STATE_DIR_NAME } = require('./utils');
 const { findArchiveCandidates, archiveCompletedPhases } = require('./lib/phase-archiver');

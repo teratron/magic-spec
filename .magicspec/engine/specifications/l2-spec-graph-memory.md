@@ -1,6 +1,6 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.3.2
+**Version:** 1.4.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -175,6 +175,32 @@ Everything the graph subsystem derives lives in one folder, `$designDir/graph/`:
 
 **Earlier locations.** Before the folder existed these lived at `$designDir/.graph-cache/`, `wiki/`, `spec-graph.html`, `graph-snapshot.json` and `graph-before.json`. A writer retires the names it replaces, and only after it has succeeded: `export-wiki` (default output only; a custom `--out` retires nothing) the cache, the wiki and the two snapshot files, `build-spec-graph --html` (default path only) the page. The cache, the wiki and the page are regenerated, so they are removed; the snapshot files carry a baseline the next comparison needs, so they are moved into the folder unless a file is already there. One informational line names what was retired. Only the five exact names are touched, never a folder by pattern.
 
+### 4.7 The Interactive Page `[ADDED]`
+
+`build-spec-graph --html` writes one self-contained page, `graph/graph.html`, that draws the graph with a library fetched from a CDN. **Defects** (simulation pass, engine 3.0.0; each seen in a browser against this repository's own registry):
+
+1. **The legend was not what was drawn.** 148 of 235 nodes carried the library's default group colours (files yellow, specifications light green, phases pink) instead of the page's palette, with the legend's colours and circles describing none of them. The cause is the library's improved layout, which clusters a large graph first and re-applies the group defaults over each node's own colours (the library logs a hint to disable it); the same on 9.1.9 and 10.1.4.
+2. **The library was unpinned and unchecked.** The page loaded `vis-network` from a URL with no version, so what ran beside the embedded specification graph was whatever the CDN served at view time (it redirected to a release published two days earlier).
+3. **Without the library the page was blank.** Offline, blocked or on a hash mismatch: a script error, an empty canvas and an empty summary — although the summary needs no library — and no message.
+4. **A phone-width window was unusable.** The search box sat 160 px off the left edge and the panels overlapped each other and the canvas; the page declares a viewport and had no narrow rule.
+5. **The canvas was the only content** for a keyboard or screen-reader user: keyboard navigation off, the search box labelled by its placeholder, no text alternative.
+
+**Required**:
+
+- **Palette.** `layout.improvedLayout` is false; the colours and shapes are set per node from one table, and the legend draws each type's shape (diamond, dot, square, triangle, star) in its colour. A harness case reads the page's markup; a browser check counts nodes by group, shape and colour.
+- **Pinned library.** One constant pair in `build-spec-graph.js` — an exact version at least two weeks old and its Subresource Integrity hash (`sha384-` digest of the file at that URL) — and `crossorigin="anonymous"`. A change of version changes both. Vendoring the library into the engine folder was rejected: about 650 KB in every install and in the manifest, against a risk the hash closes.
+- **A failure state.** The summary and the inspector's static parts are drawn before the library is needed; when `vis` is undefined the canvas shows one `role="alert"` message that names the cause (a CDN, so network access) and points to `wiki/index.md`, the same content as text. A wrong hash is the same case: the browser blocks the script.
+- **Narrow screens.** At 700 px and below: the search box on top across the width, the legend under it without its heading, the inspector as a bottom sheet (38 vh), and the summary — hidden by default there — over it when the Summary button is pressed; the button toggles it at any width (`aria-expanded`).
+- **Accessibility.** A label for the search box, regions and roles on the panels, `interaction.keyboard` on, the inspector as a polite live region, muted text at a contrast of at least 4.5:1 against the panel (the old `#666` placeholder was about 3:1).
+
+**Not specified, for want of an occurrence:** a table view of the nodes as a text alternative inside the page (the wiki is the alternative), a light theme, an offline copy of the library.
+
+**Deployment status:** built (engine 3.0.1); the pinned version at that release is 10.1.2.
+
+### 4.8 Reading the Graph from a Child Process (Scale) `[ADDED]`
+
+`export-wiki` and `serve-spec-graph` obtain the graph by running `build-spec-graph --json` and reading its stdout. A load ramp on disposable registries (10 to 2000 specifications, one specification and one source file each) found the first limit of the engine: the graph JSON grows by about 0.5 KB per specification, and at about 2000 specifications (1.02 MiB) the read ended in `ENOBUFS` and a stack trace, because Node's default buffer for a child's output is 1 MiB. Every other command was far from a limit at that size (pre-flight 0.6 s, graph 0.6 s, coverage 0.7 s; `export-wiki` grows linearly at about 2.7 ms per specification, 5.5 s at 1500). **Required**: the two readers pass an explicit `maxBuffer` of 256 MiB (a registry a hundred times larger than the engine's own is still read), and the harness holds it with a graph over 1 MiB made from one specification that references five thousand files. A registry past that size would be a decision for `build-spec-graph --json --out` as the channel, which already avoids stdout.
+
 ## 5. Implementation Notes
 
 1. `graph-cache.js` must be written first — both `build-spec-graph.js` (cache integration) and future callers depend on it.
@@ -205,6 +231,8 @@ Everything the graph subsystem derives lives in one folder, `$designDir/graph/`:
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.1 | 2026-10-29 | Agent | New **§4.8 Reading the Graph from a Child Process (Scale)**: the explicit output buffer of `export-wiki` and `serve-spec-graph`, found by a load ramp (the default 1 MiB ended the run at about 2000 specifications). |
+| 1.4.0 | 2026-10-29 | Agent | New **§4.7 The Interactive Page**: the palette and legend fix (the improved layout re-coloured most nodes), a pinned library with an integrity hash, a visible failure state with the summary drawn first, a narrow-screen layout and the accessibility minimum, from a browser pass over the generated page. Specification changed together with the code; the page cases are in [l2-test-suite.md](l2-test-suite.md). |
 | 1.3.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.3.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.3.0 | 2026-10-28 | Agent | Added §4.6 Artifact Location: the cache, the wiki, the page and the two snapshot files live under one `graph/` folder, their paths defined once; the earlier five locations are retired by the writer that replaces them, after it has succeeded. Storage and output paths in §2, §4.1, §4.2, §4.4 follow. Deployed together with the harness cases for the new paths and for the retirement. Post-Update Review: spec-critic PASS, prompt-engineer PASS; Stable retained. |

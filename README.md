@@ -32,7 +32,7 @@ your-project/
 
 ## 📦 Installation
 
-Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. The engine needs Node.js to run its scripts and adds nothing to your project's build.
+Works with **any project** — Rust, Go, Python, JavaScript, C++, or anything else. The engine needs Node.js 18 or newer to run its scripts (it is developed and tested on the current LTS) and adds nothing to your project's build.
 
 ### Supported Hosts
 
@@ -113,7 +113,7 @@ Add these entries to your `.gitignore` — the engine and what is generated from
 ```
 
 > [!TIP]
-> **Vendoring**: To commit the engine into your repo (so teammates get it without reinstalling), simply omit the engine entries from `.gitignore`. A project whose `.gitignore` still lists the earlier graph paths (`/.magicspec/*graph*.*`, `/.magicspec/wiki/`) can keep them until the first `export-wiki` run has moved the files into `.magicspec/graph/`.
+> **Vendoring**: To commit the engine into your repo (so teammates get it without reinstalling), omit the engine entries from `.gitignore` **and** add the engine folder to `.gitattributes` — for example `/.agents/skills/magicspec/** -text`. Without it, a teammate whose Git converts line endings on checkout (the Windows default, `core.autocrlf=true`) gets CRLF copies, and the integrity check reports every engine file as modified at every commit. `init` prints the exact lines for your layout. A project whose `.gitignore` still lists the earlier graph paths (`/.magicspec/*graph*.*`, `/.magicspec/wiki/`) can keep them until the first `export-wiki` run has moved the files into `.magicspec/graph/`.
 
 ### Removal
 
@@ -211,6 +211,7 @@ Each command accepts optional arguments to scope the operation to a specific **w
 | [**Distribution Guide**](./docs/distribution.md) | Integration patterns, manual install, and update instructions |
 | [**Context Economy**](./docs/context-economy.md) | What the engine keeps small, size budgets, and how to measure a session |
 | [**Migrating from 2.x**](./docs/migration.md) | The one command that takes a 2.x project to the 3.0 layout |
+| [**Developing the Engine**](./docs/development.md) | Layout, the harness, C14, the command tables, releasing |
 | [**Contributing**](./CONTRIBUTING.md) | How to develop, test, and extend the engine |
 
 ## 🛟 Support
@@ -219,7 +220,7 @@ If you encounter issues or have questions — open an [Issue](https://github.com
 
 ## 🏗️ Contributing
 
-We welcome contributions! See the [**Contributing Guide**](./CONTRIBUTING.md) for details.
+We welcome contributions! See [**Developing the Engine**](./docs/development.md) to get started and the [**Contributing Guide**](./CONTRIBUTING.md) for the conventions.
 
 ## 👥 Authors and Acknowledgments
 

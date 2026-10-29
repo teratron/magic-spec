@@ -1,9 +1,12 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('init', module);
+
 const fs = require('fs');
 const path = require('path');
-const { execSync } = require('child_process');
+const { spawnSync } = require('child_process');
 const {
     normalizePath,
     engineRoot,
@@ -95,6 +98,9 @@ function getTemplate(name, placeholders = {}) {
     return content;
 }
 
+/** @param {string} p - Absolute path. @returns {string} The path as printed: project-relative, forward slashes. */
+const shown = (p) => normalizePath(path.relative(projectRoot, p));
+
 function createGlobalFiles() {
     if (!fs.existsSync(designDir)) fs.mkdirSync(designDir, { recursive: true });
 
@@ -102,7 +108,7 @@ function createGlobalFiles() {
     if (!fs.existsSync(workspacePath)) {
         const content = getTemplate('workspace.json');
         fs.writeFileSync(workspacePath, content);
-        console.log(`✅ Created ${normalizePath(workspacePath)}`);
+        console.log(`✅ Created ${shown(workspacePath)}`);
     }
 
     const indexPath = path.join(designDir, 'INDEX.md');
@@ -112,14 +118,14 @@ function createGlobalFiles() {
             ENGINE_VERSION: engineVersion,
         });
         fs.writeFileSync(indexPath, content);
-        console.log(`✅ Created ${normalizePath(indexPath)}`);
+        console.log(`✅ Created ${shown(indexPath)}`);
     }
 
     const rulesPath = path.join(designDir, 'RULES.md');
     if (!fs.existsSync(rulesPath)) {
         const content = getTemplate('rules.md', { DATE: date });
         fs.writeFileSync(rulesPath, content);
-        console.log(`✅ Created ${normalizePath(rulesPath)}`);
+        console.log(`✅ Created ${shown(rulesPath)}`);
     }
 }
 
@@ -140,7 +146,7 @@ function initWorkspace(workspaceDir) {
     if (!fs.existsSync(indexPath)) {
         const content = getTemplate('workspace-index.md', { DATE: date });
         fs.writeFileSync(indexPath, content);
-        console.log(`✅ Created ${normalizePath(indexPath)}`);
+        console.log(`✅ Created ${shown(indexPath)}`);
     }
 }
 
@@ -153,17 +159,27 @@ if (isGlobalRegistry) {
 
 // Auto-install Git hooks if in a git repo
 if (fs.existsSync(path.join(projectRoot, '.git'))) {
-    try {
-        console.log('🔗 Installing Magic Git hooks...');
-        const executorPath = path.join(__dirname, 'executor.js');
-        execSync(`node "${executorPath}" install-hooks`, { stdio: 'inherit', cwd: projectRoot });
-    } catch (e) {
+    console.log('🔗 Installing Magic Git hooks...');
+    const executorPath = path.join(__dirname, 'executor.js');
+    // The installer's own words (a hook of the project's, a redirected hooks folder) are the
+    // reason worth recording; they are shown as they come and kept for the digest.
+    const installed = spawnSync(process.execPath, [executorPath, 'install-hooks'], {
+        cwd: projectRoot,
+        encoding: 'utf8',
+        stdio: ['ignore', 'inherit', 'pipe'],
+    });
+    if (installed.stderr) process.stderr.write(installed.stderr);
+    if (installed.status !== 0) {
         console.warn('Note: Could not automatically install Git hooks.');
+        const reason =
+            (installed.stderr || '').split('\n').find((line) => line.trim()) ||
+            installed.error?.message ||
+            `exit ${installed.status}`;
         diagnostics.record({
             severity: 'warning',
             source: 'init',
             code: 'GIT_HOOKS_NOT_INSTALLED',
-            message: `Could not automatically install Git hooks: ${e.message}`,
+            message: `Could not automatically install Git hooks: ${reason.trim()}`,
         });
     }
 }
@@ -186,4 +202,16 @@ for (const name of requestedHosts) {
             `   ${LABELS[row.action] || row.action}: ${row.path}${row.detail ? ` — ${row.detail}` : ''}`,
         );
     }
+}
+
+// Version-control guidance: the engine and what is generated from it are installed
+// dependencies; vendoring the engine instead needs one line so that line-ending conversion
+// on another machine cannot make the integrity check fail.
+const guidance = hosts.versionControlLines(requestedHosts, projectRoot);
+console.log('');
+console.log('📋 Add to .gitignore (the engine and what is generated from it are installed, like node_modules/):');
+for (const line of guidance.ignore) console.log(`   ${line}`);
+if (guidance.engineInProject) {
+    console.log('   To commit the engine instead (vendoring), leave its folder out of .gitignore and add to .gitattributes:');
+    console.log(`   /${guidance.engineInProject}/** -text`);
 }

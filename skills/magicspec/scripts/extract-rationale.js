@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('extract-rationale', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -8,6 +11,9 @@ const {
     loadGitignore,
     resolveProjectRoot,
     engineRoot,
+    compilePathEntry,
+    PATH_PATTERN_CHARS,
+    isSkippedDir,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -22,8 +28,14 @@ process.chdir(resolveProjectRoot());
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
 
-const scopeIdx = args.indexOf('--scope');
-const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : null;
+// `--scope x` and `--scope=x` mean the same.
+const scopeIdx = args.findIndex((a) => a === '--scope' || a.startsWith('--scope='));
+const scopeOverride =
+    scopeIdx === -1
+        ? null
+        : args[scopeIdx].startsWith('--scope=')
+          ? args[scopeIdx].slice('--scope='.length) || null
+          : args[scopeIdx + 1] || null;
 
 const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
 
@@ -133,7 +145,11 @@ function collectSourceFiles(dir, isIgnored, results = []) {
         if (isIgnored(relPath)) continue;
 
         if (entry.isDirectory()) {
-            if (SKIP_DIRS.has(entry.name) || ENGINE_DIRS.has(path.resolve(fullPath))) continue;
+            if (
+                isSkippedDir(SKIP_DIRS, entry.name, relPath) ||
+                ENGINE_DIRS.has(path.resolve(fullPath))
+            )
+                continue;
             collectSourceFiles(fullPath, isIgnored, results);
         } else if (entry.isFile()) {
             const ext = path.extname(entry.name).toLowerCase();
@@ -266,6 +282,18 @@ function extractReferencePaths(content) {
     return paths;
 }
 
+/** @type {Map<string, ReturnType<typeof compilePathEntry>>} Compiled pattern references, by text. */
+const patternCache = new Map();
+
+/**
+ * @param {string} refPath - A Canonical Reference that holds a wildcard.
+ * @returns {ReturnType<typeof compilePathEntry>} Its compiled matcher.
+ */
+function patternFor(refPath) {
+    if (!patternCache.has(refPath)) patternCache.set(refPath, compilePathEntry(refPath));
+    return patternCache.get(refPath);
+}
+
 /**
  * Check if a file path is covered by any Canonical Reference.
  *
@@ -286,6 +314,11 @@ function checkCoverage(filePath, refMap) {
 
     // Directory prefix match (e.g., `skills/magicspec/templates/` covers `skills/magicspec/templates/spec.md`)
     for (const [refPath, specFile] of refMap) {
+        // A pattern reference (one definition: `utils.compilePathEntry`) covers what it matches.
+        if (PATH_PATTERN_CHARS.test(refPath)) {
+            if (patternFor(refPath).test(normalized)) return { covered: true, spec: specFile };
+            continue;
+        }
         if (refPath.endsWith('/') && normalized.startsWith(refPath)) {
             return { covered: true, spec: specFile };
         }
@@ -345,7 +378,7 @@ function resolveScanDirs() {
  *
  * @param {string[]} scanDirs - Directories to scan.
  * @param {Map<string, string>} refMap - Canonical reference map.
- * @returns {{ rationale: object[], shadow_logic: object[], summary: object }}
+ * @returns {{ rationale: object[], shadow_logic: object[], summary: object, warnings: object[] }}
  */
 function scan(scanDirs, refMap) {
     /** @type {object[]} */
@@ -361,12 +394,37 @@ function scan(scanDirs, refMap) {
 
     // Collect all source files, honoring .gitignore (Invariant 7: Gitignore Safety)
     const isIgnored = loadGitignore('.');
-    const allFiles = [];
+    const collected = new Set();
+    /** @type {Array<{type: string, message: string, fix: string}>} */
+    const warnings = [];
+    /** The whole project, walked once and only when a scope entry is not a plain existing path. */
+    let wholeProject = null;
     for (const dir of scanDirs) {
-        if (fs.existsSync(dir)) {
-            collectSourceFiles(dir, isIgnored, allFiles);
+        const entry = compilePathEntry(dir);
+        // A plain folder or file that exists is read where it is: no need to walk the project.
+        if (!entry.isPattern && fs.existsSync(dir)) {
+            if (fs.statSync(dir).isDirectory()) {
+                for (const f of collectSourceFiles(dir, isIgnored, [])) collected.add(f);
+            } else if (SOURCE_EXTENSIONS.has(path.extname(dir).toLowerCase())) {
+                collected.add(path.resolve(dir));
+            }
+            continue;
         }
+        // Anything else is matched against the project's files, one definition for what an entry means.
+        wholeProject = wholeProject || collectSourceFiles('.', isIgnored, []);
+        const hits = wholeProject.filter((abs) =>
+            entry.test(normalizePath(path.relative('.', abs))),
+        );
+        if (hits.length === 0) {
+            warnings.push({
+                type: 'SCOPE_NO_MATCH',
+                message: `Scope entry '${dir}' matches no source file in the project.`,
+                fix: 'Correct the entry in workspace.json (a folder, a file, or a pattern with * and **).',
+            });
+        }
+        for (const f of hits) collected.add(f);
     }
+    const allFiles = [...collected];
 
     for (const absPath of allFiles) {
         const relPath = normalizePath(path.relative('.', absPath));
@@ -436,7 +494,7 @@ function scan(scanDirs, refMap) {
         ),
     };
 
-    return { rationale, shadow_logic, summary };
+    return { rationale, shadow_logic, summary, warnings };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -446,13 +504,16 @@ function scan(scanDirs, refMap) {
 /**
  * Print a human-readable summary of rationale extraction results.
  *
- * @param {{ rationale: object[], shadow_logic: object[], summary: object }} result
+ * @param {{ rationale: object[], shadow_logic: object[], summary: object, warnings: object[] }} result
  */
 function printHumanReadable(result) {
-    const { summary, shadow_logic, rationale } = result;
+    const { summary, shadow_logic, rationale, warnings } = result;
 
     console.log('Rationale Extraction Report');
     console.log('===========================\n');
+
+    for (const w of warnings || []) console.log(`WARNING ${w.type}: ${w.message}`);
+    if (warnings && warnings.length > 0) console.log('');
 
     console.log(`Total rationale comments : ${summary.total_rationale}`);
     console.log(`Covered by specs         : ${summary.covered_rationale}`);

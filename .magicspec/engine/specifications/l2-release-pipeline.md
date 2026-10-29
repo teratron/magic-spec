@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 2.2.0
+**Version:** 2.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -61,6 +61,21 @@ tag v* pushed
 3. **Smoke-check the archive**: the finished archive is listed and piped to `scripts/archive-composition.js check`, which fails the job on any path outside the composition or any missing required file.
 4. **Create GitHub Release**: tag `v{version}`, title `v{version}`, notes generated inline (install instructions + changelog link). Retry loop (≤4 attempts): on `already exists` → `gh release upload --clobber`; on `rate limit` → backoff `attempt × 900s`; other errors → fail with the captured status.
 
+### 5.2a The Release Script `[ADDED]`
+
+The tag push starts the workflow above and cannot be recalled, so the script that makes the tag (`scripts/release.js`, run by `/magicspec-dev:release`) publishes only when it is told to. **The defect** (simulation pass, engine 3.0.0; reproduced in a clone whose origin was a scratch bare repository): the script read no arguments, so `release.js --help` ran the QA gate, C14 and the sync, committed with `git add .` — an untracked scratch file went into the release commit — tagged the current commit, pushed the local `master` (stale: it did not hold the release commit) and the tag, and reported success; an existing tag only produced a warning before the push.
+
+**Required**:
+
+1. **Plan by default.** `release.js` with no option prints the version, the branch, the tag and what blocks the release, and changes nothing; it exits 0 when ready and 1 when blocked. `--help` prints the usage; an unknown argument exits 2.
+2. **`--yes` publishes.** Only then: the QA gate (`node tests/engine.js`), C14 and the sync, one release commit of what those steps changed, the tag, and a push of the **current branch** and the tag.
+3. **Blockers**, checked before anything is changed and again named under `--yes`: the working tree is not clean (the release commit must hold only what the release steps change, so a clean tree allows `git add -A`), `HEAD` is not on a branch, `CHANGELOG.md` has no entry for the version, the tag already exists locally. A version that C14 moves during the run stops the release before the commit (the entry and the tag would disagree).
+4. **Consent.** The workflow body (`skills/magicspec-dev/workflows/release.md`) has the agent show the plan and ask one consent question (an external release artifact, C27 E2) before it runs `--yes`.
+
+### 5.2b The Test Workflow `[ADDED]`
+
+`.github/workflows/test.yml` runs `npm test` (the regression harness) on every push to `master` and `develop` and on every pull request, on Ubuntu and Windows with the current LTS of Node.js, so a red harness is seen where the change is made and not at release time. The harness depends on no file a fresh clone lacks (the gitignored rule projection under `.agents/rules/` is compared with the source where it exists and skipped where it does not). `Assumption (forecast)`: the first CI run may expose an assumption of the Windows development machine; the workflow is the place that shows it.
+
 ### 5.3 Engine-Version Tracking [RETIRED]
 
 The earlier constraint — a change confined to `workflows/`, `skills/` or `rules/` did not bump the engine version, because the manifest covered `.magic/` only — is gone with the layout that produced it. The manifest covers the whole product folder ([l2-skill-layout.md](l2-skill-layout.md) §5.4), so every edit inside it is a version event of its own and the tag advances with it. A change outside the folder is not part of the product.
@@ -74,6 +89,8 @@ The earlier constraint — a change confined to `workflows/`, `skills/` or `rule
 | Alias | Path | Purpose |
 | --- | --- | --- |
 | `[CI]` | `.github/workflows/release.yml` | The release workflow this spec documents |
+| `[TEST-CI]` | `.github/workflows/test.yml` | The workflow that runs the regression harness (§5.2b) |
+| `[RELEASE-SCRIPT]` | `scripts/release.js` | The script that makes the tag (§5.2a) |
 | `[VERSION]` | `skills/magicspec/.version` | Single source for the release tag and archive name |
 | `[DIST]` | `docs/distribution.md` | User-facing install reference linked from release notes; its host and target-directory content is mandated by **C17 (Adapter Distribution Reference)** |
 
@@ -81,7 +98,8 @@ The earlier constraint — a change confined to `workflows/`, `skills/` or `rule
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 2.2.0 | 2026-10-28 | Agent | The archive composition and its smoke step as built ([l2-skill-distribution.md](l2-skill-distribution.md) §5.5): the workflow builds the archive from the list printed by `scripts/archive-composition.js list` and runs `unzip -Z1 … | scripts/archive-composition.js check --prefix …`, which exits non-zero on a path outside the composition or a missing required file; the "no archive content test" gap in §7 is closed. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
+| 2.3.0 | 2026-10-29 | Agent | **§5.2a The Release Script** (plan by default, `--yes` to publish, the blockers, the current branch, consent) and **§5.2b The Test Workflow**, from a simulation pass in which `release.js --help` published a release in a scratch clone. Specification changed together with the code; cases named in [l2-test-suite.md](l2-test-suite.md). |
+| 2.2.0 | 2026-10-28 | Agent | The archive composition and its smoke step as built ([l2-skill-distribution.md](l2-skill-distribution.md) §5.5): the workflow builds the archive from the list printed by `scripts/archive-composition.js list` and runs `unzip -Z1 … \| scripts/archive-composition.js check --prefix …`, which exits non-zero on a path outside the composition or a missing required file; the "no archive content test" gap in §7 is closed. Status reverted`Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 2.0.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.0 | 2026-10-28 | Agent | The pipeline packages the one product folder, `skills/magicspec/` ([l1-skill-packaging.md](l1-skill-packaging.md), [l2-skill-layout.md](l2-skill-layout.md) §5.2), and reads the engine version from its `.version`. §5.3 (the engine-version tracking constraint) is retired: the manifest now covers the whole folder, so a change to any body, role, template, script or the rule source is a version event on its own — the gap the constraint recorded no longer exists, and §7's deferred checksum-scope alternative is adopted. The archive composition proper (the layout inside the archive, the host install instructions and the smoke step) is the release step of [l2-skill-distribution.md](l2-skill-distribution.md) §5.5 and lands with the 3.0.0 release. Status reverted `Stable → RFC` (Amendment Rule, major) and re-promoted to `Stable` after the Post-Update Review in the same pass. |

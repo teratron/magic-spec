@@ -1,9 +1,35 @@
 #!/usr/bin/env node
 'use strict';
 
+// The engine's scripts use APIs from Node 16.9 on and are run on current LTS releases; an older
+// runtime would fail somewhere inside them with a TypeError, so it is refused here, first.
+const MIN_NODE_MAJOR = 18;
+if (Number(process.versions.node.split('.')[0]) < MIN_NODE_MAJOR) {
+    console.error(`HALT: Node.js ${MIN_NODE_MAJOR} or newer is required (found ${process.version}).`);
+    process.exit(1);
+}
+
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+
+// The executor's own modules: when one is missing the engine folder is damaged, and a stack trace
+// from the loader is no way to say so.
+const ENGINE_FOLDER = path.resolve(__dirname, '..');
+let utils;
+let commands;
+try {
+    utils = require('./utils');
+    commands = require('./lib/commands');
+} catch (err) {
+    if (err && err.code === 'MODULE_NOT_FOUND') {
+        console.error(
+            `HALT: The engine is damaged: a file it needs is missing (${String(err.message).split('\n')[0]}). Restore ${ENGINE_FOLDER} from the release archive.`,
+        );
+        process.exit(1);
+    }
+    throw err;
+}
 const {
     parseFlags,
     resolveProjectRoot,
@@ -11,7 +37,7 @@ const {
     LEGACY_STATE_DIR_NAME,
     WORKSPACE_NAME_RE,
     executorHint,
-} = require('./utils');
+} = utils;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // UNIVERSAL EXECUTOR (Engine Kernel Proxy)
@@ -32,13 +58,33 @@ const scriptName = process.argv[2];
 let args = process.argv.slice(3);
 
 if (!scriptName) {
-    console.error('Usage: node executor.js <script-name> [args...]');
+    console.error(commands.listText(executorHint()));
     process.exit(1);
+}
+
+// A request for the command list, or for the help of one command, is answered here, from the
+// command table, before the project is looked at and before any script starts: nothing that
+// asks what a command does can reach code that writes.
+if (['--help', '-h', 'help'].includes(scriptName)) {
+    console.log(commands.listText(executorHint()));
+    process.exit(0);
 }
 
 if (!SCRIPT_NAME_RE.test(scriptName)) {
     console.error(`HALT: Invalid script name '${scriptName}'. Must match ${SCRIPT_NAME_RE}.`);
     process.exit(1);
+}
+
+if (!commands.isCommand(scriptName)) {
+    console.error(`HALT: Unknown command '${scriptName}'.`);
+    console.error(commands.listText(executorHint()));
+    process.exit(1);
+}
+
+const commandEntry = commands.COMMANDS[scriptName];
+if (!commandEntry.ownHelp && (args.includes('--help') || args.includes('-h'))) {
+    console.log(commands.helpText(scriptName, executorHint()));
+    process.exit(0);
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -74,6 +120,15 @@ if (flagErrors.length > 0) {
 
 args = passThroughArgs;
 
+// What the command is given is checked against its entry before the project is opened, so a
+// misspelled option stops here instead of reaching a script that ignores it and runs.
+const argErrors = commands.validateArgv(scriptName, args);
+if (argErrors.length > 0) {
+    console.error(`HALT: ${argErrors[0]}`);
+    console.error(`Usage: ${executorHint()} ${commands.usageLine(scriptName)}   (see --help)`);
+    process.exit(1);
+}
+
 let projectRoot;
 try {
     projectRoot = resolveProjectRoot({ root: flagValues['--root'] });
@@ -95,7 +150,7 @@ if (hasLegacyState && !MIGRATION_SAFE.has(scriptName)) {
     const both = fs.existsSync(path.join(projectRoot, STATE_DIR_NAME));
     console.error(
         both
-            ? `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist: a migration was started and not finished (or ${STATE_DIR_NAME}/ was created by mistake). Run \`${executorHint()} migrate\` to see what is left, then \`--apply\` to finish it.`
+            ? `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist: a migration was started and not finished (or ${STATE_DIR_NAME}/ was created by mistake). Run \`${executorHint()} migrate\`: it names the one action that unblocks the migration, and \`--apply\` then finishes it.`
             : `HALT: This project uses the 2.x layout (${LEGACY_STATE_DIR_NAME}/). Run \`${executorHint()} migrate\` to see the plan, then \`--apply\` to migrate it.`,
     );
     process.exit(1);
@@ -138,11 +193,13 @@ if (fs.existsSync(workspaceJsonPath)) {
 
             if (workspaceEntry) {
                 const targetPath = path.join(projectRoot, STATE_DIR_NAME, workspaceName);
-                if (!fs.existsSync(targetPath)) {
-                    // WI-9: Auto-mkdir the standard
-                    // subtree instead of silently falling back to the state folder root.
-                    // The previous fallback caused spec/task artifacts to accumulate
-                    // at the global registry level, breaking per-workspace isolation.
+                // WI-9: a command that writes into the workspace gets the standard subtree
+                // instead of a silent fallback to the state folder root (that fallback made
+                // spec/task artifacts accumulate at the global registry level, breaking
+                // per-workspace isolation). A command that only reads never creates it: a
+                // briefing promises zero writes, and what a missing folder means is for the
+                // command to report. The note goes to stderr, so a `--json` stdout stays one document.
+                if (!fs.existsSync(targetPath) && commandEntry.provisions) {
                     try {
                         const subtree = [
                             path.join(targetPath, 'specifications'),
@@ -152,7 +209,7 @@ if (fs.existsSync(workspaceJsonPath)) {
                         for (const dir of subtree) {
                             fs.mkdirSync(dir, { recursive: true });
                         }
-                        console.log(
+                        console.error(
                             `Note: Provisioned missing workspace directory '${STATE_DIR_NAME}/${workspaceName}/' (WI-9 auto-mkdir).`,
                         );
                     } catch (err) {
@@ -196,6 +253,44 @@ if (workspaceData) {
 }
 const childEnv = Object.assign({}, process.env, envVars);
 
+// A script that needs a file the engine folder no longer holds would end in the loader's stack
+// trace, with nothing to say what happened or what to do. The local `require` calls of the script
+// and of the engine files it pulls in are read before it starts (comments aside), and a missing
+// file is reported once, with the remedy.
+/**
+ * @param {string} entry - Absolute path of the script about to run.
+ * @returns {Array<{file: string, by: string}>} Engine files that are required and absent.
+ */
+function missingEngineFiles(entry) {
+    const rel = (p) => path.relative(ENGINE_FOLDER, p).split(path.sep).join('/');
+    const seen = new Set();
+    const missing = [];
+    const queue = [entry];
+    while (queue.length > 0) {
+        const current = queue.pop();
+        if (seen.has(current)) continue;
+        seen.add(current);
+        let source;
+        try {
+            source = fs.readFileSync(current, 'utf8');
+        } catch {
+            continue;
+        }
+        const code = source
+            .replace(/\/\*[\s\S]*?\*\//g, '')
+            .replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
+        for (const match of code.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) {
+            const base = path.resolve(path.dirname(current), match[1]);
+            const found = [base, `${base}.js`, `${base}.json`, path.join(base, 'index.js')].find(
+                (p) => fs.existsSync(p) && fs.statSync(p).isFile(),
+            );
+            if (!found) missing.push({ file: rel(base), by: rel(current) });
+            else if (found.endsWith('.js') && found.startsWith(ENGINE_FOLDER)) queue.push(found);
+        }
+    }
+    return missing;
+}
+
 // Generic script execution logic follows...
 const isWindows = process.platform === 'win32';
 const jsPath = path.join(__dirname, `${scriptName}.js`);
@@ -203,6 +298,23 @@ const shellExtension = isWindows ? '.ps1' : '.sh';
 const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
 
 let command, cmdArgs;
+
+const absent = fs.existsSync(jsPath) ? missingEngineFiles(jsPath) : [];
+if (absent.length > 0) {
+    const shown = absent
+        .slice(0, 5)
+        .map((m) => `${m.file} (needed by ${m.by})`)
+        .join(', ');
+    console.error(
+        `HALT: The engine is damaged: ${absent.length} file(s) it needs are missing — ${shown}${absent.length > 5 ? ', …' : ''}.`,
+    );
+    console.error(
+        utils.hasEngineWriteTooling()
+            ? `Restore them from git (git checkout -- ${path.relative(projectRoot, ENGINE_FOLDER).split(path.sep).join('/')}).`
+            : `Restore ${utils.engineRel()}/ from the release archive; do not regenerate .checksums.`,
+    );
+    process.exit(1);
+}
 
 if (fs.existsSync(jsPath)) {
     command = 'node';
@@ -226,8 +338,13 @@ const child = spawn(command, cmdArgs, {
     cwd: projectRoot,
 });
 
-child.on('exit', (code) => {
-    process.exit(code || 0);
+child.on('exit', (code, signal) => {
+    // A child ended by a signal has no exit code; reporting success for it would hide a kill.
+    if (code === null) {
+        console.error(`Script '${scriptName}' was ended by signal ${signal}.`);
+        process.exit(1);
+    }
+    process.exit(code);
 });
 
 child.on('error', (err) => {

@@ -87,7 +87,7 @@ Parse `[arg]` to determine execution mode:
 
 **Track Owner Context**: operational position of the agent owning a task — not itself a role. The owner adopts executor and reviewer roles in sequence. In Parallel mode, `@role:orchestrator` assigns tracks, serializes shared-file conflicts, and re-reads `INDEX.md` between dispatches (full protocol in `roles/orchestrator.md`).
 
-*Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions — the shared phase workbook is such a file (Task Start and `Attempts` writes).
+*Parallel Constraint*: serialize tasks modifying the same file to prevent race conditions — the shared phase workbook is such a file (Task Start and `Attempts` writes). `STATE.md` is not: every write to it goes through `update-state`, which takes a lock, so tracks may report to it at the same time without losing each other's entries.
 
 ## Workflow: Task Execution
 

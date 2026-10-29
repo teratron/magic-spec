@@ -1,0 +1,45 @@
+name: Tests
+
+# The engine's regression harness, on every push and pull request. A release runs the same
+# suite as its quality gate (`node scripts/release.js --yes`), so a red run here is a release
+# that would have stopped there.
+
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  harness:
+    name: harness (${{ matrix.os }}, node ${{ matrix.node }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        node: [22]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+
+      - name: Run the harness
+        run: npm test

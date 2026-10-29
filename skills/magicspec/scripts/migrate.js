@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('migrate', module);
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -11,6 +14,7 @@ const {
     normalizePath,
     hashFileSafe,
     executorHint,
+    parseFlags,
 } = require('./utils');
 const hosts = require('./lib/hosts');
 
@@ -301,14 +305,44 @@ function runEngine(root, script, args = []) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
+ * What a folder holds, for a message and for the decision whether it counts as absent.
+ *
+ * @param {string} dir - Absolute folder.
+ * @returns {string[]} Entry names (empty when the folder is empty or unreadable).
+ */
+function entriesOf(dir) {
+    try {
+        return fs.readdirSync(dir).sort();
+    } catch {
+        return [];
+    }
+}
+
+/**
  * Runs the migration.
  *
  * @param {string[]} argv - Arguments after the subcommand name.
  * @returns {number} Exit code.
  */
 function main(argv) {
-    const apply = argv.includes('--apply');
-    const hostArg = argv.find((a) => a.startsWith('--host='));
+    // The shared grammar: `--host=x` and `--host x` mean the same, a value-less `--host` is an
+    // error, and an unknown host stops the run at the plan, before anything is written.
+    const parsed = parseFlags(argv, { boolFlags: ['--apply'], valueFlags: ['--host'] });
+    if (parsed.errors.length > 0) {
+        console.error(`HALT: ${parsed.errors[0]}`);
+        return 1;
+    }
+    const apply = Boolean(parsed.flags['--apply']);
+    const hostArg = parsed.values['--host'] || null;
+    if (hostArg) {
+        const checked = hosts.parseHosts(hostArg);
+        if (checked.unknown.length > 0) {
+            console.error(
+                `HALT: Unknown host '${checked.unknown.join("', '")}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`,
+            );
+            return 1;
+        }
+    }
     const root = resolveProjectRoot();
     const state = detect(root);
     let stepNo = 0;
@@ -318,10 +352,18 @@ function main(argv) {
 
     try {
         step(1);
-        if (state.oldState && state.newState) {
+        // An empty new state folder is an artefact (a stray mkdir), not state: it counts as absent
+        // and is replaced by the rename. One that holds files is somebody's work: the command
+        // never merges or deletes it and names the one action that unblocks the run.
+        const newEntries = state.newState ? entriesOf(path.join(root, STATE_DIR_NAME)) : [];
+        const newStateIsEmpty = state.newState && newEntries.length === 0;
+        if (state.oldState && state.newState && !newStateIsEmpty) {
+            const shown = newEntries.slice(0, 5).join(', ') + (newEntries.length > 5 ? ', …' : '');
             console.error(
-                `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist. A migration was started and not finished, or ${STATE_DIR_NAME}/ was created by mistake. ` +
-                    `Recommended path: finish it with \`${executorHint()} migrate --apply\` once ${STATE_DIR_NAME}/ holds nothing you need; the old state folder is never deleted by this command.`,
+                `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist, and ${STATE_DIR_NAME}/ holds ${newEntries.length} entr${newEntries.length === 1 ? 'y' : 'ies'} (${shown}). ` +
+                    `A migration was started and not finished, or ${STATE_DIR_NAME}/ was created by mistake. ` +
+                    `Recommended path: move ${STATE_DIR_NAME}/ aside (for example rename it to ${STATE_DIR_NAME}-aside/), then run \`${executorHint()} migrate --apply\`; ` +
+                    `this command never merges into or deletes a state folder.`,
             );
             return 1;
         }
@@ -342,9 +384,23 @@ function main(argv) {
         // Without a manifest nothing of the engine folder is named, so only the wrappers are listed.
         const toRemove = [...removable, ...wrapperFiles];
         const manifestless = state.oldEngine && !state.manifest;
-        const hostList = hostArg
-            ? hostArg.slice('--host='.length).split(',').filter(Boolean)
-            : state.hostNames;
+        const hostList = hostArg ? hosts.parseHosts(hostArg).hosts : state.hostNames;
+
+        // Nothing left to move, rename or remove: the migration is finished, even when the engine
+        // folder is still there because files in it differ from the old manifest and were kept.
+        if (toRemove.length === 0 && !state.oldState) {
+            console.log('Migration complete: nothing is left to move, rename or remove.');
+            if (modified.length > 0) {
+                console.log(
+                    `${modified.length} file(s) of the old engine were kept because they differ from the old manifest (you changed them):`,
+                );
+                for (const rel of modified) console.log(`  - ${rel}`);
+                console.log(
+                    `Review them, then delete ${OLD_ENGINE_DIR}/ yourself; this command never deletes a file you changed.`,
+                );
+            }
+            return 0;
+        }
 
         console.log(
             apply
@@ -361,7 +417,7 @@ function main(argv) {
             `  2. Install the projections for: ${hostList.length > 0 ? hostList.join(', ') : '(no host found — run init --host=<name> afterwards)'}, and the pre-commit hook`,
         );
         console.log(
-            `  3. ${state.oldState ? `Rename ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/ and rewrite the workspace.json entries that name it` : 'State folder: nothing to rename'}`,
+            `  3. ${state.oldState ? `Rename ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/${newStateIsEmpty ? ` (the empty ${STATE_DIR_NAME}/ that is there is replaced)` : ''} and rewrite the workspace.json entries that name it` : 'State folder: nothing to rename'}`,
         );
         console.log(
             `  4. Remove ${toRemove.length} file(s) of the old engine, last${manifestless ? ' (the manifest is missing: the engine folder is kept)' : ''}`,
@@ -387,12 +443,6 @@ function main(argv) {
 
         step(5);
         for (const name of hostList) {
-            if (!Object.hasOwn(hosts.HOSTS, name)) {
-                console.error(
-                    `HALT: Unknown host '${name}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`,
-                );
-                return 1;
-            }
             console.log(`  ${hosts.HOSTS[name].label}`);
             for (const row of hosts.projectHost(name, root))
                 console.log(`    ${row.action}: ${row.path}`);
@@ -407,6 +457,7 @@ function main(argv) {
 
         step(6);
         if (state.oldState) {
+            if (newStateIsEmpty) fs.rmdirSync(path.join(root, STATE_DIR_NAME));
             fs.renameSync(path.join(root, LEGACY_STATE_DIR_NAME), path.join(root, STATE_DIR_NAME));
             console.log(`Renamed ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/`);
         }

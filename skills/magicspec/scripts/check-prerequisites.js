@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('check-prerequisites', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -122,6 +125,9 @@ if (fs.existsSync(checksumsFile)) {
         const checksums = JSON.parse(fs.readFileSync(checksumsFile, 'utf8'));
         const mismatchedFiles = [];
         const missingFiles = [];
+        // Files whose bytes equal the manifest's once line endings are normalized: a checkout that
+        // converts line endings (autocrlf) does this to every file. Not drift; reported once.
+        const eolOnlyFiles = [];
         for (const [relPath, storedHash] of Object.entries(checksums)) {
             if (relPath === '.checksums') continue;
             const normalizedRelPath = normalizePath(relPath);
@@ -129,10 +135,12 @@ if (fs.existsSync(checksumsFile)) {
             if (fs.existsSync(fullPath)) {
                 const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
-                    mismatchedFiles.push({
-                        file: normalizedRelPath,
-                        delta: describeManifestDelta(fullPath, storedHash),
-                    });
+                    const delta = describeManifestDelta(fullPath, storedHash);
+                    if (delta && delta.lineEndingsOnly) {
+                        eolOnlyFiles.push({ file: normalizedRelPath, found: delta.found });
+                    } else {
+                        mismatchedFiles.push({ file: normalizedRelPath, delta });
+                    }
                 }
             } else {
                 // A listed file that is gone is drift of the same kind as an edited
@@ -152,6 +160,14 @@ if (fs.existsSync(checksumsFile)) {
                 'ENGINE_INTEGRITY',
                 `'${ENGINE_REL}/${file}' is missing locally.${canRunC14 ? '' : RESTORE_HINT}`,
                 canRunC14 ? C14_FIX : null,
+            );
+        }
+        if (eolOnlyFiles.length > 0) {
+            const styles = [...new Set(eolOnlyFiles.map((f) => f.found))].join('/');
+            warn(
+                'ENGINE_LINE_ENDINGS',
+                `${eolOnlyFiles.length} file(s) of ${ENGINE_REL}/ differ from the release only in line endings (found ${styles}); they are treated as unchanged.`,
+                `Add \`/${ENGINE_REL}/** -text\` to .gitattributes so a checkout keeps the release bytes.`,
             );
         }
     } catch {
@@ -657,6 +673,15 @@ if (jsonOutput) {
     process.exit(0);
 } else {
     if (ok) {
+        // A pre-flight that finds nothing wrong still says so: silence is also what a script
+        // that failed to run looks like.
+        console.log(
+            `Pre-flight: ok — ${specCount} specification(s), ${stableCount} Stable` +
+                (warnings.length > 0 ? `; ${warnings.length} advisory finding(s):` : '.'),
+        );
+        for (const w of warnings) {
+            console.log(`[${w.type}] ${w.message}${w.fix ? ` 💡 Fix: ${w.fix}` : ''}`);
+        }
         process.exit(0);
     } else {
         let errorMsg = `Missing required artifacts: ${missing.join(', ')}`;

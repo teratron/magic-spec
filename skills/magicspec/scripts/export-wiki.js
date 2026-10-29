@@ -1,10 +1,14 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('export-wiki', module);
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const {
+    normalizePath,
     resolveDesignRoot,
     resolveProjectRoot,
     executorHint,
@@ -80,6 +84,9 @@ function loadGraph() {
         cwd: rootDir,
         env: process.env,
         timeout: 60000,
+        // The graph arrives on stdout; the default 1 MiB buffer ended the run with a stack trace
+        // at about two thousand specifications.
+        maxBuffer: 256 * 1024 * 1024,
     });
     return JSON.parse(stdout.toString('utf8'));
 }
@@ -436,7 +443,7 @@ function main() {
         writeAtomic(path.join(outDir, `${specSlug(s)}.md`), article);
     }
 
-    const relOut = path.relative(rootDir, outDir) || outDir;
+    const relOut = normalizePath(path.relative(rootDir, outDir) || outDir);
     console.log(`Wiki exported → ${relOut}`);
     console.log(`  ${workspaces.length} workspaces · ${specs.length} specs · 1 index`);
 

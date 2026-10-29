@@ -2,7 +2,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { engineRoot, engineRel, normalizePath } = require('../utils');
+const {
+    engineRoot,
+    engineRel,
+    normalizePath,
+    STATE_DIR_NAME,
+    GRAPH_DIR_NAME,
+} = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOST PROJECTIONS (rule, command entries, skill link)
@@ -454,11 +460,45 @@ function removeProjections(rootDir) {
     return removed;
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Version-control guidance
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The lines a project adds to `.gitignore` so the engine and what is generated from it stay
+ * out of its history: the engine and each host's copy of the skill, the rule and command
+ * projections of the named hosts, and the graph and cache folders under the state folder.
+ *
+ * @param {string[]} hostNames - Hosts the project is set up for; may be empty.
+ * @param {string} rootDir - Project root.
+ * @returns {{ignore: string[], engineInProject: string|null}} The lines, and the engine folder
+ *   relative to the project (null when it lies outside, for example in a shared cache).
+ */
+function versionControlLines(hostNames, rootDir) {
+    const rel = normalizePath(path.relative(rootDir, process.env.MAGIC_ENGINE_DIR || engineRoot()));
+    const engineInProject = rel && !rel.startsWith('..') && !path.isAbsolute(rel) ? rel : null;
+    const ignore = [];
+    const add = (line) => {
+        if (!ignore.includes(line)) ignore.push(line);
+    };
+    if (engineInProject) add(`/${engineInProject}/`);
+    for (const name of hostNames) {
+        const host = HOSTS[name];
+        add(`/${host.skills}/magicspec/`);
+        if (host.rule.kind === 'file') add(`/${host.rule.path}`);
+        if (host.commands) add(`/${host.commands.dir}/`);
+    }
+    add(`/${STATE_DIR_NAME}/${GRAPH_DIR_NAME}/`);
+    add(`/${STATE_DIR_NAME}/*cache*/`);
+    return { ignore, engineInProject };
+}
+
 module.exports = {
     HOSTS,
     RULE_MARKER,
     BLOCK_BEGIN,
     BLOCK_END,
+    versionControlLines,
     parseHosts,
     readCommands,
     readRuleSource,

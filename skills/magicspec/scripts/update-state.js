@@ -1,16 +1,26 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('update-state', module);
+
 // ═══════════════════════════════════════════════════════════════════════════
 // UPDATE-STATE — STATE.md update utility
 // ═══════════════════════════════════════════════════════════════════════════
 
 const fs = require('fs');
 const path = require('path');
-const { parseFlags, resolveProjectRoot, engineRoot, STATE_DIR_NAME } = require('./utils');
+const {
+    parseFlags,
+    resolveProjectRoot,
+    engineRoot,
+    normalizePath,
+    STATE_DIR_NAME,
+} = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { countItems } = require('./lib/checklist');
 const diagnostics = require('./lib/diagnostics');
+const { withFileLock } = require('./lib/file-lock');
 
 /**
  * Groups a Markdown list section into logical entries, keeping each entry's
@@ -390,6 +400,10 @@ function workspaceNameOf(designDir) {
  * Reads the existing state file, applies changes, and writes back.
  * Never exceeds 100 lines — prunes old Decisions if needed.
  *
+ * The read-modify-write runs under a lock: parallel tracks of one run report to the same file,
+ * and without it two reports at once keep only the later write. The lock file lives in the
+ * state folder's cache, which projects keep out of version control.
+ *
  * @param {string} designDir   Path to .magicspec/{workspace} directory.
  * @param {object} patch       Key-value pairs to apply.
  * @param {object} [options]   Optional flags.
@@ -398,6 +412,21 @@ function workspaceNameOf(designDir) {
  * @returns {void}
  */
 function updateState(designDir, patch, options = {}) {
+    const stateRoot =
+        path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
+    const lockPath = path.join(stateRoot, '.cache', `state-${workspaceNameOf(designDir)}.lock`);
+    return withFileLock(lockPath, () => applyStateUpdate(designDir, patch, options));
+}
+
+/**
+ * The read-modify-write itself; call `updateState`, which holds the lock around it.
+ *
+ * @param {string} designDir   Path to .magicspec/{workspace} directory.
+ * @param {object} patch       Key-value pairs to apply.
+ * @param {object} options     Optional flags (see `updateState`).
+ * @returns {void}
+ */
+function applyStateUpdate(designDir, patch, options) {
     const statePath = path.join(designDir, 'STATE.md');
     const templatePath = path.join(engineRoot(), 'templates', 'state.md');
 
@@ -737,7 +766,11 @@ function updateState(designDir, patch, options = {}) {
     // Persist
     // ───────────────────────────────────────────────────────────────────────
     fs.writeFileSync(statePath, content, 'utf8');
-    console.log(`[update-state] STATE.md updated: ${statePath}`);
+    // Project-relative with forward slashes when the file lies inside the working directory.
+    const relState = normalizePath(path.relative(process.cwd(), statePath));
+    console.log(
+        `[update-state] STATE.md updated: ${relState.startsWith('..') ? normalizePath(statePath) : relState}`,
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────────────

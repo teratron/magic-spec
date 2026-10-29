@@ -201,11 +201,8 @@ function hashFileSafe(filePath, retry = 5) {
         return hashFile(filePath);
     } catch (e) {
         if (retry > 0) {
-            // Synchronous delay via busy-wait (200ms)
-            const end = Date.now() + 200;
-            while (Date.now() < end) {
-                /* spin */
-            }
+            // Synchronous 200 ms pause that sleeps instead of burning a core.
+            Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, 200);
             return hashFileSafe(filePath, retry - 1);
         }
         throw e;
@@ -327,6 +324,31 @@ const BUILD_NOISE_DIRS = Object.freeze([
     'sandbox',
     '.hatch',
 ]);
+
+/**
+ * The generic build-output names of the floor. They are skipped only where they are build
+ * output — directly under the project root — because a nested folder of the same name
+ * (`internal/build`, `src/env`, a Go or Java package) is ordinary source, and skipping it would
+ * leave a blind spot that no scan reports. The other names of the floor are never source at
+ * any depth.
+ *
+ * @type {ReadonlyArray<string>}
+ */
+const ROOT_ONLY_NOISE_DIRS = Object.freeze(['env', 'ENV', 'dist', 'build', 'target', 'temp', 'sandbox']);
+
+/**
+ * Whether a scanner skips a directory entry by name.
+ *
+ * @param {Set<string>|ReadonlyArray<string>} skipNames - The scanner's skip set (the floor plus its own excludes).
+ * @param {string} name - The entry's own name.
+ * @param {string} relPath - The entry's forward-slash path relative to the project root.
+ * @returns {boolean} True when the name is in the set and, for a root-only name, the entry is at the root.
+ */
+function isSkippedDir(skipNames, name, relPath) {
+    const listed = skipNames instanceof Set ? skipNames.has(name) : skipNames.includes(name);
+    if (!listed) return false;
+    return !ROOT_ONLY_NOISE_DIRS.includes(name) || !String(relPath).includes('/');
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // Project Location (Single Source of Truth)
@@ -756,6 +778,162 @@ function loadGitignore(rootDir = '.') {
     };
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Paths Named by the Project
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Resolves a path that the project's own configuration names (`workspace.json` is part of the
+ * repository, so a cloned repository chooses it) and returns it only when it stays inside the
+ * project: relative, no `..` that leaves, and — through the nearest entry that exists — no link
+ * that leads out, a link whose target is missing included. Data read back from the project is data, never a place to write elsewhere.
+ *
+ * @param {string} rootDir - Project root.
+ * @param {unknown} relPath - The path as the configuration spells it.
+ * @returns {string|null} The absolute path, or null when it is not a path inside the project.
+ */
+function resolveInsideProject(rootDir, relPath) {
+    if (typeof relPath !== 'string' || relPath.trim() === '' || relPath.includes('\0')) return null;
+    if (path.isAbsolute(relPath)) return null;
+    const within = (base, target) => {
+        const rel = path.relative(base, target);
+        return rel === '' || (!rel.startsWith('..') && !path.isAbsolute(rel));
+    };
+    const resolved = path.resolve(rootDir, relPath);
+    if (!within(rootDir, resolved) || resolved === path.resolve(rootDir)) return null;
+    // The nearest component that exists as an entry, a link counting as one even when its target
+    // does not (`existsSync` follows the link and calls a dangling one absent, which let a write
+    // through a link to a missing outside file pass for a write in the project).
+    const realRoot = realPathOrSelf(rootDir);
+    let probe = resolved;
+    for (;;) {
+        let entry = null;
+        try {
+            entry = fs.lstatSync(probe);
+        } catch (err) {
+            if (err.code !== 'ENOENT' && err.code !== 'ENOTDIR') return null;
+        }
+        if (entry) {
+            if (entry.isSymbolicLink()) {
+                let target;
+                try {
+                    target = fs.realpathSync.native(probe);
+                } catch {
+                    return null; // a dangling link: where a write would land is not known
+                }
+                return within(realRoot, target) ? resolved : null;
+            }
+            return within(realRoot, realPathOrSelf(probe)) ? resolved : null;
+        }
+        const parent = path.dirname(probe);
+        if (parent === probe) return null;
+        probe = parent;
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Path Set Matching (Single Matcher Invariant)
+// ───────────────────────────────────────────────────────────────────────────
+
+/** Characters that make a path-set entry a pattern rather than a literal path. */
+const PATH_PATTERN_CHARS = /[*?]/;
+
+/**
+ * Canonical spelling of one path-set entry — a workspace `scope` element or a Canonical
+ * Reference `Path` cell: forward slashes, no leading `./` or `/`, no trailing slash.
+ *
+ * @param {string} entry - Entry as written.
+ * @returns {string} The entry; `''` stands for the whole project.
+ */
+function normalizePathEntry(entry) {
+    const spelled = normalizePath(String(entry).trim())
+        .replace(/^(\.\/)+/, '')
+        .replace(/^\/+/, '')
+        .replace(/\/+$/, '');
+    return spelled === '.' ? '' : spelled;
+}
+
+/**
+ * Compiles one path-set entry into a test over repository-relative, forward-slash paths.
+ * The one definition of what a scope entry or a reference path means:
+ *
+ *   `dir` or `dir/`   the folder itself and everything beneath it
+ *   `file.ext`        exactly that file
+ *   `*`               any characters within one path segment
+ *   `**`              any characters across segments
+ *
+ * Matching is anchored at the repository root and case-sensitive. A pattern that names a
+ * folder (`src/*`) covers what lies beneath what it matches, as a plain folder does.
+ *
+ * @param {string} entry - Entry as written.
+ * @returns {{entry: string, source: string, isPattern: boolean, staticPrefix: string, test: function(string): boolean}}
+ *   `staticPrefix` is the leading run of segments without a wildcard (the folder a pattern lives under).
+ */
+function compilePathEntry(entry) {
+    const source = normalizePathEntry(entry);
+    if (source === '') {
+        return { entry, source, isPattern: false, staticPrefix: '', test: () => true };
+    }
+    const isPattern = PATH_PATTERN_CHARS.test(source);
+    const segments = source.split('/');
+    const firstWild = segments.findIndex((s) => PATH_PATTERN_CHARS.test(s));
+    const staticPrefix = (firstWild === -1 ? segments : segments.slice(0, firstWild)).join('/');
+    if (!isPattern) {
+        return {
+            entry,
+            source,
+            isPattern,
+            staticPrefix,
+            test: (p) => p === source || p.startsWith(`${source}/`),
+        };
+    }
+    const re = new RegExp(`^(?:${globToRegexSource(source)})(?:/.*)?$`);
+    return { entry, source, isPattern, staticPrefix, test: (p) => re.test(p) };
+}
+
+/**
+ * Compiles a list of path-set entries.
+ *
+ * @param {string[]} entries - Entries as written; blank ones are dropped.
+ * @returns {{
+ *   entries: ReturnType<typeof compilePathEntry>[],
+ *   matches: function(string): boolean,
+ *   matchedBy: function(string): (ReturnType<typeof compilePathEntry>|null),
+ *   unmatched: function(Iterable<string>): ReturnType<typeof compilePathEntry>[],
+ *   mayContain: function(string): boolean,
+ * }} `matches` — some entry covers the path; `matchedBy` — the first that does;
+ *   `unmatched` — the entries that cover none of the given paths (the Zero-Match Guard);
+ *   `mayContain` — whether something under the given top-level folder can match.
+ */
+function compilePathSet(entries) {
+    const compiled = (entries || [])
+        .filter((e) => String(e).trim() !== '')
+        .map((e) => compilePathEntry(e));
+    return {
+        entries: compiled,
+        matches: (p) => compiled.some((c) => c.test(p)),
+        matchedBy: (p) => compiled.find((c) => c.test(p)) || null,
+        unmatched: (paths) => {
+            const hit = compiled.map(() => false);
+            for (const p of paths) {
+                compiled.forEach((c, i) => {
+                    if (!hit[i] && c.test(p)) hit[i] = true;
+                });
+                if (hit.every(Boolean)) break;
+            }
+            return compiled.filter((_, i) => !hit[i]);
+        },
+        mayContain: (topLevel) =>
+            compiled.some((c) => {
+                if (c.source === '') return true;
+                const first = c.source.split('/')[0];
+                if (first === '**') return true;
+                if (!PATH_PATTERN_CHARS.test(first)) return first === topLevel;
+                return new RegExp(`^(?:${globToRegexSource(first)})$`).test(topLevel);
+            }),
+    };
+}
+
 /**
  * Resolves the root .magicspec/ directory that contains workspace.json.
  * If MAGIC_DESIGN_DIR points to a workspace subdirectory, walks up one level.
@@ -787,6 +965,11 @@ module.exports = {
     appendFileSafe,
     mkdirSafe,
     loadGitignore,
+    resolveInsideProject,
+    normalizePathEntry,
+    compilePathEntry,
+    compilePathSet,
+    PATH_PATTERN_CHARS,
     resolveDesignRoot,
     resolveProjectRoot,
     statePath,
@@ -800,6 +983,8 @@ module.exports = {
     STATE_DIR_NAME,
     LEGACY_STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
+    ROOT_ONLY_NOISE_DIRS,
+    isSkippedDir,
     WORKSPACE_NAME_RE,
     VOLATILE_STATE_FILES,
     hasEngineWriteTooling,

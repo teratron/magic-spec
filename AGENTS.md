@@ -224,7 +224,7 @@ Before finishing any task, verify:
   - Update relevant `.magicspec/` workspace index/specifications to reflect task completion.
 - [ ] **Synchronized**: Run metadata sync to ensure integrity:
   - `node skills/magicspec/scripts/executor.js update-engine-meta`
-  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (should show 5 files: AGENTS, GEMINI, CLAUDE, CODEX, QWEN). If broken, run `/magicspec-dev:init` to restore.
+  - **Hardlinks**: Verify integrity with `fsutil hardlink list AGENTS.md` (it lists `AGENTS.md` plus one file per host the dev init was given: `CLAUDE.md`, `CODEX.md`, `GEMINI.md`, `QWEN.md`; this checkout has all five). If broken, run `/magicspec-dev:init` **with the hosts you use** to restore — a bare run removes the managed links it does not recreate.
   - ⚠️ **Editing breaks links**: writing to any of the 5 agent files with an inode-replacing editor (most `write`/`edit` tools) silently delinks that file — the twins keep the old content. After editing one, re-run `/magicspec-dev:init` (or recreate the hardlinks) and re-verify with `fsutil hardlink list`.
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.magicspec/INDEX.md`) haven't lost data during edits.
 

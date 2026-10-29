@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./cli-guard').guardCli('generate-checksums', module);
+
 const fs = require('fs');
 const path = require('path');
 const { ENGINE_DIR, enginePath } = require('./engine-path');

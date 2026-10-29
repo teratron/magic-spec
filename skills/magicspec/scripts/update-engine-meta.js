@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('update-engine-meta', module);
+
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
@@ -104,6 +107,8 @@ function updateEngineMeta() {
     const isGitignored = loadGitignore(projectRoot);
 
     let anyChanged = false;
+    /** @type {string[]} Manifested files that differ from the manifest only in line endings. */
+    const eolOnly = [];
 
     /** @type {Set<string>} Manifest-eligible paths actually present on disk. */
     const onDisk = new Set();
@@ -134,15 +139,16 @@ function updateEngineMeta() {
 
             const currentHash = hashFileSafe(fullPath);
             if (oldChecksums[rel] !== currentHash) {
-                // A line-endings-only difference is the one cause worth naming on
-                // the line itself: it is common, and invisible in an editor.
                 const delta = isManifested
                     ? describeManifestDelta(fullPath, oldChecksums[rel])
                     : null;
-                const note = delta?.lineEndingsOnly
-                    ? ` — only line endings differ (found ${delta.found}, the release ships ${delta.expectedEol})`
-                    : '';
-                console.log(`✨ Detected change in: ${rel}${note}`);
+                // The bytes equal the manifest's once line endings are normalized: a checkout
+                // that converts them (autocrlf) does this to every file. Not drift.
+                if (delta?.lineEndingsOnly) {
+                    eolOnly.push(rel);
+                    return;
+                }
+                console.log(`✨ Detected change in: ${rel}`);
                 anyChanged = true;
             }
         });
@@ -155,6 +161,13 @@ function updateEngineMeta() {
     // here mirror generate-checksums.js exactly (history/, .checksums, volatile
     // caches), so a manifest key absent from `onDisk` is genuinely missing.
     const missingFiles = Object.keys(oldChecksums).filter((rel) => !onDisk.has(rel));
+
+    if (eolOnly.length > 0) {
+        console.log(
+            `ℹ️  ${eolOnly.length} engine file(s) differ from the release only in line endings; they are treated as unchanged. ` +
+                `To keep the release bytes on checkout, add \`/${ENGINE_REL}/** -text\` to .gitattributes.`,
+        );
+    }
 
     for (const rel of missingFiles) {
         console.log(`🗑️  Missing engine file: ${rel}`);

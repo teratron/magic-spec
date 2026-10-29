@@ -57,7 +57,6 @@ copilot-instructions.md
 .*/workflows/
 .agents/workflows/*
 !.agents/workflows/
-!.agents/workflows/magicspec-dev:*.md
 !.github/workflows/
 
 ## Skills

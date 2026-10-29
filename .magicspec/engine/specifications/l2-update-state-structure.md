@@ -1,6 +1,6 @@
 # update-state.js — Structure Defects (Locating, Grouping, Creating)
 
-**Version:** 1.1.3
+**Version:** 1.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -250,6 +250,20 @@ At creation, the template is instantiated (`instantiateStateTemplate()`), never 
 
 One harness case against the real script, mutation-checked: after a finalize-shaped creation no line holds a `{…}` placeholder, the workspace name is filled, the caller's value wins and no double blank remains; the first decision is the section's only entry; the counters recompute into the fence; a root-level design directory reads `unknown`.
 
+## 19. The Concurrent-Writer Defect (SC-2) `[ADDED]`
+
+### 19.1 The Defect
+
+`update-state.js` is a read-modify-write: it reads `STATE.md`, changes a section and writes the whole file back. `/magicspec:run` in Parallel mode (C3) has several tracks report to the one file (Task Start, a promoted constraint, a phase decision), and its Parallel Constraint named the phase workbook, not `STATE.md`, as the shared file. Two writers that read the same version keep only the later write. Reproduced at engine 3.0.0 with four concurrent `--decision` calls: all four exited 0 and two decisions survived — a silent loss, invisible to the writer that lost.
+
+### 19.2 Required Fix
+
+The read-modify-write runs under an exclusive lock: a lock file created with an exclusive flag in the state folder's cache (`.cache/state-{workspace}.lock`, kept out of version control by the cache guidance), taken before the file is read and released after it is written, in every exit path. A waiting writer retries at short randomized intervals and gives up after 15 seconds with a message that names the lock file; a lock older than 30 seconds belongs to a process that no longer exists and is taken over. The lock is the whole mechanism (`lib/file-lock.js`): the writers need no coordinator, and a process killed mid-write leaves nothing that outlives its age limit. `/magicspec:run`'s Parallel Constraint states that `STATE.md` is not a file tracks must serialize themselves.
+
+### 19.3 Regression Coverage
+
+One harness case against the real executor: four parallel writers each keep their entry and the lock is gone afterwards.
+
 ## Regression Coverage
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)), every fix needs a harness case:
@@ -281,6 +295,7 @@ None open. The register's one closure record for this file's defects is kept:
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.0 | 2026-10-29 | Agent | New **§19 — The Concurrent-Writer Defect**, the register's twenty-first defect: parallel `update-state` calls lost updates silently (four writers, two entries kept); the read-modify-write now runs under an exclusive lock file. Found by a simulation pass; implemented together with this entry. |
 | 1.1.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

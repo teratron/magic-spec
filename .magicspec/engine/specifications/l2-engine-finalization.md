@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.6.2
+**Version:** 3.7.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -10,6 +10,10 @@
 Internal helper library (`scripts/lib/`) that implements the finalization protocol — automatic version bumps, CHANGELOG entries, phase archival, and git utilities. These modules are invoked exclusively by `finalize.js` via `executor.js finalize`. The finalize pipeline is also the single choke point for the session-continuity guarantee SC-2 (post-workflow `STATE.md` update). The pipeline previously also carried SC-3 (commit suggestion guarantee); that guarantee was retired 2026-08-27 by explicit user directive — see [l1-session-continuity.md](l1-session-continuity.md). The categorical prohibition on the agent invoking write-side git operations, which survived that retirement, was itself retired 2026-09-17 — see §5.2 and [l1-session-continuity.md](l1-session-continuity.md) §1.4.
 
 This spec owns the **pipeline contract**: module inventory, invocation surface, opt-out, archival, and the terminal output block. Its two accumulated defect registers were extracted at v2.0.0 into focused child specs — [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) (the `STATE.md` correctness surface) and [l2-finalize-output-contract.md](l2-finalize-output-contract.md) (CHANGELOG bullets, stdout listings).
+
+## Configured Paths Stay Inside the Project `[ADDED]`
+
+`finalize` writes the project version and the root changelog at the paths `finalization.versionPath` and `finalization.changelogPath` of `workspace.json` name (defaults `{state folder}/.version` and `CHANGELOG.md`). `workspace.json` is part of the repository, so a cloned repository chooses them; the paths were resolved against the project root with no check, so a value such as `../../.profile`, an absolute path or a path through a link created and appended wherever it pointed — the same class as the registry's workspace names, which are guarded for that reason. **Required**: both paths resolve through `utils.resolveInsideProject`, which accepts a path only when it is relative, does not leave the project through `..`, is not the project folder itself, and — through the nearest entry that exists, a link counting as one even when its target is missing — does not leave it through a link (a dangling link is refused: where a write would land is not known); otherwise `finalize` exits 1 with `finalization.{key} in {state folder}/workspace.json must name a file inside the project` before it reads or writes anything. Found by an automated security review of the shipped scripts; reproduced in the case named in [l2-test-suite.md](l2-test-suite.md).
 
 ## Related Specifications
 
@@ -30,7 +34,7 @@ The finalization protocol (§3 of `skills/magicspec/AGENT-RULES.md`) requires se
 | Module | Responsibility |
 | --- | --- |
 | `changelog-writer.js` | Appends a given bullet to root `CHANGELOG.md` in Keep-a-Changelog form — pure insertion, does not compose bullet text. Also exports the `[Unreleased]` rotation helper (currently uncalled — see child spec §4.2). |
-| `commit-suggester.js` | Composes the CHANGELOG bullet text (`buildChangelogBullet`) using the pipeline's file-classification logic, then hands it to `changelog-writer.js` for insertion. Commit-message composition retired 2026-08-27 (SC-3 retirement). Output contract governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md). |
+| `changelog-bullets.js` | Composes the CHANGELOG bullet text (`buildChangelogBullet`) using the pipeline's file-classification logic, then hands it to `changelog-writer.js` for insertion. Commit-message composition retired 2026-08-27 (SC-3 retirement). Output contract governed by [l2-finalize-output-contract.md](l2-finalize-output-contract.md). |
 | `diagnostics.js` | Collects non-fatal engine findings and renders the digest drained by §8. Governed by [l2-engine-diagnostics.md](l2-engine-diagnostics.md). |
 | `git-utils.js` | Read-only git helpers: diff detection, staged-file enumeration, mtime queries. |
 | `phase-archiver.js` | Detects `status: Done` phase files, moves them to `archives/tasks/`, and rewrites link references in **both** `TASKS.md` and `PLAN.md`. Eligibility predicate governed by §6; index-rewrite contract by §7. |
@@ -200,7 +204,7 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 | `skills/magicspec/scripts/finalize.js` | Pipeline orchestrator; host of the §8 terminal block |
 | `skills/magicspec/scripts/lib/diagnostics.js` | Diagnostics collector drained by the §8 terminal block |
 | `skills/magicspec/scripts/lib/changelog-writer.js` | CHANGELOG append logic |
-| `skills/magicspec/scripts/lib/commit-suggester.js` | CHANGELOG bullet composition (commit-message generation retired 2026-08-27) |
+| `skills/magicspec/scripts/lib/changelog-bullets.js` | CHANGELOG bullet composition (commit-message generation retired 2026-08-27) |
 | `skills/magicspec/scripts/lib/git-utils.js` | Read-only git helpers |
 | `skills/magicspec/scripts/lib/phase-archiver.js` | Phase archival (§6) and the `TASKS.md`/`PLAN.md` index rewrites (§7) |
 | `skills/magicspec/scripts/lib/project-version.js` | `.magicspec/.version` semver management |
@@ -212,6 +216,8 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.7.0 | 2026-10-29 | Agent | New **Configured Paths Stay Inside the Project**: `finalization.versionPath` and `finalization.changelogPath` must name a file inside the project (relative, no `..` or link that leaves it) or `finalize` refuses before writing; the check is one shared function, `utils.resolveInsideProject`. |
+| 3.6.3 | 2026-10-29 | Agent | Reality sync: the bullet composer is `lib/changelog-bullets.js` (renamed from `commit-suggester.js`, whose name described the commit-message feature retired in 3.0.0 of this specification). No requirement changed. |
 | 3.6.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 3.6.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 3.6.0 | 2026-10-11 | Agent | §4 gains the **archival opt-out**: `archival.enabled: false` skips the archival step of `finalize --workflow=run` and nothing else (the explicit `archive-phases` command is unaffected), one informational line names the setting when eligible workbooks exist, and `archival.archiveDir` is withdrawn from the template because the location is fixed. The shipped template defined both keys and `rules/magic.md` §4 told users to set the first to `false`, but no script read the `archival` section (evidence and reproduction: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity); the only other switch, `finalization.enabled`, skips the whole pipeline, so a user who wanted archival alone off had no way to say so. The resolution is that section's `Assumption (forecast)`, which carries the runner-up and the override; this section gives it a contract and a regression case. Related Specifications gained the cross-reference. Source: a reference-mining pass over an external collection of agent configurations, recorded here by class only. Engine deployment is routed to `/magic.task engine`. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |

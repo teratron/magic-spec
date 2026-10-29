@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('record-diagnostic', module);
+
 const { parseFlags } = require('./utils');
 const { record } = require('./lib/diagnostics');
 

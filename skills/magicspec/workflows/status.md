@@ -21,7 +21,7 @@ Read-only resume briefing: where the project stands, what was last done and deci
 
 Examples: `/magicspec:status`, `/magicspec:status engine`.
 
-1. **Load**: read `workflows/status.md` and execute its steps.
+1. **Load**: resolve the workspace and read its `STATE.md`, `TASKS.md` and the registry (Step 1 below).
 2. **Brief**: render the seven-section briefing (Header → Position → Progress → Blockers & Constraints → Decisions → Engine → Next).
 3. **Recommend**: end with exactly one next command (Decision Record format) — never a question.
 
@@ -29,7 +29,7 @@ Examples: `/magicspec:status`, `/magicspec:status engine`.
 
 1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.magicspec/.cache/`; the sink is not an artifact and that is not a write in this sense.)
 2. **Context (Zero-Prompt)**: apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Optional `{workspace}` argument overrides.
-3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, it ends with that statement and no command; the briefing never invents one.
+3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, or is a note that names no command, it ends with that statement or note and no command; the briefing never invents one.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
 5. **Graceful Degradation**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})`, never a crash of the whole briefing.
 
@@ -54,6 +54,7 @@ Examples: `/magicspec:status`, `/magicspec:status engine`.
 7. **Next** — exactly one recommended command, or the nothing-pending statement:
    - STATE.md `Next Action` states that nothing is pending (it names no command) → render `Next: nothing pending — {the statement}` and recommend no command.
    - STATE.md `Next Action` present and names a command → recommend it verbatim.
+   - STATE.md `Next Action` present, names no `/magicspec:*` command and does not say nothing is pending (a note in the owner's words, for example a manual step to take first) → render `Next: {the text, verbatim}`, recommend no command of your own, and leave the note unrewritten.
    - Absent → compute by pipeline order: open `Todo` tasks → `/magicspec:run {workspace}`; registered specs without a plan → `/magicspec:task {workspace}`; empty registry → `/magicspec:spec`.
    - Format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)`
 

@@ -42,7 +42,7 @@ Performs a deep "Ventilation" scan: spec/code drift, missing coverage, engine me
 
 Examples: `/magicspec:analyze`, `/magicspec:analyze engine`, `/magicspec:analyze "check API"`, `/magicspec:analyze docs "focus on examples"`.
 
-1. **Analyze & Ventilate**: read `workflows/analyze.md` and execute its steps.
+1. **Analyze & Ventilate**: run the steps below for the mode the arguments select.
 2. **Report**: provide a consolidated report of findings and suggested repairs.
 3. **Advisory**: append actionable recommendations for spec quality, coverage, and structure improvements.
 

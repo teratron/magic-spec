@@ -143,4 +143,4 @@ The Retrospective system is Magic's heartbeat. It detects:
 
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
-[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Context Economy](context-economy.md) | [Engine Integrity (Checksums)](checksums.md)
+[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Developing the Engine](development.md) | [Context Economy](context-economy.md) | [Engine Integrity (Checksums)](checksums.md)

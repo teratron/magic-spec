@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('detect-communities', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -9,6 +12,7 @@ const {
     resolveProjectRoot,
     loadGitignore,
     BUILD_NOISE_DIRS,
+    isSkippedDir,
 } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -40,9 +44,11 @@ const args = process.argv.slice(2);
 
 /** @param {string} flag @param {number} def @returns {number} */
 function numArg(flag, def) {
-    const idx = args.indexOf(flag);
+    // `--flag n` and `--flag=n` mean the same.
+    const idx = args.findIndex((a) => a === flag || a.startsWith(`${flag}=`));
     if (idx === -1) return def;
-    const v = parseFloat(args[idx + 1]);
+    const raw = args[idx].startsWith(`${flag}=`) ? args[idx].slice(flag.length + 1) : args[idx + 1];
+    const v = parseFloat(raw);
     return Number.isFinite(v) ? v : def;
 }
 
@@ -85,7 +91,7 @@ function shouldSkip(absPath) {
     const rel = normalizePath(path.relative(rootDir, absPath));
     const parts = rel.split('/');
 
-    if (parts.some((p) => SKIP_DIRS.has(p))) return true;
+    if (parts.some((p, i) => isSkippedDir(SKIP_DIRS, p, parts.slice(0, i + 1).join('/')))) return true;
     if (SKIP_PATH_FRAGMENTS.some((f) => rel.includes(f))) return true;
     if (isGitignored(rel)) return true;
 
@@ -117,8 +123,9 @@ function scanDir(dir, result = []) {
         const abs = path.join(dir, entry.name);
         if (entry.isSymbolicLink()) continue;
         if (entry.isDirectory()) {
-            if (SKIP_DIRS.has(entry.name)) continue;
-            if (isGitignored(normalizePath(path.relative(rootDir, abs)))) continue;
+            const dirRel = normalizePath(path.relative(rootDir, abs));
+            if (isSkippedDir(SKIP_DIRS, entry.name, dirRel)) continue;
+            if (isGitignored(dirRel)) continue;
             scanDir(abs, result);
         } else if (entry.isFile() && SCAN_EXTENSIONS.has(path.extname(entry.name))) {
             if (!shouldSkip(abs)) result.push(abs);

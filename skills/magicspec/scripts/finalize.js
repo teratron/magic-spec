@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('finalize', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -9,6 +12,7 @@ const {
     parseFlags,
     resolveProjectRoot,
     statePath,
+    resolveInsideProject,
     STATE_DIR_NAME,
     WORKSPACE_NAME_RE,
 } = require('./utils');
@@ -21,7 +25,7 @@ const {
     gitFileNumstat,
 } = require('./lib/significance');
 const { createIfMissing, appendBullet } = require('./lib/changelog-writer');
-const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/commit-suggester');
+const { deriveChangelogCategory, buildChangelogBullet } = require('./lib/changelog-bullets');
 const { archiveCompletedPhases, findArchiveCandidates } = require('./lib/phase-archiver');
 const { listPhaseFiles } = require('./lib/phase-files');
 const { OPEN_TASK_RE, parseOpenTask } = require('./lib/checklist');
@@ -890,7 +894,7 @@ function main() {
 
     if (!opts.workflow || !VALID_WORKFLOWS.has(opts.workflow)) {
         console.error(
-            `❌ Invalid or missing --workflow. Expected: ${[...VALID_WORKFLOWS].map((w) => `magic.${w}`).join(', ')}.`,
+            `❌ Invalid or missing --workflow. Expected one of: ${[...VALID_WORKFLOWS].join(', ')} (for example --workflow=run).`,
         );
         return 1;
     }
@@ -924,8 +928,21 @@ function main() {
     // stayed correct (a workspace-scoping defect).
     const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
 
-    const versionPath = path.resolve(projectRoot, config.versionPath);
-    const changelogPath = path.resolve(projectRoot, config.changelogPath);
+    // Both come from workspace.json, which a cloned repository chooses: they must name files inside
+    // the project, or finalize would create and append wherever the configuration points.
+    const versionPath = resolveInsideProject(projectRoot, config.versionPath);
+    const changelogPath = resolveInsideProject(projectRoot, config.changelogPath);
+    for (const [key, resolved] of [
+        ['versionPath', versionPath],
+        ['changelogPath', changelogPath],
+    ]) {
+        if (!resolved) {
+            console.error(
+                `❌ finalization.${key} in ${STATE_DIR_NAME}/workspace.json must name a file inside the project (relative, no link or \`..\` that leaves it); nothing was written.`,
+            );
+            return 1;
+        }
+    }
 
     const initState = ensureInitialized(versionPath);
     const currentVersion = initState.version;

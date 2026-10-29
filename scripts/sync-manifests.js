@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./cli-guard').guardCli('sync-manifests', module);
+
 const fs = require('fs');
 const path = require('path');
 const { enginePath } = require('./engine-path');

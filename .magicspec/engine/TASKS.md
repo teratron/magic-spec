@@ -3,7 +3,7 @@
 **Version:** 1.52.0
 **Generated:** 2026-10-28
 **Based on PLAN:** .magicspec/engine/PLAN.md v1.53.0
-**Based on RULES:** .design/RULES.md v1.16.0
+**Based on RULES:** .magicspec/RULES.md v1.17.0
 **Execution Mode:** Parallel
 **Status:** Active
 

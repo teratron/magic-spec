@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-28 20:20
-**Phase:** Done — 3.0.0 prepared
+**Updated:** 2026-10-29 17:24
+**Phase:** Done — 3.0.x prepared
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-40T02 Validation: run the new cognitive case against the shipped text
+- **Task:** none
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Owner: review git status, commit on develop, tag v3.0.0 and publish; then run the fresh-reader simulation (magicspec-dev test) in a new session
+- **Next Action:** Owner: review git status, commit on develop, choose the release version (the engine is now 3.0.8 and CHANGELOG [Unreleased] holds the simulation-pass fixes), run node scripts/release.js and, once agreed, --yes; then run the fresh-reader simulation (magicspec-dev test) in a new session
 
 ## Progress
 
@@ -24,11 +24,11 @@ Overall: [45/45] ████████ 100%
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-10-29 **Decision:** Simulation-pass remediation extended: a missing engine file is named, export-wiki/graph server buffer, finalize path containment; harness 270/270, 18 mutations caught
+- 2026-10-29 **Decision:** Simulation-pass remediation (R-01..R-36) applied in place: command table, release plan/consent, line-endings rule, matcher, lock, graph page, migrate paths; harness 264/264; no phase opened
 - 2026-10-28 **Decision:** Phase 46 complete. Provides: state folder .magicspec; migrate; one archive composition; engine 3.0.0 prepared (tag and publication are the owner's)
 - 2026-10-28 **Decision:** Phase 45 complete. Provides: scripts, tests and package.json at the root; skills/magicspec-dev; /magicspec-dev:* names; predicate without earlier-layout branches
 - 2026-10-28 **Decision:** Phase 44 complete. Provides: skills/magicspec is the only engine; old tree removed; colon command form; projections refreshed on C14; constitution 1.16.0
-- 2026-10-28 **Decision:** Security review of the skill folder: three defects fixed in BOTH trees (recheck env limited to MAGIC_ keys; git called with an argument list; graph page escaped and its folder created); engine 2.1.147, harness 229 under both script sets. C-002 stays: the only edits to .magic/ while two trees exist are mirrored security fixes and the C14 files.
-- 2026-10-28 **Decision:** Phase 43 complete. Provides: skills/magicspec/ built beside the old engine (scripts, router, workflows, references, roles, templates, AGENT-RULES.md, one manifest), init --host / remove / build-plugin, the developer predicate in one place, the hook naming the engine where installed; harness 216 -> 226 under both script sets, 31 mutation entries all caught. The old tree is untouched; Phase 44 switches the repository to the new tree.
 
 ## Blockers
 

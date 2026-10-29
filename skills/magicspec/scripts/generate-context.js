@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('generate-context', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -8,6 +11,8 @@ const {
     loadGitignore,
     resolveProjectRoot,
     engineRel,
+    compilePathSet,
+    isSkippedDir,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -94,19 +99,16 @@ function buildTree(
                 // Landmark roots bypass every hiding mechanism at depth 1 —
                 // including a user project that gitignores its design dir.
                 if (currentDepth === 1 && FORCE_VISIBLE_ROOTS.has(f)) return true;
-                if (ignores.includes(f)) return false;
+                if (isSkippedDir(ignores, f, normalizePath(path.relative('.', path.join(dir, f))))) return false;
                 return !isIgnored(normalizePath(path.relative('.', path.join(dir, f))));
             })
             .sort();
         // If at root and validScopes is provided, filter allowed top-level directories
         if (currentDepth === 1 && validScopes && validScopes.length > 0) {
-            files = files.filter((f) => {
-                if (FORCE_VISIBLE_ROOTS.has(f)) return true;
-                return (
-                    validScopes.includes(f) ||
-                    validScopes.some((s) => s.startsWith(f + '/') || s.startsWith(f + '\\'))
-                );
-            });
+            // One definition of what a scope entry means (`utils.compilePathSet`): `src`, `src/`
+            // and `src/**` all keep the `src` folder.
+            const scopeSet = compilePathSet(validScopes);
+            files = files.filter((f) => FORCE_VISIBLE_ROOTS.has(f) || scopeSet.mayContain(f));
         }
     } catch {
         return '';
@@ -248,7 +250,7 @@ contextContent += '\n';
 
 try {
     fs.writeFileSync(contextPath, contextContent);
-    console.log(`Context document updated: ${contextPath}`);
+    console.log(`Context document updated: ${normalizePath(contextPath)}`);
 } catch (e) {
     console.error(`Failed to write context document: ${e.message}`);
 }

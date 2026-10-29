@@ -49,7 +49,9 @@ Because the new engine is installed and checked before the old one is removed, t
 
 The command is safe to run again after any interruption: it detects what is already done. A second run on a finished project prints that there is nothing to migrate.
 
-If both `.design/` and `.magicspec/` exist, the command stops and says so: a migration was started and not finished, or `.magicspec/` was created by mistake. Finish it with `--apply` once `.magicspec/` holds nothing you need; the old state folder is never deleted by this command.
+If both `.design/` and `.magicspec/` exist, the command looks at `.magicspec/`. An empty one is treated as absent and is replaced by the rename. One that holds files is somebody's work: the command stops, lists what it holds and names the one action that unblocks the run — move `.magicspec/` aside (for example rename it to `.magicspec-aside/`), then run `--apply` again. It never merges into or deletes a state folder, and it never deletes the old one.
+
+When nothing is left to move, rename or remove, a run prints `Migration complete` and lists the old-engine files it kept because they differ from the old manifest (you changed them); delete `.magic/` yourself once you have reviewed them.
 
 ## Not supported
 

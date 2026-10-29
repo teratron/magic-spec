@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('build-spec-graph', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
@@ -11,6 +14,7 @@ const {
     resolveProjectRoot,
     graphPaths,
     retireLegacyGraph,
+    compilePathSet,
 } = require('./utils');
 const graphCache = require('./graph-cache');
 
@@ -542,8 +546,13 @@ function findBridgeSpecs(workspaceScopes) {
         }
     }
 
+    /** Compiled scope of each workspace, built once (the matcher compiles patterns to regular expressions). */
+    const scopeSets = Object.fromEntries(
+        Object.entries(workspaceScopes).map(([ws, scope]) => [ws, compilePathSet(scope)]),
+    );
+
     /**
-     * Determines which workspace a file belongs to based on scope prefixes.
+     * Determines which workspace a file belongs to by its scope entries.
      *
      * @param {string} fileId - File node id (e.g., "file:skills/magicspec/workflows/analyze.md").
      * @returns {string[]} Matching workspace names.
@@ -551,14 +560,9 @@ function findBridgeSpecs(workspaceScopes) {
     function fileWorkspaces(fileId) {
         const filePath = fileId.replace(/^file:/, '');
         const matched = [];
-        for (const [ws, scope] of Object.entries(workspaceScopes)) {
-            for (const prefix of scope) {
-                const norm = normalizePath(prefix);
-                if (filePath.startsWith(norm + '/') || filePath === norm) {
-                    matched.push(ws);
-                    break;
-                }
-            }
+        for (const [ws, scopeSet] of Object.entries(scopeSets)) {
+            // One definition of what a scope entry means (`utils.compilePathSet`).
+            if (scopeSet.matches(filePath)) matched.push(ws);
         }
         return matched;
     }
@@ -710,6 +714,16 @@ function toJSON(analysis) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * The graph library the page loads, pinned to one release with its Subresource Integrity hash:
+ * the page embeds the project's specification graph, so what runs beside it must be the bytes
+ * that were reviewed. A change of version is a change of both constants (the hash is the
+ * `sha384-` digest, base64, of the file at the URL).
+ */
+const VIS_NETWORK_VERSION = '10.1.2';
+const VIS_NETWORK_INTEGRITY =
+    'sha384-RDdG1CLOxjNlTHh4JYx/rnAueaMHbkBHmeHwrEyljMQw3LF0it4SkuNotIY/FPxD';
+
+/**
  * Generates a self-contained HTML file with an interactive vis.js graph.
  *
  * @param {object} analysis - Analysis results from runAnalysis.
@@ -735,66 +749,90 @@ function toHTML(analysis) {
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Specification Knowledge Graph</title>
-<script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+<script src="https://unpkg.com/vis-network@${VIS_NETWORK_VERSION}/standalone/umd/vis-network.min.js" integrity="${VIS_NETWORK_INTEGRITY}" crossorigin="anonymous"></script>
 <style>
   * { margin: 0; padding: 0; box-sizing: border-box; }
   body { background: #1a1a2e; color: #e0e0e0; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
   #graph { width: 100vw; height: 100vh; }
+  .graph-error { max-width: 520px; margin: 30vh auto 0; padding: 16px; border: 1px solid #F5A623; border-radius: 8px; background: rgba(22, 22, 42, 0.95); font-size: 14px; line-height: 1.5; }
+  .graph-error code { color: #F5A623; }
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
   .panel { position: fixed; background: rgba(22, 22, 42, 0.95); border: 1px solid #333; border-radius: 8px; padding: 14px; font-size: 13px; z-index: 10; }
+  .muted { color: #9a9ab0; }
 
   #legend { top: 14px; left: 14px; }
   #legend h3 { margin-bottom: 8px; font-size: 14px; color: #aaa; }
   .legend-item { display: flex; align-items: center; gap: 8px; margin: 4px 0; }
-  .legend-dot { width: 14px; height: 14px; border-radius: 50%; flex-shrink: 0; }
+  .legend-dot { width: 14px; height: 14px; flex-shrink: 0; }
+  .shape-dot { border-radius: 50%; }
+  .shape-square { border-radius: 2px; }
+  .shape-diamond { clip-path: polygon(50% 0, 100% 50%, 50% 100%, 0 50%); }
+  .shape-triangle { clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .shape-star { clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%); }
 
-  #search-box { top: 14px; right: 320px; }
+  #search-box { top: 14px; right: 320px; display: flex; align-items: center; gap: 8px; }
   #search-box input { background: #222; border: 1px solid #555; color: #e0e0e0; padding: 6px 10px; border-radius: 4px; width: 200px; font-size: 13px; }
+  #search-box button { background: #2a2a44; border: 1px solid #555; color: #e0e0e0; padding: 6px 10px; border-radius: 4px; font-size: 13px; cursor: pointer; }
 
   #inspector { top: 14px; right: 14px; width: 290px; max-height: calc(100vh - 28px); overflow-y: auto; }
   #inspector h3 { margin-bottom: 8px; font-size: 14px; color: #ccc; border-bottom: 1px solid #444; padding-bottom: 6px; }
   .prop { margin: 3px 0; }
-  .prop-key { color: #888; }
+  .prop-key { color: #9a9ab0; }
   .prop-val { color: #e0e0e0; }
   .conn-group { margin-top: 10px; }
   .conn-group h4 { color: #aaa; font-size: 12px; margin-bottom: 4px; }
   .conn-group li { margin-left: 12px; font-size: 12px; color: #ccc; list-style: disc; }
 
   #stats { position: fixed; bottom: 14px; left: 14px; background: rgba(22, 22, 42, 0.95); border: 1px solid #333; border-radius: 8px; padding: 14px; font-size: 12px; max-width: 420px; max-height: 50vh; overflow-y: auto; z-index: 10; }
+  body.hide-stats #stats { display: none; }
   #stats h3 { margin-bottom: 6px; font-size: 14px; color: #aaa; }
   .stat-row { display: flex; justify-content: space-between; margin: 2px 0; }
-  .stat-label { color: #888; }
+  .stat-label { color: #9a9ab0; }
   .stat-value { color: #e0e0e0; font-weight: 600; }
   .finding { margin-top: 8px; }
   .finding h4 { color: #F5A623; font-size: 12px; margin-bottom: 3px; }
   .finding li { margin-left: 12px; font-size: 11px; color: #ccc; list-style: disc; }
   .finding .ok { color: #50C878; }
+
+  /* Narrow screens: search on top, legend under it, the inspector (or the summary) as a sheet at the bottom. */
+  @media (max-width: 700px) {
+    #search-box { top: 8px; left: 8px; right: 8px; padding: 8px; }
+    #search-box input { flex: 1; width: auto; min-width: 0; }
+    #legend { top: 64px; left: 8px; padding: 8px; font-size: 12px; }
+    #legend h3 { display: none; }
+    #inspector { top: auto; left: 8px; right: 8px; bottom: 8px; width: auto; max-height: 38vh; }
+    #stats { left: 8px; right: 8px; bottom: 8px; max-width: none; max-height: 60vh; z-index: 11; }
+  }
 </style>
 </head>
 <body>
-<div id="graph"></div>
+<div id="graph" role="region" aria-label="Specification knowledge graph"></div>
 
-<div id="legend" class="panel">
+<div id="legend" class="panel" role="complementary" aria-label="Legend">
   <h3>Node Types</h3>
-  <div class="legend-item"><div class="legend-dot" style="background:#4A90D9"></div> Workspace</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#50C878"></div> Specification</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#A0A0A0"></div> File</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#F5A623"></div> Convention</div>
-  <div class="legend-item"><div class="legend-dot" style="background:#9B59B6"></div> Phase</div>
+  <div class="legend-item"><div class="legend-dot shape-diamond" style="background:#4A90D9"></div> Workspace</div>
+  <div class="legend-item"><div class="legend-dot shape-dot" style="background:#50C878"></div> Specification</div>
+  <div class="legend-item"><div class="legend-dot shape-square" style="background:#A0A0A0"></div> File</div>
+  <div class="legend-item"><div class="legend-dot shape-triangle" style="background:#F5A623"></div> Convention</div>
+  <div class="legend-item"><div class="legend-dot shape-star" style="background:#9B59B6"></div> Phase</div>
 </div>
 
-<div id="search-box" class="panel">
+<div id="search-box" class="panel" role="search">
+  <label for="search" class="sr-only">Search nodes</label>
   <input type="text" id="search" placeholder="Search nodes..." />
+  <button type="button" id="summary-toggle" aria-controls="stats" aria-expanded="true">Summary</button>
 </div>
 
-<div id="inspector" class="panel">
+<div id="inspector" class="panel" role="complementary" aria-label="Inspector" aria-live="polite">
   <h3>Inspector</h3>
-  <div id="inspector-content"><p style="color:#666">Click a node to inspect</p></div>
+  <div id="inspector-content"><p class="muted">Click a node to inspect</p></div>
 </div>
 
-<div id="stats" class="panel">
+<div id="stats" class="panel" role="complementary" aria-label="Summary">
   <h3>Summary</h3>
   <div id="stats-content"></div>
+  <p class="muted" style="margin-top:8px">The same content as text: <code>wiki/index.md</code> next to this page (made by <code>export-wiki</code>).</p>
 </div>
 
 <script>
@@ -803,127 +841,12 @@ function toHTML(analysis) {
   var rawEdges = ${edgesJSON};
   var analysis = ${analysisJSON};
 
-  var TYPE_COLORS = {
-    workspace: '#4A90D9', spec: '#50C878', file: '#A0A0A0',
-    convention: '#F5A623', phase: '#9B59B6'
-  };
-  var TYPE_SHAPES = {
-    workspace: 'diamond', spec: 'dot', file: 'square',
-    convention: 'triangle', phase: 'star'
-  };
-
-  var maxDeg = 1;
-  rawNodes.forEach(function(n) { if ((n.degree || 0) > maxDeg) maxDeg = n.degree; });
-
-  var visNodes = rawNodes.map(function(n) {
-    var deg = n.degree || 0;
-    var size = 15 + (deg / maxDeg) * 35;
-    return {
-      id: n.id, label: n.label, group: n.type, title: n.id,
-      color: { background: TYPE_COLORS[n.type] || '#888', border: '#444',
-               highlight: { background: '#fff', border: TYPE_COLORS[n.type] || '#888' } },
-      shape: TYPE_SHAPES[n.type] || 'dot',
-      size: size,
-      font: { color: '#ccc', size: 11 },
-      _raw: n
-    };
-  });
-
-  var EDGE_STYLES = {
-    contains:   { color: '#555', dashes: false, width: 1.5 },
-    covers:     { color: '#444', dashes: false, width: 1 },
-    implements: { color: '#50C878', dashes: [8, 4], width: 2, arrows: 'to' },
-    enforces:   { color: '#F5A623', dashes: [3, 3], width: 1.5 },
-    scopes:     { color: '#333', dashes: false, width: 0.5 },
-    plans:      { color: '#9B59B6', dashes: [6, 3], width: 1.5, arrows: 'to' }
-  };
-
-  var visEdges = rawEdges.map(function(e, i) {
-    var s = EDGE_STYLES[e.relation] || { color: '#555', dashes: false, width: 1 };
-    return {
-      id: i, from: e.from, to: e.to,
-      color: { color: s.color, highlight: '#fff' },
-      dashes: s.dashes, width: s.width,
-      arrows: s.arrows ? { to: { enabled: true, scaleFactor: 0.6 } } : undefined,
-      title: e.relation,
-      _relation: e.relation
-    };
-  });
-
-  var container = document.getElementById('graph');
-  var data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
-  var options = {
-    physics: {
-      solver: 'barnesHut',
-      barnesHut: { gravitationalConstant: -3000, centralGravity: 0.15, springLength: 120, springConstant: 0.02, damping: 0.15 },
-      stabilization: { iterations: 200 }
-    },
-    interaction: { hover: true, tooltipDelay: 200, navigationButtons: false },
-    edges: { smooth: { type: 'continuous' } }
-  };
-  var network = new vis.Network(container, data, options);
-
-  // Search
-  var searchInput = document.getElementById('search');
-  searchInput.addEventListener('input', function() {
-    var q = this.value.toLowerCase().trim();
-    if (!q) {
-      data.nodes.forEach(function(n) { data.nodes.update({ id: n.id, opacity: 1, font: { color: '#ccc', size: 11 } }); });
-      return;
-    }
-    data.nodes.forEach(function(n) {
-      var match = n.label.toLowerCase().includes(q) || n.id.toLowerCase().includes(q);
-      data.nodes.update({ id: n.id, opacity: match ? 1 : 0.15, font: { color: match ? '#fff' : '#444', size: match ? 13 : 10 } });
-    });
-  });
-
   // Every value taken from the data is escaped before it becomes markup.
   function esc(v) {
     return String(v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
   }
 
-  // Inspector
-  network.on('click', function(params) {
-    var el = document.getElementById('inspector-content');
-    if (!params.nodes.length) { el.innerHTML = '<p style="color:#666">Click a node to inspect</p>'; return; }
-    var nodeId = params.nodes[0];
-    var node = data.nodes.get(nodeId);
-    if (!node || !node._raw) return;
-    var r = node._raw;
-    var html = '';
-    html += '<div class="prop"><span class="prop-key">Type: </span><span class="prop-val">' + esc(r.type || '-') + '</span></div>';
-    html += '<div class="prop"><span class="prop-key">Label: </span><span class="prop-val">' + esc(r.label || '-') + '</span></div>';
-    if (r.workspace) html += '<div class="prop"><span class="prop-key">Workspace: </span><span class="prop-val">' + esc(r.workspace) + '</span></div>';
-    if (r.status) html += '<div class="prop"><span class="prop-key">Status: </span><span class="prop-val">' + esc(r.status) + '</span></div>';
-    if (r.layer !== undefined) html += '<div class="prop"><span class="prop-key">Layer: </span><span class="prop-val">' + esc(r.layer) + '</span></div>';
-    if (r.version) html += '<div class="prop"><span class="prop-key">Version: </span><span class="prop-val">' + esc(r.version) + '</span></div>';
-    html += '<div class="prop"><span class="prop-key">Degree: </span><span class="prop-val">' + esc(r.degree || 0) + '</span></div>';
-
-    var connByType = {};
-    rawEdges.forEach(function(e) {
-      if (e.from === nodeId) {
-        if (!connByType[e.relation]) connByType[e.relation] = [];
-        connByType[e.relation].push(e.to);
-      }
-      if (e.to === nodeId) {
-        var inv = e.relation + ' (incoming)';
-        if (!connByType[inv]) connByType[inv] = [];
-        connByType[inv].push(e.from);
-      }
-    });
-
-    for (var rel in connByType) {
-      html += '<div class="conn-group"><h4>' + esc(rel) + '</h4><ul>';
-      connByType[rel].forEach(function(id) {
-        var cn = rawNodes.find(function(n) { return n.id === id; });
-        html += '<li>' + esc(cn ? cn.label : id) + '</li>';
-      });
-      html += '</ul></div>';
-    }
-    el.innerHTML = html;
-  });
-
-  // Stats
+  // Summary: needs no library, so it is shown whether or not the graph can be drawn.
   var s = analysis.summary;
   var statsHtml = '';
   statsHtml += '<div class="stat-row"><span class="stat-label">Nodes</span><span class="stat-value">' + s.total_nodes + '</span></div>';
@@ -976,6 +899,144 @@ function toHTML(analysis) {
   }
 
   document.getElementById('stats-content').innerHTML = statsHtml;
+
+  // The summary can be hidden to free the canvas; on a narrow screen it starts hidden.
+  var toggle = document.getElementById('summary-toggle');
+  function showStats(on) {
+    document.body.classList.toggle('hide-stats', !on);
+    toggle.setAttribute('aria-expanded', on ? 'true' : 'false');
+  }
+  showStats(!(window.matchMedia && window.matchMedia('(max-width: 700px)').matches));
+  toggle.addEventListener('click', function() { showStats(document.body.classList.contains('hide-stats')); });
+
+  // The library comes from a CDN: when it cannot be loaded (offline, blocked, or its integrity
+  // hash does not match) say so instead of leaving an empty canvas.
+  if (typeof vis === 'undefined') {
+    document.getElementById('graph').innerHTML =
+      '<div class="graph-error" role="alert"><strong>The graph cannot be drawn.</strong><br>' +
+      'Its library (<code>vis-network</code>) did not load. It is fetched from unpkg.com, so this page needs ' +
+      'network access to draw the graph. The summary is complete; the same content as text is ' +
+      '<code>wiki/index.md</code>, made by <code>export-wiki</code>.</div>';
+    return;
+  }
+
+  var TYPE_COLORS = {
+    workspace: '#4A90D9', spec: '#50C878', file: '#A0A0A0',
+    convention: '#F5A623', phase: '#9B59B6'
+  };
+  var TYPE_SHAPES = {
+    workspace: 'diamond', spec: 'dot', file: 'square',
+    convention: 'triangle', phase: 'star'
+  };
+
+  var maxDeg = 1;
+  rawNodes.forEach(function(n) { if ((n.degree || 0) > maxDeg) maxDeg = n.degree; });
+
+  var visNodes = rawNodes.map(function(n) {
+    var deg = n.degree || 0;
+    var size = 15 + (deg / maxDeg) * 35;
+    return {
+      id: n.id, label: n.label, group: n.type, title: n.id,
+      color: { background: TYPE_COLORS[n.type] || '#888', border: '#444',
+               highlight: { background: '#fff', border: TYPE_COLORS[n.type] || '#888' } },
+      shape: TYPE_SHAPES[n.type] || 'dot',
+      size: size,
+      font: { color: '#ccc', size: 11 },
+      _raw: n
+    };
+  });
+
+  var EDGE_STYLES = {
+    contains:   { color: '#555', dashes: false, width: 1.5 },
+    covers:     { color: '#444', dashes: false, width: 1 },
+    implements: { color: '#50C878', dashes: [8, 4], width: 2, arrows: 'to' },
+    enforces:   { color: '#F5A623', dashes: [3, 3], width: 1.5 },
+    scopes:     { color: '#333', dashes: false, width: 0.5 },
+    plans:      { color: '#9B59B6', dashes: [6, 3], width: 1.5, arrows: 'to' }
+  };
+
+  var visEdges = rawEdges.map(function(e, i) {
+    var s = EDGE_STYLES[e.relation] || { color: '#555', dashes: false, width: 1 };
+    return {
+      id: i, from: e.from, to: e.to,
+      color: { color: s.color, highlight: '#fff' },
+      dashes: s.dashes, width: s.width,
+      arrows: s.arrows ? { to: { enabled: true, scaleFactor: 0.6 } } : undefined,
+      title: e.relation,
+      _relation: e.relation
+    };
+  });
+
+  var container = document.getElementById('graph');
+  var data = { nodes: new vis.DataSet(visNodes), edges: new vis.DataSet(visEdges) };
+  var options = {
+    // The improved layout clusters a large graph first and, on the way, re-applies the group
+    // defaults over each node's own colours: most nodes lose the palette the legend shows.
+    layout: { improvedLayout: false },
+    physics: {
+      solver: 'barnesHut',
+      barnesHut: { gravitationalConstant: -3000, centralGravity: 0.15, springLength: 120, springConstant: 0.02, damping: 0.15 },
+      stabilization: { iterations: 200 }
+    },
+    interaction: { hover: true, tooltipDelay: 200, navigationButtons: false, keyboard: true },
+    edges: { smooth: { type: 'continuous' } }
+  };
+  var network = new vis.Network(container, data, options);
+
+  // Search
+  var searchInput = document.getElementById('search');
+  searchInput.addEventListener('input', function() {
+    var q = this.value.toLowerCase().trim();
+    if (!q) {
+      data.nodes.forEach(function(n) { data.nodes.update({ id: n.id, opacity: 1, font: { color: '#ccc', size: 11 } }); });
+      return;
+    }
+    data.nodes.forEach(function(n) {
+      var match = n.label.toLowerCase().includes(q) || n.id.toLowerCase().includes(q);
+      data.nodes.update({ id: n.id, opacity: match ? 1 : 0.15, font: { color: match ? '#fff' : '#444', size: match ? 13 : 10 } });
+    });
+  });
+
+  // Inspector
+  network.on('click', function(params) {
+    var el = document.getElementById('inspector-content');
+    if (!params.nodes.length) { el.innerHTML = '<p class="muted">Click a node to inspect</p>'; return; }
+    var nodeId = params.nodes[0];
+    var node = data.nodes.get(nodeId);
+    if (!node || !node._raw) return;
+    var r = node._raw;
+    var html = '';
+    html += '<div class="prop"><span class="prop-key">Type: </span><span class="prop-val">' + esc(r.type || '-') + '</span></div>';
+    html += '<div class="prop"><span class="prop-key">Label: </span><span class="prop-val">' + esc(r.label || '-') + '</span></div>';
+    if (r.workspace) html += '<div class="prop"><span class="prop-key">Workspace: </span><span class="prop-val">' + esc(r.workspace) + '</span></div>';
+    if (r.status) html += '<div class="prop"><span class="prop-key">Status: </span><span class="prop-val">' + esc(r.status) + '</span></div>';
+    if (r.layer !== undefined) html += '<div class="prop"><span class="prop-key">Layer: </span><span class="prop-val">' + esc(r.layer) + '</span></div>';
+    if (r.version) html += '<div class="prop"><span class="prop-key">Version: </span><span class="prop-val">' + esc(r.version) + '</span></div>';
+    html += '<div class="prop"><span class="prop-key">Degree: </span><span class="prop-val">' + esc(r.degree || 0) + '</span></div>';
+
+    var connByType = {};
+    rawEdges.forEach(function(e) {
+      if (e.from === nodeId) {
+        if (!connByType[e.relation]) connByType[e.relation] = [];
+        connByType[e.relation].push(e.to);
+      }
+      if (e.to === nodeId) {
+        var inv = e.relation + ' (incoming)';
+        if (!connByType[inv]) connByType[inv] = [];
+        connByType[inv].push(e.from);
+      }
+    });
+
+    for (var rel in connByType) {
+      html += '<div class="conn-group"><h4>' + esc(rel) + '</h4><ul>';
+      connByType[rel].forEach(function(id) {
+        var cn = rawNodes.find(function(n) { return n.id === id; });
+        html += '<li>' + esc(cn ? cn.label : id) + '</li>';
+      });
+      html += '</ul></div>';
+    }
+    el.innerHTML = html;
+  });
 })();
 </script>
 </body>

@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.4.2
+**Version:** 1.5.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -34,7 +34,7 @@ After a break the user must be able to run one command and learn: where the proj
 | --- | --- |
 | SC-1 (Live Memory Contract) | Reads `STATE.md` as the primary source; treats its `Next Action` as the resume point. |
 | SC-2 (Universal Post-Workflow Update) | Status is on the read-only exemption list; it performs no state writes. |
-| SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command, or — when `Next Action` states that nothing is pending (SC-2.4 addendum) — that statement and no command. |
+| SC-4 (Status Briefing Surface) | Briefing layout per §5.2; drift reported as an informational line (§5.4); exactly one recommended next command, or — when `Next Action` states that nothing is pending (SC-2.4 addendum), or is an owner's note that names no command (SC-4) — that statement or note and no command. |
 | SC-5 (C2 Exception) | Registered as the single authorized wrapper addition; inventory tracked in l2-workflow-wrappers.md. |
 | SC-9 (Resume From Recorded State) | The in-flight branch of §5.3 calls the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3): read-only, no writes, no diagnostics record. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert (the snapshot flow is retired, SC-9(g)). |
 
@@ -60,7 +60,7 @@ Rendered in this fixed order:
 4. **Blockers & Blocking Constraints** — both sections surfaced; constraints are mandatory reading before resuming work.
 5. **Recent Decisions** — last 3 entries.
 6. **Engine line** — local engine version vs. registry snapshot: `Engine: {version} (in sync)` or `Engine: {local} (snapshot {snap} — drift; /magicspec:analyze revalidates)`. Informational only.
-7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one.
+7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one. When `Next Action` is a note in the owner's words — it names no `/magicspec:*` command and does not say that nothing is pending — render `Next: {the text, verbatim}`, recommend no command of your own and leave the note unrewritten.
 
 ### 5.3 Resolution & Degraded States
 
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.0 | 2026-10-29 | Agent | §5.2 item 7 and the SC-4 row gain the third branch of the next-step line: an owner's note that names no command is rendered verbatim with no command added. Found walking `workflows/status.md` against this repository's own `STATE.md`, whose `Next Action` is such a note — none of the three branches applied and the agent had to improvise the last section of a read-only briefing. The body's Entry list also stopped telling the reader to read the file it is in. |
 | 1.4.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.4.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.4.0 | 2026-09-30 | Agent | The paused-session branch of §5.3 and the SC-9 row are removed with the pause snapshot ([l1-session-continuity.md](l1-session-continuity.md) 2.5.0 SC-9(g)): the resume line reports in-flight tasks only; a stray `HANDOFF.json` or a hand-set `Paused` is inert. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

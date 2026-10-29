@@ -1,6 +1,6 @@
 # Finalize Pipeline — Output Contract
 
-**Version:** 2.1.3
+**Version:** 2.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -24,14 +24,14 @@ The unifying property: everything here crosses a boundary the review gates do no
 
 Two of this pipeline's outputs land somewhere no human reviews before the fact:
 
-- **CHANGELOG bullets** are composed by `commit-suggester.js` and inserted by `changelog-writer.js` directly into a product file. No Coder authors the text; no Code-reviewer sees it as a diff. The containment gates RC-5/RC-6 therefore never apply, which is why RC-11 binds the *generator* instead.
+- **CHANGELOG bullets** are composed by `changelog-bullets.js` and inserted by `changelog-writer.js` directly into a product file. No Coder authors the text; no Code-reviewer sees it as a diff. The containment gates RC-5/RC-6 therefore never apply, which is why RC-11 binds the *generator* instead.
 - **The stdout listing** is what the user reads to understand what the invocation changed. An omission there defeats the transparency the listing exists to provide.
 
 Defects in this class are quiet by construction — they produce plausible-looking output that is wrong in a way only cross-checking against the real diff or the real file reveals.
 
 ## 2. Generator Containment (RC-11)
 
-`buildChangelogBullet()` in `commit-suggester.js` is written straight to the product's root `CHANGELOG.md` via `changelog-writer.js`'s `appendBullet()` — no Coder authors this text, no Code-reviewer reviews a diff of it, so [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)'s **RC-5/RC-6 gates never see it**. RC-11 binds this generator exactly as RC-1/RC-2 bind hand-authored text: its output must never embed a spec's **artifact ID** — the identifier obtained by stripping the `l1-`/`l2-` prefix and `.md` extension from the spec's filename (`artifactId()` in this same module).
+`buildChangelogBullet()` in `changelog-bullets.js` is written straight to the product's root `CHANGELOG.md` via `changelog-writer.js`'s `appendBullet()` — no Coder authors this text, no Code-reviewer reviews a diff of it, so [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)'s **RC-5/RC-6 gates never see it**. RC-11 binds this generator exactly as RC-1/RC-2 bind hand-authored text: its output must never embed a spec's **artifact ID** — the identifier obtained by stripping the `l1-`/`l2-` prefix and `.md` extension from the spec's filename (`artifactId()` in this same module).
 
 ### 2.1 The Defect (field report, engine 2.1.49)
 
@@ -172,6 +172,12 @@ GOOD: | CHANGELOG | skipped (duplicate — run 'release-changelog' to rotate [Un
 
 This is a diagnostics-surface change only — `changelogResult.deduped`'s value, `bulletExists()`'s dedup logic, and `buildChangelogBullet()`'s output are all untouched. RC-11 is unaffected (§4.4 constraint 1 still holds: no bullet-shape change).
 
+## 4a. Argument Validation and Workflow Names `[ADDED]`
+
+**`release-changelog`** writes whatever it is given into a heading of the product's changelog. It MUST refuse, before it rotates anything, a `--version` that is not `X.Y.Z` (with an optional pre-release or build suffix) and a `--date` that is not a calendar date in `YYYY-MM-DD` form (`2026-13-45` and `not-a-date` included); the changelog is left byte-identical. Reproduced at engine 3.0.0: `--date=not-a-date` wrote `## [9.9.9] - not-a-date`. An option the table does not list is refused by the executor before the script runs ([l2-engine-automation.md](l2-engine-automation.md) §Command Line Contract), so the message for an unknown option reads `Unknown option '--x'` (the script's own `Unknown argument` text is reached only when it is started by hand through another route).
+
+**`finalize`** names the workflows it accepts as the always-on rule writes them: an invalid or missing `--workflow` reads `Expected one of: spec, task, run, rule (for example --workflow=run)`. The identifiers it stores and prints (`magic.run` in the digest table and in `finalize-state.json`) are data and keep their spelling; only the message that teaches the argument changed (it used to list the retired `magic.*` names, which the script rejects).
+
 ## 5. Regression Coverage
 
 Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)):
@@ -189,7 +195,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Path | Role |
 | --- | --- |
-| `skills/magicspec/scripts/lib/commit-suggester.js` | Composes the CHANGELOG bullet text (§2, §4.1); commit-message composition retired 2026-08-27 (SC-3 retirement) |
+| `skills/magicspec/scripts/lib/changelog-bullets.js` | Composes the CHANGELOG bullet text (§2, §4.1); named `commit-suggester.js` until engine 3.0.1, when the name that described the retired commit-message feature was dropped |
 | `skills/magicspec/scripts/lib/changelog-writer.js` | `appendBullet()` dedup and `releaseUnreleased()` rotation (§4.1, §4.2, §4.4) |
 | `skills/magicspec/scripts/release-changelog.js` | Explicit, opt-in CLI invoking `releaseUnreleased()`; validates its arguments before any rotation and handles `--help` without side effects (§4.4, CLI Safety) |
 | `skills/magicspec/scripts/finalize.js` | Success-path file-set input (§3.2); no longer imports `releaseUnreleased` (§4.4); deduped-CHANGELOG hint surfacing (§4.5) |
@@ -200,6 +206,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.2.0 | 2026-10-29 | Agent | New **§4a**: `release-changelog` validates its version and date before it rotates, and `finalize` names the accepted workflows as the rule writes them; the bullet composer's file is `changelog-bullets.js` (renamed from `commit-suggester.js`). Found by a simulation pass; implemented together with this entry. |
 | 2.1.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.1.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.1.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

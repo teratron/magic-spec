@@ -1,12 +1,18 @@
 #!/usr/bin/env node
 'use strict';
 
+// Help and unknown options are answered before this script reads or writes anything.
+require('./lib/commands').guardArgv('analyze-coverage', module);
+
 const fs = require('fs');
 const path = require('path');
 const {
     normalizePath,
     loadGitignore,
     resolveProjectRoot,
+    compilePathEntry,
+    compilePathSet,
+    isSkippedDir,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -25,8 +31,14 @@ const {
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
-const scopeIdx = args.indexOf('--scope');
-const scopeOverride = scopeIdx !== -1 && args[scopeIdx + 1] ? args[scopeIdx + 1] : null;
+// `--scope x` and `--scope=x` mean the same.
+const scopeIdx = args.findIndex((a) => a === '--scope' || a.startsWith('--scope='));
+const scopeOverride =
+    scopeIdx === -1
+        ? null
+        : args[scopeIdx].startsWith('--scope=')
+          ? args[scopeIdx].slice('--scope='.length) || null
+          : args[scopeIdx + 1] || null;
 
 const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
 const workspaceScope = scopeOverride || process.env.MAGIC_WORKSPACE_SCOPE || null;
@@ -138,21 +150,22 @@ function parseCanonicalRefs(specPath) {
 }
 
 /**
- * Discovers all spec files and builds a mapping from referenced paths
- * to spec filenames, plus a list of directory-level references.
+ * Discovers all spec files and builds the reference index: every Canonical Reference as a
+ * compiled path-set entry (a file, a folder with or without a trailing slash, or a pattern —
+ * one definition in `utils.compilePathEntry`), plus the exact-path map and the per-spec lists.
  *
  * @param {string} specsDir - Absolute path to the specifications/ directory.
- * @returns {{ pathToSpec: Map<string, string>, dirRefs: Array<{dir: string, spec: string}>, specRefs: Map<string, string[]> }}
+ * @returns {{ pathToSpec: Map<string, string>, refEntries: Array<{ref: string, spec: string, matcher: ReturnType<typeof compilePathEntry>}>, specRefs: Map<string, string[]> }}
  */
 function buildRefIndex(specsDir) {
-    /** @type {Map<string, string>} file path → spec filename */
+    /** @type {Map<string, string>} literal file path → spec filename (the last spec to name it wins) */
     const pathToSpec = new Map();
-    /** @type {Array<{dir: string, spec: string}>} directory-level refs */
-    const dirRefs = [];
+    /** @type {Array<{ref: string, spec: string, matcher: ReturnType<typeof compilePathEntry>}>} */
+    const refEntries = [];
     /** @type {Map<string, string[]>} spec filename → all refs (for shadow detection) */
     const specRefs = new Map();
 
-    if (!fs.existsSync(specsDir)) return { pathToSpec, dirRefs, specRefs };
+    if (!fs.existsSync(specsDir)) return { pathToSpec, refEntries, specRefs };
 
     const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md'));
 
@@ -162,15 +175,13 @@ function buildRefIndex(specsDir) {
         specRefs.set(specFile, refs);
 
         for (const ref of refs) {
-            if (ref.endsWith('/')) {
-                dirRefs.push({ dir: ref, spec: specFile });
-            } else {
-                pathToSpec.set(ref, specFile);
-            }
+            const matcher = compilePathEntry(ref);
+            refEntries.push({ ref, spec: specFile, matcher });
+            if (!matcher.isPattern && !ref.endsWith('/')) pathToSpec.set(matcher.source, specFile);
         }
     }
 
-    return { pathToSpec, dirRefs, specRefs };
+    return { pathToSpec, refEntries, specRefs };
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -178,17 +189,15 @@ function buildRefIndex(specsDir) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Recursively scans the project root for source files, respecting
- * skip-directories and .gitignore patterns.
+ * Recursively scans the project root for files, respecting skip-directories and
+ * .gitignore patterns. The scope is applied by the caller, so the Zero-Match Guard
+ * can tell an entry that matches nothing from a file that was never scanned.
  *
  * @param {string} rootDir - Project root directory (absolute).
  * @param {function(string): boolean} isIgnored - Gitignore test function.
- * @param {string|null} scope - Comma-separated scope prefixes, or null for full scan.
  * @returns {string[]} Array of forward-slash normalized relative paths.
  */
-function scanProjectFiles(rootDir, isIgnored, scope) {
-    const scopePrefixes = scope ? scope.split(',').map((s) => normalizePath(s.trim())) : null;
-
+function scanProjectFiles(rootDir, isIgnored) {
     const results = [];
 
     /**
@@ -203,23 +212,15 @@ function scanProjectFiles(rootDir, isIgnored, scope) {
         }
 
         for (const entry of entries) {
-            if (SKIP_DIRS.has(entry.name)) continue;
-
             const fullPath = path.join(dir, entry.name);
             const relPath = normalizePath(path.relative(rootDir, fullPath));
 
+            if (isSkippedDir(SKIP_DIRS, entry.name, relPath)) continue;
             if (isIgnored(relPath)) continue;
 
             if (entry.isDirectory()) {
                 walk(fullPath);
             } else {
-                // Scope filtering: only include files under scope prefixes
-                if (scopePrefixes) {
-                    const inScope = scopePrefixes.some(
-                        (prefix) => relPath.startsWith(prefix + '/') || relPath === prefix,
-                    );
-                    if (!inScope) continue;
-                }
                 results.push(relPath);
             }
         }
@@ -238,12 +239,12 @@ function scanProjectFiles(rootDir, isIgnored, scope) {
  *
  * @param {string} filePath - Forward-slash normalized relative path.
  * @param {Map<string, string>} pathToSpec - Exact-path → spec mapping.
- * @param {Array<{dir: string, spec: string}>} dirRefs - Directory-level references.
+ * @param {Array<{ref: string, spec: string, matcher: ReturnType<typeof compilePathEntry>}>} refEntries - Every reference, compiled.
  * @param {Set<string>} extractedParents - Parent dirs of all EXTRACTED files.
  * @param {Set<string>} extractedGrandparents - Grandparent dirs of all EXTRACTED files.
  * @returns {{ confidence: string, spec: string|null, reason: string }}
  */
-function classifyFile(filePath, pathToSpec, dirRefs, extractedParents, extractedGrandparents) {
+function classifyFile(filePath, pathToSpec, refEntries, extractedParents, extractedGrandparents) {
     // 1. Exact match in Canonical References
     if (pathToSpec.has(filePath)) {
         return {
@@ -253,13 +254,15 @@ function classifyFile(filePath, pathToSpec, dirRefs, extractedParents, extracted
         };
     }
 
-    // 2. Contained inside a directory reference (e.g., skills/magicspec/templates/)
-    for (const { dir, spec } of dirRefs) {
-        if (filePath.startsWith(dir)) {
+    // 2. Covered by a folder reference (with or without a trailing slash) or a pattern reference
+    for (const { ref, spec, matcher } of refEntries) {
+        if (matcher.test(filePath)) {
             return {
                 confidence: 'EXTRACTED',
                 spec,
-                reason: `Inside referenced directory '${dir}'`,
+                reason: matcher.isPattern
+                    ? `Matches referenced pattern '${ref}'`
+                    : `Inside referenced directory '${ref}'`,
             };
         }
     }
@@ -293,13 +296,15 @@ function classifyFile(filePath, pathToSpec, dirRefs, extractedParents, extracted
 }
 
 /**
- * Builds the set of parent directories for all explicitly referenced paths.
+ * Builds the set of parent directories for all explicitly referenced paths. A literal file
+ * contributes its folder; a folder reference and a pattern's static prefix contribute that
+ * folder itself.
  *
  * @param {Map<string, string>} pathToSpec - Exact-path → spec mapping.
- * @param {Array<{dir: string, spec: string}>} dirRefs - Directory-level references.
+ * @param {Array<{ref: string, matcher: ReturnType<typeof compilePathEntry>}>} refEntries - Every reference, compiled.
  * @returns {{ parents: Set<string>, grandparents: Set<string> }}
  */
-function buildAncestorSets(pathToSpec, dirRefs) {
+function buildAncestorSets(pathToSpec, refEntries) {
     const parents = new Set();
     const grandparents = new Set();
 
@@ -310,10 +315,13 @@ function buildAncestorSets(pathToSpec, dirRefs) {
         if (gp !== '.') grandparents.add(gp);
     }
 
-    for (const { dir } of dirRefs) {
-        const cleaned = dir.replace(/\/$/, '');
-        parents.add(cleaned);
-        const gp = normalizePath(path.dirname(cleaned));
+    for (const { ref, matcher } of refEntries) {
+        let dir = null;
+        if (matcher.isPattern) dir = matcher.staticPrefix;
+        else if (ref.endsWith('/')) dir = matcher.source;
+        if (!dir) continue;
+        parents.add(dir);
+        const gp = normalizePath(path.dirname(dir));
         if (gp !== '.') grandparents.add(gp);
     }
 
@@ -326,17 +334,24 @@ function buildAncestorSets(pathToSpec, dirRefs) {
 
 /**
  * Detects orphaned references in specs — paths listed in Canonical References
- * that no longer exist on disk.
+ * that no longer exist on disk. A pattern reference is orphaned when it matches no
+ * scanned file; testing the raw pattern string for existence would call every pattern a ghost.
  *
  * @param {Map<string, string[]>} specRefs - Spec filename → referenced paths.
+ * @param {string[]} scannedFiles - Every file the scan saw, before the scope is applied.
  * @returns {Array<{spec: string, orphaned_refs: string[]}>}
  */
-function detectShadowSpecs(specRefs) {
+function detectShadowSpecs(specRefs, scannedFiles) {
     const shadows = [];
 
     for (const [spec, refs] of specRefs.entries()) {
         const orphaned = [];
         for (const ref of refs) {
+            const matcher = compilePathEntry(ref);
+            if (matcher.isPattern) {
+                if (!scannedFiles.some((f) => matcher.test(f))) orphaned.push(ref);
+                continue;
+            }
             const diskPath = ref.endsWith('/') ? ref.replace(/\/$/, '') : ref;
             if (!fs.existsSync(diskPath)) {
                 orphaned.push(ref);
@@ -357,11 +372,36 @@ function detectShadowSpecs(specRefs) {
 const rootDir = resolveProjectRoot();
 const specsDir = path.join(rootDir, designDir, 'specifications');
 
-const { pathToSpec, dirRefs, specRefs } = buildRefIndex(specsDir);
-const { parents, grandparents } = buildAncestorSets(pathToSpec, dirRefs);
+const { pathToSpec, refEntries, specRefs } = buildRefIndex(specsDir);
+const { parents, grandparents } = buildAncestorSets(pathToSpec, refEntries);
 
 const isIgnored = loadGitignore(rootDir);
-const files = scanProjectFiles(rootDir, isIgnored, workspaceScope);
+const scannedFiles = scanProjectFiles(rootDir, isIgnored);
+
+// Zero-Match Guard: an entry that matches nothing is reported, so an empty scan is never
+// mistaken for a clean one.
+/** @type {Array<{type: string, message: string, fix: string}>} */
+const warnings = [];
+const scopeSet = workspaceScope ? compilePathSet(workspaceScope.split(',')) : null;
+const files = scopeSet ? scannedFiles.filter((f) => scopeSet.matches(f)) : scannedFiles;
+if (scopeSet) {
+    for (const entry of scopeSet.unmatched(scannedFiles)) {
+        warnings.push({
+            type: 'SCOPE_NO_MATCH',
+            message: `Scope entry '${entry.entry}' matches no file in the project.`,
+            fix: 'Correct the entry in workspace.json (a folder, a file, or a pattern with * and **).',
+        });
+    }
+}
+for (const { ref, spec, matcher } of refEntries) {
+    if (matcher.isPattern && !scannedFiles.some((f) => matcher.test(f))) {
+        warnings.push({
+            type: 'REF_NO_MATCH',
+            message: `Canonical Reference pattern '${ref}' in ${spec} matches no file in the project.`,
+            fix: `Correct or remove the reference in ${spec}.`,
+        });
+    }
+}
 
 const coverage = [];
 const counts = { extracted: 0, inferred: 0, ambiguous: 0, uncovered: 0, exempt: 0 };
@@ -372,7 +412,7 @@ for (const file of files) {
         counts.exempt++;
         continue;
     }
-    const result = classifyFile(file, pathToSpec, dirRefs, parents, grandparents);
+    const result = classifyFile(file, pathToSpec, refEntries, parents, grandparents);
     coverage.push({
         file,
         confidence: result.confidence,
@@ -386,7 +426,7 @@ const total = counts.extracted + counts.inferred + counts.ambiguous + counts.unc
 const coveredCount = counts.extracted + counts.inferred;
 const coveragePercent = total > 0 ? Math.round((coveredCount / total) * 1000) / 10 : 0;
 
-const shadowSpecs = detectShadowSpecs(specRefs);
+const shadowSpecs = detectShadowSpecs(specRefs, scannedFiles);
 
 // ───────────────────────────────────────────────────────────────────────────
 // Output Rendering
@@ -406,6 +446,7 @@ if (jsonOutput) {
             coverage_percent: coveragePercent,
         },
         shadow_specs: shadowSpecs,
+        warnings,
     };
     console.log(JSON.stringify(output, null, 2));
     process.exit(0);
@@ -452,6 +493,14 @@ if (counts.uncovered > 0) {
     if (uncovered.length > 20) {
         console.log(`  ... and ${uncovered.length - 20} more`);
     }
+    console.log('');
+}
+
+// Zero-match warnings
+if (warnings.length > 0) {
+    console.log('WARNINGS:');
+    console.log('───────────────────────────────────────────────────────────────');
+    for (const w of warnings) console.log(`  ${w.type}: ${w.message}`);
     console.log('');
 }
 
