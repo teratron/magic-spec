@@ -1,17 +1,20 @@
 # Workspace Intent Routing
 
-**Version:** 2.0.3
-**Status:** Stable
+**Version:** 3.0.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
 
-Defines how the engine decides which workspace receives newly authored or
-amended specifications. Establishes a deterministic chain that runs **before**
-the existing `context.md` Workspace Resolution and resolves a demonstrable
-inconsistency between intent and existing scopes by the Consequence
-Forecast (C27 DA-10), narrated as one Decision Record — it asks nothing.
-`[MODIFIED]`
+Defines how the engine decides which workspace a command acts on — the
+workspace that receives newly authored or amended specifications, and, for
+every other command, the registered workspace whose plan, tasks, rules or
+findings it reads and writes. Establishes a deterministic chain that runs
+**before** the existing `context.md` Workspace Resolution, routes by the code
+locations a request touches before its topic, writes only into registered
+workspaces, and resolves a demonstrable inconsistency between intent and
+existing scopes by the Consequence Forecast (C27 DA-10), narrated as one
+Decision Record — it asks nothing. `[MODIFIED]`
 
 This specification supersedes the implicit "Zero-Prompt always silently picks
 default" behaviour and resolves three production defects observed in the
@@ -55,6 +58,28 @@ Two further defects were found during root-cause analysis:
 A third, later field report (engine 2.1.58) found the diagram fix did not close WI-10 completely: the diagram's *shape* was corrected, but `init.md` §Step 2's prose and the Init Completion Checklist still claim `init.js` copies `STATE.md` from template during bootstrap. It does not — verified against engine 2.1.62, `initWorkspace()` creates `INDEX.md`, `specifications/`, `tasks/`, and `archives/tasks/` only. `STATE.md` is bootstrapped lazily, by `update-state.js`'s own template-copy branch, the first time any mutating workflow's SC-2 step runs ([l1-session-continuity.md](l1-session-continuity.md) SC-2: "adds the end-of-command guarantee"). Non-blocking — nothing downstream assumes `STATE.md` exists immediately after `init` — but an agent trusting the Completion Checklist would falsely conclude bootstrap failed. WI-10's original wording bound only the diagram; the same file has two more surfaces making the same class of claim.
 
 The same false claim also sits inside `tests/suite.md`'s expected outcomes — T01 ("Post-init verification checks all 6 artifacts: `INDEX.md`, `RULES.md`, `STATE.md`, …"), T02 ("Post-init verification confirms all 6 artifacts present (including `STATE.md`)"), and T58 ("`.magicspec/main/` directory created with `INDEX.md`, `STATE.md`, …"). Because `magicspec-dev:test` evaluates these scenarios cognitively against the documented contract rather than by executing `init.js`, none of the three can currently catch this divergence — the suite's own expected outcome already assumes the wrong behavior. Correcting `init.md` without correcting these three scenarios would leave the cognitive suite asserting a fact its own source-of-truth (the corrected docs) no longer supports.
+
+### 1.1 Routing for Every Command `[ADDED]`
+
+The owner's list of 2026-10-29 asks for "normal" workspace routing, and chose
+its meaning the same day: every command determines its workspace by the code
+folders and the topic of the request, narrates the choice in one line, lets an
+explicit workspace always win, and never writes into an unregistered folder.
+Three facts make the change necessary:
+
+1. **Only one command routes.** Detection runs in `spec` alone; `task`, `run`
+   and `rule` take the explicit argument or the `default`, so in a project with
+   several workspaces the person names the workspace on every command, and
+   forgetting it acts on the default.
+2. **The constitution and the shared module disagree.** C26 item 1 states that
+   every workflow that creates or amends specifications, tasks or rules runs
+   detection; `references/context.md` Step 0 states that only `spec` does and
+   that the planning and rule workflows skip it. Both texts are in force.
+3. **An artifact landed outside every workspace.** A consumer project
+   (engine 2.x, 2026-05) holds a phase journal under a state-folder directory
+   named `engine` that its `workspace.json` does not register — the name of
+   this repository's own workspace. Probable cause (unverified): shipped
+   examples use `engine` as the sample workspace name.
 
 ## 2. Constraints & Assumptions
 
@@ -203,6 +228,44 @@ The following invariants govern any Layer 2 implementation:
   verify after `init` runs. Any divergence between a documented claim and
   actual init output is a release blocker. `[MODIFIED]`
 
+- **WI-11 — Every Command Routes** `[ADDED]`: Every command that acts on one
+  workspace's artifacts resolves that workspace through one shared chain, in
+  this order: explicit argument → `MAGIC_WORKSPACE` → location signal (WI-12)
+  → topic signal (the WI-3 lexicon, scored as in WI-7, ≥ 0.30 required) →
+  work in flight (the one workspace whose live memory records an
+  `In Progress` task, when exactly one does) → `default` → Workspace
+  Disambiguation. Only `spec` — and `goal` through it — may create a
+  workspace (WI-2, WI-4, WI-6); every other command routes among registered
+  workspaces only. A read-only command that reports on every workspace
+  (`status`, `graph`) keeps doing so. This chain supersedes the statement in
+  `references/context.md` Step 0 that only `spec` runs detection; C26 item 1
+  already states the rule.
+
+- **WI-12 — Location Signal** `[ADDED]`: The paths a request names or a
+  piece of work touches — paths in the prose, the files a task changes, the
+  files a defect report cites — are matched against every workspace's
+  `scope`. Each path belongs to the workspace whose scope entry matches it
+  most specifically (the longest matching prefix or pattern). The workspace
+  with the most matched paths wins; a tie falls through to the topic signal.
+  The match is computed from the paths by the engine, not judged, so
+  identical input routes identically. Paths matched by no scope give no
+  signal; a workspace with an empty `scope` covers no path by this signal.
+
+- **WI-13 — Narrated Once** `[ADDED]`: In a project with more than one
+  workspace, the resolved workspace and the signal that chose it are narrated
+  once per invocation — `[Workspace] {name} — {signal}. (Override:
+  /magicspec:{command} {other} …)` — and when matched paths also fell to
+  other workspaces, those are named in the same line. A single-workspace
+  project routes silently.
+
+- **WI-14 — Registered Folders Only** `[ADDED]`: No artifact is written under
+  a state-folder directory that `workspace.json` does not register. An
+  unregistered name — in an argument, the environment, a script flag or an
+  agent-composed path — stops the command with the list of registered
+  workspaces; every script that writes a per-workspace file applies the same
+  check before writing. Shipped examples never use a real workspace name of
+  the engine's own repository; they use a placeholder (`{workspace}`).
+
 ## 4. Status Lifecycle Hooks
 
 This spec inserts no new status; existing Draft/RFC/Stable/Deprecated lifecycle
@@ -229,8 +292,12 @@ For deterministic simulation, the chain produces exactly these outcomes:
 | **E2** | Any | resolved workspace fit <0.30 (multi-ws) | WI-7 warning → re-enter the WI-4 forecast: the best-fitting existing workspace; no creation without a creation signal. |
 | **F1** | `--workspace=X` arg | any | Use X (Priority 1 unchanged); skip detection entirely. |
 | **F2** | `MAGIC_WORKSPACE=X` env | any | Use X (Priority 2 unchanged); skip detection entirely. |
+| **G1** `[ADDED]` | Any command; paths matching one workspace's scope | N | That workspace (WI-12); narrated (WI-13). |
+| **G2** `[ADDED]` | Any command; paths matching several workspaces | N | Most matched paths wins; the others named in the narration (WI-13); a tie → topic signal. |
+| **G3** `[ADDED]` | A command other than `spec`; no paths, topic fits one workspace | N | That workspace by the topic signal (WI-11); never a creation. |
+| **G4** `[ADDED]` | Unregistered workspace name in an argument, the environment or a script flag | any | Stop with the list of registered workspaces (WI-14); nothing written. |
 
-These twelve outcomes are the canonical simulation matrix. Any Layer 2
+These sixteen outcomes are the canonical simulation matrix. Any Layer 2
 implementation MUST reproduce these outcomes given the matching input.
 
 ## 6. Drawbacks & Alternatives
@@ -270,7 +337,8 @@ premise in the dispatched specification.
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
-| `[CONTEXT]` | `skills/magicspec/references/context.md` | Hosts the new Step 0 Workspace Intent Detection block. |
+| `[CONTEXT]` | `skills/magicspec/references/context.md` | Hosts the new Step 0 Workspace Intent Detection block; WI-11 widens it from `spec` to every command. |
+| `[TASK-WORKFLOW]` | `skills/magicspec/workflows/task.md` | Argument Routing, whose sample workspace name WI-14 replaces with a placeholder. |
 | `[INIT-DOC]` | `skills/magicspec/references/init.md` | Hosts the corrected Structure Created diagram, Step 2 narrative, and Completion Checklist (WI-10). |
 | `[INIT-SCRIPT]` | `skills/magicspec/scripts/init.js` | Hosts the standalone `--workspace={name}` CLI mode. |
 | `[CREATE-WS]` | `skills/magicspec/scripts/create-workspace.js` | New executor script implementing WI-6 atomicity. |
@@ -283,6 +351,7 @@ premise in the dispatched specification.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.0.0 | 2026-10-29 | Agent | **Routing for every command** (scope change, origin `user-stated`: the owner chose "automatic in every command" on 2026-10-29 among the intake survey's three readings): new §1.1 and WI-11 to WI-14 — one shared chain for every command acting on one workspace, with only `spec` (and `goal` through it) allowed to create; a location signal computed from the paths a request touches against each workspace's `scope`, ahead of the topic signal; one narration line in multi-workspace projects; no write into an unregistered state-folder directory, and no shipped example naming this repository's own workspace. Resolves the contradiction between C26 item 1 and `context.md` Step 0 in favour of C26. Outcomes G1–G4 added (sixteen in all). Amendment Rule: `Stable → RFC`. |
 | 2.0.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

@@ -1,7 +1,7 @@
 # Engine Automation Specification
 
-**Version:** 1.26.0
-**Status:** Stable
+**Version:** 1.27.0
+**Status:** RFC
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
@@ -284,6 +284,31 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 **Regression coverage**: one harness case pinning all three halves together — a vacant section under a populated `## Completed Phases` fires; a header-only table (same zero-row state, scaffolding left behind) fires; and unrecognized prose in the section still does **not** fire. The third assertion is the load-bearing one: without it the fix is indistinguishable from deleting the guard.
 
+### Cache Retention — Every Cache Has an Owner and a Bound `[ADDED]`
+
+The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodically, and chose the same day that compaction of the SDD artifacts is not wanted now and that the cache is cleaned by a separate simple command. Measured in this repository the same day: the graph extraction cache under `graph/.cache/` holds 148 entries for a state folder of 40 specifications and 98 Markdown files — its entries are keyed by content hash and nothing ever removes the entry of a file that changed or disappeared.
+
+**Inventory.** Every cache the engine writes is listed here with its owner, how it is rebuilt and what bounds it. A script that introduces a cache adds its row in the same change.
+
+| Cache | Location (state folder) | Owner | Rebuilt by | Bound |
+| --- | --- | --- | --- | --- |
+| Graph extraction cache | `graph/.cache/` | `graph-cache.js` | the next graph build | entries for no current file are pruned after each successful build |
+| Graph query snapshot | `graph/query.json` | `build-spec-graph --json --out` | the same command | one file, overwritten |
+| Interactive page | `graph/graph.html` | `build-spec-graph --html` | the same command | one file, overwritten |
+| Wiki | `graph/wiki/` | `export-wiki` | `export-wiki` | the writer clears the folder's pages before regenerating them |
+| Finalize state | `.cache/finalize-state.json` | `finalize.js` | the next finalize | one file |
+| Project-meta state (engine repository only) | `.cache/project-meta-state.json` | `scripts/update-project-meta.js` | the next metadata sync | one file |
+| Memory index | `.cache/memory.sqlite` or `.cache/memory.json` | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
+| Diagnostics sink | `.cache/diagnostics.jsonl` | `lib/diagnostics.js` | not rebuildable — recorded findings | drained by finalize, retention bound of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) |
+| Feedback notes | `.cache/` | the feedback channel ([l1-agent-feedback.md](l1-agent-feedback.md)) | not rebuildable — recorded notes | EF-5 |
+| Migration backups | `magicspec-migration-backup-{date}/` (project root) | `migrate` | not rebuildable — the person's safety copy | never removed by the engine |
+
+**Rules.**
+
+1. **Writers prune their own.** Each rebuildable cache is pruned by its owner after a successful write — the periodic cleaning happens where the cache is written, with no separate schedule. A failed write prunes nothing.
+2. **`clean-cache`.** An executor subcommand removes the rebuildable caches of the project (the first seven rows) and prints each path with its size; `--dry-run` lists without removing. It never touches the diagnostics sink, the feedback notes or the migration backups; it lists the backups with their age and the command that deletes one by hand. Removing a rebuildable cache destroys no work, so the command asks nothing.
+3. **Nothing outside the state folder** is removed by either rule, except that the listing names the backups in the project root.
+
 ## Related Specifications
 
 - [l2-skill-layout.md](l2-skill-layout.md) — §5.3 Location Resolution is the design §Project Location implements; its delivery order puts this step first.
@@ -323,6 +348,7 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.27.0 | 2026-10-29 | Agent | **Cache Retention** (origin `user-stated`: the owner's list of 2026-10-29 — clean the engine cache periodically, with a separate simple command): the inventory of every cache with owner, rebuild path and bound; writers prune their own entries after a successful write (the graph extraction cache measured at 148 entries for 98 Markdown files, never pruned); a `clean-cache` subcommand for the rebuildable caches that never touches recorded findings, feedback notes or migration backups. Amendment Rule: `Stable → RFC`. |
 | 1.26.0 | 2026-10-29 | Agent | Deployment of a simulation pass over the shipped engine (every finding reproduced on a disposable copy before it was fixed). New **Command Line Contract** (the command table, help and refusal before any script runs, the guard in each script, the maintenance guard, the drift check, a child ended by a signal); **Provisioning** only for a writing command and its note on stderr; **Line endings are not drift** (`ENGINE_LINE_ENDINGS`, `[AMENDED]`); **Root-only floor names**; the Path Matching Contract recorded as **built**; **Pre-Flight Output in Human Mode**; the hook backup name corrected to `pre-commit.magic-spec.bak` (a bulk-rename corruption had left `pre-commitskills/magicspec-spec.bak`); Node.js 18 as the stated runtime floor; Components and Canonical References gain `lib/commands.js`, `lib/file-lock.js`, `scripts/cli-guard.js` and the renamed `lib/changelog-bullets.js`; a missing engine file is named before a script starts. Specification changed together with the code it describes; the cases are named in [l2-test-suite.md](l2-test-suite.md). |
 | 1.25.0 | 2026-10-29 | Agent | Added **Context-Economy Surfaces** after a token audit: the working-document budget (`DOC_BLOAT` / `DOC_DECOMPOSE`, 30 / 60 KB, `bloat.doc`), the rule kernel (`AGENT-RULES.md` under 16 KB, sections with a trigger in `references/rules/`), `build-spec-graph --json --out`; recorded what was not adopted and why. Bloat Advisory Configuration deployment status corrected to built. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.24.1 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

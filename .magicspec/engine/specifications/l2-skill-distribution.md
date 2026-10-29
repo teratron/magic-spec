@@ -1,7 +1,7 @@
 # Skill Distribution: Rule, Command Surfaces, Installation & Migration
 
-**Version:** 1.6.0
-**Status:** Stable
+**Version:** 1.7.0
+**Status:** RFC
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
 
@@ -97,6 +97,18 @@ The plugin is a distribution channel, not a second engine: it carries the same f
 
 Installation remains drivable by an agent: the README's install prompt names the archive, the target folder per host and the `init` command; it is updated with the verified table.
 
+**Agent-assisted installation contract** `[ADDED]`. The README's install prompt is the primary installation path (the owner's list of 2026-10-29: "installation for the user through a prompt for the AI"). It exists today with four steps; it does not check the runtime, does not look for an engine already installed, gives no fetch command, verifies nothing after placing the folder and has no failure path. The prompt therefore states, in this order:
+
+1. **Ask only intent**: the hosts to configure, and stable release or current branch — the two choices only the person can make.
+2. **Check the runtime**: `node --version` meets the stated floor; otherwise stop and say which version is needed.
+3. **Look for an installed engine**: an existing skill folder of this engine → read its `.version`; a 3.x folder is an update (§5.4, replace the folder, keep the state); a 2.x layout (the earlier engine and state folders) → install the new folder beside it and run `/magicspec:migrate` instead of `init` (§5.6).
+4. **Fetch**: the release asset's exact address pattern, with one command for a POSIX shell and one for PowerShell, and the current-branch alternative; extract into a temporary folder outside the project and copy only `skills/magicspec/`.
+5. **Place and verify**: copy the folder to the first host's skills folder, then run `update-engine-meta --check` — a mismatch means a corrupt download, and the agent deletes the copy and fetches again once.
+6. **Initialize**: `init --host=…`; any non-zero exit is reported verbatim and stops the prompt.
+7. **Finish**: add the printed ignore lines, run `check-prerequisites`, and end with one line naming `/magicspec:help` as the next step.
+
+The prompt never edits the folder after placing it, never commits, and asks nothing beyond step 1.
+
 ### 5.4 Update
 
 Replace the skill folder with the new release, then run `init` again. Replacing touches nothing in the state folder (SP-8). The upgrade-detection comparison reads the skill's `.version` against the registry snapshot, exactly as today. A projection older than its source is reported as stale (§5.1); `init` regenerates it.
@@ -154,6 +166,7 @@ The name is the single constant of `l2-skill-layout.md` §5.3. At the rename ste
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.7.0 | 2026-10-29 | Agent | **§5.3 Agent-assisted installation contract** (origin `user-stated`: the owner's list of 2026-10-29): the README install prompt checks the runtime, detects an installed engine and routes a 2.x layout to `/magicspec:migrate`, gives fetch commands for both shells, verifies the placed folder with `update-engine-meta --check`, stops on an `init` failure and ends on `/magicspec:help`. Amendment Rule: `Stable → RFC`. |
 | 1.6.0 | 2026-10-29 | Agent | Deployment of a simulation pass. **§5.3**: `init` prints the `.gitignore` lines and the vendoring `.gitattributes` line and records the hook installer's own reason; the marker wording matches what is built (a marker that names what the file is, no source file or version); `remove` refuses what it does not read before it touches anything. **§5.6**: the shared flag grammar and early host validation, the empty-or-occupied rule for a new state folder beside the old one with its one unblocking action, and a finished-migration message. Specification changed together with the code; cases named in [l2-test-suite.md](l2-test-suite.md). |
 | 1.5.0 | 2026-10-28 | Agent | Recorded as built by step 5. **Migration** is the shipped subcommand `migrate` (dry run by default, `--apply` to execute): it reads the filesystem, backs up what it removes into a dated folder, installs the projections and the hook, renames the state folder and rewrites the `workspace.json` entries that name it, removes the old engine last, and verifies; a file the old manifest names that differs is reported `ENGINE_FILE_MODIFIED` and kept; without the old manifest no file of the engine folder is removed (`ENGINE_MANIFEST_MISSING`); a layout older than 2.x is refused with the way forward. **The unmigrated project**: the executor stops every other command on a project that still has the earlier state folder (judged by its `workspace.json` or `INDEX.md`, so design assets under that name do not count), and with both folders present it names one path; the earlier name is one constant, `LEGACY_STATE_DIR_NAME`. **The archive**: `scripts/archive-composition.js` lists what goes in and checks the finished archive from the same rule; the release workflow builds from the list and runs the check. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.4.0 | 2026-10-28 | Agent | Recorded as built: `refreshProjections` (the C14 write branch rewrites projections that exist and have fallen behind, removes an entry whose command left the router, creates none) and the rule that a file reached through two hosts' folders is one projection; the repository's own projections are written by `init --host=claude,codex`, the Codex pointer block sits in `AGENTS.md`, and the maintenance init scripts call `init --host` instead of linking files; the README carries the verified host table, the install prompt and the removal command. |

@@ -1,7 +1,7 @@
 # Idea Intake Gate
 
-**Version:** 2.0.3
-**Status:** Stable
+**Version:** 2.1.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
@@ -16,6 +16,7 @@ It establishes: a self-resolution mandate (the agent exhausts its own investigat
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - The output-side twin. IK-5 wording violations are PQ findings under the ambiguity and cognitive-load lenses.
 - [l1-engine-core.md](l1-engine-core.md) - Hosts C9/C25 semantics and the `spec.md` Anti-Stall invariant that IK-9 amends.
 - [l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) - Fork class E5. Its routing forecast runs *before* this gate; workspace resolution never enters the intake survey.
+- [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The `prompt-engineer` input pass that now precedes this gate and performs its comprehension check (IP-6); the sufficiency check, the survey and its convergence rules stay here. `[ADDED]`
 - [l1-multi-angle-review.md](l1-multi-angle-review.md) - Post-dispatch review lenses. The gate improves that review's input; it does not replace the review.
 
 ## 1. Motivation
@@ -325,7 +326,9 @@ The two are structurally symmetric, and folding them together was considered. Re
 
 Resolving F1–F3 by the Consequence Forecast alone, as engine forks are resolved. A first 2.0.0 draft did this; the owner rejected it the same day (§1.3). When the text is vague or the input thin, the readings a forecast would weigh are themselves invented, so its premise is a guess about the requester's head; and at intake a question costs one turn — the requester has just supplied the idea and nothing is built ([l1-decision-autonomy.md](l1-decision-autonomy.md) DA-10 ranks it with one revert). The forecast stays in the gate: it writes the options, marks the recommended one and answers what the requester delegates.
 
-### 6.7 Rejected: a persona for each gate `[ADDED]`
+### 6.7 Rejected: a persona for each gate `[ADDED]` — superseded 2026-10-29 `[MODIFIED]`
+
+**Superseded for the comprehension gate.** The owner's list of 2026-10-29 requires every piece of human prose arriving with a command to pass through the prompt engineer; [l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6 therefore performs Gate 1 (F1, F2) in the `prompt-engineer` stance, on the intent statement the input pass produces. Gate 2 (F3), the survey and IK-6 remain steps of the acting agent, as decided below. The original record follows.
 
 The owner's flowchart draws the comprehension step as a "prompt engineer" and the sufficiency step as a "spec engineer (CEO, manager or prompt engineer?)", the last left open. Both gates stay steps of the acting agent in `spec.md`: a persona owning them would restate the workflow's own text (C2, `l1-role-system.md` R4), and the `prompt-engineer` card already audits the gate after the fact (§4.6) — the output-side reviewer reviewing the input-side step, not performing it (§6.5).
 
@@ -344,6 +347,7 @@ The owner's flowchart draws the comprehension step as a "prompt engineer" and th
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 2.1.0 | 2026-10-29 | Gate 1 (comprehension) is performed in the `prompt-engineer` stance on the input pass's intent statement ([l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6), superseding §6.7 for that gate (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"). F1–F3, the survey, IK-6 and E6's scope are unchanged. Amendment Rule: `Stable → RFC`. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

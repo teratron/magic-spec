@@ -1,6 +1,6 @@
 # Spec Graph Memory & Token Economy
 
-**Version:** 1.4.1
+**Version:** 1.4.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -173,6 +173,8 @@ Surfaces that carry the routing when it is deployed:
 
 Everything the graph subsystem derives lives in one folder, `$designDir/graph/`: the extraction cache (`.cache/`), the wiki (`wiki/`), the interactive page (`graph.html`) and the two comparison snapshots the retrospective writes (`snapshot.json`, `before.json`). The wiki belongs there because it is generated from the graph and is stale the moment the graph is. The paths are defined once, in `utils.js` (`graphPaths`); no other script spells them. The general state cache (`$designDir/.cache/`) is not graph-specific and is not moved.
 
+**Whose graph.** The graph, the wiki and the page always describe the project the executor resolves as its root — that project's own state folder: its specifications, constitution, plan and the files its specifications name. In a project that installed the engine they map that project; in the engine's own repository they map the engine's own specification workspace, because that repository specifies itself. They are never shipped: the release archive carries the skill folder only, and an installed engine starts with no graph until its first refresh. They do not map product code beyond the files a specification names in its `Canonical References`.
+
 **Earlier locations.** Before the folder existed these lived at `$designDir/.graph-cache/`, `wiki/`, `spec-graph.html`, `graph-snapshot.json` and `graph-before.json`. A writer retires the names it replaces, and only after it has succeeded: `export-wiki` (default output only; a custom `--out` retires nothing) the cache, the wiki and the two snapshot files, `build-spec-graph --html` (default path only) the page. The cache, the wiki and the page are regenerated, so they are removed; the snapshot files carry a baseline the next comparison needs, so they are moved into the folder unless a file is already there. One informational line names what was retired. Only the five exact names are touched, never a folder by pattern.
 
 ### 4.7 The Interactive Page `[ADDED]`
@@ -231,6 +233,7 @@ Everything the graph subsystem derives lives in one folder, `$designDir/graph/`:
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.2 | 2026-10-29 | Agent | Clarification (no requirement changed): §4.6 states whose graph it is — always the resolved project's own state folder, never shipped, product code only through `Canonical References` — answering the owner's question of 2026-10-29 ("for which project is the wiki-graph created"). |
 | 1.4.1 | 2026-10-29 | Agent | New **§4.8 Reading the Graph from a Child Process (Scale)**: the explicit output buffer of `export-wiki` and `serve-spec-graph`, found by a load ramp (the default 1 MiB ended the run at about 2000 specifications). |
 | 1.4.0 | 2026-10-29 | Agent | New **§4.7 The Interactive Page**: the palette and legend fix (the improved layout re-coloured most nodes), a pinned library with an integrity hash, a visible failure state with the summary drawn first, a narrow-screen layout and the accessibility minimum, from a browser pass over the generated page. Specification changed together with the code; the page cases are in [l2-test-suite.md](l2-test-suite.md). |
 | 1.3.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

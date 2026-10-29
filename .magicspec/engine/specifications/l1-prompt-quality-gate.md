@@ -1,7 +1,7 @@
 # Prompt Quality Gate
 
-**Version:** 1.0.1
-**Status:** Stable
+**Version:** 1.1.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
@@ -14,6 +14,8 @@ Establishes instruction-quality governance for all AI-facing artifacts produced 
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Card content implementing the review protocol defined here.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side wiring of the gates mandated by PQ-2.
 - [l1-engine-core.md](l1-engine-core.md) - Core invariants; this spec extends the reviewer-gate family (C24 lineage).
+- [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The input-side pass that reuses the PQ-3 taxonomy on what the engine receives (§4).
+- [l1-community-health-files.md](l1-community-health-files.md) - The contributor files PQ-1 classifies as AI-facing (HF-5).
 
 ## 1. Motivation
 
@@ -49,6 +51,7 @@ An artifact is **AI-facing** when an agent loads it as operating instructions ra
 | Workflow bodies | engine workflow files | every workflow invocation |
 | Templates | engine template files | artifact authoring |
 | Adapter instructions | agent rules and wrapper files | session bootstrap |
+| Contributor instructions `[ADDED]` | `CONTRIBUTING.md`, `SECURITY.md`, issue forms | agents contributing to the repository |
 
 Aggregate registries (`INDEX.md`), changelogs, and archives are **not** AI-facing: they are navigational or historical data, exempt from the gate.
 
@@ -100,6 +103,9 @@ Concept-level placement of the gate across the workflow surface. Exact step numb
 | rule governance | after constitutional-reviewer APPROVE, before rule write | proposed rule wording in composition with existing tiers |
 | ventilation (analyze) | audit dimension feeding the pre-advisory audit | existing AI-facing artifacts (PQ-1 classes) |
 | task execution | conditional gate when the diff touches AI-facing engine artifacts, before QA review | changed instruction text in the diff |
+| every command (input side) `[ADDED]` | before the workflow acts on the invocation | the human prose the invocation carries ([l1-input-prompt-pass.md](l1-input-prompt-pass.md)) |
+
+The input-side position reviews text the engine **received**, not text it wrote, so PQ-2 (coverage of produced artifacts), PQ-6 (verdicts) and PQ-7 (ordering after a domain reviewer) do not apply to it: its output is an intent statement with findings, governed by the input pass specification. The PQ-3 dimensions and the PQ-4 precision bar apply unchanged.
 
 ## 5. Drawbacks & Alternatives
 
@@ -128,5 +134,6 @@ A static analyzer for instruction text. Rejected for the primary mechanism: ambi
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.0 | 2026-10-29 | PQ-1 gains the contributor-instructions class (`l1-community-health-files.md` HF-5); §4 gains the input-side position of `l1-input-prompt-pass.md`, with the note on which invariants apply to it. Origin `user-stated` (the owner's list of 2026-10-29). Amendment Rule: `Stable → RFC`. |
 | 1.0.1 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.0.0 | 2026-06-11 | Initial Stable. Defines PQ-1–PQ-7 invariants, AI-facing artifact classes, six-dimension review taxonomy, verdict semantics, and gate topology. Promoted via Trust Mode (C9): MVC satisfied, no RULES.md conflicts, no circular dependencies. |

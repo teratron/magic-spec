@@ -1,7 +1,7 @@
 # Unified Role System
 
-**Version:** 1.1.2
-**Status:** Stable
+**Version:** 1.2.0
+**Status:** RFC
 **Layer:** concept
 
 ## Overview
@@ -13,6 +13,9 @@ Defines a unified, first-class registry of agent roles used across all SDD workf
 - [l1-engine-core.md](l1-engine-core.md) - Core invariants and runtime guards; C24 Role-Switching Gate is superseded by this spec.
 - [l2-agent-surface.md](l2-agent-surface.md) - Adapter-facing surface; role cards are part of the surface exposed to adapters.
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Instruction-quality discipline enforced by the `prompt-engineer` role (registry entry §4.3).
+- [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The input-side trigger of `prompt-engineer` (§4.4).
+- [l1-interface-design.md](l1-interface-design.md) - Governs the `ui-ux-designer` role (§4.4).
+- [l1-product-simulation.md](l1-product-simulation.md) - Governs the `simulator-tester` role (§4.4).
 
 ## 1. Motivation
 
@@ -44,7 +47,7 @@ This specification establishes a unified role system that (a) makes the full rol
 
 - The engine is authored in English-only identifiers (per global language policy), and role `id` fields follow kebab-case.
 - The initial migration preserves behavior: no workflow loses a gate, no gate is silently dropped. New roles (Coder, Code-reviewer, Code-simplifier, Code-skeptic, Debugger, Docs-specialist) are *additions*, not replacements, except where a legacy persona is explicitly renamed (e.g., Tester → Test-engineer).
-- Frontend-specialist and other domain-specific roles are deferred to backlog; the initial registry is domain-agnostic.
+- Frontend-specialist and other domain-specific roles are deferred to backlog; the initial registry is domain-agnostic. (Closed 2026-10-29: the `ui-ux-designer` of §4.4 covers the frontend item.)
 
 ## 3. Core Invariants
 
@@ -119,7 +122,7 @@ Role cards distributed with the engine are part of the engine surface and are NO
 
 ## 4. Role Inventory (Initial Registry)
 
-This spec defines *which roles exist* at the concept level. Concrete card content (Mission, Operating Protocol, Anti-patterns, full trigger wiring) is an L2 concern. The registry contains **14 roles**: the initial 13 (new roles + C24 migrations) plus the quality-governance extension (§4.3):
+This spec defines *which roles exist* at the concept level. Concrete card content (Mission, Operating Protocol, Anti-patterns, full trigger wiring) is an L2 concern. The registry contains **16 roles**: the initial 13 (new roles + C24 migrations), the quality-governance extension (§4.3) and the product-surface extension (§4.4):
 
 ### 4.1 New Roles (Code-Writing Coverage)
 
@@ -151,6 +154,15 @@ Note: the C24 `Planning Skeptic` is absorbed into `planner` (advisor layer carri
 | id | layer | Purpose |
 | --- | --- | --- |
 | `prompt-engineer` | reviewer | Instruction-quality gate over all AI-facing artifacts (specs, rules, task units, role cards, workflow bodies, templates). Fires after the domain reviewer at every artifact-producing gate; also serves as an audit lens during ventilation. Governed by [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md). |
+
+### 4.4 Product Surface Extension (v1.2.0) [ADDED]
+
+| id | layer | Purpose |
+| --- | --- | --- |
+| `ui-ux-designer` | executor | Interface design, layout and front-end work: writes the interface sections and the design-system specification, adds design acceptance to interface tasks, and is the stance `coder` adopts for interface work. Governed by [l1-interface-design.md](l1-interface-design.md). Closes the parked `frontend-specialist` backlog item. |
+| `simulator-tester` | reviewer | Writes the product's user-interaction scenarios at planning time and with every task that changes user-facing behaviour, and executes them in `simulate`. Distinct from `test-engineer`, which gates one task. Governed by [l1-product-simulation.md](l1-product-simulation.md). |
+
+The `prompt-engineer` (§4.3) gains an **input-side trigger**: every command invocation that carries human prose passes through it before the workflow acts ([l1-input-prompt-pass.md](l1-input-prompt-pass.md)). It stays a reviewer: on input it produces an intent statement and findings, never the workflow's artifact.
 
 ## 5. Lifecycle & Governance
 
@@ -211,6 +223,7 @@ Placing roles in `skills/magicspec/roles/{layer}/` (e.g., `skills/magicspec/role
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.0 | 2026-10-29 | Registry extended 14 → 16 (§4.4, origin `user-stated`: the owner's list of 2026-10-29): `ui-ux-designer` (executor) and `simulator-tester` (reviewer); `prompt-engineer` gains the input-side trigger of `l1-input-prompt-pass.md`. Amendment Rule: `Stable → RFC`. |
 | 1.1.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.1.0 | 2026-06-11 | Registry extended 13 → 14: added `prompt-engineer` (reviewer) as §4.3 Quality Governance Extension, governed by l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9); C12 cascade not triggered. |
