@@ -2745,14 +2745,22 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
-    test('shipped text: ventilation carries the setting-parity check and its checklist entry', () => {
-        const repoRoot = path.resolve(__dirname, '..');
-        const lines = fs
+    const analyzeWorkflowLines = () =>
+        fs
             .readFileSync(
-                path.join(repoRoot, 'skills', 'magicspec', 'workflows', 'analyze.md'),
+                path.join(
+                    path.resolve(__dirname, '..'),
+                    'skills',
+                    'magicspec',
+                    'workflows',
+                    'analyze.md',
+                ),
                 'utf8',
             )
             .split('\n');
+
+    test('shipped text: ventilation carries the setting-parity check and its checklist entry', () => {
+        const lines = analyzeWorkflowLines();
 
         const step = lines.find((l) => l.includes('**Setting Parity** (`PHANTOM_SETTING`)'));
         assert.ok(step, 'Mode C step 2 must carry the setting-parity check');
@@ -2787,13 +2795,7 @@ describe('Magic Engine Scripts', () => {
     //     goes with it.
     // ───────────────────────────────────────────────────────────────────────────
     test("shipped text: the containment scan keeps the quoting precondition for the engine's own files only, and reports a code-quoted occurrence in a consumer's product markdown", () => {
-        const repoRoot = path.resolve(__dirname, '..');
-        const lines = fs
-            .readFileSync(
-                path.join(repoRoot, 'skills', 'magicspec', 'workflows', 'analyze.md'),
-                'utf8',
-            )
-            .split('\n');
+        const lines = analyzeWorkflowLines();
 
         const bullet = lines.find((l) => l.includes('**Precondition (SH-1)'));
         assert.ok(bullet, 'step 6 must carry the quoting precondition');
@@ -2824,13 +2826,9 @@ describe('Magic Engine Scripts', () => {
 
     test('shipped text: the scaffold-removal exemption says the pre-commit hook disarms itself and never that it is removed with the scaffold, in step 6a and in the rules (both copies)', () => {
         const repoRoot = path.resolve(__dirname, '..');
-        const stepLine = fs
-            .readFileSync(
-                path.join(repoRoot, 'skills', 'magicspec', 'workflows', 'analyze.md'),
-                'utf8',
-            )
-            .split('\n')
-            .find((l) => l.includes('**Exempt**: the git pre-commit hook'));
+        const stepLine = analyzeWorkflowLines().find((l) =>
+            l.includes('**Exempt**: the git pre-commit hook'),
+        );
         assert.ok(stepLine, 'step 6a must exempt the hook');
 
         const rules = fs.readFileSync(
@@ -12471,6 +12469,23 @@ describe('Magic Engine Scripts', () => {
         return { tempDir, nested };
     };
 
+    // Runs `body` once per root mode on a fresh fixture, removed afterwards.
+    const forEachRootFixture = (body) => {
+        for (const mode of ROOT_MODES) {
+            const { tempDir, nested } = makeRootFixture();
+            try {
+                body({
+                    mode,
+                    tempDir,
+                    nested,
+                    run: (cwd, script, args) => runScript(mode, tempDir, cwd, script, args),
+                });
+            } finally {
+                cleanup(tempDir);
+            }
+        }
+    };
+
     // A command run from `a/b` must leave nothing of the project there.
     const assertNoStrayProject = (nested, what) => {
         for (const name of ['.magicspec', '.git', 'skills', 'CHANGELOG.md']) {
@@ -12540,177 +12555,160 @@ describe('Magic Engine Scripts', () => {
     });
 
     test('resume-state, diagnostics, bloat, archival and finalize act on the project from a subdirectory (SP-2)', () => {
-        for (const mode of ROOT_MODES) {
-            const { tempDir, nested } = makeRootFixture();
-            try {
-                const run = (cwd, script, args) => runScript(mode, tempDir, cwd, script, args);
-                const where = (what) => `${mode}: ${what}`;
+        forEachRootFixture(({ mode, tempDir, nested, run }) => {
+            const where = (what) => `${mode}: ${what}`;
 
-                const fromRoot = run(tempDir, 'resume-state', ['--workspace=engine']);
-                const fromNested = run(nested, 'resume-state', ['--workspace=engine']);
-                assert.strictEqual(fromRoot.status, 0);
-                assert.ok(fromRoot.stdout.includes('T-1A01'), where('the task in flight is named'));
-                assert.strictEqual(
-                    fromNested.stdout,
-                    fromRoot.stdout,
-                    where('resume-state from a subdirectory'),
-                );
+            const fromRoot = run(tempDir, 'resume-state', ['--workspace=engine']);
+            const fromNested = run(nested, 'resume-state', ['--workspace=engine']);
+            assert.strictEqual(fromRoot.status, 0);
+            assert.ok(fromRoot.stdout.includes('T-1A01'), where('the task in flight is named'));
+            assert.strictEqual(
+                fromNested.stdout,
+                fromRoot.stdout,
+                where('resume-state from a subdirectory'),
+            );
 
-                const recorded = run(nested, 'record-diagnostic', [
-                    '--severity=warning',
-                    '--source=agent',
-                    '--code=ROOT_PROBE',
-                    '--message=probe',
-                ]);
-                assert.strictEqual(recorded.status, 0);
-                const sink = path.join(tempDir, '.magicspec', '.cache', 'diagnostics.jsonl');
-                assert.ok(
-                    fs.existsSync(sink) && fs.readFileSync(sink, 'utf8').includes('ROOT_PROBE'),
-                    where('the finding lands in the project sink, not beside the caller'),
-                );
+            const recorded = run(nested, 'record-diagnostic', [
+                '--severity=warning',
+                '--source=agent',
+                '--code=ROOT_PROBE',
+                '--message=probe',
+            ]);
+            assert.strictEqual(recorded.status, 0);
+            const sink = path.join(tempDir, '.magicspec', '.cache', 'diagnostics.jsonl');
+            assert.ok(
+                fs.existsSync(sink) && fs.readFileSync(sink, 'utf8').includes('ROOT_PROBE'),
+                where('the finding lands in the project sink, not beside the caller'),
+            );
 
-                for (const [script, args] of [
-                    ['check-bloat', []],
-                    ['archive-phases', ['--dry-run']],
-                ]) {
-                    const a = run(tempDir, script, args);
-                    const b = run(nested, script, args);
-                    assert.strictEqual(b.status, a.status, where(`${script}: same exit status`));
-                    assert.strictEqual(b.stdout, a.stdout, where(`${script}: same output`));
-                }
-
-                const fin = run(nested, 'finalize', [
-                    '--workflow=spec',
-                    '--workspace=engine',
-                    '--dry-run',
-                ]);
-                assert.strictEqual(fin.status, 0, where(`finalize: ${fin.stdout}${fin.stderr}`));
-                assert.ok(
-                    !/not found/.test(fin.stdout + fin.stderr),
-                    where('finalize finds the state folder'),
-                );
-                assertNoStrayProject(nested, where('these commands'));
-            } finally {
-                cleanup(tempDir);
+            for (const [script, args] of [
+                ['check-bloat', []],
+                ['archive-phases', ['--dry-run']],
+            ]) {
+                const a = run(tempDir, script, args);
+                const b = run(nested, script, args);
+                assert.strictEqual(b.status, a.status, where(`${script}: same exit status`));
+                assert.strictEqual(b.stdout, a.stdout, where(`${script}: same output`));
             }
-        }
+
+            const fin = run(nested, 'finalize', [
+                '--workflow=spec',
+                '--workspace=engine',
+                '--dry-run',
+            ]);
+            assert.strictEqual(fin.status, 0, where(`finalize: ${fin.stdout}${fin.stderr}`));
+            assert.ok(
+                !/not found/.test(fin.stdout + fin.stderr),
+                where('finalize finds the state folder'),
+            );
+            assertNoStrayProject(nested, where('these commands'));
+        });
     });
 
     test('the graph scripts read and write the project from a subdirectory: graph, wiki, coverage, communities and rationale (SP-2)', () => {
-        for (const mode of ROOT_MODES) {
-            const { tempDir, nested } = makeRootFixture();
-            try {
-                const run = (cwd, script, args) => runScript(mode, tempDir, cwd, script, args);
-                const graphOf = (cwd) =>
-                    JSON.parse(run(cwd, 'build-spec-graph', ['--json']).stdout);
+        forEachRootFixture(({ mode, tempDir, nested, run }) => {
+            const graphOf = (cwd) =>
+                JSON.parse(run(cwd, 'build-spec-graph', ['--json']).stdout);
+            assert.deepStrictEqual(
+                graphOf(nested).nodes.map((n) => n.id),
+                graphOf(tempDir).nodes.map((n) => n.id),
+                `${mode}: build-spec-graph, same nodes from a subdirectory`,
+            );
+            assert.ok(graphOf(nested).nodes.some((n) => n.id === 'ws:engine'));
+
+            for (const script of [
+                'analyze-coverage',
+                'detect-communities',
+                'extract-rationale',
+            ]) {
+                const args =
+                    script === 'extract-rationale' ? ['--json', '--scope', 'src'] : ['--json'];
+                const a = run(tempDir, script, args);
+                const b = run(nested, script, args);
+                assert.strictEqual(
+                    a.status,
+                    0,
+                    `${mode}: ${script} from the root: ${a.stderr}`,
+                );
+                assert.strictEqual(b.status, a.status, `${mode}: ${script}: same exit status`);
                 assert.deepStrictEqual(
-                    graphOf(nested).nodes.map((n) => n.id),
-                    graphOf(tempDir).nodes.map((n) => n.id),
-                    `${mode}: build-spec-graph, same nodes from a subdirectory`,
+                    JSON.parse(b.stdout),
+                    JSON.parse(a.stdout),
+                    `${mode}: ${script}: same result from a subdirectory`,
                 );
-                assert.ok(graphOf(nested).nodes.some((n) => n.id === 'ws:engine'));
-
-                for (const script of [
-                    'analyze-coverage',
-                    'detect-communities',
-                    'extract-rationale',
-                ]) {
-                    const args =
-                        script === 'extract-rationale' ? ['--json', '--scope', 'src'] : ['--json'];
-                    const a = run(tempDir, script, args);
-                    const b = run(nested, script, args);
-                    assert.strictEqual(
-                        a.status,
-                        0,
-                        `${mode}: ${script} from the root: ${a.stderr}`,
+                if (script === 'extract-rationale') {
+                    assert.ok(
+                        b.stdout.includes('probe.js'),
+                        `${mode}: the rationale scan covers the project's sources, not the caller's directory`,
                     );
-                    assert.strictEqual(b.status, a.status, `${mode}: ${script}: same exit status`);
-                    assert.deepStrictEqual(
-                        JSON.parse(b.stdout),
-                        JSON.parse(a.stdout),
-                        `${mode}: ${script}: same result from a subdirectory`,
-                    );
-                    if (script === 'extract-rationale') {
-                        assert.ok(
-                            b.stdout.includes('probe.js'),
-                            `${mode}: the rationale scan covers the project's sources, not the caller's directory`,
-                        );
-                    }
                 }
-
-                const wiki = run(nested, 'export-wiki', []);
-                assert.strictEqual(wiki.status, 0, wiki.stdout + wiki.stderr);
-                assert.ok(
-                    fs.existsSync(path.join(tempDir, '.magicspec', 'graph', 'wiki', 'index.md')),
-                    `${mode}: the wiki is written under the project`,
-                );
-                assertNoStrayProject(nested, `${mode}: the graph scripts`);
-            } finally {
-                cleanup(tempDir);
             }
-        }
+
+            const wiki = run(nested, 'export-wiki', []);
+            assert.strictEqual(wiki.status, 0, wiki.stdout + wiki.stderr);
+            assert.ok(
+                fs.existsSync(path.join(tempDir, '.magicspec', 'graph', 'wiki', 'index.md')),
+                `${mode}: the wiki is written under the project`,
+            );
+            assertNoStrayProject(nested, `${mode}: the graph scripts`);
+        });
     });
 
     test('installers, writers and rotators put their files in the project when run from a subdirectory: hooks, workspaces, state, context, changelog (SP-2)', () => {
-        for (const mode of ROOT_MODES) {
-            const { tempDir, nested } = makeRootFixture();
-            try {
-                const run = (script, args) => runScript(mode, tempDir, nested, script, args);
+        forEachRootFixture(({ mode, tempDir, nested }) => {
+            const run = (script, args) => runScript(mode, tempDir, nested, script, args);
 
-                const hook = run('install-hooks', []);
-                assert.strictEqual(hook.status, 0, hook.stdout + hook.stderr);
-                assert.ok(
-                    fs.existsSync(path.join(tempDir, '.git', 'hooks', 'pre-commit')),
-                    `${mode}: the hook is installed in the repository root`,
-                );
+            const hook = run('install-hooks', []);
+            assert.strictEqual(hook.status, 0, hook.stdout + hook.stderr);
+            assert.ok(
+                fs.existsSync(path.join(tempDir, '.git', 'hooks', 'pre-commit')),
+                `${mode}: the hook is installed in the repository root`,
+            );
 
-                const ws = run('create-workspace', ['--name=ws2']);
-                assert.strictEqual(ws.status, 0, ws.stdout + ws.stderr);
-                assert.ok(
-                    fs.existsSync(path.join(tempDir, '.magicspec', 'ws2', 'specifications')),
-                    mode,
-                );
+            const ws = run('create-workspace', ['--name=ws2']);
+            assert.strictEqual(ws.status, 0, ws.stdout + ws.stderr);
+            assert.ok(
+                fs.existsSync(path.join(tempDir, '.magicspec', 'ws2', 'specifications')),
+                mode,
+            );
 
-                const state = run('update-state', [
-                    '--workspace=engine',
-                    '--next-action=Probe from a subdirectory',
-                ]);
-                assert.strictEqual(state.status, 0, state.stdout + state.stderr);
-                assert.ok(
-                    fs
-                        .readFileSync(
-                            path.join(tempDir, '.magicspec', 'engine', 'STATE.md'),
-                            'utf8',
-                        )
-                        .includes('Probe from a subdirectory'),
-                    `${mode}: STATE.md of the project is updated`,
-                );
+            const state = run('update-state', [
+                '--workspace=engine',
+                '--next-action=Probe from a subdirectory',
+            ]);
+            assert.strictEqual(state.status, 0, state.stdout + state.stderr);
+            assert.ok(
+                fs
+                    .readFileSync(
+                        path.join(tempDir, '.magicspec', 'engine', 'STATE.md'),
+                        'utf8',
+                    )
+                    .includes('Probe from a subdirectory'),
+                `${mode}: STATE.md of the project is updated`,
+            );
 
-                const ctx = run('generate-context', ['--workspace=engine']);
-                assert.strictEqual(ctx.status, 0, ctx.stdout + ctx.stderr);
-                assert.ok(
-                    fs.existsSync(path.join(tempDir, '.magicspec', 'engine', 'CONTEXT.md')),
-                    mode,
-                );
+            const ctx = run('generate-context', ['--workspace=engine']);
+            assert.strictEqual(ctx.status, 0, ctx.stdout + ctx.stderr);
+            assert.ok(
+                fs.existsSync(path.join(tempDir, '.magicspec', 'engine', 'CONTEXT.md')),
+                mode,
+            );
 
-                fs.writeFileSync(
-                    path.join(tempDir, 'CHANGELOG.md'),
-                    '# Changelog\n\n## [Unreleased]\n\n### Changed\n\n- a change\n',
-                );
-                fs.writeFileSync(path.join(tempDir, '.magicspec', '.version'), '0.1.0\n');
-                const rel = run('release-changelog', ['--date=2026-01-02']);
-                assert.strictEqual(rel.status, 0, rel.stdout + rel.stderr);
-                assert.ok(
-                    /## \[0\.1\.0\]/.test(
-                        fs.readFileSync(path.join(tempDir, 'CHANGELOG.md'), 'utf8'),
-                    ),
-                    `${mode}: the changelog of the project is rotated`,
-                );
-                assertNoStrayProject(nested, `${mode}: these commands`);
-            } finally {
-                cleanup(tempDir);
-            }
-        }
+            fs.writeFileSync(
+                path.join(tempDir, 'CHANGELOG.md'),
+                '# Changelog\n\n## [Unreleased]\n\n### Changed\n\n- a change\n',
+            );
+            fs.writeFileSync(path.join(tempDir, '.magicspec', '.version'), '0.1.0\n');
+            const rel = run('release-changelog', ['--date=2026-01-02']);
+            assert.strictEqual(rel.status, 0, rel.stdout + rel.stderr);
+            assert.ok(
+                /## \[0\.1\.0\]/.test(
+                    fs.readFileSync(path.join(tempDir, 'CHANGELOG.md'), 'utf8'),
+                ),
+                `${mode}: the changelog of the project is rotated`,
+            );
+            assertNoStrayProject(nested, `${mode}: these commands`);
+        });
     });
 
     test('init in a fresh repository creates the state tree at the repository root, and the pre-flight reads the project from a subdirectory (SP-2)', () => {
@@ -13279,6 +13277,27 @@ describe('Magic Engine Scripts', () => {
             },
         );
 
+    const initAllHosts = (skillDir, cwd) =>
+        skillExec(skillDir, cwd, 'init', ['--host=claude,codex,qwen']);
+
+    // The rule copies init writes for the hosts must be byte copies of the always-on rule source,
+    // which is returned. `describe` words the failure for a given copy.
+    const assertRuleCopies = (
+        skillDir,
+        cwd,
+        describe = (rel) => `${rel}: a byte copy of the source`,
+    ) => {
+        const source = fs.readFileSync(path.join(skillDir, 'AGENT-RULES.md'), 'utf8');
+        for (const rel of ['.claude/rules/magicspec.md', '.qwen/rules/magicspec.md']) {
+            assert.strictEqual(
+                fs.readFileSync(path.join(cwd, rel), 'utf8'),
+                source,
+                describe(rel),
+            );
+        }
+        return source;
+    };
+
     // Links are not followed or listed: a junction is a name, not a second copy of what it leads to.
     const walkFiles = (dir) =>
         fs
@@ -13490,17 +13509,10 @@ describe('Magic Engine Scripts', () => {
                 '# Mine\n\nKeep this.\n',
             );
 
-            const run = skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']);
+            const run = initAllHosts(skill, dir);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
 
-            const source = fs.readFileSync(path.join(skill, 'AGENT-RULES.md'), 'utf8');
-            for (const rel of ['.claude/rules/magicspec.md', '.qwen/rules/magicspec.md']) {
-                assert.strictEqual(
-                    fs.readFileSync(path.join(dir, rel), 'utf8'),
-                    source,
-                    `${rel}: a byte copy of the source`,
-                );
-            }
+            const source = assertRuleCopies(skill, dir);
             assert.ok(source.includes('<!-- magicspec-rule -->'), 'the source carries the marker');
 
             const rows = routerRows();
@@ -14493,27 +14505,48 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    const applyMigration = (skill, dir) => {
+        const run = skillExec(skill, dir, 'migrate', ['--apply']);
+        assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+        return run;
+    };
+
+    // Adds `key` to the old manifest with the right hash of the project's own file, applies the
+    // migration, and expects that file to survive while the honest entries are still removed.
+    const assertMigrationSparesUserFile = (skill, dir, key) => {
+        const manifestFile = path.join(dir, OLD_ENGINE, '.checksums');
+        const entries = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
+        entries[key] = require('crypto').createHash('sha256').update('user code\n').digest('hex');
+        fs.writeFileSync(manifestFile, JSON.stringify(entries));
+
+        applyMigration(skill, dir);
+        assert.strictEqual(
+            fs.readFileSync(path.join(dir, 'src', 'app.js'), 'utf8'),
+            'user code\n',
+        );
+        assert.ok(
+            !fs.existsSync(path.join(dir, OLD_ENGINE, 'scripts', 'a.js')),
+            'the honest entries are still removed',
+        );
+    };
+
+    const removeLink = (link) => {
+        try {
+            fs.unlinkSync(link);
+        } catch {
+            try {
+                fs.rmdirSync(link);
+            } catch {
+                /* already gone */
+            }
+        }
+    };
+
     test('migrate never reads or removes a path an old manifest names outside the old engine folder (migration)', () => {
         const { dir, skill } = legacyProject();
         try {
-            const crypto = require('crypto');
-            const sha = (text) => crypto.createHash('sha256').update(text).digest('hex');
-            const manifestFile = path.join(dir, OLD_ENGINE, '.checksums');
-            const entries = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
             // the hash is right, so only the folder boundary can keep this file alive
-            entries['../src/app.js'] = sha('user code\n');
-            fs.writeFileSync(manifestFile, JSON.stringify(entries));
-
-            const run = skillExec(skill, dir, 'migrate', ['--apply']);
-            assert.strictEqual(run.status, 0, run.stdout + run.stderr);
-            assert.strictEqual(
-                fs.readFileSync(path.join(dir, 'src', 'app.js'), 'utf8'),
-                'user code\n',
-            );
-            assert.ok(
-                !fs.existsSync(path.join(dir, OLD_ENGINE, 'scripts', 'a.js')),
-                'the honest entries are still removed',
-            );
+            assertMigrationSparesUserFile(skill, dir, '../src/app.js');
         } finally {
             cleanLink(dir);
             cleanup(dir);
@@ -14524,34 +14557,11 @@ describe('Magic Engine Scripts', () => {
         const { dir, skill } = legacyProject();
         const link = path.join(dir, OLD_ENGINE, 'out');
         try {
-            const crypto = require('crypto');
             fs.symlinkSync(path.join(dir, 'src'), link, 'junction');
-            const manifestFile = path.join(dir, OLD_ENGINE, '.checksums');
-            const entries = JSON.parse(fs.readFileSync(manifestFile, 'utf8'));
             // the hash is right and the key stays under the folder by name; only the link leads out
-            entries['out/app.js'] = crypto.createHash('sha256').update('user code\n').digest('hex');
-            fs.writeFileSync(manifestFile, JSON.stringify(entries));
-
-            const run = skillExec(skill, dir, 'migrate', ['--apply']);
-            assert.strictEqual(run.status, 0, run.stdout + run.stderr);
-            assert.strictEqual(
-                fs.readFileSync(path.join(dir, 'src', 'app.js'), 'utf8'),
-                'user code\n',
-            );
-            assert.ok(
-                !fs.existsSync(path.join(dir, OLD_ENGINE, 'scripts', 'a.js')),
-                'the honest entries are still removed',
-            );
+            assertMigrationSparesUserFile(skill, dir, 'out/app.js');
         } finally {
-            try {
-                fs.unlinkSync(link);
-            } catch {
-                try {
-                    fs.rmdirSync(link);
-                } catch {
-                    /* already gone */
-                }
-            }
+            removeLink(link);
             cleanLink(dir);
             cleanup(dir);
         }
@@ -14566,22 +14576,13 @@ describe('Magic Engine Scripts', () => {
             fs.rmSync(link, { recursive: true, force: true });
             fs.symlinkSync(outside, link, 'junction');
 
-            const run = skillExec(skill, dir, 'migrate', ['--apply']);
-            assert.strictEqual(run.status, 0, run.stdout + run.stderr);
+            applyMigration(skill, dir);
             assert.strictEqual(
                 fs.readFileSync(path.join(outside, 'magic.task.md'), 'utf8'),
                 'not ours\n',
             );
         } finally {
-            try {
-                fs.unlinkSync(link);
-            } catch {
-                try {
-                    fs.rmdirSync(link);
-                } catch {
-                    /* already gone */
-                }
-            }
+            removeLink(link);
             fs.rmSync(outside, { recursive: true, force: true });
             cleanLink(dir);
             cleanup(dir);
@@ -14830,16 +14831,9 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(integrity.status, 0, 'SP-9: ' + integrity.stdout + integrity.stderr);
 
             // SP-3 and SP-4: every host is projected, and the rule is the same bytes everywhere
-            const init = skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']);
+            const init = initAllHosts(skill, dir);
             assert.strictEqual(init.status, 0, 'SP-3: ' + init.stdout + init.stderr);
-            const source = fs.readFileSync(path.join(skill, 'AGENT-RULES.md'), 'utf8');
-            for (const rel of ['.claude/rules/magicspec.md', '.qwen/rules/magicspec.md']) {
-                assert.strictEqual(
-                    fs.readFileSync(path.join(dir, rel), 'utf8'),
-                    source,
-                    'SP-4: ' + rel + ' is a byte copy',
-                );
-            }
+            assertRuleCopies(skill, dir, (rel) => 'SP-4: ' + rel + ' is a byte copy');
 
             // SP-5: every router row has its body and every command entry names an existing body
             const bodies = fs.readdirSync(path.join(skill, 'workflows'));
