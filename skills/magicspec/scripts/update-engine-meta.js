@@ -79,7 +79,9 @@ function updateEngineMeta() {
         // deletion — neither is fixable by silently regenerating (that would
         // mask drift introduced by the same incident).
         if (checkOnly) {
-            console.error(`❌ ${ENGINE_REL}/.checksums missing. Restore ${ENGINE_REL}/ from origin.`);
+            console.error(
+                `❌ ${ENGINE_REL}/.checksums missing. Restore ${ENGINE_REL}/ from origin.`,
+            );
             process.exit(1);
         }
         // Developer bootstrap path: generate-checksums.js lives in scripts/

@@ -25,7 +25,13 @@ const ENGINE_POSIX = ENGINE_DIR.split(path.sep).join('/');
 const ROOT_FILES = ['README.md', 'LICENSE'];
 
 /** Files without which the archive is not an installable skill. */
-const REQUIRED = ['SKILL.md', 'AGENT-RULES.md', '.version', '.checksums', 'scripts/executor.js'].map((f) => `${ENGINE_POSIX}/${f}`);
+const REQUIRED = [
+    'SKILL.md',
+    'AGENT-RULES.md',
+    '.version',
+    '.checksums',
+    'scripts/executor.js',
+].map((f) => `${ENGINE_POSIX}/${f}`);
 
 /**
  * @param {string} rel - Archive path without the archive prefix, POSIX separators.
@@ -97,7 +103,9 @@ if (require.main === module) {
         for (const n of outside) console.error(`outside the composition: ${n}`);
         for (const m of missing) console.error(`required file missing: ${m}`);
         if (outside.length + missing.length > 0) process.exit(1);
-        console.log(`Archive composition ok: ${names.filter((n) => n && !n.endsWith('/')).length} files.`);
+        console.log(
+            `Archive composition ok: ${names.filter((n) => n && !n.endsWith('/')).length} files.`,
+        );
     } else {
         console.error('Usage: archive-composition.js list | check --prefix <prefix>');
         process.exit(2);

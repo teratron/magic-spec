@@ -48,8 +48,7 @@ function runCli() {
 
     const projectRoot = resolveProjectRoot();
     const changelogPath = path.join(projectRoot, 'CHANGELOG.md');
-    const version =
-        values['--version'] || readVersion(statePath(projectRoot, '.version')).version;
+    const version = values['--version'] || readVersion(statePath(projectRoot, '.version')).version;
     const date = values['--date'] || new Date().toISOString().slice(0, 10);
 
     const result = releaseUnreleased(changelogPath, version, date);

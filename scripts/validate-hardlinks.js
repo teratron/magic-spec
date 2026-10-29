@@ -46,7 +46,10 @@ const SIBLINGS = ['CLAUDE.md', 'GEMINI.md', 'QWEN.md', 'CODEX.md'];
 // Directory links of the repository: where the host looks, and the real folder it must reach.
 const LINKS = [
     { link: path.join('.agents', 'skills', 'magicspec'), target: ENGINE_DIR },
-    { link: path.join('.agents', 'skills', 'magicspec-dev'), target: path.join('skills', 'magicspec-dev') },
+    {
+        link: path.join('.agents', 'skills', 'magicspec-dev'),
+        target: path.join('skills', 'magicspec-dev'),
+    },
 ];
 
 const args = process.argv.slice(2);
@@ -179,11 +182,15 @@ function classifyLink(entry) {
     const targetReal = realOrNull(path.join(projectRoot, entry.target));
     if (!fs.existsSync(linkPath) && !isLink(linkPath)) {
         const tag = strict ? '❌' : '⚠️';
-        console.log(`   ${tag} Missing: ${entry.link}. Run: node ${ENGINE_POSIX}/scripts/executor.js init --host=codex`);
+        console.log(
+            `   ${tag} Missing: ${entry.link}. Run: node ${ENGINE_POSIX}/scripts/executor.js init --host=codex`,
+        );
         return 'missing';
     }
     if (!isLink(linkPath)) {
-        console.error(`   ❌ Drift: ${entry.link} is a copy, not a link to ${entry.target}. Remove it, then run /magicspec-dev:init.`);
+        console.error(
+            `   ❌ Drift: ${entry.link} is a copy, not a link to ${entry.target}. Remove it, then run /magicspec-dev:init.`,
+        );
         return 'drift';
     }
     if (targetReal === null || realOrNull(linkPath) !== targetReal) {
@@ -197,7 +204,9 @@ function classifyLink(entry) {
 function validateDirectoryLinks() {
     console.log('\n🔍 Validating directory links (host skills folder → skill folder)...');
     const { missing, drift, linked } = tallyLinkResults(LINKS.map(classifyLink));
-    console.log(`   ↳ ${linked}/${LINKS.length} linked${missing > 0 ? `, ${missing} missing` : ''}.`);
+    console.log(
+        `   ↳ ${linked}/${LINKS.length} linked${missing > 0 ? `, ${missing} missing` : ''}.`,
+    );
     return { drift, missing, fatal: false };
 }
 

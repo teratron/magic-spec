@@ -58,14 +58,14 @@ pwsh -NoProfile -File scripts/init/setup_windows.ps1 [agents...]
 bash scripts/init/setup_unix.sh [agents...]
 ```
 
-Phases executed by the script:
+Phases executed by the script (numbered as in the script; phase 1 is its configuration):
 
-2. **Cleanup** — remove existing managed links of **all** agents in `agents.json`, not only the named ones (safe pre-condition for git index ops, see [Windows Junction Safety](#windows-junction-safety) below)
-3. **Git index** — `git rm --cached --ignore-unmatch` on all managed paths
-4. **Infrastructure** — create `.agents/{workflows,skills,rules}/`
-5. **Agent links** — `.{agent}/{subdir,skills,rules}` → `.agents/` (junctions on Windows, symlinks on Unix)
-6. **Instruction links** — `{AGENT}.md` → `AGENTS.md` (hardlinks on Windows, symlinks on Unix)
-7. **Projections** — `node skills/magicspec/scripts/executor.js init --host=codex[,claude]`: the skill link `.agents/skills/magicspec` → `skills/magicspec`, the rule copy, the command entries and the `AGENTS.md` pointer block (generated, marked, never linked file by file)
+- **Phase 2, Cleanup** — remove existing managed links of **all** agents in `agents.json`, not only the named ones (safe pre-condition for git index ops, see [Windows Junction Safety](#windows-junction-safety) below)
+- **Phase 3, Git index** — `git rm --cached --ignore-unmatch` on all managed paths
+- **Phase 4, Infrastructure** — create `.agents/{workflows,skills,rules}/`
+- **Phase 5, Agent links** — `.{agent}/{subdir,skills,rules}` → `.agents/` (junctions on Windows, symlinks on Unix)
+- **Phase 6, Instruction links** — `{AGENT}.md` → `AGENTS.md` (hardlinks on Windows, symlinks on Unix)
+- **Phase 7, Projections** — `node skills/magicspec/scripts/executor.js init --host=codex[,claude]`: the skill link `.agents/skills/magicspec` → `skills/magicspec`, the rule copy, the command entries and the `AGENTS.md` pointer block (generated, marked, never linked file by file)
 
 ### 3. Verify
 
@@ -76,8 +76,10 @@ The script prints link targets and runs a per-platform integrity check:
 
 ## Resources
 
-- [scripts/setup_windows.ps1](scripts/setup_windows.ps1)
-- [scripts/setup_unix.sh](scripts/setup_unix.sh)
+- `scripts/init/setup_windows.ps1`
+- `scripts/init/setup_unix.sh`
+- `scripts/init/agents.json` — the agent registry both scripts read
+- `scripts/init/project-dev-skill.js` — links `.agents/skills/magicspec-dev` and writes the four `magicspec-dev` command entries
 
 ## Windows Junction Safety
 

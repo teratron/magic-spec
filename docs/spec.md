@@ -157,4 +157,4 @@ If the update halts first (version drift, cross-workspace parity, or a missing f
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-28 (v3.0.0).
+Synchronized with engine workflows on 2026-10-29 (v3.0.0).

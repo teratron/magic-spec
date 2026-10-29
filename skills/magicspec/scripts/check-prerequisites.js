@@ -220,7 +220,8 @@ if (reqSpecs && stableCount === 0) {
 
 if (draftCount > 0)
     warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magicspec:spec');
-if (rfcCount > 0) warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magicspec:spec');
+if (rfcCount > 0)
+    warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magicspec:spec');
 
 // One predicate answers all three pending-work questions (orphaned spec,
 // registry ahead of the plan, open Backlog item on a complete plan) for this
@@ -232,7 +233,9 @@ const pending = planExists ? findPendingWork(designDir) : null;
 // The flat legacy layout (the state folder itself) has no workspace to name.
 const planWorkspace = path.basename(designDir);
 const planRemedy =
-    planWorkspace === STATE_DIR_NAME ? '/magicspec:task update' : `/magicspec:task ${planWorkspace} update`;
+    planWorkspace === STATE_DIR_NAME
+        ? '/magicspec:task update'
+        : `/magicspec:task ${planWorkspace} update`;
 
 // The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
 // exists: a spec that is registered but absent from disk (or misnamed) is as much a
@@ -517,7 +520,9 @@ if (fs.existsSync(rolesDir)) {
                     const refId = match[1];
                     referencedIds.add(refId);
                     if (!roleIds.has(refId)) {
-                        const rel = normalizePath(path.relative(process.cwd(), path.join(root, file)));
+                        const rel = normalizePath(
+                            path.relative(process.cwd(), path.join(root, file)),
+                        );
                         warn(
                             'ROLE_MISSING',
                             `'${rel}' references @role:${refId} but card is not in ${ENGINE_REL}/roles/.`,

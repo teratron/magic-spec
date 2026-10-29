@@ -35,4 +35,3 @@ Pipeline: `spec` → `task` → `run`. `analyze`, `rule`, `status` and `graph` a
 ## Always-on rules
 
 The session rules (engine upgrade detection, the spec graph, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check) are in `AGENT-RULES.md` in this folder. A host loads a copy of that file at the start of every session. When the host did not, read the file before the first command.
-

@@ -67,7 +67,14 @@ const HOSTS = Object.freeze({
  * @returns {{hosts: string[], unknown: string[]}} Distinct names, in the order given.
  */
 function parseHosts(list) {
-    const names = [...new Set(String(list).split(',').map((n) => n.trim()).filter(Boolean))];
+    const names = [
+        ...new Set(
+            String(list)
+                .split(',')
+                .map((n) => n.trim())
+                .filter(Boolean),
+        ),
+    ];
     return {
         hosts: names.filter((n) => Object.hasOwn(HOSTS, n)),
         unknown: names.filter((n) => !Object.hasOwn(HOSTS, n)),
@@ -90,7 +97,8 @@ function readCommands() {
         const row = /^\| `([a-z][a-z-]*)` \| (.+?) \| `workflows\/[a-z-]+\.md` \|$/.exec(line);
         if (row) commands.push({ name: row[1], summary: row[2] });
     }
-    if (commands.length === 0) throw new Error(`No command rows in the router table of ${routerPath}.`);
+    if (commands.length === 0)
+        throw new Error(`No command rows in the router table of ${routerPath}.`);
     return commands;
 }
 
@@ -102,7 +110,8 @@ function readRuleSource() {
     const sourcePath = path.join(engineRoot(), 'AGENT-RULES.md');
     if (!fs.existsSync(sourcePath)) throw new Error(`Rule source not found: ${sourcePath}.`);
     const text = fs.readFileSync(sourcePath, 'utf8');
-    if (!text.includes(RULE_MARKER)) throw new Error(`The rule source carries no ${RULE_MARKER} marker.`);
+    if (!text.includes(RULE_MARKER))
+        throw new Error(`The rule source carries no ${RULE_MARKER} marker.`);
     return text;
 }
 
@@ -273,10 +282,8 @@ function projectHost(name, rootDir) {
     if (host.commands) {
         for (const command of readCommands()) {
             const file = path.join(rootDir, host.commands.dir, `${command.name}.md`);
-            const action = writeProjection(
-                file,
-                commandEntry(command, host.commands.args),
-                (t) => COMMAND_MARKER_RE.test(t),
+            const action = writeProjection(file, commandEntry(command, host.commands.args), (t) =>
+                COMMAND_MARKER_RE.test(t),
             );
             results.push({ path: rel(file), action });
         }
@@ -319,11 +326,25 @@ function findProjections(rootDir) {
             seen.add(ruleKey);
             const text = fs.readFileSync(rulePath, 'utf8');
             if (host.rule.kind === 'file' && text.includes(RULE_MARKER)) {
-                found.push({ path: rel(rulePath), host: name, kind: 'rule', stale: ruleSource !== null && text !== ruleSource });
-            } else if (host.rule.kind === 'block' && text.includes(BLOCK_BEGIN) && text.includes(BLOCK_END)) {
+                found.push({
+                    path: rel(rulePath),
+                    host: name,
+                    kind: 'rule',
+                    stale: ruleSource !== null && text !== ruleSource,
+                });
+            } else if (
+                host.rule.kind === 'block' &&
+                text.includes(BLOCK_BEGIN) &&
+                text.includes(BLOCK_END)
+            ) {
                 const begin = text.indexOf(BLOCK_BEGIN);
                 const current = text.slice(begin, text.indexOf(BLOCK_END) + BLOCK_END.length);
-                found.push({ path: rel(rulePath), host: name, kind: 'block', stale: current !== pointerBlock() });
+                found.push({
+                    path: rel(rulePath),
+                    host: name,
+                    kind: 'block',
+                    stale: current !== pointerBlock(),
+                });
             }
         }
         if (host.commands && fs.existsSync(path.join(rootDir, host.commands.dir))) {
@@ -337,12 +358,14 @@ function findProjections(rootDir) {
                 const commandKey = realOrNull(full) || full;
                 if (seen.has(commandKey)) continue;
                 seen.add(commandKey);
-                const command = commands && commands.find((c) => c.name === marker[1]);
+                const command = commands?.find((c) => c.name === marker[1]);
                 found.push({
                     path: rel(full),
                     host: name,
                     kind: 'command',
-                    stale: Boolean(commands) && (!command || text !== commandEntry(command, host.commands.args)),
+                    stale:
+                        Boolean(commands) &&
+                        (!command || text !== commandEntry(command, host.commands.args)),
                 });
             }
         }

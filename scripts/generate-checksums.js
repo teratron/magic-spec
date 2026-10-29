@@ -65,7 +65,9 @@ const isGitignored = loadGitignore(PROJECT_ROOT);
 // ───────────────────────────────────────────────────────────────────────────
 
 function run() {
-    console.log(`Generating checksums for ${normalizePath(path.relative(PROJECT_ROOT, MAGIC_DIR))}/ content...`);
+    console.log(
+        `Generating checksums for ${normalizePath(path.relative(PROJECT_ROOT, MAGIC_DIR))}/ content...`,
+    );
 
     // Integrity scope: the whole engine folder. Projections outside it (the rule
     // copy, the command entries) are generated from it and checked by init.

@@ -256,7 +256,8 @@ function inspectWorkspace(workspace) {
  */
 function countModifiedFiles() {
     if (!isGitRepo(projectRoot) || headSha(projectRoot) === null) return null;
-    return changedPaths(projectRoot).filter((file) => !file.startsWith(`${STATE_DIR_NAME}/`)).length;
+    return changedPaths(projectRoot).filter((file) => !file.startsWith(`${STATE_DIR_NAME}/`))
+        .length;
 }
 
 // ───────────────────────────────────────────────────────────────────────────

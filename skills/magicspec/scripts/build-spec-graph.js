@@ -22,7 +22,11 @@ const graphCache = require('./graph-cache');
 // Pipeline: extract → build → analyze → export (JSON / HTML / summary).
 //
 // Usage:
-//   node skills/magicspec/scripts/executor.js build-spec-graph [--json] [--html [path]] [--no-cache]
+//   node skills/magicspec/scripts/executor.js build-spec-graph [--json [--out [path]]] [--html [path]] [--no-cache]
+//
+// `--json` prints the whole graph to stdout (tens of thousands of tokens on a large
+// registry). `--json --out` writes it to a file instead (default: graph/query.json in
+// the state folder) and prints one line, so an agent reads only the part it needs.
 //
 // Environment:
 //   MAGIC_DESIGN_DIR — workspace design directory (default: .magicspec)
@@ -33,6 +37,10 @@ const graphCache = require('./graph-cache');
 
 const args = process.argv.slice(2);
 const jsonFlag = args.includes('--json');
+const outIdx = args.indexOf('--out');
+const outFlag = outIdx !== -1;
+const outPath =
+    outFlag && args[outIdx + 1] && !args[outIdx + 1].startsWith('--') ? args[outIdx + 1] : null;
 const htmlIdx = args.indexOf('--html');
 const htmlFlag = htmlIdx !== -1;
 const htmlPath =
@@ -1105,13 +1113,29 @@ function main() {
 
     // 5. Export
     if (jsonFlag) {
-        console.log(toJSON(analysis));
+        const json = toJSON(analysis);
+        if (!outFlag) {
+            console.log(json);
+            return;
+        }
+        const absOut = outPath
+            ? path.resolve(outPath)
+            : path.join(graphPaths(designAbs).dir, 'query.json');
+        mkdirSafe(path.dirname(absOut));
+        writeFileSafe(absOut, json);
+        console.log(
+            `Spec graph JSON written to: ${normalizePath(path.relative(rootDir, absOut))} ` +
+                `(${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges, ` +
+                `~${Math.round(json.length / 3.5)} tokens; read only the part you need)`,
+        );
         return;
     }
 
     if (htmlFlag) {
         // A path the user typed is relative to where they typed it; the default is the project's.
-        const absPath = htmlPath ? path.resolve(htmlPath) : path.resolve(rootDir, DEFAULT_HTML_PATH);
+        const absPath = htmlPath
+            ? path.resolve(htmlPath)
+            : path.resolve(rootDir, DEFAULT_HTML_PATH);
         const html = toHTML(analysis);
         // The graph folder may not exist yet: nothing else has written into it.
         mkdirSafe(path.dirname(absPath));

@@ -132,7 +132,9 @@ function resolveWorkspace(cliWorkspace) {
             const data = JSON.parse(fs.readFileSync(workspaceJson, 'utf8'));
             if (data.default) {
                 if (typeof data.default !== 'string' || !WORKSPACE_NAME_RE.test(data.default)) {
-                    throw new Error(`Invalid default workspace in ${STATE_DIR_NAME}/workspace.json. Must match ${WORKSPACE_NAME_RE}.`);
+                    throw new Error(
+                        `Invalid default workspace in ${STATE_DIR_NAME}/workspace.json. Must match ${WORKSPACE_NAME_RE}.`,
+                    );
                 }
                 return data.default;
             }
@@ -901,7 +903,9 @@ function main() {
 
     const designAbs = statePath(projectRoot);
     if (!fs.existsSync(designAbs)) {
-        console.error(`❌ ${STATE_DIR_NAME}/ not found at ${designAbs}. Run /magicspec:spec to bootstrap.`);
+        console.error(
+            `❌ ${STATE_DIR_NAME}/ not found at ${designAbs}. Run /magicspec:spec to bootstrap.`,
+        );
         return 1;
     }
 

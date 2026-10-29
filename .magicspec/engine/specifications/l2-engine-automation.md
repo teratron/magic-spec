@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.24.1
+**Version:** 1.25.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -123,7 +123,19 @@ All matching is repo-root-relative, forward-slash normalized, case-sensitive, an
 
 - Omitted keys fall back to defaults; a threshold set to `0` disables that signal class.
 - The spec scan walks `specifications/**` recursively — parity with the finalize significance whitelist; top-level-only scanning is a defect.
-- **Deployment status (engine 2.1.136):** specified, not built — `check-bloat.js` keeps the thresholds as constants and reads the top level of `specifications/` only (§Setting Parity).
+- **Deployment status:** built — `check-bloat.js` reads the override and walks `specifications/` recursively (since engine 3.0.0; it was specified, not built, at 2.1.136, §Setting Parity).
+
+### Context-Economy Surfaces — Size Is Paid on Every Turn `[ADDED]`
+
+**The defect** (token audit of 2026-10-29, engine 3.0.0): a turn re-reads the whole context, so what the engine makes an agent load is paid once per turn for the rest of the session. Three surfaces had no bound and no signal: the working documents every workflow reads whole (the engine's own registry was 68 KB, its plan 172 KB, its constitution 36 KB, the global registry 34 KB — about 90 000 tokens between them), the always-on rule (about 7 600 tokens in every turn of every session of every project), and the graph's structured output (about 35 000 tokens when printed). `check-bloat` measured specifications and phase files only.
+
+**Required**:
+
+1. **Working-document budget.** `check-bloat.js` also measures `INDEX.md`, `PLAN.md`, `TASKS.md` and `RULES.md` of the active workspace and the global `INDEX.md` and `RULES.md`, in kilobytes: over `soft` (default 30) → `DOC_BLOAT`, over `hard` (default 60) → `DOC_DECOMPOSE`. Each signal names its file, its size, its approximate tokens per read and a remedy specific to the document. Overridable under `bloat.doc` in `workspace.json` (`soft`, `hard`; `0` turns a tier off), like the other tiers. Advisory and non-halting; `/magicspec:analyze` Mode C reports it with the other bloat signals. Detection only: moving history and completed phases out of a document is not automated (Assumption (forecast): the archive layout for registry history is a design of its own, and a mover written before it would pick the layout by accident; override: `/magicspec:spec amend l2-engine-automation "archive registry history"`).
+2. **Rule kernel.** `AGENT-RULES.md` is loaded into every turn, so it holds only what applies without a trigger or is needed to recognise one: the upgrade check (§1), the graph rule (§2), the decision posture (§7), the completion checklist (§8) and the resume check (§10), and for each other section a stub that keeps the heading and number, states the rule's essence in a few lines and links the module that holds the full text. The full text of §3–§4, §5, §6 and §9 lives in `references/rules/{finalization,replan,containment,bug-reporting}.md`, moved verbatim and read when the trigger the stub names fires. The harness holds the kernel under 16 KB, keeps all ten headings and requires a link to every module that exists. The host projection is a copy of the kernel.
+3. **Graph output to a file.** `build-spec-graph --json --out [path]` writes the graph JSON to `graph/query.json` in the state folder (or the typed path) and prints one summary line; plain `--json` is unchanged and remains the machine contract. The rule of §2 names `--json --out` for structured traversal.
+
+**Not adopted** (forecast, Change-later scenario): splitting `analyze.md` and `spec.md` by mode saves only the unused modes (about 1 100 tokens for the default Mode C of a 13 400-token body) and gives up the whole-module reading the harness pins; and an unconditional "start a fresh session" line in `finalize` output is a row that renders on every invocation regardless of content (DG-7), while the engine cannot see the context fill (SC-7). The host's hook does (`scripts/token-audit.js --hook`, [docs/context-economy.md](../../../docs/context-economy.md)).
 
 ### Setting Parity — a Promised Setting Needs a Reader `[ADDED]`
 
@@ -274,6 +286,7 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.25.0 | 2026-10-29 | Agent | Added **Context-Economy Surfaces** after a token audit: the working-document budget (`DOC_BLOAT` / `DOC_DECOMPOSE`, 30 / 60 KB, `bloat.doc`), the rule kernel (`AGENT-RULES.md` under 16 KB, sections with a trigger in `references/rules/`), `build-spec-graph --json --out`; recorded what was not adopted and why. Bloat Advisory Configuration deployment status corrected to built. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.24.1 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.24.0 | 2026-10-28 | Agent | Reality sync for the switch to the skill folder. **Engine Meta Update Flow**: the manifest covers the whole folder, so there is no step that runs when nothing changed; step 3 is no longer a wrapper regeneration but a refresh of the host projections that already exist (`refreshProjections`: rewrite the stale ones, remove an entry whose command left the router, create none). **Setting Parity** reads the file set Phantom Commands scans (the skill folder, `docs/`, `README.md`) and sits beside Router Parity and Phantom Commands. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.23.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

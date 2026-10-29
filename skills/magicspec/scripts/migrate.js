@@ -36,13 +36,28 @@ const OLD_ENGINE_DIR = '.magic';
 const OLD_COMMANDS = ['analyze', 'graph', 'rule', 'run', 'spec', 'status', 'task'];
 
 /** Folders (relative to the project) in which 2.x wrappers and copies of them were placed. */
-const WRAPPER_BASES = ['', '.agents', '.claude', '.codex', '.qwen', '.gemini', '.cursor', '.kilocode', '.lingma'];
+const WRAPPER_BASES = [
+    '',
+    '.agents',
+    '.claude',
+    '.codex',
+    '.qwen',
+    '.gemini',
+    '.cursor',
+    '.kilocode',
+    '.lingma',
+];
 
 /** Names the command folders carried in the hosts of the 2.x layout. */
 const COMMAND_FOLDERS = ['workflows', 'commands', 'prompts'];
 
 /** Host folder (relative to the project) → host name of the host table. */
-const HOST_FOLDERS = { '.claude': 'claude', '.agents': 'codex', '.codex': 'codex', '.qwen': 'qwen' };
+const HOST_FOLDERS = {
+    '.claude': 'claude',
+    '.agents': 'codex',
+    '.codex': 'codex',
+    '.qwen': 'qwen',
+};
 
 const STEPS = [
     'detect the layout',
@@ -78,7 +93,9 @@ const exists = (p) => fs.existsSync(p);
 function detect(root) {
     const engineDir = path.join(root, OLD_ENGINE_DIR);
     const oldEngine = exists(path.join(engineDir, '.version'));
-    const version = oldEngine ? fs.readFileSync(path.join(engineDir, '.version'), 'utf8').trim() : null;
+    const version = oldEngine
+        ? fs.readFileSync(path.join(engineDir, '.version'), 'utf8').trim()
+        : null;
 
     let manifest = null;
     if (oldEngine && exists(path.join(engineDir, '.checksums'))) {
@@ -106,7 +123,9 @@ function detect(root) {
     }
 
     const legacyState = path.join(root, LEGACY_STATE_DIR_NAME);
-    const oldState = exists(path.join(legacyState, 'workspace.json')) || exists(path.join(legacyState, 'INDEX.md'));
+    const oldState =
+        exists(path.join(legacyState, 'workspace.json')) ||
+        exists(path.join(legacyState, 'INDEX.md'));
     const hostNames = [
         ...new Set(
             Object.entries(HOST_FOLDERS)
@@ -122,7 +141,9 @@ function detect(root) {
         newState: exists(path.join(root, STATE_DIR_NAME)),
         manifest,
         manifestFiles: manifest
-            ? Object.keys(manifest).filter((rel) => isInside(engineDir, rel) && exists(path.join(engineDir, rel)))
+            ? Object.keys(manifest).filter(
+                  (rel) => isInside(engineDir, rel) && exists(path.join(engineDir, rel)),
+              )
             : [],
         wrappers,
         hostNames,
@@ -150,7 +171,10 @@ function isInside(base, rel) {
     if (!within(base, path.resolve(base, rel))) return false;
     try {
         // A link inside the folder can lead out of it: the real place is what counts.
-        return within(fs.realpathSync.native(base), fs.realpathSync.native(path.resolve(base, rel)));
+        return within(
+            fs.realpathSync.native(base),
+            fs.realpathSync.native(path.resolve(base, rel)),
+        );
     } catch {
         return false;
     }
@@ -170,7 +194,8 @@ function classify(root, state) {
     for (const rel of state.manifestFiles) {
         const full = path.join(root, OLD_ENGINE_DIR, rel);
         const expected = state.manifest[rel];
-        if (hashFileSafe(full) === expected) removable.push(normalizePath(path.join(OLD_ENGINE_DIR, rel)));
+        if (hashFileSafe(full) === expected)
+            removable.push(normalizePath(path.join(OLD_ENGINE_DIR, rel)));
         else modified.push(normalizePath(path.join(OLD_ENGINE_DIR, rel)));
     }
     return { removable, modified };
@@ -215,7 +240,11 @@ function rewriteWorkspaceJson(root) {
     const file = path.join(root, STATE_DIR_NAME, 'workspace.json');
     if (!exists(file)) return false;
     const text = fs.readFileSync(file, 'utf8');
-    const next = text.split(`"${LEGACY_STATE_DIR_NAME}"`).join(`"${STATE_DIR_NAME}"`).split(`"${LEGACY_STATE_DIR_NAME}/`).join(`"${STATE_DIR_NAME}/`);
+    const next = text
+        .split(`"${LEGACY_STATE_DIR_NAME}"`)
+        .join(`"${STATE_DIR_NAME}"`)
+        .split(`"${LEGACY_STATE_DIR_NAME}/`)
+        .join(`"${STATE_DIR_NAME}/`);
     if (next === text) return false;
     fs.writeFileSync(file, next);
     return true;
@@ -252,11 +281,15 @@ function removeFile(root, rel) {
  */
 function runEngine(root, script, args = []) {
     try {
-        const out = execFileSync(process.execPath, [path.join(__dirname, 'executor.js'), script, ...args], {
-            cwd: root,
-            encoding: 'utf8',
-            stdio: ['ignore', 'pipe', 'pipe'],
-        });
+        const out = execFileSync(
+            process.execPath,
+            [path.join(__dirname, 'executor.js'), script, ...args],
+            {
+                cwd: root,
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+            },
+        );
         return { ok: true, out };
     } catch (err) {
         return { ok: false, out: `${err.stdout || ''}${err.stderr || ''}` };
@@ -309,23 +342,45 @@ function main(argv) {
         // Without a manifest nothing of the engine folder is named, so only the wrappers are listed.
         const toRemove = [...removable, ...wrapperFiles];
         const manifestless = state.oldEngine && !state.manifest;
-        const hostList = hostArg ? hostArg.slice('--host='.length).split(',').filter(Boolean) : state.hostNames;
+        const hostList = hostArg
+            ? hostArg.slice('--host='.length).split(',').filter(Boolean)
+            : state.hostNames;
 
-        console.log(apply ? 'Migration plan (applying):' : 'Migration plan (dry run — nothing changes without --apply):');
-        console.log(`  Layout found: engine ${state.oldEngine ? state.version : 'none'}, state folder ${state.oldState ? LEGACY_STATE_DIR_NAME + '/' : state.newState ? STATE_DIR_NAME + '/ (already renamed)' : 'none'}`);
-        console.log(`  1. Back up ${toRemove.length} file(s) to ${path.basename(backupDir(root))}/`);
-        console.log(`  2. Install the projections for: ${hostList.length > 0 ? hostList.join(', ') : '(no host found — run init --host=<name> afterwards)'}, and the pre-commit hook`);
-        console.log(`  3. ${state.oldState ? `Rename ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/ and rewrite the workspace.json entries that name it` : 'State folder: nothing to rename'}`);
-        console.log(`  4. Remove ${toRemove.length} file(s) of the old engine, last${manifestless ? ' (the manifest is missing: the engine folder is kept)' : ''}`);
+        console.log(
+            apply
+                ? 'Migration plan (applying):'
+                : 'Migration plan (dry run — nothing changes without --apply):',
+        );
+        console.log(
+            `  Layout found: engine ${state.oldEngine ? state.version : 'none'}, state folder ${state.oldState ? LEGACY_STATE_DIR_NAME + '/' : state.newState ? STATE_DIR_NAME + '/ (already renamed)' : 'none'}`,
+        );
+        console.log(
+            `  1. Back up ${toRemove.length} file(s) to ${path.basename(backupDir(root))}/`,
+        );
+        console.log(
+            `  2. Install the projections for: ${hostList.length > 0 ? hostList.join(', ') : '(no host found — run init --host=<name> afterwards)'}, and the pre-commit hook`,
+        );
+        console.log(
+            `  3. ${state.oldState ? `Rename ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/ and rewrite the workspace.json entries that name it` : 'State folder: nothing to rename'}`,
+        );
+        console.log(
+            `  4. Remove ${toRemove.length} file(s) of the old engine, last${manifestless ? ' (the manifest is missing: the engine folder is kept)' : ''}`,
+        );
         for (const rel of toRemove) console.log(`       - ${rel}`);
-        for (const rel of modified) console.log(`     ENGINE_FILE_MODIFIED ${rel} — differs from the old manifest; kept`);
+        for (const rel of modified)
+            console.log(`     ENGINE_FILE_MODIFIED ${rel} — differs from the old manifest; kept`);
         if (!apply) {
-            console.log(`Run \`${executorHint()} migrate --apply\` to execute the plan. It can be re-run after any interruption.`);
+            console.log(
+                `Run \`${executorHint()} migrate --apply\` to execute the plan. It can be re-run after any interruption.`,
+            );
             return 0;
         }
 
         step(3);
-        if (manifestless) console.log('ENGINE_MANIFEST_MISSING: the old manifest is gone, so no file of the engine folder is removed.');
+        if (manifestless)
+            console.log(
+                'ENGINE_MANIFEST_MISSING: the old manifest is gone, so no file of the engine folder is removed.',
+            );
         step(4);
         const copied = backUp(root, toRemove);
         console.log(`Backed up ${copied} file(s) to ${path.basename(backupDir(root))}/`);
@@ -333,15 +388,21 @@ function main(argv) {
         step(5);
         for (const name of hostList) {
             if (!Object.hasOwn(hosts.HOSTS, name)) {
-                console.error(`HALT: Unknown host '${name}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`);
+                console.error(
+                    `HALT: Unknown host '${name}'. Known hosts: ${Object.keys(hosts.HOSTS).join(', ')}.`,
+                );
                 return 1;
             }
             console.log(`  ${hosts.HOSTS[name].label}`);
-            for (const row of hosts.projectHost(name, root)) console.log(`    ${row.action}: ${row.path}`);
+            for (const row of hosts.projectHost(name, root))
+                console.log(`    ${row.action}: ${row.path}`);
         }
         if (exists(path.join(root, '.git'))) {
             const hook = runEngine(root, 'install-hooks');
-            if (!hook.ok) console.warn(`Note: the pre-commit hook was not installed (${hook.out.trim().split('\n')[0]}).`);
+            if (!hook.ok)
+                console.warn(
+                    `Note: the pre-commit hook was not installed (${hook.out.trim().split('\n')[0]}).`,
+                );
         }
 
         step(6);
@@ -349,14 +410,15 @@ function main(argv) {
             fs.renameSync(path.join(root, LEGACY_STATE_DIR_NAME), path.join(root, STATE_DIR_NAME));
             console.log(`Renamed ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/`);
         }
-        if (rewriteWorkspaceJson(root)) console.log('Rewrote the workspace.json entries that named the old folder.');
+        if (rewriteWorkspaceJson(root))
+            console.log('Rewrote the workspace.json entries that named the old folder.');
 
         step(7);
         for (const rel of toRemove) removeFile(root, rel);
         for (const rel of ['.magic/.checksums', '.magic/.version']) {
             if (!manifestless && modified.length === 0) removeFile(root, rel);
         }
-        console.log(`Removed ${(toRemove).length} file(s) of the old engine.`);
+        console.log(`Removed ${toRemove.length} file(s) of the old engine.`);
 
         step(8);
         const check = runEngine(root, 'check-prerequisites', ['--json']);
@@ -366,13 +428,25 @@ function main(argv) {
         } catch {
             ok = false;
         }
-        console.log(ok ? 'Pre-flight: ok.' : 'Pre-flight reported findings: run check-prerequisites to read them.');
-        console.log('Commands are now /magicspec:spec, /magicspec:task, /magicspec:run, /magicspec:analyze, /magicspec:rule, /magicspec:status and /magicspec:graph.');
-        console.log(`Suggested commit (not executed): git add -A && git commit -m "chore: migrate to the magicspec skill layout"`);
-        console.log(`Add magicspec-migration-backup-*/ to .gitignore, or delete the backup once you have checked the result.`);
+        console.log(
+            ok
+                ? 'Pre-flight: ok.'
+                : 'Pre-flight reported findings: run check-prerequisites to read them.',
+        );
+        console.log(
+            'Commands are now /magicspec:spec, /magicspec:task, /magicspec:run, /magicspec:analyze, /magicspec:rule, /magicspec:status and /magicspec:graph.',
+        );
+        console.log(
+            `Suggested commit (not executed): git add -A && git commit -m "chore: migrate to the magicspec skill layout"`,
+        );
+        console.log(
+            `Add magicspec-migration-backup-*/ to .gitignore, or delete the backup once you have checked the result.`,
+        );
         return 0;
     } catch (err) {
-        console.error(`HALT: step ${stepNo} (${STEPS[stepNo - 1]}) failed: ${err.message}. Fix the cause and run the command again; it resumes from the filesystem.`);
+        console.error(
+            `HALT: step ${stepNo} (${STEPS[stepNo - 1]}) failed: ${err.message}. Fix the cause and run the command again; it resumes from the filesystem.`,
+        );
         return 1;
     }
 }

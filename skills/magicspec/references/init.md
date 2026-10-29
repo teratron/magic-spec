@@ -8,7 +8,7 @@ Silent pre-flight check for `.magicspec/` setup. Auto-called by Step 0 of all wo
 2. **Engine Integrity**: HALT if `check-prerequisites --json` returns integrity warnings (Checksums / Ghost Registry).
 3. **Silent Default**: Run autonomously. Report only brief status or fatal failure.
 4. **Non-Overwriting**: Skip existing files. Never mutate user state.
-5. **Versioning (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`. Initial `RULES.md` is versioned at 1.0.0.
+5. **Versioning (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`. Initial `RULES.md` carries the version of `templates/rules.md`.
 
 ## Workflow: Setup & Verification
 

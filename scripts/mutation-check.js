@@ -104,7 +104,9 @@ function resolveTarget(root, file) {
         return { refusal: `file '${file}' is outside the root` };
     }
     if (rel.split(path.sep)[0] === '.magicspec') {
-        return { refusal: `file '${file}' is under .magicspec/ — specifications are never mutated` };
+        return {
+            refusal: `file '${file}' is under .magicspec/ — specifications are never mutated`,
+        };
     }
     return { abs };
 }

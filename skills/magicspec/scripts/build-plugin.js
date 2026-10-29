@@ -37,7 +37,9 @@ const version = fs.readFileSync(path.join(engine, '.version'), 'utf8').trim();
 if (fs.existsSync(out)) {
     const entries = fs.readdirSync(out);
     if (entries.length > 0 && !entries.includes(MARKER_FILE)) {
-        console.error(`HALT: '${normalizePath(out)}' is not empty and is not an earlier plugin build; nothing was written.`);
+        console.error(
+            `HALT: '${normalizePath(out)}' is not empty and is not an earlier plugin build; nothing was written.`,
+        );
         process.exit(1);
     }
     // An earlier build: replace its generated parts, nothing else.
@@ -82,6 +84,11 @@ for (const command of readCommands()) {
         ].join('\n'),
     );
 }
-fs.writeFileSync(path.join(out, MARKER_FILE), `Generated from the magicspec skill folder, version ${version}.\n`);
+fs.writeFileSync(
+    path.join(out, MARKER_FILE),
+    `Generated from the magicspec skill folder, version ${version}.\n`,
+);
 
-console.log(`Plugin written to ${normalizePath(out)} (magicspec ${version}, ${readCommands().length} commands).`);
+console.log(
+    `Plugin written to ${normalizePath(out)} (magicspec ${version}, ${readCommands().length} commands).`,
+);

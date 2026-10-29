@@ -25,7 +25,7 @@ The engine enforces 5 mandatory invariants:
 | 2 | **Engine Integrity** | HALT if `check-prerequisites` returns integrity warnings (checksums/ghost registry) |
 | 3 | **Silent Default** | Run autonomously; report only brief status or fatal failure |
 | 4 | **Non-Overwriting** | Skips existing files; never mutates user state |
-| 5 | **Versioning (C14)** | Engine checksums updated after `skills/magicspec/` modifications; initial `RULES.md` at v1.5.198 |
+| 5 | **Versioning (C14)** | Engine checksums updated after `skills/magicspec/` modifications; the initial `RULES.md` carries the version of `templates/rules.md` |
 
 ## 3. Workflow Steps
 
@@ -50,24 +50,28 @@ The engine enforces 5 mandatory invariants:
 
 `node skills/magicspec/scripts/executor.js init`
 
-Creates the following structure:
+Provisions a per-workspace layout, never a flat root: the global registry and constitution, the workspace configuration, and one workspace folder (default name `main`):
 
 ```plaintext
 .magicspec/
-├── INDEX.md          # Specification Registry
-├── RULES.md          # Project Constitution (v1.5.198)
-├── STATE.md          # Live memory — session continuity
-├── workspace.json    # Workspace configuration
-├── specifications/   # Directory for requirement documents
-├── tasks/            # Directory for per-phase task files
-└── archives/tasks/   # Directory for completed/archived tasks
+├── INDEX.md            # Global aggregate registry (lists the workspaces)
+├── RULES.md            # Global constitution
+├── workspace.json      # Workspace configuration
+└── {workspace}/        # Per-workspace artifacts
+    ├── INDEX.md        # Workspace spec registry
+    ├── STATE.md        # Live memory — created on the first mutating command, not by init
+    ├── specifications/ # Requirement documents
+    ├── tasks/          # Per-phase task files
+    └── archives/tasks/ # Completed phases
 ```
 
-**STATE.md**: Copied from `skills/magicspec/templates/state.md`. Workspace name and timestamp are filled in automatically. Set to `Status: Active`, `Phase: 0 — Not Started`, `Next Action: Run /magicspec:task`. **Never overwrites** existing STATE.md.
+**STATE.md**: not created by `init`. The first mutating command's state update (`update-state.js`) instantiates it from `skills/magicspec/templates/state.md`, filling in the workspace name and timestamp, with `Status: Active`, `Phase: 0 — Not Started` and `Next Action: Run /magicspec:task`. It never overwrites an existing STATE.md, and nothing downstream assumes it exists right after `init`.
+
+Another workspace is added later with `executor.js create-workspace --name={name}`, not by re-running `init`.
 
 ### Step 3 — Verify
 
-Ensure all artifacts exist (including STATE.md). HALT on failure.
+Ensure the artifacts listed in Step 2 exist. HALT on failure. A missing STATE.md directly after `init` is the expected state, not a failure.
 
 ### Step 4 — Hint
 
@@ -85,4 +89,4 @@ Initialization involves writing systemic files to the local directory. The proce
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-10 (v1.5.198).
+Synchronized with engine workflows on 2026-10-29 (v3.0.0).

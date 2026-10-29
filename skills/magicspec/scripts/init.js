@@ -182,6 +182,8 @@ const LABELS = {
 for (const name of requestedHosts) {
     console.log(`🧩 ${hosts.HOSTS[name].label}`);
     for (const row of hosts.projectHost(name, projectRoot)) {
-        console.log(`   ${LABELS[row.action] || row.action}: ${row.path}${row.detail ? ` — ${row.detail}` : ''}`);
+        console.log(
+            `   ${LABELS[row.action] || row.action}: ${row.path}${row.detail ? ` — ${row.detail}` : ''}`,
+        );
     }
 }

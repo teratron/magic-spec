@@ -21,7 +21,7 @@ The engine enforces 6 mandatory invariants:
 | # | Invariant | Summary |
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
-| 2 | **Read-Only Analysis** | Gather data from `.magicspec/`; write ONLY to `RETROSPECTIVE.md` |
+| 2 | **Read-Only Analysis** | Gather data from `.magicspec/`; write ONLY to `RETROSPECTIVE.md` and the graph snapshot files |
 | 3 | **Auto-Init** | Silently creates `.magicspec/` structure if missing |
 | 4 | **Actionable Output** | Recommendations must be concrete (e.g., "Add guard X", "Remove step Y") |
 | 5 | **Level Separation** | L1 (Snapshot) is silent and fast; L2 (Full) is deep and analytical |
@@ -80,7 +80,11 @@ Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules 
 
 ### Archival (C8)
 
-As part of L1 completion, move `tasks/phase-N.md` → `archives/tasks/`. Update link in `TASKS.md` to use relative path.
+Not performed by the retrospective. Moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` belongs solely to `finalize --workflow=run` (`archive-phases`) at Phase Completion in `/magicspec:run`. The retrospective only appends the Snapshots row, which avoids a double move and a conflicting link format.
+
+### Graph Snapshot
+
+Each run saves `build-spec-graph --json` to `.magicspec/graph/snapshot.json`. When `.magicspec/graph/before.json` exists, `diff-spec-graph` reports the structural deltas (new or removed nodes, coverage shifts, god-node evolution), and the snapshot is then renamed to `before.json` as the rolling baseline.
 
 ## 8. The Feedback Loop
 
@@ -92,10 +96,10 @@ Retrospective output feeds back into the system:
 
 ## 9. Safety & Scope
 
-- **Read-Only**: Analyzes data but does NOT modify specs, plans, or code.
+- **Read-Only**: Analyzes data but does NOT modify specs, plans, tasks, or code. Writes are limited to `RETROSPECTIVE.md` and the graph snapshot files.
 - **Evidence-Based**: Every observation must reference a specific file, timestamp, or event.
 - **Zero-Prompt Reporting**: Reports are saved silently to `.magicspec/RETROSPECTIVE.md`.
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-10 (v1.5.198).
+Synchronized with engine workflows on 2026-10-29 (v3.0.0).

@@ -73,7 +73,10 @@ function project(root) {
             'Arguments: $ARGUMENTS',
             '',
         ].join('\n');
-        if (fs.existsSync(file) && !fs.readFileSync(file, 'utf8').includes('<!-- magicspec-dev-command ')) {
+        if (
+            fs.existsSync(file) &&
+            !fs.readFileSync(file, 'utf8').includes('<!-- magicspec-dev-command ')
+        ) {
             report.push(`left alone: ${path.relative(root, file).split(path.sep).join('/')}`);
             continue;
         }

@@ -78,4 +78,4 @@ With no argument the workspace resolves through the standard priority chain. Pas
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-28 (v3.0.0).
+Synchronized with engine workflows on 2026-10-29 (v3.0.0).

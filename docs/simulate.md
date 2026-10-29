@@ -137,4 +137,4 @@ Each finding is reported as one Decision Record line, `[DR] {finding} → {verdi
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-04-10 (v1.5.198).
+Synchronized with engine workflows on 2026-10-29 (v3.0.0).

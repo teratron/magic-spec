@@ -48,8 +48,7 @@ const fromFile = fromFileIdx !== -1 ? args[fromFileIdx + 1] : null;
 
 /** Optional wiki output directory override. */
 const outIdx = args.indexOf('--out');
-const outDir =
-    outIdx !== -1 ? path.resolve(args[outIdx + 1]) : graphPaths(designAbs).wiki;
+const outDir = outIdx !== -1 ? path.resolve(args[outIdx + 1]) : graphPaths(designAbs).wiki;
 
 // ═══════════════════════════════════════════════════════════════════════════
 // GRAPH LOADING

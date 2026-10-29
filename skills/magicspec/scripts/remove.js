@@ -64,7 +64,9 @@ const engineDir = fs.realpathSync.native(engineRoot());
 if (hasEngineWriteTooling()) {
     console.log(`   Kept: ${rel(engineDir)}/ is the engine's own repository.`);
 } else if (!insideProject(engineDir)) {
-    console.log(`   Kept: ${normalizePath(engineDir)}/ lies outside this project (shared by others).`);
+    console.log(
+        `   Kept: ${normalizePath(engineDir)}/ lies outside this project (shared by others).`,
+    );
 } else if (dryRun) {
     console.log(`   Would remove: ${rel(engineDir)}/`);
 } else {
@@ -73,7 +75,9 @@ if (hasEngineWriteTooling()) {
         console.log(`   Removed: ${rel(engineDir)}/`);
     } catch (err) {
         // The running executor can keep its own files open on some platforms.
-        console.log(`   Could not remove ${rel(engineDir)}/ while it runs (${err.code || err.message}).`);
+        console.log(
+            `   Could not remove ${rel(engineDir)}/ while it runs (${err.code || err.message}).`,
+        );
         console.log(`   Delete it once this command has ended: ${rel(engineDir)}`);
     }
 }

@@ -157,7 +157,9 @@ const ignoreList = [...BUILD_NOISE_DIRS];
  */
 const ENGINE_REL = engineRel();
 // The engine folder's top-level segment, when the folder lies inside the project.
-const ENGINE_ROOT_SEGMENT = /^(\.\.|\/|[A-Za-z]:)/.test(ENGINE_REL) ? null : ENGINE_REL.split('/')[0];
+const ENGINE_ROOT_SEGMENT = /^(\.\.|\/|[A-Za-z]:)/.test(ENGINE_REL)
+    ? null
+    : ENGINE_REL.split('/')[0];
 const FORCE_VISIBLE_ROOTS = new Set(
     [normalizePath(designDir).split('/')[0], ENGINE_ROOT_SEGMENT].filter(Boolean),
 );
@@ -220,7 +222,9 @@ function nestHeadings(lines, baseLevel) {
 
     const shift = baseLevel - Math.min(...levels);
     return lines.map((line, i) =>
-        marks[i] ? '#'.repeat(Math.min(6, marks[i][1].length + shift)) + line.slice(marks[i][1].length) : line,
+        marks[i]
+            ? '#'.repeat(Math.min(6, marks[i][1].length + shift)) + line.slice(marks[i][1].length)
+            : line,
     );
 }
 

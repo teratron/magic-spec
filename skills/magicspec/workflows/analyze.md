@@ -266,6 +266,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
       - `SPEC_DECOMPOSE` — spec file > 500 lines → recommend immediate decomposition.
       - `TASK_BLOAT` — task phase file > 250 lines → suggest decomposing into sub-tasks.
       - `TASK_DECOMPOSE` — task phase file > 400 lines → recommend splitting the phase.
+      - `DOC_BLOAT` / `DOC_DECOMPOSE` — a working document (`INDEX.md`, `PLAN.md`, `TASKS.md`, `RULES.md`; workspace and global) > 30 KB / > 60 KB → apply the `→` remedy the signal carries. Every workflow reads these whole, so their size is paid on each read.
       Include bloat summary in the Advisory Report under **Spec Quality**.
 14. **Report**: consolidated list of errors, warnings, and suggested repairs.
 15. **Advisory**: generate Advisory Report (see §Advisory Report) for the audited scope.

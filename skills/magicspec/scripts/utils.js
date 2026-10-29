@@ -381,7 +381,9 @@ function engineRoot() {
  * @returns {string} Forward-slash path, without a trailing slash.
  */
 function engineRel() {
-    const engine = process.env.MAGIC_ENGINE_DIR ? path.resolve(process.env.MAGIC_ENGINE_DIR) : engineRoot();
+    const engine = process.env.MAGIC_ENGINE_DIR
+        ? path.resolve(process.env.MAGIC_ENGINE_DIR)
+        : engineRoot();
     let root;
     try {
         root = resolveProjectRoot();

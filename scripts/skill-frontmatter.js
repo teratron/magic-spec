@@ -153,5 +153,4 @@ function checkProjection(projection) {
     return problems;
 }
 
-
 module.exports = { checkProjection, readScalar, RESERVED_NAME_WORDS };

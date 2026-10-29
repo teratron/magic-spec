@@ -4,7 +4,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🧭 Core Philosophy
 
-1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.magicspec/specifications/*.md`).
+1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.magicspec/{workspace}/specifications/*.md`).
 2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
 3. **Governance via Rules**: All logic is governed by a central rulebook (`.magicspec/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
 4. **Resilience & Integrity**: Continuous validation via SHA256 checksums and automated versioning (C14).
@@ -14,7 +14,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🔗 The Workflow Pipeline
 
-Magic operates through **3 core workflows** and **1 auxiliary workflow**, forming a complete lifecycle from raw idea to implemented code.
+Magic operates through **3 core workflows** and **5 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
 
 ```mermaid
 graph TD
@@ -49,10 +49,10 @@ graph TD
 | Workflow | Primary File | Purpose | Documentation |
 | --- | --- | --- | --- |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
-| **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
+| **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 | **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
-| **Graph** | `workflows/graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
+| **Graph** | `graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
 
 ## 🏗️ Architecture & Directory Structure
 
@@ -64,13 +64,17 @@ your-project/
 │   ├── SKILL.md            #    Router: command grammar and command table
 │   ├── workflows/          #    One body per command (spec, task, run, ...)
 │   └── scripts/            #    Initialization & health-check scripts
-└── .magicspec/                # 📦 Project State & Artifacts (Generated)
-    ├── workspace.json      #    (Optional) Multi-workspace routing config
-    ├── INDEX.md            #    Specification registry
-    ├── RULES.md            #    Project constitution (The Rules)
-    ├── STATE.md            #    Live memory (session continuity)
-    ├── PLAN.md             #    The implementation roadmap
-    └── specifications/     #    Directory for all .md spec files
+└── .magicspec/             # 📦 Project State & Artifacts (Generated)
+    ├── workspace.json      #    Workspace routing config
+    ├── INDEX.md            #    Global registry (lists the workspaces)
+    ├── RULES.md            #    Global constitution (The Rules)
+    └── {workspace}/        #    One folder per workspace (default name: main)
+        ├── INDEX.md        #    Specification registry
+        ├── RULES.md        #    (Optional) Workspace conventions
+        ├── STATE.md        #    Live memory (session continuity)
+        ├── PLAN.md         #    The implementation roadmap
+        ├── TASKS.md        #    Task ledger, with tasks/phase-N.md workbooks
+        └── specifications/ #    Directory for all .md spec files
 ```
 
 > **Advanced Routing**: For large mono-repos, Magic Spec supports **Magic Workspaces**. By defining a `workspace.json`, you can host multiple isolated design environments (e.g. `.magicspec/core/`, `.magicspec/web/`) that all share the same `skills/magicspec/` engine without colliding.
@@ -139,4 +143,4 @@ The Retrospective system is Magic's heartbeat. It detects:
 
 It runs **automatically** after every phase completion, providing the user with a table of metrics and actionable recommendations to improve the workflow.
 
-[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Engine Integrity (Checksums)](checksums.md)
+[Main Repository](https://github.com/teratron/magic-spec) | [Distribution Guide](distribution.md) | [Context Economy](context-economy.md) | [Engine Integrity (Checksums)](checksums.md)

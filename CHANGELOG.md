@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - Completed 47 tasks (engine)
+- The repository passes `biome check` with no findings (formatting of the scripts and the harness, optional chains), and `fallow` reports no dead code.
+- Documentation matches the 3.0 layout: `docs/init.md` and `docs/retrospective.md` follow their reference modules (per-workspace layout, `STATE.md` created on the first mutating command, archival owned by `finalize`), `CONTRIBUTING.md` links the workspace registry through `.magicspec/`, and `tests/suite.md` uses the `/magicspec:*` commands and the skill folder paths.
+- **Context economy** (a turn re-reads the whole context, so what the engine makes an agent load is paid every turn): `check-bloat` also flags a working document (`INDEX.md`, `PLAN.md`, `TASKS.md`, `RULES.md`, workspace and global) over 30 KB (`DOC_BLOAT`) or 60 KB (`DOC_DECOMPOSE`), overridable under `bloat.doc`; `AGENT-RULES.md` is a kernel of about 4 300 tokens instead of 7 600, with the sections that have a trigger (finalization and archival, replan, containment, bug reporting) moved verbatim to `references/rules/` and read when the trigger fires; `build-spec-graph --json --out` writes the graph to `graph/query.json` and prints one line instead of about 35 000 tokens. New page `docs/context-economy.md`, and `scripts/token-audit.js` (maintenance only) reports per-session usage from the host's transcripts and can run as a `UserPromptSubmit` hook.
+- `references/init.md` no longer claims the initial `RULES.md` is versioned at 1.0.0; it carries the version of `templates/rules.md`.
 
 ## [3.0.0] - 2026-10-28
 

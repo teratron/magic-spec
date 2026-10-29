@@ -73,8 +73,10 @@ The Specification Knowledge Graph is managed by `magicspec:graph`.
 ### Auto-Use
 
 - Before architectural / cross-module / "how does X relate to Y" questions, run
-  `node scripts/executor.js build-spec-graph` (add `--json` for structured
-  traversal). Read its god nodes, communities, coverage stats.
+  `node scripts/executor.js build-spec-graph`. Read its god nodes, communities,
+  coverage stats. For structured traversal add `--json --out`: it writes
+  `.magicspec/graph/query.json` and prints one line, and you read only the part you
+  need. Plain `--json` prints the whole graph (tens of thousands of tokens).
 - If `.magicspec/graph/wiki/index.md` exists, navigate it instead of raw spec files for
   structure. The graph and the wiki hold no specification text: a question that
   names a mechanic ("what covers Z", "where is P defined") is answered by searching
@@ -91,246 +93,34 @@ The Specification Knowledge Graph is managed by `magicspec:graph`.
 
 ## 3. Finalization Protocol (Post-Workflow)
 
-After `/magicspec:spec`, `/magicspec:task`, `/magicspec:run`, or `/magicspec:rule` complete their
-main steps and **before** their Completion Checklist, run finalize. Skip for
-`/magicspec:analyze`, `/magicspec:graph`, `/magicspec-dev:*` (read-only / system workflows).
-
-### Procedure
-
-1. Execute:
-
-   ```bash
-   node scripts/executor.js finalize --workflow=<spec|task|run|rule> --workspace={active-workspace}
-   ```
-
-   `--workspace` names the workspace the workflow ran for. Without it the script
-   finalizes the default workspace, so an explicit workspace argument would be
-   lost: significance would be judged, and `STATE.md` written, for the wrong one.
-
-2. The script detects significant changes to whitelisted artifacts. On hit, it
-   bumps `.magicspec/.version` and appends a Keep-a-Changelog entry to root `CHANGELOG.md`.
-   On no hit, prints `⏭️ No significant changes detected` and exits 0.
-
-3. **Display the entire script stdout verbatim** to the user in a fenced block.
-
-4. If the script exits non-zero → emit a WARNING but do not block the Completion Checklist.
-
-### Opt-Out
-
-`MAGIC_FINALIZE=0` (env, highest precedence) · `finalization.enabled = false` in
-`.magicspec/workspace.json` (project-wide) · `--dry-run` (preview) · `--no-bump`,
-`--no-changelog` (per-step disable).
-
-### Significance Whitelist
-
-| Workflow | Paths that count |
-| --- | --- |
-| `magicspec:spec` | `.magicspec/{ws}/specifications/**/*.md`, `.magicspec/{ws}/INDEX.md`, `.magicspec/RULES.md`, `.magicspec/{ws}/RULES.md` |
-| `magicspec:task` | `.magicspec/{ws}/PLAN.md`, `TASKS.md`, `tasks/**/*.md` |
-| `magicspec:run` | `.magicspec/{ws}/TASKS.md` (status-line changes only), `STATE.md`, `archives/**`, `tasks/**/*.md` |
-| `magicspec:rule` | `.magicspec/RULES.md`, `.magicspec/{ws}/RULES.md` |
-
-### Channels
-
-`.magicspec/{ws}/CHANGELOG.md` is `magicspec:run`'s internal phase journal (not touched
-here). Root `CHANGELOG.md` is user-facing release notes — written by this protocol.
+After `/magicspec:spec`, `/magicspec:task`, `/magicspec:run` or `/magicspec:rule` complete their
+main steps and **before** their Completion Checklist, run
+`node scripts/executor.js finalize --workflow=<spec|task|run|rule> --workspace={active-workspace}`
+and display its entire stdout **verbatim** in a fenced block. Skip it for `/magicspec:analyze`,
+`/magicspec:graph` and `/magicspec-dev:*`. A non-zero exit is a WARNING, never a block.
+Opt-outs, the significance whitelist and the channels:
+[references/rules/finalization.md](references/rules/finalization.md) — read it the first time you finalize in a session.
 
 ## 4. Phase Archival Automation
 
-Completed phase files are auto-archived as part of `magicspec:run`'s finalize, to keep
-active context lean.
-
-### How it triggers
-
-Runs **automatically** when `finalize --workflow=run` invokes `archive-phases`
-internally — no extra command. Conditions: `tasks/phase-{N}.md` has `status: Done`
-in YAML frontmatter **and** no remaining `- [ ]` items. The phase file is then
-**moved** (rename, not copy) to `archives/tasks/phase-{N}.md`, and `TASKS.md`
-link references are rewritten with the row marked `Done (Archived)`.
-
-### Exemptions
-
-- Any remaining `- [ ]` items, or `status` ≠ `Done` → never archived.
-- Already-archived files (under `archives/tasks/`) are skipped silently.
-- Project-wide disable: `archival.enabled = false` in `.magicspec/workspace.json`.
-
-### On-demand
-
-```bash
-node scripts/executor.js archive-phases            # archive all eligible
-node scripts/executor.js archive-phases --dry-run  # preview only
-```
+`finalize --workflow=run` archives every phase with `status: Done` and no remaining `- [ ]` by itself;
+there is nothing to run by hand. On-demand form and exemptions:
+[references/rules/finalization.md](references/rules/finalization.md).
 
 ## 5. Post-Task Replan
 
-After `/magicspec:run` finishes a task or phase, drift signals may have surfaced new
-gaps. The user-visible next step collapses to ONE command — `/magicspec:task`
-(workspace propagated). Its Pre-Planning Stabilization auto-fixes mechanical
-drift; Pre-flight HALTs once with a single `/magicspec:spec` recommendation only
-when specs need substantive design work. `/magicspec:analyze` and `/magicspec:spec` are
-NEVER proactively offered after `/magicspec:run`.
-
-### Triggers (any one)
-
-- **Spec ambiguity** — agent surfaced unclear / conflicting / missing spec content during execution
-- **Phase complete with nothing to run next** — the finished phase leaves no `Todo` task behind it (a next phase that has one continues without a halt)
-- **RULES drift** — `RULES.md` version > `TASKS.md` base detected mid-run
-- **Header drift** — `STATUS_DRIFT` / `VERSION_DRIFT` reported by Pre-flight
-
-### Procedure
-
-1. Emit exactly one line:
-
-   > [!NOTE]
-   > Post-task drift detected. Run `/magicspec:task` to revalidate the plan.
-
-2. Inside `/magicspec:task`, Pre-Planning Stabilization auto-fixes mechanical drift
-   (promote `Draft → Stable`, normalize field names, move phantoms to Backlog).
-   Pre-flight HALTs with one user-facing recommendation only on hard drift that
-   needs human intent (header parity violations, missing L1 parents, structural
-   conflicts):
-
-   > Spec `{file}` requires design input: `{reason}`. Run `/magicspec:spec`, then
-   > re-run `/magicspec:task`.
-
-3. Clean `/magicspec:task` completion → handoff to `/magicspec:run`.
-
-### Hard rules for the agent
-
-- NEVER recommend `/magicspec:analyze` proactively after `/magicspec:run` — it stays on-demand.
-- NEVER recommend `/magicspec:spec` proactively after `/magicspec:run` — it surfaces ONLY inside `/magicspec:task` on a real HALT.
-- The user sees exactly ONE next step after a phase: `/magicspec:task` (on drift) or `/magicspec:run` (clean).
-
-### Chain
-
-```
-task Done
-  → drift signal?
-      yes → /magicspec:task
-              → auto-fix? → yes → replan → /magicspec:run
-                          → no  → HALT: /magicspec:spec, then /magicspec:task
-      no  → /magicspec:run (next task)
-```
-
-### Exemptions
-
-- Targeted task execution with no drift → `/magicspec:run` next, no replan.
-- Engine improvement tasks (explicit directive) — engine and spec layers are separate.
-- `MAGIC_POST_TASK_REPLAN=0` env var disables this rule entirely.
+After `/magicspec:run` finishes a task or phase, a drift signal leaves the user exactly ONE visible next
+step: `/magicspec:task` (or `/magicspec:run` when clean). Never proactively offer `/magicspec:analyze`
+or `/magicspec:spec` after a run. Triggers, the chain and exemptions:
+[references/rules/replan.md](references/rules/replan.md) — read it when a run ends a task or phase.
 
 ## 6. SDD Containment (Code ↔ SDD Boundary)
 
-The SDD is **scaffolding**: erected around the work, never a component of it,
-removed when the work is done. The boundary has two dimensions, and both answer
-the same question — *is the product still whole once the scaffold is gone?*
-
-- **Reference containment** — products may ship releases that exclude
-  `.magicspec/`, so any reference to SDD artifacts inside product files becomes
-  dead content. Traceability is one-way: SDD artifacts reference code; code
-  never references SDD artifacts.
-- **Structural containment** — with `.magicspec/`, the skill folder and the host
-  copies generated from it deleted, the product must still build, test, run, and
-  package. Making the scaffold load-bearing leaves no forbidden token behind, so
-  no reference rule can catch it.
-
-### Structural Rule (Scaffold Boundary)
-
-Never wire the engine or the SDD into the product's own lifecycle. Forbidden:
-build or package manifests invoking engine scripts (`package.json` `scripts`,
-`Makefile` targets, `pyproject.toml`, `Cargo.toml`, Gradle tasks); CI/CD steps
-gating a build, test, or release on a `/magicspec:*` workflow or an `executor.js`
-subcommand; product build or runtime code reading anything under `.magicspec/` or
-the engine directories; product tests asserting on SDD artifact structure;
-release artifacts (archives, images, published packages) that include those
-directories; and toolchain dependencies added solely to run the engine — a Node
-runtime introduced into a Python-only project is coupling even where no file
-names the engine.
-
-The engine installs by unpacking an archive and is removed by deleting
-directories. It is not a package-manager dependency, and must stay removable
-without editing a single product manifest.
-
-**Exempt**: the git pre-commit hook installed during setup. It lives in
-`.git/hooks/` — never committed, never packaged — and gating a *commit* is not
-gating a *build*. It stays behind when the scaffold is deleted, so it disarms
-itself: with the engine folder absent it says so once and lets the commit through.
-
-### Reference Rule
-
-Never write references to SDD artifacts into product files — source code,
-comments, docstrings, identifiers, string literals, test names, build/config
-files, or user-facing docs (README, CHANGELOG). Forbidden reference classes:
-
-- Task IDs in **any** form — bracketed (`[T-1A01]`), bare (`T-22A01`), or split
-  (`T-1A01.1`). The generated shape is `T-{phase}{track}{seq}` and phase numbers
-  reach two digits, so match `T-\d+[A-Z]\d+(\.\d+)?`, never a fixed width. Bare
-  is the form that actually leaks — checklists bracket the ID, prose and code
-  do not.
-- Phase designators in **any** form — the file form (`phase-{n}`,
-  `phase-{n}.md`) **and** prose (`Phase 20`, `Phase 20 Track B`, `Phase 22's
-  closing validation`). Match `[Pp]hase[-\s]\d+`.
-- SDD system files: `PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`.
-- Specification file names (e.g., `l1-*.md`, `l2-*.md`).
-- Any `.magicspec/…` path.
-
-Prose `Phase {n}` is the one class that needs judgment: many domains own the
-word (handshake phases, build phases, moon phases). Disambiguate by the
-self-containment test — if the sentence stops making sense once `.magicspec/` is
-absent, it denotes the plan's phase and is a leak; if it reads fine, it is
-domain vocabulary and is not. Every other class above is unconditional.
-
-If design rationale matters at a code site, restate it in plain language.
-Provenance ("which task produced this") lives in the SDD layer (task `Changes`
-fields, phase files) and git metadata (commit messages, PR descriptions) —
-both legitimate channels.
-
-### Example
-
-```plaintext
-BAD : // Implements T-2B03 (see .magicspec/engine/tasks/phase-2.md)
-GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
-GOOD: (commit message) feat(parser): add payload guard [T-2B03]
-```
-
-### Exemptions
-
-- The `.magicspec/` subtree itself.
-- The engine folder (the skill folder and the host copies generated from it) —
-  **in a consumer project only**. There they are a vendored, never-authored drop, so a
-  reference-containment scan over them is noise, not signal.
-- Git metadata — not part of release artifacts.
-- Contributor-facing process docs that document the SDD workflow itself
-  (there the reference IS the content).
-
-**In this engine's own repository, the engine-folder exemption above does
-not hold.** The skill folder is the product
-here — the same flip the Structural Rule above already makes for scaffold
-boundary — so a task ID, phase designator, or spec file name inside a shipped
-script's comment is a leak exactly as it would be in any consumer's product
-file, and refusing to introduce one applies to editing the skill folder itself, not
-only to editing a downstream project. A stable in-text protocol label (`C14`,
-`SC-2`, `WC1`, and siblings such as `RC-n`/`DA-n`/`WI-n`) is not a reference to
-a file or task and stays outside this rule either way.
-
-### Enforcement
-
-- **Write time** — the Coder role refuses to introduce violations.
-- **Review time** — the Code-reviewer role FAILs any diff adding an SDD reference.
-- **Audit time** — `/magicspec:analyze` ventilation reports
-  `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
-  never auto-edited), and inspects build, CI, packaging, source, and toolchain
-  for structural coupling, reported as `SDD_SCAFFOLD_COUPLING {file}:{line}`.
-  The two are separate checks because a token scan cannot see coupling — the
-  ambient surface matters most here, since coupling usually arrives through a
-  direct request ("add a lint script", "wire this into CI") rather than through
-  a workflow the role cards mediate.
-- **Remediation time** — detection and repair are separate duties, and audit
-  owns only the first. Ventilation is read-only by contract, so a leak it finds
-  is cleaned by scheduling it: the finding carries the path
-  `→ /magicspec:task {ws}` to plan a containment-cleanup task, which `/magicspec:run`
-  then executes under the Coder role — the same role that owns the write-time
-  gate. Never treat a `SDD_REFERENCE_LEAK` report as self-resolving, and never
-  edit product files from a workflow whose write scope is `.magicspec/`.
+The SDD is scaffolding, never a component of the product. Never write a reference to it into a product
+file (task IDs, phase designators, `PLAN.md`/`TASKS.md`/`INDEX.md`/`RULES.md`, spec file names, any
+`.magicspec/` path), and never wire the engine into the product's build, CI or packaging. The exact
+classes, exemptions and enforcement points:
+[references/rules/containment.md](references/rules/containment.md) — **read it before writing or editing any product file.**
 
 ## 7. Autonomous Decision Protocol (C27 Session Posture)
 
@@ -425,44 +215,10 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
 
 ## 9. Bug Reporting Protocol (Engine Feedback)
 
-The engine folder (the `magicspec` skill folder) is strictly read-only for standard workflows. If you find a bug, logic mismatch, or experience a crash in any engine script or layout, do NOT attempt to edit or fix it yourself. Instead, formulate a structured report so the user can easily submit it.
-
-### Trigger
-
-Any engine-level script error, template mismatch, run-time crash, or logic bug detected in the skill folder.
-
-### Action
-
-Output a dedicated, highly visible Markdown alert block for the user. Do not proceed to execute the task if the engine bug blocks correctness.
-
-### Recording (Diagnostics Digest)
-
-The chat block above is a one-shot emission — in a long session it scrolls away long before the work ends, and a user reading only the final summary never sees it. Alongside it, record the finding so it also survives to the next finalize digest:
-
-```bash
-node scripts/executor.js record-diagnostic \
-    --severity=error --source=agent --code=<UPPER_SNAKE_CASE> \
-    --message="<one line, matches the Symptom above>" \
-    [--locus=<engine file:line>] [--remedy="<suggested fix, if any>"]
-```
-
-This applies to every finding the agent records this way — not only engine bugs: a specification ambiguity hit mid-execution, a containment leak spotted while reading a product file, or a guard the agent had to work around all qualify. Use `--severity=warning` for anything that did not block the task. The command always exits 0, including when the finding is malformed — recording a complaint never itself fails. This is not a substitute for a HALT: a finding that must stop the work still stops the work; recording is for what the run survives.
-
-### Report Template
-
-```markdown
-> [!CAUTION]
-> **MAGIC-SPEC ENGINE BUG REPORT**
->
-> **Symptom:** {Clear description of the error / crash / unexpected behavior}
-> **Engine Version:** {Local version from .version}
-> **Environment Context:** {Workflow, Workspace, OS, Node version}
-> **File/Line:** {Path and line number inside the engine directory if applicable}
-> **Reproduction / Context:**
-> - Command executed: `{command}`
-> - State / Action during failure: `{action}`
-> **Hypothesis / Fix:** {Your technical explanation or suggested fix, if any}
-```
+The engine folder is read-only for standard workflows. On an engine-level script error, template mismatch
+or crash, do NOT edit it: emit the `MAGIC-SPEC ENGINE BUG REPORT` block for the user and record the
+finding with `record-diagnostic`. Template and recording command:
+[references/rules/bug-reporting.md](references/rules/bug-reporting.md) — read it when you meet one.
 
 ## 10. Session Resume Check (Cold Context)
 

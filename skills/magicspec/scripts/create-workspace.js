@@ -3,7 +3,13 @@
 
 const fs = require('fs');
 const path = require('path');
-const { normalizePath, engineRoot, resolveProjectRoot, statePath, STATE_DIR_NAME } = require('./utils');
+const {
+    normalizePath,
+    engineRoot,
+    resolveProjectRoot,
+    statePath,
+    STATE_DIR_NAME,
+} = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CREATE-WORKSPACE (WI-6)
@@ -69,7 +75,9 @@ const workspaceJsonPath = path.join(designDir, 'workspace.json');
 const targetDir = path.join(designDir, name);
 
 if (!fs.existsSync(designDir)) {
-    console.error(`HALT: '${STATE_DIR_NAME}/' does not exist. Run 'init' first to bootstrap the project.`);
+    console.error(
+        `HALT: '${STATE_DIR_NAME}/' does not exist. Run 'init' first to bootstrap the project.`,
+    );
     process.exit(1);
 }
 
@@ -188,4 +196,6 @@ console.log(`   - registered in ${STATE_DIR_NAME}/workspace.json`);
 if (makeDefault) {
     console.log(`   - set as default workspace`);
 }
-console.log(`(Revert: git restore ${STATE_DIR_NAME}/workspace.json && rm -rf ${STATE_DIR_NAME}/${name})`);
+console.log(
+    `(Revert: git restore ${STATE_DIR_NAME}/workspace.json && rm -rf ${STATE_DIR_NAME}/${name})`,
+);

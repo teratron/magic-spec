@@ -115,13 +115,7 @@ function markdownFilesIn(dir) {
  * @returns {string[]} Candidate absolute paths.
  */
 function collectContributingSources() {
-    return [
-        templatePath,
-        rulesPath,
-        indexPath,
-        routerPath,
-        ...markdownFilesIn(workflowsDir),
-    ];
+    return [templatePath, rulesPath, indexPath, routerPath, ...markdownFilesIn(workflowsDir)];
 }
 
 /**
@@ -224,11 +218,15 @@ function extractRegistryBlock() {
     const tableStart = indexContent.indexOf('|', start);
     if (tableStart === -1) return REGISTRY_EMPTY_BLOCK;
     const tableEnd = indexContent.indexOf('\n##', tableStart);
-    return (
+    const table = (
         tableEnd !== -1
             ? indexContent.substring(tableStart, tableEnd)
             : indexContent.substring(tableStart)
     ).trim();
+
+    // The table's links are relative to INDEX.md; CONTRIBUTING.md sits in the project root.
+    const stateDir = path.relative(projectRoot, path.dirname(indexPath)).split(path.sep).join('/');
+    return table.replace(/\]\((?![a-z][a-z0-9+.-]*:|[/#])([^)\s]+)\)/gi, `](${stateDir}/$1)`);
 }
 
 /**
@@ -254,7 +252,7 @@ function generateContributing(targetVersion, state) {
 
     const directoryTree = `root-project/
 ├── .agents/skills/magicspec/ # The SDD Engine skill (workflows, scripts - read-only)
-└── .magicspec/                  # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)`;
+└── .magicspec/               # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)`;
 
     const sourceDate = lastSourceDate();
 
@@ -314,7 +312,8 @@ function computeSyncSignals(wfPath, skillPath, targetVersion, state, wfName, ski
     const wfHash = sha(wfContent);
     const prev = state.workflows[wfName] || {};
 
-    const skillContent = skillPath && fs.existsSync(skillPath) ? fs.readFileSync(skillPath, 'utf8') : null;
+    const skillContent =
+        skillPath && fs.existsSync(skillPath) ? fs.readFileSync(skillPath, 'utf8') : null;
     const skillHash = skillContent ? sha(skillContent) : null;
     const prevSkill = state.skills[skillKey] || {};
 
@@ -424,14 +423,7 @@ function syncDocsFolder(targetVersion, state) {
         if (!fs.existsSync(wfPath)) continue; // No source → leave doc alone
 
         const skillKey = file.replace('.md', '');
-        const signals = computeSyncSignals(
-            wfPath,
-            null,
-            targetVersion,
-            state,
-            wfName,
-            skillKey,
-        );
+        const signals = computeSyncSignals(wfPath, null, targetVersion, state, wfName, skillKey);
 
         const original = fs.readFileSync(docPath, 'utf8');
         let content = original;

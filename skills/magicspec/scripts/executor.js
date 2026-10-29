@@ -89,7 +89,8 @@ try {
 const MIGRATION_SAFE = new Set(['migrate', 'remove', 'install-hooks']);
 const legacyState = path.join(projectRoot, LEGACY_STATE_DIR_NAME);
 const hasLegacyState =
-    fs.existsSync(path.join(legacyState, 'workspace.json')) || fs.existsSync(path.join(legacyState, 'INDEX.md'));
+    fs.existsSync(path.join(legacyState, 'workspace.json')) ||
+    fs.existsSync(path.join(legacyState, 'INDEX.md'));
 if (hasLegacyState && !MIGRATION_SAFE.has(scriptName)) {
     const both = fs.existsSync(path.join(projectRoot, STATE_DIR_NAME));
     console.error(
@@ -122,7 +123,9 @@ if (fs.existsSync(workspaceJsonPath)) {
             // The registry is part of the repository: a default that arrives from it passes
             // the same guard as one given on the command line before it names a folder.
             if (typeof workspaceName !== 'string' || !WORKSPACE_NAME_RE.test(workspaceName)) {
-                console.error(`HALT: Invalid default workspace name in ${STATE_DIR_NAME}/workspace.json. Must match ${WORKSPACE_NAME_RE}.`);
+                console.error(
+                    `HALT: Invalid default workspace name in ${STATE_DIR_NAME}/workspace.json. Must match ${WORKSPACE_NAME_RE}.`,
+                );
                 process.exit(1);
             }
         }
@@ -182,7 +185,8 @@ const envVars = {
     MAGIC_ROOT: projectRoot,
     MAGIC_DESIGN_DIR: magicDesignDir,
     // The engine folder by the path this executor was started through (a link keeps its name).
-    MAGIC_ENGINE_DIR: process.env.MAGIC_ENGINE_DIR || path.resolve(path.dirname(process.argv[1]), '..'),
+    MAGIC_ENGINE_DIR:
+        process.env.MAGIC_ENGINE_DIR || path.resolve(path.dirname(process.argv[1]), '..'),
 };
 if (workspaceData) {
     const workspace = workspaceData.workspaces?.[workspaceName];

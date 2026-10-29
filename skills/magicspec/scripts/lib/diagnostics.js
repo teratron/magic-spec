@@ -281,7 +281,12 @@ function drain() {
  */
 function runRecheck(recheck) {
     try {
-        if (!recheck || !SCRIPT_NAME_RE.test(recheck.script || '') || !RECHECK_SCRIPTS.has(recheck.script)) return null;
+        if (
+            !recheck ||
+            !SCRIPT_NAME_RE.test(recheck.script || '') ||
+            !RECHECK_SCRIPTS.has(recheck.script)
+        )
+            return null;
         const scriptPath = path.join(__dirname, '..', `${recheck.script}.js`);
         if (!fs.existsSync(scriptPath)) return null;
 
