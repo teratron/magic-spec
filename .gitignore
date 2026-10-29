@@ -42,7 +42,7 @@ cache/
 temp/
 *tmp/
 *sandbox/
-*references/
+/.references/
 
 # Agents
 CLAUDE.md
@@ -57,19 +57,14 @@ copilot-instructions.md
 .*/workflows/
 .agents/workflows/*
 !.agents/workflows/
-!.agents/workflows/magic.dev.*.md
+!.agents/workflows/magicspec-dev:*.md
 !.github/workflows/
 
 ## Skills
 .*/skills/
 !.agents/skills/
-.agents/skills/magic-analyze/
-.agents/skills/magic-rule/
-.agents/skills/magic-run/
-.agents/skills/magic-spec/
-.agents/skills/magic-task/
-.agents/skills/magic-status/
-.agents/skills/magic-graph/
+.agents/skills/magicspec
+.agents/skills/magicspec-dev
 
 ## Rules
 .*/rules/
@@ -77,18 +72,13 @@ copilot-instructions.md
 .agents/rules/magic*.md
 .agents/rules/MAGIC.md
 
-# Engine runtime state (written to .design/.cache/ by scripts)
-.magic/.finalize-state.json
-.magic/.project-meta-state.json
-.magic/.docs-state.json
 
 # Dev-only state cache (sync-docs.js)
-dev/.cache/
+.cache/
 
 ## Generated graph artifacts
-/.design/*graph*.*
-/.design/*cache*/
-/.design/wiki/
+/.magicspec/graph/
+/.magicspec/*cache*/
 
 # Local settings (never commit)
 */settings.json

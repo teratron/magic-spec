@@ -1,0 +1,208 @@
+# SDD Reference Containment Specification
+
+**Version:** 1.8.2
+**Status:** Stable
+**Layer:** concept
+
+## Overview
+
+Defines the containment boundary between the SDD layer (`.magicspec/`) plus the engine directories, and the product under construction in consumer projects. The boundary has two dimensions:
+
+- **Reference containment (RC-1..RC-11)**: product artifacts stay fully self-contained when a release excludes `.magicspec/` — no task IDs, phase references, plan/spec links, or `.magicspec/` paths in shipped code, comments, or product documentation. Traceability lives in the SDD layer and git metadata, never in the product.
+- **Structural containment (RC-12)**: the SDD is scaffolding, not a component of the thing it helps build. The product must build, test, run, and package with the scaffolding deleted.
+
+Both dimensions apply the same test — *is this still whole once `.magicspec/` is gone?* — RC-3 to prose meaning, RC-12 to build and runtime function.
+
+## Related Specifications
+
+- [l1-role-system.md](l1-role-system.md) - Enforcement gates are realized as role-card duties.
+- [l2-role-cards-execution.md](l2-role-cards-execution.md) - Authoring-gate carrier (Coder card, RC-5).
+- [l2-role-cards-review.md](l2-role-cards-review.md) - Review-gate carrier (Code-reviewer card, RC-6).
+- [l1-engine-core.md](l1-engine-core.md) - Hosts the run/analyze workflows that carry the enforcement and detection surfaces.
+- [l2-release-pipeline.md](l2-release-pipeline.md) - Defines the release archive's contents, which fix what "shipped" means for RC-9 and RC-12.
+- [l1-scan-input-hygiene.md](l1-scan-input-hygiene.md) - SH-1 and SH-6 decide how the detection surfaces treat a quoted occurrence (RC-2.2).
+- [l2-engine-automation.md](l2-engine-automation.md) - §Git Hook Lifecycle owns the contract of the one artifact RC-12 exempts and that scaffold removal leaves behind.
+
+## 1. Motivation
+
+Field report from a consumer project: source files accumulated comments such as "implements task T-2B03 from phase-2" and links into `.magicspec/specifications/`. The product ships via release archives that exclude `.magicspec/` — every such reference becomes dead content: links resolve nowhere, task IDs mean nothing to the reader, and SDD internals leak into the public artifact.
+
+The engine already enforces the mirrored boundary internally: the L1 release kernel never references the `dev/` tree. This spec extends the same containment discipline to the code the engine produces inside user projects.
+
+A second field report (engine 2.1.49) surfaced a leak source none of RC-1..RC-10 covers: `finalize.js`'s single-spec CHANGELOG branch composes `` Updated specification `{artifact-id}` (workspace) `` and writes it straight to the product's root `CHANGELOG.md` — no Coder typed the string, no Code-reviewer reviewed a diff, because the script generates and applies the change atomically. The multi-spec branch already used the safe generic form (`` Updated {N} specifications (workspace) ``); only the single-item path interpolated the identifier. See **RC-11**.
+
+A third report identifies a failure the reference dimension cannot express at all: in consumer projects, agents **deeply integrate the SDD as part of the project being built**. The SDD is scaffolding — erected around the work, never load-bearing for it, removed when the work is done — but nothing in RC-1..RC-11 forbids making it load-bearing, because coupling of this kind leaves no forbidden *token* behind. A `package.json` script invoking `executor.js`, a CI job gating the build on `/magicspec:analyze`, a release archive that packages `.magicspec/`: none of these mention a task ID, a phase, or a spec filename, so every existing detection surface reads them as clean. The product nonetheless stops being able to stand once the scaffold comes down. See **RC-12**.
+
+The distinction matters most where the two dimensions look alike. RC-3 already demands that a comment stay *meaningful* with `.magicspec/` absent; RC-12 demands the build stay *runnable* under the same condition. An agent can satisfy every reference rule and still produce a project that will not compile once the engine directories are deleted — which is the state the release archive of a downstream product is actually in.
+
+A fourth report surfaced the cost of leaving the engine's own repository exempt from the dimension it enforces on everyone else. `skills/magicspec/scripts/update-state.js` alone accumulated dozens of comments citing spec section numbers and file names across its defect-fix history (`l2-finalize-state-accuracy.md section 13`, among others) — several of which went stale the moment their target was later decomposed into two successor files (`l2-update-state-structure.md`, `l2-update-state-values.md`). That is RC-1's exact failure mode, reproduced inside the shipped kernel itself, because RC-8 exempted engine directories unconditionally rather than only where the exemption's own reasoning applies: a consumer never authors its vendored copy, so scanning it is noise; this repository authors `skills/magicspec/` directly, so the same scan is signal. User directive: hold the engine's own authorship to the bar RC-1/RC-2 already set for every consumer. See **RC-8 (widened)**.
+
+A fifth finding came from measurement rather than from a report. The ventilation scan carried the SH-1 quoting precondition from [l1-scan-input-hygiene.md](l1-scan-input-hygiene.md) 1.1.0 on, and that precondition — right for the engine's own files, which are written *about* the SDD layer — reads, in a consumer project, as "a path in backticks is not a reference". Documentation quotes the paths it points at, so the notation the precondition removes is the common one: 92 of 279 matches in five consumer projects' product markdown, and every match of two of them. See **RC-2.2**. The same pass found that RC-12's exemption of the pre-commit hook rested on a claim that is false as stated — the hook "is removed with the scaffold" — because `.git/hooks/` is not among the directories whose deletion defines scaffold removal; reproduced, the orphaned hook fails every commit with a misleading message. See **RC-12** and [l2-engine-automation.md](l2-engine-automation.md) §Git Hook Lifecycle.
+
+## 2. Constraints & Assumptions
+
+- `.magicspec/` is a development-time workspace; release packaging MAY exclude it entirely.
+- Git metadata (commit messages, PR descriptions) is not part of a release artifact and remains a legitimate traceability channel.
+- Engine directories are engine-owned and read-only **in a consumer project** — the consumer never authors them, which is why RC-8 exempts them there. **In the engine's own repository they are the product under active authorship, not a read-only vendor drop, so the same exemption does not extend here** (RC-8).
+- Enforcement is cognitive (workflow and role instructions), not a build-time stripper: the engine has no compile step in consumer stacks.
+- The engine is installed by unpacking a release archive and removed by deleting directories. It is not a package-manager dependency of the consumer project, and RC-12 assumes it never becomes one — the engine must remain deletable without editing a manifest.
+- The scaffolding is the SDD workspace **plus** the engine directories. Which of those count as *product* differs by repository, and only in this one respect (RC-8/RC-12): in a consumer project none of them do; in the engine's own repository the engine directories are the product while `.magicspec/` remains scaffolding.
+- **The boundary is provisional, not permanent.** `[ADDED]` A consumer project may eventually grow capable enough to host its own development discipline (self-application / dogfooding); at that point the external engine stops being load-bearing for *how the project plans its own work*, not only for what it builds. RC-12's removal test already proves the boundary is safe to cross at any given moment; this assumption states the reverse direction explicitly — design and planning inside a consumer project SHOULD NOT assume the external engine is a permanent fixture, so an eventual handoff finds nothing quietly counting on it staying.
+
+## 3. Core Invariants (Layer 1 only)
+
+Rules that Layer 2 implementations MUST NOT violate:
+
+- **RC-1 (One-Way Traceability)**: References cross the SDD boundary in one direction only: SDD artifacts → product files. Product files never reference SDD artifacts.
+- **RC-2 (Containment Scope)**: "Product files" means every release-shippable artifact: source code (identifiers, string literals), comments and docstrings, test names, build/config files, and user-facing documentation (README, CHANGELOG). Forbidden references: task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), specification file names, and any `.magicspec/…` path.
+- **RC-2.1 (Notation Independence)**: a containment check MUST match a forbidden class in **every notation it can appear in**, not in the notation the SDD layer happens to use internally. Concretely: task IDs match `T-\d+[A-Z]\d+(\.\d+)?` — bracketed *and* bare, any phase width; phase designators match both the file form (`phase-\d+(\.md)?`) and the prose form (`[Pp]hase[-\s]\d+`). Binding a check to the bracketed checklist form (`[T-XXXX]`) or to a fixed width is a **specification defect**, not a tuning choice: those are the SDD layer's own internal spellings, and a reference leaks precisely when it is *quoted out* of that layer — bare, in prose, inside a test name. Field evidence: a consumer project accumulated 121 leaks across 44 files with zero reports, because the documented literal matched almost none of them. `[ADDED]`
+- **RC-2.2 (Quoted Notation)**: RC-2.1 extends to quoting. Documentation names a file or an ID by putting it in a code span or a fence, so a check that treats those constructs as mentions (the syntactic rule of [l1-scan-input-hygiene.md](l1-scan-input-hygiene.md) SH-1) never sees the form most pointers take. In a consumer project a containment check MUST NOT drop an occurrence of a forbidden class for being code-quoted in a product markdown file (SH-6): it reports it, in the contextual sub-list when the passage reads as an illustration of a forbidden form (RC-9's third form) rather than a use of it, judged by RC-3's self-containment test. The SH-1 precondition stays for the engine's own authored files in its own repository (RC-8), where quoting speaks about the token. Evidence: measured on the tracked product markdown of five consumer projects, 92 of 279 matches by four of the classes of §4.2 (`.magicspec/` paths, task IDs, `phase-N` file forms, `PLAN.md` / `TASKS.md` names) were code-quoted — one in seven without the `phase-N` file form — and in two of the five projects every match was, so the scan reported nothing there. `[ADDED]`
+- **RC-3 (Self-Containment)**: Every comment and documentation passage must remain fully meaningful with `.magicspec/` absent. Design rationale that matters at the code site is restated in plain language in place; provenance ("which task produced this") is never stated in code.
+- **RC-4 (Traceability Relocation)**: The task ↔ code mapping lives exclusively in the SDD layer (task `Changes` fields, phase files) and git metadata (commit messages, PR descriptions).
+- **RC-5 (Authoring Gate)**: The code-producing role MUST NOT introduce violations — write-time prevention.
+- **RC-6 (Review Gate)**: Diff review MUST fail any diff that introduces an SDD reference into product files — merge-time prevention.
+- **RC-7 (Leak Detection)**: Project ventilation MUST scan existing product files for violations and report each as an actionable finding. Ventilation owns **detection only** — it is read-only by contract and never edits product files. `[MODIFIED]`
+- **RC-10 (Remediation Owner)**: Every detection surface MUST name the owner that repairs what it finds; a detection surface with no named owner is incomplete. Because ventilation is read-only and the spec-authoring workflow's write scope is confined to `.magicspec/`, no workflow that *detects* a leak may *fix* it. Remediation therefore routes through the normal pipeline: the `SDD_REFERENCE_LEAK` finding carries the path `→ /magicspec:task {ws}` to schedule a containment-cleanup task, which `/magicspec:run` executes under the code-producing role — the same role that owns the RC-5 write-time gate. Detection without a routed owner is what lets leaks re-accumulate between audits. `[ADDED]`
+- **RC-8 (Exemptions)**: Exempt from RC-1/RC-2: the `.magicspec/` subtree itself; engine directories **in a consumer project** (vendored and read-only there — a scan over content the consumer never authors is noise, not signal); git metadata; contributor-facing process documentation that documents the SDD workflow itself (there the reference IS the content, not traceability metadata). The magic-spec repository documents the SDD process as its product domain — its references to `.magicspec/` are content, not leaks. **In the engine's own repository the engine-directory exemption does not hold**: `skills/magicspec/`, `workflows/`, `skills/`, and `rules/` are the product under active authorship here — the same flip RC-12 already makes for structural containment (§4.4) — so RC-1/RC-2 bind them exactly as they bind a consumer's product files: a task ID, phase designator, or spec file name inside a shipped script's comment is a leak regardless of which repository wrote it. RC-9 remains the narrower, specific rule for the one sub-case both readings share — a shipped file naming this repository's own `.magicspec/engine/…` workspace or an engine-workspace spec filename — and its explicit carve-out for stable in-text protocol labels (`WI-n`, `DA-n`, `C{n}`, and siblings such as `RC-n`/`SC-n`/`WC-n`) is unaffected, applying equally under this widened RC-8. `[MODIFIED]`
+- **RC-9 (Shipped Self-Containment)**: Files distributed with the engine (`skills/magicspec/`, and templates instantiated into user projects) MUST NOT reference the engine repository's own SDD workspace: no `.magicspec/engine/…` paths and no engine-workspace specification file names. Normative content is restated inline or cross-referenced to another shipped file. Three forms stay valid: consumer-generic SDD paths (`.magicspec/{workspace}/…`, `$DESIGN_DIR`, the user's own `.magicspec/INDEX.md`), stable in-text protocol labels (`WI-n`, `DA-n`, `C{n}`), and illustrative examples of forbidden forms. `[ADDED]`
+- **RC-11 (Generator Self-Containment)**: Text an engine script composes and writes directly into a product file is bound by RC-1/RC-2 exactly as text a role authors by hand — machine generation is not an exemption. This surface receives no RC-5/RC-6 mediation: nothing is typed by a Coder or reviewed as a diff by a Code-reviewer, because the script generates and applies the change atomically inside a workflow's finalize step. It is also a weak signal for RC-7's cognitive scan: a spec's **artifact ID** — the identifier the engine derives internally by stripping the `l1-`/`l2-` prefix and `.md` extension (e.g. `model-runtime` from `l1-model-runtime.md`) — carries none of the markers (path segment, extension, registered filename) the scan looks for, so a leaked artifact ID reads as an unremarkable word rather than an SDD reference. Enforcement is regression-test coverage on the generator function's output shape, pinned in the finalize-pipeline harness ([l2-test-suite.md](l2-test-suite.md)) — not RC-5/RC-6/RC-7, none of which reach this surface. `[ADDED]`
+- **RC-12 (Scaffold Boundary)**: The SDD workspace and the engine directories are development-time scaffolding, never a component of the product under construction. The falsifiable form is the **scaffold-removal test**: with `.magicspec/`, `skills/magicspec/`, `workflows/`, `skills/`, and `rules/` deleted, the product MUST still build, test, run, and package. A project failing this test has made the scaffolding load-bearing. Forbidden in consumer projects: product build or package manifests wiring engine scripts into their lifecycle (`package.json` `scripts`, `Makefile` targets, `pyproject.toml`, `Cargo.toml`, Gradle tasks); CI/CD steps invoking `/magicspec:*` workflows or `executor.js` subcommands as build, test, or release gates; product runtime or build code reading any file under `.magicspec/` or the engine directories; product tests asserting on SDD artifact structure or content; release artifacts (archives, container images, published packages) that include `.magicspec/` or the engine directories; and toolchain dependencies added to the product solely to run the engine — a Node runtime introduced into a Python-only project for `executor.js` is coupling even where no product file names the engine. Exempt: the git pre-commit hook `init.js` installs, which lives in `.git/hooks/` — never committed, never packaged, and gating a *commit* is not gating a *build*. It does **not** vanish with the scaffold: `.git/hooks/` is outside the five directories, so deleting them leaves the hook behind, and its contract ([l2-engine-automation.md](l2-engine-automation.md) §Git Hook Lifecycle) therefore requires it to disarm itself — say so once and let the commit proceed — when the engine is absent, so that it cannot outlive the engine as a commit blocker. Unlike RC-1..RC-11 this invariant is not detectable by scanning for forbidden tokens — the coupling is structural and leaves no SDD identifier behind — so its enforcement surface is a distinct structural check (§4.4). `[ADDED]`
+
+> L2 spec cannot reach RFC status until all invariants here are addressed in its "Invariant Compliance" section.
+
+## 4. Detailed Design
+
+### 4.1 Enforcement Surfaces
+
+| Surface | Stage | Invariant | Carrier |
+| --- | --- | --- | --- |
+| Coder discipline | write time | RC-5 | Execution role card |
+| Code-reviewer check | review time | RC-6 | Review-gate role card |
+| Ambient agent rules | ad-hoc edits outside `run` | RC-1..RC-4 | Distributed agent rules (`rules/`) |
+| Ventilation scan | audit time | RC-7 | `analyze` workflow checklist |
+| Cleanup task | remediation time | RC-10 | `task` → `run` pipeline (Coder role) |
+| Generator output | generation time | RC-11 | `tests/engine.js` regression — no role card mediates this surface |
+| Scaffold-removal check | audit time | RC-12 | `analyze` workflow — structural check (§4.4), not a token scan |
+
+The ambient surface is mandatory because not every code change in a consumer project flows through the `run` workflow: direct user-prompted edits must obey the same containment, so the distributed agent-rules file states the policy once for every agent.
+
+The generator surface (RC-11) is structurally different from the other four: RC-5/RC-6/RC-7 all assume a human or agent produces or reviews the text before it reaches a product file. A finalize-pipeline helper composes and writes CHANGELOG/README fragments with no such step, so the only enforcement available is pinning the generator function's output shape with a regression test — the same discipline already applied to `phase-archiver.js`'s eligibility predicate (§6 of `l2-engine-finalization.md`).
+
+### 4.2 Detection Heuristic
+
+```plaintext
+for each file in scope (respect .gitignore):
+    in a consumer project: skip .magicspec/ and engine dirs (vendored, read-only there)
+    in the engine's own repository: skip only .magicspec/ (engine dirs are the product here)
+    flag unconditionally:
+        ".magicspec/"                          — any path into the SDD tree
+        /T-\d+[A-Z]\d+(\.\d+)?/             — task IDs, BRACKETED AND BARE
+        /phase-\d+(\.md)?/                  — phase file references
+        "PLAN.md" / "TASKS.md" / "INDEX.md" / "RULES.md"
+        spec filenames registered in INDEX.md
+    flag contextually (self-containment test, see below):
+        /[Pp]hase[-\s]\d+/                  — prose phase designators
+    markdown file, any class, occurrence inside a fenced block or an inline code span (RC-2.2):
+        consumer project                    — report it; contextual sub-list when it reads as an
+                                              illustration of a forbidden form, else under its class
+        engine's own authored files         — skip (SH-1: there quoting speaks about the token)
+report each as: SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"
+if finding_count > 0: state remediation path → /magicspec:task {ws}   (RC-10)
+```
+
+Per RC-2.1 the task-ID and phase patterns are notation-independent: bare `T-22A01` and prose `Phase 20 Track B` are the forms that actually leak, because a reference leaves the SDD layer by being *quoted out* of its internal bracketed/file spelling.
+
+Prose `Phase {n}` is the sole contextual class — many domains own the word (handshake phases, build phases). Disambiguate with RC-3's self-containment test: if the passage stops making sense once `.magicspec/` is absent, it denotes the plan's phase and is a leak; otherwise it is domain vocabulary. Report contextual hits in a separate sub-list so they can be triaged apart from unconditional ones.
+
+A code-quoted occurrence is not a separate class and is not skipped (RC-2.2, SH-6). The test for whether it is an illustration is the same self-containment test, asked of the passage rather than of the syntax: a README line that tells the reader to open `.magicspec/main/specifications/l1-auth.md` uses the path; a line that shows what a task-ID leak looks like mentions it. In a consumer project the second kind is rare in product text and the first is the common one, which is why the default for an ambiguous passage is to report it.
+
+False-positive guard: matches inside the exempt set (RC-8) are skipped — an exemption decided by the *role* of the document, never by the quoting of the token. Findings are advisory (severity: warning) — ventilation never auto-edits product files; repair is routed per RC-10.
+
+### 4.3 Correct Form Examples
+
+```plaintext
+BAD : // Implements T-2B03 (see .magicspec/engine/tasks/phase-2.md)
+BAD : """Validator required by l1-input-rules.md §3."""
+BAD : // T-22A01: @test: block round-trip          <- bare ID, two-digit phase
+BAD : // Added in Phase 20 Track B                 <- prose phase designator
+BAD : fn test_phase_22_closing_validation() {}     <- leak in a test name
+BAD : (CHANGELOG.md, generated) Updated specification `model-runtime` (main)
+BAD : (README.md) The contract is in `.magicspec/main/specifications/l1-auth.md`   <- quoted, still a pointer
+GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
+GOOD: // Round-trip must be lossless: the encoder and decoder share no state.
+GOOD: (commit message) feat(parser): add payload guard [T-2B03]
+GOOD: (CHANGELOG.md, generated) Updated specification (main)
+GOOD: (CHANGELOG.md, generated) Updated 3 specifications (main)
+```
+
+### 4.4 Scaffold-Removal Check (RC-12)
+
+RC-12 needs its own surface because §4.2's heuristic cannot see it: that scan looks for SDD *tokens*, and structural coupling contains none. The check is a small structural inspection, not a grep over the whole tree, and runs in consumer projects only (see the RC-8 partial exemption for the engine repository).
+
+```plaintext
+scaffold-removal check (consumer projects only):
+    1. build & lifecycle manifests — package.json (scripts), Makefile, pyproject.toml,
+       Cargo.toml, build.gradle, Taskfile, justfile, …
+         flag: any target invoking executor.js, a /magicspec:* workflow, or a skills/magicspec/ path
+    2. CI/CD configs — .github/workflows/, .gitlab-ci.yml, Jenkinsfile, …
+         flag: any build/test/release step gated on the engine or on .magicspec/ state
+    3. packaging/include lists — package.json "files", MANIFEST.in, Cargo include,
+       Dockerfile COPY, .dockerignore, .gitattributes export-ignore
+         flag: .magicspec/ or an engine directory present in a shipped artifact
+    4. product source & tests
+         flag: reads of .magicspec/ or engine paths at build or runtime
+    5. product toolchain manifests
+         flag: a runtime/dependency present solely to execute the engine
+report each as: SDD_SCAFFOLD_COUPLING {file}:{line} → "{integration point}"
+if finding_count > 0: state remediation path → /magicspec:task {ws}   (RC-10)
+```
+
+Findings are advisory and read-only, on the same terms as RC-7: ventilation reports, and RC-10 routes the repair through `/magicspec:task` → `/magicspec:run`. Severity is higher than a reference leak — a leak degrades a shipped artifact's cleanliness, whereas coupling can make it fail to build at all — but the remediation owner is unchanged.
+
+The check is deliberately a five-point inspection rather than an attempt to actually delete the directories and run the build: the engine has no knowledge of any consumer's build command, and a destructive verification cannot be part of a read-only audit. The five points are where coupling is introduced in practice; an actual removal rehearsal remains available to the user as a manual confirmation.
+
+## 5. Implementation Notes
+
+1. Amend the Coder card (authoring gate, RC-5) and Code-reviewer card (review gate, RC-6) — carried by their L2 specs.
+2. Add the ambient containment section to the distributed agent rules file (RC-1..RC-4).
+3. Extend the ventilation checklist with the RC-7 leak scan.
+4. Steps 2-3 modify engine files → C14 applies at implementation time.
+5. Purge engine-workspace references from already-shipped files (workflow bodies, templates, agent rules): replace dead spec links with inline restatement, replace baked-in workspace names with `{workspace}` placeholders, replace governance file-name citations with protocol names (RC-9). `[ADDED]`
+6. Extend the ventilation checklist with the RC-12 scaffold-removal check (§4.4), and state the scaffold framing once in the distributed agent rules — the ambient surface is where it matters most, since coupling is typically introduced by a direct user-prompted edit ("add a lint script", "wire this into CI") rather than inside a `run` workflow the role cards mediate. Both modify engine files → C14 applies at implementation time. `[ADDED]`
+7. Rescope the quoting precondition of the ventilation scan (RC-2.2): `skills/magicspec/workflows/analyze.md` step 6 names the SH-1 precondition as holding for the engine's own authored files and states that in a consumer project a code-quoted occurrence is reported. Correct the hook claim (RC-12) where it is repeated: `skills/magicspec/workflows/analyze.md` step 6a's exemption line and `skills/magicspec/AGENT-RULES.md` §6's exemption sentence say the hook "goes away with" or "is removed with" the scaffold; they say instead that the hook disarms itself when the engine is absent. `skills/magicspec/AGENT-RULES.md` is a hardlinked pair, **[C-001]**. Every file here modifies the engine → C14 applies at implementation time. `[ADDED]`
+
+## 6. Drawbacks & Alternatives
+
+- **Ship `.magicspec/` with releases** — rejected: bloats artifacts, exposes internal planning, and contradicts the release-kernel contract.
+- **Build-time comment stripping** — rejected: stack-specific, fragile, does not fix docs or identifiers, and the engine has no build step in consumer projects.
+- **Drawback**: restating rationale in plain language can drift from the spec wording over time. Accepted: the spec remains the source of truth; code comments state local constraints, not provenance.
+- **Make the engine an explicit versioned dependency** (npm package, git submodule, language-native package) so the coupling is at least declared and pinned — rejected, and it inverts RC-12 rather than satisfying it. The engine is stack-agnostic and installs into projects sharing no package manager (Rust, Go, Python, Node, polyglot monorepos); any dependency model forces a package manager and runtime onto every consumer, which is precisely the toolchain coupling RC-12 forbids. Install-by-unpacking and remove-by-deletion is what keeps the scaffold removable without editing a single product manifest — the property the invariant exists to protect.
+- **Enforce RC-12 by having ventilation actually delete the directories and run the build** — rejected: the engine knows no consumer's build command, and a read-only audit cannot perform a destructive rehearsal. §4.4's five-point structural inspection covers where coupling is introduced in practice; the removal rehearsal stays a manual confirmation the user can run.
+- **Carry SH-1 into consumer projects, as the engine's own files have it** — the 1.1.0 position of the scan hygiene specification, rejected on the measurement in §1: it is the right rule where quoting speaks about the token and the wrong one where quoting is how a pointer is written, and a consumer's product text is the second case. The scan cannot tell the two apart by syntax, so it does not try (RC-2.2).
+- **Extend RC-7's regex to match bare artifact-ID stems** — rejected: a stem like `model-runtime` or `engine-core` is indistinguishable from ordinary compound-word prose without cross-referencing every product-file token against the live spec registry on every scan, which would produce large false-positive volumes for common English compounds. Fixing at generation time (RC-11) is precise instead of probabilistic: the generator has ground truth that a string originated from a spec's own identifier at the moment it composes it, no whole-file semantic diffing required.
+
+## Canonical References
+
+| Alias | Path | Purpose |
+| --- | --- | --- |
+| `[CODER-CARD]` | `skills/magicspec/roles/coder.md` | Deployed authoring-gate carrier (RC-5). |
+| `[REVIEWER-CARD]` | `skills/magicspec/roles/code-reviewer.md` | Deployed review-gate carrier (RC-6). |
+| `[ANALYZE]` | `skills/magicspec/workflows/analyze.md` | Ventilation workflow hosting the RC-7 leak scan. |
+| `[AGENT-RULES]` | `skills/magicspec/AGENT-RULES.md` | Distributed ambient policy surface for ad-hoc edits. |
+| `[RUN]` | `skills/magicspec/workflows/run.md` | Execution workflow activating the RC-5/RC-6 gates. |
+
+## Document History
+
+| Version | Date | Author | Description |
+| --- | --- | --- | --- |
+| 1.8.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
+| 1.8.1 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
+| 1.8.0 | 2026-10-28 | Agent | RC-8 and RC-9 name the one product folder: the engine-directory exemption in a consumer project is the vendored skill folder (`skills/magicspec/`), and in this engine's own repository that folder is the product, so the exemption does not hold there (restated, not weakened). RC-9's shipped set is the skill folder and the templates instantiated into user projects. Engine paths and command names follow the layout. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. Part of the single-skill restructuring ([l2-skill-layout.md](l2-skill-layout.md) §5.9). |
+| 1.7.0 | 2026-10-11 | Agent | Two corrections found by a reference-mining pass over an external security scanner for agent configurations (recorded here by class only). **RC-2.2 (Quoted Notation)**: RC-2.1's notation independence extends to quoting. The ventilation scan carried the SH-1 precondition ("an occurrence in a code span or a fence is a mention") for every markdown product file; in a consumer project that hides the notation documentation uses to point at a path, and the scan now reports a code-quoted occurrence there (contextual sub-list when it reads as an illustration, under the self-containment test), keeping the precondition for the engine's own authored files. Measured on five consumer projects' tracked product markdown: 92 of 279 matches code-quoted, all of a project's in two of the five. §4.2 gained the rule and a paragraph on judging an illustration, §4.3 a BAD example, §6 the rejected alternative. **RC-12 hook exemption**: "removed with the scaffold" is false — `.git/hooks/` is outside the five directories — and the reproduced consequence is a hook that fails every commit after the engine is deleted; the exemption now states that the hook disarms itself when the engine is absent, the contract living in [l2-engine-automation.md](l2-engine-automation.md) §Git Hook Lifecycle. §5 gained item 7 (deployment: `.magic/analyze.md` steps 6 and 6a, `rules/magic.md` §6). Related Specifications gained the two links. Specification only; engine deployment is routed to `/magic.task engine`. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |
+| 1.6.0 | 2026-09-28 | Agent | **Widened RC-8**: the engine-directory exemption from RC-1/RC-2 now holds only **in a consumer project**, where `.magic/`/`workflows/`/`skills/`/`rules/` are a vendored, never-authored drop. In the engine's own repository these directories are the product under active authorship — the same flip RC-12 already made for structural containment — so reference containment now binds them exactly as it binds any consumer's product files; RC-9 stays the narrower rule for the one sub-case both readings share (naming this repository's own `.design/engine/…` workspace), with its protocol-label carve-out (`WI-n`/`DA-n`/`C{n}`, now explicitly including sibling forms `RC-n`/`SC-n`/`WC-n`) unaffected. §2's engine-directory assumption and §4.2's detection heuristic reworded to match; `l1-engine-core.md` Canonical References and Related Specifications unaffected (no new cross-file dependency). User directive, prompted by field evidence: `update-state.js` had accumulated spec section/filename citations under the old exemption, some already stale after `l2-finalize-state-accuracy.md`'s decomposition into two successor files (§1, fourth paragraph). Implementation (Engine Improvement, this change): `rules/magic.md` §6 Exemptions and `.magic/analyze.md` step 6 scan-scope reworded in the same pass — C14 applies. Existing `.magic/scripts/*.js` comments predating this widening are not retroactively edited; remediation is `/magic.task engine` follow-up work, per RC-10. Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues; Trust Mode (C9) kept status `Stable`. |
+| 1.5.0 | 2026-09-13 | Agent | Added a **provisional-boundary** assumption to §2 Constraints & Assumptions, surfaced via reference-mining against a downstream consumer project's own constitution: the scaffolding relationship is temporary by design, not only structurally clean — a consumer project may eventually grow capable enough to host its own development discipline, at which point the external engine stops being load-bearing for how the project plans its own work. Complements RC-12's removal test (safe to cross at any moment) with the anticipatory direction (design should not assume the engine stays). No change to Core Invariants — this is an assumption, not a new testable rule. Status reverted `Stable → RFC` (Amendment Rule); Post-Update Review (5-lens) and Instruction Quality Pass found no blocking issues, so Trust Mode (C9) auto-promoted back to `Stable` within the same invocation. |
+| 1.4.0 | 2026-08-06 | Agent | Added **RC-12 (Scaffold Boundary)** — the spec's scope widens from one dimension to two: reference containment (RC-1..RC-11, unchanged) and **structural** containment. The SDD workspace and engine directories are scaffolding, never a component of the product; the falsifiable form is the scaffold-removal test (delete all five directories — the product must still build, test, run, package). This closes a class RC-1..RC-11 structurally cannot express: coupling leaves no forbidden *token* behind, so a `package.json` script calling `executor.js`, a CI gate on `/magic.analyze`, or a release archive packaging `.design/` reads as clean to every existing surface while making the scaffold load-bearing. Carries its own detection surface (§4.4, a five-point structural inspection rather than a token scan, advisory and read-only on RC-7's terms, remediation routed per RC-10) and a §4.1 row. RC-8's engine-repository exemption tightened to **partial**: only the engine directories flip from scaffold to product here — `.design/` is scaffolding in every repository including this one, verified against the release pipeline, which walks `.magic`/`workflows`/`skills`/`rules` plus three root files and never `.design/`. Exempt from RC-12: the pre-commit hook `init.js` installs, since `.git/hooks/` is neither committed nor packaged and gating a commit is not gating a build. §6 gained two rejected alternatives (engine-as-versioned-dependency, which inverts the invariant by forcing a package manager on every consumer; and destructive removal-rehearsal as the enforcement mechanism). Field report: agents in consumer projects deeply integrate the SDD as part of the project being built. Related Specifications gained `l2-release-pipeline.md`, which fixes what "shipped" means. |
+| 1.3.0 | 2026-08-06 | Agent | Added **RC-11 (Generator Self-Containment)**: RC-1/RC-2 bind to text an engine script composes and writes into a product file, exactly as to hand-authored text — closes a leak class none of RC-5/RC-6/RC-7 can reach, since no role authors or reviews generator output. §4.1 gained a Generator-output enforcement row; §4.3 gained a generated-CHANGELOG BAD/GOOD pair; §6 gained the rejected-alternative rationale for why the fix belongs at generation time rather than in RC-7's detection regex. Field evidence: `finalize.js`'s single-spec CHANGELOG branch interpolated the spec's artifact ID (`model-runtime`, stripped of `l1-`/`.md`) into root `CHANGELOG.md` — the multi-spec branch already used safe generic wording, so only the single-item path leaked (field report, engine 2.1.49). |
+| 1.2.0 | 2026-08-06 | Agent | Added **RC-2.1 (Notation Independence)** and **RC-10 (Remediation Owner)**; RC-7 narrowed to detection-only; §4.2 heuristic split into unconditional and contextual classes with explicit patterns; §4.3 gained bare-form BAD examples. Two compounding defects: (a) every audit surface bound the task-ID class to the bracketed checklist literal `[T-XXXX]` and the phase class to the file form `phase-{n}` — the SDD layer's *internal* spellings — so bare `T-22A01` and prose `Phase 20 Track B`, the forms references actually take when quoted into code, matched nothing; (b) RC-7 called ventilation "the cleanup path" while ventilation is read-only and the spec workflow's write scope is `.design/`-only, leaving detection with no repair owner. Field evidence: 121 leaks across 44 files in a consumer project, unreported, 16 of them inside a crate whose purpose is standalone extraction (field report, engine 2.1.49). |
+| 1.1.0 | 2026-06-12 | Agent | Added RC-9 (Shipped Self-Containment): shipped engine files must not reference the engine repo's own SDD workspace — closes the gap where RC-8's engine exemption masked engine→`.design/engine/` leaks (15 sites found in first ventilation). RC-8 scope clarified; Implementation Notes step 5 added. |
+| 1.0.0 | 2026-06-12 | Agent | Initial Stable. Field-driven: consumer-project releases exclude `.design/`, so SDD references in product code become dead content. Defines RC-1..RC-8 and four enforcement surfaces. |

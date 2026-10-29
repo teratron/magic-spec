@@ -4,7 +4,7 @@ This document explains the purpose, implementation, and management of the checks
 
 ## 1. Overview
 
-The `.magic/.checksums` file acts as the "integrity passport" for the Magic SDD engine. It contains SHA256 hashes of all critical files within the `.magic/` directory.
+The `skills/magicspec/.checksums` file acts as the "integrity passport" for the Magic SDD engine. It contains SHA256 hashes of all critical files within the `skills/magicspec/` directory.
 
 The primary goals of this system are:
 
@@ -14,17 +14,17 @@ The primary goals of this system are:
 
 ## 2. The `.checksums` File
 
-The file is located at `.magic/.checksums` and uses a flat JSON structure:
+The file is located at `skills/magicspec/.checksums` and uses a flat JSON structure:
 
 ```json
 {
-  "spec.md": "sha256-hash-of-file",
-  "task.md": "sha256-hash-of-file",
+  "SKILL.md": "sha256-hash-of-file",
+  "workflows/spec.md": "sha256-hash-of-file",
   "scripts/executor.js": "sha256-hash-of-file"
 }
 ```
 
-- **Keys**: Relative paths of files within the `.magic/` directory.
+- **Keys**: Relative paths of files within the `skills/magicspec/` directory.
 - **Values**: SHA256 hashes represented as lowercase hexadecimal strings.
 - **Exclusion**: The `.checksums` file itself is excluded from hashing to avoid circular dependencies.
 
@@ -32,21 +32,21 @@ The file is located at `.magic/.checksums` and uses a flat JSON structure:
 
 ### 3.1 Prerequisite Validation
 
-The `check-prerequisites.js` script (executed via the universal `node .magic/scripts/executor.js check-prerequisites` wrapper) automatically verifies these checksums. This check is integrated as **Step 0** into ALL Magic SDD workflows.
+The `check-prerequisites.js` script (executed via the universal `node skills/magicspec/scripts/executor.js check-prerequisites` wrapper) automatically verifies these checksums. This check is integrated as **Step 0** into ALL Magic SDD workflows.
 
-If a mismatch is detected, the workflow surfaces an `ENGINE_INTEGRITY` warning — a **HALT** when the file is in scope (see the C15 Filter in `.magic/init.md` §1) — that says how the file differs:
+If a mismatch is detected, the workflow surfaces an `ENGINE_INTEGRITY` warning — a **HALT** when the file is in scope (see the C15 Filter in `skills/magicspec/references/init.md` §1) — that says how the file differs:
 
-> `'.magic/file.md' has been modified locally (sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
+> `'skills/magicspec/file.md' has been modified locally (sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
 
 When the bytes are the recorded content with other line endings, the warning says so. That difference is common (`core.autocrlf`, an editor's line-ending setting, a tool that rewrites a file) and invisible in an editor:
 
-> `'.magic/file.md' has been modified locally: only its line endings differ (found CRLF, the release ships LF; sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
+> `'skills/magicspec/file.md' has been modified locally: only its line endings differ (found CRLF, the release ships LF; sha256 expected a1b2c3d4e5f6, found 9f8e7d6c5b4a).`
 
-In a user installation the warning ends with the only real remedy: restore `.magic/` from the release archive. Do **not** regenerate `.checksums` — that would mask the change. `update-engine-meta` is the developer repository's C14 and is refused in a user installation.
+In a user installation the warning ends with the only real remedy: restore `skills/magicspec/` from the release archive. Do **not** regenerate `.checksums` — that would mask the change. `update-engine-meta` is the developer repository's C14 and is refused in a user installation.
 
 ### 3.2 Update Safety
 
-Before replacing `.magic/` from a new release archive, compare local files against `.magic/.checksums`. If local changes are detected, back them up or intentionally vendor them before copying the new engine files.
+Before replacing `skills/magicspec/` from a new release archive, compare local files against `skills/magicspec/.checksums`. If local changes are detected, back them up or intentionally vendor them before copying the new engine files.
 
 ## 4. Maintenance
 
@@ -54,26 +54,26 @@ When the engine logic is intentionally modified (e.g., during development or whe
 
 ### How to update checksums (C14)
 
-For **full synchronization** (including automatic version bump in `.magic/.version` and skill-wrapper regeneration):
+For **full synchronization** (including automatic version bump in `skills/magicspec/.version` and a refresh of the host projections that exist):
 
 ```bash
-node .magic/scripts/executor.js update-engine-meta
+node skills/magicspec/scripts/executor.js update-engine-meta
 ```
 
 For **manual checksum update only** (without a version bump, developer install only):
 
 ```bash
-node dev/scripts/generate-checksums.js
+node scripts/generate-checksums.js
 ```
 
-> The manifest builder lives in `dev/scripts/` — it is a developer tool that ships pre-generated `.magic/.checksums` to end users. User installations only verify the manifest via `update-engine-meta --check` (pre-commit hook) and never regenerate it.
+> The manifest builder lives in `scripts/` — it is a developer tool that ships pre-generated `skills/magicspec/.checksums` to end users. User installations only verify the manifest via `update-engine-meta --check` (pre-commit hook) and never regenerate it.
 
 ### When to update
 
-- Whenever an engine file (`.magic/*.md`) is intentionally modified.
+- Whenever a file inside `skills/magicspec/` is intentionally modified: the manifest covers the whole folder, so every edit is a version event.
 - Before committing changes to the project repository.
-- After manually editing `.magic/` artifacts to resolve integrity errors or `MD012` lint warnings.
-- After a global project synchronization (`/magic.dev.sync`).
+- After manually editing `skills/magicspec/` artifacts to resolve integrity errors or `MD012` lint warnings.
+- After a global project synchronization (`/magicspec-dev:sync`).
 
 ## 5. Security Note
 

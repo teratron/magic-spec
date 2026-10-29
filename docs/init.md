@@ -4,9 +4,9 @@ This document explains the automatic initialization process for the Magic SDD en
 
 ## 1. Overview
 
-The Init workflow is an internal, non-user-facing process that ensures the `.design/` directory and its core system files are correctly set up before any workflow executes.
+The Init workflow is an internal, non-user-facing process that ensures the `.magicspec/` directory and its core system files are correctly set up before any workflow executes.
 
-> **Full implementation:** `.magic/init.md` — auto-called by Step 0 of all workflows.
+> **Full implementation:** `skills/magicspec/references/init.md` — auto-called by Step 0 of all workflows.
 
 Key Goals:
 
@@ -25,13 +25,13 @@ The engine enforces 5 mandatory invariants:
 | 2 | **Engine Integrity** | HALT if `check-prerequisites` returns integrity warnings (checksums/ghost registry) |
 | 3 | **Silent Default** | Run autonomously; report only brief status or fatal failure |
 | 4 | **Non-Overwriting** | Skips existing files; never mutates user state |
-| 5 | **Versioning (C14)** | Engine checksums updated after `.magic/` modifications; initial `RULES.md` at v1.5.198 |
+| 5 | **Versioning (C14)** | Engine checksums updated after `skills/magicspec/` modifications; initial `RULES.md` at v1.5.198 |
 
 ## 3. Workflow Steps
 
 ### Step 1 — Check Prerequisites
 
-`node .magic/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`
+`node skills/magicspec/scripts/executor.js check-prerequisites --json --workspace={active-workspace}`
 
 | Result | Action |
 | --- | --- |
@@ -44,14 +44,16 @@ The engine enforces 5 mandatory invariants:
 
 **C15 Filter**: Cross-reference mismatched files against `workspace.json` scope. Out-of-scope mismatches are ignored; in-scope mismatches trigger HALT.
 
+**Project root**: every command acts on the project it is run in, from any subdirectory. The executor takes the root from the first of: `--root <dir>`, the `MAGIC_ROOT` environment variable, the nearest ancestor of the working directory that holds the state folder, the nearest ancestor that holds a `.git`, and the working directory itself (a project with neither yet, as at first install). A `--root` that is not a directory stops the command with one message. Paths typed on the command line are relative to the project root.
+
 ### Step 2 — Init
 
-`node .magic/scripts/executor.js init`
+`node skills/magicspec/scripts/executor.js init`
 
 Creates the following structure:
 
 ```plaintext
-.design/
+.magicspec/
 ├── INDEX.md          # Specification Registry
 ├── RULES.md          # Project Constitution (v1.5.198)
 ├── STATE.md          # Live memory — session continuity
@@ -61,7 +63,7 @@ Creates the following structure:
 └── archives/tasks/   # Directory for completed/archived tasks
 ```
 
-**STATE.md**: Copied from `.magic/templates/state.md`. Workspace name and timestamp are filled in automatically. Set to `Status: Active`, `Phase: 0 — Not Started`, `Next Action: Run /magic.task`. **Never overwrites** existing STATE.md.
+**STATE.md**: Copied from `skills/magicspec/templates/state.md`. Workspace name and timestamp are filled in automatically. Set to `Status: Active`, `Phase: 0 — Not Started`, `Next Action: Run /magicspec:task`. **Never overwrites** existing STATE.md.
 
 ### Step 3 — Verify
 
@@ -75,7 +77,7 @@ If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` i
 
 - **Silent Execution**: Embedded as Step 0 in every workflow. Skips silently if already initialized.
 - **Idempotent**: Only creates missing files; never overwrites existing production data.
-- **Cross-Platform**: Triggered via `node .magic/scripts/executor.js init` — works identically on Windows and Unix.
+- **Cross-Platform**: Triggered via `node skills/magicspec/scripts/executor.js init` — works identically on Windows and Unix.
 
 ## 5. Security Note
 

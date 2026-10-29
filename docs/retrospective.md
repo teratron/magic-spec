@@ -6,7 +6,7 @@ This document explains the system's self-improvement mechanism and metrics colle
 
 The Retrospective Workflow is the "heartbeat" of Magic SDD. It analyzes usage history, task metrics, and registry health to generate actionable recommendations for improving workflows and project rules.
 
-> **Full implementation:** `.magic/retrospective.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/references/retrospective.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -21,11 +21,11 @@ The engine enforces 6 mandatory invariants:
 | # | Invariant | Summary |
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
-| 2 | **Read-Only Analysis** | Gather data from `.design/`; write ONLY to `RETROSPECTIVE.md` |
-| 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
+| 2 | **Read-Only Analysis** | Gather data from `.magicspec/`; write ONLY to `RETROSPECTIVE.md` |
+| 3 | **Auto-Init** | Silently creates `.magicspec/` structure if missing |
 | 4 | **Actionable Output** | Recommendations must be concrete (e.g., "Add guard X", "Remove step Y") |
 | 5 | **Level Separation** | L1 (Snapshot) is silent and fast; L2 (Full) is deep and analytical |
-| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `skills/magicspec/` modification |
 
 ## 3. The Two-Level System
 
@@ -86,15 +86,15 @@ As part of L1 completion, move `tasks/phase-N.md` → `archives/tasks/`. Update 
 
 Retrospective output feeds back into the system:
 
-1. **Refine `.magic/` workflows**: Remove high-friction steps.
+1. **Refine `skills/magicspec/` workflows**: Remove high-friction steps.
 2. **Optimize `.agents/` instructions**: Improve prompt clarity.
-3. **Evolve `.design/RULES.md`**: Formalize patterns that work well into standing rules.
+3. **Evolve `.magicspec/RULES.md`**: Formalize patterns that work well into standing rules.
 
 ## 9. Safety & Scope
 
 - **Read-Only**: Analyzes data but does NOT modify specs, plans, or code.
 - **Evidence-Based**: Every observation must reference a specific file, timestamp, or event.
-- **Zero-Prompt Reporting**: Reports are saved silently to `.design/RETROSPECTIVE.md`.
+- **Zero-Prompt Reporting**: Reports are saved silently to `.magicspec/RETROSPECTIVE.md`.
 
 ## Sync Note
 

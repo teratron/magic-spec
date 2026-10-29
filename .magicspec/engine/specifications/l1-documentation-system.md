@@ -1,0 +1,54 @@
+# Documentation System Specification
+
+**Version:** 1.2.3
+**Status:** Stable
+**Layer:** concept
+
+## Overview
+
+Structure and governance of the Magic Spec knowledge base.
+
+## Motivation
+
+Provide clear guidance for both engine developers and end-users.
+
+## Structure
+
+- **README.md**: Entry point and overview.
+- **docs/**: Detailed guides for each workflow.
+- **CHANGELOG.md**: History of meaningful changes.
+
+## Maintenance
+
+Documents in `docs/` must stay synchronized with the active workflows in `skills/magicspec/`. Synchronization is enforced by the Project Ventilation workflow (C21): when `/magicspec:analyze` is run, any `docs/` file whose last-modified timestamp predates the corresponding `skills/magicspec/` workflow file is flagged as a **VIO-2 (Documentation Drift)** violation.
+
+### Sync Scope
+
+Each `skills/magicspec/{workflow}.md` has a corresponding `docs/{workflow}.md` counterpart that describes the same workflow for human readers. When a guard, invariant, or behavioral rule is added to a `skills/magicspec/` workflow, the matching `docs/` file must be updated in the same repair cycle.
+
+Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md`, `analyze.md`, `init.md`, `rule.md`, `retrospective.md`.
+
+### Static Documentation
+
+The following `docs/` files are reference material not tied to a specific `skills/magicspec/` workflow and are exempt from VIO-2 sync checks: `README.md`, `conception.md`, `contributing.md`, `checksums.md`.
+
+## Canonical References
+
+| Path | Role |
+| --- | --- |
+| `README.md` | Project entry point and overview |
+| `CHANGELOG.md` | Version history |
+| `CONTRIBUTING.md` | Developer guide |
+| `docs/` | Workflow-specific human-readable guides |
+| `docs/README.md` | Docs index |
+
+## Document History
+
+| Version | Date | Author | Description |
+| --- | --- | --- | --- |
+| 1.2.3 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
+| 1.2.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |
+| 1.2.1 | 2026-03-30 | Agent | Moved checksums.md to Static Documentation since it lacks a .magic/ counterpart. |
+| 1.2.0 | 2026-03-20 | Agent | Added checksums.md to sync scope; introduced Static Documentation section for VIO-2-exempt files. |
+| 1.1.0 | 2026-03-04 | Agent | Added sync enforcement rule (C21 VIO-2), sync scope table, and docs/ governance detail. |
+| 1.0.0 | 2026-03-03 | Antigravity | Initial stable version. |

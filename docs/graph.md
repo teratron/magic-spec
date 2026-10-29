@@ -1,22 +1,22 @@
 # Graph — Specification Knowledge Graph
 
-This document explains the Graph workflow, which turns the `.design/` artifact set into a navigable graph and reports what the structure reveals.
+This document explains the Graph workflow, which turns the `.magicspec/` artifact set into a navigable graph and reports what the structure reveals.
 
 ## 1. Overview
 
 Specifications accumulate relationships that no single file shows: which spec everything depends on, which files no spec claims, which Layer 2 spec lost its parent link, where the real module boundaries sit versus where the workspace config says they sit. The Graph workflow extracts those relationships and reports them.
 
-**Analysis triggers:** `/magic.graph`, *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*.
+**Analysis triggers:** `/magicspec:graph`, *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*.
 
 **Visualization triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*.
 
-> **Self-contained workflow**: unlike the other commands, `magic.graph.md` carries its own implementation rather than pointing at an engine body in `.magic/`.
+> **Self-contained workflow**: unlike the other commands, `workflows/graph.md` carries its own implementation rather than pointing at an engine body in `skills/magicspec/`.
 >
-> **Read-only**: this workflow modifies no `.design/` artifact. Findings hand off to the Spec or Rule workflows.
+> **Read-only**: this workflow modifies no `.magicspec/` artifact. Findings hand off to the Spec or Rule workflows.
 
 ## 2. Node Types
 
-The graph is built from `.design/` and the files specifications claim:
+The graph is built from `.magicspec/` and the files specifications claim:
 
 | Type | Source |
 | --- | --- |
@@ -29,7 +29,7 @@ The graph is built from `.design/` and the files specifications claim:
 ## 3. Analysis
 
 ```bash
-node .magic/scripts/executor.js build-spec-graph
+node skills/magicspec/scripts/executor.js build-spec-graph
 ```
 
 Reports:
@@ -46,7 +46,7 @@ An extraction cache keyed on file content makes repeat runs cheap; unchanged spe
 ## 4. Community Detection
 
 ```bash
-node .magic/scripts/executor.js detect-communities --include-md
+node skills/magicspec/scripts/executor.js detect-communities --include-md
 ```
 
 Label propagation over the combined code and markdown dependency graph finds clusters that actually cohere, then scores each against the declared workspace boundaries.
@@ -61,22 +61,22 @@ Label propagation over the combined code and markdown dependency graph finds clu
 ## 5. Wiki Export
 
 ```bash
-node .magic/scripts/executor.js export-wiki
+node skills/magicspec/scripts/executor.js export-wiki
 ```
 
-Generates `.design/wiki/` — a per-spec article set with an index, linked in the style of a wiki. Agents navigating the wiki obtain layer, status, version, and references at a fraction of the token cost of reading raw specification files.
+Generates `.magicspec/graph/wiki/` — a per-spec article set with an index, linked in the style of a wiki. Agents navigating the wiki obtain layer, status, version, and references at a fraction of the token cost of reading raw specification files.
 
-The wiki is a derivative artifact: any specification, plan, or rules change invalidates it. Re-export after writing to `.design/`. An audit reports `WIKI_STALE` when the index is older than its sources.
+The wiki is a derivative artifact: any specification, plan, or rules change invalidates it. Re-export after writing to `.magicspec/`. An audit reports `WIKI_STALE` when the index is older than its sources.
 
 ## 6. Visualization
 
 Generated only on an explicit visualization trigger — never automatically.
 
 ```bash
-node .magic/scripts/executor.js build-spec-graph --html
+node skills/magicspec/scripts/executor.js build-spec-graph --html
 ```
 
-Output: `.design/spec-graph.html`, a self-contained interactive view with community coloring, a node inspector, and search. Open it in a browser.
+Output: `.magicspec/graph/graph.html`, a self-contained interactive view with community coloring, a node inspector, and search. Open it in a browser.
 
 ## 7. Advisory Signal
 
@@ -97,4 +97,4 @@ Output: `.design/spec-graph.html`, a self-contained interactive view with commun
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).

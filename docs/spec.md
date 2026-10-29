@@ -4,13 +4,13 @@ This document explains the lifecycle, structure, and management of project speci
 
 ## 1. Overview
 
-The Specification Workflow is the entry point of the Magic SDD process. It converts raw ideas, requirements, and feedback into structured, versioned documents located in `.design/specifications/`.
+The Specification Workflow is the entry point of the Magic SDD process. It converts raw ideas, requirements, and feedback into structured, versioned documents located in `.magicspec/specifications/`.
 
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*.
 
-**Slash command:** `/magic.spec`
+**Slash command:** `/magicspec:spec`
 
-> **Full implementation:** `.magic/spec.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/workflows/spec.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -26,12 +26,12 @@ The engine enforces 12 mandatory invariants during every spec operation:
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain (no user prompting needed) |
 | 2 | **Prohibitions** | No implementation code in specs; technical contracts are permitted |
-| 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
-| 4 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 3 | **Auto-Init** | Silently creates `.magicspec/` structure if missing |
+| 4 | **Engine Integrity (C14)** | Checksums validated and updated after any `skills/magicspec/` modification |
 | 5 | **Linking** | Every spec must be registered in `INDEX.md` |
 | 6 | **Status** | Enforce Draft → RFC → Stable → Deprecated lifecycle |
 | 7 | **Dispatch** | Use "Raw Input" flow for unstructured ideas |
-| 8 | **Ventilation** | Delegate deep analysis to `.magic/analyze.md` |
+| 8 | **Ventilation** | Delegate deep analysis to `skills/magicspec/workflows/analyze.md` |
 | 9 | **Delta-Editing** | Files >200 lines use search-replace, not full rewrites |
 | 10 | **Closure** | Every session ends with a mandatory Task Completion Checklist |
 | 11 | **Rules** | `RULES.md` is the project constitution; check before every operation |
@@ -65,7 +65,7 @@ Specifications move through a lifecycle. In **Trust Mode (C9)**, transitions are
 
 ### 5.0 Idea Intake Gate
 
-Before writing anything, `/magic.spec {your idea}` checks whether it understood you and whether it has enough to go on. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
+Before writing anything, `/magicspec:spec {your idea}` checks whether it understood you and whether it has enough to go on. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
 
 Occasionally the agent will ask you something first. It runs two checks, in this order, and asks only when one of them fails:
 
@@ -121,7 +121,7 @@ Before any plan is generated, the workflow verifies:
 - **Layer Integrity**: L2 spec's L1 parent is Stable.
 - **Registry Sync**: Spec is registered in `INDEX.md`.
 - **Version Drift (RE-1)**: Spec `Version:` header matches `INDEX.md` record.
-- **Engine Integrity**: `.magic/` checksums are valid (C15 Filter).
+- **Engine Integrity**: `skills/magicspec/` checksums are valid (C15 Filter).
 - **Cross-Workspace Parity**: Detects spec name collisions across workspaces. At creation a colliding name is renamed with the workspace after the layer prefix (`l1-auth.md` → `l1-{workspace}-auth.md`).
 - **File-Header Parity**: Status and version in file header match `INDEX.md`.
 - **Stale References**: A `Related Specifications` or `Implements` link to a `Deprecated` spec is reported as `STALE_REFERENCE` — an advisory, never a HALT.
@@ -136,7 +136,7 @@ If a Layer 1 spec drops status (e.g., Stable → RFC), all dependent Layer 2 spe
 
 ### 6.4 Session Isolation (Phase Gates — C17)
 
-The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magic.task` to prevent context bleed-over.
+The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec:task` to prevent context bleed-over.
 
 ### 6.5 T4 Rule Capture with Tier Routing
 
@@ -157,4 +157,4 @@ If the update halts first (version drift, cross-workspace parity, or a missing f
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).

@@ -1,0 +1,30 @@
+{
+  "default": "engine",
+  "finalization": {
+    "enabled": true,
+    "autoBump": true,
+    "autoChangelog": true,
+    "changelogPath": "CHANGELOG.md",
+    "versionPath": ".magicspec/.version"
+  },
+  "workspaces": {
+    "engine": {
+      "description": "Magic SDD core engine logic, workflows, rules, and history.",
+      "scope": [
+        ".agents",
+        ".magicspec",
+        "scripts",
+        "tests",
+        "package.json",
+        "docs",
+        "skills",
+        ".github",
+        "README.md",
+        "CHANGELOG.md",
+        "CONTRIBUTING.md",
+        "AGENTS.md",
+        "CLAUDE.md"
+      ]
+    }
+  }
+}

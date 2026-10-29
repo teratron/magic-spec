@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "entry": ["dev/scripts/*.js", "dev/tests/*.js"],
-  "ignorePatterns": [".magic/**"],
+  "entry": ["scripts/*.js", "tests/*.js"],
+  "ignorePatterns": ["skills/magicspec/**"],
   "health": {
     "maxCrap": 0
   }

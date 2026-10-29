@@ -4,13 +4,13 @@ This document explains the process of carrying out implementation tasks within t
 
 ## 1. Overview
 
-The Run Workflow is the execution engine of Magic SDD. It reads the atomic tasks defined in `.design/TASKS.md` and coordinates their implementation while maintaining project state and a high-fidelity audit trail.
+The Run Workflow is the execution engine of Magic SDD. It reads the atomic tasks defined in `.magicspec/TASKS.md` and coordinates their implementation while maintaining project state and a high-fidelity audit trail.
 
 **Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*.
 
-**Slash command:** `/magic.run [arg]`
+**Slash command:** `/magicspec:run [arg]`
 
-> **Full implementation:** `.magic/run.md` — the engine reads this file before executing any steps.
+> **Full implementation:** `skills/magicspec/workflows/run.md` — the engine reads this file before executing any steps.
 
 Key Goals:
 
@@ -30,15 +30,15 @@ Key Goals:
 | `{workspace} "text"` | Scoped + Directed | Directive applied within workspace scope |
 
 ```
-/magic.run                                 # Full execution across all workspaces
-/magic.run engine                          # Scoped execution within a workspace
-/magic.run "T-1A01"                        # Execute a specific task by ID
-/magic.run "phase-2"                       # Execute all Todo tasks in a specific phase
-/magic.run docs "validation only"          # Scoped + directed execution
+/magicspec:run                                 # Full execution across all workspaces
+/magicspec:run engine                          # Scoped execution within a workspace
+/magicspec:run "T-1A01"                        # Execute a specific task by ID
+/magicspec:run "phase-2"                       # Execute all Todo tasks in a specific phase
+/magicspec:run docs "validation only"          # Scoped + directed execution
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
-> **Handoff Propagation**: When re-planning is needed, the engine recommends `/magic.task {workspace}` to preserve scope.
+> **Handoff Propagation**: When re-planning is needed, the engine recommends `/magicspec:task {workspace}` to preserve scope.
 
 ## 3. Core Invariants
 
@@ -49,10 +49,10 @@ The engine enforces 6 mandatory invariants during every execution:
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Rules First** | Read `RULES.md` before any code edit; adhere to project conventions |
 | 2.5 | **Live Memory (STATE.md)** | Read STATE.md before execution; display blockers; update after every task transition |
-| 3 | **Auto-Init** | Silently creates `.design/` structure if missing |
+| 3 | **Auto-Init** | Silently creates `.magicspec/` structure if missing |
 | 4 | **Logic Guards** | Dependency, Mode, Sync, Quarantine (C12), Spec Stability, Phantom Spec, Stabilizing exception (C12.1), Bootstrap exception, Pause Propagation |
 | 5 | **Zero-Prompt Automation (C9)** | Skip all routine confirmations; execute sequences autonomously |
-| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `.magic/` modification |
+| 6 | **Engine Integrity (C14)** | Checksums validated and updated after any `skills/magicspec/` modification |
 
 ### Live Memory (STATE.md)
 
@@ -112,13 +112,13 @@ After each task completes:
 - **Task Status**: The tracking entry moves `In Progress` → `Done` (or `Blocked [!]`); the TASKS.md Phase Checklist line is ticked when `Done`.
 - **Plan Sync**: Completed specs/phases → `[x]` in `PLAN.md`.
 - **Change Record**: 1-line summary in the task's `Changes` field.
-- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magic.task {workspace}`. `/magic.spec` is never named from the run; it surfaces only when `/magic.task` itself cannot resolve the gap.
+- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magicspec:task {workspace}`. `/magicspec:spec` is never named from the run; it surfaces only when `/magicspec:task` itself cannot resolve the gap.
 
 ### 5.5 Blocked Task Escalation
 
-If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magic.task {workspace}` recommendation. `/magic.task` then ends with the one `/magic.spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
+If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magicspec:task {workspace}` recommendation. `/magicspec:task` then ends with the one `/magicspec:spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
 
-**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magic.task {workspace}` to revalidate the plan.
+**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magicspec:task {workspace}` to revalidate the plan.
 
 ## 6. Lifecycle & Conclusion
 
@@ -133,7 +133,7 @@ If a task encounters ambiguous instructions or missing details, the agent marks 
 
 - **Retro L2**: Auto-run Level 2 (Full) retrospective.
 - **Changelog L2**: Present compiled release entry. **Only manual step: Yes/No approval.**
-- **Version Bump**: Bump `.magic/.version` and release-facing documentation per changelog (Major/Minor/Patch).
+- **Version Bump**: Bump `skills/magicspec/.version` and release-facing documentation per changelog (Major/Minor/Patch).
 - **Finalize**: Regenerate `CONTEXT.md`.
 
 ## 7. Session Isolation (Phase Gates — C17)
@@ -155,4 +155,4 @@ After every execution cycle, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-10-17 (v2.1.141).
+Synchronized with engine workflows on 2026-10-28 (v3.0.0).
