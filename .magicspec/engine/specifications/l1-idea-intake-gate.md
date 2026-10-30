@@ -1,6 +1,6 @@
 # Idea Intake Gate
 
-**Version:** 2.1.0
+**Version:** 2.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -93,7 +93,7 @@ C27 forbids the agent to outsource *its own* decisions. This gate recovers infor
 
 Every `magic.spec` invocation that carries raw idea input passes through **Intake Assessment** after Step 0 Workspace Intent Detection and before Dispatching from Raw Input. Assessment is a silent evaluation, not a user-visible step: when no firing condition of IK-4 holds — the common case — the workflow proceeds to dispatch in the same turn with no narration. When a condition holds, the survey (IK-5, IK-6) opens in the same turn.
 
-Invocations that carry no idea (blank trigger, `stabilize`, `amend {file}` with no new content) skip the gate entirely.
+Invocations that carry no idea (blank trigger, `stabilize`, `amend {file}` with no new content) skip the gate entirely. A `spec` invocation without an idea first collects one through the command intake ([l1-command-surface.md](l1-command-surface.md) CS-10, whitelist entry E7); the idea it collects then passes this gate like a typed one.
 
 ### IK-2 — Self-Resolution Mandate
 
@@ -347,6 +347,7 @@ The owner's flowchart draws the comprehension step as a "prompt engineer" and th
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 2.1.1 | 2026-10-30 | Clarification (no requirement changed here): a `spec` invocation without an idea collects one through the command intake of [l1-command-surface.md](l1-command-surface.md) 2.0.0 (E7) before this gate runs on it. |
 | 2.1.0 | 2026-10-29 | Gate 1 (comprehension) is performed in the `prompt-engineer` stance on the input pass's intent statement ([l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6), superseding §6.7 for that gate (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"). F1–F3, the survey, IK-6 and E6's scope are unchanged. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

@@ -1,91 +1,123 @@
-# Command Surface: Command Set, Grammar, Help and Migrate
+# Command Surface: One Command, Interactive Help and Argument Intake
 
-**Version:** 1.0.0
+**Version:** 2.0.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-The set of user-facing commands the engine answers, how a command is addressed, what a bare invocation does, the `help` command with an optional language for its explanations, and the `migrate` command that brings a project from an earlier layout to the current one. The commands with a contract of their own — `plan`, `goal`, `fix`, `simulate` — are specified in their own documents; this one keeps the table they all belong to and the rules every command shares.
+The engine is addressed through one command, `/magicspec`, followed by a required command name and that command's argument (`/magicspec task`, `/magicspec spec {idea}`). No host receives a per-command entry. A bare `/magicspec`, or `/magicspec help`, shows the commands the way a command-line tool shows its help and offers to run one; a command whose required argument is missing asks for it. Both use the host's choice form where the host has one and the chat where it has not. This specification keeps the command set, the grammar, the argument contract of every command, the interactive help and the `migrate` command; `plan`, `goal`, `fix` and `simulate` have contracts of their own.
 
 ## Related Specifications
 
 - [l1-skill-packaging.md](l1-skill-packaging.md) - SP-5 one source per workflow (the help text is derived, not authored twice) and SP-10 explicit migration (the path `migrate` exposes).
-- [l2-skill-distribution.md](l2-skill-distribution.md) - The command surfaces that register each command with a host, and the `migrate` subcommand the command runs (§5.6).
+- [l2-skill-distribution.md](l2-skill-distribution.md) - The single command surface that remains, and the `migrate` subcommand the command runs (§5.6).
+- [l2-skill-wrappers.md](l2-skill-wrappers.md) - The router contract that carries the command table and the grammar.
+- [l1-decision-autonomy.md](l1-decision-autonomy.md) - E7, the whitelist entry under which this specification asks (CS-11), and E1, which `migrate --apply` needs.
+- [l1-idea-intake-gate.md](l1-idea-intake-gate.md) - The intake an idea collected by the argument form passes next.
+- [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The pass every prose argument goes through, typed or entered in a form (CS-3, CS-10).
 - [l1-plan-command.md](l1-plan-command.md) - `plan`.
 - [l1-goal-mode.md](l1-goal-mode.md) - `goal`.
 - [l1-fix-command.md](l1-fix-command.md) - `fix`.
 - [l1-product-simulation.md](l1-product-simulation.md) - `simulate`.
-- [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The pass every command's prose argument goes through before routing is final (CS-3).
-- [l1-decision-autonomy.md](l1-decision-autonomy.md) - E1 consent, which `migrate --apply` needs.
 
 ## 1. Motivation
 
-The engine answers seven commands. The owner's list of 2026-10-29 asks for six more — `plan`, `goal`, `fix`, `simulate`, `migrate` and `help` — each named in the colon form and the space form (`/magicspec:migrate`, `/magicspec migrate`). Two of them have no contract elsewhere:
+The engine answers seven commands. The owner's list of 2026-10-29 asks for six more — `plan`, `goal`, `fix`, `simulate`, `migrate` and `help`. Two of them have no contract elsewhere:
 
 - **help.** A bare `/magicspec` with nothing after it reaches no defined behaviour: the router defines a bare `magicspec` followed by an idea as `spec`, and says nothing about a bare one. A user who installs the engine has no command that lists the others, and the explanations are in English only; the owner asks for `help ru`, with the agent supplying the translation.
 - **migrate.** The migration from the 2.x layout exists as an executor subcommand (`node <skills folder>/magicspec/scripts/executor.js migrate`), and every other command of an unmigrated project stops with that path as its instruction. The user has to copy a script path; nothing guides the dry run, the consent before old files are removed, or the references to the old layout left inside the migrated artifacts (old command names, old folder names).
 
 Constitution C2 forbids new workflow commands unless strictly necessary and explicitly authorized as a C2 exception. The owner's request names each of the six commands; that request is the authorization (CS-1).
 
+### 1.1 One Command Instead of Wrappers `[ADDED]`
+
+The owner decided on 2026-10-30 to remove the per-command wrappers from the user's project and keep one command, `/magicspec`, with a required argument; a bare `/magicspec` and `/magicspec help` list the commands with their descriptions, as a console application's help does, or offer them in a form — choose a command, confirm, and it runs, with a text field for the argument when the command takes one, and the chat when the host has no form; a command given without its argument, such as `/magicspec spec` without an idea, asks for it, opens a text field or offers options.
+
+Measured the same day on a disposable installation for all three hosts: the wrappers are the generated folders `.claude/commands/magicspec/` and `.qwen/commands/magicspec/`, seven files each and thirteen each with the command set of CS-1, every one of them two lines that point at the router. Codex has none and already works through the router alone. What their removal costs, measured the same day: the colon form they register is the form the engine tells the user to type — 320 occurrences in 23 shipped files, 51 in the output of 5 scripts, 108 in the README and the documentation, 368 in the tests. Left as they are, they would send the user to a command that no longer exists; CS-2 therefore fixes one printed form.
+
 ## 2. Constraints & Assumptions
 
-- Every command is one workflow with one source (SP-5); the host surfaces only register it.
+- Every command is one workflow with one source (SP-5); the router is the only command surface.
 - Command names, file paths, flags and arguments are never translated.
 - `help` and the dry run of `migrate` are read-only; neither finalizes.
-- **Assumption (forecast):** with no language argument, `help` explains in the language of the conversation, because that is the language the agent already answers in; an explicit argument overrides it. Runner-up: English unless asked. Override: `/magicspec:spec amend l1-command-surface.md "help defaults to English"`.
-- **Assumption (forecast):** after the folder migration, `migrate` also rewrites references to the old layout inside the project's SDD artifacts, because those references are the engine's own vocabulary and a stale one misleads every later workflow. Runner-up: report them only. Override: `/magicspec:spec amend l1-command-surface.md "migrate reports stale references only"`.
+- The questions this specification asks are entry E7 of the escalation whitelist, consented to by the owner on 2026-10-30; the constitution and the shipped rule text record E7 in the same delivery as the behaviour (`l1-decision-autonomy.md` 2.1.0).
+- <!-- TBD: what Claude Code does with a typed `/magicspec:task` once no entry registers it — hands the text to the model or refuses it as an unknown command; verify before the entries are removed, and say it in the release notes. -->
+- **Assumption (forecast):** with no language argument, `help` explains in the language of the conversation, because that is the language the agent already answers in; an explicit argument overrides it. Runner-up: English unless asked. Override: `/magicspec spec amend l1-command-surface.md "help defaults to English"`.
+- **Assumption (forecast):** after the folder migration, `migrate` also rewrites references to the old layout inside the project's SDD artifacts, because those references are the engine's own vocabulary and a stale one misleads every later workflow. Runner-up: report them only. Override: `/magicspec spec amend l1-command-surface.md "migrate reports stale references only"`.
+- **Assumption (forecast):** a command whose argument is optional and has a defined default runs the default without asking — the owner's examples are commands that cannot act without input, while asking on `/magicspec run` or `/magicspec status` would add a question to commands that already know what to do, against the decide-by-default posture (DA-1). Runner-up: every command typed without an argument asks. Override: `/magicspec spec amend l1-command-surface.md "ask for every missing argument"`.
+- **Assumption (forecast):** a first word that is not a command opens the help with the typed text kept, its first choice running `spec` on that text, because the command is now required and a typo of a command name must not become a specification. Runner-up: run `spec` on the whole text at once, as 1.0.0 did. Override: `/magicspec spec amend l1-command-surface.md "unknown first word runs spec"`.
 
 ## 3. Core Invariants
 
 - **CS-1 The command set.** The engine's user-facing commands are exactly: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate`, `help`. The six added on 2026-10-29 are C2 exceptions authorized by the owner's request of that date; the constitution's C2 records the command set when the first of them ships. Adding or removing a command is a constitutional event (C2).
-- **CS-2 One grammar.** A command is addressed as `magicspec <command> [args]` and may arrive as `magicspec:<command>`, `/magicspec:<command>`, `/magicspec <command>` or `$magicspec <command>`; all are the same. The first word after `magicspec` is a command when it equals a command name exactly, case-insensitively; the rest is its argument.
-- **CS-3 Bare forms.** A bare `magicspec` with no text runs `help`. A bare `magicspec` followed by text whose first word is not a command name runs `spec` with the whole text as the idea. Text that begins with a command name by accident (`/magicspec plan a holiday booking feature`) is parsed as that command; quoting the text (`/magicspec "plan a holiday booking feature"`) or naming `spec` forces the idea reading. When the input pass (`l1-input-prompt-pass.md`) finds that the remaining text cannot be that command's argument — a planning command given a product idea that names no specification or phase — it routes to `spec` instead and narrates one `[DR]` line with the override.
-- **CS-4 Help is derived.** `help` renders the command table, the pipeline order, the argument forms and, for `help {command}`, that command's arguments and one example per form. Its content comes from the router's command table and the workflow descriptions — never from a second hand-written copy — so it cannot list a command that does not exist or miss one that does. It ends with one line naming the next step the project's live memory records, when there is one.
-- **CS-5 Help language.** `help {language}` takes a language code (`ru`, `de`, `pt-BR`) or a language name. The explanations are translated by the agent at render time; command names, paths, flags, code and identifiers stay verbatim. An unrecognized language value is answered in the default language with one line saying which value was not recognized. `help {command} {language}` combines both.
+- **CS-2 One command, one printed form.** `[MODIFIED]` A user addresses the engine as `/magicspec <command> [argument]` — `$magicspec <command> [argument]` on a host that invokes skills with `$`. The first word after `magicspec` is the command when it equals a command name, case-insensitively; the rest is its argument. The engine registers no per-command entry with any host. Every text the engine prints or ships — narration, next steps, hints, override hints, documentation — names a command in this form. The colon spelling `magicspec:<command>`, typed as text, is still read by the router, but the engine never prints it.
+- **CS-3 Bare and unknown forms.** `[MODIFIED]` A bare `/magicspec` and `/magicspec help` are the same command: the interactive help (CS-4, CS-10). A first word that is not a command name opens the same help with the typed text kept: its first, recommended choice runs `spec` with the whole text as the idea, unless the word is one edit away from a command name, in which case that command is offered first. Text that begins with a command name by accident (`/magicspec plan a holiday booking feature`) is parsed as that command; quoting the text (`/magicspec "plan a holiday booking feature"`) or naming `spec` forces the idea reading. When the input pass finds that the remaining text cannot be that command's argument — a planning command given a product idea that names no specification or phase — it routes to `spec` instead and narrates one `[DR]` line with the override.
+- **CS-4 Help is derived and interactive.** `[MODIFIED]` `help` renders as a command-line tool's help: a usage line, the commands by group with one line each and their argument, and the next step the project's live memory records, when there is one (§5.2). Its content comes from the router's command table and the workflow descriptions — never from a second hand-written copy — so it cannot list a command that does not exist or miss one that does. It then offers to run a command (CS-10). `help {command}` shows that command's argument, its forms and one example each, and offers to run it.
+- **CS-5 Help language.** `help {language}` takes a language code (`ru`, `de`, `pt-BR`) or a language name. The explanations and the labels of the picker are translated by the agent at render time; command names, paths, flags, code and identifiers stay verbatim. An unrecognized language value is answered in the default language with one line saying which value was not recognized. `help {command} {language}` combines both.
 - **CS-6 Migrate is guided and consented.** `migrate` runs the migration subcommand as a dry run and shows its plan. When the plan removes or renames anything, it asks one consent question (E1) with the dry run as context; only a yes runs the apply step. A project that is already migrated gets the finished message and nothing else.
 - **CS-7 Migrate leaves no stale vocabulary.** After a successful apply, `migrate` searches the migrated state folder for references to the earlier layout — the earlier command names, the earlier state-folder and engine-folder names — and rewrites them in the SDD artifacts it is allowed to edit, listing every changed file with a revert hint. A rewritten specification receives a patch version and a history row (a reality sync: no requirement changes), and its registry row follows. Archives, history tables, retrospectives and changelogs are history and are never rewritten. A reference found in a product file is reported, never edited (`l1-sdd-reference-containment.md`).
-- **CS-8 The stop names the command.** A command refused on an unmigrated project names `/magicspec:migrate` as the one way forward, beside the script path for hosts that do not register commands.
+- **CS-8 The stop names the command.** `[MODIFIED]` A command refused on an unmigrated project names `/magicspec migrate` as the one way forward, beside the script path.
+- **CS-9 Argument contract.** `[ADDED]` Every command declares its argument as required, optional with a default, or none (§5.1). A command whose required argument is missing asks for it (CS-10) and does nothing until it has it. A command whose optional argument is missing runs its default and says, in its first line, which default ran and how to pass an argument. Where a required argument has suggestions (§5.1), they are offered with the recommended one first; free text is always accepted.
+- **CS-10 The picker and the argument form.** `[ADDED]`
+  1. **Picker.** One choice per command, `help` excepted; the recommended choice — the next step live memory records, else the first pipeline command by DA-3 — comes first and is marked. Choosing and submitting is the confirmation; no second confirmation follows, except a consent question the chosen command asks anyway (E1).
+  2. **Argument form.** For a chosen command that takes an argument: a text entry, with the command's suggestions as choices where it has them; for an optional argument, the first choice runs the default. Submitting runs the command.
+  3. **Host capability.** A host with a choice form uses it. When the form holds fewer choices than there are commands, the picker takes two steps — a group, then a command — and a group with one command skips its second step. When the form cannot hold a text entry on its own, free text is entered through its free-text choice, and an argument with no suggestion at all is asked for in the chat. A host with no choice form gets the numbered list in the chat; the reply is a number or a name. On every host, a command name typed into the free-text choice is accepted, so a choice that does not fit the form is never out of reach.
+  4. **Cancel.** A dismissed or cancelled form runs nothing, and the engine says so in one line.
+  5. **Text is prose.** Free text entered in a form passes the input pass like a typed argument (IP-1); an idea for `spec` then passes the intake gate (E6).
+- **CS-11 Asking is bounded.** `[ADDED]` This specification asks only at the invocation itself: for the command when none was named, and for a required argument that is missing — at most the picker and one argument form per invocation. It never asks for an optional argument, never asks again once the argument is given, and never asks in the middle of a workflow. These questions are entry E7 of the escalation whitelist (`l1-decision-autonomy.md` DA-2); every other question stays where DA-2 puts it.
 
 ## 5. Detailed Design
 
-### 5.1 Command Table
+### 5.1 Command Table and Argument Contract
 
-| Command | Group | Purpose | Contract |
-| --- | --- | --- | --- |
-| `spec` | pipeline | Create, amend and check specifications | `workflows/spec.md` |
-| `plan` | pipeline | Plan and replan: phases, order, backlog | `l1-plan-command.md` |
-| `task` | pipeline | Decompose the plan into atomic tasks | `workflows/task.md` |
-| `run` | pipeline | Execute the active phase | `workflows/run.md` |
-| `fix` | quality | Triage and fix reported defects | `l1-fix-command.md` |
-| `simulate` | quality | Run the product's user-interaction scenarios | `l1-product-simulation.md` |
-| `goal` | automation | Pursue a stated goal through the pipeline without pausing | `l1-goal-mode.md` |
-| `analyze` | health | Audit; reverse-engineer specifications | `workflows/analyze.md` |
-| `rule` | health | Amend the constitution | `workflows/rule.md` |
-| `status` | health | Read-only briefing | `workflows/status.md` |
-| `graph` | health | The specification graph | `workflows/graph.md` |
-| `migrate` | maintenance | Move a project from an earlier layout | this specification |
-| `help` | maintenance | List and explain the commands | this specification |
+| Command | Group | Purpose | Argument | When it is missing |
+| --- | --- | --- | --- | --- |
+| `spec` | pipeline | Create, amend and check specifications | an idea · `amend {file} …` · `stabilize [workspace]` | **required** — up to three suggested topics, the highest-coverage gaps by DA-3; free text |
+| `plan` | pipeline | Plan and replan: phases, order, backlog | an order or membership directive · a workspace | optional — revalidate the whole plan |
+| `task` | pipeline | Decompose the plan into atomic tasks | a decomposition directive · a workspace | optional — decompose the active phase, planning first when the plan is stale |
+| `run` | pipeline | Execute the active phase | a workspace · a task identifier | optional — the active phase |
+| `fix` | quality & automation | Triage and fix reported defects | the defect: a description, a report, a finding | **required** — the open findings (the diagnostics digest, simulation findings; feedback notes in the engine's own repository); free text |
+| `simulate` | quality & automation | Run the product's user-interaction scenarios | an area · a feature · `--live-only` | optional — every scenario |
+| `goal` | quality & automation | Pursue a stated goal through the pipeline without pausing | the goal | **required** unless a goal is recorded — a recorded goal continues; otherwise free text |
+| `analyze` | health | Audit; reverse-engineer specifications | a mode · a focus directive | optional — the full audit |
+| `rule` | health | Amend the constitution | the rule text · `amend {id}` · `remove {id}` | **required** — the rule candidates the latest audit reported, when there are any; free text |
+| `status` | health | Read-only briefing | a workspace | optional — the resolved workspace |
+| `graph` | health | The specification graph | a mode (`visualize`) | optional — the analysis |
+| `migrate` | maintenance | Move a project from an earlier layout | none (`--apply` only after consent) | — |
+| `help` | — | List and explain the commands, offer to run one | a command · a language | optional — the whole list and the picker |
 
-Pipeline: `spec` → `plan` → `task` → `run`; `fix` and `simulate` feed back into it; `goal` drives it.
+Pipeline: `spec` → `plan` → `task` → `run`; `fix` and `simulate` feed back into it; `goal` drives it. The four groups are the picker's first step on a host whose form holds four choices.
 
 ### 5.2 Help Layout
 
 ```plaintext
-Magic Spec {version} — commands
-  Pipeline   spec → plan → task → run
-  {group}    {command}   {one-line purpose, translated}
+Magic Spec {version}
+Usage: /magicspec <command> [argument]
+
+Pipeline
+  spec       <idea | amend <file> | stabilize>   Create, amend and check specifications
+  plan       [directive | workspace]            Plan and replan
   ...
-  Forms      /magicspec:{command} · /magicspec {command} · magicspec {command}
-  More       /magicspec help {command} [{language}]
-  Next       {Next Action from live memory, when present}
+Quality & automation
+  fix        <defect>                           Triage and fix reported defects
+  ...
+Health
+  ...
+Maintenance
+  migrate                                       Move a project from an earlier layout
+
+Next:  /magicspec {next step from live memory}
+More:  /magicspec help <command> [<language>]
 ```
+
+`<…>` marks a required argument and `[…]` an optional one, as console tools do. The picker follows the list.
 
 ### 5.3 Migrate Flow
 
 ```mermaid
 graph TD
-    A[/magicspec:migrate/] --> B[Dry run: plan]
+    A[/magicspec migrate/] --> B[Dry run: plan]
     B --> C{Anything to do?}
     C -->|no| D[Migration complete + kept files]
     C -->|yes| E[Consent question E1]
@@ -95,17 +127,39 @@ graph TD
     H --> I[Report: changed files, product-file findings, next step]
 ```
 
+### 5.4 Intake Flow
+
+```mermaid
+graph TD
+    A[/magicspec .../] --> B{Command named?}
+    B -->|no: bare, help, unknown word| C[Help list + picker]
+    C -->|cancelled| X[Nothing runs]
+    C -->|chosen| D
+    B -->|yes| D{Required argument present?}
+    D -->|yes| R[Run]
+    D -->|optional, absent| R2[Run default, say which]
+    D -->|required, absent| F[Argument form: suggestions + free text]
+    F -->|cancelled| X
+    F -->|submitted| P[Input pass; E6 for a spec idea] --> R
+```
+
 ## 6. Implementation Notes
 
-1. The router's command table and its dispatch gain the new rows and CS-3; host command entries are regenerated from it (`l2-skill-distribution.md` §5.2).
-2. `migrate` reuses the existing subcommand; the sweep (CS-7) is new and owned by `l2-skill-distribution.md` §5.6 at deployment.
-3. The constitution's C2 is amended through `/magicspec:rule` (origin `user-stated`) when the first new command ships.
-4. `help` and `migrate` join the drift-check exemptions of the always-on rules beside `status`: a drift line before help would answer a question nobody asked.
-5. Declared supersessions (`l1-coherence-check.md` CH-9): the router's command table and its bare-`magicspec` rule (`SKILL.md`); the finalization list of the always-on rules §3 and [l2-engine-finalization.md](l2-engine-finalization.md), which gain `plan`, `fix` and `simulate` (`goal` finalizes per step through them; `help` and the `migrate` dry run never finalize); the unmigrated-project stop in [l2-skill-distribution.md](l2-skill-distribution.md) §5.6; and the router description that lists seven commands by name in [l2-skill-wrappers.md](l2-skill-wrappers.md) §2 and [l2-skill-layout.md](l2-skill-layout.md) §7, which list thirteen.
+1. The router's command table gains the argument column of §5.1, and its dispatch CS-2 and CS-3; where the host reads it, the router declares its argument hint (`<command> [argument]`) for completion (`l2-skill-wrappers.md`).
+2. The host command entries and the plugin channel are retired (`l2-skill-distribution.md` 2.0.0 §5.2); `init` removes the entries an earlier 3.0.x installation left, by their marker.
+3. The printed form: every `/magicspec:<command>` in shipped text, script output, the README and documentation, and the tests becomes `/magicspec <command>` in one pass guarded by a residue search; this repository's specifications follow with a reality-sync patch each.
+4. `migrate` reuses the existing subcommand; the sweep (CS-7) is new and owned by `l2-skill-distribution.md` §5.6 at deployment.
+5. The constitution's C2 is amended through `/magicspec rule` (origin `user-stated`) when the first new command ships.
+6. `help` and `migrate` join the drift-check exemptions of the always-on rules beside `status`: a drift line before help would answer a question nobody asked.
+7. Declared supersessions (`l1-coherence-check.md` CH-9): the router's command table, grammar and bare-`magicspec` rule (`SKILL.md`); the specification workflow's Blank Trigger, which selects a topic without asking, and its hints and checklists; E7 in the constitution's C27 and C13 §3 with the template mirror, and in the always-on rules §7 and §8 (`l1-decision-autonomy.md` 2.1.0); the finalization list of the always-on rules §3 and [l2-engine-finalization.md](l2-engine-finalization.md), which gain `plan`, `fix` and `simulate` (`goal` finalizes per step through them; `help` and the `migrate` dry run never finalize); the unmigrated-project stop in [l2-skill-distribution.md](l2-skill-distribution.md) §5.6; the router description that lists seven commands by name in [l2-skill-wrappers.md](l2-skill-wrappers.md) §2 and [l2-skill-layout.md](l2-skill-layout.md) §7, which list thirteen; and the host table of the README and `docs/distribution.md`.
 
 ## 7. Drawbacks & Alternatives
 
-- **Thirteen commands against C2's minimalism.** Accepted on the owner's authorization; the groups in §5.1 keep the table readable, and `help` makes the set discoverable.
+- **No per-command completion.** The host completes `/magicspec` and its argument hint only; the help and the picker take over discovery. Accepted by the owner's decision.
+- **A two-step picker** on a host whose form holds four choices. Accepted: the recommended command is marked at the first step, and a typed command skips the picker entirely.
+- **Wrappers kept, but opt-in** — rejected by the owner on 2026-10-30 in favour of removal.
+- **Asking for every missing argument** — the forecast's runner-up (§2).
+- **Thirteen commands against C2's minimalism.** Accepted on the owner's authorization; the groups keep the help readable.
 - **`help` as a section of `status`** — rejected: `status` reports the project's state, `help` explains the engine; a user with no project yet needs the second.
 - **A hand-written help page per language** — rejected: it would drift from the command table (SP-5) and the owner asks for agent translation.
 - **Rewriting stale references in product files too** — rejected: product files are outside the engine's write scope and containment forbids the vocabulary there in the first place.
@@ -114,7 +168,8 @@ graph TD
 
 | Alias | Path | Purpose |
 | --- | --- | --- |
-| `[ROUTER]` | `skills/magicspec/SKILL.md` | The command table and dispatch CS-1 to CS-4 change. |
+| `[ROUTER]` | `skills/magicspec/SKILL.md` | The command table, grammar and dispatch CS-1 to CS-4 and CS-9 change. |
+| `[HOSTS]` | `skills/magicspec/scripts/lib/hosts.js` | The projection generator whose command entries are retired. |
 | `[MIGRATE]` | `skills/magicspec/scripts/migrate.js` | The subcommand CS-6 runs. |
 | `[EXECUTOR]` | `skills/magicspec/scripts/executor.js` | The unmigrated-project stop CS-8 rewords. |
 | `[MIGRATION-DOC]` | `docs/migration.md` | User guide that names the command. |
@@ -123,4 +178,5 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.0.0 | 2026-10-30 | Agent | **One command instead of wrappers** (origin `user-stated`: the owner's decision of 2026-10-30). CS-2: `/magicspec <command> [argument]` is the only form, no host receives a per-command entry, and the engine prints only this form (the colon spelling is still read as text). CS-3: a bare `/magicspec` and `/magicspec help` are the interactive help; an unknown first word opens it with the text kept. CS-4: the help reads like a console tool's and offers to run a command. New CS-9 (every command's argument is required, optional with a default, or none; a missing required argument is asked for, a missing optional one runs its default), CS-10 (the picker and the argument form, by host capability, the chat as fallback) and CS-11 (asking only at the invocation: E7). §1.1 records the measured footprint and the cost of removal; §5.1 gains the argument contract, §5.4 the intake flow. Two forecasts recorded: optional arguments run their default; an unknown first word opens the help. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas: the `help` command with a language argument, the `migrate` command, and the set of six new commands authorized as C2 exceptions. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

@@ -1,6 +1,6 @@
 # Defect Intake: the Fix Command
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -26,7 +26,7 @@ This repository's own field reports show what goes wrong without a triage step (
 ## 2. Constraints & Assumptions
 
 - `fix` writes product code and SDD artifacts, under the same containment and review rules as `run`.
-- It asks nothing (DA-2): a report too thin to reproduce is recorded as unreproduced with the evidence that would reproduce it, and the report says so.
+- Beyond the command intake for a missing report (`l1-command-surface.md` CS-9, E7), it asks nothing (DA-2): a report too thin to reproduce is recorded as unreproduced with the evidence that would reproduce it, and the report says so.
 - **Assumption (forecast):** a fix is recorded as a task of the active phase — or of a maintenance phase when no phase is active — rather than in a separate fix ledger, so that progress, live memory and the archive stay truthful through the existing machinery. Runner-up: a separate fix log. Override: `/magicspec:spec amend l1-fix-command.md "separate fix ledger"`.
 
 ## 3. Core Invariants
@@ -100,4 +100,5 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | Clarification (no requirement changed): `fix` typed without a report asks for one through the command intake of [l1-command-surface.md](l1-command-surface.md) 2.0.0 (E7); a thin report still asks nothing. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (route defect feedback through `/magicspec fix`, deciding carefully what goes into the specifications). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

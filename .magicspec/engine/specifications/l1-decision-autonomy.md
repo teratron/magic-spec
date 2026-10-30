@@ -1,12 +1,12 @@
 # Autonomous Decision Protocol
 
-**Version:** 2.0.3
+**Version:** 2.1.0
 **Status:** Stable
 **Layer:** concept
 
 ## Overview
 
-Defines the engine-wide protocol by which agents resolve decision points autonomously — "the engineer decides" — instead of interrupting the user with surveys. The spec establishes: a closed Escalation Whitelist that, since 2.0.0, asks only for consent to an action that cannot be undone, leaves the repository, or amends the rules binding the agent — and, at intake, for intent only the requester holds (E6); a Consequence Forecast (DA-10) that resolves every other fork the evidence does not settle — a reading, a route, a scan mode, an architecture, a fix — by simulating its candidates forward; a deterministic Selection Procedure for choosing among work candidates (specs, tasks, next workflow steps), a Decision Record narration format that replaces questions while preserving user control, a strict format for the rare sanctioned question, a declarative-proposal rule (DA-9) keeping option-surfacing workflow steps out of the question channel, and session-level posture persistence between workflow invocations. It also reconciles the constitutional conflict between C13 §3 (halt-and-ask) and C25 (Engineer Posture).
+Defines the engine-wide protocol by which agents resolve decision points autonomously — "the engineer decides" — instead of interrupting the user with surveys. The spec establishes: a closed Escalation Whitelist that, since 2.0.0, asks only for consent to an action that cannot be undone, leaves the repository, or amends the rules binding the agent — and, at intake, for intent only the requester holds (E6) and, since 2.1.0, for the command or required argument an invocation left out (E7); a Consequence Forecast (DA-10) that resolves every other fork the evidence does not settle — a reading, a route, a scan mode, an architecture, a fix — by simulating its candidates forward; a deterministic Selection Procedure for choosing among work candidates (specs, tasks, next workflow steps), a Decision Record narration format that replaces questions while preserving user control, a strict format for the rare sanctioned question, a declarative-proposal rule (DA-9) keeping option-surfacing workflow steps out of the question channel, and session-level posture persistence between workflow invocations. It also reconciles the constitutional conflict between C13 §3 (halt-and-ask) and C25 (Engineer Posture).
 
 ## Related Specifications
 
@@ -57,7 +57,7 @@ Every elective decision point inside the SDD lifecycle MUST be resolved autonomo
 
 ### DA-2 — Closed Escalation Whitelist (Consent and Intake) `[MODIFIED]`
 
-User input may be solicited ONLY for **consent** — when the winning action of a fork cannot be undone, leaves the repository, or amends the rules that bind the agent — and at **intake**, for intent that only the requester holds (E6). Every entry keeps its identifier; E3 and E5 remain named fork classes with their own detection rules, but they resolve by the Consequence Forecast (DA-10) and never produce a question:
+User input may be solicited ONLY for **consent** — when the winning action of a fork cannot be undone, leaves the repository, or amends the rules that bind the agent — and at **intake**, for intent that only the requester holds (E6) or for the command and argument an invocation left out (E7). Every entry keeps its identifier; E3 and E5 remain named fork classes with their own detection rules, but they resolve by the Consequence Forecast (DA-10) and never produce a question:
 
 | # | Entry | Source | Resolution |
 | --- | --- | --- | --- |
@@ -68,7 +68,11 @@ User input may be solicited ONLY for **consent** — when the winning action of 
 | E5 | Workspace-routing ambiguity (WI-4) | C26 | Consequence Forecast (DA-10) |
 | E6 | Intent incoherence (F1), essence ambiguity (F2) or insufficient intent (F3) in freshly supplied idea input, after repository investigation is exhausted | [l1-idea-intake-gate.md](l1-idea-intake-gate.md) | Intake survey (IK-5, IK-6), options written by DA-10 |
 
-The list is closed: adding an entry, or moving one between question and forecast, is a constitutional amendment (itself an E4 event). Any question outside E1, E2, E4 and the E6 intake survey is a protocol violation.
+| E7 `[ADDED]` | Command intake: an invocation that names no command (a bare `/magicspec`, `/magicspec help`, an unknown first word), or names a command whose required argument is missing | [l1-command-surface.md](l1-command-surface.md) CS-9 to CS-11 | The help picker and one argument form (CS-10), the recommended choice marked, free text always accepted |
+
+The list is closed: adding an entry, or moving one between question and forecast, is a constitutional amendment (itself an E4 event). Any question outside E1, E2, E4, the E6 intake survey and the E7 command intake is a protocol violation.
+
+**Why E7 asks.** `[ADDED]` An invocation without its command, or without the argument a command cannot act without, leaves the engine nothing it may decide on the requester's behalf: the forecast could pick the recorded next step or a coverage gap, but running a command the requester did not name writes files they did not ask for, while one choice costs a turn of a requester who has just typed and is present. The owner decided on 2026-10-30 that such an invocation lists the commands, offers them and asks for the missing argument, and that decision is the E4 event this clause requires. E7 is bounded where it fires: only at the invocation, never for an optional argument that has a default, never twice for the same argument, never inside a running workflow (CS-11).
 
 **Why E3 and E5 are forecast while E6 still asks.** A question has value only when its answer adds information or consent, and its cost depends on who is asked and when. E3 and E5 turn on what the repository and ordinary engineering judgment can settle — an architecture, a route — so the answer adds nothing a forecast lacks, while the question stalls a running pipeline in every world, including the common one where its marked default was right (§1.1). E6 is the opposite case: the missing piece is intent that exists only in the requester's head, the requester has just supplied the idea and is present, and nothing has been built that a wrong premise could spread into. One survey round is then the cheapest way to get it — DA-10 ranks it with one revert — and the forecast still writes its options and answers whatever the requester delegates. Consent is different in kind: no forecast makes an irreversible or outward action cheap to undo, and the rules that bind the agent are not the agent's to loosen. Technical realization (storage, library, schema, naming, algorithm) never reaches the requester in any form. Moving E3 and E5 to the forecast, and widening E6 with a sufficiency condition and forecast-written options, were the E4 event this clause anticipates, discharged by the owner directives of 2026-10-01 (§1.1); E6's registration had been discharged the same way on 2026-08-28.
 
@@ -98,7 +102,7 @@ The DR replaces the question: it gives the user the same control point (read, in
 
 ### DA-5 — Single-Question Format
 
-When a consent entry (E1, E2, E4) fires, the question MUST be: exactly one question per turn; at most three fixed options, each one line; the DA-10 winner explicitly marked as the recommended default, with its forecast stated in one line; "no answer ⇒ default" semantics stated where the default is safe. The intake survey (E6) keeps the same bound per round — at most three questions, each with at most three options plus a free-text "Other", the DA-10 winner marked — under its own convergence rule ([l1-idea-intake-gate.md](l1-idea-intake-gate.md) IK-5, IK-6). Open-ended question batteries ("What next? Also: 1)… 2)… 3)… 4)…") are forbidden in every mode, including Explore. The consent question before deleting a specification (E1) is the canonical reference implementation. `[MODIFIED]`
+When a consent entry (E1, E2, E4) fires, the question MUST be: exactly one question per turn; at most three fixed options, each one line; the DA-10 winner explicitly marked as the recommended default, with its forecast stated in one line; "no answer ⇒ default" semantics stated where the default is safe. The command intake (E7) asks one choice per step — the command, then the argument — the recommended choice first and marked, free text always accepted, a cancelled step running nothing ([l1-command-surface.md](l1-command-surface.md) CS-10). The intake survey (E6) keeps the same bound per round — at most three questions, each with at most three options plus a free-text "Other", the DA-10 winner marked — under its own convergence rule ([l1-idea-intake-gate.md](l1-idea-intake-gate.md) IK-5, IK-6). Open-ended question batteries ("What next? Also: 1)… 2)… 3)… 4)…") are forbidden in every mode, including Explore. The consent question before deleting a specification (E1) is the canonical reference implementation. `[MODIFIED]`
 
 ### DA-6 — Session Posture Persistence
 
@@ -114,9 +118,9 @@ Objective integrity guards (checksum mismatch, STATUS/VERSION_DRIFT, parity viol
 
 ### DA-9 — Proposal Surfaces Are Declarative
 
-Workflow steps that surface candidate options to the user — Explore Mode "Creative Sparks" (Blank Trigger), the Dispatch Notice, Mode-Transition "auto-transfer" prompts, and any "which of N" selection — are **declarative DR narrations**, not questions. They are Selection-class forks (§4.1): rank by DA-3 and emit a DR the same turn, then proceed; the user's redirect arrives as an interrupt (C25 §5), never as a solicited answer. The `AskUserQuestion` form — or any inline option menu — is reserved for a **firing** consent entry (E1, E2, E4) or the intake survey (E6) of DA-2.
+Workflow steps that surface candidate options to the user — Explore Mode "Creative Sparks" (Blank Trigger), the Dispatch Notice, Mode-Transition "auto-transfer" prompts, and any "which of N" selection — are **declarative DR narrations**, not questions. They are Selection-class forks (§4.1): rank by DA-3 and emit a DR the same turn, then proceed; the user's redirect arrives as an interrupt (C25 §5), never as a solicited answer. The `AskUserQuestion` form — or any inline option menu — is reserved for a **firing** consent entry (E1, E2, E4), the intake survey (E6) or the command intake (E7) of DA-2.
 
-Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no arguments resolves its scope by DA-3 (highest-coverage gap, per the Blank Trigger contract), not by asking which gap to pursue.
+Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no argument resolves its scope by DA-3, not by asking. `[MODIFIED]` The one exception is a command whose argument is **required** (E7): `spec` without an idea, `fix` without a defect, `rule` without a rule, `goal` with none recorded. There the DA-3 ranking still runs — the highest-coverage gaps become the suggested topics of the argument form, its winner first and marked — and the requester chooses or types. A command whose argument is optional keeps the rule above: it runs its default and says which.
 
 **Drift-revalidation offers** (e.g., the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1) are governed jointly by DA-8 and DA-9: a detected version/state drift is narrated with **exactly one recommended path** (`/magicspec:analyze` to revalidate) and the requested workflow proceeds — never a `[y/n]` or option menu. This is the same informational-line treatment the status surface already uses (SC-4 of `l1-session-continuity.md`). The user's redirect (running `/magicspec:analyze`) is the override, not a solicited answer.
 
@@ -169,7 +173,7 @@ A fork the evidence does not settle — which reading of an idea, which workspac
 | Intake | "what is this idea for" — vague text or thin input from the requester who just supplied it | IK gates → one survey round, options from DA-10 → intent statement |
 | Consent | "may this irreversible, outward or self-governing action proceed" | DA-2 gate evaluation (§4.2) → one DA-5 question |
 
-> Selection and Sequencing forks rendered as **workflow proposal steps** — Explore Creative Sparks, Dispatch Notice, Mode Transition — are bound by DA-9: the DA-3 winner is narrated as a [DR] the same turn, never surfaced as a question. A blank/no-argument invocation is a Selection fork, not an Escalation.
+> Selection and Sequencing forks rendered as **workflow proposal steps** — Explore Creative Sparks, Dispatch Notice, Mode Transition — are bound by DA-9: the DA-3 winner is narrated as a [DR] the same turn, never surfaced as a question. A blank/no-argument invocation is a Selection fork, not an Escalation — except a command whose argument is required, which is the E7 command intake.
 
 ### 4.2 Escalation Gate Evaluation
 
@@ -182,6 +186,7 @@ graph TD
     Q -- yes --> S[Intake survey: forecast candidates as options, winner marked, plus Other]
     S --> D
     Q -- no --> W[Winner]
+    A0[Invocation without its command or required argument - E7] --> P[Help picker / argument form, recommended choice marked] --> D
     C --> W
     W --> G{Winner irreversible, outward or amending the agent's rules - E1, E2, E4?}
     G -- no --> D[Act + emit DR, premise recorded where the work lands]
@@ -201,7 +206,7 @@ Constraints: one line; no tentative qualifiers (C25 §3); the Override hint is m
 
 ### 4.4 Constitutional Placement
 
-The protocol is anchored as convention **C27 — Autonomous Decision Protocol** in the constitution (project `RULES.md` and the engine template `rules.md`), containing: DA-1 mandate, the E1–E6 table with each entry's resolution, the DA-3 criteria list, DR grammar, DA-5 format, DA-6 persistence, DA-8 exemption, and the DA-10 forecast summary. C9 gates 3 and 7 and C26 point to DA-10 instead of asking. C27 references C9 (authorization scope), C25 (output phrasing), and C26 (E5) instead of duplicating them.
+The protocol is anchored as convention **C27 — Autonomous Decision Protocol** in the constitution (project `RULES.md` and the engine template `rules.md`), containing: DA-1 mandate, the E1–E7 table with each entry's resolution, the DA-3 criteria list, DR grammar, DA-5 format, DA-6 persistence, DA-8 exemption, and the DA-10 forecast summary. C9 gates 3 and 7 and C26 point to DA-10 instead of asking. C27 references C9 (authorization scope), C25 (output phrasing), and C26 (E5) instead of duplicating them.
 
 C13 §3 amended wording (normative):
 
@@ -216,6 +221,7 @@ C13 §3 amended wording (normative):
 5. **User-side rules** (`skills/magicspec/AGENT-RULES.md`): add a compact C27 section so watching-process agents inherit session-level posture (DA-6).
 6. **Simulation**: `magicspec-dev:test` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question; feed a Blank-Trigger Explore invocation (no arguments), assert a DA-3 [DR] auto-pick (DA-9) rather than an `AskUserQuestion` survey.
 7. **2.0.0 deployment (DA-10, DA-2 reduced to consent and intake)** `[ADDED]`: the constitution and its template — C9 gates 3 and 7, C13 §3, C26, and C27 items 2, 5 and a new item 8 (the two C27 items identical in both files); `skills/magicspec/AGENT-RULES.md` §7; `spec.md` Step 0 (WI-4), Step 0.5 (E6: two gates, a forecast-written survey), the Ambiguity clause and the Conflict constraint; `context.md` WI-4, Workspace Disambiguation and Fit Validation; `analyze.md` Depth Control and Auto-Dispatch; the `prompt-engineer` intake audit; the simulation workflow's Fix Selection. Engine Improvement — C14 applies.
+8. **2.1.0 deployment (E7 command intake)** `[ADDED]`: the constitution and its template — C27 items 2 and 5 (word for word in both files, as the harness requires) and C13 §3; `skills/magicspec/AGENT-RULES.md` §7 and its §8 checklist item; `workflows/spec.md` — the Blank Trigger (the sparks become the argument form's suggestions), its hints and its checklist, and the Engineer Posture checklist lines of every workflow that names the whitelist; the router's dispatch ([l1-command-surface.md](l1-command-surface.md) 2.0.0). Consent: the owner's decision of 2026-10-30. Engine Improvement — C14 applies.
 
 ## 6. Drawbacks & Alternatives
 
@@ -255,6 +261,7 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.0 | 2026-10-30 | **E7 — command intake** joins the closed whitelist (origin `user-stated`: the owner's decision of 2026-10-30, which is the E4 event DA-2 requires): an invocation that names no command, or a command missing its required argument, gets the help picker and one argument form ([l1-command-surface.md](l1-command-surface.md) CS-9 to CS-11). DA-2 gains the row and the reason it asks; DA-5 the form of its questions; DA-9 keeps blank input declarative except a required argument, where the DA-3 winner becomes the marked suggestion instead of the action; §4.2 and §4.4 follow; §5 item 8 names the deployment. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
