@@ -537,7 +537,7 @@ function printHumanReadable(result) {
             console.log(`  ${entry.file} (${entry.count} comments: ${entry.markers.join(', ')})`);
         }
         console.log('\n  These files contain design decisions not captured in any specification.');
-        console.log('  Consider running magicspec:spec to formalize them.');
+        console.log('  Consider running /magicspec spec to formalize them.');
     }
 
     // Covered rationale details

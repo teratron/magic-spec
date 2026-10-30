@@ -11,7 +11,7 @@ const {
 } = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HOST PROJECTIONS (rule, command entries, skill link)
+// HOST PROJECTIONS (rule, skill link; retired command entries)
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // Whatever must exist outside the skill folder for a host to find it is derived from
@@ -27,8 +27,11 @@ const RULE_MARKER = '<!-- magicspec-rule -->';
 const BLOCK_BEGIN = '<!-- magicspec:begin -->';
 const BLOCK_END = '<!-- magicspec:end -->';
 
-/** Marker of a generated command entry. */
-const COMMAND_MARKER = (cmd) => `<!-- magicspec-command ${cmd} -->`;
+/**
+ * Marker of a command entry an earlier 3.0.x installation wrote. The engine writes none any
+ * more (the router is the only command surface); the marker is how a leftover is recognized
+ * and removed.
+ */
 const COMMAND_MARKER_RE = /<!-- magicspec-command ([\w-]+) -->/;
 
 /**
@@ -37,28 +40,28 @@ const COMMAND_MARKER_RE = /<!-- magicspec-command ([\w-]+) -->/;
  * - `skills`: the project folder the host reads skills from.
  * - `rule`: where the always-on rule goes — a file of its own, or a managed block in
  *   the host's instruction file when the host documents no rules folder.
- * - `commands`: the host's command folder (a `magicspec/` subfolder is the colon
- *   namespace) and the placeholder it substitutes with the typed arguments; null when
- *   the host has no per-project command entry.
+ * - `retired`: the folder in which 3.0.x installations placed command entries (a
+ *   `magicspec/` subfolder of the host's command folder); null when the host never had one.
+ *   Nothing is written there; whatever carries the entry marker is removed.
  */
 const HOSTS = Object.freeze({
     claude: {
         label: 'Claude Code',
         skills: '.claude/skills',
         rule: { kind: 'file', path: '.claude/rules/magicspec.md' },
-        commands: { dir: '.claude/commands/magicspec', args: '$ARGUMENTS' },
+        retired: '.claude/commands/magicspec',
     },
     codex: {
         label: 'Codex',
         skills: '.agents/skills',
         rule: { kind: 'block', path: 'AGENTS.md' },
-        commands: null,
+        retired: null,
     },
     qwen: {
         label: 'Qwen Code',
         skills: '.agents/skills',
         rule: { kind: 'file', path: '.qwen/rules/magicspec.md' },
-        commands: { dir: '.qwen/commands/magicspec', args: '{{args}}' },
+        retired: '.qwen/commands/magicspec',
     },
 });
 
@@ -88,7 +91,8 @@ function parseHosts(list) {
 }
 
 /**
- * Reads the command table of the router: the one list of commands every surface uses.
+ * Reads the command table of the router. `init` calls it to prove the router is readable
+ * before it writes anything.
  *
  * @returns {{name: string, summary: string}[]} The commands, in table order.
  * @throws {Error} When the router is missing or holds no command rows.
@@ -100,7 +104,11 @@ function readCommands() {
     }
     const commands = [];
     for (const line of fs.readFileSync(routerPath, 'utf8').split(/\r?\n/)) {
-        const row = /^\| `([a-z][a-z-]*)` \| (.+?) \| `workflows\/[a-z-]+\.md` \|$/.exec(line);
+        // Columns: command, group, what it does, argument, when it is missing, body.
+        const row =
+            /^\| `([a-z][a-z-]*)` \| [^|]+ \| ([^|]+) \| [^|]+ \| [^|]+ \| `workflows\/[a-z-]+\.md` \|$/.exec(
+                line,
+            );
         if (row) commands.push({ name: row[1], summary: row[2] });
     }
     if (commands.length === 0)
@@ -124,26 +132,6 @@ function readRuleSource() {
 // ───────────────────────────────────────────────────────────────────────────
 // Generated content
 // ───────────────────────────────────────────────────────────────────────────
-
-/**
- * The text of one command entry: a pointer to the router with the command, nothing more.
- *
- * @param {{name: string, summary: string}} command - The command.
- * @param {string} argsPlaceholder - How the host spells "the arguments typed after the command".
- * @returns {string} Markdown with frontmatter.
- */
-function commandEntry(command, argsPlaceholder) {
-    const description = command.summary.replace(/\s+/g, ' ').trim();
-    return [
-        '---',
-        `description: ${description}`,
-        '---',
-        COMMAND_MARKER(command.name),
-        `Run the magicspec command \`${command.name}\`: load the \`magicspec\` skill, read its \`workflows/${command.name}.md\` and follow it.`,
-        `Arguments: ${argsPlaceholder}`,
-        '',
-    ].join('\n');
-}
 
 /**
  * The managed block that points a host instruction file at the rule.
@@ -263,7 +251,8 @@ function ensureSkillLink(rootDir, skillsRel) {
 }
 
 /**
- * Writes the projections of one host: the skill link, the rule and the command entries.
+ * Writes the projections of one host: the skill link and the rule, and removes the command
+ * entries an earlier installation left. Nothing is written into a command folder.
  *
  * @param {string} name - A key of `HOSTS`.
  * @param {string} rootDir - Project root.
@@ -285,16 +274,65 @@ function projectHost(name, rootDir) {
         results.push({ path: rel(file), action: writeBlock(file, pointerBlock()) });
     }
 
-    if (host.commands) {
-        for (const command of readCommands()) {
-            const file = path.join(rootDir, host.commands.dir, `${command.name}.md`);
-            const action = writeProjection(file, commandEntry(command, host.commands.args), (t) =>
-                COMMAND_MARKER_RE.test(t),
-            );
-            results.push({ path: rel(file), action });
+    results.push(...retireCommandEntries(name, rootDir));
+    return results;
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Retired command entries
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Removes a command folder the removal of its entries left empty.
+ *
+ * @param {string} rootDir - Project root.
+ * @returns {void}
+ */
+function removeEmptyCommandFolders(rootDir) {
+    for (const host of Object.values(HOSTS)) {
+        if (!host.retired) continue;
+        const dir = path.join(rootDir, host.retired);
+        try {
+            if (fs.readdirSync(dir).length === 0) fs.rmdirSync(dir);
+        } catch {
+            /* absent or not empty: leave it */
         }
     }
-    return results;
+}
+
+/**
+ * Removes the command entries an earlier 3.0.x installation placed for one host: exactly the
+ * files that carry the entry marker. A file of the project's own in the same folder stays, and
+ * so does the folder when it is not empty afterwards.
+ *
+ * @param {string} name - A key of `HOSTS`.
+ * @param {string} rootDir - Project root.
+ * @returns {{path: string, action: 'retired'}[]} One row per entry removed.
+ */
+function retireCommandEntries(name, rootDir) {
+    const host = HOSTS[name];
+    const rows = [];
+    if (!host.retired) return rows;
+    const dir = path.join(rootDir, host.retired);
+    let files;
+    try {
+        files = fs.readdirSync(dir);
+    } catch {
+        return rows;
+    }
+    for (const file of files) {
+        const full = path.join(dir, file);
+        try {
+            if (!file.endsWith('.md') || !fs.statSync(full).isFile()) continue;
+            if (!COMMAND_MARKER_RE.test(fs.readFileSync(full, 'utf8'))) continue;
+            fs.unlinkSync(full);
+            rows.push({ path: normalizePath(path.relative(rootDir, full)), action: 'retired' });
+        } catch {
+            /* unreadable or already gone: not ours to report */
+        }
+    }
+    removeEmptyCommandFolders(rootDir);
+    return rows;
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -303,6 +341,7 @@ function projectHost(name, rootDir) {
 
 /**
  * Lists every projection present in a project, by its marker, with whether it is stale.
+ * A command entry an earlier installation left is always listed as stale: it is retired.
  * Nothing is read from a record: a copy that lost its marker is no longer ours.
  *
  * @param {string} rootDir - Project root.
@@ -317,12 +356,6 @@ function findProjections(rootDir) {
         ruleSource = readRuleSource();
     } catch {
         /* no source: nothing can be compared, nothing is stale */
-    }
-    let commands = null;
-    try {
-        commands = readCommands();
-    } catch {
-        /* same */
     }
 
     for (const [name, host] of Object.entries(HOSTS)) {
@@ -353,9 +386,9 @@ function findProjections(rootDir) {
                 });
             }
         }
-        if (host.commands && fs.existsSync(path.join(rootDir, host.commands.dir))) {
-            for (const file of fs.readdirSync(path.join(rootDir, host.commands.dir))) {
-                const full = path.join(rootDir, host.commands.dir, file);
+        if (host.retired && fs.existsSync(path.join(rootDir, host.retired))) {
+            for (const file of fs.readdirSync(path.join(rootDir, host.retired))) {
+                const full = path.join(rootDir, host.retired, file);
                 if (!file.endsWith('.md') || !fs.statSync(full).isFile()) continue;
                 const text = fs.readFileSync(full, 'utf8');
                 const marker = COMMAND_MARKER_RE.exec(text);
@@ -364,15 +397,8 @@ function findProjections(rootDir) {
                 const commandKey = realOrNull(full) || full;
                 if (seen.has(commandKey)) continue;
                 seen.add(commandKey);
-                const command = commands?.find((c) => c.name === marker[1]);
-                found.push({
-                    path: rel(full),
-                    host: name,
-                    kind: 'command',
-                    stale:
-                        Boolean(commands) &&
-                        (!command || text !== commandEntry(command, host.commands.args)),
-                });
+                // An entry is never current: the engine registers none, so every one is retired.
+                found.push({ path: rel(full), host: name, kind: 'command', stale: true });
             }
         }
         const link = path.join(rootDir, host.skills, 'magicspec');
@@ -385,9 +411,9 @@ function findProjections(rootDir) {
 }
 
 /**
- * Regenerates the projections that exist and have fallen behind their source, in place.
- * Nothing is created: a host that has no projection is `projectHost`'s business, and a
- * file whose marker is gone is not ours to touch.
+ * Regenerates the projections that exist and have fallen behind their source, in place, and
+ * removes every command entry it finds (all are retired). Nothing is created: a host that has
+ * no projection is `projectHost`'s business, and a file whose marker is gone is not ours to touch.
  *
  * @param {string} rootDir - Project root.
  * @returns {{path: string, host: string, kind: string}[]} The projections rewritten.
@@ -397,23 +423,16 @@ function refreshProjections(rootDir) {
     for (const item of findProjections(rootDir)) {
         if (!item.stale || item.kind === 'link') continue;
         const full = path.join(rootDir, item.path);
-        const host = HOSTS[item.host];
         if (item.kind === 'rule') {
             fs.writeFileSync(full, readRuleSource());
         } else if (item.kind === 'block') {
             writeBlock(full, pointerBlock());
         } else {
-            const name = COMMAND_MARKER_RE.exec(fs.readFileSync(full, 'utf8'))[1];
-            const command = readCommands().find((c) => c.name === name);
-            // An entry whose command left the router is removed with the command.
-            if (!command) {
-                fs.unlinkSync(full);
-            } else {
-                fs.writeFileSync(full, commandEntry(command, host.commands.args));
-            }
+            fs.unlinkSync(full);
         }
         refreshed.push({ path: item.path, host: item.host, kind: item.kind });
     }
+    removeEmptyCommandFolders(rootDir);
     return refreshed;
 }
 
@@ -447,16 +466,7 @@ function removeProjections(rootDir) {
         }
         removed.push(item.path);
     }
-    // Command folders left empty by the removal go with their files.
-    for (const host of Object.values(HOSTS)) {
-        if (!host.commands) continue;
-        const dir = path.join(rootDir, host.commands.dir);
-        try {
-            if (fs.readdirSync(dir).length === 0) fs.rmdirSync(dir);
-        } catch {
-            /* absent or not empty: leave it */
-        }
-    }
+    removeEmptyCommandFolders(rootDir);
     return removed;
 }
 
@@ -466,8 +476,8 @@ function removeProjections(rootDir) {
 
 /**
  * The lines a project adds to `.gitignore` so the engine and what is generated from it stay
- * out of its history: the engine and each host's copy of the skill, the rule and command
- * projections of the named hosts, and the graph and cache folders under the state folder.
+ * out of its history: the engine and each host's copy of the skill, the rule projections of
+ * the named hosts, and the graph and cache folders under the state folder.
  *
  * @param {string[]} hostNames - Hosts the project is set up for; may be empty.
  * @param {string} rootDir - Project root.
@@ -486,7 +496,6 @@ function versionControlLines(hostNames, rootDir) {
         const host = HOSTS[name];
         add(`/${host.skills}/magicspec/`);
         if (host.rule.kind === 'file') add(`/${host.rule.path}`);
-        if (host.commands) add(`/${host.commands.dir}/`);
     }
     add(`/${STATE_DIR_NAME}/${GRAPH_DIR_NAME}/`);
     add(`/${STATE_DIR_NAME}/*cache*/`);
@@ -502,7 +511,6 @@ module.exports = {
     parseHosts,
     readCommands,
     readRuleSource,
-    commandEntry,
     pointerBlock,
     projectHost,
     findProjections,

@@ -42,7 +42,7 @@ Review every created or substantively amended AI-facing artifact (per PQ-1 class
 
 ## Idea Intake Gate Audit (E6, conditional)
 
-Runs **only** when a `magicspec:spec` invocation actually fired the Step 0.5 gate. A silent gate — the common case — has nothing to review; reporting on it is noise.
+Runs **only** when a `/magicspec spec` invocation actually fired the Step 0.5 gate. A silent gate — the common case — has nothing to review; reporting on it is noise.
 
 | Check | Violation |
 | --- | --- |

@@ -1,6 +1,6 @@
 # Interface Design: UI/UX, Layout and Front-End Work
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -33,7 +33,7 @@ A reference-mining pass over that collection (283 skills in ten collections) fou
 
 - Technology-neutral: "interface" covers any surface a person sees and operates — a web page, a desktop or mobile screen, a terminal interface.
 - Design artifacts are specifications in the state folder; the product receives only code and its own assets (containment).
-- **Assumption (forecast):** one role covers design, layout and front-end work, because R4 forbids modelling a "developer" as a role and the coding itself stays with `coder`, who adopts this stance for interface work. Runner-up: separate designer and front-end roles. Override: `/magicspec:spec amend l1-interface-design.md "split the role"`.
+- **Assumption (forecast):** one role covers design, layout and front-end work, because R4 forbids modelling a "developer" as a role and the coding itself stays with `coder`, who adopts this stance for interface work. Runner-up: separate designer and front-end roles. Override: `/magicspec spec amend l1-interface-design.md "split the role"`.
 
 ## 3. Core Invariants
 
@@ -89,4 +89,5 @@ Sizes: {narrowest} … {widest}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (a UI/UX role for layout and front-end work, informed by `.references/.design`). Reference-mining over the collection recorded by class only. Closes the parked `frontend-specialist` backlog item. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

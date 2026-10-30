@@ -1,6 +1,6 @@
 # Engine Templates
 
-**Version:** 1.3.2
+**Version:** 1.3.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -32,7 +32,7 @@ The cells show why they grew. Each is an inventory of the specification's mechan
 - All templates reside in `skills/magicspec/templates/` (flat directory, no nesting).
 - The §5.3 contract is guidance, not a gate. The engine does not write these texts, so no script refuses and no workflow halts on them; the wrapper generator can refuse a description because it is the writer of the wrapper.
 - §5.3 fixes a form and specifies no size signal. The signal belongs with the bloat advisory ([l2-engine-automation.md](l2-engine-automation.md), Bloat Advisory Configuration) and is sequenced after the contract is deployed, so its thresholds are calibrated on registries that follow the form, not on the ones that motivated it. The one anchor measured is the whole-file read limit of a host (256 KB).
-- **Assumption (forecast):** the task-ledger overview describes the ledger and does not track the plan; the state lives in the phase table. Runner-up: an overview that states the plan's present state, replaced by whoever changes it (the reading of version 1.2.0 of this specification). Override: `/magicspec:spec amend l2-engine-templates "current-state overview"`. Evidence: of a consumer project's two workspaces, one overview grew to 20.8 KB of per-phase narrative and the other is a 0.1 KB description of the file; the second needs no writer to keep it true.
+- **Assumption (forecast):** the task-ledger overview describes the ledger and does not track the plan; the state lives in the phase table. Runner-up: an overview that states the plan's present state, replaced by whoever changes it (the reading of version 1.2.0 of this specification). Override: `/magicspec spec amend l2-engine-templates "current-state overview"`. Evidence: of a consumer project's two workspaces, one overview grew to 20.8 KB of per-phase narrative and the other is a 0.1 KB description of the file; the second needs no writer to keep it true.
 
 ## 4. Invariant Compliance
 
@@ -111,6 +111,7 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.3.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.3.0 | 2026-10-06 | Revised after measuring a consumer project's registries (325 specifications): descriptions have medians of 1,578 and 2,086 characters, and the registry of the larger workspace is 597 KB. The cell had become the only index of content because the graph and the wiki hold no text, so rule 1 gains its counterpart — a content question is answered by searching the specification text ([l2-spec-graph-memory.md](l2-spec-graph-memory.md) §4.5) — and the order of adoption puts that route first. Rule 3 now has the ledger overview *describe the ledger* instead of tracking the plan, on the evidence of the consumer's second workspace (a 0.1 KB static overview beside a 20.8 KB narrative one); the `run.md` surface is dropped and the forecast assumption flips, runner-up recorded. The size signal is sequenced after deployment. Status reverted `Stable → RFC` (Amendment Rule, minor); re-promoted to `Stable` after the Post-Update Review in the same invocation. |

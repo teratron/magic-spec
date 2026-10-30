@@ -25,15 +25,25 @@ Universal process for managing project specifications in `.magicspec/specificati
 
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*.
 
+**Trigger:** `/magicspec spec <argument>`. The argument is required. Arguments:
+
+- *(empty)* — the argument form asks for the idea (Explore Mode, Blank Trigger)
+- `{idea}` — a raw idea in plain words, specified through Step 0.5 and Dispatch
+- `amend {file} "{change}"` — amend an existing specification
+- `stabilize [workspace]` — promote the Draft and RFC specifications that meet the criteria to `Stable` (Batch Stabilization)
+
+Examples: `/magicspec spec`, `/magicspec spec "a holiday booking feature"`, `/magicspec spec amend l1-auth.md "add token refresh"`, `/magicspec spec stabilize`.
+
 **Write Permissions (Hard Limit)**: ONLY `.magicspec/` subtree. Everything outside `.magicspec/` is FORBIDDEN. About to write outside? **STOP.**
 
 **Hints:**
 
 - **Idea Intake Gate (E6)**: raw idea input passes a silent Step 0.5 check before dispatch. Ask ONLY when the idea is self-contradictory, admits two readings yielding materially different specs, or leaves who it is for, what it must do or where it stops to be invented — and only after exhausting the repository. One survey round at a time: plain words, the forecast's options with its winner marked, a free-text Other; never technical questions; each round must close more than it opens, and whatever is delegated the forecast answers. See `workflows/spec.md §Step 0.5`.
+- **Command Intake (E7)**: `/magicspec spec` without an idea asks for it once, through the argument form of [help.md](help.md) Step 4 — up to three DA-3-ranked topics as suggestions, the highest-coverage gap first and marked, free text always accepted. What the form returns passes Step 0.5. See `workflows/spec.md §Explore Mode`.
 - **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation, suspended during an active intake dialogue).
 - **Delta Edits**: use surgical search-and-replace for specs >200 lines.
 - **T4 Capture**: input contains "remember that..." / "project rule:" → the rule is handed to `rule.md`'s Operational Logic, which records a user-stated rule at the strength stated and admits an agent-originated one only on evidence (see `workflows/spec.md §Updating RULES.md`).
-- **Pipeline**: `magicspec:spec` → `magicspec:task` → `magicspec:run`.
+- **Pipeline**: `/magicspec spec` → `/magicspec task` → `/magicspec run`.
 - **Finalization**: after dispatch, run `node scripts/executor.js finalize --workflow=spec --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/spec.md §Finalization Protocol`.
 
 ## Core Invariants (Mandatory)
@@ -45,7 +55,7 @@ Universal process for managing project specifications in `.magicspec/specificati
 5. **Linking**: every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
 6. **Status**: assign Draft/RFC/Stable/Deprecated. Follow transitions (D→R→S).
 7. **Dispatch**: use the "Raw Input" flow for unstructured ideas.
-8. **Ventilation**: use `magicspec:analyze` to trigger a deep consistency check. See `workflows/analyze.md` Mode C.
+8. **Ventilation**: use `/magicspec analyze` to trigger a deep consistency check. See `workflows/analyze.md` Mode C.
 9. **Delta-Editing**: for spec files >200 lines, use search-replace instead of full rewrites. Mark changed sections with `[ADDED]`, `[MODIFIED]`, `[REMOVED]`.
 10. **Closure**: every task ends with a mandatory "Task Completion Checklist".
 11. **Rules**: `RULES.md` is the project constitution. Check before every operation. Apply triggers T1-T4. Rules enter only through the admission gate (RA-1).
@@ -119,14 +129,14 @@ Apply `context.md` §Step 0 Workspace Intent Detection:
 1. Scan the user's most recent input + the workflow argument for signal classes (creation token, stack delta, domain delta).
 2. Resolve to one of `existing:{name}` · `create:{name}` · `ambiguous`.
 3. On `create:{name}` → invoke `create-workspace` BEFORE any spec authoring. Narrate: `[Workspace] Created '{name}' for {reason} (mentioned: {signal-token}). Dispatching new specs to .magicspec/{name}/. (Revert: git restore .magicspec/workspace.json && rm -rf .magicspec/{name})`.
-4. On `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) over `create:{X}`, `existing:{Y}` and no dispatch, exactly as `context.md` §Ambiguity Gate states; narrate `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec:spec {runner-up-workspace} …)` and carry the routing premise into the dispatched spec's `Constraints & Assumptions`. Nothing is asked.
+4. On `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) over `create:{X}`, `existing:{Y}` and no dispatch, exactly as `context.md` §Ambiguity Gate states; narrate `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec spec {runner-up-workspace} …)` and carry the routing premise into the dispatched spec's `Constraints & Assumptions`. Nothing is asked.
 5. On `existing:{name}` → proceed with `{name}` resolved. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below).
 
 The detection result is recorded in the agent's working state for the remainder of the workflow invocation. No subsequent step re-runs Step 0 within the same invocation.
 
 ### Step 0.5: Idea Intake Gate (E6)
 
-> Governed by the Idea Intake Gate protocol (IK-1 through IK-9). Runs after Step 0, before any mode branch. Skipped entirely when the invocation carries no idea (blank trigger, `stabilize`, `amend {file}` with no new content). This is the one place outside consent where the engine asks: the requester has just supplied the idea and is present, nothing is built yet, and the missing piece is intent only they hold. The Consequence Forecast (C27 DA-10) writes the options and answers whatever the requester delegates.
+> Governed by the Idea Intake Gate protocol (IK-1 through IK-9). Runs after Step 0, before any mode branch. Skipped entirely when the invocation carries no new idea (`stabilize`, `amend {file}` with no new content). A bare `spec` is not skipped: its argument form (Explore Mode, Blank Trigger) collects the idea, and the idea it returns is evaluated here like any freshly supplied one. This is the one place outside consent where the engine asks: the requester has just supplied the idea and is present, nothing is built yet, and the missing piece is intent only they hold. The Consequence Forecast (C27 DA-10) writes the options and answers whatever the requester delegates.
 
 **Silent by default (IK-1)**: this is an evaluation, not a stage. When no firing condition holds — the common case — proceed to dispatch in the same turn with no narration. Never announce that the gate ran clean.
 
@@ -137,7 +147,7 @@ The detection result is recorded in the agent's working state for the remainder 
 3. **Gate 2 — sufficiency (IK-4)**: is the input enough? **F3** fires for each intent anchor — who it is for, what it must do, where it stops — whose sentence would have to be invented (*test*: it cannot be quoted from the input, found in the repository, or taken as the default any engineer would assume).
    - No condition holds in either gate → record any residual doubt as `<!-- TBD: {question} -->` and dispatch.
 4. **Ask one survey round (IK-3, IK-5)**: at most three questions — one per open point — in plain words, about intent only: what is built, for whom, where it stops, what "working" looks like, which conflicting requirement wins. **Never** ask storage format, library, schema, naming, algorithm, layer or test strategy — the engineer decides those via DA-3 and records a TBD or `[DR]`. Each question's options are the Consequence Forecast's candidates — each reading and, where one exists, the **hedge** — with the forecast's winner marked as recommended, each option's consequence stated, and a free-text **Other: …** last. Any question may be skipped or delegated ("you decide"). Ask what the user wants **built**, never what the agent **should do**.
-5. **Converge or stop (IK-6)**: a chosen option closes its question; an **Other** answer is new human text and goes back through Gates 1 and 2 before it closes anything. The open set MUST be strictly smaller at each round's end than at its start — closing one while opening two is not convergence. A non-convergent reply (restated intent, `"you decide"`, an unmappable or off-topic answer) **ends the gate**: every question still open is answered by the forecast's winner and recorded in the Draft's `Constraints & Assumptions` as `- **Assumption (forecast):** {premise}. Runner-up: {other reading}. Override: /magicspec:spec amend {file} "{runner-up}"` — at most three such bullets, any further point marked TBD.
+5. **Converge or stop (IK-6)**: a chosen option closes its question; an **Other** answer is new human text and goes back through Gates 1 and 2 before it closes anything. The open set MUST be strictly smaller at each round's end than at its start — closing one while opening two is not convergence. A non-convergent reply (restated intent, `"you decide"`, an unmappable or off-topic answer) **ends the gate**: every question still open is answered by the forecast's winner and recorded in the Draft's `Constraints & Assumptions` as `- **Assumption (forecast):** {premise}. Runner-up: {other reading}. Override: /magicspec spec amend {file} "{runner-up}"` — at most three such bullets, any further point marked TBD.
 6. **State the understood idea, then write (IK-7)**: when the gate fired, narrate once `[Intake] Understood as: {one paragraph}` — the intent statement that seeds the Overview — and write the Draft on that turn. Answers live in the spec's own voice; no `Clarifications` section, no brief file, no log.
 
 **Scope containment (IK-8)**: E6 fires only on the content of a freshly supplied idea. It never covers the agent's own workflow choices (which spec, which phase, which order), proposal surfaces, or drift offers — those remain declarative `[DR]` narrations under DA-9.
@@ -146,11 +156,12 @@ The detection result is recorded in the agent's working state for the remainder 
 
 Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strives for maximum speed from idea to execution.
 
-**Blank Trigger (Creative Spark)**: triggered without specific input/arguments → become a **Proactive Architect**.
+**Blank Trigger (Argument Form)**: `/magicspec spec` without an idea → the idea is this command's required argument, so it is asked for once (E7, [help.md](help.md) Step 4) and nothing is written before it is given. While the form is prepared, become a **Proactive Architect**.
 
 1. Scan `INDEX.md` and actual project structure.
 2. Identify "Uncovered" modules or logical next steps in the architecture.
-3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magicspec:spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9): a blank/no-argument invocation resolves by DA-3, **never** by a question or option menu (e.g. an `AskUserQuestion` call) asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
+3. **Rank up to 3 candidate topics** (new specs or refinements) **by DA-3** and offer them as the argument form's suggestions: the highest-coverage gap first, marked recommended (`Specify {topic} — highest-coverage gap (DA-3)`), free text always accepted. The ranking decides which suggestion is marked; the requester chooses or types. A project with nothing uncovered gets the free-text entry alone. This is the one blank invocation that asks (DA-9, required-argument exception): a command with an optional argument runs its default instead, and no other proposal in this workflow is turned into a question.
+4. The collected idea — a chosen suggestion or typed text — passes Step 0.5 and then Dispatch; the choice of a suggestion is narrated as `[Intake] Specifying: {topic}`. A dismissed form writes nothing and says so in one line.
 
 ### Mode Transition: Explore → Dispatch
 
@@ -161,7 +172,7 @@ Explore Mode ends automatically; the agent MUST transition to Dispatching/Writin
 
 ### Project Analysis Delegation
 
-**Trigger intent**: "/magicspec:analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate".
+**Trigger intent**: "/magicspec analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate".
 
 > **Delegation Rule**: if the user's intent is to analyze the *existing codebase* — **delegate to `workflows/analyze.md`**. Read that file and follow its workflow.
 
@@ -192,11 +203,11 @@ graph TD
    - Run **Post-Update Review**.
    - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
    - Sync `INDEX.md`.
-   - **Zero-Prompt Handoff (C9 default)**: after dispatch completes, automatically invoke `/magicspec:task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magicspec:task. (Interrupt: Ctrl+C)`. A hard fork (C9 gate 3 — incompatible architectural paths with no objective tiebreaker) is resolved by the Consequence Forecast (C27 DA-10) like any other unsettled fork, its premise recorded in the spec; nothing here pauses for user input.
+   - **Zero-Prompt Handoff (C9 default)**: after dispatch completes, automatically invoke `/magicspec task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magicspec task. (Interrupt: Ctrl+C)`. A hard fork (C9 gate 3 — incompatible architectural paths with no objective tiebreaker) is resolved by the Consequence Forecast (C27 DA-10) like any other unsettled fork, its premise recorded in the spec; nothing here pauses for user input.
 
 **Constraints**:
 
-- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Workspace routing (WI-4) and hard forks are forecast, not asked; the Step 0.5 Idea Intake Gate (E6) is the one intake survey; existence and parent guards remain HALTs with one recommended path.) Step 0.5 resolves intake gaps **before** dispatch and covers only incoherence (F1), essence ambiguity (F2) and insufficient intent (F3). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs and forecast premises by editing the Draft or invoking `/magicspec:spec amend`.
+- **Ambiguity (C25)**: do NOT ask clarifying questions about spec content. Record the open question as `<!-- TBD: {question} -->` inline within the Draft spec body and continue writing. (Workspace routing (WI-4) and hard forks are forecast, not asked; the Step 0.5 Idea Intake Gate (E6) is the one intake survey; existence and parent guards remain HALTs with one recommended path.) Step 0.5 resolves intake gaps **before** dispatch and covers only incoherence (F1), essence ambiguity (F2) and insufficient intent (F3). Every ambiguity reaching this point is detail-level by definition and still routes to a TBD marker. The user resolves TBDs and forecast premises by editing the Draft or invoking `/magicspec spec amend`.
 - **Conflict**: flag contradictions with `RULES.md` or existing Stable specs. Intra-input: flag ALL conflicts within the same message before mapping; their precedence is settled at Step 0.5 (F1) — asked in the intake survey, or, when the requester delegates, forecast and recorded as a premise; never guessed silently.
 - **T4 Rule**: if input contains "remember that...", group the rule update with the dispatch proposal for atomic approval. Hand the rule to the Operational Logic of `rule.md` (§Updating RULES.md) before writing. **Cross-Check**: ensure the proposed specification logic immediately complies with the newly discovered rule before presenting the proposal.
 - **Actionable Outcome**: in Trust Mode (C9), after silent status promotion, append: `[Auto-SDD] {Spec} promoted to Stable; updated registry.`
@@ -206,7 +217,7 @@ graph TD
 1. **Pre-flight**: `node scripts/executor.js check-prerequisites --json --workspace={active-workspace}`.
    - `ok: true` → proceed to Cross-Workspace Parity check, then Creation.
    - Any other result → branch per `init.md §1`: `ENGINE_INTEGRITY` / `GHOST_REGISTRY` → C15 Filter (**HALT** only if in-scope); missing `.magicspec/` → silently execute `references/init.md` (do not prompt user), then resume; unrecognized failure → **HALT**.
-   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed: the workspace name goes right after the layer prefix, so the layer prefix stays first (`l1-auth.md` becomes `l1-{active-workspace}-auth.md`). Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{layer-prefix}{active-workspace}-{name}'. (Override: /magicspec:spec amend to rename)`. Do NOT HALT; do NOT present option menus.
+   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file already exists in any other workspace → auto-apply workspace-prefix naming and proceed: the workspace name goes right after the layer prefix, so the layer prefix stays first (`l1-auth.md` becomes `l1-{active-workspace}-auth.md`). Narrate: `[Auto-SDD] Name collision on '{file}' (exists in '{ws}'): creating as '{layer-prefix}{active-workspace}-{name}'. (Override: /magicspec spec amend to rename)`. Do NOT HALT; do NOT present option menus.
 2. **Creation**:
    - Use `templates/spec.md` (Standard) or `templates/micro-spec.md` (Micro-spec per C16).
    - **Naming**: apply layer prefix (`l1-` Concept, `l2-` Impl) to the filename (e.g., `l1-api.md`).
@@ -226,9 +237,9 @@ graph TD
 3. **Sync**:
    - Update `Version`, `Status`, `Layer` in `INDEX.md`. Change the `Description` only when what the specification is for, or when to open it, has changed — then rewrite the whole cell in the form above, never append to it; otherwise leave it byte-identical — the amendment goes to the specification's `Document History` (Versioning above), never into the registry cell.
    - **T4 Queue** (every HALT below): if the triggering input also contained a T4 rule ("remember that..."), acknowledge it explicitly — *"T4 rule detected — queued pending {reason} resolution."*, with `{reason}` = `drift` (Version Drift Guard), `parity` (Cross-Workspace Parity) or `file` (Existence Guard, Parent Existence Guard). Do NOT write to `RULES.md` until the HALT is resolved, then hand the queued rule to the Operational Logic of `rule.md` immediately — after the Resolution Validation re-evaluation for `drift`, once the copies are reconciled for `parity`, and once the target file (and parent) is restored or remapped for `file`.
-   - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magicspec:spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
+   - **Version Drift Guard**: VERSION_DRIFT detected for the target file **or any spec in its `Related Specifications` / `Implements` dependency chain** (file header `Version:` or `Status:` ≠ `INDEX.md` entry) → **HALT** before writing any updates. Report: *"Version drift on `{file}`: file header v{X} ≠ registry v{Y}. Run `/magicspec spec` to reconcile — it will sync `INDEX.md` to the file header version and apply the amendment rule to capture the external change."* Resume only after user resolves.
      - **Resolution Validation**: before resuming, confirm INDEX.md entry now matches the file header. If the file header was updated without review, flag: *"Drift resolved via registry sync. External change to `{file}` between v{Y} and v{X} was not reviewed — confirm before proceeding."* After confirmed resolution, **re-evaluate all Sync guards from the top, scoped to the amendment target** (RE-3, Cross-Workspace Parity, Existence Guard, and C12 Quarantine applied to the amendment target's upward chain — its L1 parents only, not its downstream dependents nor the drift-resolved file that triggered the HALT) before writing.
-   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magicspec:spec` in `{ws-a}` (higher version) to reconcile, then re-run the update."* One path, no option menu.
+   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, check whether an identically-named spec file exists in any other workspace. Name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magicspec spec` in `{ws-a}` (higher version) to reconcile, then re-run the update."* One path, no option menu.
    - **Existence Guard**: target file in `INDEX.md` but missing from disk → **HALT**. Ask user to restore or unregister.
    - **Parent Existence Guard**: target is L2, verify its L1 parent (defined in `Implements:`) exists on disk in the specified (or resolved) workspace. Parent missing → **HALT**. Report: *"L2 Orphan: Parent spec `{parent-file}` is missing from disk. Restore parent before updating L2."*
    - **RESCUE (AOP)**: proactively check for renamed directories by comparing path segments (Levenshtein distance ≤20% of length) and suggest a registry sync before halting.
@@ -240,7 +251,7 @@ graph TD
    - **Deprecation Cascade**: if a spec transitions to `Deprecated`:
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` — flag each as having an **invalid L1 parent** (layer integrity violation). Report: *"L2 `{file}` has no valid L1 parent — `{target}` is Deprecated."*
      2. Scan `INDEX.md` for ALL specs with `Related Specifications` referencing `{target-file}` — flag each as containing a **stale reference**. Report: *"`{file}` references Deprecated spec `{target}` in Related Specifications."*
-     3. Proceed with the deprecation — do NOT block. Findings are surfaced in the mandatory Post-Update Review as actionable warnings with suggested next steps: `→ /magicspec:spec amend {file}` (remove stale ref) or `→ /magicspec:spec deprecate {file}` (cascade further).
+     3. Proceed with the deprecation — do NOT block. Findings are surfaced in the mandatory Post-Update Review as actionable warnings with suggested next steps: `→ /magicspec spec amend {file}` (remove stale ref) or `→ /magicspec spec deprecate {file}` (cascade further).
    - **Renaming/Merging/Splitting**: if file name or internal section structure changes:
      - Update all active refs in `INDEX.md`, `PLAN.md`, `TASKS.md`, active phase files, and `Related Specs`/`Implements` links.
      - **Refactoring Guard**: if moving sections between files, MUST update task references (e.g., `T-1A01`) in `TASKS.md` to reflect the new file/section mapping.
@@ -248,7 +259,7 @@ graph TD
 
 ### Batch Stabilization
 
-**Trigger**: called from `task.md` Pre-Planning Stabilization (Step 2), or `/magicspec:spec stabilize [workspace]`.
+**Trigger**: called from `task.md` Pre-Planning Stabilization (Step 2), or `/magicspec spec stabilize [workspace]`.
 
 Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mode (C9) criteria consistently.
 
@@ -327,17 +338,17 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 Compares specs vs. project filesystem and engine integrity.
 *(Pre-flight gate analog: Pre-Planning Stabilization in `task.md` — both block progression until invariants pass.)*
 
-**Trigger**: `magicspec:task` auto-run or *"Verify specs"*.
+**Trigger**: `/magicspec task` auto-run or *"Verify specs"*.
 
 | Check | Action |
 | --- | --- |
 | Path Validity | Referenced files exist? |
 | Layer Integrity | L2 has an existing, `Stable` L1 parent? |
 | Registry Sync | `INDEX.md` entries match disk? |
-| **Stale References** | `Related Specifications` or `Implements` pointing at a `Deprecated` spec? Report `STALE_REFERENCE` (advisory, no HALT — the finding the Deprecation Cascade raises when a spec is deprecated, here for the references that predate or escaped it) → `→ /magicspec:spec amend {file}`. |
+| **Stale References** | `Related Specifications` or `Implements` pointing at a `Deprecated` spec? Report `STALE_REFERENCE` (advisory, no HALT — the finding the Deprecation Cascade raises when a spec is deprecated, here for the references that predate or escaped it) → `→ /magicspec spec amend {file}`. |
 | **Version Drift** | Spec file header `Version:` matches `INDEX.md` entry? Flag `VERSION_DRIFT` if mismatch — indicates external edit without lifecycle protocol. |
 | Config Sync | Project configuration files match declared spec metadata? |
-| **Engine Integrity** | This skill folder matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `magicspec:analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
+| **Engine Integrity** | This skill folder matches `.checksums`? → C15 Filter (`init.md §1`) → **HALT** only if in-scope mismatches. (In `/magicspec analyze` Mode C this self-check is non-halting / audit-only.) Hint: use `init` or `update-engine-meta`. |
 
 ## Finalization Protocol (Mandatory)
 
@@ -349,7 +360,7 @@ After all workflow steps (incl. Graph Refresh) and **before** the Completion Che
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.magicspec/workspace.json`.
 
-> **Note for `magicspec:run` Phase Completion**: `Changelog L1` in run.md appends to `.magicspec/{ws}/CHANGELOG.md` (internal phase journal). This protocol appends to the **root** `CHANGELOG.md` (user-facing release notes). Separate documents; no conflict.
+> **Note for `/magicspec run` Phase Completion**: `Changelog L1` in run.md appends to `.magicspec/{ws}/CHANGELOG.md` (internal phase journal). This protocol appends to the **root** `CHANGELOG.md` (user-facing release notes). Separate documents; no conflict.
 
 ### Task Completion Checklist
 
@@ -373,7 +384,8 @@ Checklist — {task description}
      in the intent layer and plain language, options from the forecast with its winner marked and an
      Other (IK-3, IK-5); rounds shrank, Other answers re-checked (IK-6); delegated questions answered
      by the forecast with premises recorded; intent statement narrated; no clarification artifact (IK-7)
-  ☐ Engineer Posture (C25): no clarifying prompts outside the intake survey (E6) and consent (C27 E1, E2, E4); ambiguity recorded as TBD-markers or forecast premises
+  ☐ Command Intake (E7): a bare `spec` asked for its idea once, through the argument form (DA-3-ranked suggestions, winner first and marked, free text accepted); the returned idea passed Step 0.5; a dismissed form wrote nothing
+  ☐ Engineer Posture (C25): no clarifying prompts outside the command intake (E7), the intake survey (E6) and consent (C27 E1, E2, E4); ambiguity recorded as TBD-markers or forecast premises
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
 ```
 
@@ -385,5 +397,5 @@ Checklist — {task description}
 
 Where this workflow may hand over, and when:
 
-- **Generate tasks** → `/magicspec:task`: Proceed to task generation without interruption to maintain Zero-Prompt workflows (Rule C9). Condition: `registry_updated`.
-- **Add a rule** → `/magicspec:rule`: Add a project-wide convention discovered during spec work.
+- **Generate tasks** → `/magicspec task`: Proceed to task generation without interruption to maintain Zero-Prompt workflows (Rule C9). Condition: `registry_updated`.
+- **Add a rule** → `/magicspec rule`: Add a project-wide convention discovered during spec work.

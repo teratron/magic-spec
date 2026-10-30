@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.3.3
+**Version:** 1.3.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -125,8 +125,8 @@ One JSON object per line:
 ```plaintext
 {"ts":"<ISO-8601>","severity":"fix","source":"finalize",
  "code":"NEXT_ACTION_SUBSTITUTED",
- "message":"Next Action named a reserved command; substituted the /magicspec:task funnel.",
- "locus":".magicspec/engine/STATE.md","remedy":"→ /magicspec:task engine"}
+ "message":"Next Action named a reserved command; substituted the /magicspec task funnel.",
+ "locus":".magicspec/engine/STATE.md","remedy":"→ /magicspec task engine"}
 ```
 
 `ts` is written by the collector, not the caller, and orders findings across processes that finish out of sequence.
@@ -137,7 +137,7 @@ A condition finding additionally carries `recheck` (§4.10), the DG-10 revalidat
 {"ts":"<ISO-8601>","severity":"warning","source":"check-prerequisites",
  "code":"SYNC_GAP",
  "message":"PLAN.md is based on INDEX.md v1.27.0, but registry is at v1.27.1.",
- "remedy":"/magicspec:task engine update",
+ "remedy":"/magicspec task engine update",
  "recheck":{"script":"check-prerequisites",
             "args":["--json","--require-specs","--verify-headers"],
             "env":{"MAGIC_DESIGN_DIR":".magicspec/engine"}}}
@@ -179,10 +179,10 @@ Rendered shape:
 **1 error · 2 warnings · 1 fix**
 
 - ❌ `STATE_UPDATE_SKIPPED` (finalize) — STATE.md update skipped: ENOENT .magicspec/engine/STATE.md
-  → restore STATE.md or run /magicspec:task engine
+  → restore STATE.md or run /magicspec task engine
 - ⚠️ `STATE_CAP_EXHAUSTED` (update-state) — STATE.md at 110 lines; Recent Decisions at its floor, nothing pruned (×3)
   → archive stale entries from ## Blocking Constraints
-- 🔧 `NEXT_ACTION_SUBSTITUTED` (finalize) — Next Action named a reserved command; substituted the /magicspec:task funnel
+- 🔧 `NEXT_ACTION_SUBSTITUTED` (finalize) — Next Action named a reserved command; substituted the /magicspec task funnel
 ```
 
 The severity glyphs reuse the engine's existing output vocabulary (`❌`/`⚠️`) and add one for the previously unnamed class. The `→` remedy form matches the Advisory Report's action notation, per DG-3.
@@ -220,7 +220,7 @@ node skills/magicspec/scripts/executor.js record-diagnostic \
 
 `--source` defaults to `agent`. The subcommand is a thin wrapper over `record()`: it validates flags via the shared `parseFlags` helper, prints one confirmation line, and exits 0 **even when the record is dropped** — an agent must never see a non-zero exit from reporting a complaint (DG-9).
 
-This is not a `/magicspec:*` workflow command and creates no C2 exception. It is invoked by the agent from the workflow bodies at the points where §9 bug reports and mid-run findings are already produced.
+This is not a `/magicspec <command>` workflow command and creates no C2 exception. It is invoked by the agent from the workflow bodies at the points where §9 bug reports and mid-run findings are already produced.
 
 ### 4.9 Flow
 
@@ -273,7 +273,7 @@ Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assig
 
 | Current message | Severity | Code |
 | --- | --- | --- |
-| `Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5; substituting the /magicspec:task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
+| `Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5; substituting the /magicspec task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
 | `STATE.md update skipped (non-blocking): {err}` | `error` | `STATE_UPDATE_SKIPPED` |
 | `CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker.` | `fix` | `CHANGELOG_FORMAT_NONSTANDARD` |
 | `Could not update CHANGELOG.md: {err}` | `error` | `CHANGELOG_WRITE_FAILED` |
@@ -293,7 +293,7 @@ Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assig
 | `STATE.md lacked the field line(s) {labels}; created so the requested update could be recorded.` | `fix` | `STATE_FIELD_CREATED` |
 | `STATE.md has a "## Progress" heading with no counter block under it that the recompute recognises; left it untouched.` | `warning` | `PROGRESS_BLOCK_UNRECOGNISED` |
 
-This script is the reason DG-4 mandates deduplication: its guard fires on **every** `updateState()` call once the cap is crossed, so a single `/magicspec:run` phase can contribute the same finding a dozen times.
+This script is the reason DG-4 mandates deduplication: its guard fires on **every** `updateState()` call once the cap is crossed, so a single `/magicspec run` phase can contribute the same finding a dozen times.
 
 The last three rows postdate the 2.1.65 inventory (§5.5): they are the `update-state.js` self-repairs of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §13–§13.1. The first two are `fix`-class — the engine altered the file, so a stderr line must not be the only record — and the third is a skip the engine deliberately declined to act on.
 
@@ -378,6 +378,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.3.2 | 2026-10-28 | Agent | Reality sync: the `SKILL_SYNC_UNAVAILABLE` finding is retired with the wrapper sync it reported ([l2-engine-automation.md](l2-engine-automation.md) §Engine Meta Update Flow now refreshes projections instead). |
 | 1.3.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

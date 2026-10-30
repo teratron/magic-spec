@@ -7,22 +7,24 @@
 | 2.x | 3.0 |
 | --- | --- |
 | `.magic/` (engine, scripts, templates, roles) | the skill folder, in the host's skills folder |
-| `workflows/magic.*.md`, `skills/magic-*`, `rules/magic.md` and copies under `.claude/`, `.agents/`, `.codex/`, `.qwen/` | the router `SKILL.md`, `AGENT-RULES.md` and generated entries (`/magicspec:<command>`) |
-| commands `/magic.spec`, `/magic.task`, ... | `/magicspec:spec`, `/magicspec:task`, ... |
+| `workflows/magic.*.md`, `skills/magic-*`, `rules/magic.md` and copies under `.claude/`, `.agents/`, `.codex/`, `.qwen/` | the router `SKILL.md` and `AGENT-RULES.md`; no per-command entry |
+| commands `/magic.spec`, `/magic.task`, ... | `/magicspec spec`, `/magicspec task`, ... (`/magicspec help` lists them) |
 | state folder `.design/` | `.magicspec/` (its contents are unchanged) |
 
-Your specifications, plan, tasks, rules and state are not rewritten. Only the entries of `workspace.json` that equal the old folder name are updated.
+Your specifications, plan, tasks, rules and state keep their content. The migration updates the entries of `workspace.json` that equal the old folder name and rewrites the earlier command and folder names (`/magic.spec`, `.design/`, `.magic/`) in your SDD artifacts, as described below.
 
 ## Steps
 
 1. Install the 3.0 skill folder into your host's skills folder (see the README). Do not delete anything yet.
-2. See the plan. Nothing changes:
+2. Type `/magicspec migrate`. It shows the plan (nothing changes yet), asks one question — apply it? — and on a yes runs the apply step.
+
+   Where the host cannot invoke the skill, run the same two steps by script. See the plan first:
 
    ```bash
    node <skills folder>/magicspec/scripts/executor.js migrate
    ```
 
-3. Apply it:
+   then apply it:
 
    ```bash
    node <skills folder>/magicspec/scripts/executor.js migrate --apply
@@ -30,7 +32,7 @@ Your specifications, plan, tasks, rules and state are not rewritten. Only the en
 
    Add `--host=claude,codex,qwen` to project for specific hosts; without it the hosts found in the project are used.
 
-Until step 3 is done, every other command stops with the same instruction and creates nothing, so a half-installed project cannot grow a second, empty state folder.
+Until the migration is applied, every other command stops with the same instruction and creates nothing, so a half-installed project cannot grow a second, empty state folder.
 
 ## What `--apply` does
 
@@ -38,10 +40,11 @@ In this order, each step reading the filesystem and never a log:
 
 1. Verifies the old engine against its own manifest. A file that differs is reported as `ENGINE_FILE_MODIFIED` and kept: it is your change.
 2. Backs up every file it is about to remove into `magicspec-migration-backup-<date>/`.
-3. Installs the new projections for each host (the rule, the command entries, the skill link) and the pre-commit hook.
+3. Installs the new projections for each host (the rule and the skill link; no command entry is written) and the pre-commit hook.
 4. Renames `.design/` to `.magicspec/`.
-5. Removes the old engine last: only the files the old manifest names and the wrappers by their names. Folders you also use (`workflows/`, `skills/`, `rules/`) lose only those files and are removed only if left empty; your own files there stay.
-6. Runs the pre-flight and prints the result, the new command names and a commit suggestion. Nothing is committed for you.
+5. Rewrites the earlier vocabulary in your SDD artifacts: `/magic.<command>` becomes `/magicspec <command>`, `.design/` becomes `.magicspec/` and `.magic/` becomes the engine folder's present path. A rewritten specification gets a patch version and a history row, and its registry row follows. Document History and Recent Decisions sections, archives, retrospectives and changelogs are history and stay as they are; the constitution is reported, not rewritten (amend it with `/magicspec rule`); a product file that still uses the earlier names is listed and not edited. Every changed file is backed up first and listed with a revert hint.
+6. Removes the old engine last: only the files the old manifest names and the wrappers by their names. Folders you also use (`workflows/`, `skills/`, `rules/`) lose only those files and are removed only if left empty; your own files there stay.
+7. Runs the pre-flight and prints the result, the new command form and a commit suggestion. Nothing is committed for you.
 
 Because the new engine is installed and checked before the old one is removed, the project is never left with neither.
 

@@ -242,8 +242,12 @@ function buildWorkflowsTable() {
     let table = '| Command | Description |\n| --- | --- |\n';
     if (!fs.existsSync(routerPath)) return table;
     for (const line of fs.readFileSync(routerPath, 'utf8').split(/\r?\n/)) {
-        const row = /^\| `([a-z][a-z-]*)` \| (.+?) \| `workflows\/[a-z-]+\.md` \|$/.exec(line);
-        if (row) table += `| \`/magicspec:${row[1]}\` | ${row[2]} |\n`;
+        // Columns: command, group, what it does, argument, when it is missing, body.
+        const row =
+            /^\| `([a-z][a-z-]*)` \| [^|]+ \| ([^|]+) \| [^|]+ \| [^|]+ \| `workflows\/[a-z-]+\.md` \|$/.exec(
+                line,
+            );
+        if (row) table += `| \`/magicspec ${row[1]}\` | ${row[2]} |\n`;
     }
     return table;
 }
@@ -431,7 +435,7 @@ function syncDocsFolder(targetVersion, state) {
         const original = fs.readFileSync(docPath, 'utf8');
         let content = original;
         content = syncTriggersLine(content, signals.wfContent);
-        content = syncSlashCommandLine(content, `magicspec:${skillKey}`);
+        content = syncSlashCommandLine(content, `magicspec ${skillKey}`);
         content = syncNoteBody(
             content,
             signals.wfChanged || signals.skillChanged || signals.versionChanged,

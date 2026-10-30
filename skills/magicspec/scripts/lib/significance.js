@@ -112,7 +112,7 @@ function matchAny(relPath, compiled) {
 /**
  * Resolves whitelist patterns for a workflow against a workspace name.
  *
- * @param {string} workflow - One of `magicspec:spec|task|run|rule`.
+ * @param {string} workflow - One of `/magicspec spec|task|run|rule`.
  * @param {string} workspace - Workspace name (no leading slash).
  * @returns {{patterns: string[], compiled: RegExp[]}}
  */
@@ -298,7 +298,7 @@ function diffSnapshots(prev, next) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * For `magicspec:run`: a TASKS.md edit is significant only when a task status
+ * For `/magicspec run`: a TASKS.md edit is significant only when a task status
  * marker actually flipped (`- [ ]` ↔ `- [x]`, or status keyword changed).
  * Pure wording edits with no status flip are not significant.
  *
@@ -324,7 +324,7 @@ function tasksStatusActuallyChanged(cwd, relPath) {
  *
  * @param {Object} opts
  * @param {string} opts.cwd - Project root (typically `process.cwd()`).
- * @param {string} opts.workflow - `magicspec:spec|task|run|rule`.
+ * @param {string} opts.workflow - `/magicspec spec|task|run|rule`.
  * @param {string} opts.workspace - Workspace name.
  * @param {Object.<string, string|null>} [opts.lastSnapshot] - Prior hashes (fallback).
  * @returns {{
@@ -357,7 +357,7 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
         candidates = diffPaths;
     }
 
-    // magicspec:run extra filter: TASKS.md must show a real status flip.
+    // /magicspec run extra filter: TASKS.md must show a real status flip.
     if (workflow === 'magic.run' && probe.available) {
         candidates = candidates.filter((p) => {
             const tasksMd = `${STATE_DIR_NAME}/${workspace}/TASKS.md`;

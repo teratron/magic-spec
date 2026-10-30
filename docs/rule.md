@@ -8,7 +8,7 @@ The Rule Workflow manages the `.magicspec/RULES.md` file, which acts as the proj
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*.
 
-**Slash command:** `/magicspec:rule`
+**Slash command:** `/magicspec rule`
 
 > **Full implementation:** `skills/magicspec/workflows/rule.md` — the engine reads this file before executing any steps.
 
@@ -92,15 +92,15 @@ Before the review, the reviewer decides whether the rule should exist at all —
 - **Evidence**: an observed occurrence of the harm — a file and line, a commit, or a failure reproduced in the session; two instances for a repeated pattern. A scenario that could happen is not evidence. Harm in the irreversible class is the one exception.
 - **With/without comparison**: does the cause persist, what already catches it, is the harm reversible — and which hazards the rule itself opens (friction, deadlock, over-reach, cascade, conflict, opened hole).
 - **Form and placement**: the lowest rung that covers the evidence (no artifact, a note in a specification, a regulation in a specification, a workspace convention, a global convention); soft by default, hard only for irreversible harm, after a cited violation, or when the user stated it.
-- **Outcome**: an admitted rule is narrated as a short admission record; a declined one as a single Decision Record (`[DR] Not codified: …`) with an override, and nothing is written. A rule that belongs in a specification is redirected to `/magicspec:spec amend` instead of written to `RULES.md`.
-- **Size and history**: a rule body is at most 10 non-empty lines, and its Document History row records the origin (`user-stated`, or `agent` with the evidence). During ventilation `/magicspec:analyze` reports rules whose cause is gone, that something else already covers, that deadlock the agent or that exceed the bound (`RULE_RETIRE_CANDIDATE`, `RULE_BLOAT`); it edits nothing.
+- **Outcome**: an admitted rule is narrated as a short admission record; a declined one as a single Decision Record (`[DR] Not codified: …`) with an override, and nothing is written. A rule that belongs in a specification is redirected to `/magicspec spec amend` instead of written to `RULES.md`.
+- **Size and history**: a rule body is at most 10 non-empty lines, and its Document History row records the origin (`user-stated`, or `agent` with the evidence). During ventilation `/magicspec analyze` reports rules whose cause is gone, that something else already covers, that deadlock the agent or that exceed the bound (`RULE_RETIRE_CANDIDATE`, `RULE_BLOAT`); it edits nothing.
 
 ## 7. Post-Write Impact
 
 After a rule is written to disk:
 
 1. **Notify**: Detect if `TASKS.md` is now based on a stale version of the rules.
-2. **Next step**: exactly one narrated next command — `/magicspec:task {workspace} update` by default, `/magicspec:spec audit` only when the rule changes verification or compliance obligations.
+2. **Next step**: exactly one narrated next command — `/magicspec task {workspace} update` by default, `/magicspec spec audit` only when the rule changes verification or compliance obligations.
 
 ## 8. Trigger Types
 

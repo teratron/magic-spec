@@ -1,6 +1,6 @@
 # Planning Command: Plan and Replan
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -19,7 +19,7 @@ Splits planning from task decomposition. `plan` owns the strategic plan — whic
 
 ## 1. Motivation
 
-The owner's flowchart draws the pipeline as specification → `/magicspec:plan` (plan) → `/magicspec:task` (tasks) → `/magicspec:run`, and the list of 2026-10-29 asks for `plan` as the command for planning and replanning.
+The owner's flowchart draws the pipeline as specification → `/magicspec plan` (plan) → `/magicspec task` (tasks) → `/magicspec run`, and the list of 2026-10-29 asks for `plan` as the command for planning and replanning.
 
 Today one workflow does both jobs. `task` writes `PLAN.md` (phases → specifications), `TASKS.md` and every phase workbook in one pass; replanning is a mode of it (`task update`), and a request such as "postpone phase 4" is a guided-planning directive mixed in the same argument grammar as "decompose phase-2". The consequences are measurable in this repository: the plan has grown to 131 KB because every pass rewrites it beside the tasks, a strategic change cannot be made without regenerating the task layer, and the post-run replan rule sends the user to `task` for a decision that is about order, not about tasks.
 
@@ -27,7 +27,7 @@ Today one workflow does both jobs. `task` writes `PLAN.md` (phases → specifica
 
 - The two commands write disjoint files: `plan` writes `PLAN.md`; `task` writes `TASKS.md` and the phase workbooks. Live memory is updated by finalization, as for every workflow.
 - No guard is lost in the split: every Pre-flight check, the stabilization batch, the C6 selection and Bootstrap rules, the cycle guards and the quarantine rules keep exactly one owner.
-- **Assumption (forecast):** `task` absorbs `plan` when the plan is missing or stale instead of refusing, because refusing would break every existing habit and handoff that names `task`. Runner-up: `task` stops and names `plan`. Override: `/magicspec:spec amend l1-plan-command.md "task refuses a stale plan"`.
+- **Assumption (forecast):** `task` absorbs `plan` when the plan is missing or stale instead of refusing, because refusing would break every existing habit and handoff that names `task`. Runner-up: `task` stops and names `plan`. Override: `/magicspec spec amend l1-plan-command.md "task refuses a stale plan"`.
 
 ## 3. Core Invariants
 
@@ -36,7 +36,7 @@ Today one workflow does both jobs. `task` writes `PLAN.md` (phases → specifica
 - **PL-3 Replanning is `plan`.** A directive about order or membership ("postpone", "move before", "split phase", "only the new specifications") is a `plan` argument; a directive about decomposition ("decompose phase-2", "smaller tasks") is a `task` argument. `plan` with no argument revalidates the whole plan against the current registry and rules.
 - **PL-4 Stale plan.** The plan records the registry and constitution versions it was written against. It is stale when either has changed since, or a Stable specification is in neither the plan nor the backlog. `task` invoked on a missing or stale plan runs `plan` first in the same invocation and narrates it; on a current plan it decomposes directly.
 - **PL-5 Handoffs.** `spec` hands off to `plan`; `plan` hands off to `task` when it changed anything the active or next phase holds; `task` hands off to `run` as today. Each handoff is narrated, never asked.
-- **PL-6 One replan step.** After `run`, a drift signal leaves the user exactly one visible next step: `/magicspec:plan` — it hands off to `task` itself. The rule that `analyze` and `spec` are never proactively offered after a run is unchanged.
+- **PL-6 One replan step.** After `run`, a drift signal leaves the user exactly one visible next step: `/magicspec plan` — it hands off to `task` itself. The rule that `analyze` and `spec` are never proactively offered after a run is unchanged.
 - **PL-7 Recorded state survives replanning.** Moving a phase, postponing a specification or reordering never resets a task's recorded state; a task whose specification leaves the active plan is blocked with its reason, as a demoted specification's tasks are today.
 
 ## 5. Detailed Design
@@ -79,10 +79,10 @@ graph LR
 ## 6. Implementation Notes
 
 1. A new workflow body for `plan`, built from the steps §5.1 assigns to it; `task.md` keeps the rest and gains PL-4.
-2. The always-on rules' replan section and its module name `/magicspec:plan`; finalization accepts `--workflow=plan`.
-3. The live-memory next-step computation names `/magicspec:plan` where it names planning today.
+2. The always-on rules' replan section and its module name `/magicspec plan`; finalization accepts `--workflow=plan`.
+3. The live-memory next-step computation names `/magicspec plan` where it names planning today.
 4. The suite's planning scenarios are split the same way; none is dropped.
-5. Declared supersessions (`l1-coherence-check.md` CH-9): the pipeline and RE-2 in [l1-engine-core.md](l1-engine-core.md); SC-2's planning step in [l1-session-continuity.md](l1-session-continuity.md); the replan rule (always-on rules §5); `--workflow=plan` in [l2-engine-finalization.md](l2-engine-finalization.md); and the constitution's C24 rows for the planner and the task instruction review, which name `task.md` — amended through `/magicspec:rule` (origin `user-stated`) when the command ships.
+5. Declared supersessions (`l1-coherence-check.md` CH-9): the pipeline and RE-2 in [l1-engine-core.md](l1-engine-core.md); SC-2's planning step in [l1-session-continuity.md](l1-session-continuity.md); the replan rule (always-on rules §5); `--workflow=plan` in [l2-engine-finalization.md](l2-engine-finalization.md); and the constitution's C24 rows for the planner and the task instruction review, which name `task.md` — amended through `/magicspec rule` (origin `user-stated`) when the command ships.
 
 ## 7. Drawbacks & Alternatives
 
@@ -103,4 +103,5 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (`/magicspec plan` for planning and replanning) and the pipeline of `.drafts/flowchart.md`. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

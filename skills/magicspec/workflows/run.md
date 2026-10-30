@@ -17,19 +17,19 @@ Executes `TASKS.md` atomic tasks. Input: `.magicspec/TASKS.md`.
 
 **Triggers:** *"Start tasks"*, *"Next task"*, *"Continue"*, *"Start parallel execution"*, *"Launch agents"*, *"Implement"*, *"Apply"*, *"Run"*, *"Execute"*, *"Start work"*.
 
-**Trigger:** `/magicspec:run [arg]`. Arguments:
+**Trigger:** `/magicspec run [arg]`. Arguments:
 
 - *(empty)* — full execution across all workspaces
 - `{workspace}` — scoped execution within a workspace
 - `"text"` — directed execution (task ID, phase, or focus)
 - `{workspace} "text"` — scoped + directed execution
 
-Examples: `/magicspec:run`, `/magicspec:run engine`, `/magicspec:run "T-1A01"`, `/magicspec:run "phase-2"`, `/magicspec:run docs "validation tasks only"`.
+Examples: `/magicspec run`, `/magicspec run engine`, `/magicspec run "T-1A01"`, `/magicspec run "phase-2"`, `/magicspec run docs "validation tasks only"`.
 
-**Scope:** code execution, task state management, and changelog generation. Task generation/orchestration is handled by `magicspec:task`. Specification authoring by `magicspec:spec`. Health auditing by `magicspec:analyze`.
+**Scope:** code execution, task state management, and changelog generation. Task generation/orchestration is handled by `/magicspec task`. Specification authoring by `/magicspec spec`. Health auditing by `/magicspec analyze`.
 
 - **Rules Parity**: always check for version mismatch between `RULES.md` and `TASKS.md` before starting.
-- **Pipeline**: `magicspec:spec` → `magicspec:task` → `magicspec:run`.
+- **Pipeline**: `/magicspec spec` → `/magicspec task` → `/magicspec run`.
 - **Finalization**: after task/phase completion, run `node scripts/executor.js finalize --workflow=run --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/run.md §Finalization Protocol`.
 
 ## Argument Routing
@@ -46,8 +46,8 @@ Parse `[arg]` to determine execution mode:
 | `engine "phase-1"` | First token is workspace + remaining is quoted text | **Scoped + Directed**: execution directive applied within workspace scope |
 
 > **Workspace Fallback (Modes A, C)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the directive.
-> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec:run "engine"`.
-> **Handoff Propagation**: when recommending `/magicspec:task` for re-planning, propagate the workspace context: `/magicspec:task {workspace}`.
+> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec run "engine"`.
+> **Handoff Propagation**: when recommending `/magicspec task` for re-planning, propagate the workspace context: `/magicspec task {workspace}`.
 
 ## Core Invariants (Mandatory)
 
@@ -66,15 +66,15 @@ Parse `[arg]` to determine execution mode:
 4. **Logic Guards**:
    - **Dependency**: never start a task if parents are not `Done`.
    - **Mode**: per C3, default execution is **Parallel mode**. If mode absent from `RULES.md §7`, assume Parallel (do not HALT).
-   - **Sync**: `RULES.md` version > `TASKS.md` base → auto-run `/magicspec:task {workspace} update` to synchronize; narrate `[Auto-Sync] RULES drift resolved: TASKS.md updated to RULES v{v}. Proceeding with execution. (Revert: git restore .magicspec/{ws}/TASKS.md)`.
-   - **Quarantine (C12)**: any active task whose L1 parent is not Stable in `INDEX.md` (C12 Quarantine) → **HALT**. Force re-run of `magicspec:task` to move tasks to quarantine/backlog. **Source-of-truth priority**: C12 reads `INDEX.md`; File-Header Parity (Pre-flight Step 1) reads file headers and is the definitive check. If `STATUS_DRIFT` or `VERSION_DRIFT` is detected in Pre-flight, that HALT takes precedence — a File-Header mismatch must be resolved before C12 logic is reached.
-   - **Spec Stability**: before executing each task, verify its target spec is still `Stable` in `INDEX.md`. Demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: *"Spec `{file}` is no longer `Stable`. Run `/magicspec:task {workspace} update` to re-evaluate the plan."* Catches external status changes that C12 pre-flight alone cannot detect.
-   - **Phantom Spec**: spec referenced by `TASKS.md` missing from `INDEX.md` or filesystem → **HALT**. Report: *"Phantom Spec `{file}` detected. Run `/magicspec:task` to revalidate the plan; it will surface a `/magicspec:spec` recommendation if the spec must be re-authored."*
+   - **Sync**: `RULES.md` version > `TASKS.md` base → auto-run `/magicspec task {workspace} update` to synchronize; narrate `[Auto-Sync] RULES drift resolved: TASKS.md updated to RULES v{v}. Proceeding with execution. (Revert: git restore .magicspec/{ws}/TASKS.md)`.
+   - **Quarantine (C12)**: any active task whose L1 parent is not Stable in `INDEX.md` (C12 Quarantine) → **HALT**. Force re-run of `/magicspec task` to move tasks to quarantine/backlog. **Source-of-truth priority**: C12 reads `INDEX.md`; File-Header Parity (Pre-flight Step 1) reads file headers and is the definitive check. If `STATUS_DRIFT` or `VERSION_DRIFT` is detected in Pre-flight, that HALT takes precedence — a File-Header mismatch must be resolved before C12 logic is reached.
+   - **Spec Stability**: before executing each task, verify its target spec is still `Stable` in `INDEX.md`. Demoted (`Stable`→`RFC` or `Draft`) since plan generation → **HALT**. Report: *"Spec `{file}` is no longer `Stable`. Run `/magicspec task {workspace} update` to re-evaluate the plan."* Catches external status changes that C12 pre-flight alone cannot detect.
+   - **Phantom Spec**: spec referenced by `TASKS.md` missing from `INDEX.md` or filesystem → **HALT**. Report: *"Phantom Spec `{file}` detected. Run `/magicspec task` to revalidate the plan; it will surface a `/magicspec spec` recommendation if the spec must be re-authored."*
    - **Stabilizing exception (C12.1)**: a task whose tracking entry carries `stabilizes: {spec-file}` — set by `task.md` Step 7 on the user's explicit request to stabilize or fix that spec — is exempt from Quarantine (C12), Spec Stability, the Step 1 Spot-Check and the Step 4 Mid-Run check for the spec the flag names and for no other: its work is what makes that spec `Stable`, so a guard demanding `Stable` first would deadlock the task meant to restore it. File-Header Parity and Phantom Spec apply unchanged; a task without the flag stays under every guard above.
    - **Bootstrap exception**: a task marked `[Bootstrap]` is held to the status its spec (and that spec's L1 parent) had at Task Start — `Draft` — instead of `Stable`, in Quarantine (C12), Spec Stability, the Step 4 Mid-Run check and the orchestrator's re-read. Any change since then other than reaching `Stable`, or a header mismatch, halts. File-Header Parity and Phantom Spec apply unchanged.
    - **Pause Propagation**: task transitions to `Blocked [!]` AND no `Todo` tasks remain in the current phase → automatically call:
      `node scripts/executor.js update-state --workspace={active-workspace} --status=Blocked`
-     Inform: *"⚠ Phase blocked. Run `/magicspec:task {workspace}` to revalidate the plan."* **Hard rule**: never name `/magicspec:spec` or `/magicspec:analyze` as the next step — they surface only inside a `/magicspec:task` HALT.
+     Inform: *"⚠ Phase blocked. Run `/magicspec task {workspace}` to revalidate the plan."* **Hard rule**: never name `/magicspec spec` or `/magicspec analyze` as the next step — they surface only inside a `/magicspec task` HALT.
 5. **Zero-Prompt Automation**: Skip all confirmations (track selection, changelog, retro). Execute sequences autonomously.
 6. **Engine Integrity (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`.
 
@@ -113,10 +113,10 @@ graph TD
    - **C15 Filter**: `ENGINE_INTEGRITY` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
    - **Bootstrap Detection**: `PLAN.md` contains `[Bootstrap]` markers → warn: *"⚠ Bootstrap Plan detected — specs are not yet Stable. Execution results may need revision when specs are finalized."* Continue execution but append `[Bootstrap]` suffix to all generated artifacts (task outputs, changelogs). Bootstrap artifacts are not final deliverables.
    - **Spec Stability Spot-Check**: read `INDEX.md`. For each spec referenced by a `Todo` task in the current phase, confirm status = `Stable`. **Bootstrap Exception**: task with `[Bootstrap]` marker → `Draft` is acceptable; skip this check for that task. **Stabilizing exception**: a task carrying the `stabilizes:` flag skips this check for the spec the flag names (Logic Guards). Any other non-Stable spec → **HALT** before execution begins (per Logic Guard above).
-   - **File-Header Parity**: for each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. Either mismatches `INDEX.md` → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magicspec:spec` to reconcile spec headers, then re-run `/magicspec:task`."* Catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the L1 parent header (incl. cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
+   - **File-Header Parity**: for each spec referenced by a `Todo` task in the current phase, read the actual file's `Status:` and `Version:` header fields. Either mismatches `INDEX.md` → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magicspec spec` to reconcile spec headers, then re-run `/magicspec task`."* Catches manual edits that bypassed the spec workflow. For L2 specs, verification MUST include reading the L1 parent header (incl. cross-workspace parents) and verifying parity against that parent's workspace `INDEX.md`.
 2. **Select**: Within the scope the invocation selects, first take a task whose tracking entry reads `In Progress` and that no track of this invocation is executing — an earlier session left it in flight, and Task Start (2b) resumes it; with none, locate a `Todo` task with fulfilled dependencies. Evaluate the branches below strictly in listed order: *Stalled* → *Backlog-Only* → *Complete*.
-   - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT**. List each `Blocked [!]` task with its recorded reason from `TASKS.md`. Recommend exactly ONE next step: `/magicspec:task {workspace}` (per `AGENT-RULES.md §5`). **Hard rule**: do NOT recommend `/magicspec:spec` or `/magicspec:analyze` — blocked specs and drift surface only inside a `/magicspec:task` HALT.
-   - *Backlog-Only*: 0 `Todo` AND 0 `In Progress` AND 0 `Done` AND 0 `Blocked` → **HALT**: "Active phase has no started tasks — all work is in `## Backlog`. Run `/magicspec:task` to activate a phase, then re-run `/magicspec:run`."
+   - *Stalled*: 0 `Todo` but `Blocked` exist → **HALT**. List each `Blocked [!]` task with its recorded reason from `TASKS.md`. Recommend exactly ONE next step: `/magicspec task {workspace}` (per `AGENT-RULES.md §5`). **Hard rule**: do NOT recommend `/magicspec spec` or `/magicspec analyze` — blocked specs and drift surface only inside a `/magicspec task` HALT.
+   - *Backlog-Only*: 0 `Todo` AND 0 `In Progress` AND 0 `Done` AND 0 `Blocked` → **HALT**: "Active phase has no started tasks — all work is in `## Backlog`. Run `/magicspec task` to activate a phase, then re-run `/magicspec run`."
    - *Complete*: 0 `Todo` AND 0 `In Progress` (all `Done`/`Cancelled`; any `Blocked` routes to *Stalled* above) → proceed to Phase Completion (Step 5). `Cancelled` counts as terminal.
 2b. **Task Start** — before the executor is activated or any file is edited, record the selected task as in flight (SC-9(a)):
    - Set its `## Detailed Tracking` entry `**Status:**` to `In Progress`. An entry that already reads `In Progress` is a task being **resumed**, not started — leave it unchanged.
@@ -139,9 +139,9 @@ graph TD
 3.6. **Simplify Pass (opt-in)** — Activate `@role:code-simplifier` when Code-reviewer emitted complexity notes OR user flagged `requires-simplify: true`. Propose revised diff; return to 3.4 on change; with no simplification needed, proceed to 3.4b (it applies its own gate, then continues to 3.5).
 4. **Update**:
    - **STATE Sync**: before touching TASKS.md, call `node scripts/executor.js update-state` with the current task result. Ensures STATE reflects reality even if execution is interrupted mid-step.
-   - **Mid-Run Stability Check**: before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. Recursively include the spec's L1 parent (if applicable). Either target or its parent shows demotion or drift since dispatch → **HALT** that track. For a task carrying the `stabilizes:` flag (the spec it names) or the `[Bootstrap]` marker the baseline is the status that spec (and its L1 parent) had at Task Start instead of `Stable`: any change since then other than reaching `Stable`, or a header mismatch, halts (Logic Guards). Report: *"Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `/magicspec:task {workspace} update` to re-evaluate."* In Parallel mode, the Track Owner notifies `@role:orchestrator` of the suspension so further assignments for the affected spec halt.
+   - **Mid-Run Stability Check**: before committing any task as `Done`, re-verify its target spec is still `Stable` in `INDEX.md` **and** confirm the file header `Status:` matches `INDEX.md`. Recursively include the spec's L1 parent (if applicable). Either target or its parent shows demotion or drift since dispatch → **HALT** that track. For a task carrying the `stabilizes:` flag (the spec it names) or the `[Bootstrap]` marker the baseline is the status that spec (and its L1 parent) had at Task Start instead of `Stable`: any change since then other than reaching `Stable`, or a header mismatch, halts (Logic Guards). Report: *"Spec `{file}` (or its parent) demoted or drifted since task began. Task output suspended — run `/magicspec task {workspace} update` to re-evaluate."* In Parallel mode, the Track Owner notifies `@role:orchestrator` of the suspension so further assignments for the affected spec halt.
    - Set `In Progress` → `Done` (or `Blocked [!]` with reason) in the task's tracking entry, and tick its line in the **`TASKS.md` Phase Checklist** (`- [x]`) when `Done`. A `Blocked [!]` task keeps its checklist line `- [ ]`, like an `In Progress` one (Step 2b): `[!]` spells the `Status` value, it is not a checkbox state.
-   - **Handoff**: spec ambiguous OR any drift signal (`STATUS_DRIFT` / `VERSION_DRIFT` / RULES > TASKS base) → **HALT**. Per Post-Task Replan (`AGENT-RULES.md §5`), recommend exactly ONE command — `/magicspec:task {workspace}`. Do NOT propose `/magicspec:analyze` or `/magicspec:spec` here; `/magicspec:task` will surface them only inside one of its HALTs (Pre-flight, or the Stalled Plan HALT of its Sync step) when mechanical auto-fix cannot resolve the gap. A completed phase is not itself a halt: after Step 5, continue into the next phase when it has `Todo` tasks; when it has none, Select's *Backlog-Only* / *Stalled* branches end the run with the same single `/magicspec:task {workspace}` recommendation.
+   - **Handoff**: spec ambiguous OR any drift signal (`STATUS_DRIFT` / `VERSION_DRIFT` / RULES > TASKS base) → **HALT**. Per Post-Task Replan (`AGENT-RULES.md §5`), recommend exactly ONE command — `/magicspec task {workspace}`. Do NOT propose `/magicspec analyze` or `/magicspec spec` here; `/magicspec task` will surface them only inside one of its HALTs (Pre-flight, or the Stalled Plan HALT of its Sync step) when mechanical auto-fix cannot resolve the gap. A completed phase is not itself a halt: after Step 5, continue into the next phase when it has `Todo` tasks; when it has none, Select's *Backlog-Only* / *Stalled* branches end the run with the same single `/magicspec task {workspace}` recommendation.
    - **Sync**: spec/phase finished → update high-level `[x]` in `PLAN.md`.
    - **Actionable Outcome**: after phase complete, show: `[Auto-Run] Phase {N} complete. {M} tasks archived.`
    - **Change Record**: write a 1-line summary in the task `Changes` field in `TASKS.md`. Embedded tool evidence (if cited) follows Evidence Capsule (`context.md §Read Hygiene`) — never raw stdout.
@@ -215,14 +215,14 @@ Checklist — {operation}
   ☐ Role Registry: All referenced role IDs resolve to cards in roles/
   ☐ Handoff Integrity: Handoff chains declared by card frontmatter respected
   ☐ Status: TASKS.md Checklist / phase files / PLAN.md [x] synced
-  ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magicspec:task` only — `/magicspec:spec` never named directly
+  ☐ Blockers: All Blocked tasks have Notes explaining [!] reason; next-step recommendation is `/magicspec task` only — `/magicspec spec` never named directly
   ☐ Conclusion: Retro L1/L2 shot, Changelog L1/L2 written, project version bumped (project release file only — never .version), CONTEXT.md updated
   ☐ Engineer Posture (C25): tasks executed and narrated; no Yes/No approval prompts inline (user reviews release artifacts independently afterward)
-  ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked
+  ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked; questions only for consent (E1, E2, E4), the intake survey (E6) or the command intake at the invocation (E7)
 ```
 
 ## Handoffs
 
 Where this workflow may hand over, and when:
 
-- **Replan** → `/magicspec:task`: Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magicspec:spec recommendation only on substantive design gaps. Per `AGENT-RULES.md §5`, this is the SOLE user-visible next step after a phase — never propose /magicspec:analyze or /magicspec:spec proactively.
+- **Replan** → `/magicspec task`: Revalidate the plan against current specs. Pre-Planning Stabilization auto-fixes mechanical drift; HALT with a single /magicspec spec recommendation only on substantive design gaps. Per `AGENT-RULES.md §5`, this is the SOLE user-visible next step after a phase — never propose /magicspec analyze or /magicspec spec proactively.

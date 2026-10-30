@@ -26,7 +26,7 @@ the same question — *is the product still whole once the scaffold is gone?*
 Never wire the engine or the SDD into the product's own lifecycle. Forbidden:
 build or package manifests invoking engine scripts (`package.json` `scripts`,
 `Makefile` targets, `pyproject.toml`, `Cargo.toml`, Gradle tasks); CI/CD steps
-gating a build, test, or release on a `/magicspec:*` workflow or an `executor.js`
+gating a build, test, or release on a `/magicspec <command>` workflow or an `executor.js`
 subcommand; product build or runtime code reading anything under `.magicspec/` or
 the engine directories; product tests asserting on SDD artifact structure;
 release artifacts (archives, images, published packages) that include those
@@ -104,7 +104,7 @@ a file or task and stays outside this rule either way.
 
 - **Write time** — the Coder role refuses to introduce violations.
 - **Review time** — the Code-reviewer role FAILs any diff adding an SDD reference.
-- **Audit time** — `/magicspec:analyze` ventilation reports
+- **Audit time** — `/magicspec analyze` ventilation reports
   `SDD_REFERENCE_LEAK {file}:{line}` findings (advisory; product files are
   never auto-edited), and inspects build, CI, packaging, source, and toolchain
   for structural coupling, reported as `SDD_SCAFFOLD_COUPLING {file}:{line}`.
@@ -115,7 +115,7 @@ a file or task and stays outside this rule either way.
 - **Remediation time** — detection and repair are separate duties, and audit
   owns only the first. Ventilation is read-only by contract, so a leak it finds
   is cleaned by scheduling it: the finding carries the path
-  `→ /magicspec:task {ws}` to plan a containment-cleanup task, which `/magicspec:run`
+  `→ /magicspec task {ws}` to plan a containment-cleanup task, which `/magicspec run`
   then executes under the Coder role — the same role that owns the write-time
   gate. Never treat a `SDD_REFERENCE_LEAK` report as self-resolving, and never
   edit product files from a workflow whose write scope is `.magicspec/`.

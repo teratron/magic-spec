@@ -52,11 +52,12 @@ for (let i = 0; i < args.length; i++) {
 
 /**
  * Regenerates the host projections that already exist in the project (the rule copy,
- * the command entries, the pointer block) from the engine folder they were made from.
+ * the pointer block) from the engine folder they were made from, and removes the command
+ * entries an earlier installation left.
  *
  * A projection is only ever refreshed, never created: which hosts a project serves is
  * the decision of `init --host`. Run on every write invocation, so an edit to the rule
- * source or to the router's command table cannot leave a stale copy behind.
+ * source cannot leave a stale copy behind.
  *
  * @returns {void}
  */
@@ -66,7 +67,13 @@ function refreshHostProjections() {
         console.log('ℹ️ No host projection to refresh.');
         return;
     }
-    for (const row of refreshed) console.log(`🔁 Refreshed projection: ${row.path}`);
+    for (const row of refreshed) {
+        console.log(
+            row.kind === 'command'
+                ? `🗑️  Removed retired command entry: ${row.path}`
+                : `🔁 Refreshed projection: ${row.path}`,
+        );
+    }
 }
 
 /**

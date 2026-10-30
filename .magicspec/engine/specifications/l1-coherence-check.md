@@ -1,6 +1,6 @@
 # Cross-Artifact Coherence Check
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -35,7 +35,7 @@ The engine does part of this today, in the wrong places:
 - It reads sections, not whole files: the comparison set is found by search first, and only the matching sections are read.
 - An artifact that shares no mechanic with any other costs one search and produces no output.
 - Archives, history tables and retrospectives are history, not specification: they are never part of the comparison set.
-- **Assumption (forecast):** a contradiction whose resolution the new input states (the requester asked for the behaviour to change) is resolved by amending the other artifact in the same invocation, because leaving the old statement in force would make the request unimplementable. Runner-up: keep the new artifact at `Draft` until the other is amended by a separate request. Override: `/magicspec:spec amend l1-coherence-check.md "contradictions always block"`.
+- **Assumption (forecast):** a contradiction whose resolution the new input states (the requester asked for the behaviour to change) is resolved by amending the other artifact in the same invocation, because leaving the old statement in force would make the request unimplementable. Runner-up: keep the new artifact at `Draft` until the other is amended by a separate request. Override: `/magicspec spec amend l1-coherence-check.md "contradictions always block"`.
 
 ## 3. Core Invariants
 
@@ -47,7 +47,7 @@ The engine does part of this today, in the wrong places:
   - **Ordering conflict** — plans only: work scheduled before what it depends on, or two plans changing the same mechanic in ways that cannot both land.
 - **CH-3 Both sides quoted.** Every finding cites the exact text of both sides with file and section. A suspicion that cannot be quoted on both sides is not a finding (precision over recall, as `l1-prompt-quality-gate.md` PQ-4).
 - **CH-4 Specification check before finalization.** For a created or substantively amended specification, the check runs after the draft is written and before the Post-Update Review promotes it. A contradiction or an interaction gap blocks promotion. It is resolved in the same invocation by one of: amending the other artifact (its own version bump and history row), revising the new artifact, or — when neither text settles which statement should win — deciding by the Consequence Forecast and recording the premise as an `Assumption (forecast)` in the artifact that yields. A duplicate definition is resolved by replacing one copy with a link.
-- **CH-5 Plan check before write-back.** A drafted plan is compared with the other phases of the same plan, with the plans of every other registered workspace, and with what archived phases record as delivered. An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other. A finding whose resolution needs a specification to change is not resolved by the planning workflow, which writes no specification: it halts once with the single recommendation `/magicspec:spec`, naming both sides.
+- **CH-5 Plan check before write-back.** A drafted plan is compared with the other phases of the same plan, with the plans of every other registered workspace, and with what archived phases record as delivered. An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other. A finding whose resolution needs a specification to change is not resolved by the planning workflow, which writes no specification: it halts once with the single recommendation `/magicspec spec`, naming both sides.
 - **CH-6 Carried by the existing reviewers.** The specification check is a mandatory step of the `spec-critic` review; the plan check is a mandatory step of the `planner` audit. Neither reviewer may report a pass without having run it.
 - **CH-7 One result line.** The check reports `[Coherence] {N} artifacts compared — {k} findings` followed by one line per finding (`{class}: {file-a} §{x} ↔ {file-b} §{y} — {resolution}`). Zero findings produces only the first line.
 - **CH-8 Independent of the audit.** Ventilation keeps checking the whole project after the fact; this check does not replace it, and an audit finding of a class in CH-2 is resolved through the same resolutions as CH-4 and CH-5.
@@ -109,4 +109,5 @@ A new specification states that a planning command owns `PLAN.md`. The search fo
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (items: check every new specification and every plan against the existing ones for contradictions and the logic of relations between functions and mechanics, per `.drafts/flowchart.md`); CH-9 (declared supersession) and the plan check's halt toward `/magicspec:spec` were added in the Post-Update Review, which found that CH-4 alone would block every specification of behaviour not yet built. Observed occurrence: the C26 item 1 / `context.md` Step 0 contradiction. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

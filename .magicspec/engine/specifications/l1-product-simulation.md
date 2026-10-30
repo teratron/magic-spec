@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -28,7 +28,7 @@ The owner asks for three things together: files that simulate the user's interac
 
 - Scenarios describe behaviour, not implementation: no code, no selectors tied to markup, no internal function names — the product's observable surface only.
 - Live execution happens only against a local or disposable instance of the product. No scenario step touches a production system, real money, real messages to real people or real accounts.
-- **Assumption (forecast):** scenarios live in the state folder (`.magicspec/{workspace}/simulations/`), not among the product's test files, because they are instructions for an agent, written from the specifications, and containment keeps SDD artifacts out of the product. Runner-up: a product test folder. Override: `/magicspec:spec amend l1-product-simulation.md "scenarios in the product tree"`.
+- **Assumption (forecast):** scenarios live in the state folder (`.magicspec/{workspace}/simulations/`), not among the product's test files, because they are instructions for an agent, written from the specifications, and containment keeps SDD artifacts out of the product. Runner-up: a product test folder. Override: `/magicspec spec amend l1-product-simulation.md "scenarios in the product tree"`.
 - **Assumption (forecast):** where the product cannot be run in the session, `simulate` traces the code instead of skipping, and labels the result, because a labelled weaker check is worth more than none and the label keeps it from being mistaken for a live one. Runner-up: skip and report. Override: `simulate --live-only`.
 
 ## 3. Core Invariants
@@ -39,7 +39,7 @@ The owner asks for three things together: files that simulate the user's interac
 - **SM-4 Kept with the code.** A task that changes user-facing behaviour updates the affected scenarios in the same task, as it updates tests. A scenario that no longer matches the specification it cites is a finding of its own (`scenario out of date`).
 - **SM-5 Two execution modes, always labelled.** `simulate` runs a step **live** when the product can be started and driven in the session (a command run, a request sent, an interface operated through a tool the host provides); otherwise it **traces** the step through the code and the specifications. Every result carries its mode, and a traced pass is reported as weaker evidence than a live one.
 - **SM-6 Safety.** A step with an external side effect (sending, paying, deleting data outside a disposable instance) is never run live without E1 consent; a step against anything other than a local or disposable instance is never run live.
-- **SM-7 Findings, not patches.** `simulate` changes no product code. Each failed or inconclusive step becomes a finding with the scenario, the step, the expected and the observed outcome and the mode; the run ends with exactly one next step, `/magicspec:fix` with the findings, when there are any.
+- **SM-7 Findings, not patches.** `simulate` changes no product code. Each failed or inconclusive step becomes a finding with the scenario, the step, the expected and the observed outcome and the mode; the run ends with exactly one next step, `/magicspec fix` with the findings, when there are any.
 - **SM-8 The role.** `simulator-tester` (reviewer) writes scenarios at planning time and in tasks that change user-facing behaviour, and executes them in `simulate`. It is distinct from `test-engineer`, which gates one task against its `Verify` line; the simulator-tester judges user journeys across tasks and phases.
 - **SM-9 Coverage report.** `simulate` reports which specification statements about user-facing behaviour no scenario verifies.
 
@@ -72,7 +72,7 @@ graph TD
     D --> F[Result per step, mode labelled]
     E --> F
     F --> G[Findings + coverage gaps]
-    G --> H[Next: /magicspec:fix]
+    G --> H[Next: /magicspec fix]
 ```
 
 ### 5.3 Arguments
@@ -88,7 +88,7 @@ graph TD
 
 1. A new workflow body for `simulate`, a scenario template, and the `simulator-tester` card (`l2-role-cards-review.md`).
 2. Planning and execution workflows gain SM-3 and SM-4 at their validation-task and task-completion steps.
-3. The developer-only `magicspec-dev:test` is unaffected: it simulates the engine, this simulates a product. Its old body name lingers in the constitution: C24's dev-only row names `simulate.md`, and `docs/simulate.md` documents the developer workflow. Before the product's `simulate` body ships, that row is renamed to the maintenance workflow (`/magicspec:rule`) and the document is renamed, so that one name means one workflow.
+3. The developer-only `magicspec-dev:test` is unaffected: it simulates the engine, this simulates a product. Its old body name lingers in the constitution: C24's dev-only row names `simulate.md`, and `docs/simulate.md` documents the developer workflow. Before the product's `simulate` body ships, that row is renamed to the maintenance workflow (`/magicspec rule`) and the document is renamed, so that one name means one workflow.
 4. `simulate` writes only scenario files (their `Last run` fields) and finalizes like the other writing workflows.
 
 ## 7. Drawbacks & Alternatives
@@ -108,4 +108,5 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (simulation files created in parallel with the code, `/magicspec simulate`, scenarios written at planning time, a simulator-tester role). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

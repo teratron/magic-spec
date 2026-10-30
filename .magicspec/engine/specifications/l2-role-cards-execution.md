@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.5
+**Version:** 1.2.6
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -182,7 +182,7 @@ related_rules: [C3]
 1. Read the task's `Blocked` reason and all diagnostic artifacts (logs, error messages, stack traces if available).
 2. Classify the blocker: (a) implementation bug, (b) spec ambiguity, (c) environment/dependency issue, (d) dependency on another Blocked task.
 3. For (a): produce a fix diff, hand off to Test-engineer for re-check.
-4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec:task {workspace}` recommendation, and `/magicspec:spec` surfaces only inside a `/magicspec:task` HALT (`AGENT-RULES.md §5`).
+4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec task {workspace}` recommendation, and `/magicspec spec` surfaces only inside a `/magicspec task` HALT (`AGENT-RULES.md §5`).
 5. For (c): document the environment fix in task notes; hand off back to Coder.
 6. For (d): update dependency graph; hand off to Planner for re-plan.
 7. Never re-mark a task `Done` directly — always route through Test-engineer.
@@ -247,6 +247,7 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.6 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.5 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.2.4 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.2.3 | 2026-10-01 | Clarification patch, no status transition (descriptions follow behavior; no requirement added). Debugger card, step 4: a spec ambiguity is recorded in the task's `Notes` and the run stops at `run.md` Step 4 with the single `/magic.task {workspace}` recommendation, instead of handing the session off to `spec.md` — the old wording routed the run directly to `/magic.spec`, which `run.md` Step 4 and the Post-Task Replan rules (`rules/magic.md §5`) forbid the run to name. The deployed card carries the same wording. |

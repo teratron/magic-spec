@@ -31,8 +31,14 @@ A simulation pass drove the shipped engine from every role on disposable copies;
 ### Added
 
 - `docs/development.md`: layout, the harness, C14, the command tables, releasing. The Node.js floor (18) is stated and checked by the executor.
+- **`/magicspec help`** (and a bare `/magicspec`): the commands listed by group like a console tool's help, each with its argument, then offered in the host's choice form (two steps on a form of four choices) or as a numbered list in the chat; `help {command}` explains one, `help ru` (any language) translates the explanations and never the names. A first word that is not a command opens the same help with the typed text kept, the one-edit correction first.
+- **`/magicspec migrate`**: the 2.x migration as a command — the dry run, one consent question, then `--apply`. After the rename it rewrites the earlier command and folder names in the project's SDD artifacts (a patch version and a history row per specification, history, archives and the constitution untouched, backups and a revert hint), and only reports product files that still use them.
+- A command whose required argument is missing (`/magicspec spec`, `/magicspec rule`) asks for it once; one whose argument is optional runs its default and says which. The constitution and the always-on rules record this as E7 (constitution 1.18.0).
 
 ### Changed
+
+- **One command, `/magicspec <command> [argument]`, is the only printed form.** The router is the only command surface: `init` no longer writes `.claude/commands/magicspec/` or `.qwen/commands/magicspec/` and removes the entries a 3.0.x installation left (`PROJECTION_RETIRED` until it does), the `.gitignore` lines it prints name no command folder, and the plugin channel (`build-plugin`) is removed. The colon spelling is gone from the shipped text, the scripts' output, the README and the documentation; the router still reads it when typed. The router table gained the group, argument and when-missing columns, and the frontmatter an `argument-hint`.
+- The README's install prompt carries the seven steps of the agent-assisted installation contract (intent only, runtime check, installed-engine and 2.x detection, fetch commands for both shells, placement with the integrity check, `init`, finish on `/magicspec help`).
 
 - `lib/commit-suggester.js` is `lib/changelog-bullets.js` (it no longer has anything to do with commit messages).
 - Eleven specifications amended together with the code (see the registry): `l2-engine-automation` 1.26.0, `l2-release-pipeline` 2.3.0, `l2-skill-distribution` 1.6.0, `l2-spec-graph-memory` 1.4.1, `l2-update-state-structure` 1.2.0, `l2-finalize-state-accuracy` 2.4.0, `l2-finalize-output-contract` 2.2.0, `l2-engine-finalization` 3.7.0, `l2-status-command` 1.5.0, `l1-session-continuity` 2.5.3, `l2-test-suite` 1.37.0.
@@ -44,6 +50,7 @@ A simulation pass drove the shipped engine from every role on disposable copies;
 - Updated 19 specifications (engine)
 - Updated 6 specifications (engine)
 - Updated task plan and task index (engine)
+- Completed task (engine)
 
 ## [3.0.0] - 2026-10-28
 

@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.2.2
+**Version:** 2.2.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -148,7 +148,7 @@ Task Completion Checklist line `☐ Review: Post-Update Review performed in Crit
 
 **[ADDED v2.1.0]** Post-Update Review gains a second stage **Instruction Quality Pass**: after `@role:spec-critic` emits PASS, `@role:prompt-engineer` reviews the created/amended spec sections per the six PQ-3 dimensions (PQ-7 ordering — quality pass never runs on critic-rejected specs). Verdict per PQ-6; FAIL blocks status promotion alongside critic findings. Checklist gains `☐ Instruction Quality: dispatched sections reviewed by @role:prompt-engineer`.
 
-**[ADDED v2.2.0]** Rule capture (T1–T4) no longer carries a guard set of its own: the T4 Inline Guards block is removed and capture is handed to the operational logic of `rule.md` (§3.4), so the `constitutional-reviewer` gate covers a rule captured during spec work exactly as it covers one added through `/magicspec:rule` (RA-1). The `spec-critic` card gains step 7, Regulation Necessity, and the Spec Council's Safety & Boundary lens gains the matching one-sentence counterweight — a regulation justified only by a scenario that could happen is a finding. Checklist gains `☐ Admission (RA)`.
+**[ADDED v2.2.0]** Rule capture (T1–T4) no longer carries a guard set of its own: the T4 Inline Guards block is removed and capture is handed to the operational logic of `rule.md` (§3.4), so the `constitutional-reviewer` gate covers a rule captured during spec work exactly as it covers one added through `/magicspec rule` (RA-1). The `spec-critic` card gains step 7, Regulation Necessity, and the Spec Council's Safety & Boundary lens gains the matching one-sentence counterweight — a regulation justified only by a scenario that could happen is a finding. Checklist gains `☐ Admission (RA)`.
 
 ### 3.3 `analyze.md`
 
@@ -258,6 +258,7 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.2.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 2.2.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.2.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 2.2.0 | 2026-09-30 | Implements [l1-rule-admission-gate.md](l1-rule-admission-gate.md) at the workflow-wiring level. §3.2: rule capture is handed to `rule.md`'s operational logic instead of a guard set of its own; the `spec-critic` Regulation Necessity step and the Spec Council counterweight are wired. §3.4: the `constitutional-reviewer` Admission stage, its position in the workflow, the review-before-write order, and the wording review's no-widening bar. Closes the follow-up the deployment plan recorded — this spec described the reviewer gate without the stage that decides whether a rule exists. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

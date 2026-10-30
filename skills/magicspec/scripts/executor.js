@@ -150,8 +150,8 @@ if (hasLegacyState && !MIGRATION_SAFE.has(scriptName)) {
     const both = fs.existsSync(path.join(projectRoot, STATE_DIR_NAME));
     console.error(
         both
-            ? `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist: a migration was started and not finished (or ${STATE_DIR_NAME}/ was created by mistake). Run \`${executorHint()} migrate\`: it names the one action that unblocks the migration, and \`--apply\` then finishes it.`
-            : `HALT: This project uses the 2.x layout (${LEGACY_STATE_DIR_NAME}/). Run \`${executorHint()} migrate\` to see the plan, then \`--apply\` to migrate it.`,
+            ? `HALT: Both ${LEGACY_STATE_DIR_NAME}/ and ${STATE_DIR_NAME}/ exist: a migration was started and not finished (or ${STATE_DIR_NAME}/ was created by mistake). Run \`/magicspec migrate\` (by script: \`${executorHint()} migrate\`): it names the one action that unblocks the migration, and applying the plan then finishes it.`
+            : `HALT: This project uses the 2.x layout (${LEGACY_STATE_DIR_NAME}/). Run \`/magicspec migrate\` to see the plan and migrate it (by script: \`${executorHint()} migrate\` to see the plan, then \`--apply\`).`,
     );
     process.exit(1);
 }

@@ -1,6 +1,6 @@
 # update-state.js — Value Defects (Progress, Injection, Line Cap)
 
-**Version:** 1.0.3
+**Version:** 1.0.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -109,7 +109,7 @@ content = content.replace(re, `${prefix}${patch[key]}`);
 
 `re` has no capture groups, so the original sweep waved it through. But `.replace()` with a string replacement re-scans that string for `` $` `` (everything **before** the match), `$'` (everything **after** the match), `$&` (the whole match), and `$$` — **none of which need a capture group**. And `patch[key]` is not engine-controlled here: `nextAction` is `finalize.js`'s `synthesizeNextAction()` output, which embeds an arbitrary task **title**, and `--task` carries the raw title. Task titles about shell tooling routinely contain bash ANSI-C quoting (`$'…\n…'`) or a backtick-wrapped `` $`command` ``.
 
-Verified by direct reproduction against engine 2.1.76: a `STATE.md` patched via `updateState(wsDir, { nextAction }, { autoProgress: true })` where `nextAction` is `` Execute T-8B04 Handle `$'refund'` edge case via /magicspec:run demo `` — the `$'` is expanded to the **entire remainder of `STATE.md` after the `Next Action` line**, so the field is truncated at `` Handle ` `` and every section below it (Progress, Recent Decisions, Blockers, Blocking Constraints, Session Continuity) is duplicated. The duplicate `## Progress` carries the pre-recompute `Phase {N}` counter, so the file now holds two Progress fences disagreeing on the active phase's numbers — the field report's "spoiled the Next Action and the Phase {N} line in `## Progress`" is these two halves of one string-replace expansion, not two separate bugs.
+Verified by direct reproduction against engine 2.1.76: a `STATE.md` patched via `updateState(wsDir, { nextAction }, { autoProgress: true })` where `nextAction` is `` Execute T-8B04 Handle `$'refund'` edge case via /magicspec run demo `` — the `$'` is expanded to the **entire remainder of `STATE.md` after the `Next Action` line**, so the field is truncated at `` Handle ` `` and every section below it (Progress, Recent Decisions, Blockers, Blocking Constraints, Session Continuity) is duplicated. The duplicate `## Progress` carries the pre-recompute `Phase {N}` counter, so the file now holds two Progress fences disagreeing on the active phase's numbers — the field report's "spoiled the Next Action and the Phase {N} line in `## Progress`" is these two halves of one string-replace expansion, not two separate bugs.
 
 **Required fix**: the §6 fix, applied to this loop too — a function-form replacement, whose return value `.replace()` uses verbatim with no re-scan:
 
@@ -219,6 +219,7 @@ None recorded.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.0.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 1.0.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

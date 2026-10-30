@@ -1,6 +1,6 @@
 # Documentation System Specification
 
-**Version:** 1.2.3
+**Version:** 1.2.4
 **Status:** Stable
 **Layer:** concept
 
@@ -20,7 +20,7 @@ Provide clear guidance for both engine developers and end-users.
 
 ## Maintenance
 
-Documents in `docs/` must stay synchronized with the active workflows in `skills/magicspec/`. Synchronization is enforced by the Project Ventilation workflow (C21): when `/magicspec:analyze` is run, any `docs/` file whose last-modified timestamp predates the corresponding `skills/magicspec/` workflow file is flagged as a **VIO-2 (Documentation Drift)** violation.
+Documents in `docs/` must stay synchronized with the active workflows in `skills/magicspec/`. Synchronization is enforced by the Project Ventilation workflow (C21): when `/magicspec analyze` is run, any `docs/` file whose last-modified timestamp predates the corresponding `skills/magicspec/` workflow file is flagged as a **VIO-2 (Documentation Drift)** violation.
 
 ### Sync Scope
 
@@ -46,6 +46,7 @@ The following `docs/` files are reference material not tied to a specific `skill
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.3 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.2.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |
 | 1.2.1 | 2026-03-30 | Agent | Moved checksums.md to Static Documentation since it lacks a .magic/ counterpart. |

@@ -1,6 +1,6 @@
 # Engine Toolchain: pnpm, TypeScript, Biome and Fallow
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
@@ -32,7 +32,7 @@ Facts checked on 2026-10-29:
 
 - Nothing the user installs changes: the skill folder keeps zero dependencies and no build step, and the engine builds itself — an edit to a script runs as edited (SP-9).
 - Formatting follows the existing style (four-space indent, single quotes, semicolons, LF line endings), so adopting the formatter is not a mass rewrite of meaning.
-- **Assumption (forecast):** TypeScript arrives in two stages — first a strict type check over the existing JavaScript through its JSDoc, then the conversion of the sources to erasable-syntax TypeScript run directly by Node once the runtime floor is raised to Node 22.18 — because the first stage gives the type safety at once without touching what users run, while converting immediately would raise the floor for every user in the same step. Runner-up: convert at once and raise the floor now. Override: `/magicspec:spec amend l2-engine-toolchain.md "convert to TypeScript in one step"`.
+- **Assumption (forecast):** TypeScript arrives in two stages — first a strict type check over the existing JavaScript through its JSDoc, then the conversion of the sources to erasable-syntax TypeScript run directly by Node once the runtime floor is raised to Node 22.18 — because the first stage gives the type safety at once without touching what users run, while converting immediately would raise the floor for every user in the same step. Runner-up: convert at once and raise the floor now. Override: `/magicspec spec amend l2-engine-toolchain.md "convert to TypeScript in one step"`.
 - **Assumption (forecast):** compiling TypeScript to JavaScript for the release is rejected, because the engine's own repository runs the skill folder through a link, and a build output would have to be rebuilt after every edit before the engine could run itself. Runner-up: compile at release. Override: the same amend command with "compile at release".
 
 ## 4. Invariant Compliance
@@ -110,4 +110,5 @@ The test job runs, in order: frozen install, `biome ci`, the type check, `fallow
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (pnpm, TypeScript, Biome and Fallow). Tool facts checked the same day. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

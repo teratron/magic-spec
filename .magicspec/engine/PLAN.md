@@ -2,7 +2,7 @@
 
 **Version:** 1.54.0
 **Generated:** 2026-10-30
-**Based on:** .magicspec/engine/INDEX.md v1.61.0
+**Based on:** .magicspec/engine/INDEX.md v1.62.0
 **Status:** Active
 
 ## Overview

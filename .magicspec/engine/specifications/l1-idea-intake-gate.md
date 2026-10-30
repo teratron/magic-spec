@@ -1,6 +1,6 @@
 # Idea Intake Gate
 
-**Version:** 2.1.1
+**Version:** 2.1.2
 **Status:** Stable
 **Layer:** concept
 
@@ -54,13 +54,13 @@ The same asymmetry holds when the idea is too thin rather than ambiguous: a spec
 
 Recorded intent from the engine owner, in the owner's own framing:
 
-> After `/magicspec:spec <idea>`, and before generating specifications, refine the idea through clarification — *if* something was genuinely not understood and *if* clarification is actually needed. As far as possible you, as the engineer, must work out the substance of the idea yourself. When you do ask, phrase questions in a form a human can understand: the user may not be a specialist.
+> After `/magicspec spec <idea>`, and before generating specifications, refine the idea through clarification — *if* something was genuinely not understood and *if* clarification is actually needed. As far as possible you, as the engineer, must work out the substance of the idea yourself. When you do ask, phrase questions in a form a human can understand: the user may not be a specialist.
 
 Three obligations are encoded there, and IK-2 through IK-5 discharge them in order: **try first**, **ask rarely**, **ask plainly**.
 
 Two further statements from the owner on 2026-10-01 shaped 2.0.0. `[ADDED]` The first, after six consecutive polls on engine internals were each answered with the marked default — *"there is not a single unresolvable case you could not solve; … make simulative forecasts of how it would work if…"* — produced the Consequence Forecast. The second, the same day and about intake specifically:
 
-> `/magicspec:spec` can indeed ask clarifying questions, because an AI cannot always understand vague human text, and sometimes there is simply too little input.
+> `/magicspec spec` can indeed ask clarifying questions, because an AI cannot always understand vague human text, and sometimes there is simply too little input.
 
 It came with a draft flowchart (`.drafts/flowchart.md`) that splits intake into a **comprehension** check ("Understood?") and a **sufficiency** check ("Is the input enough?"), each answered by surveys of options plus a free-text "Other", with free-text answers fed back into the check. The two statements are consistent: the forecast decides what the repository and engineering judgment can settle; the survey asks only for what exists in the requester's head, at the one moment the requester is present and nothing is built. 2.0.0 adopts the draft's two gates (IK-4), its options-plus-"Other" survey (IK-5) and its re-checked free text (IK-6), and lets the forecast write the options.
 
@@ -170,7 +170,7 @@ Clarification is conversational. The exchange produces no artifact: no `Clarific
 Two traces are deliberate:
 
 - **The intent statement.** When the gate fired, the understood idea is narrated once before dispatch — `[Intake] Understood as: {one paragraph}` — and seeds the Overview. It is chat narration, not an artifact; the requester can interrupt it.
-- **A forecast premise.** A question the forecast answered (IK-6.6) is recorded as one bullet in `Constraints & Assumptions` — `- **Assumption (forecast):** {the chosen reading, in outcome terms}. Runner-up: {the other reading}. Override: /magicspec:spec amend {file} "{runner-up}"` — until the requester confirms it (an amendment removes the `(forecast)` marker and keeps the sentence as an ordinary constraint) or overrides it. At most three such bullets per invocation; any further delegated point is recorded as a `<!-- TBD: … -->` marker.
+- **A forecast premise.** A question the forecast answered (IK-6.6) is recorded as one bullet in `Constraints & Assumptions` — `- **Assumption (forecast):** {the chosen reading, in outcome terms}. Runner-up: {the other reading}. Override: /magicspec spec amend {file} "{runner-up}"` — until the requester confirms it (an amendment removes the `(forecast)` marker and keeps the sentence as an ordinary constraint) or overrides it. At most three such bullets per invocation; any further delegated point is recorded as a `<!-- TBD: … -->` marker.
 
 ### IK-8 — Whitelist Entry E6 and Scope Containment `[MODIFIED]`
 
@@ -247,7 +247,7 @@ At intake asking is the cheapest worst case — one turn, against the hedge's mu
 > 3. By email as well, even when the app is closed — every user then needs an address on file.
 > Other: …
 
-Storage format, queue technology and template engine are never asked (IK-3). A reply of "you decide" makes option 1 the reading and records its premise: `- **Assumption (forecast):** people see notifications inside the app; email is not built yet. Runner-up: an email digest. Override: /magicspec:spec amend l1-notifications.md "email digest"`.
+Storage format, queue technology and template engine are never asked (IK-3). A reply of "you decide" makes option 1 the reading and records its premise: `- **Assumption (forecast):** people see notifications inside the app; email is not built yet. Runner-up: an email digest. Override: /magicspec spec amend l1-notifications.md "email digest"`.
 
 ### 4.4 Worked example — F1 fire
 
@@ -347,6 +347,7 @@ The owner's flowchart draws the comprehension step as a "prompt engineer" and th
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 2.1.2 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 2.1.1 | 2026-10-30 | Clarification (no requirement changed here): a `spec` invocation without an idea collects one through the command intake of [l1-command-surface.md](l1-command-surface.md) 2.0.0 (E7) before this gate runs on it. |
 | 2.1.0 | 2026-10-29 | Gate 1 (comprehension) is performed in the `prompt-engineer` stance on the input pass's intent statement ([l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6), superseding §6.7 for that gate (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"). F1–F3, the survey, IK-6 and E6's scope are unchanged. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

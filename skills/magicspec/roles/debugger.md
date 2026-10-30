@@ -31,7 +31,7 @@ Active role on the `Blocked [!]` branch of `run.md`. Owns diagnosis and resoluti
 1. Read the task's `Blocked` reason and all diagnostic artifacts (logs, error messages, stack traces if available).
 2. Classify the blocker: (a) implementation bug, (b) spec ambiguity, (c) environment/dependency issue, (d) dependency on another Blocked task.
 3. For (a): produce a fix diff, hand off to Test-engineer for re-check.
-4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec:task {workspace}` recommendation, and `/magicspec:spec` surfaces only inside a `/magicspec:task` HALT (`AGENT-RULES.md §5`).
+4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec task {workspace}` recommendation, and `/magicspec spec` surfaces only inside a `/magicspec task` HALT (`AGENT-RULES.md §5`).
 5. For (c): document the environment fix in task notes; hand off back to Coder.
 6. For (d): update dependency graph; hand off to Planner for re-plan.
 7. Never re-mark a task `Done` directly — always route through Test-engineer.

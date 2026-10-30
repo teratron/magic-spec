@@ -94,7 +94,7 @@ function main() {
                 `[Archive] Notice: ${candidates.length} completed phase(s) pending archival: ` +
                     candidates.map((c) => c.file).join(', '),
             );
-            console.log(`[Archive] Run /magicspec:run or: ${executorHint()} archive-phases`);
+            console.log(`[Archive] Run /magicspec run or: ${executorHint()} archive-phases`);
         }
         return 0;
     }

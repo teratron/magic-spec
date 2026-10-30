@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.1.4
+**Version:** 1.1.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -31,7 +31,7 @@ The audit recorded in [l1-session-continuity.md](l1-session-continuity.md) §1.5
 | Resume triggered by file presence; prose copies disagree on when a resume completes | `context.md` §4, `pause.md` Resume Protocol, `status.md`, [l2-status-command.md](l2-status-command.md) §5.3 | §5.3 |
 | No step records a task as in flight | `run.md` Step 3 | §5.1 |
 | No place for an abandoned approach | phase tracking entry | §5.2 |
-| No cold-context check when a session does not open with a `/magicspec:*` command | `skills/magicspec/AGENT-RULES.md` | §5.4 |
+| No cold-context check when a session does not open with a `/magicspec <command>` command | `skills/magicspec/AGENT-RULES.md` | §5.4 |
 | Finalize never says a checkpoint exists | `finalize.js` | §5.5 |
 | A `STATE.md` field with no writer | `templates/state.md` | §5.7 |
 
@@ -39,7 +39,7 @@ The audit recorded in [l1-session-continuity.md](l1-session-continuity.md) §1.5
 
 - **No new user-facing command** (SC-5 stays the only C2 exception). `resume-state` is an internal executor subcommand: reachable through `executor.js`'s generic dispatch, referenced only from engine prose, never advertised to the user.
 - **Layer placement** (`AGENTS.md` §1.3 classification): `resume-state.js` is named by L1 entry points (`context.md`, `status.md`, `skills/magicspec/AGENT-RULES.md`), so it is L1 and lives in `skills/magicspec/scripts/`. Its closure (`lib/phase-files.js`, `lib/scan-hygiene.js`, `lib/git-utils.js`) stays inside `skills/magicspec/`, and it references nothing under `dev/`.
-- **Read-only.** `resume-state` writes no artifact, so the read-only `/magicspec:status` can call it (SC-4). Its one non-fatal condition — a registered workspace's `STATE.md` that exists but cannot be read — is recorded through the shared collector like every engine finding (DG-1: `warning`, code `RESUME_STATE_UNREADABLE`) and printed to stderr; a missing `STATE.md` is a fresh workspace, not a finding. The sink is runtime state under `.magicspec/.cache/`, not an artifact, and DG already accepts that read-only commands emit; a clean run writes nothing at all. The script never exits non-zero and never blocks a workflow.
+- **Read-only.** `resume-state` writes no artifact, so the read-only `/magicspec status` can call it (SC-4). Its one non-fatal condition — a registered workspace's `STATE.md` that exists but cannot be read — is recorded through the shared collector like every engine finding (DG-1: `warning`, code `RESUME_STATE_UNREADABLE`) and printed to stderr; a missing `STATE.md` is a fresh workspace, not a finding. The sink is runtime state under `.magicspec/.cache/`, not an artifact, and DG already accepts that read-only commands emit; a clean run writes nothing at all. The script never exits non-zero and never blocks a workflow.
 - **Engine Improvement.** Every `skills/magicspec/` change below is C14-governed. `skills/magicspec/AGENT-RULES.md` is outside C14 and is a hardlinked pair with `.agents/rules/magicspec.md`: after editing it, run the hardlink validator (`[C-001]`).
 - **Layout.** The canonical two-level layout (`tasks/phase-{N}.md` holding the tracking entries) is assumed; the legacy flat layout (entries in `TASKS.md`) is read by the same three-tier lookup the `Next Action` computation already uses.
 - **Agent-executed steps** (Task Start, `Attempts`) are prose the agent follows; nothing can force them. §8 records the residual.
@@ -126,7 +126,7 @@ Output is nothing when no workspace has work in flight; otherwise one line per w
 ▶ Resume [{workspace}]: {T-ID} {title} in flight — {k} dead end(s) recorded, {m} file(s) modified. Next: {next action}
 ```
 
-Variants: several in-flight tasks name at most three, then `+{n} more`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magicspec:*` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
+Variants: several in-flight tasks name at most three, then `+{n} more`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magicspec <command>` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
 
 Call sites, each replacing prose that decides the same question independently:
 
@@ -141,9 +141,9 @@ Call sites, each replacing prose that decides the same question independently:
 
 `skills/magicspec/AGENT-RULES.md` gains **§10 Session Resume Check**, alongside §1 (upgrade detection) and with the same shape:
 
-- **Trigger (observable):** the agent is about to make its first tool call and holds no `STATE.md` for the workspace in its current context — a new session, a cleared one, a compaction. Once per cold context. A `/magicspec:*` invocation already performs the check in its context load (§5.3) and does not repeat it.
+- **Trigger (observable):** the agent is about to make its first tool call and holds no `STATE.md` for the workspace in its current context — a new session, a cleared one, a compaction. Once per cold context. A `/magicspec <command>` invocation already performs the check in its context load (§5.3) and does not repeat it.
 - **Action:** run `resume-state --all` (no workspace is resolved yet, §5.3); relay a printed line verbatim as one informational line; proceed with the user's request (narrated, never asked). Silent when the script prints nothing. A missing or failing script counts as silence: the rule fails open and never halts a session.
-- **Exemptions:** `MAGIC_RESUME_CHECK=0` disables the rule; `/magicspec:status` renders the same information in its own briefing.
+- **Exemptions:** `MAGIC_RESUME_CHECK=0` disables the rule; `/magicspec status` renders the same information in its own briefing.
 - `skills/magicspec/AGENT-RULES.md` §8 (Completion Protocol) gains the matching checklist item.
 
 ### 5.5 Checkpoint Claim (SC-6.1)
@@ -195,7 +195,7 @@ The full assertion list for each case lives here; [l2-test-suite.md](l2-test-sui
 
 ## 7. Implementation Notes
 
-Deployment inventory, routed to `/magicspec:task engine`; every row outside `.magicspec/` is beyond `/magicspec:spec`'s write scope:
+Deployment inventory, routed to `/magicspec task engine`; every row outside `.magicspec/` is beyond `/magicspec spec`'s write scope:
 
 | # | Touch-point | Change |
 | --- | --- | --- |
@@ -217,7 +217,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 ## 8. Drawbacks & Alternatives
 
-- **A script rather than prose** for detection: chosen. The predicate is mechanical, has to run at every cold context, and already had three disagreeing prose copies; a script is testable (H1–H6) and read-only. The cost is one more subcommand and a reader to keep aligned with finalize's, which the extraction in §5.2 removes. **Extending `check-prerequisites`** instead was rejected: it is a validator that records diagnostics (a write), and `/magicspec:status` must stay write-free.
+- **A script rather than prose** for detection: chosen. The predicate is mechanical, has to run at every cold context, and already had three disagreeing prose copies; a script is testable (H1–H6) and read-only. The cost is one more subcommand and a reader to keep aligned with finalize's, which the extraction in §5.2 removes. **Extending `check-prerequisites`** instead was rejected: it is a validator that records diagnostics (a write), and `/magicspec status` must stay write-free.
 - **A rolling handoff file** was rejected in [l1-session-continuity.md](l1-session-continuity.md) §5; nothing here reintroduces one.
 - **Residual: agent discipline.** Task Start and `Attempts` are steps the agent performs; a skipped one degrades to today's behavior and the harness cannot force it. What the design removes is the dependence on a *measurement* (SC-7), not on the agent following its own workflow.
 - **A task abandoned mid-flight keeps announcing itself** at every cold context until it is completed, blocked or cancelled. This is deliberate: it is unfinished work, and silence would be the failure.
@@ -243,6 +243,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.5 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.4 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.3 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 1.1.2 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

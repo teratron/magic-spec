@@ -4,20 +4,20 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-30 09:01
+**Updated:** 2026-10-30 12:50
 **Phase:** 47 — One Command Surface, Help and Argument Intake
-**Status:** Active
+**Status:** Blocked
 
 ## Current Position
 
-- **Task:** none
+- **Task:** T-47T01 Validation: harness, mutation lists, intake scenarios, C14
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Execute T-47A01 Router: one grammar, the command table with groups and the argument contract, the bare and unknown forms via /magicspec:run engine
+- **Next Action:** T-47V01 and any other open tasks need user or blocker action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, then run /magicspec run engine
 
 ## Progress
 
 ```
-Phase 47: [0/13] ░░░░░░░░ 0%
+Phase 47: [11/13] ███████░ 85%
 Overall: [45/46] ████████ 98%
 ```
 

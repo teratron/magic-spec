@@ -89,7 +89,7 @@ your-project/
 > }
 > ```
 >
-> `default` selects the workspace when a command is given no argument. `scope` bounds every scan — analysis, coverage, and community detection ignore paths outside it. Omit `scope` to let a workspace see the whole project. Every command accepts a workspace name as its first argument to override the default (`/magicspec:task web`).
+> `default` selects the workspace when a command is given no argument. `scope` bounds every scan — analysis, coverage, and community detection ignore paths outside it. Omit `scope` to let a workspace see the whole project. Every command accepts a workspace name as its first argument to override the default (`/magicspec task web`).
 
 **`.gitignore`**: When Magic Spec is used as an installed dependency, add the skill folder and the files `init --host` generated from it (the lines `init` prints) to your `.gitignore`. To vendor the engine instead, omit those entries.
 
@@ -115,18 +115,18 @@ The agent will run the **Run** workflow, picking the most prioritized task and i
 All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
 
 ```bash
-/magicspec:spec engine "new features"      # Author specs in "engine" workspace
-/magicspec:task engine                     # Plan only for the "engine" workspace
-/magicspec:task "decompose phase-2"        # Guided planning with focus
-/magicspec:run engine "phase-1"            # Execute phase 1 in "engine" workspace
-/magicspec:analyze "check API coverage"    # Focused analysis on a specific area
+/magicspec spec engine "new features"      # Author specs in "engine" workspace
+/magicspec task engine                     # Plan only for the "engine" workspace
+/magicspec task "decompose phase-2"        # Guided planning with focus
+/magicspec run engine "phase-1"            # Execute phase 1 in "engine" workspace
+/magicspec analyze "check API coverage"    # Focused analysis on a specific area
 ```
 
 ## ⚖️ Consistency & Safety
 
 Magic Spec includes built-in "Pre-flight" checks:
 
-- **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration. **After updating the engine, it is highly recommended to run the `/magicspec:analyze` command to ensure full synchronization.**
+- **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration. **After updating the engine, it is highly recommended to run the `/magicspec analyze` command to ensure full synchronization.**
 - **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
 - **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
 - **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.

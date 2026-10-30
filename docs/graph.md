@@ -6,7 +6,7 @@ This document explains the Graph workflow, which turns the `.magicspec/` artifac
 
 Specifications accumulate relationships that no single file shows: which spec everything depends on, which files no spec claims, which Layer 2 spec lost its parent link, where the real module boundaries sit versus where the workspace config says they sit. The Graph workflow extracts those relationships and reports them.
 
-**Analysis triggers:** `/magicspec:graph`, *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*.
+**Analysis triggers:** `/magicspec graph`, *"Build graph"*, *"Spec graph"*, *"Graph analysis"*, *"Knowledge graph"*, *"Community detection"*, *"Workspace discovery"*.
 
 **Visualization triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*.
 

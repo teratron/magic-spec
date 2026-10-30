@@ -6,9 +6,9 @@ This document explains the Status workflow, the read-only command that tells you
 
 After a break — a new session, a context reset, a week away — the question is always the same: what was I doing, what blocks me, what do I run now. Answering it by hand means reading `STATE.md`, `TASKS.md`, `PLAN.md`, and `INDEX.md` and reconciling them. The Status workflow does that reconciliation and renders a single briefing.
 
-**Triggers:** `/magicspec:status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
+**Triggers:** `/magicspec status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
 
-**Slash command:** `/magicspec:status [workspace]`
+**Slash command:** `/magicspec status [workspace]`
 
 > **Full implementation:** `skills/magicspec/workflows/status.md` — the engine reads this file before executing any steps.
 
@@ -45,7 +45,7 @@ The briefing always renders in this fixed order. A section whose source is unrea
 The final line follows the Decision Record format:
 
 ```
-[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)
+[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)
 ```
 
 One command, never a menu. If you disagree, you run something else — the override hint says so explicitly.
@@ -56,7 +56,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
 | **In-flight session** | A task recorded `In Progress` surfaces the resume line — the recorded next action and the dead ends already recorded against the task. |
-| **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magicspec:analyze revalidates)`. Informational; the briefing proceeds. |
+| **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
 ## 5. Workspace Targeting
@@ -64,8 +64,8 @@ One command, never a menu. If you disagree, you run something else — the overr
 With no argument the workspace resolves through the standard priority chain. Pass a name to override:
 
 ```
-/magicspec:status                # Resolved workspace
-/magicspec:status engine         # Explicit workspace
+/magicspec status                # Resolved workspace
+/magicspec status engine         # Explicit workspace
 ```
 
 ## 6. Relationship to Other Workflows

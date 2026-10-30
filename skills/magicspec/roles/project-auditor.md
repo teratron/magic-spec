@@ -18,7 +18,7 @@ deprecated: false
 
 ## Mission
 
-Pre-advisory audit for `magicspec:analyze` workflow. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
+Pre-advisory audit for `/magicspec analyze` workflow. Reviews all Mode A/B/C/D findings before the Advisory Report is generated.
 
 ## Operating Protocol
 

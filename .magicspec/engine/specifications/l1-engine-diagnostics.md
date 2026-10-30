@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest
 
-**Version:** 1.1.2
+**Version:** 1.1.3
 **Status:** Stable
 **Layer:** concept
 
@@ -32,7 +32,7 @@ This is observable today, without a synthetic case. When `computeNextAction()` r
 
 ```plaintext
 [state] Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5;
-        substituting the /magicspec:task funnel.
+        substituting the /magicspec task funnel.
 ```
 
 The engine has just overwritten a computed value with a different one and written the result into live memory. The stdout block reports `| STATE.md | updated (SC-2) |` and nothing else. A compliant agent shows the user the second line and not the first — the substitution is invisible at exactly the surface built for the user to review what happened.
@@ -49,7 +49,7 @@ The third class is the one that most needs surfacing and is least surfaced: the 
 
 ### 1.3 Scatter Across Processes
 
-A single `/magicspec:run` phase spans many separate node processes — `check-prerequisites`, `build-spec-graph`, `export-wiki`, `update-state`, `archive-phases`, `finalize` — each with its own stderr, each interleaved with tool output and agent narration across a long transcript. Findings that belong to one user-facing report are physically distributed across it. Collecting at the point of emission and rendering once at the end is the only arrangement that survives the process boundary.
+A single `/magicspec run` phase spans many separate node processes — `check-prerequisites`, `build-spec-graph`, `export-wiki`, `update-state`, `archive-phases`, `finalize` — each with its own stderr, each interleaved with tool output and agent narration across a long transcript. Findings that belong to one user-facing report are physically distributed across it. Collecting at the point of emission and rendering once at the end is the only arrangement that survives the process boundary.
 
 ### 1.4 The Agent Has No Channel Either
 
@@ -69,12 +69,12 @@ This is a narrower defect than §1.1-§1.4: those describe findings that never r
 
 - **Never fatal.** Recording, draining, or rendering a diagnostic MUST NOT change any exit code, abort any workflow, gate a version bump, or become a HALT point. Diagnostics report on work; they never arbitrate it.
 - **Additive, not a replacement.** At-occurrence printing stays exactly as it is. Recording is an addition, so a run that crashes before the drain still leaves its stderr trail — the digest must not become the only copy of a finding.
-- **No new user-facing command (C2).** The digest rides the existing finalization output. The agent-facing recorder is an `executor.js` subcommand, not a `/magicspec:*` workflow command, and therefore requires no C2 exception.
+- **No new user-facing command (C2).** The digest rides the existing finalization output. The agent-facing recorder is an `executor.js` subcommand, not a `/magicspec <command>` workflow command, and therefore requires no C2 exception.
 - **Sink is runtime state, not an artifact.** It lives beside the engine's existing runtime state under `.magicspec/.cache/` (already gitignored) — never a tracked file, never a product file. RC-12 holds: deleting the scaffold removes the sink with it.
 - **Findings are not history.** The sink is drained, not archived. Durable narrative belongs to `CHANGELOG.md` and `RETROSPECTIVE.md`; a diagnostic that matters after its digest is a spec amendment or a task, not a longer log.
 - **HALTs are out of scope.** A `console.error` that precedes `process.exit(1)` already reaches the user — the run stops and the message is the outcome. This contract governs findings the run *survives*.
 - **Inherits the finalize opt-outs.** `MAGIC_FINALIZE=0` and `finalization.enabled: false` suspend the render step along with the rest of the pipeline; a user who disables finalization knowingly suspends the digest.
-- **Read-only commands emit but never deliver.** `/magicspec:analyze`, `/magicspec:graph`, and `/magicspec:status` never finalize (SC-2 exemption), so findings they record wait in the sink until the next mutating command's digest. This is deferred delivery, not loss, and it is the accepted boundary: giving a read-only command its own digest surface would duplicate the Advisory Report for ventilation and add a report to a briefing whose whole contract is that it reports nothing new (SC-4). The sink's own retention bound is what keeps the deferral safe.
+- **Read-only commands emit but never deliver.** `/magicspec analyze`, `/magicspec graph`, and `/magicspec status` never finalize (SC-2 exemption), so findings they record wait in the sink until the next mutating command's digest. This is deferred delivery, not loss, and it is the accepted boundary: giving a read-only command its own digest surface would duplicate the Advisory Report for ventilation and add a report to a briefing whose whole contract is that it reports nothing new (SC-4). The sink's own retention bound is what keeps the deferral safe.
 - **Revalidation is opt-in and read-only.** A finding's DG-10 `recheck` — the reference it carries to reverify itself before render — MUST be side-effect-free. Revalidation is not scheduled; it runs once per distinct recheck signature every time a digest is about to render, so a `recheck` that mutated state would itself become an unrecorded, uncontrolled second mutation.
 
 ## 3. Core Invariants
@@ -133,7 +133,7 @@ Finalization MUST print, as the final section of its output, the `Next Action` v
 Two obligations, both load-bearing:
 
 1. It gives DG-5 a fixed anchor to sit before. A placement rule stated against a section that does not exist is unenforceable.
-2. It removes a divergence. The value is computed and written to live memory (SC-2), but never shown; the agent then narrates a next step of its own under DA-6. Two independently produced recommendations for one moment can disagree, and when they do, `/magicspec:status` later replays the persisted one — so the user is told one thing now and a different thing on resume. Printing the persisted value makes the two identical by construction.
+2. It removes a divergence. The value is computed and written to live memory (SC-2), but never shown; the agent then narrates a next step of its own under DA-6. Two independently produced recommendations for one moment can disagree, and when they do, `/magicspec status` later replays the persisted one — so the user is told one thing now and a different thing on resume. Printing the persisted value makes the two identical by construction.
 
 The printed value inherits SC-2.2's constraints unchanged: exactly one command, never a command `skills/magicspec/AGENT-RULES.md` §5 reserves. Surfacing adds no new screening, because it surfaces an already-screened value.
 
@@ -207,7 +207,7 @@ The digest's value is entirely in being **found**. A section whose position vari
 
 ### 4.4 Relationship to Ventilation
 
-`/magicspec:analyze` (Mode C) performs a deliberate, deep, read-only audit on demand and reports through the Advisory Report. The digest is the opposite instrument: passive, incidental, and attached to work the user was already doing. They share the finding *notation* (code, locus, `→` remedy) so that a class recognized in one is recognizable in the other, and they must not share a rendering path — an audit the user asked for and a byproduct of a command they ran are different products with different reading contexts.
+`/magicspec analyze` (Mode C) performs a deliberate, deep, read-only audit on demand and reports through the Advisory Report. The digest is the opposite instrument: passive, incidental, and attached to work the user was already doing. They share the finding *notation* (code, locus, `→` remedy) so that a class recognized in one is recognizable in the other, and they must not share a rendering path — an audit the user asked for and a byproduct of a command they ran are different products with different reading contexts.
 
 ### 4.5 Why Revalidation, Not a Shorter Window
 
@@ -240,6 +240,7 @@ Shrinking DG-4's aggregation window — draining more often, or scoping it to "s
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.1.0 | 2026-09-17 | Agent | Added **DG-10** (Revalidation Before Render) and new §1.6 (Motivation) + §4.5 (Detailed Design): a finding MAY declare a read-only `recheck` reference; the digest reruns it once per distinct signature, immediately before every render (including preview), and drops any finding whose condition no longer reproduces. Revalidation is a filter only — it MUST NOT surface a finding the recheck turns up that was not already recorded through DG-1 — and degrades to rendering-as-recorded on any recheck failure (extends DG-9's failure-open default). Self-reference guard added during authoring: a recheck runs the emitter's own check, which would otherwise call `record()` on itself and re-queue a duplicate finding for the next digest regardless of this render's outcome — revalidation now MUST suppress recording for the duration of its own recheck invocations. Closes a field-reported defect: `check-prerequisites` records `SYNC_GAP`/`ORPHANED_SPEC` at a workflow's own Pre-flight, before that same invocation's writes (e.g. `magic.task` regenerating `PLAN.md`/`TASKS.md`) resolve the condition; finalize then drained and rendered the now-stale finding as still open, confirmed by an immediate manual `check-prerequisites --json` re-run returning `warnings: []`. New Constraints bullet (§2: recheck MUST be read-only) and three Drawbacks & Alternatives entries (TTL rejected, blanket re-run rejected, recheck-fidelity risk). Post-Update Review found one defect before promotion: a recheck runs the emitter's own check, which records through DG-1 like any other invocation — left unguarded, every recheck would feed a fresh copy of its own finding back into the sink revalidation is reading from, silently re-queuing a still-open condition for the next digest regardless of this render's outcome. Fixed by adding DG-10's self-reference guard (recording MUST be suppressed for the duration of a recheck invocation) before promotion. DG-1..DG-9 unchanged otherwise; no breaking change — findings without `recheck` are unaffected. Amendment rule applied: Stable → RFC → Stable in this pass (Post-Update Review: Spec Council 5-lens + Instruction Quality Pass, both PASS after the fix, no objective conflicts — Trust Mode C9 auto-promotion). |

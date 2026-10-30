@@ -22,8 +22,9 @@ const hosts = require('./lib/hosts');
 // ═══════════════════════════════════════════════════════════════════════════
 
 // `--host=<name>[,<name>]` also writes what each named host needs to find the engine
-// (the rule, the command entries, the skill link). An unknown name, or a source that
-// cannot be read, stops the run before anything is written.
+// (the rule and the skill link) and removes the command entries an earlier installation
+// left; it writes no entry. An unknown name, or a source that cannot be read, stops the run
+// before anything is written.
 const { values: initFlags, errors: initFlagErrors } = parseFlags(process.argv.slice(2), {
     valueFlags: ['--host'],
 });
@@ -184,7 +185,7 @@ if (fs.existsSync(path.join(projectRoot, '.git'))) {
     }
 }
 
-// Host projections: the rule, the command entries and the skill link for each named host.
+// Host projections: the rule and the skill link for each named host; retired command entries go.
 const LABELS = {
     written: '✅ Wrote',
     replaced: '♻️  Updated',
@@ -194,6 +195,7 @@ const LABELS = {
     linked: '🔗 Linked',
     conflict: '⚠️  Left alone',
     unlinkable: '⚠️  Could not link',
+    retired: '🗑️  Removed (command entry of an earlier installation)',
 };
 for (const name of requestedHosts) {
     console.log(`🧩 ${hosts.HOSTS[name].label}`);

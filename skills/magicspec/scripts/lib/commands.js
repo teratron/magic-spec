@@ -46,12 +46,6 @@ const COMMANDS = {
             '--check': { kind: 'bool', help: 'Report pending archival only; change nothing' },
         },
     },
-    'build-plugin': {
-        summary: 'Build the optional plugin folder from this engine folder.',
-        options: {
-            '--out': { kind: 'value', help: 'Target folder (empty, absent, or an earlier build of this command)' },
-        },
-    },
     'build-spec-graph': {
         summary: 'Build the specification knowledge graph and print its summary.',
         options: {

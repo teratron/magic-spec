@@ -4,18 +4,18 @@ Shared workspace resolution logic referenced by all workflows. Every workflow MU
 
 **Contents:**
 
-- Step 0: Workspace Intent Detection (Pre-Resolution) — `magicspec:spec` only
+- Step 0: Workspace Intent Detection (Pre-Resolution) — `/magicspec spec` only
 - Workspace Resolution Chain
 - Workspace Disambiguation
 - Scope Auto-Apply
-- Workspace Fit Validation (WI-7, Second Contour) — `magicspec:spec` only
+- Workspace Fit Validation (WI-7, Second Contour) — `/magicspec spec` only
 - Argument Disambiguation
 - Post-Resolution
 - Context Budget Guard
 
 ## Step 0: Workspace Intent Detection (Pre-Resolution)
 
-> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for `magicspec:spec` — the sole workflow that authors new topical spec content and can therefore require workspace-creation routing. Read-only workflows (`magicspec:analyze`, `magicspec:graph`) and `task.md`/`rule.md` (operate only on already-registered specs/rules and never introduce a new domain topic) skip this step.
+> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for `/magicspec spec` — the sole workflow that authors new topical spec content and can therefore require workspace-creation routing. Read-only workflows (`/magicspec analyze`, `/magicspec graph`) and `task.md`/`rule.md` (operate only on already-registered specs/rules and never introduce a new domain topic) skip this step.
 
 ### Step 0.1: Context Auto-Enrichment (MA-1 Pre-flight)
 
@@ -57,7 +57,7 @@ The route is then chosen by the **Consequence Forecast** (C27 DA-10) among `crea
 - **Default `existing:{Y}`**: undoing a creation removes a directory and a registry entry, a deletion that needs consent (E1); moving a misrouted spec later is one rename and two registry rows. Between existing workspaces, the higher lexicon fit wins.
 - **Probe once**: read the Overview of the overlapping spec. A name collision only removes the overlap — the case is then a clear signal (class 2 or 3) and creates without the gate.
 - **Explicit creation without a name**: `existing:{Y}` contradicts the request (a Blocker), so create under a name inferred from the surrounding turns or the topic being dispatched, else `workspace-{n}`.
-- **Narrate** `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec:spec {runner-up-workspace} …)` and record the routing premise as an `Assumption (forecast)` bullet in the dispatched spec's `Constraints & Assumptions`.
+- **Narrate** `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec spec {runner-up-workspace} …)` and record the routing premise as an `Assumption (forecast)` bullet in the dispatched spec's `Constraints & Assumptions`.
 
 ### Skip Conditions
 
@@ -66,7 +66,7 @@ Skip Step 0 entirely on any of:
 - Priority 1 explicit `--workspace=X` argument → honor the override.
 - Priority 2 `MAGIC_WORKSPACE=X` env var → honor the override.
 - No `workspace.json` (Priority 4) — project has no workspace concept yet.
-- Read-only workflows (`magicspec:analyze`, `magicspec:graph`).
+- Read-only workflows (`/magicspec analyze`, `/magicspec graph`).
 
 ### Outcome Routing
 
@@ -82,7 +82,7 @@ Auto-resolve workspace using priority order:
 
 | Priority | Source | Condition | Action |
 | --- | --- | --- | --- |
-| 1 | **Explicit arg** | `/magicspec:{cmd} {workspace}` | Use it. Print: `"Active workspace: {workspace}."` Overrides `MAGIC_WORKSPACE` if both set. Unknown name → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
+| 1 | **Explicit arg** | `/magicspec {cmd} {workspace}` | Use it. Print: `"Active workspace: {workspace}."` Overrides `MAGIC_WORKSPACE` if both set. Unknown name → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
 | 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. Unknown value → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
 | 3 | **`workspace.json`** | Single workspace | Use it silently. |
 | 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: `"Active workspace: {default}."` |
@@ -98,7 +98,7 @@ When multiple workspaces exist and no default is set:
 1. **Quick-scan** current directory/context (one-turn logic).
 2. **Select** most likely workspace by path matches, project markers (e.g., `src/` → `main`), or `scope` array coverage.
 3. **Notify** user (Zero-Prompt): `"Found {marker} — selecting {workspace}. Proceeding..."`
-4. No workspace `scope` array covers ≥50% of the current directory's files → choose by the Consequence Forecast (C27 DA-10) among the registered workspaces: every wrong pick costs the same (a later move), so the highest coverage wins, then the first in `workspace.json` order. Narrate `[DR] Selecting {workspace} — {criterion}. (Override: /magicspec:{cmd} {other})`. Nothing is asked.
+4. No workspace `scope` array covers ≥50% of the current directory's files → choose by the Consequence Forecast (C27 DA-10) among the registered workspaces: every wrong pick costs the same (a later move), so the highest coverage wins, then the first in `workspace.json` order. Narrate `[DR] Selecting {workspace} — {criterion}. (Override: /magicspec {cmd} {other})`. Nothing is asked.
 
 ## Scope Auto-Apply
 
@@ -106,7 +106,7 @@ After workspace resolves, apply its `scope` array from `workspace.json` as the s
 
 ## Workspace Fit Validation (WI-7, Second Contour)
 
-After resolution returns `existing:{Y}` (Priorities 1–3), validate fit before dispatching artifacts. Catches mis-routes that Step 0 detection missed. Applies to `magicspec:spec`, which calls it just before its file write; no other workflow dispatches a specification, so the others skip it.
+After resolution returns `existing:{Y}` (Priorities 1–3), validate fit before dispatching artifacts. Catches mis-routes that Step 0 detection missed. Applies to `/magicspec spec`, which calls it just before its file write; no other workflow dispatches a specification, so the others skip it.
 
 1. Compute domain match score between the artifact's filename / overview / user input terms and `{Y}`'s lexicon (same lexicon definition as Step 0).
 2. `workspace.json` registers ≥2 workspaces AND score < 0.30:
@@ -120,7 +120,7 @@ Conservative by design: false positives (warning when fit is fine) cost one info
 
 ## Argument Disambiguation
 
-If the argument is a single unquoted word that matches both a workspace name and could be a directive keyword, **workspace takes priority**. To force directive interpretation, wrap in quotes: `/magicspec:{cmd} "{word}"`.
+If the argument is a single unquoted word that matches both a workspace name and could be a directive keyword, **workspace takes priority**. To force directive interpretation, wrap in quotes: `/magicspec {cmd} "{word}"`.
 
 ## Post-Resolution
 
@@ -136,7 +136,7 @@ After resolution, load **in this exact order** — the sequence forms the sessio
    - It prints nothing when no work is recorded in flight — a task whose tracking entry reads `In Progress`. A missing or failing script counts as nothing in flight: never a halt.
    - A printed line → relay it verbatim as one informational line. Zero-Prompt (Trust Mode): resume from the recorded position; do not ask.
    - **Memory Fence**: Loaded STATE content is **authoritative recall**, not a fresh user directive. If the current user request conflicts with the recorded `Next Action` or any `Blocking Constraints`, the **user request wins** — narrate the divergence (one line) and proceed with the user request. Non-conflicting constraints remain in force.
-   - A cold context that does not open with a `/magicspec:*` command runs the same check through the session-start rule in `AGENT-RULES.md`.
+   - A cold context that does not open with a `/magicspec <command>` command runs the same check through the session-start rule in `AGENT-RULES.md`.
 
 ## Context Budget Guard
 

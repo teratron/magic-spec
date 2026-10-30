@@ -1,6 +1,6 @@
 # Unified Role System
 
-**Version:** 1.2.0
+**Version:** 1.2.1
 **Status:** Stable
 **Layer:** concept
 
@@ -164,7 +164,7 @@ Note: the C24 `Planning Skeptic` is absorbed into `planner` (advisor layer carri
 
 The `prompt-engineer` (§4.3) gains an **input-side trigger**: every command invocation that carries human prose passes through it before the workflow acts ([l1-input-prompt-pass.md](l1-input-prompt-pass.md)). It stays a reviewer: on input it produces an intent statement and findings, never the workflow's artifact. The two new cards are specified in [l2-role-cards-execution.md](l2-role-cards-execution.md) and [l2-role-cards-review.md](l2-role-cards-review.md), and the card index in [l2-role-cards.md](l2-role-cards.md) follows, when they are built.
 
-Declared supersessions ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the count of fourteen role cards in the constitution's C24 and in its shipped template (amended through `/magicspec:rule`, origin `user-stated`), in `l2-role-cards.md`, and in the registry check's expected total all move to sixteen when the cards are built.
+Declared supersessions ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the count of fourteen role cards in the constitution's C24 and in its shipped template (amended through `/magicspec rule`, origin `user-stated`), in `l2-role-cards.md`, and in the registry check's expected total all move to sixteen when the cards are built.
 
 ## 5. Lifecycle & Governance
 
@@ -225,6 +225,7 @@ Placing roles in `skills/magicspec/roles/{layer}/` (e.g., `skills/magicspec/role
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.0 | 2026-10-29 | Registry extended 14 → 16 (§4.4, origin `user-stated`: the owner's list of 2026-10-29): `ui-ux-designer` (executor) and `simulator-tester` (reviewer); `prompt-engineer` gains the input-side trigger of `l1-input-prompt-pass.md`. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.1.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.7.0
+**Version:** 3.7.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -49,7 +49,7 @@ All modules are internal — they export functions consumed only by `finalize.js
 executor.js finalize --workflow=<spec|task|run|rule> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
 ```
 
-`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magicspec:task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `skills/magicspec/AGENT-RULES.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
+`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magicspec task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `skills/magicspec/AGENT-RULES.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
 
 `--no-commit-msg` was removed 2026-08-27 alongside the commit-suggestion feature it toggled (SC-3 retirement) — there is no longer a commit message to opt out of.
 
@@ -72,7 +72,7 @@ After significance evaluation and phase archival, the pipeline patches the activ
 - `Updated` — invocation timestamp.
 - `Status` — **not patched by this step.** `updateSessionState()` calls `updateState(wsDir, { nextAction }, { autoProgress: true })` — `status` is never a key of that patch, so the field keeps whatever value an earlier explicit `--status=` call (`task.md` plan write-back, `run.md` phase transitions) last set. Left accurate only as long as those explicit call sites stay in sync — a latent gap tracked in the Known Gaps section of [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md).
 - Progress indicators — phase and overall counters, when `TASKS.md` is present. The recompute **merges, never clobbers**: only counter lines (`Label: [done/total] …`, including template `{filled}/{total}` placeholders) inside the `## Progress` fence are engine-owned and replaced; any other line is treated as hand-authored session narrative and preserved below the fresh counters. Silently discarding the operator's Progress notes on a routine finalize is an SC-2 defect — and so is silently discarding the phase-level counter itself when the recompute cannot locate it.
-- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1(d), Blocked-phase precedence per SC-2.1(a)). The synthesized value is screened at the computation's single exit against SC-2.2: at most one command, never `/magicspec:spec` or `/magicspec:analyze`. Plan-complete resolves to the `/magicspec:task` funnel when work is pending and to a command-free statement ("Plan complete — nothing pending") when nothing is; *pending* is decided by the one predicate Pre-flight already uses for `DESIGN_DEBT_PENDING`, `ORPHANED_SPEC` and `SYNC_GAP`, extracted into a single shared module both callers import rather than copied, and a predicate that cannot be evaluated resolves to the funnel (SC-2.4 addendum, Nothing-Pending Resolution). A screened-out value degrades to the `/magicspec:task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string. SC-2.4 records the boundary condition where that funnel is itself unproductive.
+- `Next Action` — the computed next step (pipeline order per DA-6, plan-complete resolution per SC-2.1(d), Blocked-phase precedence per SC-2.1(a)). The synthesized value is screened at the computation's single exit against SC-2.2: at most one command, never `/magicspec spec` or `/magicspec analyze`. Plan-complete resolves to the `/magicspec task` funnel when work is pending and to a command-free statement ("Plan complete — nothing pending") when nothing is; *pending* is decided by the one predicate Pre-flight already uses for `DESIGN_DEBT_PENDING`, `ORPHANED_SPEC` and `SYNC_GAP`, extracted into a single shared module both callers import rather than copied, and a predicate that cannot be evaluated resolves to the funnel (SC-2.4 addendum, Nothing-Pending Resolution). A screened-out value degrades to the `/magicspec task` funnel with a warning — finalize is non-blocking and never aborts over a recommendation string. SC-2.4 records the boundary condition where that funnel is itself unproductive.
 
 The step runs even when the significance whitelist does not hit — live memory must reflect every completed command, not only version-bumping ones. Failures are non-blocking: a warning is printed and finalize continues.
 
@@ -187,7 +187,7 @@ A fixture with a directory at the `STATE.md` path, run under `--workflow=run`: f
 
 ### 10.1 The Gap
 
-`magic.spec`'s whitelist covers specifications and the registry only, and `RULES.md` is whitelisted for `magic.rule` alone. A T1–T4 capture during `/magicspec:spec` writes the constitution but finalizes as `spec`, so a capture that changes nothing else bumps no version and writes no changelog entry — an asymmetry between the two workflows that both write `RULES.md`. Impact was bounded (a capture usually rides with counted spec changes), which is why it was parked; it is closed here because the answer is one sentence.
+`magic.spec`'s whitelist covers specifications and the registry only, and `RULES.md` is whitelisted for `magic.rule` alone. A T1–T4 capture during `/magicspec spec` writes the constitution but finalizes as `spec`, so a capture that changes nothing else bumps no version and writes no changelog entry — an asymmetry between the two workflows that both write `RULES.md`. Impact was bounded (a capture usually rides with counted spec changes), which is why it was parked; it is closed here because the answer is one sentence.
 
 ### 10.2 Required Fix
 
@@ -216,6 +216,7 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.7.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 3.7.0 | 2026-10-29 | Agent | New **Configured Paths Stay Inside the Project**: `finalization.versionPath` and `finalization.changelogPath` must name a file inside the project (relative, no `..` or link that leaves it) or `finalize` refuses before writing; the check is one shared function, `utils.resolveInsideProject`. |
 | 3.6.3 | 2026-10-29 | Agent | Reality sync: the bullet composer is `lib/changelog-bullets.js` (renamed from `commit-suggester.js`, whose name described the commit-message feature retired in 3.0.0 of this specification). No requirement changed. |
 | 3.6.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

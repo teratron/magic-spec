@@ -1,13 +1,13 @@
 # Status Command
 
-**Version:** 1.5.0
+**Version:** 1.5.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
 
 ## Overview
 
-Concrete realization of the status briefing surface (SC-4/SC-5): a read-only `/magicspec:status` command with an engine body in `skills/magicspec/`, a user-facing wrapper in `workflows/`, and a generated skill wrapper in `skills/`. The command renders a resume briefing — position, progress, blockers, recent decisions, engine drift, and exactly one recommended next command.
+Concrete realization of the status briefing surface (SC-4/SC-5): a read-only `/magicspec status` command with an engine body in `skills/magicspec/`, a user-facing wrapper in `workflows/`, and a generated skill wrapper in `skills/`. The command renders a resume briefing — position, progress, blockers, recent decisions, engine drift, and exactly one recommended next command.
 
 ## Related Specifications
 
@@ -59,8 +59,8 @@ Rendered in this fixed order:
 3. **Progress** — phase and overall progress bars, verbatim from `STATE.md` Progress.
 4. **Blockers & Blocking Constraints** — both sections surfaced; constraints are mandatory reading before resuming work.
 5. **Recent Decisions** — last 3 entries.
-6. **Engine line** — local engine version vs. registry snapshot: `Engine: {version} (in sync)` or `Engine: {local} (snapshot {snap} — drift; /magicspec:analyze revalidates)`. Informational only.
-7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one. When `Next Action` is a note in the owner's words — it names no `/magicspec:*` command and does not say that nothing is pending — render `Next: {the text, verbatim}`, recommend no command of your own and leave the note unrewritten.
+6. **Engine line** — local engine version vs. registry snapshot: `Engine: {version} (in sync)` or `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`. Informational only.
+7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one. When `Next Action` is a note in the owner's words — it names no `/magicspec <command>` command and does not say that nothing is pending — render `Next: {the text, verbatim}`, recommend no command of your own and leave the note unrewritten.
 
 ### 5.3 Resolution & Degraded States
 
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.5.0 | 2026-10-29 | Agent | §5.2 item 7 and the SC-4 row gain the third branch of the next-step line: an owner's note that names no command is rendered verbatim with no command added. Found walking `workflows/status.md` against this repository's own `STATE.md`, whose `Next Action` is such a note — none of the three branches applied and the agent had to improvise the last section of a read-only briefing. The body's Entry list also stopped telling the reader to read the file it is in. |
 | 1.4.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.4.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

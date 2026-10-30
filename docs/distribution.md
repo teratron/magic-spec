@@ -10,9 +10,9 @@ The user bundle is one folder, `skills/magicspec/`, distributed through GitHub R
 
 | Path | Description |
 | --- | --- |
-| `SKILL.md` | The router: the command grammar `magicspec <command> [args]`, one selection line per command, and a pointer to the workflow body. |
+| `SKILL.md` | The router and the only command surface: the grammar `/magicspec <command> [argument]`, the command table (group, argument, what happens when it is missing) and a pointer to the workflow body. |
 | `AGENT-RULES.md` | The source of the always-on rule (engine upgrade detection, graph use, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check). |
-| `workflows/` | One body per command: `spec`, `task`, `run`, `analyze`, `rule`, `status`, `graph`. |
+| `workflows/` | One body per command: `spec`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate`, `help`. |
 | `references/` | Shared modules the bodies name: `context`, `init`, `retrospective`. |
 | `roles/` | The role cards the workflows activate. |
 | `templates/` | File scaffolds for the state folder. |
@@ -29,23 +29,22 @@ Whatever must exist outside the folder for a host to find it is generated from i
 | --- | --- | --- |
 | `<host>/rules/magicspec.md` | Claude Code, Qwen Code | a byte copy of `AGENT-RULES.md` |
 | a managed block in `AGENTS.md` | Codex | one line pointing at `AGENT-RULES.md` |
-| `<host>/commands/magicspec/<command>.md` | Claude Code, Qwen Code | the router's command table |
 | `<host>/skills/magicspec` | any host that needs its own skills folder | a link to the skill folder |
 
-A generated file that differs from its source is reported as `PROJECTION_STALE`, with `init --host=<name>` as the remedy. A file at one of these paths that carries no marker belongs to you and is never overwritten. `remove` deletes exactly the marked files and the links, and leaves your `.magicspec/` workspace untouched.
+A generated file that differs from its source is reported as `PROJECTION_STALE`, with `init --host=<name>` as the remedy. A file at one of these paths that carries no marker belongs to you and is never overwritten. No per-command entry is generated: a command entry left by a 3.0.x installation (it carries the entry marker) is reported as `PROJECTION_RETIRED`, and `init` removes exactly the marked ones. `remove` deletes exactly the marked files and the links, and leaves your `.magicspec/` workspace untouched.
 
 ## 2. Choosing Your Host
 
 The host table was read from each host's own documentation and is the one place to correct if a host changes:
 
-| Host | Skills (project) | Always-on rule | Command entries |
+| Host | Skills (project) | Always-on rule | Command form |
 | --- | --- | --- | --- |
-| Claude Code | `.claude/skills/magicspec` | `.claude/rules/magicspec.md` | `.claude/commands/magicspec/<command>.md` gives `/magicspec:<command>` |
-| Codex | `.agents/skills/magicspec` | pointer block in `AGENTS.md` | none per project: use `$magicspec <command>` through the router |
-| Qwen Code | `.agents/skills/magicspec` or `.qwen/skills/magicspec` | `.qwen/rules/magicspec.md` | `.qwen/commands/magicspec/<command>.md` gives `/magicspec:<command>` |
+| Claude Code | `.claude/skills/magicspec` | `.claude/rules/magicspec.md` | `/magicspec <command> [argument]` |
+| Codex | `.agents/skills/magicspec` | pointer block in `AGENTS.md` | `$magicspec <command> [argument]` |
+| Qwen Code | `.agents/skills/magicspec` or `.qwen/skills/magicspec` | `.qwen/rules/magicspec.md` | `/magicspec <command> [argument]` |
 
 > [!NOTE]
-> The command namespace needs no plugin: a subfolder of the command folder is the colon namespace. A Claude Code plugin is an optional distribution channel built from the same folder (`build-plugin --out <dir>`); it adds marketplace distribution and updates, not a second engine.
+> The router is the only command surface: no host receives a per-command entry, and there is no plugin channel. A host invokes the skill by its name and hands it the rest of the line; `/magicspec` alone, or `/magicspec help`, lists the commands and offers them in the host's choice form where it has one (Claude Code: a question form of two to four choices, so the picker takes two steps) and in the chat where it has not (Codex, Qwen Code).
 
 ## 3. Dev Instruments
 

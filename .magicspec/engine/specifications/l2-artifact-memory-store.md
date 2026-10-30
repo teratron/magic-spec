@@ -1,6 +1,6 @@
 # Artifact Memory Store (SQLite)
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-artifact-memory.md
@@ -25,7 +25,7 @@ The owner asks for SQLite with vectors. The runtime the engine already requires 
 - The engine's stated runtime floor (Node 18) does not move: where `node:sqlite` is missing, the fallback serves the same contract.
 - The SQLite module's experimental warning must not reach the workflow's output: the executor starts the indexer's child process with the runtime flag that disables experimental warnings, and only on a runtime that has both the module and the flag — an older runtime rejects an unknown flag and takes the fallback without it.
 - <!-- TBD: the first Node release that loads `node:sqlite` without a flag (believed 22.13 / 23.4) — verify against the release notes before the version check is written. -->
-- **Assumption (forecast):** vectors are compared in process rather than through a loadable SQLite vector extension, because the extension is a per-platform native binary — the engine's first — and the corpus is small enough not to need it. Runner-up: load a vector extension when present. Override: `/magicspec:spec amend l2-artifact-memory-store.md "use a vector extension"`.
+- **Assumption (forecast):** vectors are compared in process rather than through a loadable SQLite vector extension, because the extension is a per-platform native binary — the engine's first — and the corpus is small enough not to need it. Runner-up: load a vector extension when present. Override: `/magicspec spec amend l2-artifact-memory-store.md "use a vector extension"`.
 
 ## 4. Invariant Compliance
 
@@ -120,4 +120,5 @@ Absent or empty: lexical only. The adapter speaks the widely implemented embeddi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created with `l1-artifact-memory.md` from the owner's request for SQLite vector memory. `node:sqlite` with FTS5 probed on Node 24.12 the same day. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

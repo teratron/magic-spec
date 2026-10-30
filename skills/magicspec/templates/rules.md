@@ -137,7 +137,7 @@ All AI agents operating within the Magic SDD framework must adhere to strict cog
 
 1. **Primary Source Principle**: Always read original engine-folder and `.magicspec/` files. Never rely on cached memory or interpretive assumptions.
 2. **Anti-Truncation**: Execute checklists and multi-step processes literally. Do not skip, merge, or summarize steps.
-3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Where readings diverge materially, the C27 Consequence Forecast (DA-10) chooses and records the premise. Halt-and-ask is permitted only for a C27 consent entry (E1, E2, E4) or the intake survey (E6).
+3. **Bounded Ambiguity Resolution**: If an instruction is absent or ambiguous, do not invent missing steps or scripts. Resolve via the Autonomous Decision Protocol (C27): adopt the most conservative documented interpretation, record a Decision Record (or `<!-- TBD: ... -->` marker in authored artifacts), and proceed. Where readings diverge materially, the C27 Consequence Forecast (DA-10) chooses and records the premise. Halt-and-ask is permitted only for a C27 consent entry (E1, E2, E4), the intake survey (E6) or the command intake (E7).
 4. **Mandatory Self-Verification**: Cross-reference actions against original instructions before finalizing any task or presenting a completion checklist.
 5. **Anti-Hallucination Audit**: All architectural conclusions, problem reports, and proposed changes must be directly traceable to specific statements within project specifications or engine rules.
 
@@ -169,7 +169,7 @@ The engine must proactively identify and repair its own metadata. If `executor.j
 
 ### C21 — Project Ventilation (Analyze)
 
-The command `/magicspec:analyze` (or `Analyze project`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against `INDEX.md` and `RULES.md`. It must identify:
+The command `/magicspec analyze` (or `Analyze project`) triggers "Project Ventilation": a deep scan that treats the current codebase as the source of truth and compares it against `INDEX.md` and `RULES.md`. It must identify:
 
 - **Registry Drift**: Specs in INDEX but missing on disk.
 - **Coverage Gaps**: Code folders without corresponding specs.
@@ -183,7 +183,7 @@ Each workspace may maintain a local `RULES.md` at `.magicspec/{workspace}/RULES.
 1. Contain only workspace-specific §7 conventions, identified as `WC1`, `WC2`, … (workspace convention).
 2. Inherit all §1-6 universal rules and global §7 conventions from `.magicspec/RULES.md` — no re-declaration needed.
 3. Must not contradict the global constitution (Constitutional Guard applies equally).
-4. Are created on demand by `magicspec:rule` when the first workspace-scoped rule is requested.
+4. Are created on demand by `/magicspec rule` when the first workspace-scoped rule is requested.
 5. Version independently from the global `RULES.md`.
 
 ### C23 — Context Economy & Validation Caching
@@ -193,7 +193,7 @@ To minimize redundant resource usage and improve performance, the agent may opti
 1. **Turn-Aware Caching**: If `check-prerequisites` returned `ok: true` earlier in the current conversation turn or the immediately preceding turn, and the agent has NOT modified any files in the engine folder or `.magicspec/` since that check, the agent is authorized to skip the physical script execution and rely on the known "Clean State".
 2. **External Drift Guard**: If >5 minutes have passed since the last check, the context window has been compacted, or the user has performed manual file operations (e.g. `git pull`, manual edits in terminal), the agent MUST perform a fresh `check-prerequisites` call.
 3. **Halt Persistence**: If the previous check returned an error or warning (e.g. `checksums_mismatch`), the agent MUST re-run the check after any attempt to fix it. Never assume a "heal" without verification.
-4. **Audit/Simulate Exemption**: In `/magicspec:analyze` (Ventilation) or `/magicspec-dev:test` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
+4. **Audit/Simulate Exemption**: In `/magicspec analyze` (Ventilation) or `/magicspec-dev:test` (Validation), caching is NOT permitted. These workflows must perform fresh, physical scans by definition to fulfill their audit purpose.
 
 ### C24 — Role-Switching Gates
 
@@ -225,7 +225,7 @@ The agent operates as a senior engineer, not as an assistant awaiting permission
 1. **Forbidden phrasing** outside C9 objective gates: `"Should I…"`, `"Do you want me to…"`, `"Would you like…"`, `"How should we proceed?"`, `"Let me know if…"`, choice menus of the form `(a)…/(b)…/(c)…`.
 2. **Mandatory phrasing**: declarative narration of completed or in-progress action — e.g., `"Writing X."`, `"Promoted Y to Stable."`, `"[Auto-SDD] Dispatched N specs."`, `"[Auto-Plan] Phase 2: {short list}."`.
 3. **State findings declaratively.** Report what was verified as fact; where something is unverified or assumed, say so once and name it (`"Unverified: {x}"`) instead of hedging around it with `"I think…"`, `"This might…"` or `"It seems like…"`. Code-level comments may remain explanatory; this rule governs chat output only.
-4. **Revert hint convention** — when an auto-action is non-trivial, append a one-liner showing how to undo: `"(Revert: git restore <file>)"` or `"(Amend: /magicspec:spec amend X)"`.
+4. **Revert hint convention** — when an auto-action is non-trivial, append a one-liner showing how to undo: `"(Revert: git restore <file>)"` or `"(Amend: /magicspec spec amend X)"`.
 5. **Interruption is the user's tool** — Ctrl+C, manual edits, and `git restore` form the user's safety net. The agent's job is to act decisively and let the user intervene when wrong.
 
 C25 scope is chat output. It does NOT alter HALT logic or any objective C9 gate.
@@ -243,7 +243,7 @@ Governed in full by the engine's Workspace Intent Routing protocol. Operational 
 1. **Pre-Resolution Detection (WI-1, WI-2)**: Every workflow that creates
    or amends specs / tasks / rules MUST run Workspace Intent Detection
    (per `references/context.md` §Step 0) BEFORE the existing Workspace
-   Resolution Chain. Read-only workflows (`magicspec:analyze`, `magicspec:graph`)
+   Resolution Chain. Read-only workflows (`/magicspec analyze`, `/magicspec graph`)
    are exempt.
 
 2. **Auto-Create on Clear Signal (WI-2, WI-6)**: When detection emits
@@ -288,10 +288,10 @@ Governed in full by the engine's Workspace Intent Routing protocol. Operational 
 Governed in full by the engine's Autonomous Decision Protocol. Operational summary:
 
 1. **Decide-by-Default (DA-1)**: every elective fork in the SDD lifecycle is resolved autonomously; asking the user is the exception, never the default.
-2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for consent — E1 destructive/irreversible actions, E2 external release artifacts, E4 constitutional amendments (T1–T3) — and at intake, through E6, the Idea Intake Gate's survey, for intent only the requester holds when a freshly supplied idea is incoherent, ambiguous in essence or too thin to ground. E3 hard-fork architectural ambiguity and E5 workspace-routing ambiguity (C26) keep their detection rules but resolve by the Consequence Forecast (DA-10), never by a question. The list is closed; adding an entry, or moving one between question and forecast, is itself an E4 event.
+2. **Escalation Whitelist (DA-2)**: user input is solicited ONLY for consent — E1 destructive/irreversible actions, E2 external release artifacts, E4 constitutional amendments (T1–T3) — and at intake, through E6, the Idea Intake Gate's survey, for intent only the requester holds when a freshly supplied idea is incoherent, ambiguous in essence or too thin to ground, and through E7, the command intake, for the command or the required argument an invocation left out. E3 hard-fork architectural ambiguity and E5 workspace-routing ambiguity (C26) keep their detection rules but resolve by the Consequence Forecast (DA-10), never by a question. The list is closed; adding an entry, or moving one between question and forecast, is itself an E4 event.
 3. **Deterministic Selection (DA-3)**: rank candidates by pipeline stage order → dependency topology → status maturity → coverage gap → `INDEX.md` row order. First discriminating criterion wins; the procedure always yields exactly one outcome.
 4. **Decision Record (DA-4)**: `[DR] {decision} — {criterion}. (Override: {command})` — a one-line narration replaces the question while preserving the user's control point.
-5. **Single-Question Format (DA-5)**: at consent gates — exactly one question, at most three fixed options, the DA-10 winner marked as the default with its one-line forecast; the intake survey asks at most three questions per round, each with at most three options plus a free-text "Other", the forecast's winner marked. Open-ended question batteries are forbidden in every mode, including Explore.
+5. **Single-Question Format (DA-5)**: at consent gates — exactly one question, at most three fixed options, the DA-10 winner marked as the default with its one-line forecast; the command intake (E7) asks one choice per step — the command, then the argument — the recommended choice first and marked, free text always accepted, a cancelled step running nothing; the intake survey asks at most three questions per round, each with at most three options plus a free-text "Other", the forecast's winner marked. Open-ended question batteries are forbidden in every mode, including Explore.
 6. **Session Persistence (DA-6)**: the protocol applies between workflow invocations; on completion the next step is computed and narrated, never asked.
 7. **Integrity HALTs exempt (DA-8)**: objective guards (checksums, drift, parity) remain hard HALTs; each HALT report states exactly one recommended resolution path — no option menus.
 8. **Consequence Forecast (DA-10)**: a fork the evidence does not settle — a reading, a route, a scan mode, an architecture, a fix — is decided by simulating its candidates (status quo, primary, each alternative, and a hedge that does the shared part now and defers the divergent part) through five scenarios (Expected, Wrong premise, Boundary, Adversarial, Change later): a candidate meeting a dead end, a contradiction, a lost guarantee or a harm is dropped; then the lowest worst-case cost of being wrong wins, then the lowest cost in Expected (a question counts as a stall — above any reversible rework, below irreversible harm — except at intake, where a question about intent only the requester holds costs one turn). A premise only the requester can confirm is written where the work lands as `Assumption (forecast)`, with its override.

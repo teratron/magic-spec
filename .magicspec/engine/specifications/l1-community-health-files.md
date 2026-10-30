@@ -1,6 +1,6 @@
 # Community Health Files
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -32,9 +32,9 @@ The owner asks for both files to be filled in by those rules and kept filled in 
 ## 2. Constraints & Assumptions
 
 - These are product files of the repository, not SDD artifacts: they are written by an execution task, never by the specification workflow, and carry no task identifiers, phase designators or state-folder paths. In the engine's own repository the SDD commands are part of the product being documented, so the contribution guide may name them.
-- **Assumption (forecast):** vulnerabilities are reported privately through the platform's private reporting, and the transparency the current policy wants is kept by publishing an advisory once a fix is released. Runner-up: keep public reporting. Override: `/magicspec:spec amend l1-community-health-files.md "public vulnerability reports"`.
+- **Assumption (forecast):** vulnerabilities are reported privately through the platform's private reporting, and the transparency the current policy wants is kept by publishing an advisory once a fix is released. Runner-up: keep public reporting. Override: `/magicspec spec amend l1-community-health-files.md "public vulnerability reports"`.
 - <!-- TBD: the acknowledgement and decision times the maintainers commit to in the policy (§5.3 shows them as {N} and {M} days). -->
-- **Assumption (forecast):** security fixes go to the latest minor line of the current major version only. Runner-up: also the last minor line of the previous major for a stated period. Override: `/magicspec:spec amend l1-community-health-files.md "support the previous major until {date}"`.
+- **Assumption (forecast):** security fixes go to the latest minor line of the current major version only. Runner-up: also the last minor line of the previous major for a stated period. Override: `/magicspec spec amend l1-community-health-files.md "support the previous major until {date}"`.
 
 ## 3. Core Invariants
 
@@ -106,4 +106,5 @@ You will get an acknowledgement within {N} days and a decision within {M} days.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (fill and keep filling `SECURITY.md` and `CONTRIBUTING.md` by the platform's rules, readable for people and AI; decide the role; write instructions for manual steps on the hosting service) and the issue-report item. Scope by the owner's choice of 2026-10-29: this repository now, portable later. Repository settings read through the platform's API on 2026-10-29. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

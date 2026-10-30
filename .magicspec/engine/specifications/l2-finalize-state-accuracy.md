@@ -1,6 +1,6 @@
 # Finalize Pipeline — STATE.md Accuracy
 
-**Version:** 2.4.0
+**Version:** 2.4.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -64,13 +64,13 @@ Every defect this register has recorded, by its permanent number. **A defect kee
 for (const file of phaseFiles) {
     const content = fs.readFileSync(path.join(tasksDir, file), 'utf8');
     const openTask = content.match(openTaskRe);
-    if (openTask) return `Execute ${openTask[1]} ${openTask[2]} via /magicspec:run ${workspace}`;
+    if (openTask) return `Execute ${openTask[1]} ${openTask[2]} via /magicspec run ${workspace}`;
 }
 ```
 
-A phase recorded `status: Blocked` in its own frontmatter still has an open (`- [ ]`) checklist line for the blocked task — Blocked is not Done — so this loop returns it unconditionally. Verified by direct reproduction against engine 2.1.62: a phase file with `status: Blocked` frontmatter, a `TASKS.md` registry row reading `` `Blocked` ``, and one open checklist item yields `Execute T-1A01 {title} via /magicspec:run {ws}` byte-for-byte, while `STATE.md`'s own `**Status:** Blocked` and `## Blockers` entry are left untouched by the same call — the file becomes internally contradictory, not just stale.
+A phase recorded `status: Blocked` in its own frontmatter still has an open (`- [ ]`) checklist line for the blocked task — Blocked is not Done — so this loop returns it unconditionally. Verified by direct reproduction against engine 2.1.62: a phase file with `status: Blocked` frontmatter, a `TASKS.md` registry row reading `` `Blocked` ``, and one open checklist item yields `Execute T-1A01 {title} via /magicspec run {ws}` byte-for-byte, while `STATE.md`'s own `**Status:** Blocked` and `## Blockers` entry are left untouched by the same call — the file becomes internally contradictory, not just stale.
 
-**Required fix** (SC-2.1(a)): before returning a phase's open-task match, check that phase's `status:` frontmatter (already available in `content`) and its `TASKS.md` registry row. Either reading `Blocked` MUST redirect the return value away from an execute-style recommendation — e.g. `` `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magicspec:run ${workspace}` `` — rather than either silently falling through to the next phase (which would recommend a *different*, possibly out-of-order phase) or leaving the field untouched (which would go stale the next time the blocker's own detail changes). The redirected value still passes through the SC-2.2 single-exit screen unchanged.
+**Required fix** (SC-2.1(a)): before returning a phase's open-task match, check that phase's `status:` frontmatter (already available in `content`) and its `TASKS.md` registry row. Either reading `Blocked` MUST redirect the return value away from an execute-style recommendation — e.g. `` `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magicspec run ${workspace}` `` — rather than either silently falling through to the next phase (which would recommend a *different*, possibly out-of-order phase) or leaving the field untouched (which would go stale the next time the blocker's own detail changes). The redirected value still passes through the SC-2.2 single-exit screen unchanged.
 
 ## 4. The Status Field Collision (SC-1.1)
 
@@ -98,17 +98,17 @@ for (const file of phaseFiles) {
     const openTask = content.match(openTaskRe);
     if (!openTask) continue;
     if (isPhaseBlocked(content, tasks, file.match(/\d+/)[0])) {
-        return `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magicspec:run ${workspace}`;
+        return `Resolve blocker on ${openTask[1]} (${workspace}) — see STATE.md ## Blockers, then run /magicspec run ${workspace}`;
     }
-    return `Execute ${openTask[1]} ${openTask[2]} via /magicspec:run ${workspace}`;
+    return `Execute ${openTask[1]} ${openTask[2]} via /magicspec run ${workspace}`;
 }
 ```
 
 `isPhaseBlocked()` never reads the phase file's `## Detailed Tracking` section — the sub-block that carries each task's own `**Status:** {Todo | In Progress | Done | Blocked | Cancelled}` and `**Assignment:** {Agent | User}` fields (`skills/magicspec/templates/phase.md`). A phase whose own frontmatter/registry status is *not* `Blocked` (e.g. `In Progress`) still passes the guard unconditionally, so the loop returns an execute-style recommendation for the checklist's first open line even when that exact task's own Detailed Tracking entry marks it `Status: Blocked` or `Assignment: User` — the same class of contradiction SC-2.1(a) already closes at the phase level, reopened one level down at the task level.
 
-Verified by direct reproduction against engine 2.1.72: a synthetic phase file with `status: In Progress` frontmatter (registry row also non-Blocked) and two open checklist items — `T-1A01` (`Detailed Tracking` `**Status:** Blocked`, `**Assignment:** User`) followed by `T-1A02` (`**Status:** Todo`, `**Assignment:** Agent`) — makes `computeNextAction('run', workspace, wsDir)` return `Execute T-1A01 First blocked/user task via /magicspec:run {workspace}` byte-for-byte, skipping straight past the actionable `T-1A02` to name the one task the same file's own Detailed Tracking says the agent should not run.
+Verified by direct reproduction against engine 2.1.72: a synthetic phase file with `status: In Progress` frontmatter (registry row also non-Blocked) and two open checklist items — `T-1A01` (`Detailed Tracking` `**Status:** Blocked`, `**Assignment:** User`) followed by `T-1A02` (`**Status:** Todo`, `**Assignment:** Agent`) — makes `computeNextAction('run', workspace, wsDir)` return `Execute T-1A01 First blocked/user task via /magicspec run {workspace}` byte-for-byte, skipping straight past the actionable `T-1A02` to name the one task the same file's own Detailed Tracking says the agent should not run.
 
-**Required fix**: extend the tier-2 loop's per-task screen beyond `isPhaseBlocked()`'s phase-level check to the matched task's own Detailed Tracking entry — parse the `### [{T-ID}] ...` sub-block for that specific ID and read its `**Status:**`/`**Assignment:**` fields. Either `Status: Blocked` or `Assignment: User` on the *matched* task MUST skip it — continuing the checklist scan for the next open line in the same phase file, then the next phase file, exactly mirroring the existing phase-to-phase continuation — rather than returning it as executable. If every open task remaining across all phase files is Blocked or `Assignment: User` (no agent-actionable item found anywhere), the computation MUST NOT fall through to the plan-complete branch (SC-2.1(d) — the plan is not complete, tasks remain) nor recommend `/magicspec:run` against a task the same pass just excluded; it returns a distinct message naming that the remaining work requires user or blocker action, pointing at `STATE.md`'s `## Blockers` / the phase's `## Detailed Tracking`, without naming a specific `/magicspec:run`-executable task ID. A missing `**Assignment:**` field (task templates predating the field, or a value outside `Agent | User`) MUST default to agent-actionable — the defect is a missing check on tasks that positively declare `Blocked` or `User`, not a stricter default for tasks that declare nothing.
+**Required fix**: extend the tier-2 loop's per-task screen beyond `isPhaseBlocked()`'s phase-level check to the matched task's own Detailed Tracking entry — parse the `### [{T-ID}] ...` sub-block for that specific ID and read its `**Status:**`/`**Assignment:**` fields. Either `Status: Blocked` or `Assignment: User` on the *matched* task MUST skip it — continuing the checklist scan for the next open line in the same phase file, then the next phase file, exactly mirroring the existing phase-to-phase continuation — rather than returning it as executable. If every open task remaining across all phase files is Blocked or `Assignment: User` (no agent-actionable item found anywhere), the computation MUST NOT fall through to the plan-complete branch (SC-2.1(d) — the plan is not complete, tasks remain) nor recommend `/magicspec run` against a task the same pass just excluded; it returns a distinct message naming that the remaining work requires user or blocker action, pointing at `STATE.md`'s `## Blockers` / the phase's `## Detailed Tracking`, without naming a specific `/magicspec run`-executable task ID. A missing `**Assignment:**` field (task templates predating the field, or a value outside `Agent | User`) MUST default to agent-actionable — the defect is a missing check on tasks that positively declare `Blocked` or `User`, not a stricter default for tasks that declare nothing.
 
 Tracked in [l1-session-continuity.md](l1-session-continuity.md) SC-2.1(c).
 
@@ -161,7 +161,7 @@ Tracked under the existing SC-2 update-completeness contract ([l1-session-contin
 
 ### 16.1 The Defect
 
-The top-level `Status` field is written only by explicit `--status=` calls (`task.md` at phase start, `run.md` at Pause Propagation and Phase Complete) — §4 correctly keeps the per-task call away from it — and `finalize.js` never writes it. A phase marked `Blocked` whose blocker is cleared without `/magicspec:task` (the task returned to `Todo`, or retried to `Done`, while the phase continues) therefore keeps reading `Blocked` until the phase completes, while the same finalize recomputes a `Next Action` that says to continue. Reproduced 2026-09-30 against engine 2.1.112: `Status: Blocked`, phase `In Progress`, one open agent-actionable task — a real per-task `update-state` call and a `finalize --workflow=run` both leave `Blocked`. The mirror case (a Blocked phase, `Status: Active`, because the agent skipped Pause Propagation) reproduces the same way. Both are the SC-2.1(a) defect — the file contradicting itself — one field over. Also found: `templates/state.md` offered `Complete`, a value no path writes.
+The top-level `Status` field is written only by explicit `--status=` calls (`task.md` at phase start, `run.md` at Pause Propagation and Phase Complete) — §4 correctly keeps the per-task call away from it — and `finalize.js` never writes it. A phase marked `Blocked` whose blocker is cleared without `/magicspec task` (the task returned to `Todo`, or retried to `Done`, while the phase continues) therefore keeps reading `Blocked` until the phase completes, while the same finalize recomputes a `Next Action` that says to continue. Reproduced 2026-09-30 against engine 2.1.112: `Status: Blocked`, phase `In Progress`, one open agent-actionable task — a real per-task `update-state` call and a `finalize --workflow=run` both leave `Blocked`. The mirror case (a Blocked phase, `Status: Active`, because the agent skipped Pause Propagation) reproduces the same way. Both are the SC-2.1(a) defect — the file contradicting itself — one field over. Also found: `templates/state.md` offered `Complete`, a value no path writes.
 
 ### 16.2 Required Fix
 
@@ -183,7 +183,7 @@ Fixtures against the real scripts: (a) `Blocked` with an open agent-actionable t
 
 Every reader of a phase checklist knew two box glyphs: `- [ ]` open and `- [x]` done. The workflows spell a blocked task `Blocked [!]` — a `Status` value in its Detailed Tracking entry — and an agent updating a ledger by hand carried that spelling into the checklist as `- [!]`. Nothing in the engine asks for it and nothing forbids it: `run.md` Step 2b states the rule for an in-flight task (leave the line `- [ ]`, because an in-flight marker there would hide the very task a resuming session must find) and never states it for a blocked one. To a reader that knows two glyphs a `- [!]` line is neither open nor done, so the task vanishes from three of them:
 
-- **`classifyPlanState()`** in `finalize.js` — the reported defect. A phase whose open tasks were all `- [!]` had no open line, so tier 2 passed over it and the registry-row tier returned `Continue Phase {N} via /magicspec:run {ws}` — a recommendation that can only Stall at once (`run.md` Select, *Stalled*). Field report against engine 2.1.138, which was HEAD; reproduced directly: a two-task phase, both lines `- [!]`, both entries `Status: Blocked`, registry row `In Progress`, returned `Continue Phase 1 via /magicspec:run`, where the same state written `- [ ]` returns §9's terminal message.
+- **`classifyPlanState()`** in `finalize.js` — the reported defect. A phase whose open tasks were all `- [!]` had no open line, so tier 2 passed over it and the registry-row tier returned `Continue Phase {N} via /magicspec run {ws}` — a recommendation that can only Stall at once (`run.md` Select, *Stalled*). Field report against engine 2.1.138, which was HEAD; reproduced directly: a two-task phase, both lines `- [!]`, both entries `Status: Blocked`, registry row `In Progress`, returned `Continue Phase 1 via /magicspec run`, where the same state written `- [ ]` returns §9's terminal message.
 - **`allChecked()`** in `phase-archiver.js` — found by auditing the other readers of the line. A phase with `status: Done` and a `- [!]` line read as fully checked and was archived, filing an unresolved task away.
 - **`computeProgress()`** in `update-state.js` — same audit. The line was left out of the total, so one done, one blocked and one open read `[1/2]` where the plan holds three tasks.
 
@@ -231,6 +231,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.4.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 2.3.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.3.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.3.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

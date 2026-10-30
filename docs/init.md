@@ -65,7 +65,7 @@ Provisions a per-workspace layout, never a flat root: the global registry and co
     └── archives/tasks/ # Completed phases
 ```
 
-**STATE.md**: not created by `init`. The first mutating command's state update (`update-state.js`) instantiates it from `skills/magicspec/templates/state.md`, filling in the workspace name and timestamp, with `Status: Active`, `Phase: 0 — Not Started` and `Next Action: Run /magicspec:task`. It never overwrites an existing STATE.md, and nothing downstream assumes it exists right after `init`.
+**STATE.md**: not created by `init`. The first mutating command's state update (`update-state.js`) instantiates it from `skills/magicspec/templates/state.md`, filling in the workspace name and timestamp, with `Status: Active`, `Phase: 0 — Not Started` and `Next Action: Run /magicspec task`. It never overwrites an existing STATE.md, and nothing downstream assumes it exists right after `init`.
 
 Another workspace is added later with `executor.js create-workspace --name={name}`, not by re-running `init`.
 

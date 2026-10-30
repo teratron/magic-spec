@@ -39,7 +39,7 @@ const diagnostics = require('./lib/diagnostics');
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Triggered by `/magicspec:spec`, `/magicspec:task`, `/magicspec:run`, `/magicspec:rule`
+ * Triggered by `/magicspec spec`, `/magicspec task`, `/magicspec run`, `/magicspec rule`
  * after the workflow's main steps complete and before its Completion
  * Checklist. Detects significant artifact changes, bumps the project's
  * patch version, appends a CHANGELOG entry, and prints a structured stdout
@@ -224,10 +224,10 @@ function noteArchivalOff(wsDir) {
 /**
  * Commands that must never appear in a synthesized `Next Action`.
  *
- * `AGENT-RULES.md` §5 reserves `/magicspec:spec` to a real `/magicspec:task` Pre-flight
- * HALT and keeps `/magicspec:analyze` on-demand. The constraint is enforced on the
+ * `AGENT-RULES.md` §5 reserves `/magicspec spec` to a real `/magicspec task` Pre-flight
+ * HALT and keeps `/magicspec analyze` on-demand. The constraint is enforced on the
  * field rather than per-branch because STATE.md `Next Action` carries no
- * provenance: `/magicspec:status` replays it verbatim, so a line written by one
+ * provenance: `/magicspec status` replays it verbatim, so a line written by one
  * workflow is read back in the context of another.
  *
  * @type {RegExp}
@@ -240,7 +240,7 @@ const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
  *
  * The guard is deliberately placed at the single exit rather than on each
  * branch of the synthesis: an earlier fix corrected only the `run` branch and
- * left `task` emitting `/magicspec:spec`, which is the regression this closes.
+ * left `task` emitting `/magicspec spec`, which is the regression this closes.
  * A violation degrades to the planning funnel with a warning — `finalize` is
  * non-blocking by contract and must never abort over a recommendation string.
  *
@@ -256,7 +256,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
     if (RESERVED_COMMAND_RE.test(next)) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
-            `AGENT-RULES.md §5; substituting the /magicspec:task funnel.`;
+            `AGENT-RULES.md §5; substituting the /magicspec task funnel.`;
         console.warn(`[state] ${message}`);
         diagnostics.record({
             severity: 'fix',
@@ -265,7 +265,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
             message,
             locus: 'STATE.md',
         });
-        return `Run /magicspec:task ${workspace} to plan`;
+        return `Run /magicspec task ${workspace} to plan`;
     }
     return next;
 }
@@ -288,7 +288,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
  * @returns {string} A one-line `Next Action` value.
  */
 function planCompleteNextAction(workspace, wsDir) {
-    const funnel = `Plan complete — run /magicspec:task ${workspace} to plan new scope`;
+    const funnel = `Plan complete — run /magicspec task ${workspace} to plan new scope`;
     try {
         const pending = findPendingWork(wsDir);
         const nothingPending =
@@ -479,7 +479,7 @@ function classifyPlanState(wsDir) {
             // inline list and every phase file is Blocked or Assignment: User.
             // The plan is not complete — tasks remain — so this must not fall
             // through to the plan-complete branch below (tier 3), and must not
-            // name the excluded task as /magicspec:run-executable.
+            // name the excluded task as /magicspec run-executable.
             return { kind: 'all-excluded', id: firstExcludedTask };
         }
 
@@ -513,39 +513,39 @@ function classifyPlanState(wsDir) {
 function synthesizeNextAction(workflow, workspace, wsDir, classified) {
     // spec/rule changes require (re)planning before execution — the plan must
     // absorb the amended specs/rules first (pipeline order).
-    if (workflow === 'spec') return `Run /magicspec:task ${workspace} to update the plan`;
+    if (workflow === 'spec') return `Run /magicspec task ${workspace} to update the plan`;
     if (workflow === 'rule')
-        return `Run /magicspec:task ${workspace} to revalidate the plan against amended rules`;
+        return `Run /magicspec task ${workspace} to revalidate the plan against amended rules`;
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
     const plan = classified || classifyPlanState(wsDir);
     switch (plan.kind) {
         case 'inline-open':
         case 'actionable':
-            return `Execute ${plan.id} ${plan.title} via /magicspec:run ${workspace}`;
+            return `Execute ${plan.id} ${plan.title} via /magicspec run ${workspace}`;
         case 'blocked-phase':
             return (
                 `Resolve blocker on ${plan.id} (${workspace}) — ` +
-                `see STATE.md ## Blockers, then run /magicspec:run ${workspace}`
+                `see STATE.md ## Blockers, then run /magicspec run ${workspace}`
             );
         case 'all-excluded':
             return (
                 `${plan.id} and any other open tasks need user or blocker ` +
                 `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
-                `then run /magicspec:run ${workspace}`
+                `then run /magicspec run ${workspace}`
             );
         case 'registry-open':
-            return `Continue Phase ${plan.phase} via /magicspec:run ${workspace}`;
+            return `Continue Phase ${plan.phase} via /magicspec run ${workspace}`;
         case 'complete':
             // No open tasks anywhere → plan complete. The recommendation is
             // uniform across workflows (SC-2.1 + AGENT-RULES.md §5): new scope
-            // enters through the /magicspec:task funnel, whose Pre-flight raises the
-            // HALT that sanctions spec authoring. Naming /magicspec:spec here would
-            // short-circuit that funnel — and, because /magicspec:status replays this
-            // field verbatim, would resurface after /magicspec:run where §5 forbids it.
+            // enters through the /magicspec task funnel, whose Pre-flight raises the
+            // HALT that sanctions spec authoring. Naming /magicspec spec here would
+            // short-circuit that funnel — and, because /magicspec status replays this
+            // field verbatim, would resurface after /magicspec run where §5 forbids it.
             return planCompleteNextAction(workspace, wsDir);
         default:
-            return `Run /magicspec:task ${workspace} to plan`;
+            return `Run /magicspec task ${workspace} to plan`;
     }
 }
 
@@ -908,7 +908,7 @@ function main() {
     const designAbs = statePath(projectRoot);
     if (!fs.existsSync(designAbs)) {
         console.error(
-            `❌ ${STATE_DIR_NAME}/ not found at ${designAbs}. Run /magicspec:spec to bootstrap.`,
+            `❌ ${STATE_DIR_NAME}/ not found at ${designAbs}. Run /magicspec spec to bootstrap.`,
         );
         return 1;
     }
@@ -1040,7 +1040,7 @@ function main() {
         }
     }
 
-    // ── Phase archival (magicspec:run only) ─────────────────────────────────────
+    // ── Phase archival (/magicspec run only) ─────────────────────────────────────
     let archivedPhases = [];
     if (opts.workflow === 'run') {
         try {

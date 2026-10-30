@@ -63,12 +63,12 @@ const WORKING_DOCS = [
     {
         scope: 'workspace',
         name: 'TASKS.md',
-        remedy: 'run /magicspec:run so finalize archives the Done phases',
+        remedy: 'run /magicspec run so finalize archives the Done phases',
     },
     {
         scope: 'workspace',
         name: 'RULES.md',
-        remedy: '/magicspec:rule to consolidate overlapping conventions and trim history rows',
+        remedy: '/magicspec rule to consolidate overlapping conventions and trim history rows',
     },
     {
         scope: 'global',
@@ -78,7 +78,7 @@ const WORKING_DOCS = [
     {
         scope: 'global',
         name: 'RULES.md',
-        remedy: '/magicspec:rule to consolidate overlapping conventions and trim history rows',
+        remedy: '/magicspec rule to consolidate overlapping conventions and trim history rows',
     },
 ];
 
@@ -288,7 +288,7 @@ function main() {
         );
         if (issue.type.startsWith('SPEC_')) {
             console.log(
-                `     → /magicspec:spec amend ${path.basename(issue.file, '.md')} to split into focused L2 specs`,
+                `     → /magicspec spec amend ${path.basename(issue.file, '.md')} to split into focused L2 specs`,
             );
         } else {
             console.log(

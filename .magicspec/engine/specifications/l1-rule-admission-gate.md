@@ -1,6 +1,6 @@
 # Rule Admission Gate
 
-**Version:** 1.1.6
+**Version:** 1.1.7
 **Status:** Stable
 **Layer:** concept
 
@@ -14,7 +14,7 @@ The gate answers one question the engine has never asked: *should this rule exis
 
 - [l1-decision-autonomy.md](l1-decision-autonomy.md) - Host protocol (C27). The gate adds no question: declined candidates are Decision Records, and admitted agent-originated candidates reach the user only through the existing E4 proposal.
 - [l1-prompt-quality-gate.md](l1-prompt-quality-gate.md) - Wording review of admitted rules. RA-9 bounds its semantic-coverage dimension: it may clarify an admitted regulation, never widen it.
-- [l1-idea-intake-gate.md](l1-idea-intake-gate.md) - Sibling gate on the same `/magicspec:spec` input. Intake refines *what is built*; this gate filters *what is regulated*.
+- [l1-idea-intake-gate.md](l1-idea-intake-gate.md) - Sibling gate on the same `/magicspec spec` input. Intake refines *what is built*; this gate filters *what is regulated*.
 - [l1-role-system.md](l1-role-system.md) - The gate is executed by existing reviewer roles; no new role.
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Card content: constitutional-reviewer admission step and verdicts, spec-critic regulation check, prompt-engineer widening bar.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow wiring: rule capture handed to `rule.md`, the Admission stage and the review-before-write order (§3.2, §3.4).
@@ -41,8 +41,8 @@ The owner's report matches: working by the engine's own procedure, the agent cre
 | # | Root cause | Evidence |
 | --- | --- | --- |
 | 1 | **No "do not create" outcome.** Every guard asks about conflict, duplication, scope or wording. None asks whether the rule is needed, so a non-conflicting rule is always approved. | `skills/magicspec/roles/constitutional-reviewer.md` — verdicts APPROVE / AMEND / REJECT, REJECT only for constitutional conflict. |
-| 2 | **The laxest path is the busiest.** Inline T4 capture in `/magicspec:spec` skips the constitutional and wording reviews that `/magicspec:rule` runs; first-time analysis dispatches "M rules" with no gate at all. | `skills/magicspec/workflows/spec.md` §Updating RULES.md (T4 Inline Guards); `skills/magicspec/workflows/analyze.md` Mode A step 3, Dispatch Logic step 2. |
-| 3 | **The procedure itself generates rules.** T1 fires on "always/never" wording in any input — product requirements included; T2 on a "repeated pattern" with no count; T3 on any audit finding; the advisory suggests `/magicspec:rule add` for every "uncodified pattern", treating the absence of a rule as a defect. | `skills/magicspec/workflows/spec.md` T1–T3 row; `skills/magicspec/workflows/analyze.md` §Action Proposals. |
+| 2 | **The laxest path is the busiest.** Inline T4 capture in `/magicspec spec` skips the constitutional and wording reviews that `/magicspec rule` runs; first-time analysis dispatches "M rules" with no gate at all. | `skills/magicspec/workflows/spec.md` §Updating RULES.md (T4 Inline Guards); `skills/magicspec/workflows/analyze.md` Mode A step 3, Dispatch Logic step 2. |
+| 3 | **The procedure itself generates rules.** T1 fires on "always/never" wording in any input — product requirements included; T2 on a "repeated pattern" with no count; T3 on any audit finding; the advisory suggests `/magicspec rule add` for every "uncodified pattern", treating the absence of a rule as a defect. | `skills/magicspec/workflows/spec.md` T1–T3 row; `skills/magicspec/workflows/analyze.md` §Action Proposals. |
 | 4 | **Nothing bounds a rule to its stated intent.** Capture writes whatever strength the agent infers, and the review lenses reward additions: spec-critic's Invariant Completeness and the Safety & Boundary lens ask what else could break; the wording review's semantic-coverage dimension proposes text to add. No lens asks what could be removed. | `skills/magicspec/roles/spec-critic.md` step 2; `skills/magicspec/workflows/spec.md` §Post-Update Review lens 1; `skills/magicspec/roles/prompt-engineer.md` step 6. |
 | 5 | **Growth is a ratchet.** Add is silent with a Minor bump; Remove is a destructive action with a dependency scan, a confirmation and a Major bump. Nothing ever proposes a removal, and no rule records why it exists, so none can be shown to be obsolete. | `skills/magicspec/workflows/rule.md` §Actions. |
 | 6 | **Duplication is checked against too little.** The check compares only the two `RULES.md` tiers — not the engine's shipped rules and not the regulations inside specifications. | `skills/magicspec/workflows/spec.md` T4 Inline Guards step 2; `skills/magicspec/workflows/rule.md` Guards. |
@@ -63,7 +63,7 @@ It adds what the draft omits: the exit path (RA-7), the form bound (RA-6), and t
 - **Regulation** — normative text constraining *how work is done*: mandatory checks, required approvals or confirmations, blocking or promotion gates, required records, prohibited actions, tools or dependencies, coding conventions. It is in scope wherever it is written: `RULES.md` conventions and regulations embedded in specification text.
 - **Product invariant** — normative text about *what the product does*: behavior, data, interfaces. Out of scope; its completeness remains the spec-critic's concern. An "always/never" statement about product behavior is a product invariant and belongs in the specification, never in `RULES.md`.
 - **Origin** — *user-stated* when the user supplied the normative text in their own words; *agent-originated* when the agent composed it (T1–T3 proposals, analysis dispatch and advisories, audit findings, regulations the agent introduces into a spec, clauses the agent adds to a user-stated rule). The author of the normative text decides the origin, not who ran the command. Where the origin cannot be established from the input, the candidate is agent-originated; the Decision Record's override restates it as the user's own.
-- **Rule-governance pipeline** — the `/magicspec:rule` workflow's operational logic: tier routing, admission, guards, constitutional and wording review, write. Shipped text calls it `rule.md`'s Operational Logic.
+- **Rule-governance pipeline** — the `/magicspec rule` workflow's operational logic: tier routing, admission, guards, constitutional and wording review, write. Shipped text calls it `rule.md`'s Operational Logic.
 - No new command (C2), no new artifact file, no new question channel (the C27 consent entries E1, E2 and E4 and the E6 intake survey unchanged), no new constitutional convention (RA-9).
 - Conventions shipped in the engine's constitution template are engine-owned: this gate governs project-authored regulations.
 
@@ -71,7 +71,7 @@ It adds what the draft omits: the exit path (RA-7), the form bound (RA-6), and t
 
 ### RA-1 — One Gate, Every Entry Point
 
-Every path that writes or proposes a regulation passes the same gate: `/magicspec:rule` add and amend; T1–T4 capture in `/magicspec:spec` and the T4 queue in `/magicspec:task`; rule dispatch and rule advisories in `/magicspec:analyze`; and regulations the agent introduces into specification text. No entry point applies a weaker check than another. A path with its own inline rule handling delegates to the rule-governance pipeline instead of restating it. An amendment is gated on its delta only.
+Every path that writes or proposes a regulation passes the same gate: `/magicspec rule` add and amend; T1–T4 capture in `/magicspec spec` and the T4 queue in `/magicspec task`; rule dispatch and rule advisories in `/magicspec analyze`; and regulations the agent introduces into specification text. No entry point applies a weaker check than another. A path with its own inline rule handling delegates to the rule-governance pipeline instead of restating it. An amendment is gated on its delta only.
 
 ### RA-2 — Evidence Anchor
 
@@ -118,7 +118,7 @@ A regulation body states the constraint, its scope and a one-sentence rationale 
 
 ### RA-7 — Symmetric Exit
 
-Ventilation reports retirement candidates as advisory findings, each with a `→ /magicspec:rule remove {id}` or `→ /magicspec:rule amend {id}` next step:
+Ventilation reports retirement candidates as advisory findings, each with a `→ /magicspec rule remove {id}` or `→ /magicspec rule amend {id}` next step:
 
 - **(a) Cause gone** — the file or component named in an agent-originated regulation's evidence no longer exists.
 - **(b) Superseded** — duplicated by a higher tier, an engine rule or a specification regulation.
@@ -132,11 +132,11 @@ User-stated regulations, and regulations with no origin record (predating this g
 The gate ends in exactly one verdict:
 
 - **CREATE {rung 2–4}** or **MODIFY {id}** — narrated as a compact admission record of at most seven lines: Problem, Evidence, Without, With, Form & placement, Verdict.
-- **DO NOT CREATE** — one Decision Record: `[DR] Not codified: {candidate} — {no evidence | covered by {ref} | cost exceeds harm | placed at rung {n}}. (Override: {command})`. The override is `/magicspec:rule add "{text}"`, or `/magicspec:spec amend {spec}` when the record places the candidate at a rung the running workflow cannot write. A rung-0 outcome is the narration itself.
+- **DO NOT CREATE** — one Decision Record: `[DR] Not codified: {candidate} — {no evidence | covered by {ref} | cost exceeds harm | placed at rung {n}}. (Override: {command})`. The override is `/magicspec rule add "{text}"`, or `/magicspec spec amend {spec}` when the record places the candidate at a rung the running workflow cannot write. A rung-0 outcome is the narration itself.
 
-**Write reach.** The gate writes only what the running workflow may write. `/magicspec:spec` writes specification text and, by handing the rule to the rule-governance pipeline, `RULES.md`; `/magicspec:rule` writes `RULES.md` only. A rung-1 outcome is a DO NOT CREATE record in either workflow, with the note written in the same turn where specification text is writable (`/magicspec:spec`) and the override `/magicspec:spec amend {spec}` where it is not (`/magicspec:rule`). A rung-2 outcome is CREATE {2} in `/magicspec:spec` and, in `/magicspec:rule`, the same DO NOT CREATE record with `placed at rung 2`, naming the governing specification. Ventilation writes nothing and surfaces only rung-3 and rung-4 candidates, as advisory links; a candidate it would place at rung 0–2 is not surfaced as a rule.
+**Write reach.** The gate writes only what the running workflow may write. `/magicspec spec` writes specification text and, by handing the rule to the rule-governance pipeline, `RULES.md`; `/magicspec rule` writes `RULES.md` only. A rung-1 outcome is a DO NOT CREATE record in either workflow, with the note written in the same turn where specification text is writable (`/magicspec spec`) and the override `/magicspec spec amend {spec}` where it is not (`/magicspec rule`). A rung-2 outcome is CREATE {2} in `/magicspec spec` and, in `/magicspec rule`, the same DO NOT CREATE record with `placed at rung 2`, naming the governing specification. Ventilation writes nothing and surfaces only rung-3 and rung-4 candidates, as advisory links; a candidate it would place at rung 0–2 is not surfaced as a rule.
 
-Both verdicts live in chat only, like every Decision Record — no file, no log. An agent-originated candidate that passes at rung 3 or 4 reaches the user through the existing E4 proposal, which carries the admission record and at most three fixed options per DA-5, one of them always "do not adopt"; from ventilation it is instead an advisory `→ /magicspec:rule add` link the user runs on demand. The gate asks nothing of its own.
+Both verdicts live in chat only, like every Decision Record — no file, no log. An agent-originated candidate that passes at rung 3 or 4 reaches the user through the existing E4 proposal, which carries the admission record and at most three fixed options per DA-5, one of them always "do not adopt"; from ventilation it is instead an advisory `→ /magicspec rule add` link the user runs on demand. The gate asks nothing of its own.
 
 ### RA-9 — The Gate Is Not a Rule
 
@@ -161,7 +161,7 @@ graph TD
     P -- 0 --> X
     P -- "1-2" --> W{Running workflow can write specification text?}
     W -- yes --> L[Write the note or regulation into the spec, narrate]
-    W -- no --> R[DO NOT CREATE: DR naming the spec, override /magicspec:spec amend]
+    W -- no --> R[DO NOT CREATE: DR naming the spec, override /magicspec spec amend]
     P -- "3-4" --> Q[E4 proposal, or advisory link from ventilation]
 ```
 
@@ -174,13 +174,13 @@ User-stated rules then continue through the existing guards (tier routing, dupli
 | T1 "always / never" | Any such wording proposes a rule | Only when the statement governs how work is done; about product behavior it is a spec invariant |
 | T2 repeated pattern | Uncounted | Two or more cited instances |
 | T3 audit finding | Each finding a rule candidate | The finding is fixed where it occurs; a rule candidate only if the same class recurs after a fix |
-| T4 "remember that" | Inline guards in `/magicspec:spec` | Delegated to the rule-governance pipeline; RA-5 applies |
+| T4 "remember that" | Inline guards in `/magicspec spec` | Delegated to the rule-governance pipeline; RA-5 applies |
 | Analysis Mode A | Observed conventions dispatched as rules | Recorded descriptively in the owning L2 specification; never written as rules |
-| Analysis advisory | `/magicspec:rule add` for every uncodified pattern | Only for a cited divergence that passed the gate — a link, never a write or a question |
+| Analysis advisory | `/magicspec rule add` for every uncodified pattern | Only for a cited divergence that passed the gate — a link, never a write or a question |
 
 ### 4.3 Worked Examples
 
-**Declined — already covered.** Ventilation finds one Stable L2 without Canonical References. Candidate: "every L2 fills Canonical References before Stable". W2: `CANONICAL_MISSING` already reports it. → `[DR] Not codified: Canonical References before Stable — covered by CANONICAL_MISSING advisory. (Override: /magicspec:rule add "…")`.
+**Declined — already covered.** Ventilation finds one Stable L2 without Canonical References. Candidate: "every L2 fills Canonical References before Stable". W2: `CANONICAL_MISSING` already reports it. → `[DR] Not codified: Canonical References before Stable — covered by CANONICAL_MISSING advisory. (Override: /magicspec rule add "…")`.
 
 **Admitted — soft, workspace rung.** Two cited compile failures in one workspace came from mixing numeric types the project had standardized. W1 the cause persists (nothing enforces the standard type), W2 nothing catches it before build, W3 reversible, no hazard. → CREATE at rung 3, proposed via E4 as a soft convention ("numeric code uses the project's numeric type"), not a merge-blocking gate — the harm is reversible and no violation of a soft form has been observed yet.
 
@@ -206,11 +206,11 @@ Engine Improvement — C14 applies to every `skills/magicspec/` and `workflows/`
 | --- | --- | --- |
 | 1 | `skills/magicspec/workflows/rule.md` | Admission step (RA-2–RA-6) ahead of the existing Guards, run by the constitutional-reviewer; the workflow's order makes every review precede the write, so a DO NOT CREATE writes nothing; Add/Amend actions reference it; the Document History row records origin (RA-6); the Rule Wording Review states the no-widening bar (RA-9); checklist gains an `Admission (RA)` line. |
 | 2 | `skills/magicspec/workflows/spec.md` | §Updating RULES.md: T1–T3 rows narrowed per §4.2; T1–T4 capture delegates to the rule-governance pipeline, whose admission step runs before any E4 proposal, and the T4 Inline Guards section is removed (RA-1 — no parallel guard set); Dispatch constraint *T4 Rule* updated; Post-Update Review lens 1 gains the necessity counterweight for regulations in spec text; checklist gains an `Admission (RA)` line. |
-| 3 | `skills/magicspec/workflows/analyze.md` | Mode A step 3 and Dispatch Logic step 2 per §4.2 — analysis no longer writes rules; Action Proposals emit `/magicspec:rule add` only for gate-passing candidates; two advisory findings — `RULE_RETIRE_CANDIDATE {id}: {a–c}` and `RULE_BLOAT {id}` (RA-7), excluding engine-template conventions. |
+| 3 | `skills/magicspec/workflows/analyze.md` | Mode A step 3 and Dispatch Logic step 2 per §4.2 — analysis no longer writes rules; Action Proposals emit `/magicspec rule add` only for gate-passing candidates; two advisory findings — `RULE_RETIRE_CANDIDATE {id}: {a–c}` and `RULE_BLOAT {id}` (RA-7), excluding engine-template conventions. |
 | 4 | `skills/magicspec/workflows/task.md` | T4 queue applies the queued rule through the rule-governance pipeline instead of `spec.md` T4 Inline Guards. |
 | 5 | `skills/magicspec/roles/` | constitutional-reviewer, spec-critic and prompt-engineer cards as specified in `l2-role-cards-governance.md` 1.3.0. |
 | 6 | `skills/magicspec/workflows/spec.md`, `skills/magicspec/workflows/rule.md` | The T4 Capture hint names the admission gate instead of the duplication check; wrapper-body parity per `l2-workflow-wrappers.md` §6; skills regenerate through C14. |
-| 7 | `l2-test-suite.md`, `magicspec-dev:test` | Scenarios: an agent candidate without evidence yields one DR, no write and no question; a user-stated rule with implied strengthening is written as stated plus "Not added" DRs; a candidate duplicating an engine rule is declined naming it; a hard-form candidate for reversible harm is admitted soft; a candidate whose lowest sufficient placement is a specification is redirected by one record and writes nothing when run from `/magicspec:rule`; a regulation whose cited file is gone yields `RULE_RETIRE_CANDIDATE`. Existing T4 tier-routing and duplication tests are re-targeted to the delegated pipeline. |
+| 7 | `l2-test-suite.md`, `magicspec-dev:test` | Scenarios: an agent candidate without evidence yields one DR, no write and no question; a user-stated rule with implied strengthening is written as stated plus "Not added" DRs; a candidate duplicating an engine rule is declined naming it; a hard-form candidate for reversible harm is admitted soft; a candidate whose lowest sufficient placement is a specification is redirected by one record and writes nothing when run from `/magicspec rule`; a regulation whose cited file is gone yields `RULE_RETIRE_CANDIDATE`. Existing T4 tier-routing and duplication tests are re-targeted to the delegated pipeline. |
 | 8 | `docs/rule.md`, `docs/spec.md` §6.5, `docs/analyze.md` | The human-readable counterparts of rows 1–3 stay in step with their workflows (`l1-documentation-system.md` VIO-2): the admission gate, the narrowed triggers, the capture path, the retirement findings. |
 
 **Shipped text is self-contained.** A consumer project receives the engine directories and no specification, so the `RA-n` labels alone define nothing there. The Admission step in `rule.md` carries the tests in words: the evidence classes (RA-2), the without-rule questions and the with-rule hazards by name (RA-3), the placement ladder and the soft-by-default form (RA-4), and fidelity to a user-stated rule (RA-5). The W1–W3 and H1–H6 codes are this specification's shorthand and do not appear in shipped text. Shipped text cites the `RA-n` labels, never this specification's file name (reference containment).
@@ -263,6 +263,7 @@ The constitution template ships the engine's own conventions (engine safety, eng
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.1.7 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.6 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.5 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 1.1.4 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

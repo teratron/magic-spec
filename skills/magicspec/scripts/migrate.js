@@ -17,6 +17,7 @@ const {
     parseFlags,
 } = require('./utils');
 const hosts = require('./lib/hosts');
+const sweep = require('./lib/vocabulary-sweep');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MIGRATION FROM THE 2.x LAYOUT
@@ -70,6 +71,7 @@ const STEPS = [
     'back up the files to be removed',
     'install the projections and the hook',
     'rename the state folder',
+    'rewrite the earlier vocabulary',
     'remove the old engine',
     'verify the result',
 ];
@@ -301,6 +303,61 @@ function runEngine(root, script, args = []) {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
+// Vocabulary sweep
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Rewrites the earlier command and folder names in the migrated state folder, backs up
+ * every file it changes first, and says what it did and what it left to the project.
+ *
+ * @param {string} root - Project root.
+ * @param {string[]} removing - Project-relative files the migration removes after this step.
+ * @returns {void}
+ */
+function reportSweep(root, removing) {
+    const plan = sweep.planSweep(root, path.join(root, STATE_DIR_NAME), { exclude: removing });
+    if (plan.edits.length > 0) {
+        backUp(
+            root,
+            plan.edits.map((e) => e.rel),
+        );
+        sweep.applySweep(plan);
+        console.log(
+            `Rewrote the earlier command and folder names in ${plan.edits.length} SDD artifact(s):`,
+        );
+        for (const edit of plan.edits) {
+            const detail = [
+                edit.replacements > 0 ? `${edit.replacements} replacement(s)` : null,
+                edit.bump ? `${edit.bump.from} -> ${edit.bump.to}` : null,
+            ].filter(Boolean);
+            console.log(`  - ${edit.rel}${detail.length ? ` (${detail.join(', ')})` : ''}`);
+        }
+        console.log(
+            `  (Revert: git restore ${STATE_DIR_NAME}, or copy the files back from ${path.basename(backupDir(root))}/)`,
+        );
+    }
+    for (const item of plan.unrewritten) {
+        console.log(`Not rewritten: ${item.rel} (${item.reason})`);
+    }
+    for (const rel of plan.reportOnly) {
+        console.log(
+            `Not rewritten: ${rel} still uses the earlier names; the constitution changes through /magicspec rule`,
+        );
+    }
+    if (plan.product.total > 0) {
+        console.log(
+            `${plan.product.total} product file(s) still use the earlier names; they are yours and were not edited:`,
+        );
+        for (const file of plan.product.files) {
+            console.log(`  - ${file.rel}:${file.line} (${file.token})`);
+        }
+        if (plan.product.total > plan.product.files.length) {
+            console.log(`  … and ${plan.product.total - plan.product.files.length} more`);
+        }
+    }
+}
+
+// ───────────────────────────────────────────────────────────────────────────
 // Main
 // ───────────────────────────────────────────────────────────────────────────
 
@@ -402,6 +459,15 @@ function main(argv) {
             return 0;
         }
 
+        // Only a run that migrates sweeps: a project that was never on the earlier layout may
+        // legitimately talk about it in its specifications. Before the rename the earlier state
+        // folder is the one to read.
+        const sweepPlan = sweep.planSweep(
+            root,
+            path.join(root, state.oldState ? LEGACY_STATE_DIR_NAME : STATE_DIR_NAME),
+            { exclude: toRemove },
+        );
+
         console.log(
             apply
                 ? 'Migration plan (applying):'
@@ -420,7 +486,10 @@ function main(argv) {
             `  3. ${state.oldState ? `Rename ${LEGACY_STATE_DIR_NAME}/ to ${STATE_DIR_NAME}/${newStateIsEmpty ? ` (the empty ${STATE_DIR_NAME}/ that is there is replaced)` : ''} and rewrite the workspace.json entries that name it` : 'State folder: nothing to rename'}`,
         );
         console.log(
-            `  4. Remove ${toRemove.length} file(s) of the old engine, last${manifestless ? ' (the manifest is missing: the engine folder is kept)' : ''}`,
+            `  4. Rewrite the earlier command and folder names in ${sweepPlan.edits.length} SDD artifact(s) (listed when applied); product files are only reported`,
+        );
+        console.log(
+            `  5. Remove ${toRemove.length} file(s) of the old engine, last${manifestless ? ' (the manifest is missing: the engine folder is kept)' : ''}`,
         );
         for (const rel of toRemove) console.log(`       - ${rel}`);
         for (const rel of modified)
@@ -465,13 +534,16 @@ function main(argv) {
             console.log('Rewrote the workspace.json entries that named the old folder.');
 
         step(7);
+        reportSweep(root, toRemove);
+
+        step(8);
         for (const rel of toRemove) removeFile(root, rel);
         for (const rel of ['.magic/.checksums', '.magic/.version']) {
             if (!manifestless && modified.length === 0) removeFile(root, rel);
         }
         console.log(`Removed ${toRemove.length} file(s) of the old engine.`);
 
-        step(8);
+        step(9);
         const check = runEngine(root, 'check-prerequisites', ['--json']);
         let ok = false;
         try {
@@ -485,7 +557,7 @@ function main(argv) {
                 : 'Pre-flight reported findings: run check-prerequisites to read them.',
         );
         console.log(
-            'Commands are now /magicspec:spec, /magicspec:task, /magicspec:run, /magicspec:analyze, /magicspec:rule, /magicspec:status and /magicspec:graph.',
+            'Commands are now typed as /magicspec <command>; /magicspec help lists them.',
         );
         console.log(
             `Suggested commit (not executed): git add -A && git commit -m "chore: migrate to the magicspec skill layout"`,

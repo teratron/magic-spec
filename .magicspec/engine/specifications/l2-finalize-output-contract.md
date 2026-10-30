@@ -1,6 +1,6 @@
 # Finalize Pipeline — Output Contract
 
-**Version:** 2.2.0
+**Version:** 2.2.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -100,7 +100,7 @@ The header-derivation functions keep their `sig.files`-only input; only the stdo
 | `run` | 3 — one task, N tasks, execution state |
 | `spec` | 3 shapes × 2 verbs (`Added`/`Updated`), plus the registry fallback |
 
-Each is parameterized only by workspace name and a count. Both behaviors are individually correct; together they mean that **once a shape has appeared in `[Unreleased]`, every later cycle producing that same shape writes nothing at all**. For `task` specifically, a single-workspace project exhausts its entire vocabulary in three planning cycles, after which `/magicspec:task` can never add a CHANGELOG entry again.
+Each is parameterized only by workspace name and a count. Both behaviors are individually correct; together they mean that **once a shape has appeared in `[Unreleased]`, every later cycle producing that same shape writes nothing at all**. For `task` specifically, a single-workspace project exhausts its entire vocabulary in three planning cycles, after which `/magicspec task` can never add a CHANGELOG entry again.
 
 Observed live rather than inferred: three consecutive finalize invocations during the 2026-08-07 session each reported `CHANGELOG | skipped (duplicate)`, and the two bullets involved (`Updated task plan and task index (engine)`, `Updated 5 specifications (engine)`) were already present from earlier cycles.
 
@@ -206,6 +206,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.2.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 2.2.0 | 2026-10-29 | Agent | New **§4a**: `release-changelog` validates its version and date before it rotates, and `finalize` names the accepted workflows as the rule writes them; the bullet composer's file is `changelog-bullets.js` (renamed from `commit-suggester.js`). Found by a simulation pass; implemented together with this entry. |
 | 2.1.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.1.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

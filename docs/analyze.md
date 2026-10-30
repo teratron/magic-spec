@@ -6,9 +6,9 @@ This document explains the Project Analysis workflow for auditing project health
 
 The Analyze workflow bridges the gap between an existing project and the SDD system. It scans the codebase, generates specification proposals, and performs deep audits of registry integrity and spec-to-code coverage.
 
-**Triggers:** `/magicspec:analyze [arg]`, *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*.
+**Triggers:** `/magicspec analyze [arg]`, *"Ventilate"*, *"Analyze project"*, *"Scan project"*, *"Re-analyze"*.
 
-**Slash command:** `/magicspec:analyze [arg]`
+**Slash command:** `/magicspec analyze [arg]`
 
 > **Full implementation:** `skills/magicspec/workflows/analyze.md` — the engine reads this file before executing any steps.
 
@@ -46,10 +46,10 @@ The engine enforces 8 mandatory invariants during every analysis:
 | `first-time` | First-time (A) | Mode A directly; Mode C recommends it when INDEX.md is empty |
 
 ```
-/magicspec:analyze                             # Full project audit
-/magicspec:analyze engine                      # Scoped to "engine" workspace
-/magicspec:analyze "check API coverage"        # Focused analysis on APIs
-/magicspec:analyze docs "focus on examples"    # Focused analysis within workspace
+/magicspec analyze                             # Full project audit
+/magicspec analyze engine                      # Scoped to "engine" workspace
+/magicspec analyze "check API coverage"        # Focused analysis on APIs
+/magicspec analyze docs "focus on examples"    # Focused analysis within workspace
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force focus interpretation.
@@ -92,7 +92,7 @@ Compares current codebase against existing specs to produce a **Gap Report**:
 
 ### Mode C — Project Ventilation (Deep Audit)
 
-*Trigger: `/magicspec:analyze`, `/magicspec:analyze {workspace}`, "Ventilate"*
+*Trigger: `/magicspec analyze`, `/magicspec analyze {workspace}`, "Ventilate"*
 
 A deep audit treating the codebase as source of truth:
 
@@ -106,7 +106,7 @@ A deep audit treating the codebase as source of truth:
 8. **Rule Validation**: Check `RULES.md §7` compliance, and report retirement candidates as read-only advisories — `RULE_RETIRE_CANDIDATE` (cause gone, superseded, or deadlocking the agent) and `RULE_BLOAT` (body over 10 lines). Analysis never edits a rule.
 9. **Report**: Consolidated list of errors, warnings, and suggested repairs.
 
-> **Mode Precedence**: When `/magicspec:analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magicspec:analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
+> **Mode Precedence**: When `/magicspec analyze` is triggered and INDEX.md is empty, Mode C runs first (audit), then recommends `/magicspec analyze first-time` for Mode A (spec generation). Mode A is never auto-started.
 
 ### Mode D — Focused Analysis
 
@@ -135,7 +135,7 @@ Appended to every analysis report (Modes A–D). Chat-only output with actionabl
 - **Spec Quality**: Oversized specs for splitting, incomplete stubs, bare L1 without L2 children.
 - **Coverage Strategy**: High-churn directories without specs, test areas without suite specs.
 - **Structural Improvements**: Workspace candidates, rule consolidation, naming inconsistencies.
-- **Action Proposals**: Direct commands (e.g., `→ /magicspec:spec create {name}`) for immediate execution.
+- **Action Proposals**: Direct commands (e.g., `→ /magicspec spec create {name}`) for immediate execution.
 
 **Signal**: 🟢 = <5% uncovered/drift. 🔴 = any core engine drift or >25% project drift.
 
@@ -152,7 +152,7 @@ Pass a workspace name as an argument to scope analysis. If no argument given, th
 | **Spec** (`spec.md`) | Partner — analysis results are dispatched via the Spec workflow |
 | **Init** (`init.md`) | Predecessor — suggests analysis after first initialization |
 | **Task** (`task.md`) | Successor — once specs are created, tasks can be planned |
-| **Rule** (`rule.md`) | Consumer — analysis writes no rules; it only links `/magicspec:rule` for a candidate that passed the admission gate, and reports retirement candidates |
+| **Rule** (`rule.md`) | Consumer — analysis writes no rules; it only links `/magicspec rule` for a candidate that passed the admission gate, and reports retirement candidates |
 
 ## Sync Note
 

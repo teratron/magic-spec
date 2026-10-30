@@ -8,7 +8,7 @@ The Task Workflow is the bridge between *Design* (what to build) and *Execution*
 
 **Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*.
 
-**Slash command:** `/magicspec:task [arg]`
+**Slash command:** `/magicspec task [arg]`
 
 > **Full implementation:** `skills/magicspec/workflows/task.md` — the engine reads this file before executing any steps.
 
@@ -29,15 +29,15 @@ Key Goals:
 | `{workspace} "text"` | Scoped + Guided | Directive applied within workspace scope |
 
 ```
-/magicspec:task                              # Full planning for the resolved workspace
-/magicspec:task engine                       # Scoped planning for "engine" workspace
-/magicspec:task update                       # Re-plan against the current registry and rules (no directive)
-/magicspec:task "decompose phase-2"          # Guided planning with focus
-/magicspec:task docs "only new specs"        # Scoped + guided planning
+/magicspec task                              # Full planning for the resolved workspace
+/magicspec task engine                       # Scoped planning for "engine" workspace
+/magicspec task update                       # Re-plan against the current registry and rules (no directive)
+/magicspec task "decompose phase-2"          # Guided planning with focus
+/magicspec task docs "only new specs"        # Scoped + guided planning
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation (this also turns `update` into a directive).
-> **Handoff Propagation**: After planning, the engine recommends `/magicspec:run {workspace}` to preserve scope — when the current phase holds a task to run; a phase with only blocked tasks ends with the Stalled Plan report instead (§6.4).
+> **Handoff Propagation**: After planning, the engine recommends `/magicspec run {workspace}` to preserve scope — when the current phase holds a task to run; a phase with only blocked tasks ends with the Stalled Plan report instead (§6.4).
 
 ## 3. Core Invariants
 
@@ -93,7 +93,7 @@ Validates project state before planning:
 - **C15 Filter**: Checksums and registry integrity. In-scope issues → **HALT**.
 - **File-Header Parity**: Spec file headers must match `INDEX.md` entries (status, version).
 - **Cross-Workspace Parity**: Detects identically-named spec files across workspaces with version mismatches → **HALT**.
-- **Stable-Spec Requirement**: A registry holding only Draft or RFC specs is not a HALT — Pre-Planning Stabilization and the Bootstrap Exception handle it. An empty registry is a **HALT** with one recommendation: `/magicspec:spec`, or `/magicspec:analyze first-time` when the project already has code. The report keeps your original request.
+- **Stable-Spec Requirement**: A registry holding only Draft or RFC specs is not a HALT — Pre-Planning Stabilization and the Bootstrap Exception handle it. An empty registry is a **HALT** with one recommendation: `/magicspec spec`, or `/magicspec analyze first-time` when the project already has code. The report keeps your original request.
 
 ### 6.2 Pre-Planning Stabilization (Trust Mode Batch)
 
@@ -120,8 +120,8 @@ After drafting the plan, the engine adopts a **Planning Skeptic** persona to rev
 - **Bootstrap Tasks**: A task marked `[Bootstrap]` is exempt from C12 Quarantine and Demoted Spec while its spec is `Draft` — a Bootstrap plan is tentative, so a spec and its `Draft` L1 parent are planned together. Once the spec leaves `Draft`, both rules judge its tasks like any other.
 - **Demoted Spec**: A spec that has tasks but is no longer `Stable` moves to Backlog; its `Done` tasks keep their entries and every other task not already blocked becomes `Blocked [!]` ("Spec `{file}` is `{status}`").
 - **Quarantine Release**: When a spec held by C12 or by Demoted Spec is `Stable` again, it returns to the active plan and the tasks blocked by that quarantine return to `Todo`. Tasks blocked for any other reason are untouched.
-- **Stalled Plan**: If, after those rules, the current phase has no `Todo` or `In Progress` task but at least one `Blocked [!]` task, the plan is still written, then the engine **HALTs** instead of handing off to `/magicspec:run` — it would only stall. It reports each blocked task with its reason and exactly one next step: `/magicspec:spec` when the first blocked task's reason is a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing), otherwise the resolution the task's notes name. A block `/magicspec:task` does not own is lifted by setting the task's `Status` to `Todo` once its cause is resolved.
-- **Stabilizing Tasks (C12.1)**: Only a task flagged `stabilizes: {spec-file}` — set when you explicitly ask to stabilize or fix that spec — may bypass quarantine, and only for the spec the flag names. The flag is never inferred from a title; every other task stays quarantined. It holds through the whole run: `/magicspec:run` lets the flagged task past its own Quarantine and Spec Stability guards, and a planning directive that asks to stabilize a spec (`/magicspec:task "stabilize {spec-file}"`) plans that spec whatever its status instead of halting because it is not `Stable`.
+- **Stalled Plan**: If, after those rules, the current phase has no `Todo` or `In Progress` task but at least one `Blocked [!]` task, the plan is still written, then the engine **HALTs** instead of handing off to `/magicspec run` — it would only stall. It reports each blocked task with its reason and exactly one next step: `/magicspec spec` when the first blocked task's reason is a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing), otherwise the resolution the task's notes name. A block `/magicspec task` does not own is lifted by setting the task's `Status` to `Todo` once its cause is resolved.
+- **Stabilizing Tasks (C12.1)**: Only a task flagged `stabilizes: {spec-file}` — set when you explicitly ask to stabilize or fix that spec — may bypass quarantine, and only for the spec the flag names. The flag is never inferred from a title; every other task stays quarantined. It holds through the whole run: `/magicspec run` lets the flagged task past its own Quarantine and Spec Stability guards, and a planning directive that asks to stabilize a spec (`/magicspec task "stabilize {spec-file}"`) plans that spec whatever its status instead of halting because it is not `Stable`.
 - **Phantom Guards**: Missing-from-disk specs cause task cancellation; missing L1 parents cause **HALT**.
 
 ### 6.5 Decomposition
@@ -144,7 +144,7 @@ Tasks are organized into Execution Tracks (Track A, Track B, etc.):
 
 ## 9. Session Isolation (Phase Gates — C17)
 
-The transition from Task Planning to Execution is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec:run` to ensure the agent reads generated tasks as the sole source of truth.
+The transition from Task Planning to Execution is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec run` to ensure the agent reads generated tasks as the sole source of truth.
 
 ## 10. Task Completion Checklist
 

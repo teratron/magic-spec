@@ -1,6 +1,6 @@
 # Workspace Intent Routing
 
-**Version:** 3.0.0
+**Version:** 3.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -175,7 +175,7 @@ The following invariants govern any Layer 2 implementation:
   the single C25 exception it used to hold is retired. The forecast is
   narrated as one line — `[DR] Routed '{artifact}' to '{winner}' —
   {criterion}; worst case if wrong: {cost}; runner-up: {candidate}.
-  (Override: /magicspec:spec {runner-up-workspace} …)` — and the routing premise
+  (Override: /magicspec spec {runner-up-workspace} …)` — and the routing premise
   is recorded in the dispatched specification's `Constraints & Assumptions`
   as an `Assumption (forecast)` bullet, so a misroute is visible where the
   work lands.
@@ -256,7 +256,7 @@ The following invariants govern any Layer 2 implementation:
 - **WI-13 — Narrated Once** `[ADDED]`: In a project with more than one
   workspace, the resolved workspace and the signal that chose it are narrated
   once per invocation — `[Workspace] {name} — {signal}. (Override:
-  /magicspec:{command} {other} …)` — and when matched paths also fell to
+  /magicspec {command} {other} …)` — and when matched paths also fell to
   other workspaces, those are named in the same line. A single-workspace
   project routes silently.
 
@@ -353,6 +353,7 @@ premise in the dispatched specification.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 3.0.0 | 2026-10-29 | Agent | **Routing for every command** (scope change, origin `user-stated`: the owner chose "automatic in every command" on 2026-10-29 among the intake survey's three readings): new §1.1 and WI-11 to WI-14 — one shared chain for every command acting on one workspace, with only `spec` (and `goal` through it) allowed to create; a location signal computed from the paths a request touches against each workspace's `scope`, ahead of the topic signal; one narration line in multi-workspace projects; no write into an unregistered state-folder directory, and no shipped example naming this repository's own workspace. Resolves the contradiction between C26 item 1 and `context.md` Step 0 in favour of C26. Outcomes G1–G4 added (sixteen in all). Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

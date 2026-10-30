@@ -1,6 +1,6 @@
 # Artifact Memory Index
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -36,7 +36,7 @@ The lexical half gives most of the benefit with none of the cost; the vector hal
 - The markdown artifacts stay the only source of truth; the index is runtime state, ignored by version control and safe to delete.
 - The default path adds no dependency, no install step and no network access.
 - **Assumption (forecast):** lexical search is always on and vector search is opt-in, used only when the person configures an embedding provider, because a model would be the engine's first dependency and, if remote, its first silent network use. Runner-up: vectors on by default with a bundled model. Override: the index's provider setting.
-- **Assumption (forecast):** the index covers the state folder only, not the product's code, because code search and code graphs are what the host and dedicated tools already do. Runner-up: index product code too. Override: `/magicspec:spec amend l1-artifact-memory.md "index product code"`.
+- **Assumption (forecast):** the index covers the state folder only, not the product's code, because code search and code graphs are what the host and dedicated tools already do. Runner-up: index product code too. Override: `/magicspec spec amend l1-artifact-memory.md "index product code"`.
 
 ## 3. Core Invariants
 
@@ -87,4 +87,5 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (SQLite vector memory, research `.references/.memory`) and the memory store of `.drafts/flowchart.md`. Reference-mining recorded by class only. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

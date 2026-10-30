@@ -8,8 +8,15 @@ description: Builds, analyzes and visualizes the specification knowledge graph o
 
 **HTML triggers:** *"Visualize graph"*, *"Graph HTML"*, *"Show graph"*, *"Open graph visualization"*, *"Generate graph visualization"*.
 
+**Trigger:** `/magicspec graph [argument]`. Arguments:
+
+- *(empty)* — the analysis (Steps 1, 2 and 4)
+- `visualize` — render the interactive page, `.magicspec/graph/graph.html`
+
+Examples: `/magicspec graph`, `/magicspec graph visualize`.
+
 > **Executor:** `node scripts/executor.js <script>` for all commands.
-> **Read-only:** this workflow does not modify `.magicspec/` artifacts. Findings may trigger handoffs to `magicspec:spec` or `magicspec:rule`.
+> **Read-only:** this workflow does not modify `.magicspec/` artifacts. Findings may trigger handoffs to `/magicspec spec` or `/magicspec rule`.
 
 ## Steps
 
@@ -82,6 +89,6 @@ Graph Checklist
 
 Where this workflow may hand over, and when:
 
-- **Fix spec gaps** → `/magicspec:spec`: Orphaned files or missing Implements links found. Proceed to create or amend specifications. Condition: `gaps_detected`.
-- **Adjust workspace boundaries** → `/magicspec:rule`: Community detection found boundary drift or split suggestions. Update workspace.json or RULES.md conventions. Condition: `boundary_drift`.
-- **Run full ventilation** → `/magicspec:analyze`: Run full Mode C Ventilation to combine graph findings with registry, coverage, and rationale audit. Condition: `deep_audit_needed`.
+- **Fix spec gaps** → `/magicspec spec`: Orphaned files or missing Implements links found. Proceed to create or amend specifications. Condition: `gaps_detected`.
+- **Adjust workspace boundaries** → `/magicspec rule`: Community detection found boundary drift or split suggestions. Update workspace.json or RULES.md conventions. Condition: `boundary_drift`.
+- **Run full ventilation** → `/magicspec analyze`: Run full Mode C Ventilation to combine graph findings with registry, coverage, and rationale audit. Condition: `deep_audit_needed`.

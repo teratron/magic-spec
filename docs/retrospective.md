@@ -80,7 +80,7 @@ Append row to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules 
 
 ### Archival (C8)
 
-Not performed by the retrospective. Moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` belongs solely to `finalize --workflow=run` (`archive-phases`) at Phase Completion in `/magicspec:run`. The retrospective only appends the Snapshots row, which avoids a double move and a conflicting link format.
+Not performed by the retrospective. Moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` belongs solely to `finalize --workflow=run` (`archive-phases`) at Phase Completion in `/magicspec run`. The retrospective only appends the Snapshots row, which avoids a double move and a conflicting link format.
 
 ### Graph Snapshot
 

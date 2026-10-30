@@ -21,7 +21,7 @@ graph TD
     D -->|Yes| F[Run node scripts/executor.js init]
     F --> G[Verify Artifacts]
     G --> H[Check Existing Codebase?]
-    H --> I[Suggest: magicspec:analyze]
+    H --> I[Suggest: /magicspec analyze]
 ```
 
 ### Steps
@@ -54,7 +54,7 @@ Ensure the artifacts listed in Step 2 exist. HALT on failure. `STATE.md` is not 
 
 #### 4. Hint
 
-If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*. **Suppress this hint when `init` runs as a sub-step of an execution workflow (`/magicspec:run`)**: per `run.md` and `AGENT-RULES.md` §5, `/magicspec:analyze` is never named as a next step in the run context.
+If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*. **Suppress this hint when `init` runs as a sub-step of an execution workflow (`/magicspec run`)**: per `run.md` and `AGENT-RULES.md` §5, `/magicspec analyze` is never named as a next step in the run context.
 
 ### Structure Created
 
@@ -85,7 +85,7 @@ node scripts/executor.js create-workspace --name={name} [--description="..."] [-
 
 Per Workspace Intent Routing WI-6 the script atomically: (1) validates `{name}` against the workspace name regex; (2) adds an entry under `workspace.json#workspaces.{name}`; (3) provisions `.magicspec/{name}/` with the standard subtree above; (4) leaves `default` unchanged unless `--default` is passed.
 
-`magicspec:spec` invokes this automatically when `context.md` Step 0 emits `create:{name}` (per WI-2 signal classes). Manual invocation is reserved for users who prefer to author the workspace config explicitly before authoring specs.
+`/magicspec spec` invokes this automatically when `context.md` Step 0 emits `create:{name}` (per WI-2 signal classes). Manual invocation is reserved for users who prefer to author the workspace config explicitly before authoring specs.
 
 ## Init Completion Checklist
 

@@ -8,7 +8,7 @@ The Specification Workflow is the entry point of the Magic SDD process. It conve
 
 **Triggers:** *"Create spec"*, *"Update spec"*, *"Explore"*, *"Brainstorm"*, *"Review registry"*, *"Check specs"*, *"Verify specs"*.
 
-**Slash command:** `/magicspec:spec`
+**Slash command:** `/magicspec spec`
 
 > **Full implementation:** `skills/magicspec/workflows/spec.md` — the engine reads this file before executing any steps.
 
@@ -65,7 +65,7 @@ Specifications move through a lifecycle. In **Trust Mode (C9)**, transitions are
 
 ### 5.0 Idea Intake Gate
 
-Before writing anything, `/magicspec:spec {your idea}` checks whether it understood you and whether it has enough to go on. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
+Before writing anything, `/magicspec spec {your idea}` checks whether it understood you and whether it has enough to go on. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
 
 Occasionally the agent will ask you something first. It runs two checks, in this order, and asks only when one of them fails:
 
@@ -136,7 +136,7 @@ If a Layer 1 spec drops status (e.g., Stable → RFC), all dependent Layer 2 spe
 
 ### 6.4 Session Isolation (Phase Gates — C17)
 
-The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec:task` to prevent context bleed-over.
+The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec task` to prevent context bleed-over.
 
 ### 6.5 T4 Rule Capture with Tier Routing
 

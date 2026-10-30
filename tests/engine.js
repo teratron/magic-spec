@@ -702,7 +702,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(path.join(tempDir, '.magicspec', 'main', 'INDEX.md')));
 
             // skills/magicspec/AGENT-RULES.md §1 step 3: Auto-Init seeds a correctly-seeded Engine
-            // Version snapshot on its own, not left for /magicspec:analyze to add later
+            // Version snapshot on its own, not left for /magicspec analyze to add later
             // (field report, engine v2.1.104: fresh init produced no snapshot at all).
             const freshIndex = fs.readFileSync(
                 path.join(tempDir, '.magicspec', 'INDEX.md'),
@@ -801,7 +801,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(docContent.includes('`new-trigger`'), 'Doc triggers should be updated');
             assert.ok(docContent.includes('`another-trigger`'), 'Doc triggers should be updated');
             assert.ok(
-                docContent.includes('**Slash command:** `/magicspec:test-wf`'),
+                docContent.includes('**Slash command:** `/magicspec test-wf`'),
                 'Doc slash command should be updated',
             );
             // Sync Note refreshes on a first-ever sync (state starts empty,
@@ -815,7 +815,7 @@ describe('Magic Engine Scripts', () => {
             // The "[arg]" suffix must survive, only the command name changes.
             const argDocContent = fs.readFileSync(path.join(docsDir, 'arg-wf.md'), 'utf8');
             assert.ok(
-                argDocContent.includes('**Slash command:** `/magicspec:arg-wf [old]`'),
+                argDocContent.includes('**Slash command:** `/magicspec arg-wf [old]`'),
                 'the [arg] suffix must be preserved, only the command name replaced',
             );
 
@@ -3365,12 +3365,12 @@ describe('Magic Engine Scripts', () => {
             const flat = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 remedies(flat, 'ORPHANED_SPEC'),
-                ['/magicspec:task update'],
+                ['/magicspec task update'],
                 'the flat layout invents no workspace',
             );
             assert.deepStrictEqual(
                 remedies(flat, 'REGISTRY_MISMATCH'),
-                ['/magicspec:spec audit'],
+                ['/magicspec spec audit'],
                 'the audit command is spelled the way the workflows spell it',
             );
 
@@ -3391,7 +3391,7 @@ describe('Magic Engine Scripts', () => {
             );
             assert.deepStrictEqual(
                 remedies(scoped, 'ORPHANED_SPEC'),
-                ['/magicspec:task docs update'],
+                ['/magicspec task docs update'],
                 'a remedy without the workspace would re-plan the default workspace instead',
             );
         } finally {
@@ -3427,7 +3427,7 @@ describe('Magic Engine Scripts', () => {
                     .map((w) => w.message.match(/^'([^']+)'/)[1])
                     .sort();
 
-            // No plan yet: the state between the first spec and the first /magicspec:task.
+            // No plan yet: the state between the first spec and the first /magicspec task.
             const noPlan = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 named(noPlan, 'GHOST_REGISTRY'),
@@ -3544,7 +3544,7 @@ describe('Magic Engine Scripts', () => {
             // Backlog holds two open items.
             const hit = findDebtWarning(
                 '- Some open design item.\n- Another one.',
-                '*None — plan complete. New scope enters via `/magicspec:task`.*',
+                '*None — plan complete. New scope enters via `/magicspec task`.*',
             );
             assert.ok(hit, 'a plan-complete state with a non-empty Backlog must raise the signal');
             assert.match(
@@ -3552,7 +3552,7 @@ describe('Magic Engine Scripts', () => {
                 /2 open item/,
                 'the count must reflect the actual number of Backlog bullets',
             );
-            assert.match(hit.fix, /magicspec:spec/, 'the remedy must point at spec authoring');
+            assert.match(hit.fix, /magicspec spec/, 'the remedy must point at spec authoring');
 
             // Negative (load-bearing — SC-2.4 is about *distinguishing* two
             // plan-complete states, so a signal that also fires here would be
@@ -3561,7 +3561,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 findDebtWarning(
                     '',
-                    '*None — plan complete. New scope enters via `/magicspec:task`.*',
+                    '*None — plan complete. New scope enters via `/magicspec task`.*',
                 ),
                 undefined,
                 'an empty Backlog must never raise the signal, even at plan-complete',
@@ -3604,7 +3604,7 @@ describe('Magic Engine Scripts', () => {
             const designDir = makeMinimalDesignDir(tempDir);
             fs.writeFileSync(
                 path.join(designDir, 'TASKS.md'),
-                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magicspec:task`.*\n',
+                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magicspec task`.*\n',
             );
             const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
@@ -3871,7 +3871,7 @@ describe('Magic Engine Scripts', () => {
 
             // 1. Bootstrap — STATE.md should be created from template
             execSync(
-                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --status=Active --phase=1 --next-action="Run /magicspec:spec"`,
+                `node "${scriptPath}" --workspace=${wsDir.replace(/\\/g, '/')} --status=Active --phase=1 --next-action="Run /magicspec spec"`,
                 { cwd: tempDir },
             );
             const statePath = path.join(wsDir, 'STATE.md');
@@ -3988,10 +3988,10 @@ describe('Magic Engine Scripts', () => {
             // require.main guard means requiring finalize.js does NOT run main().
             const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
 
-            // (a) Legacy inline format: open task in TASKS.md → /magicspec:run.
+            // (a) Legacy inline format: open task in TASKS.md → /magicspec run.
             fs.writeFileSync(tasksPath, '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n');
             let next = finalize.computeNextAction('task', 'engine', wsDir);
-            assert.match(next, /\/magicspec:run engine/, 'inline open task → /magicspec:run');
+            assert.match(next, /\/magicspec run engine/, 'inline open task → /magicspec run');
             assert.match(next, /T-1A01/, 'should name the open task');
 
             // (b) Canonical two-level format: TASKS.md is a registry (table),
@@ -4015,8 +4015,8 @@ describe('Magic Engine Scripts', () => {
             next = finalize.computeNextAction('task', 'engine', wsDir);
             assert.match(
                 next,
-                /\/magicspec:run engine/,
-                'canonical two-level: open task in phase file → /magicspec:run',
+                /\/magicspec run engine/,
+                'canonical two-level: open task in phase file → /magicspec run',
             );
             assert.match(next, /T-1A02/, 'should name the open task from phase file');
 
@@ -4039,7 +4039,7 @@ describe('Magic Engine Scripts', () => {
             );
             next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(next, /Phase 1/, 'registry fallback: non-Done phase → Continue Phase N');
-            assert.match(next, /\/magicspec:run/, 'registry fallback recommends /magicspec:run');
+            assert.match(next, /\/magicspec run/, 'registry fallback recommends /magicspec run');
 
             // (d) Plan complete — no open tasks, all phases Done.
             fs.writeFileSync(
@@ -4062,13 +4062,13 @@ describe('Magic Engine Scripts', () => {
             next = finalize.computeNextAction('task', 'engine', wsDir);
             assert.match(
                 next,
-                /\/magicspec:task engine/,
-                'plan complete after task → /magicspec:task funnel (§5)',
+                /\/magicspec task engine/,
+                'plan complete after task → /magicspec task funnel (§5)',
             );
             assert.doesNotMatch(
                 next,
-                /\/magicspec:spec/,
-                '/magicspec:spec must never be named proactively (§5)',
+                /\/magicspec spec/,
+                '/magicspec spec must never be named proactively (§5)',
             );
             assert.doesNotMatch(
                 next,
@@ -4078,7 +4078,7 @@ describe('Magic Engine Scripts', () => {
 
             // (d2) Same plan-complete state reached via `run`. The recommendation
             //     is deliberately identical to (d): STATE.md `Next Action` is
-            //     workflow-agnostic at read time (/magicspec:status replays it
+            //     workflow-agnostic at read time (/magicspec status replays it
             //     verbatim), so a per-branch recommendation would let a line that
             //     is legal for one workflow surface under another.
             assert.strictEqual(
@@ -4090,21 +4090,21 @@ describe('Magic Engine Scripts', () => {
             // (e) spec/rule → replan first (pipeline order).
             assert.match(
                 finalize.computeNextAction('spec', 'engine', wsDir),
-                /\/magicspec:task/,
-                'spec → /magicspec:task',
+                /\/magicspec task/,
+                'spec → /magicspec task',
             );
             assert.match(
                 finalize.computeNextAction('rule', 'engine', wsDir),
-                /\/magicspec:task/,
-                'rule → /magicspec:task',
+                /\/magicspec task/,
+                'rule → /magicspec task',
             );
 
             // (f) Unreadable TASKS.md → safe planning fallback.
             const voidWs = path.join(tempDir, '.magicspec', 'void');
             assert.match(
                 finalize.computeNextAction('run', 'void', voidWs),
-                /\/magicspec:task/,
-                'missing TASKS.md → /magicspec:task fallback',
+                /\/magicspec task/,
+                'missing TASKS.md → /magicspec task fallback',
             );
         } finally {
             cleanup(tempDir);
@@ -4112,7 +4112,7 @@ describe('Magic Engine Scripts', () => {
     });
 
     // A complete plan with nothing waiting must say so and name no command; any
-    // pending signal — or any inability to tell — keeps the /magicspec:task funnel.
+    // pending signal — or any inability to tell — keeps the /magicspec task funnel.
     // The fixtures carry INDEX/PLAN/TASKS: the plan-complete fixture above has
     // no PLAN, so it resolves to the funnel through the cannot-evaluate path.
     test('finalize.js plan-complete Next Action names no command only when nothing is pending', () => {
@@ -4121,7 +4121,7 @@ describe('Magic Engine Scripts', () => {
             const { finalize, wsDir } = requireFinalizeWorkspace(tempDir);
             const pendingWork = requireFromFixture(tempDir, 'lib', 'pending-work.js');
             const diagnostics = requireFromFixture(tempDir, 'lib', 'diagnostics.js');
-            const FUNNEL = /Plan complete — run \/magicspec:task engine to plan new scope/;
+            const FUNNEL = /Plan complete — run \/magicspec task engine to plan new scope/;
             const NOTHING = 'Plan complete — nothing pending';
             const indexPath = path.join(wsDir, 'INDEX.md');
             const planPath = path.join(wsDir, 'PLAN.md');
@@ -4171,8 +4171,8 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(next, NOTHING, 'nothing pending → a command-free statement');
             assert.doesNotMatch(
                 next,
-                /\/magicspec:/,
-                'the statement must name no /magicspec:* command',
+                /\/magicspec /,
+                'the statement must name no /magicspec <command> command',
             );
 
             // (2) An open, unparked Backlog bullet → the funnel.
@@ -4263,7 +4263,7 @@ describe('Magic Engine Scripts', () => {
 
             // Every plan state the three-tier lookup can land in. The previous
             // regression fixed the plan-complete `run` branch only and left the
-            // `task` branch emitting /magicspec:spec, so this sweeps the full matrix
+            // `task` branch emitting /magicspec spec, so this sweeps the full matrix
             // rather than pinning one cell of it.
             const planStates = {
                 'inline open task': '## Active Phases\n\n- [ ] [T-1A01] Do the thing\n',
@@ -4289,13 +4289,13 @@ describe('Magic Engine Scripts', () => {
                     const next = finalize.computeNextAction(workflow, 'engine', wsDir);
                     assert.doesNotMatch(
                         next,
-                        /\/magicspec:(spec|analyze)/,
+                        /\/magicspec (spec|analyze)/,
                         `${workflow} @ ${label}: reserved command leaked into Next Action → "${next}"`,
                     );
                     // §5 / DA-6: the user sees exactly ONE next step. STATE.md
-                    // `Next Action` is replayed verbatim by /magicspec:status, so a
+                    // `Next Action` is replayed verbatim by /magicspec status, so a
                     // second command here becomes a second user-visible option.
-                    const commands = next.match(/\/magicspec:[a-z]+/g) || [];
+                    const commands = next.match(/\/magicspec [a-z]+/g) || [];
                     assert.strictEqual(
                         commands.length,
                         1,
@@ -4312,7 +4312,7 @@ describe('Magic Engine Scripts', () => {
             );
             assert.doesNotMatch(
                 voidNext,
-                /\/magicspec:(spec|analyze)/,
+                /\/magicspec (spec|analyze)/,
                 'catch fallback must stay §5-clean',
             );
         } finally {
@@ -4350,13 +4350,13 @@ describe('Magic Engine Scripts', () => {
             assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
             assert.match(
                 state,
-                /\/magicspec:task main/,
-                'SC-2.1 e2e: plan-complete next-action routes through the /magicspec:task funnel',
+                /\/magicspec task main/,
+                'SC-2.1 e2e: plan-complete next-action routes through the /magicspec task funnel',
             );
             assert.doesNotMatch(
                 state,
-                /Next Action:.*\/magicspec:spec/,
-                '§5: the persisted Next Action never names /magicspec:spec',
+                /Next Action:.*\/magicspec spec/,
+                '§5: the persisted Next Action never names /magicspec spec',
             );
             // SC-3 retirement regression pins: the STATE.md write dirties the
             // tree (previously the SC-3 fallback's trigger condition), but no
@@ -4559,11 +4559,11 @@ describe('Magic Engine Scripts', () => {
                 // The redirected value passes the same single-exit screen.
                 assert.doesNotMatch(
                     next,
-                    /\/magicspec:(spec|analyze)/,
+                    /\/magicspec (spec|analyze)/,
                     `${label}: §5 reserved command leaked`,
                 );
                 assert.strictEqual(
-                    (next.match(/\/magicspec:[a-z]+/g) || []).length,
+                    (next.match(/\/magicspec [a-z]+/g) || []).length,
                     1,
                     `${label}: exactly one command expected → "${next}"`,
                 );
@@ -4682,11 +4682,11 @@ describe('Magic Engine Scripts', () => {
             );
             assert.doesNotMatch(
                 next,
-                /\/magicspec:(spec|analyze)/,
+                /\/magicspec (spec|analyze)/,
                 'reserved command must not leak',
             );
             assert.strictEqual(
-                (next.match(/\/magicspec:[a-z]+/g) || []).length,
+                (next.match(/\/magicspec [a-z]+/g) || []).length,
                 1,
                 `exactly one command expected → "${next}"`,
             );
@@ -4745,7 +4745,7 @@ describe('Magic Engine Scripts', () => {
             // (i) the reported shape: every open task written `- [!]`, each
             // tracking entry `Status: Blocked`. Neither glyph was a task to the
             // old reader, so the phase read as finished and the registry row
-            // alone produced "Continue Phase 1 via /magicspec:run".
+            // alone produced "Continue Phase 1 via /magicspec run".
             fs.writeFileSync(
                 phasePath,
                 phaseFile(
@@ -4765,7 +4765,7 @@ describe('Magic Engine Scripts', () => {
             assert.doesNotMatch(next, /Plan complete/, `tasks remain → "${next}"`);
             assert.match(next, /T-1A01/, 'the terminal message should still name a task');
             assert.strictEqual(
-                (next.match(/\/magicspec:[a-z]+/g) || []).length,
+                (next.match(/\/magicspec [a-z]+/g) || []).length,
                 1,
                 `exactly one command expected → "${next}"`,
             );
@@ -5379,7 +5379,7 @@ describe('Magic Engine Scripts', () => {
     });
 
     test('finalize.js counts a RULES.md-only change as significant under magic.spec and not under magic.task (spec-side rule capture)', () => {
-        // A T1–T4 capture during /magicspec:spec writes the constitution and nothing
+        // A T1–T4 capture during /magicspec spec writes the constitution and nothing
         // else, so the spec workflow's whitelist has to see RULES.md itself.
         for (const rulesRel of ['.magicspec/RULES.md', '.magicspec/main/RULES.md']) {
             const tempDir = createTempWorkspace(true);
@@ -6785,7 +6785,7 @@ describe('Magic Engine Scripts', () => {
             // of STATE.md into the Next Action line and duplicate every section
             // below it, a second stale `## Progress` counter among them.
             const evilTitle = "Handle the $'refund' path and the $& fallback";
-            const nextAction = `Execute T-8B04 ${evilTitle} via /magicspec:run engine`;
+            const nextAction = `Execute T-8B04 ${evilTitle} via /magicspec run engine`;
 
             fs.writeFileSync(
                 path.join(wsDir, 'STATE.md'),
@@ -10363,7 +10363,7 @@ describe('Magic Engine Scripts', () => {
                 toEol(
                     resumeStateText(
                         def.status || 'Active',
-                        def.nextAction || 'Execute T-1A01 Thing via /magicspec:run engine',
+                        def.nextAction || 'Execute T-1A01 Thing via /magicspec run engine',
                     ),
                 ),
             );
@@ -10502,7 +10502,7 @@ describe('Magic Engine Scripts', () => {
                     {
                         engine: {
                             nextAction:
-                                'Execute T-1A01 Extract `finalize.js` via /magicspec:run engine',
+                                'Execute T-1A01 Extract `finalize.js` via /magicspec run engine',
                             entries: [
                                 trackingEntry('T-1A01', 'Extract `finalize.js`', 'In Progress', [
                                     '- **Attempts:**',
@@ -10544,7 +10544,7 @@ describe('Magic Engine Scripts', () => {
         assert.strictEqual(
             printed['\n'],
             '▶ Resume [engine]: T-1A01 Extract `finalize.js` in flight — 2 dead end(s) recorded, 2 file(s) modified. ' +
-                'Next: Execute T-1A01 Extract `finalize.js` via /magicspec:run engine\n',
+                'Next: Execute T-1A01 Extract `finalize.js` via /magicspec run engine\n',
             'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)',
         );
     });
@@ -10884,7 +10884,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(entry.source, 'in-progress');
             assert.deepStrictEqual(entry.tasks, [{ id: 'T-1A01', title: 'Only', attempts: 1 }]);
             assert.strictEqual(entry.changed_files, null, 'not a repository: null, not zero');
-            assert.strictEqual(entry.next_action, 'Execute T-1A01 Thing via /magicspec:run engine');
+            assert.strictEqual(entry.next_action, 'Execute T-1A01 Thing via /magicspec run engine');
 
             writeResumeFixture(tempDir, {
                 engine: { entries: [trackingEntry('T-1A01', 'Only', 'Done')] },
@@ -11214,17 +11214,17 @@ describe('Magic Engine Scripts', () => {
             .split(/\r?\n/)
             .find((line) => line.startsWith(prefix));
 
-    // The own-word rule `analyze.md` states for PHANTOM_COMMAND: a `/magicspec:{cmd}`
+    // The own-word rule `analyze.md` states for PHANTOM_COMMAND: a `/magicspec {cmd}`
     // token is a command mention only when nothing but whitespace, a backtick or
-    // an opening quote precedes it — so a path such as `skills/magicspec:x` is never
+    // an opening quote precedes it — so a path such as `skills/magicspec x` is never
     // one; `{cmd}` is a lowercase word (a hyphen ends it).
     const phantomCommands = (files, wrappers) => {
         const found = [];
         for (const { rel, text } of files) {
             text.split(/\r?\n/).forEach((line, index) => {
-                for (const match of line.matchAll(/(?<![^\s`"'“‘])\/magicspec:([a-z]+)/g)) {
+                for (const match of line.matchAll(/(?<![^\s`"'“‘])\/magicspec ([a-z]+)/g)) {
                     if (wrappers.has(match[1])) continue;
-                    found.push(`${rel}:${index + 1}: /magicspec:${match[1]}`);
+                    found.push(`${rel}:${index + 1}: /magicspec ${match[1]}`);
                 }
             });
         }
@@ -11238,23 +11238,23 @@ describe('Magic Engine Scripts', () => {
             {
                 rel: 'sample.md',
                 text: [
-                    'Run `/magicspec:pause` to stop.',
-                    'Say "/magicspec:context" first.',
-                    'Use /magicspec:retrospective now',
-                    'See skills/magicspec:x and .agents/workflows/magic.run.md.',
-                    'The `/magicspec:run`-executable flag and /magicspec:task both resolve.',
+                    'Run `/magicspec pause` to stop.',
+                    'Say "/magicspec context" first.',
+                    'Use /magicspec retrospective now',
+                    'See skills/magicspec x and .agents/workflows/magic.run.md.',
+                    'The `/magicspec run`-executable flag and /magicspec task both resolve.',
                     'Developer-facing: `/magicspec-dev:init`.',
-                    '/magicspec:pause at a line start',
+                    '/magicspec pause at a line start',
                 ].join('\n'),
             },
         ];
         assert.deepStrictEqual(
             phantomCommands(sample, wrappers),
             [
-                'sample.md:1: /magicspec:pause',
-                'sample.md:2: /magicspec:context',
-                'sample.md:3: /magicspec:retrospective',
-                'sample.md:7: /magicspec:pause',
+                'sample.md:1: /magicspec pause',
+                'sample.md:2: /magicspec context',
+                'sample.md:3: /magicspec retrospective',
+                'sample.md:7: /magicspec pause',
             ],
             'flags a mention after a backtick, a quote, whitespace and a line start; spares paths, resolving commands, a hyphen-ended token and the maintenance commands',
         );
@@ -11284,15 +11284,58 @@ describe('Magic Engine Scripts', () => {
         assert.deepStrictEqual(
             phantomCommands(scanned, resolved),
             [],
-            'a /magicspec:{cmd} mention must resolve to skills/magicspec/workflows/{cmd}.md — internal modules must not be advertised as commands',
+            'a /magicspec {cmd} mention must resolve to skills/magicspec/workflows/{cmd}.md — internal modules must not be advertised as commands',
         );
         // The pause module stays a module: no shipped text names it as a command,
         // whether or not a wrapper ever appears for it.
         assert.deepStrictEqual(
-            phantomCommands(scanned, new Set()).filter((hit) => hit.endsWith('/magicspec:pause')),
+            phantomCommands(scanned, new Set()).filter((hit) => hit.endsWith('/magicspec pause')),
             [],
-            '/magicspec:pause is not a command',
+            '/magicspec pause is not a command',
         );
+    });
+
+    test('shipped text prints one command form, /magicspec <command>: the colon spelling appears nowhere the engine prints, and the detector flags it when planted (CS-2)', () => {
+        // The old form, plain and as a regex source, with or without the slash. `magicspec-dev:`
+        // names and the `<!-- magicspec:begin -->` markers are different words and are not matched.
+        const commands = 'spec|task|run|analyze|rule|status|graph|help|migrate|plan|fix|simulate|goal';
+        const colonForm = new RegExp(
+            `\\/magicspec:[a-z*{(<]|(?<![\\w/.-])magicspec:(?:${commands})(?![\\w-])`,
+        );
+        for (const planted of [
+            'Run /magicspec:task engine.',
+            'Pipeline: `magicspec:spec` then run.',
+            "re.test('\\/magicspec:run')",
+            'Any /magicspec:* workflow.',
+        ]) {
+            assert.ok(colonForm.test(planted), `the detector must flag: ${planted}`);
+        }
+        for (const clean of [
+            'Run /magicspec task engine.',
+            'The colon spelling magicspec:<command> is read, never printed.',
+            '<!-- magicspec:begin -->',
+            'Developer-facing: /magicspec-dev:init.',
+        ]) {
+            assert.ok(!colonForm.test(clean), `the detector must spare: ${clean}`);
+        }
+
+        const scanned = [
+            ...listShipped('skills/magicspec', ['.md', '.js', '.json']),
+            ...listShipped('docs', ['.md']),
+            ...listShipped('scripts', ['.js']),
+            'README.md',
+            'CONTRIBUTING.md',
+        ].filter((rel) => fs.existsSync(path.join(shippedRoot, rel)));
+        assert.ok(scanned.length > 40, `the scan must see the shipped tree (saw ${scanned.length})`);
+        const hits = [];
+        for (const rel of scanned) {
+            readShipped(rel)
+                .split(/\r?\n/)
+                .forEach((line, index) => {
+                    if (colonForm.test(line)) hits.push(`${rel}:${index + 1}: ${line.trim()}`);
+                });
+        }
+        assert.deepStrictEqual(hits, [], 'no shipped text prints the colon spelling');
     });
 
     // A context-fill tier: a table cell holding only a percentage range,
@@ -11665,8 +11708,8 @@ describe('Magic Engine Scripts', () => {
             'Pre-Planning Stabilization',
             'Bootstrap',
             '`Stable specs (0 specs found)`',
-            '`/magicspec:spec`',
-            '`/magicspec:analyze first-time`',
+            '`/magicspec spec`',
+            '`/magicspec analyze first-time`',
             '**HALT**',
         ]) {
             assert.ok(branch.includes(needle), `the branch must state ${needle}`);
@@ -12096,7 +12139,7 @@ describe('Magic Engine Scripts', () => {
             'On `ambiguous` → resolve it by the Consequence Forecast (DA-10); nothing is asked.',
             'Core-Amendment proposals (C27 E4) are the only exception that pauses for explicit user input.',
             'Deleting a spec (E1) asks one consent question.',
-            '`/magicspec:spec {idea}` may ask before writing specs — one survey round, options from the forecast.',
+            '`/magicspec spec {idea}` may ask before writing specs — one survey round, options from the forecast.',
         ]) {
             assert.ok(!choiceGate.test(clean), `the detector must spare: ${clean}`);
         }
@@ -12125,7 +12168,9 @@ describe('Magic Engine Scripts', () => {
         // C27 in the project constitution and in the template every consumer project receives.
         for (const prefix of [
             '2. **Escalation Whitelist (DA-2)**',
+            '5. **Single-Question Format (DA-5)**',
             '8. **Consequence Forecast (DA-10)**',
+            '3. **Bounded Ambiguity Resolution**',
         ]) {
             const project = lineWith(readShipped('.magicspec/RULES.md'), prefix);
             assert.ok(project, `RULES.md C27 must carry ${prefix}`);
@@ -12135,6 +12180,29 @@ describe('Magic Engine Scripts', () => {
                 `the shipped template must mirror RULES.md word for word: ${prefix}`,
             );
         }
+        // E7, the command intake, is named wherever the whitelist is stated.
+        for (const prefix of [
+            '2. **Escalation Whitelist (DA-2)**',
+            '5. **Single-Question Format (DA-5)**',
+            '3. **Bounded Ambiguity Resolution**',
+        ]) {
+            assert.ok(
+                lineWith(readShipped('.magicspec/RULES.md'), prefix).includes('E7'),
+                `${prefix} must name E7 in both constitutions`,
+            );
+        }
+        const agentRules = readShipped('skills/magicspec/AGENT-RULES.md');
+        assert.match(agentRules, /- \*\*E7 \(Command Intake\)\*\*/, 'the always-on rules state E7');
+        assert.match(
+            agentRules,
+            /at the invocation itself \(E7, command intake\)/,
+            'the checklist',
+        );
+        assert.match(
+            agentRules,
+            /- `\/magicspec help` — read-only list of the commands[\s\S]*- `\/magicspec migrate` — runs before the project/,
+            'help and migrate join the drift-check exemptions',
+        );
         const forecast = lineWith(
             readShipped('.magicspec/RULES.md'),
             '8. **Consequence Forecast (DA-10)**',
@@ -12289,7 +12357,7 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
-    test('shipped text: task.md ends a phase left with only blocked tasks with the Stalled Plan report instead of a handoff to /magicspec:run (T257)', () => {
+    test('shipped text: task.md ends a phase left with only blocked tasks with the Stalled Plan report instead of a handoff to /magicspec run (T257)', () => {
         const task = readShipped('skills/magicspec/workflows/task.md');
 
         // The handoff is conditional on something to run, and names the report it falls back to.
@@ -12313,11 +12381,11 @@ describe('Magic Engine Scripts', () => {
             'no `Todo` or `In Progress` task',
             '≥1 `Blocked [!]`',
             '**HALT** after the plan is written',
-            'no handoff to `/magicspec:run`',
+            'no handoff to `/magicspec run`',
             'exactly ONE next step',
             'first blocked task in checklist order',
             'requires design input',
-            '`/magicspec:spec`',
+            '`/magicspec spec`',
             '(C12, Demoted Spec, Phantom Specs)',
             "setting its task's `Status` to `Todo`",
         ]) {
@@ -12333,42 +12401,42 @@ describe('Magic Engine Scripts', () => {
         const run = readShipped('skills/magicspec/workflows/run.md');
         assert.ok(
             lineWith(run, '*Stalled*:')?.includes(
-                'exactly ONE next step: `/magicspec:task {workspace}`',
+                'exactly ONE next step: `/magicspec task {workspace}`',
             ),
-            'run.md *Stalled* must keep recommending /magicspec:task as its one next step',
+            'run.md *Stalled* must keep recommending /magicspec task as its one next step',
         );
         assert.ok(
-            lineWith(run, '*Stalled*:')?.includes('only inside a `/magicspec:task` HALT'),
-            'run.md *Stalled* must say the specification workflow surfaces only inside a /magicspec:task HALT',
+            lineWith(run, '*Stalled*:')?.includes('only inside a `/magicspec task` HALT'),
+            'run.md *Stalled* must say the specification workflow surfaces only inside a /magicspec task HALT',
         );
         assert.ok(
             !/Pre-flight only/.test(run),
-            'run.md must not say a blocked spec surfaces in /magicspec:task Pre-flight only: the Stalled Plan HALT of Step 8 is a second surface',
+            'run.md must not say a blocked spec surfaces in /magicspec task Pre-flight only: the Stalled Plan HALT of Step 8 is a second surface',
         );
     });
 
-    test('shipped text: a spec ambiguity found in a run takes one route — the single /magicspec:task recommendation — in the debugger card, its mirror and the run page (T258)', () => {
+    test('shipped text: a spec ambiguity found in a run takes one route — the single /magicspec task recommendation — in the debugger card, its mirror and the run page (T258)', () => {
         const card = cardLine('skills/magicspec/roles/debugger.md', '4. For (b)');
         assert.ok(card, 'the debugger card must carry its step for a spec ambiguity');
         for (const needle of [
             '`Notes`',
             '`run.md` Step 4',
-            '`/magicspec:task {workspace}`',
-            'only inside a `/magicspec:task` HALT',
+            '`/magicspec task {workspace}`',
+            'only inside a `/magicspec task` HALT',
         ]) {
             assert.ok(card.includes(needle), `the debugger step must state ${needle}`);
         }
 
         // The stale wordings: a handoff of the session to the specification workflow.
         const toSpec =
-            /hand off to `spec\.md`|via `magicspec:spec`|delegate to `magicspec:spec`|jumps to the Spec Workflow/;
+            /hand off to `spec\.md`|via `\/magicspec spec`|delegate to `\/magicspec spec`|jumps to the Spec Workflow/;
         assert.ok(
             !toSpec.test(card),
             'the debugger card must not hand the session to the specification workflow',
         );
         for (const stale of [
             'For (b): hand off to `spec.md` workflow via `magic.spec` to resolve the ambiguity.',
-            'If spec is ambiguous → **HALT** and delegate to `magicspec:spec` for update.',
+            'If spec is ambiguous → **HALT** and delegate to `/magicspec spec` for update.',
             'A delegated handoff jumps to the Spec Workflow (Explore Mode) where specifications are formally updated.',
         ]) {
             assert.ok(toSpec.test(stale), `the detector must flag: ${stale}`);
@@ -12391,8 +12459,8 @@ describe('Magic Engine Scripts', () => {
             'docs/run.md must not route a run to the specification workflow',
         );
         assert.ok(
-            lineWith(page, '- **Handoff**:')?.includes('`/magicspec:task {workspace}`'),
-            'the run page must name /magicspec:task as the one handoff',
+            lineWith(page, '- **Handoff**:')?.includes('`/magicspec task {workspace}`'),
+            'the run page must name /magicspec task as the one handoff',
         );
     });
 
@@ -12405,7 +12473,7 @@ describe('Magic Engine Scripts', () => {
         assert.notStrictEqual(review, '', 'the post-write review section must be found');
         const halt = lineWith(review, 'Practical conflict found');
         assert.ok(halt, 'the post-write review must define its HALT');
-        for (const needle of ['**HALT**', '(already written)', '`/magicspec:rule amend C{N}`']) {
+        for (const needle of ['**HALT**', '(already written)', '`/magicspec rule amend C{N}`']) {
             assert.ok(halt.includes(needle), `the post-write HALT must state ${needle}`);
         }
         assert.ok(
@@ -13317,14 +13385,27 @@ describe('Magic Engine Scripts', () => {
                 e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)],
             );
 
-    // The commands the router lists, from its table.
-    const routerRows = () =>
-        fs
-            .readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8')
+    // The commands the router lists, from its table: command, group, what it does, argument,
+    // when it is missing, body.
+    const tableRowsOf = (text) =>
+        text
             .split(/\r?\n/)
-            .map((l) => /^\| `([a-z][a-z-]*)` \| (.+?) \| `workflows\/([a-z-]+)\.md` \|$/.exec(l))
+            .map((l) =>
+                /^\| `([a-z][a-z-]*)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| `workflows\/([a-z-]+)\.md` \|$/.exec(
+                    l,
+                ),
+            )
             .filter(Boolean)
-            .map((m) => ({ name: m[1], summary: m[2], file: m[3] }));
+            .map((m) => ({
+                name: m[1],
+                group: m[2].trim(),
+                summary: m[3].trim(),
+                argument: m[4].trim(),
+                missing: m[5].trim(),
+                file: m[6],
+            }));
+    const routerRows = () =>
+        tableRowsOf(fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8'));
 
     test('the router names the skill, fits the host limits and lists exactly the workflows of the folder (skill folder)', () => {
         const syncSkills = require(path.join(devScriptsDir, 'skill-frontmatter.js'));
@@ -13371,10 +13452,196 @@ describe('Magic Engine Scripts', () => {
                 `${row.name}: the description names the command`,
             );
         }
-        assert.strictEqual(rows.length, 7);
+        assert.strictEqual(rows.length, 9);
         assert.ok(
             !fs.existsSync(path.join(skillSrc, 'workflows', 'context.md')),
             'a shared module is not a command',
+        );
+    });
+
+    test('the help body is rendered from the router table: no second list, the picker by host capability, a bounded ask and verbatim names (skill folder)', () => {
+        const help = fs.readFileSync(path.join(skillSrc, 'workflows', 'help.md'), 'utf8');
+        assert.deepStrictEqual(
+            tableRowsOf(help),
+            [],
+            'the help body holds no copy of the command table',
+        );
+        assert.ok(
+            help.includes('Usage: /magicspec <command> [argument]'),
+            'it renders the usage line of the layout',
+        );
+        assert.ok(!/\/magicspec:[a-z]/.test(help), 'it prints no colon form');
+        for (const [needle, what] of [
+            [/\*\*Read-Only\*\*/, 'read-only'],
+            [
+                /ignoring letter case, is the command; any other token is read as a language/,
+                'command versus language',
+            ],
+            [
+                /in `<…>` when the \*When it is missing\* cell says \*\*required\*\*/,
+                'argument brackets',
+            ],
+            [/two steps: the group, then the command/, 'the two-step picker'],
+            [/a group with one command skips its second step/, 'a one-command group skips a step'],
+            [/numbered list in the chat/, 'the chat fallback'],
+            [/free-text choice/, 'free text is always accepted'],
+            [/Nothing runs before the user has chosen/, 'nothing runs unasked'],
+            [/runs nothing; say so in one line/, 'cancel'],
+            [/Asking is bounded \(E7\)/, 'E7'],
+            [/never translated, in any language/, 'verbatim names'],
+            [/one line saying which value was not recognized/, 'an unrecognized language'],
+        ]) {
+            assert.match(help, needle, `help.md: ${what}`);
+        }
+        // Both forms — the picker and the argument form — say that a dismissed form runs nothing.
+        assert.strictEqual(
+            (help.match(/runs nothing; say so in one line/g) || []).length,
+            2,
+            'a cancelled picker and a cancelled argument form each run nothing',
+        );
+    });
+
+    test('the migrate body runs the dry run, asks one consent question only for a plan that removes or renames, and applies only on a yes (skill folder)', () => {
+        const body = fs.readFileSync(path.join(skillSrc, 'workflows', 'migrate.md'), 'utf8');
+        assert.match(body, /node scripts\/executor\.js migrate`/, 'the dry run is the first step');
+        assert.match(body, /node scripts\/executor\.js migrate --apply`/, 'the apply step');
+        assert.match(body, /One consent question \(E1\)/, 'one E1 question');
+        assert.match(
+            body,
+            /asked only when the plan removes or renames something/,
+            'only for a plan',
+        );
+        assert.match(body, /On a yes, run/, 'apply only on a yes');
+        assert.match(body, /`Nothing to migrate`/, 'the finished message');
+        assert.match(body, /The sweep edits only SDD artifacts/, 'the vocabulary sweep');
+        assert.match(body, /a product file that still uses the earlier names is reported, never edited/);
+        assert.match(body, /Never finalizes/, 'no finalize');
+        assert.match(
+            body,
+            /does not initialize the project/,
+            'no Auto-Init beside the old state folder',
+        );
+        assert.ok(!/\/magicspec:[a-z]/.test(body), 'it prints no colon form');
+    });
+
+    test('a bare spec and a bare rule ask for their required argument once, through the argument form; nothing else in the bodies asks for an optional one (skill folder)', () => {
+        const spec = fs.readFileSync(path.join(skillSrc, 'workflows', 'spec.md'), 'utf8');
+        const blank = spec.slice(
+            spec.indexOf('**Blank Trigger (Argument Form)**'),
+            spec.indexOf('### Mode Transition'),
+        );
+        assert.ok(blank.length > 200, 'the Blank Trigger is the argument form');
+        assert.match(blank, /E7, \[help\.md\]\(help\.md\) Step 4/, 'it names E7 and the form');
+        assert.match(
+            blank,
+            /Rank up to 3 candidate topics\*\* \(new specs or refinements\) \*\*by DA-3/,
+        );
+        assert.match(
+            blank,
+            /highest-coverage gap first, marked recommended/,
+            'winner first and marked',
+        );
+        assert.match(blank, /free text always accepted/, 'free text is accepted');
+        assert.match(
+            blank,
+            /passes Step 0\.5 and then Dispatch/,
+            'the idea passes the intake gate',
+        );
+        assert.match(blank, /A dismissed form writes nothing/, 'a cancelled form writes nothing');
+        assert.ok(
+            !/never\*\* by a question or option menu/.test(spec),
+            'the earlier "never a question" wording is gone',
+        );
+        assert.match(spec, /☐ Command Intake \(E7\)/, 'the spec checklist names E7');
+
+        const rule = fs.readFileSync(path.join(skillSrc, 'workflows', 'rule.md'), 'utf8');
+        assert.match(rule, /## Missing Rule Text/, 'rule has the same form');
+        assert.match(rule, /\(E7, \[help\.md\]\(help\.md\) Step 4\)/);
+        assert.match(rule, /☐ Command Intake \(E7\)/, 'the rule checklist names E7');
+
+        // The commands whose argument is optional never ask for it.
+        for (const row of routerRows().filter((r) => r.missing.startsWith('optional'))) {
+            // The help picker is the one place an optional argument is offered.
+            if (row.name === 'help') continue;
+            const body = fs.readFileSync(
+                path.join(skillSrc, 'workflows', `${row.file}.md`),
+                'utf8',
+            );
+            assert.ok(
+                !/Command Intake \(E7\)/.test(body),
+                `${row.name}: an optional argument is never asked for`,
+            );
+        }
+    });
+
+    test('the router states one grammar, carries the argument contract of every command and routes the bare, unknown and missing-argument forms (skill folder)', () => {
+        const text = fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8');
+        const block = text.match(/^---\r?\n([\s\S]*?)\r?\n---/);
+        assert.match(
+            block[1],
+            /^argument-hint: "<command> \[argument\]"$/m,
+            'the frontmatter declares the argument hint',
+        );
+
+        // The table: every row carries a group, an argument and a when-missing value.
+        const groups = new Set([
+            'pipeline',
+            'quality & automation',
+            'health',
+            'maintenance',
+            '—',
+        ]);
+        const rows = routerRows();
+        assert.ok(rows.length > 0, 'the table has rows');
+        for (const row of rows) {
+            assert.ok(groups.has(row.group), `${row.name}: group "${row.group}" is a known group`);
+            assert.ok(row.argument.length > 0, `${row.name}: the argument column is filled`);
+            assert.match(
+                row.missing,
+                /^(\*\*required\*\*|optional|—)/,
+                `${row.name}: the when-missing column states required, optional or none`,
+            );
+            assert.ok(row.summary.length > 0, `${row.name}: the summary column is filled`);
+        }
+        const required = rows
+            .filter((r) => r.missing.startsWith('**required**'))
+            .map((r) => r.name);
+        assert.deepStrictEqual(
+            required.sort(),
+            ['rule', 'spec'],
+            'the commands that cannot act without input are the ones that ask for it',
+        );
+
+        const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
+        assert.strictEqual(byName.help.group, '—', 'help belongs to no group');
+        assert.strictEqual(byName.migrate.group, 'maintenance', 'migrate is maintenance');
+        assert.match(byName.spec.missing, /^\*\*required\*\* — up to three suggested topics/);
+
+        // The grammar and the dispatch branches.
+        const body = text.slice(text.indexOf('\n# Magic Spec'));
+        assert.ok(
+            body.includes('`/magicspec <command> [argument]`'),
+            'the one printed form is stated',
+        );
+        assert.ok(
+            !/\/magicspec:[a-z]/.test(body),
+            'the router prints no colon form (it only reads one)',
+        );
+        assert.match(body, /Nothing follows `magicspec`, or the word is `help`/, 'bare and help');
+        assert.ok(body.includes('`workflows/help.md`'), 'the help body is named');
+        assert.match(
+            body,
+            /any other word → the same help with the typed text kept/,
+            'unknown word',
+        );
+        assert.match(body, /one edit away from a command name/, 'a typo offers the command first');
+        assert.match(body, /Input in quotation marks is an idea for `spec`/, 'quotes force spec');
+        assert.match(body, /\*\*Required\*\* and absent → ask for it once/, 'required, absent');
+        assert.match(body, /\*\*Optional\*\* and absent → run the default/, 'optional, absent');
+        assert.match(
+            body,
+            /route it to `spec` instead and narrate one `\[DR\]` line/,
+            'misfit',
         );
     });
 
@@ -13500,7 +13767,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('init --host writes the rule, the command entries and the skill link for each host, marks them, and writes nothing for an unknown host (skill folder)', () => {
+    test('init --host writes the rule and the skill link for each host, marks them, writes no command entry anywhere, and writes nothing for an unknown host (skill folder)', () => {
         const dir = makeConsumer();
         try {
             const skill = installSkill(dir);
@@ -13525,30 +13792,19 @@ describe('Magic Engine Scripts', () => {
             const source = assertRuleCopies(skill, dir);
             assert.ok(source.includes('<!-- magicspec-rule -->'), 'the source carries the marker');
 
-            const rows = routerRows();
-            for (const host of ['.claude', '.qwen']) {
-                const entries = fs
-                    .readdirSync(path.join(dir, host, 'commands', 'magicspec'))
-                    .sort();
-                assert.deepStrictEqual(
-                    entries,
-                    rows.map((r) => `${r.name}.md`).sort(),
-                    `${host}: one entry per command`,
-                );
-                const task = fs.readFileSync(
-                    path.join(dir, host, 'commands', 'magicspec', 'task.md'),
-                    'utf8',
-                );
-                assert.match(task, /<!-- magicspec-command task -->/);
-                assert.match(
-                    task,
-                    host === '.claude' ? /Arguments: \$ARGUMENTS/ : /Arguments: \{\{args\}\}/,
+            // The router is the only command surface: no host receives an entry, and the printed
+            // ignore lines name no command folder.
+            for (const host of ['.claude', '.qwen', '.codex']) {
+                assert.ok(
+                    !fs.existsSync(path.join(dir, host, 'commands')),
+                    `${host}: no command folder is created`,
                 );
             }
             assert.ok(
-                !fs.existsSync(path.join(dir, '.codex')),
-                'Codex has no per-project command entry or folder',
+                !walkFiles(dir).some((f) => f.split(path.sep).includes('commands')),
+                'no file lies under any commands/ folder',
             );
+            assert.ok(!/commands/.test(run.stdout), 'the printed lines name no command folder');
 
             const agents = fs.readFileSync(path.join(dir, 'AGENTS.md'), 'utf8');
             assert.ok(agents.startsWith('# Mine\n\nKeep this.\n'), 'the project text is kept');
@@ -13579,7 +13835,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('a file at a projection path that carries no marker is left alone, and a copy that differs from its source is reported stale (skill folder)', () => {
+    test('a file at a projection path that carries no marker is left alone, a copy that differs from its source is reported stale, and a command entry of an earlier installation is reported retired and removed (skill folder)', () => {
         const dir = makeConsumer();
         try {
             const skill = installSkill(dir);
@@ -13593,6 +13849,20 @@ describe('Magic Engine Scripts', () => {
                 path.join(dir, '.claude', 'commands', 'magicspec', 'run.md'),
                 "the project's own command\n",
             );
+            // An entry as a 3.0.x installation wrote it.
+            const leftover = path.join(dir, '.claude', 'commands', 'magicspec', 'task.md');
+            fs.writeFileSync(
+                leftover,
+                '---\ndescription: x\n---\n<!-- magicspec-command task -->\nRun the command.\n',
+            );
+            const retiredOf = () =>
+                JSON.parse(
+                    skillExec(skill, dir, 'check-prerequisites', ['--json']).stdout,
+                ).warnings.filter((w) => w.type === 'PROJECTION_RETIRED');
+            const retired = retiredOf();
+            assert.strictEqual(retired.length, 1, 'the leftover entry is reported');
+            assert.match(retired[0].message, /'\.claude\/commands\/magicspec\/task\.md'/);
+            assert.match(retired[0].fix, /init --host=claude/);
 
             const run = skillExec(skill, dir, 'init', ['--host=claude']);
             assert.strictEqual(run.status, 0, run.stdout + run.stderr);
@@ -13611,9 +13881,12 @@ describe('Magic Engine Scripts', () => {
                 ),
                 "the project's own command\n",
             );
+            assert.ok(!fs.existsSync(leftover), 'the marked entry of an earlier install is removed');
+            assert.match(run.stdout, /Removed \(command entry of an earlier installation\)/);
+            assert.deepStrictEqual(retiredOf(), [], 'nothing is reported retired afterwards');
             assert.ok(
-                fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec', 'task.md')),
-                'the other entries are written',
+                !fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec', 'extra.md')),
+                'and no entry is written in its place',
             );
 
             // stale: a marked copy edited, and a marked copy whose source changed
@@ -13637,19 +13910,6 @@ describe('Magic Engine Scripts', () => {
             skillExec(skill, dir, 'init', ['--host=claude']);
             assert.deepStrictEqual(staleOf(), [], 'init writes the copy again');
 
-            fs.appendFileSync(
-                path.join(dir, '.claude', 'commands', 'magicspec', 'task.md'),
-                'edited\n',
-            );
-            stale = staleOf();
-            assert.strictEqual(stale.length, 1, 'an edited command entry is stale');
-            assert.match(
-                stale[0].message,
-                /'\.claude\/commands\/magicspec\/task\.md' differs from its source/,
-            );
-            skillExec(skill, dir, 'init', ['--host=claude']);
-            assert.deepStrictEqual(staleOf(), [], 'init writes the entry again');
-
             fs.appendFileSync(path.join(skill, 'AGENT-RULES.md'), '\nA new sentence.\n');
             stale = staleOf();
             assert.ok(
@@ -13661,7 +13921,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('refreshProjections rewrites only the projections that fell behind their source, creates none, and leaves an unmarked file alone (skill folder)', () => {
+    test('refreshProjections rewrites only the projections that fell behind their source, removes every command entry, creates none, and leaves an unmarked file alone (skill folder)', () => {
         const dir = makeConsumer();
         try {
             const skill = installSkill(dir);
@@ -13688,49 +13948,24 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(skillExec(skill, dir, 'init', ['--host=claude,codex']).status, 0);
             assert.deepStrictEqual(refresh(), [], 'a current projection is not rewritten');
 
-            // Hosts whose folders are links to one folder see one file: it is one projection, not a stale one
-            // for the host whose argument placeholder differs (this repository's own layout).
+            // Entries as 3.0.x installations wrote them, reached through two hosts whose command
+            // folders are one folder (this repository's own layout): each is one projection.
+            const entry = (name) =>
+                `---\ndescription: x\n---\n<!-- magicspec-command ${name} -->\nRun the command.\n`;
+            const folder = path.join(dir, '.claude', 'commands', 'magicspec');
+            fs.mkdirSync(folder, { recursive: true });
+            fs.writeFileSync(path.join(folder, 'task.md'), entry('task'));
+            fs.writeFileSync(path.join(folder, 'graph.md'), entry('graph'));
+            fs.writeFileSync(path.join(folder, 'run.md'), "the project's own command\n");
             fs.mkdirSync(path.join(dir, '.qwen'), { recursive: true });
             fs.symlinkSync(
                 path.join(dir, '.claude', 'commands'),
                 path.join(dir, '.qwen', 'commands'),
                 'junction',
             );
-            const viaLink = fs.readFileSync(
-                path.join(dir, '.claude', 'commands', 'magicspec', 'task.md'),
-                'utf8',
-            );
-            assert.deepStrictEqual(
-                refresh(),
-                [],
-                'a second host reaching the same folder does not make it stale',
-            );
-            assert.strictEqual(
-                fs.readFileSync(
-                    path.join(dir, '.claude', 'commands', 'magicspec', 'task.md'),
-                    'utf8',
-                ),
-                viaLink,
-                'and does not rewrite it',
-            );
-            fs.rmdirSync(path.join(dir, '.qwen', 'commands'));
 
-            // A source that moved on, an edited copy, a command that left the router, and a file that is not ours.
+            // A source that moved on, and the entries.
             fs.appendFileSync(path.join(skill, 'AGENT-RULES.md'), '\nA new sentence.\n');
-            const taskEntry = path.join(dir, '.claude', 'commands', 'magicspec', 'task.md');
-            fs.appendFileSync(taskEntry, 'edited\n');
-            const router = path.join(skill, 'SKILL.md');
-            fs.writeFileSync(
-                router,
-                fs
-                    .readFileSync(router, 'utf8')
-                    .split('\n')
-                    .filter((l) => !l.startsWith('| `graph` |'))
-                    .join('\n'),
-            );
-            const foreign = path.join(dir, '.claude', 'commands', 'magicspec', 'run.md');
-            fs.writeFileSync(foreign, "the project's own command\n");
-
             const rewritten = refresh()
                 .map((r) => r.path)
                 .sort();
@@ -13738,28 +13973,35 @@ describe('Magic Engine Scripts', () => {
                 rewritten.includes('.claude/rules/magicspec.md'),
                 'the rule copy follows its source',
             );
-            assert.ok(
-                rewritten.includes('.claude/commands/magicspec/task.md'),
-                'an edited entry is written again',
+            assert.strictEqual(
+                rewritten.filter((p) => /commands\/magicspec\/(task|graph)\.md$/.test(p)).length,
+                2,
+                'each entry is one projection, even through two hosts',
             );
             assert.ok(
-                rewritten.includes('.claude/commands/magicspec/graph.md'),
-                'an entry whose command left the router is reported',
-            );
-            assert.ok(
-                !fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec', 'graph.md')),
-                'and removed',
+                !fs.existsSync(path.join(folder, 'task.md')) &&
+                    !fs.existsSync(path.join(folder, 'graph.md')),
+                'every marked entry is removed, current or not',
             );
             assert.ok(
                 !rewritten.includes('.claude/commands/magicspec/run.md'),
                 'a file without a marker is not ours',
             );
-            assert.strictEqual(fs.readFileSync(foreign, 'utf8'), "the project's own command\n");
+            assert.strictEqual(
+                fs.readFileSync(path.join(folder, 'run.md'), 'utf8'),
+                "the project's own command\n",
+            );
+            assert.ok(fs.existsSync(folder), 'a folder that still holds a file of the project stays');
             assert.strictEqual(
                 fs.readFileSync(path.join(dir, '.claude', 'rules', 'magicspec.md'), 'utf8'),
                 fs.readFileSync(path.join(skill, 'AGENT-RULES.md'), 'utf8'),
                 'the copy equals its source again',
             );
+            fs.rmdirSync(path.join(dir, '.qwen', 'commands'));
+            fs.rmSync(path.join(folder, 'run.md'));
+            fs.writeFileSync(path.join(folder, 'task.md'), entry('task'));
+            assert.strictEqual(refresh().length, 1, 'a lone entry is removed');
+            assert.ok(!fs.existsSync(folder), 'and the emptied folder goes with it');
             assert.deepStrictEqual(refresh(), [], 'after a refresh nothing is left behind');
         } finally {
             try {
@@ -13779,9 +14021,14 @@ describe('Magic Engine Scripts', () => {
             skillExec(skill, dir, 'init', ['--host=claude,codex,qwen']);
             fs.mkdirSync(path.join(dir, '.claude', 'rules'), { recursive: true });
             fs.writeFileSync(path.join(dir, '.claude', 'rules', 'other.md'), 'mine\n');
+            fs.mkdirSync(path.join(dir, '.claude', 'commands', 'magicspec'), { recursive: true });
             fs.writeFileSync(
                 path.join(dir, '.claude', 'commands', 'magicspec', 'extra.md'),
                 'mine\n',
+            );
+            fs.writeFileSync(
+                path.join(dir, '.claude', 'commands', 'magicspec', 'task.md'),
+                '<!-- magicspec-command task -->\n',
             );
 
             const snapshot = () =>
@@ -14005,76 +14252,27 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('the plugin build carries the engine version, one user-invoked skill per command, and refuses a folder that is not its own (skill folder)', () => {
-        const out = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-plugin-'));
-        const foreign = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-plugin-foreign-'));
-        try {
-            const target = path.join(out, 'plugin');
-            const build = spawnSync(
-                process.execPath,
-                [path.join(skillSrc, 'scripts', 'executor.js'), 'build-plugin', '--out', target],
-                { encoding: 'utf8' },
-            );
-            assert.strictEqual(build.status, 0, build.stdout + build.stderr);
-
-            const version = fs.readFileSync(path.join(skillSrc, '.version'), 'utf8').trim();
-            const manifest = JSON.parse(
-                fs.readFileSync(path.join(target, '.claude-plugin', 'plugin.json'), 'utf8'),
-            );
-            assert.strictEqual(manifest.name, 'magicspec');
-            assert.strictEqual(
-                manifest.version,
-                version,
-                'the plugin version is the engine version',
-            );
-
-            for (const row of routerRows()) {
-                const entry = fs.readFileSync(
-                    path.join(target, 'skills', row.name, 'SKILL.md'),
-                    'utf8',
-                );
-                assert.match(entry, new RegExp(`^name: ${row.name}$`, 'm'));
-                assert.match(
-                    entry,
-                    /^disable-model-invocation: true$/m,
-                    `${row.name}: kept out of the model's list`,
-                );
-                assert.match(entry, new RegExp(`workflows/${row.name}\\.md`));
-            }
+    test('the plugin channel is gone: no builder script, no executor command, no shipped text that offers one (skill folder)', () => {
+        // The name is assembled so that a search for the removed command finds only history.
+        const removed = ['build', 'plugin'].join('-');
+        assert.ok(
+            !fs.existsSync(path.join(skillSrc, 'scripts', `${removed}.js`)),
+            'the builder script is removed',
+        );
+        const run = spawnSync(
+            process.execPath,
+            [path.join(skillSrc, 'scripts', 'executor.js'), removed],
+            { encoding: 'utf8' },
+        );
+        assert.strictEqual(run.status, 1, 'the executor no longer knows the command');
+        assert.match(run.stderr, /Unknown command/);
+        const manifest = fs.readFileSync(path.join(skillSrc, '.checksums'), 'utf8');
+        assert.ok(!manifest.includes(removed), 'the integrity manifest does not list it');
+        for (const file of walkFiles(skillSrc).filter((f) => /\.(md|js|json)$/.test(f))) {
             assert.ok(
-                fs.existsSync(path.join(target, 'skills', 'magicspec', 'SKILL.md')),
-                'the engine folder is inside the plugin',
+                !fs.readFileSync(file, 'utf8').includes(removed),
+                `${path.relative(skillSrc, file)} names the removed command`,
             );
-
-            // a second build over its own output succeeds; a folder with other content is refused untouched
-            assert.strictEqual(
-                spawnSync(
-                    process.execPath,
-                    [
-                        path.join(skillSrc, 'scripts', 'executor.js'),
-                        'build-plugin',
-                        '--out',
-                        target,
-                    ],
-                    { encoding: 'utf8' },
-                ).status,
-                0,
-            );
-            fs.writeFileSync(path.join(foreign, 'keep.txt'), 'mine\n');
-            const refused = spawnSync(
-                process.execPath,
-                [path.join(skillSrc, 'scripts', 'executor.js'), 'build-plugin', '--out', foreign],
-                { encoding: 'utf8' },
-            );
-            assert.notStrictEqual(refused.status, 0);
-            assert.deepStrictEqual(
-                fs.readdirSync(foreign),
-                ['keep.txt'],
-                'nothing was written into it',
-            );
-        } finally {
-            cleanup(out);
-            cleanup(foreign);
         }
     });
 
@@ -14450,14 +14648,14 @@ describe('Magic Engine Scripts', () => {
                 assert.ok(fs.existsSync(path.join(dir, rel)), rel + ' is kept');
             }
 
-            // the new layout is installed: the rule, the commands, the hook; the removed files are backed up
+            // the new layout is installed: the rule and the hook, no command entry; the removed files are backed up
             assert.ok(
                 fs.existsSync(path.join(dir, '.claude', 'rules', 'magicspec.md')),
                 'the rule projection is written for the host found',
             );
             assert.ok(
-                fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec', 'task.md')),
-                'the command entries are written',
+                !fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec')),
+                'no command entry is written',
             );
             assert.match(
                 fs.readFileSync(path.join(dir, '.git', 'hooks', 'pre-commit'), 'utf8'),
@@ -14577,6 +14775,193 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('the vocabulary sweep rewrites the earlier command, state-folder and engine-folder names one word at a time, and leaves history sections and look-alikes alone (migration)', () => {
+        const { rewriteVocabulary } = require(
+            path.join(skillSrc, 'scripts', 'lib', 'vocabulary-sweep.js'),
+        );
+        const input = [
+            '# Page',
+            'Run /magic.spec amend, then /magic.task, then (/magic.run).',
+            'The file workflows/magic.spec.md and /magic.spec.md and /magic.specs stay as they are.',
+            'State lives in .design/main/INDEX.md and in `.design`; x.design/y and .designs/ are not it.',
+            'The engine is .magic/scripts/executor.js, not .magicspec/main.',
+            '/magic.dev.test is not a command of the earlier layout.',
+            '',
+            '## Document History',
+            '| 1.0.0 | 2026-01-01 | Agent | Created with /magic.task in .design/. |',
+            '',
+            '## Overview',
+            'Back to /magic.status.',
+        ].join('\n');
+        const original = input.split('\n');
+        const { text, count } = rewriteVocabulary(input, '.agents/skills/magicspec');
+        const lines = text.split('\n');
+        assert.strictEqual(
+            lines[1],
+            'Run /magicspec spec amend, then /magicspec task, then (/magicspec run).',
+        );
+        assert.strictEqual(lines[2], original[2], 'file names and longer words are kept');
+        assert.strictEqual(
+            lines[3],
+            'State lives in .magicspec/main/INDEX.md and in `.magicspec`; x.design/y and .designs/ are not it.',
+        );
+        assert.strictEqual(
+            lines[4],
+            'The engine is .agents/skills/magicspec/scripts/executor.js, not .magicspec/main.',
+        );
+        assert.strictEqual(lines[5], original[5], 'a name outside the earlier set is kept');
+        assert.strictEqual(lines[8], original[8], 'a Document History row is history');
+        assert.strictEqual(lines[11], 'Back to /magicspec status.', 'the next section is rewritten');
+        assert.strictEqual(count, 7);
+        assert.strictEqual(
+            rewriteVocabulary(text, '.agents/skills/magicspec').count,
+            0,
+            'the result holds nothing left to rewrite',
+        );
+        assert.strictEqual(
+            rewriteVocabulary('see .magic/x', null).text,
+            'see .magic/x',
+            'without a project-relative engine folder the engine words are left for the report',
+        );
+    });
+
+    test('migrate --apply sweeps the SDD artifacts it may edit: versions and records each specification, follows its registry row, spares history, archives and the constitution, and only reports product files; a second run changes nothing (migration)', () => {
+        const { dir, skill } = legacyProject();
+        const today = new Date().toISOString().slice(0, 10);
+        try {
+            const put = (rel, text) => {
+                fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+                fs.writeFileSync(path.join(dir, rel), text);
+            };
+            const spec = [
+                '# Spec A',
+                '',
+                '**Version:** 1.0.0',
+                '**Status:** Stable',
+                '',
+                '## Overview',
+                '',
+                'Run /magic.spec amend; state is .design/main/INDEX.md; engine is .magic/scripts/executor.js.',
+                '',
+                '## Document History',
+                '',
+                '| Version | Date | Author | Description |',
+                '| --- | --- | --- | --- |',
+                '| 1.0.0 | 2026-01-01 | Agent | Created with /magic.task in .design/. |',
+                '',
+            ].join('\n');
+            const registry = [
+                '# Registry',
+                '',
+                '| File | Description | Status | Layer | Version |',
+                '| --- | --- | --- | --- | --- |',
+                '| [l1-a.md](specifications/l1-a.md) | Describes /magic.run | Stable | 1 | 1.0.0 |',
+                '',
+            ].join('\n');
+            const noVersion = '# Spec B\n\nRun /magic.task.\n';
+            const history = {
+                '.design/main/archives/tasks/phase-1.md': 'Done with /magic.run in .design/.\n',
+                '.design/main/RETROSPECTIVE.md': 'We used /magic.spec.\n',
+                '.design/main/CHANGELOG.md': 'Phase 1 via /magic.task.\n',
+                '.design/RULES.md': '# Rules\n\nC1 says run /magic.analyze.\n',
+            };
+            put('.design/main/specifications/l1-a.md', spec);
+            put('.design/main/specifications/l1-b.md', noVersion);
+            put('.design/main/INDEX.md', registry);
+            put('.design/main/PLAN.md', 'Next: /magic.task engine\n');
+            put(
+                '.design/main/STATE.md',
+                '# State\n\n**Next Action:** /magic.run\n\n## Recent Decisions\n\n- decided with /magic.spec\n',
+            );
+            for (const [rel, text] of Object.entries(history)) put(rel, text);
+            put('docs/guide.md', 'Type /magic.spec to begin.\n');
+
+            const dry = skillExec(skill, dir, 'migrate');
+            assert.strictEqual(dry.status, 0, dry.stdout + dry.stderr);
+            assert.match(
+                dry.stdout,
+                /4\. Rewrite the earlier command and folder names in \d+ SDD artifact/,
+            );
+            assert.strictEqual(
+                fs.readFileSync(path.join(dir, '.design/main/specifications/l1-a.md'), 'utf8'),
+                spec,
+                'a dry run rewrites nothing',
+            );
+
+            const run = applyMigration(skill, dir);
+            const read = (rel) => fs.readFileSync(path.join(dir, rel), 'utf8');
+
+            // The specification: rewritten, patch-versioned, one history row, the old row intact.
+            const migrated = read('.magicspec/main/specifications/l1-a.md');
+            assert.match(
+                migrated,
+                /Run \/magicspec spec amend; state is \.magicspec\/main\/INDEX\.md; engine is [^ ]*skills\/magicspec\/scripts\/executor\.js\./,
+            );
+            assert.match(migrated, /^\*\*Version:\*\* 1\.0\.1$/m);
+            const rows = migrated.split('\n').filter((l) => /^\| \d/.test(l));
+            assert.strictEqual(rows.length, 2, 'one history row was added');
+            assert.ok(rows[0].startsWith(`| 1.0.1 | ${today} | migrate |`), rows[0]);
+            assert.strictEqual(
+                rows[1],
+                '| 1.0.0 | 2026-01-01 | Agent | Created with /magic.task in .design/. |',
+                'the earlier row is history',
+            );
+            // Its registry row follows, and the registry's own words are rewritten.
+            assert.match(
+                read('.magicspec/main/INDEX.md'),
+                /\| \[l1-a\.md\]\(specifications\/l1-a\.md\) \| Describes \/magicspec run \| Stable \| 1 \| 1\.0\.1 \|/,
+            );
+            // Plain artifacts: rewritten, no version; the history section of the live state kept.
+            assert.strictEqual(read('.magicspec/main/PLAN.md'), 'Next: /magicspec task engine\n');
+            assert.strictEqual(
+                read('.magicspec/main/STATE.md'),
+                '# State\n\n**Next Action:** /magicspec run\n\n## Recent Decisions\n\n- decided with /magic.spec\n',
+            );
+            // History, archives and the constitution are untouched.
+            for (const [rel, text] of Object.entries(history)) {
+                assert.strictEqual(read(rel.replace('.design/', '.magicspec/')), text, rel);
+            }
+            // A specification without a version cannot be recorded, so it is left and named.
+            assert.strictEqual(read('.magicspec/main/specifications/l1-b.md'), noVersion);
+            assert.match(
+                run.stdout,
+                /Not rewritten: \.magicspec\/main\/specifications\/l1-b\.md \(no version header/,
+            );
+            assert.match(
+                run.stdout,
+                /Not rewritten: \.magicspec\/RULES\.md still uses the earlier names/,
+            );
+            // The product file is reported, not edited; the old engine and wrappers are not product.
+            assert.strictEqual(read('docs/guide.md'), 'Type /magic.spec to begin.\n');
+            assert.match(run.stdout, /1 product file\(s\) still use the earlier names/);
+            assert.match(run.stdout, /docs\/guide\.md:1 \(\/magic\.spec\)/);
+            // Every changed file is listed with its revert hint, and was backed up first.
+            assert.match(
+                run.stdout,
+                /- \.magicspec\/main\/specifications\/l1-a\.md \(\d+ replacement\(s\), 1\.0\.0 -> 1\.0\.1\)/,
+            );
+            assert.match(
+                run.stdout,
+                /\(Revert: git restore \.magicspec, or copy the files back from magicspec-migration-backup-/,
+            );
+            assert.strictEqual(
+                read(`magicspec-migration-backup-${today}/.magicspec/main/specifications/l1-a.md`),
+                spec,
+                'the original is in the backup',
+            );
+
+            // A second run finds nothing to do.
+            const after = snapshot(dir);
+            const again = skillExec(skill, dir, 'migrate', ['--apply']);
+            assert.strictEqual(again.status, 0, again.stdout + again.stderr);
+            assert.match(again.stdout, /Nothing to migrate/);
+            assert.deepStrictEqual(snapshot(dir), after, 'a second run changes nothing');
+        } finally {
+            cleanLink(dir);
+            cleanup(dir);
+        }
+    });
+
     test('migrate leaves a wrapper alone when its folder is a link that leads out of the project (migration)', () => {
         const { dir, skill } = legacyProject();
         const outside = fs.mkdtempSync(path.join(require('os').tmpdir(), 'magicspec-outside-'));
@@ -14650,6 +15035,13 @@ describe('Magic Engine Scripts', () => {
                 assert.strictEqual(r.status, 1, script + ': ' + r.stdout);
                 assert.match(r.stderr, /Both \.design\/ and \.magicspec\/ exist/, script);
                 assert.match(r.stderr, /migrate/, script + ': it names the way forward');
+                if (script !== 'migrate') {
+                    assert.match(
+                        r.stderr,
+                        /Run `\/magicspec migrate` \(by script: `[^`]*migrate`\)/,
+                        script + ': it names the command beside the script path',
+                    );
+                }
             }
             assert.deepStrictEqual(snapshot(dir), before, 'neither folder was touched');
         } finally {
@@ -14665,6 +15057,11 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(r.status, 1);
             assert.match(r.stderr, /uses the 2\.x layout/);
             assert.match(r.stderr, /migrate/);
+            assert.match(
+                r.stderr,
+                /Run `\/magicspec migrate` to see the plan and migrate it \(by script: `[^`]*migrate`/,
+                'the stop names the command beside the script path',
+            );
             assert.ok(
                 !fs.existsSync(path.join(dir, '.magicspec')),
                 'no empty state folder appeared beside the old one',
@@ -14845,7 +15242,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(init.status, 0, 'SP-3: ' + init.stdout + init.stderr);
             assertRuleCopies(skill, dir, (rel) => 'SP-4: ' + rel + ' is a byte copy');
 
-            // SP-5: every router row has its body and every command entry names an existing body
+            // SP-5: every router row has its body; no command entry exists to name another
             const bodies = fs.readdirSync(path.join(skill, 'workflows'));
             const rows = fs
                 .readFileSync(path.join(skill, 'SKILL.md'), 'utf8')
@@ -14856,25 +15253,16 @@ describe('Magic Engine Scripts', () => {
                 rows.length === bodies.length && rows.every((r) => bodies.includes(r[2])),
                 'SP-5: the table and the folder agree',
             );
-            for (const entry of fs.readdirSync(
-                path.join(dir, '.claude', 'commands', 'magicspec'),
-            )) {
-                const text = fs.readFileSync(
-                    path.join(dir, '.claude', 'commands', 'magicspec', entry),
-                    'utf8',
-                );
-                const body = /workflows\/([a-z-]+\.md)/.exec(text)[1];
-                assert.ok(bodies.includes(body), 'SP-5: ' + entry + ' resolves to ' + body);
-            }
+            assert.ok(
+                !fs.existsSync(path.join(dir, '.claude', 'commands')),
+                'SP-5: the router is the only surface, no host entry was written',
+            );
 
             // SP-6: every generated file carries a marker
-            for (const rel of [
-                '.claude/rules/magicspec.md',
-                '.claude/commands/magicspec/task.md',
-            ]) {
+            for (const rel of ['.claude/rules/magicspec.md']) {
                 assert.match(
                     fs.readFileSync(path.join(dir, rel), 'utf8'),
-                    /<!-- magicspec-(rule|command)/,
+                    /<!-- magicspec-rule/,
                     'SP-6: ' + rel,
                 );
             }
@@ -14936,8 +15324,7 @@ describe('Magic Engine Scripts', () => {
             const removed = skillExec(skill, dir, 'remove');
             assert.strictEqual(removed.status, 0, removed.stdout + removed.stderr);
             assert.ok(
-                !fs.existsSync(path.join(dir, '.claude', 'rules', 'magicspec.md')) &&
-                    !fs.existsSync(path.join(dir, '.claude', 'commands', 'magicspec', 'task.md')),
+                !fs.existsSync(path.join(dir, '.claude', 'rules', 'magicspec.md')),
                 'SP-6: the projections are gone',
             );
             assert.deepStrictEqual(state(dir), before, 'SP-6: the state is untouched by removal');
@@ -15337,9 +15724,10 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(path.join(dir, '.git', 'hooks', 'pre-commit'), '#!/bin/sh\necho mine\n', { mode: 0o755 });
             const result = simExec(dir, ['init', '--host=claude']);
             assert.strictEqual(result.status, 0, result.stderr);
-            for (const line of [`/${SIM_ENGINE_REL}/`, '/.claude/skills/magicspec/', '/.claude/rules/magicspec.md', '/.claude/commands/magicspec/', '/.magicspec/graph/', '/.magicspec/*cache*/']) {
+            for (const line of [`/${SIM_ENGINE_REL}/`, '/.claude/skills/magicspec/', '/.claude/rules/magicspec.md', '/.magicspec/graph/', '/.magicspec/*cache*/']) {
                 assert.ok(result.stdout.includes(`   ${line}\n`), `the .gitignore block lists ${line}`);
             }
+            assert.ok(!result.stdout.includes('commands'), 'no command folder is named');
             assert.ok(result.stdout.includes(`/${SIM_ENGINE_REL}/** -text`), 'the vendoring line');
             const sink = fs.readFileSync(path.join(dir, '.magicspec', '.cache', 'diagnostics.jsonl'), 'utf8');
             assert.match(sink, /GIT_HOOKS_NOT_INSTALLED[^\n]*pre-commit hook that this installer did not write/, 'the installer\'s own reason is recorded');

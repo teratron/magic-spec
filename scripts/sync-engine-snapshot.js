@@ -12,7 +12,7 @@ const { writeFileSafe } = require(enginePath('scripts', 'utils'));
 // ═══════════════════════════════════════════════════════════════════════════
 // SCRIPT: SYNC-ENGINE-SNAPSHOT
 // ═══════════════════════════════════════════════════════════════════════════
-// Dev-repo-only counterpart to /magicspec:analyze's Engine Snapshot step
+// Dev-repo-only counterpart to /magicspec analyze's Engine Snapshot step
 // (l1-engine-core.md §Known Process Gaps — Dev-Repo Engine-Version Snapshot
 // Sync). Engine Upgrade Detection (AGENT-RULES.md §1) compares the engine .version
 // against the **Engine Version:** field in .magicspec/INDEX.md to catch an

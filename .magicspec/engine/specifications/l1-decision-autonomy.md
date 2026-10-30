@@ -1,6 +1,6 @@
 # Autonomous Decision Protocol
 
-**Version:** 2.1.0
+**Version:** 2.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -26,7 +26,7 @@ Production use of the SDD engine surfaced a recurring failure mode, reported ver
 - When asked to continue work, the agent responds with "which specification should I prepare?" plus a selection menu, instead of selecting one itself.
 - User verdict, repeated across sessions: *"You are the engineer — decide yourself, without sacrificing quality."* Non-technical users, or users of large generated codebases, cannot meaningfully answer these questions; every survey is a hard stop for the pipeline.
 - *(2026-10-01)* Six consecutive polls in one engine-maintenance session were each answered with the marked default. The owner then stated: *"There is not a single unresolvable case you could not solve — you already recommend at least, so you know which direction to move; and if you make simulative forecasts of how it would work if… and so on."* A question whose marked default is always taken adds no information; it only stalls the pipeline. `[ADDED]`
-- *(2026-10-01, the same day)* The owner corrected the first 2.0.0 draft, which had removed the intake question too: *"`/magicspec:spec` can indeed ask clarifying questions, because an AI cannot always understand vague human text, and sometimes there is simply too little input"* — together with a draft intake flowchart (`.drafts/flowchart.md`: a comprehension check and a sufficiency check, each answered by surveys of options plus "Other"). The cost of a question depends on who is asked and when: an owner pulled away from autonomous work to judge engine internals answers with the default, while a requester who has just typed an idea is present and holds the one thing no investigation can find. `[ADDED]`
+- *(2026-10-01, the same day)* The owner corrected the first 2.0.0 draft, which had removed the intake question too: *"`/magicspec spec` can indeed ask clarifying questions, because an AI cannot always understand vague human text, and sometimes there is simply too little input"* — together with a draft intake flowchart (`.drafts/flowchart.md`: a comprehension check and a sufficiency check, each answered by surveys of options plus "Other"). The cost of a question depends on who is asked and when: an owner pulled away from autonomous work to judge engine internals answers with the default, while a requester who has just typed an idea is present and holds the one thing no investigation can find. `[ADDED]`
 
 ### 1.2 Root Causes (verified against engine source)
 
@@ -98,7 +98,7 @@ Every autonomous resolution of a fork MUST be narrated as a single line in chat:
 [DR] {decision} — {winning criterion}. (Override: {command or revert hint})
 ```
 
-The DR replaces the question: it gives the user the same control point (read, interrupt, override) without blocking the pipeline. DRs are chat-level narration — no file artifact, no log (C2). Example: `[DR] Preparing l1-payment-flow.md next — only Draft blocking Phase 2 (DA-3 #2). (Override: /magicspec:spec amend <other>)`.
+The DR replaces the question: it gives the user the same control point (read, interrupt, override) without blocking the pipeline. DRs are chat-level narration — no file artifact, no log (C2). Example: `[DR] Preparing l1-payment-flow.md next — only Draft blocking Phase 2 (DA-3 #2). (Override: /magicspec spec amend <other>)`.
 
 ### DA-5 — Single-Question Format
 
@@ -122,7 +122,7 @@ Workflow steps that surface candidate options to the user — Explore Mode "Crea
 
 Presenting a proposal as a question, even a single well-formatted one with a marked default, is a DA-2 violation when no whitelist entry fired: **the marked default is itself proof that DA-3 already discriminated a winner**, so the question is redundant by construction. "Blank/ambiguous input" is not a whitelist entry — a workflow invoked with no argument resolves its scope by DA-3, not by asking. `[MODIFIED]` The one exception is a command whose argument is **required** (E7): `spec` without an idea, `fix` without a defect, `rule` without a rule, `goal` with none recorded. There the DA-3 ranking still runs — the highest-coverage gaps become the suggested topics of the argument form, its winner first and marked — and the requester chooses or types. A command whose argument is optional keeps the rule above: it runs its default and says which.
 
-**Drift-revalidation offers** (e.g., the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1) are governed jointly by DA-8 and DA-9: a detected version/state drift is narrated with **exactly one recommended path** (`/magicspec:analyze` to revalidate) and the requested workflow proceeds — never a `[y/n]` or option menu. This is the same informational-line treatment the status surface already uses (SC-4 of `l1-session-continuity.md`). The user's redirect (running `/magicspec:analyze`) is the override, not a solicited answer.
+**Drift-revalidation offers** (e.g., the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1) are governed jointly by DA-8 and DA-9: a detected version/state drift is narrated with **exactly one recommended path** (`/magicspec analyze` to revalidate) and the requested workflow proceeds — never a `[y/n]` or option menu. This is the same informational-line treatment the status surface already uses (SC-4 of `l1-session-continuity.md`). The user's redirect (running `/magicspec analyze`) is the override, not a solicited answer.
 
 ### DA-10 — Consequence Forecast (Outcome Simulation) `[ADDED]`
 
@@ -202,7 +202,7 @@ graph TD
 [DR] <decision, declarative past/present> — <criterion id or short reason>. (Override: <one command>)
 ```
 
-Constraints: one line; no tentative qualifiers (C25 §3); the Override hint is mandatory for non-trivial decisions and SHOULD reuse existing revert conventions (`git restore`, `/magicspec:spec amend`, Ctrl+C). A DA-10 decision also states its worst case and runner-up before the Override: `; worst case if wrong: <cost>; runner-up: <candidate>`.
+Constraints: one line; no tentative qualifiers (C25 §3); the Override hint is mandatory for non-trivial decisions and SHOULD reuse existing revert conventions (`git restore`, `/magicspec spec amend`, Ctrl+C). A DA-10 decision also states its worst case and runner-up before the Override: `; worst case if wrong: <cost>; runner-up: <candidate>`.
 
 ### 4.4 Constitutional Placement
 
@@ -216,7 +216,7 @@ C13 §3 amended wording (normative):
 
 1. **Project constitution** (`.magicspec/RULES.md`): amend C13 §3, add C27 — done atomically with this spec's dispatch (T4, user-mandated).
 2. **Engine template** (`skills/magicspec/templates/rules.md`): mirror the C13 §3 amendment and C27 — Engine Improvement task (C14 applies).
-3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. (c) **Drift-revalidation offers** — the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1 — bind to DA-8/DA-9: narrate the drift with one recommended path (`/magicspec:analyze`) and proceed; the pre-C27 `[y/n]` prompt (with `On y` / `On n` branches) is replaced with the single-path informational form (SC-4 reference). Engine Improvement — C14 applies.
+3. **Workflow touch-points**: (a) completion sections of `spec.md` / `task.md` / `run.md` gain a DA-6 reminder (next step is computed and narrated, never asked); checklists gain a `Decision Autonomy (C27)` line. (b) **Proposal surfaces** (DA-9) — `spec.md` Explore Mode Blank Trigger (Creative Sparks), Dispatch Notice, and Mode Transition — bind to DA-3: render the winner as a [DR] the same turn, never as an `AskUserQuestion` survey. Pre-C27 wording ("propose … in the next turn … auto-pick") is replaced with the DA-9 narrate-and-act form. (c) **Drift-revalidation offers** — the Engine Upgrade Detection prompt in `rules/MAGIC.md` §1 — bind to DA-8/DA-9: narrate the drift with one recommended path (`/magicspec analyze`) and proceed; the pre-C27 `[y/n]` prompt (with `On y` / `On n` branches) is replaced with the single-path informational form (SC-4 reference). Engine Improvement — C14 applies.
 4. **Role system**: role template and card `Anti-patterns` sections gain one advisory line — "elective questions outside the closed C27 escalation whitelist are a protocol violation". No new role card (§6.2).
 5. **User-side rules** (`skills/magicspec/AGENT-RULES.md`): add a compact C27 section so watching-process agents inherit session-level posture (DA-6).
 6. **Simulation**: `magicspec-dev:test` scenario — feed an ambiguous fork, assert DR emission instead of a question; feed an E1 fork, assert a DA-5-compliant question; feed a Blank-Trigger Explore invocation (no arguments), assert a DA-3 [DR] auto-pick (DA-9) rather than an `AskUserQuestion` survey.
@@ -261,6 +261,7 @@ Folding the procedure into C25. Rejected: C25 is scoped to chat output phrasing 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.1 | 2026-10-30 | Agent | **As built** (Phase 47): E7 stands in C27 items 2 and 5 and C13 §3 of the constitution (1.18.0) and in the shipped template word for word, which the harness compares for items 2, 5 and 8 and C13 §3; the always-on rules carry the E7 bullet, the checklist clause and the `help` and `migrate` exemptions of the drift check and of finalization; `spec` (Blank Trigger) and `rule` (Missing Rule Text) are the argument forms and name E7 in their checklists, and `run`, `task` and `analyze` state that an absent optional argument runs its default and is never asked. The printed command form of this specification follows [l1-command-surface.md](l1-command-surface.md) CS-2. |
 | 2.1.0 | 2026-10-30 | **E7 — command intake** joins the closed whitelist (origin `user-stated`: the owner's decision of 2026-10-30, which is the E4 event DA-2 requires): an invocation that names no command, or a command missing its required argument, gets the help picker and one argument form ([l1-command-surface.md](l1-command-surface.md) CS-9 to CS-11). DA-2 gains the row and the reason it asks; DA-5 the form of its questions; DA-9 keeps blank input declarative except a required argument, where the DA-3 winner becomes the marked suggestion instead of the action; §4.2 and §4.4 follow; §5 item 8 names the deployment. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

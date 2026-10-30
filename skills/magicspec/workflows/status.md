@@ -12,14 +12,14 @@ Read-only resume briefing for returning users. Composes current position, progre
 
 Read-only resume briefing: where the project stands, what was last done and decided, what blocks progress, and the one command to run next. Composed from live memory (`STATE.md`) and registries — performs zero writes.
 
-**Triggers:** `/magicspec:status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
+**Triggers:** `/magicspec status [arg]`, *"Where am I"*, *"What's next"*, *"Project status"*, *"Resume briefing"*.
 
-**Trigger:** `/magicspec:status [arg]`. Arguments:
+**Trigger:** `/magicspec status [arg]`. Arguments:
 
 - *(empty)* — briefing for the resolved (default) workspace
 - `{workspace}` — briefing for a specific workspace
 
-Examples: `/magicspec:status`, `/magicspec:status engine`.
+Examples: `/magicspec status`, `/magicspec status engine`.
 
 1. **Load**: resolve the workspace and read its `STATE.md`, `TASKS.md` and the registry (Step 1 below).
 2. **Brief**: render the seven-section briefing (Header → Position → Progress → Blockers & Constraints → Decisions → Engine → Next).
@@ -50,17 +50,17 @@ Examples: `/magicspec:status`, `/magicspec:status engine`.
 5. **Recent Decisions** — last 3 entries.
 6. **Engine line** — compare `.version` against the `**Engine Version:**` snapshot in `.magicspec/INDEX.md`:
    - Match → `Engine: {version} (in sync)`
-   - Differ or unknown → `Engine: {local} (snapshot {snap} — drift; /magicspec:analyze revalidates)`
+   - Differ or unknown → `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`
 7. **Next** — exactly one recommended command, or the nothing-pending statement:
    - STATE.md `Next Action` states that nothing is pending (it names no command) → render `Next: nothing pending — {the statement}` and recommend no command.
    - STATE.md `Next Action` present and names a command → recommend it verbatim.
-   - STATE.md `Next Action` present, names no `/magicspec:*` command and does not say nothing is pending (a note in the owner's words, for example a manual step to take first) → render `Next: {the text, verbatim}`, recommend no command of your own, and leave the note unrewritten.
-   - Absent → compute by pipeline order: open `Todo` tasks → `/magicspec:run {workspace}`; registered specs without a plan → `/magicspec:task {workspace}`; empty registry → `/magicspec:spec`.
-   - Format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec:* command)`
+   - STATE.md `Next Action` present, names no `/magicspec <command>` command and does not say nothing is pending (a note in the owner's words, for example a manual step to take first) → render `Next: {the text, verbatim}`, recommend no command of your own, and leave the note unrewritten.
+   - Absent → compute by pipeline order: open `Todo` tasks → `/magicspec run {workspace}`; registered specs without a plan → `/magicspec task {workspace}`; empty registry → `/magicspec spec`.
+   - Format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)`
 
 ### 3. Degraded States
 
-- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec:task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
+- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
 - **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
@@ -81,5 +81,5 @@ Status Checklist
 
 Where this workflow may hand over, and when:
 
-- **Continue execution** → `/magicspec:run`: Resume the active phase from the recommended next task. Condition: `open_tasks`.
-- **Replan** → `/magicspec:task`: Plan or revalidate the implementation plan. Condition: `plan_gap_or_drift`.
+- **Continue execution** → `/magicspec run`: Resume the active phase from the recommended next task. Condition: `open_tasks`.
+- **Replan** → `/magicspec task`: Plan or revalidate the implementation plan. Condition: `plan_gap_or_drift`.

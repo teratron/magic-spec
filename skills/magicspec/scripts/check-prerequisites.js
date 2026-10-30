@@ -235,9 +235,9 @@ if (reqSpecs && stableCount === 0) {
 }
 
 if (draftCount > 0)
-    warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, 'magicspec:spec');
+    warn('SPEC_STATUS', `${draftCount} specs are still in Draft status`, '/magicspec spec');
 if (rfcCount > 0)
-    warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, 'magicspec:spec');
+    warn('SPEC_STATUS', `${rfcCount} specs are still in RFC status`, '/magicspec spec');
 
 // One predicate answers all three pending-work questions (orphaned spec,
 // registry ahead of the plan, open Backlog item on a complete plan) for this
@@ -250,8 +250,8 @@ const pending = planExists ? findPendingWork(designDir) : null;
 const planWorkspace = path.basename(designDir);
 const planRemedy =
     planWorkspace === STATE_DIR_NAME
-        ? '/magicspec:task update'
-        : `/magicspec:task ${planWorkspace} update`;
+        ? '/magicspec task update'
+        : `/magicspec task ${planWorkspace} update`;
 
 // The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
 // exists: a spec that is registered but absent from disk (or misnamed) is as much a
@@ -270,7 +270,7 @@ for (const spec of indexSpecs) {
         warn(
             'GHOST_REGISTRY',
             `'${spec}' is registered in INDEX.md but file is missing from ${designDir}/specifications/.`,
-            'magicspec:analyze',
+            '/magicspec analyze',
         );
     }
 
@@ -307,7 +307,7 @@ if (planExists && indexExists) {
             warn(
                 'REGISTRY_MISMATCH',
                 `'${pSpec}' is referenced in PLAN.md but missing from INDEX.md.`,
-                '/magicspec:spec audit',
+                '/magicspec spec audit',
             );
         }
     }
@@ -374,7 +374,7 @@ if (planExists && indexExists) {
 // ═══════════════════════════════════════════════════════════════════════════
 //
 // A plan can go mechanically clean — every check above passes — while still
-// holding real, undone design work: Backlog entries that need a `/magicspec:spec`
+// holding real, undone design work: Backlog entries that need a `/magicspec spec`
 // pass before anything is implementable. Every other Pre-flight gate tests
 // mechanical drift (header parity, missing parents, collisions, checksums),
 // none of which fires here, so nothing HALTs and the plan-complete funnel
@@ -390,7 +390,7 @@ if (pending?.planComplete && pending.openBacklogItems.length > 0) {
     warn(
         'DESIGN_DEBT_PENDING',
         `Plan complete with no active phase, but ## Backlog holds ${pending.openBacklogItems.length} open item(s) needing design input.`,
-        `magicspec:spec ${workspaceName}`,
+        `/magicspec spec ${workspaceName}`,
     );
 }
 
@@ -430,13 +430,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version is MISSING but INDEX.md declares (${indexVersion}). Spec headers must mirror the registry.`,
-                    `Run /magicspec:spec to restore the header, then re-run /magicspec:task`,
+                    `Run /magicspec spec to restore the header, then re-run /magicspec task`,
                 );
             } else if (fileVersionMatch[1] !== indexVersion) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version (${fileVersionMatch[1]}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
-                    `Run /magicspec:spec to reconcile, then re-run /magicspec:task`,
+                    `Run /magicspec spec to reconcile, then re-run /magicspec task`,
                 );
             }
         }
@@ -447,13 +447,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status is MISSING but INDEX.md declares (${indexStatus}). Spec headers must mirror the registry.`,
-                    `Run /magicspec:spec to restore the header, then re-run /magicspec:task`,
+                    `Run /magicspec spec to restore the header, then re-run /magicspec task`,
                 );
             } else if (fileStatusMatch[1] !== indexStatus) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status (${fileStatusMatch[1]}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
-                    `Run /magicspec:spec to reconcile, then re-run /magicspec:task`,
+                    `Run /magicspec spec to reconcile, then re-run /magicspec task`,
                 );
             }
         }
@@ -461,14 +461,22 @@ if (verifyHeaders && indexExists) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
-// HOST PROJECTIONS (copies of the rule and the command entries)
+// HOST PROJECTIONS (copies of the rule; command entries left by an earlier install)
 // ═══════════════════════════════════════════════════════════════════════════
 
 // A projection that differs from the engine folder it was generated from says something
 // the engine no longer says. The remedy is to write it again; nothing is changed here.
+// A command entry is different: the engine registers none, so one left by an earlier
+// installation is retired, and the same `init` removes it.
 try {
     for (const item of require('./lib/hosts').findProjections(process.cwd())) {
-        if (item.stale) {
+        if (item.kind === 'command') {
+            warn(
+                'PROJECTION_RETIRED',
+                `'${item.path}' is a command entry of an earlier installation; the engine registers none now.`,
+                `${executorHint()} init --host=${item.host}`,
+            );
+        } else if (item.stale) {
             warn(
                 'PROJECTION_STALE',
                 `'${item.path}' differs from its source in ${ENGINE_REL}/.`,
@@ -686,7 +694,7 @@ if (jsonOutput) {
     } else {
         let errorMsg = `Missing required artifacts: ${missing.join(', ')}`;
         if (missing.includes('INDEX.md') && missing.includes('RULES.md')) {
-            errorMsg += `. 💡 SDD structure missing. Any /magicspec:* workflow sets it up automatically (Auto-Init), or run: ${executorHint()} init`;
+            errorMsg += `. 💡 SDD structure missing. Any /magicspec <command> workflow sets it up automatically (Auto-Init), or run: ${executorHint()} init`;
         }
         // For non-JSON mode, also print warnings as plain strings for backward compatibility
         for (const w of warnings) {

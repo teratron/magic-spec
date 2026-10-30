@@ -9,6 +9,7 @@ Manages project conventions across a two-tier rules system:
 
 - Entry
 - Core Invariants (Mandatory)
+- Missing Rule Text
 - Rule Tier Routing
 - Workflow: Convention Management
 - Finalization Protocol (Mandatory)
@@ -19,9 +20,18 @@ Manages project conventions across a two-tier rules system:
 
 **Triggers:** *"Add rule"*, *"Add convention"*, *"Amend rule"*, *"Remove rule"*.
 
-**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `magicspec:spec`. Rule changes feed into `magicspec:task` (plan updates) and `magicspec:run` (execution).
+**Trigger:** `/magicspec rule <argument>`. The argument is required. Arguments:
 
-**Pipeline context:** `magicspec:rule` governs conventions used across `magicspec:spec` → `magicspec:task` → `magicspec:run`.
+- *(empty)* — the argument form asks for the rule text (Missing Rule Text)
+- `{rule text}` — add the convention the text states
+- `amend {id}` — amend that convention (`C7`, `WC2`)
+- `remove {id}` — remove that convention, after the single confirmation
+
+Examples: `/magicspec rule`, `/magicspec rule "tests are written before the code they cover"`, `/magicspec rule amend C7`, `/magicspec rule remove WC2`.
+
+**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `/magicspec spec`. Rule changes feed into `/magicspec task` (plan updates) and `/magicspec run` (execution).
+
+**Pipeline context:** `/magicspec rule` governs conventions used across `/magicspec spec` → `/magicspec task` → `/magicspec run`.
 
 - **Admission**: an agent-originated rule must cite an observed occurrence and survive a with/without comparison; a user-stated rule is written at the strength stated. See `workflows/rule.md §Operational Logic`.
 - **Finalization**: after writing RULES.md, run `node scripts/executor.js finalize --workflow=rule --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/rule.md §Finalization Protocol`.
@@ -34,13 +44,21 @@ Manages project conventions across a two-tier rules system:
 4. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
 5. **Versioning (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`. **Rules**: bump Minor (add/amend), Major (remove), Patch (typos). Update Document History in target file. `.magicspec/` changes (including `.magicspec/{workspace}/RULES.md`) do NOT trigger C14 — they are project-manifest, not engine (C14 scope is the engine folder only).
 
+## Missing Rule Text
+
+`/magicspec rule` without a rule text: the text is this command's required argument, so it is asked for once (E7, [help.md](help.md) Step 4) and nothing is written before it is given. `amend {id}` and `remove {id}` carry their target and are not missing anything.
+
+1. **Suggestions**: the conventions proposed by the most recent Advisory Report of `analyze` in this conversation (its Action Proposals), at most three, each with the evidence the report cited, ranked by DA-3 with the first marked recommended. No such report, or none that proposes a convention → the argument form is the free-text entry alone.
+2. **Origin**: a chosen suggestion is an agent-originated candidate and passes the Admission step in full; text the requester types is user-stated and is recorded at its stated strength (RA-5).
+3. **Collected**: the text continues at Operational Logic step 2. A dismissed form writes nothing and says so in one line.
+
 ## Rule Tier Routing
 
 Determine target tier on every add/amend/remove:
 
 - **Workspace tier** → `.magicspec/{workspace}/RULES.md`: rule names a workspace, references workspace-scoped paths/tools, or applies to one workspace's domain. Signal words: *"in engine"*, *"for this workspace"*, *"this workspace"*.
 - **Global tier** → `.magicspec/RULES.md`: rule applies uniformly regardless of active workspace, or no workspace is active.
-- **Ambiguous**: resolve autonomously (DA-6) — default to the **workspace tier** when a workspace is active, else **global**. Narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magicspec:rule with an explicit tier)`. No prompt: rule-tier routing is not an approval gate (gates are Core-Amendment §1–6, Constitutional Guard and Remove only, per Invariant 3).
+- **Ambiguous**: resolve autonomously (DA-6) — default to the **workspace tier** when a workspace is active, else **global**. Narrate `[DR] Routing rule to {tier} — {criterion}. (Override: re-run /magicspec rule with an explicit tier)`. No prompt: rule-tier routing is not an approval gate (gates are Core-Amendment §1–6, Constitutional Guard and Remove only, per Invariant 3).
 
 ## Workflow: Convention Management
 
@@ -70,8 +88,8 @@ graph TD
 4. **Admission**: activate `@role:constitutional-reviewer` (protocol steps 1-2) to decide whether the rule should exist before asking whether it conflicts. Applies to Add and Amend (Amend: its delta only); Remove and List skip it.
    - **Origin**: *user-stated* when the user supplied the normative text, *agent-originated* when the agent composed it (a T1-T3 proposal, analysis output, a clause added to a user's rule). The author of the text decides, not who ran the command. An origin that cannot be established counts as agent-originated; the Decision Record's override restates the rule as the user's own.
    - **Agent-originated** → apply the Admission Tests below. **User-stated** → record it at its stated strength and scope (RA-5).
-   - **DECLINE**: narrate one Decision Record — `[DR] Not codified: {candidate} — {no evidence | covered by {ref} | cost exceeds harm | placed at rung {n}}. (Override: {command})` — and stop; nothing is written. The override is `/magicspec:rule add "{text}"`, or `/magicspec:spec amend {spec}` when the candidate is placed at a rung this workflow cannot write.
-   - **Write reach**: this logic runs as `/magicspec:rule` (writes `RULES.md` only) and on behalf of `/magicspec:spec`. Run as `/magicspec:rule`, a placement at rung 1 or 2 (a note or a regulation in a specification) ends as the DECLINE record above, naming the governing specification; run on behalf of `/magicspec:spec`, the note or regulation is written into the specification under edit. Rung 0 is the narration itself; rungs 3 and 4 continue to Guards.
+   - **DECLINE**: narrate one Decision Record — `[DR] Not codified: {candidate} — {no evidence | covered by {ref} | cost exceeds harm | placed at rung {n}}. (Override: {command})` — and stop; nothing is written. The override is `/magicspec rule add "{text}"`, or `/magicspec spec amend {spec}` when the candidate is placed at a rung this workflow cannot write.
+   - **Write reach**: this logic runs as `/magicspec rule` (writes `RULES.md` only) and on behalf of `/magicspec spec`. Run as `/magicspec rule`, a placement at rung 1 or 2 (a note or a regulation in a specification) ends as the DECLINE record above, naming the governing specification; run on behalf of `/magicspec spec`, the note or regulation is written into the specification under edit. Rung 0 is the narration itself; rungs 3 and 4 continue to Guards.
    - **Admitted**: narrate a compact admission record of at most seven lines — Problem, Evidence, Without, With, Form & placement, Verdict — then continue.
 5. **Guards**:
    - **Core-Amendment Routing**: if user's target matches §1–6 (not §7) → route as a **core amendment**. Inform: *"This targets core section §{N}. Core amendments require explicit approval and trigger a Major version bump."* Require user confirmation. Confirmed → apply to target core section. Denied → abort.
@@ -165,10 +183,10 @@ Convention nodes change when rule entries are added or removed, invalidating the
 - Does the rule use vague qualifiers (`"significant"`, `"appropriate"`, `"usually"`) that would make it ambiguous under C13 (Agent Cognitive Discipline)?
 - If applied retroactively to the last 3 completed tasks, would any of them have halted or produced different output?
 
-Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` (already written) creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Run `/magicspec:rule amend C{N}` to resolve it."*
+Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` (already written) creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Run `/magicspec rule amend C{N}` to resolve it."*
 
 - **Notify**: inform user if `TASKS.md` is now stale.
-- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magicspec:task {workspace} update` (propagate the rule into the plan); choose `/magicspec:spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
+- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magicspec task {workspace} update` (propagate the rule into the plan); choose `/magicspec spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
 
 ## Finalization Protocol (Mandatory)
 
@@ -194,13 +212,14 @@ Rule Checklist — {operation}
   ☐ Graph: export-wiki run after Add/Amend/Remove (skip for List and patch-only typo fixes)
   ☐ Engine Meta: C14 bump ONLY if files of this skill folder were modified (not for .magicspec/ changes)
   ☐ Admission (RA): origin recorded; an agent-originated candidate cited an occurrence and passed the with/without comparison, or was declined by one Decision Record; a user-stated rule written at its stated strength and scope; body within 10 non-empty lines
-  ☐ Engineer Posture (C25): no clarifying prompts outside C9 objective gates
+  ☐ Command Intake (E7): a missing rule text was asked for once, through the argument form; a chosen suggestion passed Admission as agent-originated; a dismissed form wrote nothing
+  ☐ Engineer Posture (C25): no clarifying prompts outside the command intake (E7) and C9 objective gates
 ```
 
 ## Handoffs
 
 Where this workflow may hand over, and when:
 
-- **Create spec** → `/magicspec:spec`: Create a new specification document.
-- **Update tasks** → `/magicspec:task`: Update the project plan and tasks after amending standing rules.
-- **Audit specs** → `/magicspec:spec`: Audit specifications to ensure compliance with updated rules.
+- **Create spec** → `/magicspec spec`: Create a new specification document.
+- **Update tasks** → `/magicspec task`: Update the project plan and tasks after amending standing rules.
+- **Audit specs** → `/magicspec spec`: Audit specifications to ensure compliance with updated rules.
