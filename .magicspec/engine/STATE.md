@@ -4,20 +4,21 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-30 08:22
-**Phase:** Done — 3.0.x prepared
+**Updated:** 2026-10-30 09:01
+**Phase:** 47 — One Command Surface, Help and Argument Intake
 **Status:** Active
 
 ## Current Position
 
 - **Task:** none
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Run /magicspec:task engine to update the plan
+- **Next Action:** Execute T-47A01 Router: one grammar, the command table with groups and the argument contract, the bare and unknown forms via /magicspec:run engine
 
 ## Progress
 
 ```
-Overall: [45/45] ████████ 100%
+Phase 47: [0/13] ░░░░░░░░ 0%
+Overall: [45/46] ████████ 98%
 ```
 
 ## Recent Decisions

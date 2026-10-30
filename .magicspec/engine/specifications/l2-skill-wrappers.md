@@ -123,7 +123,6 @@ The release archive carries `skills/magicspec/`; the user places it in a host sk
 | 1.2.0 | 2026-05-07 | Agent | Added Layer/Implements header fields. Updated skill dir names (magic.analyze → magic-analyze format). Added magic-graph. Removed stale sync-skills.js reference. |
 | 1.1.0 | 2026-04-29 | Agent | Replaced legacy package deployment with GitHub Release archive distribution. |
 
-
 ## 5. Invariants
 
 - **Parity**: the router's command table and the files of `workflows/` name the same commands ([l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6).

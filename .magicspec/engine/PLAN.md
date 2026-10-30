@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.53.0
-**Generated:** 2026-10-28
-**Based on:** .magicspec/engine/INDEX.md v1.59.0
+**Version:** 1.54.0
+**Generated:** 2026-10-30
+**Based on:** .magicspec/engine/INDEX.md v1.61.0
 **Status:** Active
 
 ## Overview
@@ -490,6 +490,77 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - **Execution outcome**: all 10 tasks Done, none Blocked; harness 227 → 236 (seven migration cases, two archive cases), 236 of 236 passing; engine 2.1.150 → 3.0.0. Planning predictions that held: the rename was one scripted pass with the residue search as the proof, the old name needed exactly two kinds of place (the migration module and the fixtures), and the migration's fixtures had to be generated because the old tree was already gone. Not predicted: the scripted pass bumped the specifications across two attempts and its rerun had to be idempotent; the SP-8 scan and one stale-environment case spelled the old name as a regex and were missed by the plain rename; an equivalent branch in the migration survived mutation and was removed instead of pinned; nine mutation entries of earlier steps had needles naming the old folder. Decisions taken in execution: the executor, not the migration alone, stops an unmigrated project (otherwise Auto-Init would create a second state folder); a folder named like the old state folder counts only when it holds `workspace.json` or `INDEX.md`; the release is prepared, not published — the tag and the publication are the owner's act. Left to the owner: the commit, the tag `v3.0.0` and the publication; a fresh-reader run of `/magicspec-dev:test` in a new session.
   - Tasks: [archives/tasks/phase-46.md](archives/tasks/phase-46.md)
   - Workbook: created when Phase 45 completes.
+
+### Phase 47 — One Command Surface, Help and Argument Intake
+
+- [ ] **Command surface** ([l1-command-surface.md](specifications/l1-command-surface.md) v2.0.0 CS-1 to CS-11) [L1] — one printed form, `/magicspec <command> [argument]`; the router's command table with its groups and argument contract; `help` as a console-style list followed by a picker and an argument form, chosen by what the host can show; `migrate` as a command with its consent and its vocabulary sweep.
+- [ ] **E7 command intake** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) v2.1.0 DA-2, DA-5, DA-9) [L1] — the whitelist entry in the constitution and its template word for word, the always-on rules and their checklist, the Blank Trigger of `spec`.
+- [ ] **Router as the only surface** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) v3.0.0 §2.1, §2.2, §3.1) [L2] — grammar, the table's group and argument columns, the argument hint.
+- [ ] **Retired host entries and plugin; the installation prompt** ([l2-skill-distribution.md](specifications/l2-skill-distribution.md) v2.0.0 §5.1 to §5.6, and its v1.7.0 §5.3 contract) [L2] — `init` writes no command entry and removes the ones an earlier install left (`PROJECTION_RETIRED`), `build-plugin` removed, the README install prompt in seven steps.
+  - Requires nothing unbuilt; the first phase of the specification passes of 2026-10-29 and 2026-10-30. The six new commands are not added to the router here: each joins with its own body, because the router lists exactly the bodies that exist. `help` and `migrate` are the two bodies this phase builds.
+  - **Track shape**: A (router and bodies) — A01 grammar and table, A02 the `help` body (needs A01), A03 the argument intake of `spec` and `rule`, A04 the `migrate` body and the unmigrated stop, A05 the vocabulary sweep in the migration script (needs C01, same file). B01 E7 in the constitution, its template and the always-on rules. C (projections) — C01 command entries retired in the generator, C02 the plugin channel removed, C03 README and documentation. V01 three host checks (User). D01 the printed form across the repository (needs A, B and C). T01 validates, S01 syncs the specifications.
+  - **Highest blast radius**: T-47D01 (about 850 occurrences in shipped text, script output, documentation and tests; an assertion that checks the old form is absent inverts under a naive rename), T-47C01 (deletes files in a user's project — only files that carry the command marker).
+  - **Planning-surfaced**: (1) Router parity limits the help to the bodies that exist; the thirteen commands of CS-1 arrive over Phases 49 to 53. (2) The harness requires C27 items 2 and 8 to be identical in `RULES.md` and the template, so B01 edits both in one change. (3) The migration script is edited by C01 (no command entries) and A05 (the sweep): serialized. (4) `rule.md` is edited only by A03 (the intake and its checklist line), so B01 leaves it alone. (5) This repository's own engine entries under `.agents/workflows/magicspec/` are retired by C01; the maintenance entries under `.agents/workflows/magicspec-dev/` stay — the owner's decision covers end users.
+  - Planner pass: optimism — D01 is mechanical but the largest task, so it goes last, as one scripted pass with literal replacement (no pattern expansion), a residue search over plain and escaped spellings, and the harness as proof. Hidden dependency — the host checks of V01 do not block C01 (the help path works with no argument at all) but feed the release notes and S01. Cascade — if B01's constitutional change fails review, A03 (which relies on E7) waits; no other task does.
+  - Tasks: [tasks/phase-47.md](tasks/phase-47.md)
+
+### Phase 48 — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
+
+- [ ] **Routing for every command** ([l1-workspace-intent-routing.md](specifications/l1-workspace-intent-routing.md) v3.0.0 WI-11 to WI-14, outcomes G1 to G4) [L1] — one shared chain for every command acting on one workspace, the location signal computed from paths against each scope, one narration line in a multi-workspace project, writes only into registered folders, shipped examples without this repository's workspace name.
+- [ ] **Cache retention** ([l2-engine-automation.md](specifications/l2-engine-automation.md) v1.27.0 §Cache Retention) [L2] — every writer prunes its own stale entries (the graph extraction cache first), `clean-cache` with a dry run that never touches findings, notes or backups.
+- [ ] **Community health files** ([l1-community-health-files.md](specifications/l1-community-health-files.md) v1.0.0 HF-1 to HF-9) [L1] — the security policy (private reporting, supported versions), the contribution guide with generated blocks only, the issue forms including agent feedback, the maintainer instruction for the hosting-service settings.
+  - Requires Phase 47 (new text is written in the printed form).
+  - **Track shape**: three independent tracks — routing, cache, community files — and one validation task.
+  - **Planning-surfaced**: the response times in the security policy are a maintainer commitment (the specification's TBD), so that task has a User step; the `agent-feedback` label and the Discussions setting are manual steps the maintainer instruction lists.
+  - Workbook: created when Phase 47 completes.
+
+### Phase 49 — Planning Split (`plan`)
+
+- [ ] **Planning command** ([l1-plan-command.md](specifications/l1-plan-command.md) v1.0.0 PL-1 to PL-7) [L1] — a `plan` body built from the planning steps of `task`; `task` absorbs a missing or stale plan; the replan step names `plan`; `--workflow=plan` in finalization; the constitution's C24 rows for the planner.
+  - Requires Phase 47 (the router row and the help listing).
+  - **Planning-surfaced**: this very workflow is split while it plans; the cognitive suite's planning scenarios are split with it and none is dropped.
+  - Workbook: created when Phase 48 completes.
+
+### Phase 50 — Review Gates: Coherence Check and Input Prompt Pass
+
+- [ ] **Coherence check** ([l1-coherence-check.md](specifications/l1-coherence-check.md) v1.0.0 CH-1 to CH-9) [L1] — the step in the `spec-critic` and `planner` cards and at the review and audit gates, declared supersession.
+- [ ] **Input prompt pass** ([l1-input-prompt-pass.md](specifications/l1-input-prompt-pass.md) v1.0.0 IP-1 to IP-7) [L1] — the `prompt-engineer` input protocol in every workflow body, with [l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md) v1.1.0 (contributor class, input position), [l1-idea-intake-gate.md](specifications/l1-idea-intake-gate.md) v2.1.1 (comprehension in the `prompt-engineer` stance) and [l1-role-system.md](specifications/l1-role-system.md) v1.2.0 §4.4 (the input trigger).
+  - Requires Phase 49 (CH-5 sits in the plan workflow's audit, and the input pass covers the `plan` body).
+  - Workbook: created when Phase 49 completes.
+
+### Phase 51 — Defect Intake and Engine Feedback
+
+- [ ] **Fix command** ([l1-fix-command.md](specifications/l1-fix-command.md) v1.0.1 FX-1 to FX-9) [L1] — the `fix` body: re-verify, reproduce, classify by the specification test, sibling sites, gated repair with a regression check, a maintenance phase through `plan`.
+- [ ] **Engine feedback channel** ([l1-agent-feedback.md](specifications/l1-agent-feedback.md) v1.0.0 EF-1 to EF-12) [L1] — the notes store, drafting with scrubbing and a fingerprint, the text and link paths, submission behind E1, the work queue in this repository.
+  - Requires Phase 49 (a fix opens a maintenance phase through `plan`) and Phase 48 (the agent-feedback issue form).
+  - **Planning-surfaced**: the submission cases run against a stand-in for the tracker client, never against the real repository.
+  - Workbook: created when Phase 50 completes.
+
+### Phase 52 — Product Simulation and Interface Design
+
+- [ ] **Product simulation** ([l1-product-simulation.md](specifications/l1-product-simulation.md) v1.0.0 SM-1 to SM-9) [L1] — the `simulate` body, the scenario template, the `simulator-tester` card, SM-3 and SM-4 in planning and execution; C24's developer-only `simulate.md` row and `docs/simulate.md` renamed first.
+- [ ] **Interface design** ([l1-interface-design.md](specifications/l1-interface-design.md) v1.0.0 UI-1 to UI-7) [L1] — the `ui-ux-designer` card, the design-system template, the interface section of the specification template; the registry count of [l1-role-system.md](specifications/l1-role-system.md) v1.2.0 moves from 14 to 16.
+  - Requires Phase 49 (scenarios are asked for at planning) and Phase 51 (findings go to `fix`).
+  - Workbook: created when Phase 51 completes.
+
+### Phase 53 — Goal Mode
+
+- [ ] **Goal mode** ([l1-goal-mode.md](specifications/l1-goal-mode.md) v1.0.0 GM-1 to GM-8) [L1] — the `goal` body, the goal block in live memory, the resume line and the status briefing, the stop conditions as suite scenarios.
+  - Requires Phases 49, 51 and 52 (every step the loop executes exists).
+  - Workbook: created when Phase 52 completes.
+
+### Phase 54 — Artifact Memory Index
+
+- [ ] **Artifact memory (concept)** ([l1-artifact-memory.md](specifications/l1-artifact-memory.md) v1.0.0 AM-1 to AM-8) [L1]
+- [ ] **Artifact memory store** ([l2-artifact-memory-store.md](specifications/l2-artifact-memory-store.md) v1.0.0) [L2] — `memory-index` and `memory-query`, the SQLite backend with full-text ranking, the pure-script fallback, optional embeddings, the call from `export-wiki`.
+  - Requires Phase 48 (the cache retention contract lists the index). The coherence check of Phase 50 gains the index query here.
+  - Workbook: created when Phase 53 completes.
+
+### Phase 55 — Development Toolchain (Stages 0 and 1)
+
+- [ ] **Engine toolchain** ([l2-engine-toolchain.md](specifications/l2-engine-toolchain.md) v1.0.0 §5.1 to §5.5) [L2] — pnpm with a lockfile, Biome (one formatting commit, then `biome ci`), the strict type check over JSDoc, Fallow advisory then gating, the CI job and its Node matrix.
+  - Requires nothing functional; last, so that the formatting commit lands after the large text changes of the earlier phases. Stage 2 (TypeScript sources, runtime floor Node 22.18) waits for the runtime-floor decision of a minor release and is not planned here.
+  - Workbook: created when Phase 54 completes.
 
 ## Backlog
 

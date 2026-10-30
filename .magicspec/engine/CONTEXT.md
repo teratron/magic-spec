@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-10-28
+**Generated:** 2026-10-30
 
 ## Active Technologies
 
@@ -14,15 +14,15 @@
 │   ├── rules/
 │   ├── skills/
 │   └── workflows/
-├── .design/
+├── .github/
+│   └── workflows/
+├── .magicspec/
 │   ├── .version
 │   ├── CONTEXT.md
 │   ├── INDEX.md
 │   ├── RULES.md
 │   ├── engine/
 │   └── workspace.json
-├── .github/
-│   └── workflows/
 ├── AGENTS.md
 ├── CHANGELOG.md
 ├── CONTRIBUTING.md
@@ -32,9 +32,12 @@
 │   ├── analyze.md
 │   ├── checksums.md
 │   ├── conception.md
+│   ├── context-economy.md
+│   ├── development.md
 │   ├── distribution.md
 │   ├── graph.md
 │   ├── init.md
+│   ├── migration.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── run.md
@@ -44,7 +47,9 @@
 │   └── task.md
 ├── package.json
 ├── scripts/
+│   ├── archive-composition.js
 │   ├── benchmark.js
+│   ├── cli-guard.js
 │   ├── engine-path.js
 │   ├── executor.js
 │   ├── generate-checksums.js
@@ -56,6 +61,7 @@
 │   ├── sync-engine-snapshot.js
 │   ├── sync-manifests.js
 │   ├── sync.js
+│   ├── token-audit.js
 │   ├── update-project-meta.js
 │   └── validate-hardlinks.js
 ├── skills/

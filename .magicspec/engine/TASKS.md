@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.52.0
-**Generated:** 2026-10-28
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.53.0
+**Version:** 1.53.0
+**Generated:** 2026-10-30
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.54.0
 **Based on RULES:** .magicspec/RULES.md v1.17.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 47](tasks/phase-47.md) | One Command Surface, Help and Argument Intake — `/magicspec <command> [argument]` as the only form, the router's table with groups and the argument contract, the `help` and `migrate` bodies, E7 in the constitution and the always-on rules, command entries and the plugin retired, the install prompt, the printed form across the repository | `Todo` |
 | [Phase 46](archives/tasks/phase-46.md) | State Folder Rename, Migration, Archive & 3.0.0 (Single-Skill Step 5) — `.design/` becomes `.magicspec/`, a resumable `migrate` subcommand for 2.x projects with fixtures of every supported layout, one archive composition with a smoke check, the version file at 3.0.0 | `Done (Archived)` |
 | [Phase 45](archives/tasks/phase-45.md) | Maintenance Layout (Single-Skill Step 4) — `scripts`, `tests` and `package.json` to the root, `skills/magicspec-dev/` with the four maintenance workflows, the dotted `/magicspec-dev:*` names to `/magicspec-dev:*`, the predicate in its final form | `Done (Archived)` |
 | [Phase 44](archives/tasks/phase-44.md) | Switch to the Skill and Retire the Old Engine (Single-Skill Step 3, Part 2) — the colon command names, the projection refresh in the C14 write branch, the maintenance scripts, link inventory, harness, repository projections, CI, documentation, constitution and specifications retargeted to `skills/magicspec/`, then the old tree removed last and C14 run on the new one | `Done (Archived)` |
@@ -74,5 +75,5 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 ## Meta Information
 
-- **Last Updated**: 2026-10-28
+- **Last Updated**: 2026-10-30
 - **Maintainer**: Core Team

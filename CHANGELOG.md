@@ -43,6 +43,7 @@ A simulation pass drove the shipped engine from every role on disposable copies;
 - `references/init.md` no longer claims the initial `RULES.md` is versioned at 1.0.0; it carries the version of `templates/rules.md`.
 - Updated 19 specifications (engine)
 - Updated 6 specifications (engine)
+- Updated task plan and task index (engine)
 
 ## [3.0.0] - 2026-10-28
 
