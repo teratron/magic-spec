@@ -1,5 +1,14 @@
 # Engine Workspace Changelog
 
+## Phase 47 — 2026-10-30 (One Command Surface, Help and Argument Intake)
+
+- **One command, `/magicspec <command> [argument]`, is the only printed form.** The router has a six-column command table (group, argument, what happens when the argument is missing) and an argument hint; a bare `/magicspec`, `help` and an unknown first word open the interactive help; the colon and dot spellings typed as text are read as the command. 822 occurrences of the colon form in shipped text, script output, documentation and tests were replaced in one scripted pass, and a harness case holds the residue at zero.
+- **Two new bodies:** `help` (a console-style list from the router table, the picker by host capability, the argument form, a help language) and `migrate` (dry run, one consent question, apply). `spec` and `rule` ask for a missing required argument once (E7, constitution 1.18.0 with the template word for word); optional arguments run their default and say which.
+- **No per-command entry and no plugin.** `init` writes no `commands/` file and removes the entries a 3.0.x installation left (`PROJECTION_RETIRED`); `build-plugin` is gone; the README's install prompt has the seven steps of the contract.
+- **The migration leaves no stale vocabulary:** `lib/vocabulary-sweep.js` rewrites the earlier command and folder names in the SDD artifacts after the rename (a patch version and a history row per specification, history, archives and the constitution untouched, backups and a revert hint) and only reports product files.
+- **Specifications:** 35 received the reality-sync patch for the printed form; `l1-command-surface` 2.1.2, `l2-skill-distribution` 2.1.1, `l2-skill-wrappers` 3.1.1 and `l1-decision-autonomy` 2.1.1 record the build; registry 1.62.1. Host observations (the owner, 2026-10-30): Qwen Code passes the text after the name; Codex accepts the argument hint; Claude Code's handling of a typed colon form and Qwen Code with the hint remain explicit open notes.
+- **Coverage.** Harness 270 → 277; 26 mutation entries all caught; scenarios T268–T277 in the cognitive suite. Engine 3.0.18.
+
 ## Phase 46 — 2026-10-28 (State Folder Rename, Migration, Archive & 3.0.0, single-skill step 5)
 
 - **The state folder is `.magicspec/`.** One constant; the earlier name is spelled once (`LEGACY_STATE_DIR_NAME`). This repository's own workspace was renamed in the same step, with 33 specifications swept (patch bump and history row each) and the constitution at 1.17.0.

@@ -1,23 +1,39 @@
 ---
 phase: 47
 name: "One Command Surface, Help and Argument Intake"
-status: Todo
+status: Done
 subsystem: "skills/magicspec (router, workflows, scripts, AGENT-RULES, templates), .magicspec/RULES.md, tests, README, docs"
 requires:
   - "Phase 46: the single-skill layout, the migrate subcommand and the archive composition; harness 270"
   - "The one-command decision (l1-command-surface 2.0.0, l1-decision-autonomy 2.1.0, l2-skill-wrappers 3.0.0, l2-skill-distribution 2.0.0): Stable at registry 1.61.0"
-provides: []
+provides:
+  - "The router is the only command surface: /magicspec <command> [argument], a six-column command table with groups and the argument contract, an argument hint, and a tolerance for the colon and dot spellings typed as text"
+  - "workflows/help.md and workflows/migrate.md; spec and rule ask for a missing required argument once (E7); optional arguments run their default and say which"
+  - "E7 in the constitution (1.18.0, wording 1.18.1), the template word for word and the always-on rules; help and migrate exempt from the drift line and from finalization"
+  - "init writes no command entry and removes the ones an earlier install left (PROJECTION_RETIRED); the plugin channel is removed; the README install prompt in seven steps"
+  - "scripts/lib/vocabulary-sweep.js: the migration rewrites the earlier command and folder names in the SDD artifacts and reports the rest"
+  - "The printed form /magicspec <command> across the repository (822 replacements, residue held at zero by the harness); 35 specifications synchronized; engine 3.0.18, harness 277"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
-duration_minutes: ~
+  created:
+    - "skills/magicspec/workflows/help.md"
+    - "skills/magicspec/workflows/migrate.md"
+    - "skills/magicspec/scripts/lib/vocabulary-sweep.js"
+  modified:
+    - "skills/magicspec/SKILL.md, AGENT-RULES.md, templates/rules.md; workflows/spec.md, rule.md, graph.md, run.md, task.md, analyze.md"
+    - "skills/magicspec/scripts/lib/hosts.js, migrate.js, executor.js, init.js, check-prerequisites.js, update-engine-meta.js"
+    - ".magicspec/RULES.md; scripts/sync-docs.js; tests/engine.js, tests/suite.md; README.md, docs/distribution.md, docs/migration.md, CHANGELOG.md"
+patterns_established:
+  - "A table the host-facing text is rendered from is the one list: the help is derived from the router, never authored twice"
+  - "A generator that retires a surface keeps the marker so it can still find and remove what it once wrote, and writes nothing new"
+  - "A sweep of the project's own vocabulary is a plan first, writes only where it may, backs up what it changes, and reports the rest instead of guessing"
+  - "A rename pass skips the lines that assert the old form is absent, and a harness case plants the old form to prove its detector can fire"
+duration_minutes: 240
 ---
 
 # Stage 47 Tasks — One Command Surface, Help and Argument Intake
 
 **Phase:** 47
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** The user's project receives no per-command wrapper: the engine is reached as `/magicspec <command> [argument]` ([l1-command-surface.md](../specifications/l1-command-surface.md) 2.0.0), a bare `/magicspec` or `/magicspec help` lists the commands and offers them in the host's form or the chat, a command missing its required argument asks for it (E7, [l1-decision-autonomy.md](../specifications/l1-decision-autonomy.md) 2.1.0), and every text the engine prints names a command in that one form.
 
 ## Atomic Checklist
@@ -33,10 +49,10 @@ duration_minutes: ~
 - [x] [T-47C01] Command entries retired in the projection generator
 - [x] [T-47C02] The plugin channel removed
 - [x] [T-47C03] README and documentation: one form, host table, the seven-step install prompt
-- [ ] [T-47V01] Host checks: typed colon form, text after `/magicspec`, the argument hint
+- [x] [T-47V01] Host checks: typed colon form, text after `/magicspec`, the argument hint
 - [x] [T-47D01] The printed form across the repository behind a residue search
 - [x] [T-47T01] Validation: harness, mutation lists, intake scenarios, C14
-- [ ] [T-47S01] Spec sync: as-built decisions and the specifications' printed form
+- [x] [T-47S01] Spec sync: as-built decisions and the specifications' printed form
 
 ## Detailed Tracking
 
@@ -131,11 +147,12 @@ duration_minutes: ~
 ### [T-47V01] Host checks: typed colon form, text after `/magicspec`, the argument hint
 
 - **Spec:** l1-command-surface.md §2 (TBD); l2-skill-distribution.md §5.2 (TBD); l2-skill-wrappers.md §2.2 (TBD)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** User
 - **Verify:** three observations recorded in this entry's `Changes`: what Claude Code does with a typed `/magicspec:task` in a project with no command entry; whether Qwen Code hands the text after `/magicspec` to the skill; whether Codex and Qwen Code load the router with an `argument-hint` field in its frontmatter.
 - **Handoff:** T-47S01.
 - **Notes:** does not block C01: a host that drops the argument still reaches every command through the help, which needs none. The answers decide the release notes and whether the hint is omitted for a host.
+- **Changes:** observed by the owner on 2026-10-30. (2) Qwen Code hands the text after /magicspec to the skill, which answers from it and offers options drawn from it; assumed of any host that invokes a skill by name. (3) Codex loads the router with argument-hint and renders the help as a list in the chat (engine 3.0.18); Qwen Code with the field is still to be tried by the owner, and a host that cannot show a form behaves as Codex does. (1) The typed colon form was not tried in Claude Code; the owner decided the engine's side instead: the likely command is assumed and run, the dot spelling too (CS-2, l1-command-surface 2.1.1). Whether Claude Code refuses the name before the model sees it stays an explicit Unverified statement in l1-command-surface section 2
 
 ### [T-47D01] The printed form across the repository behind a residue search
 
@@ -159,9 +176,9 @@ duration_minutes: ~
 ### [T-47S01] Spec sync: as-built decisions and the specifications' printed form
 
 - **Spec:** l1-command-surface.md; l2-skill-distribution.md; l2-skill-wrappers.md; l1-decision-autonomy.md
-- **Status:** Blocked [!]
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** the three TBD markers are resolved from T-47V01's observations; decisions taken while building are recorded in the four specifications with a history row each; this repository's specifications print `/magicspec <command>` (a reality-sync patch each, history exempt); the registry rows follow; `check-prerequisites --verify-headers` reports no drift.
 - **Handoff:** Phase 48.
 - **Notes:** specification work, done through the specification workflow.
-- **Changes:** done: the printed form in 35 specifications (patch + history row each, registry rows following), the constitution 1.18.1 wording, the as-built decisions in l1-command-surface 2.1.0, l2-skill-distribution 2.1.0, l2-skill-wrappers 3.1.0 and l1-decision-autonomy 2.1.1, registry 1.62.0, plan anchor, pre-flight with --verify-headers clean apart from the uncommitted-constitution notice. BLOCKED [!]: the three TBD markers (l1-command-surface section 2, l2-skill-distribution 5.2, l2-skill-wrappers 2.2) can only be resolved from the owner's host observations in T-47V01; re-run this task's last step once they are recorded
+- **Changes:** the printed form in 35 specifications (patch + history row each, registry rows following), the constitution 1.18.1 wording, the as-built decisions in l1-command-surface 2.1.0, l2-skill-distribution 2.1.0, l2-skill-wrappers 3.1.0 and l1-decision-autonomy 2.1.1, then the owner's observations: the Qwen Code marker resolved (l2-skill-distribution 2.1.1), the Codex half of the argument-hint marker resolved and narrowed to Qwen Code (l2-skill-wrappers 3.1.1), the Claude Code marker turned into an explicit Unverified statement (l1-command-surface 2.1.2); registry 1.62.1, plan anchor follows; pre-flight with --verify-headers reports no drift

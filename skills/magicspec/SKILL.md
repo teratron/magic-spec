@@ -12,7 +12,7 @@ One skill, one command: `/magicspec <command> [argument]`. Every command is a wo
 
 ## Commands
 
-The grammar is `/magicspec <command> [argument]` (`$magicspec <command> [argument]` on a host that invokes skills with a dollar sign). The first word after `magicspec` is the command when it equals a command name, in any letter case; the rest is its argument. The colon spelling `magicspec:<command>`, typed as text, is read the same way and is never printed. No host receives a per-command entry: this file is the only surface.
+The grammar is `/magicspec <command> [argument]` (`$magicspec <command> [argument]` on a host that invokes skills with a dollar sign). The first word after `magicspec` is the command when it equals a command name, in any letter case; the rest is its argument. The colon spelling `magicspec:<command>` and the dot spelling `magicspec.<command>`, typed as text, are read as that command too — a slip in the form is not a reason to stop — and are never printed: run the command and say in one line that the form is `/magicspec <command>`. No host receives a per-command entry: this file is the only surface.
 
 | Command | Group | What it does | Argument | When it is missing | Body |
 | --- | --- | --- | --- | --- | --- |

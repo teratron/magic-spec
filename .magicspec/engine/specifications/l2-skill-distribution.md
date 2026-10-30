@@ -1,6 +1,6 @@
 # Skill Distribution: Rule, Command Surface, Installation & Migration
 
-**Version:** 2.1.0
+**Version:** 2.1.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
@@ -80,7 +80,7 @@ Host table, verified 2026-10-28 against each host's own documentation (pages in 
 
 What the table settles:
 
-- **No per-command entry is needed.** `[MODIFIED]` A host invokes the skill by its name and hands it the rest of the line: Claude Code documents `/<name>` for a skill folder, with the text after it delivered as the skill's arguments (appended as `ARGUMENTS: …` when the skill declares no placeholder; read 2026-10-30); Codex invokes `$magicspec task`. Qwen Code documents `/<name>` for a skill; how it passes the text after the name is not documented on the pages read <!-- TBD: verify on Qwen Code whether the text after `/magicspec` reaches the skill; if it does not, its users reach every command through the interactive help, which needs no argument, and the release notes say so -->. The command-folder column above records what the hosts offer; the engine writes nothing there.
+- **No per-command entry is needed.** `[MODIFIED]` A host invokes the skill by its name and hands it the rest of the line: Claude Code documents `/<name>` for a skill folder, with the text after it delivered as the skill's arguments (appended as `ARGUMENTS: …` when the skill declares no placeholder; read 2026-10-30); Codex invokes `$magicspec task`. Qwen Code documents `/<name>` for a skill; it hands the text after the name to the skill (observed by the owner, 2026-10-30: the skill answered from the typed text and offered options drawn from it). The same is assumed of any host that invokes a skill by its name, and the interactive help needs no argument at all. The command-folder column above records what the hosts offer; the engine writes nothing there.
 - **Choice forms for the interactive help.** `[ADDED]` Claude Code gives the agent a question form of two to four choices per question and up to four questions per form, always with a free-text choice (observed in the tool definition of a Claude Code session, 2026-10-30); the command picker therefore takes two steps there — a group, then a command ([l1-command-surface.md](l1-command-surface.md) CS-10). Codex and Qwen Code: no choice form is documented on the pages read; both get the numbered list in the chat.
 - **One skill location serves two hosts.** `.agents/skills/magicspec` is read by Codex and Qwen Code; Claude Code needs `.claude/skills/magicspec`, a copy or a link to the same folder. The earlier `.codex/skills`, `.codex/prompts` and `.codex/rules` paths of this repository are read by no documented Codex feature, and `.agents/rules` and `.agents/workflows` by no host.
 - **The router description carries the command names.** Every host lists skills by description before one is chosen; none lists a skill's other files. The router description names the commands.
@@ -174,6 +174,7 @@ The name is the single constant of `l2-skill-layout.md` §5.3. At the rename ste
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.1.1 | 2026-10-30 | Agent | **Host observation recorded** (origin `user-stated`: the owner's observation of 2026-10-30): on Qwen Code the text after `/magicspec` reaches the skill; the open marker of §5.2 is resolved. No requirement changed. |
 | 2.1.0 | 2026-10-30 | Agent | **As built** (Phase 47): the migration gains its vocabulary-sweep step (§5.6 step 7), the unmigrated stop and the retirement messages are recorded as printed, and the install prompt as written. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.0 | 2026-10-30 | Agent | **One command surface** (origin `user-stated`: the owner's decision of 2026-10-30 to remove the wrappers): S2 (host command entries) and S3 (the plugin) are retired, S1 the router is the only surface; §5.2 records why no entry is needed per host and what choice form each host has for the interactive help; §5.1 reports an entry left by an earlier install as `PROJECTION_RETIRED`, and `init` removes it; §5.3, §5.5 and §5.6 write no entry; the forms printed are `/magicspec <command>`. Two forecasts: the plugin is retired with the entries; the dotted names stay retired. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.7.0 | 2026-10-29 | Agent | **§5.3 Agent-assisted installation contract** (origin `user-stated`: the owner's list of 2026-10-29): the README install prompt checks the runtime, detects an installed engine and routes a 2.x layout to `/magicspec:migrate`, gives fetch commands for both shells, verifies the placed folder with `update-engine-meta --check`, stops on an `init` failure and ends on `/magicspec:help`. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

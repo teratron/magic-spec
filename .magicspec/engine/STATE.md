@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-30 12:50
-**Phase:** 47 — One Command Surface, Help and Argument Intake
-**Status:** Blocked
+**Updated:** 2026-10-30 13:25
+**Phase:** 48 — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
+**Status:** Active
 
 ## Current Position
 
 - **Task:** T-47T01 Validation: harness, mutation lists, intake scenarios, C14
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** T-47V01 and any other open tasks need user or blocker action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, then run /magicspec run engine
+- **Next Action:** Plan Phase 48 (workbook not yet created) via /magicspec task engine
 
 ## Progress
 
 ```
-Phase 47: [11/13] ███████░ 85%
-Overall: [45/46] ████████ 98%
+Overall: [46/46] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-10-30 **Decision:** Phase 47 complete. Provides: one command surface (/magicspec <command>), help and migrate bodies, E7, no command entries or plugin, the migration vocabulary sweep; engine 3.0.18, harness 277
 - 2026-10-29 **Decision:** Simulation-pass remediation extended: a missing engine file is named, export-wiki/graph server buffer, finalize path containment; harness 270/270, 18 mutations caught
 - 2026-10-29 **Decision:** Simulation-pass remediation (R-01..R-36) applied in place: command table, release plan/consent, line-endings rule, matcher, lock, graph page, migrate paths; harness 264/264; no phase opened
 - 2026-10-28 **Decision:** Phase 46 complete. Provides: state folder .magicspec; migrate; one archive composition; engine 3.0.0 prepared (tag and publication are the owner's)
 - 2026-10-28 **Decision:** Phase 45 complete. Provides: scripts, tests and package.json at the root; skills/magicspec-dev; /magicspec-dev:* names; predicate without earlier-layout branches
-- 2026-10-28 **Decision:** Phase 44 complete. Provides: skills/magicspec is the only engine; old tree removed; colon command form; projections refreshed on C14; constitution 1.16.0
 
 ## Blockers
 

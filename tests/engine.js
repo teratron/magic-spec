@@ -13627,6 +13627,11 @@ describe('Magic Engine Scripts', () => {
             !/\/magicspec:[a-z]/.test(body),
             'the router prints no colon form (it only reads one)',
         );
+        assert.match(
+            body,
+            /colon spelling `magicspec:<command>` and the dot spelling `magicspec\.<command>`[^.]*are read as that command too/,
+            'a slip in the form is read as the command',
+        );
         assert.match(body, /Nothing follows `magicspec`, or the word is `help`/, 'bare and help');
         assert.ok(body.includes('`workflows/help.md`'), 'the help body is named');
         assert.match(

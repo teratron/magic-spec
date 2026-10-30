@@ -63,7 +63,7 @@
   "scripts/update-engine-meta.js": "400bcdd5125fdf038cff785f5d224208ad727c2e84f3d688dea9f3df78960a14",
   "scripts/update-state.js": "6e9bbaa1135fd042ecc049a025e16b22c7d1aa44551ae9b798d1f99241c220b5",
   "scripts/utils.js": "2a010cd9743f3869616f28fd93ba5f4d2cb3fed93fd02d06f73ffaa34b007f2d",
-  "SKILL.md": "6321d309cd321080aa931d9b8d2956d18cb75c326dcfdb5b51104072cd59bfac",
+  "SKILL.md": "c3ded8886da877724437d745decbc5923046faa1da620fbb09e4c7915a36b0b2",
   "templates/changelog.md": "10ed856f5a62ad4e614f2532504ed574a404684338e0ea4a091aee73a747dcc5",
   "templates/contributing.md": "258ec06f474387dcc96d49b4cd43f5aa93eaf01a023695eda5bd6ad0d9f6e58c",
   "templates/global-index.md": "cff4b7245d524d5aa944568bf92671fa8221d132cb6a059c30dcc83630645541",

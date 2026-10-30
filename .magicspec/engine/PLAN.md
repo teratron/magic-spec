@@ -2,7 +2,7 @@
 
 **Version:** 1.54.0
 **Generated:** 2026-10-30
-**Based on:** .magicspec/engine/INDEX.md v1.62.0
+**Based on:** .magicspec/engine/INDEX.md v1.62.1
 **Status:** Active
 
 ## Overview
@@ -493,16 +493,16 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 47 — One Command Surface, Help and Argument Intake
 
-- [ ] **Command surface** ([l1-command-surface.md](specifications/l1-command-surface.md) v2.0.0 CS-1 to CS-11) [L1] — one printed form, `/magicspec <command> [argument]`; the router's command table with its groups and argument contract; `help` as a console-style list followed by a picker and an argument form, chosen by what the host can show; `migrate` as a command with its consent and its vocabulary sweep.
-- [ ] **E7 command intake** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) v2.1.0 DA-2, DA-5, DA-9) [L1] — the whitelist entry in the constitution and its template word for word, the always-on rules and their checklist, the Blank Trigger of `spec`.
-- [ ] **Router as the only surface** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) v3.0.0 §2.1, §2.2, §3.1) [L2] — grammar, the table's group and argument columns, the argument hint.
-- [ ] **Retired host entries and plugin; the installation prompt** ([l2-skill-distribution.md](specifications/l2-skill-distribution.md) v2.0.0 §5.1 to §5.6, and its v1.7.0 §5.3 contract) [L2] — `init` writes no command entry and removes the ones an earlier install left (`PROJECTION_RETIRED`), `build-plugin` removed, the README install prompt in seven steps.
+- [x] **Command surface** ([l1-command-surface.md](specifications/l1-command-surface.md) v2.0.0 CS-1 to CS-11) [L1] — one printed form, `/magicspec <command> [argument]`; the router's command table with its groups and argument contract; `help` as a console-style list followed by a picker and an argument form, chosen by what the host can show; `migrate` as a command with its consent and its vocabulary sweep.
+- [x] **E7 command intake** ([l1-decision-autonomy.md](specifications/l1-decision-autonomy.md) v2.1.0 DA-2, DA-5, DA-9) [L1] — the whitelist entry in the constitution and its template word for word, the always-on rules and their checklist, the Blank Trigger of `spec`.
+- [x] **Router as the only surface** ([l2-skill-wrappers.md](specifications/l2-skill-wrappers.md) v3.0.0 §2.1, §2.2, §3.1) [L2] — grammar, the table's group and argument columns, the argument hint.
+- [x] **Retired host entries and plugin; the installation prompt** ([l2-skill-distribution.md](specifications/l2-skill-distribution.md) v2.0.0 §5.1 to §5.6, and its v1.7.0 §5.3 contract) [L2] — `init` writes no command entry and removes the ones an earlier install left (`PROJECTION_RETIRED`), `build-plugin` removed, the README install prompt in seven steps.
   - Requires nothing unbuilt; the first phase of the specification passes of 2026-10-29 and 2026-10-30. The six new commands are not added to the router here: each joins with its own body, because the router lists exactly the bodies that exist. `help` and `migrate` are the two bodies this phase builds.
   - **Track shape**: A (router and bodies) — A01 grammar and table, A02 the `help` body (needs A01), A03 the argument intake of `spec` and `rule`, A04 the `migrate` body and the unmigrated stop, A05 the vocabulary sweep in the migration script (needs C01, same file). B01 E7 in the constitution, its template and the always-on rules. C (projections) — C01 command entries retired in the generator, C02 the plugin channel removed, C03 README and documentation. V01 three host checks (User). D01 the printed form across the repository (needs A, B and C). T01 validates, S01 syncs the specifications.
   - **Highest blast radius**: T-47D01 (about 850 occurrences in shipped text, script output, documentation and tests; an assertion that checks the old form is absent inverts under a naive rename), T-47C01 (deletes files in a user's project — only files that carry the command marker).
   - **Planning-surfaced**: (1) Router parity limits the help to the bodies that exist; the thirteen commands of CS-1 arrive over Phases 49 to 53. (2) The harness requires C27 items 2 and 8 to be identical in `RULES.md` and the template, so B01 edits both in one change. (3) The migration script is edited by C01 (no command entries) and A05 (the sweep): serialized. (4) `rule.md` is edited only by A03 (the intake and its checklist line), so B01 leaves it alone. (5) This repository's own engine entries under `.agents/workflows/magicspec/` are retired by C01; the maintenance entries under `.agents/workflows/magicspec-dev/` stay — the owner's decision covers end users.
   - Planner pass: optimism — D01 is mechanical but the largest task, so it goes last, as one scripted pass with literal replacement (no pattern expansion), a residue search over plain and escaped spellings, and the harness as proof. Hidden dependency — the host checks of V01 do not block C01 (the help path works with no argument at all) but feed the release notes and S01. Cascade — if B01's constitutional change fails review, A03 (which relies on E7) waits; no other task does.
-  - Tasks: [tasks/phase-47.md](tasks/phase-47.md)
+  - Tasks: [archives/tasks/phase-47.md](archives/tasks/phase-47.md)
 
 ### Phase 48 — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
 
