@@ -1,7 +1,7 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -88,7 +88,8 @@ graph TD
 
 1. A new workflow body for `simulate`, a scenario template, and the `simulator-tester` card (`l2-role-cards-review.md`).
 2. Planning and execution workflows gain SM-3 and SM-4 at their validation-task and task-completion steps.
-3. The developer-only `magicspec-dev:test` is unaffected: it simulates the engine, this simulates a product.
+3. The developer-only `magicspec-dev:test` is unaffected: it simulates the engine, this simulates a product. Its old body name lingers in the constitution: C24's dev-only row names `simulate.md`, and `docs/simulate.md` documents the developer workflow. Before the product's `simulate` body ships, that row is renamed to the maintenance workflow (`/magicspec:rule`) and the document is renamed, so that one name means one workflow.
+4. `simulate` writes only scenario files (their `Last run` fields) and finalizes like the other writing workflows.
 
 ## 7. Drawbacks & Alternatives
 
@@ -107,4 +108,4 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (simulation files created in parallel with the code, `/magicspec simulate`, scenarios written at planning time, a simulator-tester role). |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (simulation files created in parallel with the code, `/magicspec simulate`, scenarios written at planning time, a simulator-tester role). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

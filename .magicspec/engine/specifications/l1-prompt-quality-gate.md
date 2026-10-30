@@ -1,7 +1,7 @@
 # Prompt Quality Gate
 
 **Version:** 1.1.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -134,6 +134,6 @@ A static analyzer for instruction text. Rejected for the primary mechanism: ambi
 
 | Version | Date | Description |
 | --- | --- | --- |
-| 1.1.0 | 2026-10-29 | PQ-1 gains the contributor-instructions class (`l1-community-health-files.md` HF-5); §4 gains the input-side position of `l1-input-prompt-pass.md`, with the note on which invariants apply to it. Origin `user-stated` (the owner's list of 2026-10-29). Amendment Rule: `Stable → RFC`. |
+| 1.1.0 | 2026-10-29 | PQ-1 gains the contributor-instructions class (`l1-community-health-files.md` HF-5); §4 gains the input-side position of `l1-input-prompt-pass.md`, with the note on which invariants apply to it. Origin `user-stated` (the owner's list of 2026-10-29). Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.0.1 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.0.0 | 2026-06-11 | Initial Stable. Defines PQ-1–PQ-7 invariants, AI-facing artifact classes, six-dimension review taxonomy, verdict semantics, and gate topology. Promoted via Trust Mode (C9): MVC satisfied, no RULES.md conflicts, no circular dependencies. |

@@ -1,7 +1,7 @@
 # Idea Intake Gate
 
 **Version:** 2.1.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -347,7 +347,7 @@ The owner's flowchart draws the comprehension step as a "prompt engineer" and th
 
 | Version | Date | Change |
 | --- | --- | --- |
-| 2.1.0 | 2026-10-29 | Gate 1 (comprehension) is performed in the `prompt-engineer` stance on the input pass's intent statement ([l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6), superseding §6.7 for that gate (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"). F1–F3, the survey, IK-6 and E6's scope are unchanged. Amendment Rule: `Stable → RFC`. |
+| 2.1.0 | 2026-10-29 | Gate 1 (comprehension) is performed in the `prompt-engineer` stance on the input pass's intent statement ([l1-input-prompt-pass.md](l1-input-prompt-pass.md) IP-6), superseding §6.7 for that gate (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"). F1–F3, the survey, IK-6 and E6's scope are unchanged. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

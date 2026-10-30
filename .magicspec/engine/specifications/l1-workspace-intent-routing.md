@@ -1,7 +1,7 @@
 # Workspace Intent Routing
 
 **Version:** 3.0.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -250,6 +250,8 @@ The following invariants govern any Layer 2 implementation:
   The match is computed from the paths by the engine, not judged, so
   identical input routes identically. Paths matched by no scope give no
   signal; a workspace with an empty `scope` covers no path by this signal.
+  It is a routing signal among registered workspaces, not a creation signal:
+  WI-2's closed set is unchanged.
 
 - **WI-13 — Narrated Once** `[ADDED]`: In a project with more than one
   workspace, the resolved workspace and the signal that chose it are narrated
@@ -278,7 +280,7 @@ For deterministic simulation, the chain produces exactly these outcomes:
 
 | Code | User input shape | Existing workspaces | Outcome |
 | --- | --- | --- | --- |
-| **A1** | Generic spec text | 0 (no `workspace.json`) | Use `.magicspec/` root (Priority 4 unchanged). |
+| **A1** `[MODIFIED]` | Generic spec text | 0 (no `workspace.json`) | Transient: auto-init creates the default workspace (`context.md` Priority 4), then A2 applies; nothing is written to the state-folder root (WI-14). |
 | **A2** | Generic spec text | 1, no signal | Use sole workspace (Priority 3 unchanged). |
 | **A3** | Generic spec text | N, default set | Use default (Priority 3 unchanged). |
 | **A4** | Generic spec text | N, no default | Run existing Disambiguation (`context.md` §Workspace Disambiguation). |
@@ -351,7 +353,7 @@ premise in the dispatched specification.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 3.0.0 | 2026-10-29 | Agent | **Routing for every command** (scope change, origin `user-stated`: the owner chose "automatic in every command" on 2026-10-29 among the intake survey's three readings): new §1.1 and WI-11 to WI-14 — one shared chain for every command acting on one workspace, with only `spec` (and `goal` through it) allowed to create; a location signal computed from the paths a request touches against each workspace's `scope`, ahead of the topic signal; one narration line in multi-workspace projects; no write into an unregistered state-folder directory, and no shipped example naming this repository's own workspace. Resolves the contradiction between C26 item 1 and `context.md` Step 0 in favour of C26. Outcomes G1–G4 added (sixteen in all). Amendment Rule: `Stable → RFC`. |
+| 3.0.0 | 2026-10-29 | Agent | **Routing for every command** (scope change, origin `user-stated`: the owner chose "automatic in every command" on 2026-10-29 among the intake survey's three readings): new §1.1 and WI-11 to WI-14 — one shared chain for every command acting on one workspace, with only `spec` (and `goal` through it) allowed to create; a location signal computed from the paths a request touches against each workspace's `scope`, ahead of the topic signal; one narration line in multi-workspace projects; no write into an unregistered state-folder directory, and no shipped example naming this repository's own workspace. Resolves the contradiction between C26 item 1 and `context.md` Step 0 in favour of C26. Outcomes G1–G4 added (sixteen in all). Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.0.2 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

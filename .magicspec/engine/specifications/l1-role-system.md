@@ -1,7 +1,7 @@
 # Unified Role System
 
 **Version:** 1.2.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -162,7 +162,9 @@ Note: the C24 `Planning Skeptic` is absorbed into `planner` (advisor layer carri
 | `ui-ux-designer` | executor | Interface design, layout and front-end work: writes the interface sections and the design-system specification, adds design acceptance to interface tasks, and is the stance `coder` adopts for interface work. Governed by [l1-interface-design.md](l1-interface-design.md). Closes the parked `frontend-specialist` backlog item. |
 | `simulator-tester` | reviewer | Writes the product's user-interaction scenarios at planning time and with every task that changes user-facing behaviour, and executes them in `simulate`. Distinct from `test-engineer`, which gates one task. Governed by [l1-product-simulation.md](l1-product-simulation.md). |
 
-The `prompt-engineer` (§4.3) gains an **input-side trigger**: every command invocation that carries human prose passes through it before the workflow acts ([l1-input-prompt-pass.md](l1-input-prompt-pass.md)). It stays a reviewer: on input it produces an intent statement and findings, never the workflow's artifact.
+The `prompt-engineer` (§4.3) gains an **input-side trigger**: every command invocation that carries human prose passes through it before the workflow acts ([l1-input-prompt-pass.md](l1-input-prompt-pass.md)). It stays a reviewer: on input it produces an intent statement and findings, never the workflow's artifact. The two new cards are specified in [l2-role-cards-execution.md](l2-role-cards-execution.md) and [l2-role-cards-review.md](l2-role-cards-review.md), and the card index in [l2-role-cards.md](l2-role-cards.md) follows, when they are built.
+
+Declared supersessions ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the count of fourteen role cards in the constitution's C24 and in its shipped template (amended through `/magicspec:rule`, origin `user-stated`), in `l2-role-cards.md`, and in the registry check's expected total all move to sixteen when the cards are built.
 
 ## 5. Lifecycle & Governance
 
@@ -223,7 +225,7 @@ Placing roles in `skills/magicspec/roles/{layer}/` (e.g., `skills/magicspec/role
 
 | Version | Date | Description |
 | --- | --- | --- |
-| 1.2.0 | 2026-10-29 | Registry extended 14 → 16 (§4.4, origin `user-stated`: the owner's list of 2026-10-29): `ui-ux-designer` (executor) and `simulator-tester` (reviewer); `prompt-engineer` gains the input-side trigger of `l1-input-prompt-pass.md`. Amendment Rule: `Stable → RFC`. |
+| 1.2.0 | 2026-10-29 | Registry extended 14 → 16 (§4.4, origin `user-stated`: the owner's list of 2026-10-29): `ui-ux-designer` (executor) and `simulator-tester` (reviewer); `prompt-engineer` gains the input-side trigger of `l1-input-prompt-pass.md`. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.1.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.1.0 | 2026-06-11 | Registry extended 13 → 14: added `prompt-engineer` (reviewer) as §4.3 Quality Governance Extension, governed by l1-prompt-quality-gate.md. Stable retained via Trust Mode re-review (C9); C12 cascade not triggered. |

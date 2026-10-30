@@ -1,7 +1,7 @@
 # Cross-Artifact Coherence Check
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -47,10 +47,11 @@ The engine does part of this today, in the wrong places:
   - **Ordering conflict** — plans only: work scheduled before what it depends on, or two plans changing the same mechanic in ways that cannot both land.
 - **CH-3 Both sides quoted.** Every finding cites the exact text of both sides with file and section. A suspicion that cannot be quoted on both sides is not a finding (precision over recall, as `l1-prompt-quality-gate.md` PQ-4).
 - **CH-4 Specification check before finalization.** For a created or substantively amended specification, the check runs after the draft is written and before the Post-Update Review promotes it. A contradiction or an interaction gap blocks promotion. It is resolved in the same invocation by one of: amending the other artifact (its own version bump and history row), revising the new artifact, or — when neither text settles which statement should win — deciding by the Consequence Forecast and recording the premise as an `Assumption (forecast)` in the artifact that yields. A duplicate definition is resolved by replacing one copy with a link.
-- **CH-5 Plan check before write-back.** A drafted plan is compared with the other phases of the same plan, with the plans of every other registered workspace, and with what archived phases record as delivered. An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other.
+- **CH-5 Plan check before write-back.** A drafted plan is compared with the other phases of the same plan, with the plans of every other registered workspace, and with what archived phases record as delivered. An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other. A finding whose resolution needs a specification to change is not resolved by the planning workflow, which writes no specification: it halts once with the single recommendation `/magicspec:spec`, naming both sides.
 - **CH-6 Carried by the existing reviewers.** The specification check is a mandatory step of the `spec-critic` review; the plan check is a mandatory step of the `planner` audit. Neither reviewer may report a pass without having run it.
 - **CH-7 One result line.** The check reports `[Coherence] {N} artifacts compared — {k} findings` followed by one line per finding (`{class}: {file-a} §{x} ↔ {file-b} §{y} — {resolution}`). Zero findings produces only the first line.
 - **CH-8 Independent of the audit.** Ventilation keeps checking the whole project after the fact; this check does not replace it, and an audit finding of a class in CH-2 is resolved through the same resolutions as CH-4 and CH-5.
+- **CH-9 Declared supersession is not a contradiction.** An artifact that deliberately changes a mechanic another artifact defines — a specification of behaviour not yet built — declares it: its `Implementation Notes` name each artifact and section the change supersedes and what changes there. A contradiction so declared is reported as `superseded`, does not block, and is resolved when the change is deployed, by amending the declared artifact in the same delivery. An undeclared contradiction blocks as CH-4 states.
 
 ## 5. Detailed Design
 
@@ -80,7 +81,7 @@ The plan check sits at the same place in the planning workflow: after the draft 
 
 ### 5.3 Example
 
-A new specification states that a planning command owns `PLAN.md`. The search for `PLAN.md` finds the planning workflow body, which states that the task workflow writes it, and the finalization specification, which reads it. The first is a contradiction (two owners); the second is an interaction (a consumer whose producer moves). Resolution: the new specification records the ownership change, and the planning workflow's specification is amended in the same invocation to point at the new owner.
+A new specification states that a planning command owns `PLAN.md`. The search for `PLAN.md` finds the planning workflow body, which states that the task workflow writes it, and the finalization specification, which reads it. The first is a contradiction (two owners); the second is an interaction (a consumer whose producer moves). Resolution: the new specification records the ownership change and declares it in its `Implementation Notes` (CH-9); the planning workflow and the finalization specification are amended when the change is deployed.
 
 ## 6. Implementation Notes
 
@@ -108,4 +109,4 @@ A new specification states that a planning command owns `PLAN.md`. The search fo
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (items: check every new specification and every plan against the existing ones for contradictions and the logic of relations between functions and mechanics, per `.drafts/flowchart.md`). Observed occurrence: the C26 item 1 / `context.md` Step 0 contradiction. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (items: check every new specification and every plan against the existing ones for contradictions and the logic of relations between functions and mechanics, per `.drafts/flowchart.md`); CH-9 (declared supersession) and the plan check's halt toward `/magicspec:spec` were added in the Post-Update Review, which found that CH-4 alone would block every specification of behaviour not yet built. Observed occurrence: the C26 item 1 / `context.md` Step 0 contradiction. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

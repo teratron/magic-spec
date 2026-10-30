@@ -1,7 +1,7 @@
 # Engine Feedback Channel
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -32,7 +32,7 @@ Two opposite failures bound the design. Silence loses the signal. An agent that 
 - The destination is the engine's public issue tracker on GitHub; its address is stored once, in the skill folder's own metadata.
 - The engine stores no credentials. Submission uses the human's own signed-in command-line client of the tracker.
 - Reports are written in English, the tracker's language; the conversation stays in the human's language.
-- GitHub facts (docs.github.com, *Creating an issue*): a prefilled new-issue link accepts `title`, `body`, `labels`, `assignees`, `milestone`, `projects` and `template`; every parameter except title and body needs a permission the visitor may lack, and an over-long link fails without a published limit. The link therefore carries only title and body, and the body is cut to a conservative size budget.
+- GitHub facts (docs.github.com, *Creating an issue*): a prefilled new-issue link accepts `title`, `body`, `labels`, `assignees`, `milestone`, `projects` and `template`; every parameter except title and body needs a permission the visitor may lack, and an over-long link fails without a published limit. The link therefore carries only title and body, and the body is cut to a fixed size budget that the implementation sets below the lowest limit known to fail.
 - **Assumption (forecast):** the channel is on by default, with submission offered behind the human's approval, because the owner asks for the agent itself to be able to send the report. Runner-up: drafting only by default. Override: the channel setting (EF-10).
 - **Assumption (forecast):** one report covers one problem, grouping related notes, because separate issues can be triaged and recognized as duplicates. Runner-up: one report per session. Override: `/magicspec:spec amend l1-agent-feedback.md "one report per session"`.
 
@@ -49,7 +49,7 @@ Terms: a **note** is one observation the agent records; **evidence** is context 
 - **EF-7 Closed kinds.** A note is one of `bug`, `missing-capability`, `improvement`, `docs`. An engine bug report emitted under the Bug Reporting Protocol is also recorded as a `bug` note, so every such report accumulates instead of scrolling away.
 - **EF-8 One problem per issue, duplicates not filed.** A draft carries a fingerprint derived from stable facts — kind, engine file, finding code, workflow — not from wording. Submission first looks for an open issue with the fingerprint; when one exists, it reports that issue and creates nothing, unless the human asks for a new one. A failed look-up never blocks submission and is reported.
 - **EF-9 A text path always exists.** In every environment — no tracker client, not signed in, offline, submission switched off — a draft yields the complete report text and, when it fits the budget, a link to a prefilled new-issue page. A failed submission leaves the draft intact.
-- **EF-10 Guidance in, switch out.** The always-on rules tell the agent when to record a note, what is not worth reporting (a defect of the user's product, of the host, or of the user's environment), and to offer the drafts when a workflow ends with notes pending. The human sets the channel to `full` (default: copy, link, submission), `draft` (text and link only; the agent can never publish) or `off` (no notes, no offer). An unrecognized value gives `draft` and is reported; it never widens the channel.
+- **EF-10 Guidance in, switch out.** The always-on rules tell the agent when to record a note, what is not worth reporting (a defect of the user's product, of the host, or of the user's environment), and to offer the drafts when a workflow ends with notes pending. Each draft is offered once; the person's answer — submit, keep as text, discard — closes it, and an unanswered offer leaves the draft listed in the next digest without asking again. The human sets the channel to `full` (default: copy, link, submission), `draft` (text and link only; the agent can never publish) or `off` (no notes, no offer). An unrecognized value gives `draft` and is reported; it never widens the channel.
 - **EF-11 Never in the way.** Recording a note changes no workflow's result or exit status; a fault inside the channel never fails a workflow.
 - **EF-12 Work queue in the engine's repository.** Where the developer-repository predicate holds, notes are not drafted or offered for submission: they are listed at the end of a workflow as fix candidates, and the one next step is `/magicspec:fix` with them.
 
@@ -102,7 +102,7 @@ Submission reports exactly one of: **created** (with the issue address), **dupli
 
 ## 6. Implementation Notes
 
-1. The notes store sits beside the diagnostics sink in the state folder's runtime cache, with its own retention (it is not drained by the digest).
+1. The notes store sits beside the diagnostics sink in the state folder's runtime cache, with its own retention (it is not drained by the digest). Declared supersession (`l1-coherence-check.md` CH-9): the constraint of [l1-engine-diagnostics.md](l1-engine-diagnostics.md) that findings are drained, not kept, holds for findings; notes are a separate store, and [l2-engine-diagnostics.md](l2-engine-diagnostics.md) gains the note record when it is built.
 2. Recording, drafting and submission are executor subcommands invoked by the agent; no new user-facing command is needed (C2).
 3. The Bug Reporting rule module gains the recording of a `bug` note and the offer at workflow end.
 4. The issue forms are delivered with the repository's community health files.
@@ -126,4 +126,4 @@ Submission reports exactly one of: **created** (with the issue address), **dupli
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas: a feedback mechanism from the engine's users to its developers (copyable report or agent submission to the issue tracker), accumulation of every `MAGIC-SPEC ENGINE BUG REPORT` during the work, and the issue report format. Adapted from a sibling project's agent-feedback specification, recorded by class only. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas: a feedback mechanism from the engine's users to its developers (copyable report or agent submission to the issue tracker), accumulation of every `MAGIC-SPEC ENGINE BUG REPORT` during the work, and the issue report format. Adapted from a sibling project's agent-feedback specification, recorded by class only. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

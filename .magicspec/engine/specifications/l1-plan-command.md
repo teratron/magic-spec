@@ -1,7 +1,7 @@
 # Planning Command: Plan and Replan
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -34,7 +34,7 @@ Today one workflow does both jobs. `task` writes `PLAN.md` (phases → specifica
 - **PL-1 Ownership.** `plan` owns the plan: phase membership, phase order, the backlog and its dispositions, the dependency matrix between specifications, the planner audit and the plan check (CH-5). `task` owns decomposition: task identifiers, tracks, verify lines, validation tasks, the tracking entries and their state transitions. Neither writes the other's files.
 - **PL-2 Guard ownership.** Pre-flight, Pre-Planning Stabilization, C6 selection with the Bootstrap Exception, the hard-dependency cycle guard, the cross-workspace parity checks and the quarantine decision for a specification (C12, demoted, phantom) belong to `plan`. Applying a quarantine to tasks — blocking, releasing, preserving recorded state — belongs to `task`.
 - **PL-3 Replanning is `plan`.** A directive about order or membership ("postpone", "move before", "split phase", "only the new specifications") is a `plan` argument; a directive about decomposition ("decompose phase-2", "smaller tasks") is a `task` argument. `plan` with no argument revalidates the whole plan against the current registry and rules.
-- **PL-4 Stale plan.** The plan is stale when the registry or the constitution changed after the plan was written, or a Stable specification is in neither the plan nor the backlog. `task` invoked on a missing or stale plan runs `plan` first in the same invocation and narrates it; on a current plan it decomposes directly.
+- **PL-4 Stale plan.** The plan records the registry and constitution versions it was written against. It is stale when either has changed since, or a Stable specification is in neither the plan nor the backlog. `task` invoked on a missing or stale plan runs `plan` first in the same invocation and narrates it; on a current plan it decomposes directly.
 - **PL-5 Handoffs.** `spec` hands off to `plan`; `plan` hands off to `task` when it changed anything the active or next phase holds; `task` hands off to `run` as today. Each handoff is narrated, never asked.
 - **PL-6 One replan step.** After `run`, a drift signal leaves the user exactly one visible next step: `/magicspec:plan` — it hands off to `task` itself. The rule that `analyze` and `spec` are never proactively offered after a run is unchanged.
 - **PL-7 Recorded state survives replanning.** Moving a phase, postponing a specification or reordering never resets a task's recorded state; a task whose specification leaves the active plan is blocked with its reason, as a demoted specification's tasks are today.
@@ -82,6 +82,7 @@ graph LR
 2. The always-on rules' replan section and its module name `/magicspec:plan`; finalization accepts `--workflow=plan`.
 3. The live-memory next-step computation names `/magicspec:plan` where it names planning today.
 4. The suite's planning scenarios are split the same way; none is dropped.
+5. Declared supersessions (`l1-coherence-check.md` CH-9): the pipeline and RE-2 in [l1-engine-core.md](l1-engine-core.md); SC-2's planning step in [l1-session-continuity.md](l1-session-continuity.md); the replan rule (always-on rules §5); `--workflow=plan` in [l2-engine-finalization.md](l2-engine-finalization.md); and the constitution's C24 rows for the planner and the task instruction review, which name `task.md` — amended through `/magicspec:rule` (origin `user-stated`) when the command ships.
 
 ## 7. Drawbacks & Alternatives
 
@@ -102,4 +103,4 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (`/magicspec plan` for planning and replanning) and the pipeline of `.drafts/flowchart.md`. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (`/magicspec plan` for planning and replanning) and the pipeline of `.drafts/flowchart.md`. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

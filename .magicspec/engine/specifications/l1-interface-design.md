@@ -1,7 +1,7 @@
 # Interface Design: UI/UX, Layout and Front-End Work
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -41,7 +41,7 @@ A reference-mining pass over that collection (283 skills in ten collections) fou
 - **UI-2 One design system.** A product with an interface has one design-system specification: its tokens, its components with their variants and states, and the rules for overriding them in one place. Screen and flow specifications reference it and never redefine a token.
 - **UI-3 States are specified.** Every screen or flow specification states, for each view: the normal state and the empty, loading, error, partial, disabled and long-content states that apply to it, and what the person can do in each.
 - **UI-4 Accessibility is specified.** Every interface specification states its accessibility requirements — contrast, keyboard operation and focus order, accessible names, reduced motion, and the sizes or windows it must work at — as verifiable statements.
-- **UI-5 Early draft.** For a new screen or flow, the first task produces a draft the person can look at before the full build.
+- **UI-5 Early draft.** For a new screen or flow, the first task produces a draft the person can look at before the full build. The draft is recorded and the build continues; nothing pauses for a look (DA-2), and a correction arrives as the person's interruption or a later amendment.
 - **UI-6 Verified by looking.** A task that changes an interface is verified by rendering it where the session can (a screenshot, a driven browser or a captured terminal) and comparing it with the statements of UI-2 to UI-4; where it cannot render, the task says so and the check is a review against the specification. The verification method is named in the task's `Verify` line.
 - **UI-7 The role.** `ui-ux-designer` (executor) writes the interface sections of specifications and the design-system specification, adds design acceptance to interface tasks at planning time, and is the stance `coder` adopts for layout and front-end work. It hands off to `code-reviewer`, `test-engineer` and, for journeys, `simulator-tester`.
 
@@ -89,4 +89,4 @@ Sizes: {narrowest} … {widest}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (a UI/UX role for layout and front-end work, informed by `.references/.design`). Reference-mining over the collection recorded by class only. Closes the parked `frontend-specialist` backlog item. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (a UI/UX role for layout and front-end work, informed by `.references/.design`). Reference-mining over the collection recorded by class only. Closes the parked `frontend-specialist` backlog item. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

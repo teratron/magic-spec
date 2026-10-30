@@ -1,7 +1,7 @@
 # Engine Toolchain: pnpm, TypeScript, Biome and Fallow
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
 
@@ -110,4 +110,4 @@ The test job runs, in order: frozen install, `biome ci`, the type check, `fallow
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (pnpm, TypeScript, Biome and Fallow). Tool facts checked the same day. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (pnpm, TypeScript, Biome and Fallow). Tool facts checked the same day. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

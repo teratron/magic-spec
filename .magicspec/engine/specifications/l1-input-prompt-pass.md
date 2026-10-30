@@ -1,7 +1,7 @@
 # Input Prompt Pass: Human Prose Through the Prompt Engineer
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -27,6 +27,7 @@ Today the `prompt-engineer` reviews only what the engine wrote (PQ-2: specificat
 - The pass is one reasoning pass in the `prompt-engineer` stance; no script and no model call beyond the agent's own.
 - Questions stay where DA-2 allows them: the idea intake survey (E6) and consent. The pass never asks on its own.
 - Technical content is written in English; the conversation stays in the person's language. The intent statement is technical content.
+- No misread input is on record in the engine's history: the pass rests on the owner's directive, not on a measured failure. It is therefore kept cheap (IP-1, IP-7), and its keep-or-drop evidence is the number of invocations in which it printed an `[Intake]` line — a pass that never changes a reading is a candidate for removal through `/magicspec:rule`.
 - **Assumption (forecast):** the pass covers the engine's own skills (`magicspec`, `magicspec-dev`) and no other skill the host has installed, because the engine has no authority over another skill's input. Runner-up: every skill invocation in a session that uses the engine. Override: `/magicspec:spec amend l1-input-prompt-pass.md "all skills"`.
 
 ## 3. Core Invariants
@@ -78,4 +79,4 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (any human prose arriving with commands or skills passes through the prompt engineer) and block 1 of `.drafts/flowchart.md`. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (any human prose arriving with commands or skills passes through the prompt engineer) and block 1 of `.drafts/flowchart.md`. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

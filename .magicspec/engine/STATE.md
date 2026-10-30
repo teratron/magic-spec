@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-29 17:24
+**Updated:** 2026-10-30 07:24
 **Phase:** Done — 3.0.x prepared
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** none
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Owner: review git status, commit on develop, choose the release version (the engine is now 3.0.8 and CHANGELOG [Unreleased] holds the simulation-pass fixes), run node scripts/release.js and, once agreed, --yes; then run the fresh-reader simulation (magicspec-dev test) in a new session
+- **Next Action:** Run /magicspec:task engine to update the plan
 
 ## Progress
 

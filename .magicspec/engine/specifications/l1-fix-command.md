@@ -1,7 +1,7 @@
 # Defect Intake: the Fix Command
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -79,7 +79,7 @@ Next: {one command}
 ## 6. Implementation Notes
 
 1. A new workflow body for `fix`; it reuses the execution gates of `run` and the amendment steps of `spec` by reference.
-2. A maintenance phase (`Phase M`) is created by the planning workflow on the first fix when no phase is active; its tasks archive like any other.
+2. With no active phase, `fix` hands the planning command a membership directive to open a maintenance phase for the repair (PL-1: only `plan` writes the plan), then records the task there; the phase archives like any other.
 3. In the engine's own repository, the developer predicate routes pasted engine bug reports and pending feedback notes here.
 
 ## 7. Drawbacks & Alternatives
@@ -100,4 +100,4 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (route defect feedback through `/magicspec fix`, deciding carefully what goes into the specifications). |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (route defect feedback through `/magicspec fix`, deciding carefully what goes into the specifications). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

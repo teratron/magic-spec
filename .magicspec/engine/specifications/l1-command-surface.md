@@ -1,7 +1,7 @@
 # Command Surface: Command Set, Grammar, Help and Migrate
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -40,11 +40,11 @@ Constitution C2 forbids new workflow commands unless strictly necessary and expl
 
 - **CS-1 The command set.** The engine's user-facing commands are exactly: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate`, `help`. The six added on 2026-10-29 are C2 exceptions authorized by the owner's request of that date; the constitution's C2 records the command set when the first of them ships. Adding or removing a command is a constitutional event (C2).
 - **CS-2 One grammar.** A command is addressed as `magicspec <command> [args]` and may arrive as `magicspec:<command>`, `/magicspec:<command>`, `/magicspec <command>` or `$magicspec <command>`; all are the same. The first word after `magicspec` is a command when it equals a command name exactly, case-insensitively; the rest is its argument.
-- **CS-3 Bare forms.** A bare `magicspec` with no text runs `help`. A bare `magicspec` followed by text whose first word is not a command name runs `spec` with the whole text as the idea. Text that begins with a command name by accident (`/magicspec plan a holiday booking feature`) is that command; quoting the text (`/magicspec "plan a holiday booking feature"`) or naming `spec` forces the idea reading. When the input pass (`l1-input-prompt-pass.md`) finds that the reading taken contradicts the text — a planning command given a product idea with no plan to act on — it routes to `spec` and narrates one `[DR]` line with the override.
+- **CS-3 Bare forms.** A bare `magicspec` with no text runs `help`. A bare `magicspec` followed by text whose first word is not a command name runs `spec` with the whole text as the idea. Text that begins with a command name by accident (`/magicspec plan a holiday booking feature`) is parsed as that command; quoting the text (`/magicspec "plan a holiday booking feature"`) or naming `spec` forces the idea reading. When the input pass (`l1-input-prompt-pass.md`) finds that the remaining text cannot be that command's argument — a planning command given a product idea that names no specification or phase — it routes to `spec` instead and narrates one `[DR]` line with the override.
 - **CS-4 Help is derived.** `help` renders the command table, the pipeline order, the argument forms and, for `help {command}`, that command's arguments and one example per form. Its content comes from the router's command table and the workflow descriptions — never from a second hand-written copy — so it cannot list a command that does not exist or miss one that does. It ends with one line naming the next step the project's live memory records, when there is one.
 - **CS-5 Help language.** `help {language}` takes a language code (`ru`, `de`, `pt-BR`) or a language name. The explanations are translated by the agent at render time; command names, paths, flags, code and identifiers stay verbatim. An unrecognized language value is answered in the default language with one line saying which value was not recognized. `help {command} {language}` combines both.
 - **CS-6 Migrate is guided and consented.** `migrate` runs the migration subcommand as a dry run and shows its plan. When the plan removes or renames anything, it asks one consent question (E1) with the dry run as context; only a yes runs the apply step. A project that is already migrated gets the finished message and nothing else.
-- **CS-7 Migrate leaves no stale vocabulary.** After a successful apply, `migrate` searches the migrated state folder for references to the earlier layout — the earlier command names, the earlier state-folder and engine-folder names — and rewrites them in the SDD artifacts it is allowed to edit, listing every changed file with a revert hint. Archives, history tables, retrospectives and changelogs are history and are never rewritten. A reference found in a product file is reported, never edited (`l1-sdd-reference-containment.md`).
+- **CS-7 Migrate leaves no stale vocabulary.** After a successful apply, `migrate` searches the migrated state folder for references to the earlier layout — the earlier command names, the earlier state-folder and engine-folder names — and rewrites them in the SDD artifacts it is allowed to edit, listing every changed file with a revert hint. A rewritten specification receives a patch version and a history row (a reality sync: no requirement changes), and its registry row follows. Archives, history tables, retrospectives and changelogs are history and are never rewritten. A reference found in a product file is reported, never edited (`l1-sdd-reference-containment.md`).
 - **CS-8 The stop names the command.** A command refused on an unmigrated project names `/magicspec:migrate` as the one way forward, beside the script path for hosts that do not register commands.
 
 ## 5. Detailed Design
@@ -101,6 +101,7 @@ graph TD
 2. `migrate` reuses the existing subcommand; the sweep (CS-7) is new and owned by `l2-skill-distribution.md` §5.6 at deployment.
 3. The constitution's C2 is amended through `/magicspec:rule` (origin `user-stated`) when the first new command ships.
 4. `help` and `migrate` join the drift-check exemptions of the always-on rules beside `status`: a drift line before help would answer a question nobody asked.
+5. Declared supersessions (`l1-coherence-check.md` CH-9): the router's command table and its bare-`magicspec` rule (`SKILL.md`); the finalization list of the always-on rules §3 and [l2-engine-finalization.md](l2-engine-finalization.md), which gain `plan`, `fix` and `simulate` (`goal` finalizes per step through them; `help` and the `migrate` dry run never finalize); the unmigrated-project stop in [l2-skill-distribution.md](l2-skill-distribution.md) §5.6; and the router description that lists seven commands by name in [l2-skill-wrappers.md](l2-skill-wrappers.md) §2 and [l2-skill-layout.md](l2-skill-layout.md) §7, which list thirteen.
 
 ## 7. Drawbacks & Alternatives
 
@@ -122,4 +123,4 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas: the `help` command with a language argument, the `migrate` command, and the set of six new commands authorized as C2 exceptions. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas: the `help` command with a language argument, the `migrate` command, and the set of six new commands authorized as C2 exceptions. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

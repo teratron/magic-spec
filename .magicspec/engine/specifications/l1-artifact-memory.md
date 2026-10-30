@@ -1,7 +1,7 @@
 # Artifact Memory Index
 
 **Version:** 1.0.0
-**Status:** Draft
+**Status:** Stable
 **Layer:** concept
 
 ## Overview
@@ -87,4 +87,4 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (SQLite vector memory, research `.references/.memory`) and the memory store of `.drafts/flowchart.md`. Reference-mining recorded by class only. |
+| 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (SQLite vector memory, research `.references/.memory`) and the memory store of `.drafts/flowchart.md`. Reference-mining recorded by class only. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

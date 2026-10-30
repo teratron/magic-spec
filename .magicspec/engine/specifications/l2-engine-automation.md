@@ -1,7 +1,7 @@
 # Engine Automation Specification
 
 **Version:** 1.27.0
-**Status:** RFC
+**Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
 
@@ -348,7 +348,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 1.27.0 | 2026-10-29 | Agent | **Cache Retention** (origin `user-stated`: the owner's list of 2026-10-29 — clean the engine cache periodically, with a separate simple command): the inventory of every cache with owner, rebuild path and bound; writers prune their own entries after a successful write (the graph extraction cache measured at 148 entries for 98 Markdown files, never pruned); a `clean-cache` subcommand for the rebuildable caches that never touches recorded findings, feedback notes or migration backups. Amendment Rule: `Stable → RFC`. |
+| 1.27.0 | 2026-10-29 | Agent | **Cache Retention** (origin `user-stated`: the owner's list of 2026-10-29 — clean the engine cache periodically, with a separate simple command): the inventory of every cache with owner, rebuild path and bound; writers prune their own entries after a successful write (the graph extraction cache measured at 148 entries for 98 Markdown files, never pruned); a `clean-cache` subcommand for the rebuildable caches that never touches recorded findings, feedback notes or migration backups. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.26.0 | 2026-10-29 | Agent | Deployment of a simulation pass over the shipped engine (every finding reproduced on a disposable copy before it was fixed). New **Command Line Contract** (the command table, help and refusal before any script runs, the guard in each script, the maintenance guard, the drift check, a child ended by a signal); **Provisioning** only for a writing command and its note on stderr; **Line endings are not drift** (`ENGINE_LINE_ENDINGS`, `[AMENDED]`); **Root-only floor names**; the Path Matching Contract recorded as **built**; **Pre-Flight Output in Human Mode**; the hook backup name corrected to `pre-commit.magic-spec.bak` (a bulk-rename corruption had left `pre-commitskills/magicspec-spec.bak`); Node.js 18 as the stated runtime floor; Components and Canonical References gain `lib/commands.js`, `lib/file-lock.js`, `scripts/cli-guard.js` and the renamed `lib/changelog-bullets.js`; a missing engine file is named before a script starts. Specification changed together with the code it describes; the cases are named in [l2-test-suite.md](l2-test-suite.md). |
 | 1.25.0 | 2026-10-29 | Agent | Added **Context-Economy Surfaces** after a token audit: the working-document budget (`DOC_BLOAT` / `DOC_DECOMPOSE`, 30 / 60 KB, `bloat.doc`), the rule kernel (`AGENT-RULES.md` under 16 KB, sections with a trigger in `references/rules/`), `build-spec-graph --json --out`; recorded what was not adopted and why. Bloat Advisory Configuration deployment status corrected to built. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.24.1 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
