@@ -1,7 +1,7 @@
 # Implementation Plan
 
-**Version:** 1.54.0
-**Generated:** 2026-10-30
+**Version:** 1.55.0
+**Generated:** 2026-10-31
 **Based on:** .magicspec/engine/INDEX.md v1.62.1
 **Status:** Active
 
@@ -510,9 +510,11 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 - [ ] **Cache retention** ([l2-engine-automation.md](specifications/l2-engine-automation.md) v1.27.0 §Cache Retention) [L2] — every writer prunes its own stale entries (the graph extraction cache first), `clean-cache` with a dry run that never touches findings, notes or backups.
 - [ ] **Community health files** ([l1-community-health-files.md](specifications/l1-community-health-files.md) v1.0.0 HF-1 to HF-9) [L1] — the security policy (private reporting, supported versions), the contribution guide with generated blocks only, the issue forms including agent feedback, the maintainer instruction for the hosting-service settings.
   - Requires Phase 47 (new text is written in the printed form).
-  - **Track shape**: three independent tracks — routing, cache, community files — and one validation task.
-  - **Planning-surfaced**: the response times in the security policy are a maintainer commitment (the specification's TBD), so that task has a User step; the `agent-feedback` label and the Discussions setting are manual steps the maintainer instruction lists.
-  - Workbook: created when Phase 47 completes.
+  - **Track shape**: three independent tracks and one validation task. A (routing) — A01 the `resolve-workspace` script, A02 registered folders only, A03 the shared module and the bodies (needs A01, A02), A04 the example residue (needs A03, same bodies). B (cache) — B01 the extraction cache pruned, B02 the inventory walked and completed, B03 `clean-cache` (needs B02). C (community files) — C01 the response commitments (User), C02 `SECURITY.md` (needs C01), C03 the guide generator and the template's layer, C04 `CONTRIBUTING.md` (needs C03), C05 the issue forms, C06 the maintainer instruction, C07 the release check (needs C02), C08 the documentation audit and the card trigger (needs C02, C04, C05, A04). T01 validation, S01 specification sync.
+  - **Highest blast radius**: T-48A02 (every script that writes into a workspace folder), T-48A04 (a literal pass over shipped text and documentation; an assertion that the example is absent inverts under a naive rename), T-48C03 (a template leaves the shipped folder: the manifest, the generator and the layer rule).
+  - **Planning-surfaced**: (1) the response times in the security policy are a maintainer commitment (the specification's TBD), so C01 is a User task and C02 stays `Blocked [!]` rather than guess them; (2) the `agent-feedback` label and the Discussions setting are manual steps that `docs/repository-settings.md` (C06) lists; (3) the template's layer is decided by the §1.3 trace inside C03, not assumed; (4) `analyze.md` is edited by A03, A04 and C08 and `CONTRIBUTING.md` by C03 and C04 — serialized; (5) C08 edits one specification line, the card's mirror, because the harness requires the card and its mirror to change together; S01 records it.
+  - Planner pass: optimism — A01 is the largest task (a deterministic chain with a path matcher, two scoring rules and four fall-throughs) and A02 hides an audit of every writer, so both are sized as the phase's critical path. Hidden dependency — tests/engine.js and the C14 manifest are shared by all three tracks, so a track owner writes the harness in one batch and runs `update-engine-meta` once per batch. Cascade — if the resolver's output shape (A01) fails review, A03 waits and nothing else; if C01 stalls, C02, C07 and C08 wait and the other tracks proceed.
+  - Tasks: [tasks/phase-48.md](tasks/phase-48.md)
 
 ### Phase 49 — Planning Split (`plan`)
 

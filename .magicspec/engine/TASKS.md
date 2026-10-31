@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.53.0
-**Generated:** 2026-10-30
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.54.0
+**Version:** 1.54.0
+**Generated:** 2026-10-31
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.55.0
 **Based on RULES:** .magicspec/RULES.md v1.18.1
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 48](tasks/phase-48.md) | Independent Hardening — every command routes to one workspace by one engine-computed chain (`resolve-workspace`: argument, environment, paths against each scope, topic, work in flight, default), narrated once and writing only into registered folders; every cache has an owner that prunes it and `clean-cache` removes the rebuildable ones; the security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules, the policy's response times being the maintainer's to give | `Todo` |
 | [Phase 47](archives/tasks/phase-47.md) | One Command Surface, Help and Argument Intake — `/magicspec <command> [argument]` as the only form, the router's table with groups and the argument contract, the `help` and `migrate` bodies, E7 in the constitution and the always-on rules, command entries and the plugin retired, the install prompt, the printed form across the repository | `Done (Archived)` |
 | [Phase 46](archives/tasks/phase-46.md) | State Folder Rename, Migration, Archive & 3.0.0 (Single-Skill Step 5) — `.design/` becomes `.magicspec/`, a resumable `migrate` subcommand for 2.x projects with fixtures of every supported layout, one archive composition with a smoke check, the version file at 3.0.0 | `Done (Archived)` |
 | [Phase 45](archives/tasks/phase-45.md) | Maintenance Layout (Single-Skill Step 4) — `scripts`, `tests` and `package.json` to the root, `skills/magicspec-dev/` with the four maintenance workflows, the dotted `/magicspec-dev:*` names to `/magicspec-dev:*`, the predicate in its final form | `Done (Archived)` |
