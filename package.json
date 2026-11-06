@@ -1,7 +1,24 @@
 {
   "private": true,
   "type": "commonjs",
+  "description": "Aggregator and synchronizer of indicator and strategy scripts across MetaTrader 5 and TradingView, reached over MCP, with a test-and-history refinement loop.",
+  "packageManager": "pnpm@12.18.0",
+  "engines": {
+    "node": ">=24"
+  },
   "scripts": {
+    "lint": "biome check .",
+    "lint:fix": "biome check --write .",
+    "format": "biome format --write .",
+    "fallow": "fallow",
+    "fallow:fix": "fallow fix",
+    "audit": "fallow audit",
+    "audit:ci": "fallow audit --format json",
+    "audit:review": "fallow review --brief",
     "test": "node --test tests/engine.js"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.6.5",
+    "fallow": "^3.40.0"
   }
 }
