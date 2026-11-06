@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-10-12 07:16
+**Updated:** 2026-11-06 11:25
 **Phase:** 40 — Setting Parity, Git Hook Lifecycle, Deleted Engine Files & Quoted Notation Deployment
 **Status:** Active
 
@@ -24,11 +24,11 @@ Overall: [39/39] ████████ 100%
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-06 **Decision:** Field reports against engine 2.1.144 repaired in place, ported from the 3.x line: one Canonical References reader, the whole design folder EXEMPT, a workspace without scope is the whole project, a blocked plan always leads to /magic.task
 - 2026-10-12 **Decision:** Phase 40 complete. Provides: the archival opt-out with its reader and a standing setting-parity check, an installer that owns only its own hook and a hook that disarms without .magic/, a pre-flight that reports a deleted engine file, a containment scan that reports code-quoted references in a consumer's markdown, and the bloat override reader; harness 178 to 197, 70 mutation entries all caught, cognitive case T267, engine 2.1.138 (two C14). Three stale specification statements and the lower-tier reader run left open.
 - 2026-10-11 **Decision:** Phase 40 planned (deployment of the three 2026-10-11 reference-mining amendments, registry 1.40.0 to 1.43.0: setting parity with the archival opt-out, git hook lifecycle, deleted engine files in the pre-flight, quoted notation in the containment scan, the bloat reader; 18 tasks, 5 tracks plus closing): hook text follows the hook, harness follows the code, one C14 bump at T-40T01; PLAN v1.48.0 / TASKS v1.47.0.
 - 2026-10-06 **Decision:** Phase 39 complete. Provides: the registry Description form in spec.md (what and when, two sentences, rewritten never appended), the ledger overview rule in task.md, three template comments, docs lines, the content-versus-structure routing in rules/magic.md section 2, and this workspace rewritten once by its own rule (36 of 37 cells, ledger overview 27 KB to under 0.5 KB); harness 178, 20 mutations caught, cognitive suite T264-T266, engine 2.1.136. Lower-tier fresh-reader run left open.
 - 2026-10-05 **Decision:** Phase 38 complete. Provides: generation-time validation of every skill wrapper (refuse, never write) with a C14 flow that finishes before failing; nine descriptions in the Selection Signal form; contents lists in six engine bodies and whole-module pointers to context.md; a reader tier in the simulation workflow; harness 167 to 174, cognitive suite T260-T263, 42 mutation controls caught; engine 2.1.134. Lower-tier fresh-reader run left open.
-- 2026-10-05 **Decision:** Phase 38 planned (deployment of the 2026-10-05 skill-wrapper and body-navigation amendments, 12 tasks, 4 tracks): hardlink pairs restored first (all three groups drifted), descriptions rewritten before the generator refuses them, the C14 flow finishes before failing; PLAN v1.46.0 / TASKS v1.45.0 on registry v1.38.0, one C14 bump at T-38T01.
 
 ## Blockers
 

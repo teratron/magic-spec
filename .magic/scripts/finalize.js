@@ -500,6 +500,10 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
     const plan = classified || classifyPlanState(wsDir);
+    // A plan with nothing left to execute has one way forward, from either workflow: `/magic.run`
+    // would only Stall, so `task.md` Step 8 hands nothing to it and `run.md` Select (*Stalled*)
+    // sends the user to `/magic.task`, which surfaces whatever the blocker needs.
+    const afterBlocker = `re-run /magic.task ${workspace}`;
     switch (plan.kind) {
         case 'inline-open':
         case 'actionable':
@@ -507,13 +511,13 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
         case 'blocked-phase':
             return (
                 `Resolve blocker on ${plan.id} (${workspace}) — ` +
-                `see STATE.md ## Blockers, then run /magic.run ${workspace}`
+                `see STATE.md ## Blockers, then ${afterBlocker}`
             );
         case 'all-excluded':
             return (
                 `${plan.id} and any other open tasks need user or blocker ` +
                 `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
-                `then run /magic.run ${workspace}`
+                `then ${afterBlocker}`
             );
         case 'registry-open':
             return `Continue Phase ${plan.phase} via /magic.run ${workspace}`;
