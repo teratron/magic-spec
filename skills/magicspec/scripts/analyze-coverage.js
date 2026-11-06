@@ -16,6 +16,7 @@ const {
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
+const { parseCanonicalRefs } = require('./lib/canonical-refs');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // CONFIDENCE TAXONOMY — COVERAGE ANALYSIS
@@ -45,8 +46,8 @@ const workspaceScope = scopeOverride || process.env.MAGIC_WORKSPACE_SCOPE || nul
 
 /**
  * Shared build-noise floor plus this scanner's domain excludes.
- * `.magicspec` and the engine folder are deliberately NOT excluded — spec artifacts and
- * engine files are classified against Canonical References like any source.
+ * `.magicspec` is deliberately NOT skipped by the walk: its files are reported, as EXEMPT,
+ * so the exclusion stays auditable. The engine folder is classified like any source.
  */
 const SKIP_DIRS = new Set([...BUILD_NOISE_DIRS, '.references']);
 
@@ -56,37 +57,21 @@ const TAXONOMY = {
     INFERRED: 'File is a sibling of explicitly referenced paths',
     AMBIGUOUS: 'File is scope-adjacent but not directly referenced',
     UNCOVERED: 'No specification covers this file',
-    EXEMPT: 'SDD bookkeeping/journal file — not a coverage subject, excluded from the denominator',
+    EXEMPT: 'SDD state file (under the state folder) — not a coverage subject, excluded from the denominator',
 };
 
 /**
- * Basenames of `.magicspec/` bookkeeping/journal files: the SDD process's own
- * state, never meant to appear in a spec's Canonical References. Counting
- * them alongside implementation source makes reported coverage fall as
- * project history accumulates (archived phase journals in particular).
- */
-const EXEMPT_BASENAMES = new Set([
-    'PLAN.md',
-    'TASKS.md',
-    'STATE.md',
-    'CONTEXT.md',
-    'CHANGELOG.md',
-    'RETROSPECTIVE.md',
-]);
-
-/**
- * A file is EXEMPT when it sits under `.magicspec/` and is either one of the
- * fixed bookkeeping basenames or an archived phase journal (any path segment
- * named `archives`). Deliberately scoped — `specifications/`, `INDEX.md`,
- * `RULES.md`, `workspace.json`, and active `tasks/*.md` are NOT exempted.
+ * A file is EXEMPT when it sits anywhere under `.magicspec/`: the specifications, the
+ * registries, the constitution, `workspace.json`, `.version`, the active and archived phase
+ * workbooks and every journal are the SDD process's own state. They are what the Canonical
+ * References are written *about*, never source a specification is meant to cover, and counting
+ * them makes reported coverage fall with every spec and phase a project accumulates.
  *
  * @param {string} filePath - Forward-slash normalized, repo-root-relative path.
  * @returns {boolean}
  */
 function isExemptFile(filePath) {
-    if (!filePath.startsWith(`${STATE_DIR_NAME}/`)) return false;
-    if (EXEMPT_BASENAMES.has(path.basename(filePath))) return true;
-    return filePath.split('/').includes('archives');
+    return filePath.startsWith(`${STATE_DIR_NAME}/`);
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -100,53 +85,8 @@ function isExemptFile(filePath) {
  * @param {string} specPath - Absolute path to the specification .md file.
  * @returns {string[]} Array of path strings from the Path column.
  */
-function parseCanonicalRefs(specPath) {
-    const content = fs.readFileSync(specPath, 'utf8');
-    const lines = content.split(/\r?\n/);
-    const refs = [];
-
-    let inTable = false;
-    let pathColIdx = -1;
-
-    for (const line of lines) {
-        // Detect the start of the Canonical References section
-        if (/^##\s+Canonical References/i.test(line)) {
-            inTable = true;
-            pathColIdx = -1;
-            continue;
-        }
-
-        // Any new heading breaks out of the section
-        if (inTable && /^##\s+/.test(line)) {
-            break;
-        }
-
-        if (!inTable) continue;
-
-        const cells = line.split('|').map((c) => c.trim());
-
-        // Identify header row and find the Path column index
-        if (pathColIdx === -1) {
-            const idx = cells.findIndex((c) => /^Path$/i.test(c));
-            if (idx !== -1) {
-                pathColIdx = idx;
-            }
-            continue;
-        }
-
-        // Skip separator rows (e.g., | :--- | :--- |)
-        if (/^[\s|:-]+$/.test(line)) continue;
-
-        // Extract path value, stripping backtick wrappers
-        if (cells.length > pathColIdx) {
-            const raw = cells[pathColIdx].replace(/`/g, '').trim();
-            if (raw) {
-                refs.push(normalizePath(raw));
-            }
-        }
-    }
-
-    return refs;
+function parseSpecRefs(specPath) {
+    return parseCanonicalRefs(fs.readFileSync(specPath, 'utf8'));
 }
 
 /**
@@ -171,7 +111,7 @@ function buildRefIndex(specsDir) {
 
     for (const specFile of specFiles) {
         const specPath = path.join(specsDir, specFile);
-        const refs = parseCanonicalRefs(specPath);
+        const refs = parseSpecRefs(specPath);
         specRefs.set(specFile, refs);
 
         for (const ref of refs) {
@@ -217,6 +157,10 @@ function scanProjectFiles(rootDir, isIgnored) {
 
             if (isSkippedDir(SKIP_DIRS, entry.name, relPath)) continue;
             if (isIgnored(relPath)) continue;
+
+            // A link is judged where its target lives: following it would count the target twice,
+            // and a link to a directory would otherwise be reported as one file.
+            if (entry.isSymbolicLink()) continue;
 
             if (entry.isDirectory()) {
                 walk(fullPath);

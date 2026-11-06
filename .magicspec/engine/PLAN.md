@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.55.0
+**Version:** 1.55.1
 **Generated:** 2026-10-31
-**Based on:** .magicspec/engine/INDEX.md v1.62.1
+**Based on:** .magicspec/engine/INDEX.md v1.63.0
 **Status:** Active
 
 ## Overview

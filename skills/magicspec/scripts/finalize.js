@@ -232,7 +232,7 @@ function noteArchivalOff(wsDir) {
  *
  * @type {RegExp}
  */
-const RESERVED_COMMAND_RE = /\/magic\.(spec|analyze)/;
+const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
 
 /**
  * Computes the post-workflow `Next Action` for STATE.md and enforces the §5
@@ -519,6 +519,10 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
     const plan = classified || classifyPlanState(wsDir);
+    // A plan with nothing left to execute has one way forward, from either workflow: `/magicspec
+    // run` would only Stall, so `task.md` Step 8 hands nothing to it and `run.md` Select (*Stalled*)
+    // sends the user to `/magicspec task`, which surfaces whatever the blocker needs.
+    const afterBlocker = `re-run /magicspec task ${workspace}`;
     switch (plan.kind) {
         case 'inline-open':
         case 'actionable':
@@ -526,13 +530,13 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
         case 'blocked-phase':
             return (
                 `Resolve blocker on ${plan.id} (${workspace}) — ` +
-                `see STATE.md ## Blockers, then run /magicspec run ${workspace}`
+                `see STATE.md ## Blockers, then ${afterBlocker}`
             );
         case 'all-excluded':
             return (
                 `${plan.id} and any other open tasks need user or blocker ` +
                 `action — see STATE.md ## Blockers / the phase's ## Detailed Tracking, ` +
-                `then run /magicspec run ${workspace}`
+                `then ${afterBlocker}`
             );
         case 'registry-open':
             return `Continue Phase ${plan.phase} via /magicspec run ${workspace}`;
@@ -1121,6 +1125,7 @@ function main() {
 module.exports = {
     main,
     computeNextAction,
+    RESERVED_COMMAND_RE,
     classifyPlanState,
     reconcileStatus,
     updateSessionState,

@@ -15,7 +15,12 @@ const {
     graphPaths,
     retireLegacyGraph,
     compilePathSet,
+    loadGitignore,
+    isSkippedDir,
+    STATE_DIR_NAME,
+    BUILD_NOISE_DIRS,
 } = require('./utils');
+const { parseCanonicalRefs } = require('./lib/canonical-refs');
 const graphCache = require('./graph-cache');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -102,7 +107,32 @@ function addEdge(from, to, relation) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
+ * The scope of a workspace that declares none: the whole project, as the top-level files and
+ * folders a scan would enter (the state folder, build noise and `.gitignore`d paths left out).
+ * Each entry stands for everything beneath it, as an entry of a declared scope does.
+ *
+ * @returns {string[]} Sorted top-level entry names.
+ */
+function wholeProjectScope() {
+    const isIgnored = loadGitignore(rootDir);
+    const skip = new Set([...BUILD_NOISE_DIRS, '.references', STATE_DIR_NAME]);
+    let entries;
+    try {
+        entries = fs.readdirSync(rootDir, { withFileTypes: true });
+    } catch (_) {
+        return [];
+    }
+    return entries
+        .filter((e) => !e.isSymbolicLink())
+        .filter((e) => !isSkippedDir(skip, e.name, e.name) && !isIgnored(e.name))
+        .map((e) => e.name)
+        .sort();
+}
+
+/**
  * Parses .magicspec/workspace.json and creates workspace nodes + scope edges.
+ * A workspace without a `scope` covers the whole project (`context.md`), so its scope is
+ * every top-level entry of the project rather than nothing.
  *
  * @returns {Record<string, string[]>} Map of workspace name → scope array.
  */
@@ -118,7 +148,8 @@ function extractWorkspaces() {
         const wsId = `ws:${name}`;
         addNode(wsId, name, 'workspace', { workspace: name });
 
-        const scope = config.scope || [];
+        const declared = Array.isArray(config.scope) ? config.scope : [];
+        const scope = declared.length ? declared : wholeProjectScope();
         result[name] = scope;
 
         for (const s of scope) {
@@ -223,35 +254,7 @@ function parseSpecBody(specPath) {
         return { refs: [], parent: null, conventions: [] };
     }
 
-    const lines = content.split(/\r?\n/);
-    const refs = [];
-    let inCanonical = false;
-    let pathColIdx = -1;
-
-    for (const line of lines) {
-        if (/^##\s+Canonical References/i.test(line)) {
-            inCanonical = true;
-            pathColIdx = -1;
-            continue;
-        }
-        if (inCanonical && /^##\s+/.test(line)) {
-            inCanonical = false;
-            continue;
-        }
-        if (!inCanonical) continue;
-
-        const cells = line.split('|').map((c) => c.trim());
-        if (pathColIdx === -1) {
-            const idx = cells.findIndex((c) => /^Path$/i.test(c));
-            if (idx !== -1) pathColIdx = idx;
-            continue;
-        }
-        if (/^[\s|:-]+$/.test(line)) continue;
-        if (cells.length > pathColIdx) {
-            const raw = cells[pathColIdx].replace(/`/g, '').trim();
-            if (raw) refs.push(normalizePath(raw));
-        }
-    }
+    const refs = parseCanonicalRefs(content);
 
     const linkMatch = content.match(/\*\*Implements:\*\*\s*\[([^\]]*)\]\(([^)]+)\)/);
     const parent = linkMatch

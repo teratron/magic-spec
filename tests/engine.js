@@ -5,7 +5,7 @@ const { test, describe } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const path = require('path');
-const { execSync, spawnSync } = require('child_process');
+const { execSync, execFileSync, spawnSync } = require('child_process');
 const os = require('os');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -10040,7 +10040,7 @@ describe('Magic Engine Scripts', () => {
     // ───────────────────────────────────────────────────────────────────────────
     // 18. analyze-coverage.js — EXEMPT classification (Coverage Denominator Scope)
     // ───────────────────────────────────────────────────────────────────────────
-    test('analyze-coverage.js classifies .magicspec/ bookkeeping and archived phase journals as EXEMPT', () => {
+    test('analyze-coverage.js classifies .magicspec/ state files (journals, archived phases, specifications) as EXEMPT', () => {
         const tempDir = createTempWorkspace();
         try {
             const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
@@ -10077,10 +10077,10 @@ describe('Magic Engine Scripts', () => {
                 'EXEMPT',
                 'an archived phase journal must classify EXEMPT',
             );
-            assert.notStrictEqual(
+            assert.strictEqual(
                 byFile.get('.magicspec/specifications/l1-core.md').confidence,
                 'EXEMPT',
-                'specifications/ itself must NOT be exempted — unaffected by this change',
+                'a specification is SDD state too — not a coverage subject',
             );
             assert.strictEqual(
                 byFile.get('src/main.rs').confidence,
@@ -10160,6 +10160,268 @@ describe('Magic Engine Scripts', () => {
                 before.summary.exempt + 3,
                 'the three new bookkeeping files must be counted as exempt',
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Field report (engine 2.1.144) — the analysis scripts read one table, one way
+    // ───────────────────────────────────────────────────────────────────────────
+
+    // A project with one workspace `main` that declares no scope, one spec whose Canonical
+    // References use the template's `| Alias | Path | Purpose |` table, and a cell holding two paths.
+    const writeAliasPathFixture = (tempDir) => {
+        const mk = (rel, body) => writeTreeFile(tempDir, rel, body);
+        mk(
+            '.magicspec/workspace.json',
+            JSON.stringify({ default: 'main', workspaces: { main: { description: 'm' } } }),
+        );
+        mk('.magicspec/INDEX.md', '# Index\n');
+        mk('.magicspec/RULES.md', '# Rules\n');
+        mk('.magicspec/.version', '1.0.0\n');
+        mk(
+            '.magicspec/main/INDEX.md',
+            [
+                '# Index',
+                '',
+                '## Domain Specifications',
+                '',
+                '| File | Description | Status | Layer | Version |',
+                '| --- | --- | --- | --- | --- |',
+                '| [l2-game.md](specifications/l2-game.md) | Game | Stable | 2 | 1.0.0 |',
+                '',
+            ].join('\n'),
+        );
+        mk('.magicspec/main/tasks/phase-10.md', '# Phase 10\n');
+        mk(
+            '.magicspec/main/specifications/l2-game.md',
+            [
+                '# Game',
+                '',
+                '## Canonical References',
+                '',
+                '| Alias | Path | Purpose |',
+                '| --- | --- | --- |',
+                '| `[ENGINE]` | `src/cli_runner.rs` | Runner |',
+                '| `[GAME]` | `src/tools/game.rs`, `src/tools/game/` | Game tools |',
+                '',
+            ].join('\n'),
+        );
+        mk('src/cli_runner.rs', '// SAFETY: the runner owns the handle\nfn main() {}\n');
+        mk('src/tools/game.rs', 'fn g() {}\n');
+        mk('src/tools/game/mod.rs', 'fn m() {}\n');
+        mk('src/lonely.rs', 'fn l() {}\n');
+    };
+
+    const runFixtureScript = (tempDir, script, args = []) =>
+        execFileSync(
+            process.execPath,
+            [path.join(tempDir, 'skills', 'magicspec', 'scripts', script), ...args],
+            {
+                cwd: tempDir,
+                encoding: 'utf8',
+                env: { ...process.env, MAGIC_DESIGN_DIR: '.magicspec/main', MAGIC_WORKSPACE: 'main' },
+            },
+        );
+
+    test('extract-rationale.js finds the Path column of an Alias/Path/Purpose table and names the covering spec', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeAliasPathFixture(tempDir);
+            const out = JSON.parse(runFixtureScript(tempDir, 'extract-rationale.js', ['--json']));
+            const safety = out.rationale.find((r) => r.file === 'src/cli_runner.rs');
+            assert.ok(safety, 'the SAFETY comment is found');
+            assert.strictEqual(safety.covered, true, 'the alias column must not be read as the path');
+            assert.strictEqual(safety.spec, 'l2-game.md');
+            assert.deepStrictEqual(out.shadow_logic, []);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('analyze-coverage.js registers each code span of a Path cell, and both scripts reach the same verdict', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeAliasPathFixture(tempDir);
+            const cov = JSON.parse(runFixtureScript(tempDir, 'analyze-coverage.js', ['--json']));
+            assert.deepStrictEqual(cov.shadow_specs, [], 'both paths of the cell exist');
+            const byFile = new Map(cov.coverage.map((c) => [c.file, c]));
+            for (const file of ['src/tools/game.rs', 'src/tools/game/mod.rs', 'src/cli_runner.rs']) {
+                assert.strictEqual(byFile.get(file).confidence, 'EXTRACTED', file);
+            }
+            assert.strictEqual(byFile.get('src/lonely.rs').confidence, 'INFERRED');
+
+            const rationale = JSON.parse(runFixtureScript(tempDir, 'extract-rationale.js', ['--json']));
+            assert.ok(
+                rationale.rationale.every((r) => r.covered === (byFile.get(r.file).confidence !== 'UNCOVERED')),
+                'extract-rationale and analyze-coverage must agree on every file',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('lib/canonical-refs.js reads a Path column wherever it stands, splits cells on spans and outer commas, and falls back to the first column', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { parseCanonicalRefs, splitPathCell } = requireFromFixture(tempDir, 'lib', 'canonical-refs.js');
+            assert.deepStrictEqual(splitPathCell('`a/b.js`, `c/`'), ['a/b.js', 'c/']);
+            assert.deepStrictEqual(splitPathCell('a/b.js, c/d.js'), ['a/b.js', 'c/d.js']);
+            assert.deepStrictEqual(splitPathCell('src/{a,b}/*.js, x.md'), ['src/{a,b}/*.js', 'x.md']);
+            assert.deepStrictEqual(splitPathCell('`a.js` (main entry)'), ['a.js']);
+
+            const doc = (table) => `# S\n\n## Canonical References\n\n${table}\n\n## Next\n\n| \`ignored.js\` | x |\n`;
+            assert.deepStrictEqual(
+                parseCanonicalRefs(doc('| Purpose | Alias | Path |\n| --- | --- | --- |\n| p | `[A]` | `x/y.js` |')),
+                ['x/y.js'],
+                'the Path column is found by its header, not by its position',
+            );
+            assert.deepStrictEqual(
+                parseCanonicalRefs(doc('| File | Notes |\n| :--- | :--- |\n| `lib/a.js` | n |\n| lib/b.js | n |')),
+                ['lib/a.js', 'lib/b.js'],
+                'a table whose header names no Path is read through its first column',
+            );
+            assert.deepStrictEqual(
+                parseCanonicalRefs(doc('| Path | Description |\n| `lib/a.js` | n |')),
+                ['lib/a.js'],
+                'a header without its separator row is still the header',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('analyze-coverage.js exempts everything under .magicspec/ from the denominator and skips links', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeAliasPathFixture(tempDir);
+            const linkTarget = path.join(tempDir, 'src', 'tools');
+            const link = path.join(tempDir, 'linked-tools');
+            let linked = true;
+            try {
+                fs.symlinkSync(linkTarget, link, 'junction');
+            } catch {
+                linked = false; // no permission to create a link on this host
+            }
+            const cov = JSON.parse(runFixtureScript(tempDir, 'analyze-coverage.js', ['--json']));
+            const byFile = new Map(cov.coverage.map((c) => [c.file, c]));
+            for (const file of [
+                '.magicspec/INDEX.md',
+                '.magicspec/RULES.md',
+                '.magicspec/workspace.json',
+                '.magicspec/.version',
+                '.magicspec/main/INDEX.md',
+                '.magicspec/main/tasks/phase-10.md',
+                '.magicspec/main/specifications/l2-game.md',
+            ]) {
+                assert.strictEqual(byFile.get(file)?.confidence, 'EXEMPT', `${file} is SDD state`);
+            }
+            assert.strictEqual(
+                cov.summary.total,
+                cov.summary.extracted + cov.summary.inferred + cov.summary.ambiguous + cov.summary.uncovered,
+            );
+            assert.ok(
+                cov.coverage.filter((c) => c.confidence === 'UNCOVERED').every((c) => !c.file.startsWith('.magicspec/')),
+            );
+            if (linked) {
+                assert.ok(!byFile.has('linked-tools'), 'a linked directory is not one more file');
+                assert.ok(![...byFile.keys()].some((f) => f.startsWith('linked-tools/')), 'a link is not followed');
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a workspace without scope is measured against the whole project by build-spec-graph.js and detect-communities.js', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeAliasPathFixture(tempDir);
+            const graph = runFixtureScript(tempDir, 'build-spec-graph.js');
+            const row = graph.match(/main: (\d+) specs, (\d+) files covered \/ (\d+) scope → ([\d.]+)%/);
+            assert.ok(row, `the coverage line is printed:\n${graph}`);
+            assert.ok(Number(row[3]) > 0, 'the whole project is the scope');
+            assert.ok(Number(row[4]) > 0, 'src/ is covered by the spec');
+
+            const detect = runFixtureScript(tempDir, 'detect-communities.js', ['--include-md', '--threshold', '10']);
+            assert.doesNotMatch(detect, /LOW ALIGNMENT/);
+            assert.doesNotMatch(detect, /Best workspace: unassigned/);
+            assert.match(detect, /main: no scope/);
+            const labelled = (detect.match(/⚠ OVERSIZED/g) || []).length;
+            assert.ok(labelled > 0, 'the fixture must hold an oversized community, or the check below proves nothing');
+            assert.match(detect, new RegExp(`Oversized \\(>10%\\): ${labelled}\\b`), 'the header counts what the labels mark');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js sends a plan of blocked tasks back to /magicspec task from either workflow, never to a /magicspec run that would only Stall', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                [
+                    '---',
+                    'phase: 1',
+                    'status: In Progress',
+                    '---',
+                    '',
+                    '## Atomic Checklist',
+                    '',
+                    '- [!] [T-1A01] First task',
+                    '',
+                    '## Detailed Tracking',
+                    '',
+                    '### [T-1A01] First task',
+                    '',
+                    '- **Status:** Blocked',
+                    '- **Assignment:** Agent',
+                    '',
+                ].join('\n'),
+            );
+            assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
+            for (const workflow of ['task', 'run']) {
+                const next = finalize.computeNextAction(workflow, 'engine', wsDir);
+                assert.match(next, /T-1A01/, workflow);
+                assert.match(next, /re-run \/magicspec task engine$/, workflow);
+                assert.doesNotMatch(next, /\/magicspec run/, workflow);
+            }
+
+            // a blocked phase file takes the same exit
+            fs.writeFileSync(tasksPath, registryTable('Blocked'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                '---\nphase: 1\nstatus: Blocked\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+            );
+            assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
+            for (const workflow of ['task', 'run']) {
+                const next = finalize.computeNextAction(workflow, 'engine', wsDir);
+                assert.match(next, /re-run \/magicspec task engine$/, workflow);
+                assert.doesNotMatch(next, /\/magicspec run/, workflow);
+            }
+
+            // control: a plan with work to do still goes to execution
+            fs.writeFileSync(tasksPath, registryTable('In Progress'));
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                '---\nphase: 1\nstatus: In Progress\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+            );
+            assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js guard names the command spellings of this engine, so a reserved command can never be written as Next Action', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { RESERVED_COMMAND_RE } = requireFromFixture(tempDir, 'finalize.js');
+            assert.ok(RESERVED_COMMAND_RE.test('Run /magicspec spec engine to amend'));
+            assert.ok(RESERVED_COMMAND_RE.test('Run /magicspec analyze'));
+            assert.ok(!RESERVED_COMMAND_RE.test('Run /magicspec task engine to plan'));
+            assert.ok(!RESERVED_COMMAND_RE.test('Run /magicspec specify'), 'a longer word is not the command');
         } finally {
             cleanup(tempDir);
         }

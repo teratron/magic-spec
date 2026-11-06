@@ -20,6 +20,13 @@ const { graphPaths } = require('./utils');
 // Storage: $designDir/graph/.cache/{hash}.json
 // Value:   { refs: [...], parent: "..." | null, conventions: [14, 23] }
 
+/**
+ * Version of the extraction the cached values come from. It is part of every key, so a change
+ * to how a spec is read (the Canonical References reader, `lib/canonical-refs.js`) retires the
+ * entries the old reading wrote instead of serving them for as long as the spec is unedited.
+ */
+const EXTRACTION_VERSION = 2;
+
 // ───────────────────────────────────────────────────────────────────────────
 // Frontmatter Stripping (Markdown only)
 // ───────────────────────────────────────────────────────────────────────────
@@ -67,6 +74,8 @@ function fileHash(absPath, rootDir) {
     const body = stripFrontmatter(raw, path.extname(absPath));
 
     const h = crypto.createHash('sha256');
+    h.update(`extraction:${EXTRACTION_VERSION}`);
+    h.update(Buffer.from([0]));
     h.update(body);
     h.update(Buffer.from([0]));
 

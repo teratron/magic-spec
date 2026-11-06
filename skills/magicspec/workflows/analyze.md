@@ -112,11 +112,11 @@ Coverage classification uses a five-level confidence taxonomy (inspired by knowl
 | **INFERRED** | File is a sibling of explicitly referenced paths (same parent directory) | Structural proximity |
 | **AMBIGUOUS** | File is in a scope-adjacent directory (same grandparent) but has no direct reference | Weak association |
 | **UNCOVERED** | No specification references this file or its containing directory | No coverage |
-| **EXEMPT** | `.magicspec/` bookkeeping/journal file (`PLAN.md`, `TASKS.md`, `STATE.md`, `CONTEXT.md`, `CHANGELOG.md`, `RETROSPECTIVE.md`, archived phase journals) — the SDD process's own state, never meant to appear in a Canonical References table | Not a coverage subject |
+| **EXEMPT** | Any file under `.magicspec/` — specifications, registries, the constitution, `workspace.json`, `.version`, active and archived phase workbooks and the journals (`PLAN.md`, `TASKS.md`, `STATE.md`, `CONTEXT.md`, `CHANGELOG.md`, `RETROSPECTIVE.md`): the SDD process's own state, never meant to appear in a Canonical References table | Not a coverage subject |
 
 **Usage**: `node scripts/executor.js analyze-coverage --json` for structured output. Use this data to enrich Gap Report entries in Modes B/C with confidence labels instead of binary Covered/Uncovered classification.
 
-**Coverage metric**: `coverage_percent = (EXTRACTED + INFERRED) / total * 100`, where `total = EXTRACTED + INFERRED + AMBIGUOUS + UNCOVERED`. AMBIGUOUS files count in `total` but are excluded from the numerator — they require human review to determine if a spec should cover them. **EXEMPT files are excluded from `total` entirely** (not merely the numerator): they are not a coverage subject at all, so counting them would penalize a project's coverage percentage for accumulating ordinary SDD history (e.g. archived phase journals).
+**Coverage metric**: `coverage_percent = (EXTRACTED + INFERRED) / total * 100`, where `total = EXTRACTED + INFERRED + AMBIGUOUS + UNCOVERED`. AMBIGUOUS files count in `total` but are excluded from the numerator — they require human review to determine if a spec should cover them. **EXEMPT files are excluded from `total` entirely** (not merely the numerator): they are not a coverage subject at all, so counting them would penalize a project's coverage percentage for accumulating ordinary SDD history (e.g. archived phase journals, or the specifications themselves). A symbolic link is not scanned: its target is judged where it lives.
 
 ## Rationale Extraction
 

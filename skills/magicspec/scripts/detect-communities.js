@@ -473,19 +473,28 @@ function computeModularity(communities) {
  * Loads workspace.json and builds a map of workspace → expanded file set.
  * Expands directory scopes by listing all files within those directories.
  *
- * @returns {{workspaces: Record<string, Set<string>>, raw: object}}
+ * A workspace that declares no `scope` covers the whole project (`context.md`). It has no
+ * boundary to compare a community against, so it is returned apart, in `wholeProject`, rather
+ * than as an empty file set that every community would score zero against.
+ *
+ * @returns {{workspaces: Record<string, Set<string>>, wholeProject: string[], raw: object}}
  */
 function loadWorkspaces() {
     const wsPath = path.join(designAbs, 'workspace.json');
-    if (!fs.existsSync(wsPath)) return { workspaces: {}, raw: {} };
+    if (!fs.existsSync(wsPath)) return { workspaces: {}, wholeProject: [], raw: {} };
 
     const raw = JSON.parse(fs.readFileSync(wsPath, 'utf8'));
     const workspaces = raw.workspaces || {};
     const result = {};
+    const wholeProject = [];
 
     for (const [name, config] of Object.entries(workspaces)) {
+        if (!Array.isArray(config.scope) || config.scope.length === 0) {
+            wholeProject.push(name);
+            continue;
+        }
         const fileSet = new Set();
-        for (const scopeEntry of config.scope || []) {
+        for (const scopeEntry of config.scope) {
             const abs = path.resolve(rootDir, scopeEntry);
             const rel = normalizePath(path.relative(rootDir, abs));
 
@@ -502,7 +511,7 @@ function loadWorkspaces() {
         result[name] = fileSet;
     }
 
-    return { workspaces: result, raw };
+    return { workspaces: result, wholeProject, raw };
 }
 
 /**
@@ -531,6 +540,8 @@ function jaccardSimilarity(community, workspace) {
  */
 function alignCommunities(communities, workspaces) {
     const alignments = new Map();
+    // Without a declared boundary there is no alignment to report.
+    if (Object.keys(workspaces).length === 0) return alignments;
 
     for (const [label, members] of communities) {
         let bestWs = 'unassigned';
@@ -637,7 +648,10 @@ function generateSplitSuggestions(communities, totalNodes) {
  * @param {object} report - Full analysis result object.
  */
 function printSummary(report) {
-    const { graph, communities, alignments, modularity, suggestions, workspaceNames } = report;
+    const { graph, communities, alignments, modularity, suggestions, workspaceNames, wholeProject } =
+        report;
+    const oversizedAt = (size) => size > (OVERSIZED_THRESHOLD_PCT / 100) * graph.nodes;
+    const oversizedCount = communities.filter((c) => oversizedAt(c.size)).length;
 
     console.log('');
     console.log('COMMUNITY DETECTION — Workspace Discovery');
@@ -646,7 +660,9 @@ function printSummary(report) {
     console.log(`Graph nodes    : ${graph.nodes}`);
     console.log(`Graph edges    : ${graph.edges}`);
     console.log(`Communities    : ${communities.length}`);
-    console.log(`Oversized (>${OVERSIZED_THRESHOLD_PCT}%): ${suggestions.length}`);
+    console.log(
+        `Oversized (>${OVERSIZED_THRESHOLD_PCT}%): ${oversizedCount} (splittable: ${suggestions.length})`,
+    );
     console.log('');
 
     console.log('COMMUNITIES:');
@@ -654,13 +670,11 @@ function printSummary(report) {
     for (const comm of communities) {
         const align = alignments.get(comm.label);
         const mod = modularity.get(comm.label) || 0;
-        const ws = align ? align.workspace : 'unassigned';
-        const score = align ? align.score : 0;
-        const oversized =
-            comm.size > (OVERSIZED_THRESHOLD_PCT / 100) * graph.nodes ? ' ⚠ OVERSIZED' : '';
+        const oversized = oversizedAt(comm.size) ? ' ⚠ OVERSIZED' : '';
         console.log(`  [${comm.label.slice(0, 40).padEnd(40)}]${oversized}`);
         console.log(`    Nodes: ${comm.size}  Cohesion: ${comm.cohesion}  Modularity: ${mod}`);
-        console.log(`    Best workspace: ${ws} (Jaccard: ${score})`);
+        // No workspace declares a boundary → there is nothing to align a community with.
+        if (align) console.log(`    Best workspace: ${align.workspace} (Jaccard: ${align.score})`);
         const top5 = comm.members.slice(0, 5);
         console.log(
             `    Members (top 5): ${top5.join(', ')}${comm.members.length > 5 ? ' ...' : ''}`,
@@ -696,6 +710,10 @@ function printSummary(report) {
         console.log('WORKSPACE BOUNDARY ALIGNMENT:');
         console.log('───────────────────────────────────────────────────────────────');
         for (const ws of workspaceNames) {
+            if (wholeProject.includes(ws)) {
+                console.log(`  ${ws}: no scope — covers the whole project, alignment not applicable`);
+                continue;
+            }
             const matching = communities.filter((c) => alignments.get(c.label)?.workspace === ws);
             const avgScore = matching.length
                 ? Math.round(
@@ -765,8 +783,8 @@ function main() {
         .sort((a, b) => b.size - a.size);
 
     // 5. Load workspaces and align
-    const { workspaces } = loadWorkspaces();
-    const workspaceNames = Object.keys(workspaces);
+    const { workspaces, wholeProject } = loadWorkspaces();
+    const workspaceNames = [...Object.keys(workspaces), ...wholeProject];
     const alignments = alignCommunities(rawCommunities, workspaces);
 
     // 6. Generate split suggestions
@@ -779,6 +797,7 @@ function main() {
         modularity: modMap,
         suggestions,
         workspaceNames,
+        wholeProject,
     };
 
     // 7. Output

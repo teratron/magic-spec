@@ -17,6 +17,7 @@ const {
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
+const { parseCanonicalRefs } = require('./lib/canonical-refs');
 
 // Every path below is relative to the project root: run from there whatever directory the caller is in.
 process.chdir(resolveProjectRoot());
@@ -227,59 +228,14 @@ function loadCanonicalReferences(baseDesignDir) {
 /**
  * Extract file/directory paths from a Canonical References markdown table.
  *
- * Expects lines like: `| \`skills/magicspec/scripts/executor.js\` | Description |`
+ * The same reader as `analyze-coverage` and `build-spec-graph` (`lib/canonical-refs.js`):
+ * the `Path` column found by its header, every code span of a cell its own reference.
  *
  * @param {string} content - Full markdown content of a spec file.
  * @returns {string[]} Array of extracted paths.
  */
 function extractReferencePaths(content) {
-    const paths = [];
-    const lines = content.split(/\r?\n/);
-    let inSection = false;
-
-    for (const line of lines) {
-        // Detect section start
-        if (/^##\s+Canonical References/i.test(line)) {
-            inSection = true;
-            continue;
-        }
-
-        // Detect section end (next heading)
-        if (inSection && /^##\s/.test(line)) {
-            break;
-        }
-
-        if (!inSection) continue;
-
-        // Skip table header and separator rows
-        if (/^\|\s*:?-+/.test(line) || /^\|\s*Path\s*\|/i.test(line)) continue;
-
-        // Extract path from first column — supports both backtick-wrapped
-        // (| `path` |) and plain (| skills/magicspec/scripts/foo.js |) formats
-        let extracted = null;
-        const btMatch = line.match(/^\|\s*`([^`]+)`/);
-        if (btMatch) {
-            extracted = btMatch[1];
-        } else {
-            const cells = line
-                .split('|')
-                .map((c) => c.trim())
-                .filter(Boolean);
-            if (
-                cells.length >= 1 &&
-                cells[0] &&
-                !cells[0].startsWith(':') &&
-                !cells[0].startsWith('-')
-            ) {
-                extracted = cells[0];
-            }
-        }
-        if (extracted) {
-            paths.push(extracted);
-        }
-    }
-
-    return paths;
+    return parseCanonicalRefs(content);
 }
 
 /** @type {Map<string, ReturnType<typeof compilePathEntry>>} Compiled pattern references, by text. */

@@ -1,6 +1,6 @@
 # Test Suite Specification
 
-**Version:** 1.37.1
+**Version:** 1.38.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -170,6 +170,7 @@ A finding of `magicspec-dev:test` is decided by evidence and fixed in the same r
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.38.0 | 2026-11-06 | Agent | **Field-report coverage (mandatory)**: seven harness cases, each failing on the earlier scripts — the Alias/Path/Purpose table read by `extract-rationale`, a two-span Path cell and the verdict agreement of `analyze-coverage` and `extract-rationale`, the shared reader's column and cell rules, the whole-state-folder EXEMPT set and the skipped link, a scopeless workspace in `build-spec-graph` and `detect-communities` (including header and labels counting the same communities), the Stalled Plan exit of `finalize` and the reserved-command guard ([l2-engine-automation.md](l2-engine-automation.md) 1.28.0, [l2-finalize-state-accuracy.md](l2-finalize-state-accuracy.md) §18). |
 | 1.37.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.37.0 | 2026-10-29 | Agent | New **Command Line, Matching and Release Coverage (mandatory)**: the cases of a simulation pass over the shipped engine, one per reproduced defect (the command table and its drift check, help and refusal without writes, `remove`, provisioning, path matching and the Zero-Match Guard, the root-only floor, line endings in the integrity check, human-mode pre-flight, the graph page, the init guidance, `release-changelog` validation, the graph server's arguments, parallel `update-state`, the migration's state-folder paths, the release script and the maintenance guard). Two existing cases moved with their contract (line endings are not drift; the unknown-option path of `update-state` is the executor's refusal) and two stopped depending on a file a fresh clone lacks. |
 | 1.36.0 | 2026-10-28 | Agent | New **Migration and Archive Coverage (mandatory)**: the 2.x fixtures (engine with manifest, wrappers in the root folders and under a host, own files beside them, state with entries naming the old folder) and the cases — a dry run changes nothing and a clean project is told so; `--apply` installs, renames, removes exactly the old engine, keeps the project's own files, backs up and is idempotent; a changed old file is kept and reported; resumption after the rename and after the projections; both state folders stop every command with one path; any other command in an unmigrated project stops and creates nothing, while design assets under the old name do not trigger it; a layout older than 2.x, an unknown host and a missing manifest; the archive composition and its smoke check with planted strays; and one case that builds the archive and walks SP-1 to SP-10 on it. All under mutation control. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
