@@ -322,6 +322,16 @@ describe('Magic Engine Scripts', () => {
             ...rest,
         ].join('\n');
 
+    // requireFinalizeWorkspace() plus a registry at `registryStatus`, and `writePhase(items, options)`
+    // to write the phase workbook: the start of every finalize case that plants one phase.
+    const requireFinalizePlan = (tempDir, registryStatus = 'In Progress') => {
+        const plan = requireFinalizeWorkspace(tempDir);
+        fs.writeFileSync(plan.tasksPath, registryTable(registryStatus));
+        const writePhase = (items, options) =>
+            fs.writeFileSync(path.join(plan.tasksDir, 'phase-1.md'), phaseWorkbook(items, options));
+        return { ...plan, writePhase };
+    };
+
     // require()s update-state.js and creates a plain single-workspace fixture
     // in one step — the pairing every autoProgress/computeProgress test (§7e)
     // starts with.
@@ -5078,9 +5088,7 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js computeNextAction preserves code spans in task titles while still ignoring quoted checklist lines', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
-
-            fs.writeFileSync(tasksPath, registryTable('In Progress'));
+            const { finalize, wsDir, tasksDir, writePhase } = requireFinalizePlan(tempDir);
 
             // (i) a title carrying a backticked path must survive verbatim.
             // `stripQuoted()` (SH-1) blanks matched characters rather than
@@ -5088,12 +5096,7 @@ describe('Magic Engine Scripts', () => {
             // so a title read from the stripped text loses the span. This
             // pins the field regression named `NEXT_ACTION_TITLE_STRIPPED`,
             // introduced by the SC-2.1(c) per-item scan itself.
-            fs.writeFileSync(
-                path.join(tasksDir, 'phase-1.md'),
-                phaseWorkbook([
-                    '- [ ] [T-1A01] New `scripts/sync-engine-snapshot.js` (L2 snapshot writer)',
-                ]),
-            );
+            writePhase(['- [ ] [T-1A01] New `scripts/sync-engine-snapshot.js` (L2 snapshot writer)']);
             let next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(
                 next,
@@ -10366,22 +10369,18 @@ describe('Magic Engine Scripts', () => {
     test('finalize.js sends a plan of blocked tasks back to /magicspec task from either workflow, never to a /magicspec run that would only Stall', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
-            fs.writeFileSync(tasksPath, registryTable('In Progress'));
-            fs.writeFileSync(
-                path.join(tasksDir, 'phase-1.md'),
-                phaseWorkbook(['- [!] [T-1A01] First task'], {
-                    rest: [
-                        '## Detailed Tracking',
-                        '',
-                        '### [T-1A01] First task',
-                        '',
-                        '- **Status:** Blocked',
-                        '- **Assignment:** Agent',
-                        '',
-                    ],
-                }),
-            );
+            const { finalize, wsDir, tasksPath, writePhase } = requireFinalizePlan(tempDir);
+            writePhase(['- [!] [T-1A01] First task'], {
+                rest: [
+                    '## Detailed Tracking',
+                    '',
+                    '### [T-1A01] First task',
+                    '',
+                    '- **Status:** Blocked',
+                    '- **Assignment:** Agent',
+                    '',
+                ],
+            });
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
             for (const workflow of ['task', 'run']) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
@@ -10392,10 +10391,7 @@ describe('Magic Engine Scripts', () => {
 
             // a blocked phase file takes the same exit
             fs.writeFileSync(tasksPath, registryTable('Blocked'));
-            fs.writeFileSync(
-                path.join(tasksDir, 'phase-1.md'),
-                phaseWorkbook(['- [ ] [T-1A01] First task'], { status: 'Blocked' }),
-            );
+            writePhase(['- [ ] [T-1A01] First task'], { status: 'Blocked' });
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
             for (const workflow of ['task', 'run']) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
@@ -10405,10 +10401,7 @@ describe('Magic Engine Scripts', () => {
 
             // control: a plan with work to do still goes to execution
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
-            fs.writeFileSync(
-                path.join(tasksDir, 'phase-1.md'),
-                phaseWorkbook(['- [ ] [T-1A01] First task']),
-            );
+            writePhase(['- [ ] [T-1A01] First task']);
             assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
         } finally {
             cleanup(tempDir);
