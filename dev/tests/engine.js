@@ -285,6 +285,22 @@ describe('Magic Engine Scripts', () => {
             '',
         ].join('\n');
 
+    // A phase workbook: frontmatter, an Atomic Checklist, then `rest` (a Detailed Tracking section,
+    // notes) — the file every classifyPlanState / computeNextAction case writes.
+    const phaseWorkbook = (items, { status = 'In Progress', rest = [] } = {}) =>
+        [
+            '---',
+            'phase: 1',
+            `status: ${status}`,
+            '---',
+            '',
+            '## Atomic Checklist',
+            '',
+            ...items,
+            '',
+            ...rest,
+        ].join('\n');
+
     // require()s update-state.js and creates a plain single-workspace fixture
     // in one step — the pairing every autoProgress/computeProgress test (§7e)
     // starts with.
@@ -5250,17 +5266,9 @@ describe('Magic Engine Scripts', () => {
             // introduced by the SC-2.1(c) per-item scan itself.
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                [
-                    '---',
-                    'phase: 1',
-                    'status: In Progress',
-                    '---',
-                    '',
-                    '## Atomic Checklist',
-                    '',
+                phaseWorkbook([
                     '- [ ] [T-1A01] New `dev/scripts/sync-engine-snapshot.js` (L2 snapshot writer)',
-                    '',
-                ].join('\n'),
+                ]),
             );
             let next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(
@@ -10302,24 +10310,17 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                [
-                    '---',
-                    'phase: 1',
-                    'status: In Progress',
-                    '---',
-                    '',
-                    '## Atomic Checklist',
-                    '',
-                    '- [!] [T-1A01] First task',
-                    '',
-                    '## Detailed Tracking',
-                    '',
-                    '### [T-1A01] First task',
-                    '',
-                    '- **Status:** Blocked',
-                    '- **Assignment:** Agent',
-                    '',
-                ].join('\n'),
+                phaseWorkbook(['- [!] [T-1A01] First task'], {
+                    rest: [
+                        '## Detailed Tracking',
+                        '',
+                        '### [T-1A01] First task',
+                        '',
+                        '- **Status:** Blocked',
+                        '- **Assignment:** Agent',
+                        '',
+                    ],
+                }),
             );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
             for (const workflow of ['task', 'run']) {
@@ -10333,7 +10334,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('Blocked'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                '---\nphase: 1\nstatus: Blocked\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+                phaseWorkbook(['- [ ] [T-1A01] First task'], { status: 'Blocked' }),
             );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
             for (const workflow of ['task', 'run']) {
@@ -10346,7 +10347,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                '---\nphase: 1\nstatus: In Progress\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+                phaseWorkbook(['- [ ] [T-1A01] First task']),
             );
             assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
         } finally {
