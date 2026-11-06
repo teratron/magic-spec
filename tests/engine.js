@@ -306,6 +306,22 @@ describe('Magic Engine Scripts', () => {
             '',
         ].join('\n');
 
+    // A phase workbook: frontmatter, an Atomic Checklist, then `rest` (a Detailed Tracking section,
+    // notes) — the file every classifyPlanState / computeNextAction case writes.
+    const phaseWorkbook = (items, { status = 'In Progress', rest = [] } = {}) =>
+        [
+            '---',
+            'phase: 1',
+            `status: ${status}`,
+            '---',
+            '',
+            '## Atomic Checklist',
+            '',
+            ...items,
+            '',
+            ...rest,
+        ].join('\n');
+
     // require()s update-state.js and creates a plain single-workspace fixture
     // in one step — the pairing every autoProgress/computeProgress test (§7e)
     // starts with.
@@ -5074,17 +5090,9 @@ describe('Magic Engine Scripts', () => {
             // introduced by the SC-2.1(c) per-item scan itself.
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                [
-                    '---',
-                    'phase: 1',
-                    'status: In Progress',
-                    '---',
-                    '',
-                    '## Atomic Checklist',
-                    '',
+                phaseWorkbook([
                     '- [ ] [T-1A01] New `scripts/sync-engine-snapshot.js` (L2 snapshot writer)',
-                    '',
-                ].join('\n'),
+                ]),
             );
             let next = finalize.computeNextAction('run', 'engine', wsDir);
             assert.match(
@@ -10362,24 +10370,17 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                [
-                    '---',
-                    'phase: 1',
-                    'status: In Progress',
-                    '---',
-                    '',
-                    '## Atomic Checklist',
-                    '',
-                    '- [!] [T-1A01] First task',
-                    '',
-                    '## Detailed Tracking',
-                    '',
-                    '### [T-1A01] First task',
-                    '',
-                    '- **Status:** Blocked',
-                    '- **Assignment:** Agent',
-                    '',
-                ].join('\n'),
+                phaseWorkbook(['- [!] [T-1A01] First task'], {
+                    rest: [
+                        '## Detailed Tracking',
+                        '',
+                        '### [T-1A01] First task',
+                        '',
+                        '- **Status:** Blocked',
+                        '- **Assignment:** Agent',
+                        '',
+                    ],
+                }),
             );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'all-excluded');
             for (const workflow of ['task', 'run']) {
@@ -10393,7 +10394,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('Blocked'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                '---\nphase: 1\nstatus: Blocked\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+                phaseWorkbook(['- [ ] [T-1A01] First task'], { status: 'Blocked' }),
             );
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
             for (const workflow of ['task', 'run']) {
@@ -10406,7 +10407,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(tasksPath, registryTable('In Progress'));
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-1.md'),
-                '---\nphase: 1\nstatus: In Progress\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] First task\n',
+                phaseWorkbook(['- [ ] [T-1A01] First task']),
             );
             assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
         } finally {
@@ -14768,10 +14769,7 @@ describe('Magic Engine Scripts', () => {
     // skills/ and rules/, copies under a host folder, the state in the earlier folder; the new skill installed.
     const legacyProject = ({ manifest = true, hostCopy = true, version = '2.1.100' } = {}) => {
         const dir = makeConsumer();
-        const put = (rel, text) => {
-            fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
-            fs.writeFileSync(path.join(dir, rel), text);
-        };
+        const put = (rel, text) => putFile(dir, rel, text);
         const sha = (rel) =>
             require('crypto')
                 .createHash('sha256')
@@ -14812,6 +14810,12 @@ describe('Magic Engine Scripts', () => {
         const skill = installSkill(dir);
         return { dir, skill };
     };
+    // Writes a file of a migration fixture, creating its folders.
+    const putFile = (dir, rel, text) => {
+        fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+        fs.writeFileSync(path.join(dir, rel), text);
+    };
+
     const snapshot = (dir) =>
         walkFiles(dir)
             .filter(
@@ -14829,6 +14833,15 @@ describe('Magic Engine Scripts', () => {
             )
             .sort()
             .map((f) => [path.relative(dir, f), fs.readFileSync(f, 'utf8')]);
+    // A second `migrate --apply` finds nothing to do and changes nothing.
+    const expectSecondRunIdle = (skill, dir) => {
+        const after = snapshot(dir);
+        const again = skillExec(skill, dir, 'migrate', ['--apply']);
+        assert.strictEqual(again.status, 0, again.stdout + again.stderr);
+        assert.match(again.stdout, /Nothing to migrate/);
+        assert.deepStrictEqual(snapshot(dir), after, 'a second run changes nothing');
+    };
+
     const cleanLink = (dir) => {
         for (const rel of ['.claude/skills/magicspec']) {
             try {
@@ -14940,11 +14953,7 @@ describe('Magic Engine Scripts', () => {
             assert.match(run.stdout, /Pre-flight/);
 
             // idempotent
-            const after = snapshot(dir);
-            const again = skillExec(skill, dir, 'migrate', ['--apply']);
-            assert.strictEqual(again.status, 0);
-            assert.match(again.stdout, /Nothing to migrate/);
-            assert.deepStrictEqual(snapshot(dir), after, 'a second run changes nothing');
+            expectSecondRunIdle(skill, dir);
         } finally {
             cleanLink(dir);
             cleanup(dir);
@@ -15096,10 +15105,7 @@ describe('Magic Engine Scripts', () => {
         const { dir, skill } = legacyProject();
         const today = new Date().toISOString().slice(0, 10);
         try {
-            const put = (rel, text) => {
-                fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
-                fs.writeFileSync(path.join(dir, rel), text);
-            };
+            const put = (rel, text) => putFile(dir, rel, text);
             const spec = [
                 '# Spec A',
                 '',
@@ -15218,11 +15224,7 @@ describe('Magic Engine Scripts', () => {
             );
 
             // A second run finds nothing to do.
-            const after = snapshot(dir);
-            const again = skillExec(skill, dir, 'migrate', ['--apply']);
-            assert.strictEqual(again.status, 0, again.stdout + again.stderr);
-            assert.match(again.stdout, /Nothing to migrate/);
-            assert.deepStrictEqual(snapshot(dir), after, 'a second run changes nothing');
+            expectSecondRunIdle(skill, dir);
         } finally {
             cleanLink(dir);
             cleanup(dir);
