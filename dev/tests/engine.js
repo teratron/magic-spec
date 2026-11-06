@@ -11445,6 +11445,20 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
+    test('shipped text: no engine body links to the rules, workflows or skills folders, which a project keeps under its host folder (field report 2.1.144)', () => {
+        // A link such as ../rules/magic.md resolves in this repository and nowhere else: in a project
+        // the host copies live under .agents/, so the body names them in code, not as a link.
+        const bodies = engineBodies();
+        assert.ok(bodies.length > 0, 'the engine bodies must be found');
+        const broken = [];
+        for (const { rel, text } of bodies) {
+            text.split(/\r?\n/).forEach((line, i) => {
+                if (/\]\(\.\.\/(rules|workflows|skills)\//.test(line)) broken.push(`${rel}:${i + 1}`);
+            });
+        }
+        assert.deepStrictEqual(broken, [], 'engine bodies must not link outside the engine folder');
+    });
+
     test('shipped text: rules/magic.md carries the session resume check and its opt-out (H10d)', () => {
         const rules = readShipped('rules/magic.md');
         assert.match(

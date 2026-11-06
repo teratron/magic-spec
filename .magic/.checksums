@@ -1,5 +1,5 @@
 {
-  "analyze.md": "362136a70fbf9485ee5d0488f8b0ad7e53bd63ebfbdd3763036bca0a8f3dd4b7",
+  "analyze.md": "eea9985959a8db53d3d34fb6cdc6b128111a144954549c7356acff6ab64827d5",
   "context.md": "14b2e40f29f203b512d6e2be554a34949994c0c009ca5f68ffb9be9a39d9cbdc",
   "init.md": "1b9a5871b70fa4d73ebd4bdc0c63fbd6a0fb1c1e5428e9d5cba62e339650da67",
   "retrospective.md": "82858a3c4e47aa76508b8373179d8c9f1ff19a29e03f3b0fd36971e92caccfa9",
@@ -55,8 +55,8 @@
   "scripts/update-engine-meta.js": "70812b1604ace551fef22e21c1e4d74de8d84818f9fb84fa8caec576e588a9a6",
   "scripts/update-state.js": "e9145eb94655cafcd887e81fc3af124472ae11c52a5e7c525be768d29c25f2f5",
   "scripts/utils.js": "2ed8bd97651334e06517b830f1af9f3351d7f2a4967393f9329a6913bb52b65e",
-  "spec.md": "71ff24a91665d9cd65d11880d6c44aede860936701865577115290d56facf6b4",
-  "status.md": "706adfb407977863747335655447d5bdd873718bc1f5e539edf77eb35b72e210",
+  "spec.md": "565b91d4bc8c96a99a038bec532a2df7511a4f954112e52bceb7eac79e5cb190",
+  "status.md": "b0d27d07f981ff30166ec754ee9dd192d37bfdc9daf432db2b82545e50450093",
   "task.md": "c4e8c1686eb6124a059c3e7e3def6d04e8b3ecee3009876a7bb8be8f5a5936bd",
   "templates/changelog.md": "5e83d67073c1153a621bead8e832c6817b2195e7551d47ee9292b2eec41783ad",
   "templates/contributing.md": "4e2ab6bf0884d4e83db3294ae115444c6493e8f9c1d931af723a96dc4afba2d5",

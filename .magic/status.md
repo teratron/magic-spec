@@ -7,7 +7,7 @@ description: Read-only resume briefing — where the project stands and the one 
 Read-only resume briefing for returning users. Composes current position, progress, blockers, recent decisions, engine state, and exactly one recommended next command — or, when nothing is pending, a statement of that — all from existing artifacts.
 
 > **Scope**: presentation only. No file writes, no version bumps, no finalization, no delegation to other workflows.
-> **Executable projections:** [`workflows/magic.status.md`](../workflows/magic.status.md) · [`skills/magic-status/SKILL.md`](../skills/magic-status/SKILL.md)
+> **Executable projections:** `workflows/magic.status.md` · `skills/magic-status/SKILL.md`
 
 ## Core Invariants (Mandatory)
 

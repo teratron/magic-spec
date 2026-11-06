@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The engine bodies no longer link to `rules/`, `workflows/` or `skills/`** (engine v2.1.144 → v2.1.145): `analyze.md` (twice), `spec.md` and `status.md` linked to `../rules/magic.md`, `../workflows/…` and `../skills/…`, which resolve in this repository and nowhere else: a project keeps those copies under its host folder (`.agents/`). The three bodies now name the files in code, not as links, so the text does not depend on the layout. A harness case fails on any such link.
+
 - **`CONTEXT.md` no longer gets a second top-level heading** (engine v2.1.141 → v2.1.142): the "Recent Changes" section pasted the last lines of the changelog verbatim, so the changelog's own `# …` title landed in the middle of the document (markdownlint MD025). The excerpt's headings are now nested under "Recent Changes", keeping their relative depth; lines inside fenced code blocks are left untouched. The same excerpt could also begin on a blank line (the 15-line cut landed on one), leaving two blank lines under the section header (MD012); leading blank lines are now dropped.
 
 - **The wiki pages and a rotated changelog pass markdownlint** (engine v2.1.142 → v2.1.144): `export-wiki` ran a list straight into the next heading (MD022, MD032) in the index and workspace pages, printed the spec count as a bold-only line (MD036) and doubled a blank line for a workspace without specs (MD012); every page is now joined through one helper that keeps a single blank line between blocks. `release-changelog` swallowed the blank line under the renamed `## [X.Y.Z] - date` heading, so its first `### Added` stuck to it (MD022); the heading match no longer eats the line break.

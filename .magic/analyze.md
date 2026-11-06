@@ -296,7 +296,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 
 After every successful `/magic.analyze` run (Modes A, B, C, and D — including read-only audits), update the `**Engine Version:**` field in `.design/INDEX.md` to match the current value of `.magic/.version`. Add the field if missing.
 
-This is the contract consumed by [`rules/magic.md` §1](../rules/magic.md): the rule **narrates one informational drift line** recommending `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version` (it never emits a `[y/n]` prompt). Skipping this step causes that drift line to re-narrate every session — by design, until `/magic.analyze` runs.
+This is the contract consumed by `rules/magic.md` §1: the rule **narrates one informational drift line** recommending `/magic.analyze` whenever the `INDEX.md` snapshot diverges from `.magic/.version` (it never emits a `[y/n]` prompt). Skipping this step causes that drift line to re-narrate every session — by design, until `/magic.analyze` runs.
 
 This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 
@@ -368,7 +368,7 @@ This is a `.design/` write — it does NOT trigger C14 (engine meta bump).
 1. **Specs**: call `spec.md` "Creating a New Specification" (direct to Stable).
 2. **Dispatch**:
    - Registry Sync: update `INDEX.md`. Bump Registry version.
-   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by [`rules/magic.md` §1](../rules/magic.md) to detect when the engine has been upgraded since the last analysis. Add the field if missing.
+   - **Engine Snapshot**: update the `**Engine Version:**` field in `.design/INDEX.md` to the value of `.magic/.version`. This snapshot is consumed by `rules/magic.md` §1 to detect when the engine has been upgraded since the last analysis. Add the field if missing.
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node .magic/scripts/executor.js generate-context`.
    - **Graph Refresh**: `node .magic/scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).

@@ -7,7 +7,7 @@ description: Workflow for creating and managing project specifications and the s
 Universal process for managing project specifications in `.design/specifications/`.
 
 > **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
-> **Executable projections:** [`workflows/magic.spec.md`](../workflows/magic.spec.md) · [`skills/magic-spec/SKILL.md`](../skills/magic-spec/SKILL.md)
+> **Executable projections:** `workflows/magic.spec.md` · `skills/magic-spec/SKILL.md`
 > **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
 
 **Contents:**
