@@ -36,6 +36,7 @@
 │   ├── context-economy.md
 │   ├── development.md
 │   ├── distribution.md
+│   ├── fix.md
 │   ├── graph.md
 │   ├── init.md
 │   ├── migration.md

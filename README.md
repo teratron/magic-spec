@@ -193,6 +193,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec plan` | Plan and replan: which specifications are built in which phase, in what order | optional: a workspace or an order directive |
 | `/magicspec task` | Break a planned phase into atomic tasks | optional: a workspace or a decomposition directive |
 | `/magicspec run` | Execute tasks from the plan | optional: a workspace, a task ID or a phase |
+| `/magicspec fix` | Triage and repair a reported defect, leaving a check that fails without the repair | the defect (asked for when missing) |
 | `/magicspec rule` | Add or amend project conventions | the rule text (asked for when missing) |
 | `/magicspec analyze` (alias `audit`) | Audit project health and detect drift | optional: a workspace or a focus |
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |

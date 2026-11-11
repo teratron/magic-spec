@@ -1,6 +1,6 @@
 # Contributing to magic-spec
 
-Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.36<!-- /generated:version -->).
+Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.71<!-- /generated:version -->).
 This guide tells you, in order, how to report a bug, how to propose a change, how to run the repository's checks, what a pull request must contain, and which conventions a change follows.
 
 ## 1. Report a bug or propose a change
@@ -77,6 +77,7 @@ The engine is used through one command. This table is generated from the router.
 | `/magicspec plan` | Plans and replans: which specifications are built in which phase, in what order, and what waits in the backlog |
 | `/magicspec task` | Turns a planned phase into atomic tasks, tracks and verify lines, and keeps their recorded state in step with the plan |
 | `/magicspec run` | Executes the planned tasks of the active phase, in parallel tracks when they are independent |
+| `/magicspec fix` | Triages and repairs reported defects: reproduces each, classifies it against the specifications by a closed rule, repairs it with a regression check left behind |
 | `/magicspec analyze` | Audits the project against its registry, rules and engine integrity; reverse-engineers specifications from existing code |
 | `/magicspec rule` | Adds, amends or removes a project convention in the constitution, global or per workspace |
 | `/magicspec status` | Briefs a session on where the project stands, read-only |

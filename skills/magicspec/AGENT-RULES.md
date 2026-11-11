@@ -96,9 +96,9 @@ The Specification Knowledge Graph is managed by `/magicspec graph`.
 
 ## 3. Finalization Protocol (Post-Workflow)
 
-After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run` or `/magicspec rule` complete their
+After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`, `/magicspec fix` or `/magicspec rule` complete their
 main steps and **before** their Completion Checklist, run
-`node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule> --workspace={active-workspace}`
+`node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule|fix> --workspace={active-workspace}`
 and display its entire stdout **verbatim** in a fenced block. Skip it for `/magicspec analyze`,
 `/magicspec graph`, `/magicspec help`, `/magicspec migrate` and `/magicspec-dev:*`. A non-zero exit is a
 WARNING, never a block.
@@ -196,7 +196,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
 - [ ] **§2 Spec Graph** — ran `build-spec-graph` before architectural questions;
       navigated `.magicspec/graph/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.magicspec/` change this session.
-- [ ] **§3 Finalization** — after `/magicspec spec|plan|task|run|rule`, ran
+- [ ] **§3 Finalization** — after `/magicspec spec|plan|task|run|rule|fix`, ran
       `node scripts/executor.js finalize --workflow=<...> --workspace={active-workspace}` and displayed its stdout **verbatim**.
 - [ ] **§4 Phase Archival** — for `/magicspec run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
@@ -229,7 +229,7 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
 
 The engine folder is read-only for standard workflows. On an engine-level script error, template mismatch
 or crash, do NOT edit it: emit the `MAGIC-SPEC ENGINE BUG REPORT` block for the user and record the
-finding with `record-diagnostic`. Template and recording command:
+finding with `record-diagnostic` and as a `feedback note`. Template, recording and the offer of the drafts:
 [references/rules/bug-reporting.md](references/rules/bug-reporting.md) — read it when you meet one.
 
 ## 10. Session Resume Check (Cold Context)

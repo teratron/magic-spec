@@ -14,7 +14,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🔗 The Workflow Pipeline
 
-Magic operates through **4 core workflows** and **5 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
+Magic operates through **4 core workflows** and **6 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
 
 ```mermaid
 graph TD
@@ -52,6 +52,7 @@ graph TD
 
 | Workflow | Primary File | Purpose | Documentation |
 | --- | --- | --- | --- |
+| **Fix** | `fix.md` | Takes a reported defect, reproduces it, classifies it against the specifications by a closed rule, repairs it and leaves a check that fails without the repair. | [Detailed Guide](fix.md) |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |

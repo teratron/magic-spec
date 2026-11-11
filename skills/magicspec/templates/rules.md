@@ -123,9 +123,9 @@ Logic and progress tracking are distributed between two primary files to ensure 
 
 All execution progress (`[x]`, `[/]`, etc.) must be recorded in the `TASKS.md` checklist first. `PLAN.md` is updated only when a specification or phase is fully completed.
 
-### C11 — Simulation Workflow (C2 Exception)
+### C11 — Maintenance Commands (C2 Exception)
 
-`magicspec-dev:test` is explicitly authorized as a developer-facing tool for engine validation and regression testing. It is a one-time exception to C2. Not intended for use in regular project workflows.
+The commands of `/magicspec-dev` — `init`, `test`, `sync`, `release` and `fix` — are explicitly authorized as developer-facing tools of the engine's own repository: the setup of links and projections, engine validation and regression testing, the metadata and documentation sync, the release, and the repair of error feedback about the engine. They are exceptions to C2. Not intended for use in regular project workflows.
 
 ### C12 — Quarantine Cascade
 

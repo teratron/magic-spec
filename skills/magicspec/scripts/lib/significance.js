@@ -49,6 +49,16 @@ const WHITELIST = {
         `${STATE_DIR_NAME}/{ws}/archives/**/*`,
         `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`,
     ],
+    // A repair is recorded like a run, and may amend a specification or open a maintenance phase.
+    'magic.fix': [
+        `${STATE_DIR_NAME}/{ws}/TASKS.md`,
+        `${STATE_DIR_NAME}/{ws}/STATE.md`,
+        `${STATE_DIR_NAME}/{ws}/PLAN.md`,
+        `${STATE_DIR_NAME}/{ws}/archives/**/*`,
+        `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`,
+        `${STATE_DIR_NAME}/{ws}/specifications/**/*.md`,
+        `${STATE_DIR_NAME}/{ws}/INDEX.md`,
+    ],
     'magic.rule': [`${STATE_DIR_NAME}/RULES.md`, `${STATE_DIR_NAME}/{ws}/RULES.md`],
 };
 
@@ -62,6 +72,7 @@ const DEFAULT_CATEGORIES = {
     'magic.plan': 'Changed',
     'magic.task': 'Changed',
     'magic.run': 'Changed',
+    'magic.fix': 'Fixed',
     'magic.rule': 'Changed',
 };
 
@@ -358,8 +369,8 @@ function computeSignificance({ cwd, workflow, workspace, lastSnapshot }) {
         candidates = diffPaths;
     }
 
-    // /magicspec run extra filter: TASKS.md must show a real status flip.
-    if (workflow === 'magic.run' && probe.available) {
+    // /magicspec run and /magicspec fix extra filter: TASKS.md must show a real status flip.
+    if ((workflow === 'magic.run' || workflow === 'magic.fix') && probe.available) {
         candidates = candidates.filter((p) => {
             const tasksMd = `${STATE_DIR_NAME}/${workspace}/TASKS.md`;
             if (p === tasksMd) return tasksStatusActuallyChanged(cwd, p);

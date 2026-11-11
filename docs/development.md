@@ -47,6 +47,18 @@ node skills/magicspec/scripts/executor.js remove --help
 node scripts/sync.js --dry-run                              # preview the maintenance sync
 ```
 
+## Maintenance commands
+
+The repository has a second command, `/magicspec-dev <command> [argument]` (the colon spelling `/magicspec-dev:<command>` is read as text too). It is not part of the engine archive and the engine's `help` never lists it.
+
+| Command | What it does |
+| --- | --- |
+| `init` | Rebuilds the agent-facing links and the projections of the engine skill, per agent. Name every agent you use: a bare run removes the managed links it does not recreate |
+| `test` | Validates the engine by cognitive simulation and the regression suite |
+| `sync` | Synchronizes engine metadata, version anchors, links, registry metadata and documentation |
+| `release` | Validates, versions and triggers a GitHub Release |
+| `fix` | Carries error feedback about the engine — a pasted engine bug report, a pending feedback note, a failing harness case — from report to a verified repair: the shipped `fix` triage with the engine as the product, a harness case shown to fail without the repair, C14, and every maintained release line |
+
 ## Releasing
 
 `node scripts/release.js` prints the plan and what blocks it, and changes nothing. `node scripts/release.js --yes` publishes: the QA gate, C14 and the sync, one release commit of what they changed, the tag, and a push of the current branch and the tag. The tag push starts the public release workflow, so run it only when you mean to publish; the working tree must be clean and `CHANGELOG.md` must hold an entry for the version.

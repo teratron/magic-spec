@@ -34,6 +34,8 @@ function deriveChangelogCategory(workflow, files) {
             if (files.every((f) => f.status === 'deleted')) return 'Removed';
             return 'Changed';
         }
+        case 'fix':
+            return 'Fixed';
         case 'plan':
         case 'task':
         case 'run':
@@ -94,6 +96,11 @@ function buildChangelogBullet(workflow, workspace, files) {
             }
             if (tasks.length > 1) return `Completed ${tasks.length} tasks (${workspace})`;
             return `Updated task execution state (${workspace})`;
+        }
+        case 'fix': {
+            const tasks = files.filter((f) => f.path.includes('/tasks/'));
+            if (tasks.length > 1) return `Repaired ${tasks.length} reported defects (${workspace})`;
+            return `Repaired a reported defect (${workspace})`;
         }
         case 'rule': {
             const global = files.some((f) => f.path === `${STATE_DIR_NAME}/RULES.md`);

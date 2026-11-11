@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.3.4
+**Version:** 1.4.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -265,6 +265,17 @@ recheck: {
 
 `revalidate()` never mutates the sink and never calls `record()` — a dropped finding is simply absent from the array passed to `dedupe()`/`formatDigest()` next; DG-4's "exactly once" guarantee is unaffected because the finding was still drained from the sink exactly once, it is just not selected for rendering.
 
+### 4.11 Feedback Note Record `[ADDED]`
+
+[l1-agent-feedback.md](l1-agent-feedback.md) EF-1 keeps what an agent learns about the engine until it is delivered or discarded, which the sink (§4.4, §4.5) does not do: findings are drained by the digest, notes are not. The two are therefore separate files.
+
+- **File:** `.magicspec/.cache/feedback.json`, written by `lib/feedback.js` through an atomic rename; not among the caches `clean-cache` removes (the cache inventory of [l2-engine-automation.md](l2-engine-automation.md) lists it as not rebuildable). A file that cannot be read is set aside as `feedback.json.corrupt` once and the store starts empty.
+- **Store:** `{version, nextId, nextDraftId, notes[], drafts[]}`.
+- **Note:** `id` (`n{k}`), `kind` (`bug`, `missing-capability`, `improvement`, `docs`), `summary`, `tried`, `happened`, optionally `expected`, `suggestion`, `impact` (`blocked`, `workaround`, `minor`), `engineFile` (a path inside the skill folder), `code` (UPPER_SNAKE_CASE), `workflow`, then `recordedAt`, `draftId` and `offeredAt` once drafted or offered, and `evidence`: `engineVersion`, `findingCodes` (at most 10, from the sink), `os`, `runtime`, `host`, `failingScript` (only an executor command) and `exitStatus` (an integer).
+- **Draft:** `id` (`d{k}`), `fingerprint` (twelve hexadecimal characters of a hash of kind, engine file, code and workflow; a note with none of the three facts is hashed with its identifier), `noteIds`, `title`, `body`, `link` (or none), `createdAt`, `shownAt`, `offeredAt`.
+- **Limits (EF-5), named constants of `lib/feedback.js`:** summary 120 characters; tried 600; happened 1200; expected 600; suggestion 600; engine file 200; code 60; notes 40; drafts 20; the store 65,536 bytes, within which the evidence of the oldest notes gives way first. A text over its limit is rejected with the limit named. A report is cut at 12,000 characters saying by how many, and a link is offered only up to 6,000 (`lib/feedback-draft.js`).
+- **Channel:** `feedback.channel` of `workspace.json` — `full` (default), `draft`, `off`; an unrecognized value reads as `draft`.
+
 ## 5. Migration Inventory
 
 Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assigned severity and code. HALT-and-exit `console.error` sites are **excluded** by §2 of the parent spec — the run stops and the message is the outcome.
@@ -378,6 +389,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the concept specification declared that this specification gains the note record when it is built): §4.11 records the feedback note store — its file, its records and its limits — beside the findings sink, and says why the two are separate files. No requirement of the sink changed. |
 | 1.3.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.3.2 | 2026-10-28 | Agent | Reality sync: the `SKILL_SYNC_UNAVAILABLE` finding is retired with the wrapper sync it reported ([l2-engine-automation.md](l2-engine-automation.md) §Engine Meta Update Flow now refreshes projections instead). |

@@ -1,6 +1,6 @@
 # Defect Intake: the Fix Command
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -30,6 +30,8 @@ The owner's list of 2026-11-11 adds the engine's own side: error feedback about 
 - `fix` writes product code and SDD artifacts, under the same containment and review rules as `run`.
 - Beyond the command intake for a missing report (`l1-command-surface.md` CS-9, E7), it asks nothing (DA-2): a report too thin to reproduce is recorded as unreproduced with the evidence that would reproduce it, and the report says so.
 - **Assumption (forecast):** a fix is recorded as a task of the active phase — or of a maintenance phase when no phase is active — rather than in a separate fix ledger, so that progress, live memory and the archive stay truthful through the existing machinery. Runner-up: a separate fix log. Override: `/magicspec spec amend l1-fix-command.md "separate fix ledger"`.
+- **Assumption (forecast):** the route FX-11 names in the engine's repository, `/magicspec-dev fix`, is carried by the repository's own text — the constitution's C28 item 2 and the maintenance router — while the shipped router, body and scripts route to `/magicspec fix`: the maintenance set's specification forbids shipped text from naming the maintenance command, and the shipped `finalize` prints its next step from the router's table, which has no maintenance row. Runner-up: a shipped script prints the maintenance command when the developer predicate holds. Override: `/magicspec spec amend l1-fix-command.md "the developer predicate chooses the printed route in a shipped script"`.
+- **Assumption (forecast):** the override of FX-11 is the same text retyped to `spec`; a text already routed once in the conversation is not routed again, so the override cannot loop. Runner-up: a distinct override spelling. Override: `/magicspec spec amend l1-fix-command.md "a distinct override form"`.
 
 ## 3. Core Invariants
 
@@ -105,6 +107,7 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the two premises below are recorded in §2; no requirement changed). The user command is `workflows/fix.md`: triage Steps 1 to 4 (FX-1 to FX-5, the deciding question verbatim), grouping by confirmed cause, sibling sites with the `{k} fixed, {m} recorded` counts (FX-6), the repair as a task of the active phase under the identifier `T-{phase}F{nn}` — the next free number of the `F` track, so it never collides with the tracks the task workflow writes — gates by reference to the execution workflow's steps (FX-7), the check written first and seen to fail (FX-8). With no active phase the body makes the planning write as one step of its own stage (`l1-pipeline-stages.md` PS-1): one maintenance-phase entry through the plan workflow's write-back, the workbook and ledger row from the templates, `PLAN.md` written by no other route (PL-1). A confirmed cause inside the skill folder of an installed engine is classified External with a `bug` feedback note and nothing there is edited. The router row is group `quality & automation`, demand `deep`, the defect required (the open findings — `feedback list`: pending notes, then the findings no digest has shown — as the suggestions of the argument form); `finalize --workflow=fix` behaves as after a run (archives a finished maintenance phase, a `Fixed` changelog entry). The maintenance form is `skills/magicspec-dev/workflows/fix.md` (FX-10): the shipped triage followed unchanged plus seven engine steps; the shipped body names no maintenance step. |
 | 1.1.0 | 2026-11-11 | Agent | **The engine's side** (origin `user-stated`: the owner's list of commands of 2026-11-11 — error feedback goes through a maintenance `fix`, not through `spec`). New FX-10 (`/magicspec-dev fix`: the same triage with the engine as the product, plus the shipped-folder sibling search, a harness case shown to fail without the repair, C14 and every maintained release line) and FX-11 (a defect report given to `spec` is routed to `fix` with a `[DR]` line). The user command is unchanged (forecast in [l1-command-surface.md](l1-command-surface.md) §2). Amendment Rule: `Stable → RFC`. |
 | 1.0.2 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.1 | 2026-10-30 | Agent | Clarification (no requirement changed): `fix` typed without a report asks for one through the command intake of [l1-command-surface.md](l1-command-surface.md) 2.0.0 (E7); a thin report still asks nothing. |

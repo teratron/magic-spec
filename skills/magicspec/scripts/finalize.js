@@ -16,6 +16,7 @@ const {
     STATE_DIR_NAME,
     WORKSPACE_NAME_RE,
     unregisteredWorkspaceMessage,
+    hasEngineWriteTooling,
 } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
@@ -34,6 +35,7 @@ const { findPendingWork } = require('./lib/pending-work');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
+const feedback = require('./lib/feedback');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // FINALIZATION PROTOCOL (Post-Workflow Orchestrator)
@@ -58,7 +60,7 @@ const projectRoot = resolveProjectRoot();
 const designCacheDir = statePath(projectRoot, '.cache');
 const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
-const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule']);
+const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule', 'fix']);
 
 /**
  * The words finalize uses to tell the user that the SC-2 state update was
@@ -236,6 +238,29 @@ function noteArchivalOff(wsDir) {
 const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
 
 /**
+ * In the engine's own repository the notes the agent recorded are a work queue (EF-12): while
+ * any wait, the next step is `/magicspec fix` with them. A step that sends the plan to be revalidated
+ * (`Run /magicspec plan …`: a pending directive, a stale plan, a plan to update) keeps its place,
+ * because a repair is recorded in a phase of a plan that must stand; the open-ended "plan new scope"
+ * and "nothing pending" states do not.
+ *
+ * @param {string} workspace - Workspace name.
+ * @param {string} wsDir - The workspace design directory (`<project>/<state folder>/<workspace>`).
+ * @param {string} next - The next step the plan state computed.
+ * @returns {string} `next`, or the work-queue step.
+ */
+function workQueueFirst(workspace, wsDir, next) {
+    try {
+        if (!hasEngineWriteTooling() || /^Run \/magicspec plan\b/.test(next)) return next;
+        const count = feedback.pendingCount(path.resolve(wsDir, '..', '..'));
+        if (count === 0) return next;
+        return `Run /magicspec fix ${workspace} to work through ${count} pending feedback note${count === 1 ? '' : 's'}`;
+    } catch {
+        return next; // a fault in the channel never changes a workflow's result (EF-11)
+    }
+}
+
+/**
  * Computes the post-workflow `Next Action` for STATE.md and enforces the §5
  * reserved-command invariant on the result.
  *
@@ -245,7 +270,7 @@ const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
  * A violation degrades to the planning funnel with a warning — `finalize` is
  * non-blocking by contract and must never abort over a recommendation string.
  *
- * @param {string} workflow - `spec|plan|task|run|rule`.
+ * @param {string} workflow - `spec|plan|task|run|rule|fix`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [plan] - A {@link classifyPlanState} result already read by the
@@ -253,7 +278,7 @@ const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
  * @returns {string}
  */
 function computeNextAction(workflow, workspace, wsDir, plan) {
-    const next = synthesizeNextAction(workflow, workspace, wsDir, plan);
+    const next = workQueueFirst(workspace, wsDir, synthesizeNextAction(workflow, workspace, wsDir, plan));
     if (RESERVED_COMMAND_RE.test(next)) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
@@ -509,7 +534,7 @@ function classifyPlanState(wsDir) {
  *
  * Callers should use {@link computeNextAction}, which applies the §5 guard.
  *
- * @param {string} workflow - `spec|plan|task|run|rule`.
+ * @param {string} workflow - `spec|plan|task|run|rule|fix`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [classified] - A pre-read {@link classifyPlanState} result.
@@ -958,6 +983,21 @@ function handoffLine(nextAction, workspace) {
 }
 
 /**
+ * The block of pending feedback notes, between the digest and the next step. A fault in the
+ * channel costs the block and nothing else (EF-11).
+ *
+ * @param {boolean} [dryRun] - A preview records no offer.
+ * @returns {string|null} The block, or null.
+ */
+function pendingNotesBlock(dryRun) {
+    try {
+        return feedback.pendingBlock({ developer: hasEngineWriteTooling(), dryRun: Boolean(dryRun), root: projectRoot });
+    } catch {
+        return null;
+    }
+}
+
+/**
  * Renders the terminal block shared by both finalize exit paths, in a fixed
  * order (DG-5): the engine diagnostics digest
  * (omitted entirely when there is nothing to report — DG-7), then the next
@@ -979,6 +1019,8 @@ function emitTail(ctx) {
     const blocks = [];
     const digest = diagnostics.formatDigest(findings);
     if (digest.length > 0) blocks.push(digest.join('\n'));
+    const notes = pendingNotesBlock(ctx.dryRun);
+    if (notes) blocks.push(notes);
     if (nextAction) {
         // The handoff line follows the step it summarizes, once: the next command, its argument, its demand.
         const handoff = handoffLine(nextAction, workspace);
@@ -1103,7 +1145,7 @@ function main() {
         const findings = diagnostics.revalidate(
             opts.dryRun ? diagnostics.read() : diagnostics.drain(),
         );
-        emitTail({ nextAction: stateResult.nextAction, workspace, findings });
+        emitTail({ nextAction: stateResult.nextAction, workspace, findings, dryRun: opts.dryRun });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
             lastWorkflow: `magic.${opts.workflow}`,
@@ -1158,9 +1200,10 @@ function main() {
         }
     }
 
-    // ── Phase archival (/magicspec run only) ─────────────────────────────────────
+    // ── Phase archival (/magicspec run and /magicspec fix) ───────────────────────
+    // A repair that finished a maintenance phase archives it as a run does.
     let archivedPhases = [];
-    if (opts.workflow === 'run') {
+    if (opts.workflow === 'run' || opts.workflow === 'fix') {
         try {
             const archiveResult = isArchivalEnabled()
                 ? archiveCompletedPhases(wsDir, { dryRun: opts.dryRun })
@@ -1220,7 +1263,7 @@ function main() {
         stateResult,
         diagnosticsCount,
     });
-    emitTail({ nextAction: stateResult.nextAction, workspace, findings });
+    emitTail({ nextAction: stateResult.nextAction, workspace, findings, dryRun: opts.dryRun });
 
     const nextState = {
         lastVersion: next,
@@ -1239,6 +1282,7 @@ function main() {
 module.exports = {
     main,
     computeNextAction,
+    workQueueFirst,
     RESERVED_COMMAND_RE,
     classifyPlanState,
     reconcileStatus,

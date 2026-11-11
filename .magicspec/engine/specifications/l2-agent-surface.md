@@ -1,6 +1,6 @@
 # Agent Surface Architecture
 
-**Version:** 2.0.1
+**Version:** 2.0.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -33,7 +33,7 @@ The `.agents/` surface consists of three domains:
 ### 2.2 Skills (`.agents/skills/`)
 
 - **The engine skill:** `magicspec`, a directory link to `skills/magicspec/` (§4, link table). It is the one place Codex and Qwen Code read the skill from, and Claude Code reaches it through `.claude/skills`.
-- **Maintenance skills:** `magicspec-dev` (a link to `skills/magicspec-dev/`, the router and the four maintenance workflows; its command entries are written by `scripts/init/project-dev-skill.js`) and hand-crafted ones (`eval-prompts`, `reference-mining`). Each skill folder contains a `SKILL.md` (following the standard tool manifest layout). All are authored; nothing here is generated except the entries.
+- **Maintenance skills:** `magicspec-dev` (a link to `skills/magicspec-dev/`, the router and the five maintenance workflows; its command entries are written by `scripts/init/project-dev-skill.js`) and hand-crafted ones (`eval-prompts`, `reference-mining`). Each skill folder contains a `SKILL.md` (following the standard tool manifest layout). All are authored; nothing here is generated except the entries.
 
 ### 2.3 Rules (`.agents/rules/`)
 
@@ -88,6 +88,7 @@ A directory link leads to the real folder, so an edit through it is an edit of t
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.0.2 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 51): the maintenance skill has five workflows — `init`, `test`, `sync`, `release` and `fix` — and its command entries, written by `scripts/init/project-dev-skill.js` from the three-column table of its router, include `fix`. |
 | 2.0.1 | 2026-10-28 | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |
 | 2.0.0 | 2026-10-28 | The link inventory follows the single-skill layout ([l2-skill-layout.md](l2-skill-layout.md) §5.6, §5.9): hardlink groups 2 (`rules/*.md`) and 3 (`workflows/*.md`) are retired because neither side exists — the always-on rule is generated from `AGENT-RULES.md` and the command surface lives in the skill folder — and a **directory-link table** replaces them (`.agents/skills/magicspec` → `skills/magicspec`; a link is checked as a link, by `lstat` and real path). Group 1 (the AGENTS family) is unchanged and `[C-001]` keeps naming it. §2 now describes what `.agents/` holds: the link, the projections `init --host` generates, and the maintenance workflows and skills. Editing a file through a directory link edits the real file, so the delinking hazard that motivated groups 2 and 3 is gone for the engine content. Status reverted `Stable → RFC` (Amendment Rule, major) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.1.0 | 2026-08-28 | Added §4 Linked-Pair Inventory & Validation Invariant — the complete, closed list of three hardlink groups (AGENTS family, `rules/`, `workflows/`) that `validate-hardlinks.js` and `[C-001]` must both cover, plus the explicit exclusion of `skills/` (independently generated, not a hardlink). Authored after a production gap: the `workflows/` group existed unguarded by either enforcement surface, so an edit delinked it silently and the skill generator shipped a stale artifact while every integrity check passed. Corrected §2.1 and §2.3, which had described the `.agents/workflows/` and `.agents/rules/` mechanism imprecisely (§2.3 called `.agents/rules/` "Reserved" though it has been an active hardlink target since before this spec's 1.0.0). Canonical References table cross-referenced to §4. |

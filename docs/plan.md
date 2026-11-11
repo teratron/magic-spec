@@ -102,4 +102,4 @@ After every planning session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-11 (v3.0.50).
+Synchronized with engine workflows on 2026-11-11 (v3.0.71).

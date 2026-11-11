@@ -12,5 +12,8 @@
   },
   "archival": {
     "enabled": true
+  },
+  "feedback": {
+    "channel": "full"
   }
 }

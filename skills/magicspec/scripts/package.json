@@ -2,5 +2,6 @@
   "type": "commonjs",
   "engines": {
     "node": ">=18"
-  }
+  },
+  "repository": "https://github.com/teratron/magic-spec"
 }

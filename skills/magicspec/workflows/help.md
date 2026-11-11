@@ -59,6 +59,8 @@ Usage: /magicspec <command> [argument]
 Pipeline
   spec       <idea | amend <file> | stabilize>   Create, amend and check specifications
   ...
+Quality & automation
+  fix        <defect>                           Triage and repair reported defects
 Health
   status     [workspace]                        Brief a session on where the project stands
 
@@ -96,11 +98,11 @@ The picker has one choice per command, `help` excepted, and the recommended comm
 
 For a command chosen in the picker that takes an argument, and for a command whose required argument is missing:
 
-1. Take the command's row from the table. Its *When it is missing* cell names the suggestions and the default; the command's own body defines how they are computed (`spec`: *Blank Trigger*; `rule`: *Missing Rule Text*).
+1. Take the command's row from the table. Its *When it is missing* cell names the suggestions and the default; the command's own body defines how they are computed (`spec`: *Blank Trigger*; `rule`: *Missing Rule Text*; `fix`: its *Entry*, the open findings).
 2. **Form**: a text entry, with the suggestions as choices where the command has them, the recommended one first and marked. For an optional argument the first choice runs the default and names it. A form that cannot hold a text entry on its own takes free text through its free-text choice; an argument with no suggestion at all is asked for in the chat in one message. A host with no form gets the suggestions as a numbered list and the line *or type your own*.
 3. **Required**: nothing runs until the argument is given. **Optional**: the default runs when the user takes the first choice.
 4. **Cancel**: a dismissed form runs nothing; say so in one line.
-5. Free text entered in a form is read exactly as a typed argument is.
+5. Free text entered in a form is read exactly as a typed argument is: it passes the Input Pass before the command runs (the line of the Entry section), and a suggestion the person chooses is engine-made text and passes none.
 
 ### 5. Hand Over
 

@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.7.2
+**Version:** 3.8.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -46,7 +46,7 @@ The finalization protocol (§3 of `skills/magicspec/AGENT-RULES.md`) requires se
 All modules are internal — they export functions consumed only by `finalize.js`. No workflow or spec file should reference individual `lib/` modules directly. The public API is:
 
 ```plaintext
-executor.js finalize --workflow=<spec|plan|task|run|rule> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
+executor.js finalize --workflow=<spec|plan|task|run|rule|fix> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
 ```
 
 `--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magicspec task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `skills/magicspec/AGENT-RULES.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
@@ -197,6 +197,16 @@ The `magic.spec` whitelist gains `.magicspec/RULES.md` and `.magicspec/{ws}/RULE
 
 A fixture in which only `RULES.md` changed, run under `--workflow=spec`: significant, version bumped, changelog entry written. Control: the same change under `--workflow=task` stays non-significant.
 
+## 11. The Fix Workflow and the Pending Notes `[ADDED]`
+
+- **`--workflow=fix`** is accepted. It finalizes as a run does: the same filter that counts a ledger change only when a status flipped, and phase archival after a repair that finished a maintenance phase. Its whitelist (`magic.fix`) is the ledger, `STATE.md`, `PLAN.md`, `archives/**`, `tasks/**/*.md`, `specifications/**/*.md` and `INDEX.md` of the workspace — a repair may amend a specification or open a maintenance phase. The category is `Fixed` and the changelog bullet `Repaired a reported defect ({ws})` or `Repaired {n} reported defects ({ws})`: no identifier of the project travels into its changelog. The next step follows the plan state exactly as after a run.
+- **Pending notes.** After the diagnostics digest and before the next step, `finalize` prints `### Feedback notes` when notes are pending and the channel is not `off` ([l1-agent-feedback.md](l1-agent-feedback.md) EF-10). Each note or draft is offered once — the first listing says to run `feedback draft`, show the complete report and ask submit, keep as text or discard (the channel `draft` drops submission), and records `offeredAt`; later listings name the same items as offered and do not ask again. A preview (`--dry-run`) lists, records nothing and attempts no write. A fault in the store costs the block, never the workflow (EF-11).
+- **The work queue (EF-12).** Where the developer-repository predicate holds the block is `### Feedback notes — fix candidates`, nothing is drafted or offered, and the persisted `Next Action` — printed once more as the handoff line — is `Run /magicspec fix {ws} to work through {n} pending feedback notes` while any wait, unless the plan state's step is a `Run /magicspec plan …` step (a pending directive, a stale plan, a plan to update), which keeps its place; the open-ended plan-complete states do not. The shipped script prints the user command, never the maintenance one.
+
+### 11.1 Regression Coverage
+
+A fixture of a repair that finished a maintenance phase (archived, a `Fixed` entry, the version bumped); the accepted-workflow list in the refusal and in the help; the offer once, the preview, the channel `off`, a broken store, a consumer project whose next step stays the plan state; the work queue in a fixture with the maintenance tooling, its precedence in isolation, an empty queue and a switched-off channel.
+
 ## Canonical References
 
 | Path | Role |
@@ -216,7 +226,8 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
-| 3.7.2 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). `finalize` accepts `--workflow=<spec|plan|task|run|rule>`; the significance whitelist has a `plan` row (the plan file) and the `task` row no longer lists it, and the changelog has a bullet for a plan; the synthesized `Next Action` follows `spec` → `plan` → `task` → `run` with a pending replan directive first; the reader of the directive and the predicates it shares with `check-prerequisites` (the undecomposed phase, the ledger behind the plan, the constitution gap) are in `lib/pending-work.js`; and the finalization output ends with the handoff line of [l1-pipeline-stages.md](l1-pipeline-stages.md), printed once by the script after the summary and before the Completion Checklist. |
+| 3.8.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the requirements were declared by the command surface's finalization list and by the feedback channel's EF-10 and EF-12; this record follows): §11 records `--workflow=fix` — valid, finalized like a run (the same status-flip filter on the ledger, phase archival), with its own whitelist row (the ledger, the live state, the plan, the archives, the workbooks, the specifications and the registry), the category `Fixed` and the bullet `Repaired a reported defect ({ws})` — and the pending feedback notes: a block between the digest and the next step, each note or draft offered once and then named as offered, nothing printed for the channel `off`, nothing written by a preview, and in the developer repository a list of fix candidates with the persisted next step `Run /magicspec fix {ws} to work through {n} pending feedback notes` unless the plan state says `Run /magicspec plan …`. |
+| 3.7.2 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). `finalize` accepts `--workflow=<spec \| plan \| task \| run \| rule>`; the significance whitelist has a`plan` row (the plan file) and the `task` row no longer lists it, and the changelog has a bullet for a plan; the synthesized `Next Action` follows `spec` → `plan` → `task` → `run` with a pending replan directive first; the reader of the directive and the predicates it shares with `check-prerequisites` (the undecomposed phase, the ledger behind the plan, the constitution gap) are in `lib/pending-work.js`; and the finalization output ends with the handoff line of [l1-pipeline-stages.md](l1-pipeline-stages.md), printed once by the script after the summary and before the Completion Checklist. |
 | 3.7.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 3.7.0 | 2026-10-29 | Agent | New **Configured Paths Stay Inside the Project**: `finalization.versionPath` and `finalization.changelogPath` must name a file inside the project (relative, no `..` or link that leaves it) or `finalize` refuses before writing; the check is one shared function, `utils.resolveInsideProject`. |
 | 3.6.3 | 2026-10-29 | Agent | Reality sync: the bullet composer is `lib/changelog-bullets.js` (renamed from `commit-suggester.js`, whose name described the commit-message feature retired in 3.0.0 of this specification). No requirement changed. |

@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.57.0
+**Version:** 1.58.0
 **Generated:** 2026-11-11
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.56.3
-**Based on RULES:** .magicspec/RULES.md v1.20.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.57.0
+**Based on RULES:** .magicspec/RULES.md v1.21.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 51](archives/tasks/phase-51.md) | Defect Intake and Engine Feedback — `/magicspec fix` reproduces a reported defect, classifies it against the specifications by a closed rule, repairs it with a regression check left behind and traces it as a task, and a defect report given to `spec` is routed to it; the engine feedback channel (notes recorded while the agent works, scrubbed drafts, a copy, a link or an approved submission to the public tracker, a work queue in the engine repository); the maintenance `fix` and the maintenance router with five commands, the constitution's C11 and C28 following; the text an argument form returns passes the Input Pass | `Done (Archived)` |
 | [Phase 50](archives/tasks/phase-50.md) | Review Gates — before a specification or a plan is finalized it is compared with every artifact sharing a mechanic with it (the `spec-critic` and `planner` cards, the Post-Update Review and the Planning Audit, ventilation resolving the same four classes, declared supersession in the template); every piece of human prose arriving with a command passes through the `prompt-engineer` input pass first (its protocol once in the card, one line in each of the ten shipped and four maintenance bodies, comprehension of the intake gate in its stance, the C24 row through `/magicspec rule`), with the documentation, the suite and the harness following | `Done (Archived)` |
 | [Phase 49](archives/tasks/phase-49.md) | Planning Split and Stage Boundaries — `plan` owns the plan and replanning, `task` owns decomposition and hands findings back to `plan` as a directive; every pipeline command performs one stage and ends by naming the next with its reasoning demand, so a model can be switched between stages; the router gains `plan`, the demand column and the `audit` alias, `help` explains itself once, `finalize` knows `plan`, the replan rule, the constitution (C9, C24, C2), the role cards, the documentation and the suite follow | `Done (Archived)` |
 | [Phase 48](archives/tasks/phase-48.md) | Independent Hardening — every command routes to one workspace by one engine-computed chain (`resolve-workspace`: argument, environment, paths against each scope, topic, work in flight, default), narrated once and writing only into registered folders; every cache has an owner that prunes it and `clean-cache` removes the rebuildable ones; the security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules, the policy's response times decided by forecast, the release checking the policy's supported-versions table | `Done (Archived)` |

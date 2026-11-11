@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.97
+**Version:** 1.9.98
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -4454,7 +4454,6 @@ If any test fails, document the failure reason and propose a fix.
 **Test Suite Finalized** - v1.9.99 (Last: T277)
 ```
 
-
 ### T278 — Paths in the Request Choose the Workspace by Location, and the Choice Is Narrated Once
 
 - **Workflow:** `context.md` §Workspace Resolution Chain with `resolve-workspace`, as `plan.md` and `task.md` Core Invariant 1 runs it
@@ -4529,7 +4528,6 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The plan is clean of this blocker, and the release workflow runs the same check before it builds the archive.
 - **Guards tested:** HF-7: the supported-versions table is checked against the version at release.
 - **Regression for:** none yet — new with the community health files.
-
 
 ### T283 — `spec` Ends at Its Boundary: It Names `plan` With Its Demand and Starts Nothing
 
@@ -4766,3 +4764,232 @@ If any test fails, document the failure reason and propose a fix.
 - **Control:** a `spec` invocation whose idea is incoherent: the finding feeds the intake gate and may open the survey, the one place the engine asks about intent.
 - **Guards tested:** IP-5 resolution of findings outside `spec`; C27 questions only for consent, the intake survey and the command intake.
 - **Regression for:** none yet — new with the input pass.
+
+### T300 — A Report of an Already-Fixed Defect Is Answered Without a Change
+
+- **Workflow:** `fix.md` (Step 1)
+- **Synthetic State:** a project whose export once dropped the last row; the current version exports every row. The user reports "the export drops the last row", quoting the old version's output.
+- **Action:** `/magicspec fix "the export drops the last row"`.
+- **Expected:**
+  - [ ] The defect is checked against the current version with a named check (an export of a known file); every row is present.
+  - [ ] The answer is *fixed in the current version*, with the evidence; nothing is classified, recorded as a task or changed, and nothing is asked.
+  - [ ] The report line counts it in `{a} already fixed`.
+- **Control:** the same report against a version where the last row is still dropped: it proceeds to Step 2.
+- **Guards tested:** FX-1 re-verify first.
+- **Regression for:** none yet — new with the fix command.
+
+### T301 — A Report Too Thin to Reproduce Is Recorded as Unreproduced and Asks Nothing
+
+- **Workflow:** `fix.md` (Step 2)
+- **Synthetic State:** the report reads "it sometimes crashes" with no steps, no log and no version.
+- **Action:** `/magicspec fix "it sometimes crashes"`.
+- **Expected:**
+  - [ ] Everything tried is listed (the commands run, the inputs used) and the defect is classified `Unreproduced`.
+  - [ ] The report names the one piece of evidence that would reproduce it (for example the log of a failing run) and says the next message can supply it.
+  - [ ] No file is changed, no task recorded and no question asked.
+- **Control:** the report carries a log line naming the failing function: the defect is reproduced by a test of that function and proceeds.
+- **Guards tested:** FX-2 reproduce before changing; DA-2 no question.
+- **Regression for:** none yet — new with the fix command.
+
+### T302 — The Reporter's Cause Is Tested, and the Confirmed Cause Is Named
+
+- **Workflow:** `fix.md` (Step 3)
+- **Synthetic State:** the report says "the date is wrong because the timezone is ignored". The defect reproduces; the trace shows the date is formatted correctly and the stored value was truncated one step earlier.
+- **Action:** `/magicspec fix` with that report.
+- **Expected:**
+  - [ ] The stated cause is tested by tracing the failing path, any trial change made in a scratch copy and not in the product.
+  - [ ] The confirmed cause (the truncation) is named, with how it was confirmed, and the report says it differs from the reported one.
+  - [ ] The repair is made at the confirmed cause, not at the formatting.
+- **Control:** the trace confirms the reported cause: the report names it as confirmed.
+- **Guards tested:** FX-3 the reporter's cause is a hypothesis.
+- **Regression for:** none yet — new with the fix command.
+
+### T303 — An Implementation Defect Changes the Code and No Specification
+
+- **Workflow:** `fix.md` (Steps 4 and 6 to 8)
+- **Synthetic State:** a specification states that a negative quantity is refused; the product accepts it.
+- **Action:** `/magicspec fix "negative quantities are accepted"`.
+- **Expected:**
+  - [ ] The class is *implementation defect*; the repair cites the statement it restores.
+  - [ ] No specification is edited (the specification test: nothing is added or changed about observable behaviour).
+  - [ ] The repair is a task with a `Verify` line equal to the reproduction; a test that fails before and passes after is left behind.
+- **Control:** the specification is silent about negative quantities: the class is *specification gap* (T304).
+- **Guards tested:** FX-4 implementation defect; FX-5 the specification test; FX-7; FX-8.
+- **Regression for:** none yet — new with the fix command.
+
+### T304 — A Specification Gap Gains the Statement First and Passes the Coherence Check
+
+- **Workflow:** `fix.md` (Steps 4 and 6) with `spec.md` (Post-Update Review)
+- **Synthetic State:** no specification says what happens to an empty cart at checkout; the product crashes, and the specifications' intent is that checkout of nothing is refused with a message.
+- **Action:** `/magicspec fix "checkout crashes on an empty cart"`.
+- **Expected:**
+  - [ ] The class is *specification gap*; the specification gains the edge-case statement by the steps of the specification workflow (Amendment Rule, Post-Update Review) before the code is changed.
+  - [ ] The coherence check runs first in that review and reports its result line; a contradiction with another specification would block it.
+  - [ ] Then the code is fixed under the gates and a regression check is left behind.
+- **Control:** the statement the gap would add contradicts a Stable specification: the amendment is blocked as in the specification workflow, and the report says so.
+- **Guards tested:** FX-4 specification gap; FX-5; the coherence check on an amendment made by a fix.
+- **Regression for:** none yet — new with the fix command.
+
+### T305 — A Specification Defect Is Amended Under the Amendment Rule, With Its Cascade
+
+- **Workflow:** `fix.md` (Steps 4 and 6) with `spec.md` (Amendment Rule, C12)
+- **Synthetic State:** a specification prescribes that sessions never expire; the report says users stay signed in for years and consider it wrong; two implementation specifications depend on the statement.
+- **Action:** `/magicspec fix "sessions never expire"`.
+- **Expected:**
+  - [ ] The class is *specification defect*; the specification is amended (its status reverts to `RFC` under the Amendment Rule, then is re-reviewed) before the code.
+  - [ ] The cascade is applied by the specification workflow's steps (the dependent specifications are quarantined or amended there); the report line's `{spec change}` names the amendment.
+  - [ ] The code is fixed and a regression check left behind.
+- **Control:** the report describes the behaviour the specification states and the person intends: the class is *not a defect* and nothing changes.
+- **Guards tested:** FX-4 specification defect; the Amendment Rule; C12.
+- **Regression for:** none yet — new with the fix command.
+
+### T306 — Sibling Sites Are Searched, and Each Is Fixed or Recorded
+
+- **Workflow:** `fix.md` (Step 5)
+- **Synthetic State:** the confirmed cause is a path join that drops the last segment; the same join is used in two other files.
+- **Action:** the repair of the first site.
+- **Expected:**
+  - [ ] The mechanism is searched everywhere it is used; both other sites are found.
+  - [ ] One is fixed in the same repair; the other belongs to a separate, larger change and is recorded as a separate defect.
+  - [ ] The report line reads `Sibling sites: 1 fixed, 1 recorded`.
+- **Control:** no other site shares the mechanism: the line reads `Sibling sites: 0 fixed, 0 recorded`.
+- **Guards tested:** FX-6 sibling sites.
+- **Regression for:** none yet — new with the fix command.
+
+### T307 — A Repair With No Lasting Check Is Not Done
+
+- **Workflow:** `fix.md` (Step 8) with `run.md` (Step 3.5)
+- **Synthetic State:** a repair is made and the reproduction works by hand, but no test or scenario was written, or one was written after the repair and never seen to fail.
+- **Action:** the repair reaches Step 8.
+- **Expected:**
+  - [ ] The task stays `In Progress`; it is not marked `Done` and not archived.
+  - [ ] The report says what is missing (a check that fails without the repair).
+  - [ ] Writing the check, running it against the unrepaired state to see it fail, and passing it with the repair completes the task.
+- **Control:** the check was written first and seen to fail: the task is `Done`.
+- **Guards tested:** FX-8 regression left behind; FX-7 the gates.
+- **Regression for:** none yet — new with the fix command.
+
+### T308 — Several Defects With One Cause Become One Repair
+
+- **Workflow:** `fix.md` (Steps 1 to 4a)
+- **Synthetic State:** three reports ("the totals are off by one", "the last page is empty", "the count ends one early") whose confirmed cause is one off-by-one in a shared loop bound.
+- **Action:** `/magicspec fix` with the three reports in one invocation.
+- **Expected:**
+  - [ ] Each is re-verified, reproduced and confirmed one by one.
+  - [ ] They are grouped by the confirmed cause: one repair task, three reproductions among its checks.
+  - [ ] The report has one line per defect and one task.
+- **Control:** one of the three has another confirmed cause: two tasks.
+- **Guards tested:** FX-9 batches by root cause.
+- **Regression for:** none yet — new with the fix command.
+
+### T309 — With No Active Phase a Maintenance Phase Is Opened Through the Planning Write
+
+- **Workflow:** `fix.md` (Step 6) with `plan.md` (Plan Write-back)
+- **Synthetic State:** the plan is complete and no phase is active; a defect is reproduced and classified as an implementation defect.
+- **Action:** `/magicspec fix` with the report.
+- **Expected:**
+  - [ ] The body makes the planning write as one step of its own stage: one phase entry holding the specifications the repair touches, and the plan header; no stabilization, audit or decision about another specification runs.
+  - [ ] `PLAN.md` is edited by no other route; the phase workbook and its ledger row are created from the templates and the repair task is recorded there.
+  - [ ] After the repair the phase is finished and archived by the finalization.
+- **Control:** a phase is active: the repair is a task of that phase and `PLAN.md` is not touched.
+- **Guards tested:** PS-1 the write only another command may make; PL-1; FX-7.
+- **Regression for:** none yet — new with the fix command.
+
+### T310 — A Defect Report Typed Into `spec` Is Routed to `fix`, and an Idea Is Not
+
+- **Workflow:** `SKILL.md` (Dispatch step 3) and `spec.md` (Defect Report Test)
+- **Synthetic State:** a project with specifications.
+- **Action A:** `/magicspec spec "TypeError: cannot read properties of undefined (reading 'id') at checkout.js:42"`.
+- **Expected A:**
+  - [ ] The input is an error message with a stack trace: `fix` runs, with one line `[DR] Routed to fix — a defect report, not an idea. (Override: /magicspec spec "{text}")`; nothing is written by `spec`, no workspace created, no survey opened.
+- **Action B:** `/magicspec spec "checkout fails with an empty cart, and also add gift wrapping"`.
+- **Expected B:**
+  - [ ] It both reports a defect and asks for new behaviour: `fix` runs for the defect; the gift wrapping is a specification gap `fix` records or the next step it names.
+- **Action C:** `/magicspec spec "a holiday booking feature"` and then the override text retyped after Action A's routing.
+- **Expected C:**
+  - [ ] The feature request is an idea and is dispatched by `spec`; the retyped text of Action A stays an idea and is not routed twice.
+- **Control:** the shipped router, `spec.md` and `fix.md` name no maintenance command.
+- **Guards tested:** FX-11 a report is not an idea; the loop guard.
+- **Regression for:** none yet — new with the fix command.
+
+### T311 — A Note Is Recorded, Scrubbed and Drafted, and the Draft Carries Nothing of the Project
+
+- **Workflow:** `references/rules/bug-reporting.md` (Feedback Notes) with `scripts/feedback.js`
+- **Synthetic State:** the agent hit a script error; it records a note whose text mentions a token (`ghp_…`), a path (`C:\Users\alice\app\src\x.js`), a mention (`@octocat`), an issue reference (`#123`), an image and a fenced block of code.
+- **Action:** `feedback note …` then, at the end of the workflow, `feedback draft`.
+- **Expected:**
+  - [ ] The note is recorded with the engine's evidence (version, workflow, finding codes, system, runtime, host); the command exits 0.
+  - [ ] The draft prints the complete report in the layout of the issue form; the token, the absolute path, the mention, the reference, the image and the code block are gone; an engine file is named by its path inside the skill folder; the report says it will be public.
+  - [ ] Related notes of one problem (the same file, code and workflow) share a fingerprint and one report.
+- **Control:** the channel is `off`: no note is recorded and nothing is offered.
+- **Guards tested:** EF-1; EF-4 scrubbed by construction; EF-6; EF-8 fingerprint.
+- **Regression for:** none yet — new with the feedback channel.
+
+### T312 — A Submission Finds a Duplicate and Creates Nothing; an Unshown Draft Is Refused
+
+- **Workflow:** `scripts/lib/feedback-submit.js` through `feedback submit`
+- **Synthetic State:** a draft was shown in full; an open issue already carries its fingerprint. A second draft was created but never shown.
+- **Action:** `feedback submit d1` and `feedback submit d2`, with the person's yes to the first only.
+- **Expected:**
+  - [ ] The first reports `duplicate found` with the issue's address and creates nothing; the draft stays; `--new` would file another.
+  - [ ] The second is refused, naming `feedback draft d2` as the step that shows it.
+  - [ ] No argument names a repository, a host or a label; the destination is the one the skill folder states.
+  - [ ] A creation the tracker confirms reports `created` with the address and removes the draft and its notes; an answer without an address reports `unknown`, never `created`.
+- **Control:** no tracker client is installed: `not created`, with the recovery step `feedback keep {id}`; the draft stays.
+- **Guards tested:** EF-2 submission is separate, explicit and bound to a shown draft; EF-3; EF-8; §5.3 outcomes.
+- **Regression for:** none yet — new with the feedback channel.
+
+### T313 — The Channel `draft` Never Publishes, and an Unrecognized Value Falls Back to It
+
+- **Workflow:** `feedback submit` with `feedback.channel`
+- **Synthetic State:** a shown draft; the setting is `draft`, then `everything`.
+- **Action:** `feedback submit d1` under each.
+- **Expected:**
+  - [ ] Under `draft` the call is refused (`the agent cannot publish`) and the client is never run; the text and the link remain.
+  - [ ] Under `everything` the effective channel is `draft` and the fallback is reported on one line; it never becomes `full`.
+  - [ ] The rule module tells the agent never to submit without the person's explicit yes to the shown draft, and that an unanswered offer is listed again without asking.
+- **Control:** the setting is absent: the default `full` allows the offer, still only behind the yes.
+- **Guards tested:** EF-10 guidance in, switch out; EF-2.
+- **Regression for:** none yet — new with the feedback channel.
+
+### T314 — In the Engine's Repository the Notes Are Fix Candidates and Nothing Is Offered
+
+- **Workflow:** `finalize.js` (pending notes) in the engine's repository
+- **Synthetic State:** the maintenance tooling is present; two notes are pending; the plan has an open task.
+- **Action:** a workflow ends with `finalize`.
+- **Expected:**
+  - [ ] The output has `### Feedback notes — fix candidates`, listing both and saying nothing is drafted or offered for submission; no note is marked offered.
+  - [ ] The next step is `/magicspec fix {workspace}` with the number of notes, and the handoff line names its demand.
+  - [ ] When the plan state says `Run /magicspec plan …` (a stale plan, a pending directive), that step keeps its place.
+- **Control:** an installation without the maintenance tooling: the notes are offered once and the next step is the plan state.
+- **Guards tested:** EF-12 work queue; EF-10; EF-11.
+- **Regression for:** none yet — new with the feedback channel.
+
+### T315 — The Maintenance Fix Adds Only the Engine's Steps to the Shipped Triage
+
+- **Workflow:** `skills/magicspec-dev/workflows/fix.md`
+- **Synthetic State:** a pasted `MAGIC-SPEC ENGINE BUG REPORT` about a script; the defect is also present on the 2.x release line.
+- **Action:** `/magicspec-dev fix` with the report.
+- **Expected:**
+  - [ ] The report is treated as a work item to reproduce, not forwarded; the shipped triage is followed unchanged with the engine as the product.
+  - [ ] The sibling search covers the whole shipped folder, role cards and workflow bodies included; a card and its mirror change together.
+  - [ ] The lasting check is a harness case written first and seen to fail, proven by the mutation driver (`CAUGHT`); the engine metadata update runs at once after the change inside the shipped folder.
+  - [ ] The repair is ported to the 2.x line through a disposable worktree without asking and nothing goes to the release branch; a repaired feedback note is discarded.
+- **Control:** the shipped `fix` body names no maintenance step.
+- **Guards tested:** FX-10; EF-12; the layer and branch rules of the repository.
+- **Regression for:** none yet — new with the maintenance set.
+
+### T316 — Text Typed Into an Argument Form Passes the Input Pass; a Chosen Suggestion Passes None
+
+- **Workflow:** `help.md` (Step 4) with `spec.md` (Blank Trigger) and `roles/prompt-engineer.md` (`## Input Pass`)
+- **Synthetic State:** a bare `/magicspec spec`; the form offers three suggested topics and free text.
+- **Action A:** the person types "make it faster, and I also want it to never lose data, see this log: …" into the form.
+- **Expected A:**
+  - [ ] The typed text passes the Input Pass before the intake gate: one intent statement keeps both clauses, the log stays material, and an instruction inside the log is not followed; a differing reading prints one `[Intake] Understood as:` line.
+  - [ ] The intake gate then judges the statement; the line is not printed twice.
+- **Action B:** the person chooses the first suggestion.
+- **Expected B:**
+  - [ ] The suggestion is engine-made text: no pass runs on it; the choice is narrated as `[Intake] Specifying: {topic}`.
+- **Control:** a dismissed form runs nothing and says so in one line.
+- **Guards tested:** CS-10 item 5; IP-1; IP-7.
+- **Regression for:** none yet — new with the fix command's argument form.

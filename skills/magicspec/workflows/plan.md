@@ -51,7 +51,7 @@ Parse `[arg]` to determine the planning mode:
 
 | Input | Detection | Result |
 | --- | --- | --- |
-| *(empty)* | No argument | **Revalidation**: resolve the workspace via `context.md` §Workspace Resolution Chain, then re-evaluate the whole plan (Step 8, Update Mode) |
+| *(empty)* | No argument | **Revalidation**: resolve the workspace via `context.md` §Workspace Resolution Chain, then re-evaluate the whole plan (Steps 1–6, the Sync step being Update Mode) |
 | `{workspace}` | Matches a workspace name in `workspace.json` | **Scoped Revalidation**: only the specifications registered in that workspace's `INDEX.md` |
 | `"postpone phase 4"` | Quoted text, or text that matches no workspace name | **Guided Replanning**: the text is an order or membership directive (focus, filter, instruction) |
 | `{workspace} "only new specs"` | First token is a workspace, the rest is quoted text | **Scoped + Guided**: the directive applies within the workspace's scope |

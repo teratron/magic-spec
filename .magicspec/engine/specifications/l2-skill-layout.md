@@ -1,6 +1,6 @@
 # Skill Layout, Location Resolution & Delivery Order
 
-**Version:** 1.6.1
+**Version:** 1.6.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
@@ -188,7 +188,7 @@ The constitution's `.magic/`-named conventions (C1, C7, C14, C15, C28) are amend
 
 ## 7. Drawbacks & Alternatives
 
-- **One router description for seven commands** loses per-command selection by the host. The commands are used together in a fixed pipeline and are named in the router description; the cost is accepted and revisited if a host selects the skill wrongly in the verified-host table.
+- **One router description for every command** loses per-command selection by the host. The commands are used together in a fixed pipeline and are named in the router description; the cost is accepted and revisited if a host selects the skill wrongly in the verified-host table.
 - **Handoff metadata** that wrappers carried in frontmatter becomes prose at the end of each workflow; hosts that read handoffs from frontmatter lose the button, not the behavior.
 - **Moving everything in one release** was considered and rejected: the resolvers (step 1) are independently valuable, compatible with installs, and make the rest testable.
 - **A compatibility link from `.magic/` to the new folder** during the transition was rejected: the paths inside differ (`.magic/spec.md` becomes `workflows/spec.md`), so a link would hide breakage rather than prevent it.
@@ -206,6 +206,7 @@ The constitution's `.magic/`-named conventions (C1, C7, C14, C15, C28) are amend
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.2 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 51): the drawback "one router description for seven commands" no longer counts them — the router lists eleven, `fix` included, and the description names each; the host-limit case (at most 1,024 characters) keeps guarding it. |
 | 1.6.1 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). The `workflows/` listing of §2 names every command of the router: analyze, graph, help, migrate, plan, rule, run, spec, status, task. |
 | 1.6.0 | 2026-10-28 | Agent | Step 5 shipped: the state folder constant is `.magicspec` and the earlier name is spelled in one place (`LEGACY_STATE_DIR_NAME`, used by the executor guard and `migrate`); the engine reads `.magicspec/` and this repository's own workspace was renamed in the same step; the version file reads 3.0.0, the single release of steps 1 to 5. The delivery order is complete. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.5.1 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

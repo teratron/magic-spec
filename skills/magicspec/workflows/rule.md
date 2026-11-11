@@ -52,7 +52,7 @@ Examples: `/magicspec rule`, `/magicspec rule "tests are written before the code
 
 1. **Suggestions**: the conventions proposed by the most recent Advisory Report of `analyze` in this conversation (its Action Proposals), at most three, each with the evidence the report cited, ranked by DA-3 with the first marked recommended. No such report, or none that proposes a convention → the argument form is the free-text entry alone.
 2. **Origin**: a chosen suggestion is an agent-originated candidate and passes the Admission step in full; text the requester types is user-stated and is recorded at its stated strength (RA-5).
-3. **Collected**: the text continues at Operational Logic step 2. A dismissed form writes nothing and says so in one line.
+3. **Collected**: the text the person typed passes the Input Pass, then continues at Operational Logic step 2; a chosen suggestion is an engine-made candidate and passes no pass. A dismissed form writes nothing and says so in one line.
 
 ## Rule Tier Routing
 
