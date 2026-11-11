@@ -1,45 +1,49 @@
 # Security Policy
 
-This document describes the security policy for Magic Spec.
+This policy tells you which versions of Magic Spec receive security fixes and how to report a vulnerability.
 
-## Supported Versions
+## Supported versions
 
-The following versions are currently supported:
+Security fixes go to the latest minor line of the current major version only.
 
-| Version | Supported | Security Patches |
-| --- | --- | --- |
-| `v2.1.x` | Yes | Yes |
+| Version line | Supported |
+| --- | --- |
+| `3.0.x` | Yes |
+| `2.1.x` | No |
+| `2.0.x` | No |
+| `1.x` | No |
 
-## Reporting a Vulnerability
+If you use a line that is not supported, upgrade to the supported line before you report.
 
-If you discover a security vulnerability, please follow these steps to report it:
+## Report a vulnerability
 
-1. Create a **Public Bug Report** in the GitHub repository:
-   - Use the `Security Issue` template
-   - Clearly describe the vulnerability and the steps to reproduce it
-   - Include any relevant logs or error messages
+1. Do not open a public issue.
+2. Open the repository's **Security** tab and choose **Report a vulnerability**. The direct address is `https://github.com/teratron/magic-spec/security/advisories/new`.
+3. State the affected version. It is the content of `skills/magicspec/.version` in your project.
+4. Describe the steps to reproduce the problem, one numbered step at a time.
+5. Describe the impact: what an attacker can read, write, run or delete.
 
-2. **Do NOT use private security reports** - we prefer public transparency and discussion about security issues
+Reports are private until a fix is released.
 
-3. Our team will review the report and coordinate with you on a fix
+## What to expect
 
-## Supported Channels
+1. You get an acknowledgement within 7 days.
+2. You get a decision within 30 days: accepted, needs more information, or declined with the reason.
+3. An accepted report is fixed in a private branch and released as a patch version.
+4. The fix is disclosed in a published security advisory. The advisory credits you unless you ask us not to.
 
-For questions about security, please contact the maintainers:
+## Scope
 
-- [Report Security Issue](https://github.com/teratron/magic-spec/issues/new?template=security-issue.md)
-- Community Discussions: [GitHub Discussions](https://github.com/teratron/magic-spec/discussions)
+In scope:
 
-## Incident Response
+1. The scripts and files in the release archive of the engine.
+2. The installation, update, migration and removal of the engine in a project.
+3. The pre-commit hook that the engine installs.
+4. The workflows of this repository that build and publish a release.
 
-In the event of a security incident, we will follow these steps:
+Out of scope:
 
-1. Acknowledge the report publicly
-2. Investigate the vulnerability
-3. Develop a fix in a private branch
-4. Release a patch version with the fix
-5. Update this security policy
-
----
-
-*Last updated*: 2026-10-19
+1. The behaviour of an AI agent, its host or its model.
+2. Vulnerabilities in software that a project using the engine depends on.
+3. Reports that show no impact on a project that uses the engine.
+4. Findings that need write access to the engine folder of the project first.

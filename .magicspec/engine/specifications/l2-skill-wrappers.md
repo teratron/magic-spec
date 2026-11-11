@@ -1,6 +1,6 @@
 # L2 Specification: Router Skill & Host Surfaces
 
-**Version:** 3.1.1
+**Version:** 3.1.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -114,6 +114,7 @@ The release archive carries `skills/magicspec/`; the user places it in a host sk
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.1.2 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). The router's description names `plan` and `task` by what each does (the plan's order and membership, the decomposition into tasks) within the 1,024 characters and the Selection Signal rules, the table has seven columns with the demand, and the router lists exactly the workflows of its folder (ten commands, `audit` an alias that is not a row); the cognitive suite's selection cases choose a command from the table (T260 to T262). |
 | 3.1.1 | 2026-10-30 | Agent | **Host observation recorded** (origin `user-stated`: the owner's observation of 2026-10-30): Codex accepts the argument hint. The marker for Qwen Code is narrowed to that host. No requirement changed. |
 | 3.1.0 | 2026-10-30 | Agent | **As built** (Phase 47): the six-column table, the quoted argument hint and the table's remaining readers are recorded; the open host observation of §2.2 stays a marker until it is measured. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 3.0.0 | 2026-10-30 | Agent | **The router is the only command surface** (origin `user-stated`: the owner's decision of 2026-10-30): §1 and §2.1 drop the per-command host entries; §2.2 states the one printed form `/magicspec <command> [argument]`, the argument column of the command table and the dispatch of the interactive help and the argument form ([l1-command-surface.md](l1-command-surface.md) 2.0.0), and adds the argument hint; §2.3 rule 5 no longer counts the commands; §3.1 `refreshProjections` removes every command entry it finds. The maintenance router's own entries are out of scope. The specification also gains the `Overview` and `Motivation` headings the constitution requires (§5), which it lacked. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

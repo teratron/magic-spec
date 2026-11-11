@@ -1,6 +1,6 @@
 # Task Workflow
 
-Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.magicspec/specifications/`.
+Decomposes a planned phase into atomic tasks: writes `TASKS.md` (the ledger) and `tasks/phase-{n}.md` (the workbooks). Input: `PLAN.md` and the specifications its active phase holds. The plan itself — phases, order, backlog — is `plan.md`.
 
 **Contents:**
 
@@ -8,33 +8,34 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.magicspec/s
 - Context Quality Guidance
 - Argument Routing
 - Core Invariants (Mandatory)
-- Workflow: Planning & Orchestration
+- Workflow: Decomposition
 - Finalization Protocol (Mandatory)
 - Task Completion Checklist
 - Handoffs
 
 ## Entry
 
-**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Create plan"*, *"Generate plan"*, *"Update plan"*.
+**Triggers:** *"Generate tasks"*, *"Create tasks"*, *"Update tasks"*, *"Sync tasks"*, *"Decompose phase"*, *"Break down the phase"*, *"Smaller tasks"*.
 
 **Trigger:** `/magicspec task [arg]`. Arguments:
 
-- *(empty)* — full planning for the resolved workspace
-- `{workspace}` — scoped planning for a specific workspace
-- `update` — re-plan against the current registry and rules with no directive (`{workspace} update` scopes it); the command the engine names when a plan has gone stale
-- `"text"` — guided planning with focus or instructions
-- `{workspace} "text"` — scoped + guided planning
+- *(empty)* — decompose the active phase for the resolved workspace
+- `{workspace}` — decompose the active phase of a specific workspace
+- `update` — an alias of `/magicspec plan`, kept for habit (`{workspace} update` scopes it): say in one line that `update` is the plan's revalidation, run `workflows/plan.md` and end as it does, naming `/magicspec task`
+- `"text"` — guided decomposition: a directive about decomposition ("decompose phase-2 in more detail", "smaller tasks", "validation tasks only")
+- `{workspace} "text"` — scoped + guided decomposition
 
-Examples: `/magicspec task`, `/magicspec task {workspace}`, `/magicspec task update`, `/magicspec task "decompose phase-2 in more detail"`, `/magicspec task docs "only new specs"`.
+Examples: `/magicspec task`, `/magicspec task {workspace}`, `/magicspec task "decompose phase-2 in more detail"`, `/magicspec task {workspace} "validation tasks only"`.
 
 **Scope:**
 
-- **Rules Parity**: `RULES.md` version must be recorded in `TASKS.md` header.
-- **Registry First**: every plan update must synchronize with `INDEX.md`. Orphaned specs are critical blockers.
-- Plan generation, task decomposition, and execution orchestration. Execution is handled by `/magicspec run`. Specification authoring by `/magicspec spec`. Rule governance by `/magicspec rule`.
-- **Pipeline**: `/magicspec spec` → `/magicspec task` → `/magicspec run`.
-- **Post-Run Entry (`AGENT-RULES.md §5`)**: when invoked after `/magicspec run` for drift recovery, Pre-Planning Stabilization auto-fixes mechanical drift (Draft→Stable promotion, field normalization, phantom backlog moves); Pre-flight HALTs with a single `/magicspec spec` recommendation only on substantive gaps requiring human design input.
-- **Finalization**: after plan write, run `node scripts/executor.js finalize --workflow=task --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/task.md §Finalization Protocol`.
+- **Ownership (PL-1)**: this workflow owns decomposition — task identifiers, tracks, verify lines, validation tasks, the tracking entries and their state transitions. It writes `TASKS.md` and the phase workbooks and never `PLAN.md`.
+- **Reads**: the plan's active (or next) phase, the sections of the specifications that phase holds, the constitution, and the ledger and workbooks it updates. Not the whole body of a specification unless a step edits it.
+- **Complete for the next stage (PL-9)**: each task names the specification section it implements and its `Verify` line, so `/magicspec run` executes it without reading the plan. A missing record of an earlier stage is reported as a finding and never guessed.
+- **A directive about order or membership** ("postpone", "move before", "split phase", "only the new specifications") is not this workflow's: name `/magicspec plan` with it as the one next step and write nothing.
+- **Rules Parity**: `RULES.md` version must be recorded in the `TASKS.md` header.
+- **Pipeline**: `/magicspec spec` → `/magicspec plan` → `/magicspec task` → `/magicspec run`. One stage per invocation: this workflow ends by recording its result in the files and naming the next command with its reasoning demand; it never starts `/magicspec run` itself, unless the request's own words asked for the following stage too.
+- **Finalization**: after the ledger write, run `node scripts/executor.js finalize --workflow=task --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/task.md §Finalization Protocol`.
 
 ## Context Quality Guidance
 
@@ -45,148 +46,104 @@ Read economy is guidance, not a measurement: the agent has no reliable reading o
 
 ## Argument Routing
 
-Parse `[arg]` to determine planning mode:
+Parse `[arg]` to determine the decomposition mode:
 
 | Input | Detection | Result |
 | --- | --- | --- |
-| *(empty)* | No argument | **Full Planning**: resolve workspace via `context.md` §Workspace Resolution Chain, then plan all specs |
-| `{workspace}` | Matches a workspace name in `workspace.json` | **Scoped Planning**: plan only specs registered in that workspace's `INDEX.md` |
-| `update` | Reserved keyword, unquoted and not a workspace name (also `{workspace} update`) | **Plan Update**: Full (or Scoped) Planning with no directive — re-evaluates the existing plan against the current registry and rules (Step 8, Update Mode). This is the command the engine names wherever a plan has gone stale; it is a mode, not a planning directive, so the Guided Planning Filter never applies to it |
-| `"decompose phase-2"` | Quoted text, or text that matches neither a workspace name nor `update` | **Guided Planning**: interpret text as planning directive (focus, instruction, filter) |
-| `{workspace} "only new specs"` | First token is workspace + remaining is quoted text | **Scoped + Guided**: planning directive applied within workspace scope |
+| *(empty)* | No argument | **Active Phase**: resolve the workspace via `context.md` §Workspace Resolution Chain, then decompose its active phase |
+| `{workspace}` | Matches a workspace name in `workspace.json` | **Scoped**: decompose the active phase of that workspace |
+| `update` | Reserved keyword, unquoted and not a workspace name (also `{workspace} update`) | **Plan alias**: the plan's revalidation, `workflows/plan.md` (see Entry); it is a mode, not a directive, so no decomposition directive ever applies to it |
+| `"decompose phase-2"` | Quoted text, or text that matches neither a workspace name nor `update` | **Guided**: interpret text as a decomposition directive (focus, instruction, filter) |
+| `{workspace} "only tests"` | First token is a workspace + remaining is quoted text | **Scoped + Guided**: the directive applied within the workspace |
 
-> **Workspace Fallback (Modes A, C, and `update`)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the planning directive. The plan is written for that one workspace; Step 2 (Pre-Planning Stabilization) still iterates every registered workspace, default first. The directive text filters or guides planning but does not replace workspace resolution.
+> **Workspace Fallback**: when no workspace is specified, resolve via Core Invariant 1 (Zero-Prompt chain) before applying the directive. The directive filters or guides decomposition but does not replace workspace resolution.
 > **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec task "{workspace}"`. The same quoting turns `update` into a directive: `/magicspec task "update"`.
-> **Handoff Propagation**: when recommending `/magicspec run` after planning, propagate the workspace context: `/magicspec run {workspace}`.
+> **Handoff Propagation**: when naming `/magicspec run` after decomposition, propagate the workspace context: `/magicspec run {workspace}`.
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command task [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
-2. **Registry Integrity**: Account for every spec registered in `INDEX.md` before planning — read the registry entries and the wiki, and open a spec body only where a step needs it. No spec may be left unaccounted for.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command task [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
+2. **Plan Integrity**: Account for every specification the active phase holds before decomposing — read the plan's phase entry and the wiki, and open a spec body only where a step needs it. No specification of the phase may be left without tasks.
 3. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md` (do not prompt user).
    - **Intent Preservation**: if `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: *"Resuming: '{original intent}'."* Intent MUST NOT be silently dropped across workflow boundaries.
 4. **Logic Guards**:
-   - **No Orphans**: every registered spec must be in `PLAN.md` or `## Backlog`.
-   - **Atomic Tasks (C10)**: every spec in Phase 1+ must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
-   - **Auto-Plan (C9 default)**: automatically generate and write the Plan & Checklist without prompting. Narrate inline as the work happens — e.g., `[Auto-Plan] Phase 2: {N} specs → {short list}. (Adjust: /magicspec task "{adjustment}" | Revert: git restore .magicspec/{ws}/PLAN.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
-   - **Zero-Prompt handoff**: after writing tasks, hand off to execution mode when the current phase holds a `Todo` or `In Progress` task. A phase left with only `Blocked [!]` tasks would Stall `/magicspec run` at once and send the user back here, so Step 8 ends the run with its Stalled Plan report instead.
-5. **Rules Parity**: Record current `RULES.md` version in `TASKS.md` header. Notify user of drift and re-sync during update.
+   - **Plan Gate (PL-4)**: the plan is missing, or stale — its recorded registry or constitution version differs from the current one, or a Stable specification is in neither a phase nor the backlog. Then `task` decomposes nothing, writes nothing and ends with `/magicspec plan {workspace}` as its next step, naming why (which version moved, which specification is unplanned). The plan's own pre-flight findings (`SYNC_GAP`, `ORPHANED_SPEC`, a header or parent drift, `DESIGN_DEBT_PENDING`, an engine integrity finding) are judged by `plan`: seeing one, end the same way and name it.
+   - **Atomic Tasks (C10)**: every specification of the active phase must have a concise checklist in **`TASKS.md`** (Phase Checklist) with `T-XXXX` IDs.
+   - **Auto-Decompose (C9 default)**: automatically generate and write the tasks without prompting. Narrate inline as the work happens — e.g., `[Auto-Tasks] Phase 2: {N} tasks in {K} tracks. (Adjust: /magicspec task "{adjustment}" | Revert: git restore .magicspec/{ws}/TASKS.md)`. No "Go" confirm; no menu — a declarative proposal surface (DA-9), never a question (e.g. an `AskUserQuestion` call).
+   - **One Stage**: after writing the ledger, end the invocation. The next stage is named, never started: when the current phase holds a `Todo` or `In Progress` task it is `/magicspec run`. A phase left with only `Blocked [!]` tasks would Stall `/magicspec run` at once, so the Sync step ends with its Stalled Plan report instead.
+   - **Findings Go Back (PL-8)**: when decomposition finds that a phase cannot be decomposed as planned — a specification too large for one phase, a dependency between specifications the plan does not state, a phase order that the tasks' dependencies contradict, a specification whose content leaves a task without a verifiable outcome — `task` changes nothing in the plan (PL-1). It decomposes the phases the finding does not touch, records the finding as a replan directive in the ledger (see Plan Write-back) and ends with `/magicspec plan {workspace} "{directive}"` as its next step. A finding that needs a specification change is routed by `plan` to `/magicspec spec amend` in its own report.
+   - **T4 Capture**: a directive that contains a T4 trigger phrase (`"remember that..."`, `"from now on..."`, `"project rule:"`) is handed to the Operational Logic of `rule.md` before decomposition, so such a phrase is never silently dropped; the decomposition proceeds on the rest.
+5. **Rules Parity**: Record the current `RULES.md` version in the `TASKS.md` header. Notify the user of drift and re-sync during update.
 6. **Engine Integrity (C14)**: If this skill folder is modified → `node scripts/executor.js update-engine-meta`.
-7. **Architectural Logic**:
-   - **Circular Guard (Semantic Split)**:
-     - **Hard Dependencies** (`Implements:` chains, L2→L1): deep-scan across ALL levels. Any cycle → **HALT**. These are blocking dependencies that define build/planning order.
-     - **Soft References** (`Related Specifications`): scan for mutual references. Cycles here are **warnings**, not HALTs — peer modules in the same layer commonly cross-reference each other (e.g., ECS core systems, networking subsystem). Log: `[Cycle-Info] {N} mutual references detected in Related Specifications (non-blocking).`
-   - **Cycle Resolution** (Hard Dependencies only): suggest breaking the chain by identifying the "weakest link" — the edge that should be downgraded from `Implements` to `Related Specifications`.
-   - **Layer Respect**: L1 (Concept) always scheduled BEFORE L2 (Implementation).
-   - **Autonomous Selection (C6)**: **Default**: auto-pull ALL `Stable` specs into the active `PLAN.md`. Move `Draft`/`RFC` to `## Backlog`. No user prompt unless a priority conflict is detected.
-   - **Guided Planning Filter**: when a planning directive is present (Guided / Scoped + Guided modes), restrict C6 selection to `Stable` specs whose filename, title, or content matches the directive (same matching approach as `analyze.md` Mode D Focus Directive). Non-matching `Stable` specs are left untouched in their current `PLAN.md`/Backlog placement — the directive narrows this invocation's scope, it does not reclassify specs it doesn't match. **Bootstrap interaction**: when the C6 Bootstrap Exception (below) activates, the filter applies identically to the Draft-spec pull — only MVC-passing Draft specs matching the directive are planned with `[Bootstrap]`; non-matching Draft specs stay untouched. **Stabilization interaction (C12.1)**: when the directive is the explicit request to stabilize or fix a spec (Step 7), the spec it names is admitted whatever its status — it is planned with `stabilizes:`-flagged tasks instead of being parked in Backlog — and counts as a match for the HALT below. Directive matches zero specs (Stable, Draft when Bootstrap is eligible, or named for stabilization) → **HALT**: *"Could not map planning directive '{text}' to any registered spec. Run `/magicspec task {workspace}` for full planning, or author it first with `/magicspec spec`."*
-   - **C6 Bootstrap Exception**: if, after Pre-Planning Stabilization (Step 2), **zero** specs reached `Stable` AND the project has **no prior `PLAN.md`** (file missing or contains zero active phase entries) → activate Bootstrap Mode. In Bootstrap Mode, `Draft` specs that pass MVC criteria (Overview + at least one design section) are treated as plannable with a `[Bootstrap]` marker. The generated plan is explicitly tentative: `[Bootstrap Plan] {N} Draft specs planned tentatively. Plan will be finalized when specs reach Stable.` Bootstrap Mode is automatically deactivated once ≥1 spec reaches `Stable` through normal lifecycle.
-   - **Actionable Outcome**: after planning, show: `[Auto-Plan] {N} specs added to Phase {X}, {M} moved to Backlog.`
-   - **Parent Header Parity (Cross-Workspace)**: when planning an L2 spec that implements an L1 parent in a DIFFERENT workspace, the agent MUST verify the parent's file header against its own workspace's `INDEX.md`. Drift (`STATUS_DRIFT`/`VERSION_DRIFT`) in the cross-workspace parent → **HALT**. Ensures L2 tasks are never planned against mismatched L1 definitions.
 
-## Workflow: Planning & Orchestration
+## Workflow: Decomposition
 
 ```mermaid
 graph TD
-    A[Trigger: Plot/Sync] --> B[Pre-flight: Pre-reqs & Engine Guard]
-    B --> S[Pre-Planning Stabilization: Trust Mode Batch]
-    S --> C[Build Dependency Graph]
-    C --> D[Apply Mode Choice §7]
-    D --> E[Selective Selection C6 + Bootstrap]
-    E --> F[Decompose Phase 1 Tasks]
-    F --> G[Log Plan & Breakdown Summary]
-    G --> H[Write PLAN, TASKS, phase-*.md]
-    H --> I[Generate CONTEXT.md]
+    A[Trigger: Decompose] --> B[Plan Gate: current plan?]
+    B -->|stale or missing| X[Name /magicspec plan and stop]
+    B --> C[Select the active phase]
+    C --> D[Execution Mode]
+    D --> E[Decompose into tasks]
+    E --> F[Task Instruction Review]
+    F --> G[Sync: apply the plan's decisions to the tasks]
+    G --> H[Write TASKS.md and the workbooks]
+    H --> I[State and Context]
+    I --> J[Finalize and name the next stage]
 ```
 
 ### Steps
 
-1. **Pre-flight**: `node scripts/executor.js check-prerequisites --json --require-specs --verify-headers --workspace={active-workspace}`.
-   - **C15 Filter**: `ENGINE_INTEGRITY` or `GHOST_REGISTRY` → C15 Filter (`init.md §1`). In-scope → **HALT**. Out-of-scope → proceed silently.
-   - **File-Header Parity**: for each spec in `INDEX.md`, read the actual file's `Status:` and `Version:` header fields. Either mismatches the corresponding `INDEX.md` entry → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Header parity failure on `{file}`: file {field} `{file_val}` ≠ registry `{index_val}`. Run `/magicspec spec` to reconcile spec headers, then re-run `/magicspec task`."* Catches manual edits that bypassed the spec workflow.
-   - **Cross-Workspace Parity**: if `workspace.json` registers >1 workspace, scan for identically-named spec files across workspaces. Any name collision with version mismatch → **HALT**. Report: *"Source of Truth Drift: `{file}` exists in `{ws-a}` (v{X}) and `{ws-b}` (v{Y}). Run `/magicspec spec` in `{ws-a}` (higher version) to reconcile, then re-run `/magicspec task`."* One recommended path — no option menu.
-   - **Cross-Workspace Parent Header Parity** (Pre-flight gate): for every L2 spec in the active workspace whose `Implements:` field references an L1 spec in a **different** workspace, read that parent's file header (`Status:`, `Version:`) and compare against the parent workspace's own `INDEX.md` entry. Mismatch → **HALT** with `STATUS_DRIFT` or `VERSION_DRIFT`. Report: *"Cross-workspace parent drift: `{parent-file}` in `{parent-ws}` — file header `{field}: {file_val}` ≠ registry `{index_val}`. Run `/magicspec spec` in `{parent-ws}` to reconcile, then re-run `/magicspec task`."* Runs in Pre-flight (Step 1) — not deferred to Step 8 — to prevent planning against a drifted L1 parent before any artifacts are written.
-   - **Design-Debt Backlog** (`DESIGN_DEBT_PENDING`, per SC-2.4): if `check-prerequisites` reports this warning type — plan complete (no active phase in `TASKS.md`) with ≥1 open item in `PLAN.md`'s `## Backlog` — **HALT**. Report: *"Backlog holds {N} item(s) needing design input — plan has no active phase to absorb them. Run `/magicspec spec {ws}` to author the queued specs, then re-run `/magicspec task`."* This is the sanctioned door for `/magicspec spec` at plan-complete: every other mechanical gate above is clean by construction here, so without this check nothing would ever HALT and the persisted `Next Action` (SC-2.1(c)) would keep recommending `/magicspec task` itself — the command that just produced this exact HALT.
-   - **Stable-Spec Requirement** (`--require-specs`): a `missing_required` entry naming `Stable specs` is **not** a HALT while the registry holds Draft or RFC specs — Pre-Planning Stabilization (Step 2) promotes the eligible ones and the C6 Bootstrap Exception covers the rest. An empty registry (`Stable specs (0 specs found)`) → **HALT**. Report: *"No specifications are registered. Run `/magicspec spec` to author the first one, then re-run `/magicspec task`."* For an existing codebase (the `init.md` Step 4 indicators) the single recommendation is `/magicspec analyze first-time` instead. The report restates the original request (Core Invariant 3), so the intent survives the HALT.
-   - **T4 Queue (Cross-Workflow)**: if the planning-directive argument contains a T4 trigger phrase (`"remember that..."`, `"from now on..."`, `"project rule:"`) AND any Pre-flight gate above HALTs, acknowledge the embedded T4 explicitly: *"T4 rule detected — queued pending {drift_type} resolution. Will be handed to the Operational Logic of `rule.md` after resolution."* Do NOT write to `RULES.md` until Pre-flight passes on a subsequent invocation. Mirrors `spec.md §Updating → T4 Queue` semantics so a T4 phrase routed through `/magicspec task` is never silently dropped.
-2. **Pre-Planning Stabilization (Trust Mode Batch)**:
-   - Iterate all `Draft` specs registered in `INDEX.md`, processing **L1 specs first**, then **L2 specs** (layer order is mandatory — an L2 spec cannot promote until its L1 parent is `Stable`). **Workspace order**: when multiple workspaces exist, process the `default` workspace first (per `workspace.json`), then remaining workspaces in registration order. Ensures foundational specs are promoted before consumer workspaces that depend on them.
-   - For each spec, evaluate Trust Mode criteria from `spec.md`:
-     - (a) No `RULES.md` conflicts.
-     - (b) No hard-dependency cycles (per Circular Guard Semantic Split — soft reference cycles do NOT block promotion).
-     - (c) Layer constraints satisfied (`Implements:` field present and valid for L2).
-     - (d) **Minimum Viable Completeness (MVC)**: `Overview` + at least one design section (`Core Invariants` for L1, `Invariant Compliance` for L2, `Detailed Design`, or for non-standard layers like `test`/`tool` — any numbered section with substantive content). Full template compliance NOT required for Draft→Stable batch promotion — missing optional sections (`Drawbacks`, `Implementation Notes`) do not block.
-   - **Promote**: specs passing all criteria → provisionally promoted `Draft → Stable`, updating both file headers and `INDEX.md` entries atomically. This batch IS `spec.md` Batch Stabilization (invoked from here); promoted specs are **subject to its Post-Update Review gate** (`@role:spec-critic` + `@role:prompt-engineer`) — a spec that fails the review reverts to `Draft`/`RFC` and is not left `Stable`.
-   - **Skip**: specs failing any criterion remain `Draft` with a logged reason.
-   - Report: `[Pre-Plan] {N} specs promoted to Stable, {M} remain Draft. Reasons: {summary}.`
-   - **Field Normalization**: during iteration, if an L2 spec uses a non-standard field name for its L1 parent reference (e.g., `L1 Reference:` instead of `Implements:`), auto-rename to canonical `Implements:`. Log: `[Normalize] {file}: 'L1 Reference' → 'Implements'.`
-3. **Analyze**: extract `Related Specifications` and `Implementation Notes`.
-4. **Draft Plan**: group by Layer. Build full dependency matrix *before* task generation to detect N-level cycles.
-5. **Planning Audit**: activate `@role:planner` to review the draft `PLAN.md`. Audit for:
-   - **Optimism Bias**: have task sizes been underestimated?
-   - **Hidden Dependencies**: are parallel tracks truly independent, or is there a shared resource/config bottleneck?
-   - **Cascade Risk**: if a critical spec fails to implement in Phase 1, which Phase 2 tasks are instantly blocked?
-5a. **Task Instruction Review**: after the planner adversarial pass and before Plan Write-back, activate `@role:prompt-engineer` over the generated task descriptions, `Verify` lines, and phase notes — the instruction text `run.md` executors receive. Six-dimension review per the PQ-3 taxonomy. Verdict per PQ-6: FAIL → revise the task units before write-back; PASS-WITH-REWRITES → apply rewrites inline; PASS → proceed.
-6. **Execution Mode**: default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
-7. **Decompose**: split the active phase into 2-3 tasks per spec.
+1. **Plan Gate**: `node scripts/executor.js check-prerequisites --json --require-specs --require-plan --workspace={active-workspace}` and the staleness test of Core Invariant 4 (`missing_required` naming `PLAN.md` is the missing plan, reported by the script). Stale or missing plan, or a finding `plan` owns → end naming `/magicspec plan {workspace}` (nothing written). Otherwise proceed.
+2. **Select the Phase**: the phase `TASKS.md` marks `In Progress`; otherwise the first phase of `PLAN.md`, in order, whose specifications are not all decomposed. A directive may name another (`phase-3`). A specification the plan places in `## Backlog` is not decomposed.
+3. **Execution Mode**: default to **Parallel mode (C3)**. If mode is not defined in `RULES.md §7`, assume Parallel (do not ask).
+4. **Decompose**: split the active phase into 2-3 tasks per spec.
    - **IDs**: `T-{phase}{track}{seq}` (e.g., `T-1A01`).
    - **Tracks**: group tasks by file independence.
    - **Verify Line (Mandatory)**: every atomic task MUST include a `Verify` line with a concrete command, check, or evidence source. Vague criteria such as "works", "verify manually", or "covered by tests" are invalid unless the specific test/check is named.
    - **Testing (Mandatory)**: every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
-   - **Stabilizing Tasks (C12.1)**: when the user explicitly asks to stabilize or fix a spec — in the invocation or in the request that led to it — every task that targets that spec carries the flag `stabilizes: {spec-file}` in its tracking entry. The flag is never inferred from a title or a description, and a task without it is never a stabilizing task.
-8. **Sync (Update Mode)**:
-   - **C12 Quarantine**: if L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move L2 children to `## Backlog` in `PLAN.md`; mark their tasks `Blocked [!]` (a `Status` value — the checklist line stays `- [ ]`) with reason: *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md here** — downward C12/deprecation status changes are `spec.md`'s responsibility (`task.md` writes only the upward `Draft → Stable` promotion in Step 2). **C12.1 Stabilization Exception**: only a task carrying the `stabilizes: {spec-file}` flag (Step 7) may bypass quarantine, and only for the spec the flag names; every other task stays quarantined.
-   - **Bootstrap Tasks**: a task carrying the `[Bootstrap]` marker is exempt from the C12 Quarantine above and from Demoted Spec below while its spec is `Draft` — a Bootstrap plan is tentative by construction (C6 Bootstrap Exception), so a spec and its `Draft` L1 parent are planned together before either is `Stable`. Once the spec leaves `Draft`, both rules judge its tasks like any other.
-   - **Demoted Spec**: a spec that has tasks but is no longer `Stable` in `INDEX.md` (an amendment or a status edit moved it to `RFC` or `Draft` after the plan was written) → move it to `## Backlog` in `PLAN.md`; its `Done` tasks keep their tracking entries, every other task not already `Blocked [!]` becomes `Blocked [!]` with reason: *"Spec `{file}` is `{status}`"* (a task blocked for another reason keeps that reason). **C12.1** applies as for a quarantined child. Like C12, this never modifies `INDEX.md`.
-   - **Quarantine Release**: when a spec held by C12 or by Demoted Spec is `Stable` again (for C12, with its L1 parent `Stable` too), it returns to the active plan under C6 and the tasks blocked by that quarantine reason return to `Todo` — the reverse of the block, applied to the same tasks. A task blocked for any other reason is untouched.
-   - **Phantom Specs**: spec in PLAN/INDEX but missing from disk → cancel `Todo`/`Pending`; archive `Done`. Block active tasks.
-   - **Phantom Parent Guard**: L2 spec's parent missing from disk or `INDEX.md` (cross-workspace or local) → **HALT**. Report: *"Parent Spec `{parent-file}` (L1) is missing. Cannot plan dependent `{file}` (L2). Run `/magicspec spec` to author the missing parent, then re-run `/magicspec task`."* Move L2 to `## Backlog` with reason: *"Missing L1 Parent (Phantom)."*
-   - **Structural Refactor**: if sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others.
-   - **Renames**: global search-and-replace on filename changes (exclude archives). Ensure new names follow the `l1-`/`l2-` prefix convention.
-   - **Stalled Plan**: after the rules above, the current phase has no `Todo` or `In Progress` task but ≥1 `Blocked [!]` task → **HALT** after the plan is written, with no handoff to `/magicspec run` (it would only Stall). Report each blocked task with its recorded reason, then exactly ONE next step, the one for the first blocked task in checklist order: a reason that names a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing) ends *"Spec `{file}` requires design input: `{reason}`. Run `/magicspec spec`, then re-run `/magicspec task`."* (`AGENT-RULES.md §5`); any other reason ends with the resolution its `Notes` or `Handoff` names. This workflow releases only the blocks it owns (C12, Demoted Spec, Phantom Specs) — a block it does not own is lifted by setting its task's `Status` to `Todo` once the cause is resolved, and `/magicspec run` then selects it.
+   - **Stabilizing Tasks (C12.1)**: every task that targets a specification the plan marks `[Stabilize]` carries the flag `stabilizes: {spec-file}` in its tracking entry. The flag comes from the plan's marker and from nothing else — never from the request in the conversation, never inferred from a title or a description — and a task without it is never a stabilizing task.
+   - **Bootstrap Tasks**: every task of a specification the plan marks `[Bootstrap]` carries the same marker.
+5. **Task Instruction Review**: after the decomposition and before the write-back, activate `@role:prompt-engineer` over the generated task descriptions, `Verify` lines, and phase notes — the instruction text `run.md` executors receive. Six-dimension review per the PQ-3 taxonomy. Verdict per PQ-6: FAIL → revise the task units before write-back; PASS-WITH-REWRITES → apply rewrites inline; PASS → proceed.
+6. **Sync (Update Mode)** — applying the plan's decisions to the tasks; whether a specification is in the plan is `plan.md`'s:
+   - **Blocking a quarantined specification's tasks**: a specification the plan moved to `## Backlog` with the reason *"L1 parent `{file}` is `{status}` (C12)"* → its tasks not already `Done` become `Blocked [!]` (a `Status` value — the checklist line stays `- [ ]`) with that reason. **Cross-workspace**: the reason names the parent in its workspace. Only a task carrying the `stabilizes: {spec-file}` flag (Step 4) may bypass the block, and only for the specification the flag names; every other task stays blocked.
+   - **Bootstrap exemption**: a task carrying the `[Bootstrap]` marker is exempt from this blocking and from the next one while its specification is `Draft` — a Bootstrap plan is tentative by construction, so a specification and its `Draft` L1 parent are decomposed together before either is `Stable`. Once the specification leaves `Draft`, both rules judge its tasks like any other.
+   - **Blocking a demoted specification's tasks**: a specification the plan moved to `## Backlog` with the reason *"Spec `{file}` is `{status}`"* → its `Done` tasks keep their tracking entries, every other task not already `Blocked [!]` becomes `Blocked [!]` with that reason (a task blocked for another reason keeps that reason). The `stabilizes:` exception applies as above.
+   - **Releasing a block**: when the plan returned a specification it had held to the active phase, the tasks blocked by that quarantine reason return to `Todo` — the reverse of the block, applied to the same tasks. A task blocked for any other reason is untouched.
+   - **Missing specifications**: a specification the plan moved to `## Backlog` as *"Phantom: missing from disk"* → cancel its `Todo`/`Pending` tasks, archive its `Done` ones, block its active ones.
+   - **Structural Refactor**: if sections merged or split, validate all `T-{ID}` mappings to §sections. Re-map in TASKS.md & phase files. **ID Splitting**: keep original `T-{ID}` for the first sub-task; append `.N` suffixes (e.g., `T-1A01.1`, `T-1A01.2`) for others. A renamed specification's file name is re-mapped in the ledger and the workbooks (exclude archives).
+   - **Stalled Plan**: after the rules above, the current phase has no `Todo` or `In Progress` task but ≥1 `Blocked [!]` task → **HALT** after the ledger is written, with no handoff to `/magicspec run` (it would only Stall). Report each blocked task with its recorded reason, then exactly ONE next step, the one for the first blocked task in checklist order: a reason that names a specification gap (the spec is not `Stable`, or its content is ambiguous, conflicting or missing) ends *"Spec `{file}` requires design input: `{reason}`. Run `/magicspec spec`, then re-run `/magicspec plan`."* (`AGENT-RULES.md §5`); any other reason ends with the resolution its `Notes` or `Handoff` names. This workflow releases only the blocks it owns — a block it does not own is lifted by setting its task's `Status` to `Todo` once the cause is resolved, and `/magicspec run` then selects it.
 
 ### Plan Write-back
 
-- Use `templates/plan.md`, `templates/tasks.md`, and `templates/phase.md`.
-- PLAN.md: strategic overview (Phases & Specifications). No atomic checklist items.
-- TASKS.md: master Phase Index. Contains phase registry and status tracking. Its `Overview` says what the file is and how to read it and tracks nothing: the active phase is the phase table's status column, and what a finished phase produced lives in its phase file, the workspace changelog and the archive. Nobody appends to the `Overview` or rewrites it as the plan moves.
+- Use `templates/tasks.md` and `templates/phase.md`.
+- TASKS.md: master Phase Index. Contains the phase registry and status tracking, and records the plan version it was decomposed from (`Based on PLAN`) and the constitution version (`Based on RULES`). Its `Overview` says what the file is and how to read it and tracks nothing: the active phase is the phase table's status column, and what a finished phase produced lives in its phase file, the workspace changelog and the archive. Nobody appends to the `Overview` or rewrites it as the plan moves.
 - tasks/phase-{n}.md: tactical execution workbooks. Contain atomic checklists (T-XXXX) for specific phases.
-- **Preserve recorded task state (Update mode)**: when a phase workbook is regenerated or updated, every task ID that survives the rewrite keeps its tracking entry's `Status` (including `In Progress`), `Changes` and `Attempts` **verbatim** — they record work already done or attempted, and a rewrite that resets them erases exactly what a resuming session needs. Only new task IDs receive fresh template entries; a removed ID leaves with its entry. Only Step 8's explicit transitions change a surviving entry's `Status` — C12, Demoted Spec, Phantom Specs, and the way back, Quarantine Release.
-- **Phase Frontmatter**: when creating `tasks/phase-{N}.md`, populate the YAML frontmatter from the draft PLAN.md. At minimum fill: `phase`, `name`, `status: Todo`, `subsystem` (inferred from touched directories/specs), `requires` (from dependency graph built in Step 3). Leave `provides`, `key_files`, `patterns_established`, `duration_minutes` empty — filled by `run.md` on phase completion.
-- **Dependency Read**: when building the dependency matrix (Step 3), also read existing `phase-*.md` frontmatter `provides` fields to understand what prior phases deliver. Supplements PLAN.md prose descriptions with machine-readable data.
+- **Never `PLAN.md`** (PL-1): a task whose specification leaves the active plan keeps its recorded state (PL-7) and is blocked with the reason the plan records.
+- **Replan Directive**: a finding of Core Invariant 4 ("Findings Go Back") is written as a section `## Replan Directive` of `TASKS.md` with two fields — `**Plan version:**` (the version of `PLAN.md` at that moment) and `**Directive:**` (what, where, and the change it suggests, in plain words). It is pending only while `PLAN.md`'s version equals the recorded one: a plan rewritten since retires it, and `plan` never writes this file. A decomposition that completes without a finding removes a stale section; the next-step computation (`finalize`) reads a pending one as `/magicspec plan {workspace} "{directive}"`.
+- **Preserve recorded task state (Update mode)**: when a phase workbook is regenerated or updated, every task ID that survives the rewrite keeps its tracking entry's `Status` (including `In Progress`), `Changes` and `Attempts` **verbatim** — they record work already done or attempted, and a rewrite that resets them erases exactly what a resuming session needs. Only new task IDs receive fresh template entries; a removed ID leaves with its entry. Only Step 6's explicit transitions change a surviving entry's `Status` — the blocks of a quarantined or demoted specification, the cancellation for a missing one, and the way back, the release of a block.
+- **Phase Frontmatter**: when creating `tasks/phase-{N}.md`, populate the YAML frontmatter from the plan's phase entry. At minimum fill: `phase`, `name`, `status: Todo`, `subsystem` (inferred from touched directories/specs), `requires` (from the plan's dependency matrix). Leave `provides`, `key_files`, `patterns_established`, `duration_minutes` empty — filled by `run.md` on phase completion.
 
 ### State Init/Update
 
-After PLAN.md, TASKS.md, and phase files are written:
+After TASKS.md and the phase files are written:
 
 - If `STATE.md` does not exist → it will be created by `init.md` automatically (always called first).
-- Update STATE.md to reflect new plan:
-  `node scripts/executor.js update-state --workspace={active-workspace} --phase="1 — {Phase-1 Name}" --status=Active --next-action="Run /magicspec run to execute Phase 1"`
-- If plan update mode (C12, update, sync) → patch `--phase` and `--next-action` to reflect the re-planned state.
+- Update STATE.md to reflect the new tasks:
+  `node scripts/executor.js update-state --workspace={active-workspace} --phase="{N} — {Phase Name}" --status=Active --next-action="Run /magicspec run {active-workspace} to execute Phase {N}"`
+- On a decomposition that ended with a finding, patch `--next-action` to `Run /magicspec plan {active-workspace} "{directive}"`.
 
 ### Context Regeneration
 
-After writing PLAN.md, TASKS.md, and phase files, regenerate the workspace context file:
+After writing TASKS.md and the phase files, regenerate the workspace context file:
 `node scripts/executor.js generate-context --workspace={active-workspace}`
-
-### Graph Refresh (Post-Write)
-
-`PLAN.md` phases are graph nodes; plan mutations invalidate the spec graph and wiki. After Plan Write-back and Context Regeneration, run **once per planning invocation**:
-
-```bash
-node scripts/executor.js export-wiki
-```
-
-Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in pure dependency-graph audit mode (no plan written).
-
-**Read-side tip (planning)**: before building the dependency matrix in Step 3, prefer reading `.magicspec/graph/wiki/index.md` and per-spec wiki articles over scanning every raw spec file. The wiki gives layer/status/version/refs at ~10× lower token cost than full spec reads. Fall back to direct `.magicspec/specifications/` reads only when wiki is absent or `WIKI_STALE` was reported by the most recent `analyze` Mode C run.
 
 ## Finalization Protocol (Mandatory)
 
-After all workflow steps (incl. Context Regeneration + Graph Refresh) and **before** the Completion Checklist:
+After all workflow steps (incl. Context Regeneration) and **before** the Completion Checklist:
 
 1. Run `node scripts/executor.js finalize --workflow=task --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
-2. **Display the entire script output verbatim** in a fenced block.
+2. **Display the entire script output verbatim** in a fenced block. It ends with the handoff line — `Next: /magicspec {command} {argument} — {demand} reasoning` — printed once by the script, after the step it summarizes and before the Completion Checklist. The demand is advice for whoever chooses the model: never a warning and never a condition of running.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.magicspec/workspace.json`.
@@ -196,23 +153,21 @@ After all workflow steps (incl. Context Regeneration + Graph Refresh) and **befo
 ```
 Task Workflow Checklist — {operation}
   ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
-  ☐ All registered specs read; no orphans/phantoms left unaddressed
-  ☐ Pre-Planning Stabilization: Trust Mode batch applied (L1→L2 order); field normalization done
-  ☐ Stabilization Review: batch-promoted specs passed `spec.md` Post-Update Review gate; review failures reverted (not left Stable)
-  ☐ Circular Guard: hard-dependency cycles checked (Implements chains); soft reference cycles logged
-  ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
+  ☐ Plan Gate: a missing or stale plan ended the run with `/magicspec plan` named and nothing written
+  ☐ Every specification of the active phase has tasks; none from the backlog was decomposed
   ☐ Stalled Plan: a phase left with only `Blocked [!]` tasks ended with the report and one next step, not a handoff to `/magicspec run`
   ☐ Verify Lines: Every atomic task has a concrete command/check/evidence criterion
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
+  ☐ Stabilizing flag taken from the plan's `[Stabilize]` marker only
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
-  ☐ Planning Audit: Draft Plan reviewed by `@role:planner` (Optimism, Dependencies, Risk)
   ☐ Instruction Quality: task units reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
   ☐ Phase Frontmatter: YAML block populated in phase-*.md files (phase, name, status, subsystem, requires)
-  ☐ STATE.md updated with new phase and next action after plan write-back
-  ☐ PLAN.md (Strategic) / TASKS.md (Tactical) written; CONTEXT.md regenerated
-  ☐ Graph: export-wiki run after plan write-back (skip if no plan written)
+  ☐ Ownership: TASKS.md and the workbooks were written and PLAN.md was not (PL-1)
+  ☐ Findings Go Back: a finding became a `## Replan Directive` and the next step names `/magicspec plan` with it
+  ☐ STATE.md updated with the phase and next action after the ledger write; CONTEXT.md regenerated
   ☐ Engine Meta: C14 bump performed if files of this skill folder were modified
-  ☐ Engineer Posture (C25): plan auto-written and narrated; no "Go" prompts
+  ☐ One stage: the next command was named with its reasoning demand and not started; the request's own words did not ask for it
+  ☐ Engineer Posture (C25): tasks auto-written and narrated; no "Go" prompts
   ☐ Decision Autonomy (C27): elective forks resolved as [DR] one-liners; next step computed and narrated (DA-6), never asked; questions only for consent (E1, E2, E4), the intake survey (E6) or the command intake at the invocation (E7)
 ```
 
@@ -220,4 +175,5 @@ Task Workflow Checklist — {operation}
 
 Where this workflow may hand over, and when:
 
-- **Execute tasks** → `/magicspec run`: Proceed to task execution without interruption to maintain Zero-Prompt workflows (Rule C9). Condition: `tasks_generated`.
+- **Execute tasks** → `/magicspec run`: name it, with the workspace, as the next step when the phase holds a `Todo` or `In Progress` task. It is named in the handoff line with its reasoning demand and not started here. Condition: `tasks_generated`.
+- **Replan** → `/magicspec plan`: name it, with the workspace, when the plan is missing or stale (naming why), or with the recorded directive when decomposition found that the plan must change (PL-8). Condition: `plan_stale` or `finding`.

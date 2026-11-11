@@ -82,7 +82,7 @@ Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, 
 
 `node scripts/executor.js resolve-workspace --command {command} --text "{request}"`
 
-adding `--workspace {name}` when the invocation named a registered workspace and `--paths {a,b}` for files the work touches that the text does not name, and take the `Workspace:` line of its output as the active workspace. `{request}` is the rest of the argument, plus the user's own words of this turn when they name files or a topic. The script reads the registry, the specification folders and the phase workbooks, writes nothing, and never creates a workspace. `graph` builds one graph of every workspace and does not route.
+adding `--workspace {name}` when the invocation named a registered workspace and `--paths {a,b}` for files the work touches that the text does not name, and take the `Workspace:` line of its output as the active workspace. `{request}` is the rest of the argument, plus the user's own words of this turn when they name files or a topic. When there is no text at all, leave `--text` out: the script refuses an empty value. The script reads the registry, the specification folders and the phase workbooks, writes nothing, and never creates a workspace. `graph` builds one graph of every workspace and does not route.
 
 | Priority | Source | Condition | Action |
 | --- | --- | --- | --- |

@@ -1,6 +1,6 @@
 # Workspace Intent Routing
 
-**Version:** 3.0.1
+**Version:** 3.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -302,6 +302,19 @@ For deterministic simulation, the chain produces exactly these outcomes:
 These sixteen outcomes are the canonical simulation matrix. Any Layer 2
 implementation MUST reproduce these outcomes given the matching input.
 
+### 5.1 As Built (Phase 48) `[ADDED]`
+
+Recorded from the delivery of WI-11 to WI-14; no requirement changed.
+
+- **The script.** `resolve-workspace --command {name} [--workspace {name}] [--text "{request}"] [--paths a,b] [--json]` computes the chain, writes nothing and prints `Workspace:`, `Signal:` and — in a project with several workspaces — `Narration:`, plus a `Paths no scope covers:` line when the request names paths no workspace's scope holds. An empty `--text` is refused like any empty option value; a caller with no request leaves the flag out. The creation signal (WI-2, WI-4, WI-6) stays in `spec`: the script never creates.
+- **Where a typed name comes from.** The executor strips `--workspace` and forwards only the folder, so it hands the child `MAGIC_WORKSPACE_SOURCE` (`argument`, `environment` or `default`); without it a script could not tell a typed name from the default. A registry entry that is not an object registers nothing.
+- **Location.** A path belongs to the workspace whose matching scope entry is the most specific: the deeper literal folder, then a literal over a pattern, then the longer entry. A path two workspaces match equally counts for both. The workspace with the most paths wins; a tie of totals decides nothing and falls to the topic.
+- **Topic.** The request's words with the path-shaped ones removed are scored against the lexicon of WI-3 — description, scope segments, specification names without their layer prefix, the top-level headings; never the workspace's own name. A word is held on equality, on a four-letter prefix or on a five-letter shared stem. The score is held words over request words, to two decimals; it must reach 0.30 and exceed every other workspace's.
+- **Work in flight.** One predicate, `lib/in-flight.js` — a task whose tracking entry reads `In Progress` — shared with `resume-state`, so the two scripts cannot disagree.
+- **Coverage.** The last signal counts the files of the whole project (the executor runs scripts from the project root, so the caller's directory is unknown), up to 20000 in name order, to four decimals; the first workspace in registry order wins a tie.
+- **The unregistered stop** is one sentence, `Unknown workspace '{x}'. Available: [{list}].`, written once in `utils.js` and used by the executor and by every writer (`l2-engine-automation.md` §Registered Folders Only).
+- **Simulated.** The sixteen outcomes of this section, G1 to G4 included, are walked in [simulations/workspace-intent-routing.md](simulations/workspace-intent-routing.md).
+
 ## 6. Drawbacks & Alternatives
 
 **Drawback — Lexicon false negatives**: If a user's existing workspace
@@ -353,6 +366,7 @@ premise in the dispatched specification.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.0.2 | 2026-11-11 | Agent | **As built (Phase 48), clarification patch, Stable retained — no requirement changed.** New §5.1 records the delivery of WI-11 to WI-14: the script's inputs and output (an empty `--text` is refused, so a request-less call leaves it out), `MAGIC_WORKSPACE_SOURCE`, the location tie rules (most specific entry, a path two workspaces match counts for both, a tie of totals falls to the topic), the topic score and its word match, the shared work-in-flight predicate, the coverage step's bound and the one sentence of the unregistered stop. The simulation matrix covers the sixteen outcomes. |
 | 3.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 3.0.0 | 2026-10-29 | Agent | **Routing for every command** (scope change, origin `user-stated`: the owner chose "automatic in every command" on 2026-10-29 among the intake survey's three readings): new §1.1 and WI-11 to WI-14 — one shared chain for every command acting on one workspace, with only `spec` (and `goal` through it) allowed to create; a location signal computed from the paths a request touches against each workspace's `scope`, ahead of the topic signal; one narration line in multi-workspace projects; no write into an unregistered state-folder directory, and no shipped example naming this repository's own workspace. Resolves the contradiction between C26 item 1 and `context.md` Step 0 in favour of C26. Outcomes G1–G4 added (sixteen in all). Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 2.0.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

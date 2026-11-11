@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.6
+**Version:** 1.2.8
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -29,7 +29,7 @@ id: planner
 name: Planner
 layer: advisor
 triggers:
-  - workflow: task.md
+  - workflow: plan.md
     gate: "Plan Write-back"
 outputs:
   - type: plan
@@ -43,17 +43,17 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
+**Mission:** Own plan construction in `plan.md`. Produces the phase breakdown and the dependency graph between specifications, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 **Operating Protocol:**
 
-1. Read all specs referenced by active-phase tasks.
+1. Read all specs the plan holds or the draft places: their headers, overviews and invariants.
 2. Construct a dependency graph with edges as `Implements` / `Related Specifications` / file-level-conflict links.
-3. Group tasks into phases that minimize cross-phase dependencies.
-4. Draft `PLAN.md` with phase summaries and task lists.
+3. Group specifications into phases that minimize cross-phase dependencies.
+4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.
 5. **Adversarial pass (mandatory):** re-read the draft asking: "Am I optimistic about parallel degree? Are there hidden dependencies I skipped? Does any phase cascade into the next if one task blocks?" Revise if any answer implies risk.
-6. Write back to `PLAN.md` and `TASKS.md`.
-7. Hand off to Orchestrator (Parallel) or Coder (Sequential).
+6. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
+7. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
 
 **Anti-patterns:**
 
@@ -182,7 +182,7 @@ related_rules: [C3]
 1. Read the task's `Blocked` reason and all diagnostic artifacts (logs, error messages, stack traces if available).
 2. Classify the blocker: (a) implementation bug, (b) spec ambiguity, (c) environment/dependency issue, (d) dependency on another Blocked task.
 3. For (a): produce a fix diff, hand off to Test-engineer for re-check.
-4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec task {workspace}` recommendation, and `/magicspec spec` surfaces only inside a `/magicspec task` HALT (`AGENT-RULES.md §5`).
+4. For (b): record the ambiguity in the task's `Notes` and stop — `run.md` Step 4 ends the run with the single `/magicspec plan {workspace}` recommendation, and `/magicspec spec` surfaces only inside a `/magicspec plan` HALT (`AGENT-RULES.md §5`).
 5. For (c): document the environment fix in task notes; hand off back to Coder.
 6. For (d): update dependency graph; hand off to Planner for re-plan.
 7. Never re-mark a task `Done` directly — always route through Test-engineer.
@@ -204,17 +204,21 @@ layer: executor
 triggers:
   - workflow: run.md
     gate: "Post-Done Docs Sync"
+  - workflow: run.md
+    gate: "A community health file must change"
 outputs:
   - type: docs
     scope: "README, CHANGELOG, and public-API documentation updates triggered by the Done task"
 handoff:
+  - to: prompt-engineer
+    condition: "a community health file changed; its text is reviewed before the Done transition"
   - to: test-engineer
     condition: "docs updated; Done transition can finalize"
 skills_recommended: []
 related_rules: [C2]
 ```
 
-**Mission:** Active role triggered after Test-engineer passes a task whose diff changed public API or docs-visible behavior. Updates README, CHANGELOG, and any affected guides. Does not modify specs — spec changes go through `spec.md`.
+**Mission:** Active role triggered after Test-engineer passes a task whose diff changed public API or docs-visible behavior. Updates README, CHANGELOG, and any affected guides. Also triggered when a community health file — the security policy, the contribution guide or an issue form — must change. Does not modify specs — spec changes go through `spec.md`.
 
 **Operating Protocol:**
 
@@ -222,7 +226,8 @@ related_rules: [C2]
 2. Update `README.md` for feature-level changes.
 3. Update `CHANGELOG.md` with the task's `Changes` field (L1 phase entry — per `run.md` Step 5).
 4. Update in-codebase docstrings / JSDoc if signatures changed (per the project's documented docstring conventions).
-5. Hand back to Test-engineer to finalize `Done` transition.
+5. When the trigger is a community health file, change only the file the work concerns: `CONTRIBUTING.md` for a change of the command set, the setup or the checks; `SECURITY.md` and the issue forms for a change of a reporting channel. Write short sections with descriptive headings, numbered steps for procedures and exact commands in code blocks. Hand the changed text to `@role:prompt-engineer` before the task is `Done`.
+6. Hand back to Test-engineer to finalize `Done` transition.
 
 **Anti-patterns:**
 
@@ -247,6 +252,8 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.8 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 49; the mirror follows the deployed cards word for word). Planner: the gate triggers on `plan.md` (the Planning Audit moved with the draft plan), the protocol ends with the write-back to `PLAN.md` only and the stage boundary (`/magicspec task` named, never started). Debugger: the spec-ambiguity step records the finding in the task and ends the run with the single `/magicspec plan` recommendation, as `run.md` Step 4 says. The `prompt-engineer` trigger on `task.md` (the task instruction review) is untouched. |
+| 1.2.7 | 2026-11-11 | Clarification patch, Stable retained (the card gained a second trigger; the mirror follows the deployed card word for word). Docs-specialist: the trigger "A community health file must change" (`run.md`), a handoff to `prompt-engineer` for the changed text, one protocol step for the files (`CONTRIBUTING.md`, `SECURITY.md`, the issue forms) and the mission sentence naming it, as delivered with [l1-community-health-files.md](l1-community-health-files.md) 1.1.0 (HF-6, HF-7). |
 | 1.2.6 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.5 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.2.4 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

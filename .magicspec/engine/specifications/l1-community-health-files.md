@@ -1,6 +1,6 @@
 # Community Health Files
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -33,7 +33,7 @@ The owner asks for both files to be filled in by those rules and kept filled in 
 
 - These are product files of the repository, not SDD artifacts: they are written by an execution task, never by the specification workflow, and carry no task identifiers, phase designators or state-folder paths. In the engine's own repository the SDD commands are part of the product being documented, so the contribution guide may name them.
 - **Assumption (forecast):** vulnerabilities are reported privately through the platform's private reporting, and the transparency the current policy wants is kept by publishing an advisory once a fix is released. Runner-up: keep public reporting. Override: `/magicspec spec amend l1-community-health-files.md "public vulnerability reports"`.
-- <!-- TBD: the acknowledgement and decision times the maintainers commit to in the policy (§5.3 shows them as {N} and {M} days). -->
+- **Assumption (forecast):** the policy commits to acknowledging a report within 7 days and giving a decision within 30, because the repository has one maintainer, 7 and 30 days are keepable by one person, and a keepable commitment does less harm than a faster one that is missed in public. Runner-up: 3 and 14 days. Override: `/magicspec spec amend l1-community-health-files.md "respond within {N} and {M} days"` — and edit the two numbers in `SECURITY.md`.
 - **Assumption (forecast):** security fixes go to the latest minor line of the current major version only. Runner-up: also the last minor line of the previous major for a stated period. Override: `/magicspec spec amend l1-community-health-files.md "support the previous major until {date}"`.
 
 ## 3. Core Invariants
@@ -70,6 +70,8 @@ The owner asks for both files to be filled in by those rules and kept filled in 
 | Discussions | Settings → General → Features → Discussions | Disabled | Either enable it, or keep it disabled and remove every link to it (the policy links it today). |
 | Label `agent-feedback` | Issues → Labels → New label | Missing | Create it, so the agent-feedback form can apply it. |
 
+Re-observed on 2026-11-11 through the platform's API, read-only: private vulnerability reporting enabled, Discussions disabled, the label still missing among the repository's nine labels. The maintainer instruction in `docs/repository-settings.md` carries the same table with that date.
+
 ### 5.3 Example — the reporting section
 
 ```plaintext
@@ -77,15 +79,15 @@ The owner asks for both files to be filled in by those rules and kept filled in 
 1. Do not open a public issue.
 2. Open the repository's Security tab and choose "Report a vulnerability".
 3. Include: affected version, steps to reproduce, impact.
-You will get an acknowledgement within {N} days and a decision within {M} days.
+You will get an acknowledgement within 7 days and a decision within 30 days.
 ```
 
 ## 6. Implementation Notes
 
-1. The generator of the contribution guide keeps only the marked blocks; the constitution is linked, not copied. The template it reads today ships inside the skill folder although only a maintenance script uses it; it moves to the maintenance tree unless and until HF-8's offer ships.
+1. The generator of the contribution guide keeps only the marked blocks; the constitution is linked, not copied. The template it reads today ships inside the skill folder although only a maintenance script uses it; it moves to the maintenance tree unless and until HF-8's offer ships. **As built:** the layer trace of the repository's layer classification algorithm found no user-reachable reader (the router, the bodies, the always-on rules, the references and the installed hook name the output, never the template), so it is maintenance-only and lives at `scripts/templates/contributing.md`, reduced to the seed of a repository that has no guide; the generator refills the three marked blocks (`generated:version`, `generated:commands`, `generated:workspaces`) of the hand-written guide, gives a guide without markers one appended section, and leaves unpaired markers alone.
 2. The release workflow checks the supported-versions table (HF-7).
 3. The documentation audit in `analyze` (engine repository only) checks HF-2 to HF-4 alongside the existing contribution-guide check.
-4. Declared supersession ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the `docs-specialist` card in [l2-role-cards-execution.md](l2-role-cards-execution.md) is triggered only by public API changes in `run`; it gains the trigger "a community health file must change" (HF-7) when the card is next amended.
+4. Declared supersession ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the `docs-specialist` card in [l2-role-cards-execution.md](l2-role-cards-execution.md) is triggered only by public API changes in `run`; it gains the trigger "a community health file must change" (HF-7) when the card is next amended. **As built:** the card gained the trigger, a handoff to `prompt-engineer` and one protocol step, and its mirror in [l2-role-cards-execution.md](l2-role-cards-execution.md) carries the same words; the role index ([l2-role-cards.md](l2-role-cards.md)) and the integration table ([l2-role-integration.md](l2-role-integration.md)) name the second trigger. The documentation audit and the release both check the files: `analyze` Mode C step 10, and `scripts/check-security-policy.js` run by `scripts/release.js` and by the release workflow before the archive is built.
 
 ## 7. Drawbacks & Alternatives
 
@@ -106,5 +108,6 @@ You will get an acknowledgement within {N} days and a decision within {M} days.
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-11 | Agent | **Delivered (Phase 48); Stable retained — no requirement changed.** The open marker for the response times becomes an `Assumption (forecast)` — 7 days to acknowledge, 30 to a decision — decided by the engineer under the Consequence Forecast, with its runner-up and override; §5.3's example shows the numbers. HF-1: the platform's documentation for a security policy was read again on 2026-11-11 — it asks for the supported versions and how to report a vulnerability, and says nothing of private reporting, which the policy states from the repository's own setting. §5.2 records the settings re-observed on the same date. §6 records, as built, the template's new place (`scripts/templates/`, maintenance-only by the layer trace), the generator's marked blocks, the card trigger with its mirror and the two sibling listings, and the two checks (the documentation audit, the release). |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (fill and keep filling `SECURITY.md` and `CONTRIBUTING.md` by the platform's rules, readable for people and AI; decide the role; write instructions for manual steps on the hosting service) and the issue-report item. Scope by the owner's choice of 2026-10-29: this repository now, portable later. Repository settings read through the platform's API on 2026-10-29. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

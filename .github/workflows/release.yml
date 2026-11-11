@@ -28,6 +28,9 @@ jobs:
         id: version
         run: echo "value=$(cat skills/magicspec/.version)" >> "$GITHUB_OUTPUT"
 
+      - name: Check the security policy
+        run: node scripts/check-security-policy.js --version "${{ steps.version.outputs.value }}"
+
       - name: Build release archive
         run: |
           # The files that go in are decided by scripts/archive-composition.js and nowhere else.

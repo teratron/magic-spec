@@ -4,7 +4,7 @@ Loaded on demand from `AGENT-RULES.md` (sections 3 and 4). Paths are relative to
 
 ## 3. Finalization Protocol (Post-Workflow)
 
-After `/magicspec spec`, `/magicspec task`, `/magicspec run`, or `/magicspec rule` complete their
+After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`, or `/magicspec rule` complete their
 main steps and **before** their Completion Checklist, run finalize. Skip for
 `/magicspec analyze`, `/magicspec graph`, `/magicspec-dev:*` (read-only / system workflows).
 
@@ -13,7 +13,7 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 1. Execute:
 
    ```bash
-   node scripts/executor.js finalize --workflow=<spec|task|run|rule> --workspace={active-workspace}
+   node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule> --workspace={active-workspace}
    ```
 
    `--workspace` names the workspace the workflow ran for. Without it the script
@@ -39,7 +39,8 @@ main steps and **before** their Completion Checklist, run finalize. Skip for
 | Workflow | Paths that count |
 | --- | --- |
 | `/magicspec spec` | `.magicspec/{ws}/specifications/**/*.md`, `.magicspec/{ws}/INDEX.md`, `.magicspec/RULES.md`, `.magicspec/{ws}/RULES.md` |
-| `/magicspec task` | `.magicspec/{ws}/PLAN.md`, `TASKS.md`, `tasks/**/*.md` |
+| `/magicspec plan` | `.magicspec/{ws}/PLAN.md` |
+| `/magicspec task` | `.magicspec/{ws}/TASKS.md`, `tasks/**/*.md` |
 | `/magicspec run` | `.magicspec/{ws}/TASKS.md` (status-line changes only), `STATE.md`, `archives/**`, `tasks/**/*.md` |
 | `/magicspec rule` | `.magicspec/RULES.md`, `.magicspec/{ws}/RULES.md` |
 

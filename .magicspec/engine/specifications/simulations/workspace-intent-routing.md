@@ -1,13 +1,13 @@
 # Simulation — Workspace Intent Routing
 
-**Spec:** `l1-workspace-intent-routing.md` v2.0.0
+**Spec:** `l1-workspace-intent-routing.md` v3.0.2
 **Status:** Active
-**Last Run:** 2026-10-01
+**Last Run:** 2026-11-11
 
 ## Purpose
 
 Cognitive simulation matrix for the Workspace Intent Routing chain. Walks
-through every canonical outcome (A1 – F2 from the spec §5) plus four
+through every canonical outcome (A1 – G4 from the spec §5) plus four
 field-relevant user phrasings to confirm the agent reaches the documented
 outcome without prompting at all: since 2.0.0 the WI-4 ambiguity gate is
 resolved by the Consequence Forecast (C27 DA-10), narrated as a `[DR]`,
@@ -26,6 +26,7 @@ Three baseline configurations are referenced below:
 | **Baseline-Z** | absent (fresh project) | absent |
 | **Baseline-S** | single workspace `web` (description: "Web frontend"; scope: `["src/web"]`); spec: `l1-auth.md` | `.magicspec/web/` populated |
 | **Baseline-M** | two workspaces: `engine` (default), `docs`; both with scope arrays and stable specs | `.magicspec/engine/`, `.magicspec/docs/` populated |
+| **Baseline-T** | three workspaces: `api` (scope `src/api/`), `web` (scope `src/web/`), `docs` (default, scope `docs/`); no task in flight | one folder each, populated |
 
 ## Canonical Outcomes (Spec §5)
 
@@ -45,6 +46,15 @@ Three baseline configurations are referenced below:
 | **E2** | Baseline-M (default `engine`) | "Add the onboarding-checklist spec." | none (a feature, not a stack or surface) | <0.30 against `engine`, 0.20 against `docs` | E2 | no (WI-7 → WI-4 forecast) | Fit warning emitted. Candidates `existing:engine`, `existing:docs`; no creation signal, so `create` has no basis. `docs` fits no better → `existing:engine` kept, premise recorded, runner-up `existing:docs`. |
 | **F1** | Baseline-M | "/magic.spec docs add the contributor guide spec." | n/a (Priority 1 override) | n/a | F1 | no | Skip Step 0, dispatch to `.magicspec/docs/specifications/`. |
 | **F2** | Baseline-M, env `MAGIC_WORKSPACE=engine` | "Add a metrics spec." | n/a (Priority 2 override) | n/a | F2 | no | Skip Step 0, dispatch to `.magicspec/engine/specifications/`. |
+
+### Routing for Every Command (Spec §5, G1 – G4)
+
+| # | Setup | User input | Signal | Outcome | Question? | Final dispatch |
+| --- | --- | --- | --- | --- | --- | --- |
+| **G1** | Baseline-T | `/magicspec task "split the checkout flow in src/web/cart.js"` | location | G1 | no | `resolve-workspace` chooses `web` although `docs` is the default. One line, once: `[Workspace] web — location. (Override: /magicspec task {other} …)`. The plan is written for `web`. The same request in a project with one workspace is routed silently. |
+| **G2** | Baseline-T | `/magicspec run "review src/web/a.js src/web/b.js src/api/c.js"` | location (split) | G2 | no | `web` holds two paths, `api` one: `web` wins and the line names `api` as the other match. With one path each, the totals tie, location decides nothing and the topic signal chooses; no topic score reaches 0.30 → the default. |
+| **G3** | Baseline-T, `web` has a specification named `l1-checkout-flow.md` | `/magicspec status "checkout"` | topic | G3 | no | No path, so the topic: `checkout` is held by the `web` lexicon at 1.00 and by no other. `web` is chosen. A command other than `spec` never creates a workspace, whatever the words. |
+| **G4** | Baseline-T | `/magicspec task mobile`; `MAGIC_WORKSPACE=mobile`; a script started with `MAGIC_DESIGN_DIR=.magicspec/mobile` | argument · environment · folder | G4 | no | Each stops with `Unknown workspace 'mobile'. Available: [api, web, docs].` Nothing is written, no `.magicspec/mobile/` appears. Only `spec`'s own detection may create `mobile`. |
 
 ## Field-Reproduced Phrasings
 
@@ -97,16 +107,17 @@ total failure leaves `workspace.json` and any prior workspace untouched.
 
 ## Coverage Confirmation
 
-The 12 outcomes of spec §5 are tested by rows A1 through F2.
+The 16 outcomes of spec §5 are tested by rows A1 through G4.
 The 4 field-relevant phrasings are tested by R1 through R4.
 The 8 adversarial edges are tested by X1 through X8.
 The 4 anti-patterns are tested by N1 through N4.
 
-Total: 28 simulation rows, all matching their expected resolution path.
+Total: 32 simulation rows, all matching their expected resolution path.
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.0.0 | 2026-11-11 | Agent | Re-run against Workspace Intent Routing v3.0.2: new baseline `Baseline-T` and rows G1 to G4 (routing for every command: the location signal narrated once and silent in a single-workspace project, a split of paths and its tie, the topic signal that never creates, the unregistered stop in an argument, the environment and a script folder). The matrix now holds the sixteen outcomes and 32 rows. |
 | 2.0.0 | 2026-10-01 | Agent | Re-run against Workspace Intent Routing v2.0.0: no row asks a question. B2, C2, D2, E2, X5 and X6 resolve by the WI-4 forecast — `create` under an inferred or placeholder name when creation was explicitly requested, `existing` by default, a name-collision probe turning D2 into D1. E2's former input ("Add a landing-page hero spec.") was a D1 case — a domain delta absent from every lexicon creates at Step 0 — and is replaced by an input with no signal and a low fit. A4 follows the forecasted Workspace Disambiguation. |
 | 1.0.0 | 2026-05-07 | Agent | Initial simulation matrix for Workspace Intent Routing v1.0.0. |

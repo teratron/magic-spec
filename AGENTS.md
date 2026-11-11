@@ -103,8 +103,25 @@ All development tasks (metadata sync, analysis, simulation) are handled via the 
 node skills/magicspec/scripts/executor.js update-engine-meta
 
 # Run project analysis
-/magicspec:analyze
+/magicspec analyze
 ```
+
+### 3.2 Static Checks (biome and fallow)
+
+Both are devDependencies (`pnpm install`) and read `biome.json` and `.fallowrc.json`. After changing JavaScript or JSON (`scripts/`, `skills/magicspec/scripts/`, `tests/`, `package.json`):
+
+```bash
+# Formatter and linter on the files you changed (whole repository: pnpm run lint; pnpm run lint:fix writes the fixes)
+node_modules/.bin/biome check <changed files>
+
+# Dead code, duplication and complexity on the files the change touched
+pnpm run audit        # fallow audit (plain `pnpm audit` is pnpm's own security audit)
+```
+
+- A finding on code you wrote is fixed in the same task: for a duplicated block reuse the helper that exists or extract one; never suppress it to pass.
+- The IDE shows the same fallow findings as diagnostics (`code-duplication`, complexity); a new one counts as a finding of the task.
+- A finding on code you did not touch is inherited: report it, and do not reformat a file wholesale to clear it (an edit inside `skills/magicspec/` is a C14 event, so a repository-wide `biome --write` is a task of its own).
+- Biome also lists Markdown and YAML formatting; the check is for code, so run it on `*.js` and `*.json`.
 
 ## 4. Python Coding Style
 
@@ -214,6 +231,7 @@ Before finishing any task, verify:
 
 - [ ] **Validated**: All logic changes verified via simulation:
   - `/magicspec-dev:test`
+- [ ] **Checked**: `biome check` on the changed `*.js` and `*.json` files and `pnpm run audit` (fallow) report no finding on code written in this task (§3.2).
 - [ ] **Versioned**: Increment the patch version (e.g., `2.0.1` → `2.0.2`) in:
   - `skills/magicspec/.version`
   - `CHANGELOG.md`

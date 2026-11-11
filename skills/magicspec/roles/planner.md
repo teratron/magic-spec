@@ -3,7 +3,7 @@ id: planner
 name: Planner
 layer: advisor
 triggers:
-  - workflow: task.md
+  - workflow: plan.md
     gate: "Plan Write-back"
 outputs:
   - type: plan
@@ -22,17 +22,17 @@ deprecated: false
 
 ## Mission
 
-Own plan construction in `task.md`. Produces phase breakdown and task dependency graph, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
+Own plan construction in `plan.md`. Produces the phase breakdown and the dependency graph between specifications, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 ## Operating Protocol
 
-1. Read all specs referenced by active-phase tasks.
+1. Read all specs the plan holds or the draft places: their headers, overviews and invariants.
 2. Construct a dependency graph with edges as `Implements` / `Related Specifications` / file-level-conflict links.
-3. Group tasks into phases that minimize cross-phase dependencies.
-4. Draft `PLAN.md` with phase summaries and task lists.
+3. Group specifications into phases that minimize cross-phase dependencies.
+4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.
 5. **Adversarial pass (mandatory):** re-read the draft asking: "Am I optimistic about parallel degree? Are there hidden dependencies I skipped? Does any phase cascade into the next if one task blocks?" Revise if any answer implies risk.
-6. Write back to `PLAN.md` and `TASKS.md`.
-7. Hand off to Orchestrator (Parallel) or Coder (Sequential).
+6. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
+7. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
 
 ## Anti-patterns
 

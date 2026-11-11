@@ -22,6 +22,13 @@ const MAINTENANCE_COMMANDS = {
     'sync-docs': {
         summary: 'Refill the marked blocks of CONTRIBUTING.md and the Sync Note lines of docs/ from the registries.',
     },
+    'check-security-policy': {
+        summary: 'Check that the supported-versions table of SECURITY.md matches the version being released.',
+        options: {
+            '--version': { kind: 'space', help: 'Version being released (default: the content of skills/magicspec/.version)' },
+            '--policy': { kind: 'space', help: 'Policy file (default: SECURITY.md)' },
+        },
+    },
     'sync-manifests': {
         summary: 'Align the version in README.md and package.json with the engine version.',
     },

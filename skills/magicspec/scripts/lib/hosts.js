@@ -90,11 +90,44 @@ function parseHosts(list) {
     };
 }
 
+/** The reasoning demands a command row may declare: how much reasoning the stage that command runs needs. */
+const DEMANDS = Object.freeze(['deep', 'standard', 'light']);
+
+/**
+ * Reads one row of the router's command table: command (with an optional alias), group, what it
+ * does, argument, when it is missing, demand, body. The one parser of the table — the engine, the
+ * guide generator and the harness all read the router through it.
+ *
+ * @param {string} line - One line of the router.
+ * @returns {{name: string, aliases: string[], group: string, summary: string, argument: string,
+ *   missing: string, demand: string, body: string}|null} The row, or `null` for a line that is
+ *   not a command row.
+ */
+function parseCommandRow(line) {
+    if (!line.startsWith('| `') || !line.endsWith('|')) return null;
+    const cells = line.slice(1, -1).split('|').map((cell) => cell.trim());
+    if (cells.length !== 7) return null;
+    const command = /^`([a-z][a-z-]*)`(?: \(alias(?:es)? ((?:`[a-z][a-z-]*`(?:, )?)+)\))?$/.exec(cells[0]);
+    const body = /^`workflows\/([a-z-]+\.md)`$/.exec(cells[6]);
+    if (!command || !body || !DEMANDS.includes(cells[5])) return null;
+    return {
+        name: command[1],
+        aliases: command[2] ? [...command[2].matchAll(/`([a-z][a-z-]*)`/g)].map((m) => m[1]) : [],
+        group: cells[1],
+        summary: cells[2],
+        argument: cells[3],
+        missing: cells[4],
+        demand: cells[5],
+        body: body[1],
+    };
+}
+
 /**
  * Reads the command table of the router. `init` calls it to prove the router is readable
  * before it writes anything.
  *
- * @returns {{name: string, summary: string}[]} The commands, in table order.
+ * @returns {{name: string, aliases: string[], group: string, summary: string, argument: string,
+ *   missing: string, demand: string, body: string}[]} The commands, in table order.
  * @throws {Error} When the router is missing or holds no command rows.
  */
 function readCommands() {
@@ -104,12 +137,8 @@ function readCommands() {
     }
     const commands = [];
     for (const line of fs.readFileSync(routerPath, 'utf8').split(/\r?\n/)) {
-        // Columns: command, group, what it does, argument, when it is missing, body.
-        const row =
-            /^\| `([a-z][a-z-]*)` \| [^|]+ \| ([^|]+) \| [^|]+ \| [^|]+ \| `workflows\/[a-z-]+\.md` \|$/.exec(
-                line,
-            );
-        if (row) commands.push({ name: row[1], summary: row[2] });
+        const row = parseCommandRow(line);
+        if (row) commands.push(row);
     }
     if (commands.length === 0)
         throw new Error(`No command rows in the router table of ${routerPath}.`);
@@ -509,6 +538,7 @@ module.exports = {
     BLOCK_END,
     versionControlLines,
     parseHosts,
+    parseCommandRow,
     readCommands,
     readRuleSource,
     pointerBlock,

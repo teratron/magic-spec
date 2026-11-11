@@ -15,6 +15,7 @@
 │   ├── skills/
 │   └── workflows/
 ├── .github/
+│   ├── ISSUE_TEMPLATE/
 │   └── workflows/
 ├── .magicspec/
 │   ├── .version
@@ -38,6 +39,7 @@
 │   ├── graph.md
 │   ├── init.md
 │   ├── migration.md
+│   ├── repository-settings.md
 │   ├── retrospective.md
 │   ├── rule.md
 │   ├── run.md
@@ -49,6 +51,7 @@
 ├── scripts/
 │   ├── archive-composition.js
 │   ├── benchmark.js
+│   ├── check-security-policy.js
 │   ├── cli-guard.js
 │   ├── engine-path.js
 │   ├── executor.js
@@ -61,6 +64,7 @@
 │   ├── sync-engine-snapshot.js
 │   ├── sync-manifests.js
 │   ├── sync.js
+│   ├── templates/
 │   ├── token-audit.js
 │   ├── update-project-meta.js
 │   └── validate-hardlinks.js

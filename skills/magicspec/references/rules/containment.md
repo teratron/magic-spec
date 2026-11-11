@@ -115,7 +115,7 @@ a file or task and stays outside this rule either way.
 - **Remediation time** — detection and repair are separate duties, and audit
   owns only the first. Ventilation is read-only by contract, so a leak it finds
   is cleaned by scheduling it: the finding carries the path
-  `→ /magicspec task {ws}` to plan a containment-cleanup task, which `/magicspec run`
+  `→ /magicspec plan {ws}` to plan a containment-cleanup task, which `/magicspec run`
   then executes under the Coder role — the same role that owns the write-time
   gate. Never treat a `SDD_REFERENCE_LEAK` report as self-resolving, and never
   edit product files from a workflow whose write scope is `.magicspec/`.

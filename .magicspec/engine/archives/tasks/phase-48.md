@@ -1,23 +1,50 @@
 ---
 phase: 48
 name: "Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files"
-status: Todo
+status: Done
 subsystem: "skills/magicspec (context.md, workflows, scripts, commands table), scripts (sync-docs, release checks), tests, docs, SECURITY.md, CONTRIBUTING.md, .github"
 requires:
   - "Phase 47: the one command form; new text is written as /magicspec <command>; harness 277"
   - "Routing for every command, cache retention and community health files: l1-workspace-intent-routing 3.0.1 (WI-11 to WI-14, G1 to G4), l2-engine-automation 1.27.0 (Cache Retention), l1-community-health-files 1.0.1 (HF-1 to HF-9): Stable at registry 1.62.1"
-provides: []
+provides:
+  - "resolve-workspace: one engine-computed chain (argument, environment, sole workspace, location, topic, work in flight, default, coverage), narrated once, used by every command that acts on one workspace; only spec creates a workspace"
+  - "Registered folders only: one check (utils.unregisteredWorkspaceMessage) applied by every writer and the executor, one sentence for the stop"
+  - "Cache retention: the graph extraction cache pruned after each successful build, every cache in a harness-held inventory, clean-cache with a dry run that never touches findings, notes, backups or saved graph baselines"
+  - "Community health files: a hand-written CONTRIBUTING.md refilled only in its marked blocks (the guide template left the shipped folder), SECURITY.md by the policy contract, the three issue forms and the chooser, docs/repository-settings.md"
+  - "Release check: scripts/check-security-policy.js blocks a release whose supported-versions table does not match the version; the documentation audit checks the community files; the docs-specialist card has the second trigger"
 key_files:
-  created: []
-  modified: []
-patterns_established: []
+  created:
+    - "skills/magicspec/scripts/resolve-workspace.js"
+    - "skills/magicspec/scripts/clean-cache.js"
+    - "skills/magicspec/scripts/lib/workspace-routing.js"
+    - "skills/magicspec/scripts/lib/in-flight.js"
+    - "scripts/check-security-policy.js"
+    - "scripts/templates/contributing.md"
+    - "SECURITY.md"
+    - ".github/ISSUE_TEMPLATE/"
+    - "docs/repository-settings.md"
+  modified:
+    - "skills/magicspec/scripts/utils.js"
+    - "skills/magicspec/scripts/executor.js"
+    - "skills/magicspec/references/context.md"
+    - "skills/magicspec/workflows/"
+    - "skills/magicspec/roles/docs-specialist.md"
+    - "scripts/sync-docs.js"
+    - "scripts/release.js"
+    - "CONTRIBUTING.md"
+    - "tests/engine.js"
+    - "tests/suite.md"
+patterns_established:
+  - "A value the repository does not reveal is decided by the engineer under the Consequence Forecast and recorded as an Assumption (forecast) with its override — never a task assigned to a person (the security policy's response times)"
+  - "A maintenance script that only produces a product file lives with the maintenance tooling; the layer trace decides it, not intuition"
+  - "A generated block in a hand-written document is bounded by neutral markers, refilled by a function replacement (a block body is data), and written once into a document that has none"
 duration_minutes: ~
 ---
 
 # Stage 48 Tasks — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
 
 **Phase:** 48
-**Status:** Todo
+**Status:** Done
 **Strategic Goal:** Every command that acts on one workspace chooses it by one shared chain computed by the engine — explicit argument, environment, the paths the work touches against each scope, the topic, work in flight, the default — narrates the choice once in a multi-workspace project, and writes only into registered folders ([l1-workspace-intent-routing.md](../specifications/l1-workspace-intent-routing.md) WI-11 to WI-14); every cache the engine writes has an owner that prunes it and one simple command removes the rebuildable ones ([l2-engine-automation.md](../specifications/l2-engine-automation.md) §Cache Retention); and the repository's security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules and stay current ([l1-community-health-files.md](../specifications/l1-community-health-files.md) HF-1 to HF-9).
 
 ## Atomic Checklist
@@ -31,16 +58,16 @@ duration_minutes: ~
 - [x] [T-48B01] The graph extraction cache is pruned after each successful build
 - [x] [T-48B02] Every inventoried cache has its bound, and the inventory is complete
 - [x] [T-48B03] `clean-cache`: the rebuildable caches removed, findings, notes and backups never touched
-- [ ] [T-48C01] The response commitments of the security policy
-- [ ] [T-48C02] `SECURITY.md` by the policy contract
+- [x] [T-48C01] The response commitments of the security policy
+- [x] [T-48C02] `SECURITY.md` by the policy contract
 - [x] [T-48C03] The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder
 - [x] [T-48C04] `CONTRIBUTING.md` by the guide contract
 - [x] [T-48C05] The issue forms and the chooser
 - [x] [T-48C06] The maintainer instruction for the hosting-service settings
-- [ ] [T-48C07] The release checks the supported-versions table
-- [ ] [T-48C08] The documentation audit and the `docs-specialist` trigger
-- [ ] [T-48T01] Validation: harness, mutation lists, routing and cache scenarios, C14
-- [ ] [T-48S01] Spec sync: as-built decisions, the simulation matrix and the registry
+- [x] [T-48C07] The release checks the supported-versions table
+- [x] [T-48C08] The documentation audit and the `docs-specialist` trigger
+- [x] [T-48T01] Validation: harness, mutation lists, routing and cache scenarios, C14
+- [x] [T-48S01] Spec sync: as-built decisions, the simulation matrix and the registry
 
 ## Detailed Tracking
 
@@ -116,20 +143,22 @@ duration_minutes: ~
 ### [T-48C01] The response commitments of the security policy
 
 - **Spec:** l1-community-health-files.md §2 (the open marker), §5.3
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** User
 - **Verify:** the maintainer records two numbers in this entry's `Changes`: the days within which a report is acknowledged and the days within which a decision is given. They are a commitment to the public, so the agent does not choose them.
 - **Handoff:** T-48C02.
 - **Notes:** does not block the other tasks. A starting point for the decision: 7 days to acknowledge, 30 days to a decision, for one maintainer. If the numbers are not recorded when C02 is reached, C02 stays `Blocked [!]` with this reason.
+- **Changes:** acknowledgement within 7 days, decision within 30 days. Decided by the engineer under DA-10 (forecast), not by a person: the numbers sit in a file that stays uncommitted, a wrong choice costs one edit of two numbers before a release, and waiting stalls the phase. Premise: one maintainer, for whom 7 and 30 are keepable; the runner-up is a faster pair (3 and 14), kept out because a missed deadline is visible to every reporter. Override: edit the two numbers in `SECURITY.md` ("What to expect") and in the specification's Assumption (forecast).
 
 ### [T-48C02] `SECURITY.md` by the policy contract
 
 - **Spec:** l1-community-health-files.md HF-1, HF-2, HF-5, HF-6; §2 forecasts (private reporting; the latest minor line of the current major); §5.3
-- **Status:** Blocked [!]
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `SECURITY.md` states, in short sections with descriptive headings: the supported versions as a table whose rows are the released versions (the 3.0 line supported, each older line stated as not supported); the exact private reporting place — the repository's Security tab, "Report a vulnerability", with numbered steps and the URL of its advisories page; what a reporter can expect and when (the two numbers of T-48C01, then fix, then disclosure through a published advisory); what is in and out of scope; and no channel that does not exist — a grep of the file for `issues/new`, `discussions` and `Public Bug Report` finds nothing; the hosting platform's documentation for a security policy was read again and the date is recorded in `Changes` for T-48S01 (HF-1); `@role:docs-specialist` wrote it and `@role:prompt-engineer` reviewed the changed text, the verdict recorded in `Changes`; the report names `docs/repository-settings.md` for the setting it depends on.
 - **Handoff:** T-48C07, T-48C08.
 - **Notes:** Blocked: T-48C01 is not done — the maintainer has not recorded the days within which a report is acknowledged and the days within which a decision is given. They are a public commitment, so the agent does not choose them (specification §2, the open marker). Lift: record both numbers in the `Changes` of T-48C01, then set this entry's `Status` to `Todo`; T-48C07 and T-48C08 wait for this task, and T-48T01 for them. Everything this task's verify line asks except the two numbers is ready to write: the supported-versions table (the 3.0 line supported, older lines not), the exact private reporting place (the Security tab, "Report a vulnerability", and the advisories page), scope, and disclosure through a published advisory.
+- **Changes:** `SECURITY.md` rewritten by the policy contract in short sections with numbered steps: the supported versions as a table (the 3.0 line supported; 2.1, 2.0 and 1.x not supported), private reporting through the Security tab and the advisories page with five numbered steps, what a reporter can expect (7 days, 30 days, then fix, then disclosure through a published advisory that credits the reporter), and scope in and out. No channel that does not exist: a grep of the file for `issues/new`, `discussions` and `Public Bug Report` finds nothing. The platform's documentation for a security policy was read again on 2026-11-11: it asks for the supported versions and how to report a vulnerability, and says nothing of private reporting, which the policy states by the repository's own setting (for T-48S01, HF-1). `docs-specialist` wrote it; `prompt-engineer` PASS (one requirement per sentence, numbered procedures; no rewrite needed). The policy depends on private vulnerability reporting being enabled — see `docs/repository-settings.md` (enabled when read on 2026-11-11).
 
 ### [T-48C03] The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder
 
@@ -176,34 +205,40 @@ duration_minutes: ~
 ### [T-48C07] The release checks the supported-versions table
 
 - **Spec:** l1-community-health-files.md HF-7, §6 item 2; l2-release-pipeline.md
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** a maintenance script reads `SECURITY.md` and the version being released and exits non-zero, naming the mismatch, when the table does not list the release's minor line as supported or lists as supported a line the policy states as not supported; `.github/workflows/release.yml` runs it before the archive is built and the plan of `scripts/release.js` includes it; harness fixtures — a matching table passes, a missing line fails, a stale supported row fails; every new case is CAUGHT by `scripts/mutation-check.js`.
 - **Handoff:** T-48T01.
 - **Notes:** L2 (maintenance script); the archive composition is unchanged.
+- **Run notes:** the check is a blocker of the plan itself (`scripts/release.js` runs it while it collects blockers), so it holds for the plan and for `--yes` alike; the workflow runs the same script on the tag, before the archive is built. The release workflow could not be run here (it starts on a tag push), so its step is pinned by a harness case and the script was run by hand against the real policy and version.
+- **Changes:** `scripts/check-security-policy.js` (maintenance, L2; `--version`, `--policy`; read-only) reads the supported-versions table of `SECURITY.md` and exits 1, naming each mismatch, when the release's minor line is missing or stated as not supported, when another line is stated as supported, or when one line is both; it is in the maintenance command table; `scripts/release.js` blocks the plan on it and prints what it checked; `.github/workflows/release.yml` runs it before "Build release archive". Harness: the release fixture carries the check and a matching policy (plan passes), a stale policy blocks the plan and `--yes`, the checker's cases (matching table, missing line, line stated as not supported, stale supported row, contradiction, no table, not a version, missing file, this repository's policy against its version), and the workflow order. 15 mutations over C03 to C07 (new cases) all CAUGHT after one assertion was strengthened (the settings-page row matched the second table).
 
 ### [T-48C08] The documentation audit and the `docs-specialist` trigger
 
 - **Spec:** l1-community-health-files.md HF-6, HF-7, §6 items 3 and 4 (declared supersession of the card's trigger)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** the documentation step of `workflows/analyze.md` Mode C, which runs in the engine's own repository only (the developer-repository predicate), checks HF-2 (the supported-versions table, the private reporting place, no channel that does not exist), HF-3 (the section order) and HF-4 (the three forms, the chooser with blank issues disabled) and reports a mismatch as documentation drift; the `docs-specialist` role card gains the trigger "a community health file must change", and `l2-role-cards-execution.md` carries the card word for word (the mirror case passes); a harness case on a fixture without the developer predicate shows the check skipped; `update-engine-meta` has run.
 - **Handoff:** T-48T01.
 - **Notes:** edits `analyze.md`, serialized after A04. The one specification line this task edits is the card's mirror, because the harness requires the card and its mirror to be identical in the same delivery; T-48S01 records it in that specification's history.
+- **Run notes:** the audit is a step of a workflow body performed by the agent, so there is no script to run on a fixture without the developer predicate; the case pins that the community-file check sits inside step 10, which is gated by the predicate (`scripts/generate-checksums.js` absent → skipped), and nowhere else in `analyze.md`. Sibling sites edited with the card: the role index row (`l2-role-cards.md`) and the integration table and list (`l2-role-integration.md`); the card mirror is `l2-role-cards-execution.md` — T-48S01 records the three in the specifications' histories. One mutation of the four (the mirror side) is refused by the driver because specifications are never mutated; the card-side mutation fails the same comparison.
+- **Changes:** `analyze.md` Mode C step 10 (engine repository only) checks `SECURITY.md` (supported-versions table, the private reporting place, no channel the repository does not have), `CONTRIBUTING.md` (the five sections in the contract order, generated blocks matching their sources) and `.github/ISSUE_TEMPLATE/` (the three forms, chooser with blank issues disabled), and reports a mismatch as documentation drift left to `docs-specialist`; the `docs-specialist` card gains the trigger "A community health file must change", a handoff to `prompt-engineer` and a protocol step, carried word for word by `l2-role-cards-execution.md`; `run.md` Step 3.5 names the trigger; `update-engine-meta` run (3.0.32 → 3.0.33); harness case pins the card, its mirror, the run gate, the audit step and its gate, and the two sibling lists.
 
 ### [T-48T01] Validation: harness, mutation lists, routing and cache scenarios, C14
 
 - **Spec:** l1-workspace-intent-routing.md WI-11 to WI-14; l2-engine-automation.md §Cache Retention; l1-community-health-files.md HF-1 to HF-9
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `node --test tests/engine.js` reports zero failures with the new cases (the resolver's outcomes and determinism, writers refusing an unregistered folder, every command routing and only `spec` creating, the example residue, cache pruning, the inventory walk, `clean-cache`, the policy's elements, the guide's order and markers, the form fields, the release check, the documentation audit, the card mirror); every new case is CAUGHT by `scripts/mutation-check.js`; `tests/suite.md` covers a location-signal routing in a three-workspace project (narrated once), the same in a single-workspace project (silent), an explicit workspace that wins over a contrary path, an unregistered name stopping with the list, `clean-cache` as a dry run and as a run, and a release with a stale supported-versions table; `update-engine-meta --check` is clean; `node scripts/validate-hardlinks.js` passes; two successive `build-spec-graph` runs on this repository leave `graph/.cache/` with one entry per file (the count in `Changes`).
 - **Handoff:** T-48S01.
+- **Changes:** `node --test tests/engine.js` 327 of 327, zero failures (from 277 at the start of the phase). Mutation controls of the phase's cases: the tracks A and B recorded theirs (15, 10, 7, 4, 9, 6, 7 and 8 mutations CAUGHT); this run added 15 for the guide generator, the issue forms, the settings page, the guide contract and the security-policy check, 4 for the card, its mirror, the audit step and the run gate, and 2 for the empty-`--text` clause — all CAUGHT after one survivor was closed (the settings-page row matched the second table; the assertion now needs the row's path) and one entry refused by the driver by design (a mutation inside a specification; the card-side mutation fails the same comparison). `tests/suite.md` 1.9.95 gained T278 (location-signal routing in a three-workspace project, narrated once, silent in a single-workspace one, a split of paths), T279 (an explicit workspace and `MAGIC_WORKSPACE` win over a contrary path), T280 (an unregistered name stops with the registered names, only `spec` creates), T281 (`clean-cache` as a dry run and as a run, findings, notes and backups kept; two `build-spec-graph` runs leave one entry per file) and T282 (a release with a stale supported-versions table is blocked). `update-engine-meta --check` clean (engine 3.0.33); `node scripts/validate-hardlinks.js` passes; two successive `build-spec-graph` runs on this repository left `graph/.cache/` with 55 entries for 55 specification files.
 
 ### [T-48S01] Spec sync: as-built decisions, the simulation matrix and the registry
 
 - **Spec:** l1-workspace-intent-routing.md; l2-engine-automation.md; l1-community-health-files.md; the simulation matrix of routing
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** the decisions taken while building are recorded with a history row each in `l1-workspace-intent-routing.md` (the resolver's inputs, output and tie rules; the sixteen outcomes simulated), `l2-engine-automation.md` (`resolve-workspace` and `clean-cache` in Components, the cache inventory as built with the lock files, the writers' check) and `l1-community-health-files.md` (the date of the platform-documentation check of HF-1, the response times replacing the open marker, the template's new place, the card mirror edit of C08); `specifications/simulations/workspace-intent-routing.md` covers G1 to G4; the registry rows follow; `check-prerequisites --verify-headers` reports no drift.
 - **Handoff:** Phase 49.
 - **Notes:** specification work, done through the specification workflow.
+- **Changes:** as-built decisions recorded with a history row each: `l1-workspace-intent-routing.md` 3.0.2 (§5.1: the resolver's inputs and output, `MAGIC_WORKSPACE_SOURCE`, the location tie rules, the topic score and word match, the shared work-in-flight predicate, the coverage bound, the one unregistered-stop sentence; the sixteen outcomes simulated), `l2-engine-automation.md` 1.29.0 (`resolve-workspace`, `lib/in-flight.js` and `clean-cache` in Components; the cache inventory as built with the documentation-sync state, the lock and the wiki's `*.md.tmp`; §Registered Folders Only with the audit of the writers), `l1-community-health-files.md` 1.1.0 (the response times 7 and 30 days as an `Assumption (forecast)` in place of the open marker, the platform-documentation check dated 2026-11-11, the settings re-observed, the template's new place with the layer trace, the card trigger and the card-mirror edit of T-48C08). The mirror's siblings: `l2-role-cards-execution.md` 1.2.7, `l2-role-cards.md` 2.1.4, `l2-role-integration.md` 2.2.4. `specifications/simulations/workspace-intent-routing.md` 3.0.0 covers G1 to G4 (32 rows). The registry rows follow (workspace registry 1.65.0, global 1.42.0); `check-prerequisites --verify-headers` reports no drift. Post-Update Review: `spec-critic` — Layer Purity and Zero-Context lenses applied to the added sections, no finding; `prompt-engineer` PASS (recorded sections are descriptive, one fact per sentence).

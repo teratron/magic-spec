@@ -38,7 +38,7 @@ Key Goals:
 ```
 
 > **Disambiguation**: If an unquoted word matches a workspace name, workspace takes priority. Wrap in quotes to force directive interpretation.
-> **Handoff Propagation**: When re-planning is needed, the engine recommends `/magicspec task {workspace}` to preserve scope.
+> **Handoff Propagation**: When re-planning is needed, the engine recommends `/magicspec plan {workspace}` to preserve scope.
 
 ## 3. Core Invariants
 
@@ -112,13 +112,13 @@ After each task completes:
 - **Task Status**: The tracking entry moves `In Progress` → `Done` (or `Blocked [!]`); the TASKS.md Phase Checklist line is ticked when `Done`.
 - **Plan Sync**: Completed specs/phases → `[x]` in `PLAN.md`.
 - **Change Record**: 1-line summary in the task's `Changes` field.
-- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magicspec task {workspace}`. `/magicspec spec` is never named from the run; it surfaces only when `/magicspec task` itself cannot resolve the gap.
+- **Handoff**: If the spec is ambiguous or a drift signal appears → **HALT** with exactly one recommended command, `/magicspec plan {workspace}`. `/magicspec spec` is never named from the run; it surfaces only when `/magicspec plan` itself cannot resolve the gap.
 
 ### 5.5 Blocked Task Escalation
 
-If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magicspec task {workspace}` recommendation. `/magicspec task` then ends with the one `/magicspec spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
+If a task encounters ambiguous instructions or missing details, the agent marks it `Blocked`, records the reason in the task's `Notes` and halts with that single `/magicspec plan {workspace}` recommendation. `/magicspec plan` then ends with the one `/magicspec spec` step when the reason is a specification gap; the specification is amended there, and the blocked task is released once its cause is resolved.
 
-**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magicspec task {workspace}` to revalidate the plan.
+**Pause Propagation**: When a task becomes `Blocked [!]` and no `Todo` tasks remain in the current phase, STATE.md is automatically updated to `Blocked` status and the engine recommends `/magicspec plan {workspace}` to revalidate the plan.
 
 ## 6. Lifecycle & Conclusion
 

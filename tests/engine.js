@@ -58,6 +58,16 @@ describe('Magic Engine Scripts', () => {
         }
     };
 
+    /** Makes `dir` a git repository with everything in it committed, for a case that reads the working tree against a commit. */
+    const commitAllInFixture = (dir) => {
+        const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
+        git('init', '-b', 'master');
+        git('config', 'user.email', 'test@example.com');
+        git('config', 'user.name', 'Test User');
+        git('add', '.');
+        git('commit', '-m', 'init');
+    };
+
     const createTempWorkspace = (withGit = false) => {
         const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-test-'));
         scaffoldTempDirs(tempDir);
@@ -586,22 +596,13 @@ describe('Magic Engine Scripts', () => {
     test('no engine kernel file contains a raw NUL byte', () => {
         const repoRoot = path.resolve(__dirname, '..');
         const found = [];
-        const walk = (dir) => {
-            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-                const full = path.join(dir, entry.name);
-                if (entry.isDirectory()) {
-                    if (!['history', '.git', 'node_modules'].includes(entry.name)) walk(full);
-                } else {
-                    const at = fs.readFileSync(full).indexOf(0);
-                    if (at !== -1)
-                        found.push(
-                            `${path.relative(repoRoot, full).split(path.sep).join('/')}@${at}`,
-                        );
-                }
-            }
-        };
+        const skipped = /[\\/](?:history|\.git|node_modules)[\\/]/;
         for (const dir of [path.join('skills', 'magicspec')]) {
-            if (fs.existsSync(path.join(repoRoot, dir))) walk(path.join(repoRoot, dir));
+            for (const full of listFilesUnder(path.join(repoRoot, dir), (f) => !skipped.test(f))) {
+                const at = fs.readFileSync(full).indexOf(0);
+                if (at !== -1)
+                    found.push(`${path.relative(repoRoot, full).split(path.sep).join('/')}@${at}`);
+            }
         }
 
         assert.deepStrictEqual(
@@ -2563,12 +2564,7 @@ describe('Magic Engine Scripts', () => {
                 `---\nphase: 1\nname: "Alpha"\nstatus: ${done ? 'Done' : 'Todo'}\n---\n\n` +
                 `## Atomic Checklist\n\n- [${done ? 'x' : ' '}] [T-1A01] Do it\n`,
         });
-        const git = (...args) => spawnSync('git', args, { cwd: dir, encoding: 'utf8' });
-        git('init', '-b', 'master');
-        git('config', 'user.email', 'test@example.com');
-        git('config', 'user.name', 'Test User');
-        git('add', '.');
-        git('commit', '-m', 'init');
+        commitAllInFixture(dir);
         fs.appendFileSync(path.join(ws, 'tasks', 'phase-1.md'), '\n<!-- touched -->\n');
         return { dir, ws };
     };
@@ -3391,7 +3387,7 @@ describe('Magic Engine Scripts', () => {
             const flat = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 remedies(flat, 'ORPHANED_SPEC'),
-                ['/magicspec task update'],
+                ['/magicspec plan'],
                 'the flat layout invents no workspace',
             );
             assert.deepStrictEqual(
@@ -3417,9 +3413,92 @@ describe('Magic Engine Scripts', () => {
             );
             assert.deepStrictEqual(
                 remedies(scoped, 'ORPHANED_SPEC'),
-                ['/magicspec task docs update'],
+                ['/magicspec plan docs'],
                 'a remedy without the workspace would re-plan the default workspace instead',
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 6b-sexies. check-prerequisites.js — the plan stage owns the plan: every hint that updates,
+    //            revalidates or extends the plan names it, and a plan written against an older
+    //            constitution is stale like one written against an older registry
+    // ───────────────────────────────────────────────────────────────────────────
+    test('check-prerequisites.js sends every plan remedy and every parity report to /magicspec plan, and reports a plan written against an older constitution', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { designDir, specsDir } = makeRegistryScanWorkspace(tempDir);
+            fs.writeFileSync(
+                path.join(designDir, 'INDEX.md'),
+                [
+                    '# Index',
+                    '',
+                    '**Version:** 1.2.0',
+                    '',
+                    '| [l1-real.md](specifications/l1-real.md) | x | Stable | 1 | 1.0.0 |',
+                    '| [l1-extra.md](specifications/l1-extra.md) | x | Stable | 1 | 1.0.0 |',
+                    '',
+                ].join('\n'),
+            );
+            // The header of a registered spec drifted from the registry, in version and in status.
+            fs.writeFileSync(path.join(specsDir, 'l1-real.md'), '# Real\n\n**Version:** 1.0.1\n**Status:** Draft\n');
+            fs.writeFileSync(path.join(specsDir, 'l1-extra.md'), '# Extra\n\n**Version:** 1.0.0\n**Status:** Stable\n');
+            fs.writeFileSync(path.join(designDir, 'RULES.md'), '# Rules\n\n**Version:** 2.0.0\n');
+            const writePlan = (extra) =>
+                fs.writeFileSync(
+                    path.join(designDir, 'PLAN.md'),
+                    [
+                        '# Plan',
+                        '',
+                        '**Version:** 1.0.0',
+                        '**Based on:** .magicspec/INDEX.md v1.0.0',
+                        ...extra,
+                        '',
+                        '- [ ] **Real** ([l1-real.md](specifications/l1-real.md))',
+                        '',
+                    ].join('\n'),
+                );
+            writePlan(['**Based on RULES:** .magicspec/RULES.md v1.0.0']);
+            generateChecksums(tempDir);
+
+            const result = runCheckPrerequisites(tempDir, '--require-specs', '--verify-headers');
+            const fixes = (type) => result.warnings.filter((w) => w.type === type).map((w) => w.fix);
+
+            // The registry is ahead of the plan, the constitution is ahead of the plan, a spec is not in the plan:
+            // each is the plan's to repair, in one spelling, with no "update" word.
+            assert.deepStrictEqual(fixes('SYNC_GAP'), ['/magicspec plan', '/magicspec plan']);
+            assert.deepStrictEqual(fixes('ORPHANED_SPEC'), ['/magicspec plan']);
+            const gaps = result.warnings.filter((w) => w.type === 'SYNC_GAP').map((w) => w.message);
+            assert.ok(gaps.some((m) => /based on INDEX\.md v1\.0\.0, but registry is at v1\.2\.0/.test(m)), 'the registry gap');
+            assert.ok(
+                gaps.some((m) => /PLAN\.md is based on RULES\.md v1\.0\.0, but the constitution is at v2\.0\.0/.test(m)),
+                'the constitution gap',
+            );
+
+            // A header that disagrees with the registry is reconciled by the specification workflow and then
+            // by the plan, which owns the Pre-flight that reports it.
+            const parity = [...fixes('VERSION_DRIFT'), ...fixes('STATUS_DRIFT')];
+            assert.ok(parity.length >= 2, 'both the version and the status drift are reported');
+            for (const fix of parity) {
+                assert.match(fix, /^Run \/magicspec spec to reconcile, then re-run \/magicspec plan$/, fix);
+            }
+            assert.ok(!result.warnings.some((w) => /\/magicspec task/.test(w.fix || '')), 'no plan remedy names the task stage');
+
+            // A plan that records no constitution version is not judged against one.
+            writePlan([]);
+            const unjudged = runCheckPrerequisites(tempDir, '--require-specs');
+            assert.strictEqual(
+                unjudged.warnings.filter((w) => /RULES\.md/.test(w.message)).length,
+                0,
+                'a plan from before the record has nothing to compare',
+            );
+
+            // A plan that records the current constitution is clean of that finding.
+            writePlan(['**Based on RULES:** .magicspec/RULES.md v2.0.0']);
+            const current = runCheckPrerequisites(tempDir, '--require-specs');
+            assert.strictEqual(current.warnings.filter((w) => /RULES\.md/.test(w.message)).length, 0);
         } finally {
             cleanup(tempDir);
         }
@@ -3453,7 +3532,7 @@ describe('Magic Engine Scripts', () => {
                     .map((w) => w.message.match(/^'([^']+)'/)[1])
                     .sort();
 
-            // No plan yet: the state between the first spec and the first /magicspec task.
+            // No plan yet: the state between the first spec and the first /magicspec plan.
             const noPlan = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 named(noPlan, 'GHOST_REGISTRY'),
@@ -3479,11 +3558,17 @@ describe('Magic Engine Scripts', () => {
                 );
             }
 
+            // The Plan Gate of `task` asks for the plan: its absence is a mechanical finding, not a reading.
+            const gateNoPlan = runCheckPrerequisites(tempDir, '--require-specs', '--require-plan');
+            assert.ok(gateNoPlan.missing_required.includes('PLAN.md'), 'a missing plan is reported by --require-plan');
+
             // Control: a plan changes nothing about what the registry-vs-disk scan reports.
             fs.writeFileSync(
                 path.join(designDir, 'PLAN.md'),
                 '# Plan\n- [x] real spec ([l1-real.md](specifications/l1-real.md))\n',
             );
+            const gateWithPlan = runCheckPrerequisites(tempDir, '--require-specs', '--require-plan');
+            assert.ok(!gateWithPlan.missing_required.includes('PLAN.md'), 'and not once the plan exists');
             const withPlan = runCheckPrerequisites(tempDir, '--require-specs');
             assert.deepStrictEqual(
                 named(withPlan, 'GHOST_REGISTRY'),
@@ -3570,7 +3655,7 @@ describe('Magic Engine Scripts', () => {
             // Backlog holds two open items.
             const hit = findDebtWarning(
                 '- Some open design item.\n- Another one.',
-                '*None — plan complete. New scope enters via `/magicspec task`.*',
+                '*None — plan complete. New scope enters via `/magicspec plan`.*',
             );
             assert.ok(hit, 'a plan-complete state with a non-empty Backlog must raise the signal');
             assert.match(
@@ -3587,7 +3672,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 findDebtWarning(
                     '',
-                    '*None — plan complete. New scope enters via `/magicspec task`.*',
+                    '*None — plan complete. New scope enters via `/magicspec plan`.*',
                 ),
                 undefined,
                 'an empty Backlog must never raise the signal, even at plan-complete',
@@ -3630,7 +3715,7 @@ describe('Magic Engine Scripts', () => {
             const designDir = makeMinimalDesignDir(tempDir);
             fs.writeFileSync(
                 path.join(designDir, 'TASKS.md'),
-                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magicspec task`.*\n',
+                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magicspec plan`.*\n',
             );
             const findDebtWarning = makeDebtWarningFinder(tempDir, designDir);
 
@@ -4088,8 +4173,8 @@ describe('Magic Engine Scripts', () => {
             next = finalize.computeNextAction('task', 'engine', wsDir);
             assert.match(
                 next,
-                /\/magicspec task engine/,
-                'plan complete after task → /magicspec task funnel (§5)',
+                /\/magicspec plan engine/,
+                'plan complete after task → /magicspec plan funnel (§5)',
             );
             assert.doesNotMatch(
                 next,
@@ -4116,21 +4201,21 @@ describe('Magic Engine Scripts', () => {
             // (e) spec/rule → replan first (pipeline order).
             assert.match(
                 finalize.computeNextAction('spec', 'engine', wsDir),
-                /\/magicspec task/,
-                'spec → /magicspec task',
+                /\/magicspec plan/,
+                'spec → /magicspec plan',
             );
             assert.match(
                 finalize.computeNextAction('rule', 'engine', wsDir),
-                /\/magicspec task/,
-                'rule → /magicspec task',
+                /\/magicspec plan/,
+                'rule → /magicspec plan',
             );
 
             // (f) Unreadable TASKS.md → safe planning fallback.
             const voidWs = path.join(tempDir, '.magicspec', 'void');
             assert.match(
                 finalize.computeNextAction('run', 'void', voidWs),
-                /\/magicspec task/,
-                'missing TASKS.md → /magicspec task fallback',
+                /\/magicspec plan/,
+                'missing TASKS.md → /magicspec plan fallback',
             );
         } finally {
             cleanup(tempDir);
@@ -4138,16 +4223,357 @@ describe('Magic Engine Scripts', () => {
     });
 
     // A complete plan with nothing waiting must say so and name no command; any
-    // pending signal — or any inability to tell — keeps the /magicspec task funnel.
+    // pending signal — or any inability to tell — keeps the /magicspec plan funnel.
     // The fixtures carry INDEX/PLAN/TASKS: the plan-complete fixture above has
     // no PLAN, so it resolves to the funnel through the cannot-evaluate path.
+    // The four stages: the next step follows spec → plan → task → run, and a finding that a decomposition
+    // or a run handed back is the next step until the plan is rewritten.
+    test('finalize.js names the next stage — plan after spec and rule, task after a plan that left the ledger behind, run when tasks wait — and a plan with an undecomposed phase is not complete', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            const planPath = path.join(wsDir, 'PLAN.md');
+            const writePlan = ({ version = '1.0.0', phases = [['1', 'First', true], ['2', 'Second', false]] } = {}) =>
+                fs.writeFileSync(
+                    planPath,
+                    [
+                        '# Plan',
+                        '',
+                        `**Version:** ${version}`,
+                        '',
+                        '## Active Phases',
+                        '',
+                        ...phases.flatMap(([n, name, done]) => [`### Phase ${n} — ${name}`, '', `- [${done ? 'x' : ' '}] **A spec**`, '']),
+                        '## Backlog',
+                        '',
+                        '*None.*',
+                        '',
+                    ].join('\n'),
+                );
+            const writeLedger = ({ basedOn = '1.0.0', rows = [['1', 'Done']], tail = '' } = {}) =>
+                fs.writeFileSync(
+                    tasksPath,
+                    [
+                        '# Master Task Index',
+                        '',
+                        `**Based on PLAN:** .magicspec/engine/PLAN.md v${basedOn}`,
+                        '',
+                        '## Active Phases',
+                        '',
+                        '| Phase | Description | Status |',
+                        '| --- | --- | --- |',
+                        ...rows.map(([n, status]) => `| [Phase ${n}](tasks/phase-${n}.md) | d | \`${status}\` |`),
+                        '',
+                        tail,
+                    ].join('\n'),
+                );
+
+            // Phase 2 has an open item and no row in the ledger: the plan is not complete.
+            writePlan();
+            writeLedger();
+            for (const workflow of ['task', 'run']) {
+                assert.strictEqual(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    'Run /magicspec task engine to decompose Phase 2',
+                    `${workflow}: a phase the plan holds and the ledger has no row for is waiting for its tasks`,
+                );
+            }
+
+            // The shared predicate says the same, so Pre-flight cannot call such a plan complete either
+            // (a backlog warning would otherwise fire against a plan that still has a phase to decompose).
+            const pending = requireFromFixture(tempDir, 'lib', 'pending-work.js').findPendingWork(wsDir);
+            assert.deepStrictEqual(pending.nextUndecomposed, { phase: '2', name: 'Second' });
+            assert.strictEqual(pending.planComplete, false, 'a phase with no tasks yet is not a complete plan');
+            assert.deepStrictEqual(pending.openBacklogItems, [], 'so its backlog is not judged');
+
+            // spec and rule come back to the plan (pipeline order).
+            assert.strictEqual(finalize.computeNextAction('spec', 'engine', wsDir), 'Run /magicspec plan engine to update the plan');
+            assert.strictEqual(
+                finalize.computeNextAction('rule', 'engine', wsDir),
+                'Run /magicspec plan engine to revalidate the plan against amended rules',
+            );
+
+            // After a plan that left the ledger behind: decomposition — the undecomposed phase first.
+            writePlan({ version: '1.1.0' });
+            assert.strictEqual(
+                finalize.computeNextAction('plan', 'engine', wsDir),
+                'Run /magicspec task engine to decompose Phase 2',
+            );
+            // … or the re-sync of the tasks when every phase has its row.
+            writePlan({ version: '1.1.0', phases: [['1', 'First', true]] });
+            assert.strictEqual(
+                finalize.computeNextAction('plan', 'engine', wsDir),
+                'Run /magicspec task engine to bring the tasks in line with the plan',
+            );
+
+            // A plan whose ledger is in step: the step the plan state computes — execute the open task.
+            fs.mkdirSync(tasksDir, { recursive: true });
+            writePlan({ version: '1.0.0', phases: [['1', 'First', false]] });
+            writeLedger({ basedOn: '1.0.0', rows: [['1', 'In Progress']] });
+            fs.writeFileSync(
+                path.join(tasksDir, 'phase-1.md'),
+                phaseWorkbook(['- [ ] [T-1A01] Do the thing'], {
+                    rest: ['## Detailed Tracking', '', '### [T-1A01] Do the thing', '', '- **Status:** Todo', '- **Assignment:** Agent', ''],
+                }),
+            );
+            for (const workflow of ['plan', 'task']) {
+                assert.match(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    /^Execute T-1A01 Do the thing via \/magicspec run engine$/,
+                    workflow,
+                );
+            }
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize.js turns a replan directive into the next step while the plan it was written against stands, and drops it once the plan is rewritten', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            const planPath = path.join(wsDir, 'PLAN.md');
+            const writePlan = (version) =>
+                fs.writeFileSync(
+                    planPath,
+                    ['# Plan', '', `**Version:** ${version}`, '', '## Active Phases', '', '### Phase 1 — First', '', '- [ ] **A spec**', '', '## Backlog', '', '*None.*', ''].join('\n'),
+                );
+            const writeLedger = (section) => {
+                fs.writeFileSync(
+                    tasksPath,
+                    ['# Master Task Index', '', '**Based on PLAN:** .magicspec/engine/PLAN.md v2.0.0', '', '## Active Phases', '', '| Phase | Description | Status |', '| --- | --- | --- |', '| [Phase 1](tasks/phase-1.md) | d | `In Progress` |', '', section, '## Meta Information', ''].join('\n'),
+                );
+                fs.writeFileSync(
+                    path.join(tasksDir, 'phase-1.md'),
+                    phaseWorkbook(['- [ ] [T-1A01] Do'], { rest: ['## Detailed Tracking', '', '### [T-1A01] Do', '', '- **Status:** Todo', '- **Assignment:** Agent', ''] }),
+                );
+            };
+            const directive = [
+                '## Replan Directive',
+                '',
+                '- **Plan version:** 2.0.0',
+                '- **Directive:** Split Phase 1: the auth specification is too large for one phase,',
+                '  and "login" must come before the API.',
+                '',
+            ].join('\n');
+
+            // Pending: the plan's version is the one the directive records, for every workflow.
+            writePlan('2.0.0');
+            writeLedger(directive);
+            for (const workflow of ['task', 'run', 'plan']) {
+                assert.strictEqual(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    'Run /magicspec plan engine "Split Phase 1: the auth specification is too large for one phase, and \'login\' must come before the API."',
+                    `${workflow}: the directive is the next step, in one line, with the inner quotes turned`,
+                );
+            }
+
+            // Retired: the plan was rewritten (a new version) — the ledger is not touched, the directive is ignored.
+            writePlan('2.1.0');
+            assert.match(finalize.computeNextAction('task', 'engine', wsDir), /^Execute T-1A01 Do via \/magicspec run engine$/);
+
+            // The template's example is a comment and is not a directive.
+            writePlan('2.0.0');
+            writeLedger(`<!-- Optional section.\n\n${directive}-->\n`);
+            assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01 Do via \/magicspec run engine$/);
+
+            // A section with no version or no text is not a directive.
+            writeLedger('## Replan Directive\n\n- **Directive:** something\n');
+            assert.match(finalize.computeNextAction('run', 'engine', wsDir), /^Execute T-1A01/);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize --workflow=plan is accepted, judges only the plan file as significant, and writes a plan-shaped changelog bullet', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const significance = requireFromFixture(tempDir, 'lib', 'significance.js');
+            const bullets = requireFromFixture(tempDir, 'lib', 'changelog-bullets.js');
+            const { patterns } = significance.resolveWhitelist('magic.plan', 'engine');
+            assert.deepStrictEqual(patterns, ['.magicspec/engine/PLAN.md']);
+            const taskPatterns = significance.resolveWhitelist('magic.task', 'engine').patterns;
+            assert.ok(!taskPatterns.some((pattern) => pattern.endsWith('PLAN.md')), 'the task stage no longer writes the plan');
+            assert.ok(taskPatterns.includes('.magicspec/engine/TASKS.md'));
+            assert.strictEqual(
+                bullets.buildChangelogBullet('plan', 'engine', [{ path: '.magicspec/engine/PLAN.md', status: 'modified' }]),
+                'Updated implementation plan (engine)',
+            );
+            assert.strictEqual(bullets.deriveChangelogCategory('plan', []), 'Changed');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('finalize ends with one handoff line naming the next command, its argument and its reasoning demand, read from the router through the one parser (PS-4, PS-7)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            // A router in the fixture: seven columns, an alias, a demand per command.
+            fs.writeFileSync(
+                path.join(tempDir, 'skills', 'magicspec', 'SKILL.md'),
+                [
+                    '| Command | Group | What it does | Argument | When it is missing | Demand | Body |',
+                    '| --- | --- | --- | --- | --- | --- | --- |',
+                    '| `spec` | pipeline | s | an idea | **required** | deep | `workflows/spec.md` |',
+                    '| `plan` | pipeline | p | a directive | optional | deep | `workflows/plan.md` |',
+                    '| `task` | pipeline | t | a workspace | optional | standard | `workflows/task.md` |',
+                    '| `run` | pipeline | r | a workspace | optional | standard | `workflows/run.md` |',
+                    '| `analyze` (alias `audit`) | health | a | a mode | optional | deep | `workflows/analyze.md` |',
+                    '| `status` | health | s | a workspace | optional | light | `workflows/status.md` |',
+                    '',
+                ].join('\n'),
+            );
+            const finalize = requireFromFixture(tempDir, 'finalize.js');
+            const line = (nextAction, workspace = 'engine') => finalize.handoffLine(nextAction, workspace);
+
+            // The four boundaries: the demand is the NEXT command's.
+            assert.strictEqual(line('Run /magicspec plan engine to update the plan'), 'Next: /magicspec plan engine — deep reasoning', 'after spec');
+            assert.strictEqual(line('Run /magicspec task engine to decompose Phase 2'), 'Next: /magicspec task engine — standard reasoning', 'after plan');
+            assert.strictEqual(line('Execute T-1A01 Do the thing via /magicspec run engine'), 'Next: /magicspec run engine — standard reasoning', 'after task');
+            assert.strictEqual(
+                line('Run /magicspec plan engine "Split Phase 1: the auth specification is too large"'),
+                'Next: /magicspec plan engine "Split Phase 1: the auth specification is too large" — deep reasoning',
+                'a directive after a run travels with its command',
+            );
+
+            // The argument is the workspace the Next Action names — prose after the command is not an argument.
+            assert.strictEqual(line('Run /magicspec plan to plan'), 'Next: /magicspec plan — deep reasoning');
+            assert.strictEqual(line('Run /magicspec plan other to plan'), 'Next: /magicspec plan — deep reasoning', 'another word is not the workspace');
+            // An alias reads as its command and prints the command's own name.
+            assert.strictEqual(line('Run /magicspec audit engine'), 'Next: /magicspec analyze engine — deep reasoning');
+
+            // No line: no command, a command the router does not list, or a statement.
+            assert.strictEqual(line('Plan complete — nothing pending'), null);
+            assert.strictEqual(line('Run /magicspec goal engine'), null);
+            assert.strictEqual(line(''), null);
+            assert.strictEqual(line(undefined), null);
+
+            // Printed once, after the step it summarizes, with the Next Action text untouched and carrying no demand.
+            const printed = [];
+            const original = process.stdout.write;
+            process.stdout.write = (chunk) => {
+                printed.push(String(chunk));
+                return true;
+            };
+            try {
+                finalize.emitTail({ nextAction: 'Run /magicspec task engine to decompose Phase 2', workspace: 'engine', findings: [] });
+                finalize.emitTail({ nextAction: 'Plan complete — nothing pending', workspace: 'engine', findings: [] });
+            } finally {
+                process.stdout.write = original;
+            }
+            const text = printed.join('');
+            assert.strictEqual(text.split('Next: /magicspec').length - 1, 1, 'one handoff line, and none for a statement');
+            assert.ok(text.includes('### Next step\n\nRun /magicspec task engine to decompose Phase 2\n\nNext: /magicspec task engine — standard reasoning'), 'the line follows the step');
+            assert.ok(!/Run \/magicspec task engine to decompose Phase 2[^\n]*reasoning/.test(text), 'the Next Action itself carries no demand');
+
+            // An unreadable router costs the line, never the finalization.
+            fs.rmSync(path.join(tempDir, 'skills', 'magicspec', 'SKILL.md'));
+            assert.strictEqual(line('Run /magicspec plan engine'), null);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('shipped text: every pipeline body says the finalization output ends with the handoff line, printed once before the checklist (PS-7)', () => {
+        for (const body of ['spec', 'plan', 'task', 'run', 'rule']) {
+            const text = readShipped(`skills/magicspec/workflows/${body}.md`);
+            const section = text.slice(text.indexOf('## Finalization Protocol'));
+            assert.ok(section.includes('It ends with the handoff line'), `${body}.md: the finalization step names the handoff line`);
+            assert.ok(/handoff line[^\n]*(?:once|before the (?:Completion )?Checklist)/i.test(section), `${body}.md: printed once, before the checklist`);
+            assert.ok(/never refuses|advice|not a warning/i.test(section), `${body}.md: the demand is advice`);
+        }
+    });
+
+    test('a stage started cold from the files alone reaches the step the earlier stage recorded: plan → task → run, and a directive travelling back to plan (PS-2, PS-5, PS-6)', () => {
+        const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'magic-cold-'));
+        try {
+            fs.cpSync(path.join(path.resolve(__dirname, '..'), 'skills', 'magicspec'), path.join(dir, 'skills', 'magicspec'), { recursive: true });
+            const put = (rel, body) => {
+                fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true });
+                fs.writeFileSync(path.join(dir, rel), body);
+            };
+            put('.gitignore', 'skills/magicspec/\n');
+            put('.magicspec/workspace.json', JSON.stringify({ default: 'ws', workspaces: { ws: { description: 'fixture' } }, finalization: { enabled: true, autoBump: false, autoChangelog: false } }));
+            put('.magicspec/RULES.md', '# Rules\n\n**Version:** 1.0.0\n');
+            put('.magicspec/ws/INDEX.md', '# Index\n\n**Version:** 1.0.0\n\n| [l1-a.md](specifications/l1-a.md) | A | Stable | 1 | 1.0.0 |\n');
+            put('.magicspec/ws/specifications/l1-a.md', '# A\n\n**Version:** 1.0.0\n**Status:** Stable\n**Layer:** concept\n\n## Overview\n\nA.\n');
+            put(
+                '.magicspec/ws/STATE.md',
+                '# Project State\n\n**Workspace:** ws\n**Phase:** none\n**Status:** Active\n\n## Current Position\n\n- **Task:** none\n- **Next Action:** none\n\n## Recent Decisions\n\n## Blockers\n\n## Blocking Constraints\n',
+            );
+            const plan = (version) =>
+                [
+                    '# Plan',
+                    '',
+                    `**Version:** ${version}`,
+                    '**Based on:** .magicspec/ws/INDEX.md v1.0.0',
+                    '**Based on RULES:** .magicspec/RULES.md v1.0.0',
+                    '',
+                    '## Active Phases',
+                    '',
+                    '### Phase 1 — First',
+                    '',
+                    '- [ ] **A** ([l1-a.md](specifications/l1-a.md))',
+                    '',
+                    '## Backlog',
+                    '',
+                    '*None.*',
+                    '',
+                ].join('\n');
+            put('.magicspec/ws/PLAN.md', plan('1.0.0'));
+            commitAllInFixture(dir);
+
+            // Every stage is a fresh process: nothing but the files in the project carries over.
+            const stage = (...args) => spawnSync(process.execPath, [path.join(dir, 'skills', 'magicspec', 'scripts', 'executor.js'), ...args], { cwd: dir, encoding: 'utf8', env: simEnv() });
+            const nextAction = () => /\*\*Next Action:\*\*\s*(.+)/.exec(fs.readFileSync(path.join(dir, '.magicspec', 'ws', 'STATE.md'), 'utf8'))?.[1].trim();
+            const handoff = (result) => /^Next: .*$/m.exec(result.stdout)?.[0];
+
+            // 1. The plan stage ends: the plan is written, and the next stage and its demand are recorded.
+            put('.magicspec/ws/PLAN.md', plan('1.0.0') + '\n<!-- revalidated -->\n');
+            const afterPlan = stage('finalize', '--workflow=plan', '--workspace=ws');
+            assert.strictEqual(afterPlan.status, 0, afterPlan.stdout + afterPlan.stderr);
+            assert.strictEqual(nextAction(), 'Run /magicspec task ws to decompose Phase 1', 'the plan names the decomposition in the live memory');
+            assert.strictEqual(handoff(afterPlan), 'Next: /magicspec task ws — standard reasoning');
+
+            // 2. The task stage starts cold: the files say the plan is current (its Plan Gate passes) …
+            const gate = JSON.parse(stage('check-prerequisites', '--json', '--require-specs', '--workspace=ws').stdout);
+            assert.ok(!gate.warnings.some((w) => w.type === 'SYNC_GAP' || w.type === 'ORPHANED_SPEC'), 'no finding that the plan owns: ' + JSON.stringify(gate.warnings));
+            // … and ends having written the ledger and a workbook: the run is next.
+            put(
+                '.magicspec/ws/TASKS.md',
+                '# Master Task Index\n\n**Based on PLAN:** .magicspec/ws/PLAN.md v1.0.0\n**Based on RULES:** .magicspec/RULES.md v1.0.0\n\n## Active Phases\n\n| Phase | Description | Status |\n| --- | --- | --- |\n| [Phase 1](tasks/phase-1.md) | First | `In Progress` |\n',
+            );
+            put('.magicspec/ws/tasks/phase-1.md', '---\nphase: 1\nstatus: In Progress\n---\n\n## Atomic Checklist\n\n- [ ] [T-1A01] Do it\n\n## Detailed Tracking\n\n### [T-1A01] Do it\n\n- **Status:** Todo\n- **Assignment:** Agent\n');
+            const afterTask = stage('finalize', '--workflow=task', '--workspace=ws');
+            assert.strictEqual(afterTask.status, 0, afterTask.stdout + afterTask.stderr);
+            assert.strictEqual(nextAction(), 'Execute T-1A01 Do it via /magicspec run ws');
+            assert.strictEqual(handoff(afterTask), 'Next: /magicspec run ws — standard reasoning');
+
+            // 3. A finding goes back: the directive is in the ledger, and a stage that starts cold reads it.
+            const ledger = fs.readFileSync(path.join(dir, '.magicspec', 'ws', 'TASKS.md'), 'utf8');
+            put('.magicspec/ws/TASKS.md', ledger + '\n## Replan Directive\n\n- **Plan version:** 1.0.0\n- **Directive:** Split Phase 1: the specification is too large for one phase.\n');
+            const afterFinding = stage('finalize', '--workflow=task', '--workspace=ws');
+            assert.strictEqual(nextAction(), 'Run /magicspec plan ws "Split Phase 1: the specification is too large for one phase."');
+            assert.strictEqual(handoff(afterFinding), 'Next: /magicspec plan ws "Split Phase 1: the specification is too large for one phase." — deep reasoning');
+
+            // 4. The plan is rewritten: the directive retires on its own and the ledger is not touched.
+            put('.magicspec/ws/PLAN.md', plan('1.1.0'));
+            const afterReplan = stage('finalize', '--workflow=plan', '--workspace=ws');
+            assert.strictEqual(afterReplan.status, 0, afterReplan.stdout + afterReplan.stderr);
+            assert.strictEqual(nextAction(), 'Run /magicspec task ws to bring the tasks in line with the plan', 'the retired directive no longer leads');
+            assert.ok(fs.readFileSync(path.join(dir, '.magicspec', 'ws', 'TASKS.md'), 'utf8').includes('## Replan Directive'), 'the plan stage did not write the ledger');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
     test('finalize.js plan-complete Next Action names no command only when nothing is pending', () => {
         const tempDir = createTempWorkspace();
         try {
             const { finalize, wsDir } = requireFinalizeWorkspace(tempDir);
             const pendingWork = requireFromFixture(tempDir, 'lib', 'pending-work.js');
             const diagnostics = requireFromFixture(tempDir, 'lib', 'diagnostics.js');
-            const FUNNEL = /Plan complete — run \/magicspec task engine to plan new scope/;
+            const FUNNEL = /Plan complete — run \/magicspec plan engine to plan new scope/;
             const NOTHING = 'Plan complete — nothing pending';
             const indexPath = path.join(wsDir, 'INDEX.md');
             const planPath = path.join(wsDir, 'PLAN.md');
@@ -4376,8 +4802,8 @@ describe('Magic Engine Scripts', () => {
             assert.match(state, /\*\*Updated:\*\*/, 'STATE.md carries an Updated timestamp');
             assert.match(
                 state,
-                /\/magicspec task main/,
-                'SC-2.1 e2e: plan-complete next-action routes through the /magicspec task funnel',
+                /\/magicspec plan main/,
+                'SC-2.1 e2e: plan-complete next-action routes through the /magicspec plan funnel',
             );
             assert.doesNotMatch(
                 state,
@@ -10366,7 +10792,7 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('finalize.js sends a plan of blocked tasks back to /magicspec task from either workflow, never to a /magicspec run that would only Stall', () => {
+    test('finalize.js sends a plan of blocked tasks back to /magicspec plan from either workflow, never to a /magicspec run that would only Stall', () => {
         const tempDir = createTempWorkspace();
         try {
             const { finalize, wsDir, tasksPath, writePhase } = requireFinalizePlan(tempDir);
@@ -10385,7 +10811,7 @@ describe('Magic Engine Scripts', () => {
             for (const workflow of ['task', 'run']) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
                 assert.match(next, /T-1A01/, workflow);
-                assert.match(next, /re-run \/magicspec task engine$/, workflow);
+                assert.match(next, /re-run \/magicspec plan engine$/, workflow);
                 assert.doesNotMatch(next, /\/magicspec run/, workflow);
             }
 
@@ -10395,7 +10821,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(finalize.classifyPlanState(wsDir).kind, 'blocked-phase');
             for (const workflow of ['task', 'run']) {
                 const next = finalize.computeNextAction(workflow, 'engine', wsDir);
-                assert.match(next, /re-run \/magicspec task engine$/, workflow);
+                assert.match(next, /re-run \/magicspec plan engine$/, workflow);
                 assert.doesNotMatch(next, /\/magicspec run/, workflow);
             }
 
@@ -10414,7 +10840,7 @@ describe('Magic Engine Scripts', () => {
             const { RESERVED_COMMAND_RE } = requireFromFixture(tempDir, 'finalize.js');
             assert.ok(RESERVED_COMMAND_RE.test('Run /magicspec spec engine to amend'));
             assert.ok(RESERVED_COMMAND_RE.test('Run /magicspec analyze'));
-            assert.ok(!RESERVED_COMMAND_RE.test('Run /magicspec task engine to plan'));
+            assert.ok(!RESERVED_COMMAND_RE.test('Run /magicspec plan engine to plan'));
             assert.ok(!RESERVED_COMMAND_RE.test('Run /magicspec specify'), 'a longer word is not the command');
         } finally {
             cleanup(tempDir);
@@ -11912,7 +12338,7 @@ describe('Magic Engine Scripts', () => {
                     text: [
                         '1. Run `node skills/magicspec/scripts/executor.js finalize --workflow=task --workspace={active-workspace}`.',
                         '1. Run `node skills/magicspec/scripts/executor.js finalize --workflow=run`.',
-                        '   node skills/magicspec/scripts/executor.js finalize --workflow=<spec|task|run|rule>',
+                        '   node skills/magicspec/scripts/executor.js finalize --workflow=<spec|plan|task|run|rule>',
                         'Prose that merely mentions finalize is not an invocation.',
                     ].join('\n'),
                 },
@@ -11944,9 +12370,397 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
-    test('shipped text: task.md defines the Stable-spec branch of Pre-flight, the demoted-spec rule and the quarantine release (T242, T244)', () => {
+    test('shipped text: every planning guard has one owner — plan.md carries it once and task.md does not (PL-1, PL-2)', () => {
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
         const task = readShipped('skills/magicspec/workflows/task.md');
-        const steps = task.slice(task.indexOf('\n### Steps'));
+        const count = (text, label) => text.split(label).length - 1;
+
+        // The guards and steps that moved from the old planning workflow, by their bold label.
+        const planOwned = [
+            '**C15 Filter**',
+            '**File-Header Parity**',
+            '**Cross-Workspace Parity**',
+            '**Cross-Workspace Parent Header Parity**',
+            '**Parent Header Parity (Cross-Workspace)**',
+            '**Design-Debt Backlog**',
+            '**Stable-Spec Requirement**',
+            '**T4 Queue (Cross-Workflow)**',
+            '**Circular Guard (Semantic Split)**',
+            '**Hard Dependencies**',
+            '**Soft References**',
+            '**Cycle Resolution**',
+            '**Layer Respect**',
+            '**Autonomous Selection (C6)**',
+            '**Guided Planning Filter**',
+            '**C6 Bootstrap Exception**',
+            '**Pre-Planning Stabilization (Trust Mode Batch)**',
+            '**Field Normalization**',
+            '**Planning Audit**',
+            '**C12 Quarantine**',
+            '**Cross-Workspace C12**',
+            '**C12.1 Stabilization Exception**',
+            '**Demoted Spec**',
+            '**Quarantine Release**',
+            '**Phantom Specs**',
+            '**Phantom Parent Guard**',
+            '**Renames**',
+            '**No Orphans**',
+            '**Auto-Plan (C9 default)**',
+        ];
+        for (const label of planOwned) {
+            assert.strictEqual(count(plan, label), 1, `plan.md carries ${label} exactly once`);
+            assert.strictEqual(count(task, label), 0, `task.md does not carry ${label}`);
+        }
+
+        // The decomposition guards stay with task.md and are not copied into plan.md.
+        const taskOwned = [
+            '**Atomic Tasks (C10)**',
+            '**Execution Mode**',
+            '**Verify Line (Mandatory)**',
+            '**Testing (Mandatory)**',
+            '**Stabilizing Tasks (C12.1)**',
+            '**Structural Refactor**',
+            '**ID Splitting**',
+            '**Stalled Plan**',
+            '**Task Instruction Review**',
+            '**Preserve recorded task state (Update mode)**',
+            '**Phase Frontmatter**',
+        ];
+        for (const label of taskOwned) {
+            if (label === '**Execution Mode**' || label === '**Task Instruction Review**') continue; // step names, not bullets
+            assert.strictEqual(count(task, label), 1, `task.md carries ${label} exactly once`);
+            assert.strictEqual(count(plan, label), 0, `plan.md does not carry ${label}`);
+        }
+
+        // The files each writes: the plan writes PLAN.md and no part of the task layer, the tasks the reverse.
+        assert.match(plan, /It writes `PLAN\.md` and nothing else of the task layer: never `TASKS\.md`, a phase workbook or a tracking entry/);
+        assert.match(task, /It writes `TASKS\.md` and the phase workbooks and never `PLAN\.md`/);
+        assert.ok(!/(?:^|\n)\s*- Use `templates\/phase\.md`/.test(plan), 'plan.md uses no phase template');
+        assert.ok(!/templates\/plan\.md/.test(task), 'task.md uses no plan template');
+    });
+
+    test('shipped text: task.md stops on a missing or stale plan, hands findings back as a replan directive, reads the plan marker for stabilization and keeps update as an alias of plan (PL-4, PL-8)', () => {
+        const task = readShipped('skills/magicspec/workflows/task.md');
+        const template = readShipped('skills/magicspec/templates/tasks.md');
+        for (const [needle, what] of [
+            ['**Plan Gate (PL-4)**: the plan is missing, or stale', 'the stale-plan stop'],
+            ['check-prerequisites --json --require-specs --require-plan --workspace={active-workspace}', 'the missing plan is reported by the script, not left to the reader'],
+            ['decomposes nothing, writes nothing and ends with `/magicspec plan {workspace}` as its next step, naming why', 'it names plan and why'],
+            ['(which version moved, which specification is unplanned)', 'the reasons it names'],
+            ['**Findings Go Back (PL-8)**', 'the directive rule'],
+            ['a specification too large for one phase', 'the first finding class'],
+            ['a dependency between specifications the plan does not state', 'the second finding class'],
+            ['a phase order that the tasks\' dependencies contradict', 'the third finding class'],
+            ['a specification whose content leaves a task without a verifiable outcome', 'the fourth finding class'],
+            ['ends with `/magicspec plan {workspace} "{directive}"` as its next step', 'the next step carries the directive'],
+            ['## Replan Directive', 'the section in the ledger'],
+            ['`**Plan version:**`', 'it records the plan version'],
+            ['It is pending only while `PLAN.md`\'s version equals the recorded one', 'and retires when the plan is rewritten'],
+            ['`plan` never writes this file', 'the plan never writes the ledger'],
+            ['`update` — an alias of `/magicspec plan`', 'the update alias'],
+            ['carries the flag `stabilizes: {spec-file}`', 'the flag'],
+            ['the plan marks `[Stabilize]`', 'from the plan\'s marker'],
+            ['never from the request in the conversation', 'and never from the conversation'],
+        ]) {
+            assert.ok(task.includes(needle), what);
+        }
+        assert.ok(template.includes('## Replan Directive') && template.includes('- **Plan version:**') && template.includes('- **Directive:**'), 'the ledger template carries the section, commented out');
+        assert.ok(/<!--[\s\S]*## Replan Directive[\s\S]*-->/.test(template), 'and as a comment: absent means none');
+        // The Plan Gate runs before anything is read for decomposition or written.
+        assert.ok(task.indexOf('1. **Plan Gate**') < task.indexOf('2. **Select the Phase**'), 'the gate is Step 1');
+    });
+
+    test('shipped text: the always-on rules and the rule modules finalize plan, name /magicspec plan as the one replan step after a run, and still never offer spec or analyze unasked (PL-6)', () => {
+        const rules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const replan = readShipped('skills/magicspec/references/rules/replan.md');
+        const finalization = readShipped('skills/magicspec/references/rules/finalization.md');
+        const containment = readShipped('skills/magicspec/references/rules/containment.md');
+
+        // §3: plan finalizes, and its whitelist row is the plan file; task no longer owns the plan file.
+        assert.ok(rules.includes('`/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run` or `/magicspec rule` complete their'));
+        assert.ok(rules.includes('finalize --workflow=<spec|plan|task|run|rule>'));
+        assert.ok(finalization.includes('finalize --workflow=<spec|plan|task|run|rule>'));
+        assert.ok(finalization.includes('| `/magicspec plan` | `.magicspec/{ws}/PLAN.md` |'));
+        assert.ok(finalization.includes('| `/magicspec task` | `.magicspec/{ws}/TASKS.md`, `tasks/**/*.md` |'));
+
+        // §5: one visible next step after a run — plan on drift, run when clean.
+        assert.ok(rules.includes('step: `/magicspec plan` (or `/magicspec run` when clean). Never proactively offer `/magicspec analyze`'));
+        assert.ok(rules.includes('ONE command: `/magicspec plan` (with'));
+        assert.ok(replan.includes('collapses to ONE command — `/magicspec plan`'));
+        assert.ok(replan.includes('> Post-task drift detected. Run `/magicspec plan` to revalidate the plan.'));
+        assert.ok(replan.includes('The user sees exactly ONE next step after a phase: `/magicspec plan` (on drift) or `/magicspec run` (clean).'));
+        assert.ok(replan.includes('it surfaces ONLY inside `/magicspec plan` on a real HALT'));
+        assert.ok(replan.includes('each stage ends at its boundary and starts nothing'));
+        assert.ok(replan.includes('yes → /magicspec plan') && replan.includes('→ /magicspec task → /magicspec run'), 'the chain shows plan, then task, then run');
+        assert.ok(containment.includes('`→ /magicspec plan {ws}` to plan a containment-cleanup task'));
+
+        // No replan sentence names the task stage as the step (the old spelling).
+        for (const text of [rules, replan, finalization]) {
+            assert.ok(!/replan[^\n]*\/magicspec task\b|\/magicspec task\b[^\n]*revalidate the plan\b/.test(text), 'no replan sentence names the task stage');
+        }
+
+        // spec and analyze stay unoffered after a run.
+        assert.ok(rules.includes('or `/magicspec spec` after a run.'));
+        assert.ok(replan.includes('NEVER recommend `/magicspec analyze` proactively after `/magicspec run`'));
+    });
+
+    test('shipped text: spec and analyze end at their boundary and name plan; rule, status and help name the stage that owns what they recommend (PS-1, PL-5)', () => {
+        const spec = readShipped('skills/magicspec/workflows/spec.md');
+        const analyze = readShipped('skills/magicspec/workflows/analyze.md');
+        const rule = readShipped('skills/magicspec/workflows/rule.md');
+        const status = readShipped('skills/magicspec/workflows/status.md');
+        const help = readShipped('skills/magicspec/workflows/help.md');
+
+        // spec: the handoff names the plan and starts nothing, unless the request asked for it.
+        assert.ok(spec.includes('- **Pipeline**: `/magicspec spec` → `/magicspec plan` → `/magicspec task` → `/magicspec run`. One stage per invocation'));
+        const handoff = lineWith(spec, '**Handoff (C9 default, one stage)**');
+        assert.ok(handoff, 'spec.md carries the one-stage handoff');
+        for (const needle of ['end the invocation', 'named, never started', 'Next: /magicspec plan {workspace}', "When the request's own words asked for the following stage too", 'say in one line that the request asked for it']) {
+            assert.ok(handoff.includes(needle), `the spec handoff states: ${needle}`);
+        }
+        assert.ok(spec.includes('- **Plan** → `/magicspec plan`: Name it as the next step, with the workspace; it is not started here (one stage per invocation).'));
+        assert.ok(spec.includes('**Trigger**: the pre-flight of `/magicspec plan` or *"Verify specs"*.'));
+
+        // analyze: the same boundary for the reverse-engineering dispatch, and the remedies name the plan.
+        const analyzeHandoff = lineWith(analyze, '**Handoff (C9 / DA-6 / DA-9)**');
+        assert.ok(analyzeHandoff, 'analyze.md carries the handoff');
+        for (const needle of ['then end the invocation', 'named, never started', '/magicspec plan is next', "the request's own words asked for the following stage too"]) {
+            assert.ok(analyzeHandoff.includes(needle), `the analyze handoff states: ${needle}`);
+        }
+        assert.ok(analyze.includes('**Plan Sync needed** → emit `→ /magicspec plan`'));
+        assert.ok(analyze.includes('`→ /magicspec plan {ws}` to plan a containment-cleanup task'));
+        assert.ok(analyze.includes('- **Plan repairs** → `/magicspec plan`'));
+        for (const [name, text] of [['spec.md', spec], ['analyze.md', analyze]]) {
+            assert.ok(!/automatically invoke|Auto-Handoff|invoking \/magicspec (?:task|plan)/i.test(text), `${name} invokes no later stage`);
+        }
+
+        // rule: the rule feeds the plan.
+        assert.ok(rule.includes('Rule changes feed into `/magicspec plan` (plan updates)'));
+        assert.ok(rule.includes('default `/magicspec plan {workspace}` (propagate the rule into the plan)'));
+        assert.ok(rule.includes('- **Update the plan** → `/magicspec plan`'));
+        assert.ok(!/\/magicspec task \{workspace\} update/.test(rule), 'the update spelling is gone');
+
+        // status and help compute the recommendation in the same pipeline order.
+        const orderOf = (text, tokens) => tokens.map((t) => text.indexOf(t));
+        const statusStep = lineWith(status, 'Absent → compute by pipeline order');
+        const helpStep = lineWith(help, '4. Find the recommended command');
+        assert.ok(statusStep && helpStep);
+        for (const [text, tokens] of [
+            [statusStep, ['/magicspec spec', '/magicspec plan', '/magicspec task', '/magicspec run']],
+            [helpStep, ['→ `spec`', '→ `plan`', '→ `task`', '→ `run`']],
+        ]) {
+            const at = orderOf(text, tokens);
+            assert.ok(at.every((i) => i !== -1) && at.every((i, k) => k === 0 || i > at[k - 1]), `the order is spec, plan, task, run in: ${text.slice(0, 80)}`);
+        }
+        assert.ok(statusStep.includes('older than the registry or the constitution') && helpStep.includes('older than the registry or the constitution'));
+        assert.ok(status.includes('plus the recommendation to run `/magicspec plan {workspace}`'));
+        assert.ok(status.includes('- **Replan** → `/magicspec plan`'));
+    });
+
+    test('shipped text: each stage names what it reads and never guesses a missing record, and the plan and the tasks each end complete for the next stage (PS-3, PL-9)', () => {
+        const reads = {
+            spec: "- **Reads**: the idea, the constitution, the registry, and the specifications on the idea's topic.",
+            plan: '- **Reads**: the registry, the headers, overviews and invariants of the Stable specifications, the constitution, the plan with its backlog, the `provides` of finished phases, and a replan directive a later stage left for it',
+            task: "- **Reads**: the plan's active (or next) phase, the sections of the specifications that phase holds, the constitution, and the ledger and workbooks it updates.",
+            run: '- **Reads**: the active phase workbook, the sections of the specifications its tasks cite, and the code.',
+        };
+        for (const [body, line] of Object.entries(reads)) {
+            const text = readShipped(`skills/magicspec/workflows/${body}.md`);
+            assert.ok(text.includes(line), `${body}.md carries its Reads line`);
+            assert.strictEqual(text.split('- **Reads**:').length - 1, 1, `${body}.md has one Reads line`);
+            assert.ok(text.includes('A missing record of an earlier stage is reported as a finding and never guessed.'), `${body}.md never guesses a missing record`);
+        }
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
+        const task = readShipped('skills/magicspec/workflows/task.md');
+        assert.ok(plan.includes('the plan names, for each phase, its specifications, the order and the reason for it, the dependencies that order rests on, and for each backlog item its disposition'));
+        assert.ok(plan.includes('so `/magicspec task` decomposes the phase without reading what this workflow read'));
+        assert.ok(task.includes('each task names the specification section it implements and its `Verify` line, so `/magicspec run` executes it without reading the plan'));
+    });
+
+    test('the constitution and its shipped template say the same about the four stages: C2 names the command set, C9 runs each stage autonomously and lets only goal chain them, C24 puts the planner gate in plan.md', () => {
+        const constitution = readShipped('.magicspec/RULES.md');
+        const template = readShipped('skills/magicspec/templates/rules.md');
+        const sectionOf = (text, id) => {
+            const start = text.indexOf(`### ${id} `);
+            assert.notStrictEqual(start, -1, `${id} is in the text`);
+            const end = text.indexOf('\n### ', start + 5);
+            return text.slice(start, end === -1 ? undefined : end);
+        };
+        for (const id of ['C2', 'C9']) {
+            assert.strictEqual(sectionOf(template, id), sectionOf(constitution, id), `${id} is the same word for word in the template`);
+        }
+        const c2 = sectionOf(constitution, 'C2');
+        assert.ok(c2.includes('The command set as it ships: `spec`, `plan`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`'));
+        assert.ok(c2.includes('`fix`, `simulate`, `goal` and `sync` are authorized C2 exceptions that join with their own deliveries'));
+        assert.ok(c2.includes('`audit` is an alias of `analyze` and not a command'));
+        const c9 = sectionOf(constitution, 'C9');
+        for (const needle of [
+            'executes each stage of the SDD lifecycle (specify: Draft → RFC → Stable; plan; task; run) autonomously',
+            'One stage per invocation',
+            'naming the next command with its reasoning demand',
+            "it never starts the next stage itself, unless the request's own words asked for it",
+            '`goal` is the one command that chains the stages',
+        ]) {
+            assert.ok(c9.includes(needle), `C9 states: ${needle}`);
+        }
+        assert.ok(!c9.includes('executes the full SDD lifecycle'), 'the old sentence is gone');
+        for (const text of [constitution, template]) {
+            assert.ok(text.includes('| `plan.md` | Before `Plan Write-back` | `@role:planner` | `roles/planner.md` |'), 'the planner gate is in plan.md');
+            assert.ok(!text.includes('| `task.md` | Before `Plan Write-back`'), 'and no longer named for task.md');
+            assert.ok(text.includes('| `task.md` | Task Instruction Review (before Plan Write-back) |'), 'the task instruction review stays with task.md');
+        }
+        // The amendment is a minor bump with its history row, and the ledger records the constitution it was written against.
+        const version = /\*\*Version:\*\* (\S+)/.exec(constitution)[1];
+        const historyRow = constitution.split('\n').find((line) => line.startsWith(`| ${version} |`));
+        assert.ok(historyRow?.includes('**The pipeline is four stages**'), 'the current version has its history row');
+        const ledger = readShipped('.magicspec/engine/TASKS.md');
+        assert.ok(ledger.includes(`**Based on RULES:** .magicspec/RULES.md v${version}`), 'TASKS.md records the current constitution version');
+    });
+
+    test('the planner card triggers on plan.md, its mirror carries it word for word, the task instruction review stays with task.md, and the listings agree', () => {
+        const card = readShipped('skills/magicspec/roles/planner.md');
+        const mirror = readShipped('.magicspec/engine/specifications/l2-role-cards-execution.md');
+        for (const line of [
+            '  - workflow: plan.md',
+            '    gate: "Plan Write-back"',
+            'Own plan construction in `plan.md`.',
+            '1. Read all specs the plan holds or the draft places: their headers, overviews and invariants.',
+            '3. Group specifications into phases that minimize cross-phase dependencies.',
+            '4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.',
+            '6. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.',
+            '7. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started.',
+        ]) {
+            assert.ok(card.includes(line), `the card carries: ${line}`);
+            assert.ok(mirror.includes(line), `the mirror carries: ${line}`);
+        }
+        assert.ok(!card.includes('workflow: task.md'), 'the card no longer triggers on task.md');
+        assert.ok(!/active-phase tasks|task dependency graph/.test(card), 'and no longer plans tasks');
+
+        // The prompt-engineer's gate in task.md is untouched.
+        const governance = readShipped('skills/magicspec/roles/prompt-engineer.md');
+        assert.ok(/workflow: task\.md/.test(governance), 'the task instruction review stays with task.md');
+
+        // The listings: the index row, the integration table and the reference list.
+        const index = readShipped('.magicspec/engine/specifications/l2-role-cards.md');
+        assert.ok(index.includes('| `planner` | advisor | `plan.md` → Plan Write-back | execution |'));
+        const integration = readShipped('.magicspec/engine/specifications/l2-role-integration.md');
+        assert.ok(integration.includes('| `plan.md` | Plan Write-back | `planner` | `skills/magicspec/roles/planner.md` |'));
+        assert.ok(integration.includes('| `[PLAN]` | `skills/magicspec/workflows/plan.md` | Host of planner integration. |'));
+        assert.ok(!integration.includes('| `task.md` | Plan Write-back | `planner`'), 'no gate row names task.md for the planner');
+    });
+
+    test('the documentation draws four stages: docs/plan.md follows the plan body, docs/task.md keeps decomposition only, the pipeline reads spec, plan, task, run everywhere, and no page names a command the router lacks', () => {
+        const repo = path.resolve(__dirname, '..');
+        const read = (rel) => fs.readFileSync(path.join(repo, rel), 'utf8');
+        const planBody = read('skills/magicspec/workflows/plan.md');
+        const planDoc = read('docs/plan.md');
+        const taskDoc = read('docs/task.md');
+
+        // The page carries the body's triggers verbatim and its own slash command, so the maintenance sync has a line to propagate.
+        const triggers = /^\*\*Triggers:\*\*\s+(.+)$/m.exec(planBody)[1].trim();
+        assert.ok(planDoc.includes(`**Triggers:** ${triggers}`), 'docs/plan.md carries the Triggers line of plan.md');
+        assert.ok(planDoc.includes('**Slash command:** `/magicspec plan [arg]`'));
+        assert.ok(/## Sync Note\s+Synchronized with engine workflows on \d{4}-\d{2}-\d{2} \(v\d+\.\d+\.\d+\)\./.test(planDoc), 'and a Sync Note');
+
+        // The planning steps are on the plan page, not on the task page.
+        for (const owned of ['Pre-Planning Stabilization', 'Planning Audit', 'Circular Guard', 'Stable-Spec Requirement', 'C6 Selection']) {
+            assert.ok(planDoc.includes(owned), `docs/plan.md describes ${owned}`);
+            assert.ok(!taskDoc.includes(owned), `docs/task.md does not describe ${owned}`);
+        }
+        for (const kept of ['The Plan Gate', 'Findings Go Back', 'Replan Directive', 'Stalled Plan']) {
+            assert.ok(taskDoc.includes(kept), `docs/task.md describes ${kept}`);
+        }
+        assert.ok(taskDoc.includes('| `update` | Plan alias |'), 'the update alias is explained');
+
+        // The pipeline, in each place it is drawn or sentenced.
+        const readme = read('README.md');
+        const index = read('docs/README.md');
+        assert.ok(readme.includes('*Thought → Spec → Plan → Task → Run → Code*'));
+        assert.ok(readme.includes('📋 Specification  →  🗺️ Plan  →  ✅ Task  →  ⚡ Run'));
+        assert.ok(index.includes('*Thought → Spec → Plan → Task → Run → Code*'));
+        assert.ok(index.includes('**4 core workflows** and **5 auxiliary workflows**'));
+        assert.ok(index.includes('SPEC --> PLAN["🗺️ Plan"]') && index.includes('PLAN --> TASK["✅ Task"]') && index.includes('TASK --> RUN["⚡ Run"]'));
+        assert.ok(index.includes('| **2** | **Plan** | `plan.md`') && index.includes('| **3** | **Task** | `task.md`'));
+        assert.ok(index.includes('Spec → Plan → Task → Run'));
+        assert.ok(read('docs/spec.md').includes('before running `/magicspec plan`'));
+        assert.ok(read('docs/rule.md').includes('`/magicspec plan {workspace}` by default'));
+
+        // No page, and no shipped text, names a command the router does not list (an alias counts as listed).
+        const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
+        const known = new Set(hosts.readCommands().flatMap((r) => [r.name, ...r.aliases]));
+        const phantoms = [];
+        const scan = (rel) => {
+            const full = path.join(repo, rel);
+            if (fs.statSync(full).isDirectory()) {
+                for (const entry of fs.readdirSync(full)) scan(path.join(rel, entry));
+            } else if (rel.endsWith('.md')) {
+                fs.readFileSync(full, 'utf8').split(/\r?\n/).forEach((line, i) => {
+                    for (const m of line.matchAll(/(?:^|[\s`"(])\/magicspec ([a-z][a-z-]*)/g)) {
+                        if (!known.has(m[1])) phantoms.push(`${rel}:${i + 1} /magicspec ${m[1]}`);
+                    }
+                });
+            }
+        };
+        for (const rel of ['skills/magicspec', 'docs', 'README.md']) scan(rel);
+        assert.deepStrictEqual(phantoms, [], 'every command a page names is a row of the router');
+    });
+
+    test('shipped text: no workflow body starts a later stage by itself, and a drift found in a run goes back to plan as a recorded directive (PS-1, PS-5, PL-6)', () => {
+        const dir = path.join(shippedRoot, 'skills', 'magicspec', 'workflows');
+        // Wording that makes one stage start the next: an automatic invocation, an auto-run, the old narration.
+        const chaining = /automatically invoke|auto-run `\/magicspec|Auto-Handoff|invoking `?\/magicspec (?:plan|task|run)\b/i;
+        for (const planted of [
+            'automatically invoke `/magicspec task` to regenerate the plan',
+            'auto-run `/magicspec task {workspace} update` to synchronize',
+            '[Auto-Handoff] Specs Stable. Invoking /magicspec task.',
+            'then proceed — invoking `/magicspec plan`',
+        ]) {
+            assert.ok(chaining.test(planted), `the detector fires on: ${planted}`);
+        }
+        for (const spared of ['name it as the next step, never started', 'by editing the Draft or invoking `/magicspec spec amend`']) {
+            assert.ok(!chaining.test(spared), `the detector spares: ${spared}`);
+        }
+        const bodies = fs.readdirSync(dir).filter((f) => f.endsWith('.md'));
+        assert.ok(bodies.includes('plan.md') && bodies.includes('run.md'));
+        for (const body of bodies) {
+            assert.ok(!chaining.test(fs.readFileSync(path.join(dir, body), 'utf8')), `${body} starts no later stage`);
+        }
+
+        // run: the drift guards end the run with the one next step, the plan.
+        const run = readShipped('skills/magicspec/workflows/run.md');
+        const sync = lineWith(run, '- **Sync**: `RULES.md` version > `TASKS.md` base');
+        assert.ok(sync, 'run.md carries the Sync guard');
+        for (const needle of ['**HALT**', 'the plan is stale (PL-4) and is not repaired inside a run', '## Replan Directive', '**Plan version:**', '**Directive:**', '`/magicspec plan {workspace}` as the one next step']) {
+            assert.ok(sync.includes(needle), `the Sync guard states: ${needle}`);
+        }
+        const handoff = lineWith(run, '- **Handoff**: spec ambiguous OR any drift signal');
+        for (const needle of ['record the finding in the ledger\'s `## Replan Directive` section', 'exactly ONE command — `/magicspec plan {workspace}`', 'which reads the directive', 'its Stalled Plan report']) {
+            assert.ok(handoff?.includes(needle), `the run Handoff states: ${needle}`);
+        }
+        assert.ok(lineWith(run, '**Quarantine (C12)**')?.includes('the plan decides the quarantine and `/magicspec task` applies it to the tasks'));
+        assert.ok(lineWith(run, '**Spec Stability**')?.includes('Run `/magicspec plan {workspace}`'));
+        assert.ok(lineWith(run, '**Mid-Run Stability Check**')?.includes('run `/magicspec plan {workspace}` to re-evaluate'));
+        assert.ok(lineWith(run, '- *Backlog-Only*:')?.includes('Run `/magicspec plan` to activate a phase'));
+        assert.ok(run.includes('- **Replan** → `/magicspec plan`'));
+        assert.ok(run.includes('next-step recommendation is `/magicspec plan` only'));
+        // The read set, and no leftover naming the task stage as a recommendation.
+        assert.ok(run.includes('- **Reads**: the active phase workbook, the sections of the specifications its tasks cite, and the code.'));
+        for (const old of [
+            'ONE command — `/magicspec task {workspace}`',
+            'ONE next step: `/magicspec task {workspace}`',
+            're-run `/magicspec task`',
+            '`/magicspec task {workspace} update`',
+            'Force re-run of `/magicspec task`',
+        ]) {
+            assert.ok(!run.includes(old), `run.md no longer recommends the task stage: ${old}`);
+        }
+        assert.ok(run.includes("set by `task.md` Step 4 from the plan's `[Stabilize]` marker"));
+    });
+
+    test('shipped text: plan.md defines the Stable-spec branch of Pre-flight, the demoted-spec decision and the quarantine release, and task.md applies them to the tasks (T242, T244)', () => {
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
+        const task = readShipped('skills/magicspec/workflows/task.md');
+        const steps = plan.slice(plan.indexOf('\n### Steps'));
 
         // Pre-flight runs `--require-specs` before Step 2 can promote anything, so the
         // script's `Stable specs` finding is the normal state of a Draft-only registry.
@@ -11971,29 +12785,38 @@ describe('Magic Engine Scripts', () => {
             assert.ok(branch.includes(needle), `the branch must state ${needle}`);
         }
 
-        // Update mode: a spec demoted after the plan was written, and the way back out.
-        const sync = stepBlock(steps, '8.');
-        assert.ok(sync, 'Step 8 must be found');
+        // Update mode, the plan's side: a spec demoted after the plan was written moves to the backlog
+        // with its reason, and the way back out returns it to the plan.
+        const sync = stepBlock(steps, '6.');
+        assert.ok(sync, 'plan.md Step 6 (Sync) must be found');
         const demoted = sync.slice(
             sync.indexOf('**Demoted Spec**'),
             sync.indexOf('**Quarantine Release**'),
         );
-        assert.ok(demoted.length > 0, 'Step 8 must define Demoted Spec before Quarantine Release');
-        for (const needle of [
-            '## Backlog',
-            '`Done`',
-            '`Blocked [!]`',
-            'Spec `{file}` is `{status}`',
-        ]) {
+        assert.ok(demoted.length > 0, 'Step 6 must define Demoted Spec before Quarantine Release');
+        for (const needle of ['## Backlog', 'Spec `{file}` is `{status}`']) {
             assert.ok(demoted.includes(needle), `Demoted Spec must state ${needle}`);
         }
         const release = sync.slice(sync.indexOf('**Quarantine Release**'));
-        for (const needle of ['C12', 'Demoted Spec', '`Stable`', 'return to `Todo`']) {
+        for (const needle of ['C12', 'Demoted Spec', '`Stable`', 'returns to the active plan']) {
             assert.ok(release.includes(needle), `Quarantine Release must state ${needle}`);
         }
+
+        // The tasks' side: the block that decision causes, and the release that undoes it.
+        const taskSync = stepBlock(task.slice(task.indexOf('\n### Steps')), '6.');
+        assert.ok(taskSync, 'task.md Step 6 (Sync) must be found');
+        const blocking = lineWith(taskSync, "**Blocking a demoted specification's tasks**");
+        assert.ok(blocking, 'task.md must apply the demoted-spec decision to the tasks');
+        for (const needle of ['## Backlog', '`Done`', '`Blocked [!]`', 'Spec `{file}` is `{status}`']) {
+            assert.ok(blocking.includes(needle), `the block must state ${needle}`);
+        }
+        const releasing = lineWith(taskSync, '**Releasing a block**');
+        for (const needle of ['quarantine reason', 'return to `Todo`']) {
+            assert.ok(releasing?.includes(needle), `the release must state ${needle}`);
+        }
         assert.ok(
-            /Preserve recorded task state[^\n]*Quarantine Release/.test(task),
-            'the rule that survivors keep their recorded status must name Quarantine Release among the explicit transitions',
+            /Preserve recorded task state[^\n]*release of a block/.test(task),
+            'the rule that survivors keep their recorded status must name the release of a block among the explicit transitions',
         );
     });
 
@@ -12108,33 +12931,46 @@ describe('Magic Engine Scripts', () => {
 
     test('shipped text: the C12.1 stabilization exception has a data trigger — the stabilizes flag — in the planning workflow, the constitution and its template (T71)', (t) => {
         const task = readShipped('skills/magicspec/workflows/task.md');
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
         const steps = task.slice(task.indexOf('\n### Steps'));
 
-        const decompose = stepBlock(steps, '7.');
-        assert.ok(decompose, 'Step 7 must be found');
+        // The flag is set by task.md Decompose, from the marker the plan wrote — never from the conversation.
+        const decompose = stepBlock(steps, '4.');
+        assert.ok(decompose, 'task.md Step 4 (Decompose) must be found');
         const setting = decompose.slice(decompose.indexOf('**Stabilizing Tasks'));
         assert.ok(
             setting.startsWith('**Stabilizing Tasks'),
-            'Step 7 must define Stabilizing Tasks',
+            'Step 4 must define Stabilizing Tasks',
         );
         assert.ok(
             setting.includes('`stabilizes: {spec-file}`'),
-            'Step 7 must define how the flag is set',
+            'Step 4 must define how the flag is set',
         );
+        const settingLine = setting.slice(0, setting.indexOf('\n'));
         assert.ok(
-            /explicit/i.test(setting.slice(0, setting.indexOf('\n'))),
-            'the flag is set only on an explicit request, never inferred from a title',
+            settingLine.includes("the plan marks `[Stabilize]`") &&
+                /never from the request in the conversation/.test(settingLine),
+            'the flag comes from the plan\'s marker, never from the request, never inferred from a title',
         );
 
-        const sync = stepBlock(steps, '8.');
-        assert.ok(sync, 'Step 8 must be found');
-        const c12 = sync.split(/\r?\n/).find((line) => line.includes('**C12 Quarantine**'));
-        assert.ok(c12, 'Step 8 must carry the C12 Quarantine bullet');
+        // The plan's side: only a marked spec bypasses the quarantine; every other child stays quarantined.
+        const planSync = stepBlock(plan.slice(plan.indexOf('\n### Steps')), '6.');
+        assert.ok(planSync, 'plan.md Step 6 must be found');
+        const c12 = planSync.split(/\r?\n/).find((line) => line.includes('**C12 Quarantine**'));
+        assert.ok(c12, 'plan.md Step 6 must carry the C12 Quarantine bullet');
         const exception = c12.slice(c12.indexOf('**C12.1 Stabilization Exception**'));
         assert.ok(
-            exception.includes('`stabilizes: {spec-file}`') &&
-                exception.includes('stays quarantined'),
-            'C12.1 in Step 8 must require the flag and keep every other task quarantined',
+            exception.includes('`[Stabilize]`') && exception.includes('stays quarantined'),
+            'C12.1 in plan.md must require the marker and keep every other child quarantined',
+        );
+
+        // The tasks' side: the flag is the one thing that lets a task past the block.
+        const sync = stepBlock(steps, '6.');
+        assert.ok(sync, 'task.md Step 6 must be found');
+        const blocking = lineWith(sync, "**Blocking a quarantined specification's tasks**");
+        assert.ok(
+            blocking?.includes('`stabilizes: {spec-file}`') && blocking.includes('stays blocked'),
+            'task.md must require the flag and keep every other task blocked',
         );
 
         // The constitution and the template shipped to consumers state the same exception.
@@ -12215,14 +13051,14 @@ describe('Magic Engine Scripts', () => {
         );
 
         const filter = lineWith(
-            readShipped('skills/magicspec/workflows/task.md'),
+            readShipped('skills/magicspec/workflows/plan.md'),
             '**Guided Planning Filter**',
         );
-        assert.ok(filter, 'task.md must carry the Guided Planning Filter');
+        assert.ok(filter, 'plan.md must carry the Guided Planning Filter');
         for (const needle of [
             '**Stabilization interaction (C12.1)**',
             'whatever its status',
-            '`stabilizes:`',
+            '`[Stabilize]`',
         ]) {
             assert.ok(filter.includes(needle), `the filter must state ${needle}`);
         }
@@ -12289,26 +13125,39 @@ describe('Magic Engine Scripts', () => {
             `the cards spec must carry the card line verbatim: ${reread}`,
         );
 
-        // Planning side: the Sync step must not return a tentative plan's tasks to Backlog.
-        const task = readShipped('skills/magicspec/workflows/task.md');
-        const sync = stepBlock(task.slice(task.indexOf('\n### Steps')), '8.');
-        const bootstrapTasks = lineWith(sync, '**Bootstrap Tasks**');
+        // Planning side: the Sync step must not return a tentative plan's specs to Backlog.
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
+        const sync = stepBlock(plan.slice(plan.indexOf('\n### Steps')), '6.');
+        const bootstrapPlan = lineWith(sync, '**Bootstrap Plan**');
         assert.ok(
-            bootstrapTasks,
-            'task.md Step 8 must define Bootstrap Tasks beside C12 and Demoted Spec',
+            bootstrapPlan,
+            'plan.md Step 6 must define the Bootstrap Plan beside C12 and Demoted Spec',
         );
         for (const needle of [
             '`[Bootstrap]`',
             'C12 Quarantine',
             'Demoted Spec',
-            'while its spec is `Draft`',
+            'while it is `Draft`',
             'leaves `Draft`',
         ]) {
-            assert.ok(bootstrapTasks.includes(needle), `Bootstrap Tasks must state ${needle}`);
+            assert.ok(bootstrapPlan.includes(needle), `the Bootstrap Plan must state ${needle}`);
         }
         assert.ok(
-            sync.indexOf('**Bootstrap Tasks**') < sync.indexOf('**Demoted Spec**'),
-            'Bootstrap Tasks must come before Demoted Spec, the rule it limits',
+            sync.indexOf('**Bootstrap Plan**') < sync.indexOf('**Demoted Spec**'),
+            'the Bootstrap Plan must come before Demoted Spec, the rule it limits',
+        );
+
+        // Task side: the tasks of a tentative spec are not blocked while it is Draft.
+        const task = readShipped('skills/magicspec/workflows/task.md');
+        const taskSync = stepBlock(task.slice(task.indexOf('\n### Steps')), '6.');
+        const exemption = lineWith(taskSync, '**Bootstrap exemption**');
+        assert.ok(exemption, 'task.md Step 6 must define the Bootstrap exemption');
+        for (const needle of ['`[Bootstrap]`', 'while its specification is `Draft`', 'leaves `Draft`']) {
+            assert.ok(exemption.includes(needle), `the exemption must state ${needle}`);
+        }
+        assert.ok(
+            taskSync.indexOf('**Bootstrap exemption**') < taskSync.indexOf("**Blocking a demoted specification's tasks**"),
+            'the exemption must come before the block it limits',
         );
     });
 
@@ -12617,32 +13466,32 @@ describe('Magic Engine Scripts', () => {
         const task = readShipped('skills/magicspec/workflows/task.md');
 
         // The handoff is conditional on something to run, and names the report it falls back to.
-        const handoff = lineWith(task, '**Zero-Prompt handoff**');
-        assert.ok(handoff, 'task.md must carry the Zero-Prompt handoff guard');
+        const handoff = lineWith(task, '**One Stage**');
+        assert.ok(handoff, 'task.md must carry the One Stage guard');
         for (const needle of ['`Todo` or `In Progress` task', '`Blocked [!]`', 'Stalled Plan']) {
             assert.ok(handoff.includes(needle), `the handoff must state ${needle}`);
         }
 
-        // Step 8 defines the report: its trigger, the single next step, the line a spec gap ends with
+        // Step 6 defines the report: its trigger, the single next step, the line a spec gap ends with
         // and the one block the workflow does not lift itself.
-        const sync = stepBlock(task.slice(task.indexOf('\n### Steps')), '8.');
-        assert.ok(sync, 'Step 8 must be found');
+        const sync = stepBlock(task.slice(task.indexOf('\n### Steps')), '6.');
+        assert.ok(sync, 'Step 6 must be found');
         const stalled = lineWith(sync, '**Stalled Plan**');
-        assert.ok(stalled, 'Step 8 must define the Stalled Plan outcome');
+        assert.ok(stalled, 'Step 6 must define the Stalled Plan outcome');
         assert.ok(
-            sync.indexOf('**Stalled Plan**') > sync.indexOf('**Quarantine Release**'),
+            sync.indexOf('**Stalled Plan**') > sync.indexOf('**Releasing a block**'),
             'the outcome must follow the release rule: it judges what the rules above left',
         );
         for (const needle of [
             'no `Todo` or `In Progress` task',
             '≥1 `Blocked [!]`',
-            '**HALT** after the plan is written',
+            '**HALT** after the ledger is written',
             'no handoff to `/magicspec run`',
             'exactly ONE next step',
             'first blocked task in checklist order',
             'requires design input',
             '`/magicspec spec`',
-            '(C12, Demoted Spec, Phantom Specs)',
+            'releases only the blocks it owns',
             "setting its task's `Status` to `Todo`",
         ]) {
             assert.ok(stalled.includes(needle), `Stalled Plan must state ${needle}`);
@@ -12657,28 +13506,28 @@ describe('Magic Engine Scripts', () => {
         const run = readShipped('skills/magicspec/workflows/run.md');
         assert.ok(
             lineWith(run, '*Stalled*:')?.includes(
-                'exactly ONE next step: `/magicspec task {workspace}`',
+                'exactly ONE next step: `/magicspec plan {workspace}`',
             ),
-            'run.md *Stalled* must keep recommending /magicspec task as its one next step',
+            'run.md *Stalled* must keep recommending /magicspec plan as its one next step',
         );
         assert.ok(
-            lineWith(run, '*Stalled*:')?.includes('only inside a `/magicspec task` HALT'),
-            'run.md *Stalled* must say the specification workflow surfaces only inside a /magicspec task HALT',
+            lineWith(run, '*Stalled*:')?.includes('only inside a `/magicspec plan` HALT'),
+            'run.md *Stalled* must say the specification workflow surfaces only inside a /magicspec plan HALT',
         );
         assert.ok(
             !/Pre-flight only/.test(run),
-            'run.md must not say a blocked spec surfaces in /magicspec task Pre-flight only: the Stalled Plan HALT of Step 8 is a second surface',
+            'run.md must not say a blocked spec surfaces in /magicspec task Pre-flight only: the Stalled Plan report of task.md Step 6 is a second surface',
         );
     });
 
-    test('shipped text: a spec ambiguity found in a run takes one route — the single /magicspec task recommendation — in the debugger card, its mirror and the run page (T258)', () => {
+    test('shipped text: a spec ambiguity found in a run takes one route — the single /magicspec plan recommendation — in the debugger card, its mirror and the run page (T258)', () => {
         const card = cardLine('skills/magicspec/roles/debugger.md', '4. For (b)');
         assert.ok(card, 'the debugger card must carry its step for a spec ambiguity');
         for (const needle of [
             '`Notes`',
             '`run.md` Step 4',
-            '`/magicspec task {workspace}`',
-            'only inside a `/magicspec task` HALT',
+            '`/magicspec plan {workspace}`',
+            'only inside a `/magicspec plan` HALT',
         ]) {
             assert.ok(card.includes(needle), `the debugger step must state ${needle}`);
         }
@@ -12715,8 +13564,8 @@ describe('Magic Engine Scripts', () => {
             'docs/run.md must not route a run to the specification workflow',
         );
         assert.ok(
-            lineWith(page, '- **Handoff**:')?.includes('`/magicspec task {workspace}`'),
-            'the run page must name /magicspec task as the one handoff',
+            lineWith(page, '- **Handoff**:')?.includes('`/magicspec plan {workspace}`'),
+            'the run page must name /magicspec plan as the one handoff',
         );
     });
 
@@ -13641,24 +14490,27 @@ describe('Magic Engine Scripts', () => {
                 e.isDirectory() ? walkFiles(path.join(dir, e.name)) : [path.join(dir, e.name)],
             );
 
-    // The commands the router lists, from its table: command, group, what it does, argument,
-    // when it is missing, body.
+    // The commands the router lists, from its table: command (and its alias), group, what it does,
+    // argument, when it is missing, demand, body. The harness reads the table with its own pattern, so
+    // a case can compare it with the one parser of the engine (lib/hosts.js).
     const tableRowsOf = (text) =>
         text
             .split(/\r?\n/)
             .map((l) =>
-                /^\| `([a-z][a-z-]*)` \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| `workflows\/([a-z-]+)\.md` \|$/.exec(
+                /^\| `([a-z][a-z-]*)`(?: \(alias `([a-z][a-z-]*)`\))? \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| (deep|standard|light) \| `workflows\/([a-z-]+)\.md` \|$/.exec(
                     l,
                 ),
             )
             .filter(Boolean)
             .map((m) => ({
                 name: m[1],
-                group: m[2].trim(),
-                summary: m[3].trim(),
-                argument: m[4].trim(),
-                missing: m[5].trim(),
-                file: m[6],
+                alias: m[2] || null,
+                group: m[3].trim(),
+                summary: m[4].trim(),
+                argument: m[5].trim(),
+                missing: m[6].trim(),
+                demand: m[7],
+                file: m[8],
             }));
     const routerRows = () =>
         tableRowsOf(fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8'));
@@ -13708,11 +14560,73 @@ describe('Magic Engine Scripts', () => {
                 `${row.name}: the description names the command`,
             );
         }
-        assert.strictEqual(rows.length, 9);
+        assert.strictEqual(rows.length, 10);
         assert.ok(
             !fs.existsSync(path.join(skillSrc, 'workflows', 'context.md')),
             'a shared module is not a command',
         );
+    });
+
+    test('the router table has a demand for every command, an alias that is never a command, and one parser that reads it the way the harness does (skill folder)', () => {
+        const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
+        const text = fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8');
+        const rows = routerRows();
+        const parsed = hosts.readCommands();
+
+        // The demands of the specification's table (l1-pipeline-stages.md §5.2), one per command.
+        const demands = {
+            spec: 'deep',
+            plan: 'deep',
+            task: 'standard',
+            run: 'standard',
+            analyze: 'deep',
+            rule: 'standard',
+            status: 'light',
+            graph: 'light',
+            migrate: 'light',
+            help: 'light',
+        };
+        assert.deepStrictEqual(
+            Object.fromEntries(rows.map((r) => [r.name, r.demand])),
+            demands,
+            'every command declares the demand of the specification',
+        );
+        for (const row of rows) {
+            assert.ok(
+                fs.existsSync(path.join(skillSrc, 'workflows', `${row.file}.md`)),
+                `${row.name}: the body exists`,
+            );
+        }
+
+        // An alias is read as its command and is never the name of another one.
+        const names = new Set(rows.map((r) => r.name));
+        const aliases = rows.filter((r) => r.alias).map((r) => [r.alias, r.name]);
+        assert.deepStrictEqual(aliases, [['audit', 'analyze']]);
+        for (const [alias] of aliases) assert.ok(!names.has(alias), `${alias} is not a command`);
+
+        // The engine's parser and the harness's own pattern read the same table.
+        assert.deepStrictEqual(
+            parsed.map((r) => [r.name, r.demand, r.aliases, r.body]),
+            rows.map((r) => [r.name, r.demand, r.alias ? [r.alias] : [], `${r.file}.md`]),
+            'the one parser and the harness agree on every row',
+        );
+        assert.deepStrictEqual(
+            parsed.map((r) => r.summary),
+            rows.map((r) => r.summary),
+        );
+        // A row that is not seven columns, has no known demand or an alias that is not backticked is not a row.
+        assert.strictEqual(hosts.parseCommandRow('| `x` | pipeline | s | a | m | `workflows/x.md` |'), null, 'six columns');
+        assert.strictEqual(hosts.parseCommandRow('| `x` | pipeline | s | a | m | fast | `workflows/x.md` |'), null, 'an unknown demand');
+        assert.strictEqual(hosts.parseCommandRow('| `x` (alias y) | pipeline | s | a | m | light | `workflows/x.md` |'), null, 'an alias with no backticks');
+        assert.deepStrictEqual(
+            hosts.parseCommandRow('| `x` (aliases `y`, `z`) | pipeline | s | a | m | light | `workflows/x.md` |').aliases,
+            ['y', 'z'],
+        );
+
+        // The dispatch reads an alias as its command, with no narration, and the pipeline reads plan between spec and task.
+        assert.match(text, /or an alias in its row \(`audit` is `analyze`\) → that command/);
+        assert.match(text, /An alias runs the command with no narration/);
+        assert.match(text, /Pipeline: `spec` → `plan` → `task` → `run`/);
     });
 
     test('the help body is rendered from the router table: no second list, the picker by host capability, a bounded ask and verbatim names (skill folder)', () => {
@@ -13730,7 +14644,7 @@ describe('Magic Engine Scripts', () => {
         for (const [needle, what] of [
             [/\*\*Read-Only\*\*/, 'read-only'],
             [
-                /ignoring letter case, is the command; any other token is read as a language/,
+                /ignoring letter case, is the command — only the first such token[\s\S]*[Aa]ny other token is read as a language/,
                 'command versus language',
             ],
             [
@@ -13828,6 +14742,30 @@ describe('Magic Engine Scripts', () => {
                 `${row.name}: an optional argument is never asked for`,
             );
         }
+    });
+
+    test('help explains one command with its demand, reads an alias as its command, explains itself once with no picker, stops its recursion at one level and answers an unknown token (skill folder)', () => {
+        const help = fs.readFileSync(path.join(skillSrc, 'workflows', 'help.md'), 'utf8');
+        for (const [needle, what] of [
+            ['- `{command}` — that command\'s argument, its forms, its reasoning demand and one example each', 'the Entry names the demand in the detail view'],
+            ['an alias names its command, `help help` explains this command like any other and offers no picker', 'help help and the alias are explained'],
+            ['`/magicspec help help`, `/magicspec help audit`', 'the examples carry both'],
+            ['only the first such token: a further one is ignored with one line saying so', 'the recursion is bounded'],
+            ['so `help help help` renders what `help help` renders', 'at one level'],
+            ['a token that is neither a command, an alias nor a recognized language is answered with one line naming it, the command one edit away when there is one, and then the whole list', 'an unknown token is answered'],
+            ['An alias follows its command\'s name in parentheses (`analyze (audit)`)', 'the list shows the alias'],
+            ['(`audit is analyze`)', 'the detail view says an alias is its command'],
+            ['the offer is dropped: the list is one `help` away', 'help help offers no picker'],
+            ['/magicspec {command} {argument}      ({demand} reasoning)', 'the detail layout carries the demand'],
+            ['one edit away from a command name or an alias', 'an alias counts for the near-miss suggestion'],
+            ['through the one parser of the engine (`lib/hosts.js`)', 'the help reads the table through the engine\'s parser'],
+        ]) {
+            assert.ok(help.includes(needle), what);
+        }
+        // The demand is advice: help never prints it as a warning and no list row carries it.
+        assert.ok(help.includes('it is never printed as a warning and never changes what runs'));
+        const list = help.slice(help.indexOf('Magic Spec {version}'), help.indexOf('Next:  /magicspec'));
+        assert.ok(!/reasoning/.test(list), 'the list layout carries no demand');
     });
 
     test('the router states one grammar, carries the argument contract of every command and routes the bare, unknown and missing-argument forms (skill folder)', () => {
@@ -15509,10 +16447,10 @@ describe('Magic Engine Scripts', () => {
             const rows = fs
                 .readFileSync(path.join(skill, 'SKILL.md'), 'utf8')
                 .split('\n')
-                .map((l) => /^\| `([a-z-]+)` \| .+ \| `workflows\/([a-z-]+\.md)` \|$/.exec(l))
+                .map((l) => require(path.join(scriptsDir, 'lib', 'hosts.js')).parseCommandRow(l))
                 .filter(Boolean);
             assert.ok(
-                rows.length === bodies.length && rows.every((r) => bodies.includes(r[2])),
+                rows.length === bodies.length && rows.every((r) => bodies.includes(r.body)),
                 'SP-5: the table and the folder agree',
             );
             assert.ok(
@@ -16020,7 +16958,7 @@ describe('Magic Engine Scripts', () => {
         try {
             const result = simExec(dir, ['finalize', '--workflow=bogus']);
             assert.notStrictEqual(result.status, 0);
-            assert.match(result.stderr, /Expected one of: spec, task, run, rule/);
+            assert.match(result.stderr, /Expected one of: spec, plan, task, run, rule/);
         } finally {
             cleanup(dir);
         }
@@ -16156,6 +17094,14 @@ describe('Magic Engine Scripts', () => {
             fs.mkdirSync(path.join(dir, 'scripts'));
             fs.mkdirSync(path.join(dir, 'skills', 'magicspec'), { recursive: true });
             fs.copyFileSync(path.resolve(__dirname, '..', 'scripts', 'release.js'), path.join(dir, 'scripts', 'release.js'));
+            // The policy check and the two modules its command-line guard loads.
+            for (const file of ['check-security-policy.js', 'cli-guard.js', 'engine-path.js']) {
+                fs.copyFileSync(path.resolve(__dirname, '..', 'scripts', file), path.join(dir, 'scripts', file));
+            }
+            fs.mkdirSync(path.join(dir, 'skills', 'magicspec', 'scripts', 'lib'), { recursive: true });
+            fs.copyFileSync(path.join(scriptsDir, 'utils.js'), path.join(dir, 'skills', 'magicspec', 'scripts', 'utils.js'));
+            fs.copyFileSync(path.join(scriptsDir, 'lib', 'commands.js'), path.join(dir, 'skills', 'magicspec', 'scripts', 'lib', 'commands.js'));
+            fs.writeFileSync(path.join(dir, 'SECURITY.md'), '# Security\n\n| Version line | Supported |\n| --- | --- |\n| `9.9.x` | Yes |\n| `9.8.x` | No |\n');
             fs.writeFileSync(path.join(dir, 'skills', 'magicspec', '.version'), '9.9.9');
             fs.writeFileSync(path.join(dir, 'CHANGELOG.md'), '# Changelog\n\n## [9.9.9] - 2026-10-29\n');
             git(dir, 'add', '-A');
@@ -16175,6 +17121,15 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(head(), start, 'the plan commits nothing');
             assert.strictEqual(git(dir, 'tag', '--list').stdout.trim(), '', 'and tags nothing');
             assert.strictEqual(pushed(), '', 'and pushes nothing');
+
+            // a security policy whose table does not support the line being released blocks the plan
+            fs.writeFileSync(path.join(dir, 'SECURITY.md'), '# Security\n\n| Version line | Supported |\n| --- | --- |\n| `9.8.x` | Yes |\n');
+            const stalePolicy = run();
+            assert.strictEqual(stalePolicy.status, 1);
+            assert.match(stalePolicy.stderr, /the security policy does not match this release: .*does not list the 9\.9 line/);
+            assert.strictEqual(run('--yes').status !== 0, true, 'and so does --yes');
+            git(dir, 'checkout', '--', 'SECURITY.md');
+            assert.match(run().stdout, /Ready\. Run with --yes/, 'a matching table lets the plan through again');
 
             // a scratch file must never ride along into a release commit
             fs.writeFileSync(path.join(dir, 'scratch-note.md'), 'not for a release\n');
@@ -16203,6 +17158,104 @@ describe('Magic Engine Scripts', () => {
             cleanup(dir);
             cleanup(remote);
         }
+    });
+
+
+    test('the security policy check passes a table that supports the release line, and names a missing line, a stale supported row, a contradiction and a missing table', () => {
+        const { checkPolicy, parseSupportedVersions, minorLineOf } = require(path.resolve(__dirname, '..', 'scripts', 'check-security-policy.js'));
+        const table = (...rows) => `| Version line | Supported |\n| --- | --- |\n${rows.join('\n')}\n`;
+        assert.strictEqual(minorLineOf('3.0.32'), '3.0');
+        assert.strictEqual(minorLineOf('latest'), null);
+        assert.deepStrictEqual(parseSupportedVersions(table('| `3.0.x` | Yes |', '| `1.x` | no |')).map((r) => [r.line, r.supported]), [['3.0', true], ['1', false]]);
+
+        assert.deepStrictEqual(checkPolicy(table('| `3.0.x` | Yes |', '| `2.1.x` | No |', '| `1.x` | No |'), '3.0.32'), [], 'a matching table passes');
+        assert.match(checkPolicy(table('| `2.1.x` | No |'), '3.0.32')[0], /does not list the 3\.0 line/, 'a missing line fails');
+        assert.match(checkPolicy(table('| `3.0.x` | No |'), '3.0.32')[0], /3\.0 line, which is being released, as not supported/, 'a release line stated as not supported fails');
+        assert.match(
+            checkPolicy(table('| `3.0.x` | Yes |', '| `2.1.x` | Yes |'), '3.0.32').join('|'),
+            /2\.1\.x as supported, but only the latest minor line \(3\.0\)/,
+            'a stale supported row fails',
+        );
+        assert.match(checkPolicy(table('| `3.0.x` | Yes |', '| `3.0.x` | No |'), '3.0.32').join('|'), /both supported and not supported/, 'a contradiction fails');
+        assert.match(checkPolicy('# Security\n\nNo table here.\n', '3.0.32')[0], /no supported-versions table/, 'a missing table fails');
+        assert.match(checkPolicy(table('| `3.0.x` | Yes |'), 'next')[0], /is not a version/);
+
+        // As a program: exit 0 on a match, 1 with every mismatch named, and the real policy matches the real version.
+        const dir = createTempWorkspace();
+        try {
+            fs.writeFileSync(path.join(dir, 'SECURITY.md'), table('| `3.0.x` | Yes |', '| `2.1.x` | Yes |'));
+            const script = path.join(dir, 'scripts', 'check-security-policy.js');
+            const stale = spawnSync(process.execPath, [script, '--version', '3.0.1'], { cwd: dir, encoding: 'utf8' });
+            assert.strictEqual(stale.status, 1);
+            assert.match(stale.stderr, /\[BLOCKED\] SECURITY\.md: .*2\.1\.x as supported/);
+            fs.writeFileSync(path.join(dir, 'SECURITY.md'), table('| `3.0.x` | Yes |'));
+            const fresh = spawnSync(process.execPath, [script, '--version', '3.0.1'], { cwd: dir, encoding: 'utf8' });
+            assert.strictEqual(fresh.status, 0, fresh.stderr);
+            fs.rmSync(path.join(dir, 'SECURITY.md'));
+            const missing = spawnSync(process.execPath, [script, '--version', '3.0.1'], { cwd: dir, encoding: 'utf8' });
+            assert.strictEqual(missing.status, 1);
+            assert.match(missing.stderr, /security policy is missing/);
+        } finally {
+            cleanup(dir);
+        }
+        const repo = path.resolve(__dirname, '..');
+        const version = fs.readFileSync(path.join(repo, 'skills', 'magicspec', '.version'), 'utf8').trim();
+        assert.deepStrictEqual(checkPolicy(fs.readFileSync(path.join(repo, 'SECURITY.md'), 'utf8'), version), [], 'this repository\'s policy supports the version it carries');
+    });
+
+
+    test('the docs-specialist card gains the community-health trigger, its mirror carries it word for word, and the run gate and the audit step name it', () => {
+        const repo = path.resolve(__dirname, '..');
+        const card = fs.readFileSync(path.join(repo, 'skills', 'magicspec', 'roles', 'docs-specialist.md'), 'utf8');
+        const mirror = fs.readFileSync(path.join(repo, '.magicspec', 'engine', 'specifications', 'l2-role-cards-execution.md'), 'utf8');
+
+        // The trigger, the handoff to the reviewer and the protocol step, in the card and in its mirror.
+        const lines = [
+            '  - workflow: run.md',
+            '    gate: "A community health file must change"',
+            '  - to: prompt-engineer',
+            '    condition: "a community health file changed; its text is reviewed before the Done transition"',
+            'Also triggered when a community health file — the security policy, the contribution guide or an issue form — must change.',
+            '5. When the trigger is a community health file, change only the file the work concerns:',
+            '6. Hand back to Test-engineer to finalize `Done` transition.',
+        ];
+        for (const line of lines) {
+            assert.ok(card.includes(line), `the card carries: ${line}`);
+            assert.ok(mirror.includes(line), `the mirror carries: ${line}`);
+        }
+        const protocol = (text) => text.split('\n').filter((line) => /^[1-6]\. /.test(line));
+        const cardSteps = protocol(card.slice(card.indexOf('## Operating Protocol')));
+        const mirrorSteps = protocol(mirror.slice(mirror.indexOf('## 5. Docs-specialist')));
+        assert.deepStrictEqual(mirrorSteps.slice(0, cardSteps.length), cardSteps, 'the protocol steps are identical');
+
+        // The run body names the trigger beside the first one, with the reviewer.
+        const run = fs.readFileSync(path.join(repo, 'skills', 'magicspec', 'workflows', 'run.md'), 'utf8');
+        assert.match(run, /community health file \(the security policy, the contribution guide or an issue form\) must change → activate `@role:docs-specialist`; `@role:prompt-engineer` reviews/);
+
+        // The documentation audit checks the three files, and only in the engine's own repository.
+        const analyze = fs.readFileSync(path.join(repo, 'skills', 'magicspec', 'workflows', 'analyze.md'), 'utf8');
+        const start = analyze.indexOf('10. **Documentation & Version Audit**');
+        const end = analyze.indexOf('11. **Scope Blind-Spot Check**');
+        const step = analyze.slice(start, end);
+        assert.ok(start !== -1 && end > start);
+        assert.ok(step.includes("the engine's own repository only — skip when `scripts/generate-checksums.js` is absent"), 'the step is gated by the developer predicate');
+        for (const needle of ['`SECURITY.md` states the supported versions as a table', 'private reporting place', '`CONTRIBUTING.md` keeps its five sections in the contract order', '`.github/ISSUE_TEMPLATE/` holds the bug report, change proposal and agent-feedback forms', 'blank issues disabled', 'documentation drift']) {
+            assert.ok(step.includes(needle), `the audit step checks: ${needle}`);
+        }
+        assert.ok(!analyze.slice(0, start).includes('SECURITY.md') && !analyze.slice(end).includes('SECURITY.md'), 'the community-file check lives only inside the gated step');
+
+        // The sibling places that list the card's triggers agree.
+        const index = fs.readFileSync(path.join(repo, '.magicspec', 'engine', 'specifications', 'l2-role-cards.md'), 'utf8');
+        const integration = fs.readFileSync(path.join(repo, '.magicspec', 'engine', 'specifications', 'l2-role-integration.md'), 'utf8');
+        assert.ok(index.includes('a community health file must change'));
+        assert.ok(integration.includes('| `run.md` | A community health file must change | `docs-specialist` |'));
+    });
+
+    test('the release workflow checks the security policy before it builds the archive', () => {
+        const workflow = fs.readFileSync(path.resolve(__dirname, '..', '.github', 'workflows', 'release.yml'), 'utf8');
+        const check = workflow.indexOf('node scripts/check-security-policy.js --version');
+        const build = workflow.indexOf('- name: Build release archive');
+        assert.ok(check !== -1 && build !== -1 && check < build, 'the policy check runs first');
     });
 
     test('the maintenance scripts answer --help and refuse an unknown option before they write, and their table names exactly what each reads', () => {
@@ -16744,6 +17797,29 @@ describe('Magic Engine Scripts', () => {
         } finally {
             cleanup(dir);
         }
+    });
+
+    test('resolve-workspace: an empty --text is refused, a command typed with only a workspace runs it without --text, and every body and the context module say so', () => {
+        const dir = createTempWorkspace();
+        try {
+            writeRoutingFixture(dir, routingRegistry({ default: undefined }));
+            const refused = runRouting(dir, ['--command', 'run', '--workspace', 'docs', '--text', '']);
+            assert.notStrictEqual(refused.status, 0, 'an empty value is refused');
+            assert.match(refused.stderr + refused.stdout, /non-empty value/);
+            const accepted = runRouting(dir, ['--command', 'run', '--workspace', 'docs']);
+            assert.strictEqual(accepted.status, 0, accepted.stderr);
+            assert.match(accepted.stdout, /^Workspace: docs$/m);
+        } finally {
+            cleanup(dir);
+        }
+        const engine = path.resolve(scriptsDir, '..');
+        const clause = 'when it is empty `--text` is left out';
+        for (const body of ['analyze', 'rule', 'run', 'spec', 'status', 'task']) {
+            const text = fs.readFileSync(path.join(engine, 'workflows', `${body}.md`), 'utf8');
+            assert.ok(text.includes(clause), `workflows/${body}.md says what to do with an empty request`);
+        }
+        const context = fs.readFileSync(path.join(engine, 'references', 'context.md'), 'utf8');
+        assert.ok(context.includes('leave `--text` out'), 'references/context.md says it too');
     });
 
     test('resolve-workspace: the words of a request that have the shape of a path are paths; URLs, versions, commands and places outside the project are not', () => {
@@ -17728,10 +18804,10 @@ describe('Magic Engine Scripts', () => {
         fs.writeFileSync(
             path.join(dir, 'skills', 'magicspec', 'SKILL.md'),
             [
-                '| Command | Group | What it does | Argument | When it is missing | Body |',
-                '| --- | --- | --- | --- | --- | --- |',
-                '| `spec` | pipeline | Writes specifications | an idea | **required** | `workflows/spec.md` |',
-                '| `run` | pipeline | Runs the tasks | a workspace | optional | `workflows/run.md` |',
+                '| Command | Group | What it does | Argument | When it is missing | Demand | Body |',
+                '| --- | --- | --- | --- | --- | --- | --- |',
+                '| `spec` | pipeline | Writes specifications | an idea | **required** | deep | `workflows/spec.md` |',
+                '| `run` (alias `go`) | pipeline | Runs the tasks | a workspace | optional | standard | `workflows/run.md` |',
                 '',
             ].join('\n'),
         );
@@ -17784,6 +18860,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(after.includes('<!-- generated:version -->v1.0.0<!-- /generated:version -->'));
             assert.ok(after.includes('| `/magicspec spec` | Writes specifications |'));
             assert.ok(after.includes('| `/magicspec run` | Runs the tasks |'));
+            assert.ok(!after.includes('/magicspec go'), 'an alias is not a row of its own: the guide lists commands');
             assert.ok(!after.includes('STALE'), 'the stale block bodies were replaced');
             assert.ok(
                 after.includes('costs $& and $1'),
@@ -17839,6 +18916,11 @@ describe('Magic Engine Scripts', () => {
                 text.includes('<!-- generated:commands -->\nhand text without a closing marker\n'),
                 'an unpaired block is left as it is',
             );
+            assert.strictEqual(
+                text.split('<!-- generated:commands -->').length - 1,
+                1,
+                'and no second pair of markers is added beside it',
+            );
         } finally {
             cleanup(unpaired.dir);
         }
@@ -17849,18 +18931,9 @@ describe('Magic Engine Scripts', () => {
         const engine = path.join(repo, 'skills', 'magicspec');
         assert.ok(!fs.existsSync(path.join(engine, 'templates', 'contributing.md')), 'the template left the engine folder');
         assert.ok(fs.existsSync(path.join(repo, 'scripts', 'templates', 'contributing.md')), 'and lives beside the generator');
-        const offenders = [];
-        const walk = (dir) => {
-            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
-                const full = path.join(dir, entry.name);
-                if (entry.isDirectory()) walk(full);
-                else if (/\.(md|js|json)$/.test(entry.name) || entry.name === '.checksums') {
-                    if (/templates\/contributing\.md/.test(fs.readFileSync(full, 'utf8')))
-                        offenders.push(path.relative(repo, full));
-                }
-            }
-        };
-        walk(engine);
+        const offenders = listFilesUnder(engine, (f) => /\.(md|js|json)$/.test(f) || path.basename(f) === '.checksums')
+            .filter((f) => /templates\/contributing\.md/.test(fs.readFileSync(f, 'utf8')))
+            .map((f) => path.relative(repo, f));
         assert.deepStrictEqual(offenders, [], 'no shipped file names the template');
     });
 
@@ -17913,9 +18986,9 @@ describe('Magic Engine Scripts', () => {
             const specText = fs.readFileSync(spec, 'utf8');
             const specLines = [...specText.matchAll(/^ {2}## (.+)$/gm)].map((m) => m[1]);
             assert.strictEqual(specLines.length, layout.length, 'the specification lists the same number of sections');
-            layout.forEach((label, index) =>
-                assert.ok(specLines[index].startsWith(label), `section ${index + 1} of the report layout is: ${label}`),
-            );
+            for (const [index, label] of layout.entries()) {
+                assert.ok(specLines[index].startsWith(label), `section ${index + 1} of the report layout is: ${label}`);
+            }
         }
 
         // The chooser: blank issues off, the private reporting page linked, no Discussions page.
@@ -17930,7 +19003,8 @@ describe('Magic Engine Scripts', () => {
         const repo = path.resolve(__dirname, '..');
         const page = fs.readFileSync(path.join(repo, 'docs', 'repository-settings.md'), 'utf8');
         for (const setting of ['Private vulnerability reporting', 'Discussions', 'Label `agent-feedback`']) {
-            assert.ok(page.includes(`| ${setting} |`), `the table has a row for: ${setting}`);
+            // The row of the settings table: the setting, then its path through the service's settings.
+            assert.ok(page.includes(`\n| ${setting} | Repository `), `the table has a row for: ${setting}`);
         }
         assert.ok(page.includes('**Settings** → **Security** → **Advanced Security** → **Private vulnerability reporting**'));
         assert.ok(page.includes('**Settings** → **General** → **Features** → **Discussions**'));
@@ -17956,7 +19030,7 @@ describe('Magic Engine Scripts', () => {
             [1, 2, 3, 4, 5],
         );
         const patterns = [/report a bug.*propose a change/i, /set up.*checks/i, /pull request/i, /conventions/i, /conduct/i];
-        headings.forEach(([, title], index) => assert.match(title, patterns[index]));
+        for (const [index, [, title]] of headings.entries()) assert.match(title, patterns[index]);
 
         // The three generated blocks are present and paired.
         for (const key of ['version', 'commands', 'workspaces']) {
@@ -17978,7 +19052,8 @@ describe('Magic Engine Scripts', () => {
 
         // The command table lists exactly the commands of the router (a stale table means: run the maintenance sync).
         const router = fs.readFileSync(path.join(repo, 'skills', 'magicspec', 'SKILL.md'), 'utf8');
-        const routerCommands = [...router.matchAll(/^\| `([a-z-]+)` \|/gm)].map((m) => m[1]);
+        const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
+        const routerCommands = router.split(/\r?\n/).map((l) => hosts.parseCommandRow(l)).filter(Boolean).map((r) => r.name);
         const block = guide.slice(guide.indexOf('<!-- generated:commands -->'), guide.indexOf('<!-- /generated:commands -->'));
         const guideCommands = [...block.matchAll(/^\| `\/magicspec ([a-z-]+)` \|/gm)].map((m) => m[1]);
         assert.deepStrictEqual(guideCommands, routerCommands, 'the guide\'s command table follows the router; run the maintenance sync');

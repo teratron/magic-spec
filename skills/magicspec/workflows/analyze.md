@@ -48,7 +48,7 @@ Examples: `/magicspec analyze`, `/magicspec analyze {workspace}`, `/magicspec an
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command analyze [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command analyze [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md` (do not prompt user).
 3. **Read-Only for user specs and project code**: never modify spec content (`.magicspec/specifications/**/*.md`, `PLAN.md`, `TASKS.md`, `RULES.md`) or project source code without explicit user approval. Engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may be auto-repaired for deterministic mechanical drift — narrate each fix with a `(Revert: git restore {file})` note.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Modes A/B dispatch **new** specs to `.magicspec/` immediately (C9 default, Mode A step 3); changes to existing specs go through the approval gates of Invariant 3.
@@ -224,7 +224,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - **Do NOT bind the scan to a fixed-width or bracket-only literal.** Matching only `[T-XXXX]` misses every bare reference and every two-digit phase.
    - Exemptions: git metadata and contributor-facing docs that document the SDD workflow itself (the reference IS the content).
    - Report each finding as `SDD_REFERENCE_LEAK {file}:{line} → "{matched token}"` — advisory severity (warning). Product files are NEVER auto-edited here: ventilation is read-only and owns detection, not repair.
-   - **Remediation path** (state it whenever the finding count > 0): `→ /magicspec task {ws}` to plan a containment-cleanup task, executed by `/magicspec run` under the Coder role — the same role that owns the write-time gate. A leak report without this path is incomplete: the finding is otherwise unowned and re-accumulates.
+   - **Remediation path** (state it whenever the finding count > 0): `→ /magicspec plan {ws}` to plan a containment-cleanup task, executed by `/magicspec run` under the Coder role — the same role that owns the write-time gate. A leak report without this path is incomplete: the finding is otherwise unowned and re-accumulates.
 6a. **Scaffold Boundary Check (`SDD_SCAFFOLD_COUPLING`)**: the SDD workspace and the engine directories are development-time scaffolding — erected around the work, never load-bearing for it. The falsifiable form is the **scaffold-removal test**: with `.magicspec/`, the engine folder (this skill) and the host copies generated from it deleted, the product must still build, test, run, and package. Step 6's token scan cannot see a failure of this kind, because structural coupling leaves no SDD identifier behind — a build script calling the engine names no task, no phase, no spec file. Inspect five points:
    1. **Build & lifecycle manifests** (`package.json` scripts, `Makefile`, `pyproject.toml`, `Cargo.toml`, `build.gradle`, `Taskfile`, `justfile`, …) → flag any target invoking `executor.js`, a `/magicspec <command>` workflow, or a path into the engine folder.
    2. **CI/CD configs** (`.github/workflows/`, `.gitlab-ci.yml`, `Jenkinsfile`, …) → flag any build, test, or release step gated on the engine or on `.magicspec/` state.
@@ -248,6 +248,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
    - Any community exceeds the oversized threshold (>25% of graph) and BFS partitioning reveals sub-clusters → suggest workspace split with proposed names.
 10. **Documentation & Version Audit** (the engine's own repository only — skip when `scripts/generate-checksums.js` is absent):
     - Check `CONTRIBUTING.md` exists and contains all active commands of the command table in `SKILL.md`.
+    - Check the community health files: `SECURITY.md` states the supported versions as a table, names the repository's private reporting place and links no channel the repository does not have (an issue template or a discussions page that is absent); `CONTRIBUTING.md` keeps its five sections in the contract order — report or propose, set up and checks, pull request, conventions, conduct — and its generated blocks (version, commands, workspaces) match their sources; `.github/ISSUE_TEMPLATE/` holds the bug report, change proposal and agent-feedback forms and a chooser with blank issues disabled. A mismatch is documentation drift: name the file and the section, and leave the repair to `@role:docs-specialist`.
     - Verify `README.md` version badge matches `.version`.
     - Verify `AGENT-RULES.md` points users to GitHub Releases and the current manual update folders.
     - Report drift as `DOC_SYNC` warning: *"Documentation/version drift detected. Recommend running `/magicspec-dev:sync`."*
@@ -260,7 +261,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
     - **Registry healing** (Ghost/Zombie entries in `INDEX.md`) → auto-execute registry repair; narrate `[Auto-Repair] Registry healed: {N} Ghost/Zombie entries resolved. (Revert: git restore .magicspec/{ws}/INDEX.md)`.
     - **Wiki stale** → auto-run `node scripts/executor.js export-wiki`; narrate `[Auto-Repair] Wiki refreshed.`.
     - **Shadow Logic** (files with ≥3 rationale markers, no spec) → emit `→ /magicspec spec create {module}` once per file (no menu).
-    - **Task Sync needed** → emit `→ /magicspec task` (no option menu).
+    - **Plan Sync needed** → emit `→ /magicspec plan` (no option menu).
     - **Bloat Advisory**: run `node scripts/executor.js check-bloat --json`. Report any issues as advisory signals (non-halting, token-economy concern):
       - `SPEC_BLOAT` — spec file > 300 lines → suggest splitting into focused L2 specs.
       - `SPEC_DECOMPOSE` — spec file > 500 lines → recommend immediate decomposition.
@@ -395,7 +396,7 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
    - Post-Update Review: run on all created specs before closing.
    - Context Regeneration: `node scripts/executor.js generate-context`.
    - **Graph Refresh**: `node scripts/executor.js export-wiki` once after all specs in this dispatch batch are written — spec mutations invalidate the graph and wiki. Best-effort — log `[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.` on failure and continue. Skip in Mode C/D when no dispatch occurred (read-only).
-   - **Zero-Prompt Handoff (C9 / DA-6 / DA-9)**: after dispatch, compute the next step and narrate it as a Decision Record, then proceed — automatically invoke task generation (`/magicspec task`): `[DR] Specs Stable — invoking /magicspec task to plan. (Override: Ctrl+C)`. This is a Sequencing fork (DA-9): narrated, never posed as "Proceed to Plan/Run?". The sole pause condition is a **firing E3 hard-fork** (>1 incompatible architectural path with no objective DA-3 tiebreaker), surfaced as a DA-5 single question with a marked default.
+   - **Handoff (C9 / DA-6 / DA-9)**: after dispatch, compute the next step and narrate it as a Decision Record, then end the invocation — the next stage is named, never started: `[DR] Specs Stable — /magicspec plan is next. (Override: any /magicspec <command>)`. When the request's own words asked for the following stage too, run it and say in one line that the request asked for it. This is a Sequencing fork (DA-9): narrated, never posed as "Proceed to Plan/Run?". The sole pause condition is a **firing E3 hard-fork** (>1 incompatible architectural path with no objective DA-3 tiebreaker), surfaced as a DA-5 single question with a marked default.
 
 ## Task Completion Checklist
 
@@ -464,4 +465,4 @@ Analysis Checklist — Mode D: Focused
 Where this workflow may hand over, and when:
 
 - **Create specifications** → `/magicspec spec`: Proceed to create suggested specifications for uncovered areas. Condition: `gaps_detected`.
-- **Generate tasks** → `/magicspec task`: Plan repairs and task synchronization for discovered issues. Condition: `repairs_needed`.
+- **Plan repairs** → `/magicspec plan`: Name it as the next step to plan the repairs and the synchronization of the plan for discovered issues. Condition: `repairs_needed`.

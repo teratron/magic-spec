@@ -29,16 +29,16 @@ Manages project conventions across a two-tier rules system:
 
 Examples: `/magicspec rule`, `/magicspec rule "tests are written before the code they cover"`, `/magicspec rule amend C7`, `/magicspec rule remove WC2`.
 
-**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `/magicspec spec`. Rule changes feed into `/magicspec task` (plan updates) and `/magicspec run` (execution).
+**Scope:** direct management of RULES.md §7 Project Conventions. Automatic rule capture during spec work is handled by `/magicspec spec`. Rule changes feed into `/magicspec plan` (plan updates) and `/magicspec run` (execution).
 
-**Pipeline context:** `/magicspec rule` governs conventions used across `/magicspec spec` → `/magicspec task` → `/magicspec run`.
+**Pipeline context:** `/magicspec rule` governs conventions used across `/magicspec spec` → `/magicspec plan` → `/magicspec task` → `/magicspec run`.
 
 - **Admission**: an agent-originated rule must cite an observed occurrence and survive a with/without comparison; a user-stated rule is written at the strength stated. See `workflows/rule.md §Operational Logic`.
 - **Finalization**: after writing RULES.md, run `node scripts/executor.js finalize --workflow=rule --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/rule.md §Finalization Protocol`.
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command rule [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command rule [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6), Constitutional Guard and Remove (a destructive action, gate 1). All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
@@ -185,15 +185,15 @@ Convention nodes change when rule entries are added or removed, invalidating the
 
 Practical conflict found → **HALT** before notifying user. Report: *"C24 Constitutional Review: Rule `C{N}` (already written) creates a practical conflict with `{C-ID}` at step `{workflow}§{step}`. Run `/magicspec rule amend C{N}` to resolve it."*
 
-- **Notify**: inform user if `TASKS.md` is now stale.
-- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magicspec task {workspace} update` (propagate the rule into the plan); choose `/magicspec spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
+- **Notify**: inform user if the plan is now stale.
+- **Next step (DA-6)**: compute and narrate exactly ONE next command — default `/magicspec plan {workspace}` (propagate the rule into the plan); choose `/magicspec spec audit` instead only when the rule changes verification/compliance obligations. Narrate as a single `[DR]` line; the non-chosen option is an informational note, never a second offered command.
 
 ## Finalization Protocol (Mandatory)
 
 After all workflow steps (incl. Graph Refresh + Constitutional Review) and **before** the Completion Checklist:
 
 1. Run `node scripts/executor.js finalize --workflow=rule --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
-2. **Display the entire script output verbatim** in a fenced block.
+2. **Display the entire script output verbatim** in a fenced block. It ends with the handoff line — `Next: /magicspec {command} {argument} — {demand} reasoning` — printed once by the script, after the step it summarizes and before the Completion Checklist. The demand is advice for whoever chooses the model: never a warning and never a condition of running.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.magicspec/workspace.json`.
@@ -222,5 +222,5 @@ Rule Checklist — {operation}
 Where this workflow may hand over, and when:
 
 - **Create spec** → `/magicspec spec`: Create a new specification document.
-- **Update tasks** → `/magicspec task`: Update the project plan and tasks after amending standing rules.
+- **Update the plan** → `/magicspec plan`: Revalidate the project plan after amending standing rules.
 - **Audit specs** → `/magicspec spec`: Audit specifications to ensure compliance with updated rules.

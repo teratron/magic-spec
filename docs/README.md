@@ -5,7 +5,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 ## 🧭 Core Philosophy
 
 1. **Specs First, Code Later**: The AI agent is strictly forbidden from writing implementation code from raw user input. All ideas must first be synthesized into a Specification (`.magicspec/{workspace}/specifications/*.md`).
-2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Task → Run → Code*.
+2. **Deterministic Process**: The system enforces a strict pipeline: *Thought → Spec → Plan → Task → Run → Code*.
 3. **Governance via Rules**: All logic is governed by a central rulebook (`.magicspec/RULES.md`), which acts as the project's living constitution, and enforced by rigorous **Code Quality & Engineering Standards** (SOLID, DRY, KISS, YAGNI) during execution.
 4. **Resilience & Integrity**: Continuous validation via SHA256 checksums and automated versioning (C14).
 5. **Continuous Self-Improvement**: Built-in auto-retrospectives analyze actual usage data after every phase.
@@ -14,7 +14,7 @@ Magic Spec is an agentic, Specification-Driven Development (SDD) workflow system
 
 ## 🔗 The Workflow Pipeline
 
-Magic operates through **3 core workflows** and **5 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
+Magic operates through **4 core workflows** and **5 auxiliary workflows**, forming a complete lifecycle from raw idea to implemented code.
 
 ```mermaid
 graph TD
@@ -24,8 +24,11 @@ graph TD
     INIT -.->|"existing code detected"| ANALYZE["🔬 Analyze"]
     ANALYZE -->|"proposals approved"| SPEC
     SPEC["📋 Specification"] <--> RULE["📜 Rule"]
-    SPEC --> TASK["🗺️ Task & Plan"]
+    SPEC --> PLAN["🗺️ Plan"]
+    PLAN --> TASK["✅ Task"]
     TASK --> RUN["⚡ Run"]
+    TASK -.->|"a finding goes back"| PLAN
+    RUN -.->|"drift goes back"| PLAN
     RUN --> CODE["🚀 Code"]
     RUN -.->|"auto: phase done"| RETRO["🔍 Retrospective"]
     RETRO -.->|Feedback loop| SPEC
@@ -41,8 +44,9 @@ graph TD
 | # | Workflow | Primary File | Purpose | Documentation |
 | ---: | --- | --- | --- | --- |
 | **1** | **Specification** | `spec.md` | Converts thoughts into structured specs. Manages lifecycle (Draft → RFC → Stable). | [Detailed Guide](spec.md) |
-| **2** | **Task** | `task.md` | Reads Stable specs, builds dependency graphs, and decomposes them into atomic tasks in `PLAN.md` and `TASKS.md`. | [Detailed Guide](task.md) |
-| **3** | **Run** | `run.md` | Executes tasks sequentially or in parallel. Triggers automatic retrospectives at phase completion. | [Detailed Guide](run.md) |
+| **2** | **Plan** | `plan.md` | Reads Stable specs, builds dependency graphs and writes `PLAN.md`: phases, order and backlog. The one command for replanning. | [Detailed Guide](plan.md) |
+| **3** | **Task** | `task.md` | Decomposes the planned phase into atomic tasks in `TASKS.md` and the phase workbooks, and hands findings back to the plan. | [Detailed Guide](task.md) |
+| **4** | **Run** | `run.md` | Executes tasks sequentially or in parallel. Triggers automatic retrospectives at phase completion. | [Detailed Guide](run.md) |
 
 ### Auxiliary Workflows
 
@@ -105,19 +109,20 @@ The agent will run the **Specification** workflow, creating a file in `.magicspe
 ### 2. Planning Implementation
 >
 > *"Build an implementation plan for the stable specs."*
-The agent will run the **Task** workflow, generating a phased `PLAN.md` and decomposing it into atomic units in `TASKS.md`.
+The agent will run the **Plan** workflow, generating a phased `PLAN.md`; the **Task** workflow then decomposes the active phase into atomic units in `TASKS.md`. Each stage ends by naming the next command and how much reasoning it takes, so you can switch the model between stages.
 
 ### 3. Executing Tasks
 >
 > *"Start the implementation from the next task."*
 The agent will run the **Run** workflow, picking the most prioritized task and implementing it.
 
-All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
+All four core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
 
 ```bash
 /magicspec spec {workspace} "new features" # Author specs in one workspace
-/magicspec task {workspace}                # Plan only for one workspace
-/magicspec task "decompose phase-2"        # Guided planning with focus
+/magicspec plan {workspace}                # Plan only for one workspace
+/magicspec plan "postpone phase 4"         # Guided replanning
+/magicspec task "decompose phase-2"        # Guided decomposition of a phase
 /magicspec run {workspace} "phase-1"       # Execute phase 1 in one workspace
 /magicspec analyze "check API coverage"    # Focused analysis on a specific area
 ```
@@ -129,7 +134,7 @@ Magic Spec includes built-in "Pre-flight" checks:
 - **Consistency Check**: Before planning, the engine verifies that specifications match the actual file structure and project configuration. **After updating the engine, it is highly recommended to run the `/magicspec analyze` command to ensure full synchronization.**
 - **Engine Integrity**: All core logic files are validated against their stored hashes before execution.
 - **Quarantine Cascade (C12)**: Implementation tasks are automatically halted if their conceptual foundation (L1 Spec) is no longer stable.
-- **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.
+- **Session Isolation (Phase Gates - C17)**: To prevent context bleed-over and hallucinations, major workflow transitions enforce a **Hard Stop**. You must physically open a "New Chat" in your IDE to proceed between Spec → Plan → Task → Run. Simply telling the AI to "forget" does not reliably clear its memory.
 - **Agent Memory (STATE.md)**: A live project state digest read first in every session. Tracks position, decisions, blockers, and constraints. Checkpointed automatically after every workflow: when a workflow reports `checkpoint saved`, ending the session loses nothing. Work left in flight (a task marked `In Progress`) is reported in one line at the start of the next session, with the dead ends already recorded against it.
 - **Task Verification**: No task is marked complete without a confirmed completion checklist.
 

@@ -1,6 +1,6 @@
 # Pipeline Stages: One Stage per Invocation, File-Borne Handoffs and Model Choice
 
-**Version:** 1.0.0
+**Version:** 1.0.1
 **Status:** Stable
 **Layer:** concept
 
@@ -117,4 +117,5 @@ One line, printed once, after the finalization output and before the completion 
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.1 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). **The handoff line as built:** `finalize.js` builds `Next: /magicspec {command} {argument} — {demand} reasoning` from the persisted `Next Action` — the first `/magicspec <command>` it names, the workspace and a quoted directive as the argument, an alias read as its command and printed by its own name — and the demand is read from the router's table through the one parser (`lib/hosts.js`, `readCommands`), never from a copy; it is printed once, as the last line of the `### Next step` block, after the unchanged `Next Action` text; a `Next Action` that names no command or one the router does not list gets no line, and an unreadable router costs the line and never the finalization. The five pipeline bodies say so in their finalization step. **Each body's read set** is one `**Reads**` line equal to its row of §5.1 and the sentence that a missing record of an earlier stage is reported as a finding and never guessed. **Delivered supersessions (§6 item 6):** the Zero-Prompt Handoff of `spec.md` and `analyze.md` names the next stage and starts nothing; the constitution's C9 reads that the agent executes each stage autonomously and `goal` chains them (constitution 1.19.0, the shipped template word for word); a stage found in a cold session reaches the recorded next step from the files alone (harness and the cognitive suite scenarios T283 to T290). |
 | 1.0.0 | 2026-11-11 | Agent | Created from the owner's list of commands of 2026-11-11 (origin `user-stated`): stages split so that a model can be switched between them, `goal` as the non-stop mode. One stage per invocation, file-borne handoffs, a bounded read set, a reasoning demand per command, backward handoffs with a directive. |

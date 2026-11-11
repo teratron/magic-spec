@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.28.0
+**Version:** 1.29.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -18,6 +18,9 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **executor.js**: Cross-platform wrapper for the engine's scripts. Answers `--help` and refuses an unknown command, option or argument from the command table before it starts anything (§Command Line Contract), resolves the project root and the workspace, and runs the script from the root (§Project Location). Requires Node.js 18 or newer and says so otherwise.
 - **lib/commands.js**: The command table: every command the executor runs, the options each reads, and the help it prints.
 - **lib/file-lock.js**: An exclusive lock file for a read-modify-write (`update-state` takes it around its STATE.md write).
+- **resolve-workspace.js** with **lib/workspace-routing.js**: Computes the workspace a command acts on — argument, environment, sole workspace, location, topic, work in flight, default, coverage — writes nothing and prints `Workspace:`, `Signal:` and the `Narration:` line (`l1-workspace-intent-routing.md` §5.1).
+- **lib/in-flight.js**: The one predicate for "a task is `In Progress`", read by `resume-state` and by `resolve-workspace`.
+- **clean-cache.js**: Removes the rebuildable caches of the project; `--dry-run` lists them (§Cache Retention).
 - **check-prerequisites.js**: Validates engine integrity and project state.
 - **generate-checksums.js**: Maintains `skills/magicspec/.checksums`. Honors `.gitignore` during the file walk (Invariant 7 parity).
 - **generate-context.js**: Regenerates `CONTEXT.md` from current project state.
@@ -311,9 +314,11 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | Graph extraction cache | `graph/.cache/` | `graph-cache.js` | the next graph build | entries for no current file are pruned after each successful build |
 | Graph query snapshot | `graph/query.json` | `build-spec-graph --json --out` | the same command | one file, overwritten |
 | Interactive page | `graph/graph.html` | `build-spec-graph --html` | the same command | one file, overwritten |
-| Wiki | `graph/wiki/` | `export-wiki` | `export-wiki` | the writer clears the folder's pages before regenerating them |
+| Wiki | `graph/wiki/` | `export-wiki` | `export-wiki` | the writer clears the folder's pages — and the `*.md.tmp` of an interrupted write — before regenerating them |
 | Finalize state | `.cache/finalize-state.json` | `finalize.js` | the next finalize | one file |
 | Project-meta state (engine repository only) | `.cache/project-meta-state.json` | `scripts/update-project-meta.js` | the next metadata sync | one file |
+| Documentation-sync state (engine repository only) | `.cache/docs-state.json` | `scripts/sync-docs.js` | the next documentation sync | one file; the earlier `.docs-state.json` in a `.cache/` at the project root is read once, then retired, and its folder goes only when empty |
+| State lock | `.cache/state-{workspace}.lock` | `lib/file-lock.js`, taken by `update-state` | not kept | removed after use; a lock left by a killed process is taken over after 30 seconds |
 | Memory index | `.cache/memory.sqlite` or `.cache/memory.json` | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
 | Diagnostics sink | `.cache/diagnostics.jsonl` | `lib/diagnostics.js` | not rebuildable — recorded findings | drained by finalize, retention bound of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) |
 | Feedback notes | `.cache/` | the feedback channel ([l1-agent-feedback.md](l1-agent-feedback.md)) | not rebuildable — recorded notes | EF-5 |
@@ -322,8 +327,25 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 **Rules.**
 
 1. **Writers prune their own.** Each rebuildable cache is pruned by its owner after a successful write — the periodic cleaning happens where the cache is written, with no separate schedule. A failed write prunes nothing.
-2. **`clean-cache`.** An executor subcommand removes the rebuildable caches of the project (the first seven rows) and prints each path with its size; `--dry-run` lists without removing. It never touches the diagnostics sink, the feedback notes or the migration backups; it lists the backups with their age and the command that deletes one by hand. Removing a rebuildable cache destroys no work, so the command asks nothing.
+2. **`clean-cache`.** An executor subcommand removes the rebuildable caches of the project (every row up to and including the memory index, except the lock, which is not kept) and prints each path with its size; `--dry-run` lists without removing. It never touches the diagnostics sink, the feedback notes or the migration backups; it lists the backups with their age and the command that deletes one by hand. Removing a rebuildable cache destroys no work, so the command asks nothing.
 3. **Nothing outside the state folder** is removed by either rule, except that the listing names the backups in the project root.
+
+**As built (Phase 48).** The extraction cache is pruned by `graph-cache.js`: it records the hash of every entry the process reads or writes and removes the others, and the `*.json.tmp` leftovers of interrupted writes, only after the build that asked for them returned — a build that throws prunes nothing, and `--no-cache` never prunes. Measured on this repository during the phase: 226 entries for 53 specification files before (none matched a current file), 53 after the first build, 53 after a second that hit 53 of 53. `clean-cache` never follows a link (it says `is a link: left alone`), keeps the graph baselines a person saves (`graph/snapshot.json`, `graph/before.json`), lists the migration backups with their age and the command that deletes one, exits 0 with one line in a project with no state folder, and a second run says `Nothing to remove`. A harness case holds the inventory as a table and fails when a script outside it mentions a cache folder or a row's writer stops writing it.
+
+### Registered Folders Only — One Check for Every Writer `[ADDED]`
+
+`l1-workspace-intent-routing.md` WI-14: no artifact is written under a state-folder directory that `workspace.json` does not register. The check is `utils.unregisteredWorkspaceMessage(folder)`, with `registeredWorkspaceNames(registry)` and `unknownWorkspaceMessage(name, registered)` beside it. A folder whose registry lies beside it and does not hold it is refused with `Unknown workspace '{x}'. Available: [{list}].`; the state folder itself, a folder with no registry beside it and a registry without a `workspaces` object are not judged. The executor is the choke point and stops on an unregistered `--workspace`, `MAGIC_WORKSPACE` or registry default; the writers apply the check themselves because a script started directly with `MAGIC_DESIGN_DIR` bypasses the executor.
+
+| Script | Applies the check | Why |
+| --- | --- | --- |
+| `update-state.js` | before its lock file, in the library and in the command | writes the workspace's `STATE.md` |
+| `finalize.js` | after the folder is resolved, before any write | writes the workspace's state, changelog and archives |
+| `archive-phases.js`, `generate-context.js` | before any write | write into the workspace folder |
+| `create-workspace.js`, `init.js`, the executor's provisioning | creators: they register first | the folder they make is the one they register |
+| `check-prerequisites`, `check-bloat`, `analyze-coverage`, `extract-rationale`, `resume-state`, `resolve-workspace`, `lib/diagnostics`, `build-spec-graph`, `export-wiki` | none: they write only at the state folder's level (`graph/`, `.cache/`, an `--out` the caller names) | never into a workspace folder |
+| `migrate.js` | none: moves the whole state folder | not a workspace write |
+
+A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a new reader or writer fails the suite until it is placed in this table's rows.
 
 ## Related Specifications
 
@@ -365,6 +387,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.29.0 | 2026-11-11 | Agent | **As built (Phase 48), Stable retained — no requirement added.** Components name `resolve-workspace` (with `lib/workspace-routing.js`), `lib/in-flight.js` and `clean-cache`. The cache inventory is completed as built: the wiki prune also removes the `*.md.tmp` of an interrupted write; the documentation-sync state (moved into the state folder, the earlier root-level file read once and retired) and the state lock (removed after use, taken over after 30 seconds) have rows; rule 2 names the rows `clean-cache` removes. New §Registered Folders Only records the one check every writer applies (WI-14) and the audit of which scripts apply it. The measured extraction cache (226 entries for 53 files before, 53 after) and the behaviour of `clean-cache` are recorded. |
 | 1.28.0 | 2026-11-06 | Agent | **Field report against engine 2.1.144, reproduced against 3.0.18** (origin `user-stated`: four MAGIC-SPEC ENGINE BUG REPORTs, direct repair). New **Canonical References Reader** (one reader for the three scripts that read the table: the Path column by header, one reference per code span) and **Scopeless Workspace** (a workspace without `scope` is the whole project in `build-spec-graph` and `detect-communities`; one definition of "oversized"); **Coverage Denominator Scope widened** to every file under the state folder, and links are not scanned. Regression cases in [l2-test-suite.md](l2-test-suite.md). |
 | 1.27.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.27.0 | 2026-10-29 | Agent | **Cache Retention** (origin `user-stated`: the owner's list of 2026-10-29 — clean the engine cache periodically, with a separate simple command): the inventory of every cache with owner, rebuild path and bound; writers prune their own entries after a successful write (the graph extraction cache measured at 148 entries for 98 Markdown files, never pruned); a `clean-cache` subcommand for the rebuildable caches that never touches recorded findings, feedback notes or migration backups. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |

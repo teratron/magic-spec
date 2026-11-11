@@ -7,10 +7,10 @@
 
 **The Specification-Driven Development (SDD) Operating System for AI Coding Agents.**
 
-`magic-spec` installs a structured pipeline — *Thought → Spec → Task → Run → Code* — directly into any project, regardless of the tech stack. It acts as a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude Code, Gemini CLI, and others), enforcing a deterministic process that ensures the AI fully understands the problem before writing code.
+`magic-spec` installs a structured pipeline — *Thought → Spec → Plan → Task → Run → Code* — directly into any project, regardless of the tech stack. It acts as a set of **markdown-based workflow instructions** for AI coding agents (Cursor, Windsurf, Claude Code, Gemini CLI, and others), enforcing a deterministic process that ensures the AI fully understands the problem before writing code.
 
 ```plaintext
-💡 Idea  →  📋 Specification  →  🗺️ Plan & Task →  ⚡ Run  →  🚀 Code
+💡 Idea  →  📋 Specification  →  🗺️ Plan  →  ✅ Task  →  ⚡ Run  →  🚀 Code
 ```
 
 ### What Gets Installed
@@ -177,7 +177,8 @@ For the host table with its sources and the mechanics of each projection, see th
 Talk to your AI agent naturally — it will route to the correct workflow:
 
 - *"Create a spec for user authentication"* → **Specification** workflow
-- *"Build an implementation plan"* → **Task & Plan** workflow
+- *"Build an implementation plan"* or *"postpone phase 4"* → **Plan** workflow
+- *"Break the next phase into tasks"* → **Task** workflow
 - *"Execute the next task"* → **Run** workflow
 - *"Add a rule: always use Inter font"* → **Rule** workflow
 - *"Run a project audit"* → **Analyze** workflow
@@ -189,10 +190,11 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | Command | Purpose | Argument |
 | --- | --- | --- |
 | `/magicspec spec` | Create or update specifications | an idea in plain words (asked for when missing) |
-| `/magicspec task` | Generate implementation plan and tasks | optional: a workspace or a directive |
+| `/magicspec plan` | Plan and replan: which specifications are built in which phase, in what order | optional: a workspace or an order directive |
+| `/magicspec task` | Break a planned phase into atomic tasks | optional: a workspace or a decomposition directive |
 | `/magicspec run` | Execute tasks from the plan | optional: a workspace, a task ID or a phase |
 | `/magicspec rule` | Add or amend project conventions | the rule text (asked for when missing) |
-| `/magicspec analyze` | Audit project health and detect drift | optional: a workspace or a focus |
+| `/magicspec analyze` (alias `audit`) | Audit project health and detect drift | optional: a workspace or a focus |
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |
 | `/magicspec status` | Resume briefing: position, progress, blockers, next command (read-only) | optional: a workspace |
 | `/magicspec migrate` | Move a 2.x project to this layout | none |
@@ -200,28 +202,32 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 
 A command whose argument is required asks for it when you leave it out; a command whose argument is optional runs its default and says which. There is nothing to configure: no command is written into your project.
 
+The pipeline `spec` → `plan` → `task` → `run` runs one stage per command: each stage ends by writing what the next one needs into your project's files and naming the next command with how much reasoning it takes (`deep`, `standard` or `light`). You can type the next command at once, in a new session, or after switching to a different model; `/magicspec help {command}` shows the demand of a command.
+
 #### Commands with Arguments
 
 Arguments scope the operation to a **workspace** or provide a **directive**:
 
 ```bash
 # No argument — runs the default
+/magicspec plan
 /magicspec task
 /magicspec run
 
 # Workspace-scoped
-/magicspec task {workspace}                # Plan only for one workspace
+/magicspec plan {workspace}                # Plan only for one workspace
 /magicspec analyze {workspace}             # Analyze only one workspace
 
 # With directive (quoted text)
-/magicspec task "decompose phase-2"        # Guided planning with focus
+/magicspec plan "postpone phase 4"         # Guided replanning
+/magicspec task "decompose phase-2"        # Guided decomposition of a phase
 /magicspec run "T-1A01"                    # Execute a specific task by ID
 /magicspec run "phase-2"                   # Execute all tasks in a phase
 /magicspec analyze "check API coverage"    # Focused analysis on a specific area
 
 # Workspace + directive
 /magicspec run {workspace} "phase-1"       # Execute phase 1 in one workspace
-/magicspec task {workspace} "only new specs" # Plan only new specs in one workspace
+/magicspec plan {workspace} "only new specs" # Plan only new specs in one workspace
 ```
 
 > [!NOTE]

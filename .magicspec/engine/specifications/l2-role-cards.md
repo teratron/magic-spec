@@ -1,6 +1,6 @@
 # Role Card Registry (Implementation)
 
-**Version:** 2.1.3
+**Version:** 2.1.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -92,14 +92,14 @@ Cards MAY include additional sections after these four (e.g., `## Examples`, `##
 | id | layer | Triggers (workflow → gate) | Content Spec |
 | --- | --- | --- | --- |
 | `orchestrator` | manager | `run.md` → Parallel Mode Dispatch | execution |
-| `planner` | advisor | `task.md` → Plan Write-back | execution |
+| `planner` | advisor | `plan.md` → Plan Write-back | execution |
 | `coder` | executor | `run.md` → Step 3 Execute | execution |
 | `code-reviewer` | reviewer | `run.md` → Step 3.4 Diff Review (new) | review |
 | `code-simplifier` | reviewer | `run.md` → Step 3.6 Simplify Pass (new, opt-in) | review |
 | `code-skeptic` | reviewer | `run.md` → Step 3.3 Decision Review (new, opt-in) | review |
 | `test-engineer` | reviewer | `run.md` → Step 3.5 QA Review (renamed from C24 Tester) | review |
 | `debugger` | executor | `run.md` → Blocked Branch (new) | execution |
-| `docs-specialist` | executor | `run.md` → Post-Done Docs Sync (new) | execution |
+| `docs-specialist` | executor | `run.md` → Post-Done Docs Sync (new); a community health file must change | execution |
 | `spec-critic` | reviewer | `spec.md` → Post-Update Review (migrated C24) | governance |
 | `project-auditor` | reviewer | `analyze.md` → Pre-Advisory Audit (migrated C24) | governance |
 | `constitutional-reviewer` | reviewer | `rule.md` → Impact Analysis (migrated C24) | governance |
@@ -139,6 +139,8 @@ The original v1.x kept all card content in this one spec (~656 lines), which tri
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.5 | 2026-11-11 | Clarification patch, Stable retained: the index row of `planner` names `plan.md` as its trigger, as in the deployed card. |
+| 2.1.4 | 2026-11-11 | Clarification patch, Stable retained: the index row of `docs-specialist` names its second trigger (a community health file must change), as in the deployed card. |
 | 2.1.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.1.2 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 2.1.1 | 2026-09-30 | Clarification patch, no status transition: R10 cited `CLAUDE.md §1.1` — a section of a gitignored twin of `AGENTS.md` that a fresh clone does not contain; it now names the L1 user contract in plain words. |

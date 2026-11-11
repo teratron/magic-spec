@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-11 07:25
-**Phase:** 48 — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
-**Status:** Blocked
+**Updated:** 2026-11-11 11:38
+**Phase:** 49 — Planning Split and Stage Boundaries (plan)
+**Status:** Active
 
 ## Current Position
 
-- **Task:** T-48C04..C06 done; T-48C02 blocked on T-48C01
+- **Task:** T-49C03 done; T-49D01 suite
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Record the two response-time numbers in T-48C01 (maintainer), then set T-48C02 to Todo and run /magicspec run engine
+- **Next Action:** Run /magicspec task engine to decompose Phase 50
 
 ## Progress
 
 ```
-Phase 48: [11/17] █████░░░ 65%
-Overall: [46/47] ████████ 98%
+Overall: [48/48] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-11 **Decision:** Phase 49 complete. Provides: plan as its own command and body, task stopping on a stale plan with findings handed back as a directive, one stage per invocation with the handoff line and its demand, the router's seven-column table with the audit alias, finalize and the pre-flight following the stages, constitution 1.19.0
+- 2026-11-11 **Decision:** Phase 48 complete. Provides: one routing chain for every command, registered folders only, cache retention and clean-cache, community health files, the release policy check; engine 3.0.33, harness 327
 - 2026-11-06 **Decision:** Field reports against engine 2.1.144 repaired in place, no phase opened: one Canonical References reader, the whole state folder EXEMPT, a workspace without scope is the whole project, a blocked plan always leads to /magicspec task
 - 2026-10-30 **Decision:** Phase 47 complete. Provides: one command surface (`/magicspec <command>`), help and migrate bodies, E7, no command entries or plugin, the migration vocabulary sweep; engine 3.0.18, harness 277
 - 2026-10-29 **Decision:** Simulation-pass remediation extended: a missing engine file is named, export-wiki/graph server buffer, finalize path containment; harness 270/270, 18 mutations caught
-- 2026-10-29 **Decision:** Simulation-pass remediation (R-01..R-36) applied in place: command table, release plan/consent, line-endings rule, matcher, lock, graph page, migrate paths; harness 264/264; no phase opened
-- 2026-10-28 **Decision:** Phase 46 complete. Provides: state folder .magicspec; migrate; one archive composition; engine 3.0.0 prepared (tag and publication are the owner's)
 
 ## Blockers
 

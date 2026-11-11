@@ -136,7 +136,7 @@ If a Layer 1 spec drops status (e.g., Stable → RFC), all dependent Layer 2 spe
 
 ### 6.4 Session Isolation (Phase Gates — C17)
 
-The transition from Specification to Task Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec task` to prevent context bleed-over.
+The transition from Specification to Planning is protected by a **Hard Stop**. You must physically open a **New Chat** before running `/magicspec plan` to prevent context bleed-over. Specification ends by naming `/magicspec plan` and how much reasoning it takes; it does not start it.
 
 ### 6.5 T4 Rule Capture with Tier Routing
 

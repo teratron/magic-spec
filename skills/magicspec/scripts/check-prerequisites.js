@@ -250,8 +250,8 @@ const pending = planExists ? findPendingWork(designDir) : null;
 const planWorkspace = path.basename(designDir);
 const planRemedy =
     planWorkspace === STATE_DIR_NAME
-        ? '/magicspec task update'
-        : `/magicspec task ${planWorkspace} update`;
+        ? '/magicspec plan'
+        : `/magicspec plan ${planWorkspace}`;
 
 // The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
 // exists: a spec that is registered but absent from disk (or misnamed) is as much a
@@ -316,6 +316,14 @@ if (planExists && indexExists) {
         warn(
             'SYNC_GAP',
             `PLAN.md is based on INDEX.md v${pending.syncGap.planBasedOn}, but registry is at v${pending.syncGap.indexVersion}.`,
+            planRemedy,
+        );
+    }
+
+    if (pending.rulesGap) {
+        warn(
+            'SYNC_GAP',
+            `PLAN.md is based on RULES.md v${pending.rulesGap.planBasedOn}, but the constitution is at v${pending.rulesGap.rulesVersion}.`,
             planRemedy,
         );
     }
@@ -430,13 +438,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version is MISSING but INDEX.md declares (${indexVersion}). Spec headers must mirror the registry.`,
-                    `Run /magicspec spec to restore the header, then re-run /magicspec task`,
+                    `Run /magicspec spec to restore the header, then re-run /magicspec plan`,
                 );
             } else if (fileVersionMatch[1] !== indexVersion) {
                 warn(
                     'VERSION_DRIFT',
                     `'${specFile}' file header Version (${fileVersionMatch[1]}) ≠ INDEX.md (${indexVersion}). External edit without lifecycle protocol.`,
-                    `Run /magicspec spec to reconcile, then re-run /magicspec task`,
+                    `Run /magicspec spec to reconcile, then re-run /magicspec plan`,
                 );
             }
         }
@@ -447,13 +455,13 @@ if (verifyHeaders && indexExists) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status is MISSING but INDEX.md declares (${indexStatus}). Spec headers must mirror the registry.`,
-                    `Run /magicspec spec to restore the header, then re-run /magicspec task`,
+                    `Run /magicspec spec to restore the header, then re-run /magicspec plan`,
                 );
             } else if (fileStatusMatch[1] !== indexStatus) {
                 warn(
                     'STATUS_DRIFT',
                     `'${specFile}' file header Status (${fileStatusMatch[1]}) ≠ INDEX.md (${indexStatus}). External edit without lifecycle protocol.`,
-                    `Run /magicspec spec to reconcile, then re-run /magicspec task`,
+                    `Run /magicspec spec to reconcile, then re-run /magicspec plan`,
                 );
             }
         }

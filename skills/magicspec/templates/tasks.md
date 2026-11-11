@@ -19,6 +19,14 @@ Tactical registry of all phases and their statuses. Check individual phase files
 | --- | --- | --- |
 | [Phase {N}](tasks/phase-{N}.md) | {Detailed phase goal} | `Todo` \| `In Progress` \| `Blocked` |
 
+<!-- Optional section. Written by /magicspec task, or by /magicspec run, when a finding must go back to /magicspec plan. Absent means none. Pending only while PLAN.md's version equals the one recorded here; a plan rewritten since retires it, and /magicspec plan never writes this file.
+
+## Replan Directive
+
+- **Plan version:** {the version of PLAN.md when the finding was made}
+- **Directive:** {what, where, and the change it suggests, in plain words}
+-->
+
 ## Meta Information
 
 - **Last Updated**: {YYYY-MM-DD}

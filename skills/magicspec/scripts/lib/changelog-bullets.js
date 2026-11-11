@@ -34,6 +34,7 @@ function deriveChangelogCategory(workflow, files) {
             if (files.every((f) => f.status === 'deleted')) return 'Removed';
             return 'Changed';
         }
+        case 'plan':
         case 'task':
         case 'run':
         case 'rule':
@@ -77,6 +78,8 @@ function buildChangelogBullet(workflow, workspace, files) {
             }
             return `${verb} ${specs.length} specifications (${workspace})`;
         }
+        case 'plan':
+            return `Updated implementation plan (${workspace})`;
         case 'task': {
             const hasPlan = files.some((f) => f.path.endsWith('PLAN.md'));
             const hasTasks = files.some((f) => f.path.endsWith('TASKS.md'));

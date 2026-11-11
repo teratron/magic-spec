@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.41.0
+**Version:** 1.43.0
 **Status:** Active
-**Engine Version:** 3.0.31
+**Engine Version:** 3.0.51
 
 ## Overview
 
@@ -24,6 +24,8 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.43.0 | 2026-11-11 | Agent | No spec-count change (55/55 Stable). Phase 49 recorded as built: `l1-plan-command.md` 2.0.1, `l1-pipeline-stages.md` 1.0.1, `l1-command-surface.md` 2.2.1, `l1-engine-core.md` 1.9.4, `l1-session-continuity.md` 2.5.5, `l2-engine-finalization.md` 3.7.2, `l2-skill-wrappers.md` 3.1.2, `l2-skill-layout.md` 1.6.1, `l2-test-suite.md` 1.39.0, `l2-role-cards-execution.md` 1.2.8, `l2-role-cards.md` 2.1.5 and `l2-role-integration.md` 2.2.5. The engine registry is 1.66.0. |
+| 1.42.0 | 2026-11-11 | Agent | No spec-count change (55/55 Stable). Phase 48 recorded as built: l1-workspace-intent-routing.md 3.0.2, l2-engine-automation.md 1.29.0, l1-community-health-files.md 1.1.0, l2-role-cards-execution.md 1.2.7, l2-role-cards.md and l2-role-integration.md one patch each. |
 | 1.41.0 | 2026-11-11 | Agent | Spec count 53 → 55 (55/55 Stable); the engine row read 40, stale since 2026-10-29, and now matches the registry. Added `l1-pipeline-stages.md` and `l1-sync-command.md`; amended `l1-command-surface.md` 2.2.0, `l1-plan-command.md` 2.0.0, `l1-goal-mode.md` 1.1.0, `l1-fix-command.md` 1.1.0 — the owner's list of commands of 2026-11-11. |
 | 1.40.0 | 2026-11-06 | Agent | No spec-count change (40/40 Stable). Field reports against engine 2.1.144 re-verified against 3.0.18 and repaired: `l2-engine-automation.md` 1.28.0, `l2-finalize-state-accuracy.md` 2.5.0, `l2-test-suite.md` 1.38.0. |
 | 1.39.0 | 2026-10-29 | Agent | No spec-count change (40/40 Stable). Deployment of a simulation pass over the shipped engine: 11 specifications amended together with the code that fixes what the pass reproduced (the command line contract, provisioning, line endings in the integrity check, the path matching contract as built, the release script, the migration's state-folder paths, the graph page, the concurrent STATE.md writer, argument validation, an owner's note as a `Next Action`). l2-engine-automation 1.26.0, l2-release-pipeline 2.3.0, l2-skill-distribution 1.6.0, l2-spec-graph-memory 1.4.1, l2-update-state-structure 1.2.0, l2-finalize-state-accuracy 2.4.0, l2-finalize-output-contract 2.2.0, l2-engine-finalization 3.7.0, l2-status-command 1.5.0, l1-session-continuity 2.5.3, l2-test-suite 1.37.0. |

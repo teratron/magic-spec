@@ -3,6 +3,7 @@
 **Version:** {X.Y.Z}
 **Generated:** {YYYY-MM-DD}
 **Based on:** .magicspec/INDEX.md v{X.Y.Z}
+**Based on RULES:** .magicspec/RULES.md v{X.Y.Z}
 **Status:** Active
 
 ## Overview

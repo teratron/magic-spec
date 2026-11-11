@@ -43,7 +43,8 @@ Examples: `/magicspec spec`, `/magicspec spec "a holiday booking feature"`, `/ma
 - **Explore Mode**: safe brainstorming; transitions to writing AUTOMATICALLY on specific input or Anti-Stall (≥1 question asked without file creation, suspended during an active intake dialogue).
 - **Delta Edits**: use surgical search-and-replace for specs >200 lines.
 - **T4 Capture**: input contains "remember that..." / "project rule:" → the rule is handed to `rule.md`'s Operational Logic, which records a user-stated rule at the strength stated and admits an agent-originated one only on evidence (see `workflows/spec.md §Updating RULES.md`).
-- **Pipeline**: `/magicspec spec` → `/magicspec task` → `/magicspec run`.
+- **Reads**: the idea, the constitution, the registry, and the specifications on the idea's topic. A missing record of an earlier stage is reported as a finding and never guessed.
+- **Pipeline**: `/magicspec spec` → `/magicspec plan` → `/magicspec task` → `/magicspec run`. One stage per invocation: this workflow ends by recording its result in the registry and the specifications and naming the next command; it never starts `/magicspec plan` itself, unless the request's own words asked for the following stage too.
 - **Finalization**: after dispatch, run `node scripts/executor.js finalize --workflow=spec --workspace={active-workspace}` and display output verbatim. Never auto-commit. See `workflows/spec.md §Finalization Protocol`.
 
 ## Core Invariants (Mandatory)
@@ -130,7 +131,7 @@ Apply `context.md` §Step 0 Workspace Intent Detection:
 2. Resolve to one of `existing:{name}` · `create:{name}` · `ambiguous`.
 3. On `create:{name}` → invoke `create-workspace` BEFORE any spec authoring. Narrate: `[Workspace] Created '{name}' for {reason} (mentioned: {signal-token}). Dispatching new specs to .magicspec/{name}/. (Revert: git restore .magicspec/workspace.json && rm -rf .magicspec/{name})`.
 4. On `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) over `create:{X}`, `existing:{Y}` and no dispatch, exactly as `context.md` §Ambiguity Gate states; narrate `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec spec {runner-up-workspace} …)` and carry the routing premise into the dispatched spec's `Constraints & Assumptions`. Nothing is asked.
-5. On `existing:{name}` → proceed with `{name}` resolved by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command spec [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line and print its `Narration:` line once. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below). Only this workflow may create a workspace; every other command routes among the registered ones.
+5. On `existing:{name}` → proceed with `{name}` resolved by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command spec [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line and print its `Narration:` line once. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below). Only this workflow may create a workspace; every other command routes among the registered ones.
 
 The detection result is recorded in the agent's working state for the remainder of the workflow invocation. No subsequent step re-runs Step 0 within the same invocation.
 
@@ -203,7 +204,7 @@ graph TD
    - Run **Post-Update Review**.
    - Check `RULES.md` triggers (T1-T4). If T4 found, update `RULES.md` first.
    - Sync `INDEX.md`.
-   - **Zero-Prompt Handoff (C9 default)**: after dispatch completes, automatically invoke `/magicspec task` to regenerate the plan. Narrate: `[Auto-Handoff] Specs Stable. Invoking /magicspec task. (Interrupt: Ctrl+C)`. A hard fork (C9 gate 3 — incompatible architectural paths with no objective tiebreaker) is resolved by the Consequence Forecast (C27 DA-10) like any other unsettled fork, its premise recorded in the spec; nothing here pauses for user input.
+   - **Handoff (C9 default, one stage)**: after dispatch completes, end the invocation. The specifications and the registry are the record; the next stage is named, never started: narrate `[Handoff] Specs Stable. Next: /magicspec plan {workspace}.` and let the handoff line of the finalization carry its reasoning demand. When the request's own words asked for the following stage too ("specify this and plan it"), run `/magicspec plan` and say in one line that the request asked for it. A hard fork (C9 gate 3 — incompatible architectural paths with no objective tiebreaker) is resolved by the Consequence Forecast (C27 DA-10) like any other unsettled fork, its premise recorded in the spec; nothing here pauses for user input.
 
 **Constraints**:
 
@@ -338,7 +339,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 Compares specs vs. project filesystem and engine integrity.
 *(Pre-flight gate analog: Pre-Planning Stabilization in `task.md` — both block progression until invariants pass.)*
 
-**Trigger**: `/magicspec task` auto-run or *"Verify specs"*.
+**Trigger**: the pre-flight of `/magicspec plan` or *"Verify specs"*.
 
 | Check | Action |
 | --- | --- |
@@ -355,7 +356,7 @@ Compares specs vs. project filesystem and engine integrity.
 After all workflow steps (incl. Graph Refresh) and **before** the Completion Checklist:
 
 1. Run `node scripts/executor.js finalize --workflow=spec --workspace={active-workspace}`. Output is either `✅ Finalization complete` (with version bump + CHANGELOG entry) or `⏭️ No significant changes detected`.
-2. **Display the entire script output verbatim** in a fenced block.
+2. **Display the entire script output verbatim** in a fenced block. It ends with the handoff line — `Next: /magicspec {command} {argument} — {demand} reasoning` — printed once by the script, after the step it summarizes and before the Completion Checklist. The demand is advice for whoever chooses the model: never a warning and never a condition of running.
 3. Script exit non-zero → emit WARNING, do NOT block the Completion Checklist.
 
 **Opt-out**: `MAGIC_FINALIZE=0` env var, or `finalization.enabled = false` in `.magicspec/workspace.json`.
@@ -398,5 +399,5 @@ Checklist — {task description}
 
 Where this workflow may hand over, and when:
 
-- **Generate tasks** → `/magicspec task`: Proceed to task generation without interruption to maintain Zero-Prompt workflows (Rule C9). Condition: `registry_updated`.
+- **Plan** → `/magicspec plan`: Name it as the next step, with the workspace; it is not started here (one stage per invocation). Condition: `registry_updated`.
 - **Add a rule** → `/magicspec rule`: Add a project-wide convention discovered during spec work.

@@ -96,9 +96,9 @@ The Specification Knowledge Graph is managed by `/magicspec graph`.
 
 ## 3. Finalization Protocol (Post-Workflow)
 
-After `/magicspec spec`, `/magicspec task`, `/magicspec run` or `/magicspec rule` complete their
+After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run` or `/magicspec rule` complete their
 main steps and **before** their Completion Checklist, run
-`node scripts/executor.js finalize --workflow=<spec|task|run|rule> --workspace={active-workspace}`
+`node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule> --workspace={active-workspace}`
 and display its entire stdout **verbatim** in a fenced block. Skip it for `/magicspec analyze`,
 `/magicspec graph`, `/magicspec help`, `/magicspec migrate` and `/magicspec-dev:*`. A non-zero exit is a
 WARNING, never a block.
@@ -114,7 +114,7 @@ there is nothing to run by hand. On-demand form and exemptions:
 ## 5. Post-Task Replan
 
 After `/magicspec run` finishes a task or phase, a drift signal leaves the user exactly ONE visible next
-step: `/magicspec task` (or `/magicspec run` when clean). Never proactively offer `/magicspec analyze`
+step: `/magicspec plan` (or `/magicspec run` when clean). Never proactively offer `/magicspec analyze`
 or `/magicspec spec` after a run. Triggers, the chain and exemptions:
 [references/rules/replan.md](references/rules/replan.md) — read it when a run ends a task or phase.
 
@@ -196,16 +196,16 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
 - [ ] **§2 Spec Graph** — ran `build-spec-graph` before architectural questions;
       navigated `.magicspec/graph/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.magicspec/` change this session.
-- [ ] **§3 Finalization** — after `/magicspec spec|task|run|rule`, ran
+- [ ] **§3 Finalization** — after `/magicspec spec|plan|task|run|rule`, ran
       `node scripts/executor.js finalize --workflow=<...> --workspace={active-workspace}` and displayed its stdout **verbatim**.
 - [ ] **§4 Phase Archival** — for `/magicspec run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
       references were rewritten to `archives/tasks/phase-{N}.md (Done (Archived))`.
 - [ ] **§5 Post-Task Replan** — on any drift signal during `/magicspec run`, the
-      user-visible next step was exactly ONE command: `/magicspec task` (with
+      user-visible next step was exactly ONE command: `/magicspec plan` (with
       workspace context). NEVER proactively offered `/magicspec spec` or
       `/magicspec analyze` as a separate user-visible step — `/magicspec spec` surfaces
-      only inside `/magicspec task` on a real HALT.
+      only inside `/magicspec plan` (or the Stalled Plan report of `/magicspec task`) on a real HALT.
 - [ ] **§6 Reference Containment** — no SDD-artifact references (task IDs,
       phase designators, `PLAN.md`/`TASKS.md`/`INDEX.md`/`RULES.md`, spec file
       names, `.magicspec/` paths) were written into product files; rationale

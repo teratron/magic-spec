@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.2.3
+**Version:** 2.2.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -48,7 +48,8 @@ Full workflow-to-role mapping after integration:
 | `run.md` | Step 3.6 — Simplify Pass (new, opt-in) | `code-simplifier` | New gate |
 | `run.md` | Blocked Branch | `debugger` | New role for existing branch |
 | `run.md` | Post-Done Docs Sync (new) | `docs-specialist` | New gate |
-| `task.md` | Plan Write-back | `planner` | Absorb Planning Skeptic |
+| `run.md` | A community health file must change | `docs-specialist` | Second trigger; `prompt-engineer` reviews the changed text |
+| `plan.md` | Plan Write-back | `planner` | Absorb Planning Skeptic; the gate moved from `task.md` with the planning steps |
 | `spec.md` | Post-Update Review | `spec-critic` | Migrate Project Critic |
 | `analyze.md` | Pre-Advisory Audit | `project-auditor` | Migrate Auditor |
 | `rule.md` | Impact Analysis | `constitutional-reviewer` | Migrate Constitutional Reviewer |
@@ -190,7 +191,7 @@ The engine maintains a unified role registry at `skills/magicspec/roles/`. At cr
 | Workflow | Gate | Role | Card |
 | --- | --- | --- | --- |
 | `spec.md` | Post-Update Review | `spec-critic` | `skills/magicspec/roles/spec-critic.md` |
-| `task.md` | Plan Write-back | `planner` | `skills/magicspec/roles/planner.md` |
+| `plan.md` | Plan Write-back | `planner` | `skills/magicspec/roles/planner.md` |
 | `run.md` | Step 3 Execute | `coder` | `skills/magicspec/roles/coder.md` |
 | `run.md` | Step 3.4 Diff Review | `code-reviewer` | `skills/magicspec/roles/code-reviewer.md` |
 | `run.md` | Step 3.5 QA Review | `test-engineer` | `skills/magicspec/roles/test-engineer.md` |
@@ -207,7 +208,7 @@ The engine maintains a unified role registry at `skills/magicspec/roles/`. At cr
 **Opt-in roles** (triggered conditionally; not in mandatory gate table):
 - `code-skeptic` — opt-in decision review before coding.
 - `code-simplifier` — opt-in simplification pass after Code-reviewer.
-- `docs-specialist` — triggered only when a Done task changes public API / docs-visible behavior.
+- `docs-specialist` — triggered only when a Done task changes public API / docs-visible behavior, or when a community health file (the security policy, the contribution guide, an issue form) must change.
 - `prompt-engineer` (run.md Step 3.4b) — triggered only when the diff touches AI-facing instruction artifacts.
 
 Role activation is mandatory at listed gates — it is not skipped in Trust Mode (C9). Activating a role means applying that role's Operating Protocol. The agent adopts the role's stance for one reasoning pass; no user interaction required.
@@ -247,7 +248,8 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 | Alias | Path | Purpose |
 | --- | --- | --- |
 | `[RUN]` | `skills/magicspec/workflows/run.md` | Host of 6 role integration points. |
-| `[TASK]` | `skills/magicspec/workflows/task.md` | Host of planner integration. |
+| `[PLAN]` | `skills/magicspec/workflows/plan.md` | Host of planner integration. |
+| `[TASK]` | `skills/magicspec/workflows/task.md` | Host of the task instruction review. |
 | `[SPEC]` | `skills/magicspec/workflows/spec.md` | Host of spec-critic integration. |
 | `[ANALYZE]` | `skills/magicspec/workflows/analyze.md` | Host of project-auditor integration. |
 | `[RULE]` | `skills/magicspec/workflows/rule.md` | Host of constitutional-reviewer integration. |
@@ -258,6 +260,8 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.2.5 | 2026-11-11 | Clarification patch, Stable retained: the gate table and the reference table name `plan.md` for the planner (a new `[PLAN]` reference), and `task.md` for the `prompt-engineer` task instruction review, as in the constitution (C24, 1.19.0). |
+| 2.2.4 | 2026-11-11 | Clarification patch, Stable retained: the gate table and the list of triggered roles name the second `docs-specialist` trigger (a community health file must change), with `prompt-engineer` reviewing the changed text. |
 | 2.2.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 2.2.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 2.2.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

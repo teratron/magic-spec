@@ -120,6 +120,22 @@ if (fs.existsSync(CHANGELOG_FILE)) {
     log('Warning: CHANGELOG.md missing.');
 }
 
+// The security policy promises fixes to the line being released: its supported-versions table must say so.
+try {
+    execFileSync(process.execPath, [path.join(__dirname, 'check-security-policy.js'), '--version', version], {
+        cwd: ROOT_DIR,
+        encoding: 'utf8',
+        stdio: 'pipe',
+    });
+} catch (failure) {
+    const detail = String(failure.stderr || failure.message)
+        .trim()
+        .split(/\r?\n/)
+        .map((line) => line.replace(/^\[BLOCKED\] /, ''))
+        .join('; ');
+    blockers.push(`the security policy does not match this release: ${detail}`);
+}
+
 if (gitOk(['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`])) {
     blockers.push(`tag ${tagName} already exists locally; bump the version or delete the tag deliberately`);
 }
@@ -131,6 +147,7 @@ if (gitOk(['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`])) {
 log(`Release plan for ${tagName}${publish ? '' : ' (nothing is changed without --yes)'}:`);
 log(`  branch:    ${branch || '(none)'} → origin/${branch || '?'}`);
 log(`  version:   ${version} (skills/magicspec/.version)`);
+log('  checked:   CHANGELOG.md entry, supported-versions table of SECURITY.md, clean tree, free tag');
 log('  steps:     QA gate (node tests/engine.js) → C14 + sync → release commit of what they changed → tag → push branch and tag');
 for (const b of blockers) console.error(`\x1b[31m[BLOCKED]\x1b[0m ${b}`);
 

@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.55.0
+**Version:** 1.56.1
 **Generated:** 2026-11-11
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.56.0
-**Based on RULES:** .magicspec/RULES.md v1.18.1
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.56.3
+**Based on RULES:** .magicspec/RULES.md v1.19.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,7 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
-| [Phase 48](tasks/phase-48.md) | Independent Hardening — every command routes to one workspace by one engine-computed chain (`resolve-workspace`: argument, environment, paths against each scope, topic, work in flight, default), narrated once and writing only into registered folders; every cache has an owner that prunes it and `clean-cache` removes the rebuildable ones; the security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules, the policy's response times being the maintainer's to give | `Todo` |
+| [Phase 49](archives/tasks/phase-49.md) | Planning Split and Stage Boundaries — `plan` owns the plan and replanning, `task` owns decomposition and hands findings back to `plan` as a directive; every pipeline command performs one stage and ends by naming the next with its reasoning demand, so a model can be switched between stages; the router gains `plan`, the demand column and the `audit` alias, `help` explains itself once, `finalize` knows `plan`, the replan rule, the constitution (C9, C24, C2), the role cards, the documentation and the suite follow | `Done (Archived)` |
+| [Phase 48](archives/tasks/phase-48.md) | Independent Hardening — every command routes to one workspace by one engine-computed chain (`resolve-workspace`: argument, environment, paths against each scope, topic, work in flight, default), narrated once and writing only into registered folders; every cache has an owner that prunes it and `clean-cache` removes the rebuildable ones; the security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules, the policy's response times decided by forecast, the release checking the policy's supported-versions table | `Done (Archived)` |
 | [Phase 47](archives/tasks/phase-47.md) | One Command Surface, Help and Argument Intake — `/magicspec <command> [argument]` as the only form, the router's table with groups and the argument contract, the `help` and `migrate` bodies, E7 in the constitution and the always-on rules, command entries and the plugin retired, the install prompt, the printed form across the repository | `Done (Archived)` |
 | [Phase 46](archives/tasks/phase-46.md) | State Folder Rename, Migration, Archive & 3.0.0 (Single-Skill Step 5) — `.design/` becomes `.magicspec/`, a resumable `migrate` subcommand for 2.x projects with fixtures of every supported layout, one archive composition with a smoke check, the version file at 3.0.0 | `Done (Archived)` |
 | [Phase 45](archives/tasks/phase-45.md) | Maintenance Layout (Single-Skill Step 4) — `scripts`, `tests` and `package.json` to the root, `skills/magicspec-dev/` with the four maintenance workflows, the dotted `/magicspec-dev:*` names to `/magicspec-dev:*`, the predicate in its final form | `Done (Archived)` |

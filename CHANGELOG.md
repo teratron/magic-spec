@@ -43,11 +43,15 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - **`/magicspec migrate`**: the 2.x migration as a command — the dry run, one consent question, then `--apply`. After the rename it rewrites the earlier command and folder names in the project's SDD artifacts (a patch version and a history row per specification, history, archives and the constitution untouched, backups and a revert hint), and only reports product files that still use them.
 - A command whose required argument is missing (`/magicspec spec`, `/magicspec rule`) asks for it once; one whose argument is optional runs its default and says which. The constitution and the always-on rules record this as E7 (constitution 1.18.0).
 - **Issue forms** (`.github/ISSUE_TEMPLATE/`): a bug report, a change proposal and an agent-feedback form whose sections follow the report an agent submits itself; blank issues are disabled and the chooser links private vulnerability reporting.
+- **`/magicspec plan`**: planning and replanning as a command of its own, with its body built from the planning steps of `task`. It orders the specifications into phases, keeps the backlog, writes `PLAN.md` and nothing of the task layer, and records the registry and constitution versions it was written against. A directive about order or membership (`"postpone phase 4"`, `"split phase 2"`) is its argument; `task update` still works and runs it.
+- **One stage per invocation.** `spec`, `plan`, `task` and `run` end by naming the next command with the reasoning it takes, as a final line (`Next: /magicspec task engine — standard reasoning`), and start nothing, so the model can be switched between stages; `spec` and `analyze` no longer invoke the next stage themselves. The demand is read from a new column of the router's table; `audit` is an alias of `analyze`; `help help` explains `help` once.
 - `docs/repository-settings.md`: the settings only a maintainer can change on the hosting service (private vulnerability reporting, Discussions, the `agent-feedback` label), with the path to each, why it matters, the state observed and how to verify it.
 
 ### Changed
 
 - **One command, `/magicspec <command> [argument]`, is the only printed form.** The router is the only command surface: `init` no longer writes `.claude/commands/magicspec/` or `.qwen/commands/magicspec/` and removes the entries a 3.0.x installation left (`PROJECTION_RETIRED` until it does), the `.gitignore` lines it prints name no command folder, and the plugin channel (`build-plugin`) is removed. The colon spelling is gone from the shipped text, the scripts' output, the README and the documentation; the router still reads it when typed. The router table gained the group, argument and when-missing columns, and the frontmatter an `argument-hint`.
+- **`task` decomposes a plan that stands.** On a missing or stale plan it stops naming `/magicspec plan` and why, writing nothing; a decomposition finding it cannot repair (a specification too large for a phase, a dependency the plan does not state) is recorded in the ledger as a replan directive that `plan` reads, and that retires when the plan is rewritten. After a run the one next step is `/magicspec plan`.
+- `finalize` accepts `--workflow=plan` and computes the next step across the four stages; a plan that holds a phase with no tasks is no longer reported complete; every remedy of the pre-flight names `/magicspec plan`, and a plan written against an older constitution is reported. The constitution is 1.19.0: C2 lists the ten commands, C9 says each stage runs autonomously and only `goal` chains them, C24 puts the planner on `plan`.
 - The README's install prompt carries the seven steps of the agent-assisted installation contract (intent only, runtime check, installed-engine and 2.x detection, fetch commands for both shells, placement with the integrity check, `init`, finish on `/magicspec help`).
 
 - `lib/commit-suggester.js` is `lib/changelog-bullets.js` (it no longer has anything to do with commit messages).
@@ -62,6 +66,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - Updated task plan and task index (engine)
 - Completed task (engine)
 - **`CONTRIBUTING.md` is hand-written** in the five sections of the contribution contract and links the constitution instead of copying it. `scripts/sync-docs.js` refills only its marked blocks (the command table from the router, the workspace table from the registry, the engine version); a guide without markers receives them once, and the guide template left the shipped engine folder for `scripts/templates/` (engine 3.0.31).
+- Completed 2 tasks (engine)
 
 ## [3.0.0] - 2026-10-28
 

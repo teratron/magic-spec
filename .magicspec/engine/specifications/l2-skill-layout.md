@@ -1,6 +1,6 @@
 # Skill Layout, Location Resolution & Delivery Order
 
-**Version:** 1.6.0
+**Version:** 1.6.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-skill-packaging.md
@@ -61,7 +61,7 @@ skills/magicspec/                  # in the developer repository; <host>/skills/
 ├── README.md                      # short description and install pointer
 ├── .version                       # the one engine version (SP-1)
 ├── .checksums                     # manifest of every other file in this folder
-├── workflows/                     # one file per user-invokable command: analyze, graph, rule, run, spec, status, task
+├── workflows/                     # one file per user-invokable command: analyze, graph, help, migrate, plan, rule, run, spec, status, task
 ├── references/                    # shared and internal modules: context, init, retrospective, and long-form notes
 ├── roles/                         # role cards (shared by several workflows, so not under workflows/)
 ├── templates/                     # file scaffolds
@@ -206,6 +206,7 @@ The constitution's `.magic/`-named conventions (C1, C7, C14, C15, C28) are amend
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.1 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). The `workflows/` listing of §2 names every command of the router: analyze, graph, help, migrate, plan, rule, run, spec, status, task. |
 | 1.6.0 | 2026-10-28 | Agent | Step 5 shipped: the state folder constant is `.magicspec` and the earlier name is spelled in one place (`LEGACY_STATE_DIR_NAME`, used by the executor guard and `migrate`); the engine reads `.magicspec/` and this repository's own workspace was renamed in the same step; the version file reads 3.0.0, the single release of steps 1 to 5. The delivery order is complete. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 1.5.1 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.5.0 | 2026-10-28 | Agent | Recorded as built by the maintenance layout (step 4): `dev/scripts`, `dev/tests` and `dev/package.json` are at the repository root as `scripts/`, `tests/` and `package.json` (`package.json` also carries the `test` script); `skills/magicspec-dev/` holds the router and four workflows with nothing executable, the init and release scripts live in `scripts/init/` and `scripts/release.js`, and `scripts/init/project-dev-skill.js` writes its link and command entries; the dotted `/magic.dev.*` names are `/magicspec-dev:{init,release,test,sync}`; the wrapper generator is removed and its checker survives as `scripts/skill-frontmatter.js`; the predicate reads only `<root>/skills/magicspec` and `<root>/scripts/generate-checksums.js`, the earlier-layout branches are removed. Status reverted `Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |

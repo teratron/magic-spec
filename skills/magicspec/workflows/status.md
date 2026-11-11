@@ -28,7 +28,7 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
 ## Core Invariants (Mandatory)
 
 1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.magicspec/.cache/`; the sink is not an artifact and that is not a write in this sense.)
-2. **Context (Zero-Prompt)**: apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command status [--workspace {name}] --text "{request}"` (it writes nothing; `--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
+2. **Context (Zero-Prompt)**: apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command status [--workspace {name}] --text "{request}"` (it writes nothing; `--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, or is a note that names no command, it ends with that statement or note and no command; the briefing never invents one.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
 5. **Graceful Degradation**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})`, never a crash of the whole briefing.
@@ -55,12 +55,12 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
    - STATE.md `Next Action` states that nothing is pending (it names no command) → render `Next: nothing pending — {the statement}` and recommend no command.
    - STATE.md `Next Action` present and names a command → recommend it verbatim.
    - STATE.md `Next Action` present, names no `/magicspec <command>` command and does not say nothing is pending (a note in the owner's words, for example a manual step to take first) → render `Next: {the text, verbatim}`, recommend no command of your own, and leave the note unrewritten.
-   - Absent → compute by pipeline order: open `Todo` tasks → `/magicspec run {workspace}`; registered specs without a plan → `/magicspec task {workspace}`; empty registry → `/magicspec spec`.
+   - Absent → compute by pipeline order: an empty registry → `/magicspec spec`; registered specs the plan does not hold, or a plan older than the registry or the constitution → `/magicspec plan {workspace}`; a phase the plan holds with no tasks yet → `/magicspec task {workspace}`; open `Todo` tasks → `/magicspec run {workspace}`.
    - Format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)`
 
 ### 3. Degraded States
 
-- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec task {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
+- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec plan {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
 - **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
@@ -83,4 +83,4 @@ Status Checklist
 Where this workflow may hand over, and when:
 
 - **Continue execution** → `/magicspec run`: Resume the active phase from the recommended next task. Condition: `open_tasks`.
-- **Replan** → `/magicspec task`: Plan or revalidate the implementation plan. Condition: `plan_gap_or_drift`.
+- **Replan** → `/magicspec plan`: Plan or revalidate the implementation plan. Condition: `plan_gap_or_drift`.

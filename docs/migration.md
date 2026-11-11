@@ -8,7 +8,7 @@
 | --- | --- |
 | `.magic/` (engine, scripts, templates, roles) | the skill folder, in the host's skills folder |
 | `workflows/magic.*.md`, `skills/magic-*`, `rules/magic.md` and copies under `.claude/`, `.agents/`, `.codex/`, `.qwen/` | the router `SKILL.md` and `AGENT-RULES.md`; no per-command entry |
-| commands `/magic.spec`, `/magic.task`, ... | `/magicspec spec`, `/magicspec task`, ... (`/magicspec help` lists them) |
+| commands `/magic.spec`, `/magic.task`, ... | `/magicspec spec`, `/magicspec plan`, `/magicspec task`, ... (`/magicspec help` lists them) |
 | state folder `.design/` | `.magicspec/` (its contents are unchanged) |
 
 Your specifications, plan, tasks, rules and state keep their content. The migration updates the entries of `workspace.json` that equal the old folder name and rewrites the earlier command and folder names (`/magic.spec`, `.design/`, `.magic/`) in your SDD artifacts, as described below.

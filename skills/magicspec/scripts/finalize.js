@@ -40,7 +40,7 @@ const diagnostics = require('./lib/diagnostics');
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Triggered by `/magicspec spec`, `/magicspec task`, `/magicspec run`, `/magicspec rule`
+ * Triggered by `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`, `/magicspec rule`
  * after the workflow's main steps complete and before its Completion
  * Checklist. Detects significant artifact changes, bumps the project's
  * patch version, appends a CHANGELOG entry, and prints a structured stdout
@@ -58,7 +58,7 @@ const projectRoot = resolveProjectRoot();
 const designCacheDir = statePath(projectRoot, '.cache');
 const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
-const VALID_WORKFLOWS = new Set(['spec', 'task', 'run', 'rule']);
+const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule']);
 
 /**
  * The words finalize uses to tell the user that the SC-2 state update was
@@ -225,7 +225,7 @@ function noteArchivalOff(wsDir) {
 /**
  * Commands that must never appear in a synthesized `Next Action`.
  *
- * `AGENT-RULES.md` §5 reserves `/magicspec spec` to a real `/magicspec task` Pre-flight
+ * `AGENT-RULES.md` §5 reserves `/magicspec spec` to a real `/magicspec plan` Pre-flight
  * HALT and keeps `/magicspec analyze` on-demand. The constraint is enforced on the
  * field rather than per-branch because STATE.md `Next Action` carries no
  * provenance: `/magicspec status` replays it verbatim, so a line written by one
@@ -245,7 +245,7 @@ const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
  * A violation degrades to the planning funnel with a warning — `finalize` is
  * non-blocking by contract and must never abort over a recommendation string.
  *
- * @param {string} workflow - `spec|task|run|rule`.
+ * @param {string} workflow - `spec|plan|task|run|rule`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [plan] - A {@link classifyPlanState} result already read by the
@@ -257,7 +257,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
     if (RESERVED_COMMAND_RE.test(next)) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
-            `AGENT-RULES.md §5; substituting the /magicspec task funnel.`;
+            `AGENT-RULES.md §5; substituting the /magicspec plan funnel.`;
         console.warn(`[state] ${message}`);
         diagnostics.record({
             severity: 'fix',
@@ -266,7 +266,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
             message,
             locus: 'STATE.md',
         });
-        return `Run /magicspec task ${workspace} to plan`;
+        return `Run /magicspec plan ${workspace} to plan`;
     }
     return next;
 }
@@ -289,9 +289,13 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
  * @returns {string} A one-line `Next Action` value.
  */
 function planCompleteNextAction(workspace, wsDir) {
-    const funnel = `Plan complete — run /magicspec task ${workspace} to plan new scope`;
+    const funnel = `Plan complete — run /magicspec plan ${workspace} to plan new scope`;
     try {
         const pending = findPendingWork(wsDir);
+        // A phase the plan holds and the ledger has no row for is waiting for its tasks, not complete.
+        if (pending.nextUndecomposed) {
+            return `Run /magicspec task ${workspace} to decompose Phase ${pending.nextUndecomposed.phase}`;
+        }
         const nothingPending =
             pending.registryEvaluated &&
             pending.backlogEvaluated &&
@@ -498,14 +502,14 @@ function classifyPlanState(wsDir) {
 
 /**
  * Derives the raw recommendation from the plan ledger, following pipeline
- * order (spec → task → run). Plan-state-aware per SC-2.1: for task/run the
+ * order (spec → plan → task → run). Plan-state-aware per SC-2.1: for task/run the
  * recommendation comes from the actual plan state (open tasks → run; plan
  * complete → replan), never a fixed "execute the active phase" against an
  * empty plan.
  *
  * Callers should use {@link computeNextAction}, which applies the §5 guard.
  *
- * @param {string} workflow - `spec|task|run|rule`.
+ * @param {string} workflow - `spec|plan|task|run|rule`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [classified] - A pre-read {@link classifyPlanState} result.
@@ -514,16 +518,30 @@ function classifyPlanState(wsDir) {
 function synthesizeNextAction(workflow, workspace, wsDir, classified) {
     // spec/rule changes require (re)planning before execution — the plan must
     // absorb the amended specs/rules first (pipeline order).
-    if (workflow === 'spec') return `Run /magicspec task ${workspace} to update the plan`;
+    // A finding a decomposition or a run handed back is the next step until the plan is rewritten.
+    const directive = pendingDirective(wsDir);
+    if (directive) return `Run /magicspec plan ${workspace} \x22${directive}\x22`;
+
+    if (workflow === 'spec') return `Run /magicspec plan ${workspace} to update the plan`;
     if (workflow === 'rule')
-        return `Run /magicspec task ${workspace} to revalidate the plan against amended rules`;
+        return `Run /magicspec plan ${workspace} to revalidate the plan against amended rules`;
+    if (workflow !== 'plan') {
+        // A plan written against an older constitution is stale (PL-4): it is revalidated before more work.
+        const stale = rulesGapAfter(wsDir);
+        if (stale) return `Run /magicspec plan ${workspace} to revalidate the plan against amended rules`;
+    }
+    if (workflow === 'plan') {
+        // A plan that was just written leaves the task ledger behind it: decomposition is next.
+        const behind = ledgerAfterPlan(wsDir);
+        if (behind) return behind.replace('{ws}', workspace);
+    }
 
     // task/run: derive the next step from the actual plan state (SC-2.1).
     const plan = classified || classifyPlanState(wsDir);
     // A plan with nothing left to execute has one way forward, from either workflow: `/magicspec
     // run` would only Stall, so `task.md` Step 8 hands nothing to it and `run.md` Select (*Stalled*)
     // sends the user to `/magicspec task`, which surfaces whatever the blocker needs.
-    const afterBlocker = `re-run /magicspec task ${workspace}`;
+    const afterBlocker = `re-run /magicspec plan ${workspace}`;
     switch (plan.kind) {
         case 'inline-open':
         case 'actionable':
@@ -544,13 +562,65 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
         case 'complete':
             // No open tasks anywhere → plan complete. The recommendation is
             // uniform across workflows (SC-2.1 + AGENT-RULES.md §5): new scope
-            // enters through the /magicspec task funnel, whose Pre-flight raises the
+            // enters through the /magicspec plan funnel, whose Pre-flight raises the
             // HALT that sanctions spec authoring. Naming /magicspec spec here would
             // short-circuit that funnel — and, because /magicspec status replays this
             // field verbatim, would resurface after /magicspec run where §5 forbids it.
             return planCompleteNextAction(workspace, wsDir);
         default:
-            return `Run /magicspec task ${workspace} to plan`;
+            return `Run /magicspec plan ${workspace} to plan`;
+    }
+}
+
+/**
+ * The pending replan directive of a workspace, in one line for a quoted argument, or `null` when
+ * there is none, it was retired by a rewritten plan, or the files cannot be read (a missing
+ * recommendation is better than a wrong one).
+ *
+ * @param {string} wsDir - The workspace design directory.
+ * @returns {string|null}
+ */
+function pendingDirective(wsDir) {
+    try {
+        const pending = findPendingWork(wsDir);
+        return pending.replanDirective
+            ? pending.replanDirective.directive.replace(/\x22/g, '\x27')
+            : null;
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Whether the plan records a constitution version that is not the constitution's own now.
+ *
+ * @param {string} wsDir - The workspace design directory.
+ * @returns {boolean} False when it cannot be told.
+ */
+function rulesGapAfter(wsDir) {
+    try {
+        return findPendingWork(wsDir).rulesGap !== null;
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * After `/magicspec plan`: whether the task ledger was decomposed from an older plan, and then
+ * the decomposition step to name. `{ws}` stands for the workspace, filled by the caller.
+ *
+ * @param {string} wsDir - The workspace design directory.
+ * @returns {string|null} The next step, or `null` when the ledger is in step with the plan.
+ */
+function ledgerAfterPlan(wsDir) {
+    try {
+        const pending = findPendingWork(wsDir);
+        if (!pending.ledgerBehindPlan && !pending.nextUndecomposed) return null;
+        return pending.nextUndecomposed
+            ? `Run /magicspec task {ws} to decompose Phase ${pending.nextUndecomposed.phase}`
+            : 'Run /magicspec task {ws} to bring the tasks in line with the plan';
+    } catch {
+        return null;
     }
 }
 
@@ -857,6 +927,37 @@ function emitSuccess(ctx) {
 }
 
 /**
+ * The handoff line a stage ends with: `Next: /magicspec {command} {argument} — {demand} reasoning`.
+ * The command and its argument are the ones the `Next Action` records — the command is the first
+ * `/magicspec <command>` of that text, the argument its workspace and a quoted directive, when it
+ * names them — and the demand is read from the router's command table through the engine's one
+ * parser, so the table is not copied here. An alias reads as its command. A `Next Action` that
+ * names no command, or one the router does not list, gets no line.
+ *
+ * @param {string} nextAction - The `Next Action` this invocation persisted.
+ * @param {string} workspace - The workspace the workflow ran for.
+ * @returns {string|null} The line, or `null`.
+ */
+function handoffLine(nextAction, workspace) {
+    const hit = /\/magicspec ([a-z][a-z-]*)(?: ([A-Za-z0-9][A-Za-z0-9._-]*))?(?: (\x22[^\x22]*\x22))?/.exec(
+        nextAction || '',
+    );
+    if (!hit) return null;
+    let commands;
+    try {
+        commands = require('./lib/hosts').readCommands();
+    } catch {
+        return null; // an unreadable router costs the line, never the finalization
+    }
+    const row = commands.find((c) => c.name === hit[1] || c.aliases.includes(hit[1]));
+    if (!row) return null;
+    // The second token is an argument only when it is the workspace; otherwise it is prose ("to plan").
+    const named = hit[2] === workspace;
+    const argument = (named ? ` ${workspace}` : '') + (named && hit[3] ? ` ${hit[3]}` : '');
+    return `Next: /magicspec ${row.name}${argument} — ${row.demand} reasoning`;
+}
+
+/**
  * Renders the terminal block shared by both finalize exit paths, in a fixed
  * order (DG-5): the engine diagnostics digest
  * (omitted entirely when there is nothing to report — DG-7), then the next
@@ -865,11 +966,11 @@ function emitSuccess(ctx) {
  * either of these blocks; that prohibition is the whole mechanism by which
  * the two exit paths cannot drift apart.
  *
- * @param {{nextAction?: string, findings?: Object[]}} ctx
+ * @param {{nextAction?: string, workspace?: string, findings?: Object[]}} ctx
  * @returns {void}
  */
 function emitTail(ctx) {
-    const { nextAction, findings = [] } = ctx;
+    const { nextAction, workspace, findings = [] } = ctx;
 
     // Each present block is joined internally, then blocks are joined with a
     // single blank line between them — avoids the double-blank a naive
@@ -878,7 +979,11 @@ function emitTail(ctx) {
     const blocks = [];
     const digest = diagnostics.formatDigest(findings);
     if (digest.length > 0) blocks.push(digest.join('\n'));
-    if (nextAction) blocks.push(['### Next step', '', nextAction].join('\n'));
+    if (nextAction) {
+        // The handoff line follows the step it summarizes, once: the next command, its argument, its demand.
+        const handoff = handoffLine(nextAction, workspace);
+        blocks.push(['### Next step', '', nextAction, ...(handoff ? ['', handoff] : [])].join('\n'));
+    }
 
     if (blocks.length === 0) return;
     process.stdout.write('\n' + blocks.join('\n\n') + '\n');
@@ -998,7 +1103,7 @@ function main() {
         const findings = diagnostics.revalidate(
             opts.dryRun ? diagnostics.read() : diagnostics.drain(),
         );
-        emitTail({ nextAction: stateResult.nextAction, findings });
+        emitTail({ nextAction: stateResult.nextAction, workspace, findings });
         const nextState = Object.assign({}, state, {
             lastCheckedAt: new Date().toISOString(),
             lastWorkflow: `magic.${opts.workflow}`,
@@ -1115,7 +1220,7 @@ function main() {
         stateResult,
         diagnosticsCount,
     });
-    emitTail({ nextAction: stateResult.nextAction, findings });
+    emitTail({ nextAction: stateResult.nextAction, workspace, findings });
 
     const nextState = {
         lastVersion: next,
@@ -1142,6 +1247,7 @@ module.exports = {
     collectChangedFiles,
     emitSuccess,
     emitTail,
+    handoffLine,
 };
 
 // Execute only as a CLI, not when required by tests.

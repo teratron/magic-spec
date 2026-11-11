@@ -64,6 +64,8 @@ The engine folder (`skills/magicspec/` in this repository, the skill folder of a
 
 Limit the SDD workflow to the core command set to maximize automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary and explicitly authorized as a C2 exception.
 
+The command set as it ships: `spec`, `plan`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `fix`, `simulate`, `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
+
 ### C3 — Parallel Task Execution Mode
 
 Task execution defaults to **Parallel mode**. A Manager Agent coordinates execution, reads status, unblocks tracks, and escalates conflicts. Tasks with no shared constraints are implemented in parallel tracks.
@@ -94,7 +96,7 @@ On phase completion, the per-phase task file is moved from `$DESIGN_DIR/tasks/` 
 
 ### C9 — Default Autonomous Execution
 
-**Default behavior**: the agent executes the full SDD lifecycle (Draft → RFC → Stable → Plan → Task → Run) autonomously — including status promotion, planning, dispatch, retrospective L1, changelog L1, and CONTEXT.md regeneration. User input is solicited **only** at the closed list of objective gates below. Outside this list, asking for confirmation, presenting choice menus, or hesitating is forbidden (see C25 Engineer Posture).
+**Default behavior**: the agent executes each stage of the SDD lifecycle (specify: Draft → RFC → Stable; plan; task; run) autonomously — including status promotion, planning, dispatch, retrospective L1, changelog L1, and CONTEXT.md regeneration. One stage per invocation: a stage ends by recording its result in the project's files and naming the next command with its reasoning demand, so that a person or a host may switch the model between stages; it never starts the next stage itself, unless the request's own words asked for it. `goal` is the one command that chains the stages. User input is solicited **only** at the closed list of objective gates below. Outside this list, asking for confirmation, presenting choice menus, or hesitating is forbidden (see C25 Engineer Posture).
 
 **Objective gates** — a consent question, a HALT, or, for gates 3 and 7, a forecast (C27 DA-10):
 
@@ -202,7 +204,7 @@ At critical decision points, the agent MUST activate the designated role card fr
 | Workflow | Gate | Role | Card |
 | --- | --- | --- | --- |
 | `spec.md` | Before `Post-Update Review` | `@role:spec-critic` | `roles/spec-critic.md` |
-| `task.md` | Before `Plan Write-back` | `@role:planner` | `roles/planner.md` |
+| `plan.md` | Before `Plan Write-back` | `@role:planner` | `roles/planner.md` |
 | `run.md` | Before marking task `Done` | `@role:test-engineer` | `roles/test-engineer.md` |
 | `retrospective.md` | Before Signal calculation | `@role:retrospective-analyst` | `roles/retrospective-analyst.md` |
 | `analyze.md` | Before Advisory Report | `@role:project-auditor` | `roles/project-auditor.md` |
