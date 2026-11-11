@@ -12611,8 +12611,10 @@ describe('Magic Engine Scripts', () => {
         }
         // The amendment is a minor bump with its history row, and the ledger records the constitution it was written against.
         const version = /\*\*Version:\*\* (\S+)/.exec(constitution)[1];
-        const historyRow = constitution.split('\n').find((line) => line.startsWith(`| ${version} |`));
-        assert.ok(historyRow?.includes('**The pipeline is four stages**'), 'the current version has its history row');
+        const historyRows = constitution.split('\n');
+        assert.ok(historyRows.some((line) => line.startsWith(`| ${version} |`)), 'the current version has its history row');
+        const stagesRow = historyRows.find((line) => line.startsWith('| 1.19.0 |'));
+        assert.ok(stagesRow?.includes('**The pipeline is four stages**'), 'the amendment that made the pipeline four stages keeps its history row');
         const ledger = readShipped('.magicspec/engine/TASKS.md');
         assert.ok(ledger.includes(`**Based on RULES:** .magicspec/RULES.md v${version}`), 'TASKS.md records the current constitution version');
     });
@@ -12627,8 +12629,8 @@ describe('Magic Engine Scripts', () => {
             '1. Read all specs the plan holds or the draft places: their headers, overviews and invariants.',
             '3. Group specifications into phases that minimize cross-phase dependencies.',
             '4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.',
-            '6. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.',
-            '7. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started.',
+            '7. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.',
+            '8. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started.',
         ]) {
             assert.ok(card.includes(line), `the card carries: ${line}`);
             assert.ok(mirror.includes(line), `the mirror carries: ${line}`);
@@ -12647,6 +12649,213 @@ describe('Magic Engine Scripts', () => {
         assert.ok(integration.includes('| `plan.md` | Plan Write-back | `planner` | `skills/magicspec/roles/planner.md` |'));
         assert.ok(integration.includes('| `[PLAN]` | `skills/magicspec/workflows/plan.md` | Host of planner integration. |'));
         assert.ok(!integration.includes('| `task.md` | Plan Write-back | `planner`'), 'no gate row names task.md for the planner');
+    });
+
+    test('the spec-critic card carries the coherence check as its first step, its mirror carries it word for word, and the Post-Update Review runs it before the lenses and the Instruction Quality Pass (CH-1, CH-4, CH-6, CH-7, CH-9)', () => {
+        const card = readShipped('skills/magicspec/roles/spec-critic.md');
+        const mirror = readShipped('.magicspec/engine/specifications/l2-role-cards-governance.md');
+        const protocol = card.slice(card.indexOf('## Operating Protocol'));
+        const step = stepBlock(protocol, '1.');
+        assert.ok(step?.startsWith('1. **Coherence check (runs first):**'), 'the coherence check is step 1 of the card');
+        for (const needle of [
+            'every other specification that touches the same mechanics, whether or not it is declared in `Related Specifications`',
+            'Search the specification text of every registered workspace for each name',
+            'direct neighbours of the specification in the specification graph',
+            'Archives, history tables and retrospectives are history and never part of the set',
+            '*contradiction*',
+            '*duplicate definition*',
+            '*interaction gap*',
+            'the exact text of both sides with file and section',
+            'blocks promotion until it is resolved in the same invocation',
+            'decide by the Consequence Forecast and record the premise as an `Assumption (forecast)`',
+            'replacing one copy with a link',
+            'is reported as `superseded` and does not block',
+            '`[Coherence] {N} artifacts compared — {k} findings`',
+            'zero findings print only the first line',
+            'A patch-level change (typo fix, clarification) introduces no mechanic',
+        ]) {
+            assert.ok(step.includes(needle), `step 1 states: ${needle}`);
+        }
+        assert.strictEqual((card.match(/^\d+\. \*\*Coherence/gm) ?? []).length, 1, 'one step of the card is named coherence');
+        assert.ok(card.includes('5. **Internal consistency:** Does the document read consistently after edits?'), 'the old coherence line is renamed');
+        assert.ok(lineWith(card, '10. Emit PASS or FAIL')?.includes('PASS is never emitted without step 1 having run (CH-6)'), 'the verdict needs the check');
+        assert.ok(mirror.includes(step), 'the mirror carries the step word for word');
+        for (const line of card.split('\n').filter((l) => /^(10|[2-9])\. /.test(l) && !l.includes('Regulation Necessity') && !l.includes('Sync Check'))) {
+            assert.ok(mirror.includes(line), `the mirror carries: ${line.slice(0, 60)}`);
+        }
+
+        // The Post-Update Review of the specification workflow.
+        const spec = readShipped('skills/magicspec/workflows/spec.md');
+        const review = spec.slice(spec.indexOf('### Post-Update Review (Mandatory)'), spec.indexOf('### Graph Refresh (Post-Dispatch)'));
+        const at = (marker) => {
+            const i = review.indexOf(marker);
+            assert.notStrictEqual(i, -1, `the review has: ${marker}`);
+            return i;
+        };
+        assert.ok(at('**Coherence check (first stage)**') < at('**Spec Council'), 'the check runs before the lenses');
+        assert.ok(at('**Spec Council') < at('**Instruction Quality Pass (second stage)**'), 'and the Instruction Quality Pass is last');
+        const stage = lineWith(review, '**Coherence check (first stage)**');
+        for (const needle of ['A contradiction or an interaction gap blocks promotion', 'declare as a supersession', '`superseded`', '`[Coherence] {N} artifacts compared — {k} findings`']) {
+            assert.ok(stage.includes(needle), `the review stage states: ${needle}`);
+        }
+        assert.ok(lineWith(review, '3. **Ecosystem & Extensibility Lens')?.includes('every other specification that shares a mechanic with it'), 'the Ecosystem lens composes with the comparison set');
+        assert.ok(spec.includes('☐ Coherence (CH-4):'), 'the checklist has the coherence line');
+        assert.ok(!review.includes('Planning Audit in `task.md`'), 'the analog names plan.md, where the Planning Audit lives');
+    });
+
+    test('the planner card carries the plan check, its mirror carries it word for word, and plan.md runs it in the Planning Audit with one halt toward /magicspec spec (CH-5, CH-6, CH-7)', () => {
+        const card = readShipped('skills/magicspec/roles/planner.md');
+        const mirror = readShipped('.magicspec/engine/specifications/l2-role-cards-execution.md');
+        const step = cardLine('skills/magicspec/roles/planner.md', '6. **Plan check (mandatory, before write-back):**');
+        assert.ok(step, 'the plan check is step 6 of the card');
+        for (const needle of [
+            '(a) the other phases of the same plan',
+            '(b) the plan of every other workspace `workspace.json` registers',
+            '(c) what archived phases record as delivered',
+            'Read only the matching entries',
+            '*ordering conflict*',
+            '*contradiction*',
+            '*duplicate definition*',
+            '*interaction gap*',
+            'the exact text of both sides with file and section',
+            'Resolve every finding before the plan is written',
+            'assign work duplicated across workspaces to one workspace and reference it from the other',
+            'halt once with the single recommendation `/magicspec spec`, quoting both sides',
+            'this card writes no specification',
+            '`[Coherence] {N} artifacts compared — {k} findings`',
+            'The audit is not passed without this step (CH-6)',
+        ]) {
+            assert.ok(step.includes(needle), `step 6 states: ${needle}`);
+        }
+        assert.ok(mirror.includes(step), 'the mirror carries the step word for word');
+        assert.ok(card.indexOf('5. **Adversarial pass') < card.indexOf(step) && card.indexOf(step) < card.indexOf('7. Write back'), 'the plan check sits between the adversarial pass and the write-back');
+        assert.ok(card.includes('- Passing the audit without the plan check, or comparing the draft only with its own plan.'), 'the anti-pattern is there');
+
+        const plan = readShipped('skills/magicspec/workflows/plan.md');
+        const audit = stepBlock(plan.slice(plan.indexOf('\n### Steps')), '5.');
+        const check = lineWith(audit, '**Plan check (CH-5)**');
+        assert.ok(check, 'Step 5 lists the plan check');
+        for (const needle of ['with the plan of every other registered workspace', 'archived phases record as delivered', '**HALT** once with the single recommendation', '`/magicspec spec`', 'this workflow writes no specification', '`[Coherence] {N} artifacts compared — {k} findings`']) {
+            assert.ok(check.includes(needle), `the plan check line states: ${needle}`);
+        }
+        assert.ok(plan.includes('☐ Plan check (CH-5):'), 'the checklist has the plan check');
+        assert.ok(lineWith(plan, '**Author what the plan cannot place**')?.includes('Step 5 (the plan check)'), 'the handoff names the new halt');
+    });
+
+    test('ventilation resolves the same four classes through the same resolutions and the specification template says where a supersession is declared (CH-8, CH-9)', () => {
+        const analyze = readShipped('skills/magicspec/workflows/analyze.md');
+        const line = lineWith(analyze, '7a. **Cross-Artifact Coherence (`COHERENCE`)**');
+        assert.ok(line, 'Mode C has step 7a');
+        for (const needle of [
+            '*contradiction*',
+            '*duplicate definition*',
+            '*interaction gap*',
+            '*ordering conflict*',
+            'in plans only',
+            '`COHERENCE {class} {file-a} §{x} ↔ {file-b} §{y}`',
+            '`COHERENCE superseded`',
+            '`→ /magicspec spec amend {file}`',
+            '`→ /magicspec plan {ws}`',
+            'Assumption (forecast)',
+            'no artifact is rewritten during ventilation',
+        ]) {
+            assert.ok(line.includes(needle), `step 7a states: ${needle}`);
+        }
+        assert.ok(analyze.indexOf('7a. **Cross-Artifact') < analyze.indexOf('8. **Specification Knowledge Graph**'), 'the step precedes the graph step and no later step was renumbered');
+        assert.ok(lineWith(analyze, '| **Coherence** |')?.includes('never by the audit'), 'the findings schema has its row');
+        const template = readShipped('skills/magicspec/templates/spec.md');
+        const notes = template.slice(template.indexOf('## 6. Implementation Notes'), template.indexOf('## 7. Drawbacks'));
+        assert.ok(notes.includes('is declared here') && notes.includes('name each specification and section it supersedes'), 'the template says where a supersession is declared');
+    });
+
+    test('the input pass is defined once in the prompt-engineer card, its mirror carries it, ten shipped bodies are its triggers, and every body names it in one line right after its argument parsing (IP-1 to IP-7)', () => {
+        const card = readShipped('skills/magicspec/roles/prompt-engineer.md');
+        const mirror = readShipped('.magicspec/engine/specifications/l2-role-cards-governance.md');
+        const section = card.slice(card.indexOf('## Input Pass'), card.indexOf('## Idea Intake Gate Audit'));
+        assert.ok(section.length > 0 && card.indexOf('## Input Pass') !== -1, 'the card has the section');
+        const items = section.split('\n').filter((l) => /^[1-7]\. /.test(l));
+        assert.strictEqual(items.length, 7, 'seven items');
+        const expected = [
+            ['1. **Coverage:**', 'names, flags or paths', 'runs no pass'],
+            ['2. **Nothing lost:**', 'listed as set aside, with the reason', 'wins any dispute over the person'],
+            ['3. **Request apart from material:**', 'quoted or referenced unchanged', 'is not followed'],
+            ['4. **Intent statement:**', 'the request in one precise paragraph', 'the PQ-3 dimension'],
+            ['5. **Findings:**', 'F1 incoherence, F2 essence ambiguity', 'it never becomes a question'],
+            ['6. **Silent by default:**', 'print nothing', '`[Intake] Understood as: {statement}`'],
+            ['7. **Bar:**', 'PQ-4 precision bar', 'never a verdict'],
+        ];
+        expected.forEach((needles, i) => {
+            for (const needle of needles) assert.ok(items[i].includes(needle), `item ${i + 1} states: ${needle}`);
+            assert.ok(mirror.includes(items[i]), `the mirror carries item ${i + 1}`);
+        });
+        assert.ok(mirror.includes('**Input Pass:** Runs before a workflow acts on human prose'), 'the mirror carries the section lead');
+
+        // Triggers: exactly the ten shipped bodies, one `Input Pass` gate each.
+        const bodies = fs.readdirSync(path.join(shippedRoot, 'skills/magicspec/workflows')).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)).sort();
+        assert.strictEqual(bodies.length, 10, 'ten shipped bodies');
+        const triggered = [...card.matchAll(/- workflow: (\S+)\.md\n {4}gate: "Input Pass"/g)].map((m) => m[1]).sort();
+        assert.deepStrictEqual(triggered, bodies, 'every shipped body, and no other, is an Input Pass trigger');
+        for (const body of bodies) assert.ok(mirror.includes(`  - workflow: ${body}.md\n    gate: "Input Pass"`), `the mirror lists ${body}`);
+
+        // Every body: one line, naming the section, placed between its argument parsing and the next step.
+        const placement = {
+            'skills/magicspec/workflows/plan.md': ['## Argument Routing', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/task.md': ['## Argument Routing', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/run.md': ['## Argument Routing', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/analyze.md': ['## Argument Routing', '## Workspace Resolution'],
+            'skills/magicspec/workflows/rule.md': ['## Entry', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/status.md': ['## Entry', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/migrate.md': ['## Entry', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/help.md': ['## Entry', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/graph.md': ['## Steps', '### 1. Build the Specification Knowledge Graph'],
+            'skills/magicspec-dev/workflows/init.md': ['## Arguments', '## Agent Map'],
+            'skills/magicspec-dev/workflows/test.md': ['**Scope:**', '## Core Invariants (Mandatory)'],
+            'skills/magicspec-dev/workflows/release.md': ['# Release Workflow', '## Agent Guidelines'],
+            'skills/magicspec-dev/workflows/sync.md': ['# Sync Workflow', 'Pipeline (orchestrated by'],
+        };
+        for (const [rel, [before, after]] of Object.entries(placement)) {
+            const text = readShipped(rel);
+            const lines = text.split('\n').filter((l) => l.startsWith('**Input Pass**:'));
+            assert.strictEqual(lines.length, 1, `${rel} carries one Input Pass line`);
+            const where = text.indexOf(lines[0]);
+            assert.ok(text.indexOf(before) !== -1 && text.indexOf(before) < where, `${rel}: after ${before}`);
+            assert.ok(text.indexOf(after, where) !== -1, `${rel}: before ${after}`);
+            const cardPath = rel.startsWith('skills/magicspec-dev/') ? '`skills/magicspec/roles/prompt-engineer.md`' : '`roles/prompt-engineer.md`';
+            for (const needle of [cardPath, 'section `## Input Pass`', 'arguments that are only names, flags or paths run no pass', 'never asked (IP-5)']) {
+                assert.ok(lines[0].includes(needle), `${rel}: the line states ${needle}`);
+            }
+        }
+        assert.ok(lineWith(readShipped('skills/magicspec/workflows/task.md'), '**Input Pass**:').includes('T4 Capture of Core Invariant 4'), 'task hands a set-aside rule clause to the T4 Capture');
+        assert.ok(lineWith(readShipped('skills/magicspec/workflows/help.md'), '**Input Pass**:').includes('before `spec` is offered with it'), 'help passes typed text through the pass before offering spec');
+
+        // The specification workflow: the pass is the first step, the intake gate judges comprehension on its statement.
+        const spec = readShipped('skills/magicspec/workflows/spec.md');
+        const passAt = spec.indexOf('### Input Pass (First Step, Before Step 0)');
+        assert.notStrictEqual(passAt, -1, 'the specification workflow has the pass section');
+        assert.ok(passAt < spec.indexOf('### Step 0: Workspace Intent Detection'), 'the pass precedes Step 0');
+        assert.ok(lineWith(spec, '2. **Gate 1 — comprehension (IK-4)**')?.includes('Judged in the `prompt-engineer` stance, on the intent statement the Input Pass produced'), 'Gate 1 runs on the statement');
+        assert.ok(spec.includes('run the Input Pass of `roles/prompt-engineer.md`'), 'the pass names the card');
+        assert.ok(spec.includes('its IK-7 line below is the one printed, once'), 'one intake line per invocation');
+        assert.ok(spec.includes('☐ Input Pass (IP):'), 'the checklist has the line');
+
+        // The listings.
+        const integration = readShipped('.magicspec/engine/specifications/l2-role-integration.md');
+        assert.ok(integration.includes('| every shipped workflow body (`spec.md`, `plan.md`, `task.md`, `run.md`, `analyze.md`, `rule.md`, `status.md`, `graph.md`, `migrate.md`, `help.md`) | Input Pass'), 'the integration map has the row');
+        assert.ok(readShipped('.magicspec/engine/specifications/l2-role-cards.md').includes('every shipped workflow body → Input Pass'), 'the card index has it');
+    });
+
+    test('the constitution and its shipped template carry the Input Pass row of C24 word for word, and the amendment has its history row', () => {
+        const row = '| every workflow body | Input Pass (before the workflow acts on prose) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |';
+        const constitution = readShipped('.magicspec/RULES.md');
+        const template = readShipped('skills/magicspec/templates/rules.md');
+        for (const text of [constitution, template]) {
+            assert.strictEqual(text.split(row).length - 1, 1, 'the row is in the table once');
+            assert.ok(text.indexOf(row) > text.indexOf('| `analyze.md` | Prompt Quality Audit (Mode C) |'), 'after the audit row');
+            assert.ok(text.includes('14 registered role cards'), 'the card count is unchanged');
+        }
+        const historyRow = constitution.split('\n').find((line) => line.includes('**C24 gains the Input Pass row**'));
+        assert.ok(historyRow?.startsWith('| 1.20.0 |'), 'the amendment has its own history row');
+        assert.ok(historyRow.includes('origin `user-stated`'), 'with its origin');
     });
 
     test('the documentation draws four stages: docs/plan.md follows the plan body, docs/task.md keeps decomposition only, the pipeline reads spec, plan, task, run everywhere, and no page names a command the router lacks', () => {

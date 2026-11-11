@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-11 11:38
-**Phase:** 49 — Planning Split and Stage Boundaries (plan)
+**Updated:** 2026-11-11 18:01
+**Phase:** 51 — Defect Intake and Engine Feedback
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-49C03 done; T-49D01 suite
+- **Task:** Phase 50 complete
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Run /magicspec task engine to decompose Phase 50
+- **Next Action:** Run /magicspec plan engine to revalidate the plan against amended rules
 
 ## Progress
 
 ```
-Overall: [48/48] ████████ 100%
+Overall: [49/49] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-11 **Decision:** Phase 50 complete. Provides: the specification check and the plan check (coherence by mechanic, both sides quoted, declared supersession), the Input Pass defined once in the prompt-engineer card and named by every body, constitution 1.20.0 (C24 row); engine 3.0.60, harness 350, suite 1.9.97
 - 2026-11-11 **Decision:** Phase 49 complete. Provides: plan as its own command and body, task stopping on a stale plan with findings handed back as a directive, one stage per invocation with the handoff line and its demand, the router's seven-column table with the audit alias, finalize and the pre-flight following the stages, constitution 1.19.0
 - 2026-11-11 **Decision:** Phase 48 complete. Provides: one routing chain for every command, registered folders only, cache retention and clean-cache, community health files, the release policy check; engine 3.0.33, harness 327
 - 2026-11-06 **Decision:** Field reports against engine 2.1.144 repaired in place, no phase opened: one Canonical References reader, the whole state folder EXEMPT, a workspace without scope is the whole project, a blocked plan always leads to /magicspec task
 - 2026-10-30 **Decision:** Phase 47 complete. Provides: one command surface (`/magicspec <command>`), help and migrate bodies, E7, no command entries or plugin, the migration vocabulary sweep; engine 3.0.18, harness 277
-- 2026-10-29 **Decision:** Simulation-pass remediation extended: a missing engine file is named, export-wiki/graph server buffer, finalize path containment; harness 270/270, 18 mutations caught
 
 ## Blockers
 

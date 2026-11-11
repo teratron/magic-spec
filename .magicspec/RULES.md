@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.19.0
+**Version:** 1.20.0
 **Status:** Stable
 **Based on:** `workflows/spec.md` of the engine folder
 
@@ -215,6 +215,7 @@ At critical decision points, the agent MUST activate the designated role card fr
 | `task.md` | Task Instruction Review (before Plan Write-back) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `rule.md` | Rule Wording Review (after APPROVE verdict) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `analyze.md` | Prompt Quality Audit (Mode C) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
+| every workflow body | Input Pass (before the workflow acts on prose) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `simulate.md` | During Logic Audit | Skeptic persona (dev-only; no role card) | — |
 
 **Opt-in conditional gate:** `prompt-engineer` also fires in `run.md` Step 3.4b when the diff touches AI-facing instruction artifacts (specifications, rules, plan/task units, role cards, workflow bodies, templates, adapter instructions); diffs touching only non-instruction code or data skip it silently.
@@ -280,6 +281,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.m
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.20.0 | 2026-11-11 | Agent | **C24 gains the Input Pass row** (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"; the row composed by the agent from the input pass protocol and mirrored word for word in `skills/magicspec/templates/rules.md`). The prose of an invocation passes through `@role:prompt-engineer` before any workflow body acts on it, silent when its reading agrees with the literal text. A §7 amendment, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the row the card gate the engine ships would be absent from the constitution that lists every card gate. Constitutional review: no conflict with §1–6, C9 or C27 (the pass asks no question) and no hole opened; rule wording review: PASS. The count of 14 registered role cards is unchanged. |
 | 1.19.0 | 2026-11-11 | Agent | **The pipeline is four stages** (origin `user-stated`: the owner's list of commands of 2026-11-11 — stages split so that a model can be switched between them). C9: the agent executes each stage autonomously, one stage per invocation, a stage ending by recording its result and naming the next command with its reasoning demand; `goal` chains them. C2 records the command set as it ships, with the four authorized exceptions still to come and `audit` as an alias. C24: the planner gate lives in `plan.md`. Admission (user-stated, soft form): the old C9 sentence ("executes the full lifecycle autonomously") contradicts the one-stage rule the delivered `plan` and `task` bodies follow, and C24's row named a gate the `task` body no longer holds. No objective gate changed; no §1–6 text touched. The shipped template carries the same words. |
 | 1.18.1 | 2026-10-30 | Agent | **Wording only: the printed command form** is `/magicspec <command>` in C21, C23, C25 and C28 (origin `user-stated`: the owner's decision of 2026-10-30, [l1-command-surface.md](engine/specifications/l1-command-surface.md) CS-2); the earlier colon spelling is gone from the text. No rule changed; the shipped template already prints the new form. |
 | 1.18.0 | 2026-10-30 | Agent | **C27 items 2 and 5 and C13 §3 amended: E7, the command intake, joins the escalation whitelist** (origin `user-stated`: the owner's decision of 2026-10-30 to keep one command `/magicspec` whose bare form and whose missing required argument are asked for, which is the E4 event DA-2 requires; wording composed by the agent from `l1-decision-autonomy.md` 2.1.0 and mirrored word for word in `skills/magicspec/templates/rules.md`): a user question is now also permitted through E7 for the command or the required argument an invocation left out (item 2), asked as one choice per step with the recommended choice first and marked, free text always accepted and a cancelled step running nothing (item 5), and halt-and-ask in C13 §3 names it beside the consent entries and the intake survey. Admission (RA-1): without the change the constitution would forbid the question the one-command surface asks. No change to §1–6, to the other conventions or to the other whitelist entries; E6 and the forecast-resolved E3 and E5 are untouched. |

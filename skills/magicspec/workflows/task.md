@@ -60,6 +60,8 @@ Parse `[arg]` to determine the decomposition mode:
 > **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec task "{workspace}"`. The same quoting turns `update` into a directive: `/magicspec task "update"`.
 > **Handoff Propagation**: when naming `/magicspec run` after decomposition, propagate the workspace context: `/magicspec run {workspace}`.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5). A clause the pass sets aside as a project rule (`"remember that…"`, `"from now on…"`, `"project rule:"`) goes to the T4 Capture of Core Invariant 4, as before.
+
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command task [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.

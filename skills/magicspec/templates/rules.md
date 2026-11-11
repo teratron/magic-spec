@@ -213,6 +213,7 @@ At critical decision points, the agent MUST activate the designated role card fr
 | `task.md` | Task Instruction Review (before Plan Write-back) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `rule.md` | Rule Wording Review (after APPROVE verdict) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `analyze.md` | Prompt Quality Audit (Mode C) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
+| every workflow body | Input Pass (before the workflow acts on prose) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 
 **Opt-in conditional gate:** `prompt-engineer` also fires in `run.md` Step 3.4b when the diff touches AI-facing instruction artifacts (specifications, rules, plan/task units, role cards, workflow bodies, templates, adapter instructions); diffs touching only non-instruction code or data skip it silently.
 

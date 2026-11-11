@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.8
+**Version:** 1.2.9
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -14,6 +14,7 @@ Cards in this spec: `planner`, `orchestrator`, `coder`, `debugger`, `docs-specia
 ## Related Specifications
 
 - [l1-role-system.md](l1-role-system.md) - Parent concept; defines invariants R1-R10.
+- [l1-coherence-check.md](l1-coherence-check.md) - Concept authority for the plan check that is step 6 of the planner card (§1).
 - [l2-role-cards.md](l2-role-cards.md) - Registry parent: file format, frontmatter schema (§1), role inventory index (§2), template, drawbacks.
 - [l2-role-cards-review.md](l2-role-cards-review.md) - Sibling: run.md inline review-gate cards.
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Sibling: migrated C24 governance/audit cards.
@@ -43,7 +44,7 @@ skills_recommended: []
 related_rules: [C24]
 ```
 
-**Mission:** Own plan construction in `plan.md`. Produces the phase breakdown and the dependency graph between specifications, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) before write-back. The skeptical review is an intrinsic step, not a separate gate.
+**Mission:** Own plan construction in `plan.md`. Produces the phase breakdown and the dependency graph between specifications, then performs adversarial self-review (optimism bias, hidden dependencies, cascade risk) and the plan check (coherence with the other phases, the other workspaces' plans and the archived deliveries) before write-back. The skeptical review is an intrinsic step, not a separate gate.
 
 **Operating Protocol:**
 
@@ -52,12 +53,14 @@ related_rules: [C24]
 3. Group specifications into phases that minimize cross-phase dependencies.
 4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.
 5. **Adversarial pass (mandatory):** re-read the draft asking: "Am I optimistic about parallel degree? Are there hidden dependencies I skipped? Does any phase cascade into the next if one task blocks?" Revise if any answer implies risk.
-6. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
-7. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
+6. **Plan check (mandatory, before write-back):** compare the draft with (a) the other phases of the same plan, (b) the plan of every other workspace `workspace.json` registers, and (c) what archived phases record as delivered (`provides` in `tasks/` and `archives/tasks/`). Read only the matching entries: search each of them for the names the draft's phases introduce or use. A finding is exactly one of: an *ordering conflict* (work scheduled before what it depends on, or two plans changing the same mechanic in ways that cannot both land), a *contradiction* (two statements in force cannot both hold), a *duplicate definition* (the same mechanic defined, or the same work scheduled, in two places) or an *interaction gap* (a consumer scheduled with no producer, or the reverse). A finding cites the exact text of both sides with file and section; a suspicion that cannot be quoted on both sides is dropped. Resolve every finding before the plan is written: reorder or revise the draft, and assign work duplicated across workspaces to one workspace and reference it from the other. A finding whose resolution needs a specification to change is not resolved here, because this card writes no specification: halt once with the single recommendation `/magicspec spec`, quoting both sides. Print `[Coherence] {N} artifacts compared — {k} findings`, then one line per finding, `{class}: {file-a} §{x} ↔ {file-b} §{y} — {resolution}`; zero findings print only the first line. The audit is not passed without this step (CH-6).
+7. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
+8. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
 
 **Anti-patterns:**
 
 - Skipping the adversarial pass because the plan "looks fine".
+- Passing the audit without the plan check, or comparing the draft only with its own plan.
 - Treating soft links (`Related Specifications`) as hard dependencies (only `Implements` and file-level conflicts are hard).
 - Creating phases so fine-grained that orchestration cost exceeds execution cost.
 
@@ -252,6 +255,7 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.9 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50; the mirror follows the deployed card word for word). Planner: step 6 is the Plan check (the other phases, the other workspaces' plans and the archived deliveries; the four finding classes with the ordering conflict; matching entries only; both sides quoted; resolution before write-back; duplicated work assigned to one workspace; a specification-changing finding halts once with `/magicspec spec`; the `[Coherence]` result line; the audit not passed without it), the write-back and stage-boundary steps become 7 and 8, and the mission and one anti-pattern name the check. |
 | 1.2.8 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 49; the mirror follows the deployed cards word for word). Planner: the gate triggers on `plan.md` (the Planning Audit moved with the draft plan), the protocol ends with the write-back to `PLAN.md` only and the stage boundary (`/magicspec task` named, never started). Debugger: the spec-ambiguity step records the finding in the task and ends the run with the single `/magicspec plan` recommendation, as `run.md` Step 4 says. The `prompt-engineer` trigger on `task.md` (the task instruction review) is untouched. |
 | 1.2.7 | 2026-11-11 | Clarification patch, Stable retained (the card gained a second trigger; the mirror follows the deployed card word for word). Docs-specialist: the trigger "A community health file must change" (`run.md`), a handoff to `prompt-engineer` for the changed text, one protocol step for the files (`CONTRIBUTING.md`, `SECURITY.md`, the issue forms) and the mission sentence naming it, as delivered with [l1-community-health-files.md](l1-community-health-files.md) 1.1.0 (HF-6, HF-7). |
 | 1.2.6 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

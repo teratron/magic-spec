@@ -62,6 +62,8 @@ Parse `[arg]` to determine the planning mode:
 > **A directive about decomposition** ("decompose phase-2", "smaller tasks") is not this workflow's: name `/magicspec task` with it as the one next step and write nothing.
 > **Handoff Propagation**: when naming `/magicspec task` after planning, propagate the workspace context: `/magicspec task {workspace}`.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command plan [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument, and when it is empty `--text` is left out: the script refuses an empty value), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
@@ -128,6 +130,7 @@ graph TD
    - **Optimism Bias**: have the phases been sized too small for the work their specifications hold?
    - **Hidden Dependencies**: are the phases truly independent where the plan says so, or is there a shared resource/config bottleneck?
    - **Cascade Risk**: if a critical spec fails to implement in Phase 1, which Phase 2 specifications are instantly blocked?
+   - **Plan check (CH-5)**: compare the draft with the other phases of the plan, with the plan of every other registered workspace and with what archived phases record as delivered, for an ordering conflict, a contradiction, a duplicate definition or an interaction gap (card step 6). An ordering conflict or a contradiction is resolved before the plan is written; work duplicated across workspaces is assigned to one of them and referenced from the other. A finding whose resolution needs a specification to change is not resolved here, because this workflow writes no specification → **HALT** once with the single recommendation. Report: *"Plan check: `{file-a}` §{x} ↔ `{file-b}` §{y} — {class}; resolving it changes a specification. Run `/magicspec spec`, then re-run `/magicspec plan`."* The check prints `[Coherence] {N} artifacts compared — {k} findings` and one line per finding.
 6. **Sync (Update Mode)** — the planning decisions about a specification; applying them to tasks is `task.md`:
    - **C12 Quarantine**: if an L1 parent is not `Stable` in `INDEX.md` (status already changed by `spec.md` C12 cascade) → move its L2 children to `## Backlog` in `PLAN.md` with the reason *"L1 parent `{file}` is `{status}` (C12)"*. **Cross-Workspace C12**: if the L1 parent resides in a different workspace, verify its status by reading that parent workspace's `INDEX.md`. **Do NOT modify INDEX.md here** — downward C12/deprecation status changes are `spec.md`'s responsibility (this workflow writes only the upward `Draft → Stable` promotion in Step 2). **C12.1 Stabilization Exception**: only a spec the plan marks `[Stabilize]` (Guided Planning Filter) may bypass quarantine, and only that spec; every other child stays quarantined.
    - **Bootstrap Plan**: a spec carrying the `[Bootstrap]` marker is exempt from the C12 Quarantine above and from Demoted Spec below while it is `Draft` — a Bootstrap plan is tentative by construction (C6 Bootstrap Exception), so a spec and its `Draft` L1 parent are planned together before either is `Stable`. Once the spec leaves `Draft`, both rules judge it like any other.
@@ -189,6 +192,7 @@ Plan Workflow Checklist — {operation}
   ☐ Circular Guard: hard-dependency cycles checked (Implements chains); soft reference cycles logged
   ☐ Selective Planning (C6) and Quarantine (C12) applied; Bootstrap Exception evaluated if needed
   ☐ Planning Audit: Draft Plan reviewed by `@role:planner` (Optimism, Dependencies, Risk)
+  ☐ Plan check (CH-5): draft compared with the other phases, the other workspaces' plans and the archived deliveries; findings resolved before write-back or halted once with `/magicspec spec`; result line printed
   ☐ Plan Record: PLAN.md carries the registry and constitution versions it was written against
   ☐ Complete for the next stage: each phase names its specifications, order and reason, dependencies; each backlog item its disposition (PL-9)
   ☐ Ownership: PLAN.md was the only plan or task file written; TASKS.md and the phase workbooks are untouched (PL-1)
@@ -205,4 +209,4 @@ Plan Workflow Checklist — {operation}
 Where this workflow may hand over, and when:
 
 - **Decompose into tasks** → `/magicspec task`: name it, with the workspace, as the next step when the plan changed anything the active or next phase holds (PL-5). It is named in the handoff line with its reasoning demand and not started here. Condition: `plan_changed`.
-- **Author what the plan cannot place** → `/magicspec spec`: surfaces only inside a HALT of Step 1 or Step 6, with its one recommendation.
+- **Author what the plan cannot place** → `/magicspec spec`: surfaces only inside a HALT of Step 1, Step 5 (the plan check) or Step 6, with its one recommendation.

@@ -20,6 +20,8 @@ Examples: `/magicspec graph`, `/magicspec graph visualize`.
 
 ## Steps
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ### 1. Build the Specification Knowledge Graph
 
 Run the full extract → build → analyze → export pipeline over `.magicspec/` SDD artifacts:

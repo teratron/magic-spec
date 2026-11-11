@@ -533,10 +533,11 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 50 — Review Gates: Coherence Check and Input Prompt Pass
 
-- [ ] **Coherence check** ([l1-coherence-check.md](specifications/l1-coherence-check.md) v1.0.0 CH-1 to CH-9) [L1] — the step in the `spec-critic` and `planner` cards and at the review and audit gates, declared supersession.
-- [ ] **Input prompt pass** ([l1-input-prompt-pass.md](specifications/l1-input-prompt-pass.md) v1.0.0 IP-1 to IP-7) [L1] — the `prompt-engineer` input protocol in every workflow body, with [l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md) v1.1.0 (contributor class, input position), [l1-idea-intake-gate.md](specifications/l1-idea-intake-gate.md) v2.1.1 (comprehension in the `prompt-engineer` stance) and [l1-role-system.md](specifications/l1-role-system.md) v1.2.0 §4.4 (the input trigger).
+- [x] **Coherence check** ([l1-coherence-check.md](specifications/l1-coherence-check.md) v1.0.0 CH-1 to CH-9) [L1] — the step in the `spec-critic` and `planner` cards and at the review and audit gates, declared supersession.
+- [x] **Input prompt pass** ([l1-input-prompt-pass.md](specifications/l1-input-prompt-pass.md) v1.0.0 IP-1 to IP-7) [L1] — the `prompt-engineer` input protocol in every workflow body, with [l1-prompt-quality-gate.md](specifications/l1-prompt-quality-gate.md) v1.1.0 (contributor class, input position), [l1-idea-intake-gate.md](specifications/l1-idea-intake-gate.md) v2.1.1 (comprehension in the `prompt-engineer` stance) and [l1-role-system.md](specifications/l1-role-system.md) v1.2.0 §4.4 (the input trigger).
   - Requires Phase 49 (CH-5 sits in the plan workflow's audit, and the input pass covers the `plan` body).
-  - Workbook: created when Phase 49 completes.
+  - **Execution outcome**: all 12 tasks Done, none Blocked; harness 345 → 350, engine 3.0.51 → 3.0.60 (nine C14 bumps), the cognitive suite 1.9.96 → 1.9.97, constitution 1.19.0 → 1.20.0. The planned sequence held (the specification and plan checks first, the pass after the cards they share). Two things the plan did not foresee: the example workspace name in a shipped card tripped the case that forbids this repository's workspace names in shipped text (fixed in the card, the pass now uses a placeholder), and one mutation entry survived until its case asserted that the marker it compares exists. The pass is defined once in the card, not in each body, which the plan's "every workflow body" wording did not settle.
+  - Tasks: [archives/tasks/phase-50.md](archives/tasks/phase-50.md)
 
 ### Phase 51 — Defect Intake and Engine Feedback
 

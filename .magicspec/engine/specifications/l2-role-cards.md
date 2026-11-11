@@ -1,6 +1,6 @@
 # Role Card Registry (Implementation)
 
-**Version:** 2.1.5
+**Version:** 2.1.6
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -104,7 +104,7 @@ Cards MAY include additional sections after these four (e.g., `## Examples`, `##
 | `project-auditor` | reviewer | `analyze.md` → Pre-Advisory Audit (migrated C24) | governance |
 | `constitutional-reviewer` | reviewer | `rule.md` → Impact Analysis (migrated C24) | governance |
 | `retrospective-analyst` | advisor | `retrospective.md` → Signal Calculation (migrated C24) | governance |
-| `prompt-engineer` | reviewer | `spec.md` → Instruction Quality Pass · `task.md` → Task Instruction Review · `rule.md` → Rule Wording Review · `analyze.md` → Prompt Quality Audit · `run.md` → Instruction Diff Review (conditional) | governance |
+| `prompt-engineer` | reviewer | `spec.md` → Instruction Quality Pass · `task.md` → Task Instruction Review · `rule.md` → Rule Wording Review · `analyze.md` → Prompt Quality Audit · `run.md` → Instruction Diff Review (conditional) · every shipped workflow body → Input Pass | governance |
 
 > The **Content Spec** column names the child spec (`l2-role-cards-{cluster}.md`) holding each card's full authoring source. Implementation (L2 integration — see l2-role-integration.md) copies each card section verbatim into `skills/magicspec/roles/{id}.md`, combining the frontmatter block (§1.2) with the body (§1.3).
 
@@ -139,6 +139,7 @@ The original v1.x kept all card content in this one spec (~656 lines), which tri
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.1.6 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50): the index row of `prompt-engineer` lists the Input Pass among its workflow triggers. |
 | 2.1.5 | 2026-11-11 | Clarification patch, Stable retained: the index row of `planner` names `plan.md` as its trigger, as in the deployed card. |
 | 2.1.4 | 2026-11-11 | Clarification patch, Stable retained: the index row of `docs-specialist` names its second trigger (a community health file must change), as in the deployed card. |
 | 2.1.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

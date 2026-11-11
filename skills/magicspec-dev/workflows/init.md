@@ -27,6 +27,8 @@ Valid agent names: `claude`, `gemini`, `qwen`, `codex`
 
 > `.agents/workflows/`, `.agents/skills/`, and `.agents/rules/` are always initialized — agent directories depend on them.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `skills/magicspec/roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ## Agent Map
 
 | Agent | Instruction File | Directory | Workflow Subdir |

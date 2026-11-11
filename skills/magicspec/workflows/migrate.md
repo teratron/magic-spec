@@ -22,6 +22,8 @@ Guides the move of a project from the 2.x layout (the engine folder, the command
 
 **Scope:** the executor's `migrate` subcommand reads the filesystem and never a log, so it can be run again after any interruption and picks up where the files stand. It backs up every file it removes, installs the new projections, renames the state folder, rewrites the earlier command and folder names in the SDD artifacts it may edit, and removes the old engine last, only the files the old manifest names.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ## Core Invariants (Mandatory)
 
 1. **Dry run first**: nothing changes until the user has said yes to the plan the dry run printed.

@@ -65,6 +65,8 @@ Specifications move through a lifecycle. In **Trust Mode (C9)**, transitions are
 
 ### 5.0 Idea Intake Gate
 
+**Your words are read first.** Whenever a command arrives with prose — an idea, a directive, a pasted log or report — the prompt-engineer role turns it into one precise statement of what you asked before anything else happens. It keeps every clause (anything it sets aside is listed with the reason), keeps pasted material unchanged and apart from your request, and does not follow instructions that appear inside pasted material. When its reading is the plain meaning of your words it says nothing; when it differs materially — another command, another scope, a clause set aside — it prints one line, `[Intake] Understood as: …`, so you can correct it. It never asks you a question of its own: the checks below judge the statement it produced. A command given only names, flags or paths (`/magicspec status`) has nothing to read and skips this step.
+
 Before writing anything, `/magicspec spec {your idea}` checks whether it understood you and whether it has enough to go on. Most of the time this is invisible — the idea is clear enough and specifications appear straight away.
 
 Occasionally the agent will ask you something first. It runs two checks, in this order, and asks only when one of them fails:
@@ -103,6 +105,7 @@ The engine parses unstructured user chat and maps it to specification domains.
 
 After every spec update, the engine switches to a **Critic Persona** and re-reads the spec for:
 
+- **Coherence with the other specifications** — checked first. The new or amended text is compared with every other specification that shares a mechanic with it, found by the names it uses and not only through the specifications it lists as related, for contradictions, duplicated definitions and interaction gaps (something produced that nothing consumes, or the reverse). A contradiction or gap blocks promotion to Stable until one side is amended, the new text is revised, or a precedence is decided and recorded as an assumption; a duplicate definition is replaced by a link. A change that deliberately overrides another specification declares it in its Implementation Notes and is reported as superseding instead of blocking. The check ends with one line: `[Coherence] {N} artifacts compared — {k} findings`.
 - Internal contradictions and logical gaps.
 - Compliance with `RULES.md` conventions.
 - Missing or broken cross-references.

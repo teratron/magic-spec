@@ -6,6 +6,8 @@ This workflow automates the end-to-end process of validating, versioning, and re
 The core logic is handled by the `release` script, which enforces QA gates and triggers distribution via GitHub Actions.
 Publishing is an external, irreversible act (a pushed tag starts the public release workflow), so the script prints its plan by default and publishes only with `--yes`.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `skills/magicspec/roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ## Agent Guidelines
 
 **Agent guidelines:**

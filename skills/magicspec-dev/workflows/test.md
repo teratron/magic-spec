@@ -16,6 +16,8 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 > **Anti-Hallucination Guard:** Simulation is a purely cognitive task for the AI. **DO NOT** create physical test scripts (like `simulate.js`, `simulate.ps1`, etc.). Evaluate test scenarios internally and report results directly to the chat.
 > **Executor:** Use `node skills/magicspec/scripts/executor.js <script>` for all automation.
 
+**Input Pass**: when the input carries prose — a directive, a report, a goal, the person's message that accompanies the command — run the Input Pass of `skills/magicspec/roles/prompt-engineer.md` (`@role:prompt-engineer`, section `## Input Pass`) first and act on its intent statement; arguments that are only names, flags or paths run no pass. A finding is resolved by the Consequence Forecast or a `<!-- TBD: … -->` marker where the work lands and narrated as one `[DR]` line, never asked (IP-5).
+
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [references/context.md](../../magicspec/references/context.md) as a whole — every section applies unless it names other workflows.

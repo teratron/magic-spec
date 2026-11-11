@@ -1,6 +1,6 @@
 # Input Prompt Pass: Human Prose Through the Prompt Engineer
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -79,5 +79,6 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.2 | 2026-11-11 | Agent | As built in Phase 50, no requirement changed. The protocol is written once, in the `Input Pass` section of the `prompt-engineer` card (§6 item 1), and each shipped workflow body names it in one line placed right after its argument parsing (§6 item 2) — fourteen copies would be the duplicate definition constitution §6 forbids; the card carries ten `Input Pass` triggers, one per shipped body. The four maintenance bodies name the card by its path and are not triggers, because the role registry resolves a trigger inside the engine folder and a user installation has no maintenance skill. In the specification workflow the pass is the first step, before workspace routing, and when the intake gate fires its IK-7 line is the one intake line printed. The constitution's C24 gained the Input Pass row (origin `user-stated`, constitution 1.20.0). |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (any human prose arriving with commands or skills passes through the prompt engineer) and block 1 of `.drafts/flowchart.md`. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

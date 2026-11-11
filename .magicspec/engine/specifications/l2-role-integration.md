@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.2.5
+**Version:** 2.2.6
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -59,6 +59,7 @@ Full workflow-to-role mapping after integration:
 | `rule.md` | Impact Analysis — Rule Wording Review (new) | `prompt-engineer` | New gate (v2.1.0) |
 | `analyze.md` | Mode C — Prompt Quality Audit (new) | `prompt-engineer` | New audit dimension (v2.1.0) |
 | `run.md` | Step 3.4b — Instruction Diff Review (new, conditional) | `prompt-engineer` | New conditional gate (v2.1.0) |
+| every shipped workflow body (`spec.md`, `plan.md`, `task.md`, `run.md`, `analyze.md`, `rule.md`, `status.md`, `graph.md`, `migrate.md`, `help.md`) | Input Pass — before the workflow acts on prose, right after argument parsing | `prompt-engineer` | New input-side trigger |
 
 ## 2. `run.md` Amendments
 
@@ -260,6 +261,7 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.2.6 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50): the Integration Map gains the Input Pass row — every shipped workflow body activates `prompt-engineer` right after its argument parsing, the protocol defined once in the card and named by one line in each body. The gates of `spec-critic` and `planner` are unchanged; their new coherence steps live inside the existing gates. |
 | 2.2.5 | 2026-11-11 | Clarification patch, Stable retained: the gate table and the reference table name `plan.md` for the planner (a new `[PLAN]` reference), and `task.md` for the `prompt-engineer` task instruction review, as in the constitution (C24, 1.19.0). |
 | 2.2.4 | 2026-11-11 | Clarification patch, Stable retained: the gate table and the list of triggered roles name the second `docs-specialist` trigger (a community health file must change), with `prompt-engineer` reviewing the changed text. |
 | 2.2.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

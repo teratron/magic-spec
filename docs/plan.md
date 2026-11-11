@@ -70,6 +70,7 @@ After drafting the plan, the engine activates the planner role to review it for:
 - **Optimism Bias**: Have the phases been sized too small for the work their specifications hold?
 - **Hidden Dependencies**: Are the phases truly independent where the plan says so?
 - **Cascade Risk**: If a critical Phase 1 spec fails, which Phase 2 specifications are blocked?
+- **Plan check**: The draft is compared with the other phases, with the plan of every other workspace and with what finished phases delivered, for work scheduled before what it depends on, contradictions, work planned twice and a consumer planned with no producer. Such a finding is resolved before the plan is written; work duplicated across workspaces is assigned to one of them. A finding that can only be resolved by changing a specification halts planning once with a single recommendation, `/magicspec spec`, quoting both sides — planning writes no specification. The check ends with one line: `[Coherence] {N} artifacts compared — {k} findings`.
 
 ### 4.4 Autonomous Selection & Quarantine Decisions
 

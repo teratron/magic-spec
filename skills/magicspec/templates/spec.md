@@ -69,7 +69,8 @@ graph TD;
 
 ## 6. Implementation Notes
 
-<!-- Optional. Fill if implementation order is non-obvious. -->
+<!-- Optional. Fill if implementation order is non-obvious.
+     A deliberate change to a mechanic another specification defines (behaviour not yet built) is declared here: name each specification and section it supersedes and what changes there. The coherence check then reports it as `superseded` instead of blocking promotion, and the declared specification is amended when the change is deployed. -->
 
 1. Step A — prerequisite for all others
 2. Step B — can begin after A

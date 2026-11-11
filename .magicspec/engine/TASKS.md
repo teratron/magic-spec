@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.56.1
+**Version:** 1.57.0
 **Generated:** 2026-11-11
 **Based on PLAN:** .magicspec/engine/PLAN.md v1.56.3
-**Based on RULES:** .magicspec/RULES.md v1.19.0
+**Based on RULES:** .magicspec/RULES.md v1.20.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 50](archives/tasks/phase-50.md) | Review Gates — before a specification or a plan is finalized it is compared with every artifact sharing a mechanic with it (the `spec-critic` and `planner` cards, the Post-Update Review and the Planning Audit, ventilation resolving the same four classes, declared supersession in the template); every piece of human prose arriving with a command passes through the `prompt-engineer` input pass first (its protocol once in the card, one line in each of the ten shipped and four maintenance bodies, comprehension of the intake gate in its stance, the C24 row through `/magicspec rule`), with the documentation, the suite and the harness following | `Done (Archived)` |
 | [Phase 49](archives/tasks/phase-49.md) | Planning Split and Stage Boundaries — `plan` owns the plan and replanning, `task` owns decomposition and hands findings back to `plan` as a directive; every pipeline command performs one stage and ends by naming the next with its reasoning demand, so a model can be switched between stages; the router gains `plan`, the demand column and the `audit` alias, `help` explains itself once, `finalize` knows `plan`, the replan rule, the constitution (C9, C24, C2), the role cards, the documentation and the suite follow | `Done (Archived)` |
 | [Phase 48](archives/tasks/phase-48.md) | Independent Hardening — every command routes to one workspace by one engine-computed chain (`resolve-workspace`: argument, environment, paths against each scope, topic, work in flight, default), narrated once and writing only into registered folders; every cache has an owner that prunes it and `clean-cache` removes the rebuildable ones; the security policy, contribution guide, issue forms and maintainer instruction meet the hosting platform's rules, the policy's response times decided by forecast, the release checking the policy's supported-versions table | `Done (Archived)` |
 | [Phase 47](archives/tasks/phase-47.md) | One Command Surface, Help and Argument Intake — `/magicspec <command> [argument]` as the only form, the router's table with groups and the argument contract, the `help` and `migrate` bodies, E7 in the constitution and the always-on rules, command entries and the plugin retired, the install prompt, the printed form across the repository | `Done (Archived)` |

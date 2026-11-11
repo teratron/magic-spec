@@ -1,6 +1,6 @@
 # Cross-Artifact Coherence Check
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -109,5 +109,6 @@ A new specification states that a planning command owns `PLAN.md`. The search fo
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.2 | 2026-11-11 | Agent | As built in Phase 50, no requirement changed. The specification check is step 1 of the `spec-critic` card and the first stage of the Post-Update Review in the specification workflow (before the lenses and the Instruction Quality Pass; the Ecosystem lens now composes with the comparison set); the plan check is step 6 of the `planner` card and the fourth item of the Planning Audit in the plan workflow, with its one halt toward `/magicspec spec` named among that body's handoffs; ventilation names the four classes in a step of Mode C and a findings-schema row (`COHERENCE {class}`, a declared supersession reported `COHERENCE superseded`), resolved through the same commands and rewriting nothing; the specification template says where a supersession is declared. A patch-level change has nothing to compare: the check prints the first result line with zero artifacts and ends. Until the artifact memory index exists the comparison set is found by text search and the graph's neighbours. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (items: check every new specification and every plan against the existing ones for contradictions and the logic of relations between functions and mechanics, per `.drafts/flowchart.md`); CH-9 (declared supersession) and the plan check's halt toward `/magicspec:spec` were added in the Post-Update Review, which found that CH-4 alone would block every specification of behaviour not yet built. Observed occurrence: the C26 item 1 / `context.md` Step 0 contradiction. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

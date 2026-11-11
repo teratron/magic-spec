@@ -39,6 +39,7 @@
 │   ├── graph.md
 │   ├── init.md
 │   ├── migration.md
+│   ├── plan.md
 │   ├── repository-settings.md
 │   ├── retrospective.md
 │   ├── rule.md
