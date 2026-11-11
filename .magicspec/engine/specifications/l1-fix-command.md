@@ -1,6 +1,6 @@
 # Defect Intake: the Fix Command
 
-**Version:** 1.0.2
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -15,13 +15,15 @@
 - [l1-agent-feedback.md](l1-agent-feedback.md) - Feedback notes are an input; in the engine's own repository they arrive here instead of being reported.
 - [l1-coherence-check.md](l1-coherence-check.md) - A specification amendment made by a fix passes the same check.
 - [l1-input-prompt-pass.md](l1-input-prompt-pass.md) - The report's prose is normalized before triage.
-- [l1-command-surface.md](l1-command-surface.md) - CS-1, the command set `fix` joins.
+- [l1-command-surface.md](l1-command-surface.md) - CS-1, the command set `fix` joins, and CS-15, the maintenance set its engine form (FX-10) belongs to.
 
 ## 1. Motivation
 
 Defect reports reach a project from several directions, and today none has a path. A user's report goes to `run`, which executes planned tasks and has no step that asks whether the specification is wrong; to `spec`, which writes specifications and cannot touch code; or to an unrecorded edit, which is the one outcome the SDD exists to prevent. The owner asks for `/magicspec fix`, and asks it to look carefully at what must go into the specifications and what need not.
 
 This repository's own field reports show what goes wrong without a triage step (engine history, 2026-08 to 2026-10): a report is often already partly fixed in the current version, the part that remains is a missed branch of the same defect, and the reporter's explanation of the cause is sometimes wrong — so a repair that follows the report literally fixes the symptom at one site and leaves the others.
+
+The owner's list of 2026-11-11 adds the engine's own side: error feedback about the engine is to be carried through a maintenance `fix` command, not through `spec` (FX-10, FX-11). In this repository such feedback has so far arrived as pasted bug reports handled by hand, or as a `spec` invocation that had to work out on its own that the input was a defect and not an idea.
 
 ## 2. Constraints & Assumptions
 
@@ -45,6 +47,8 @@ This repository's own field reports show what goes wrong without a triage step (
 - **FX-7 Traced and gated.** Every repair is a task with a `Verify` line equal to the reproduction (FX-2), and passes the execution gates a `run` task passes (`coder`, `code-reviewer`, `test-engineer`; `debugger` when the first attempt fails).
 - **FX-8 Regression left behind.** The reproduction becomes a lasting check — a test, or a simulation scenario for user-facing behaviour — that fails without the repair. A repair with no lasting check is not `Done`.
 - **FX-9 Batches by root cause.** Several defects in one invocation are triaged one by one, then grouped by confirmed cause; one cause is one repair task.
+- **FX-10 The engine repository's form.** `[ADDED]` In the engine's own repository, `/magicspec-dev fix {report}` is the entry for error feedback about the engine: a pasted engine bug report, a pending feedback note, a failing harness case, a finding of an engine simulation. It runs FX-1 to FX-9 unchanged, with the engine as the product, and adds the steps that only the engine has: the sibling-site search covers the whole shipped folder, role cards and workflow bodies included; the lasting check is a harness case that is shown to fail without the repair; the engine meta update (C14) follows every change inside the shipped folder; and the repair reaches every maintained release line the defect is present on. The user command keeps no engine-maintenance step and never needs the maintenance tooling.
+- **FX-11 A report is not an idea.** `[ADDED]` Input given to `spec` that is a defect report — an error message or stack trace, a pasted bug report, a statement that existing behaviour is wrong ("X does not work", "Y fails when Z") with nothing new to build — is routed to `fix` with one `[DR]` line and its override (`/magicspec spec "{text}"` keeps it an idea). In the engine's repository the route is `/magicspec-dev fix`. Input that both reports a defect and asks for new behaviour goes to `fix` for the defect; the new behaviour is a specification gap (FX-4) or, when it is beyond the defect, the next step `fix` names.
 
 ## 5. Detailed Design
 
@@ -80,7 +84,8 @@ Next: {one command}
 
 1. A new workflow body for `fix`; it reuses the execution gates of `run` and the amendment steps of `spec` by reference.
 2. With no active phase, `fix` hands the planning command a membership directive to open a maintenance phase for the repair (PL-1: only `plan` writes the plan), then records the task there; the phase archives like any other.
-3. In the engine's own repository, the developer predicate routes pasted engine bug reports and pending feedback notes here.
+3. `[MODIFIED]` In the engine's own repository, pasted engine bug reports and pending feedback notes go to `/magicspec-dev fix` (FX-10): a maintenance workflow `skills/magicspec-dev/workflows/fix.md` that names the shipped `fix` body for the triage and adds the engine steps; the maintenance router gains its row. The developer predicate decides which route FX-11 narrates.
+4. `[ADDED]` The router's argument check and the specification workflow's dispatch gain the FX-11 test. Declared supersessions (`l1-coherence-check.md` CH-9): the router's step that routes text it cannot take to `spec` (`SKILL.md` Dispatch step 3), which gains the reverse route; the bug-report handling of this repository's constitution C28 item 2, which names the maintenance command when it is next amended.
 
 ## 7. Drawbacks & Alternatives
 
@@ -100,6 +105,7 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-11 | Agent | **The engine's side** (origin `user-stated`: the owner's list of commands of 2026-11-11 — error feedback goes through a maintenance `fix`, not through `spec`). New FX-10 (`/magicspec-dev fix`: the same triage with the engine as the product, plus the shipped-folder sibling search, a harness case shown to fail without the repair, C14 and every maintained release line) and FX-11 (a defect report given to `spec` is routed to `fix` with a `[DR]` line). The user command is unchanged (forecast in [l1-command-surface.md](l1-command-surface.md) §2). Amendment Rule: `Stable → RFC`. |
 | 1.0.2 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.1 | 2026-10-30 | Agent | Clarification (no requirement changed): `fix` typed without a report asks for one through the command intake of [l1-command-surface.md](l1-command-surface.md) 2.0.0 (E7); a thin report still asks nothing. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (route defect feedback through `/magicspec fix`, deciding carefully what goes into the specifications). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

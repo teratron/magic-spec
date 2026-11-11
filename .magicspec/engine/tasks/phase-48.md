@@ -33,10 +33,10 @@ duration_minutes: ~
 - [x] [T-48B03] `clean-cache`: the rebuildable caches removed, findings, notes and backups never touched
 - [ ] [T-48C01] The response commitments of the security policy
 - [ ] [T-48C02] `SECURITY.md` by the policy contract
-- [ ] [T-48C03] The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder
-- [ ] [T-48C04] `CONTRIBUTING.md` by the guide contract
-- [ ] [T-48C05] The issue forms and the chooser
-- [ ] [T-48C06] The maintainer instruction for the hosting-service settings
+- [x] [T-48C03] The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder
+- [x] [T-48C04] `CONTRIBUTING.md` by the guide contract
+- [x] [T-48C05] The issue forms and the chooser
+- [x] [T-48C06] The maintainer instruction for the hosting-service settings
 - [ ] [T-48C07] The release checks the supported-versions table
 - [ ] [T-48C08] The documentation audit and the `docs-specialist` trigger
 - [ ] [T-48T01] Validation: harness, mutation lists, routing and cache scenarios, C14
@@ -125,44 +125,53 @@ duration_minutes: ~
 ### [T-48C02] `SECURITY.md` by the policy contract
 
 - **Spec:** l1-community-health-files.md HF-1, HF-2, HF-5, HF-6; §2 forecasts (private reporting; the latest minor line of the current major); §5.3
-- **Status:** Todo
+- **Status:** Blocked [!]
 - **Assignment:** Agent
 - **Verify:** `SECURITY.md` states, in short sections with descriptive headings: the supported versions as a table whose rows are the released versions (the 3.0 line supported, each older line stated as not supported); the exact private reporting place — the repository's Security tab, "Report a vulnerability", with numbered steps and the URL of its advisories page; what a reporter can expect and when (the two numbers of T-48C01, then fix, then disclosure through a published advisory); what is in and out of scope; and no channel that does not exist — a grep of the file for `issues/new`, `discussions` and `Public Bug Report` finds nothing; the hosting platform's documentation for a security policy was read again and the date is recorded in `Changes` for T-48S01 (HF-1); `@role:docs-specialist` wrote it and `@role:prompt-engineer` reviewed the changed text, the verdict recorded in `Changes`; the report names `docs/repository-settings.md` for the setting it depends on.
 - **Handoff:** T-48C07, T-48C08.
+- **Notes:** Blocked: T-48C01 is not done — the maintainer has not recorded the days within which a report is acknowledged and the days within which a decision is given. They are a public commitment, so the agent does not choose them (specification §2, the open marker). Lift: record both numbers in the `Changes` of T-48C01, then set this entry's `Status` to `Todo`; T-48C07 and T-48C08 wait for this task, and T-48T01 for them. Everything this task's verify line asks except the two numbers is ready to write: the supported-versions table (the 3.0 line supported, older lines not), the exact private reporting place (the Security tab, "Report a vulnerability", and the advisories page), scope, and disclosure through a published advisory.
 
 ### [T-48C03] The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder
 
 - **Spec:** l1-community-health-files.md HF-3, HF-8, §6 item 1; the layer classification algorithm (`CLAUDE.md` §1.3)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** the §1.3 trace for `skills/magicspec/templates/contributing.md` is written in `Notes` (entry points that name it, the closure, read versus write path) and decides its layer; if it is maintenance-only, it is moved to the maintenance tree and a grep finds no file of `skills/magicspec/` naming it; `scripts/sync-docs.js` renders the command table (from the router), the workspace table (from the registry) and the version into marked blocks of a hand-written `CONTRIBUTING.md` and writes nothing outside the markers; a guide without markers receives them once and a second run changes nothing; the constitution is no longer embedded; the sync-docs harness cases are updated and pass; `update-engine-meta` has run.
 - **Handoff:** T-48C04.
 - **Notes:** do not relocate on intuition — the trace comes first. The generated tables read the router's six-column table through the shared row parser.
+- **Layer trace (§1.3):** (1) entry points — the router, `workflows/*.md`, `AGENT-RULES.md`, `references/*.md` and the hook text of `install-hooks.js` name the output `CONTRIBUTING.md` (`analyze.md` Mode C checks it exists) and never the template path; (2) the L1 root set of `executor.js` subcommands holds no script that reads the template; (3) closure — the only readers are `scripts/sync-docs.js` and the maintenance workflow `skills/magicspec-dev/workflows/sync.md`, both L2; (4) read versus write path — the template is read only on the write branch that produces a product file of this repository, never on a path a user reaches; (5) not in the closure → L2. Decision: maintenance-only; moved to `scripts/templates/contributing.md` and reduced to the seed of a repository with no guide.
+- **Changes:** `scripts/sync-docs.js` refills only the `generated:version`, `generated:commands` and `generated:workspaces` blocks of a hand-written `CONTRIBUTING.md` (the command table through the router's one row parser `hosts.readCommands`; the constitution and the footer date are no longer generated); a guide without markers receives them once in one appended section, a missing guide is seeded from `scripts/templates/contributing.md`, unpaired markers are left alone; `skills/magicspec/templates/contributing.md` removed, `templates/changelog.md` no longer names a CONTRIBUTING blueprint, `skills/magicspec-dev/workflows/sync.md`, `sync.js` and `cli-guard.js` text follow; `tests/engine.js`: two fixtures moved to the new seed path and four cases added (marked blocks only and idempotent, markers added once, seed and unpaired markers, template not shipped); `update-engine-meta` run (3.0.30 → 3.0.31); harness 320/320. Reviews: `code-reviewer` PASS (a block body is data: the replacement is a function, and a case with a dollar sequence in the registry pins it); `prompt-engineer` PASS on the two changed instruction texts.
 
 ### [T-48C04] `CONTRIBUTING.md` by the guide contract
 
 - **Spec:** l1-community-health-files.md HF-3, HF-5, HF-6; §2 (the SDD commands are part of the product here and may be named)
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `CONTRIBUTING.md` has these sections in this order: how to report a bug and how to propose a change (pointing to the issue forms), how to set up the repository and run its checks (exact commands in code blocks: the harness, `update-engine-meta --check`, `validate-hardlinks.js`), what a pull request must contain and pass, the conventions a change follows (linked, not copied), and the expected conduct; the command table, the workspace table and the version sit inside the generator's markers and a harness case regenerates and compares them; no run of three consecutive lines equals a run of lines of the constitution's sections 1 to 6; it names no task identifier and no phase designator; procedures are numbered steps; `@role:docs-specialist` wrote it and `@role:prompt-engineer` reviewed the changed text, the verdict recorded in `Changes`.
 - **Handoff:** T-48C08.
+- **Notes:** branch rule and Node version: the guide says "branch from and open the pull request against `develop`" (the line this repository integrates on) and points at `engines` in `package.json` instead of repeating a number — `docs/development.md` says 18+, the CI matrix runs 22 and `package.json` requires 24, so a number written here would contradict two of the three; the reconciliation is outside this task and is named in the report.
+- **Changes:** `CONTRIBUTING.md` rewritten by hand in the five contract sections (report or propose through the issue forms and the private policy; set up and the three checks as numbered steps with exact commands; the pull request list; conventions linked, not copied, plus the commands and workspaces blocks; conduct); the version, the command table and the workspace table sit inside the generator's markers and were filled by one real run of `scripts/sync-docs.js` in a disposable copy (only the guide was copied back); harness case pins the section order, the paired markers, no task identifier or phase designator, no run of three lines equal to the constitution's sections 1 to 6, and the command table equal to the router's. Reviews: `docs-specialist` wrote it; `prompt-engineer` PASS (numbered steps, one requirement per sentence; no rewrite needed).
 
 ### [T-48C05] The issue forms and the chooser
 
 - **Spec:** l1-community-health-files.md HF-4, HF-5; l1-agent-feedback.md §5.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `.github/ISSUE_TEMPLATE/bug-report.yml`, `change-proposal.yml`, `agent-feedback.yml` and `config.yml` exist; `config.yml` disables blank issues and links the repository's private vulnerability reporting page and no Discussions page; `agent-feedback.yml` has the seven sections of the agent-feedback report layout in that order and applies the `agent-feedback` label; the bug form asks for the engine version, the host, the command typed, the steps, and what was expected and what happened; a harness case reads each file's top-level keys and the labels of its form fields (a small reader inside the case, no new dependency) and compares them with those lists; `@role:prompt-engineer` reviewed the changed text, the verdict recorded in `Changes`; the report names `docs/repository-settings.md` for the label.
 - **Handoff:** T-48C08.
+- **Notes:** the platform's own check: all four files parse as YAML and use only the issue-form elements the platform documents (markdown, input, textarea, dropdown with `validations.required`); the label `agent-feedback` is created by a maintainer (`docs/repository-settings.md`).
+- **Changes:** `.github/ISSUE_TEMPLATE/` holds `bug-report.yml` (engine version, host and operating system, command typed, steps, expected, happened), `change-proposal.yml`, `agent-feedback.yml` (the seven sections of the report layout in that order, label `agent-feedback`) and `config.yml` (blank issues disabled, a contact link to the repository's private vulnerability reporting page, no Discussions link); harness case reads each file's top-level keys and field labels with a small in-case reader and compares them with the lists and, when present, with the report layout of the specification. `prompt-engineer` PASS on the form texts. Depends on a maintainer setting: the label `agent-feedback` is missing on the service — see `docs/repository-settings.md`.
 
 ### [T-48C06] The maintainer instruction for the hosting-service settings
 
 - **Spec:** l1-community-health-files.md HF-9, §5.2
-- **Status:** Todo
+- **Status:** Done
 - **Assignment:** Agent
 - **Verify:** `docs/repository-settings.md` lists, as a table, the three settings of the specification (private vulnerability reporting, Discussions, the `agent-feedback` label) with the exact path through the service's settings, why each matters, the state observed on the date the page is written and how to verify it, and names the tasks that depend on it (C02, C05); `docs/README.md` links it; the documentation link check passes.
 - **Handoff:** T-48C07.
 - **Notes:** the state of a setting is read from the service when the access exists, else carried over from the specification with its date and marked as not re-observed.
+- **Run notes:** the state was read from the hosting service on 2026-11-11 (read-only calls): private vulnerability reporting enabled, Discussions disabled, no `agent-feedback` label among the nine labels. The verify line asks the page to name the dependent tasks (C02, C05); a product page must carry no task identifier (containment, HF-8), so the page names the files that depend on each setting and this entry records the tasks.
+- **Changes:** `docs/repository-settings.md` lists the three settings as a table with the exact path through the service's settings, why each matters, the state observed 2026-11-11 and how to verify it, a short "what to do now" list and the files that depend on them (`SECURITY.md`, `.github/ISSUE_TEMPLATE/config.yml`, `agent-feedback.yml`); linked from `docs/README.md`; relative links checked; harness case pins the three rows, the paths, the dated state, the dependent files and the absence of task identifiers.
 
 ### [T-48C07] The release checks the supported-versions table
 

@@ -3,7 +3,7 @@
 ### Added
 
 - **Doc-Sync Engine**: Automated generation and synchronization of `CONTRIBUTING.md` based on project metadata.
-- **Documentation Templates**: New blueprints for `CONTRIBUTING.md` and `CHANGELOG.md` entries in `templates/`.
+- **Documentation Templates**: New blueprints for `CHANGELOG.md` entries in `templates/`.
 
 ### Meta
 

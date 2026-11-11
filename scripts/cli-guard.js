@@ -20,7 +20,7 @@ const commands = require(enginePath('scripts', 'lib', 'commands'));
  */
 const MAINTENANCE_COMMANDS = {
     'sync-docs': {
-        summary: 'Regenerate CONTRIBUTING.md and the Sync Note lines of docs/ from the registries.',
+        summary: 'Refill the marked blocks of CONTRIBUTING.md and the Sync Note lines of docs/ from the registries.',
     },
     'sync-manifests': {
         summary: 'Align the version in README.md and package.json with the engine version.',

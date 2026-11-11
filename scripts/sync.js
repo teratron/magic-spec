@@ -25,7 +25,7 @@ const { enginePath } = require('./engine-path');
  *                                history row only when structural digest
  *                                actually changed
  *                                (scripts/)
- *   5. sync-docs              — regenerates CONTRIBUTING from template,
+ *   5. sync-docs              — refills the marked blocks of CONTRIBUTING.md,
  *                                propagates Triggers/Slash command into
  *                                docs/{name}.md, refreshes Sync Note only
  *                                on real workflow-source change

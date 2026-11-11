@@ -1,6 +1,6 @@
 # Goal Mode: Non-Stop Pursuit of a Stated Goal
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -17,12 +17,15 @@
 - [l1-product-simulation.md](l1-product-simulation.md) - Scenarios that verify user-facing criteria.
 - [l1-fix-command.md](l1-fix-command.md) - The step that consumes simulation findings.
 - [l1-command-surface.md](l1-command-surface.md) - CS-1, the command set `goal` joins.
+- [l1-pipeline-stages.md](l1-pipeline-stages.md) - PS-6: `goal` is the one command that crosses stage boundaries, through the same records.
 
 ## 1. Motivation
 
 Every workflow ends with a computed next step that is narrated (DA-6), and the user types it. For a goal that spans several phases — "the import works end to end for all three file formats" — the user's only contribution between steps is retyping what the engine already computed. The owner asks for a non-stop mode (`/magicspec goal`).
 
 Two failure modes bound the design. A loop that also skips consent turns an assistant into an unattended process that deletes files or publishes a release on its own. A loop with no stop rule spends without converging: it keeps planning and running while nothing moves the goal closer.
+
+The owner's list of 2026-11-11 adds two forms of the argument: a phase, or a number of tasks, besides a goal stated in words (GM-9). Both name work that is already specified and planned, so neither needs an intake.
 
 ## 2. Constraints & Assumptions
 
@@ -33,7 +36,7 @@ Two failure modes bound the design. A loop that also skips consent turns an assi
 
 ## 3. Core Invariants
 
-- **GM-1 One intake, then no questions.** The goal statement passes the input pass and the idea intake gate once, at the start, through the specification step; questions are allowed there and only there. After the intake, the mode asks only consent questions (E1, E2, E4), and only when it stops (GM-5).
+- **GM-1 One intake, then no questions.** `[MODIFIED]` A goal statement passes the input pass and the idea intake gate once, at the start, through the specification step; questions are allowed there and only there. A phase or a task count (GM-9) has no intake: it asks nothing at all. After the intake, the mode asks only consent questions (E1, E2, E4), and only when it stops (GM-5).
 - **GM-2 Verifiable criteria.** The intake turns the goal into acceptance criteria, each verifiable by a named check: a command, a test, a simulation scenario or a specification statement whose tasks are `Done`. A criterion with no possible check is rewritten until it has one, or recorded as an `Assumption (forecast)` the report names.
 - **GM-3 Recorded goal.** The goal, its criteria and each criterion's state (`open`, `met`, `blocked`) are recorded in the workspace's live memory and updated after every iteration. A resume in a new session reports the goal and continues it; `goal` with no argument continues the recorded goal; with none recorded, it says so and shows the goal form.
 - **GM-4 The iteration.** Each iteration computes the next step exactly as DA-6 does and executes it instead of narrating it: `spec` for an uncovered criterion, `plan`/`task` for an unplanned one, `run` while a phase has a runnable task, `simulate` when scenarios cover a criterion, `fix` for open findings. After each step, finalization runs and the criteria are re-checked.
@@ -41,6 +44,12 @@ Two failure modes bound the design. A loop that also skips consent turns an assi
 - **GM-6 Closed stop conditions.** The mode stops on exactly one of: every criterion `met` (done); nothing unblocked remains and consents are queued (GM-5); three consecutive iterations without progress — an iteration makes progress when it changes a recorded state: a criterion's state, a task's status, a specification's status, the plan's membership or order, or a finding closed; repeating a step on unchanged input with an unchanged outcome is no progress; an objective integrity halt (checksums, drift, parity); a bound the goal states (iterations, phases or time); an interruption by the user.
 - **GM-7 No guard is relaxed.** Every review gate (`spec-critic`, `planner`, `prompt-engineer`, `code-reviewer`, `test-engineer`), every Pre-flight check and every containment rule runs in goal mode exactly as outside it. The mode only removes the pause between one workflow's end and the next one's start.
 - **GM-8 One report.** When the mode stops, it reports once: the stop condition, each criterion with its state and its evidence, the work done per phase with commit suggestions, the queued consents, and the one next step.
+- **GM-9 Scope forms.** `[ADDED]` The argument is one of:
+  1. **A goal statement** — as GM-1 to GM-8 describe.
+  2. **A phase** (`goal phase-3`) — the goal is that phase `Done`: its criteria are the phase's tasks, each met when its verify line passes and its status is `Done`. The iteration runs `task` when the phase is not yet decomposed and `run` while it has a runnable task, and stops at the phase's end. A phase that does not exist in the plan is answered with one line listing the plan's phases, and nothing runs.
+  3. **A number of tasks** (`goal 5 tasks`) — a bound on the work, not a goal: the mode follows the plan from its next runnable task and stops after that many tasks reach `Done`, at a task boundary, never in the middle of one. Combined with a statement or a phase (`goal phase-3 5 tasks`), it bounds that goal, as a stated bound of GM-6 does.
+
+  A phase or a count is recorded in live memory like a statement (GM-3), so `goal` with no argument continues it in a new session. A number with no unit, or a phrase that is neither a phase nor a count, is read as a goal statement.
 
 ## 5. Detailed Design
 
@@ -102,5 +111,6 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-11 | Agent | **Scope forms** (origin `user-stated`: the owner's list of commands of 2026-11-11 — "a phase or some number of tasks" as the argument). New GM-9: a phase makes that phase `Done` the goal, a task count bounds the work, and either may bound a statement; GM-1 states that neither has an intake. Related: `l1-pipeline-stages.md` PS-6. Amendment Rule: `Stable → RFC`. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (non-stop mode, `/magicspec goal`). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

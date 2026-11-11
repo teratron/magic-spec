@@ -1,0 +1,57 @@
+name: Bug report
+description: Report behaviour of the engine that differs from what its documentation or specifications say.
+title: "[bug] "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for the report. One bug per issue, please.
+        To report a security vulnerability, do not use this form: follow the repository's security policy and use private vulnerability reporting.
+  - type: input
+    id: engine-version
+    attributes:
+      label: Engine version
+      description: The content of `skills/magicspec/.version` in the affected project.
+      placeholder: "3.0.31"
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Host and operating system
+      description: The coding agent that ran the engine and the operating system it ran on.
+      placeholder: "Claude Code on Windows 11"
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command typed
+      description: The exact text you typed, including its argument.
+      placeholder: "/magicspec task engine"
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Numbered steps, starting from a clean state. Include the smallest project that shows the problem.
+      placeholder: |
+        1. ...
+        2. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: happened
+    attributes:
+      label: What happened
+      description: The output or the behaviour you saw. Paste messages as text, not as screenshots.
+    validations:
+      required: true

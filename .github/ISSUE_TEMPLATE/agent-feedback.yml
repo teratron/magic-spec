@@ -1,0 +1,62 @@
+name: Agent feedback
+description: Feedback about the engine drafted by an AI agent, or written by hand in the same layout.
+title: "[agent-feedback] "
+labels: ["agent-feedback"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This form has the same sections as a report an agent submits itself, so both read alike.
+        Keep the text free of secrets, personal data and the contents of private files.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: One bullet per note when several notes are grouped.
+    validations:
+      required: true
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: What was tried and what came back.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected / suggestion
+      description: Leave empty when there is none.
+    validations:
+      required: false
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - blocked
+        - workaround
+        - minor
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Environment
+      description: Engine version, workflow, operating system, runtime and host.
+    validations:
+      required: true
+  - type: textarea
+    id: engine-context
+    attributes:
+      label: Engine-observed context
+      description: Finding codes, the failing script and its exit status.
+    validations:
+      required: false
+  - type: textarea
+    id: report-details
+    attributes:
+      label: Report details
+      description: The fingerprint, the format version and a note saying whether an agent drafted the report.
+    validations:
+      required: false

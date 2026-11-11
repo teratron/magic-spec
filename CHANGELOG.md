@@ -42,6 +42,8 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - **`/magicspec help`** (and a bare `/magicspec`): the commands listed by group like a console tool's help, each with its argument, then offered in the host's choice form (two steps on a form of four choices) or as a numbered list in the chat; `help {command}` explains one, `help ru` (any language) translates the explanations and never the names. A first word that is not a command opens the same help with the typed text kept, the one-edit correction first.
 - **`/magicspec migrate`**: the 2.x migration as a command — the dry run, one consent question, then `--apply`. After the rename it rewrites the earlier command and folder names in the project's SDD artifacts (a patch version and a history row per specification, history, archives and the constitution untouched, backups and a revert hint), and only reports product files that still use them.
 - A command whose required argument is missing (`/magicspec spec`, `/magicspec rule`) asks for it once; one whose argument is optional runs its default and says which. The constitution and the always-on rules record this as E7 (constitution 1.18.0).
+- **Issue forms** (`.github/ISSUE_TEMPLATE/`): a bug report, a change proposal and an agent-feedback form whose sections follow the report an agent submits itself; blank issues are disabled and the chooser links private vulnerability reporting.
+- `docs/repository-settings.md`: the settings only a maintainer can change on the hosting service (private vulnerability reporting, Discussions, the `agent-feedback` label), with the path to each, why it matters, the state observed and how to verify it.
 
 ### Changed
 
@@ -59,6 +61,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - Updated 6 specifications (engine)
 - Updated task plan and task index (engine)
 - Completed task (engine)
+- **`CONTRIBUTING.md` is hand-written** in the five sections of the contribution contract and links the constitution instead of copying it. `scripts/sync-docs.js` refills only its marked blocks (the command table from the router, the workspace table from the registry, the engine version); a guide without markers receives them once, and the guide template left the shipped engine folder for `scripts/templates/` (engine 3.0.31).
 
 ## [3.0.0] - 2026-10-28
 

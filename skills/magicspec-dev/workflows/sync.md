@@ -11,7 +11,7 @@ Pipeline (orchestrated by `scripts/sync.js`):
 3. **Hardlink Validation**: Verifies that `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Drift is reported (non-fatal by default; pass `--strict-links` to fail). Repair: `/magicspec-dev:init`.
 4. **Project Meta (idempotent)**: Computes a structural digest of `.magicspec/INDEX.md` (with version/date/history fields stripped). Bumps the index version and appends a history row **only when the digest actually changed** — no more "Automated metadata update" floods.
 5. **Doc Sync (content, not stamps)**:
-   - Regenerates `CONTRIBUTING.md` from `skills/magicspec/templates/contributing.md` using current sources (RULES.md, INDEX.md, the router and `skills/magicspec/workflows/`). Footer date reflects the latest source mtime, not "today".
+   - Refills the marked blocks of the hand-written `CONTRIBUTING.md` (the command table from the router, the workspace table from the registry, the engine version) and writes nothing outside the markers. A guide without markers receives them once; a repository with no guide is seeded from `scripts/templates/contributing.md`.
    - For each `docs/{name}.md` with a matching `skills/magicspec/workflows/{name}.md`, propagates the `**Triggers:**` and `**Slash command:**` lines verbatim and refreshes the `## Sync Note` only when the workflow source hash changed or the engine version bumped.
 
 Flags (forwarded to `sync.js`):

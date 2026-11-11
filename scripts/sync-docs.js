@@ -17,16 +17,16 @@ const { writeFileSafe, mkdirSafe, isDryRun, STATE_DIR_NAME } = require(enginePat
 /**
  * Brings documentation in sync with its actual sources of truth:
  *
- *   CONTRIBUTING.md  ←  templates/contributing.md + RULES.md + INDEX.md +
- *                       the router SKILL.md and workflows/*.md
+ *   CONTRIBUTING.md  ←  the marked blocks of a hand-written guide: the command table
+ *                       (the router), the workspace table (the registry) and the
+ *                       engine version. Nothing outside the markers is written.
  *   docs/{name}.md   ←  workflows/{name}.md   (Triggers, Slash command,
  *                                                    and Sync Note version)
  *
  * Anti-thrash guarantees (the reason this file was rewritten):
  *
- *   1. CONTRIBUTING.md no longer carries `today's date` — the footer renders
- *      the **mtime of the most recent source file**. Two consecutive runs
- *      with no source change produce byte-identical output.
+ *   1. CONTRIBUTING.md carries no date and no embedded copy of the constitution.
+ *      Two consecutive runs with no source change produce byte-identical output.
  *   2. docs/*.md no longer get a global `vX.Y.Z` regex sweep. Each doc has
  *      a single anchored "Sync Note" line that holds the engine version.
  *   3. Sync Notes are only refreshed when the corresponding workflow source
@@ -39,7 +39,9 @@ const { writeFileSafe, mkdirSafe, isDryRun, STATE_DIR_NAME } = require(enginePat
 
 const projectRoot = process.cwd();
 const versionFile = enginePath('.version');
-const templatePath = enginePath('templates', 'contributing.md');
+// The seed of a guide that does not exist yet. It is a maintenance artifact: nothing a user installs
+// reads it, so it lives beside this script and not in the shipped engine folder.
+const templatePath = path.join(__dirname, 'templates', 'contributing.md');
 // The state cache is the state folder's own `.cache/`, beside the finalize and project-meta states:
 // one folder holds every cache, and `clean-cache` reaches it. It is a dev-only artifact owned by this
 // script and must not ship with the distributable engine folder.
@@ -51,14 +53,10 @@ const legacyStateDir = path.join(projectRoot, '.cache');
 const legacyStateFile = path.join(legacyStateDir, '.docs-state.json');
 
 const contributingPath = path.join(projectRoot, 'CONTRIBUTING.md');
-const rulesPath = path.join(projectRoot, '.magicspec', 'RULES.md');
 const indexPath = path.join(projectRoot, '.magicspec', 'INDEX.md');
 const workflowsDir = enginePath('workflows');
-const routerPath = enginePath('SKILL.md');
 const docsDir = path.join(projectRoot, 'docs');
 
-const RULES_MISSING_BLOCK =
-    '> [!WARNING]\n> Project constitution (RULES.md) missing. No rules inferred.\n';
 const REGISTRY_EMPTY_BLOCK =
     '| Workspace | Description |\n| --- | --- |\n| `root` | No workspaces registered |\n';
 
@@ -111,64 +109,88 @@ function readIfExists(p) {
     return fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
 }
 
-// ───────────────────────────────────────────────────────────────────────────
-// Source Date — most recent mtime among source files
-// ───────────────────────────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════════════
+// CONTRIBUTING.md — MARKED BLOCKS
+// ═══════════════════════════════════════════════════════════════════════════
+//
+// The guide is hand-written. Three facts that change with the repository are generated into
+// blocks the prose marks with a neutral key:
+//
+//   <!-- generated:commands -->  …  <!-- /generated:commands -->
+//
+// Everything outside the markers is the author's and is never written. A guide that has no
+// markers yet receives them once, in one section appended at its end; from then on the run
+// only refills what lies between them, so a second run changes nothing.
+
+/** The blocks, in the order a missing one is appended: the key and the heading it gets. */
+const GUIDE_BLOCKS = Object.freeze([
+    { key: 'version', heading: null, inline: true },
+    { key: 'commands', heading: '### Commands', inline: false },
+    { key: 'workspaces', heading: '### Workspaces', inline: false },
+]);
+
+/** The heading the one-time appended section carries. */
+const APPENDED_SECTION_HEADING = '## Generated reference';
 
 /**
- * Every `.md` file directly under `dir`, as absolute paths. Empty when `dir`
- * does not exist.
- *
- * @param {string} dir - Absolute directory path.
- * @returns {string[]}
+ * @param {string} key - Block key.
+ * @returns {{open: string, close: string}} The two marker lines of the block.
  */
-function markdownFilesIn(dir) {
-    if (!fs.existsSync(dir)) return [];
-    return fs
-        .readdirSync(dir)
-        .filter((f) => f.endsWith('.md'))
-        .map((f) => path.join(dir, f));
+function blockMarkers(key) {
+    return { open: `<!-- generated:${key} -->`, close: `<!-- /generated:${key} -->` };
 }
 
 /**
- * Lists every file that can influence CONTRIBUTING.md's content: the fixed
- * trio (template, RULES.md, INDEX.md), the router and every `workflows/*.md`.
- * Existence is not guaranteed for the fixed trio —
- * callers filter.
- *
- * @returns {string[]} Candidate absolute paths.
+ * @param {string} text - Guide content.
+ * @param {string} key - Block key.
+ * @returns {'ok'|'missing'|'broken'} `ok` when an opening marker is followed by its closing one,
+ *          `broken` when only one of the two exists, `missing` when neither does.
  */
-function collectContributingSources() {
-    return [templatePath, rulesPath, indexPath, routerPath, ...markdownFilesIn(workflowsDir)];
+function blockState(text, key) {
+    const { open, close } = blockMarkers(key);
+    const opening = text.indexOf(open);
+    const closing = text.indexOf(close);
+    if (opening === -1 && closing === -1) return 'missing';
+    return opening !== -1 && closing > opening ? 'ok' : 'broken';
 }
 
 /**
- * @param {string[]} paths - Candidate paths; non-existent entries are skipped.
- * @returns {number} The latest mtime in milliseconds, or 0 if none exist.
+ * Replaces what lies between the markers of one block. A block-level body gets its own lines; an
+ * inline one sits directly between the markers.
+ *
+ * @param {string} text - Guide content that holds the block.
+ * @param {string} key - Block key.
+ * @param {string} body - New content of the block.
+ * @param {boolean} inline - Whether the block sits inside a line of prose.
+ * @returns {string}
  */
-function latestMtimeMs(paths) {
-    let latest = 0;
-    for (const p of paths) {
-        if (!fs.existsSync(p)) continue;
-        const m = fs.statSync(p).mtimeMs;
-        if (m > latest) latest = m;
+function fillBlock(text, key, body, inline) {
+    const { open, close } = blockMarkers(key);
+    const escaped = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const pattern = new RegExp(`${escaped(open)}[\\s\\S]*?${escaped(close)}`, 'g');
+    // A function replacement: the body is data, and `$` sequences in it must stay as written.
+    return text.replace(pattern, () => (inline ? open + body + close : `${open}\n${body}\n${close}`));
+}
+
+/**
+ * Appends, once, the blocks a guide lacks. The section heading is added only when the guide does
+ * not hold it already.
+ *
+ * @param {string} text - Guide content.
+ * @param {string[]} keys - Keys of the missing blocks.
+ * @returns {string}
+ */
+function appendMissingBlocks(text, keys) {
+    let out = text.replace(/\s*$/, '\n');
+    if (!out.includes(`\n${APPENDED_SECTION_HEADING}\n`)) out += `\n${APPENDED_SECTION_HEADING}\n`;
+    for (const block of GUIDE_BLOCKS.filter((b) => keys.includes(b.key))) {
+        const { open, close } = blockMarkers(block.key);
+        out += block.inline
+            ? `\nEngine version: ${open}${close}\n`
+            : `\n${block.heading}\n\n${open}\n${close}\n`;
     }
-    return latest;
+    return out;
 }
-
-/**
- * Returns ISO date (YYYY-MM-DD) of the most recently modified source file
- * involved in CONTRIBUTING regeneration. Stable across runs as long as the
- * sources don't change — eliminates `today` thrash in the footer.
- */
-function lastSourceDate() {
-    const latest = latestMtimeMs(collectContributingSources());
-    return new Date(latest || Date.now()).toISOString().split('T')[0];
-}
-
-// ═══════════════════════════════════════════════════════════════════════════
-// CONTRIBUTING.md REGENERATION
-// ═══════════════════════════════════════════════════════════════════════════
 
 // ───────────────────────────────────────────────────────────────────────────
 // Project Name Resolution
@@ -190,7 +212,7 @@ function projectNameFromWorkspaceJson() {
 }
 
 /**
- * Resolves the project display name for generated documentation.
+ * Resolves the project display name for the seed of a new guide.
  * Resolution order:
  *   1. workspace.json → meta.name  (explicit project config)
  *   2. MAGIC_PROJECT_NAME env var  (CI/runtime override)
@@ -207,40 +229,22 @@ function getProjectName() {
 }
 
 // ───────────────────────────────────────────────────────────────────────────
-// Content Block Extraction
+// Block Sources
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Extracts RULES.md §1–§6 (between the `## 1.` and `## 7.` headings) for
- * embedding in CONTRIBUTING.md. Falls back to a missing-constitution notice
- * when RULES.md is absent or doesn't contain a recognizable `## 1.` heading;
- * a present `## 1.` with no `## 7.` still extracts to the end of the file.
- *
- * @returns {string}
- */
-function extractRulesBlock() {
-    if (!fs.existsSync(rulesPath)) return RULES_MISSING_BLOCK;
-    const rulesContent = fs.readFileSync(rulesPath, 'utf8');
-    const r1 = rulesContent.indexOf('## 1.');
-    if (r1 === -1) return RULES_MISSING_BLOCK;
-    const r7 = rulesContent.indexOf('## 7.');
-    return (r7 !== -1 ? rulesContent.substring(r1, r7) : rulesContent.substring(r1)).trim();
-}
-
-/**
- * Extracts the `## Workspaces` table from INDEX.md for embedding in
- * CONTRIBUTING.md. Falls back to an empty-registry placeholder when
- * INDEX.md is absent or carries no recognizable table under that heading.
+ * Extracts the `## Workspaces` table from INDEX.md. Falls back to an empty-registry placeholder
+ * when INDEX.md is absent or carries no recognizable table under that heading.
  *
  * @returns {string}
  */
 function extractRegistryBlock() {
-    if (!fs.existsSync(indexPath)) return REGISTRY_EMPTY_BLOCK;
+    if (!fs.existsSync(indexPath)) return REGISTRY_EMPTY_BLOCK.trim();
     const indexContent = fs.readFileSync(indexPath, 'utf8');
     const start = indexContent.indexOf('## Workspaces');
-    if (start === -1) return REGISTRY_EMPTY_BLOCK;
+    if (start === -1) return REGISTRY_EMPTY_BLOCK.trim();
     const tableStart = indexContent.indexOf('|', start);
-    if (tableStart === -1) return REGISTRY_EMPTY_BLOCK;
+    if (tableStart === -1) return REGISTRY_EMPTY_BLOCK.trim();
     const tableEnd = indexContent.indexOf('\n##', tableStart);
     const table = (
         tableEnd !== -1
@@ -254,66 +258,83 @@ function extractRegistryBlock() {
 }
 
 /**
- * Builds the `| Command | Description |` table from the router's command table,
- * the one list every command surface is generated from.
+ * Builds the `| Command | Description |` table from the router's command table, read through the
+ * engine's one row parser, so the guide lists exactly the commands the router does.
  *
- * @returns {string}
+ * @returns {string|null} The table, or `null` when the router cannot be read (the block is then
+ *          left as it is).
  */
 function buildWorkflowsTable() {
-    let table = '| Command | Description |\n| --- | --- |\n';
-    if (!fs.existsSync(routerPath)) return table;
-    for (const line of fs.readFileSync(routerPath, 'utf8').split(/\r?\n/)) {
-        // Columns: command, group, what it does, argument, when it is missing, body.
-        const row =
-            /^\| `([a-z][a-z-]*)` \| [^|]+ \| ([^|]+) \| [^|]+ \| [^|]+ \| `workflows\/[a-z-]+\.md` \|$/.exec(
-                line,
-            );
-        if (row) table += `| \`/magicspec ${row[1]}\` | ${row[2]} |\n`;
+    let commands;
+    try {
+        commands = require(enginePath('scripts', 'lib', 'hosts')).readCommands();
+    } catch (error) {
+        console.warn(`  ⚠️  Command table not regenerated: ${error.message}`);
+        return null;
     }
-    return table;
+    let table = '| Command | Description |\n| --- | --- |\n';
+    for (const command of commands) table += `| \`/magicspec ${command.name}\` | ${command.summary} |\n`;
+    return table.trim();
 }
 
+// ───────────────────────────────────────────────────────────────────────────
+// Generation
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Brings the marked blocks of CONTRIBUTING.md up to date. A repository with no guide gets the
+ * seed; a guide with no markers gets them once.
+ *
+ * @param {string} targetVersion - Engine version.
+ * @param {Object} state - Persisted sync state (mutated: the content hash of the guide).
+ * @returns {boolean} Whether the guide was written.
+ */
 function generateContributing(targetVersion, state) {
-    if (!fs.existsSync(templatePath)) return false;
+    const existing = readIfExists(contributingPath);
+    let guide = existing;
+    if (guide === null) {
+        if (!fs.existsSync(templatePath)) return false;
+        guide = fs
+            .readFileSync(templatePath, 'utf8')
+            .replace(/{{project_name}}/g, () => getProjectName());
+    }
 
-    const template = fs.readFileSync(templatePath, 'utf8');
+    const bodies = {
+        version: `v${targetVersion}`,
+        commands: buildWorkflowsTable(),
+        workspaces: extractRegistryBlock(),
+    };
 
-    const directoryTree = `root-project/
-├── .agents/skills/magicspec/ # The SDD Engine skill (workflows, scripts - read-only)
-└── .magicspec/               # Your Project Design Workspace (INDEX.md, RULES.md, PLAN.md)`;
+    const missing = [];
+    for (const block of GUIDE_BLOCKS) {
+        const found = blockState(guide, block.key);
+        if (found === 'missing') missing.push(block.key);
+        else if (found === 'broken')
+            console.warn(
+                `  ⚠️  CONTRIBUTING.md — the ${block.key} markers are unpaired; the block is left as it is`,
+            );
+    }
+    if (missing.length > 0) guide = appendMissingBlocks(guide, missing);
 
-    const sourceDate = lastSourceDate();
-
-    const rendered = template
-        .replace(/{{project_name}}/g, getProjectName())
-        .replace(/{{VERSION}}/g, targetVersion)
-        .replace(/{{engine_version}}/g, targetVersion)
-        .replace(/{{workflows_table}}/g, buildWorkflowsTable().trim())
-        .replace(/{{DATE}}/g, sourceDate)
-        .replace(/{{rules_block}}/g, extractRulesBlock())
-        .replace(/{{registry_block}}/g, extractRegistryBlock())
-        .replace(/{{directory_tree}}/g, directoryTree)
-        .replace(
-            /{{setup_command}}/g,
-            'node .agents/skills/magicspec/scripts/executor.js check-prerequisites --json',
-        );
+    for (const block of GUIDE_BLOCKS) {
+        if (bodies[block.key] === null || blockState(guide, block.key) !== 'ok') continue;
+        guide = fillBlock(guide, block.key, bodies[block.key], block.inline);
+    }
 
     // Idempotency: skip write if content hasn't changed
-    const existing = readIfExists(contributingPath);
-    if (existing === rendered) {
+    if (existing === guide) {
         console.log('  ℹ️  CONTRIBUTING.md — already current');
         return false;
     }
 
-    if (writeFileSafe(contributingPath, rendered)) {
-        console.log(
-            `  ✅ CONTRIBUTING.md regenerated (sourceDate=${sourceDate}, v${targetVersion})`,
-        );
-        state.contributing = sha(rendered);
+    if (writeFileSafe(contributingPath, guide)) {
+        console.log(`  ✅ CONTRIBUTING.md blocks regenerated (v${targetVersion})`);
+        state.contributing = sha(guide);
         return true;
     }
     return false;
 }
+
 
 // ═══════════════════════════════════════════════════════════════════════════
 // docs/{name}.md SYNC FROM workflows/{name}.md
@@ -498,9 +519,7 @@ function syncDocs() {
 
     const state = readState();
 
-    if (fs.existsSync(templatePath)) {
-        generateContributing(targetVersion, state);
-    }
+    generateContributing(targetVersion, state);
 
     syncDocsFolder(targetVersion, state);
 

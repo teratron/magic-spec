@@ -1,8 +1,8 @@
 # Implementation Plan
 
-**Version:** 1.55.1
-**Generated:** 2026-10-31
-**Based on:** .magicspec/engine/INDEX.md v1.63.0
+**Version:** 1.56.0
+**Generated:** 2026-11-11
+**Based on:** .magicspec/engine/INDEX.md v1.64.0
 **Status:** Active
 
 ## Overview
@@ -516,11 +516,13 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Planner pass: optimism — A01 is the largest task (a deterministic chain with a path matcher, two scoring rules and four fall-throughs) and A02 hides an audit of every writer, so both are sized as the phase's critical path. Hidden dependency — tests/engine.js and the C14 manifest are shared by all three tracks, so a track owner writes the harness in one batch and runs `update-engine-meta` once per batch. Cascade — if the resolver's output shape (A01) fails review, A03 waits and nothing else; if C01 stalls, C02, C07 and C08 wait and the other tracks proceed.
   - Tasks: [tasks/phase-48.md](tasks/phase-48.md)
 
-### Phase 49 — Planning Split (`plan`)
+### Phase 49 — Planning Split and Stage Boundaries (`plan`)
 
-- [ ] **Planning command** ([l1-plan-command.md](specifications/l1-plan-command.md) v1.0.0 PL-1 to PL-7) [L1] — a `plan` body built from the planning steps of `task`; `task` absorbs a missing or stale plan; the replan step names `plan`; `--workflow=plan` in finalization; the constitution's C24 rows for the planner.
+- [ ] **Planning command** ([l1-plan-command.md](specifications/l1-plan-command.md) v2.0.0 PL-1 to PL-9) [L1] — a `plan` body built from the planning steps of `task`; `task` on a missing or stale plan ends naming `/magicspec plan` instead of planning (PL-4); a decomposition finding goes back to `plan` as a directive (PL-8); `task update` becomes an alias of `plan`; the replan step names `plan`; `--workflow=plan` in finalization; the constitution's C24 rows for the planner.
+- [ ] **Pipeline stages** ([l1-pipeline-stages.md](specifications/l1-pipeline-stages.md) v1.0.0 PS-1 to PS-7) [L1] — one stage per invocation: the Zero-Prompt Handoff of `spec` and of `analyze`'s dispatch become a handoff line; the line `Next: /magicspec {command} {argument} — {demand} reasoning` from the finalize next-step computation; the constitution's C9 wording (each stage autonomously, `goal` chains) through `/magicspec rule`, mirrored in the template; a cold-start suite case per boundary.
+- [ ] **Command surface, the stage-related part** ([l1-command-surface.md](specifications/l1-command-surface.md) v2.2.0 CS-12 to CS-14) [L1] — the router's demand column and `plan` row, the alias `audit` read as `analyze`, the help detail view with the demand, `help help` bounded at one level, an unknown token answered with the list.
   - Requires Phase 47 (the router row and the help listing).
-  - **Planning-surfaced**: this very workflow is split while it plans; the cognitive suite's planning scenarios are split with it and none is dropped.
+  - **Planning-surfaced**: (1) this very workflow is split while it plans; the cognitive suite's planning scenarios are split with it and none is dropped. (2) PL-4 and PS-1 must land together with the `plan` body: a `task` that stops on a stale plan before `plan` exists would leave no command that plans — so the body is built first and the stop second, in one phase. (3) `SKILL.md` and `workflows/help.md` are edited by the `plan` row, the demand column and the alias: one task, serialized. (4) The C9 amendment is user-stated (the owner's list of 2026-11-11) and goes through `/magicspec rule`; if its review fails, the handoff line still ships — only the constitution's wording waits.
   - Workbook: created when Phase 48 completes.
 
 ### Phase 50 — Review Gates: Coherence Check and Input Prompt Pass
@@ -532,10 +534,11 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 51 — Defect Intake and Engine Feedback
 
-- [ ] **Fix command** ([l1-fix-command.md](specifications/l1-fix-command.md) v1.0.1 FX-1 to FX-9) [L1] — the `fix` body: re-verify, reproduce, classify by the specification test, sibling sites, gated repair with a regression check, a maintenance phase through `plan`.
+- [ ] **Fix command** ([l1-fix-command.md](specifications/l1-fix-command.md) v1.1.0 FX-1 to FX-11) [L1] — the `fix` body: re-verify, reproduce, classify by the specification test, sibling sites, gated repair with a regression check, a maintenance phase through `plan`; a defect report given to `spec` routed to `fix` (FX-11); the maintenance `/magicspec-dev fix` for engine feedback (FX-10) with its router row.
+- [ ] **Maintenance command set** ([l1-command-surface.md](specifications/l1-command-surface.md) v2.2.0 CS-15) [L1] — `skills/magicspec-dev/SKILL.md` in the space grammar with `init`, `test`, `sync`, `release` and `fix`; the constitution's C11 extended to the whole set and C28 item 2 naming `/magicspec-dev fix`, through `/magicspec rule`.
 - [ ] **Engine feedback channel** ([l1-agent-feedback.md](specifications/l1-agent-feedback.md) v1.0.0 EF-1 to EF-12) [L1] — the notes store, drafting with scrubbing and a fingerprint, the text and link paths, submission behind E1, the work queue in this repository.
   - Requires Phase 49 (a fix opens a maintenance phase through `plan`) and Phase 48 (the agent-feedback issue form).
-  - **Planning-surfaced**: the submission cases run against a stand-in for the tracker client, never against the real repository.
+  - **Planning-surfaced**: (1) the submission cases run against a stand-in for the tracker client, never against the real repository. (2) The maintenance `fix` names the shipped `fix` body for its triage, so it is written after that body; the shipped body names no maintenance step (FX-10). (3) The reverse route of FX-11 edits the router's Dispatch step 3, last edited in Phase 49 — no overlap inside this phase.
   - Workbook: created when Phase 50 completes.
 
 ### Phase 52 — Product Simulation and Interface Design
@@ -547,7 +550,7 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
 
 ### Phase 53 — Goal Mode
 
-- [ ] **Goal mode** ([l1-goal-mode.md](specifications/l1-goal-mode.md) v1.0.0 GM-1 to GM-8) [L1] — the `goal` body, the goal block in live memory, the resume line and the status briefing, the stop conditions as suite scenarios.
+- [ ] **Goal mode** ([l1-goal-mode.md](specifications/l1-goal-mode.md) v1.1.0 GM-1 to GM-9) [L1] — the `goal` body, the goal block in live memory, the resume line and the status briefing, the stop conditions as suite scenarios; the scope forms (a phase, a number of tasks, either bounding a statement) with no intake; each step crossing its stage boundary through the files (PS-6).
   - Requires Phases 49, 51 and 52 (every step the loop executes exists).
   - Workbook: created when Phase 52 completes.
 
@@ -558,11 +561,18 @@ Implementation plan for the Magic SDD engine workspace. Phase 3 introduced the u
   - Requires Phase 48 (the cache retention contract lists the index). The coherence check of Phase 50 gains the index query here.
   - Workbook: created when Phase 53 completes.
 
-### Phase 55 — Development Toolchain (Stages 0 and 1)
+### Phase 55 — Sync Command
+
+- [ ] **Sync command** ([l1-sync-command.md](specifications/l1-sync-command.md) v1.0.0 SY-1 to SY-9) [L1] — the `sync` body and its executor subcommand over six areas (registry, projections, graph, state, versions, docs) with `--dry-run`, the one report, disagreements reported with their command and nothing deleted; the registration of version anchors and documentation blocks (the specification's TBD, decided in the task); the router's `sync` row; the finalization and drift-check exemptions; the read-only caution's regeneration sentence; `scripts/sync.js` calling the shipped pass as its project-meta stage; the constitution's C2 through `/magicspec rule`.
+  - Requires Phase 49 (the demand column and the handoff line its report ends with) and Phase 48 (the cache retention contract, which the `graph` area's refresh honours).
+  - **Planning-surfaced**: (1) the `projections` area calls the generator `init` already uses and is skipped when the engine integrity check fails — regenerating copies from a corrupted folder would spread it. (2) The caution sentence is an addition next to the read-only prohibition, which stays word for word (C28 item 5). (3) The maintenance pipeline's project-meta stage is replaced, not duplicated: the harness pins that `scripts/sync.js` still writes `.magicspec/INDEX.md` once and idempotently.
+  - Workbook: created when Phase 54 completes.
+
+### Phase 56 — Development Toolchain (Stages 0 and 1)
 
 - [ ] **Engine toolchain** ([l2-engine-toolchain.md](specifications/l2-engine-toolchain.md) v1.0.0 §5.1 to §5.5) [L2] — pnpm with a lockfile, Biome (one formatting commit, then `biome ci`), the strict type check over JSDoc, Fallow advisory then gating, the CI job and its Node matrix.
   - Requires nothing functional; last, so that the formatting commit lands after the large text changes of the earlier phases. Stage 2 (TypeScript sources, runtime floor Node 22.18) waits for the runtime-floor decision of a minor release and is not planned here.
-  - Workbook: created when Phase 54 completes.
+  - Workbook: created when Phase 55 completes.
 
 ## Backlog
 

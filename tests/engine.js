@@ -759,12 +759,12 @@ describe('Magic Engine Scripts', () => {
     test('sync.js should propagate version and generate docs', () => {
         const tempDir = createTempWorkspace(true); // Need git for executor.js
         try {
-            // Setup template
-            const templatesDir = path.join(tempDir, 'skills', 'magicspec', 'templates');
-            if (!fs.existsSync(templatesDir)) fs.mkdirSync(templatesDir, { recursive: true });
+            // Setup the seed of a guide that does not exist yet (a maintenance artifact beside the script)
+            const templatesDir = path.join(tempDir, 'scripts', 'templates');
+            fs.mkdirSync(templatesDir, { recursive: true });
             fs.writeFileSync(
                 path.join(templatesDir, 'contributing.md'),
-                '# Contributing v{{VERSION}}\n\n## Rules\n{{rules_block}}\n\n## Registry\n{{registry_block}}',
+                '# Contributing <!-- generated:version --><!-- /generated:version -->\n\n## Registry\n\n<!-- generated:workspaces -->\n<!-- /generated:workspaces -->\n',
             );
 
             // Setup .magicspec content
@@ -817,8 +817,8 @@ describe('Magic Engine Scripts', () => {
 
             // Verify documentation (CONTRIBUTING.md)
             const contributing = fs.readFileSync(path.join(tempDir, 'CONTRIBUTING.md'), 'utf8');
-            assert.ok(contributing.includes('v1.0.0'));
-            assert.ok(contributing.includes('Rule 1'));
+            assert.ok(contributing.includes('<!-- generated:version -->v1.0.0<!-- /generated:version -->'));
+            assert.ok(!contributing.includes('Rule 1'), 'the constitution is no longer embedded in the guide');
             assert.ok(contributing.includes('| test | desc |'));
 
             // Verify docs sync (version and triggers)
@@ -17650,9 +17650,10 @@ describe('Magic Engine Scripts', () => {
     test('the documentation sync keeps its state in the state folder\'s cache, reads the state the earlier location left, and retires it', () => {
         const dir = createTempWorkspace(true);
         try {
+            fs.mkdirSync(path.join(dir, 'scripts', 'templates'), { recursive: true });
             fs.writeFileSync(
-                path.join(dir, 'skills', 'magicspec', 'templates', 'contributing.md'),
-                '# Contributing v{{VERSION}}\n\n## Rules\n{{rules_block}}\n\n## Registry\n{{registry_block}}',
+                path.join(dir, 'scripts', 'templates', 'contributing.md'),
+                '# Contributing <!-- generated:version --><!-- /generated:version -->\n\n## Registry\n\n<!-- generated:workspaces -->\n<!-- /generated:workspaces -->\n',
             );
             fs.mkdirSync(path.join(dir, '.magicspec'));
             fs.writeFileSync(path.join(dir, '.magicspec', 'RULES.md'), '## 1. Concept\nRule 1\n## 7. Misc\n');
@@ -17709,4 +17710,278 @@ describe('Magic Engine Scripts', () => {
             cleanup(dir);
         }
     });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // The contribution guide: marked blocks only, and a template that does not ship
+    // ───────────────────────────────────────────────────────────────────────────
+    const guideFixture = (guide) => {
+        const dir = createTempWorkspace(true);
+        fs.mkdirSync(path.join(dir, '.magicspec'));
+        fs.writeFileSync(
+            path.join(dir, '.magicspec', 'RULES.md'),
+            '## 1. Naming\nUNIQUE-RULE-LINE\n## 7. Misc\n',
+        );
+        fs.writeFileSync(
+            path.join(dir, '.magicspec', 'INDEX.md'),
+            '## Workspaces\n\n| Workspace | Description |\n| --- | --- |\n| engine | costs $& and $1 | [engine/INDEX.md](engine/INDEX.md) |\n\n## Meta\n',
+        );
+        fs.writeFileSync(
+            path.join(dir, 'skills', 'magicspec', 'SKILL.md'),
+            [
+                '| Command | Group | What it does | Argument | When it is missing | Body |',
+                '| --- | --- | --- | --- | --- | --- |',
+                '| `spec` | pipeline | Writes specifications | an idea | **required** | `workflows/spec.md` |',
+                '| `run` | pipeline | Runs the tasks | a workspace | optional | `workflows/run.md` |',
+                '',
+            ].join('\n'),
+        );
+        if (guide !== null) fs.writeFileSync(path.join(dir, 'CONTRIBUTING.md'), guide);
+        fs.mkdirSync(path.join(dir, 'scripts', 'templates'), { recursive: true });
+        fs.writeFileSync(
+            path.join(dir, 'scripts', 'templates', 'contributing.md'),
+            '# Contributing to {{project_name}}\n\nSeed prose.\n\n<!-- generated:commands -->\n<!-- /generated:commands -->\n',
+        );
+        const run = () =>
+            execFileSync(process.execPath, [path.join(dir, 'scripts', 'sync-docs.js')], {
+                cwd: dir,
+                stdio: 'pipe',
+            });
+        return { dir, run, guidePath: path.join(dir, 'CONTRIBUTING.md') };
+    };
+    const withoutBlockBodies = (text) =>
+        text.replace(/(<!-- generated:([a-z]+) -->)[\s\S]*?(<!-- \/generated:\2 -->)/g, '$1$3');
+
+    test('the guide generator writes only between its markers, leaves the prose as written, and a second run changes nothing', () => {
+        const guide = [
+            '# Hand-written guide',
+            '',
+            'Version <!-- generated:version -->v0.0.0<!-- /generated:version --> of the engine.',
+            '',
+            '## Commands',
+            '',
+            '<!-- generated:commands -->',
+            'STALE COMMAND TABLE',
+            '<!-- /generated:commands -->',
+            '',
+            'Prose between the blocks stays exactly as written.',
+            '',
+            '<!-- generated:workspaces -->',
+            'STALE WORKSPACES',
+            '<!-- /generated:workspaces -->',
+            '',
+            'Closing prose.',
+            '',
+        ].join('\n');
+        const { dir, run, guidePath } = guideFixture(guide);
+        try {
+            run();
+            const after = fs.readFileSync(guidePath, 'utf8');
+            assert.strictEqual(
+                withoutBlockBodies(after),
+                withoutBlockBodies(guide),
+                'nothing outside the markers changed',
+            );
+            assert.ok(after.includes('<!-- generated:version -->v1.0.0<!-- /generated:version -->'));
+            assert.ok(after.includes('| `/magicspec spec` | Writes specifications |'));
+            assert.ok(after.includes('| `/magicspec run` | Runs the tasks |'));
+            assert.ok(!after.includes('STALE'), 'the stale block bodies were replaced');
+            assert.ok(
+                after.includes('costs $& and $1'),
+                'a body is data: its dollar sequences are written as they are',
+            );
+            assert.ok(after.includes('(.magicspec/engine/INDEX.md)'), 'registry links are rebased to the project root');
+            assert.ok(!after.includes('UNIQUE-RULE-LINE'), 'the constitution is not embedded');
+            run();
+            assert.strictEqual(fs.readFileSync(guidePath, 'utf8'), after, 'a second run changes nothing');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('a guide without markers receives them once, below its prose, and a second run changes nothing', () => {
+        const guide = '# Hand-written guide\n\nOnly prose lives here.\n';
+        const { dir, run, guidePath } = guideFixture(guide);
+        try {
+            run();
+            const after = fs.readFileSync(guidePath, 'utf8');
+            assert.ok(after.startsWith(guide), 'the prose is kept byte for byte');
+            for (const key of ['version', 'commands', 'workspaces']) {
+                assert.strictEqual(
+                    after.split(`<!-- generated:${key} -->`).length - 1,
+                    1,
+                    `the ${key} block is added once`,
+                );
+            }
+            assert.ok(after.includes('| `/magicspec spec` | Writes specifications |'));
+            run();
+            assert.strictEqual(fs.readFileSync(guidePath, 'utf8'), after, 'the markers are not added twice');
+        } finally {
+            cleanup(dir);
+        }
+    });
+
+    test('a repository with no guide is seeded from the maintenance template, and a block with unpaired markers is left alone', () => {
+        const seeded = guideFixture(null);
+        try {
+            seeded.run();
+            const text = fs.readFileSync(seeded.guidePath, 'utf8');
+            assert.ok(text.includes('Seed prose.'), 'the seed is the starting text');
+            assert.ok(text.includes('| `/magicspec run` | Runs the tasks |'));
+        } finally {
+            cleanup(seeded.dir);
+        }
+        const broken = '# Guide\n\n<!-- generated:commands -->\nhand text without a closing marker\n';
+        const unpaired = guideFixture(broken);
+        try {
+            unpaired.run();
+            const text = fs.readFileSync(unpaired.guidePath, 'utf8');
+            assert.ok(
+                text.includes('<!-- generated:commands -->\nhand text without a closing marker\n'),
+                'an unpaired block is left as it is',
+            );
+        } finally {
+            cleanup(unpaired.dir);
+        }
+    });
+
+    test('the contribution-guide template is a maintenance artifact: it is not in the shipped folder and nothing shipped names it', () => {
+        const repo = path.resolve(__dirname, '..');
+        const engine = path.join(repo, 'skills', 'magicspec');
+        assert.ok(!fs.existsSync(path.join(engine, 'templates', 'contributing.md')), 'the template left the engine folder');
+        assert.ok(fs.existsSync(path.join(repo, 'scripts', 'templates', 'contributing.md')), 'and lives beside the generator');
+        const offenders = [];
+        const walk = (dir) => {
+            for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) walk(full);
+                else if (/\.(md|js|json)$/.test(entry.name) || entry.name === '.checksums') {
+                    if (/templates\/contributing\.md/.test(fs.readFileSync(full, 'utf8')))
+                        offenders.push(path.relative(repo, full));
+                }
+            }
+        };
+        walk(engine);
+        assert.deepStrictEqual(offenders, [], 'no shipped file names the template');
+    });
+
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // Issue forms and the maintainer instruction (community health files)
+    // ───────────────────────────────────────────────────────────────────────────
+    // A small reader, no dependency: the top-level keys of a form and the labels of its fields, in order.
+    const readIssueForm = (file) => {
+        const text = fs.readFileSync(file, 'utf8');
+        return {
+            keys: [...text.matchAll(/^([a-z_]+):/gm)].map((m) => m[1]),
+            labels: [...text.matchAll(/^ {6}label: (.+)$/gm)].map((m) => m[1].trim()),
+            text,
+        };
+    };
+    const issueFormsDir = path.resolve(__dirname, '..', '.github', 'ISSUE_TEMPLATE');
+
+    test('the issue forms carry the sections the engine\'s reports and the policy name, and the chooser disables blank issues', () => {
+        const keys = ['name', 'description', 'title', 'labels', 'body'];
+        const bug = readIssueForm(path.join(issueFormsDir, 'bug-report.yml'));
+        const change = readIssueForm(path.join(issueFormsDir, 'change-proposal.yml'));
+        const feedback = readIssueForm(path.join(issueFormsDir, 'agent-feedback.yml'));
+        for (const form of [bug, change, feedback]) assert.deepStrictEqual(form.keys, keys);
+
+        // The bug form asks for the version, the host, the command, the steps, the expectation and the outcome.
+        assert.deepStrictEqual(bug.labels, [
+            'Engine version',
+            'Host and operating system',
+            'Command typed',
+            'Steps to reproduce',
+            'What you expected',
+            'What happened',
+        ]);
+
+        // The agent-feedback form has the seven sections of the report layout, in that order.
+        const layout = [
+            'Summary',
+            'What happened',
+            'Expected / suggestion',
+            'Impact',
+            'Environment',
+            'Engine-observed context',
+            'Report details',
+        ];
+        assert.deepStrictEqual(feedback.labels, layout);
+        assert.match(feedback.text, /^labels: \["agent-feedback"\]$/m);
+        const spec = path.resolve(__dirname, '..', '.magicspec', 'engine', 'specifications', 'l1-agent-feedback.md');
+        if (fs.existsSync(spec)) {
+            const specText = fs.readFileSync(spec, 'utf8');
+            const specLines = [...specText.matchAll(/^ {2}## (.+)$/gm)].map((m) => m[1]);
+            assert.strictEqual(specLines.length, layout.length, 'the specification lists the same number of sections');
+            layout.forEach((label, index) =>
+                assert.ok(specLines[index].startsWith(label), `section ${index + 1} of the report layout is: ${label}`),
+            );
+        }
+
+        // The chooser: blank issues off, the private reporting page linked, no Discussions page.
+        const config = readIssueForm(path.join(issueFormsDir, 'config.yml'));
+        assert.deepStrictEqual(config.keys, ['blank_issues_enabled', 'contact_links']);
+        assert.match(config.text, /^blank_issues_enabled: false$/m);
+        assert.ok(config.text.includes('/security/advisories/new'), 'the private vulnerability reporting page is linked');
+        assert.ok(!/discussions/i.test(config.text), 'no Discussions page is linked');
+    });
+
+    test('the maintainer instruction lists the three settings with their paths, the observed state and the files that depend on them, and the documentation index links it', () => {
+        const repo = path.resolve(__dirname, '..');
+        const page = fs.readFileSync(path.join(repo, 'docs', 'repository-settings.md'), 'utf8');
+        for (const setting of ['Private vulnerability reporting', 'Discussions', 'Label `agent-feedback`']) {
+            assert.ok(page.includes(`| ${setting} |`), `the table has a row for: ${setting}`);
+        }
+        assert.ok(page.includes('**Settings** → **Security** → **Advanced Security** → **Private vulnerability reporting**'));
+        assert.ok(page.includes('**Settings** → **General** → **Features** → **Discussions**'));
+        assert.ok(page.includes('**Issues** → **Labels** → **New label**'));
+        assert.match(page, /State observed \d{4}-\d{2}-\d{2}/);
+        for (const file of ['SECURITY.md', '.github/ISSUE_TEMPLATE/config.yml', '.github/ISSUE_TEMPLATE/agent-feedback.yml']) {
+            assert.ok(page.includes(`| \`${file}\` |`), `the page names the dependent file: ${file}`);
+        }
+        assert.ok(!/T-\d{2}[A-Z]\d{2}|Phase \d+|\.magicspec\//.test(page), 'a product page carries no task identifier, phase or state-folder path');
+        const index = fs.readFileSync(path.join(repo, 'docs', 'README.md'), 'utf8');
+        assert.ok(index.includes('(repository-settings.md)'), 'docs/README.md links the page');
+    });
+
+
+    test('the repository\'s contribution guide keeps the contract order, copies no part of the constitution and lists the router\'s commands', () => {
+        const repo = path.resolve(__dirname, '..');
+        const guide = fs.readFileSync(path.join(repo, 'CONTRIBUTING.md'), 'utf8');
+
+        // The five sections, in the order the contract states.
+        const headings = [...guide.matchAll(/^## (\d)\. (.+)$/gm)].map((m) => [Number(m[1]), m[2]]);
+        assert.deepStrictEqual(
+            headings.map(([n]) => n),
+            [1, 2, 3, 4, 5],
+        );
+        const patterns = [/report a bug.*propose a change/i, /set up.*checks/i, /pull request/i, /conventions/i, /conduct/i];
+        headings.forEach(([, title], index) => assert.match(title, patterns[index]));
+
+        // The three generated blocks are present and paired.
+        for (const key of ['version', 'commands', 'workspaces']) {
+            assert.ok(guide.includes(`<!-- generated:${key} -->`) && guide.includes(`<!-- /generated:${key} -->`), `the ${key} block is paired`);
+        }
+
+        // A product file names no task identifier and no phase designator.
+        assert.ok(!/\bT-\d+[A-Z]\d+\b|\bPhase \d+\b|\bphase-\d+\b/.test(guide), 'no task identifier or phase designator');
+
+        // No three consecutive lines of the guide equal three consecutive lines of the constitution's sections 1 to 6.
+        const rules = fs.readFileSync(path.join(repo, '.magicspec', 'RULES.md'), 'utf8');
+        const from = rules.indexOf('## 1.');
+        const to = rules.indexOf('## 7.');
+        const lines = (text) => text.split(/\r?\n/).map((line) => line.trim());
+        const runs = (all) => all.slice(0, -2).map((_, i) => all.slice(i, i + 3).join('\n'));
+        const constitutionRuns = new Set(runs(lines(rules.slice(from, to))).filter((run) => run.replace(/\s/g, '').length > 40));
+        const copied = runs(lines(guide)).filter((run) => constitutionRuns.has(run));
+        assert.deepStrictEqual(copied, [], 'the guide links the constitution and does not copy it');
+
+        // The command table lists exactly the commands of the router (a stale table means: run the maintenance sync).
+        const router = fs.readFileSync(path.join(repo, 'skills', 'magicspec', 'SKILL.md'), 'utf8');
+        const routerCommands = [...router.matchAll(/^\| `([a-z-]+)` \|/gm)].map((m) => m[1]);
+        const block = guide.slice(guide.indexOf('<!-- generated:commands -->'), guide.indexOf('<!-- /generated:commands -->'));
+        const guideCommands = [...block.matchAll(/^\| `\/magicspec ([a-z-]+)` \|/gm)].map((m) => m[1]);
+        assert.deepStrictEqual(guideCommands, routerCommands, 'the guide\'s command table follows the router; run the maintenance sync');
+    });
+
 });
