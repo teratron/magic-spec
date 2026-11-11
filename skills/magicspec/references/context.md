@@ -15,7 +15,7 @@ Shared workspace resolution logic referenced by all workflows. Every workflow MU
 
 ## Step 0: Workspace Intent Detection (Pre-Resolution)
 
-> Governed by the Workspace Intent Routing protocol (WI-1 through WI-10). Run **before** the Resolution Chain for `/magicspec spec` — the sole workflow that authors new topical spec content and can therefore require workspace-creation routing. Read-only workflows (`/magicspec analyze`, `/magicspec graph`) and `task.md`/`rule.md` (operate only on already-registered specs/rules and never introduce a new domain topic) skip this step.
+> Governed by the Workspace Intent Routing protocol (WI-1 through WI-14). This step detects only the intent to **create** a workspace, so it runs **before** the Resolution Chain for `/magicspec spec` alone — the sole command that may create one (WI-11). Every other command skips it and routes among the registered workspaces through the Resolution Chain below.
 
 ### Step 0.1: Context Auto-Enrichment (MA-1 Pre-flight)
 
@@ -78,27 +78,37 @@ Skip Step 0 entirely on any of:
 
 ## Workspace Resolution Chain
 
-Auto-resolve workspace using priority order:
+Every command that acts on one workspace's artifacts — `spec`, `task`, `run`, `rule`, `analyze`, `status` — chooses it through the chain below (WI-11). The engine computes the chain, so identical input routes identically. Run
+
+`node scripts/executor.js resolve-workspace --command {command} --text "{request}"`
+
+adding `--workspace {name}` when the invocation named a registered workspace and `--paths {a,b}` for files the work touches that the text does not name, and take the `Workspace:` line of its output as the active workspace. `{request}` is the rest of the argument, plus the user's own words of this turn when they name files or a topic. The script reads the registry, the specification folders and the phase workbooks, writes nothing, and never creates a workspace. `graph` builds one graph of every workspace and does not route.
 
 | Priority | Source | Condition | Action |
 | --- | --- | --- | --- |
-| 1 | **Explicit arg** | `/magicspec {cmd} {workspace}` | Use it. Print: `"Active workspace: {workspace}."` Overrides `MAGIC_WORKSPACE` if both set. Unknown name → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
-| 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it. Unknown value → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
-| 3 | **`workspace.json`** | Single workspace | Use it silently. |
-| 3 | **`workspace.json`** | Multiple + `default` set | Use default. Print: `"Active workspace: {default}."` |
-| 3 | **`workspace.json`** | Multiple + no `default` | **Workspace Disambiguation** (below). |
+| 1 | **Explicit arg** | `/magicspec {cmd} {workspace}` | Use it (signal `argument`). Overrides `MAGIC_WORKSPACE` if both set. Unregistered name → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
+| 2 | **`MAGIC_WORKSPACE`** | Env var set | Use it (signal `environment`). Unregistered value → **HALT**: `"Unknown workspace '{x}'. Available: [{list}]."` |
+| 3 | **`workspace.json`** | Single workspace | Use it silently (signal `sole`). |
+| 3 | **`workspace.json`** | Multiple | The first signal of the list below that decides. |
 | 4 | **No `workspace.json`** | — | Transient pre-init state only: read root `.magicspec/`, then auto-init (`init.md`) bootstraps `.magicspec/{default}/` (WI-10) and resolution re-runs at Priority 3. Never write artifacts to flat root `.magicspec/`. Log: `"No workspace config found — scanning root .magicspec/."` |
+
+The signals of Priority 3 for several registered workspaces, in this order; the first that decides ends the chain:
+
+1. **location** — the workspace whose `scope` matches the most of the paths the request names or the work touches. Each path belongs to the most specific scope entry that matches it; a tie in the count decides nothing.
+2. **topic** — the one workspace whose lexicon (description, scope segments, specification names and headings) holds at least 30% of the request's words and more of them than any other.
+3. **work in flight** — the one workspace whose phase workbook records a task `In Progress`.
+4. the registry's `default`.
+5. **Workspace Disambiguation** (below).
+
+**Narrated once (WI-13).** With more than one workspace registered, print the `Narration:` line of the script once per invocation, verbatim: `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)`; when paths also matched other workspaces, the same line names them. A project with one workspace routes silently and the script prints no such line.
+
+**Registered folders only (WI-14).** No artifact is written under a state-folder directory that `workspace.json` does not register, and the scripts that write into a workspace folder refuse one it does not hold. Never compose a workspace path from a name taken from an example or from memory; use the name the chain returned.
 
 > **Path Notation**: throughout the workflows, `.magicspec/...` references (e.g. `.magicspec/TASKS.md`, `.magicspec/specifications/`) are shorthand for the resolved `.magicspec/{workspace}/...` path after this chain runs — the flat root form is never the literal artifact location (per WI-10).
 
 ## Workspace Disambiguation
 
-When multiple workspaces exist and no default is set:
-
-1. **Quick-scan** current directory/context (one-turn logic).
-2. **Select** most likely workspace by path matches, project markers (e.g., `src/` → `main`), or `scope` array coverage.
-3. **Notify** user (Zero-Prompt): `"Found {marker} — selecting {workspace}. Proceeding..."`
-4. No workspace `scope` array covers ≥50% of the current directory's files → choose by the Consequence Forecast (C27 DA-10) among the registered workspaces: every wrong pick costs the same (a later move), so the highest coverage wins, then the first in `workspace.json` order. Narrate `[DR] Selecting {workspace} — {criterion}. (Override: /magicspec {cmd} {other})`. Nothing is asked.
+When several workspaces are registered, no `default` is set and no signal decided, the last step of the chain chooses by the Consequence Forecast (C27 DA-10): every wrong pick costs the same, a later move, so the workspace whose `scope` covers the largest share of the project's files wins, then the first in `workspace.json` order. The script reports it as signal `coverage`, the `Narration:` line carries the share, and nothing is asked.
 
 ## Scope Auto-Apply
 

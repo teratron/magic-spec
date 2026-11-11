@@ -41,7 +41,16 @@ Reports:
 - **Bridge specs** — specs referencing files across more than one workspace. Either the spec should be extracted, or the boundary is drawn wrong.
 - **Orphaned conventions** — rules in `RULES.md` that no specification cites. Not necessarily dead, but untraceable.
 
-An extraction cache keyed on file content makes repeat runs cheap; unchanged specs are not re-parsed.
+An extraction cache keyed on file content makes repeat runs cheap; unchanged specs are not re-parsed, and the entries of files that changed or disappeared are removed after each build.
+
+To clear every cache the engine can rebuild — that extraction cache, the wiki, the page and the query snapshot of the graph, and the state files of `finalize` and, in the engine's own repository, of the project-metadata and documentation syncs — run:
+
+```bash
+node skills/magicspec/scripts/executor.js clean-cache --dry-run   # list each path with its size; remove nothing
+node skills/magicspec/scripts/executor.js clean-cache             # remove them
+```
+
+The command asks nothing: each cache is rebuilt by the command that owns it. It never removes recorded findings, feedback notes, saved graph baselines or the migration backups in the project root; it lists the backups with their age and the command that deletes one by hand.
 
 ## 4. Community Detection
 

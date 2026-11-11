@@ -18,7 +18,7 @@
     "test": "node --test tests/engine.js"
   },
   "devDependencies": {
-    "@biomejs/biome": "^2.6.5",
-    "fallow": "^3.40.0"
+    "@biomejs/biome": "^2.6.6",
+    "fallow": "^3.42.0"
   }
 }

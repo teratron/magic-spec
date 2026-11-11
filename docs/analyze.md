@@ -47,7 +47,7 @@ The engine enforces 8 mandatory invariants during every analysis:
 
 ```
 /magicspec analyze                             # Full project audit
-/magicspec analyze engine                      # Scoped to "engine" workspace
+/magicspec analyze {workspace}                 # Scoped to one workspace
 /magicspec analyze "check API coverage"        # Focused analysis on APIs
 /magicspec analyze docs "focus on examples"    # Focused analysis within workspace
 ```

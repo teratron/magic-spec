@@ -27,6 +27,15 @@ const { graphPaths } = require('./utils');
  */
 const EXTRACTION_VERSION = 2;
 
+/**
+ * Hashes of the entries this process read or wrote: the entries of the files the build used.
+ * The entry of a file that changed or disappeared is never asked for again, so whatever is not in
+ * this set when a build has succeeded is stale and `pruneUnused` removes it.
+ *
+ * @type {Set<string>}
+ */
+const inUse = new Set();
+
 // ───────────────────────────────────────────────────────────────────────────
 // Frontmatter Stripping (Markdown only)
 // ───────────────────────────────────────────────────────────────────────────
@@ -128,6 +137,7 @@ function loadCached(absPath, designAbs, rootDir = designAbs) {
         return null;
     }
 
+    inUse.add(hash);
     const entry = path.join(cacheDir(designAbs), `${hash}.json`);
     if (!fs.existsSync(entry)) return null;
 
@@ -155,6 +165,7 @@ function saveCached(absPath, result, designAbs, rootDir = designAbs) {
         return;
     }
 
+    inUse.add(hash);
     const entry = path.join(cacheDir(designAbs), `${hash}.json`);
     const tmp = `${entry}.tmp`;
 
@@ -204,11 +215,42 @@ function clearCache(designAbs) {
     return removed;
 }
 
+/**
+ * Removes the entries no file of the build asked for, and the temporary files a write that was
+ * interrupted left behind. Called by the owner after a build has succeeded: a failed build prunes
+ * nothing, so the entries an earlier build left stay until a build gets through. Files that are
+ * not cache entries are left alone, and the set of entries in use is emptied afterwards.
+ *
+ * @param {string} designAbs - Absolute path of the state folder.
+ * @returns {number} Number of files removed.
+ */
+function pruneUnused(designAbs) {
+    const dir = graphPaths(designAbs).cache;
+    let names;
+    try {
+        names = fs.readdirSync(dir);
+    } catch (_) {
+        return 0;
+    }
+    let removed = 0;
+    for (const name of names) {
+        const match = /^([0-9a-f]{64})\.json(\.tmp)?$/.exec(name);
+        if (!match || (!match[2] && inUse.has(match[1]))) continue;
+        try {
+            fs.unlinkSync(path.join(dir, name));
+            removed += 1;
+        } catch (_) {}
+    }
+    inUse.clear();
+    return removed;
+}
+
 module.exports = {
     fileHash,
     cacheDir,
     loadCached,
     saveCached,
     clearCache,
+    pruneUnused,
     stripFrontmatter,
 };

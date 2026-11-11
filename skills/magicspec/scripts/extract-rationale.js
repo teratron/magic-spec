@@ -171,7 +171,7 @@ function collectSourceFiles(dir, isIgnored, results = []) {
  * Each spec may contain a "## Canonical References" section with a
  * markdown table whose first column holds file/directory paths.
  *
- * @param {string} baseDesignDir - The design directory (e.g., `.magicspec/engine`).
+ * @param {string} baseDesignDir - The design directory (e.g., `.magicspec/{workspace}`).
  * @returns {Map<string, string>} Map from normalized file path to spec filename.
  */
 function loadCanonicalReferences(baseDesignDir) {

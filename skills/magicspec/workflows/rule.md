@@ -38,7 +38,7 @@ Examples: `/magicspec rule`, `/magicspec rule "tests are written before the code
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command rule [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Scope Guard**: Only modify §7. Sections 1-6 are the **Universal Constitution**; amend ONLY if explicitly targeted by user.
 3. **Narrate Writes (C25)**: Apply changes immediately and show the diff inline AS the write happens. Approval gates apply ONLY at C9 objective gates — Core-Amendment (§1–6), Constitutional Guard and Remove (a destructive action, gate 1). All other §7 operations are silent-but-narrated.
 4. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md`. If workspace RULES.md is needed but absent, auto-create from template (see Init action) before writing.
@@ -202,6 +202,7 @@ After all workflow steps (incl. Graph Refresh + Constitutional Review) and **bef
 
 ```
 Rule Checklist — {operation}
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Read full RULES.md (global + workspace if active); §1-6 core invariants respected
   ☐ Tier routing: target file confirmed (global RULES.md or workspace RULES.md)
   ☐ Scope: only §7 target (unless core amendment requested)

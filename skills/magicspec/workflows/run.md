@@ -24,7 +24,7 @@ Executes `TASKS.md` atomic tasks. Input: `.magicspec/TASKS.md`.
 - `"text"` — directed execution (task ID, phase, or focus)
 - `{workspace} "text"` — scoped + directed execution
 
-Examples: `/magicspec run`, `/magicspec run engine`, `/magicspec run "T-1A01"`, `/magicspec run "phase-2"`, `/magicspec run docs "validation tasks only"`.
+Examples: `/magicspec run`, `/magicspec run {workspace}`, `/magicspec run "T-1A01"`, `/magicspec run "phase-2"`, `/magicspec run docs "validation tasks only"`.
 
 **Scope:** code execution, task state management, and changelog generation. Task generation/orchestration is handled by `/magicspec task`. Specification authoring by `/magicspec spec`. Health auditing by `/magicspec analyze`.
 
@@ -39,19 +39,19 @@ Parse `[arg]` to determine execution mode:
 | Input | Detection | Result |
 | --- | --- | --- |
 | *(empty)* | No argument | **Full Execution**: resolve workspace via `context.md` §Workspace Resolution Chain, then execute next available `Todo` task(s) |
-| `engine` | Matches a workspace name in `workspace.json` | **Scoped Execution**: execute tasks only from that workspace's `TASKS.md` |
+| `{workspace}` | Matches a workspace name in `workspace.json` | **Scoped Execution**: execute tasks only from that workspace's `TASKS.md` |
 | `"T-1A01"` | Quoted text or non-workspace token matching `T-XXXX` pattern | **Targeted Task**: execute a specific task by ID |
 | `"phase-2"` | Quoted text or non-workspace token matching `phase-N` pattern | **Targeted Phase**: execute all `Todo` tasks in the specified phase |
 | `"only tests"` | Quoted text or non-workspace token (general directive) | **Directed Execution**: interpret text as execution filter or focus |
-| `engine "phase-1"` | First token is workspace + remaining is quoted text | **Scoped + Directed**: execution directive applied within workspace scope |
+| `{workspace} "phase-1"` | First token is workspace + remaining is quoted text | **Scoped + Directed**: execution directive applied within workspace scope |
 
 > **Workspace Fallback (Modes A, C)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the directive.
-> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec run "engine"`.
+> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec run "{workspace}"`.
 > **Handoff Propagation**: when recommending `/magicspec task` for re-planning, propagate the workspace context: `/magicspec task {workspace}`.
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command run [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Rules First**: Read `RULES.md` before any code edit. Adhere to project conventions.
 2.5. **Live Memory (STATE.md)**: Before any execution, read `.magicspec/{workspace}/STATE.md`.
    - `Blockers` non-empty → display blockers before proceeding.
@@ -204,6 +204,7 @@ After all workflow steps (incl. Phase Completion or Plan Completion) and **befor
 
 ```
 Checklist — {operation}
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Spec Stability: All active-phase specs confirmed Stable in INDEX.md before execution (the spec a `stabilizes:` task names excepted)
   ☐ Rules Parity: Current RULES.md version matches TASKS.md base; no drift warnings ignored
   ☐ TASKS.md read first; execution bound to spec section

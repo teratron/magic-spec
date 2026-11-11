@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { enginePath } = require('./engine-path');
-const { writeFileSafe } = require(enginePath('scripts', 'utils'));
+const { writeFileSafe, mkdirSafe, isDryRun, STATE_DIR_NAME } = require(enginePath('scripts', 'utils'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOCUMENTATION SYNC — Real Content Sync, Not Version Stamping
@@ -30,7 +30,7 @@ const { writeFileSafe } = require(enginePath('scripts', 'utils'));
  *   2. docs/*.md no longer get a global `vX.Y.Z` regex sweep. Each doc has
  *      a single anchored "Sync Note" line that holds the engine version.
  *   3. Sync Notes are only refreshed when the corresponding workflow source
- *      was modified (per stored hash in `.cache/.docs-state.json`) or when
+ *      was modified (per stored hash in `.magicspec/.cache/docs-state.json`) or when
  *      the engine version itself bumped — whichever applies.
  *   4. Triggers / Slash command lines are propagated from workflow frontmatter
  *      using anchored line patterns; if a doc lacks the line, we leave it
@@ -40,10 +40,15 @@ const { writeFileSafe } = require(enginePath('scripts', 'utils'));
 const projectRoot = process.cwd();
 const versionFile = enginePath('.version');
 const templatePath = enginePath('templates', 'contributing.md');
-// State cache lives under .cache/ — it's a dev-only artifact owned by this
-// script, must not ship with the distributable engine folder.
-const stateCacheDir = path.join(projectRoot, '.cache');
-const stateFile = path.join(stateCacheDir, '.docs-state.json');
+// The state cache is the state folder's own `.cache/`, beside the finalize and project-meta states:
+// one folder holds every cache, and `clean-cache` reaches it. It is a dev-only artifact owned by this
+// script and must not ship with the distributable engine folder.
+const stateCacheDir = path.join(projectRoot, STATE_DIR_NAME, '.cache');
+const stateFile = path.join(stateCacheDir, 'docs-state.json');
+// Where the state lived before, in a `.cache/` at the project root: read once so the first sync after
+// the move does not re-stamp every Sync Note, then retired.
+const legacyStateDir = path.join(projectRoot, '.cache');
+const legacyStateFile = path.join(legacyStateDir, '.docs-state.json');
 
 const contributingPath = path.join(projectRoot, 'CONTRIBUTING.md');
 const rulesPath = path.join(projectRoot, '.magicspec', 'RULES.md');
@@ -66,9 +71,10 @@ function defaultState() {
 }
 
 function readState() {
-    if (!fs.existsSync(stateFile)) return defaultState();
+    const source = [stateFile, legacyStateFile].find((candidate) => fs.existsSync(candidate));
+    if (!source) return defaultState();
     try {
-        const raw = JSON.parse(fs.readFileSync(stateFile, 'utf8'));
+        const raw = JSON.parse(fs.readFileSync(source, 'utf8'));
         raw.workflows ||= {};
         raw.skills ||= {};
         return raw;
@@ -78,8 +84,23 @@ function readState() {
 }
 
 function writeState(state) {
-    if (!fs.existsSync(stateCacheDir)) fs.mkdirSync(stateCacheDir, { recursive: true });
+    mkdirSafe(stateCacheDir);
     writeFileSafe(stateFile, JSON.stringify(state, null, 2) + '\n');
+    retireLegacyState();
+}
+
+/**
+ * Removes the state file the earlier location left, and that location's folder when nothing else
+ * is in it. A preview (dry run) retires nothing.
+ */
+function retireLegacyState() {
+    if (isDryRun() || !fs.existsSync(legacyStateFile)) return;
+    fs.rmSync(legacyStateFile, { force: true });
+    try {
+        fs.rmdirSync(legacyStateDir);
+    } catch {
+        /* the folder holds something else: not ours to remove */
+    }
 }
 
 function sha(content) {

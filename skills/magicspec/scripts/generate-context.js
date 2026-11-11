@@ -15,6 +15,7 @@ const {
     isSkippedDir,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
+    unregisteredWorkspaceMessage,
 } = require('./utils');
 
 // Every path below is relative to the project root: run from there whatever directory the caller is in.
@@ -31,6 +32,12 @@ const contextPath = path.join(designDir, 'CONTEXT.md');
 // ───────────────────────────────────────────────────────────────────────────
 // Directory Check
 // ───────────────────────────────────────────────────────────────────────────
+
+const unregistered = unregisteredWorkspaceMessage(designDir);
+if (unregistered) {
+    console.error(`HALT: ${unregistered}`);
+    process.exit(1);
+}
 
 if (!fs.existsSync(designDir) || !fs.statSync(designDir).isDirectory()) {
     console.error(`Error: ${designDir} directory not found`);

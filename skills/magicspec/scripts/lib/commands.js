@@ -69,6 +69,12 @@ const COMMANDS = {
             '--verify-headers': { kind: 'bool', help: 'Compare each specification header with the registry' },
         },
     },
+    'clean-cache': {
+        summary: 'Remove the caches the engine can rebuild (graph, wiki, state files); never findings, notes or backups.',
+        options: {
+            '--dry-run': { kind: 'bool', help: 'List what would be removed with its size; remove nothing' },
+        },
+    },
     'create-workspace': {
         summary: 'Create a workspace folder and register it in workspace.json.',
         options: {
@@ -162,6 +168,15 @@ const COMMANDS = {
         summary: 'Remove the engine from this project: the marked projections, the hook and the engine folder. Keeps ' + STATE_DIR_NAME + '/ and your files.',
         options: {
             '--dry-run': { kind: 'bool', help: 'List what would be removed; change nothing' },
+        },
+    },
+    'resolve-workspace': {
+        summary: 'Choose the workspace a command acts on, and say which signal chose it. Writes nothing.',
+        options: {
+            '--command': { kind: 'value', help: 'The command being routed, for the narration line' },
+            '--text': { kind: 'value', help: 'The request as typed: its paths and words are the location and topic signals' },
+            '--paths': { kind: 'value', help: 'Comma-separated paths the work touches, in addition to those in the text' },
+            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
         },
     },
     'resume-state': {

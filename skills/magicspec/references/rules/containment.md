@@ -75,7 +75,7 @@ both legitimate channels.
 ### Example
 
 ```plaintext
-BAD : // Implements T-2B03 (see .magicspec/engine/tasks/phase-2.md)
+BAD : // Implements T-2B03 (see .magicspec/{workspace}/tasks/phase-2.md)
 GOOD: // Reject zero-length payloads: the upstream queue treats them as poison messages.
 GOOD: (commit message) feat(parser): add payload guard [T-2B03]
 ```

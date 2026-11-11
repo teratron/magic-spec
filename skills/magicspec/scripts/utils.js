@@ -583,6 +583,58 @@ function retireLegacyGraph(designAbs, rootDir, group) {
 const WORKSPACE_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9_-]{0,63}$/;
 
 /**
+ * The one sentence for a workspace name the registry does not hold: it names the name and
+ * lists what is registered, so the person can correct the typo instead of guessing.
+ *
+ * @param {string} name - The name that was given.
+ * @param {string[]} registered - The names `workspace.json` registers.
+ * @returns {string} Message without a `HALT:` prefix.
+ */
+function unknownWorkspaceMessage(name, registered) {
+    return `Unknown workspace '${name}'. Available: [${registered.join(', ')}].`;
+}
+
+/**
+ * The names a parsed `workspace.json` registers: the keys whose entry is an object. An entry
+ * that is `null` or a string registers nothing.
+ *
+ * @param {{workspaces?: unknown}|null|undefined} registry - The parsed registry.
+ * @returns {string[]} Registered names, in registry order.
+ */
+function registeredWorkspaceNames(registry) {
+    const entries = registry?.workspaces;
+    if (!entries || typeof entries !== 'object') return [];
+    return Object.keys(entries).filter((name) => entries[name] && typeof entries[name] === 'object');
+}
+
+/**
+ * The check every script that writes into a workspace folder makes before it writes: the folder
+ * must be one the registry beside it holds. A folder under the state folder that the registry does
+ * not hold is how an artifact lands outside every workspace — a mistyped name, a name copied from
+ * an example, a path composed by an agent.
+ *
+ * Only a judgment the registry can make is made. The state folder itself, a folder with no
+ * registry beside it (a project that is not initialized yet, a custom design root) and a registry
+ * without a `workspaces` object all pass: there is nothing to compare with.
+ *
+ * @param {string} workspaceDir - The folder a script is about to write into, absolute or relative to the working directory.
+ * @returns {string|null} The message for an unregistered folder (without `HALT:`); `null` when the folder may be written.
+ */
+function unregisteredWorkspaceMessage(workspaceDir) {
+    const abs = path.resolve(workspaceDir);
+    let registry;
+    try {
+        registry = JSON.parse(fs.readFileSync(path.join(path.dirname(abs), 'workspace.json'), 'utf8'));
+    } catch {
+        return null;
+    }
+    if (!registry?.workspaces || typeof registry.workspaces !== 'object') return null;
+    const registered = registeredWorkspaceNames(registry);
+    const name = path.basename(abs);
+    return registered.includes(name) ? null : unknownWorkspaceMessage(name, registered);
+}
+
+/**
  * Parses an argv slice under one grammar shared by every engine entry point.
  *
  * Both `--flag=value` and `--flag value` are accepted for value-taking flags —
@@ -986,6 +1038,9 @@ module.exports = {
     ROOT_ONLY_NOISE_DIRS,
     isSkippedDir,
     WORKSPACE_NAME_RE,
+    unknownWorkspaceMessage,
+    registeredWorkspaceNames,
+    unregisteredWorkspaceMessage,
     VOLATILE_STATE_FILES,
     hasEngineWriteTooling,
     maintenanceScript,

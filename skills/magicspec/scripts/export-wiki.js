@@ -387,14 +387,15 @@ function writeAtomic(absPath, content) {
 }
 
 /**
- * Removes every .md file inside the wiki directory (keeps the directory).
+ * Removes every page inside the wiki directory (keeps the directory): the `.md` files, and the
+ * `.md.tmp` a write that was interrupted left behind, which no later write would ever replace.
  *
  * @param {string} dir
  */
 function pruneWiki(dir) {
     if (!fs.existsSync(dir)) return;
     for (const name of fs.readdirSync(dir)) {
-        if (name.endsWith('.md')) {
+        if (name.endsWith('.md') || name.endsWith('.md.tmp')) {
             try {
                 fs.unlinkSync(path.join(dir, name));
             } catch (_) {}

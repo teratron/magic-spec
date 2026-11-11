@@ -7,7 +7,7 @@ description: Workflow for analyzing existing projects and generating initial spe
 Audits project health, syncs registries, and reverse-engineers code into `.magicspec/` spec proposals.
 
 **Triggers**: `/magicspec analyze [arg]`, "Ventilate", "Analyze project", "Scan project", "Re-analyze".
-**Examples**: `/magicspec analyze`, `/magicspec analyze engine`, `/magicspec analyze "check API coverage"`, `/magicspec analyze engine "focus on tests"`.
+**Examples**: `/magicspec analyze`, `/magicspec analyze {workspace}`, `/magicspec analyze "check API coverage"`, `/magicspec analyze {workspace} "focus on tests"`.
 
 **Contents:**
 
@@ -40,7 +40,7 @@ Performs a deep "Ventilation" scan: spec/code drift, missing coverage, engine me
 - `{workspace} "text"` — focused analysis within a workspace
 - `first-time` — first-time analysis of an existing codebase (Mode A); Mode C recommends it when the registry is empty
 
-Examples: `/magicspec analyze`, `/magicspec analyze engine`, `/magicspec analyze "check API"`, `/magicspec analyze docs "focus on examples"`.
+Examples: `/magicspec analyze`, `/magicspec analyze {workspace}`, `/magicspec analyze "check API"`, `/magicspec analyze docs "focus on examples"`.
 
 1. **Analyze & Ventilate**: run the steps below for the mode the arguments select.
 2. **Report**: provide a consolidated report of findings and suggested repairs.
@@ -48,7 +48,7 @@ Examples: `/magicspec analyze`, `/magicspec analyze engine`, `/magicspec analyze
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command analyze [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md` (do not prompt user).
 3. **Read-Only for user specs and project code**: never modify spec content (`.magicspec/specifications/**/*.md`, `PLAN.md`, `TASKS.md`, `RULES.md`) or project source code without explicit user approval. Engine-config artifacts (`workspace.json`, `INDEX.md` registry fields, wiki) may be auto-repaired for deterministic mechanical drift — narrate each fix with a `(Revert: git restore {file})` note.
 4. **Artifact-First**: Write proposals/reports to agent artifacts. Modes A/B dispatch **new** specs to `.magicspec/` immediately (C9 default, Mode A step 3); changes to existing specs go through the approval gates of Invariant 3.
@@ -68,11 +68,11 @@ Parse `[arg]` to determine analysis mode:
 | --- | --- | --- |
 | *(empty)* | No argument | **Full Analysis**: resolve workspace via §Workspace Resolution, then Mode C → A/B |
 | `first-time` | Reserved keyword, unquoted and not a workspace name (also `{workspace} first-time`) | **First-Time Analysis**: Mode A directly, without the Mode C precedence. If `INDEX.md` already lists specs, Mode B runs instead |
-| `engine` | Matches a workspace name in `workspace.json` | **Workspace Analysis**: Mode C (with Structural Integrity) → A/B scoped to that workspace |
+| `{workspace}` | Matches a workspace name in `workspace.json` | **Workspace Analysis**: Mode C (with Structural Integrity) → A/B scoped to that workspace |
 | `"check API coverage"` | Quoted text or text that does NOT match any workspace name | **Focused Analysis**: Mode D — interpret text as focus directive |
-| `engine "focus on tests"` | First token is workspace + remaining is quoted text | **Workspace + Focus**: Mode D scoped to workspace |
+| `{workspace} "focus on tests"` | First token is workspace + remaining is quoted text | **Workspace + Focus**: Mode D scoped to workspace |
 
-> **Disambiguation**: a single unquoted word that matches both a workspace name and a focus keyword → workspace takes priority. Force focus interpretation by quoting: `/magicspec analyze "engine"`.
+> **Disambiguation**: a single unquoted word that matches both a workspace name and a focus keyword → workspace takes priority. Force focus interpretation by quoting: `/magicspec analyze "{workspace}"`.
 
 ## Workspace Resolution
 
@@ -188,7 +188,7 @@ Both first-time analysis (A) and re-analysis (B) start with the same pre-flight 
 ### [Mode C] Project Ventilation
 
 *Trigger*: `/magicspec analyze`, `/magicspec analyze {workspace}`, "Ventilate", "Ventilate {workspace}".
-*Examples*: `/magicspec analyze`, `/magicspec analyze engine`, "Ventilate engine".
+*Examples*: `/magicspec analyze`, `/magicspec analyze {workspace}`, "Ventilate {workspace}".
 
 > **Mode Precedence**: when `/magicspec analyze` is triggered and `INDEX.md` is empty, run Mode C first (self-check + registry audit). After the Mode C report is delivered, narrate `[DR] Next: /magicspec analyze first-time — the registry is empty. (Override: stop here)` and stop. Mode A never starts inside the same invocation — the user may only want the audit — and is entered only through the explicit `first-time` argument.
 > **Audit Policy**: this mode collects ALL issues (Drift, Gaps, Violations) before reporting. Bypassed HALT conditions in this mode: `ENGINE_INTEGRITY`, Existence Guard, `VERSION_DRIFT`, C12 Quarantine. Depth Control does not apply either (Core Invariant 6 — Mode C is read-only; size is noted, not used to choose a scan mode). Report-delivery is the only HALT point.
@@ -370,7 +370,7 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
   → /magicspec spec create engine-scripts
 
 ### Structural Improvements
-- 🔧 Workspace `engine` WC2 duplicates global C15 (`RULE_RETIRE_CANDIDATE`, superseded)
+- 🔧 Workspace `{workspace}` WC2 duplicates global C15 (`RULE_RETIRE_CANDIDATE`, superseded)
   → /magicspec rule remove WC2
 
 ### No Action Needed
@@ -401,6 +401,7 @@ This is a `.magicspec/` write — it does NOT trigger C14 (engine meta bump).
 
 ```
 Analysis Checklist — Mode A/B
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Pre-flight check passed (no invalid registry/meta drift)
   ☐ Depth Control obeyed; size-assessed before scanning
   ☐ Stack/Arch inferred; modules identified
@@ -414,6 +415,7 @@ Analysis Checklist — Mode A/B
   ☐ Engineer Posture (C25): no inline approval menu; user adjusts via /magicspec spec amend or git restore; an absent optional argument runs the default and is never asked for (E7)
 
 Analysis Checklist — Mode C: Ventilation
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Depth Control noted (advisory only; Mode C never HALTs on file count — size is informational, not a gate)
   ☐ Self-check complete: engine integrity status noted (non-halting)
   ☐ Registry audit: orphans and unregistered files identified
@@ -445,6 +447,7 @@ Analysis Checklist — Mode C: Ventilation
   ☐ Engineer Posture (C25): findings narrated declaratively; advisory items as actionable links, not approval prompts; no option menus; an absent optional argument runs the default and is never asked for (E7)
 
 Analysis Checklist — Mode D: Focused
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Focus directive parsed and matched to project area
   ☐ Targeted scan completed (not full project)
   ☐ Focused Gap Report generated for matched area only
@@ -454,7 +457,7 @@ Analysis Checklist — Mode D: Focused
   ☐ Engineer Posture (C25): focus area findings narrated; no approval menus; an absent optional argument runs the default and is never asked for (E7)
 ```
 
-*Examples*: `/magicspec analyze "check API coverage"`, `/magicspec analyze engine "focus on tests"`.
+*Examples*: `/magicspec analyze "check API coverage"`, `/magicspec analyze {workspace} "focus on tests"`.
 
 ## Handoffs
 

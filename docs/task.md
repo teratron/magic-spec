@@ -30,7 +30,7 @@ Key Goals:
 
 ```
 /magicspec task                              # Full planning for the resolved workspace
-/magicspec task engine                       # Scoped planning for "engine" workspace
+/magicspec task {workspace}                  # Scoped planning for one workspace
 /magicspec task update                       # Re-plan against the current registry and rules (no directive)
 /magicspec task "decompose phase-2"          # Guided planning with focus
 /magicspec task docs "only new specs"        # Scoped + guided planning

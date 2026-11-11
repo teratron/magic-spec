@@ -14,8 +14,7 @@ const {
     WORKSPACE_NAME_RE,
 } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
-const { listPhaseFiles } = require('./lib/phase-files');
-const { listTrackingEntries } = require('./lib/tracking-entries');
+const { collectInFlight } = require('./lib/in-flight');
 const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
 
@@ -171,36 +170,6 @@ function readStateField(stripped, raw, labelRe) {
         return rawMatch ? rawMatch[1].trim() : null;
     }
     return null;
-}
-
-/**
- * Collects the tasks recorded as in flight in one workspace.
- *
- * Live phase workbooks are `tasks/phase-{N}[{track}].md`; archived phases live
- * elsewhere and hold no open work. The legacy flat layout keeps its entries in
- * `TASKS.md`, which the new layout leaves free of them.
- *
- * @param {string} wsDir - Absolute workspace design directory.
- * @returns {{ id: string, title: string, attempts: number }[]}
- */
-function collectInFlight(wsDir) {
-    const sources = listPhaseFiles(path.join(wsDir, 'tasks')).map(({ file }) =>
-        path.join(wsDir, 'tasks', file),
-    );
-    sources.push(path.join(wsDir, 'TASKS.md'));
-
-    const inFlight = [];
-    for (const source of sources) {
-        const read = readText(source);
-        if (read.text === undefined) continue;
-        const stripped = stripQuoted(read.text);
-        for (const entry of listTrackingEntries(stripped, read.text)) {
-            if (entry.status && /^In Progress\b/i.test(entry.status)) {
-                inFlight.push({ id: entry.id, title: entry.title, attempts: entry.attempts });
-            }
-        }
-    }
-    return inFlight;
 }
 
 /**

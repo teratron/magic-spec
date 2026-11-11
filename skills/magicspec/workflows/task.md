@@ -25,7 +25,7 @@ Generates `PLAN.md` (Phases) and `TASKS.md` (Atomic Tasks). Input: `.magicspec/s
 - `"text"` — guided planning with focus or instructions
 - `{workspace} "text"` — scoped + guided planning
 
-Examples: `/magicspec task`, `/magicspec task engine`, `/magicspec task update`, `/magicspec task "decompose phase-2 in more detail"`, `/magicspec task docs "only new specs"`.
+Examples: `/magicspec task`, `/magicspec task {workspace}`, `/magicspec task update`, `/magicspec task "decompose phase-2 in more detail"`, `/magicspec task docs "only new specs"`.
 
 **Scope:**
 
@@ -50,18 +50,18 @@ Parse `[arg]` to determine planning mode:
 | Input | Detection | Result |
 | --- | --- | --- |
 | *(empty)* | No argument | **Full Planning**: resolve workspace via `context.md` §Workspace Resolution Chain, then plan all specs |
-| `engine` | Matches a workspace name in `workspace.json` | **Scoped Planning**: plan only specs registered in that workspace's `INDEX.md` |
-| `update` | Reserved keyword, unquoted and not a workspace name (also `engine update`) | **Plan Update**: Full (or Scoped) Planning with no directive — re-evaluates the existing plan against the current registry and rules (Step 8, Update Mode). This is the command the engine names wherever a plan has gone stale; it is a mode, not a planning directive, so the Guided Planning Filter never applies to it |
+| `{workspace}` | Matches a workspace name in `workspace.json` | **Scoped Planning**: plan only specs registered in that workspace's `INDEX.md` |
+| `update` | Reserved keyword, unquoted and not a workspace name (also `{workspace} update`) | **Plan Update**: Full (or Scoped) Planning with no directive — re-evaluates the existing plan against the current registry and rules (Step 8, Update Mode). This is the command the engine names wherever a plan has gone stale; it is a mode, not a planning directive, so the Guided Planning Filter never applies to it |
 | `"decompose phase-2"` | Quoted text, or text that matches neither a workspace name nor `update` | **Guided Planning**: interpret text as planning directive (focus, instruction, filter) |
-| `engine "only new specs"` | First token is workspace + remaining is quoted text | **Scoped + Guided**: planning directive applied within workspace scope |
+| `{workspace} "only new specs"` | First token is workspace + remaining is quoted text | **Scoped + Guided**: planning directive applied within workspace scope |
 
 > **Workspace Fallback (Modes A, C, and `update`)**: when no workspace specified, resolve via Core Invariant #1 (Zero-Prompt chain) before applying the planning directive. The plan is written for that one workspace; Step 2 (Pre-Planning Stabilization) still iterates every registered workspace, default first. The directive text filters or guides planning but does not replace workspace resolution.
-> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec task "engine"`. The same quoting turns `update` into a directive: `/magicspec task "update"`.
+> **Disambiguation**: a single unquoted word that matches both a workspace name and a directive keyword → workspace takes priority. Force directive interpretation by quoting: `/magicspec task "{workspace}"`. The same quoting turns `update` into a directive: `/magicspec task "update"`.
 > **Handoff Propagation**: when recommending `/magicspec run` after planning, propagate the workspace context: `/magicspec run {workspace}`.
 
 ## Core Invariants (Mandatory)
 
-1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows.
+1. **Context (Zero-Prompt)**: Apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command task [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 2. **Registry Integrity**: Account for every spec registered in `INDEX.md` before planning — read the registry entries and the wiki, and open a spec body only where a step needs it. No spec may be left unaccounted for.
 3. **Auto-Init**: If `.magicspec/` or system files missing, silently execute `references/init.md` (do not prompt user).
    - **Intent Preservation**: if `init.md` or `analyze.md` is sub-delegated during this workflow, memo the original user intent before delegating. After delegation resolves, resume explicitly: *"Resuming: '{original intent}'."* Intent MUST NOT be silently dropped across workflow boundaries.
@@ -195,6 +195,7 @@ After all workflow steps (incl. Context Regeneration + Graph Refresh) and **befo
 
 ```
 Task Workflow Checklist — {operation}
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ All registered specs read; no orphans/phantoms left unaddressed
   ☐ Pre-Planning Stabilization: Trust Mode batch applied (L1→L2 order); field normalization done
   ☐ Stabilization Review: batch-promoted specs passed `spec.md` Post-Update Review gate; review failures reverted (not left Stable)

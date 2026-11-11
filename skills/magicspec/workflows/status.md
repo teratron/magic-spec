@@ -16,10 +16,10 @@ Read-only resume briefing: where the project stands, what was last done and deci
 
 **Trigger:** `/magicspec status [arg]`. Arguments:
 
-- *(empty)* — briefing for the resolved (default) workspace
+- *(empty)* — briefing for the resolved workspace
 - `{workspace}` — briefing for a specific workspace
 
-Examples: `/magicspec status`, `/magicspec status engine`.
+Examples: `/magicspec status`, `/magicspec status {workspace}`.
 
 1. **Load**: resolve the workspace and read its `STATE.md`, `TASKS.md` and the registry (Step 1 below).
 2. **Brief**: render the seven-section briefing (Header → Position → Progress → Blockers & Constraints → Decisions → Engine → Next).
@@ -28,7 +28,7 @@ Examples: `/magicspec status`, `/magicspec status engine`.
 ## Core Invariants (Mandatory)
 
 1. **Read-Only (SC-4)**: this workflow performs ZERO writes — no STATE.md update, no finalize call, no version bump, no graph refresh. About to write a file? **STOP** — that is a defect, not a feature. (A script this briefing calls — `resume-state` — may record a non-fatal finding to the runtime diagnostics sink under `.magicspec/.cache/`; the sink is not an artifact and that is not a write in this sense.)
-2. **Context (Zero-Prompt)**: apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Optional `{workspace}` argument overrides.
+2. **Context (Zero-Prompt)**: apply [context.md](../references/context.md) as a whole — every section applies unless it names other workflows. Choose the workspace first, by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command status [--workspace {name}] --text "{request}"` (it writes nothing; `--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line as the active workspace and print its `Narration:` line once.
 3. **One Next Step (DA-6)**: the briefing ends with exactly one recommended command, narrated as a Decision Record — never a question, never an option menu. When `Next Action` states that nothing is pending, or is a note that names no command, it ends with that statement or note and no command; the briefing never invents one.
 4. **Informational Drift**: engine-version drift is reported as a briefing line; never prompt, never auto-run another workflow. Status is exempt from the upgrade-detection prompt (same exemption class as analyze).
 5. **Graceful Degradation**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})`, never a crash of the whole briefing.
@@ -37,7 +37,7 @@ Examples: `/magicspec status`, `/magicspec status engine`.
 
 ### 1. Resolve & Load
 
-1. Resolve the workspace (context.md chain; `{workspace}` argument overrides).
+1. Resolve the workspace with `resolve-workspace` (Core Invariant 2; a `{workspace}` argument wins).
 2. Read `.magicspec/{workspace}/STATE.md` (primary source), `.magicspec/{workspace}/TASKS.md`, the `**Engine Version:**` field of `.magicspec/INDEX.md`, and `.version`.
 3. `STATE.md` missing → render the Bootstrap Briefing (Step 3) instead.
 
@@ -69,6 +69,7 @@ Examples: `/magicspec status`, `/magicspec status engine`.
 
 ```
 Status Checklist
+  ☐ Workspace Routing: `resolve-workspace` chose the workspace before any workspace file was read; with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ Read-only honored: zero writes, no finalize, no version bump
   ☐ Briefing rendered in fixed section order (Header → Next)
   ☐ Blocking Constraints surfaced (mandatory reading)

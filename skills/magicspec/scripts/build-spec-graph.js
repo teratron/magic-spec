@@ -1154,9 +1154,12 @@ function printSummary(analysis) {
 // ═══════════════════════════════════════════════════════════════════════════
 
 /**
- * Main entry point. Orchestrates the full pipeline.
+ * Runs the pipeline and writes the output the flags ask for.
+ *
+ * @returns {boolean} True when the human-readable summary was printed (the only output that
+ *          may carry a line about the cache).
  */
-function main() {
+function buildAndExport() {
     // 1. Extract workspaces
     const workspaceScopes = extractWorkspaces();
     const workspaceNames = Object.keys(workspaceScopes);
@@ -1180,7 +1183,7 @@ function main() {
         const json = toJSON(analysis);
         if (!outFlag) {
             console.log(json);
-            return;
+            return false;
         }
         const absOut = outPath
             ? path.resolve(outPath)
@@ -1192,7 +1195,7 @@ function main() {
                 `(${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges, ` +
                 `~${Math.round(json.length / 3.5)} tokens; read only the part you need)`,
         );
-        return;
+        return false;
     }
 
     if (htmlFlag) {
@@ -1213,10 +1216,28 @@ function main() {
         console.log(
             `  ${analysis.summary.total_nodes} nodes, ${analysis.summary.total_edges} edges`,
         );
-        return;
+        return false;
     }
 
     printSummary(analysis);
+    return true;
+}
+
+/**
+ * Entry point. After a build has written its output, the extraction cache is pruned to the files
+ * the build used: the entry of a file that changed or disappeared is never asked for again, and
+ * nothing else would ever remove it. A build that throws prunes nothing, and neither does one that
+ * bypassed the cache (it used no entry, so every entry would look stale).
+ */
+function main() {
+    const printedSummary = buildAndExport();
+    if (noCacheFlag) return;
+    const removed = graphCache.pruneUnused(designAbs);
+    if (printedSummary && removed > 0) {
+        console.log(
+            `Extraction cache : pruned ${removed} stale ${removed === 1 ? 'file' : 'files'}`,
+        );
+    }
 }
 
 main();

@@ -31,7 +31,7 @@ Key Goals:
 
 ```
 /magicspec run                                 # Full execution across all workspaces
-/magicspec run engine                          # Scoped execution within a workspace
+/magicspec run {workspace}                     # Scoped execution within a workspace
 /magicspec run "T-1A01"                        # Execute a specific task by ID
 /magicspec run "phase-2"                       # Execute all Todo tasks in a specific phase
 /magicspec run docs "validation only"          # Scoped + directed execution

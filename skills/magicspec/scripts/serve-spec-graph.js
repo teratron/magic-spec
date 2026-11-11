@@ -222,7 +222,7 @@ const TOOLS = [
     {
         name: 'get_node',
         description:
-            'Returns full details for a specific node by its id (e.g. "spec:engine/l1-engine-core", "ws:engine", "conv:C1").',
+            'Returns full details for a specific node by its id (e.g. "spec:{workspace}/l1-core", "ws:{workspace}", "conv:C1").',
         inputSchema: {
             type: 'object',
             required: ['id'],

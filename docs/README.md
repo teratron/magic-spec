@@ -115,10 +115,10 @@ The agent will run the **Run** workflow, picking the most prioritized task and i
 All three core workflows support **argument routing** to scope operations to a specific workspace or provide directives:
 
 ```bash
-/magicspec spec engine "new features"      # Author specs in "engine" workspace
-/magicspec task engine                     # Plan only for the "engine" workspace
+/magicspec spec {workspace} "new features" # Author specs in one workspace
+/magicspec task {workspace}                # Plan only for one workspace
 /magicspec task "decompose phase-2"        # Guided planning with focus
-/magicspec run engine "phase-1"            # Execute phase 1 in "engine" workspace
+/magicspec run {workspace} "phase-1"       # Execute phase 1 in one workspace
 /magicspec analyze "check API coverage"    # Focused analysis on a specific area
 ```
 

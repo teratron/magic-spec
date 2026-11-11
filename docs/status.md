@@ -65,7 +65,7 @@ With no argument the workspace resolves through the standard priority chain. Pas
 
 ```
 /magicspec status                # Resolved workspace
-/magicspec status engine         # Explicit workspace
+/magicspec status {workspace}    # Explicit workspace
 ```
 
 ## 6. Relationship to Other Workflows

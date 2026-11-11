@@ -16,6 +16,7 @@ const {
     engineRoot,
     normalizePath,
     STATE_DIR_NAME,
+    unregisteredWorkspaceMessage,
 } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { countItems } = require('./lib/checklist');
@@ -412,6 +413,9 @@ function workspaceNameOf(designDir) {
  * @returns {void}
  */
 function updateState(designDir, patch, options = {}) {
+    // Before the lock file, which is itself a write: a folder the registry does not hold gets nothing.
+    const unregistered = unregisteredWorkspaceMessage(designDir);
+    if (unregistered) throw new Error(unregistered);
     const stateRoot =
         path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
     const lockPath = path.join(stateRoot, '.cache', `state-${workspaceNameOf(designDir)}.lock`);
@@ -948,6 +952,12 @@ function runCli() {
     // Relative design directories are relative to the project root, wherever the caller stands.
     process.chdir(resolveProjectRoot());
     const workspaceArg = values['--workspace'] || process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
+
+    const unregistered = unregisteredWorkspaceMessage(workspaceArg);
+    if (unregistered) {
+        console.error(`[update-state] HALT: ${unregistered}`);
+        process.exit(1);
+    }
 
     updateState(workspaceArg, parsed, opts);
 }

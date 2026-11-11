@@ -5,7 +5,12 @@
 require('./lib/commands').guardArgv('archive-phases', module);
 
 const path = require('path');
-const { resolveProjectRoot, executorHint, STATE_DIR_NAME } = require('./utils');
+const {
+    resolveProjectRoot,
+    executorHint,
+    STATE_DIR_NAME,
+    unregisteredWorkspaceMessage,
+} = require('./utils');
 const { findArchiveCandidates, archiveCompletedPhases } = require('./lib/phase-archiver');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -86,6 +91,12 @@ function main() {
     const projectRoot = resolveProjectRoot();
     const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
     const wsDir = path.resolve(projectRoot, designDir);
+
+    const unregistered = unregisteredWorkspaceMessage(wsDir);
+    if (unregistered) {
+        console.error(`HALT: ${unregistered}`);
+        return 1;
+    }
 
     if (opts.check) {
         const candidates = findArchiveCandidates(wsDir);

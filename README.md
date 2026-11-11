@@ -27,7 +27,7 @@ your-project/
 > **One skill, one command.** Everything lives in a single folder, `skills/magicspec/`. You type `/magicspec <command> [argument]`; the host loads the router (`SKILL.md`), which sends the command to the workflow body under `workflows/`. No per-command entry is written into your project. What a host needs outside the folder (the always-on rule and the link to the skill) is generated from it by `init --host=<name>` and carries a marker, so `remove` deletes exactly that and nothing of yours.
 
 > [!TIP]
-> **Magic Workspaces**: Multiple isolated design environments within a single repo (e.g., `.magicspec/engine/`, `.magicspec/web/`). See [SDD Philosophy](./docs/conception.md) for details.
+> **Magic Workspaces**: Multiple isolated design environments within a single repo (one `.magicspec/{workspace}/` folder per registered workspace). See [SDD Philosophy](./docs/conception.md) for details.
 
 ## 📦 Installation
 
@@ -210,8 +210,8 @@ Arguments scope the operation to a **workspace** or provide a **directive**:
 /magicspec run
 
 # Workspace-scoped
-/magicspec task engine                     # Plan only for the "engine" workspace
-/magicspec analyze engine                  # Analyze only the "engine" workspace
+/magicspec task {workspace}                # Plan only for one workspace
+/magicspec analyze {workspace}             # Analyze only one workspace
 
 # With directive (quoted text)
 /magicspec task "decompose phase-2"        # Guided planning with focus
@@ -220,8 +220,8 @@ Arguments scope the operation to a **workspace** or provide a **directive**:
 /magicspec analyze "check API coverage"    # Focused analysis on a specific area
 
 # Workspace + directive
-/magicspec run engine "phase-1"            # Execute phase 1 in "engine" workspace
-/magicspec task engine "only new specs"    # Plan only new specs in "engine" workspace
+/magicspec run {workspace} "phase-1"       # Execute phase 1 in one workspace
+/magicspec task {workspace} "only new specs" # Plan only new specs in one workspace
 ```
 
 > [!NOTE]

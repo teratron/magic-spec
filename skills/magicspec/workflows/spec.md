@@ -130,7 +130,7 @@ Apply `context.md` §Step 0 Workspace Intent Detection:
 2. Resolve to one of `existing:{name}` · `create:{name}` · `ambiguous`.
 3. On `create:{name}` → invoke `create-workspace` BEFORE any spec authoring. Narrate: `[Workspace] Created '{name}' for {reason} (mentioned: {signal-token}). Dispatching new specs to .magicspec/{name}/. (Revert: git restore .magicspec/workspace.json && rm -rf .magicspec/{name})`.
 4. On `ambiguous` → resolve it by the Consequence Forecast (WI-4, C27 DA-10) over `create:{X}`, `existing:{Y}` and no dispatch, exactly as `context.md` §Ambiguity Gate states; narrate `[DR] Routed '{artifact}' to '{winner}' — {criterion}; worst case if wrong: {cost}; runner-up: {candidate}. (Override: /magicspec spec {runner-up-workspace} …)` and carry the routing premise into the dispatched spec's `Constraints & Assumptions`. Nothing is asked.
-5. On `existing:{name}` → proceed with `{name}` resolved. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below).
+5. On `existing:{name}` → proceed with `{name}` resolved by the engine's chain (`context.md` §Workspace Resolution Chain): run `node scripts/executor.js resolve-workspace --command spec [--workspace {name}] --text "{request}"` (`--workspace` only when the invocation names a registered workspace; `{request}` is the rest of the argument), take its `Workspace:` line and print its `Narration:` line once. Apply WI-7 Workspace Fit Validation just before the actual file write (Step Creating / Updating below). Only this workflow may create a workspace; every other command routes among the registered ones.
 
 The detection result is recorded in the agent's working state for the remainder of the workflow invocation. No subsequent step re-runs Step 0 within the same invocation.
 
@@ -368,6 +368,7 @@ After all workflow steps (incl. Graph Refresh) and **before** the Completion Che
 
 ```
 Checklist — {task description}
+  ☐ Workspace Routing: Step 0 ran before any other step; an existing workspace was chosen by `resolve-workspace`, and with more than one workspace registered its line `[Workspace] {name} — {signal}. (Override: /magicspec {command} {other} …)` was printed once
   ☐ No implementation code in specs (pseudo-code for logic; contracts & references permitted)
   ☐ Registry: INDEX.md updated (Status, Layer, Version; Description only if what or when changed)
   ☐ Lifecycle: Status transitions valid (Draft -> RFC -> Stable) & C12 Quarantine applied

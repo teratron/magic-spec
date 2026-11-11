@@ -37,6 +37,8 @@ const {
     LEGACY_STATE_DIR_NAME,
     WORKSPACE_NAME_RE,
     executorHint,
+    registeredWorkspaceNames,
+    unknownWorkspaceMessage,
 } = utils;
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -158,6 +160,13 @@ if (hasLegacyState && !MIGRATION_SAFE.has(scriptName)) {
 
 // An explicit flag overrides the ambient MAGIC_WORKSPACE; both reach the same guard.
 let workspaceName = flagValues['--workspace'] || process.env.MAGIC_WORKSPACE || null;
+// How the name was chosen, handed to the child: the child receives only the resulting folder, so
+// without this it could not tell a name the caller typed from the registry default.
+let workspaceSource = flagValues['--workspace']
+    ? 'argument'
+    : process.env.MAGIC_WORKSPACE
+      ? 'environment'
+      : null;
 
 if (workspaceName && !WORKSPACE_NAME_RE.test(workspaceName)) {
     console.error(
@@ -175,6 +184,7 @@ if (fs.existsSync(workspaceJsonPath)) {
         workspaceData = JSON.parse(fs.readFileSync(workspaceJsonPath, 'utf8'));
         if (!workspaceName && workspaceData.default) {
             workspaceName = workspaceData.default;
+            workspaceSource = 'default';
             // The registry is part of the repository: a default that arrives from it passes
             // the same guard as one given on the command line before it names a folder.
             if (typeof workspaceName !== 'string' || !WORKSPACE_NAME_RE.test(workspaceName)) {
@@ -186,12 +196,9 @@ if (fs.existsSync(workspaceJsonPath)) {
         }
 
         if (workspaceName) {
-            const workspaceEntry =
-                workspaceData.workspaces &&
-                typeof workspaceData.workspaces === 'object' &&
-                workspaceData.workspaces[workspaceName];
+            const registered = registeredWorkspaceNames(workspaceData);
 
-            if (workspaceEntry) {
+            if (registered.includes(workspaceName)) {
                 const targetPath = path.join(projectRoot, STATE_DIR_NAME, workspaceName);
                 // WI-9: a command that writes into the workspace gets the standard subtree
                 // instead of a silent fallback to the state folder root (that fallback made
@@ -221,7 +228,7 @@ if (fs.existsSync(workspaceJsonPath)) {
                 }
                 magicDesignDir = `${STATE_DIR_NAME}/${workspaceName}`;
             } else {
-                console.error(`HALT: Unknown workspace name '${workspaceName}'. Fix and retry.`);
+                console.error(`HALT: ${unknownWorkspaceMessage(workspaceName, registered)}`);
                 process.exit(1);
             }
         }
@@ -252,6 +259,8 @@ if (workspaceData) {
     }
 }
 const childEnv = Object.assign({}, process.env, envVars);
+if (workspaceSource) childEnv.MAGIC_WORKSPACE_SOURCE = workspaceSource;
+else delete childEnv.MAGIC_WORKSPACE_SOURCE;
 
 // A script that needs a file the engine folder no longer holds would end in the loader's stack
 // trace, with nothing to say what happened or what to do. The local `require` calls of the script

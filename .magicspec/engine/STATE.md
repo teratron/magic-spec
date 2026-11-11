@@ -4,15 +4,15 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-06 11:22
+**Updated:** 2026-11-11 06:09
 **Phase:** 48 — Independent Hardening: Routing in Every Command, Cache Retention, Community Health Files
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-47T01 Validation: harness, mutation lists, intake scenarios, C14
+- **Task:** T-48B03 clean-cache: the rebuildable caches removed, findings, notes and backups never touched
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** Execute T-48A01 The routing chain as a script: `resolve-workspace`, the location signal computed from paths against each scope via /magicspec run engine
+- **Next Action:** Execute T-48C03 The contribution-guide generator keeps only its marked blocks; its template leaves the shipped folder via /magicspec run engine (T-48C01 needs the maintainer's response times)
 
 ## Progress
 

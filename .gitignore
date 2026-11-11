@@ -43,6 +43,7 @@ temp/
 *tmp/
 *sandbox/
 /.references/
+/.remember/
 
 # Agents
 CLAUDE.md

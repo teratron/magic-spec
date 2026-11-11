@@ -15,6 +15,7 @@ const {
     resolveInsideProject,
     STATE_DIR_NAME,
     WORKSPACE_NAME_RE,
+    unregisteredWorkspaceMessage,
 } = require('./utils');
 const { stripQuoted } = require('./lib/scan-hygiene');
 const { ensureInitialized, bumpPatch, writeVersion } = require('./lib/project-version');
@@ -931,6 +932,14 @@ function main() {
     // diverge from an explicit --workspace at one call site while another
     // stayed correct (a workspace-scoping defect).
     const wsDir = resolveWorkspaceDir(opts.workspace, workspace, designAbs);
+
+    // Every write below lands in this folder or beside it: a folder the registry does not hold
+    // gets none of them, and the registered names are listed so the typo can be corrected.
+    const unregistered = unregisteredWorkspaceMessage(wsDir);
+    if (unregistered) {
+        console.error(`❌ ${unregistered}`);
+        return 1;
+    }
 
     // Both come from workspace.json, which a cloned repository chooses: they must name files inside
     // the project, or finalize would create and append wherever the configuration points.
