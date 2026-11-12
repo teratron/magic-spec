@@ -39,6 +39,8 @@ triggers:
     gate: "Input Pass"
   - workflow: goal.md
     gate: "Input Pass"
+  - workflow: sync.md
+    gate: "Input Pass"
 outputs:
   - type: prompt-review
     scope: "PASS / PASS-WITH-REWRITES / FAIL verdict with exact-text findings and concrete rewrites across the six PQ-3 dimensions"

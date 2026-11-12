@@ -10,6 +10,7 @@ Sections are independent — apply each by its own trigger. Paths are relative t
 > SDD engine — unauthorized changes corrupt it for every user of this project.
 > If you are about to edit any file in it: **STOP** and ask the user
 > to confirm the task is an engine improvement.
+> Regenerating those host copies through the shipped generator (`init`, `sync`) is the engine's own act, not a write by hand.
 
 ## 1. Engine Upgrade Detection (Local ↔ Snapshot)
 
@@ -58,6 +59,7 @@ releases routinely carry behavior-affecting changes.
 - `/magicspec status` — read-only briefing; shows drift as an informational line, never a prompt.
 - `/magicspec help` — read-only list of the commands; a drift line before it would answer a question nobody asked.
 - `/magicspec migrate` — runs before the project is on the layout the engine reads, so there is no snapshot to compare.
+- `/magicspec sync` — its report already lists a stale projection or a failed integrity check.
 - Missing or unreadable `.version` → skip silently, do not block work.
 - `MAGIC_DRIFT_CHECK=0` env var disables this rule entirely.
 
@@ -92,7 +94,7 @@ After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`,
 main steps and **before** their Completion Checklist, run
 `node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule|fix|simulate> --workspace={active-workspace}`
 and display its entire stdout **verbatim** in a fenced block. Skip it for `/magicspec analyze`,
-`/magicspec graph`, `/magicspec help`, `/magicspec migrate` and `/magicspec-dev:*`. A non-zero exit is a
+`/magicspec graph`, `/magicspec help`, `/magicspec migrate`, `/magicspec sync` and `/magicspec-dev:*`. A non-zero exit is a
 WARNING, never a block.
 Opt-outs, the significance whitelist and the channels:
 [references/rules/finalization.md](references/rules/finalization.md) — read it the first time you finalize in a session.

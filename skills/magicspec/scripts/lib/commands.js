@@ -232,6 +232,13 @@ const COMMANDS = {
     'serve-spec-graph': {
         summary: 'Serve the graph to an agent over stdio (MCP, JSON-RPC 2.0).',
     },
+    sync: {
+        summary: 'Bring derived state up to date: registries, projections, graph, live-memory progress, version anchors, registered documentation blocks. Reports every disagreement with its command; deletes nothing.',
+        positional: ['[area|workspace]'],
+        options: {
+            '--dry-run': { kind: 'bool', help: 'Compute everything, list every write it would make, write nothing' },
+        },
+    },
     'update-engine-meta': {
         summary: 'Verify engine integrity (--check); in the engine repository also bump the version and regenerate the manifest.',
         options: {

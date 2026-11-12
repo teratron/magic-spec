@@ -53,8 +53,8 @@ These files are kept in the main repository for maintainers. They are not part o
 ### 3.1. Maintenance scripts (`scripts/`)
 
 - `generate-checksums.js` — builds the folder's `.checksums`.
-- `sync.js` — the lifecycle pipeline: engine metadata, version anchors, link validation, project metadata, documentation.
-- `sync-docs.js`, `sync-manifests.js`, `sync-engine-snapshot.js`, `update-project-meta.js` — the steps of that pipeline.
+- `sync.js` — the lifecycle pipeline: engine metadata, version anchors, link validation, derived project state (the shipped `sync` pass), documentation.
+- `sync-docs.js`, `sync-manifests.js`, `sync-engine-snapshot.js` — the steps of that pipeline.
 - `validate-hardlinks.js` — checks the link inventory of the repository.
 - `mutation-check.js` — proves that a harness case fails without the fix it guards.
 - `tests/engine.js` — the script harness.

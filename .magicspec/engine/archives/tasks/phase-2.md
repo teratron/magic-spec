@@ -37,6 +37,20 @@ duration_minutes: ~
   - Modified: `.magic/scripts/init.js`
 - **Assignee:** Agent
 
+## [T-2I01] Include skills in GitHub release archives
+
+- **Spec:** l2-skill-wrappers.md §4.2
+- **Status:** Done
+- **Assignee:** Agent
+- **Notes:** Ensure the release archive includes generated `skills/` output from `sync-skills.js`, alongside `workflows/` and `rules/`. (Merged from the earlier task list `02-universal-skill-wrappers.md`, which held this task and the next one and nothing else the archive lacked.)
+
+## [T-2M01] Update adapter path documentation
+
+- **Spec:** l2-skill-wrappers.md §2
+- **Status:** Done
+- **Assignee:** Agent
+- **Notes:** Keep adapter target paths documented in `docs/distribution.md` and mirrored in the README adapter table. (Merged from the same earlier task list.)
+
 ## [T-2T01] Add validation tests for skill projection
 
 - **Spec:** l2-skill-wrappers.md §5

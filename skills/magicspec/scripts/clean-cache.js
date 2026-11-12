@@ -15,8 +15,8 @@ const { graphPaths, normalizePath, resolveProjectRoot, STATE_DIR_NAME } = requir
 /**
  * Removes the rebuildable caches of the project: what the engine derives from the specifications
  * and the plan and writes under the state folder — the graph extraction cache, the query snapshot,
- * the interactive page, the wiki, the finalize state, the project-meta and documentation-sync states
- * (the last two exist in the engine's own repository only) and the memory index.
+ * the interactive page, the wiki, the finalize state, the documentation-sync state (which exists in
+ * the engine's own repository only) and the memory index.
  * Each is rebuilt by the command that owns it, so removing one destroys no work and the command
  * asks nothing.
  *
@@ -51,7 +51,6 @@ function rebuildableCaches(designAbs) {
         graph.html,
         graph.wiki,
         path.join(cache, 'finalize-state.json'),
-        path.join(cache, 'project-meta-state.json'),
         path.join(cache, 'docs-state.json'),
         path.join(cache, 'memory.sqlite'),
         path.join(cache, 'memory.json'),

@@ -44,7 +44,7 @@ This layer contains ONLY the resources the end-user will download and install. N
 - **Role**: The auxiliary part of the core engine. It contains development, testing, and operational logic that **must not** be distributed to the user side.
 - **Developer contract — what lives here**:
   - **Manifest builders** that write to L1 artifacts (e.g., `scripts/generate-checksums.js` writes `skills/magicspec/.checksums`).
-  - **Project-meta updaters** (e.g., `scripts/update-project-meta.js` writes `.magicspec/INDEX.md`).
+  - **Project-meta updaters** (e.g., `scripts/sync-engine-snapshot.js` writes the engine version into `.magicspec/INDEX.md`).
   - **Sync orchestrators** that coordinate cross-layer state (`scripts/sync.js`, `sync-docs.js`, `sync-manifests.js`, `validate-hardlinks.js`).
   - **Tests** (`tests/`).
 - **Constraint**: anything that exists solely to **produce or maintain** L1 artifacts belongs here, even if the artifact it produces ships to users. The output is L1; the producer is L2.

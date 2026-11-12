@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.7
+**Version:** 1.4.8
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -224,6 +224,8 @@ triggers:
     gate: "Input Pass"
   - workflow: goal.md
     gate: "Input Pass"
+  - workflow: sync.md
+    gate: "Input Pass"
 outputs:
   - type: prompt-review
     scope: "PASS / PASS-WITH-REWRITES / FAIL verdict with exact-text findings and concrete rewrites across the six PQ-3 dimensions"
@@ -303,6 +305,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.8 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 55; the mirror follows the deployed card word for word). The prompt-engineer card lists `sync.md` among its Input Pass triggers, so every shipped body (fourteen) is one. |
 | 1.4.7 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 54; the mirror follows the deployed card word for word). Spec-critic: the Comparison set bullet of step 1 names `memory-query "{name}"` first, cites each result, reads a cited section before relying on it and falls back to a direct text search when the query prints that the index is unavailable; the graph's neighbours stay in the set and archives stay out. |
 | 1.4.6 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 53; the mirror follows the deployed card word for word). Prompt-engineer: the Input Pass gains the trigger `goal.md`, thirteen shipped bodies in all, and item 5 says the intake gate's comprehension check is performed in this stance in `goal` as well, which starts with it (IP-6). |
 | 1.4.5 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 52; the mirror follows the deployed card word for word). Prompt-engineer: the Input Pass gains the trigger `simulate.md`, twelve shipped bodies in all. |

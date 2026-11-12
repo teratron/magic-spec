@@ -17,7 +17,7 @@ The grammar is `/magicspec-dev <command> [argument]`. The colon spelling `/magic
 | --- | --- | --- |
 | `init` | Rebuilds the agent-facing links and the projections of the engine skill, per agent | `workflows/init.md` |
 | `test` | Validates the engine by cognitive simulation and the regression suite | `workflows/test.md` |
-| `sync` | Synchronizes engine metadata, version anchors, links, registry metadata and documentation | `workflows/sync.md` |
+| `sync` | Runs `/magicspec sync`, then the engine-only stages: engine metadata, version anchors, links and documentation | `workflows/sync.md` |
 | `release` | Validates, versions and triggers a GitHub Release | `workflows/release.md` |
 | `fix` | Carries error feedback about the engine — a pasted engine bug report, a pending feedback note, a failing harness case — to a verified repair | `workflows/fix.md` |
 

@@ -1,3 +1,23 @@
+---
+phase: 1
+name: "Config Drift Detection"
+status: Done
+subsystem: ".magic/scripts, .magic/init.md, tests"
+requires: []
+provides:
+  - "check-prerequisites: git diff drift check for RULES.md (global and workspace tier), non-blocking"
+  - "init.md: Config Drift Advisory sub-step"
+  - "Cognitive tests T168 to T170"
+key_files:
+  created: []
+  modified:
+    - ".magic/scripts/check-prerequisites.js"
+    - ".magic/init.md"
+    - ".magic/tests/suite.md"
+patterns_established: []
+duration_minutes: ~
+---
+
 # Phase 1 — Config Drift Detection
 
 ## [T-1A01] Add git diff drift check to executor check-prerequisites

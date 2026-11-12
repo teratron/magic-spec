@@ -60,6 +60,7 @@ graph TD
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 | **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
 | **Graph** | `graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export, and the artifact index (`memory-query`) that finds the sections bearing on a question. | [Detailed Guide](graph.md) |
+| **Sync** | `sync.md` | Brings derived state back in line with its sources — registry counts, rule projections, the graph and wiki, progress counters, declared version anchors and registered documentation blocks — and reports what needs a judgement instead of settling it. | [Detailed Guide](sync.md) |
 
 ## 🏗️ Architecture & Directory Structure
 

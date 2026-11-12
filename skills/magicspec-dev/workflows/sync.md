@@ -11,7 +11,7 @@ Pipeline (orchestrated by `scripts/sync.js`):
 1. **Engine Meta (C14)**: Detects drift in `skills/magicspec/`. Bumps `skills/magicspec/.version`, regenerates checksums, and refreshes the host projections that exist.
 2. **Manifest Parity**: Propagates the version into the anchored `**Active Development** (vX.Y.Z)` line in `README.md`. Other version mentions are not touched.
 3. **Hardlink Validation**: Verifies that `CLAUDE.md`, `GEMINI.md`, `QWEN.md`, `CODEX.md` share the same inode as `AGENTS.md`. Drift is reported (non-fatal by default; pass `--strict-links` to fail). Repair: `/magicspec-dev:init`.
-4. **Project Meta (idempotent)**: Computes a structural digest of `.magicspec/INDEX.md` (with version/date/history fields stripped). Bumps the index version and appends a history row **only when the digest actually changed** — no more "Automated metadata update" floods.
+4. **Project State (the shipped pass, SY-9)**: Runs `node skills/magicspec/scripts/executor.js sync` — the command a user runs as `/magicspec sync` — which brings the derived state of the project back in line with its sources and writes only what differs: registry counts, the rule projection and host copies, the graph and wiki, live memory's progress, the declared version anchors and registered documentation blocks. It writes no registry version, no `Last Updated` stamp and no history row; those are authored with the specification. Its report is printed as the stage runs, and `--dry-run` is forwarded.
 5. **Doc Sync (content, not stamps)**:
    - Refills the marked blocks of the hand-written `CONTRIBUTING.md` (the command table from the router, the workspace table from the registry, the engine version) and writes nothing outside the markers. A guide without markers receives them once; a repository with no guide is seeded from `scripts/templates/contributing.md`.
    - For each `docs/{name}.md` with a matching `skills/magicspec/workflows/{name}.md`, propagates the `**Triggers:**` and `**Slash command:**` lines verbatim and refreshes the `## Sync Note` only when the workflow source hash changed or the engine version bumped.
@@ -25,7 +25,6 @@ Flags (forwarded to `sync.js`):
 State files (do not edit by hand):
 
 - `skills/magicspec/.checksums` — engine drift baseline (Step 1).
-- `.magicspec/.cache/project-meta-state.json` — last structural digest of `.magicspec/INDEX.md` (Step 4).
 - `.cache/.docs-state.json` — last hash + version per workflow (Step 5, dev-only).
 
 // turbo

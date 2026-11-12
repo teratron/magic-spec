@@ -35,15 +35,6 @@ const MAINTENANCE_COMMANDS = {
     'sync-engine-snapshot': {
         summary: 'Write the engine version into the Engine Version field of the global registry.',
     },
-    'update-project-meta': {
-        summary: 'Update the metadata of the registries (version, history row, spec counts).',
-        options: {
-            '--workspace': { kind: 'value', help: 'Workspace to update (default: every registered one)' },
-            '--message': { kind: 'value', help: 'History row text (default: "Automated metadata update")' },
-            '-m': { kind: 'value', help: 'Same as --message' },
-            '--force': { kind: 'bool', help: 'Write even when nothing structural changed' },
-        },
-    },
     'generate-checksums': {
         summary: 'Rebuild the integrity manifest (.checksums) of an engine folder.',
         options: {

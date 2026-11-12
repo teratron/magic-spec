@@ -21,10 +21,14 @@ const { enginePath } = require('./engine-path');
  *                                AGENTS.md inode (non-fatal by default;
  *                                use --strict-links to fail on missing)
  *                                (scripts/)
- *   4. update-project-meta    — idempotent: bumps INDEX version + appends
- *                                history row only when structural digest
- *                                actually changed
- *                                (scripts/)
+ *   4. sync (the shipped pass) — brings the derived state of the project
+ *                                back in line: registry counts, projections,
+ *                                graph and wiki, live-memory progress, the
+ *                                declared version anchors and documentation
+ *                                blocks; writes only what differs and no
+ *                                registry version or history row
+ *                                (engine scripts/ — the same command a user
+ *                                runs as /magicspec sync)
  *   5. sync-docs              — refills the marked blocks of CONTRIBUTING.md,
  *                                propagates Triggers/Slash command into
  *                                docs/{name}.md, refreshes Sync Note only
@@ -120,8 +124,8 @@ function main() {
         );
     }
 
-    // 4. Project meta (idempotent: only bumps INDEX when structural digest changes)
-    runScript(path.join(devScriptsDir, 'update-project-meta.js'));
+    // 4. Derived project state: the shipped pass (L2 calling L1, the sanctioned direction), previewed with the pipeline
+    runScript(path.join(magicScriptsDir, 'sync.js'), dryRun ? ['--dry-run'] : []);
 
     // 5. Docs (CONTRIBUTING + docs/*.md content sync)
     if (!rawArgs.includes('--skip-docs')) {

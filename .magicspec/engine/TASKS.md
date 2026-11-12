@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.61.0
+**Version:** 1.62.0
 **Generated:** 2026-11-12
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.60.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.61.0
 **Based on RULES:** .magicspec/RULES.md v1.23.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 55](archives/tasks/phase-55.md) | Sync Command — `/magicspec sync` brings derived state back in line with its sources (the registry's computed cells, the rule projection and host copies, the graph and wiki, live memory's progress lines, declared version anchors, registered documentation blocks), writes only what needs no judgement, reports every disagreement and stale file with the command that resolves it, deletes nothing, writes nothing on a second run and previews with `--dry-run`; the registration form for anchors and blocks, the body and router row, the kernel's exemptions and caution, the constitution's C2, and the maintenance pipeline running the shipped pass as its project-meta stage | `Done (Archived)` |
 | [Phase 54](archives/tasks/phase-54.md) | Artifact Memory Index — a local index over the state folder's artifacts, one row per section with its provenance, answers a content question with ranked citations (lexical always, semantic only with a configured provider), re-indexes changed files before answering and never fails a workflow: `memory-index` and `memory-query` on SQLite with a pure-script fallback, refreshed by `export-wiki`, queried first by the comparison-set, intake and sibling-site searches | `Done (Archived)` |
 | [Phase 53](archives/tasks/phase-53.md) | Goal Mode — `/magicspec goal` takes a goal statement, a phase or a number of tasks and drives the pipeline toward it without pausing between steps: each computed next step executed instead of narrated and ended at its own boundary, consent queued and asked only when the mode stops, a closed list of stop conditions and one report; the goal and its criteria kept in `STATE.md`, so the resume line, the status briefing and a bare `goal` continue it; the router row with its demand read per step, the Input Pass and the constitution's command set | `Done (Archived)` |
 | [Phase 52](archives/tasks/phase-52.md) | Product Simulation and Interface Design — `/magicspec simulate` runs the product's user-interaction scenarios live or traced (always labelled), every failed step a finding for `/magicspec fix`; scenarios listed at planning, written by validation tasks and kept with the code, carried by the `simulator-tester` role; an interface specified with its design context, one design system, its states and accessibility, an early draft and verification by looking, carried by the `ui-ux-designer` role; the developer workflow keeps its own name, the constitution records the command set and sixteen cards, and the rule kernel makes room for this phase and Phases 53 and 55 | `Done (Archived)` |
@@ -52,6 +53,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 | [Phase 27](archives/tasks/phase-27.md) | Idea Intake Gate Deployment (E6) — input-side clarification gate installed in `.magic/spec.md`, E6 registered across the DA-2 table + live constitution + distributed template + ambient rules, reviewer checks on the `prompt-engineer` card, user docs, cognitive suite coverage | `Done (Archived)` |
 | [Phase 26](archives/tasks/phase-26.md) | Commit-Suggestion Feature Removal — strip message-composition from `commit-suggester.js`, flag/config/rendering machinery from `finalize.js`, dead config key from both `workspace.json` files | `Done (Archived)` |
 | [Phase 25](archives/tasks/phase-25.md) | CHANGELOG Dedup Discoverability Hint — `finalize.js`'s deduped row names `release-changelog`; field-confirmed §4.5 fix, no bullet-content or dedup-logic change | `Done (Archived)` |
+| [Phase 1](archives/tasks/phase-1.md) | Config Drift Detection — git diff drift check for RULES.md in check-prerequisites, Config Drift Advisory in init.md, cognitive tests T168-T170 | `Done (Archived)` |
 | [Phase 2](archives/tasks/phase-2.md) | Skill Projection & Agent Surface Implementation | `Done (Archived)` |
 | [Phase 3](archives/tasks/phase-3.md) | Unified Role System — `.magic/roles/` + workflow integration | `Done (Archived)` |
 | [Phase 4](archives/tasks/phase-4.md) | Prompt Quality Gate — `prompt-engineer` card #14 + five workflow gates | `Done (Archived)` |
@@ -75,6 +77,11 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 | [Phase 22](archives/tasks/phase-22.md) | Field-Report Triage — DESIGN_DEBT_PENDING Structural Predicate, Mode C Depth Control, Project-Auditor Citation | `Done (Archived)` |
 | [Phase 23](archives/tasks/phase-23.md) | Next-Action Task-Level Precedence & Decision-Prune Honesty — Detailed Tracking `Status`/`Assignment` screen, terminal all-excluded branch, decision-prune claim correction | `Done (Archived)` |
 | [Phase 24](archives/tasks/phase-24.md) | Dev-Repo Engine-Version Snapshot Sync — L2 snapshot writer, guarded L1 delegation, `rules/magic.md` §1 sole-writer carve-out; plus Track C, the Next Action title-stripping regression found by this phase's own planning run | `Done (Archived)` |
+
+## Replan Directive
+
+**Plan version:** 1.61.0
+**Directive:** The constitution moved from v1.23.0 to v1.24.0 (C2 lists `sync` as shipped) and the engine registry from v1.71.0 to v1.72.0 (Phase 55 recorded as built): revalidate the plan against both, and mark Phase 55 done in the plan.
 
 ## Backlog
 

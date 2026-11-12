@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.4.2
+**Version:** 1.4.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -29,7 +29,7 @@ The parent contract states *what* must be collected and *where* it must appear. 
 
 - Node ≥ 18, no new runtime dependencies — the sink is written with `fs` primitives already used across `scripts/`.
 - Multiple engine processes may append concurrently within one workflow invocation; the format must make an interleaved write damage at most one entry.
-- `.magicspec/.cache/` is gitignored and already hosts engine runtime state (`finalize-state.json`, `project-meta-state.json`); the sink joins it and needs no new ignore rule.
+- `.magicspec/.cache/` is gitignored and already hosts engine runtime state (`finalize-state.json`); the sink joins it and needs no new ignore rule.
 - The collector is `require`d from L1 scripts only (`skills/magicspec/scripts/**`) — it introduces no L1→L2 dependency.
 - Existing print statements are **not** removed by this migration (DG-1 additive clause); each call site gains a recording call alongside its print.
 
@@ -392,6 +392,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.3 | 2026-11-12 | Agent | Reality sync, no contract change (as built in Phase 55): the runtime state the sink joins in `.cache/` no longer lists `project-meta-state.json`, whose writer, the maintenance updater, was retired. |
 | 1.4.2 | 2026-11-12 | Agent | Inventory rows only, no contract change (as built in Phase 54): §5.4 lists the two findings of the artifact index — `MEMORY_INDEX_UNAVAILABLE`, recorded when the index cannot be built, opened or queried (the command exits 0 and tells the reader to search the text), and `MEMORY_EMBEDDINGS_FAILED`, recorded when the embeddings provider fails or its setting cannot be used (lexical search is unaffected). Both are warnings with a remedy. |
 | 1.4.1 | 2026-11-12 | Agent | Inventory row only, no contract change (as built in Phase 53): §5.2 lists the finding `update-state.js` records when it refuses a goal block — a goal that fails the closed schema or the line bound, two goal flags together, a goal file that cannot be read. |
 | 1.4.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the concept specification declared that this specification gains the note record when it is built): §4.11 records the feedback note store — its file, its records and its limits — beside the findings sink, and says why the two are separate files. No requirement of the sink changed. |

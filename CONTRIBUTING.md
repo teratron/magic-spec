@@ -1,6 +1,6 @@
 # Contributing to magic-spec
 
-Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.102<!-- /generated:version -->).
+Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.129<!-- /generated:version -->).
 This guide tells you, in order, how to report a bug, how to propose a change, how to run the repository's checks, what a pull request must contain, and which conventions a change follows.
 
 ## 1. Report a bug or propose a change
@@ -85,6 +85,7 @@ The engine is used through one command. This table is generated from the router.
 | `/magicspec status` | Briefs a session on where the project stands, read-only |
 | `/magicspec graph` | Builds, analyzes and visualizes the specification knowledge graph |
 | `/magicspec migrate` | Moves a project from the earlier layout to this skill folder: a dry run, one consent question, then the apply step |
+| `/magicspec sync` | Brings derived state — registries, projections, graph, version anchors, registered documentation blocks — back in line with its sources, and reports what needs a judgement instead of settling it |
 | `/magicspec help` | Lists the commands, explains one and offers to run one, in the host's choice form or in the chat |
 <!-- /generated:commands -->
 

@@ -239,6 +239,25 @@ function noteArchivalOff(wsDir) {
 const RESERVED_COMMAND_RE = /\/magicspec (spec|analyze)\b/;
 
 /**
+ * The part of a `Next Action` that names the step, with the task title taken out. The
+ * `Execute {id} {title} via /magicspec run {ws}` step embeds the title as the ledger wrote it,
+ * and a title may name a command (`Document /magicspec spec …`). Both readers of the field that
+ * look for a command — the reserved-command guard and the handoff line — must read the command the
+ * composer appended after the title, never one inside it. The composer's own tail is the last
+ * ` via /magicspec ` of the text, so a title that contains the same words is skipped too.
+ *
+ * @param {string} nextAction - A `Next Action`.
+ * @returns {string} The text with the title removed from an `Execute` step; any other text unchanged.
+ */
+function stepOf(nextAction) {
+    const text = nextAction || '';
+    const at = text.lastIndexOf(' via /magicspec ');
+    const head = /^Execute (\S+) /.exec(text);
+    if (!head || at < head[0].length - 1) return text;
+    return `Execute ${head[1]}${text.slice(at)}`;
+}
+
+/**
  * In the engine's own repository the notes the agent recorded are a work queue (EF-12): while
  * any wait, the next step is `/magicspec fix` with them. A step that sends the plan to be revalidated
  * (`Run /magicspec plan …`: a pending directive, a stale plan, a plan to update) keeps its place,
@@ -280,7 +299,7 @@ function workQueueFirst(workspace, wsDir, next) {
  */
 function computeNextAction(workflow, workspace, wsDir, plan) {
     const next = workQueueFirst(workspace, wsDir, synthesizeNextAction(workflow, workspace, wsDir, plan));
-    if (RESERVED_COMMAND_RE.test(next)) {
+    if (RESERVED_COMMAND_RE.test(stepOf(next))) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
             `CONSTITUTION.md §5; substituting the /magicspec plan funnel.`;
@@ -974,7 +993,7 @@ function emitSuccess(ctx) {
  */
 function handoffLine(nextAction, workspace) {
     const hit = /\/magicspec ([a-z][a-z-]*)(?: ([A-Za-z0-9][A-Za-z0-9._-]*))?(?: (\x22[^\x22]*\x22))?/.exec(
-        nextAction || '',
+        stepOf(nextAction),
     );
     if (!hit) return null;
     let commands;

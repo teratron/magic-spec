@@ -1,6 +1,6 @@
 # Sync Command: Bringing Derived State up to Date
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -35,7 +35,7 @@ Constitution C2 forbids new workflow commands unless explicitly authorized; the 
 - It deletes nothing (SY-5).
 - **Assumption (forecast):** `sync` rewrites derived state and reports every disagreement that needs a judgement instead of resolving it — a specification header that differs from its registry row is an unreviewed external edit (`spec.md` Version Drift Guard), and picking a winner silently would bury it. Runner-up: reconcile drift by "the file header wins". Override: `/magicspec spec amend l1-sync-command.md "sync reconciles drift by the file header"`.
 - **Assumption (forecast):** documentation is synchronized only inside blocks the project registered as derived, because the rest of a document is someone's prose and no rule tells which sentence follows which source. Runner-up: a content check of documentation against the specifications, which is a judgement and belongs to `analyze`. Override: `/magicspec spec amend l1-sync-command.md "sync checks documentation content"`.
-- <!-- TBD: the form in which a project registers a derived documentation block and a version anchor (a section of the workspace configuration is the obvious candidate). -->
+- **Assumption (forecast):** a project registers its version anchors and derived documentation blocks in a `sync` section of `workspace.json`, beside the settings finalization already reads there, with the entry grammar of §5.5. Runner-up: a file of its own in the state folder (one more file and one more owner to learn for two keys, and a cost of changing later that is a move of two keys either way). Override: `/magicspec spec amend l1-sync-command.md "sync registers in its own file"`.
 
 ## 3. Core Invariants
 
@@ -99,6 +99,27 @@ graph TD
 
 An integrity failure skips only the `projections` area — regenerating copies from a corrupted folder would spread the corruption; the other areas still run.
 
+### 5.5 Registration
+
+The `sync` section of `workspace.json` holds two lists, both optional; an absent section declares nothing.
+
+```plaintext
+"sync": {
+  "versions": [
+    { "file": "package.json", "json": "version" },
+    { "file": "README.md", "marker": "version", "format": "v{version}" }
+  ],
+  "docs": [
+    { "file": "docs/guide.md", "marker": "overview", "from": "docs/overview.md", "fromMarker": "overview" }
+  ]
+}
+```
+
+- A `versions` entry names a project-relative `file` and exactly one of `json` (a dotted key path whose value is a string) and `marker` (a neutral key); `format` applies to a marker and contains `{version}` (default `{version}`). The version written is the one the version file finalization keeps holds (`finalization.versionPath`).
+- A `docs` entry names the `file` and `marker` of the block and the `from` file that fills it, whole or, with `fromMarker`, from that file's own block of that key.
+- A marker is a lowercase key of letters, digits and hyphens; in a product file it reads `<!-- sync:{key} -->` … `<!-- /sync:{key} -->` and carries nothing about the SDD (SY-6).
+- Every path stays inside the project. An entry that cannot be used — an unknown key, a path that leaves the project, both or neither of `json` and `marker`, a malformed list — is one disagreement with its place and the command that resolves it (edit the section), never an exception, and the valid entries still run (SY-2).
+
 ## 6. Implementation Notes
 
 1. A new workflow body `workflows/sync.md` and an executor subcommand that computes the areas; the body adds nothing a script can compute.
@@ -107,6 +128,10 @@ An integrity failure skips only the `projections` area — regenerating copies f
 4. `sync` joins the finalization exemptions of the always-on rules beside `help` and `migrate`, and the drift-check exemptions: a drift line before `sync` would announce what its report already covers.
 5. The constitution's C2 records the command when it ships, through `/magicspec rule` (origin `user-stated`).
 6. The read-only caution of the always-on rules forbids writing the host copies by hand; regenerating them through the shipped generator is the engine's own act, as `init`'s already is. The caution gains that sentence when `sync` ships, and its prohibition of hand edits stays word for word (the shipped guard is never weakened, C28 item 5).
+7. **As built (Phase 55).** The areas run in the order registry, state, projections, versions, docs, graph. Three writers the areas could have reused write more than SY-3 and SY-5 allow, so each area computes first, compares with what is stored and writes only the difference: the graph area renders the wiki into a scratch folder with `export-wiki --out` and copies only the pages whose bytes differ (`export-wiki` itself prunes and rewrites every page on each run), the state area runs `update-state --auto-progress` only when the recomputed counters differ (it stamps `Updated` on every write), and the projections area rewrites a stale rule copy or managed block itself and never calls the projection refresh (which deletes retired command entries). An integrity failure skips only the projections area. A cache its owner prunes under the retention contract — the graph extraction cache, the artifact index's rows for a vanished file — is not a derived file in the sense of SY-5.
+8. **The preview reaches the build too.** The wiki is rendered by a graph build that writes its extraction cache into the project, so the extraction cache honors `MAGIC_DRY_RUN` (no folder created, no entry saved or pruned) and the graph area sets it for the build of a preview (SY-7).
+9. **The containment check is written once.** No script implemented the reference rule (ventilation runs it as a cognitive scan), so the shipped pass carries it for the one place it generates text: a task identifier, a phase designator (the file form and the prose `Phase N`, refused conservatively because generated text cannot apply the rule's judgement), an SDD system file, a specification file name and a path into the state folder refuse the write and are reported.
+10. **The maintenance pipeline's project-state step is the shipped pass.** The earlier updater also bumped the registries' version lines and appended history rows; neither is derived state (SY-1), so both ended with it, the updater was removed, and the registries' versions and history are authored with the specifications.
 
 ## 7. Drawbacks & Alternatives
 
@@ -126,4 +151,5 @@ An integrity failure skips only the `projections` area — regenerating copies f
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-12 | Agent | **As built in Phase 55; the registration form decided.** The open question of §2 is closed by a forecast: a `sync` section of `workspace.json` (§5.5), with the entry grammar, the neutral `sync:{key}` markers and the rule that a malformed entry is one disagreement; the runner-up (a file of its own) and its override are recorded. §6 items 7 to 10 record the as-built decisions: the area order and compare-before-write for the three writers that would otherwise write on every run, the preview reaching the graph build's extraction cache, the containment check written once in the shipped pass, and the retirement of the maintenance updater's version and history writes. Amendment Rule: `Stable → RFC`; re-promoted `Stable` after the Post-Update Review (`@role:spec-critic`, coherence check against the command surface, session-continuity and reference-containment specifications: no ordering conflict, contradiction, duplicate definition or interaction gap; `@role:prompt-engineer`: PASS). |
 | 1.0.0 | 2026-11-11 | Agent | Created from the owner's list of commands of 2026-11-11 (origin `user-stated`): `sync` as a user command for versions, documentation and other derived state; the maintenance command of the same name becomes its extension in the engine's repository. |

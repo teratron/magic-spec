@@ -1,6 +1,6 @@
 # Command Surface: One Command, Interactive Help and Argument Intake
 
-**Version:** 2.2.4
+**Version:** 2.2.5
 **Status:** Stable
 **Layer:** concept
 
@@ -229,6 +229,7 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.2.5 | 2026-11-12 | Agent | As built in Phase 55, no requirement changed: the router has the row `sync` after `migrate` — group `maintenance`, an area, a workspace or `--dry-run` as the optional argument, demand `light`, body `workflows/sync.md` — `sync` is named in the router's description and its pipeline sentence, `help` lists it from the table, and the constitution's C2 records the command set with `sync` shipped (1.24.0). The maintenance `sync` runs the shipped pass first (CS-15). |
 | 2.2.4 | 2026-11-12 | Agent | As built in Phase 53, no requirement changed. §6 item 10 records the `goal` row, the demand `per step` in the one parser and the handoff line, the bare-`goal` exception to the argument contract and the router's description. |
 | 2.2.3 | 2026-11-12 | Agent | As built in Phase 52, no requirement changed. The router lists `simulate` after `fix` in the `quality & automation` group (demand `standard`, scope optional, the default says which ran), and C2 of the constitution lists `fix` and `simulate` as shipped (constitution 1.22.0). |
 | 2.2.2 | 2026-11-11 | Agent | As built in Phase 51, no requirement changed. The router's table has the row `fix` after `run` — group `quality & automation` (the fourth group, so the picker's group step is four choices), the defect required, demand `deep` — and `help` renders the group between Pipeline and Health. The text entered in an argument form passes the input pass before the command or the intake gate acts on it, a chosen suggestion passes none (CS-10 item 5), in `spec`, `rule` and `help`. The maintenance router (`skills/magicspec-dev/SKILL.md`) has the space grammar and the five commands `init`, `test`, `sync`, `release`, `fix`, the colon spelling read as text; the printed colon forms in the older maintenance bodies and the repository's other text were left as they are. Constitution 1.21.0: C11 authorizes the whole maintenance set and C28 item 2 names `/magicspec-dev fix`. |

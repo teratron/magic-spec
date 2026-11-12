@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.102
+**Version:** 1.9.104
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -5318,3 +5318,143 @@ If any test fails, document the failure reason and propose a fix.
 - **Control:** once the folders are removed, the next run builds the index and the finding is not recorded again.
 - **Guards tested:** AM-8; AM-1.
 - **Regression for:** none yet — new with the artifact index.
+
+### T342 — A Task Title That Names a Command Is a Title, Not the Next Step
+
+- **Workflow:** `scripts/finalize.js` after `task` or `run`
+- **Synthetic State:** the first open task of the active phase has the title ``The constitution through `/magicspec rule`: C2 lists `sync` as shipped``; a second fixture has a title that names `/magicspec spec`.
+- **Action:** `finalize --workflow=task`, reading the `Next Action` it records and the handoff line it prints.
+- **Expected:**
+  - [ ] The `Next Action` reads `Execute {id} {title} via /magicspec run {workspace}` with the title as the ledger wrote it, and the handoff line is `Next: /magicspec run {workspace} — standard reasoning`, not a line for the command the title names.
+  - [ ] The second fixture's `Next Action` is not replaced by the planning funnel, and no `NEXT_ACTION_SUBSTITUTED` finding is recorded.
+- **Control:** a step that itself names `/magicspec spec` (a recommendation, not a title) is still replaced by the planning funnel with the finding recorded.
+- **Guards tested:** PS-4 (the handoff line carries the command the `Next Action` records); the reserved-command rule of the constitution's §5.
+- **Regression for:** feedback note n1 — the handoff line took the first `/magicspec` command of the whole `Next Action`, a task title included.
+
+### T343 — Sync Writes Only Derived State, Never the Engine Snapshot, and a Second Run Writes Nothing and Says So in One Line
+
+- **Workflow:** `workflows/sync.md` with `scripts/sync.js`
+- **Synthetic State:** a project whose global registry shows a stale specification count for its one workspace, whose live memory has stale progress counters, and whose registry carries a version line, a history row and an `**Engine Version:**` snapshot.
+- **Action:** `/magicspec sync`, then `/magicspec sync` again.
+- **Expected:**
+  - [ ] The first report lists the count and the counters as written, prints the counts line first and ends with one `Next:` line naming a command and its demand.
+  - [ ] The registry's version line, history row and engine-version snapshot are exactly as they were; no project version was bumped and no changelog entry was written; `finalize` was not run.
+  - [ ] The second run writes no byte and prints one line: `[Sync] in sync — nothing to write, nothing to report.`
+- **Control:** restoring the stale count writes only that cell again; nothing else of the file moves.
+- **Guards tested:** SY-1; SY-3; SY-8.
+- **Regression for:** none yet — new with the sync command.
+
+### T344 — An Area or a Workspace Argument Narrows the Run
+
+- **Workflow:** `workflows/sync.md` Entry and Step 1
+- **Synthetic State:** two registered workspaces, both with a stale count.
+- **Action:** `/magicspec sync registry`, then `/magicspec sync {workspace}`, then `/magicspec sync nothing`.
+- **Expected:**
+  - [ ] `registry` runs that area only: no projection, graph, state, version or documentation line appears.
+  - [ ] A workspace name limits every area to that workspace; the other workspace's row and files are untouched.
+  - [ ] An unknown word exits 1 with one line listing the areas and the registered workspaces, and writes nothing.
+- **Control:** with a workspace named like an area, the area wins and `--workspace {name}` reaches the workspace.
+- **Guards tested:** the argument grammar of §5.2.
+- **Regression for:** none yet — new with the sync command.
+
+### T345 — A Recorded Goal Survives Sync
+
+- **Workflow:** `scripts/lib/sync-state.js` with `scripts/update-state.js`
+- **Synthetic State:** live memory records a goal with criteria and hand-written decisions, and its progress counters are stale.
+- **Action:** `/magicspec sync state`.
+- **Expected:**
+  - [ ] The counters are recomputed from the ledger and the phase workbooks.
+  - [ ] The goal block, its criteria, the decisions and every other hand-written section are byte for byte as they were.
+  - [ ] With the counters already current, `update-state` is not called and the file's `Updated` stamp does not move.
+- **Control:** a project with no goal block gets the same recomputation.
+- **Guards tested:** SY-1; SY-3; the goal block's one writer (`update-state`).
+- **Regression for:** none yet — new with the sync command.
+
+### T346 — A Disagreement That Needs a Judgement Is Reported With Its Command and Left Alone
+
+- **Workflow:** `scripts/lib/sync-registry.js`
+- **Synthetic State:** a specification whose header says `RFC` and `1.3.0` while its registry row says `Stable` and `1.2.0`; a registry row whose file is missing from the disk; a specification file no row registers; a stale count.
+- **Action:** `/magicspec sync`.
+- **Expected:**
+  - [ ] Each of the three disagreements is listed with its place, the difference and one command: `/magicspec spec` for the header, `/magicspec analyze` for the missing file and the unregistered one.
+  - [ ] Neither the header nor the row is changed, whichever source is newer; the stale count is still written.
+  - [ ] The `Next:` line names the command of the first disagreement.
+- **Control:** reconciling the header by `/magicspec spec` and running `sync` again lists no disagreement.
+- **Guards tested:** SY-2.
+- **Regression for:** none yet — new with the sync command.
+
+### T347 — A Version Reaches the Declared Anchors and Nowhere Else
+
+- **Workflow:** `scripts/lib/sync-versions.js` with `scripts/lib/sync-config.js`
+- **Synthetic State:** the project's version file reads `2.5.0`; the registration declares a JSON key in a manifest and a marker in the README; the README also holds the text `0.0.1` outside the marker, and the manifest holds a second key with the same old value.
+- **Action:** `/magicspec sync versions`, then again.
+- **Expected:**
+  - [ ] The manifest key and the marker content read `2.5.0`; the manifest keeps its formatting and its other key; the README text outside the marker is untouched.
+  - [ ] The second run writes nothing.
+  - [ ] A declared marker missing from its file, a key that is not a string and a pair that occurs twice are each reported with the file and left as they are.
+- **Control:** with no `sync` section in the registration, the area writes and reports nothing.
+- **Guards tested:** SY-4; SY-2.
+- **Regression for:** none yet — new with the sync command.
+
+### T348 — A Stale Derived File Is Reported With Its Command and Kept
+
+- **Workflow:** `scripts/lib/sync-projections.js`, `scripts/lib/sync-graph.js`, `scripts/lib/sync-registry.js`
+- **Synthetic State:** a retired command entry an earlier release wrote into a host folder; a wiki page of a specification that was removed; a row of the global registry for a workspace that is not registered.
+- **Action:** `/magicspec sync`.
+- **Expected:**
+  - [ ] Each is listed as stale with the command that removes it (`init` for the host, `export-wiki` for the page, a manual edit for the row).
+  - [ ] No file is deleted and no row is removed by `sync`; the rest of the run completes.
+- **Control:** after the person runs the listed command, `sync` lists nothing stale.
+- **Guards tested:** SY-5.
+- **Regression for:** none yet — new with the sync command.
+
+### T349 — A Registered Documentation Block Is Rewritten Between Its Markers Only and Carries No SDD Reference
+
+- **Workflow:** `scripts/lib/sync-docs.js` with `scripts/lib/sync-markers.js`
+- **Synthetic State:** a page holding a registered block between `<!-- sync:{key} -->` markers; a source file holding the block's text; later, a source that mentions a task identifier, a phase designator, a registry file name, a specification file name or a path into the state folder.
+- **Action:** `/magicspec sync docs`.
+- **Expected:**
+  - [ ] The text between the markers equals the source; every byte outside the markers, line endings included, is identical.
+  - [ ] A source carrying any of the five classes is refused: the page is as it was and the report names the class and the source.
+  - [ ] A missing source, a missing page and a missing marker are each reported and nothing is written.
+- **Control:** removing the reference from the source and running `sync docs` again writes the block.
+- **Guards tested:** SY-6; SY-2.
+- **Regression for:** none yet — new with the sync command.
+
+### T350 — A Preview Writes Nothing, the Wiki and the Index Included
+
+- **Workflow:** `scripts/sync.js` with `scripts/lib/sync-graph.js` and `scripts/graph-cache.js`
+- **Synthetic State:** a project with a stale count, stale counters, a missing wiki and no artifact index.
+- **Action:** `/magicspec sync --dry-run`, then `/magicspec sync`.
+- **Expected:**
+  - [ ] The preview's counts line reads `(dry run)` and each write reads `would write`, the wiki pages and the index refresh among them.
+  - [ ] Not one byte of the project changed: no registry cell, no counter, no wiki page, no index file, no extraction-cache entry, no `.cache` folder.
+  - [ ] The real run then writes what the preview listed.
+- **Control:** a second preview after the real run lists nothing and prints the one-line report.
+- **Guards tested:** SY-7.
+- **Regression for:** none yet — new with the sync command.
+
+### T351 — A Failed Engine Integrity Check Skips Projections Only
+
+- **Workflow:** `scripts/lib/sync-projections.js`
+- **Synthetic State:** one file of the installed skill folder differs from its recorded checksum; the host's rule copy is older than the folder's rules; the registry count is stale.
+- **Action:** `/magicspec sync`.
+- **Expected:**
+  - [ ] The report lists one disagreement naming the folder and the command to restore it from the release archive; the rule copy is not rewritten.
+  - [ ] The registry count, the counters and the graph are still brought up to date.
+- **Control:** after the folder is restored, `sync projections` rewrites the stale copy.
+- **Guards tested:** SY-2; §5.4 (an integrity failure skips only the projections area).
+- **Regression for:** none yet — new with the sync command.
+
+### T352 — In the Engine's Repository the Maintenance Sync Runs the Shipped Pass and Bumps No Registry Version
+
+- **Workflow:** `skills/magicspec-dev/workflows/sync.md` with `scripts/sync.js`
+- **Synthetic State:** the engine's repository, whose global registry has a stale count and whose workspace registries carry version lines and history rows.
+- **Action:** `/magicspec-dev sync --dry-run`, then `/magicspec-dev sync`, then again.
+- **Expected:**
+  - [ ] Stage 4 prints the shipped report; the dry run changes no file.
+  - [ ] The real run changes the registry's count only: no registry version line moves, no `Last Updated` stamp, no history row is appended.
+  - [ ] The second run writes nothing to the registries, and the plan no longer falls behind its registry through the sync.
+- **Control:** the engine-only stages (engine metadata, the README anchor, the link check, the documentation) still run in their places.
+- **Guards tested:** SY-9; SY-1.
+- **Regression for:** none yet — new with the sync command.

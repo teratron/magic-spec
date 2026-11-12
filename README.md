@@ -201,6 +201,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |
 | `/magicspec status` | Resume briefing: position, progress, blockers, next command (read-only) | optional: a workspace |
 | `/magicspec migrate` | Move a 2.x project to this layout | none |
+| `/magicspec sync` | Bring derived state up to date: registry counts, rule copies, graph, version anchors, registered doc blocks | optional: an area, a workspace or `--dry-run` |
 | `/magicspec help` | List the commands, explain one, offer to run it | optional: a command, a language |
 
 A command whose argument is required asks for it when you leave it out; a command whose argument is optional runs its default and says which. There is nothing to configure: no command is written into your project.
@@ -267,4 +268,4 @@ Distributed under the [MIT](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v3.0.0). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v3.0.129). We are constantly refining the SDD engine based on real-world usage.

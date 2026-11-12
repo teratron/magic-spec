@@ -55,7 +55,7 @@ The repository has a second command, `/magicspec-dev <command> [argument]` (the 
 | --- | --- |
 | `init` | Rebuilds the agent-facing links and the projections of the engine skill, per agent. Name every agent you use: a bare run removes the managed links it does not recreate |
 | `test` | Validates the engine by cognitive simulation and the regression suite |
-| `sync` | Synchronizes engine metadata, version anchors, links, registry metadata and documentation |
+| `sync` | Runs `/magicspec sync`, then the engine-only stages: engine metadata, version anchors, links and documentation |
 | `release` | Validates, versions and triggers a GitHub Release |
 | `fix` | Carries error feedback about the engine — a pasted engine bug report, a pending feedback note, a failing harness case — from report to a verified repair: the shipped `fix` triage with the engine as the product, a harness case shown to fail without the repair, C14, and every maintained release line |
 

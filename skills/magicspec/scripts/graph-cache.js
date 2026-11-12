@@ -4,7 +4,7 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { graphPaths } = require('./utils');
+const { graphPaths, isDryRun } = require('./utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // SPEC GRAPH EXTRACTION CACHE
@@ -113,7 +113,8 @@ function fileHash(absPath, rootDir) {
  */
 function cacheDir(designAbs) {
     const dir = graphPaths(designAbs).cache;
-    fs.mkdirSync(dir, { recursive: true });
+    // A dry run (MAGIC_DRY_RUN, which `sync --dry-run` sets for the build it renders) leaves the project as it is.
+    if (!isDryRun()) fs.mkdirSync(dir, { recursive: true });
     return dir;
 }
 
@@ -166,6 +167,7 @@ function saveCached(absPath, result, designAbs, rootDir = designAbs) {
     }
 
     inUse.add(hash);
+    if (isDryRun()) return;
     const entry = path.join(cacheDir(designAbs), `${hash}.json`);
     const tmp = `${entry}.tmp`;
 
@@ -225,6 +227,7 @@ function clearCache(designAbs) {
  * @returns {number} Number of files removed.
  */
 function pruneUnused(designAbs) {
+    if (isDryRun()) return 0;
     const dir = graphPaths(designAbs).cache;
     let names;
     try {
