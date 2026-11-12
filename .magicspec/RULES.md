@@ -1,6 +1,6 @@
 # Project Specification Rules
 
-**Version:** 1.21.0
+**Version:** 1.22.0
 **Status:** Stable
 **Based on:** `workflows/spec.md` of the engine folder
 
@@ -65,7 +65,7 @@ The engine folder (`skills/magicspec/` in this repository, the skill folder of a
 
 Limit the SDD workflow to the core command set to maximize automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary and explicitly authorized as a C2 exception.
 
-The command set as it ships: `spec`, `plan`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `fix`, `simulate`, `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
+The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
 
 ### C3 — Parallel Task Execution Mode
 
@@ -216,13 +216,13 @@ At critical decision points, the agent MUST activate the designated role card fr
 | `rule.md` | Rule Wording Review (after APPROVE verdict) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | `analyze.md` | Prompt Quality Audit (Mode C) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
 | every workflow body | Input Pass (before the workflow acts on prose) | `@role:prompt-engineer` | `roles/prompt-engineer.md` |
-| `simulate.md` | During Logic Audit | Skeptic persona (dev-only; no role card) | — |
+| `test.md` (maintenance: `/magicspec-dev test`) | During Logic Audit | Skeptic persona (dev-only; no role card) | — |
 
 **Opt-in conditional gate:** `prompt-engineer` also fires in `run.md` Step 3.4b when the diff touches AI-facing instruction artifacts (specifications, rules, plan/task units, role cards, workflow bodies, templates, adapter instructions); diffs touching only non-instruction code or data skip it silently.
 
 Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
-Full registry: `roles/` of the engine folder — 14 registered role cards; each card is self-contained and defines its own gates and invariants.
+Full registry: `roles/` of the engine folder — 16 registered role cards; each card is self-contained and defines its own gates and invariants.
 
 ### C25 — Engineer Posture (Narrate-and-Act)
 
@@ -281,6 +281,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: `.m
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.22.0 | 2026-11-12 | Agent | **C24's developer row names the maintenance workflow, C24 counts sixteen role cards and C2 lists `fix` and `simulate` as shipped** (origin `user-stated`: the owner's list of 2026-10-29, which asks for `simulate` and for the `ui-ux-designer` and `simulator-tester` roles; wording composed by the agent from the product simulation, role system and command surface specifications and mirrored word for word in `skills/magicspec/templates/rules.md` for C2 and the card count — the template has no developer row). C24's row for the developer-only workflow names `test.md` (`/magicspec-dev test`) instead of `simulate.md`, so that the name `simulate` means the product command alone once it ships; the registry line counts 16 cards instead of 14; C2's list of the command set as it ships gains `fix` (shipped since the planning-split phases and never recorded) and `simulate`, and keeps `goal` and `sync` as the exceptions still to come. All §7 amendments, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the change the constitution names one developer workflow and one product command by the same word, counts 14 cards where 16 exist, and calls a shipped command pending. Constitutional review: APPROVE — no conflict with §1–6 or C2 (the two commands are the exceptions C2 itself authorizes), no practical conflict with C11, C24 or C28, no hole opened, no new question, gate or obligation; rule wording review: PASS. |
 | 1.21.0 | 2026-11-11 | Agent | **C11 extends to the whole maintenance set and C28 item 2 names the entry for engine bug reports** (origin `user-stated`: the owner's list of commands of 2026-11-11 — error feedback about the engine goes through a maintenance `fix`, and the maintenance commands are authorized as C2 exceptions when it ships; wording composed by the agent and mirrored word for word in `skills/magicspec/templates/rules.md` for C11). C11 authorizes `init`, `test`, `sync`, `release` and `fix` of `/magicspec-dev` as developer-facing exceptions (it named `test` alone, as a one-time exception); C28 item 2 says a pasted engine bug report is entered through `/magicspec-dev fix`. Both are §7 amendments, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the change the constitution authorizes one maintenance command of five and routes engine bug reports nowhere. Constitutional review: no conflict with §1–6 or C2 (the exceptions are explicitly authorized, as C2 requires), the shipped guard of C28 item 5 is untouched and the consumer-facing text still forbids a project that installed the engine to edit it; rule wording review: PASS. |
 | 1.20.0 | 2026-11-11 | Agent | **C24 gains the Input Pass row** (origin `user-stated`: the owner's list of 2026-10-29, "any human prose arriving with commands or skills passes through the prompt engineer"; the row composed by the agent from the input pass protocol and mirrored word for word in `skills/magicspec/templates/rules.md`). The prose of an invocation passes through `@role:prompt-engineer` before any workflow body acts on it, silent when its reading agrees with the literal text. A §7 amendment, so no core-amendment gate. Admission (RA-1, user-stated, soft form, recorded at its stated strength): without the row the card gate the engine ships would be absent from the constitution that lists every card gate. Constitutional review: no conflict with §1–6, C9 or C27 (the pass asks no question) and no hole opened; rule wording review: PASS. The count of 14 registered role cards is unchanged. |
 | 1.19.0 | 2026-11-11 | Agent | **The pipeline is four stages** (origin `user-stated`: the owner's list of commands of 2026-11-11 — stages split so that a model can be switched between them). C9: the agent executes each stage autonomously, one stage per invocation, a stage ending by recording its result and naming the next command with its reasoning demand; `goal` chains them. C2 records the command set as it ships, with the four authorized exceptions still to come and `audit` as an alias. C24: the planner gate lives in `plan.md`. Admission (user-stated, soft form): the old C9 sentence ("executes the full lifecycle autonomously") contradicts the one-stage rule the delivered `plan` and `task` bodies follow, and C24's row named a gate the `task` body no longer holds. No objective gate changed; no §1–6 text touched. The shipped template carries the same words. |

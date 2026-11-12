@@ -13,34 +13,27 @@ Sections are independent — apply each by its own trigger. Paths are relative t
 
 ## 1. Engine Upgrade Detection (Local ↔ Snapshot)
 
-Engine updates ship via the project's releases page on the remote Git host (e.g., GitHub, GitLab, etc.): the user
-downloads the latest release archive and manually replaces the skill
-folder. Its `.version` then changes locally while
-the `**Engine Version:**` snapshot in `.magicspec/INDEX.md` still points at the
-previously analyzed value. This section detects that delta and offers to
-re-validate the project. No network calls — purely local comparison.
+Engine updates ship as release archives on the project's releases page: the user replaces the skill
+folder by hand, so its `.version` changes while the `**Engine Version:**` snapshot in
+`.magicspec/INDEX.md` still holds the previously analyzed value. This section detects that
+delta and offers to re-validate the project, by a purely local comparison (no network calls).
 
 ### Procedure
 
-Runs at the start of **every** `/magicspec <command>` invocation except `/magicspec analyze`
-(would recurse), `/magicspec status` (read-only briefing — reports drift as an
-informational line instead of prompting), `/magicspec help` and `/magicspec migrate`
-(see Exemptions). Trigger on **any** segment
-difference — `major`, `minor`, **and `patch`**; patch releases routinely
-carry behavior-affecting changes.
+Runs at the start of **every** `/magicspec <command>` invocation except those named under
+Exemptions. Trigger on **any** segment difference — `major`, `minor`, **and `patch`**; patch
+releases routinely carry behavior-affecting changes.
 
 1. Read `local_engine` from `.version`.
 2. Read `snapshot_engine` from the `**Engine Version:**` field in `.magicspec/INDEX.md`.
-   Missing `.magicspec/INDEX.md` → treat as `fresh` (no prior analysis exists — nothing has
-   drifted from anything). File present but the `**Engine Version:**` field missing →
+   Missing `.magicspec/INDEX.md` → treat as `fresh` (no prior analysis exists, so nothing
+   can have drifted). File present but the `**Engine Version:**` field missing →
    treat as `unknown` (a registry exists without the snapshot).
-3. If `local_engine == snapshot_engine`, or the result is `fresh` → proceed silently.
-   A fresh project has no prior snapshot to revalidate against; Auto-Init creates
-   `.magicspec/INDEX.md` with a correctly-seeded snapshot on its own.
+3. If `local_engine == snapshot_engine`, or the result is `fresh` → proceed silently;
+   Auto-Init creates `.magicspec/INDEX.md` with a correctly-seeded snapshot on its own.
 4. On mismatch, or `unknown`, narrate **one informational line** and **proceed** —
-   never a `[y/n]` prompt or option menu. This is a drift-revalidation offer governed by
-   DA-8/DA-9 of the Autonomous Decision Protocol (one recommended path, no menu); it mirrors
-   the read-only treatment `/magicspec status` already uses (SC-4):
+   never a `[y/n]` prompt or option menu. The line is a drift-revalidation offer under DA-8/DA-9
+   (one recommended path, no menu), as `/magicspec status` shows it (SC-4):
 
    > [!NOTE]
    > SDD engine drift: `{snapshot_engine}` → `{local_engine}`. Recommend `/magicspec analyze`
@@ -53,17 +46,16 @@ carry behavior-affecting changes.
 
 6. **Snapshot contract**: the `**Engine Version:**` field updates **only** when
    `/magicspec analyze` runs (the sole writer; manual edits must not touch it) — except in this
-   engine's own dev-repo, where `update-engine-meta` also patches the field directly on every
-   C14 bump (detected via the developer-repository predicate `generate-checksums`/
-   `sync-engine-snapshot` already use). Consumer projects are unaffected: the guard is absent there, so
-   the sole-writer contract above holds exactly as written. Until a writer runs, the drift line
-   re-narrates each session — that recurrence is by design (a standing recommendation), not a
-   prompt.
+   engine's own dev-repo, where `update-engine-meta` also patches it on every C14 bump (the
+   developer-repository predicate `generate-checksums`/`sync-engine-snapshot` already use).
+   Consumer projects lack that predicate, so the sole-writer contract holds for them as written.
+   Until a writer runs, the drift line re-narrates each session — a standing recommendation by
+   design, not a prompt.
 
 ### Exemptions
 
 - `/magicspec analyze` itself (would recurse).
-- `/magicspec status` — read-only briefing; renders drift as an informational engine line, never a prompt.
+- `/magicspec status` — read-only briefing; shows drift as an informational line, never a prompt.
 - `/magicspec help` — read-only list of the commands; a drift line before it would answer a question nobody asked.
 - `/magicspec migrate` — runs before the project is on the layout the engine reads, so there is no snapshot to compare.
 - Missing or unreadable `.version` → skip silently, do not block work.
@@ -96,9 +88,9 @@ The Specification Knowledge Graph is managed by `/magicspec graph`.
 
 ## 3. Finalization Protocol (Post-Workflow)
 
-After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`, `/magicspec fix` or `/magicspec rule` complete their
+After `/magicspec spec`, `/magicspec plan`, `/magicspec task`, `/magicspec run`, `/magicspec fix`, `/magicspec simulate` or `/magicspec rule` complete their
 main steps and **before** their Completion Checklist, run
-`node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule|fix> --workspace={active-workspace}`
+`node scripts/executor.js finalize --workflow=<spec|plan|task|run|rule|fix|simulate> --workspace={active-workspace}`
 and display its entire stdout **verbatim** in a fenced block. Skip it for `/magicspec analyze`,
 `/magicspec graph`, `/magicspec help`, `/magicspec migrate` and `/magicspec-dev:*`. A non-zero exit is a
 WARNING, never a block.
@@ -135,8 +127,7 @@ does not revert to host-assistant defaults at workflow boundaries.
 
 - **DA-6 (Session Persistence)**: when a workflow completes, the next step is
   computed (pipeline order → dependency topology → status maturity) and
-  **narrated, never asked**. "Task finished — what now?" is resolved by the
-  protocol, not by a question.
+  **narrated, never asked**.
 - **DA-4 (Decision Record grammar)**: every autonomous resolution of an
   elective fork is narrated as exactly one line:
   `[DR] {decision} — {criterion}. (Override: {command})` — the override hint
@@ -190,13 +181,13 @@ does not revert to host-assistant defaults at workflow boundaries.
 Before finishing any task that involved magic-spec workflows, verify §1–§10 were honored.
 
 - [ ] **§1 Upgrade Detection** — compared `.version` to `**Engine Version:**`
-      in `.magicspec/INDEX.md` before any `/magicspec <command>` (except `/magicspec analyze`); on
+      in `.magicspec/INDEX.md` before any `/magicspec <command>` (except the §1 exemptions); on
       mismatch (or `unknown` snapshot) narrated exactly one informational drift line
       and proceeded — never prompted `[y/n]`, never auto-diverted into `/magicspec analyze`.
 - [ ] **§2 Spec Graph** — ran `build-spec-graph` before architectural questions;
       navigated `.magicspec/graph/wiki/index.md` (if present) instead of raw spec files;
       ran `export-wiki` after any `.magicspec/` change this session.
-- [ ] **§3 Finalization** — after `/magicspec spec|plan|task|run|rule|fix`, ran
+- [ ] **§3 Finalization** — after `/magicspec spec|plan|task|run|rule|fix|simulate`, ran
       `node scripts/executor.js finalize --workflow=<...> --workspace={active-workspace}` and displayed its stdout **verbatim**.
 - [ ] **§4 Phase Archival** — for `/magicspec run`, confirmed `finalize` archived every
       phase with `status: Done` and no remaining `- [ ]`, and `TASKS.md` link
@@ -234,12 +225,10 @@ finding with `record-diagnostic` and as a `feedback note`. Template, recording a
 
 ## 10. Session Resume Check (Cold Context)
 
-A session that is new, cleared, or continuing after a compaction starts with no
-memory of the work in flight. The engine records that work at events it can
-observe — a task marked `In Progress`, dead ends written to `Attempts`, the
-`STATE.md` update every finalize makes — so a cold context can recover it
-without asking anyone. This section makes the recovery automatic: there is
-nothing for the user to type.
+A new or cleared session, or one continuing after a compaction, starts with no memory of the
+work in flight. The engine records that work at events it can observe — a task marked
+`In Progress`, dead ends written to `Attempts`, the `STATE.md` update every finalize makes —
+so a cold context recovers it automatically, with nothing for the user to type.
 
 ### Procedure
 

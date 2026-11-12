@@ -67,6 +67,24 @@ graph TD;
 
 ...
 
+## Interface
+
+<!-- Optional: used only when the specification describes an interface a person sees and operates (a web page, a desktop or mobile screen, a terminal interface). Delete the section otherwise. The design system is a specification of its own (`templates/design-system.md`); this section references it and never redefines a token. -->
+
+**Design system:** {design-system specification} (tokens and components used), or the sources of the choices when there is none.
+
+**Views:**
+
+| View | Normal | Empty | Loading | Error | Partial | Disabled | Long content |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| {view} | {what the person sees and can do} | {…} | {…} | {…} | {…} | {…} | {…} |
+
+<!-- State only the states that apply to the view, and say what the person can do in each. -->
+
+**Accessibility:** contrast {level}; keyboard operation and focus order {order}; accessible names {rule}; reduced motion {rule}.
+
+**Sizes:** {narrowest} … {widest}.
+
 ## 6. Implementation Notes
 
 <!-- Optional. Fill if implementation order is non-obvious.

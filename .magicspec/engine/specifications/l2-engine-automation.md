@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.30.0
+**Version:** 1.30.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -20,6 +20,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 - **lib/file-lock.js**: An exclusive lock file for a read-modify-write (`update-state` takes it around its STATE.md write).
 - **resolve-workspace.js** with **lib/workspace-routing.js**: Computes the workspace a command acts on — argument, environment, sole workspace, location, topic, work in flight, default, coverage — writes nothing and prints `Workspace:`, `Signal:` and the `Narration:` line (`l1-workspace-intent-routing.md` §5.1).
 - **lib/in-flight.js**: The one predicate for "a task is `In Progress`", read by `resume-state` and by `resolve-workspace`.
+- **lib/simulation-findings.js**: The failed and inconclusive steps the last runs of a workspace's scenarios recorded, read from the scenario files for the next-step computation of `finalize` and the argument form of `fix` — it keeps no store, ignores a layout shown in a comment or a code block and fails open ([l1-product-simulation.md](l1-product-simulation.md) SM-7).
 - **feedback.js** with **lib/feedback.js**, **lib/feedback-draft.js** and **lib/feedback-submit.js**: The engine feedback channel — `note`, `list`, `draft`, `submit`, `keep` and `discard` (the record and its limits are in [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11). Always exits 0; submission goes through the person's own `gh` client only.
 - **clean-cache.js**: Removes the rebuildable caches of the project; `--dry-run` lists them (§Cache Retention).
 - **check-prerequisites.js**: Validates engine integrity and project state.
@@ -388,6 +389,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.30.1 | 2026-11-12 | Agent | As built in Phase 52, Stable retained: the Components list gains `lib/simulation-findings.js`, the shared reader of the open simulation findings. |
 | 1.30.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained: the Components list gains `feedback.js` with its libraries, and the cache inventory row of the feedback notes names its file (`.cache/feedback.json`, owner `lib/feedback.js`, not rebuildable, bounded by the limits of `l2-engine-diagnostics.md` §4.11). The command table gains the entry `feedback` (positional action and identifier, twelve options, `--new`), and `finalize --workflow` accepts `fix`. |
 | 1.29.0 | 2026-11-11 | Agent | **As built (Phase 48), Stable retained — no requirement added.** Components name `resolve-workspace` (with `lib/workspace-routing.js`), `lib/in-flight.js` and `clean-cache`. The cache inventory is completed as built: the wiki prune also removes the `*.md.tmp` of an interrupted write; the documentation-sync state (moved into the state folder, the earlier root-level file read once and retired) and the state lock (removed after use, taken over after 30 seconds) have rows; rule 2 names the rows `clean-cache` removes. New §Registered Folders Only records the one check every writer applies (WI-14) and the audit of which scripts apply it. The measured extraction cache (226 entries for 53 files before, 53 after) and the behaviour of `clean-cache` are recorded. |
 | 1.28.0 | 2026-11-06 | Agent | **Field report against engine 2.1.144, reproduced against 3.0.18** (origin `user-stated`: four MAGIC-SPEC ENGINE BUG REPORTs, direct repair). New **Canonical References Reader** (one reader for the three scripts that read the table: the Path column by header, one reference per code span) and **Scopeless Workspace** (a workspace without `scope` is the whole project in `build-spec-graph` and `detect-communities`; one definition of "oversized"); **Coverage Denominator Scope widened** to every file under the state folder, and links are not scanned. Regression cases in [l2-test-suite.md](l2-test-suite.md). |

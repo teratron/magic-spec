@@ -1,6 +1,6 @@
 # Documentation System Specification
 
-**Version:** 1.2.4
+**Version:** 1.2.5
 **Status:** Stable
 **Layer:** concept
 
@@ -26,7 +26,7 @@ Documents in `docs/` must stay synchronized with the active workflows in `skills
 
 Each `skills/magicspec/{workflow}.md` has a corresponding `docs/{workflow}.md` counterpart that describes the same workflow for human readers. When a guard, invariant, or behavioral rule is added to a `skills/magicspec/` workflow, the matching `docs/` file must be updated in the same repair cycle.
 
-Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md`, `analyze.md`, `init.md`, `rule.md`, `retrospective.md`.
+Files currently in scope: `spec.md`, `run.md`, `task.md`, `simulate.md` (the product command; the engine's own test workflow is documented in `dev-test.md`), `analyze.md`, `init.md`, `rule.md`, `retrospective.md`.
 
 ### Static Documentation
 
@@ -46,6 +46,7 @@ The following `docs/` files are reference material not tied to a specific `skill
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.5 | 2026-11-12 | Agent | Reality sync, as built in Phase 52 (Stable retained, no requirement changed): the files in scope name `simulate.md` as the product command and the engine's own test workflow as `dev-test.md`, so that one name means one workflow. |
 | 1.2.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.3 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.2.2 | 2026-06-10 | Agent | Restored missing Version/Status/Layer header fields (parity repair with INDEX.md registry). |

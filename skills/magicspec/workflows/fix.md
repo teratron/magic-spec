@@ -23,7 +23,7 @@ Takes reported defects — a description, a failing test, a finding of a simulat
 
 **Trigger:** `/magicspec fix [defect]`. The defect is required. Arguments:
 
-- *(empty)* — the argument form asks for the defect once. Its suggestions are the open findings, read by `node scripts/executor.js feedback list` (the pending feedback notes, then the findings the diagnostics sink holds that no digest has shown yet) and, when the product has them, the findings of a simulation: at most three, the first marked recommended, free text always accepted
+- *(empty)* — the argument form asks for the defect once. Its suggestions are the open findings, read by `node scripts/executor.js feedback list` (the pending feedback notes, then the findings the diagnostics sink holds that no digest has shown yet) and, when the product has them, the findings of a simulation (the `fail` and `inconclusive` steps of the `Last run` records under `.magicspec/{workspace}/simulations/`): at most three, the first marked recommended, free text always accepted
 - `{defect}` — what is wrong, in words; a pasted report (an error message, a stack trace, a bug report); or a finding taken from the open findings
 - `{workspace} "{defect}"` — the same, in a specific workspace
 
@@ -46,7 +46,7 @@ Examples: `/magicspec fix "the export drops the last row"`, `/magicspec fix {wor
 | *(empty)* | No argument | **Argument form**: ask for the defect once (`help.md` Step 4); nothing runs until it is given. A dismissed form runs nothing and says so in one line |
 | `"{defect}"` | Quoted text, or text that matches no workspace name | **Triage**: the text is the defect, in the workspace the routing chain chooses |
 | `{workspace} "{defect}"` | First token is a workspace, the rest is the defect | **Scoped triage**: the same, in that workspace |
-| a finding | An entry of the open findings (a diagnostics code, a feedback note identifier, a simulation finding) | **Triage of the finding**: the entry's own text is the defect |
+| a finding | An entry of the open findings (a diagnostics code, a feedback note identifier, a simulation finding — a failed or inconclusive step of a scenario's `Last run` record) | **Triage of the finding**: the entry's own text is the defect |
 
 > **Disambiguation**: a single unquoted word that matches both a workspace name and a defect word → workspace takes priority; force the defect by quoting it.
 > **A directive about order or membership** ("postpone", "plan the fix") is not this workflow's: name `/magicspec plan` with it as the one next step and write nothing.

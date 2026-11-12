@@ -102,6 +102,12 @@ function buildChangelogBullet(workflow, workspace, files) {
             if (tasks.length > 1) return `Repaired ${tasks.length} reported defects (${workspace})`;
             return `Repaired a reported defect (${workspace})`;
         }
+        case 'simulate': {
+            const areas = files.filter((f) => f.path.includes('/simulations/'));
+            if (areas.length > 1)
+                return `Ran the user scenarios of ${areas.length} areas (${workspace})`;
+            return `Ran the user scenarios (${workspace})`;
+        }
         case 'rule': {
             const global = files.some((f) => f.path === `${STATE_DIR_NAME}/RULES.md`);
             return global

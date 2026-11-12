@@ -53,6 +53,7 @@ graph TD
 | Workflow | Primary File | Purpose | Documentation |
 | --- | --- | --- | --- |
 | **Fix** | `fix.md` | Takes a reported defect, reproduces it, classifies it against the specifications by a closed rule, repairs it and leaves a check that fails without the repair. | [Detailed Guide](fix.md) |
+| **Simulate** | `simulate.md` | Runs the product's user-interaction scenarios live where the product can be driven and traced where it cannot, labels every result and hands each failed step to `fix`. | [Detailed Guide](simulate.md) |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |

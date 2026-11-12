@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.98
+**Version:** 1.9.99
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -254,7 +254,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T15 — Simulate Checksums Mismatch HALT
 
-- **Workflow:** `simulate.md` (Step 0: Pre-flight)
+- **Workflow:** `test.md` (Step 0: Pre-flight)
 - **Synthetic State:**
   - `skills/magicspec/.checksums` exists
   - `spec.md` hash does not match stored checksum (file was modified without regeneration)
@@ -574,7 +574,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T32 — Simulate Missing Test Suite (Improv Mode Fallback)
 
-- **Workflow:** `simulate.md` (Improv Mode)
+- **Workflow:** `test.md` (Improv Mode)
 - **Synthetic State:**
   - `tests/suite.md` file is missing or inaccessible.
 - **Action 1:** User runs `/magicspec-dev:test test`
@@ -621,7 +621,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T35 — Simulate Regression Sweep Post-Fix
 
-- **Workflow:** `simulate.md` (Verification Step)
+- **Workflow:** `test.md` (Verification Step)
 - **Synthetic State:**
   - Logic flaw found in a workflow definition (e.g. `init.md`).
   - Surgical fix applied.
@@ -695,7 +695,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T40 — Simulate Improv Mode Zero-Prompt Fallback
 
-- **Workflow:** `simulate.md` (Wrapper & Engine)
+- **Workflow:** `test.md` (Wrapper & Engine)
 - **Synthetic State:** Fresh design session, all files present.
 - **Action:** User prompts `"/magicspec-dev:test"` without arguments.
 - **Expected:**
@@ -925,7 +925,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T56 — Engine Meta Automation Enforcement
 
-- **Workflow:** `run.md`, `rule.md`, `simulate.md`, `spec.md` (Core Engine Update)
+- **Workflow:** `run.md`, `rule.md`, `test.md`, `spec.md` (Core Engine Update)
 - **Synthetic State:**
   - Agent modifies `skills/magicspec-dev/workflows/test.md` to add a new guideline.
   - `skills/magicspec/.version` is `1.4.11`.
@@ -1030,7 +1030,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T63 — Simulation Cold Start Auto-Init
 
-- **Workflow:** `simulate.md` (Step 0: Pre-flight)
+- **Workflow:** `test.md` (Step 0: Pre-flight)
 - **Synthetic State:** Fresh repository, `.magicspec/` (missing).
 - **Action:** User runs `/magicspec-dev:test`.
 - **Expected:**
@@ -1162,7 +1162,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T73 — Simulation: Corrupted Suite (Partial Content)
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - `tests/suite.md` exists but contains only the header block (no `### T{N}` test scenarios).
   - File is readable but has zero parseable test cases.
@@ -1942,7 +1942,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T122 — Simulate C14 Enforcement Gate Blocks Report
 
-- **Workflow:** `simulate.md` (§Reporting & Fixes — C14 Enforcement Gate)
+- **Workflow:** `test.md` (§Reporting & Fixes — C14 Enforcement Gate)
 - **Synthetic State:**
   - Agent ran `/magicspec-dev:test spec` and found 2 ROUGH EDGEs
   - Agent applied surgical patches to `skills/magicspec/workflows/spec.md`
@@ -1958,7 +1958,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T123 — Simulate Succession Max 2-Round Guard
 
-- **Workflow:** `simulate.md` (§Succession — max iterations)
+- **Workflow:** `test.md` (§Succession — max iterations)
 - **Synthetic State:**
   - Round 1: `/magicspec-dev:test test` finds 1 FAIL → agent patches → C14 Gate → Succession
   - Round 2: `/magicspec-dev:test test` finds 1 new FAIL (introduced by Round 1 fix) → agent patches → C14 Gate → Succession
@@ -1973,7 +1973,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T124 — Simulate File-Path Argument Routing
 
-- **Workflow:** `simulate.md` (§Mode Selection — file-path support)
+- **Workflow:** `test.md` (§Mode Selection — file-path support)
 - **Synthetic State:**
   - All engine files present and valid
 - **Test A — Workflow name:**
@@ -2065,7 +2065,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T129 — Simulate Pre-flight Blocks on Engine Integrity Failure
 
-- **Workflow:** `simulate.md` (§0 Pre-flight)
+- **Workflow:** `test.md` (§0 Pre-flight)
 - **Synthetic State:**
   - `skills/magicspec/.checksums` has been manually altered (hash mismatch)
   - `check-prerequisites --json` returns `checksums_mismatch: true`
@@ -2080,7 +2080,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T130 — Improv Mode Crisis Template Structural Validation
 
-- **Workflow:** `simulate.md` (§1a Crisis Template)
+- **Workflow:** `test.md` (§1a Crisis Template)
 - **Synthetic State:**
   - `workspace.json` has 2 workspaces: `engine`, `docs`
   - All engine files valid
@@ -2098,7 +2098,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T131 — Simulate Guard Resilience Reports Mechanical vs Instructional
 
-- **Workflow:** `simulate.md` (§3 Cognitive Coverage Report — Guard Resilience)
+- **Workflow:** `test.md` (§3 Cognitive Coverage Report — Guard Resilience)
 - **Synthetic State:**
   - Target: `run.md`
   - Guards applicable: C12 (mechanical — INDEX.md check), C7 (instructional — no HALT keyword), C14 (mechanical — checksums), Spec Stability (instructional — explicit HALT in `run.md` Logic Guard)
@@ -2115,7 +2115,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T132 — Simulate Context Bleed Warning in Succession Report
 
-- **Workflow:** `simulate.md` (§3 Succession — Context Bleed Warning)
+- **Workflow:** `test.md` (§3 Succession — Context Bleed Warning)
 - **Synthetic State:**
   - Agent ran `/magicspec-dev:test spec`, found 1 ROUGH EDGE, applied fix
   - C14 gate passed
@@ -2129,7 +2129,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T133 — Suite Integrity Timing: Test Mode Validates Before Execution
 
-- **Workflow:** `simulate.md` (§2 Suite Integrity — timing rule)
+- **Workflow:** `test.md` (§2 Suite Integrity — timing rule)
 - **Synthetic State:**
   - `tests/suite.md` exists but T14 has a malformed header: `### T14: Missing Dash` (colon instead of dash)
   - suite.md has 20 valid tests + 1 malformed
@@ -2144,14 +2144,14 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T134 — Context Resolution Consistency Across Workflows
 
-- **Workflow:** All workflows (`spec.md`, `plan.md` and `task.md`, `run.md`, `analyze.md`, `init.md`, `rule.md`, `simulate.md`)
+- **Workflow:** All workflows (`spec.md`, `plan.md` and `task.md`, `run.md`, `analyze.md`, `init.md`, `rule.md`, `test.md`)
 - **Synthetic State:**
   - `workspace.json` has 2 workspaces: `engine` (default), `docs`
   - `MAGIC_WORKSPACE` env var is set to `docs`
   - User runs `/magicspec spec` (no explicit workspace arg)
 - **Expected:**
   - [ ] Agent resolves workspace using priority chain: explicit arg (none) > `MAGIC_WORKSPACE` (`docs`) → uses `docs`
-  - [ ] Same resolution logic produces same result in `task.md`, `run.md`, `rule.md`, `simulate.md`, `init.md`
+  - [ ] Same resolution logic produces same result in `task.md`, `run.md`, `rule.md`, `test.md`, `init.md`
   - [ ] `analyze.md` full Workspace Resolution table produces identical result for same inputs
   - [ ] No workflow falls back to `workspace.json` default when `MAGIC_WORKSPACE` is set
 - **Guards tested:** Context Resolution parity across all workflows, priority chain consistency
@@ -2283,7 +2283,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T142 — Simulate HALT Includes Recovery Hint
 
-- **Workflow:** `simulate.md` (Step 0: Pre-flight)
+- **Workflow:** `test.md` (Step 0: Pre-flight)
 - **Synthetic State:**
   - `skills/magicspec/.checksums` exists but `run.md` checksum mismatches (file was modified)
 - **Action:** `/magicspec-dev:test run`
@@ -2499,7 +2499,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T157 — Simulate Scope-Isolated Integrity Check (C15 Filter)
 
-- **Workflow:** `simulate.md`, `init.md`
+- **Workflow:** `test.md`, `init.md`
 - **Synthetic State:**
   - Workspace `docs` active (`scope: docs/, package.json` — excludes `.magic`).
   - `skills/magicspec/workflows/run.md` modified locally (hash mismatch) — a file outside the active workspace's scope.
@@ -2789,7 +2789,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T179 — Simulate Suite Corruption Fallback (RE-5 Regression)
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - `tests/suite.md` exists but contains only metadata header (no test scenarios).
   - File size > 0 bytes, readable.
@@ -2907,7 +2907,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T186 — Simulate Pre-flight Hard Gate Enforcement
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - `.magicspec/` initialized, engine checksums valid
   - Agent begins simulation without running `check-prerequisites`
@@ -2916,11 +2916,11 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Simulation is flagged as INVALID by any reviewer
   - [ ] No findings from the skipped simulation are accepted
   - [ ] Agent MUST re-run with Pre-flight output recorded verbatim in report
-- **Guards tested:** Pre-flight Hard Gate (HALT), simulate.md §0
+- **Guards tested:** Pre-flight Hard Gate (HALT), test.md §0
 
 ### T187 — Simulate Evidence-Linked Claims Validation
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - Agent produces a simulation report with 3 findings:
     - Finding A: includes `file`, `line`, `evidence` (verbatim quote), `verification` (grep command)
@@ -2936,7 +2936,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T188 — Simulate Null-Result Acceptance
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - All workflow files have 0 vague terms (grep confirms)
   - No divergent duplicates (all C14/Zero-Prompt text identical across files)
@@ -2952,10 +2952,10 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T189 — Simulate Read-Before-Claim Gate
 
-- **Workflow:** `simulate.md`
+- **Workflow:** `test.md`
 - **Synthetic State:**
   - Agent runs Improv Mode simulation
-  - Agent reads 5 of 8 workflow files in Grounding Phase (skips `rule.md`, `retrospective.md`, `simulate.md`)
+  - Agent reads 5 of 8 workflow files in Grounding Phase (skips `rule.md`, `retrospective.md`, `test.md`)
   - Agent then claims a rough edge in `rule.md` Line 42
 - **Action:** Reviewer cross-references the claim against the Grounding Phase file checklist
 - **Expected:**
@@ -2963,7 +2963,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Claim about `rule.md` is automatically INVALID per Read-Before-Claim Gate
   - [ ] Agent must re-read `rule.md` and re-evaluate the claim before it can be accepted
   - [ ] Only claims about files listed in the Grounding Phase checklist are valid
-- **Guards tested:** Read-Before-Claim Gate (simulate.md §0 Step 3)
+- **Guards tested:** Read-Before-Claim Gate (test.md §0 Step 3)
 
 ### T190 — Skill Projection Parity
 
@@ -2997,7 +2997,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T192 — Vague Term Elimination in rules.md Template
 
-- **Workflow:** `simulate.md` (Logic Audit — Ambiguity C13)
+- **Workflow:** `test.md` (Logic Audit — Ambiguity C13)
 - **Synthetic State:**
   - `templates/rules.md` contains quantified terms replacing former vague qualifiers
 - **Action:** Scan `templates/rules.md` for vague terms from the closed list
@@ -4993,3 +4993,145 @@ If any test fails, document the failure reason and propose a fix.
 - **Control:** a dismissed form runs nothing and says so in one line.
 - **Guards tested:** CS-10 item 5; IP-1; IP-7.
 - **Regression for:** none yet — new with the fix command's argument form.
+
+### T317 — A Step That Cannot Run Live Is Traced, Labelled, and Never Counted as a Live Pass
+
+- **Workflow:** `simulate.md` (Steps 2 and 3; Core Invariant 4, two modes) with `roles/simulator-tester.md`
+- **Synthetic State:** a workspace with one scenario file of three steps; the product has no documented way to start in the session.
+- **Action A:** `/magicspec simulate`.
+- **Expected A:**
+  - [ ] Every step is traced through the code and the specifications, and the report says why none ran live.
+  - [ ] Each result line carries `traced`; a traced `pass` is counted under `{t}` and never under `{l}`, and is reported as weaker evidence.
+- **Action B:** `/magicspec simulate --live-only`.
+- **Expected B:**
+  - [ ] No step is traced: all three are `skipped` and listed.
+- **Control:** a product the session can start runs the same scenario live, every result labelled `live`.
+- **Guards tested:** SM-5; Core Invariant 4 (two modes, always labelled).
+- **Regression for:** none yet — new with the simulate command.
+
+### T318 — A Step Against a Shared or Production System Is Never Run Live
+
+- **Workflow:** `simulate.md` (Core Invariant 4, Safety)
+- **Synthetic State:** a scenario whose precondition points at the staging instance of the product that real customers also use.
+- **Action:** `/magicspec simulate`.
+- **Expected:**
+  - [ ] No step runs live against it, with no question asked: the steps are traced, or `skipped` under `--live-only`, and the report names the instance as the reason.
+  - [ ] No credential, account or money of a real person is used by any step.
+- **Control:** the same steps against an instance the run starts locally run live.
+- **Guards tested:** SM-6; Core Invariant 4 (Safety).
+- **Regression for:** none yet — new with the simulate command.
+
+### T319 — A Step With an External Side Effect Runs Live Only After One Consent Question
+
+- **Workflow:** `simulate.md` (Core Invariant 4, Safety; E1) with `AGENT-RULES.md` §7
+- **Synthetic State:** a scenario step that sends an email through a service; the instance of the product is local.
+- **Action:** `/magicspec simulate`.
+- **Expected:**
+  - [ ] Exactly one question precedes that step, with at most three fixed options: skip it (marked default), trace it, run it live.
+  - [ ] Choosing the default skips the step and lists it; no other step is asked about.
+- **Control:** under `--live-only` the options are skip and run it live; a step with no side effect asks nothing.
+- **Guards tested:** SM-6; E1; DA-5.
+- **Regression for:** none yet — new with the simulate command.
+
+### T320 — A Failed Step Is Recorded in Last Run and the One Next Step Is Fix
+
+- **Workflow:** `simulate.md` (Steps 3 to 5, Report) with `finalize.js` (`--workflow=simulate`) and `fix.md` (empty argument)
+- **Synthetic State:** a scenario of three steps; step 2's observed outcome differs from its expectation, step 3 depends on step 2.
+- **Action:** `/magicspec simulate`, then `/magicspec fix` with no argument.
+- **Expected:**
+  - [ ] `Last run` holds the date, the product's version and one line per step: step 2 `fail` with its observed outcome, step 3 `skipped` with that reason; no product file, specification or test is changed.
+  - [ ] The report has one finding line and ends `Next: /magicspec fix {workspace} — deep reasoning`; finalization names `fix` as the next action.
+  - [ ] `fix`'s argument form offers the step as its first suggestion.
+- **Control:** a run in which every step passes names no `fix`, and a re-run that passes replaces the failing lines.
+- **Guards tested:** SM-7; Core Invariant 4 (findings, not patches).
+- **Regression for:** none yet — new with the simulate command.
+
+### T321 — An Expectation No Specification States Is a Specification Gap, Not an Invention
+
+- **Workflow:** `simulate.md` (Core Invariant 4, written from the specifications; Step 5) with `roles/simulator-tester.md` (step 2)
+- **Synthetic State:** a scenario step expects "the cart total includes shipping", which no specification states; the product's code adds shipping.
+- **Action:** `/magicspec simulate`.
+- **Expected:**
+  - [ ] The step is not judged by what the code does: it is reported as a finding of the class specification gap, with the step and the missing statement.
+  - [ ] Nothing in the scenario or in a specification is edited by the run.
+- **Control:** an expectation a specification does state is judged against it, pass or fail.
+- **Guards tested:** SM-2; Core Invariant 4 (written from the specifications).
+- **Regression for:** none yet — new with the simulate command.
+
+### T322 — The Coverage Report Lists What No Scenario Verifies; With No Scenario Files Nothing Is Written
+
+- **Workflow:** `simulate.md` (Steps 1 and 5, Report)
+- **Synthetic State:** a workspace whose specifications state eight user-facing behaviours; no `simulations/` folder.
+- **Action:** `/magicspec simulate`.
+- **Expected:**
+  - [ ] Nothing runs and nothing is written; the report lists the eight statements, each with its specification section, as verified by no scenario.
+  - [ ] The next step is `/magicspec plan {workspace}`, because scenarios are planned with the work.
+- **Control:** with scenarios for six of the eight, the report lists the other two.
+- **Guards tested:** SM-9; SM-3.
+- **Regression for:** none yet — new with the simulate command.
+
+### T323 — Planning Lists the Scenarios a Phase Writes and Decomposition Writes Them
+
+- **Workflow:** `plan.md` (Step 5, Scenario list), `task.md` (Step 4) with `roles/planner.md` (step 7)
+- **Synthetic State:** a phase that adds a checkout flow; a second phase that only renames an internal module.
+- **Action A:** `/magicspec plan`.
+- **Expected A:**
+  - [ ] The checkout phase's entry carries `- Scenarios: {area} — {titles}` written with `@role:simulator-tester`; the rename phase lists none and records no finding.
+  - [ ] A checkout phase without the list is a planning finding resolved before the plan is written.
+- **Action B:** `/magicspec task`.
+- **Expected B:**
+  - [ ] The checkout track's validation task writes the listed scenarios and names the scenario file in its `Verify` line; the rename phase gets no scenario task.
+- **Control:** a phase with user-facing behaviour whose plan entry lists no scenario is a decomposition finding that goes back to `plan` (Findings Go Back), and the other phases are still decomposed.
+- **Guards tested:** SM-3; PL-1; PL-8.
+- **Regression for:** none yet — new with the simulate command.
+
+### T324 — A Task That Changes Behaviour Updates Its Scenarios; a Stale One Is a Finding
+
+- **Workflow:** `run.md` (Step 3.2, Scenario Upkeep; Step 3.5)
+- **Synthetic State:** a task that changes the order of two checkout steps; a scenario still expects the old order, and cites a specification statement that now states the new one.
+- **Action:** `/magicspec run`.
+- **Expected:**
+  - [ ] The scenario is updated in the same task; the finding `scenario out of date` is recorded in the task's `Notes`.
+  - [ ] The QA review asks for the updated scenarios before `Done`.
+- **Control:** when the specification does not settle the new expectation, the task halts with the spec-ambiguity handoff and the scenario is not guessed.
+- **Guards tested:** SM-4; Core Invariant 4 (Handoff).
+- **Regression for:** none yet — new with the simulate command.
+
+### T325 — An Interface Specification With No Design Context Says Where Its Choices Come From
+
+- **Workflow:** `spec.md` (Creation, Interface) with `roles/ui-ux-designer.md` and `templates/spec.md`, `templates/design-system.md`
+- **Synthetic State:** a new product with a web interface; no design-system specification, no brand material, no existing interface.
+- **Action:** `/magicspec spec "an order tracking page"`.
+- **Expected:**
+  - [ ] The specification's interface section says that none of the three exists and states where its choices come from; a design-system specification is created from the template, and the page specification references it and defines no token.
+  - [ ] Every view states its normal state and the empty, loading, error, partial, disabled and long-content states that apply, and the accessibility requirements as verifiable statements.
+- **Control:** a product with a design-system specification cites it first and the section adds no token.
+- **Guards tested:** UI-1; UI-2; UI-3; UI-4.
+- **Regression for:** none yet — new with the interface design.
+
+### T326 — An Interface Task Starts With a Draft That Waits for Nothing and Names How It Is Looked At
+
+- **Workflow:** `task.md` (Step 4, Interface tasks) and `run.md` (Step 3.1)
+- **Synthetic State:** a new screen to build; the session has a browser tool in one run and none in another.
+- **Action A:** `/magicspec task`, then `/magicspec run` with the browser tool.
+- **Expected A:**
+  - [ ] The first task of the track is a draft task; the build continues without waiting for a look; the `Verify` line of every interface task names the visual check.
+  - [ ] The screen is rendered and compared with the interface section; the method is recorded in `Changes`.
+- **Action B:** the same run with no way to render.
+- **Expected B:**
+  - [ ] The task says it cannot render and the check is a review against the interface section, recorded as such; nothing asks the person to look.
+- **Control:** a task that changes no interface meets neither step 3.1 nor the design acceptance.
+- **Guards tested:** UI-5; UI-6; UI-7; DA-2.
+- **Regression for:** none yet — new with the interface design.
+
+### T327 — The Simulator-Tester and the Test-Engineer Do Not Replace Each Other
+
+- **Workflow:** `run.md` (Steps 3.2 and 3.5) with `roles/simulator-tester.md` and `roles/test-engineer.md`
+- **Synthetic State:** a task whose `Verify` line passes while a scenario that crosses it fails; a second task whose scenarios all pass while its `Verify` line fails.
+- **Action:** `/magicspec run` on both tasks, then `/magicspec simulate`.
+- **Expected:**
+  - [ ] The first task can be `Done` by its `Verify` line; the failing scenario is a finding of `simulate`, not a reason the QA gate blocked.
+  - [ ] The second task is `Blocked [!]` by the QA gate whatever its scenarios say.
+- **Control:** an interface task is implemented in the designer's stance, but the `coder` card still owns the diff and the review gates stay as they were.
+- **Guards tested:** SM-8; UI-7.
+- **Regression for:** none yet — new with the simulate command.

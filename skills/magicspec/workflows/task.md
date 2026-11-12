@@ -104,6 +104,8 @@ graph TD
    - **Tracks**: group tasks by file independence.
    - **Verify Line (Mandatory)**: every atomic task MUST include a `Verify` line with a concrete command, check, or evidence source. Vague criteria such as "works", "verify manually", or "covered by tests" are invalid unless the specific test/check is named.
    - **Testing (Mandatory)**: every feature track MUST include at least one `Validation Task` (e.g., `T-1T01`) to verify implementation vs spec.
+   - **Scenarios (SM-3)**: when the phase's plan entry lists scenarios (`- Scenarios: {area} — {scenario titles}`), the validation tasks of the tracks that change that behaviour include writing or updating them (`templates/simulation.md`, by `@role:simulator-tester`), with the scenario file named in the task's `Verify` line. A phase with user-facing behaviour whose plan entry lists none is a finding that goes back to `plan` (Findings Go Back).
+   - **Interface tasks (UI-5, UI-6)**: for a task that builds or changes an interface a person sees and operates, `@role:ui-ux-designer` adds the design acceptance. A new screen or flow starts with a draft task the person can look at; the build continues without waiting for that look (DA-2). The `Verify` line of every interface task names how the result is looked at: rendered where the session can (a screenshot, a driven browser, a captured terminal) and compared with the specification's interface section, or, where it cannot render, reviewed against that section.
    - **Stabilizing Tasks (C12.1)**: every task that targets a specification the plan marks `[Stabilize]` carries the flag `stabilizes: {spec-file}` in its tracking entry. The flag comes from the plan's marker and from nothing else — never from the request in the conversation, never inferred from a title or a description — and a task without it is never a stabilizing task.
    - **Bootstrap Tasks**: every task of a specification the plan marks `[Bootstrap]` carries the same marker.
 5. **Task Instruction Review**: after the decomposition and before the write-back, activate `@role:prompt-engineer` over the generated task descriptions, `Verify` lines, and phase notes — the instruction text `run.md` executors receive. Six-dimension review per the PQ-3 taxonomy. Verdict per PQ-6: FAIL → revise the task units before write-back; PASS-WITH-REWRITES → apply rewrites inline; PASS → proceed.
@@ -160,6 +162,8 @@ Task Workflow Checklist — {operation}
   ☐ Stalled Plan: a phase left with only `Blocked [!]` tasks ended with the report and one next step, not a handoff to `/magicspec run`
   ☐ Verify Lines: Every atomic task has a concrete command/check/evidence criterion
   ☐ Testing Track: Validation tasks (T-XXXX) included for all new features
+  ☐ Scenarios (SM-3): the validation tasks of a phase whose plan entry lists scenarios write or update them, the scenario file named in the `Verify` line
+  ☐ Interface tasks (UI-5, UI-6): a new screen or flow starts with a draft task that waits for nothing; every interface task's `Verify` line names how the result is looked at; the design acceptance comes from `@role:ui-ux-designer`
   ☐ Stabilizing flag taken from the plan's `[Stabilize]` marker only
   ☐ Rules Parity: Current RULES.md version recorded in TASKS.md; Task IDs valid
   ☐ Instruction Quality: task units reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)

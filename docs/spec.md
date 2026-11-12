@@ -114,6 +114,17 @@ After every spec update, the engine switches to a **Critic Persona** and re-read
 
 Multiple specs can be promoted to Stable in a single pass (L1 specs first, then their L2 dependents), preserving layer dependency order.
 
+### 5.5 Interface Specifications
+
+When a specification describes an interface a person sees and operates — a web page, a desktop or mobile screen, a terminal interface — the `ui-ux-designer` role writes its `## Interface` section (the template `skills/magicspec/templates/spec.md` carries it, optional). Four requirements apply:
+
+- **Context first**: the design context is gathered and cited before anything is invented — the product's design-system specification, its brand material, the current interface. With none of them, the specification says so and says where its choices come from.
+- **One design system**: a product with an interface has one design-system specification (`skills/magicspec/templates/design-system.md`): its tokens, its components with their variants and states, and the rules for overriding them. Screen and flow specifications reference it and never redefine a token.
+- **States**: every view states the normal state and the empty, loading, error, partial, disabled and long-content states that apply to it, and what the person can do in each.
+- **Accessibility**: contrast, keyboard operation and focus order, accessible names, reduced motion, and the sizes or windows the interface must work at, stated as verifiable statements.
+
+Tasks that build the interface start with a draft the person can look at and are verified by looking at the result, as the planning and execution workflows say.
+
 ## 6. Safety & Integrity
 
 ### 6.1 Consistency Check (Pre-flight)
@@ -160,4 +171,4 @@ If the update halts first (version drift, cross-workspace parity, or a missing f
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-11 (v3.0.71).
+Synchronized with engine workflows on 2026-11-12 (v3.0.93).

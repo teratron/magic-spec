@@ -1,6 +1,6 @@
 # Interface Design: UI/UX, Layout and Front-End Work
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -71,6 +71,7 @@ Sizes: {narrowest} … {widest}
 1. The role card (`l2-role-cards-execution.md`) with `skills_recommended` pointing at design skills as advisory hints (R6).
 2. A design-system specification template among the engine templates.
 3. The parked `frontend-specialist` backlog item is closed by this specification.
+4. **As built (Phase 52).** UI-1 to UI-4: the creation step of `workflows/spec.md` (the `Interface` bullet), `templates/design-system.md` and the optional `## Interface` section of `templates/spec.md`. UI-5 and UI-6: step 4 of `workflows/task.md` (the draft task, the design acceptance, the named way of looking) and step 3.1 of `workflows/run.md`. UI-7: `roles/ui-ux-designer.md`, with one sub-bullet under the minimal-diff step of `roles/coder.md`. The card recommends the `frontend-design` skill as a hint only (R6).
 
 ## 7. Drawbacks & Alternatives
 
@@ -89,5 +90,6 @@ Sizes: {narrowest} … {widest}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.2 | 2026-11-12 | Agent | As built in Phase 52, Stable retained, no requirement changed. §6 records where each requirement lives: UI-1 to UI-4 in the creation step of the specification workflow with the design-system template and the optional interface section of the specification template; UI-5 and UI-6 in the decomposition and execution workflows; UI-7 in the `ui-ux-designer` card and the stance line of the `coder` card. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (a UI/UX role for layout and front-end work, informed by `.references/.design`). Reference-mining over the collection recorded by class only. Closes the parked `frontend-specialist` backlog item. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

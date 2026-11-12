@@ -1,7 +1,7 @@
 {
   "private": true,
   "type": "commonjs",
-  "description": "Aggregator and synchronizer of indicator and strategy scripts across MetaTrader 5 and TradingView, reached over MCP, with a test-and-history refinement loop.",
+  "description": "Development repository of Magic Spec, a Specification-Driven Development engine for AI coding agents: the engine skill, its maintenance scripts and the regression harness.",
   "packageManager": "pnpm@12.18.0",
   "engines": {
     "node": ">=24"

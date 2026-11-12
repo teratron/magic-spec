@@ -1,6 +1,6 @@
 # Engine Templates
 
-**Version:** 1.3.3
+**Version:** 1.3.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -50,7 +50,9 @@ The cells show why they grew. Each is an inventory of the specification's mechan
 
 ```plaintext
 skills/magicspec/templates/
-  spec.md            — Full specification (L1/L2)
+  spec.md            — Full specification (L1/L2), with an optional interface section
+  design-system.md   — The one design-system specification of a product with an interface
+  simulation.md      — One area of the product's user-interaction scenarios
   micro-spec.md      — Lightweight spec for minor changes (<50 lines)
   plan.md            — Implementation plan
   tasks.md           — Task breakdown ledger
@@ -99,6 +101,8 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 | Path | Role |
 | --- | --- |
 | `skills/magicspec/templates/spec.md` | Full specification scaffold |
+| `skills/magicspec/templates/design-system.md` | Design-system specification scaffold |
+| `skills/magicspec/templates/simulation.md` | Scenario file scaffold |
 | `skills/magicspec/templates/micro-spec.md` | Lightweight spec scaffold |
 | `skills/magicspec/templates/plan.md` | Implementation plan scaffold |
 | `skills/magicspec/templates/tasks.md` | Task ledger scaffold |
@@ -111,6 +115,7 @@ Rewriting the rows and the overview that already exist in a workspace is a task 
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.4 | 2026-11-12 | As built in Phase 52, Stable retained: the inventory lists `simulation.md` (the scenario file) and `design-system.md` (the product's one design-system specification), and `spec.md` gains the optional `## Interface` section. |
 | 1.3.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.3.1 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

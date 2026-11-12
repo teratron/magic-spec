@@ -136,7 +136,7 @@ const COMMANDS = {
         summary: 'Post-workflow: version bump, changelog entry, STATE.md update and phase archival.',
         provisions: true,
         options: {
-            '--workflow': { kind: 'value', help: 'spec | plan | task | run | rule | fix (required)' },
+            '--workflow': { kind: 'value', help: 'spec | plan | task | run | rule | fix | simulate (required)' },
             '--dry-run': { kind: 'bool', help: 'Report what would change; write nothing' },
             '--no-bump': { kind: 'bool', help: 'Skip the project version bump' },
             '--no-changelog': { kind: 'bool', help: 'Skip the changelog entry' },

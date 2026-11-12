@@ -106,4 +106,4 @@ Output: `.magicspec/graph/graph.html`, a self-contained interactive view with co
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-11 (v3.0.71).
+Synchronized with engine workflows on 2026-11-12 (v3.0.93).

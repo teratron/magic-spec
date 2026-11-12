@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-11-11
+**Generated:** 2026-11-12
 
 ## Active Technologies
 
@@ -34,6 +34,7 @@
 │   ├── checksums.md
 │   ├── conception.md
 │   ├── context-economy.md
+│   ├── dev-test.md
 │   ├── development.md
 │   ├── distribution.md
 │   ├── fix.md

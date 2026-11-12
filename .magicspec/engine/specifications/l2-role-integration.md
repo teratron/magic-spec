@@ -1,6 +1,6 @@
 # Role System Workflow Integration
 
-**Version:** 2.2.7
+**Version:** 2.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -50,6 +50,12 @@ Full workflow-to-role mapping after integration:
 | `run.md` | Post-Done Docs Sync (new) | `docs-specialist` | New gate |
 | `run.md` | A community health file must change | `docs-specialist` | Second trigger; `prompt-engineer` reviews the changed text |
 | `plan.md` | Plan Write-back | `planner` | Absorb Planning Skeptic; the gate moved from `task.md` with the planning steps |
+| `plan.md` | Scenario List (planning) | `simulator-tester` | New gate (SM-3): the planner activates it after the plan check |
+| `run.md` | Scenario Upkeep (task completion) | `simulator-tester` | New gate (SM-4) |
+| `spec.md` | Interface Specification | `ui-ux-designer` | New gate (UI-1 to UI-4): context first, one design system, states, accessibility |
+| `task.md` | Interface Tasks | `ui-ux-designer` | New gate (UI-5, UI-6): the draft task and the design acceptance in `Verify` lines |
+| `run.md` | Interface Implementation | `ui-ux-designer` | New gate (UI-6, UI-7): the `coder` adopts the stance; verified by looking |
+| `simulate.md` | Scenario Run | `simulator-tester` | The product simulation command's own body |
 | `spec.md` | Post-Update Review | `spec-critic` | Migrate Project Critic |
 | `analyze.md` | Pre-Advisory Audit | `project-auditor` | Migrate Auditor |
 | `rule.md` | Impact Analysis | `constitutional-reviewer` | Migrate Constitutional Reviewer |
@@ -59,7 +65,7 @@ Full workflow-to-role mapping after integration:
 | `rule.md` | Impact Analysis — Rule Wording Review (new) | `prompt-engineer` | New gate (v2.1.0) |
 | `analyze.md` | Mode C — Prompt Quality Audit (new) | `prompt-engineer` | New audit dimension (v2.1.0) |
 | `run.md` | Step 3.4b — Instruction Diff Review (new, conditional) | `prompt-engineer` | New conditional gate (v2.1.0) |
-| every shipped workflow body (`spec.md`, `plan.md`, `task.md`, `run.md`, `analyze.md`, `rule.md`, `status.md`, `graph.md`, `migrate.md`, `help.md`, `fix.md`) | Input Pass — before the workflow acts on prose, right after argument parsing | `prompt-engineer` | New input-side trigger |
+| every shipped workflow body (`spec.md`, `plan.md`, `task.md`, `run.md`, `analyze.md`, `rule.md`, `status.md`, `graph.md`, `migrate.md`, `help.md`, `fix.md`, `simulate.md`) | Input Pass — before the workflow acts on prose, right after argument parsing | `prompt-engineer` | New input-side trigger |
 
 ## 2. `run.md` Amendments
 
@@ -261,6 +267,7 @@ Integration touches 6 workflow files (`run.md`, `task.md`, `spec.md`, `analyze.m
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.3.0 | 2026-11-12 | As built in Phase 52 (Stable retained via Trust Mode re-review, C9): the integration map gains the gates of the two new roles — `plan.md` Scenario List, `run.md` Scenario Upkeep and `simulate.md` Scenario Run for `simulator-tester`; `spec.md` Interface Specification, `task.md` Interface Tasks and `run.md` Interface Implementation for `ui-ux-designer` — and the Input Pass row lists `simulate.md`. |
 | 2.2.7 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 51): the Input Pass row of the Integration Map names `fix.md` among the shipped bodies. |
 | 2.2.6 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50): the Integration Map gains the Input Pass row — every shipped workflow body activates `prompt-engineer` right after its argument parsing, the protocol defined once in the card and named by one line in each body. The gates of `spec-critic` and `planner` are unchanged; their new coherence steps live inside the existing gates. |
 | 2.2.5 | 2026-11-11 | Clarification patch, Stable retained: the gate table and the reference table name `plan.md` for the planner (a new `[PLAN]` reference), and `task.md` for the `prompt-engineer` task instruction review, as in the constitution (C24, 1.19.0). |

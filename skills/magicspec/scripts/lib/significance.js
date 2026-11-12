@@ -60,6 +60,8 @@ const WHITELIST = {
         `${STATE_DIR_NAME}/{ws}/INDEX.md`,
     ],
     'magic.rule': [`${STATE_DIR_NAME}/RULES.md`, `${STATE_DIR_NAME}/{ws}/RULES.md`],
+    // A simulation writes the `Last run` record of the scenario files and nothing else.
+    'magic.simulate': [`${STATE_DIR_NAME}/{ws}/simulations/**/*.md`],
 };
 
 /**
@@ -74,6 +76,7 @@ const DEFAULT_CATEGORIES = {
     'magic.run': 'Changed',
     'magic.fix': 'Fixed',
     'magic.rule': 'Changed',
+    'magic.simulate': 'Changed',
 };
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -124,7 +127,7 @@ function matchAny(relPath, compiled) {
 /**
  * Resolves whitelist patterns for a workflow against a workspace name.
  *
- * @param {string} workflow - One of `/magicspec spec|plan|task|run|rule`.
+ * @param {string} workflow - One of `/magicspec spec|plan|task|run|rule|fix|simulate`.
  * @param {string} workspace - Workspace name (no leading slash).
  * @returns {{patterns: string[], compiled: RegExp[]}}
  */
@@ -336,7 +339,7 @@ function tasksStatusActuallyChanged(cwd, relPath) {
  *
  * @param {Object} opts
  * @param {string} opts.cwd - Project root (typically `process.cwd()`).
- * @param {string} opts.workflow - `/magicspec spec|plan|task|run|rule`.
+ * @param {string} opts.workflow - `/magicspec spec|plan|task|run|rule|fix|simulate`.
  * @param {string} opts.workspace - Workspace name.
  * @param {Object.<string, string|null>} [opts.lastSnapshot] - Prior hashes (fallback).
  * @returns {{

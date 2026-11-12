@@ -1,6 +1,6 @@
 # Engine Finalization Library
 
-**Version:** 3.8.0
+**Version:** 3.9.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -207,6 +207,15 @@ A fixture in which only `RULES.md` changed, run under `--workflow=spec`: signifi
 
 A fixture of a repair that finished a maintenance phase (archived, a `Fixed` entry, the version bumped); the accepted-workflow list in the refusal and in the help; the offer once, the preview, the channel `off`, a broken store, a consumer project whose next step stays the plan state; the work queue in a fixture with the maintenance tooling, its precedence in isolation, an empty queue and a switched-off channel.
 
+## 12. The Simulate Workflow `[ADDED]`
+
+- **`--workflow=simulate`** is accepted. Its whitelist (`magic.simulate`) is `.magicspec/{ws}/simulations/**/*.md`, its category `Changed` and its bullet `Ran the user scenarios ({ws})` (`Ran the user scenarios of {n} areas ({ws})` for several files); it archives no phase.
+- **The next step.** After a simulate run, while any scenario file holds a `fail` or `inconclusive` step line, the persisted `Next Action` is `Run /magicspec fix {workspace} to repair {n} simulation finding(s)` and the handoff line names `fix`; with none, the plan-state step stands. The lines are read by one shared library (`lib/simulation-findings.js`), which ignores a layout shown in a code block, a code span or an HTML comment, keeps the observed text as written and fails open: a missing folder or an unreadable file holds no finding, so a fault in it costs the recommendation and never the finalization.
+
+### 12.1 Regression Coverage
+
+A fixture with two open findings (the next action, the handoff line, the version bump, the `Changed` entry) and one with none (the plan-state step); the reader field for field, with a comment and a code block ignored; the bullet, the category and the whitelist; the accepted-workflow list in the refusal and in the help; the kernel and the rule module naming the workflow.
+
 ## Canonical References
 
 | Path | Role |
@@ -226,6 +235,7 @@ A fixture of a repair that finished a maintenance phase (archived, a `Fixed` ent
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 3.9.0 | 2026-11-12 | Agent | As built in Phase 52, Stable retained: new §12, the simulate workflow — `--workflow=simulate` accepted, its whitelist and category, its bullet, the next step after a run (`fix` while a scenario file still holds a `fail` or `inconclusive` step, the plan-state step otherwise) and the shared findings reader. |
 | 3.8.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the requirements were declared by the command surface's finalization list and by the feedback channel's EF-10 and EF-12; this record follows): §11 records `--workflow=fix` — valid, finalized like a run (the same status-flip filter on the ledger, phase archival), with its own whitelist row (the ledger, the live state, the plan, the archives, the workbooks, the specifications and the registry), the category `Fixed` and the bullet `Repaired a reported defect ({ws})` — and the pending feedback notes: a block between the digest and the next step, each note or draft offered once and then named as offered, nothing printed for the channel `off`, nothing written by a preview, and in the developer repository a list of fix candidates with the persisted next step `Run /magicspec fix {ws} to work through {n} pending feedback notes` unless the plan state says `Run /magicspec plan …`. |
 | 3.7.2 | 2026-11-11 | Agent | Clarification patch, Stable retained (as built in Phase 49; the requirement moved with the amendment that declared it, this record follows). `finalize` accepts `--workflow=<spec \| plan \| task \| run \| rule>`; the significance whitelist has a`plan` row (the plan file) and the `task` row no longer lists it, and the changelog has a bullet for a plan; the synthesized `Next Action` follows `spec` → `plan` → `task` → `run` with a pending replan directive first; the reader of the directive and the predicates it shares with `check-prerequisites` (the undecomposed phase, the ledger behind the plan, the constitution gap) are in `lib/pending-work.js`; and the finalization output ends with the handoff line of [l1-pipeline-stages.md](l1-pipeline-stages.md), printed once by the script after the summary and before the Completion Checklist. |
 | 3.7.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

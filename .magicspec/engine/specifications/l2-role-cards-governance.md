@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.4
+**Version:** 1.4.5
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -220,6 +220,8 @@ triggers:
     gate: "Input Pass"
   - workflow: fix.md
     gate: "Input Pass"
+  - workflow: simulate.md
+    gate: "Input Pass"
 outputs:
   - type: prompt-review
     scope: "PASS / PASS-WITH-REWRITES / FAIL verdict with exact-text findings and concrete rewrites across the six PQ-3 dimensions"
@@ -299,6 +301,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.5 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 52; the mirror follows the deployed card word for word). Prompt-engineer: the Input Pass gains the trigger `simulate.md`, twelve shipped bodies in all. |
 | 1.4.4 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 51; the mirror follows the deployed card word for word). Prompt-engineer: item 1 of the Input Pass names text entered in an argument form among the prose covered, and the card gains the `fix.md` trigger (eleven shipped bodies). |
 | 1.4.3 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50; the mirror follows the deployed cards word for word). Spec-critic: the Coherence check is step 1 (comparison set by names and graph neighbours, the three specification finding classes quoted on both sides, resolution before promotion, declared supersession reported `superseded`, the `[Coherence]` result line, a patch-level carve-out); the former coherence step is renamed Internal consistency; the verdict is barred without step 1 (CH-6); scope, mission and one anti-pattern follow. Prompt-engineer: the Input Pass section (seven items), ten `Input Pass` triggers (one per shipped body) and an `intent-statement` output, a mission sentence and three anti-patterns. The maintenance bodies are not triggers: the role registry resolves a trigger inside the engine folder and a user installation has no maintenance skill, so they name the card by its path. Related Specifications gain the two concept specifications. |
 | 1.4.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

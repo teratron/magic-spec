@@ -64,7 +64,7 @@ The engine folder (`skills/magicspec/` in this repository, the skill folder of a
 
 Limit the SDD workflow to the core command set to maximize automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary and explicitly authorized as a C2 exception.
 
-The command set as it ships: `spec`, `plan`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `fix`, `simulate`, `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
+The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
 
 ### C3 — Parallel Task Execution Mode
 
@@ -219,7 +219,7 @@ At critical decision points, the agent MUST activate the designated role card fr
 
 Role activation is mandatory — it is not skipped under C9. Each role card defines its own gate conditions and interrogative hooks. The role switch takes one internal reasoning pass; it does not require user interaction.
 
-Full registry: `roles/` — 14 registered role cards; each card is self-contained and defines its own gates and invariants.
+Full registry: `roles/` — 16 registered role cards; each card is self-contained and defines its own gates and invariants.
 
 ### C25 — Engineer Posture (Narrate-and-Act)
 

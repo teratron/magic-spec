@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.2.9
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -9,7 +9,7 @@
 
 Full card content for the **execution-pipeline** roles — the plan → coordinate → build → fix → document chain consumed by `task.md` and `run.md`. Extracted verbatim from [l2-role-cards.md](l2-role-cards.md) §3 during the v2.0.0 decomposition to keep each role spec focused. The parent spec owns the file format, frontmatter schema, and role inventory index; this spec owns the canonical authoring source for these five cards.
 
-Cards in this spec: `planner`, `orchestrator`, `coder`, `debugger`, `docs-specialist`.
+Cards in this spec: `planner`, `orchestrator`, `coder`, `debugger`, `docs-specialist` and `ui-ux-designer`. The last is the stance `coder` adopts for layout and front-end work; it is also where interface sections of specifications are written and where interface tasks get their design acceptance.
 
 ## Related Specifications
 
@@ -20,6 +20,7 @@ Cards in this spec: `planner`, `orchestrator`, `coder`, `debugger`, `docs-specia
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Sibling: migrated C24 governance/audit cards.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side integration of all role cards.
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Containment policy; Coder carries the authoring gate (RC-5).
+- [l1-interface-design.md](l1-interface-design.md) - The interface requirements the `ui-ux-designer` card carries (UI-1 to UI-7).
 
 ## 1. Planner
 
@@ -54,8 +55,9 @@ related_rules: [C24]
 4. Draft `PLAN.md` with phase summaries, the specifications each phase holds, the order and the reason for it.
 5. **Adversarial pass (mandatory):** re-read the draft asking: "Am I optimistic about parallel degree? Are there hidden dependencies I skipped? Does any phase cascade into the next if one task blocks?" Revise if any answer implies risk.
 6. **Plan check (mandatory, before write-back):** compare the draft with (a) the other phases of the same plan, (b) the plan of every other workspace `workspace.json` registers, and (c) what archived phases record as delivered (`provides` in `tasks/` and `archives/tasks/`). Read only the matching entries: search each of them for the names the draft's phases introduce or use. A finding is exactly one of: an *ordering conflict* (work scheduled before what it depends on, or two plans changing the same mechanic in ways that cannot both land), a *contradiction* (two statements in force cannot both hold), a *duplicate definition* (the same mechanic defined, or the same work scheduled, in two places) or an *interaction gap* (a consumer scheduled with no producer, or the reverse). A finding cites the exact text of both sides with file and section; a suspicion that cannot be quoted on both sides is dropped. Resolve every finding before the plan is written: reorder or revise the draft, and assign work duplicated across workspaces to one workspace and reference it from the other. A finding whose resolution needs a specification to change is not resolved here, because this card writes no specification: halt once with the single recommendation `/magicspec spec`, quoting both sides. Print `[Coherence] {N} artifacts compared — {k} findings`, then one line per finding, `{class}: {file-a} §{x} ↔ {file-b} §{y} — {resolution}`; zero findings print only the first line. The audit is not passed without this step (CH-6).
-7. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
-8. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
+7. **Scenario list (for a phase with user-facing behaviour, before write-back):** activate `@role:simulator-tester` for each phase that adds or changes what a person sees or does with the product; it lists in the phase entry the scenarios to write or update (the area file and the scenario titles), and the phase's validation tasks write them. A phase with user-facing behaviour and no scenario is a planning finding, resolved before the plan is written; a phase with none lists none and records no finding.
+8. Write back to `PLAN.md` only; the task ledger belongs to `task.md`.
+9. End at the stage boundary: the plan is the record, and `/magicspec task` is named as the next step, never started. Orchestrator (Parallel) or Coder (Sequential) take over in `run.md`.
 
 **Anti-patterns:**
 
@@ -137,6 +139,7 @@ related_rules: [C2, C3]
 2. Read the assigned spec section and task `Verify` line in full — not just the task title.
 3. Before editing, name any material assumption about API, data shape, security, persistence, file format, public behavior, or compatibility. If the assumption changes behavior or scope, stop and route to Code-skeptic or Debugger; otherwise record it in task notes.
 4. Implement only the minimal diff needed for the spec section and `Verify` criterion. Do not add speculative options, abstractions, configuration, or future-proofing.
+   - **Interface work:** when the task changes what a person sees or operates (layout, front-end), adopt the stance of `@role:ui-ux-designer` for that part: the design system and the specification's states and accessibility statements govern, and the `Verify` line names how the result is looked at.
 5. Keep the diff self-contained per RC-1/RC-2 ([l1-sdd-reference-containment.md](l1-sdd-reference-containment.md)): never reference SDD artifacts — task IDs, phase designators, SDD system files (`PLAN.md`, `TASKS.md`, `INDEX.md`, `RULES.md`), spec file names, any `.magicspec/` path — in code, comments, docstrings, identifiers, string literals, or test names. If spec rationale matters at the code site, restate it in plain language; provenance stays in task notes and the commit message.
    - Per RC-2.1 the **bare** form is what slips through: the assigned task ID is in working memory while writing, so `T-22A01` in a test name or `@test:` annotation, or a "Phase 20 Track B" aside, reads natural when typed and dead once `.magicspec/` is absent. Before finishing the diff, re-scan the added lines for `T-\d+[A-Z]\d+` and `[Pp]hase[-\s]\d+`; this gate has failed in the field precisely at the bare form. `[ADDED]`
 6. Remove only unused imports, variables, files, or comments made obsolete by this diff. Leave pre-existing unrelated dead code untouched.
@@ -238,6 +241,60 @@ related_rules: [C2]
 - Writing docs for internal changes not visible to users.
 - Updating `CHANGELOG.md` L2 entries (release-level) — those are handled by `run.md` Plan Completion step.
 
+## 6. UI/UX-designer
+
+**Frontmatter:**
+
+```yaml
+id: ui-ux-designer
+name: UI/UX-designer
+layer: executor
+triggers:
+  - workflow: spec.md
+    gate: "Interface Specification"
+  - workflow: task.md
+    gate: "Interface Tasks"
+  - workflow: run.md
+    gate: "Interface Implementation"
+outputs:
+  - type: interface-spec
+    scope: "the interface sections of specifications and the design-system specification"
+  - type: design-acceptance
+    scope: "the draft task and the visual verification named in interface tasks' Verify lines"
+handoff:
+  - to: code-reviewer
+    condition: "interface implementation ready for diff review"
+  - to: test-engineer
+    condition: "interface task ready for QA against its Verify line"
+  - to: simulator-tester
+    condition: "a journey across screens needs a scenario"
+skills_recommended:
+  - frontend-design
+related_rules: [C24]
+```
+
+**Mission:** Treat a product's interface as specified work, not styling decided at the keyboard. Writes the interface sections of specifications and the design-system specification, adds design acceptance to interface tasks when they are decomposed, and is the stance `coder` adopts for layout and front-end work. Covers any surface a person sees and operates: a web page, a desktop or mobile screen, a terminal interface. Recommended design skills are advisory hints: the role works with none installed.
+
+**Operating Protocol:**
+
+1. **Context first:** before an interface is specified, gather and cite the existing design context: the product's design-system specification if one exists, its brand material, the current interface. Absent all three, the specification says so and states where its choices come from.
+2. **One design system:** a product with an interface has one design-system specification: its tokens (colour, type, spacing, radius, elevation, motion), its components with their variants and states, and the rules for overriding them in one place. Screen and flow specifications reference it and never redefine a token.
+3. **States:** every screen or flow specification states, for each view, the normal state and the empty, loading, error, partial, disabled and long-content states that apply to it, and what the person can do in each.
+4. **Accessibility:** every interface specification states its accessibility requirements as verifiable statements: contrast, keyboard operation and focus order, accessible names, reduced motion, and the sizes or windows it must work at.
+5. **Early draft:** for a new screen or flow, the first task produces a draft the person can look at before the full build. Record the draft and continue the build; nothing pauses for a look, and a correction arrives as an interruption or a later amendment.
+6. **Verified by looking:** a task that changes an interface is verified by rendering it where the session can (a screenshot, a driven browser, a captured terminal) and comparing it with the specification's design system, states and accessibility statements. Where it cannot render, the task says so and the check is a review against the specification. The method is named in the task's `Verify` line.
+7. In implementation the `coder` adopts this stance for layout and front-end work; hand off to `code-reviewer` and `test-engineer`, and for a journey across screens to `simulator-tester`.
+
+**Anti-patterns:**
+
+- Choosing a style from generic defaults instead of the design context or the design system.
+- Redefining a token in a screen or flow specification.
+- Specifying only the happy path of a view.
+- Leaving accessibility as an afterthought, or stated in terms nobody can verify.
+- Pausing the build to wait for a look at the draft.
+- Marking an interface task verified without saying how it was looked at.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
@@ -248,6 +305,7 @@ related_rules: [C2]
 | `[CODER]` | `skills/magicspec/roles/coder.md` | Deployed coder card. |
 | `[DEBUGGER]` | `skills/magicspec/roles/debugger.md` | Deployed debugger card. |
 | `[DOCS]` | `skills/magicspec/roles/docs-specialist.md` | Deployed docs-specialist card. |
+| `[UI-UX-DESIGNER]` | `skills/magicspec/roles/ui-ux-designer.md` | Deployed ui-ux-designer card. |
 | `[RUN]` | `skills/magicspec/workflows/run.md` | Primary consumer of these execution roles. |
 | `[TASK]` | `skills/magicspec/workflows/task.md` | Consumer of planner. |
 
@@ -255,6 +313,7 @@ related_rules: [C2]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.0 | 2026-11-12 | As built in Phase 52 (Stable retained via Trust Mode re-review, C9): new §6, the `ui-ux-designer` card, generated from the deployed card word for word; the coder's mirror and card gain the interface-stance sub-bullet under the minimal-diff step; the planner gains step 7, the scenario list, with the write-back and stage-boundary steps renumbered 8 and 9. Pre-existing, not touched: this mirror of the coder lacks the deployed card's step 4 (surface multiple interpretations) and words step 5 differently. |
 | 1.2.9 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50; the mirror follows the deployed card word for word). Planner: step 6 is the Plan check (the other phases, the other workspaces' plans and the archived deliveries; the four finding classes with the ordering conflict; matching entries only; both sides quoted; resolution before write-back; duplicated work assigned to one workspace; a specification-changing finding halts once with `/magicspec spec`; the `[Coherence]` result line; the audit not passed without it), the write-back and stage-boundary steps become 7 and 8, and the mission and one anti-pattern name the check. |
 | 1.2.8 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 49; the mirror follows the deployed cards word for word). Planner: the gate triggers on `plan.md` (the Planning Audit moved with the draft plan), the protocol ends with the write-back to `PLAN.md` only and the stage boundary (`/magicspec task` named, never started). Debugger: the spec-ambiguity step records the finding in the task and ends the run with the single `/magicspec plan` recommendation, as `run.md` Step 4 says. The `prompt-engineer` trigger on `task.md` (the task instruction review) is untouched. |
 | 1.2.7 | 2026-11-11 | Clarification patch, Stable retained (the card gained a second trigger; the mirror follows the deployed card word for word). Docs-specialist: the trigger "A community health file must change" (`run.md`), a handoff to `prompt-engineer` for the changed text, one protocol step for the files (`CONTRIBUTING.md`, `SECURITY.md`, the issue forms) and the mission sentence naming it, as delivered with [l1-community-health-files.md](l1-community-health-files.md) 1.1.0 (HF-6, HF-7). |

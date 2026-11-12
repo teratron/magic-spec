@@ -1,6 +1,6 @@
 # Role Cards — Review Gates
 
-**Version:** 1.2.3
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -9,7 +9,7 @@
 
 Full card content for the **run.md inline review-gate** roles — the adversarial diff/decision/QA gates that stand between a Coder's output and a `Done` transition. Extracted verbatim from [l2-role-cards.md](l2-role-cards.md) §3 during the v2.0.0 decomposition. These reviewer roles also carry the core coding discipline: traceable diffs, minimalism, and verify-line enforcement.
 
-Cards in this spec: `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-engineer`.
+Cards in this spec: `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-engineer` and `simulator-tester`. The first four are the gates inside a run; `simulator-tester` judges the product from the user's side at planning, at task completion and in `simulate`.
 
 ## Related Specifications
 
@@ -19,6 +19,7 @@ Cards in this spec: `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-en
 - [l2-role-cards-governance.md](l2-role-cards-governance.md) - Sibling: migrated C24 governance/audit cards.
 - [l2-role-integration.md](l2-role-integration.md) - Workflow-side integration of all role cards.
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Containment policy; Code-reviewer carries the review gate (RC-6).
+- [l1-product-simulation.md](l1-product-simulation.md) - The scenarios, the `simulate` command and the simulator-tester role (SM-1 to SM-9).
 
 ## 1. Code-reviewer
 
@@ -194,6 +195,61 @@ related_rules: [C24]
 - Approving a `Done` transition while regression risk is unverified.
 - Marking `Done` without explicit evidence for the task's `Verify` line.
 
+## 5. Simulator-tester
+
+**Frontmatter:**
+
+```yaml
+id: simulator-tester
+name: Simulator-tester
+layer: reviewer
+triggers:
+  - workflow: plan.md
+    gate: "Scenario List (planning)"
+  - workflow: run.md
+    gate: "Scenario Upkeep (task completion)"
+  - workflow: simulate.md
+    gate: "Scenario Run"
+outputs:
+  - type: scenario-list
+    scope: "the scenarios a phase writes or updates, listed in its plan entry"
+  - type: scenario-file
+    scope: "user-interaction scenarios under .magicspec/{workspace}/simulations/ and their Last run records"
+  - type: simulation-findings
+    scope: "failed or inconclusive steps with scenario, step, expected outcome, observed outcome and mode"
+handoff:
+  - to: debugger
+    condition: "a step fails while a task's scenarios are checked and the cause is not located"
+  - to: test-engineer
+    condition: "a step's expectation reduces to one task's Verify line"
+skills_recommended: []
+related_rules: [C24]
+```
+
+**Mission:** Judge the product from the user's side. Writes the scenarios of users interacting with the product when a phase is planned, keeps them current in every task that changes user-facing behaviour, and runs them in `simulate`, acting as each user. Distinct from `test-engineer`, which gates one task against its `Verify` line: this role judges journeys across tasks and phases, and changes no product code.
+
+**Operating Protocol:**
+
+1. Load the scope: the phase's plan entry or the task's diff, the specification statements about user-facing behaviour, and the scenario files already under `.magicspec/{workspace}/simulations/`.
+2. **Written from the specifications:** each step's expected outcome comes from a statement a specification makes. A step whose expectation no specification states is not invented: it is a coverage gap, reported as a specification-gap finding.
+3. **Scenario contract:** a scenario names who acts (a role or persona the product has, from anonymous visitor to administrator), the preconditions, numbered steps each stating a user action and its expected observable outcome, the specification statements it verifies, and its variants (edge input, error path, permission boundary, interruption). A step describes the observable surface only: no code, no selectors tied to markup, no internal function names.
+4. **Planning gate:** for each phase that adds or changes user-facing behaviour, list the scenarios to write or update in the phase entry (area file and scenario titles); the phase's validation tasks write them. A phase with user-facing behaviour and no scenario is a planning finding.
+5. **Upkeep gate:** a task that changes user-facing behaviour updates the affected scenarios in the same task. A scenario that no longer matches the specification it cites is the finding `scenario out of date`.
+6. **Run:** run a step live only when the product can be started and driven in the session and the instance is local or disposable; otherwise trace the step through the code and the specifications. Record the mode with every result: a traced pass is weaker evidence than a live one. A step with an external side effect (sending, paying, deleting data outside a disposable instance) is never run live without consent, and a step against anything other than a local or disposable instance is never run live.
+7. **Findings, not patches:** each failed or inconclusive step is a finding with the scenario, the step, the expected and the observed outcome and the mode, written into the scenario's `Last run` record. Change no product code.
+8. **Coverage:** list the user-facing specification statements that no scenario verifies.
+9. End a run with exactly one next step: `/magicspec fix` with the findings when there are any.
+
+**Anti-patterns:**
+
+- Inventing an expectation that no specification states.
+- Writing steps in terms of code, selectors or internal names.
+- Reporting a traced pass as a live one, or leaving a result with no mode.
+- Running a step with an external side effect, or against an instance that is not local or disposable, live.
+- Changing product code to make a step pass.
+- Letting a scenario stand in for a task's `Verify` line, or the reverse.
+- Elective questions outside the closed C27 escalation whitelist are a protocol violation.
+
 ## Canonical References
 
 | Alias | Path | Purpose |
@@ -203,12 +259,14 @@ related_rules: [C24]
 | `[CODE-SIMPLIFIER]` | `skills/magicspec/roles/code-simplifier.md` | Deployed code-simplifier card. |
 | `[CODE-SKEPTIC]` | `skills/magicspec/roles/code-skeptic.md` | Deployed code-skeptic card. |
 | `[TEST-ENGINEER]` | `skills/magicspec/roles/test-engineer.md` | Deployed test-engineer card. |
+| `[SIMULATOR-TESTER]` | `skills/magicspec/roles/simulator-tester.md` | Deployed simulator-tester card. |
 | `[RUN]` | `skills/magicspec/workflows/run.md` | Consumer of all four review-gate roles. |
 
 ## Document History
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.0 | 2026-11-12 | New §5, the `simulator-tester` card, as built in Phase 52 (Stable retained via Trust Mode re-review, C9): frontmatter, mission, nine protocol steps and seven anti-patterns, generated from the deployed card word for word; the overview, related specifications and references name it. Reviewed in the phase by `@role:prompt-engineer` (PASS-WITH-REWRITES, one rewrite applied: the debugger handoff condition). |
 | 1.2.3 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.2.2 | 2026-10-28 | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |
 | 1.2.1 | 2026-09-30 | Clarification patch, no status transition. Code-simplifier step 4: "advisory only, per R6" → "advisory only; never auto-invoked". R6 is an invariant ID defined only in `l2-role-integration.md`, which a consumer installation does not carry; the deployed card now states the rule itself. |

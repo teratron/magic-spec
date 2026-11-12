@@ -1,6 +1,6 @@
 # Unified Role System
 
-**Version:** 1.2.1
+**Version:** 1.2.2
 **Status:** Stable
 **Layer:** concept
 
@@ -166,6 +166,8 @@ The `prompt-engineer` (§4.3) gains an **input-side trigger**: every command inv
 
 Declared supersessions ([l1-coherence-check.md](l1-coherence-check.md) CH-9): the count of fourteen role cards in the constitution's C24 and in its shipped template (amended through `/magicspec rule`, origin `user-stated`), in `l2-role-cards.md`, and in the registry check's expected total all move to sixteen when the cards are built.
 
+**As built (Phase 52).** `roles/ui-ux-designer.md` and `roles/simulator-tester.md` exist, both named by a workflow body (`ROLE_DORMANT` is silent), and the registry holds sixteen cards. The counts of the supersession above read sixteen in C24 and its shipped template (constitution 1.22.0) and in `l2-role-cards.md`; the registry check keeps no constant and counts the files.
+
 ## 5. Lifecycle & Governance
 
 ### 5.1 Adding a Role
@@ -225,6 +227,7 @@ Placing roles in `skills/magicspec/roles/{layer}/` (e.g., `skills/magicspec/role
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.2.2 | 2026-11-12 | Agent | **Reality sync, as built in Phase 52** (Stable retained, no requirement changed): the two cards of §4.4 are built — the registry holds sixteen — and the counts the declared supersession named follow: C24 and its shipped template (constitution 1.22.0), `l2-role-cards.md` and the registry check, which counts the cards on disk. |
 | 1.2.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.0 | 2026-10-29 | Registry extended 14 → 16 (§4.4, origin `user-stated`: the owner's list of 2026-10-29): `ui-ux-designer` (executor) and `simulator-tester` (reviewer); `prompt-engineer` gains the input-side trigger of `l1-input-prompt-pass.md`. Amendment Rule: `Stable → RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation. |
 | 1.1.2 | 2026-10-28 | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

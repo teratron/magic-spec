@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.0.1
+**Version:** 1.0.2
 **Status:** Stable
 **Layer:** concept
 
@@ -29,6 +29,7 @@ The owner asks for three things together: files that simulate the user's interac
 - Scenarios describe behaviour, not implementation: no code, no selectors tied to markup, no internal function names — the product's observable surface only.
 - Live execution happens only against a local or disposable instance of the product. No scenario step touches a production system, real money, real messages to real people or real accounts.
 - **Assumption (forecast):** scenarios live in the state folder (`.magicspec/{workspace}/simulations/`), not among the product's test files, because they are instructions for an agent, written from the specifications, and containment keeps SDD artifacts out of the product. Runner-up: a product test folder. Override: `/magicspec spec amend l1-product-simulation.md "scenarios in the product tree"`.
+- **Assumption (forecast):** in the engine's own repository the cognitive suite (`tests/suite.md`, run by the maintenance test command) stands for the scenario files SM-3 asks of a phase: the engine's user-facing behaviour is its commands, and the suite's scenarios are written by the phases' tasks against exactly them, so a second collection would restate the first. Runner-up: scenario files under `.magicspec/engine/simulations/`. Override: `/magicspec spec amend l1-product-simulation.md "engine scenarios in simulations/"`.
 - **Assumption (forecast):** where the product cannot be run in the session, `simulate` traces the code instead of skipping, and labels the result, because a labelled weaker check is worth more than none and the label keeps it from being mistaken for a live one. Runner-up: skip and report. Override: `simulate --live-only`.
 
 ## 3. Core Invariants
@@ -60,6 +61,8 @@ The owner asks for three things together: files that simulate the user's interac
     Variants: edge | error | permission | interruption
     Last run: {date} · v{version} · {live|traced} · {pass|fail per step}
 ```
+
+**As built (Phase 52).** The `Last run` record is the date and the product's version, then one line per step — `- Step {n}: {pass, fail, inconclusive or skipped} · {live or traced}`, and for a failed or inconclusive step ` — observed: {the outcome}` (`templates/simulation.md`). What is open is read from these lines: a run replaces a scenario's lines, so `finalize` (the next step after a run is `fix` while any `fail` or `inconclusive` line stands) and `fix` (the suggestions of its argument form) read the scenario files and keep no store of their own (`lib/simulation-findings.js`).
 
 ### 5.2 Run
 
@@ -108,5 +111,6 @@ graph TD
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.0.2 | 2026-11-12 | Agent | As built in Phase 52, Stable retained, no requirement changed. §5.1 records the `Last run` record as built (the date and the product version, then one line per step with its result, its mode and, for a failed or inconclusive step, the observed outcome; what is open is read from those lines by `finalize` and `fix`, which keep no store), and §2 records the forecast that settles SM-3 for this repository: the engine's cognitive suite stands for its scenario files. The `simulate.md` row of C24 and the developer document were renamed first (§6 item 3), as required. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (simulation files created in parallel with the code, `/magicspec simulate`, scenarios written at planning time, a simulator-tester role). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

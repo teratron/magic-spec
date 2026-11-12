@@ -32,6 +32,7 @@ const { archiveCompletedPhases, findArchiveCandidates } = require('./lib/phase-a
 const { listPhaseFiles } = require('./lib/phase-files');
 const { OPEN_TASK_RE, parseOpenTask } = require('./lib/checklist');
 const { findPendingWork } = require('./lib/pending-work');
+const { readSimulationFindings } = require('./lib/simulation-findings');
 const { getTrackingBlock, readField } = require('./lib/tracking-entries');
 const { updateState } = require('./update-state');
 const diagnostics = require('./lib/diagnostics');
@@ -60,7 +61,7 @@ const projectRoot = resolveProjectRoot();
 const designCacheDir = statePath(projectRoot, '.cache');
 const stateFile = path.join(designCacheDir, 'finalize-state.json');
 
-const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule', 'fix']);
+const VALID_WORKFLOWS = new Set(['spec', 'plan', 'task', 'run', 'rule', 'fix', 'simulate']);
 
 /**
  * The words finalize uses to tell the user that the SC-2 state update was
@@ -270,7 +271,7 @@ function workQueueFirst(workspace, wsDir, next) {
  * A violation degrades to the planning funnel with a warning — `finalize` is
  * non-blocking by contract and must never abort over a recommendation string.
  *
- * @param {string} workflow - `spec|plan|task|run|rule|fix`.
+ * @param {string} workflow - `spec|plan|task|run|rule|fix|simulate`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [plan] - A {@link classifyPlanState} result already read by the
@@ -534,7 +535,7 @@ function classifyPlanState(wsDir) {
  *
  * Callers should use {@link computeNextAction}, which applies the §5 guard.
  *
- * @param {string} workflow - `spec|plan|task|run|rule|fix`.
+ * @param {string} workflow - `spec|plan|task|run|rule|fix|simulate`.
  * @param {string} workspace
  * @param {string} wsDir - Absolute path to the workspace design directory.
  * @param {Object} [classified] - A pre-read {@link classifyPlanState} result.
@@ -546,6 +547,14 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
     // A finding a decomposition or a run handed back is the next step until the plan is rewritten.
     const directive = pendingDirective(wsDir);
     if (directive) return `Run /magicspec plan ${workspace} \x22${directive}\x22`;
+
+    // A simulation that left failed or inconclusive steps in the scenario files hands them to `fix`.
+    if (workflow === 'simulate') {
+        const open = readSimulationFindings(wsDir).length;
+        if (open > 0) {
+            return `Run /magicspec fix ${workspace} to repair ${open} simulation finding${open === 1 ? '' : 's'}`;
+        }
+    }
 
     if (workflow === 'spec') return `Run /magicspec plan ${workspace} to update the plan`;
     if (workflow === 'rule')

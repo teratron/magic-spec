@@ -1,13 +1,13 @@
 # Role Card Registry (Implementation)
 
-**Version:** 2.1.6
+**Version:** 2.2.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
 
 ## Overview
 
-Concrete implementation of the role system defined by [l1-role-system.md](l1-role-system.md). Specifies the on-disk location of the registry (`skills/magicspec/roles/`), the role card file format (YAML frontmatter + body), and the **inventory index** of all 14 role cards. As of v2.0.0 the full per-card authoring content lives in three focused child specs (token-economy decomposition); this spec is the format/schema authority and the navigation index. Executor/reviewer roles also define the core coding discipline: material assumptions are surfaced, diffs remain traceable to task/spec/verify scope, speculative complexity is rejected, and completion requires explicit verification evidence.
+Concrete implementation of the role system defined by [l1-role-system.md](l1-role-system.md). Specifies the on-disk location of the registry (`skills/magicspec/roles/`), the role card file format (YAML frontmatter + body), and the **inventory index** of all 16 role cards. As of v2.0.0 the full per-card authoring content lives in three focused child specs (token-economy decomposition); this spec is the format/schema authority and the navigation index. Executor/reviewer roles also define the core coding discipline: material assumptions are surfaced, diffs remain traceable to task/spec/verify scope, speculative complexity is rejected, and completion requires explicit verification evidence.
 
 ## Card Content Specs
 
@@ -15,8 +15,8 @@ The full canonical authoring source for each card (frontmatter + Mission + Opera
 
 | Child Spec | Cluster | Cards |
 | --- | --- | --- |
-| [l2-role-cards-execution.md](l2-role-cards-execution.md) | Plan → coordinate → build → fix → document | `planner`, `orchestrator`, `coder`, `debugger`, `docs-specialist` |
-| [l2-role-cards-review.md](l2-role-cards-review.md) | `run.md` inline review gates | `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-engineer` |
+| [l2-role-cards-execution.md](l2-role-cards-execution.md) | Plan → coordinate → build → fix → document | `planner`, `orchestrator`, `coder`, `debugger`, `docs-specialist`, `ui-ux-designer` |
+| [l2-role-cards-review.md](l2-role-cards-review.md) | `run.md` inline review gates | `code-reviewer`, `code-simplifier`, `code-skeptic`, `test-engineer`, `simulator-tester` |
 | [l2-role-cards-governance.md](l2-role-cards-governance.md) | Cross-workflow governance (migrated C24 + quality gate) | `spec-critic`, `project-auditor`, `constitutional-reviewer`, `retrospective-analyst`, `prompt-engineer` |
 
 ## Related Specifications
@@ -98,7 +98,9 @@ Cards MAY include additional sections after these four (e.g., `## Examples`, `##
 | `code-simplifier` | reviewer | `run.md` → Step 3.6 Simplify Pass (new, opt-in) | review |
 | `code-skeptic` | reviewer | `run.md` → Step 3.3 Decision Review (new, opt-in) | review |
 | `test-engineer` | reviewer | `run.md` → Step 3.5 QA Review (renamed from C24 Tester) | review |
+| `simulator-tester` | reviewer | `plan.md` → Scenario List (planning) · `run.md` → Scenario Upkeep (task completion) · `simulate.md` → Scenario Run | review |
 | `debugger` | executor | `run.md` → Blocked Branch (new) | execution |
+| `ui-ux-designer` | executor | `spec.md` → Interface Specification · `task.md` → Interface Tasks · `run.md` → Interface Implementation | execution |
 | `docs-specialist` | executor | `run.md` → Post-Done Docs Sync (new); a community health file must change | execution |
 | `spec-critic` | reviewer | `spec.md` → Post-Update Review (migrated C24) | governance |
 | `project-auditor` | reviewer | `analyze.md` → Pre-Advisory Audit (migrated C24) | governance |
@@ -139,6 +141,7 @@ The original v1.x kept all card content in this one spec (~656 lines), which tri
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 2.2.0 | 2026-11-12 | Inventory 14 → 16 as built in Phase 52, Stable retained via Trust Mode re-review (C9): the index registers `ui-ux-designer` (executor, execution cluster) and `simulator-tester` (reviewer, review cluster) with their triggers, and the cluster list names them. The cards themselves are in the two child specifications. |
 | 2.1.6 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 50): the index row of `prompt-engineer` lists the Input Pass among its workflow triggers. |
 | 2.1.5 | 2026-11-11 | Clarification patch, Stable retained: the index row of `planner` names `plan.md` as its trigger, as in the deployed card. |
 | 2.1.4 | 2026-11-11 | Clarification patch, Stable retained: the index row of `docs-specialist` names its second trigger (a community health file must change), as in the deployed card. |
