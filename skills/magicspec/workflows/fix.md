@@ -60,7 +60,7 @@ Examples: `/magicspec fix "the export drops the last row"`, `/magicspec fix {wor
    - **The defect is a hypothesis too**: what a report says is wrong is tested before it is acted on (Step 2); a report may describe a version that is already fixed.
    - **The skill folder is not the product**: a confirmed cause inside the skill folder of this engine is the engine's, not the project's. Classify it `External`, record a `bug` feedback note (`references/rules/bug-reporting.md`), say so in the report, and edit nothing there — the always-on rules forbid it from a project that installed the engine.
    - **No scope creep**: the repair changes what the cause requires and the sites that share its mechanism (Step 5) — nothing else.
-   - **Containment**: product files carry no reference to the SDD (`AGENT-RULES.md` §6); the regression check and the code speak in plain language about the behaviour.
+   - **Containment**: product files carry no reference to the SDD (`CONSTITUTION.md` §6); the regression check and the code speak in plain language about the behaviour.
    - **One Stage**: after the report, end the invocation. The next stage is named, never started.
 5. **Engine Integrity (C14)**: if this skill folder is modified → `node scripts/executor.js update-engine-meta`.
 

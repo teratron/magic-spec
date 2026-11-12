@@ -12,7 +12,7 @@ const { mkdirSafe, appendFileSafe, resolveProjectRoot, statePath } = require('..
 //
 // Implements DG-1..DG-9: every non-fatal finding an
 // engine script produces is recorded here, in addition to whatever it prints
-// at the point of occurrence. `AGENT-RULES.md` §3 binds the agent to relay
+// at the point of occurrence. `CONSTITUTION.md` §3 binds the agent to relay
 // finalize's **stdout** verbatim; every `console.warn`/`console.error` in the
 // engine writes to stderr, so a finding recorded only there is unreachable by
 // that contract. finalize.js drains this sink and renders one digest instead.

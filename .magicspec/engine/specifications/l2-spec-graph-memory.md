@@ -167,7 +167,7 @@ Surfaces that carry the routing when it is deployed:
 
 | Surface | What it states |
 | --- | --- |
-| `skills/magicspec/AGENT-RULES.md` §2 Auto-Use (and its hardlinked twin, **[C-001]**) | The clause that today sends "what covers Z" to the graph gains the split above: structure to the graph and the wiki, a mechanic named in the question to the specification text. `rules/` is outside C14's version and checksum tracking |
+| `skills/magicspec/CONSTITUTION.md` §2 Auto-Use (and its hardlinked twin, **[C-001]**) | The clause that today sends "what covers Z" to the graph gains the split above: structure to the graph and the wiki, a mechanic named in the question to the specification text. `rules/` is outside C14's version and checksum tracking |
 
 ### 4.6 Artifact Location
 

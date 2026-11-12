@@ -215,7 +215,7 @@ function noteArchivalOff(wsDir) {
     if (waiting.length > 0) {
         console.log(
             `ℹ  Phase archival is off (archival.enabled = false in workspace.json): ` +
-                `${waiting.length} finished phase(s) stay in tasks/.`,
+            `${waiting.length} finished phase(s) stay in tasks/.`,
         );
     }
     return { archived: [], skipped: [], unrecognized: [] };
@@ -228,7 +228,7 @@ function noteArchivalOff(wsDir) {
 /**
  * Commands that must never appear in a synthesized `Next Action`.
  *
- * `AGENT-RULES.md` §5 reserves `/magicspec spec` to a real `/magicspec plan` Pre-flight
+ * `CONSTITUTION.md` §5 reserves `/magicspec spec` to a real `/magicspec plan` Pre-flight
  * HALT and keeps `/magicspec analyze` on-demand. The constraint is enforced on the
  * field rather than per-branch because STATE.md `Next Action` carries no
  * provenance: `/magicspec status` replays it verbatim, so a line written by one
@@ -283,7 +283,7 @@ function computeNextAction(workflow, workspace, wsDir, plan) {
     if (RESERVED_COMMAND_RE.test(next)) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
-            `AGENT-RULES.md §5; substituting the /magicspec plan funnel.`;
+            `CONSTITUTION.md §5; substituting the /magicspec plan funnel.`;
         console.warn(`[state] ${message}`);
         diagnostics.record({
             severity: 'fix',
@@ -595,7 +595,7 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
             return `Continue Phase ${plan.phase} via /magicspec run ${workspace}`;
         case 'complete':
             // No open tasks anywhere → plan complete. The recommendation is
-            // uniform across workflows (SC-2.1 + AGENT-RULES.md §5): new scope
+            // uniform across workflows (SC-2.1 + CONSTITUTION.md §5): new scope
             // enters through the /magicspec plan funnel, whose Pre-flight raises the
             // HALT that sanctions spec authoring. Naming /magicspec spec here would
             // short-circuit that funnel — and, because /magicspec status replays this
@@ -843,7 +843,7 @@ function writeState(state) {
 function emitSkip(workflow, workspace, patterns, version) {
     process.stdout.write(
         [
-            `⏭️  No significant changes detected for magic.${workflow} on workspace '${workspace}'.`,
+            `⏭️  No significant changes detected for /magicspec ${workflow} on workspace '${workspace}'.`,
             `Whitelist checked: ${patterns.length ? patterns.join(', ') : '(none)'}.`,
             `Project version unchanged: ${version}.`,
             '',
@@ -891,7 +891,7 @@ function emitSuccess(ctx) {
         ``,
         `| Field | Value |`,
         `| --- | --- |`,
-        `| Workflow | magic.${workflow} |`,
+        `| Workflow | /magicspec ${workflow} |`,
         `| Workspace | ${workspace} |`,
         `| Project version | ${previous} → ${next} |`,
         `| Detected changes | ${describeChangeCounts(files.length + omitted, whitelistCount)} |`,
@@ -901,8 +901,8 @@ function emitSuccess(ctx) {
         const clStatus = changelogResult.deduped
             ? `skipped (duplicate — run 'release-changelog' to rotate [Unreleased])`
             : changelogResult.formatWarning
-              ? 'prepended with warning (non-standard format)'
-              : `appended to [Unreleased] § ${changelogResult.category}`;
+                ? 'prepended with warning (non-standard format)'
+                : `appended to [Unreleased] § ${changelogResult.category}`;
         lines.push(`| CHANGELOG | ${clStatus} |`);
     }
 
@@ -911,8 +911,8 @@ function emitSuccess(ctx) {
         const stateStatus = stateResult.updated
             ? `updated (SC-2) — ${CHECKPOINT_CLAIM}`
             : stateResult.dryRun
-              ? 'dry-run preview'
-              : 'skipped (warning above)';
+                ? 'dry-run preview'
+                : 'skipped (warning above)';
         lines.push(`| STATE.md | ${stateStatus} |`);
     }
     // DG-7: a row that renders on every invocation regardless of content is a

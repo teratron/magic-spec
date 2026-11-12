@@ -207,7 +207,7 @@ Two harness cases against the real scripts, each mutation-checked (each fails on
 
 A field report against engine 2.1.144, reproduced against 3.0.18: `/magicspec task` on a plan whose open tasks are all Blocked ends with its Stalled Plan report ([task.md](../../../skills/magicspec/workflows/task.md) Step 8) and **no handoff to `/magicspec run`**, which would only Stall; the one next step it leaves is the resolution of the first blocked task, ending in a re-run of `/magicspec task`. The `finalize --workflow=task` that follows then rewrote `Next Action` with the `blocked-phase` / `all-excluded` text of §2 and §9 — "…then run /magicspec run {ws}" — the handoff the workflow had just forbidden, so STATE.md contradicted the report and `/magicspec status` replayed it.
 
-The same text followed `/magicspec run` itself. Found while fixing the above: `run.md` Select (*Stalled*) and Step 4 (Handoff) name exactly one next step, `/magicspec task {ws}` (`AGENT-RULES.md` §5), while the finalize of that run recorded `/magicspec run {ws}` — the command that had just stalled.
+The same text followed `/magicspec run` itself. Found while fixing the above: `run.md` Select (*Stalled*) and Step 4 (Handoff) name exactly one next step, `/magicspec task {ws}` (`CONSTITUTION.md` §5), while the finalize of that run recorded `/magicspec run {ws}` — the command that had just stalled.
 
 The guard that keeps reserved commands out of `Next Action` (`RESERVED_COMMAND_RE`, AGENT-RULES §5) still spelled the retired `/magic.` prefix, so it matched nothing in an engine whose commands are `/magicspec …`; it was dead since the command form changed.
 

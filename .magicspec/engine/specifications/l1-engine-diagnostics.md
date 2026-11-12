@@ -22,16 +22,16 @@ The digest also gives the agent a durable channel for its own findings, so that 
 
 ### 1.1 The Relay Gap (root defect)
 
-The Finalization Protocol (`skills/magicspec/AGENT-RULES.md` §3, restated in each workflow body) instructs the agent:
+The Finalization Protocol (`skills/magicspec/CONSTITUTION.md` §3, restated in each workflow body) instructs the agent:
 
 > Display the entire script **stdout** verbatim to the user in a fenced block.
 
 Node's `console.warn` and `console.error` write to **stderr**. Every non-fatal finding the engine emits is therefore, by contract, outside the channel the user is shown — not by oversight in any one script, but structurally. An agent that follows the relay instruction exactly relays the structured success block and drops every warning that accompanied it.
 
-This is observable today, without a synthetic case. When `computeNextAction()` rejects a synthesized recommendation naming a command `skills/magicspec/AGENT-RULES.md` §5 reserves, it substitutes the planning funnel and warns:
+This is observable today, without a synthetic case. When `computeNextAction()` rejects a synthesized recommendation naming a command `skills/magicspec/CONSTITUTION.md` §5 reserves, it substitutes the planning funnel and warns:
 
 ```plaintext
-[state] Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5;
+[state] Next Action "…" names a command reserved by skills/magicspec/CONSTITUTION.md §5;
         substituting the /magicspec task funnel.
 ```
 
@@ -53,7 +53,7 @@ A single `/magicspec run` phase spans many separate node processes — `check-pr
 
 ### 1.4 The Agent Has No Channel Either
 
-`skills/magicspec/AGENT-RULES.md` §9 (Bug Reporting Protocol) instructs the agent to emit a formatted report block when it encounters an engine-level bug, and §6 has ventilation report `SDD_REFERENCE_LEAK` findings. Both are one-shot chat emissions with no durable destination: in a long run they are separated from the end of the work by hundreds of lines, and a user reading only the final summary never sees them. The same digest that solves the engine's problem solves the agent's, and for the same reason.
+`skills/magicspec/CONSTITUTION.md` §9 (Bug Reporting Protocol) instructs the agent to emit a formatted report block when it encounters an engine-level bug, and §6 has ventilation report `SDD_REFERENCE_LEAK` findings. Both are one-shot chat emissions with no durable destination: in a long run they are separated from the end of the work by hundreds of lines, and a user reading only the final summary never sees them. The same digest that solves the engine's problem solves the agent's, and for the same reason.
 
 ### 1.5 The Shape Already Exists
 
@@ -135,7 +135,7 @@ Two obligations, both load-bearing:
 1. It gives DG-5 a fixed anchor to sit before. A placement rule stated against a section that does not exist is unenforceable.
 2. It removes a divergence. The value is computed and written to live memory (SC-2), but never shown; the agent then narrates a next step of its own under DA-6. Two independently produced recommendations for one moment can disagree, and when they do, `/magicspec status` later replays the persisted one — so the user is told one thing now and a different thing on resume. Printing the persisted value makes the two identical by construction.
 
-The printed value inherits SC-2.2's constraints unchanged: exactly one command, never a command `skills/magicspec/AGENT-RULES.md` §5 reserves. Surfacing adds no new screening, because it surfaces an already-screened value.
+The printed value inherits SC-2.2's constraints unchanged: exactly one command, never a command `skills/magicspec/CONSTITUTION.md` §5 reserves. Surfacing adds no new screening, because it surfaces an already-screened value.
 
 ### DG-7 — Empty State Is Silence
 
@@ -145,7 +145,7 @@ For the same reason, the summary table gains a diagnostics row only when the cou
 
 ### DG-8 — Agent Channel
 
-The agent records its own findings into the same sink, through the same shape (DG-3), with `source: agent`. Cognitive findings — a specification ambiguity encountered mid-execution, an engine bug per the Bug Reporting Protocol (`skills/magicspec/AGENT-RULES.md` §9), a containment leak spotted while reading a product file, a guard the agent had to work around — are then delivered by the same digest, at the same position, in the same structure as the engine's own.
+The agent records its own findings into the same sink, through the same shape (DG-3), with `source: agent`. Cognitive findings — a specification ambiguity encountered mid-execution, an engine bug per the Bug Reporting Protocol (`skills/magicspec/CONSTITUTION.md` §9), a containment leak spotted while reading a product file, a guard the agent had to work around — are then delivered by the same digest, at the same position, in the same structure as the engine's own.
 
 This is the invariant that makes the digest a complete account rather than a script-only one. Two consequences follow:
 
@@ -233,7 +233,7 @@ Shrinking DG-4's aggregation window — draining more often, or scoping it to "s
 | `[FINALIZE]` | `skills/magicspec/scripts/finalize.js` | Host of the drain-and-render step and of the `Next Action` computation DG-6 surfaces |
 | `[STATE]` | `skills/magicspec/scripts/update-state.js` | Highest-frequency emitter; source of the DG-4 deduplication requirement |
 | `[PREREQ]` | `skills/magicspec/scripts/check-prerequisites.js` | Existing `[{type}] {message}{fixHint}` shape that DG-3 generalizes |
-| `[RELAY]` | `skills/magicspec/AGENT-RULES.md` | §3 stdout relay contract (the gap), §9 Bug Reporting Protocol (the DG-8 obligation) |
+| `[RELAY]` | `skills/magicspec/CONSTITUTION.md` | §3 stdout relay contract (the gap), §9 Bug Reporting Protocol (the DG-8 obligation) |
 | `[EXECUTOR]` | `skills/magicspec/scripts/executor.js` | Dispatch point for the agent-facing recorder subcommand |
 
 ## Document History

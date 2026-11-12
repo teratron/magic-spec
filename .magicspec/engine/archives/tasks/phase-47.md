@@ -19,7 +19,7 @@ key_files:
     - "skills/magicspec/workflows/migrate.md"
     - "skills/magicspec/scripts/lib/vocabulary-sweep.js"
   modified:
-    - "skills/magicspec/SKILL.md, AGENT-RULES.md, templates/rules.md; workflows/spec.md, rule.md, graph.md, run.md, task.md, analyze.md"
+    - "skills/magicspec/SKILL.md, CONSTITUTION.md, templates/rules.md; workflows/spec.md, rule.md, graph.md, run.md, task.md, analyze.md"
     - "skills/magicspec/scripts/lib/hosts.js, migrate.js, executor.js, init.js, check-prerequisites.js, update-engine-meta.js"
     - ".magicspec/RULES.md; scripts/sync-docs.js; tests/engine.js, tests/suite.md; README.md, docs/distribution.md, docs/migration.md, CHANGELOG.md"
 patterns_established:
@@ -111,7 +111,7 @@ duration_minutes: 240
 - **Spec:** l1-decision-autonomy.md DA-2, DA-5, §5 item 8
 - **Status:** Done
 - **Assignment:** Agent
-- **Verify:** `.magicspec/RULES.md` C27 items 2 and 5 and C13 §3 name E7, and `skills/magicspec/templates/rules.md` carries items 2 and 8 word for word (the harness mirror case passes); `skills/magicspec/AGENT-RULES.md` §7 has the E7 bullet and §8's checklist line names E7, and §1's exemptions list `help` and `migrate`; the whitelist lines in the checklists of `task.md`, `run.md` and `analyze.md` name E7; `update-engine-meta` has run.
+- **Verify:** `.magicspec/RULES.md` C27 items 2 and 5 and C13 §3 name E7, and `skills/magicspec/templates/rules.md` carries items 2 and 8 word for word (the harness mirror case passes); `skills/magicspec/CONSTITUTION.md` §7 has the E7 bullet and §8's checklist line names E7, and §1's exemptions list `help` and `migrate`; the whitelist lines in the checklists of `task.md`, `run.md` and `analyze.md` name E7; `update-engine-meta` has run.
 - **Handoff:** T-47A03, T-47D01.
 - **Notes:** a constitutional amendment, written through the rule workflow's logic with origin `user-stated` (the owner's decision of 2026-10-30 is the consent); the constitutional-reviewer and prompt-engineer passes still run on the wording.
 - **Changes:** E7 in C27 items 2 and 5 and C13 section 3 (constitution 1.18.0, template word for word, mirror case extended to items 5 and 3); AGENT-RULES section 7 E7 bullet, section 8 line, section 1 exemptions for help and migrate; TASKS base RULES 1.18.0

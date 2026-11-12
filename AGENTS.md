@@ -9,7 +9,7 @@ This repository **is** the Magic Spec engine's source, and it builds itself: its
 Consequences for an agent working here:
 
 1. **You are the engine's author, not its consumer.** `skills/magicspec/` and the maintenance tooling (`skills/magicspec-dev/`, `scripts/`, `tests/`) are the product under development. Changing them is the ordinary work of this repository, authorized by the request itself — no "Engine Improvement" keyword and no confirmation step beyond the ones every task already has (C27 E1: destructive or irreversible actions).
-2. **The consumer guards do not apply here.** Shipped text written for the end user's project — the read-only `CAUTION` block at the top of `skills/magicspec/AGENT-RULES.md`, its §9 Bug Reporting protocol ("do not attempt to edit or fix it yourself") with the matching §8 checklist item, and the §1.1 user contract below — is loaded into this session too (`.agents/rules/magicspec.md` is its generated projection), but it describes a project that *installed* the engine. Here, a pasted `MAGIC-SPEC ENGINE BUG REPORT` is a work item to reproduce and fix, not a report to forward.
+2. **The consumer guards do not apply here.** Shipped text written for the end user's project — the read-only `CAUTION` block at the top of `skills/magicspec/CONSTITUTION.md`, its §9 Bug Reporting protocol ("do not attempt to edit or fix it yourself") with the matching §8 checklist item, and the §1.1 user contract below — is loaded into this session too (`.agents/rules/magicspec.md` is its generated projection), but it describes a project that *installed* the engine. Here, a pasted `MAGIC-SPEC ENGINE BUG REPORT` is a work item to reproduce and fix, not a report to forward.
 3. **Workflow write scopes are not repository permissions.** `/magicspec:spec` writes only under `.magicspec/` and `/magicspec:rule` only to `RULES.md`; those bounds describe what the workflow itself writes and hold here as everywhere. A request whose substance is the engine — a rule about engine code, a fix in a shipped file — is carried out as direct engine work in the same turn, not rerouted into `.magicspec/` because the invoked workflow cannot reach the target.
 4. **Freedom of scope is not freedom from procedure.** Every engine change still follows C1 (read first, trace impact, update atomically), C14 (`update-engine-meta` after any change inside `skills/magicspec/`), the §1.3 layer classification, and `[C-001]` (recreate any hardlink an edit broke).
 5. **Keep the consumer guard intact.** The read-only rules in shipped files are correct for their audience; when editing those files, do not weaken them to match this repository's freedom. A shipped script that must tell the two apart uses the existing signal — the presence of `scripts/generate-checksums.js` — never an assumption.
@@ -24,7 +24,7 @@ The project creates an SDD (Specification-Driven Development) engine. The reposi
 
 This layer contains ONLY the resources the end-user will download and install. Nothing extra must be placed here.
 
-- `skills/magicspec/` — **The most important directory!** The whole SDD engine as one skill: `SKILL.md` (the router), `workflows/` (one body per command), `references/`, `roles/`, `templates/`, `scripts/` (the executor and its subcommands), `AGENT-RULES.md` (the source of the always-on rule), `.version` and `.checksums`.
+- `skills/magicspec/` — **The most important directory!** The whole SDD engine as one skill: `SKILL.md` (the router), `workflows/` (one body per command), `references/`, `roles/`, `templates/`, `scripts/` (the executor and its subcommands), `CONSTITUTION.md` (the source of the always-on rule), `.version` and `.checksums`.
 
 **User contract** — what the end user does with the release kernel:
 
@@ -55,7 +55,7 @@ When in doubt whether a script belongs in `skills/magicspec/scripts/` (L1) or `s
 
 1. **Enumerate user-facing entry points** — every place where an end user (not a magic-spec developer) can invoke a script:
    - `skills/magicspec/SKILL.md` (the router) and `skills/magicspec/workflows/*.md`
-   - `skills/magicspec/AGENT-RULES.md`
+   - `skills/magicspec/CONSTITUTION.md`
    - `skills/magicspec/references/*.md` (modules the bodies name)
    - The hardcoded pre-commit hook content in `skills/magicspec/scripts/install-hooks.js`
 2. **Grep these entry points** for `executor.js <name>` and `skills/magicspec/scripts/<name>.js`. The union is the **L1 root set** of subcommands.
@@ -247,5 +247,5 @@ Before finishing any task, verify:
 - [ ] **Preserved**: Verify that structural documents (like diagrams or `.magicspec/INDEX.md`) haven't lost data during edits.
 
 <!-- magicspec:begin -->
-Before any work in this project, read `skills/magicspec/AGENT-RULES.md` and follow it for the whole session.
+Before any work in this project, read `skills/magicspec/CONSTITUTION.md` and follow it for the whole session.
 <!-- magicspec:end -->

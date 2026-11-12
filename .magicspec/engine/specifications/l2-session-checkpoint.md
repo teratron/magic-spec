@@ -31,16 +31,16 @@ The audit recorded in [l1-session-continuity.md](l1-session-continuity.md) §1.5
 | Resume triggered by file presence; prose copies disagree on when a resume completes | `context.md` §4, `pause.md` Resume Protocol, `status.md`, [l2-status-command.md](l2-status-command.md) §5.3 | §5.3 |
 | No step records a task as in flight | `run.md` Step 3 | §5.1 |
 | No place for an abandoned approach | phase tracking entry | §5.2 |
-| No cold-context check when a session does not open with a `/magicspec <command>` command | `skills/magicspec/AGENT-RULES.md` | §5.4 |
+| No cold-context check when a session does not open with a `/magicspec <command>` command | `skills/magicspec/CONSTITUTION.md` | §5.4 |
 | Finalize never says a checkpoint exists | `finalize.js` | §5.5 |
 | A `STATE.md` field with no writer | `templates/state.md` | §5.7 |
 
 ## 2. Constraints & Assumptions
 
 - **No new user-facing command** (SC-5 stays the only C2 exception). `resume-state` is an internal executor subcommand: reachable through `executor.js`'s generic dispatch, referenced only from engine prose, never advertised to the user.
-- **Layer placement** (`AGENTS.md` §1.3 classification): `resume-state.js` is named by L1 entry points (`context.md`, `status.md`, `skills/magicspec/AGENT-RULES.md`), so it is L1 and lives in `skills/magicspec/scripts/`. Its closure (`lib/phase-files.js`, `lib/scan-hygiene.js`, `lib/git-utils.js`) stays inside `skills/magicspec/`, and it references nothing under `dev/`.
+- **Layer placement** (`AGENTS.md` §1.3 classification): `resume-state.js` is named by L1 entry points (`context.md`, `status.md`, `skills/magicspec/CONSTITUTION.md`), so it is L1 and lives in `skills/magicspec/scripts/`. Its closure (`lib/phase-files.js`, `lib/scan-hygiene.js`, `lib/git-utils.js`) stays inside `skills/magicspec/`, and it references nothing under `dev/`.
 - **Read-only.** `resume-state` writes no artifact, so the read-only `/magicspec status` can call it (SC-4). Its one non-fatal condition — a registered workspace's `STATE.md` that exists but cannot be read — is recorded through the shared collector like every engine finding (DG-1: `warning`, code `RESUME_STATE_UNREADABLE`) and printed to stderr; a missing `STATE.md` is a fresh workspace, not a finding. The sink is runtime state under `.magicspec/.cache/`, not an artifact, and DG already accepts that read-only commands emit; a clean run writes nothing at all. The script never exits non-zero and never blocks a workflow.
-- **Engine Improvement.** Every `skills/magicspec/` change below is C14-governed. `skills/magicspec/AGENT-RULES.md` is outside C14 and is a hardlinked pair with `.agents/rules/magicspec.md`: after editing it, run the hardlink validator (`[C-001]`).
+- **Engine Improvement.** Every `skills/magicspec/` change below is C14-governed. `skills/magicspec/CONSTITUTION.md` is outside C14 and is a hardlinked pair with `.agents/rules/magicspec.md`: after editing it, run the hardlink validator (`[C-001]`).
 - **Layout.** The canonical two-level layout (`tasks/phase-{N}.md` holding the tracking entries) is assumed; the legacy flat layout (entries in `TASKS.md`) is read by the same three-tier lookup the `Next Action` computation already uses.
 - **Agent-executed steps** (Task Start, `Attempts`) are prose the agent follows; nothing can force them. §8 records the residual.
 
@@ -133,18 +133,18 @@ Call sites, each replacing prose that decides the same question independently:
 | Surface | Obligation |
 | --- | --- |
 | `context.md` §4 Resume Detection | Run the script with `--workspace`; relay its line; keep the Memory Fence. No snapshot is loaded or consumed: the snapshot flow is retired (§5.8). |
-| `skills/magicspec/AGENT-RULES.md` §10 | §5.4. |
+| `skills/magicspec/CONSTITUTION.md` §10 | §5.4. |
 | `status.md` degraded states | The in-flight branch calls the script (read-only); [l2-status-command.md](l2-status-command.md) §5.3 is amended accordingly. |
 | `pause.md` | Deleted (§5.8); no surface states a resume rule there any more. |
 
 ### 5.4 Session-Start Rule (SC-9(c))
 
-`skills/magicspec/AGENT-RULES.md` gains **§10 Session Resume Check**, alongside §1 (upgrade detection) and with the same shape:
+`skills/magicspec/CONSTITUTION.md` gains **§10 Session Resume Check**, alongside §1 (upgrade detection) and with the same shape:
 
 - **Trigger (observable):** the agent is about to make its first tool call and holds no `STATE.md` for the workspace in its current context — a new session, a cleared one, a compaction. Once per cold context. A `/magicspec <command>` invocation already performs the check in its context load (§5.3) and does not repeat it.
 - **Action:** run `resume-state --all` (no workspace is resolved yet, §5.3); relay a printed line verbatim as one informational line; proceed with the user's request (narrated, never asked). Silent when the script prints nothing. A missing or failing script counts as silence: the rule fails open and never halts a session.
 - **Exemptions:** `MAGIC_RESUME_CHECK=0` disables the rule; `/magicspec status` renders the same information in its own briefing.
-- `skills/magicspec/AGENT-RULES.md` §8 (Completion Protocol) gains the matching checklist item.
+- `skills/magicspec/CONSTITUTION.md` §8 (Completion Protocol) gains the matching checklist item.
 
 ### 5.5 Checkpoint Claim (SC-6.1)
 
@@ -179,7 +179,7 @@ Harness (`tests/engine.js`), deterministic:
 | H7 | Fixture pair identical except one entry whose `Attempts` quotes `**Status:** Blocked` and `**Assignment:** User` → `computeNextAction` output identical for both; `resume-state` counts the attempt and does not treat the task as Blocked. | SC-8 parser safety |
 | H8 | Every field label in `templates/state.md` maps to a key of `update-state`'s field map, and the template has no `Last Session Ended`. | SC-1.3 |
 | H9 | `checkpoint saved` is printed on both finalize exit paths after a successful update, and absent under `--dry-run` and when the state update is forced to fail (a directory at the `STATE.md` path). Wording pinned. | SC-6.1 |
-| H10 | Shipped text: (a) nothing names `/magic.pause` as a command; (b) `context.md` has no percentage tier table and no `at {n}%` narration; (c) `run.md` has the Task Start step and all three `Attempts` events; (d) `skills/magicspec/AGENT-RULES.md` has §10 and `MAGIC_RESUME_CHECK=0`. | SC-7, SC-9 |
+| H10 | Shipped text: (a) nothing names `/magic.pause` as a command; (b) `context.md` has no percentage tier table and no `at {n}%` narration; (c) `run.md` has the Task Start step and all three `Attempts` events; (d) `skills/magicspec/CONSTITUTION.md` has §10 and `MAGIC_RESUME_CHECK=0`. | SC-7, SC-9 |
 
 Cognitive suite (`tests/suite.md`), the guarantees no script can hold — landed as T220–T224 (T213–T219 were already assigned to other cases by the time these were written; do not repeat a specific range here, `tests/suite.md`'s own closing line is the source of truth per [l2-test-suite.md](l2-test-suite.md)):
 
@@ -208,7 +208,7 @@ Deployment inventory, routed to `/magicspec task engine`; every row outside `.ma
 | 7 | `skills/magicspec/templates/state.md`, `phase.md`; `handoff.json` deleted | §5.7; document the optional `Attempts` in the phase template without a live line. |
 | 8 | `skills/magicspec/scripts/finalize.js` | §5.5. |
 | 9 | `skills/magicspec/workflows/analyze.md` | `PHANTOM_COMMAND` ([l2-workflow-wrappers.md](l2-workflow-wrappers.md) §6.1). |
-| 10 | `skills/magicspec/AGENT-RULES.md` and `.agents/rules/magicspec.md` | §10 and the §8 item; validate the hardlink pair afterwards. |
+| 10 | `skills/magicspec/CONSTITUTION.md` and `.agents/rules/magicspec.md` | §10 and the §8 item; validate the hardlink pair afterwards. |
 | 11 | `docs/run.md`, `docs/task.md`, `docs/status.md`, `docs/README.md` | Phantom hints, tier note, resume, the checkpoint sentence (documentation parity). |
 | 12 | `tests/engine.js`, `tests/suite.md` | §6. |
 | 13 | `.magicspec/engine/STATE.md` | Drop the stale `Last Session Ended` line. |
@@ -235,7 +235,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 | `[PHASE-TPL]` | `skills/magicspec/templates/phase.md` | Tracking-entry schema |
 | `[FIELDS]` | `skills/magicspec/scripts/update-state.js` | The writer table every template field must map to |
 | `[FINALIZE]` | `skills/magicspec/scripts/finalize.js` | State-update outcome and the checkpoint claim |
-| `[RULES]` | `skills/magicspec/AGENT-RULES.md` | Always-loaded rules; §10 Session Resume Check |
+| `[RULES]` | `skills/magicspec/CONSTITUTION.md` | Always-loaded rules; §10 Session Resume Check |
 | `[HARNESS]` | `tests/engine.js` | Deterministic regression harness (§6, H1–H10) |
 | `[SUITE]` | `tests/suite.md` | Cognitive regression suite (§6, C1–C5) |
 

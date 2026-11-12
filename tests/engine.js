@@ -728,7 +728,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(path.join(tempDir, '.magicspec', 'RULES.md')));
             assert.ok(fs.existsSync(path.join(tempDir, '.magicspec', 'main', 'INDEX.md')));
 
-            // skills/magicspec/AGENT-RULES.md §1 step 3: Auto-Init seeds a correctly-seeded Engine
+            // skills/magicspec/CONSTITUTION.md §1 step 3: Auto-Init seeds a correctly-seeded Engine
             // Version snapshot on its own, not left for /magicspec analyze to add later
             // (field report, engine v2.1.104: fresh init produced no snapshot at all).
             const freshIndex = fs.readFileSync(
@@ -2315,17 +2315,17 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
-    test('question routing: skills/magicspec/AGENT-RULES.md sends a mechanic named in a question to the specification text and a structural one to the graph, in both copies', () => {
+    test('question routing: skills/magicspec/CONSTITUTION.md sends a mechanic named in a question to the specification text and a structural one to the graph, in both copies', () => {
         const repoRoot = path.resolve(__dirname, '..');
         const text = fs.readFileSync(
-            path.join(repoRoot, 'skills', 'magicspec', 'AGENT-RULES.md'),
+            path.join(repoRoot, 'skills', 'magicspec', 'CONSTITUTION.md'),
             'utf8',
         );
         const start = text.indexOf('## 2. Specification Knowledge Graph');
         const end = text.indexOf('\n## 3.', start);
         assert.ok(
             start >= 0 && end > start,
-            'skills/magicspec/AGENT-RULES.md must carry the graph section',
+            'skills/magicspec/CONSTITUTION.md must carry the graph section',
         );
         const bullets = text.slice(start, end).split('\n- ');
 
@@ -2895,15 +2895,15 @@ describe('Magic Engine Scripts', () => {
         if (fs.existsSync(twinPath)) {
             assert.strictEqual(
                 fs.readFileSync(twinPath, 'utf8'),
-                fs.readFileSync(path.join(repoRoot, 'skills', 'magicspec', 'AGENT-RULES.md'), 'utf8'),
+                fs.readFileSync(path.join(repoRoot, 'skills', 'magicspec', 'CONSTITUTION.md'), 'utf8'),
                 'the projection under .agents/rules must carry the same text as the rule source',
             );
         }
     });
 
-    test('rule kernel: AGENT-RULES.md stays within its size budget, keeps every section heading, and names each rule module that exists', () => {
+    test('rule kernel: CONSTITUTION.md stays within its size budget, keeps every section heading, and names each rule module that exists', () => {
         const skill = path.join(path.resolve(__dirname, '..'), 'skills', 'magicspec');
-        const kernel = fs.readFileSync(path.join(skill, 'AGENT-RULES.md'), 'utf8');
+        const kernel = fs.readFileSync(path.join(skill, 'CONSTITUTION.md'), 'utf8');
 
         // The kernel is loaded into every turn of every session: its size is the budget.
         assert.ok(
@@ -5321,14 +5321,14 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-30.md'),
                 '---\nphase: 30\nname: "Held"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-30A01] Done\n- [!] [T-30A02] Blocked\n',
+                '## Atomic Checklist\n\n- [x] [T-30A01] Done\n- [!] [T-30A02] Blocked\n',
             );
             // Negative control: the same glyph quoted in a code span is prose.
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-31.md'),
                 '---\nphase: 31\nname: "Quoting"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-31A01] Done\n\n' +
-                    '## Detailed Tracking\n\n### [T-31A01]\n- **Notes:** blocked reads `- [!]` here.\n',
+                '## Atomic Checklist\n\n- [x] [T-31A01] Done\n\n' +
+                '## Detailed Tracking\n\n### [T-31A01]\n- **Notes:** blocked reads `- [!]` here.\n',
             );
             const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
             assert.ok(
@@ -5862,6 +5862,42 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('finalize.js names the workflow in the printed form /magicspec <command> on both outcomes, never the retired dotted name (CS-2)', () => {
+        const tempDir = createTempWorkspace(true);
+        try {
+            const { finalizePath } = createFinalizeFixture(tempDir, {
+                workspace: 'main',
+                autoChangelog: true,
+            });
+            commitFixture(tempDir);
+            const run = (workflow) =>
+                execSync(`node "${finalizePath}" --workflow=${workflow} --workspace=main`, {
+                    cwd: tempDir,
+                    encoding: 'utf8',
+                });
+
+            // Skip outcome: nothing changed, so the plan workflow finds nothing significant.
+            const skipped = run('plan');
+            assert.match(
+                skipped,
+                /No significant changes detected for \/magicspec plan on workspace 'main'/,
+            );
+            assert.doesNotMatch(skipped, /\bmagic\.plan\b/, 'the skip line names no dotted form');
+
+            // Success outcome: a constitution change is significant for the rule workflow.
+            fs.writeFileSync(
+                path.join(tempDir, '.magicspec', 'RULES.md'),
+                '# Rules\n\n- A rule that makes the change significant.\n',
+            );
+            const finished = run('rule');
+            assert.match(finished, /Finalization complete/);
+            assert.match(finished, /\| Workflow \| \/magicspec rule \|/);
+            assert.doesNotMatch(finished, /\bmagic\.rule\b/, 'the table names no dotted form');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js reports every changed file, not just whitelisted ones (stdout listing completeness)', () => {
         const tempDir = createTempWorkspace(true);
         try {
@@ -5996,15 +6032,15 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-20.md'),
                 '---\nphase: 20\nname: "Quoting"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-20A01] Done item\n\n' +
-                    '## Detailed Tracking\n\n### [T-20A01]\n- **Notes:** detect open `- [ ]` tasks via regex.\n',
+                '## Atomic Checklist\n\n- [x] [T-20A01] Done item\n\n' +
+                '## Detailed Tracking\n\n### [T-20A01]\n- **Notes:** detect open `- [ ]` tasks via regex.\n',
             );
 
             // (b) Done but a genuine unchecked checklist line → NOT archivable.
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-21.md'),
                 '---\nphase: 21\nname: "Open"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-21A01] Done\n- [ ] [T-21A02] Still open\n',
+                '## Atomic Checklist\n\n- [x] [T-21A01] Done\n- [ ] [T-21A02] Still open\n',
             );
 
             const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
@@ -6034,14 +6070,14 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-10b.md'),
                 '---\nphase: 10\nname: "Track B"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-10B01] Done item\n',
+                '## Atomic Checklist\n\n- [x] [T-10B01] Done item\n',
             );
 
             // Same shape, still open → the suffix must not become a free pass.
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-10a.md'),
                 '---\nphase: 10\nname: "Track A"\nstatus: Done\n---\n\n' +
-                    '## Atomic Checklist\n\n- [x] [T-10A01] Done\n- [ ] [T-10A02] Open\n',
+                '## Atomic Checklist\n\n- [x] [T-10A01] Done\n- [ ] [T-10A02] Open\n',
             );
 
             const candidates = archiver.findArchiveCandidates(wsDir).map((c) => c.file);
@@ -6073,7 +6109,7 @@ describe('Magic Engine Scripts', () => {
                 fs.writeFileSync(
                     path.join(tasksDir, file),
                     `---\nphase: ${phase}\nname: "W"\nstatus: Done\n---\n\n` +
-                        '## Atomic Checklist\n\n- [x] [T-1A01] Done\n',
+                    '## Atomic Checklist\n\n- [x] [T-1A01] Done\n',
                 );
             }
 
@@ -6119,7 +6155,7 @@ describe('Magic Engine Scripts', () => {
         fs.writeFileSync(
             path.join(tasksDir, 'phase-3.md'),
             '---\nphase: 3\nname: "Shipping"\nstatus: Done\n---\n\n' +
-                '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n',
+            '## Atomic Checklist\n\n- [x] [T-3A01] Ship it\n',
         );
 
         const tasksPath = path.join(wsDir, 'TASKS.md');
@@ -6422,7 +6458,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(wsDir, 'TASKS.md'),
                 '| Phase | Description | Status |\n| --- | --- | --- |\n' +
-                    '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
+                '| [Phase 1](tasks/phase-1.md) | Bootstrap | `Done` |\n',
             );
             warnedBy(() => updateState(wsDir, { phase: '1' }, { autoProgress: true }));
             assert.match(
@@ -7846,9 +7882,187 @@ describe('Magic Engine Scripts', () => {
             const stateFile = path.join(wsDir, 'STATE.md');
             assert.ok(
                 !fs.existsSync(stateFile) ||
-                    !/Handoff File/.test(fs.readFileSync(stateFile, 'utf8')),
+                !/Handoff File/.test(fs.readFileSync(stateFile, 'utf8')),
                 'the retired field is not created on a fresh file',
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    // ───────────────────────────────────────────────────────────────────────────
+    // 7g. update-state.js — the goal block of live memory (GM-3)
+    // ───────────────────────────────────────────────────────────────────────────
+    const GOAL_FIXTURE = {
+        statement: 'the import works end to end for all three formats',
+        phase: 3,
+        taskLimit: 5,
+        bound: 'give up after 5 rounds without progress',
+        withoutProgress: 1,
+        tasksDone: 2,
+        criteria: [
+            { state: 'met', text: 'CSV import round-trips', check: 'scenario S-1 passes' },
+            { state: 'open', text: 'JSON import round-trips', check: 'scenario S-2 passes' },
+            { state: 'blocked', text: 'XML import - namespaces', check: 'a decision on the parser' },
+        ],
+        consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
+    };
+
+    const goalSectionOf = (state) => {
+        const start = state.search(/^## Goal\b/m);
+        if (start === -1) return null;
+        const next = state.indexOf('\n## ', start + 1);
+        return state.slice(start, next === -1 ? state.length : next);
+    };
+
+    const runGoalWriter = (tempDir, wsDir, ...args) =>
+        spawnSync(
+            process.execPath,
+            [
+                path.join(tempDir, 'skills', 'magicspec', 'scripts', 'update-state.js'),
+                `--workspace=${wsDir}`,
+                ...args,
+            ],
+            { cwd: tempDir, encoding: 'utf8' },
+        );
+
+    test('update-state records the goal from a file between Current Position and Progress, keeps it byte for byte under every other update, and a cleared goal leaves no section (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const { updateState, wsDir } = requireUpdateStateWithTasks(tempDir);
+            fs.writeFileSync(
+                path.join(wsDir, 'TASKS.md'),
+                '# Tasks\n\n| Phase | Description | Status |\n| --- | --- | --- |\n| [Phase 1](tasks/phase-1.md) | A | `Todo` |\n',
+            );
+            fs.writeFileSync(path.join(tempDir, 'goal.json'), JSON.stringify(GOAL_FIXTURE));
+            const statePath = path.join(wsDir, 'STATE.md');
+
+            const written = runGoalWriter(tempDir, wsDir, '--phase=3', '--goal-file=goal.json');
+            assert.strictEqual(written.status, 0, written.stdout + written.stderr);
+            const state = fs.readFileSync(statePath, 'utf8');
+            const section = goalSectionOf(state);
+            assert.ok(section, 'the goal section is written');
+            for (const line of [
+                '- **Goal:** the import works end to end for all three formats',
+                '- **Target phase:** 3',
+                '- **Task limit:** 5',
+                '- **Bound:** give up after 5 rounds without progress',
+                '- **Without progress:** 1',
+                '- **Tasks done:** 2',
+                '- [met] CSV import round-trips — scenario S-1 passes',
+                '- [open] JSON import round-trips — scenario S-2 passes',
+                '- [blocked] XML import - namespaces — a decision on the parser',
+                '- [consent] delete the old importer — a destructive action',
+            ]) {
+                assert.ok(section.includes(`${line}\n`) || section.endsWith(line), `the section holds: ${line}`);
+            }
+            assert.ok(
+                state.indexOf('## Current Position') < state.indexOf('## Goal') &&
+                state.indexOf('## Goal') < state.indexOf('## Progress'),
+                'the section sits between Current Position and Progress',
+            );
+
+            // Every other writer leaves the block byte for byte.
+            updateState(wsDir, { nextAction: 'Continue', task: 'T-1 something' }, { autoProgress: true });
+            updateState(wsDir, { decision: 'A decision' }, { addDecision: true });
+            updateState(wsDir, { constraint: { title: 'A constraint', desc: 'never' } }, { addConstraint: true });
+            assert.strictEqual(
+                goalSectionOf(fs.readFileSync(statePath, 'utf8')),
+                section,
+                'the block survives every other update unchanged',
+            );
+
+            // A new block replaces the old one; a cleared goal removes the section and nothing else.
+            const cleared = runGoalWriter(tempDir, wsDir, '--goal-clear');
+            assert.strictEqual(cleared.status, 0, cleared.stdout + cleared.stderr);
+            const after = fs.readFileSync(statePath, 'utf8');
+            assert.strictEqual(goalSectionOf(after), null, 'no goal section remains');
+            for (const heading of ['## Current Position', '## Progress', '## Recent Decisions', '## Blocking Constraints']) {
+                assert.ok(after.includes(heading), `${heading} stays`);
+            }
+            assert.ok(!/\n\n\n/.test(after.replace(/\r/g, '')), 'removing the section leaves no double blank line');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('update-state refuses a goal over its bound, with an unknown field or with a bad criterion, records one diagnostic and writes nothing (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            updateState(wsDir, { nextAction: 'Start' });
+            const statePath = path.join(wsDir, 'STATE.md');
+            const before = fs.readFileSync(statePath, 'utf8');
+
+            const cases = {
+                'over the bound': {
+                    ...GOAL_FIXTURE,
+                    criteria: Array.from({ length: 30 }, (_, i) => ({ state: 'open', text: `criterion ${i}`, check: 'c' })),
+                },
+                'an unknown field': { ...GOAL_FIXTURE, owner: 'someone' },
+                'a bad criterion state': { ...GOAL_FIXTURE, criteria: [{ state: 'done', text: 'x', check: 'y' }] },
+                'no statement, phase or limit': { bound: 'none' },
+            };
+            for (const [name, goal] of Object.entries(cases)) {
+                fs.writeFileSync(path.join(tempDir, 'goal.json'), JSON.stringify(goal));
+                const result = runGoalWriter(tempDir, wsDir, '--next-action=Changed', '--goal-file=goal.json');
+                assert.notStrictEqual(result.status, 0, `${name}: refused`);
+                assert.match(result.stderr, /HALT: .*goal/i, `${name}: the refusal names the goal`);
+                assert.strictEqual(fs.readFileSync(statePath, 'utf8'), before, `${name}: nothing was written, not even the other fields`);
+            }
+            const { read } = requireFromFixture(tempDir, 'lib', 'diagnostics.js');
+            const refused = read().filter((f) => f.code === 'STATE_GOAL_REFUSED');
+            assert.strictEqual(refused.length, Object.keys(cases).length, 'each refusal is recorded');
+            assert.ok(refused.every((f) => f.source === 'update-state' && f.severity === 'error'));
+
+            // The two goal flags exclude each other, and an unreadable file is a refusal too.
+            const both = runGoalWriter(tempDir, wsDir, '--goal-file=goal.json', '--goal-clear');
+            assert.notStrictEqual(both.status, 0, 'a goal and a clear together are refused');
+            const missing = runGoalWriter(tempDir, wsDir, '--goal-file=absent.json');
+            assert.notStrictEqual(missing.status, 0, 'a missing goal file is refused');
+            assert.strictEqual(fs.readFileSync(statePath, 'utf8'), before, 'still nothing written');
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('a STATE.md that records no goal gains no goal section from an ordinary update, and a fresh one carries none (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            copyStateTemplate(tempDir);
+            const { updateState, wsDir } = requireUpdateState(tempDir);
+            updateState(wsDir, { phase: '1 — A', nextAction: 'Start' });
+            updateState(wsDir, { decision: 'D' }, { addDecision: true });
+            updateState(wsDir, { constraint: { title: 'C', desc: 'd' } }, { addConstraint: true });
+            const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
+            assert.strictEqual(goalSectionOf(state), null, 'no goal section appears');
+            assert.ok(!/<!-- Written by update-state only/.test(state), 'the template comment of the section does not leak either');
+            // Clearing a goal that was never recorded is a no-op and still succeeds.
+            const cleared = runGoalWriter(tempDir, wsDir, '--goal-clear');
+            assert.strictEqual(cleared.status, 0, cleared.stdout + cleared.stderr);
+            assert.strictEqual(goalSectionOf(fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8')), null);
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('the goal block renders and parses to the same object, a separator inside a text cannot split a line wrongly, and a file with no named goal reads as none (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { normalizeGoal, renderGoalSection, parseGoalSection } = requireFromFixture(tempDir, 'lib', 'goal-block.js');
+            const goal = normalizeGoal({
+                ...GOAL_FIXTURE,
+                criteria: [{ state: 'open', text: 'one — two', check: 'a — b' }],
+            });
+            assert.strictEqual(goal.criteria[0].text, 'one - two', 'the separator inside a text is replaced');
+            assert.deepStrictEqual(parseGoalSection(`# State\n\n${renderGoalSection(goal)}\n## Progress\n`), goal);
+            // Phase and count forms record without a statement.
+            const phaseOnly = normalizeGoal({ phase: 4 });
+            assert.deepStrictEqual(parseGoalSection(renderGoalSection(phaseOnly)), phaseOnly);
+            assert.strictEqual(parseGoalSection('# State\n\n## Goal\n\n<!-- nothing recorded -->\n'), null);
+            assert.strictEqual(parseGoalSection('# State\n'), null);
         } finally {
             cleanup(tempDir);
         }
@@ -8103,7 +8317,7 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(tasksDir, 'phase-16.md'),
                 '---\r\nphase: 16\r\nname: "Windows"\r\nstatus: Done\r\n---\r\n\r\n' +
-                    '## Atomic Checklist\r\n\r\n- [x] [T-16A01] Done\r\n',
+                '## Atomic Checklist\r\n\r\n- [x] [T-16A01] Done\r\n',
             );
 
             const candidates = archiver.findArchiveCandidates(wsDir);
@@ -10532,9 +10746,9 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(
                 out.summary.total,
                 out.summary.extracted +
-                    out.summary.inferred +
-                    out.summary.ambiguous +
-                    out.summary.uncovered,
+                out.summary.inferred +
+                out.summary.ambiguous +
+                out.summary.uncovered,
                 'total must be computed from the four non-exempt buckets only',
             );
             assert.strictEqual(
@@ -10924,16 +11138,16 @@ describe('Magic Engine Scripts', () => {
     });
 
     // ───────────────────────────────────────────────────────────────────────────
-    // 17. skills/magicspec/AGENT-RULES.md §1 — Fresh-Project Snapshot Ambiguity (structural)
+    // 17. skills/magicspec/CONSTITUTION.md §1 — Fresh-Project Snapshot Ambiguity (structural)
     //     Engine Upgrade Detection is a cognitive procedure the agent follows
     //     by reading this file — no executor subcommand implements the
     //     compare/narrate logic — so coverage is structural/textual, the same
     //     precedent as T-29T01's skills/magicspec/analyze.md cognitive-instruction case.
     // ───────────────────────────────────────────────────────────────────────────
-    test('skills/magicspec/AGENT-RULES.md §1 distinguishes a fresh project from an unknown-field registry', () => {
+    test('skills/magicspec/CONSTITUTION.md §1 distinguishes a fresh project from an unknown-field registry', () => {
         const repoRoot = path.resolve(__dirname, '..');
         const content = fs.readFileSync(
-            path.join(repoRoot, 'skills', 'magicspec', 'AGENT-RULES.md'),
+            path.join(repoRoot, 'skills', 'magicspec', 'CONSTITUTION.md'),
             'utf8',
         );
 
@@ -11026,6 +11240,20 @@ describe('Magic Engine Scripts', () => {
             '',
         ].join('\n');
 
+    // A STATE.md text with the goal block the writer would record (`goal` is the object the
+    // writer takes), placed where it puts it: before the section that follows it.
+    const withGoalSection = (text, goal) => {
+        if (!goal) return text;
+        const { normalizeGoal, renderGoalSection } = require(
+            path.join(scriptsDir, 'lib', 'goal-block.js'),
+        );
+        return text.replace(
+            '## Session Continuity',
+            `${renderGoalSection(normalizeGoal(goal))}
+## Session Continuity`,
+        );
+    };
+
     // Writes the tree resume-state.js reads: a registry plus, per workspace, a
     // STATE.md and (when given) one phase workbook of tracking entries.
     const writeResumeFixture = (
@@ -11043,9 +11271,12 @@ describe('Magic Engine Scripts', () => {
             fs.writeFileSync(
                 path.join(wsDir, 'STATE.md'),
                 toEol(
-                    resumeStateText(
-                        def.status || 'Active',
-                        def.nextAction || 'Execute T-1A01 Thing via /magicspec run engine',
+                    withGoalSection(
+                        resumeStateText(
+                            def.status || 'Active',
+                            def.nextAction || 'Execute T-1A01 Thing via /magicspec run engine',
+                        ),
+                        def.goal,
                     ),
                 ),
             );
@@ -11226,7 +11457,7 @@ describe('Magic Engine Scripts', () => {
         assert.strictEqual(
             printed['\n'],
             '▶ Resume [engine]: T-1A01 Extract `finalize.js` in flight — 2 dead end(s) recorded, 2 file(s) modified. ' +
-                'Next: Execute T-1A01 Extract `finalize.js` via /magicspec run engine\n',
+            'Next: Execute T-1A01 Extract `finalize.js` via /magicspec run engine\n',
             'one line: title and Next Action with their code spans intact, the recorded dead ends, and the two product files (not the workbook)',
         );
     });
@@ -12146,8 +12377,8 @@ describe('Magic Engine Scripts', () => {
         const qa = stepBlock(steps, '3.5.');
         assert.ok(
             qa.includes('Attempts') &&
-                qa.includes('Blocked [!]') &&
-                qa.indexOf('Attempts') < qa.indexOf('Blocked [!]'),
+            qa.includes('Blocked [!]') &&
+            qa.indexOf('Attempts') < qa.indexOf('Blocked [!]'),
             'a Verify or QA failure is recorded before the task is set Blocked',
         );
 
@@ -12181,12 +12412,12 @@ describe('Magic Engine Scripts', () => {
         );
     });
 
-    test('shipped text: skills/magicspec/AGENT-RULES.md carries the session resume check and its opt-out (H10d)', () => {
-        const rules = readShipped('skills/magicspec/AGENT-RULES.md');
+    test('shipped text: skills/magicspec/CONSTITUTION.md carries the session resume check and its opt-out (H10d)', () => {
+        const rules = readShipped('skills/magicspec/CONSTITUTION.md');
         assert.match(
             rules,
             /^## 10\. Session Resume Check/m,
-            'skills/magicspec/AGENT-RULES.md must carry section 10',
+            'skills/magicspec/CONSTITUTION.md must carry section 10',
         );
         assert.ok(
             rules.indexOf('\n## 9. ') < rules.indexOf('\n## 10. '),
@@ -12271,7 +12502,7 @@ describe('Magic Engine Scripts', () => {
             found,
             [],
             'shipped text must not cite a specification file — restate the rationale in plain language and keep only the protocol label:\n' +
-                found.join('\n'),
+            found.join('\n'),
         );
     });
 
@@ -12326,7 +12557,7 @@ describe('Magic Engine Scripts', () => {
             bare,
             [],
             'a Pre-flight without --workspace validates the default workspace in place of the one the workflow was given:\n' +
-                bare.join('\n'),
+            bare.join('\n'),
         );
     });
 
@@ -12355,7 +12586,7 @@ describe('Magic Engine Scripts', () => {
         // Workflow bodies (each opens with the entry section that used to be a wrapper) and the ambient rule carry the command.
         const read = (rel) => ({ rel, text: readShipped(rel) });
         const { seen, bare } = bareWorkspaceCommands(
-            [...engineBodies(), read('skills/magicspec/AGENT-RULES.md')],
+            [...engineBodies(), read('skills/magicspec/CONSTITUTION.md')],
             'finalize',
         );
         assert.ok(
@@ -12366,7 +12597,7 @@ describe('Magic Engine Scripts', () => {
             bare,
             [],
             'finalize without --workspace computes significance and writes STATE.md for the default workspace, not the one the workflow ran for:\n' +
-                bare.join('\n'),
+            bare.join('\n'),
         );
     });
 
@@ -12471,7 +12702,7 @@ describe('Magic Engine Scripts', () => {
     });
 
     test('shipped text: the always-on rules and the rule modules finalize plan, name /magicspec plan as the one replan step after a run, and still never offer spec or analyze unasked (PL-6)', () => {
-        const rules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const rules = readShipped('skills/magicspec/CONSTITUTION.md');
         const replan = readShipped('skills/magicspec/references/rules/replan.md');
         const finalization = readShipped('skills/magicspec/references/rules/finalization.md');
         const containment = readShipped('skills/magicspec/references/rules/containment.md');
@@ -12592,8 +12823,8 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(sectionOf(template, id), sectionOf(constitution, id), `${id} is the same word for word in the template`);
         }
         const c2 = sectionOf(constitution, 'C2');
-        assert.ok(c2.includes('The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`'));
-        assert.ok(c2.includes('`goal` and `sync` are authorized C2 exceptions that join with their own deliveries'));
+        assert.ok(c2.includes('The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`'));
+        assert.ok(c2.includes('`sync` is an authorized C2 exception that joins with its own delivery'));
         assert.ok(c2.includes('`audit` is an alias of `analyze` and not a command'));
         const c9 = sectionOf(constitution, 'C9');
         for (const needle of [
@@ -13319,7 +13550,7 @@ describe('Magic Engine Scripts', () => {
         }
 
         // The kernel points at it, within its budget; the consumer guard is as it was.
-        const rules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const rules = readShipped('skills/magicspec/CONSTITUTION.md');
         assert.ok(rules.includes('finding with `record-diagnostic` and as a `feedback note`. Template, recording and the offer of the drafts:'), 'the kernel names the note and the offer');
         assert.ok(rules.includes('do NOT edit it: emit the `MAGIC-SPEC ENGINE BUG REPORT` block for the user'), 'the read-only prohibition is untouched');
         assert.ok(Buffer.byteLength(rules) < 16384, `the rule kernel is under 16 KB (${Buffer.byteLength(rules)} bytes)`);
@@ -13336,7 +13567,7 @@ describe('Magic Engine Scripts', () => {
             const result = runEngine(repaired.dir, 'finalize', '--workflow=fix', '--workspace=ws');
             const out = result.stdout + result.stderr;
             assert.strictEqual(result.status, 0, out);
-            assert.match(out, /\| Workflow \| magic\.fix \|/, 'the workflow is accepted');
+            assert.match(out, /\| Workflow \| \/magicspec fix \|/, 'the workflow is accepted');
             assert.ok(fs.existsSync(path.join(repaired.ws, 'archives', 'tasks', 'phase-1.md')), 'a finished maintenance phase is archived as after a run');
             assert.match(out, /### Archived phases/);
             assert.strictEqual(fs.readFileSync(path.join(repaired.dir, '.magicspec', '.version'), 'utf8').trim(), '0.1.1', 'a repair is a significant change: the version bumps');
@@ -13587,7 +13818,7 @@ describe('Magic Engine Scripts', () => {
         assert.ok(c28.includes('is a work item to reproduce and fix, not a report to forward: it is entered through `/magicspec-dev fix`, whose steps are the reproduction and the repair.'), 'item 2 names the maintenance entry');
         assert.ok(c28.includes('5. **The shipped guard stays intact.** Do not weaken the read-only rules'), 'item 5 is untouched');
         assert.ok(!template.includes('/magicspec-dev fix'), 'the shipped template names no maintenance entry');
-        const shippedRules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const shippedRules = readShipped('skills/magicspec/CONSTITUTION.md');
         assert.ok(shippedRules.includes('do NOT edit it: emit the `MAGIC-SPEC ENGINE BUG REPORT` block for the user'), 'the consumer prohibition is as it was');
 
         const history = constitution.split('\n').find((line) => line.startsWith('| 1.21.0 |'));
@@ -13629,7 +13860,7 @@ describe('Magic Engine Scripts', () => {
         const record = step('6. **Record the repair as a task**');
         assert.ok(record.includes('`T-{phase}F{nn}`') && record.includes('`Verify` line equal to the reproduction'));
         assert.ok(record.includes('the body calls the planning write as one step of its own stage') && record.includes('The body never edits `PLAN.md` by any other route.'), 'PL-1: the plan is written by the planning write only');
-        assert.ok(record.includes('the Post-Update Review including its coherence check'),'a specification amendment follows the spec steps');
+        assert.ok(record.includes('the Post-Update Review including its coherence check'), 'a specification amendment follows the spec steps');
         const repair = step('7. **Repair under the gates**');
         assert.ok(repair.includes('`workflows/run.md` Steps 2b to 4') && repair.includes('`@role:debugger` takes the branch when the first attempt fails'));
         assert.ok(step('8. **Regression left behind**').includes('written and run **before** the repair so that it is seen to fail'));
@@ -13957,7 +14188,7 @@ describe('Magic Engine Scripts', () => {
         const settingLine = setting.slice(0, setting.indexOf('\n'));
         assert.ok(
             settingLine.includes("the plan marks `[Stabilize]`") &&
-                /never from the request in the conversation/.test(settingLine),
+            /never from the request in the conversation/.test(settingLine),
             'the flag comes from the plan\'s marker, never from the request, never inferred from a title',
         );
 
@@ -14263,7 +14494,7 @@ describe('Magic Engine Scripts', () => {
             ...engineBodies().map(({ rel }) => rel),
             ...listShipped('skills/magicspec/roles', ['.md']),
             'skills/magicspec/templates/rules.md',
-            'skills/magicspec/AGENT-RULES.md',
+            'skills/magicspec/CONSTITUTION.md',
             ...listShipped('workflows', ['.md']),
             ...listShipped('skills', ['.md']),
             '.magicspec/RULES.md',
@@ -14304,7 +14535,7 @@ describe('Magic Engine Scripts', () => {
                 `${prefix} must name E7 in both constitutions`,
             );
         }
-        const agentRules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const agentRules = readShipped('skills/magicspec/CONSTITUTION.md');
         assert.match(agentRules, /- \*\*E7 \(Command Intake\)\*\*/, 'the always-on rules state E7');
         assert.match(
             agentRules,
@@ -14359,9 +14590,9 @@ describe('Magic Engine Scripts', () => {
         }
 
         // The user rules carry the procedure to watching-process agents.
-        const rules = readShipped('skills/magicspec/AGENT-RULES.md');
+        const rules = readShipped('skills/magicspec/CONSTITUTION.md');
         const start = rules.indexOf('**DA-10 (Consequence Forecast)**');
-        assert.ok(start !== -1, 'skills/magicspec/AGENT-RULES.md §7 must state DA-10');
+        assert.ok(start !== -1, 'skills/magicspec/CONSTITUTION.md §7 must state DA-10');
         const bullet = rules.slice(start, rules.indexOf('\n- ', start));
         for (const needle of [
             'hedge',
@@ -14372,7 +14603,7 @@ describe('Magic Engine Scripts', () => {
         ]) {
             assert.ok(
                 bullet.includes(needle),
-                `skills/magicspec/AGENT-RULES.md DA-10 must name ${needle}`,
+                `skills/magicspec/CONSTITUTION.md DA-10 must name ${needle}`,
             );
         }
 
@@ -14414,7 +14645,7 @@ describe('Magic Engine Scripts', () => {
         ]) {
             assert.ok(
                 e6.includes(needle),
-                `skills/magicspec/AGENT-RULES.md E6 must state ${needle}`,
+                `skills/magicspec/CONSTITUTION.md E6 must state ${needle}`,
             );
         }
         assert.ok(
@@ -15478,7 +15709,7 @@ describe('Magic Engine Scripts', () => {
         cwd,
         describe = (rel) => `${rel}: a byte copy of the source`,
     ) => {
-        const source = fs.readFileSync(path.join(skillDir, 'AGENT-RULES.md'), 'utf8');
+        const source = fs.readFileSync(path.join(skillDir, 'CONSTITUTION.md'), 'utf8');
         for (const rel of ['.claude/rules/magicspec.md', '.qwen/rules/magicspec.md']) {
             assert.strictEqual(
                 fs.readFileSync(path.join(cwd, rel), 'utf8'),
@@ -15987,7 +16218,7 @@ describe('Magic Engine Scripts', () => {
             assert.match(bad.stderr, /Unknown host 'zed'\. Known hosts: claude, codex, qwen\./);
             assert.ok(
                 !fs.existsSync(path.join(dir, '.magicspec')) &&
-                    !fs.existsSync(path.join(dir, '.claude')),
+                !fs.existsSync(path.join(dir, '.claude')),
                 'nothing written',
             );
             assert.strictEqual(
@@ -16119,7 +16350,7 @@ describe('Magic Engine Scripts', () => {
             skillExec(skill, dir, 'init', ['--host=claude']);
             assert.deepStrictEqual(staleOf(), [], 'init writes the copy again');
 
-            fs.appendFileSync(path.join(skill, 'AGENT-RULES.md'), '\nA new sentence.\n');
+            fs.appendFileSync(path.join(skill, 'CONSTITUTION.md'), '\nA new sentence.\n');
             stale = staleOf();
             assert.ok(
                 stale.some((w) => /magicspec\.md/.test(w.message)),
@@ -16174,7 +16405,7 @@ describe('Magic Engine Scripts', () => {
             );
 
             // A source that moved on, and the entries.
-            fs.appendFileSync(path.join(skill, 'AGENT-RULES.md'), '\nA new sentence.\n');
+            fs.appendFileSync(path.join(skill, 'CONSTITUTION.md'), '\nA new sentence.\n');
             const rewritten = refresh()
                 .map((r) => r.path)
                 .sort();
@@ -16189,7 +16420,7 @@ describe('Magic Engine Scripts', () => {
             );
             assert.ok(
                 !fs.existsSync(path.join(folder, 'task.md')) &&
-                    !fs.existsSync(path.join(folder, 'graph.md')),
+                !fs.existsSync(path.join(folder, 'graph.md')),
                 'every marked entry is removed, current or not',
             );
             assert.ok(
@@ -16203,7 +16434,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(fs.existsSync(folder), 'a folder that still holds a file of the project stays');
             assert.strictEqual(
                 fs.readFileSync(path.join(dir, '.claude', 'rules', 'magicspec.md'), 'utf8'),
-                fs.readFileSync(path.join(skill, 'AGENT-RULES.md'), 'utf8'),
+                fs.readFileSync(path.join(skill, 'CONSTITUTION.md'), 'utf8'),
                 'the copy equals its source again',
             );
             fs.rmdirSync(path.join(dir, '.qwen', 'commands'));
@@ -16357,7 +16588,7 @@ describe('Magic Engine Scripts', () => {
             const manifest = JSON.parse(fs.readFileSync(path.join(skill, '.checksums'), 'utf8'));
             for (const rel of [
                 'SKILL.md',
-                'AGENT-RULES.md',
+                'CONSTITUTION.md',
                 'workflows/run.md',
                 'references/context.md',
                 'roles/coder.md',
@@ -16376,7 +16607,7 @@ describe('Magic Engine Scripts', () => {
 
             for (const rel of [
                 'SKILL.md',
-                'AGENT-RULES.md',
+                'CONSTITUTION.md',
                 'workflows/run.md',
                 'references/context.md',
                 'roles/coder.md',
@@ -16764,12 +16995,12 @@ describe('Magic Engine Scripts', () => {
                     !f.includes(path.sep + '.git' + path.sep) &&
                     !f.includes(
                         path.sep +
-                            '.agents' +
-                            path.sep +
-                            'skills' +
-                            path.sep +
-                            'magicspec' +
-                            path.sep,
+                        '.agents' +
+                        path.sep +
+                        'skills' +
+                        path.sep +
+                        'magicspec' +
+                        path.sep,
                     ),
             )
             .sort()
@@ -16806,12 +17037,12 @@ describe('Magic Engine Scripts', () => {
             assert.deepStrictEqual(snapshot(dir), before, 'a dry run changes no file');
             assert.ok(
                 !fs.existsSync(path.join(dir, '.magicspec')) &&
-                    !fs.existsSync(
-                        path.join(
-                            dir,
-                            'magicspec-migration-backup-' + new Date().toISOString().slice(0, 10),
-                        ),
+                !fs.existsSync(
+                    path.join(
+                        dir,
+                        'magicspec-migration-backup-' + new Date().toISOString().slice(0, 10),
                     ),
+                ),
             );
         } finally {
             cleanLink(dir);
@@ -16888,7 +17119,7 @@ describe('Magic Engine Scripts', () => {
             );
             assert.ok(
                 fs.existsSync(path.join(backup, '.magic', 'spec.md')) &&
-                    fs.existsSync(path.join(backup, 'workflows', 'magic.spec.md')),
+                fs.existsSync(path.join(backup, 'workflows', 'magic.spec.md')),
                 'the removed files are in the backup',
             );
             assert.match(run.stdout, /Pre-flight/);
@@ -17220,7 +17451,7 @@ describe('Magic Engine Scripts', () => {
                 );
                 assert.ok(
                     !fs.existsSync(path.join(dir, OLD_STATE)) &&
-                        !fs.existsSync(path.join(dir, OLD_ENGINE)),
+                    !fs.existsSync(path.join(dir, OLD_ENGINE)),
                     stage + ': nothing of the old layout is left',
                 );
             } finally {
@@ -17439,7 +17670,7 @@ describe('Magic Engine Scripts', () => {
             fs.cpSync(archived, skill, { recursive: true });
             assert.ok(
                 fs.existsSync(path.join(skill, 'SKILL.md')) &&
-                    fs.existsSync(path.join(skill, 'scripts', 'executor.js')),
+                fs.existsSync(path.join(skill, 'scripts', 'executor.js')),
                 'SP-1: the copy is complete',
             );
 
@@ -17552,7 +17783,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(run.status, 0, 'SP-10: ' + run.stdout + run.stderr);
             assert.ok(
                 fs.existsSync(path.join(legacy.skill, 'SKILL.md')) &&
-                    fs.existsSync(path.join(legacy.dir, '.magicspec', 'main', 'STATE.md')),
+                fs.existsSync(path.join(legacy.dir, '.magicspec', 'main', 'STATE.md')),
                 'SP-10: the new engine and the state are both there when the old engine is gone',
             );
             assert.ok(
@@ -17712,8 +17943,8 @@ describe('Magic Engine Scripts', () => {
             for (const flag of literals) {
                 assert.ok(
                     declared.includes(flag) ||
-                        allowed['*'].includes(flag) ||
-                        (allowed[name] || []).includes(flag),
+                    allowed['*'].includes(flag) ||
+                    (allowed[name] || []).includes(flag),
                     `${name}: the script reads '${flag}' but the table does not list it`,
                 );
             }
@@ -17893,7 +18124,7 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(simExec(dir, ['init']).status, 0);
             const engine = path.join(dir, ...SIM_ENGINE_REL.split('/'));
             // a checkout that converts line endings does this to every text file
-            for (const rel of ['workflows/spec.md', 'workflows/task.md', 'AGENT-RULES.md']) {
+            for (const rel of ['workflows/spec.md', 'workflows/task.md', 'CONSTITUTION.md']) {
                 const file = path.join(engine, rel);
                 fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace(/\r?\n/g, '\r\n'));
             }
@@ -20268,7 +20499,7 @@ describe('Magic Engine Scripts', () => {
             const result = runEngine(failing.dir, 'finalize', '--workflow=simulate', '--workspace=ws');
             const out = result.stdout + result.stderr;
             assert.strictEqual(result.status, 0, out);
-            assert.match(out, /\| Workflow \| magic\.simulate \|/, 'the workflow is accepted');
+            assert.match(out, /\| Workflow \| \/magicspec simulate \|/, 'the workflow is accepted');
             assert.strictEqual(fs.readFileSync(path.join(failing.dir, '.magicspec', '.version'), 'utf8').trim(), '0.1.1', 'a changed scenario file is a significant change: the version bumps');
             assert.match(fs.readFileSync(path.join(failing.dir, 'CHANGELOG.md'), 'utf8'), /### Changed\n[\s\S]*Ran the user scenarios \(ws\)/, 'the entry names a run of scenarios and no internal identifier');
             assert.match(fs.readFileSync(path.join(failing.ws, 'STATE.md'), 'utf8'), /\*\*Next Action:\*\* Run \/magicspec fix ws to repair 2 simulation findings/, 'two open findings: the next action is fix');
@@ -20308,7 +20539,7 @@ describe('Magic Engine Scripts', () => {
         assert.deepStrictEqual(requireFromFixture(path.resolve(__dirname, '..'), 'lib', 'significance.js').WHITELIST['magic.simulate'], ['.magicspec/{ws}/simulations/**/*.md']);
 
         // The rule kernel names the workflow and stays within its budget; the fix body says where the findings are read.
-        const kernel = readShipped('skills/magicspec/AGENT-RULES.md');
+        const kernel = readShipped('skills/magicspec/CONSTITUTION.md');
         assert.ok(Buffer.byteLength(kernel) < 16384, `the rule kernel is under 16 KB (${Buffer.byteLength(kernel)} bytes)`);
         const fix = readShipped('skills/magicspec/workflows/fix.md');
         assert.ok(fix.includes('the `fail` and `inconclusive` steps of the `Last run` records under `.magicspec/{workspace}/simulations/`'), 'the argument form reads them there');

@@ -6,7 +6,7 @@ An agent turn re-reads the whole context, so the cost of a session is the sum, o
 
 | Surface | Mechanism |
 | --- | --- |
-| Always-on rule | `AGENT-RULES.md` is a kernel (a size budget is pinned by the harness). Sections with a trigger live in `references/rules/` and are read when the trigger fires: finalization and archival, post-task replan, containment, bug reporting. |
+| Always-on rule | `CONSTITUTION.md` is a kernel (a size budget is pinned by the harness). Sections with a trigger live in `references/rules/` and are read when the trigger fires: finalization and archival, post-task replan, containment, bug reporting. |
 | Working documents | `check-bloat` flags a registry, plan, task ledger or constitution over 30 KB (`DOC_BLOAT`) or 60 KB (`DOC_DECOMPOSE`), in the workspace and globally. Every workflow reads them whole. Override in `.magicspec/workspace.json` under `bloat.doc` (`soft` and `hard`, in KB; `0` turns a tier off). |
 | Specifications and phases | `SPEC_BLOAT` / `SPEC_DECOMPOSE` (300 / 500 lines) and `TASK_BLOAT` / `TASK_DECOMPOSE` (250 / 400 lines), as before. |
 | Graph queries | `build-spec-graph --json --out` writes the graph to `.magicspec/graph/query.json` and prints one line. Plain `--json` prints the whole graph, tens of thousands of tokens on a large registry. |

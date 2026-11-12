@@ -27,7 +27,7 @@ const ROOT_FILES = ['README.md', 'LICENSE'];
 /** Files without which the archive is not an installable skill. */
 const REQUIRED = [
     'SKILL.md',
-    'AGENT-RULES.md',
+    'CONSTITUTION.md',
     '.version',
     '.checksums',
     'scripts/executor.js',

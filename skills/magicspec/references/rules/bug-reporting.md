@@ -1,6 +1,6 @@
 # Rule Module: Bug Reporting
 
-Loaded on demand from `AGENT-RULES.md` (section 9). Paths are relative to the `magicspec` skill folder.
+Loaded on demand from `CONSTITUTION.md` (section 9). Paths are relative to the `magicspec` skill folder.
 
 ## 9. Bug Reporting Protocol (Engine Feedback)
 

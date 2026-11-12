@@ -13,7 +13,7 @@ const { record } = require('./lib/diagnostics');
 
 /**
  * Lets the agent write its own findings — a spec ambiguity hit mid-run, an
- * engine bug per AGENT-RULES.md §9, a containment leak spotted while reading
+ * engine bug per CONSTITUTION.md §9, a containment leak spotted while reading
  * a product file — into the same sink the engine's own scripts use, so they
  * surface in the next finalize digest instead of scrolling away as one-shot
  * chat narration in a long transcript.

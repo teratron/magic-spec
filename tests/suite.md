@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.99
+**Version:** 1.9.100
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -613,7 +613,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Action:** User executes `/magicspec run`
 - **Expected:**
   - [ ] Agent records `Blocked [!]` status and the specific reason in `TASKS.md` Notes.
-  - [ ] Per `AGENT-RULES.md §5` Post-Task Replan, agent records the finding as a Replan Directive in `TASKS.md` and recommends **exactly ONE** command: `/magicspec plan {workspace}`.
+  - [ ] Per `CONSTITUTION.md §5` Post-Task Replan, agent records the finding as a Replan Directive in `TASKS.md` and recommends **exactly ONE** command: `/magicspec plan {workspace}`.
   - [ ] Agent does NOT proactively propose `/magicspec analyze` or `/magicspec spec` from `run.md` (per `run.md` Step 4 Handoff explicit prohibition).
   - [ ] `/magicspec spec` recommendation surfaces ONLY inside a `/magicspec plan` HALT — its Pre-flight — or in the Stalled Plan report of `/magicspec task` (T257), when mechanical auto-fix cannot resolve the gap.
   - [ ] After spec resolution + re-run of `/magicspec plan` and `/magicspec task`, dependencies are rebuilt before resuming execution.
@@ -2029,7 +2029,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] Pre-flight File-Header Parity detects VERSION_DRIFT on `docs-architecture.md` (file=2.0.0 ≠ INDEX=1.0.0)
   - [ ] **HALT** before any task execution with drift report (Cognitive Guard)
   - [ ] C12 cascade is NOT triggered prematurely (drift must be resolved first)
-  - [ ] User directed to resolve via `/magicspec spec`, then re-run `/magicspec plan` (per `AGENT-RULES.md §5` Post-Task Replan — single user-facing recommendation, no `/magicspec analyze` step)
+  - [ ] User directed to resolve via `/magicspec spec`, then re-run `/magicspec plan` (per `CONSTITUTION.md §5` Post-Task Replan — single user-facing recommendation, no `/magicspec analyze` step)
 - **Guards tested:** File-Header Parity (run.md, Cognitive Guard), STATUS_DRIFT, VERSION_DRIFT, C12 pre-condition ordering
 
 ### T127 — Plan Pre-flight File-Header Parity Scan
@@ -2273,7 +2273,7 @@ If any test fails, document the failure reason and propose a fix.
 - **Synthetic State:**
   - `TASKS.md` Phase 1 task `T-1A01` mapped to `auth.md`
   - During execution, spec is ambiguous → HALT triggered
-- **Action:** Agent halts and recommends exactly ONE command — `/magicspec plan {workspace}` — per `AGENT-RULES.md §5` Post-Task Replan. Inside `/magicspec plan`, a HALT of its Pre-flight carries a single `/magicspec spec` recommendation (the Stalled Plan report of `/magicspec task` — T257 — is the only other door); user runs `/magicspec spec`, then re-runs `/magicspec plan`.
+- **Action:** Agent halts and recommends exactly ONE command — `/magicspec plan {workspace}` — per `CONSTITUTION.md §5` Post-Task Replan. Inside `/magicspec plan`, a HALT of its Pre-flight carries a single `/magicspec spec` recommendation (the Stalled Plan report of `/magicspec task` — T257 — is the only other door); user runs `/magicspec spec`, then re-runs `/magicspec plan`.
 - **Expected:**
   - [ ] Agent records Blocked status with reason in TASKS.md, and the finding as a Replan Directive
   - [ ] Agent recommends `/magicspec plan` (with workspace context); does NOT proactively propose `/magicspec analyze` or `/magicspec spec`
@@ -3154,7 +3154,7 @@ If any test fails, document the failure reason and propose a fix.
   - Six known suite drifts previously corrected (T34, T58, T195 — v2.1.25; T36, T190, simulate-rename — v2.1.55) must not re-regress.
 - **Action:** Static scan of `tests/suite.md` against workflow source of truth.
 - **Expected:**
-  - [ ] T34 expectation cites `AGENT-RULES.md §5` Post-Task Replan collapse to `/magicspec plan` — does NOT claim direct `run.md → /magicspec spec` handoff.
+  - [ ] T34 expectation cites `CONSTITUTION.md §5` Post-Task Replan collapse to `/magicspec plan` — does NOT claim direct `run.md → /magicspec spec` handoff.
   - [ ] T58 expectation reads `default: main` — does NOT contain the literal string `default: root` (WI-10 contract).
   - [ ] T195 expectation requires verbatim changelog display + independent post-hoc review — does NOT contain the phrase `Yes/No` as an inline approval gate.
   - [ ] T36 expectation describes the WI-10 bootstrap fallback (auto-init provisions `.magicspec/{default}/`; root `.magicspec/` read transiently) — does NOT claim root `.magicspec/` is used "for all operations".
@@ -3414,7 +3414,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T220 — Cold Start With an Unrelated First Message Surfaces the Resume Line and Keeps the Request (SC-6/SC-8/SC-9)
 
-- **Workflow:** `AGENT-RULES.md` §10 (Session Resume Check) + `resume-state` (via `executor.js`) + `run.md` Task Start
+- **Workflow:** `CONSTITUTION.md` §10 (Session Resume Check) + `resume-state` (via `executor.js`) + `run.md` Task Start
 - **Synthetic State:**
   - A new session: the context holds no `STATE.md`. `.magicspec/engine/` initialized, `MAGIC_RESUME_CHECK` unset.
   - `tasks/phase-3.md`: task `T-3A02` "Extract the parser" has its tracking entry `**Status:** In Progress`; its checklist line still reads `- [ ]`. Its `Attempts` field holds two indented lines: `tried a global regex → it swallowed the next entry` and `tried a line scan → it split on CRLF`.
@@ -3433,7 +3433,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T221 — A Bare "continue" Executes the Recorded Next Action Without a Question, Past a Stale Snapshot (SC-9/C25)
 
-- **Workflow:** `AGENT-RULES.md` §10 + `context.md` Post-Resolution step 4 + `run.md` Task Start (resume branch)
+- **Workflow:** `CONSTITUTION.md` §10 + `context.md` Post-Resolution step 4 + `run.md` Task Start (resume branch)
 - **Synthetic State:**
   - The state of T220 (`T-3A02` `In Progress`, two dead ends).
   - A leftover `.magicspec/engine/HANDOFF.json` from a retired snapshot mechanism, whose `next_action` names a different task, `T-2B05`.
@@ -3450,7 +3450,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T222 — A Context That Begins With a Summary Is Re-grounded From Files, Never From the Summary or a Percentage (SC-7)
 
-- **Workflow:** `context.md` §Context Budget Guard → Post-Compaction Re-grounding + `AGENT-RULES.md` §10
+- **Workflow:** `context.md` §Context Budget Guard → Post-Compaction Re-grounding + `CONSTITUTION.md` §10
 - **Synthetic State:**
   - The conversation was compacted: its first message is a summary stating that the current task is `T-3A02`, that the global-regex approach worked, and that no constraints apply.
   - On disk: `STATE.md` carries the Blocking Constraint `[C-004]` ("do not edit the checksum manifest by hand"); `T-3A02`'s `Attempts` records the global-regex approach as **failed**. The host supplies no usage figure.
@@ -3482,7 +3482,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T224 — Finalize With an Unwritable `STATE.md`: the Agent Never Tells the User It Is Safe to Clear (SC-6.1)
 
-- **Workflow:** `AGENT-RULES.md` §3 (Finalization Protocol) + the `finalize.js` checkpoint claim
+- **Workflow:** `CONSTITUTION.md` §3 (Finalization Protocol) + the `finalize.js` checkpoint claim
 - **Synthetic State (Test A — update fails):**
   - `/magicspec plan engine` has just written its plan. `STATE.md` cannot be updated, so `finalize --workflow=plan` prints `⚠ STATE.md update skipped (non-blocking): …`, its summary row reads `STATE.md | skipped (warning above)`, and its digest lists `STATE_UPDATE_SKIPPED`. The words `checkpoint saved` do not appear anywhere in the output.
 - **Action A:** The agent relays the output and writes its closing message; the user then asks, `can I clear the context now?`
@@ -3694,7 +3694,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T236 — A Completed Phase Continues Into the Next Phase When It Has Todo Tasks, and Otherwise Ends With One `/magicspec plan` Recommendation
 
-- **Workflow:** `run.md` (Step 4 Handoff, Step 5 Phase Completion, Step 2 Select) + `AGENT-RULES.md` §5
+- **Workflow:** `run.md` (Step 4 Handoff, Step 5 Phase Completion, Step 2 Select) + `CONSTITUTION.md` §5
 - **Synthetic State (Test A — next phase is ready):**
   - Phase 1: its last task is marked `Done`. Phase 2 holds 3 `Todo` tasks whose parents are `Done`. No drift signal, no spec ambiguity.
 - **Expected A:**
@@ -3706,11 +3706,11 @@ If any test fails, document the failure reason and propose a fix.
   - Phase 1 is complete; the plan's next phase has no `Todo` task (its work sits in `## Backlog`).
 - **Expected B:**
   - [ ] Phase Completion runs; Select reaches *Backlog-Only* and halts.
-  - [ ] Exactly one command is recommended: `/magicspec plan {workspace}` (the `AGENT-RULES.md` §5 trigger "phase complete with nothing to run next").
+  - [ ] Exactly one command is recommended: `/magicspec plan {workspace}` (the `CONSTITUTION.md` §5 trigger "phase complete with nothing to run next").
 - **Synthetic State (Test C — control):** during the run `RULES.md` moves ahead of the `TASKS.md` base.
 - **Expected C:**
   - [ ] HALT as before, with the single recommendation `/magicspec plan {workspace}`; the drift list in the Handoff bullet is unchanged for `STATUS_DRIFT`, `VERSION_DRIFT` and `RULES > TASKS base`.
-- **Guards tested:** Handoff HALT list limited to ambiguity and drift; one recommended command per stop; diagram edge J→C reachable; agreement of `run.md`, `AGENT-RULES.md` §5, T21 and T205.
+- **Guards tested:** Handoff HALT list limited to ambiguity and drift; one recommended command per stop; diagram edge J→C reachable; agreement of `run.md`, `CONSTITUTION.md` §5, T21 and T205.
 - **Regression for:** "The Undeclared Verb" crisis (Improv Mode 2026-09-30) — the Handoff bullet listed "phase complete" as a halt while the diagram and T21/T205 continued into the next phase.
 
 ### T237 — `spec.md` and `rule.md` Pre-flight Branch Through `init.md` §1, the Single Source
@@ -3780,7 +3780,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T241 — Every Finalize Command Names the Workspace the Workflow Ran For
 
-- **Workflow:** `spec.md`, `plan.md`, `task.md`, `run.md`, `rule.md` (Finalization Protocol), `AGENT-RULES.md` §3, `references/rules/finalization.md`, `executor.js` and `finalize.js` (workspace resolution)
+- **Workflow:** `spec.md`, `plan.md`, `task.md`, `run.md`, `rule.md` (Finalization Protocol), `CONSTITUTION.md` §3, `references/rules/finalization.md`, `executor.js` and `finalize.js` (workspace resolution)
 - **Synthetic State (Test A — behavior):**
   - `workspace.json` registers `engine` (default) and `docs`; `MAGIC_WORKSPACE` is unset. `/magicspec plan docs` has just written the `docs` plan.
 - **Action A:** the agent runs the Finalization Protocol.
@@ -3788,9 +3788,9 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The command is `finalize --workflow=plan --workspace=docs`: `executor.js` consumes the flag and exports `MAGIC_DESIGN_DIR=.magicspec/docs`, so `finalize.js` judges significance against the `docs` whitelist and writes the `docs` `STATE.md`.
   - [ ] The `engine` workspace's `STATE.md` is untouched; a bare command would have finalized `engine` and reported "No significant changes" for the `docs` plan.
 - **Synthetic State (Test B — static scan):** shipped text.
-- **Action B:** list every `executor.js finalize` command in `skills/magicspec/workflows/*.md`, `AGENT-RULES.md` and `references/rules/*.md`.
+- **Action B:** list every `executor.js finalize` command in `skills/magicspec/workflows/*.md`, `CONSTITUTION.md` and `references/rules/*.md`.
 - **Expected B:**
-  - [ ] All thirteen (five bodies with two lines each, two lines of `AGENT-RULES.md`, one line of `references/rules/finalization.md`) carry `--workspace={active-workspace}`.
+  - [ ] All thirteen (five bodies with two lines each, two lines of `CONSTITUTION.md`, one line of `references/rules/finalization.md`) carry `--workspace={active-workspace}`.
 - **Guards tested:** Context resolution reaching the script (Core Invariant 1 of every workflow); the explicit flag outranking the default in `executor.js`; parity of the finalize command across bodies, wrappers and rules.
 - **Regression for:** `/magicspec-dev:test test` (2026-10-01) — no finalize command passed the flag, so after `/magicspec plan docs` (or any explicit workspace argument) the default workspace was finalized instead.
 
@@ -4080,7 +4080,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T257 — A Phase Left With Only Blocked Tasks Ends `/magicspec task` With the Stalled Plan Report, Not a Handoff Back to `/magicspec run`
 
-- **Workflow:** `task.md` (Handoffs, Step 6 Stalled Plan) + `run.md` (Step 2 *Stalled*) + `AGENT-RULES.md` §5
+- **Workflow:** `task.md` (Handoffs, Step 6 Stalled Plan) + `run.md` (Step 2 *Stalled*) + `CONSTITUTION.md` §5
 - **Synthetic State (Test A — a spec gap):**
   - A single workspace `engine`. `l1-billing.md` was amended and is `Stable` again; its L2 child `l2-billing-ledger.md` was set to `RFC` by the C12 cascade and nothing has promoted it (Pre-Planning Stabilization iterates `Draft` specs only). `l2-billing-api.md` is `Stable`.
   - Phase 2: `T-2A01` `Done`; `T-2A02` (`l2-billing-api.md`) `Blocked [!]` with the reason "Spec `l2-billing-api.md` §3 is ambiguous: the rounding rule is unstated"; `T-2B01` (`l2-billing-ledger.md`) `Blocked [!]` "Spec `l2-billing-ledger.md` is `RFC`". No `Todo` and no `In Progress` task. Every file header equals its `INDEX.md` entry.
@@ -4104,7 +4104,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T258 — A Spec Ambiguity Found During a Run Ends at Step 4 With the Single `/magicspec plan` Recommendation: No Card, Page or Step Routes the Run to `/magicspec spec`
 
-- **Workflow:** `run.md` (Step 3.5, Step 4 Handoff) + `roles/debugger.md` (Operating Protocol 4) + `docs/run.md` §5.4–5.5 + `AGENT-RULES.md` §5 + `l2-role-cards-execution.md` (the card's mirror)
+- **Workflow:** `run.md` (Step 3.5, Step 4 Handoff) + `roles/debugger.md` (Operating Protocol 4) + `docs/run.md` §5.4–5.5 + `CONSTITUTION.md` §5 + `l2-role-cards-execution.md` (the card's mirror)
 - **Synthetic State:**
   - `T-1A01` failed its QA review because the spec section it implements is ambiguous. It is set `Blocked [!]` and `@role:debugger` is activated on the Blocked Branch.
 - **Action:** the debugger classifies the blocker as (b), a spec ambiguity.
@@ -4114,7 +4114,7 @@ If any test fails, document the failure reason and propose a fix.
   - [ ] The deployed card and its mirror in `l2-role-cards-execution.md` carry the same step 4, word for word.
 - **Control (an implementation bug):** the debugger classifies (a): it produces a fix diff and hands it to the test engineer, as before.
 - **Guards tested:** card ↔ workflow body ↔ ambient rules ↔ documentation agreement on the one route a spec ambiguity takes; verbatim parity between a deployed card and its mirror.
-- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — the debugger card and the run page said "hand off to `spec.md`" / "delegate to `magic.spec`" while `run.md` Step 4, `AGENT-RULES.md` §5 and T34/T141 allow the run only the single `/magicspec task` recommendation.
+- **Regression for:** "The Stranded Child" crisis (Improv Mode 2026-10-01) — the debugger card and the run page said "hand off to `spec.md`" / "delegate to `magic.spec`" while `run.md` Step 4, `CONSTITUTION.md` §5 and T34/T141 allow the run only the single `/magicspec task` recommendation.
 
 ### T259 — The Post-Write Constitutional Conflict Report Names the Rule That Is Already Written and One Way to Resolve It
 
@@ -4246,7 +4246,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T266 — A Mechanic Named in a Question Is Searched in the Specification Text; a Structural Question Goes to the Graph
 
-- **Workflow:** ambient rule `AGENT-RULES.md` §2 (Specification Knowledge Graph, Auto-Use)
+- **Workflow:** ambient rule `CONSTITUTION.md` §2 (Specification Knowledge Graph, Auto-Use)
 - **Synthetic State (Test A):**
   - A workspace of 60 specifications whose registry descriptions are two sentences each. One L2 specification defines "idempotency keys" in a section of its own. The wiki and the graph exist; their nodes and articles carry layers, versions, references and edges, and no specification text.
 - **Action A:** the user asks: "Which specification covers idempotency keys?"
@@ -4264,7 +4264,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T267 — A Code-Quoted Reference in a Consumer's Product Markdown Is Reported; Quoting Does Not Un-Ship a Token
 
-- **Workflow:** `/magicspec analyze` Mode C step 6 (SDD Reference Containment Scan) with the ambient rule `AGENT-RULES.md` §6
+- **Workflow:** `/magicspec analyze` Mode C step 6 (SDD Reference Containment Scan) with the ambient rule `CONSTITUTION.md` §6
 - **Synthetic State (Test A):**
   - A consumer project that installed the engine; the engine directories are vendored and the project's own code and documents are product files. Its `README.md` contains the line: "Before changing the login flow, open `.magicspec/main/specifications/l1-auth.md` to see how it is specified." The path is inside an inline code span.
 - **Action A:** the user runs `/magicspec analyze` and the ventilation reaches step 6.
@@ -4592,7 +4592,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T287 — A Stage Started Cold From the Files Reaches the Recorded Next Step
 
-- **Workflow:** the router `SKILL.md`, `task.md` and `run.md` (Entry, context load) with `resume-state` (`AGENT-RULES.md` §10)
+- **Workflow:** the router `SKILL.md`, `task.md` and `run.md` (Entry, context load) with `resume-state` (`CONSTITUTION.md` §10)
 - **Synthetic State:** a new session after `/clear`; the previous session ended after `/magicspec plan engine`; the only memory is the workspace: `PLAN.md`, `STATE.md` with `Next Action: Decompose Phase 2 via /magicspec task engine`, the registry and the constitution.
 - **Action:** the user types `/magicspec task engine` and nothing else.
 - **Expected:**
@@ -5023,7 +5023,7 @@ If any test fails, document the failure reason and propose a fix.
 
 ### T319 — A Step With an External Side Effect Runs Live Only After One Consent Question
 
-- **Workflow:** `simulate.md` (Core Invariant 4, Safety; E1) with `AGENT-RULES.md` §7
+- **Workflow:** `simulate.md` (Core Invariant 4, Safety; E1) with `CONSTITUTION.md` §7
 - **Synthetic State:** a scenario step that sends an email through a service; the instance of the product is local.
 - **Action:** `/magicspec simulate`.
 - **Expected:**
@@ -5135,3 +5135,17 @@ If any test fails, document the failure reason and propose a fix.
 - **Control:** an interface task is implemented in the designer's stance, but the `coder` card still owns the diff and the review gates stay as they were.
 - **Guards tested:** SM-8; UI-7.
 - **Regression for:** none yet — new with the simulate command.
+
+### T328 — Finalization Names the Workflow in the Printed Form on Both Outcomes
+
+- **Workflow:** `plan.md` and `rule.md` (Finalization Protocol) with `scripts/finalize.js`
+- **Synthetic State:** a workspace with no change since the last snapshot; then one with a changed constitution.
+- **Action A:** `/magicspec plan`, whose finalization finds nothing significant.
+- **Expected A:**
+  - [ ] The skip line reads `No significant changes detected for /magicspec plan on workspace '{workspace}'`; the retired dotted name `magic.plan` appears nowhere in the output.
+- **Action B:** `/magicspec rule`, whose finalization counts the constitution change.
+- **Expected B:**
+  - [ ] The result table's workflow row reads `/magicspec rule`, never `magic.rule`.
+- **Control:** the whitelist keys the script matches internally keep their form; only the text the user reads changes.
+- **Guards tested:** CS-2 (one command, one printed form).
+- **Regression for:** the finalization output named the command by the pre-3.0 dotted form.

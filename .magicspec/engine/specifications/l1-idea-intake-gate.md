@@ -289,13 +289,13 @@ Engine Improvement — C14 applies to every touch-point below.
 | 2 | `skills/magicspec/workflows/spec.md` | Hints block gains a one-line gate mention; wrapper-body parity per `l2-workflow-wrappers.md` §6. `skills/magic-spec/SKILL.md` regenerates from it via C14. |
 | 3 | `l1-decision-autonomy.md` | DA-2 whitelist table gains row E6 with a cross-reference to this spec. Minor bump; the Amendment Rule applies. |
 | 4 | `.magicspec/RULES.md` and `skills/magicspec/templates/rules.md` | C27 escalation list gains E6. Both files must stay identical in this clause — the template is the consumer-project source. |
-| 5 | `skills/magicspec/AGENT-RULES.md` | §7 Autonomous Decision Protocol summary gains the E6 entry so watching-process agents inherit the gate. |
+| 5 | `skills/magicspec/CONSTITUTION.md` | §7 Autonomous Decision Protocol summary gains the E6 entry so watching-process agents inherit the gate. |
 | 6 | `l2-role-cards-governance.md` | `prompt-engineer` card gains the §4.6 check table. |
 | 7 | `l2-test-suite.md` and `magicspec-dev:test` | Scenarios: a coherent idea asserts zero questions; an F2 idea asserts a fired gate with IK-3-clean, IK-5-compliant wording; a "you decide" reply asserts immediate termination plus TBD markers; a technical-fork idea asserts no question. |
 
 Ordering: 3 and 4 are the constitutional amendment and land together; 1, 2, 5, 6 are deployment; 7 closes.
 
-**2.0.0 deployment** `[ADDED]`: `skills/magicspec/workflows/spec.md` Step 0.5 runs the two gates and the survey — options from the forecast, the winner marked, an "Other", re-checked free text, delegated questions answered by the forecast with their premises, the intent statement — and its Ambiguity clause and Conflict constraint follow; `skills/magicspec/workflows/spec.md` hint; constitution and template C27 items 2, 5 and 8 (items 2 and 8 identical in both); `skills/magicspec/AGENT-RULES.md` §7 E6 bullet; the `prompt-engineer` card's §4.6 table; the cognitive suite's intake scenarios. Engine Improvement — C14 applies.
+**2.0.0 deployment** `[ADDED]`: `skills/magicspec/workflows/spec.md` Step 0.5 runs the two gates and the survey — options from the forecast, the winner marked, an "Other", re-checked free text, delegated questions answered by the forecast with their premises, the intent statement — and its Ambiguity clause and Conflict constraint follow; `skills/magicspec/workflows/spec.md` hint; constitution and template C27 items 2, 5 and 8 (items 2 and 8 identical in both); `skills/magicspec/CONSTITUTION.md` §7 E6 bullet; the `prompt-engineer` card's §4.6 table; the cognitive suite's intake scenarios. Engine Improvement — C14 applies.
 
 ## 6. Drawbacks & Rejected Alternatives
 
@@ -341,7 +341,7 @@ The owner's flowchart draws the comprehension step as a "prompt engineer" and th
 | `[PQ]` | `.magicspec/engine/specifications/l1-prompt-quality-gate.md` | Output-side twin; the PQ-3 taxonomy classifies IK-5 violations. |
 | `[RULES]` | `.magicspec/RULES.md` | Constitution. C25 phrasing rules and the C27 escalation list constrain and record the gate. |
 | `[RULES-TPL]` | `skills/magicspec/templates/rules.md` | Distributed constitution template; must mirror the C27 escalation-list amendment for consumer projects. |
-| `[USER-RULES]` | `skills/magicspec/AGENT-RULES.md` | User-side watching rules; §7 carries the E6 entry to downstream agents. |
+| `[USER-RULES]` | `skills/magicspec/CONSTITUTION.md` | User-side watching rules; §7 carries the E6 entry to downstream agents. |
 
 ## Document History
 

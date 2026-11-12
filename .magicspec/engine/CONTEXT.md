@@ -16,6 +16,7 @@
 │   └── workflows/
 ├── .github/
 │   ├── ISSUE_TEMPLATE/
+│   ├── PULL_REQUEST_TEMPLATE.md
 │   └── workflows/
 ├── .magicspec/
 │   ├── .version

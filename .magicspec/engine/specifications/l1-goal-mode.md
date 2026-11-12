@@ -105,7 +105,7 @@ Next: {one command}
 | --- | --- | --- |
 | `[STATE]` | `skills/magicspec/templates/state.md` | Live-memory template that gains the goal block. |
 | `[RESUME]` | `skills/magicspec/scripts/resume-state.js` | Resume line that reports the goal. |
-| `[RULES]` | `skills/magicspec/AGENT-RULES.md` | §7, the decision posture goal mode extends. |
+| `[RULES]` | `skills/magicspec/CONSTITUTION.md` | §7, the decision posture goal mode extends. |
 
 ## Document History
 

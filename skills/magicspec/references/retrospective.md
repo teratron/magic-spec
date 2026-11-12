@@ -72,7 +72,7 @@ Append to Snapshots table: `| Date | Phase N | D/R/S | Done/Blk/Can | Rules | Si
 
 ### 7. Archival (C8) — delegated, not performed here
 
-Phase archival — moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` — is owned **solely** by `finalize --workflow=run` / `archive-phases` during `/magicspec run` Phase Completion (see `run.md` Step 5 and `AGENT-RULES.md` §4). The retrospective performs **no** task or archival writes; it only appends the Snapshots row (Step 6). This avoids a double-move (the second pass would hit an already-moved file) and a conflicting link format.
+Phase archival — moving `tasks/phase-N.md` → `archives/tasks/` and rewriting the `TASKS.md` link row to `Done (Archived)` — is owned **solely** by `finalize --workflow=run` / `archive-phases` during `/magicspec run` Phase Completion (see `run.md` Step 5 and `CONSTITUTION.md` §4). The retrospective performs **no** task or archival writes; it only appends the Snapshots row (Step 6). This avoids a double-move (the second pass would hit an already-moved file) and a conflicting link format.
 
 ## Retrospective Completion Checklist
 

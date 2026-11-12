@@ -1,6 +1,6 @@
 # Rule Module: Finalization and Phase Archival
 
-Loaded on demand from `AGENT-RULES.md` (sections 3 and 4). Paths are relative to the `magicspec` skill folder.
+Loaded on demand from `CONSTITUTION.md` (sections 3 and 4). Paths are relative to the `magicspec` skill folder.
 
 ## 3. Finalization Protocol (Post-Workflow)
 

@@ -22,6 +22,7 @@ const { stripQuoted } = require('./lib/scan-hygiene');
 const { countItems } = require('./lib/checklist');
 const diagnostics = require('./lib/diagnostics');
 const { withFileLock } = require('./lib/file-lock');
+const { GoalError, normalizeGoal, renderGoalSection } = require('./lib/goal-block');
 
 /**
  * Groups a Markdown list section into logical entries, keeping each entry's
@@ -144,6 +145,7 @@ function wholeEntryRe(lineRe, isListItem) {
  */
 const SECTION_ORDER = [
     '## Current Position',
+    '## Goal',
     '## Progress',
     '## Recent Decisions',
     '## Blockers',
@@ -233,6 +235,52 @@ function ensureSection(content, marker, statePath) {
         locus: statePath,
     });
     return { content: created, ...locateSection(created, marker) };
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Goal Section
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Writes the goal section: replaces the one the file holds, else places it at
+ * its slot in SECTION_ORDER — before the earliest present section that follows it,
+ * else at the end of the file. Unlike `ensureSection`, creating it is the
+ * request and not a repair, so it is neither announced nor recorded as a finding.
+ *
+ * @param {string} content  STATE.md text.
+ * @param {string} text     The rendered section, ending in one line break.
+ * @returns {string} STATE.md text with the section written.
+ */
+function writeGoalSection(content, text) {
+    const eol = lineEnding(content);
+    const section = text.replace(/\n/g, eol);
+    const found = locateSection(content, '## Goal');
+    if (found) return content.slice(0, found.start) + section + content.slice(found.end);
+
+    let at = content.length;
+    for (const following of SECTION_ORDER.slice(SECTION_ORDER.indexOf('## Goal') + 1)) {
+        const heading = headingRe(following).exec(content);
+        if (heading && heading.index < at) at = heading.index;
+    }
+    if (at === content.length) return `${content.trimEnd()}${eol}${eol}${section}`;
+    return `${content.slice(0, at)}${section}${eol}${content.slice(at)}`;
+}
+
+/**
+ * Removes the goal section and the blank line that set it off, leaving the
+ * rest of the file as it was. A file with no such section is returned as is.
+ *
+ * @param {string} content  STATE.md text.
+ * @returns {string} STATE.md text without the goal section.
+ */
+function removeGoalSection(content) {
+    const found = locateSection(content, '## Goal');
+    if (!found) return content;
+    if (found.end >= content.length) {
+        return `${content.slice(0, found.start).trimEnd()}${lineEnding(content)}`;
+    }
+    const separator = content.startsWith('\r\n', found.end) ? 2 : 1;
+    return content.slice(0, found.start) + content.slice(found.end + separator);
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -380,7 +428,10 @@ function instantiateStateTemplate(template, workspace) {
     );
     // The blank line that set the examples off goes with them, so the section
     // does not end in a double blank (markdownlint MD012).
-    return content.replace(/(\r?\n)\r?\n(?:- \{YYYY-MM-DD\} .*\r?\n?)+/g, (_match, eol) => eol);
+    content = content.replace(/(\r?\n)\r?\n(?:- \{YYYY-MM-DD\} .*\r?\n?)+/g, (_match, eol) => eol);
+    // A fresh file records no goal: the template shows the section's layout, and the
+    // section itself appears only when a goal is written.
+    return removeGoalSection(content);
 }
 
 /**
@@ -411,11 +462,17 @@ function workspaceNameOf(designDir) {
  * @param {boolean} [options.addDecision]   If true, prepend a decision entry.
  * @param {boolean} [options.addConstraint] If true, prepend a constraint entry.
  * @returns {void}
+ * @throws {GoalError} When `patch.goal` is a goal the section cannot hold; nothing is written.
  */
 function updateState(designDir, patch, options = {}) {
     // Before the lock file, which is itself a write: a folder the registry does not hold gets nothing.
     const unregistered = unregisteredWorkspaceMessage(designDir);
     if (unregistered) throw new Error(unregistered);
+    // `patch.goal` is a goal object to record, `null` to clear the block, or absent to leave it.
+    // A goal is checked and rendered here, ahead of every write, so a refusal changes nothing.
+    if (patch.goal !== undefined && patch.goal !== null) {
+        patch = { ...patch, goal: renderGoalSection(normalizeGoal(patch.goal)) };
+    }
     const stateRoot =
         path.basename(designDir) === STATE_DIR_NAME ? designDir : path.dirname(designDir);
     const lockPath = path.join(stateRoot, '.cache', `state-${workspaceNameOf(designDir)}.lock`);
@@ -531,6 +588,13 @@ function applyStateUpdate(designDir, patch, options) {
             locus: statePath,
         });
     }
+
+    // ───────────────────────────────────────────────────────────────────────
+    // Goal block (GM-3): rendered and checked by `updateState`; here it is only
+    // placed, or removed. No other write touches the section.
+    // ───────────────────────────────────────────────────────────────────────
+    if (patch.goal === null) content = removeGoalSection(content);
+    else if (typeof patch.goal === 'string') content = writeGoalSection(content, patch.goal);
 
     // ───────────────────────────────────────────────────────────────────────
     // Prepend Decision (keeps last 5 entries)
@@ -884,7 +948,7 @@ function runCli() {
                 '[--task=<id>] [--status=<s>] [--phase=<n>] ' +
                 '[--next-action=<text>] [--decision=<text>] ' +
                 '[--constraint-title=<t>] [--constraint-desc=<d>] ' +
-                '[--bootstrap=<true|false>]',
+                '[--bootstrap=<true|false>] [--goal-file=<json>|--goal-clear]',
         );
         process.exit(1);
     }
@@ -904,13 +968,17 @@ function runCli() {
             '--decision',
             '--constraint-title',
             '--constraint-desc',
+            '--goal-file',
         ],
-        boolFlags: ['--auto-progress'],
+        boolFlags: ['--auto-progress', '--goal-clear'],
     });
 
     if (errors.length > 0) {
         console.error(`[update-state] HALT: ${errors[0]}`);
         process.exit(1);
+    }
+    if (values['--goal-file'] !== undefined && flags['--goal-clear']) {
+        refuseGoal('--goal-file and --goal-clear cannot be given together.');
     }
     for (const unknown of rest) {
         console.warn(`[update-state] Unknown argument: ${unknown}`);
@@ -946,6 +1014,7 @@ function runCli() {
         parsed.constraint.desc = values['--constraint-desc'];
         opts.addConstraint = true;
     }
+    if (flags['--goal-clear']) parsed.goal = null;
 
     // `--workspace` here is a design *directory* (may contain separators), not
     // the bare workspace name that executor.js validates. Absent → ambient env.
@@ -959,7 +1028,47 @@ function runCli() {
         process.exit(1);
     }
 
-    updateState(workspaceArg, parsed, opts);
+    try {
+        if (values['--goal-file'] !== undefined) parsed.goal = readGoalFile(values['--goal-file']);
+        updateState(workspaceArg, parsed, opts);
+    } catch (error) {
+        if (!(error instanceof GoalError)) throw error;
+        refuseGoal(error.message);
+    }
+}
+
+/**
+ * Reads the goal object a `--goal-file` names. Relative to the project root, which
+ * the CLI has already made the working directory.
+ *
+ * @param {string} file  Path of a JSON file holding one goal object.
+ * @returns {unknown} The parsed JSON, to be checked by `updateState`.
+ * @throws {GoalError} When the file cannot be read or is not JSON.
+ */
+function readGoalFile(file) {
+    try {
+        return JSON.parse(fs.readFileSync(path.resolve(file), 'utf8'));
+    } catch (error) {
+        throw new GoalError(`The goal file '${file}' could not be read as JSON: ${error.message}`);
+    }
+}
+
+/**
+ * Ends the run for a goal that cannot be recorded: one error line, one recorded
+ * finding, exit 1. Called before anything is written, so STATE.md is as it was.
+ *
+ * @param {string} message  What is wrong with the goal.
+ * @returns {never}
+ */
+function refuseGoal(message) {
+    console.error(`[update-state] HALT: the goal was refused — ${message}`);
+    diagnostics.record({
+        severity: 'error',
+        source: 'update-state',
+        code: 'STATE_GOAL_REFUSED',
+        message: `The goal block was not written: ${message}`,
+    });
+    process.exit(1);
 }
 
 module.exports = { updateState, computeProgress };

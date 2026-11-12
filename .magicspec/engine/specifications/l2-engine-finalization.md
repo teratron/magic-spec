@@ -27,7 +27,7 @@ This spec owns the **pipeline contract**: module inventory, invocation surface, 
 
 ## 1. Motivation
 
-The finalization protocol (§3 of `skills/magicspec/AGENT-RULES.md`) requires several coordinated writes across version files, CHANGELOG, and phase archives. Rather than embedding this logic in `executor.js`, it is decomposed into focused single-responsibility modules in `scripts/lib/`.
+The finalization protocol (§3 of `skills/magicspec/CONSTITUTION.md`) requires several coordinated writes across version files, CHANGELOG, and phase archives. Rather than embedding this logic in `executor.js`, it is decomposed into focused single-responsibility modules in `scripts/lib/`.
 
 ## 2. Library Modules
 
@@ -49,7 +49,7 @@ All modules are internal — they export functions consumed only by `finalize.js
 executor.js finalize --workflow=<spec|plan|task|run|rule|fix> [--workspace=<name>] [--dry-run] [--no-bump] [--no-changelog]
 ```
 
-`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magicspec task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `skills/magicspec/AGENT-RULES.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
+`--workspace` names the workspace the calling workflow ran for. `executor.js` consumes the flag and exports that workspace's design directory to the script; without it the executor falls back to `MAGIC_WORKSPACE`, then to the `workspace.json` default. An explicit workspace argument of the calling workflow (`/magicspec task docs`) therefore reaches the pipeline **only** through this flag — and both the significance whitelist (the `{ws}` patterns, §2) and the SC-2 state update (§5.1) are evaluated for whichever workspace resolves. Every workflow body, command wrapper and `skills/magicspec/CONSTITUTION.md` §3 passes `--workspace={active-workspace}`; a harness case scans the shipped text for a bare `finalize` command.
 
 `--no-commit-msg` was removed 2026-08-27 alongside the commit-suggestion feature it toggled (SC-3 retirement) — there is no longer a commit message to opt out of.
 
@@ -57,7 +57,7 @@ executor.js finalize --workflow=<spec|plan|task|run|rule|fix> [--workspace=<name
 
 Controlled by `MAGIC_FINALIZE=0` (env) or `finalization.enabled: false` in `workspace.json`. When disabled, all `lib/` modules are skipped and `executor.js` exits with `⏭️ No significant changes detected`.
 
-**Archival opt-out `[ADDED]`.** `archival.enabled: false` in `workspace.json` skips the phase-archival step of `finalize --workflow=run` and nothing else: no `Done` workbook is moved, `TASKS.md` and `PLAN.md` keep their links, and the output has no archived-phases block, while the version bump, the changelog entry and the state update run as usual. Only the value `false` disables it; an absent key, or any other value, leaves archival on. When eligible workbooks exist, one informational line names the setting, so a skipped step is distinguishable from nothing to archive (the principle of the Zero-Match Guard, [l2-engine-automation.md](l2-engine-automation.md) §Path Matching Contract). The explicit `archive-phases` command is unaffected — it is the user's own request, and its `--dry-run` previews as before. The archive location is not a setting: `archives/tasks/` under the workspace is what §7 and `skills/magicspec/AGENT-RULES.md` §4 assume, and `archival.archiveDir` is withdrawn from the template. Origin: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity, whose first cited case this resolves.
+**Archival opt-out `[ADDED]`.** `archival.enabled: false` in `workspace.json` skips the phase-archival step of `finalize --workflow=run` and nothing else: no `Done` workbook is moved, `TASKS.md` and `PLAN.md` keep their links, and the output has no archived-phases block, while the version bump, the changelog entry and the state update run as usual. Only the value `false` disables it; an absent key, or any other value, leaves archival on. When eligible workbooks exist, one informational line names the setting, so a skipped step is distinguishable from nothing to archive (the principle of the Zero-Match Guard, [l2-engine-automation.md](l2-engine-automation.md) §Path Matching Contract). The explicit `archive-phases` command is unaffected — it is the user's own request, and its `--dry-run` previews as before. The archive location is not a setting: `archives/tasks/` under the workspace is what §7 and `skills/magicspec/CONSTITUTION.md` §4 assume, and `archival.archiveDir` is withdrawn from the template. Origin: [l2-engine-automation.md](l2-engine-automation.md) §Setting Parity, whose first cited case this resolves.
 
 **Regression coverage**: a fixture with `archival.enabled: false` and a `Done`, fully checked workbook — `finalize --workflow=run` leaves the workbook in `tasks/`, prints the informational line, and runs the rest of the pipeline as it would without the key (a significant change still bumps the version and writes the changelog entry, and `STATE.md` is updated); the same fixture with the key absent archives the workbook; the explicit `archive-phases` command archives it in both. The case that proves the setting is read is the one with the key present, so it fails against a script that ignores the section.
 
@@ -92,7 +92,7 @@ Read-only workflows (analyze, graph, status) never invoke finalize; they inherit
 
 ## 6. Phase Archival Eligibility (Precision)
 
-This section pins the eligibility predicate for the **C8 (Phase Archival)** convention — the move of a completed phase file from `tasks/` to `archives/tasks/`. `skills/magicspec/AGENT-RULES.md` §4 states a phase is archivable when its file has `status: Done` and "no remaining `- [ ]` items". The word *items* is normative and means **unchecked Atomic Checklist line items**, not any textual occurrence of the `- [ ]` sequence. The eligibility predicate MUST:
+This section pins the eligibility predicate for the **C8 (Phase Archival)** convention — the move of a completed phase file from `tasks/` to `archives/tasks/`. `skills/magicspec/CONSTITUTION.md` §4 states a phase is archivable when its file has `status: Done` and "no remaining `- [ ]` items". The word *items* is normative and means **unchecked Atomic Checklist line items**, not any textual occurrence of the `- [ ]` sequence. The eligibility predicate MUST:
 
 1. Match an unchecked item only as a **checklist line** — anchored at line start with optional indentation (e.g. `^\s*- \[ \]`), inside the phase file's checklist region.
 2. **Ignore** `- [ ]` appearing in prose, task `Notes`, `Verify` lines, fenced code, or inline code-spans (backticks). A phase whose tasks merely *describe* checkbox syntax is still archivable when its real checklist is fully checked.
@@ -191,7 +191,7 @@ A fixture with a directory at the `STATE.md` path, run under `--workflow=run`: f
 
 ### 10.2 Required Fix
 
-The `magic.spec` whitelist gains `.magicspec/RULES.md` and `.magicspec/{ws}/RULES.md`. Considered and rejected: finalizing a capture as `rule` — finalize runs once per invocation for the invoked workflow, and a spec invocation is not a rule invocation. A path present in both workflows' whitelists counts once per invocation. `skills/magicspec/AGENT-RULES.md` §3's whitelist table follows (deployment), and the summary line of the finalize output names the whitelisted paths as before.
+The `magic.spec` whitelist gains `.magicspec/RULES.md` and `.magicspec/{ws}/RULES.md`. Considered and rejected: finalizing a capture as `rule` — finalize runs once per invocation for the invoked workflow, and a spec invocation is not a rule invocation. A path present in both workflows' whitelists counts once per invocation. `skills/magicspec/CONSTITUTION.md` §3's whitelist table follows (deployment), and the summary line of the finalize output names the whitelisted paths as before.
 
 ### 10.3 Regression Coverage
 

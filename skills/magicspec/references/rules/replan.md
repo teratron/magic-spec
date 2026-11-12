@@ -1,6 +1,6 @@
 # Rule Module: Post-Task Replan
 
-Loaded on demand from `AGENT-RULES.md` (section 5). Paths are relative to the `magicspec` skill folder.
+Loaded on demand from `CONSTITUTION.md` (section 5). Paths are relative to the `magicspec` skill folder.
 
 ## 5. Post-Task Replan
 

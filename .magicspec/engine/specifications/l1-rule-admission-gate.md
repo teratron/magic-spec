@@ -215,7 +215,7 @@ Engine Improvement — C14 applies to every `skills/magicspec/` and `workflows/`
 
 **Shipped text is self-contained.** A consumer project receives the engine directories and no specification, so the `RA-n` labels alone define nothing there. The Admission step in `rule.md` carries the tests in words: the evidence classes (RA-2), the without-rule questions and the with-rule hazards by name (RA-3), the placement ladder and the soft-by-default form (RA-4), and fidelity to a user-stated rule (RA-5). The W1–W3 and H1–H6 codes are this specification's shorthand and do not appear in shipped text. Shipped text cites the `RA-n` labels, never this specification's file name (reference containment).
 
-Deliberately untouched (RA-9): the constitution template `skills/magicspec/templates/rules.md`, this project's `.magicspec/RULES.md`, and `skills/magicspec/AGENT-RULES.md`. The C24 gate table is unchanged, because T4 capture now runs inside the rule-governance workflow where the constitutional-reviewer gate already sits.
+Deliberately untouched (RA-9): the constitution template `skills/magicspec/templates/rules.md`, this project's `.magicspec/RULES.md`, and `skills/magicspec/CONSTITUTION.md`. The C24 gate table is unchanged, because T4 capture now runs inside the rule-governance workflow where the constitutional-reviewer gate already sits.
 
 Ordering: 5 first (cards), then 1, the delegation target; 2, 3 and 4 follow it and each hands its rule handling to 1; 6 after 2 (it points at 2's section) and before the C14 bump that regenerates the skills; 8 after 1–3; 7 closes.
 

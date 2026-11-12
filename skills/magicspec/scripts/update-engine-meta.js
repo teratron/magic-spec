@@ -172,7 +172,7 @@ function updateEngineMeta() {
     if (eolOnly.length > 0) {
         console.log(
             `ℹ️  ${eolOnly.length} engine file(s) differ from the release only in line endings; they are treated as unchanged. ` +
-                `To keep the release bytes on checkout, add \`/${ENGINE_REL}/** -text\` to .gitattributes.`,
+            `To keep the release bytes on checkout, add \`/${ENGINE_REL}/** -text\` to .gitattributes.`,
         );
     }
 
@@ -186,7 +186,7 @@ function updateEngineMeta() {
             if (missingFiles.length > 0) {
                 console.error(
                     `❌ ${missingFiles.length} file(s) listed in ${ENGINE_REL}/.checksums are absent from disk. ` +
-                        `Restore ${ENGINE_REL}/ from the release archive.`,
+                    `Restore ${ENGINE_REL}/ from the release archive.`,
                 );
             } else if (hasEngineWriteTooling()) {
                 console.error(
@@ -198,7 +198,7 @@ function updateEngineMeta() {
                 // check exists to surface.
                 console.error(
                     `❌ Engine drift detected. Restore ${ENGINE_REL}/ from the release archive — ` +
-                        'do not regenerate .checksums (that would mask the change).',
+                    'do not regenerate .checksums (that would mask the change).',
                 );
             }
             process.exit(1);
@@ -208,7 +208,7 @@ function updateEngineMeta() {
         // and regenerates the manifest. A user installation has no manifest
         // builder, so it can do neither — and must not do the half it can.
         // Bumping `.version` there moves the very signal Engine Upgrade
-        // Detection (AGENT-RULES.md §1) reads as "the engine was replaced under
+        // Detection (CONSTITUTION.md §1) reads as "the engine was replaced under
         // this project", while the drift it claims to resolve is untouched: the
         // manifest is unchanged, so the next check reports the same files again
         // and every retry bumps the version once more. Refuse before anything
@@ -223,7 +223,7 @@ function updateEngineMeta() {
 
         // Dev-repo-only: keep .magicspec/INDEX.md's Engine Version snapshot current
         // with every C14 bump. Consumer installs never reach this branch — the
-        // external-drift signal Engine Upgrade Detection (AGENT-RULES.md §1)
+        // external-drift signal Engine Upgrade Detection (CONSTITUTION.md §1)
         // provides to them is untouched.
         const syncSnapshotPath = maintenanceScript('sync-engine-snapshot.js');
         if (fs.existsSync(syncSnapshotPath)) {

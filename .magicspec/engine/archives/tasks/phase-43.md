@@ -8,7 +8,7 @@ requires:
   - "Phase 41: the project root, the engine folder and the state folder name each defined once in utils.js (engineRoot, resolveProjectRoot, STATE_DIR_NAME), so a script in the new folder finds its own resources and the project without counting levels"
   - "The mutation-control driver and the script harness (l2-test-suite 1.32.0)"
 provides:
-  - "skills/magicspec/: the engine in its new shape beside the old one (scripts, templates, roles, references, the seven workflows with their entry sections folded in, the router SKILL.md, AGENT-RULES.md, one manifest and the version at the root), with every engine path and printed path resolved from the folder itself"
+  - "skills/magicspec/: the engine in its new shape beside the old one (scripts, templates, roles, references, the seven workflows with their entry sections folded in, the router SKILL.md, CONSTITUTION.md, one manifest and the version at the root), with every engine path and printed path resolved from the folder itself"
   - "Host projections: lib/hosts.js (the verified host table), init --host (rule copy, command entries, AGENTS.md pointer block, skill link, markers, staleness warning), remove, and the optional build-plugin"
   - "The developer-repository predicate in one place; the hook written with the engine folder as named at install and probing the folder; the manifest builder taking --dir"
   - "Harness 216 -> 226 under both script sets; 31 mutation entries, all caught; engine 2.1.146 (the old tree needed no C14 bump)"
@@ -46,7 +46,7 @@ duration_minutes: 240
 - [x] [T-43A04] Pipeline workflows `spec`, `task`, `run`: wrapper entry folded in, paths skill-relative
 - [x] [T-43A05] Audit workflows `analyze`, `rule`, `status`, `graph`: the same
 - [x] [T-43A06] References, role cards and templates: paths skill-relative
-- [x] [T-43A07] `AGENT-RULES.md` from `rules/magic.md`
+- [x] [T-43A07] `CONSTITUTION.md` from `rules/magic.md`
 - [x] [T-43B01] Manifest and version at the skill root; the builder and `--check` work on the new tree
 - [x] [T-43B02] The developer-repository predicate in one place
 - [x] [T-43B03] Hook: the executor location is written at install; the disarm test follows
@@ -94,7 +94,7 @@ duration_minutes: 240
 - **Verify:** the frontmatter `name` is `magicspec`, the `description` is at most 1,024 characters, third person, holds a `Use when` sentence and names all seven commands; the command table lists exactly the files in `workflows/` (T-43T02 pins both).
 - **Handoff:** T-43T02.
 - **Notes:** the router is authored once. It states the grammar `magicspec <command> [args]` (and `magicspec:<command>` typed as text), one selection line per command, that every path in the skill is relative to the folder holding this file, and that scripts are run as `node <that folder>/scripts/executor.js`. Per-command `handoffs` that wrappers carried in frontmatter become the last lines of each workflow (T-43A04, T-43A05). The router describes the final grammar even though the bodies still use dotted names until the next phase; say so in one line of the router's own notes for the maintainer, not for the user.
-- **Changes:** SKILL.md: name magicspec, a description under 1,024 characters that names all seven commands, the grammar, the command table (the one list every surface reads), the dispatch steps, the notation rule and the pointer to AGENT-RULES.md. Found by the new case: a colon followed by a space inside the plain description makes the frontmatter unparseable; the first draft had one.
+- **Changes:** SKILL.md: name magicspec, a description under 1,024 characters that names all seven commands, the grammar, the command table (the one list every surface reads), the dispatch steps, the notation rule and the pointer to CONSTITUTION.md. Found by the new case: a colon followed by a space inside the plain description makes the frontmatter unparseable; the first draft had one.
 
 ### [T-43A04] Pipeline workflows `spec`, `task`, `run`: wrapper entry folded in, paths skill-relative
 
@@ -103,7 +103,7 @@ duration_minutes: 240
 - **Assignment:** Agent
 - **Verify:** `grep -nE "\.magic/|rules/magic\.md|workflows/magic\." skills/magicspec/workflows/{spec,task,run}.md skills/magicspec/references/context.md` prints nothing; each body keeps a contents list naming every `##` heading (the body navigation contract); each body ends with its handoff lines.
 - **Handoff:** T-43T02.
-- **Notes:** the wrapper's entry section (triggers, arguments, scope, hints) becomes the head of the body; the wrapper's `Full implementation` pointer and the `Executor` line disappear into the router. `.magic/x.md` becomes `references/x.md` or `workflows/x.md`; `node .magic/scripts/executor.js` becomes `node scripts/executor.js`; `rules/magic.md §N` becomes `AGENT-RULES.md §N`. The dotted command names stay. These three bodies are the most-read text of the engine: take the originals from `.magic/` and the wrappers, not from memory.
+- **Notes:** the wrapper's entry section (triggers, arguments, scope, hints) becomes the head of the body; the wrapper's `Full implementation` pointer and the `Executor` line disappear into the router. `.magic/x.md` becomes `references/x.md` or `workflows/x.md`; `node .magic/scripts/executor.js` becomes `node scripts/executor.js`; `rules/magic.md §N` becomes `CONSTITUTION.md §N`. The dotted command names stay. These three bodies are the most-read text of the engine: take the originals from `.magic/` and the wrappers, not from memory.
 - **Changes:** workflows/spec.md, task.md, run.md: the wrapper entry section folded in as ## Entry (triggers, arguments, scope, hints), handoffs as a closing ## Handoffs section, both added to the contents list; paths skill-relative; the lines that pointed at the generated wrappers removed or restated.
 
 ### [T-43A05] Audit workflows `analyze`, `rule`, `status`, `graph`: the same
@@ -126,15 +126,15 @@ duration_minutes: 240
 - **Notes:** `templates/rules.md` is the shipped mirror of the live constitution (conventions C1, C7, C14 and others name `.magic/`); the live constitution is amended in the next phase, and the template follows it word for word, so those lines are left and listed in this entry's `Changes`. Role cards cite `.magic/roles/`: skill-relative `roles/`.
 - **Changes:** references/, roles/ and templates/ converted; templates/rules.md keeps its lines that name the earlier folder (they mirror the live constitution word for word and follow it when it is amended); templates/retrospective.md names an engine file, not a folder.
 
-### [T-43A07] `AGENT-RULES.md` from `rules/magic.md`
+### [T-43A07] `CONSTITUTION.md` from `rules/magic.md`
 
 - **Spec:** l2-skill-distribution.md §5.1
 - **Status:** Done
 - **Assignment:** Agent
-- **Verify:** `skills/magicspec/AGENT-RULES.md` has the sections §1 to §10 of the source in the same order and at most as many lines (`wc -l`); `grep -n "\.magic/" skills/magicspec/AGENT-RULES.md` prints nothing; the consumer guard names the skill folder and its projections instead of the four folders.
+- **Verify:** `skills/magicspec/CONSTITUTION.md` has the sections §1 to §10 of the source in the same order and at most as many lines (`wc -l`); `grep -n "\.magic/" skills/magicspec/CONSTITUTION.md` prints nothing; the consumer guard names the skill folder and its projections instead of the four folders.
 - **Handoff:** T-43C01 (the projection is a byte copy of this file).
 - **Notes:** the file is always loaded in every host, so it must not grow. Engine resources are named relative to the skill; the cold-context step says to load the skill first and run the resume check from its folder, and that a step which cannot resolve the executor fails open and says nothing. The read-only contract for engine directories is kept for consumers (C28 §5): do not weaken it. Do not touch `rules/magic.md` (the live copy, hardlinked to `.agents/rules/magic.md`).
-- **Changes:** AGENT-RULES.md: 499 lines like the source; paths relative to the skill folder, the consumer guard naming the skill folder, the resume check from references/context.md; the first line carries the marker the projections are recognized by.
+- **Changes:** CONSTITUTION.md: 499 lines like the source; paths relative to the skill folder, the consumer guard naming the skill folder, the resume check from references/context.md; the first line carries the marker the projections are recognized by.
 
 ### [T-43B01] Manifest and version at the skill root; the builder and `--check` work on the new tree
 
@@ -171,7 +171,7 @@ duration_minutes: 240
 - **Spec:** l2-skill-distribution.md §5.1, §5.2, §5.3
 - **Status:** Done
 - **Assignment:** Agent
-- **Verify:** `init --host=claude,qwen,codex` in a fixture writes `.claude/rules/magicspec.md` and `.qwen/rules/magicspec.md` as byte copies of `AGENT-RULES.md`, a managed block with one pointer line in `AGENTS.md` for Codex, `.claude/commands/magicspec/<cmd>.md` and `.qwen/commands/magicspec/<cmd>.md` for the seven commands, and no command entry for Codex; every file carries the generated-by marker; a second run changes nothing; an unknown host name stops before writing anything and lists the known names; a projection that differs from its source is reported as stale.
+- **Verify:** `init --host=claude,qwen,codex` in a fixture writes `.claude/rules/magicspec.md` and `.qwen/rules/magicspec.md` as byte copies of `CONSTITUTION.md`, a managed block with one pointer line in `AGENTS.md` for Codex, `.claude/commands/magicspec/<cmd>.md` and `.qwen/commands/magicspec/<cmd>.md` for the seven commands, and no command entry for Codex; every file carries the generated-by marker; a second run changes nothing; an unknown host name stops before writing anything and lists the known names; a projection that differs from its source is reported as stale.
 - **Handoff:** T-43C02, T-43C03, T-43T02.
 - **Notes:** the host table is data in one library file (`lib/hosts.js`), read again against the documentation at the start of this task (it changes). A file at a projection path that carries no marker is foreign: it is left untouched and reported, as the hook installer does. The AGENTS.md block is delimited by begin and end markers and `init` replaces only its content. Claude Code needs its skill folder at `.claude/skills/magicspec`: `init` creates a directory link or, where a link cannot be created, reports the one-line copy command; it never overwrites a folder that is not its own link (junction safety, CLAUDE.md §6). Entries are 2-3 lines pointing at the router with the command.
 - **Changes:** lib/hosts.js holds the verified host table, the router reader, the rule and command projections, the pointer block, the skill link, findProjections and removeProjections; init --host writes them (an unknown host or an unreadable source stops before any write); a file without a marker is left alone; a second run changes nothing; check-prerequisites warns PROJECTION_STALE for a copy that differs from its source.

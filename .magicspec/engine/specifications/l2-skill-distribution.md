@@ -53,7 +53,7 @@ A skill loads on demand; the engine also needs text that holds from the first tu
 
 ### 5.1 The Always-On Rule
 
-`AGENT-RULES.md` in the skill folder is the source of the rule that today ships as `rules/magic.md`: upgrade detection, graph use, finalization, archival, replan, containment, decision posture, the completion checklist, bug reporting and the cold-context resume check. It is renamed because `RULES.md` already names the project constitution and the two must not be confused.
+`CONSTITUTION.md` in the skill folder is the source of the rule that today ships as `rules/magic.md`: upgrade detection, graph use, finalization, archival, replan, containment, decision posture, the completion checklist, bug reporting and the cold-context resume check. It is renamed because `RULES.md` already names the project constitution and the two must not be confused.
 
 - **Projection.** `init --host=<name>` writes the rule where the host loads rules unconditionally (`<host>/rules/magicspec.md`). A host with no rules directory gets a managed block in its instruction file, delimited by a begin and an end marker and holding one pointer line; `init` replaces the block's content and nothing else in the file.
 - **Identical wording (SP-4).** The projection is a byte copy of the source; no per-install substitution. Engine resources are named relative to the skill (`scripts/executor.js`); a cold-context rule that needs the executor first loads the skill, whose router gives the base location. A rule step that cannot resolve the executor fails open and says nothing, as the resume check already does.
@@ -118,7 +118,7 @@ Replace the skill folder with the new release, then run `init` again. Replacing 
 
 ### 5.5 Release Archive
 
-The archive prefix is `magic-spec-v{version}/`; its contents are the skill folder, `README.md` and `LICENSE` (the plugin manifest and entries left with S3; the composition never carried them). The version is read from the skill's `.version`, the single source for the tag and the archive name. A smoke step in the release workflow lists the archive and fails when any path lies outside that set, closing the "no archive content test" gap recorded in `l2-release-pipeline.md`. The tag-driven trigger, the retry loop and the idempotent publication are unchanged. As built: one composition function (`scripts/archive-composition.js`) produces the list the workflow zips and checks the finished archive for paths outside the set and for missing required files (`SKILL.md`, `AGENT-RULES.md`, `.version`, `.checksums`, the executor).
+The archive prefix is `magic-spec-v{version}/`; its contents are the skill folder, `README.md` and `LICENSE` (the plugin manifest and entries left with S3; the composition never carried them). The version is read from the skill's `.version`, the single source for the tag and the archive name. A smoke step in the release workflow lists the archive and fails when any path lies outside that set, closing the "no archive content test" gap recorded in `l2-release-pipeline.md`. The tag-driven trigger, the retry loop and the idempotent publication are unchanged. As built: one composition function (`scripts/archive-composition.js`) produces the list the workflow zips and checks the finished archive for paths outside the set and for missing required files (`SKILL.md`, `CONSTITUTION.md`, `.version`, `.checksums`, the executor).
 
 ### 5.6 Migration from the 2.x Layout
 

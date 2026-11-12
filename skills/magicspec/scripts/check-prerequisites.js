@@ -388,7 +388,7 @@ if (planExists && indexExists) {
 // none of which fires here, so nothing HALTs and the plan-complete funnel
 // (SC-2.1(c)) recommends the very command that just produced no scope. This
 // check gives Pre-flight the one signal it was missing to raise that HALT
-// through the door AGENT-RULES.md §5 already sanctions.
+// through the door CONSTITUTION.md §5 already sanctions.
 
 // A complete plan is recognized by positive reads only (a marker, all-terminal
 // rows, or a vacant section), and Backlog bullets carrying a trailing Parked
@@ -693,7 +693,7 @@ if (jsonOutput) {
         // that failed to run looks like.
         console.log(
             `Pre-flight: ok — ${specCount} specification(s), ${stableCount} Stable` +
-                (warnings.length > 0 ? `; ${warnings.length} advisory finding(s):` : '.'),
+            (warnings.length > 0 ? `; ${warnings.length} advisory finding(s):` : '.'),
         );
         for (const w of warnings) {
             console.log(`[${w.type}] ${w.message}${w.fix ? ` 💡 Fix: ${w.fix}` : ''}`);

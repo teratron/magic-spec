@@ -14,6 +14,19 @@
 - **Spec:** {spec-file.md} §{section}
 - **Next Action:** {Concrete next action in one line}
 
+## Goal
+
+<!-- Present only while `/magicspec goal` has a goal recorded; written by update-state (--goal-file), never by hand, at most 28 lines. Layout:
+  - **Goal:** {statement}
+  - **Target phase:** {N}
+  - **Task limit:** {N}
+  - **Bound:** {a bound the goal states}
+  - **Without progress:** {iterations in a row}
+  - **Tasks done:** {n}
+  - [open | met | blocked] {criterion} — {the check that verifies it}
+  - [consent] {action} — {why it waits for consent}
+-->
+
 ## Progress
 
 ```

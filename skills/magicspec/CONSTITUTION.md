@@ -1,4 +1,4 @@
-# Magic Spec — Agent Rules <!-- magicspec-rule -->
+# Magic Spec — Constitution <!-- magicspec-rule -->
 
 Consolidated operational rules for AI agents in projects using the magic-spec engine.
 Sections are independent — apply each by its own trigger. Paths are relative to the `magicspec` skill folder (the folder holding its `SKILL.md`); scripts run as `node <that folder>/scripts/executor.js`; `.magicspec/…` is relative to the project root.
@@ -127,7 +127,9 @@ does not revert to host-assistant defaults at workflow boundaries.
 
 - **DA-6 (Session Persistence)**: when a workflow completes, the next step is
   computed (pipeline order → dependency topology → status maturity) and
-  **narrated, never asked**.
+  **narrated, never asked**. In `/magicspec goal` that step is executed, not
+  narrated: each step ends at its own boundary and finalizes as itself, a consent
+  action is queued and asked only when the mode stops, and no gate or check is relaxed.
 - **DA-4 (Decision Record grammar)**: every autonomous resolution of an
   elective fork is narrated as exactly one line:
   `[DR] {decision} — {criterion}. (Override: {command})` — the override hint
@@ -205,7 +207,8 @@ Before finishing any task that involved magic-spec workflows, verify §1–§10 
       (never questions); the post-workflow next step was computed and narrated
       per DA-6; unsettled forks were forecast (DA-10); questions appeared only
       for consent (E1, E2, E4) — single-question, ≤3 fixed options — in the
-      intake survey (E6), or at the invocation itself (E7, command intake).
+      intake survey (E6), or at the invocation itself (E7, command intake); in goal mode a
+      consent is queued until the mode stops.
 - [ ] **§9 Bug Reporting** — if any engine-level bug, unexpected behavior, or crash was
       encountered in the engine files (the skill folder),
       did NOT attempt to self-repair the engine; generated a formatted

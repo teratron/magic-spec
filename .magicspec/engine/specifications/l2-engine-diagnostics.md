@@ -284,7 +284,7 @@ Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assig
 
 | Current message | Severity | Code |
 | --- | --- | --- |
-| `Next Action "…" names a command reserved by skills/magicspec/AGENT-RULES.md §5; substituting the /magicspec task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
+| `Next Action "…" names a command reserved by skills/magicspec/CONSTITUTION.md §5; substituting the /magicspec task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
 | `STATE.md update skipped (non-blocking): {err}` | `error` | `STATE_UPDATE_SKIPPED` |
 | `CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker.` | `fix` | `CHANGELOG_FORMAT_NONSTANDARD` |
 | `Could not update CHANGELOG.md: {err}` | `error` | `CHANGELOG_WRITE_FAILED` |

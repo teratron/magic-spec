@@ -64,7 +64,7 @@ Examples: `/magicspec simulate`, `/magicspec simulate {area}`, `/magicspec simul
    - **Two modes, always labelled**: every step result carries `live` or `traced`. A traced `pass` is weaker evidence than a live one and is reported as such; it is never counted as a live pass.
    - **Safety**: a step runs live only against a local or disposable instance of the product, started in this session or named by the scenario's preconditions as disposable. A step against anything else — a shared, staging or production system, real accounts, real money, real messages to people — is never run live. A step with an external side effect (sending, paying, deleting data outside a disposable instance) runs live only after one consent question (E1): one question, at most three fixed options — skip it (the default, the irreversible side being the worse error), trace it, run it live. Under `--live-only` the options are skip and run it live.
    - **Findings, not patches**: no product file, specification or test is changed. Each failed or inconclusive step becomes a finding, written into the scenario's `Last run` record.
-   - **Containment**: scenario files are SDD artifacts; the product never references them, and nothing written into the product's tree names a scenario, a task or a specification (`AGENT-RULES.md` §6).
+   - **Containment**: scenario files are SDD artifacts; the product never references them, and nothing written into the product's tree names a scenario, a task or a specification (`CONSTITUTION.md` §6).
    - **One Stage**: after the report, end the invocation. The next stage is named, never started.
 5. **Engine Integrity (C14)**: if this skill folder is modified → `node scripts/executor.js update-engine-meta`.
 
@@ -106,7 +106,7 @@ End the invocation with one report in this layout, then the finalization output:
 Next: {one command}
 ```
 
-`{scenario}` is the scenario's identifier and its title. One line per finding; none → the line `  No findings.` A traced pass is counted under `{t}` and never under `{l}`. The `Next:` line is the handoff line `finalize` prints: `/magicspec fix` with the findings when there are any, otherwise the command the pipeline state computes.
+`{scenario}` is the scenario's identifier and its title. One line per finding; none → the line `No findings.` A traced pass is counted under `{t}` and never under `{l}`. The `Next:` line is the handoff line `finalize` prints: `/magicspec fix` with the findings when there are any, otherwise the command the pipeline state computes.
 
 ## Finalization Protocol (Mandatory)
 

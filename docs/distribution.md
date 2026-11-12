@@ -11,7 +11,7 @@ The user bundle is one folder, `skills/magicspec/`, distributed through GitHub R
 | Path | Description |
 | --- | --- |
 | `SKILL.md` | The router and the only command surface: the grammar `/magicspec <command> [argument]`, the command table (group, argument, what happens when it is missing) and a pointer to the workflow body. |
-| `AGENT-RULES.md` | The source of the always-on rule (engine upgrade detection, graph use, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check). |
+| `CONSTITUTION.md` | The source of the always-on rule (engine upgrade detection, graph use, finalization, archival, replan, containment, decision posture, bug reporting, the cold-context resume check). |
 | `workflows/` | One body per command: `spec`, `task`, `run`, `analyze`, `rule`, `status`, `graph`, `migrate`, `help`. |
 | `references/` | Shared modules the bodies name: `context`, `init`, `retrospective`. |
 | `roles/` | The role cards the workflows activate. |
@@ -27,8 +27,8 @@ Whatever must exist outside the folder for a host to find it is generated from i
 
 | Generated file | For | Source |
 | --- | --- | --- |
-| `<host>/rules/magicspec.md` | Claude Code, Qwen Code | a byte copy of `AGENT-RULES.md` |
-| a managed block in `AGENTS.md` | Codex | one line pointing at `AGENT-RULES.md` |
+| `<host>/rules/magicspec.md` | Claude Code, Qwen Code | a byte copy of `CONSTITUTION.md` |
+| a managed block in `AGENTS.md` | Codex | one line pointing at `CONSTITUTION.md` |
 | `<host>/skills/magicspec` | any host that needs its own skills folder | a link to the skill folder |
 
 A generated file that differs from its source is reported as `PROJECTION_STALE`, with `init --host=<name>` as the remedy. A file at one of these paths that carries no marker belongs to you and is never overwritten. No per-command entry is generated: a command entry left by a 3.0.x installation (it carries the entry marker) is reported as `PROJECTION_RETIRED`, and `init` removes exactly the marked ones. `remove` deletes exactly the marked files and the links, and leaves your `.magicspec/` workspace untouched.

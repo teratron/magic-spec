@@ -169,7 +169,7 @@ The check is deliberately a five-point inspection rather than an attempt to actu
 4. Steps 2-3 modify engine files → C14 applies at implementation time.
 5. Purge engine-workspace references from already-shipped files (workflow bodies, templates, agent rules): replace dead spec links with inline restatement, replace baked-in workspace names with `{workspace}` placeholders, replace governance file-name citations with protocol names (RC-9). `[ADDED]`
 6. Extend the ventilation checklist with the RC-12 scaffold-removal check (§4.4), and state the scaffold framing once in the distributed agent rules — the ambient surface is where it matters most, since coupling is typically introduced by a direct user-prompted edit ("add a lint script", "wire this into CI") rather than inside a `run` workflow the role cards mediate. Both modify engine files → C14 applies at implementation time. `[ADDED]`
-7. Rescope the quoting precondition of the ventilation scan (RC-2.2): `skills/magicspec/workflows/analyze.md` step 6 names the SH-1 precondition as holding for the engine's own authored files and states that in a consumer project a code-quoted occurrence is reported. Correct the hook claim (RC-12) where it is repeated: `skills/magicspec/workflows/analyze.md` step 6a's exemption line and `skills/magicspec/AGENT-RULES.md` §6's exemption sentence say the hook "goes away with" or "is removed with" the scaffold; they say instead that the hook disarms itself when the engine is absent. `skills/magicspec/AGENT-RULES.md` is a hardlinked pair, **[C-001]**. Every file here modifies the engine → C14 applies at implementation time. `[ADDED]`
+7. Rescope the quoting precondition of the ventilation scan (RC-2.2): `skills/magicspec/workflows/analyze.md` step 6 names the SH-1 precondition as holding for the engine's own authored files and states that in a consumer project a code-quoted occurrence is reported. Correct the hook claim (RC-12) where it is repeated: `skills/magicspec/workflows/analyze.md` step 6a's exemption line and `skills/magicspec/CONSTITUTION.md` §6's exemption sentence say the hook "goes away with" or "is removed with" the scaffold; they say instead that the hook disarms itself when the engine is absent. `skills/magicspec/CONSTITUTION.md` is a hardlinked pair, **[C-001]**. Every file here modifies the engine → C14 applies at implementation time. `[ADDED]`
 
 ## 6. Drawbacks & Alternatives
 
@@ -188,7 +188,7 @@ The check is deliberately a five-point inspection rather than an attempt to actu
 | `[CODER-CARD]` | `skills/magicspec/roles/coder.md` | Deployed authoring-gate carrier (RC-5). |
 | `[REVIEWER-CARD]` | `skills/magicspec/roles/code-reviewer.md` | Deployed review-gate carrier (RC-6). |
 | `[ANALYZE]` | `skills/magicspec/workflows/analyze.md` | Ventilation workflow hosting the RC-7 leak scan. |
-| `[AGENT-RULES]` | `skills/magicspec/AGENT-RULES.md` | Distributed ambient policy surface for ad-hoc edits. |
+| `[AGENT-RULES]` | `skills/magicspec/CONSTITUTION.md` | Distributed ambient policy surface for ad-hoc edits. |
 | `[RUN]` | `skills/magicspec/workflows/run.md` | Execution workflow activating the RC-5/RC-6 gates. |
 
 ## Document History

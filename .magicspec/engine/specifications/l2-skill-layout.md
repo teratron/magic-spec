@@ -42,7 +42,7 @@ The concrete shape of the single-skill engine: the folder tree, where every file
 | SP-1 One folder, one version | §5.1 tree; §5.4 manifest covers every file in the folder except itself |
 | SP-2 Location independence | §5.3 two resolvers: project root from the working context, skill root from the script's own file |
 | SP-3 Projections generated | §5.1 lists no projection inside the tree; generation and staleness checks are in `l2-skill-distribution.md` §5.1-5.3 |
-| SP-4 Always-on text outside | The rule's source is `AGENT-RULES.md` in the tree; installation is in `l2-skill-distribution.md` §5.1 |
+| SP-4 Always-on text outside | The rule's source is `CONSTITUTION.md` in the tree; installation is in `l2-skill-distribution.md` §5.1 |
 | SP-5 One source per workflow | §5.2 folds each wrapper and body into one `workflows/` file; the router lists exactly those files |
 | SP-6 Removable without trace | §5.1 holds no file outside the folder; the link and projection inventories (§5.6) name everything else |
 | SP-7 Maintenance not shipped; one signal | §5.5 layout and the single predicate |
@@ -57,7 +57,7 @@ The concrete shape of the single-skill engine: the folder tree, where every file
 ```plaintext
 skills/magicspec/                  # in the developer repository; <host>/skills/magicspec/ in an installation
 ├── SKILL.md                       # router: command grammar, one selection line per command, pointers
-├── AGENT-RULES.md                 # source of the always-on rule (installed outside, see distribution §5.1)
+├── CONSTITUTION.md                 # source of the always-on rule (installed outside, see distribution §5.1)
 ├── README.md                      # short description and install pointer
 ├── .version                       # the one engine version (SP-1)
 ├── .checksums                     # manifest of every other file in this folder
@@ -81,7 +81,7 @@ A file belongs in `workflows/` if and only if it is a command a user can invoke;
 | `workflows/magic.graph.md` (no body) | `workflows/graph.md` |
 | `.magic/{context,init,retrospective}.md` | `references/{context,init,retrospective}.md` |
 | `skills/magic-*/SKILL.md` (generated) | removed; replaced by the router `SKILL.md` and the generated surfaces of `l2-skill-distribution.md` §5.2 |
-| `rules/magic.md` (and its `.agents/rules/` twin) | `AGENT-RULES.md`; the installed twin is a projection |
+| `rules/magic.md` (and its `.agents/rules/` twin) | `CONSTITUTION.md`; the installed twin is a projection |
 | `dev/scripts/`, `dev/tests/`, `dev/package.json` | repository-root `scripts/`, `tests/`, `package.json` (§5.5) |
 | `.agents/skills/magic-dev-*`, `.agents/workflows/magic.dev.*.md` | `skills/magicspec-dev/workflows/{init,release,test,sync}.md`; the executable parts (init scripts, release script) to `scripts/`; the dotted names `/magic.dev.*` become `/magicspec-dev:{init,release,test,sync}` |
 | `.magicspec/{wiki,spec-graph.html,graph-before.json,.graph-cache}` | `graph/` under the state folder (§5.7) |

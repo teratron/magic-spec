@@ -1,6 +1,6 @@
 # Rule Module: SDD Containment
 
-Loaded on demand from `AGENT-RULES.md` (section 6). Paths are relative to the `magicspec` skill folder.
+Loaded on demand from `CONSTITUTION.md` (section 6). Paths are relative to the `magicspec` skill folder.
 
 **Contents:**
 

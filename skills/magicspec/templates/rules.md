@@ -64,7 +64,7 @@ The engine folder (`skills/magicspec/` in this repository, the skill folder of a
 
 Limit the SDD workflow to the core command set to maximize automation and minimize cognitive overhead. Do not introduce new workflow commands unless strictly necessary and explicitly authorized as a C2 exception.
 
-The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `goal` and `sync` are authorized C2 exceptions that join with their own deliveries, one workflow body each. `audit` is an alias of `analyze` and not a command.
+The command set as it ships: `spec`, `plan`, `task`, `run`, `fix`, `simulate`, `goal`, `analyze`, `rule`, `status`, `graph`, `migrate` and `help`; `sync` is an authorized C2 exception that joins with its own delivery, one workflow body. `audit` is an alias of `analyze` and not a command.
 
 ### C3 — Parallel Task Execution Mode
 

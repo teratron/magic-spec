@@ -18,7 +18,7 @@ key_files:
     - "scripts/skill-frontmatter.js"
   modified:
     - "scripts/ (moved from dev/scripts), tests/ (moved from dev/tests), package.json (moved from dev/package.json)"
-    - "skills/magicspec/scripts/utils.js, check-prerequisites.js, update-engine-meta.js; AGENT-RULES.md"
+    - "skills/magicspec/scripts/utils.js, check-prerequisites.js, update-engine-meta.js; CONSTITUTION.md"
 patterns_established:
   - "A scripted rename of a folder name that is also a generic word needs a residue search for the forms the pattern cannot see (escaped slashes, path segments passed as separate arguments)"
   - "Retire a generator together with its fixtures, but keep the rules it enforced as a checker the harness runs"

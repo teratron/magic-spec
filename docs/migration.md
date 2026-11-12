@@ -7,7 +7,7 @@
 | 2.x | 3.0 |
 | --- | --- |
 | `.magic/` (engine, scripts, templates, roles) | the skill folder, in the host's skills folder |
-| `workflows/magic.*.md`, `skills/magic-*`, `rules/magic.md` and copies under `.claude/`, `.agents/`, `.codex/`, `.qwen/` | the router `SKILL.md` and `AGENT-RULES.md`; no per-command entry |
+| `workflows/magic.*.md`, `skills/magic-*`, `rules/magic.md` and copies under `.claude/`, `.agents/`, `.codex/`, `.qwen/` | the router `SKILL.md` and `CONSTITUTION.md`; no per-command entry |
 | commands `/magic.spec`, `/magic.task`, ... | `/magicspec spec`, `/magicspec plan`, `/magicspec task`, ... (`/magicspec help` lists them) |
 | state folder `.design/` | `.magicspec/` (its contents are unchanged) |
 

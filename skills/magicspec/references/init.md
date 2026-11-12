@@ -54,7 +54,7 @@ Ensure the artifacts listed in Step 2 exist. HALT on failure. `STATE.md` is not 
 
 #### 4. Hint
 
-If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*. **Suppress this hint when `init` runs as a sub-step of an execution workflow (`/magicspec run`)**: per `run.md` and `AGENT-RULES.md` §5, `/magicspec analyze` is never named as a next step in the run context.
+If `package.json`, `pyproject.toml`, `src/`, or `lib/` detected AND `INDEX.md` is empty/new → suggest *"Analyze project"*. **Suppress this hint when `init` runs as a sub-step of an execution workflow (`/magicspec run`)**: per `run.md` and `CONSTITUTION.md` §5, `/magicspec analyze` is never named as a next step in the run context.
 
 ### Structure Created
 

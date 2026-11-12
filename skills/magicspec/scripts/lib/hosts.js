@@ -150,7 +150,7 @@ function readCommands() {
  * @throws {Error} When the source is missing or carries no marker.
  */
 function readRuleSource() {
-    const sourcePath = path.join(engineRoot(), 'AGENT-RULES.md');
+    const sourcePath = path.join(engineRoot(), 'CONSTITUTION.md');
     if (!fs.existsSync(sourcePath)) throw new Error(`Rule source not found: ${sourcePath}.`);
     const text = fs.readFileSync(sourcePath, 'utf8');
     if (!text.includes(RULE_MARKER))
@@ -170,7 +170,7 @@ function readRuleSource() {
 function pointerBlock() {
     return [
         BLOCK_BEGIN,
-        `Before any work in this project, read \`${engineRel()}/AGENT-RULES.md\` and follow it for the whole session.`,
+        `Before any work in this project, read \`${engineRel()}/CONSTITUTION.md\` and follow it for the whole session.`,
         BLOCK_END,
     ].join('\n');
 }

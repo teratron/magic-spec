@@ -54,7 +54,7 @@ The Rule Workflow supports a two-tier rules system for multi-workspace projects:
 | Universal rule, no workspace context | Global `RULES.md` |
 | Ambiguous | Resolved autonomously: workspace tier when a workspace is active, else global; narrated as a Decision Record |
 
-Workspace `RULES.md` files are created on demand. Duplication checks scan both tiers, the rules the engine ships in `skills/magicspec/AGENT-RULES.md` and the regulations inside specifications.
+Workspace `RULES.md` files are created on demand. Duplication checks scan both tiers, the rules the engine ships in `skills/magicspec/CONSTITUTION.md` and the regulations inside specifications.
 
 ## 5. Rule Actions
 

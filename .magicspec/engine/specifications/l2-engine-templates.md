@@ -90,9 +90,9 @@ Surfaces that carry the contract when it is deployed — each is shipped text, s
 | `spec.md`, Updating an Existing Specification, Sync | The `Description` changes only when what or when changed; the amendment goes to Document History (rule 2) |
 | `task.md`, Plan Write-back | The ledger overview describes the ledger and is not appended to (rule 3) |
 | `workspace-index.md`, `global-index.md`, `tasks.md` | A one-line comment at the placeholder (§5.2) |
-| `skills/magicspec/AGENT-RULES.md` §2 (hardlinked twin, **[C-001]**) | A content question goes to the specification text, a structural one to the graph and the wiki ([l2-spec-graph-memory.md](l2-spec-graph-memory.md) §4.5) |
+| `skills/magicspec/CONSTITUTION.md` §2 (hardlinked twin, **[C-001]**) | A content question goes to the specification text, a structural one to the graph and the wiki ([l2-spec-graph-memory.md](l2-spec-graph-memory.md) §4.5) |
 
-Order of adoption: the `skills/magicspec/AGENT-RULES.md` row lands with or before the `spec.md` rows. A short description is safe only once the content question has its own route; before that, a cell that shrinks leaves the question to whatever the reader improvises. `rules/` is outside C14's version and checksum tracking, so that row ships without a version bump.
+Order of adoption: the `skills/magicspec/CONSTITUTION.md` row lands with or before the `spec.md` rows. A short description is safe only once the content question has its own route; before that, a cell that shrinks leaves the question to whatever the reader improvises. `rules/` is outside C14's version and checksum tracking, so that row ships without a version bump.
 
 Rewriting the rows and the overview that already exist in a workspace is a task of the phase that deploys the contract, not part of it.
 
