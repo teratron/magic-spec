@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.60.0
+**Version:** 1.61.0
 **Generated:** 2026-11-12
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.59.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.60.0
 **Based on RULES:** .magicspec/RULES.md v1.23.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,7 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 54](archives/tasks/phase-54.md) | Artifact Memory Index — a local index over the state folder's artifacts, one row per section with its provenance, answers a content question with ranked citations (lexical always, semantic only with a configured provider), re-indexes changed files before answering and never fails a workflow: `memory-index` and `memory-query` on SQLite with a pure-script fallback, refreshed by `export-wiki`, queried first by the comparison-set, intake and sibling-site searches | `Done (Archived)` |
 | [Phase 53](archives/tasks/phase-53.md) | Goal Mode — `/magicspec goal` takes a goal statement, a phase or a number of tasks and drives the pipeline toward it without pausing between steps: each computed next step executed instead of narrated and ended at its own boundary, consent queued and asked only when the mode stops, a closed list of stop conditions and one report; the goal and its criteria kept in `STATE.md`, so the resume line, the status briefing and a bare `goal` continue it; the router row with its demand read per step, the Input Pass and the constitution's command set | `Done (Archived)` |
 | [Phase 52](archives/tasks/phase-52.md) | Product Simulation and Interface Design — `/magicspec simulate` runs the product's user-interaction scenarios live or traced (always labelled), every failed step a finding for `/magicspec fix`; scenarios listed at planning, written by validation tasks and kept with the code, carried by the `simulator-tester` role; an interface specified with its design context, one design system, its states and accessibility, an early draft and verification by looking, carried by the `ui-ux-designer` role; the developer workflow keeps its own name, the constitution records the command set and sixteen cards, and the rule kernel makes room for this phase and Phases 53 and 55 | `Done (Archived)` |
 | [Phase 51](archives/tasks/phase-51.md) | Defect Intake and Engine Feedback — `/magicspec fix` reproduces a reported defect, classifies it against the specifications by a closed rule, repairs it with a regression check left behind and traces it as a task, and a defect report given to `spec` is routed to it; the engine feedback channel (notes recorded while the agent works, scrubbed drafts, a copy, a link or an approved submission to the public tracker, a work queue in the engine repository); the maintenance `fix` and the maintenance router with five commands, the constitution's C11 and C28 following; the text an argument form returns passes the Input Pass | `Done (Archived)` |

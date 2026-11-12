@@ -1,6 +1,6 @@
 # Artifact Memory Store (SQLite)
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-artifact-memory.md
@@ -24,7 +24,7 @@ The owner asks for SQLite with vectors. The runtime the engine already requires 
 
 - The engine's stated runtime floor (Node 18) does not move: where `node:sqlite` is missing, the fallback serves the same contract.
 - The SQLite module's experimental warning must not reach the workflow's output: the executor starts the indexer's child process with the runtime flag that disables experimental warnings, and only on a runtime that has both the module and the flag — an older runtime rejects an unknown flag and takes the fallback without it.
-- <!-- TBD: the first Node release that loads `node:sqlite` without a flag (believed 22.13 / 23.4) — verify against the release notes before the version check is written. -->
+- **The backend is chosen by trying, not by a version table.** `node:sqlite` loads without a flag from Node 22.13 and 23.4 (it was added behind `--experimental-sqlite` in 22.5; checked against the Node documentation's history table, 2026-11-12), and a runtime can lack it or be built without FTS5, so the engine loads the module and creates the full-text table, and takes the fallback when either fails. No release number is compared anywhere.
 - **Assumption (forecast):** vectors are compared in process rather than through a loadable SQLite vector extension, because the extension is a per-platform native binary — the engine's first — and the corpus is small enough not to need it. Runner-up: load a vector extension when present. Override: `/magicspec spec amend l2-artifact-memory-store.md "use a vector extension"`.
 
 ## 4. Invariant Compliance
@@ -52,6 +52,7 @@ skills/magicspec/scripts/
     ├── memory-sections.js # markdown → section units (shared by both backends)
     ├── memory-sqlite.js   # node:sqlite + FTS5 backend
     ├── memory-fallback.js # pure-JS BM25 backend, same interface
+    ├── memory-refresh.js  # open under the lock, refresh from the files, report a failure
     └── memory-embed.js    # optional provider adapter + cosine + RRF
 ```
 
@@ -94,13 +95,14 @@ Hyphenated and dotted names are queried as phrases, so `check-prerequisites` mat
 workspace.json → "memory": { "embeddings": { "url": "...", "model": "...", "dimensions": 768 } }
 ```
 
-Absent or empty: lexical only. The adapter speaks the widely implemented embeddings request shape (a JSON body with `model` and `input`). A provider failure leaves the lexical results intact and records a warning.
+An optional `apiKeyEnv` names the environment variable that holds a bearer key; the key is never written to a project file. Absent or empty: lexical only. The adapter speaks the widely implemented embeddings request shape (a JSON body with `model` and `input`). A provider failure leaves the lexical results intact and records a warning.
 
 ## 6. Implementation Notes
 
 1. `lib/memory-sections.js` first, with tests over this repository's own state folder; then the fallback backend; then the SQLite backend, checked to return the same ordering as the fallback on a fixed corpus (ties aside).
 2. The executor's command table gains both subcommands as reading commands (`memory-index` writes only the cache).
 3. `export-wiki` calls the indexer last; its failure never fails the refresh.
+4. **As built (Phase 54), no requirement changed.** (a) The index reads the Markdown files of the state folder whose location gives a kind (§5.3); the extraction cache, the graph folder with its wiki, and the generated `CONTEXT.md` are never read, because nothing derived may enter an index built from the artifacts (AM-1). A scenario file below `specifications/` is read as a specification by location, with its own header. (b) A section over 2,000 characters is cut at paragraph boundaries; a paragraph that alone exceeds the bound (a long table, a run of list items) is cut at its line boundaries, so a row or an item stays whole — measured on this repository, cutting at blank lines alone left 411 sections over the bound, one of 70 KB. (c) Queries join their terms by OR, not by FTS5's default AND, so a question of several words still finds the sections that hold some of them; BM25 ranks the fuller matches first. A hyphenated or dotted word, and a quoted stretch, are phrases of adjacent tokens. The tokenizer and the query parser are shared by both backends (`lib/memory-sections.js`), so they agree on what a word is. (d) `replaceFile` keeps the row, the id and the vector of a section whose heading and text did not change, so only changed sections are sent for embedding again. (e) The refresh, the lock and the failure report are one library (`lib/memory-refresh.js`) because both commands and the wiki export need them and a script must not require another script; the unavailable finding is `MEMORY_INDEX_UNAVAILABLE` and a failing or misconfigured provider is the separate warning `MEMORY_EMBEDDINGS_FAILED` (the index still answers lexically), both in [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §5.4. (f) Embedding happens in `memory-index`, and so in the wiki refresh that calls it, not in `memory-query`: a query embeds only its own text, so the first query after a provider is configured is never a long upload, and a section edited since the last index run has no vector until the next one (its text is never answered stale: a changed section loses its vector at once). The query fuses the two rankings over the top max(50, 5 x k) of each. (g) A run of `export-wiki` with `--out` or `--from-file` does not touch the index: it belongs to the project's state folder. (h) The comparison-set searches of the specification check, the plan check and Mode C of the audit, and the intake investigation (IK-2) and the sibling-site search (FX-6), name `memory-query` first and a direct text search as the fallback; the plan check adds `--history` for archived phases, the others keep history out. The product's code is searched as text, because the index covers the state folder only. (i) The command table gains the entry field `usesSqlite`, and the executor starts such a command with `--disable-warning=ExperimentalWarning` only when the runtime lists that flag.
 
 ## 7. Drawbacks & Alternatives
 
@@ -120,5 +122,6 @@ Absent or empty: lexical only. The adapter speaks the widely implemented embeddi
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-12 | Agent | **As built in Phase 54, Stable retained.** §2: the open question of the first release that loads the module without a flag is settled (22.13 and 23.4, checked against the Node documentation) and the backend is chosen by trying the module and an FTS5 table, never by a version. §5.1 lists `lib/memory-refresh.js`; §5.5 gains the optional `apiKeyEnv`; §6 gains item 4 with the decisions of the build (what the index reads, the cut of a long table, OR terms, id-preserving replacement, where embedding happens, the two diagnostic codes, the skipped export runs, the wired consumers, the command-table field). No requirement changed. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created with `l1-artifact-memory.md` from the owner's request for SQLite vector memory. `node:sqlite` with FTS5 probed on Node 24.12 the same day. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.4.1
+**Version:** 1.4.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -325,6 +325,8 @@ Both are the sanctioned L1→L2 graceful-fallback guards. They are exactly the c
 | `init.js` | `Template not found: {name}. Using empty string.` | `fix` | `TEMPLATE_MISSING` |
 | `init.js` | `Note: Could not automatically install Git hooks.` | `warning` | `GIT_HOOKS_NOT_INSTALLED` |
 | `check-prerequisites.js` | `[{w.type}] {w.message}{fixHint}` | `warning` | forwarded from `w.type` |
+| `lib/memory-refresh.js` (for `memory-index`, `memory-query`, `export-wiki`) | `The artifact index could not be used: {reason}` | `warning` | `MEMORY_INDEX_UNAVAILABLE` |
+| `lib/memory-refresh.js` (for `memory-index`, `memory-query`) | `The embeddings provider could not be used: {reason}` | `warning` | `MEMORY_EMBEDDINGS_FAILED` |
 
 `check-prerequisites.js` needs no code assignment: it already carries a typed identifier and a fix hint per warning (`l1-engine-diagnostics.md` §1.5). Its migration forwards `w.type` as `code` and `fixHint` as `remedy` unchanged — the site that most closely already satisfies DG-3. Its `warn()` additionally attaches `recheck` (§4.10, DG-10) to every finding it records — every warning this script produces is a condition assessed against current repository state, never an event, so the whole emitter opts in.
 
@@ -390,6 +392,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.2 | 2026-11-12 | Agent | Inventory rows only, no contract change (as built in Phase 54): §5.4 lists the two findings of the artifact index — `MEMORY_INDEX_UNAVAILABLE`, recorded when the index cannot be built, opened or queried (the command exits 0 and tells the reader to search the text), and `MEMORY_EMBEDDINGS_FAILED`, recorded when the embeddings provider fails or its setting cannot be used (lexical search is unaffected). Both are warnings with a remedy. |
 | 1.4.1 | 2026-11-12 | Agent | Inventory row only, no contract change (as built in Phase 53): §5.2 lists the finding `update-state.js` records when it refuses a goal block — a goal that fails the closed schema or the line bound, two goal flags together, a goal file that cannot be read. |
 | 1.4.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the concept specification declared that this specification gains the note record when it is built): §4.11 records the feedback note store — its file, its records and its limits — beside the findings sink, and says why the two are separate files. No requirement of the sink changed. |
 | 1.3.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

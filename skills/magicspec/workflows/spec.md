@@ -151,7 +151,7 @@ The detection result is recorded in the agent's working state for the remainder 
 
 **Silent by default (IK-1)**: this is an evaluation, not a stage. When no firing condition holds — the common case — proceed to dispatch in the same turn with no narration. Never announce that the gate ran clean.
 
-1. **Investigate first (IK-2)**: before composing any question, exhaust what the repository can answer — global + workspace `RULES.md`, workspace `INDEX.md`, specs on the idea's topic, the spec graph, the source tree. A question is legitimate only for what cannot exist in the repository: the user's intent. *"I did not read the specs"* is never grounds to ask.
+1. **Investigate first (IK-2)**: before composing any question, exhaust what the repository can answer — global + workspace `RULES.md`, workspace `INDEX.md`, specs on the idea's topic, the spec graph, the source tree. Find the specs on the topic with `node scripts/executor.js memory-query "{topic}"`, which ranks the sections that bear on it and cites each; read a cited section before relying on it, and when the query prints that the index is unavailable, search the text directly. A question is legitimate only for what cannot exist in the repository: the user's intent. *"I did not read the specs"* is never grounds to ask.
 2. **Gate 1 — comprehension (IK-4)**: is the idea understood? Judged in the `prompt-engineer` stance, on the intent statement the Input Pass produced:
    - **F1 Incoherence** — the idea is internally contradictory, or admits no single coherent reading.
    - **F2 Essence ambiguity** — ≥2 coherent readings yield **materially different** specs. *Test*: draft the one-sentence Overview each reading produces. Same sentence → detail-level, no fire. Different sentence → fire.

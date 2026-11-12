@@ -29,7 +29,7 @@ const EXECUTOR_OPTIONS = Object.freeze([
     ['--root <dir>', 'Act on this project (default: found from the working directory)'],
 ]);
 
-/** @type {Record<string, {summary: string, options?: Record<string, {kind: string, help: string}>, positional?: string[], ownHelp?: boolean, provisions?: boolean}>} */
+/** @type {Record<string, {summary: string, options?: Record<string, {kind: string, help: string}>, positional?: string[], ownHelp?: boolean, provisions?: boolean, usesSqlite?: boolean}>} */
 const COMMANDS = {
     'analyze-coverage': {
         summary: 'Classify project files by how well the specifications cover them.',
@@ -156,6 +156,30 @@ const COMMANDS = {
     },
     'install-hooks': {
         summary: 'Install the git pre-commit hook that checks engine integrity.',
+    },
+    'memory-index': {
+        summary: 'Build or refresh the local index over the specification artifacts. Always exits 0.',
+        usesSqlite: true,
+        options: {
+            '--rebuild': { kind: 'bool', help: 'Delete the index and build it from nothing' },
+        },
+    },
+    'memory-query': {
+        summary: 'Find the sections that bear on a question, ranked, with citations. Always exits 0 when the index is unavailable.',
+        usesSqlite: true,
+        positional: ['<text>'],
+        options: {
+            '--kind': {
+                kind: 'value',
+                help: 'Comma-separated kinds to keep: spec, rules, plan, tasks, state, registry, archive, history, retrospective, changelog',
+            },
+            '--k': { kind: 'value', help: 'Most results to print, 1 to 50 (default: 10)' },
+            '--history': {
+                kind: 'bool',
+                help: 'Include archives, history tables, retrospectives and changelogs',
+            },
+            '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
+        },
     },
     migrate: {
         summary: 'Migrate a 2.x project to the current layout (a dry run unless --apply is given).',
@@ -469,9 +493,28 @@ function guardArgv(name, scriptModule) {
     }
 }
 
+/**
+ * The runtime flags a command's script is started with. A command marked `usesSqlite`
+ * loads the runtime's built-in SQLite module, which prints an experimental warning when
+ * it loads; the warning must not reach a workflow's output. The flag that silences it
+ * exists only in runtimes new enough to know it, and an older runtime rejects an unknown
+ * flag, so it is passed only when this runtime lists it (an older one takes the
+ * pure-script fallback and has nothing to silence).
+ *
+ * @param {{usesSqlite?: boolean}} entry - The command's entry in `COMMANDS`.
+ * @param {{has: (flag: string) => boolean}} [allowedFlags] - Flags the runtime accepts; replaced in tests.
+ * @returns {string[]} Flags to put before the script path; empty for most commands.
+ */
+function runtimeFlags(entry, allowedFlags = process.allowedNodeEnvironmentFlags) {
+    return entry.usesSqlite && allowedFlags.has('--disable-warning')
+        ? ['--disable-warning=ExperimentalWarning']
+        : [];
+}
+
 module.exports = {
     COMMANDS,
     EXECUTOR_OPTIONS,
+    runtimeFlags,
     commandNames,
     isCommand,
     validateArgv,

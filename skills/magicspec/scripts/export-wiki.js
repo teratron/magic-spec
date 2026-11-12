@@ -7,6 +7,8 @@ require('./lib/commands').guardArgv('export-wiki', module);
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
+const diagnostics = require('./lib/diagnostics');
+const { reportUnavailable } = require('./lib/memory-refresh');
 const {
     normalizePath,
     resolveDesignRoot,
@@ -404,6 +406,45 @@ function pruneWiki(dir) {
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
+// ARTIFACT INDEX
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * Refreshes the artifact index after the wiki, so one refresh keeps graph, wiki and index
+ * current (AM-5). The indexer runs as its own command through the executor, which gives it
+ * the runtime flag that keeps the SQLite module's warning out of this output. It can never
+ * fail the refresh (AM-8): a failure to start or finish it is recorded and reported in one
+ * line, and the wiki that was just written stands.
+ *
+ * @returns {void}
+ */
+function refreshArtifactIndex() {
+    try {
+        const out = execFileSync(
+            process.execPath,
+            [path.join(__dirname, 'executor.js'), 'memory-index'],
+            {
+                cwd: rootDir,
+                env: process.env,
+                encoding: 'utf8',
+                stdio: ['ignore', 'pipe', 'pipe'],
+                timeout: 300000,
+                maxBuffer: 16 * 1024 * 1024,
+            },
+        );
+        for (const line of out.split('\n')) {
+            if (line.startsWith('[memory-index]'))
+                console.log(line.replace('[memory-index]', 'Artifact index:'));
+        }
+    } catch (err) {
+        const reason = reportUnavailable('export-wiki', err, diagnostics.record);
+        console.log(
+            `[Index-Refresh] The artifact index was not refreshed: ${reason}. Search the text with grep instead.`,
+        );
+    }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
 // MAIN
 // ═══════════════════════════════════════════════════════════════════════════
 
@@ -455,6 +496,9 @@ function main() {
         if (retired.length > 0) {
             console.log(`Retired legacy graph artifacts: ${retired.join(', ')}`);
         }
+        // The index belongs to the project's state folder: a wiki written elsewhere, or from a
+        // graph file, is not the project's refresh.
+        if (!fromFile) refreshArtifactIndex();
     }
 }
 

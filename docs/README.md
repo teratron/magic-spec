@@ -59,7 +59,7 @@ graph TD
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |
 | **Status** | `status.md` | Read-only resume briefing: position, progress, blockers, and the one next command. Writes nothing. | [Detailed Guide](status.md) |
-| **Graph** | `graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export. | [Detailed Guide](graph.md) |
+| **Graph** | `graph.md` | Builds the Specification Knowledge Graph: god nodes, orphaned files, community detection, wiki export, and the artifact index (`memory-query`) that finds the sections bearing on a question. | [Detailed Guide](graph.md) |
 
 ## 🏗️ Architecture & Directory Structure
 

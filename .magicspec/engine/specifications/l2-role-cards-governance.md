@@ -1,6 +1,6 @@
 # Role Cards — Governance Gates (C24 Migrations)
 
-**Version:** 1.4.6
+**Version:** 1.4.7
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -47,7 +47,7 @@ related_rules: [C24]
 **Operating Protocol:**
 
 1. **Coherence check (runs first):** compare the created or substantively amended sections with every other specification that touches the same mechanics, whether or not it is declared in `Related Specifications` — the gap is exactly where the author's knowledge ends. A patch-level change (typo fix, clarification) introduces no mechanic: print the result line with zero artifacts and end the step.
-   - **Comparison set:** list the names the changed sections introduce or use — headings, code-quoted tokens, invariant identifiers, file paths, command names. Search the specification text of every registered workspace for each name, and add the direct neighbours of the specification in the specification graph (`node scripts/executor.js build-spec-graph --json --out`, reading only the part needed). Read only the matching sections; stop when a round adds no new specification. Archives, history tables and retrospectives are history and never part of the set.
+   - **Comparison set:** list the names the changed sections introduce or use — headings, code-quoted tokens, invariant identifiers, file paths, command names. Search the specification text of every registered workspace for each name with `node scripts/executor.js memory-query "{name}"`, which ranks the sections that hold the name and cites each; read a cited section before relying on it, and when the query prints that the index is unavailable, search the text directly. Add the direct neighbours of the specification in the specification graph (`node scripts/executor.js build-spec-graph --json --out`, reading only the part needed). Read only the matching sections; stop when a round adds no new specification. Archives, history tables and retrospectives are history and never part of the set.
    - **Finding classes (closed set):** a *contradiction* (two statements in force cannot both hold), a *duplicate definition* (the same mechanic defined in two places), or an *interaction gap* (a consumer with no producer, a producer with no consumer, a mismatched shape, order or name). A finding cites the exact text of both sides with file and section; a suspicion that cannot be quoted on both sides is dropped.
    - **Resolution before promotion:** a contradiction or an interaction gap blocks promotion until it is resolved in the same invocation — amend the other specification (with its own version bump and history row — the default when the request states the changed behaviour), revise the new one, or, when neither text settles which statement wins, decide by the Consequence Forecast and record the premise as an `Assumption (forecast)` in the specification that yields. A duplicate definition is resolved by replacing one copy with a link and needs no decision.
    - **Declared supersession:** a contradiction that the specification's `Implementation Notes` declare — naming each specification and section the change supersedes and what changes there — is reported as `superseded` and does not block; it is resolved when the change is deployed.
@@ -303,6 +303,7 @@ related_rules: [C13, C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.4.7 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 54; the mirror follows the deployed card word for word). Spec-critic: the Comparison set bullet of step 1 names `memory-query "{name}"` first, cites each result, reads a cited section before relying on it and falls back to a direct text search when the query prints that the index is unavailable; the graph's neighbours stay in the set and archives stay out. |
 | 1.4.6 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 53; the mirror follows the deployed card word for word). Prompt-engineer: the Input Pass gains the trigger `goal.md`, thirteen shipped bodies in all, and item 5 says the intake gate's comprehension check is performed in this stance in `goal` as well, which starts with it (IP-6). |
 | 1.4.5 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 52; the mirror follows the deployed card word for word). Prompt-engineer: the Input Pass gains the trigger `simulate.md`, twelve shipped bodies in all. |
 | 1.4.4 | 2026-11-11 | Clarification patch, Stable retained (as built in Phase 51; the mirror follows the deployed card word for word). Prompt-engineer: item 1 of the Input Pass names text entered in an argument form among the prose covered, and the card gains the `fix.md` trigger (eleven shipped bodies). |

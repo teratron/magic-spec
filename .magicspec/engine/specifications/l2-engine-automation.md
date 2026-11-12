@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.30.1
+**Version:** 1.31.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -17,6 +17,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 
 - **executor.js**: Cross-platform wrapper for the engine's scripts. Answers `--help` and refuses an unknown command, option or argument from the command table before it starts anything (§Command Line Contract), resolves the project root and the workspace, and runs the script from the root (§Project Location). Requires Node.js 18 or newer and says so otherwise.
 - **lib/commands.js**: The command table: every command the executor runs, the options each reads, and the help it prints.
+- **memory-index.js**, **memory-query.js** with **lib/memory-sections.js**, **lib/memory-fallback.js**, **lib/memory-sqlite.js**, **lib/memory-embed.js** and **lib/memory-refresh.js**: the artifact index and its ranked query ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)); both commands are reading commands that write only the cache, and `export-wiki` runs the indexer as its last step.
 - **lib/file-lock.js**: An exclusive lock file for a read-modify-write (`update-state` takes it around its STATE.md write).
 - **resolve-workspace.js** with **lib/workspace-routing.js**: Computes the workspace a command acts on — argument, environment, sole workspace, location, topic, work in flight, default, coverage — writes nothing and prints `Workspace:`, `Signal:` and the `Narration:` line (`l1-workspace-intent-routing.md` §5.1).
 - **lib/in-flight.js**: The one predicate for "a task is `In Progress`", read by `resume-state` and by `resolve-workspace`.
@@ -52,7 +53,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 
 **Required**:
 
-1. **One command table** (`lib/commands.js`). Every command the executor runs has an entry: summary, options with their kind (`bool`, `value` — `--x v` or `--x=v`, `eq` — `--x=v` only, `space` — `--x v` only, `optSpace` — an optional value), positional arguments, `provisions` (§Zero-Prompt Resolution) and `ownHelp` (the script prints its own help: `release-changelog`). Libraries (`utils`, `graph-cache`) are not commands.
+1. **One command table** (`lib/commands.js`). Every command the executor runs has an entry: summary, options with their kind (`bool`, `value` — `--x v` or `--x=v`, `eq` — `--x=v` only, `space` — `--x v` only, `optSpace` — an optional value), positional arguments, `provisions` (§Zero-Prompt Resolution), `usesSqlite` (the script loads the runtime's experimental SQLite module, so the executor starts it with `--disable-warning=ExperimentalWarning` when the runtime lists that flag, through `runtimeFlags`) and `ownHelp` (the script prints its own help: `release-changelog`). Libraries (`utils`, `graph-cache`) are not commands.
 2. **The executor answers first.** `executor.js` with no command prints the list; an unknown command is `HALT: Unknown command '<name>'` with the list and exit 1 (no shell fallback is reached); `<command> --help` or `-h` prints the command's help and exits 0, before the project is looked at; the options after the command are checked against the entry (an unknown option, a missing value, a value on a switch, a stray argument) and refused with exit 1 before the project is opened. `--workspace` and `--root` belong to the executor and are accepted for every command.
 3. **A script started by hand answers the same.** Each runnable script calls `guardArgv(name, module)` as its first statement; it does nothing when the script is loaded by another module, so a test or a library caller never meets the host's argv.
 4. **The maintenance scripts** that write (`sync-docs`, `sync-manifests`, `sync-engine-snapshot`, `update-project-meta`, `generate-checksums`, `validate-hardlinks`, `benchmark`) call `guardCli(name, module)` of `scripts/cli-guard.js`, whose table uses the same grammar and the same validator (`lib/commands.js`); an unknown option exits 2. `scripts/release.js` parses its own arguments (§Release in [l2-release-pipeline.md](l2-release-pipeline.md)). `token-audit` reads transcripts only and imports nothing from the engine by design, and `archive-composition` already refuses an unknown mode.
@@ -321,7 +322,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | Project-meta state (engine repository only) | `.cache/project-meta-state.json` | `scripts/update-project-meta.js` | the next metadata sync | one file |
 | Documentation-sync state (engine repository only) | `.cache/docs-state.json` | `scripts/sync-docs.js` | the next documentation sync | one file; the earlier `.docs-state.json` in a `.cache/` at the project root is read once, then retired, and its folder goes only when empty |
 | State lock | `.cache/state-{workspace}.lock` | `lib/file-lock.js`, taken by `update-state` | not kept | removed after use; a lock left by a killed process is taken over after 30 seconds |
-| Memory index | `.cache/memory.sqlite` or `.cache/memory.json` | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
+| Memory index | `.cache/memory.sqlite` or `.cache/memory.json` (and `.cache/memory.lock` while a command writes it) | `memory-index` ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)) | `memory-index --rebuild` | one file; rebuilt on a schema change |
 | Diagnostics sink | `.cache/diagnostics.jsonl` | `lib/diagnostics.js` | not rebuildable — recorded findings | drained by finalize, retention bound of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) |
 | Feedback notes | `.cache/feedback.json` | `lib/feedback.js` ([l1-agent-feedback.md](l1-agent-feedback.md)) | not rebuildable — recorded notes | the limits of [l2-engine-diagnostics.md](l2-engine-diagnostics.md) §4.11 (EF-5) |
 | Migration backups | `magicspec-migration-backup-{date}/` (project root) | `migrate` | not rebuildable — the person's safety copy | never removed by the engine |
@@ -344,7 +345,7 @@ The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodi
 | `finalize.js` | after the folder is resolved, before any write | writes the workspace's state, changelog and archives |
 | `archive-phases.js`, `generate-context.js` | before any write | write into the workspace folder |
 | `create-workspace.js`, `init.js`, the executor's provisioning | creators: they register first | the folder they make is the one they register |
-| `check-prerequisites`, `check-bloat`, `analyze-coverage`, `extract-rationale`, `resume-state`, `resolve-workspace`, `lib/diagnostics`, `build-spec-graph`, `export-wiki` | none: they write only at the state folder's level (`graph/`, `.cache/`, an `--out` the caller names) | never into a workspace folder |
+| `check-prerequisites`, `check-bloat`, `analyze-coverage`, `extract-rationale`, `resume-state`, `resolve-workspace`, `memory-query` (it reads the folder the executor forwards to filter by workspace), `lib/diagnostics`, `build-spec-graph`, `export-wiki` | none: they write only at the state folder's level (`graph/`, `.cache/`, an `--out` the caller names) | never into a workspace folder |
 | `migrate.js` | none: moves the whole state folder | not a workspace write |
 
 A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a new reader or writer fails the suite until it is placed in this table's rows.
@@ -389,6 +390,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.31.0 | 2026-11-12 | Agent | As built in Phase 54, Stable retained: the Components list gains the artifact index scripts and libraries; the command table gains `memory-index` and `memory-query` and the entry field `usesSqlite` with `runtimeFlags` (the executor passes the warning-silencing flag only to such a command, and only when the runtime lists it); the cache row of the memory index names its lock; `memory-query` joins the commands that read `MAGIC_DESIGN_DIR` and write only at the state folder's level. |
 | 1.30.1 | 2026-11-12 | Agent | As built in Phase 52, Stable retained: the Components list gains `lib/simulation-findings.js`, the shared reader of the open simulation findings. |
 | 1.30.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained: the Components list gains `feedback.js` with its libraries, and the cache inventory row of the feedback notes names its file (`.cache/feedback.json`, owner `lib/feedback.js`, not rebuildable, bounded by the limits of `l2-engine-diagnostics.md` §4.11). The command table gains the entry `feedback` (positional action and identifier, twelve options, `--new`), and `finalize --workflow` accepts `fix`. |
 | 1.29.0 | 2026-11-11 | Agent | **As built (Phase 48), Stable retained — no requirement added.** Components name `resolve-workspace` (with `lib/workspace-routing.js`), `lib/in-flight.js` and `clean-cache`. The cache inventory is completed as built: the wiki prune also removes the `*.md.tmp` of an interrupted write; the documentation-sync state (moved into the state folder, the earlier root-level file read once and retired) and the state lock (removed after use, taken over after 30 seconds) have rows; rule 2 names the rows `clean-cache` removes. New §Registered Folders Only records the one check every writer applies (WI-14) and the audit of which scripts apply it. The measured extraction cache (226 entries for 53 files before, 53 after) and the behaviour of `clean-cache` are recorded. |

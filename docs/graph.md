@@ -43,7 +43,7 @@ Reports:
 
 An extraction cache keyed on file content makes repeat runs cheap; unchanged specs are not re-parsed, and the entries of files that changed or disappeared are removed after each build.
 
-To clear every cache the engine can rebuild — that extraction cache, the wiki, the page and the query snapshot of the graph, and the state files of `finalize` and, in the engine's own repository, of the project-metadata and documentation syncs — run:
+To clear every cache the engine can rebuild — that extraction cache, the wiki, the page and the query snapshot of the graph, the artifact index of section 6, and the state files of `finalize` and, in the engine's own repository, of the project-metadata and documentation syncs — run:
 
 ```bash
 node skills/magicspec/scripts/executor.js clean-cache --dry-run   # list each path with its size; remove nothing
@@ -75,9 +75,64 @@ node skills/magicspec/scripts/executor.js export-wiki
 
 Generates `.magicspec/graph/wiki/` — a per-spec article set with an index, linked in the style of a wiki. Agents navigating the wiki obtain layer, status, version, and references at a fraction of the token cost of reading raw specification files.
 
-The wiki is a derivative artifact: any specification, plan, or rules change invalidates it. Re-export after writing to `.magicspec/`. An audit reports `WIKI_STALE` when the index is older than its sources.
+The wiki is a derivative artifact: any specification, plan, or rules change invalidates it. Re-export after writing to `.magicspec/`. An audit reports `WIKI_STALE` when the index is older than its sources. Each export also refreshes the artifact index of section 6 as its last step.
 
-## 6. Visualization
+## 6. Artifact Index
+
+The graph answers questions about structure. Questions about content — *which specification already defines the retry rule*, *has a decision about the lock been recorded* — are answered by searching the text, and the text is large. `memory-query` searches it for you: it finds the sections of your specifications, rules, plan, tasks and decisions that bear on a question, ranked, each with its file and heading.
+
+```bash
+node skills/magicspec/scripts/executor.js memory-query "retry rule"
+node skills/magicspec/scripts/executor.js memory-query "check-prerequisites" --kind=spec,rules --k=5
+node skills/magicspec/scripts/executor.js memory-query "retry rule" --history --json
+node skills/magicspec/scripts/executor.js memory-index              # build or refresh the index
+node skills/magicspec/scripts/executor.js memory-index --rebuild    # delete it and build from nothing
+```
+
+```plaintext
+modes: lexical
+ 1. 12.4  .magicspec/ws/specifications/l1-x.md › ## 3. Core Invariants › X-4   (spec, Stable v1.2.0)
+      … a failed call is retried three times with a pause …
+```
+
+| Option | Effect |
+| --- | --- |
+| `--kind=spec,rules` | Keep only these kinds: `spec`, `rules`, `plan`, `tasks`, `state`, `registry`, and the history kinds `archive`, `history`, `retrospective`, `changelog` |
+| `--k=10` | Most results to print, 1 to 50 |
+| `--history` | Include archives, history tables, retrospectives and changelogs, which are left out otherwise |
+| `--json` | The same results as data |
+| `--workspace={name}` | Only that workspace's sections |
+
+How to read it:
+
+- **A result is a citation, never an answer.** It names the section, its kind (and status and version for a specification), a score and a snippet. Open the cited section and read it before relying on it: the index finds, the text decides.
+- **It reads the state folder only** — the Markdown of `.magicspec/` — not your product's code, and not what the engine derives from it (the graph folder, the caches, the generated context).
+- **It is always current.** A file whose content changed is re-indexed before a query answers, so no result comes from a stale section; unchanged files are not read again. `export-wiki` refreshes the index after the wiki, so one refresh keeps graph, wiki and index current.
+- **It is disposable.** The index lives in `.magicspec/.cache/` (`memory.sqlite`, or `memory.json` where the runtime has no SQLite module) and is rebuilt from your files at any time; `clean-cache` removes it and nothing is lost.
+- **It is never in the way.** If the index cannot be built or opened, the command still exits 0, records a warning for the next `finalize` digest and prints one line telling you to search the text directly.
+
+### Semantic search (optional)
+
+Out of the box the ranking is lexical: it works on every installation and sends nothing anywhere. To add search by meaning, configure an embeddings provider in `.magicspec/workspace.json`:
+
+```json
+{
+  "memory": {
+    "embeddings": {
+      "url": "https://example.com/v1/embeddings",
+      "model": "your-model",
+      "dimensions": 768,
+      "apiKeyEnv": "EMBEDDINGS_API_KEY"
+    }
+  }
+}
+```
+
+The provider must answer the widely implemented request: a JSON body with `model` and `input` (a list of texts), returning `{"data": [{"embedding": [...]}]}`. `apiKeyEnv` is optional and names an environment variable that holds a bearer key; the key itself is never written to a project file.
+
+**What is sent, and when.** Nothing leaves the machine until you configure this. `memory-index` sends, for each section that has no vector yet, its heading path and its text (cut at 6000 characters), in requests of 32 sections, and prints one line with the host and the number of sections sent; a section is sent again only when its text changes, and every section is sent again when you change the model or its dimensions. A query sends its own text, once. Results then combine the lexical and the vector ranking, and the first line reads `modes: lexical + vector`. If the provider fails, the lexical results are returned as before and a warning is recorded.
+
+## 7. Visualization
 
 Generated only on an explicit visualization trigger — never automatically.
 
@@ -87,7 +142,7 @@ node skills/magicspec/scripts/executor.js build-spec-graph --html
 
 Output: `.magicspec/graph/graph.html`, a self-contained interactive view with community coloring, a node inspector, and search. Open it in a browser.
 
-## 7. Advisory Signal
+## 8. Advisory Signal
 
 | Signal | Condition |
 | --- | --- |
@@ -95,7 +150,7 @@ Output: `.magicspec/graph/graph.html`, a self-contained interactive view with co
 | 🟡 | 1–3 orphaned files, or 1–2 missing `Implements`, or any community at Jaccard 0.3–0.5 |
 | 🔴 | A god node without a spec, any bridge spec, a community below Jaccard 0.3, or an oversized community with a split suggestion |
 
-## 8. Relationship to Other Workflows
+## 9. Relationship to Other Workflows
 
 | Workflow | Relationship |
 | --- | --- |

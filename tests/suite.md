@@ -1,6 +1,6 @@
 # Workflow Test Suite
 
-**Version:** 1.9.101
+**Version:** 1.9.102
 **Purpose:** Regression testing for Magic SDD engine workflows.
 **Trigger:** `/magicspec-dev:test test`
 
@@ -5241,3 +5241,80 @@ If any test fails, document the failure reason and propose a fix.
 - **Control:** `/magicspec goal phase-3 5 tasks` stops at the end of the phase or after five tasks, whichever comes first; a task that ends `Blocked [!]` does not count toward the five.
 - **Guards tested:** GM-9 (item 3); GM-6 (condition 5).
 - **Regression for:** none yet — new with the goal command.
+
+### T336 — A Review's Comparison Set Comes from the Index, and from a Text Search When the Index Is Unavailable
+
+- **Workflow:** `roles/spec-critic.md` (step 1, Comparison set), `roles/planner.md` (step 6, Plan check) and `analyze.md` (Mode C, step 7a) with `scripts/memory-query.js`
+- **Synthetic State:** a specification amended to rename a term that two other specifications and one plan phase use; a built artifact index; an archived phase that mentions the old term.
+- **Action:** the Post-Update Review of the amendment; then the same review with both index files replaced by folders, so that `memory-query` prints its unavailable line.
+- **Expected:**
+  - [ ] The review lists the names the changed sections introduce or use and runs `memory-query "{name}"` for each; it reads each cited section before it relies on the result, and adds the specification graph's neighbours.
+  - [ ] The two specifications that use the old term are found and compared; the archived phase is not part of the set.
+  - [ ] With the unavailable line the review searches the specification text of every registered workspace directly, finds the same sections and reports the same findings with the same `[Coherence] {N} artifacts compared — {k} findings` line; the unavailable index is not a finding of the review and stops nothing.
+- **Control:** the plan check of the planner passes `--history` to reach what archived phases delivered; the specification check and the audit never do.
+- **Guards tested:** AM-3; AM-8; the comparison set of the coherence check (CH-1) and its result line (CH-6).
+- **Regression for:** none yet — new with the artifact index.
+
+### T337 — A Cited Section Is Read Before It Is Relied On, and the Product's Code Stays a Text Search
+
+- **Workflow:** `spec.md` (Step 0.5, item 1, Investigate first) and `fix.md` (step 5, Sibling sites) with `scripts/memory-query.js`
+- **Synthetic State:** an idea about retrying failed calls, and a specification that already defines a retry rule with one exception the snippet of a result does not show; a defect in a guard whose rule two specifications state and whose pattern four source files share.
+- **Action:** `/magicspec spec "{the retry idea}"`; `/magicspec fix "{the guard defect}"`.
+- **Expected:**
+  - [ ] The intake runs `memory-query` on the topic, opens the cited section of the specification and finds the exception before it concludes that the rule exists or asks anything; no question is asked about what the repository answers (IK-2).
+  - [ ] `fix` finds the two specifications that state the guard through `memory-query`, reads the cited sections, and searches the four source files as text, because the index covers the state folder only; the report counts the sites fixed and recorded.
+- **Control:** a result whose snippet says what the agent expected, but whose section was not opened, is not relied on: the run opens it first.
+- **Guards tested:** AM-3; IK-2; the sibling-site search of the fix command (FX-6).
+- **Regression for:** none yet — new with the artifact index.
+
+### T338 — A Changed File Is Re-indexed Before the Answer
+
+- **Workflow:** `scripts/memory-query.js`, `scripts/memory-index.js` and `scripts/export-wiki.js`
+- **Synthetic State:** a built index; afterwards a specification gains the word `zebra`, a new specification is added and another is deleted.
+- **Action:** `memory-query "zebra"` with no `memory-index` run before it; then another edit followed by `export-wiki`, then `memory-index`.
+- **Expected:**
+  - [ ] The query answers from the edited text and the new specification, and no result comes from the deleted one.
+  - [ ] After the edit and `export-wiki`, `memory-index` reports `0 indexed`: the export left the index current.
+  - [ ] A run with nothing changed reads no file's text (`0 indexed`, every file `unchanged`).
+- **Control:** `export-wiki --out {folder}` and `export-wiki --from-file {graph.json}` leave the index as it was.
+- **Guards tested:** AM-5; AM-1 (the index is rebuilt from the files).
+- **Regression for:** none yet — new with the artifact index.
+
+### T339 — History Stays Out of the Results Unless Asked For
+
+- **Workflow:** `scripts/memory-query.js` (`--history`, `--kind`)
+- **Synthetic State:** a word that occurs only in an archived phase, a changelog entry and a retrospective; a second word that occurs in a plan phase and in the changelog.
+- **Action:** `memory-query` for each word with no option, with `--history`, and with `--kind=changelog`.
+- **Expected:**
+  - [ ] With no option the first word returns nothing and the second returns only the plan phase.
+  - [ ] With `--history` the archive, changelog and retrospective sections are returned, each labelled with its kind.
+  - [ ] `--kind=changelog` returns the changelog section without `--history`: a named kind is what was asked for.
+- **Control:** the comparison set of a review (T336) never contains a history section.
+- **Guards tested:** AM-6.
+- **Regression for:** none yet — new with the artifact index.
+
+### T340 — With No Provider Nothing Leaves the Machine, and the Query Says It Ran Lexically
+
+- **Workflow:** `scripts/memory-index.js`, `scripts/memory-query.js` and `lib/memory-embed.js`
+- **Synthetic State:** a project with no `memory.embeddings` in `workspace.json`; then the same project with a provider configured and a key named by `apiKeyEnv`.
+- **Action:** `memory-index` and `memory-query "retry rule"` in each state.
+- **Expected:**
+  - [ ] With no provider, no network call is made, `memory-index` prints no `Sent` line and the first line of the query is `modes: lexical`.
+  - [ ] With a provider, `memory-index` sends the sections that have no vector yet and prints exactly one line with the host and the count; a second run sends nothing; the query's first line is `modes: lexical + vector`.
+  - [ ] When the provider answers an error, the query returns the lexical results as before, a warning `MEMORY_EMBEDDINGS_FAILED` is recorded and the index is not reported unavailable.
+- **Control:** changing the model or the dimensions sends every section again; the key never appears in a project file or in any output.
+- **Guards tested:** AM-4; AM-7; AM-8.
+- **Regression for:** none yet — new with the artifact index.
+
+### T341 — An Index That Cannot Be Built Leaves the Workflow on Text Search with One Diagnostic
+
+- **Workflow:** `scripts/memory-index.js`, `scripts/memory-query.js` and `scripts/export-wiki.js` with `finalize.js`
+- **Synthetic State:** both index files are folders, so neither backend can open its file; a separate case with the indexer crashing when `export-wiki` runs it.
+- **Action:** `memory-query "retry"` during a review, `memory-index`, then `finalize`; `export-wiki` with the crashing indexer.
+- **Expected:**
+  - [ ] Both commands exit 0, print one line saying the index is unavailable and telling the reader to search the text directly, and record the warning `MEMORY_INDEX_UNAVAILABLE`; the review goes on by text search.
+  - [ ] The finalize digest shows the finding once, with its remedy; the workflow it follows is not marked failed.
+  - [ ] With the crashing indexer `export-wiki` leaves the wiki written, exits 0 and prints `[Index-Refresh]` with the same advice.
+- **Control:** once the folders are removed, the next run builds the index and the finding is not recorded again.
+- **Guards tested:** AM-8; AM-1.
+- **Regression for:** none yet — new with the artifact index.

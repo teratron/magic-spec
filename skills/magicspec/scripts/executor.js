@@ -327,7 +327,7 @@ if (absent.length > 0) {
 
 if (fs.existsSync(jsPath)) {
     command = 'node';
-    cmdArgs = [jsPath, ...args];
+    cmdArgs = [...commands.runtimeFlags(commandEntry), jsPath, ...args];
 } else {
     const scriptPath = shellPath;
     if (isWindows) {
