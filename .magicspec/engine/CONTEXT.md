@@ -39,6 +39,7 @@
 │   ├── development.md
 │   ├── distribution.md
 │   ├── fix.md
+│   ├── goal.md
 │   ├── graph.md
 │   ├── init.md
 │   ├── migration.md

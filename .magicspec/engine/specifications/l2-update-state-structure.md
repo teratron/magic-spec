@@ -1,6 +1,6 @@
 # update-state.js — Structure Defects (Locating, Grouping, Creating)
 
-**Version:** 1.2.1
+**Version:** 1.2.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -183,7 +183,7 @@ Verified by direct reproduction against engine 2.1.100, the version the report n
 **Required fix**: one locator and one create-if-absent step, shared by both call sites.
 
 - `locateSection(content, marker)` matches the heading **at the start of a line** (`^## Recent Decisions\b`, multiline) and returns the section's bounds: from the heading up to the line break that precedes the next level-2 heading, or the end of the file. A word boundary — not end-of-line — follows the marker, so a hand-suffixed heading (`## Recent Decisions (last 5)`) is still the section (rebuilt to the canonical heading, as before), while text that merely mentions the heading is not one.
-- `ensureSection(content, marker, statePath)` returns the located section, or first **creates** it: a heading-only section placed before the earliest present section that follows it in the template's order (`## Current Position`, `## Progress`, `## Recent Decisions`, `## Blockers`, `## Blocking Constraints`, `## Session Continuity`), else at the end of the file, with exactly one blank line on each side. The existing deterministic rebuild (§8.3) then fills it exactly as it fills a section that was always there. The `if (secStart !== -1)` guard is gone: an absent section can no longer skip the write.
+- `ensureSection(content, marker, statePath)` returns the located section, or first **creates** it: a heading-only section placed before the earliest present section that follows it in the template's order (`## Current Position`, `## Goal`, `## Progress`, `## Recent Decisions`, `## Blockers`, `## Blocking Constraints`, `## Session Continuity`), else at the end of the file, with exactly one blank line on each side. The existing deterministic rebuild (§8.3) then fills it exactly as it fills a section that was always there. The `if (secStart !== -1)` guard is gone: an absent section can no longer skip the write.
 - Creation is announced, not silent: a stderr notice and one `fix`-severity `STATE_SECTION_CREATED` diagnostic (DG-1), so the finalize digest lists it. It happens once — the next call finds the section and reports nothing.
 
 ```plaintext
@@ -295,6 +295,7 @@ None open. The register's one closure record for this file's defects is kept:
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.2.2 | 2026-11-12 | Agent | As built in Phase 53, Stable retained, no requirement changed. §Create: the template's order of sections gains `## Goal` between `## Current Position` and `## Progress`; the section is written only by the goal option of the writer ([l1-goal-mode.md](l1-goal-mode.md) §6 item 6), is not repaired when absent, and no other writer touches it. |
 | 1.2.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.2.0 | 2026-10-29 | Agent | New **§19 — The Concurrent-Writer Defect**, the register's twenty-first defect: parallel `update-state` calls lost updates silently (four writers, two entries kept); the read-modify-write now runs under an exclusive lock file. Found by a simulation pass; implemented together with this entry. |
 | 1.1.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

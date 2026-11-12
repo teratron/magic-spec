@@ -1,6 +1,6 @@
 # Session Checkpoint Contract
 
-**Version:** 1.1.5
+**Version:** 1.1.6
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -113,7 +113,8 @@ for each workspace in scope (the resolved workspace, or every registered one und
     flight  = tracking entries with Status == In Progress in the live phase
               workbooks (tasks/; archived phases hold no open work), or in
               TASKS.md for the legacy flat layout - read through the SH-1 strip
-    if flight is empty: skip this workspace                          # silence
+    goal    = the ## Goal block of STATE.md (lib/goal-block.js), when it names a goal
+    if flight is empty and no goal is recorded: skip this workspace                          # silence
     changed = read-only change listing (git diff --name-only HEAD + untracked),
               excluding .magicspec/ (the bookkeeping this line already reports);
               null when the directory is not a repository
@@ -126,7 +127,7 @@ Output is nothing when no workspace has work in flight; otherwise one line per w
 ▶ Resume [{workspace}]: {T-ID} {title} in flight — {k} dead end(s) recorded, {m} file(s) modified. Next: {next action}
 ```
 
-Variants: several in-flight tasks name at most three, then `+{n} more`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magicspec <command>` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
+A recorded goal (GM-3) adds `; goal {scope} — {met} met, {open} open, {blocked} blocked[, {k} consent(s) queued]` to the line, and with no task in flight the line is `▶ Resume [{workspace}]: goal {scope} — … Next: /magicspec goal`; the scope is spelled as the commands spell it (`"{statement}"`, `phase-3`, `5 tasks`). Variants: several in-flight tasks name at most three, then `+{n} more`; the file count is omitted when `changed` is null. `--json` returns `{ "in_flight": bool, "workspaces": [{ "workspace", "source": "in-progress", "tasks": [{ "id", "title", "attempts" }], "changed_files": n | null, "next_action" }] }` `[REFERENCE]`. The exit code is always 0. **Scope (C15):** a caller that has resolved a workspace — every `/magicspec <command>` context load — passes `--workspace`, and the script reads that workspace only; only the session-start rule (§5.4), which runs before any workspace is resolved, passes `--all`. The scope flag is explicit because of what the executor does with `--workspace`: it consumes the flag itself, hands the resolved workspace on as `MAGIC_DESIGN_DIR`, and substitutes the registry default when the flag is absent — so the script cannot tell "omitted" from "defaulted" and could not treat the absence of `--workspace` as "every workspace". Without either flag the script reads the workspace the executor resolved; under direct invocation an explicit `--workspace` wins over `--all`.
 
 Call sites, each replacing prose that decides the same question independently:
 
@@ -243,6 +244,7 @@ Order: row 1, then row 2 with H1–H7, then rows 3–9 in one C14 pass, then row
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.6 | 2026-11-12 | Agent | As built in Phase 53, Stable retained (the requirement moved with the goal mode specification that declared it, CH-9, and this record follows). §5.3: `resume-state` also reads the goal block and reports a recorded goal in the one line, a goal alone included, with `/magicspec goal` as its next step; silence needs no task in flight and no recorded goal; `--json` gains a `goal` object only for a workspace that records one, and `in_flight` still means a task in flight. |
 | 1.1.5 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.4 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.3 | 2026-10-28 | Agent | Reality sync for the maintenance layout: the maintenance folders (`scripts/`, `tests/`, `skills/magicspec-dev/`) and the `/magicspec-dev:` command names follow the move out of `dev/` and the dotted names. No requirement changed. |

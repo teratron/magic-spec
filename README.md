@@ -195,6 +195,7 @@ Every command is typed as `/magicspec <command> [argument]` (`$magicspec <comman
 | `/magicspec run` | Execute tasks from the plan | optional: a workspace, a task ID or a phase |
 | `/magicspec fix` | Triage and repair a reported defect, leaving a check that fails without the repair | the defect (asked for when missing) |
 | `/magicspec simulate` | Run the product's user scenarios, live or traced, and hand each failed step to `fix` | optional: an area, a feature or `--live-only` |
+| `/magicspec goal` | Work toward a goal without pausing between steps; consent is queued and asked when the mode stops | a goal in words, `phase-N` or `N tasks` (a recorded goal continues) |
 | `/magicspec rule` | Add or amend project conventions | the rule text (asked for when missing) |
 | `/magicspec analyze` (alias `audit`) | Audit project health and detect drift | optional: a workspace or a focus |
 | `/magicspec graph` | Build and analyze the specification knowledge graph | optional: `visualize` |

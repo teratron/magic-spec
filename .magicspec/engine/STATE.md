@@ -4,32 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-12 07:39
-**Phase:** 53 — Goal Mode
+**Updated:** 2026-11-12 10:50
+**Phase:** 54 — Artifact Memory Index
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-53M01 The goal block in live memory
+- **Task:** T-53T01 Validation
 - **Spec:** l2-engine-finalization.md §9.2 (significance read-failure) · l1-sdd-reference-containment.md RC-8 (confirmed leak cleanup)
-- **Next Action:** T-53M02 The resume line reports a recorded goal
+- **Next Action:** Run /magicspec plan engine to revalidate the plan against amended rules
 
 ## Progress
 
 ```
-Phase 53: [0/13] ░░░░░░░░ 0%
-Overall: [51/52] ████████ 98%
+Overall: [52/52] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-12 **Decision:** Phase 53 complete. Provides: the goal command (a goal in words, a phase or a number of tasks pursued without pausing, each step its own body, six closed stop conditions, consent queued and asked after the one report), the goal block in live memory written only by update-state with its resume line and briefing line, the demand per step in the router and its parser, constitution 1.23.0, the rule kernel at 16021 bytes; engine 3.0.105, harness 386, suite 1.9.101
 - 2026-11-12 **Decision:** Phase 52 complete. Provides: the simulate command (scenarios run live or traced, every result labelled, findings kept in Last run and read by finalize and fix), the interface design (ui-ux-designer, design-system template, interface section, draft task, verification by looking), the simulator-tester and ui-ux-designer cards (sixteen), the planner's scenario list, constitution 1.22.0, the rule kernel at 15741 bytes; engine 3.0.94, harness 376, suite 1.9.99
 - 2026-11-11 **Decision:** Phase 51 complete. Provides: the fix command (triage by a closed rule, the repair as a task, a regression check seen to fail), the engine feedback channel (bounded notes, scrubbed drafts, submission only of a shown draft behind a yes, the work queue in the engine repository), the maintenance set with its fix, constitution 1.21.0; engine 3.0.79, harness 365, suite 1.9.98
 - 2026-11-11 **Decision:** Phase 50 complete. Provides: the specification check and the plan check (coherence by mechanic, both sides quoted, declared supersession), the Input Pass defined once in the prompt-engineer card and named by every body, constitution 1.20.0 (C24 row); engine 3.0.60, harness 350, suite 1.9.97
 - 2026-11-11 **Decision:** Phase 49 complete. Provides: plan as its own command and body, task stopping on a stale plan with findings handed back as a directive, one stage per invocation with the handoff line and its demand, the router's seven-column table with the audit alias, finalize and the pre-flight following the stages, constitution 1.19.0
-- 2026-11-11 **Decision:** Phase 48 complete. Provides: one routing chain for every command, registered folders only, cache retention and clean-cache, community health files, the release policy check; engine 3.0.33, harness 327
 
 ## Blockers
 

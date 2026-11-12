@@ -90,8 +90,12 @@ function parseHosts(list) {
     };
 }
 
-/** The reasoning demands a command row may declare: how much reasoning the stage that command runs needs. */
-const DEMANDS = Object.freeze(['deep', 'standard', 'light']);
+/**
+ * The reasoning demands a command row may declare: how much reasoning the stage that command runs
+ * needs. `per step` is the demand of a command that runs other commands (`goal`): each of its
+ * steps carries the demand of the command it runs.
+ */
+const DEMANDS = Object.freeze(['deep', 'standard', 'light', 'per step']);
 
 /**
  * Reads one row of the router's command table: command (with an optional alias), group, what it

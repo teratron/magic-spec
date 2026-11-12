@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.4.0
+**Version:** 1.4.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -301,6 +301,7 @@ Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assig
 | `STATE.md exceeds 100 lines ({n}) and ## Recent Decisions is already at its floor — nothing was pruned.` | `warning` | `STATE_CAP_EXHAUSTED` |
 | `Unknown argument: {arg}` | `warning` | `UNKNOWN_ARGUMENT` |
 | `STATE.md had no "{marker}" section; created it so the requested write could be recorded.` | `fix` | `STATE_SECTION_CREATED` |
+| `The goal block was not written: {reason}` | `error` | `STATE_GOAL_REFUSED` |
 | `STATE.md lacked the field line(s) {labels}; created so the requested update could be recorded.` | `fix` | `STATE_FIELD_CREATED` |
 | `STATE.md has a "## Progress" heading with no counter block under it that the recompute recognises; left it untouched.` | `warning` | `PROGRESS_BLOCK_UNRECOGNISED` |
 
@@ -389,6 +390,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.1 | 2026-11-12 | Agent | Inventory row only, no contract change (as built in Phase 53): §5.2 lists the finding `update-state.js` records when it refuses a goal block — a goal that fails the closed schema or the line bound, two goal flags together, a goal file that cannot be read. |
 | 1.4.0 | 2026-11-11 | Agent | As built in Phase 51, Stable retained (the concept specification declared that this specification gains the note record when it is built): §4.11 records the feedback note store — its file, its records and its limits — beside the findings sink, and says why the two are separate files. No requirement of the sink changed. |
 | 1.3.4 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.3.3 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

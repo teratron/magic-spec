@@ -32,6 +32,9 @@ const GOAL_KEYS = Object.freeze([
     'bound',
     'withoutProgress',
     'tasksDone',
+    'iterations',
+    'phasesDone',
+    'started',
     'criteria',
     'consents',
 ]);
@@ -90,6 +93,22 @@ function wholeNumber(value, label, min, fallback) {
 }
 
 /**
+ * Reads the moment the goal was started, which a bound of elapsed time is measured from.
+ *
+ * @param {unknown} value - A date or a date and time, or `undefined` for none.
+ * @returns {string|null}
+ * @throws {GoalError} When the value is present and is not a date.
+ */
+function readStarted(value) {
+    if (value === undefined || value === null) return null;
+    const text = oneLine(value, 'started');
+    if (text === '' || Number.isNaN(Date.parse(text))) {
+        throw new GoalError('started must be a date or a date and time.');
+    }
+    return text;
+}
+
+/**
  * Checks one list of `{a, b}` items and reduces each text to one line.
  *
  * @param {unknown} list - The field, or `undefined`.
@@ -116,7 +135,8 @@ function readList(list, label, read) {
  *
  * @param {unknown} input - The parsed JSON the caller passed.
  * @returns {{statement: string|null, phase: number|null, taskLimit: number|null,
- *   bound: string|null, withoutProgress: number, tasksDone: number,
+ *   bound: string|null, withoutProgress: number, tasksDone: number, iterations: number,
+ *   phasesDone: number, started: string|null,
  *   criteria: {state: string, text: string, check: string}[],
  *   consents: {action: string, reason: string}[]}}
  * @throws {GoalError} For any shape the section cannot hold.
@@ -167,6 +187,9 @@ function normalizeGoal(input) {
         bound,
         withoutProgress: wholeNumber(input.withoutProgress, 'withoutProgress', 0, 0),
         tasksDone: wholeNumber(input.tasksDone, 'tasksDone', 0, 0),
+        iterations: wholeNumber(input.iterations, 'iterations', 0, 0),
+        phasesDone: wholeNumber(input.phasesDone, 'phasesDone', 0, 0),
+        started: readStarted(input.started),
         criteria,
         consents,
     };
@@ -194,6 +217,9 @@ function renderGoalSection(goal) {
     if (goal.bound !== null) lines.push(`- **Bound:** ${goal.bound}`);
     lines.push(`- **Without progress:** ${goal.withoutProgress}`);
     lines.push(`- **Tasks done:** ${goal.tasksDone}`);
+    lines.push(`- **Iterations:** ${goal.iterations}`);
+    lines.push(`- **Phases done:** ${goal.phasesDone}`);
+    if (goal.started !== null) lines.push(`- **Started:** ${goal.started}`);
     for (const { state, text, check } of goal.criteria) {
         lines.push(`- [${state}] ${text}${check === '' ? '' : ` — ${check}`}`);
     }
@@ -242,6 +268,9 @@ function parseGoalSection(stateText) {
         bound: null,
         withoutProgress: 0,
         tasksDone: 0,
+        iterations: 0,
+        phasesDone: 0,
+        started: null,
         criteria: [],
         consents: [],
     };
@@ -258,6 +287,9 @@ function parseGoalSection(stateText) {
             else if (label === 'Bound') goal.bound = value.trim() || null;
             else if (label === 'Without progress') goal.withoutProgress = count(value);
             else if (label === 'Tasks done') goal.tasksDone = count(value);
+            else if (label === 'Iterations') goal.iterations = count(value);
+            else if (label === 'Phases done') goal.phasesDone = count(value);
+            else if (label === 'Started') goal.started = value.trim() || null;
             continue;
         }
         const asItem = item.exec(raw);

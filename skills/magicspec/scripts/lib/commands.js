@@ -227,7 +227,7 @@ const COMMANDS = {
             '--constraint-title': { kind: 'value', help: 'Add a blocking constraint: title' },
             '--constraint-desc': { kind: 'value', help: 'Add a blocking constraint: description' },
             '--bootstrap': { kind: 'value', help: 'true | false' },
-            '--goal-file': { kind: 'value', help: 'Record the goal block from this JSON file (replaces the block)' },
+            '--goal-file': { kind: 'value', help: 'Record the goal block from a JSON file' },
             '--goal-clear': { kind: 'bool', help: 'Remove the goal block' },
             '--auto-progress': { kind: 'bool', help: 'Recompute the progress block' },
         },

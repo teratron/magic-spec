@@ -145,4 +145,4 @@ After every task session, the engine verifies:
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-12 (v3.0.93).
+Synchronized with engine workflows on 2026-11-12 (v3.0.102).

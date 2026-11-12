@@ -54,6 +54,7 @@ graph TD
 | --- | --- | --- | --- |
 | **Fix** | `fix.md` | Takes a reported defect, reproduces it, classifies it against the specifications by a closed rule, repairs it and leaves a check that fails without the repair. | [Detailed Guide](fix.md) |
 | **Simulate** | `simulate.md` | Runs the product's user-interaction scenarios live where the product can be driven and traced where it cannot, labels every result and hands each failed step to `fix`. | [Detailed Guide](simulate.md) |
+| **Goal** | `goal.md` | Pursues a goal in words, a phase or a number of tasks through the pipeline without pausing between steps, queues what needs consent and stops on a closed list of conditions. | [Detailed Guide](goal.md) |
 | **Rule** | `rule.md` | Manages the project constitution (`RULES.md`). Add/Amend/Remove project conventions. | [Detailed Guide](rule.md) |
 | **Retrospective** | `retrospective.md` | Collects metrics and generates recommendations. Level 1 (Snapshot) vs Level 2 (Full). | [Detailed Guide](retrospective.md) |
 | **Analyze** | `analyze.md` | Audits project health (Ventilation); bootstraps specs from code; detects coverage gaps and drift. | [Detailed Guide](analyze.md) |

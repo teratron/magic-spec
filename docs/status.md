@@ -16,7 +16,7 @@ Key Goals:
 
 - **Position**: what was last done, which spec is active, what phase the plan is in.
 - **Obstruction**: blockers and blocking constraints surfaced before you resume, not after you hit them.
-- **Direction**: exactly one recommended next command, with the reason it was chosen — or, when the plan is complete and no work is waiting, a one-clause statement that nothing is pending and no command.
+- **Direction**: exactly one recommended next command — `/magicspec goal` first while a recorded goal still has a criterion that is not met — with the reason it was chosen — or, when the plan is complete and no work is waiting, a one-clause statement that nothing is pending and no command.
 - **Purity**: the command changes nothing — no writes, no version bump, no finalize.
 
 ## 2. Read-Only Guarantee
@@ -35,7 +35,7 @@ The briefing always renders in this fixed order. A section whose source is unrea
 | # | Section | Source |
 | ---: | --- | --- |
 | 1 | **Header** — workspace, status, phase, last updated | `STATE.md` |
-| 2 | **Position** — current or last task ID and title, active spec | `STATE.md` Current Position |
+| 2 | **Position** — current or last task ID and title, active spec; a recorded goal adds one line, `Goal: {scope} — {met} met, {open} open, {blocked} blocked` (or `done`), and nothing else is shown for it | `STATE.md` Current Position and `## Goal` |
 | 3 | **Progress** — phase and overall progress bars | `STATE.md` Progress |
 | 4 | **Blockers & Blocking Constraints** — both surfaced; constraints are mandatory reading | `STATE.md` |
 | 5 | **Recent Decisions** — last three entries | `STATE.md` |
@@ -55,7 +55,7 @@ One command, never a menu. If you disagree, you run something else — the overr
 | State | Behavior |
 | --- | --- |
 | **`STATE.md` missing** | Bootstrap briefing: registry summary from `INDEX.md` (spec counts and statuses) plus a recommendation to run planning, whose auto-init provisions the missing file. Status still creates nothing. |
-| **In-flight session** | A task recorded `In Progress` surfaces the resume line — the recorded next action and the dead ends already recorded against the task. |
+| **In-flight session** | A task recorded `In Progress`, a recorded goal, or both, surface the resume line — the recorded next action and the dead ends already recorded against the task, and the goal with its criteria counts. |
 | **Engine drift** | `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`. Informational; the briefing proceeds. |
 | **Multiple workspaces** | The resolved workspace is rendered in full, followed by a one-line footer listing the others with their statuses. |
 
@@ -78,4 +78,4 @@ With no argument the workspace resolves through the standard priority chain. Pas
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-12 (v3.0.93).
+Synchronized with engine workflows on 2026-11-12 (v3.0.102).

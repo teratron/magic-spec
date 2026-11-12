@@ -162,7 +162,7 @@ duration_minutes: 240
 - **Verify:** a residue search for `/magicspec:[a-z]` (plain and escaped spellings) over `skills/magicspec/`, `scripts/`, `tests/`, `docs/`, `README.md`, the templates and CI finds only the router's tolerance sentence, the migration's sweep patterns, history rows, changelogs and archives; script output (`finalize.js`, `check-prerequisites.js`, `check-bloat.js`, `archive-phases.js`, `migrate.js`) prints `/magicspec <command>`; every assertion that the old form is absent still asserts absence; `node --test tests/engine.js` passes; `update-engine-meta` has run.
 - **Handoff:** T-47T01.
 - **Notes:** one scripted pass with literal replacement (`split`/`join`, never a replacement string with `$` sequences); exemptions listed before the pass. The `/magicspec-dev:` maintenance names are out of scope.
-- **Changes:** colon spelling replaced by /magicspec <command> across skills/magicspec, scripts, tests, docs, README and CONTRIBUTING (822 replacements, literal pass); exemptions listed first; the four command-count regexes, the stale-wording detector, the docs sync (router row parser and slash line) and the router parser follow; new harness case holds the residue at zero and proves its detector; C14 run
+- **Changes:** colon spelling replaced by `/magicspec <command>` across skills/magicspec, scripts, tests, docs, README and CONTRIBUTING (822 replacements, literal pass); exemptions listed first; the four command-count regexes, the stale-wording detector, the docs sync (router row parser and slash line) and the router parser follow; new harness case holds the residue at zero and proves its detector; C14 run
 
 ### [T-47T01] Validation: harness, mutation lists, intake scenarios, C14
 

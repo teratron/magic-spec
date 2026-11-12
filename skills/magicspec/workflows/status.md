@@ -46,7 +46,7 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
 ### 2. Render Briefing (fixed order)
 
 1. **Header** — workspace, `Status`, `Phase`, `Updated` (from STATE.md).
-2. **Position** — current/last task ID and title, active spec (STATE.md Current Position).
+2. **Position** — current/last task ID and title, active spec (STATE.md Current Position). When `STATE.md` has a `## Goal` section that names a goal (the layout `templates/state.md` documents), one more line follows: `Goal: {scope} — {met} met, {open} open, {blocked} blocked`, with `, {k} consent(s) queued` appended when consents wait, or `Goal: {scope} — done` when every criterion is `met`. The scope is spelled as the commands spell it (`"{statement}"`, `phase-3`, `5 tasks`). The briefing shows what the block records and re-checks nothing; a section that names no goal adds no line.
 3. **Progress** — phase and overall progress bars, verbatim from STATE.md Progress.
 4. **Blockers & Blocking Constraints** — both sections surfaced; constraints are mandatory reading before resuming work.
 5. **Recent Decisions** — last 3 entries.
@@ -54,6 +54,7 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
    - Match → `Engine: {version} (in sync)`
    - Differ or unknown → `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`
 7. **Next** — exactly one recommended command, or the nothing-pending statement:
+   - A goal is recorded and not every criterion is `met` (a goal with no criteria yet counts as not met) → `/magicspec goal`, which continues it; this comes before every line below. A goal whose criteria are all `met` is done and is passed over.
    - STATE.md `Next Action` states that nothing is pending (it names no command) → render `Next: nothing pending — {the statement}` and recommend no command.
    - STATE.md `Next Action` present and names a command → recommend it verbatim.
    - STATE.md `Next Action` present, names no `/magicspec <command>` command and does not say nothing is pending (a note in the owner's words, for example a manual step to take first) → render `Next: {the text, verbatim}`, recommend no command of your own, and leave the note unrewritten.
@@ -63,7 +64,7 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
 ### 3. Degraded States
 
 - **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec plan {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
-- **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`. A missing or failing script adds no line.
+- **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`, a recorded goal, or both in one line. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.
 
@@ -76,6 +77,7 @@ Status Checklist
   ☐ Briefing rendered in fixed section order (Header → Next)
   ☐ Blocking Constraints surfaced (mandatory reading)
   ☐ Engine line rendered: in-sync or informational drift (no prompt, no auto-analyze)
+  ☐ A recorded goal shown as one `Goal:` line under Position, none when no goal is named; `/magicspec goal` recommended first while a criterion is not `met`
   ☐ Exactly one next command recommended as [DR] (DA-6)
   ☐ Degraded states handled (missing STATE.md → Bootstrap Briefing; in-flight → resume line)
 ```
@@ -84,5 +86,6 @@ Status Checklist
 
 Where this workflow may hand over, and when:
 
+- **Continue a goal** → `/magicspec goal`: Continue the recorded goal in a new session. Condition: `goal_open`.
 - **Continue execution** → `/magicspec run`: Resume the active phase from the recommended next task. Condition: `open_tasks`.
 - **Replan** → `/magicspec plan`: Plan or revalidate the implementation plan. Condition: `plan_gap_or_drift`.

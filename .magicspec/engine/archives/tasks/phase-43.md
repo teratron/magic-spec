@@ -194,7 +194,7 @@ duration_minutes: 240
 - **Verify:** the generator writes `.claude-plugin/plugin.json` with name `magicspec` and the skill's version, plus one skill per command whose text points at the router; a version mismatch between the manifest and `.version` fails the harness case of T-43T02.
 - **Handoff:** T-43T02.
 - **Notes:** the owner asked for this channel and keeps it in the plan. The verified documentation shows that S2 already gives the same `/magicspec:<command>` names, so the plugin adds marketplace distribution and updates, not new names; it is the last task of its track and ships behind its own flag in the archive. It writes files only under the plugin folder named by its argument.
-- **Changes:** scripts/build-plugin.js (build-plugin --out <dir>): plugin.json with the engine version, the engine folder copied in as the magicspec skill, one command skill each with disable-model-invocation, a marker file; refuses a folder that is not its own. Kept in the plan at the owner's request.
+- **Changes:** scripts/build-plugin.js (`build-plugin --out <dir>`): plugin.json with the engine version, the engine folder copied in as the magicspec skill, one command skill each with disable-model-invocation, a marker file; refuses a folder that is not its own. Kept in the plan at the owner's request.
 
 ### [T-43T01] Harness against the new scripts: a full run, every divergence resolved
 

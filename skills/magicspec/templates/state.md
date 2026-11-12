@@ -23,6 +23,9 @@
   - **Bound:** {a bound the goal states}
   - **Without progress:** {iterations in a row}
   - **Tasks done:** {n}
+  - **Iterations:** {n}
+  - **Phases done:** {n}
+  - **Started:** {date and time}
   - [open | met | blocked] {criterion} — {the check that verifies it}
   - [consent] {action} — {why it waits for consent}
 -->

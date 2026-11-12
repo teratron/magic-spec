@@ -7900,10 +7900,17 @@ describe('Magic Engine Scripts', () => {
         bound: 'give up after 5 rounds without progress',
         withoutProgress: 1,
         tasksDone: 2,
+        iterations: 4,
+        phasesDone: 1,
+        started: '2026-11-12 09:00',
         criteria: [
             { state: 'met', text: 'CSV import round-trips', check: 'scenario S-1 passes' },
             { state: 'open', text: 'JSON import round-trips', check: 'scenario S-2 passes' },
-            { state: 'blocked', text: 'XML import - namespaces', check: 'a decision on the parser' },
+            {
+                state: 'blocked',
+                text: 'XML import - namespaces',
+                check: 'a decision on the parser',
+            },
         ],
         consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
     };
@@ -7950,23 +7957,37 @@ describe('Magic Engine Scripts', () => {
                 '- **Bound:** give up after 5 rounds without progress',
                 '- **Without progress:** 1',
                 '- **Tasks done:** 2',
+                '- **Iterations:** 4',
+                '- **Phases done:** 1',
+                '- **Started:** 2026-11-12 09:00',
                 '- [met] CSV import round-trips — scenario S-1 passes',
                 '- [open] JSON import round-trips — scenario S-2 passes',
                 '- [blocked] XML import - namespaces — a decision on the parser',
                 '- [consent] delete the old importer — a destructive action',
             ]) {
-                assert.ok(section.includes(`${line}\n`) || section.endsWith(line), `the section holds: ${line}`);
+                assert.ok(
+                    section.includes(`${line}\n`) || section.endsWith(line),
+                    `the section holds: ${line}`,
+                );
             }
             assert.ok(
                 state.indexOf('## Current Position') < state.indexOf('## Goal') &&
-                state.indexOf('## Goal') < state.indexOf('## Progress'),
+                    state.indexOf('## Goal') < state.indexOf('## Progress'),
                 'the section sits between Current Position and Progress',
             );
 
             // Every other writer leaves the block byte for byte.
-            updateState(wsDir, { nextAction: 'Continue', task: 'T-1 something' }, { autoProgress: true });
+            updateState(
+                wsDir,
+                { nextAction: 'Continue', task: 'T-1 something' },
+                { autoProgress: true },
+            );
             updateState(wsDir, { decision: 'A decision' }, { addDecision: true });
-            updateState(wsDir, { constraint: { title: 'A constraint', desc: 'never' } }, { addConstraint: true });
+            updateState(
+                wsDir,
+                { constraint: { title: 'A constraint', desc: 'never' } },
+                { addConstraint: true },
+            );
             assert.strictEqual(
                 goalSectionOf(fs.readFileSync(statePath, 'utf8')),
                 section,
@@ -7978,10 +7999,18 @@ describe('Magic Engine Scripts', () => {
             assert.strictEqual(cleared.status, 0, cleared.stdout + cleared.stderr);
             const after = fs.readFileSync(statePath, 'utf8');
             assert.strictEqual(goalSectionOf(after), null, 'no goal section remains');
-            for (const heading of ['## Current Position', '## Progress', '## Recent Decisions', '## Blocking Constraints']) {
+            for (const heading of [
+                '## Current Position',
+                '## Progress',
+                '## Recent Decisions',
+                '## Blocking Constraints',
+            ]) {
                 assert.ok(after.includes(heading), `${heading} stays`);
             }
-            assert.ok(!/\n\n\n/.test(after.replace(/\r/g, '')), 'removing the section leaves no double blank line');
+            assert.ok(
+                !/\n\n\n/.test(after.replace(/\r/g, '')),
+                'removing the section leaves no double blank line',
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -7999,22 +8028,43 @@ describe('Magic Engine Scripts', () => {
             const cases = {
                 'over the bound': {
                     ...GOAL_FIXTURE,
-                    criteria: Array.from({ length: 30 }, (_, i) => ({ state: 'open', text: `criterion ${i}`, check: 'c' })),
+                    criteria: Array.from({ length: 30 }, (_, i) => ({
+                        state: 'open',
+                        text: `criterion ${i}`,
+                        check: 'c',
+                    })),
                 },
                 'an unknown field': { ...GOAL_FIXTURE, owner: 'someone' },
-                'a bad criterion state': { ...GOAL_FIXTURE, criteria: [{ state: 'done', text: 'x', check: 'y' }] },
+                'a bad criterion state': {
+                    ...GOAL_FIXTURE,
+                    criteria: [{ state: 'done', text: 'x', check: 'y' }],
+                },
                 'no statement, phase or limit': { bound: 'none' },
+                'a start that is not a date': { ...GOAL_FIXTURE, started: 'yesterday-ish' },
             };
             for (const [name, goal] of Object.entries(cases)) {
                 fs.writeFileSync(path.join(tempDir, 'goal.json'), JSON.stringify(goal));
-                const result = runGoalWriter(tempDir, wsDir, '--next-action=Changed', '--goal-file=goal.json');
+                const result = runGoalWriter(
+                    tempDir,
+                    wsDir,
+                    '--next-action=Changed',
+                    '--goal-file=goal.json',
+                );
                 assert.notStrictEqual(result.status, 0, `${name}: refused`);
                 assert.match(result.stderr, /HALT: .*goal/i, `${name}: the refusal names the goal`);
-                assert.strictEqual(fs.readFileSync(statePath, 'utf8'), before, `${name}: nothing was written, not even the other fields`);
+                assert.strictEqual(
+                    fs.readFileSync(statePath, 'utf8'),
+                    before,
+                    `${name}: nothing was written, not even the other fields`,
+                );
             }
             const { read } = requireFromFixture(tempDir, 'lib', 'diagnostics.js');
             const refused = read().filter((f) => f.code === 'STATE_GOAL_REFUSED');
-            assert.strictEqual(refused.length, Object.keys(cases).length, 'each refusal is recorded');
+            assert.strictEqual(
+                refused.length,
+                Object.keys(cases).length,
+                'each refusal is recorded',
+            );
             assert.ok(refused.every((f) => f.source === 'update-state' && f.severity === 'error'));
 
             // The two goal flags exclude each other, and an unreadable file is a refusal too.
@@ -8038,11 +8088,17 @@ describe('Magic Engine Scripts', () => {
             updateState(wsDir, { constraint: { title: 'C', desc: 'd' } }, { addConstraint: true });
             const state = fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8');
             assert.strictEqual(goalSectionOf(state), null, 'no goal section appears');
-            assert.ok(!/<!-- Written by update-state only/.test(state), 'the template comment of the section does not leak either');
+            assert.ok(
+                !/<!-- Written by update-state only/.test(state),
+                'the template comment of the section does not leak either',
+            );
             // Clearing a goal that was never recorded is a no-op and still succeeds.
             const cleared = runGoalWriter(tempDir, wsDir, '--goal-clear');
             assert.strictEqual(cleared.status, 0, cleared.stdout + cleared.stderr);
-            assert.strictEqual(goalSectionOf(fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8')), null);
+            assert.strictEqual(
+                goalSectionOf(fs.readFileSync(path.join(wsDir, 'STATE.md'), 'utf8')),
+                null,
+            );
         } finally {
             cleanup(tempDir);
         }
@@ -8051,17 +8107,31 @@ describe('Magic Engine Scripts', () => {
     test('the goal block renders and parses to the same object, a separator inside a text cannot split a line wrongly, and a file with no named goal reads as none (GM-3)', () => {
         const tempDir = createTempWorkspace();
         try {
-            const { normalizeGoal, renderGoalSection, parseGoalSection } = requireFromFixture(tempDir, 'lib', 'goal-block.js');
+            const { normalizeGoal, renderGoalSection, parseGoalSection } = requireFromFixture(
+                tempDir,
+                'lib',
+                'goal-block.js',
+            );
             const goal = normalizeGoal({
                 ...GOAL_FIXTURE,
                 criteria: [{ state: 'open', text: 'one — two', check: 'a — b' }],
             });
-            assert.strictEqual(goal.criteria[0].text, 'one - two', 'the separator inside a text is replaced');
-            assert.deepStrictEqual(parseGoalSection(`# State\n\n${renderGoalSection(goal)}\n## Progress\n`), goal);
+            assert.strictEqual(
+                goal.criteria[0].text,
+                'one - two',
+                'the separator inside a text is replaced',
+            );
+            assert.deepStrictEqual(
+                parseGoalSection(`# State\n\n${renderGoalSection(goal)}\n## Progress\n`),
+                goal,
+            );
             // Phase and count forms record without a statement.
             const phaseOnly = normalizeGoal({ phase: 4 });
             assert.deepStrictEqual(parseGoalSection(renderGoalSection(phaseOnly)), phaseOnly);
-            assert.strictEqual(parseGoalSection('# State\n\n## Goal\n\n<!-- nothing recorded -->\n'), null);
+            assert.strictEqual(
+                parseGoalSection('# State\n\n## Goal\n\n<!-- nothing recorded -->\n'),
+                null,
+            );
             assert.strictEqual(parseGoalSection('# State\n'), null);
         } finally {
             cleanup(tempDir);
@@ -11249,8 +11319,7 @@ describe('Magic Engine Scripts', () => {
         );
         return text.replace(
             '## Session Continuity',
-            `${renderGoalSection(normalizeGoal(goal))}
-## Session Continuity`,
+            `${renderGoalSection(normalizeGoal(goal))}\n## Session Continuity`,
         );
     };
 
@@ -11806,6 +11875,122 @@ describe('Magic Engine Scripts', () => {
                 JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
                 { in_flight: false, workspaces: [] },
             );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    const RESUME_GOAL = {
+        statement: 'the import works',
+        criteria: [
+            { state: 'met', text: 'CSV round-trips', check: 'scenario S-1' },
+            { state: 'open', text: 'JSON round-trips', check: 'scenario S-2' },
+            { state: 'open', text: 'XML round-trips', check: 'scenario S-3' },
+            { state: 'blocked', text: 'Excel round-trips', check: 'a decision' },
+        ],
+        consents: [{ action: 'delete the old importer', reason: 'a destructive action' }],
+    };
+    const RESUME_GOAL_COUNTS = '1 met, 2 open, 1 blocked, 1 consent(s) queued';
+
+    test('resume-state reports a recorded goal in its one line: alone it names the goal, the criteria counts and /magicspec goal, beside a task in flight it is the same line (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            writeResumeFixture(tempDir, {
+                engine: { entries: [trackingEntry('T-1A01', 'Thing', 'Done')], goal: RESUME_GOAL },
+            });
+            const alone = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(alone.status, 0);
+            assert.strictEqual(
+                alone.stdout,
+                `▶ Resume [engine]: goal "the import works" — ${RESUME_GOAL_COUNTS}. Next: /magicspec goal\n`,
+            );
+
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [trackingEntry('T-1A01', 'Thing', 'In Progress')],
+                    goal: RESUME_GOAL,
+                },
+            });
+            const both = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(both.stdout.trim().split('\n').length, 1, 'one line, not two');
+            assert.strictEqual(
+                both.stdout,
+                `▶ Resume [engine]: T-1A01 Thing in flight — 0 dead end(s) recorded; goal "the import works" — ${RESUME_GOAL_COUNTS}. ` +
+                    'Next: Execute T-1A01 Thing via /magicspec run engine\n',
+            );
+
+            // A phase or a task count is a goal like a statement, and names itself the way the commands spell it.
+            writeResumeFixture(tempDir, {
+                engine: {
+                    entries: [],
+                    goal: {
+                        phase: 3,
+                        taskLimit: 5,
+                        criteria: [{ state: 'open', text: 'T-3A01 done' }],
+                    },
+                },
+            });
+            assert.strictEqual(
+                runResumeState(tempDir, ['--workspace=engine']).stdout,
+                '▶ Resume [engine]: goal phase-3 5 tasks — 0 met, 1 open, 0 blocked. Next: /magicspec goal\n',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
+    test('resume-state is silent for a goal section that names no goal, and its --json carries the goal only where one is recorded (GM-3)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = writeResumeFixture(tempDir, { engine: { entries: [] } });
+            const statePath = path.join(designDir, 'engine', 'STATE.md');
+            fs.writeFileSync(
+                statePath,
+                fs
+                    .readFileSync(statePath, 'utf8')
+                    .replace(
+                        '## Session Continuity',
+                        '## Goal\n\n<!-- nothing recorded -->\n\n## Session Continuity',
+                    ),
+            );
+            const empty = runResumeState(tempDir, ['--workspace=engine']);
+            assert.strictEqual(empty.status, 0);
+            assert.strictEqual(empty.stdout, '', 'an empty block prints nothing');
+            assert.deepStrictEqual(
+                JSON.parse(runResumeState(tempDir, ['--workspace=engine', '--json']).stdout),
+                {
+                    in_flight: false,
+                    workspaces: [],
+                },
+            );
+
+            writeResumeFixture(tempDir, { engine: { entries: [], goal: RESUME_GOAL } });
+            const parsed = JSON.parse(
+                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+            );
+            assert.strictEqual(parsed.in_flight, false, 'in_flight still means a task in flight');
+            assert.strictEqual(parsed.workspaces.length, 1);
+            assert.deepStrictEqual(parsed.workspaces[0].tasks, []);
+            assert.deepStrictEqual(parsed.workspaces[0].goal, {
+                scope: '"the import works"',
+                statement: 'the import works',
+                phase: null,
+                task_limit: null,
+                bound: null,
+                criteria: { met: 1, open: 2, blocked: 1 },
+                consents: 1,
+                without_progress: 0,
+                tasks_done: 0,
+            });
+
+            // With no goal the entry keeps the shape it always had.
+            writeResumeFixture(tempDir, {
+                engine: { entries: [trackingEntry('T-1A01', 'Only', 'In Progress')] },
+            });
+            const plain = JSON.parse(
+                runResumeState(tempDir, ['--workspace=engine', '--json']).stdout,
+            );
+            assert.ok(!('goal' in plain.workspaces[0]), 'no goal key where none is recorded');
         } finally {
             cleanup(tempDir);
         }
@@ -12737,6 +12922,233 @@ describe('Magic Engine Scripts', () => {
         assert.ok(replan.includes('NEVER recommend `/magicspec analyze` proactively after `/magicspec run`'));
     });
 
+    test('the goal body states the three scope forms, one intake, the criteria and their block, the choice of the next step, the consent queue, the six stop conditions and one report, runs each step as its own body and finalizes as none (GM-1 to GM-9)', () => {
+        const body = readShipped('skills/magicspec/workflows/goal.md');
+        const has = (needle, what) =>
+            assert.ok(body.includes(needle), `goal.md states ${what}: ${needle}`);
+
+        // Entry and routing: the forms of GM-9.
+        has('`/magicspec goal [scope]`', 'the trigger');
+        for (const form of [
+            '`"{statement}"`',
+            '`phase-{N}`',
+            '`{N} tasks`',
+            '`phase-{N} {N} tasks`',
+            '`"{statement}" {N} tasks`',
+            '`{workspace} …`',
+        ]) {
+            has(form, 'a scope form');
+        }
+        has(
+            "A phase the plan does not hold is answered with one line listing the plan's phases, and nothing runs",
+            'GM-9 item 2',
+        );
+        has(
+            'stops at a task boundary after N tasks reach `Done`, never in the middle of one',
+            'GM-9 item 3',
+        );
+        has('A number with no unit', 'the unit-less number');
+        has('is read as a goal statement', 'the unit-less number is a statement');
+        has(
+            'replaces it, narrated as one `[DR]` line naming the replaced goal',
+            'a new scope over a recorded goal',
+        );
+        has('a phase and a count are names and run none', 'the Input Pass for names');
+
+        // The invariants: one intake, the queue, no relaxed guard, the files, the body of the step.
+        has('**One intake, then no questions (GM-1)**', 'GM-1');
+        has('**Consent is queued, never assumed (GM-5)**', 'GM-5');
+        has('waiting for consent: {action}', 'the dependent work blocked with its reason');
+        has('**No guard is relaxed (GM-7)**', 'GM-7');
+        has('**The files carry the state (PS-6)**', 'PS-6');
+        has('read `workflows/{step}.md` in full and follow it', 'the step is its body');
+        has('this workflow does not finalize as itself', 'finalization by step');
+        assert.ok(!/finalize --workflow=goal/.test(body), 'no finalization of its own is named');
+        has('**Never commits**', 'no commit');
+
+        // The recorded goal: the one writer, the temporary file, the closed schema, a refusal that halts.
+        has(
+            'update-state --workspace={active-workspace} --goal-file {path-to-the-json}',
+            'the one writer',
+        );
+        has("from a temporary file outside the project's tree", 'the file outside the tree');
+        for (const field of [
+            'statement',
+            'phase',
+            'taskLimit',
+            'bound',
+            'withoutProgress',
+            'tasksDone',
+            'iterations',
+            'phasesDone',
+            'started',
+            'criteria',
+            'consents',
+        ]) {
+            has(`\`${field}\``, 'a field of the block');
+        }
+        has(
+            'A refusal (an unknown field, a block over its bound) is a **HALT** of the mode',
+            'the refusal',
+        );
+        has('resume-state --all --json', 'the search for a recorded goal');
+
+        // The criteria and the choice of the step.
+        has(
+            'each verifiable by a named check: a command, a test, a simulation scenario, or a specification statement whose tasks are `Done`',
+            'GM-2',
+        );
+        has('recorded as an `Assumption (forecast)`', 'the criterion with no check');
+        has(
+            '| A criterion of a statement that no `Stable` specification states (the criterion of a phase or a count is not one) | `spec`',
+            'the first row',
+        );
+        has('| An open finding', 'the fix row');
+        has(
+            '| A phase goal and the phase has no workbook yet | `task {workspace} "phase-{N}"` |',
+            'the decomposition row of a phase goal',
+        );
+        has(
+            '| A phase goal and the phase holds a `Todo` or `In Progress` task | `run {workspace} "phase-{N}"` |',
+            'the run row of a phase goal',
+        );
+        has(
+            "`STATE.md`'s `Next Action` names `/magicspec spec`, `plan`, `task` or `run`",
+            'the pipeline rows',
+        );
+        has('| Scenarios verify an open criterion', 'the simulate row');
+        has('`run` execute one task at a time', 'the exact task count');
+
+        // The six stop conditions, closed, in order, with the definition of progress.
+        const stops = body.slice(body.indexOf('6. **Stop condition**'), body.indexOf('## Report'));
+        const conditions = [...stops.matchAll(/^ {3}(\d)\. \*\*([^*]+)\*\*/gm)].map((m) => m[2]);
+        assert.deepStrictEqual(conditions, [
+            'Done',
+            'Consent queued',
+            'No progress',
+            'Integrity halt',
+            'A bound the goal states',
+            'Interrupted',
+        ]);
+        has('three consecutive iterations without progress', 'GM-6');
+        has(
+            'an iteration makes progress when it changes a recorded state',
+            'the definition of progress',
+        );
+        has(
+            'Repeating a step on unchanged input with an unchanged outcome is no progress',
+            'the repeated step',
+        );
+        has('the mode stops on exactly one of the six conditions', 'the closed list');
+
+        // One report, in the layout, with its consents asked after it.
+        for (const line of [
+            'Goal: {scope}',
+            'Stopped: {done | consent queued | no progress | integrity halt | bound reached | interrupted}',
+            '[met]     {criterion} — {evidence}',
+            'Work: Phase {N}: {summary} — commit suggestion: {message}',
+            'Queued consents: {n}',
+        ]) {
+            has(line, 'a line of the report');
+        }
+        has('are asked after the report, only now (GM-5)', 'the consents asked at the stop');
+        has(
+            "one question, at most three fixed options, the forecast's winner marked as the default",
+            'the consent question',
+        );
+        has('`Next: /magicspec {command} {argument} — {demand} reasoning`', 'the handoff line');
+
+        // The shape of a body: frontmatter, contents, checklist, handoffs.
+        assert.match(body, /^---\ndescription: Workflow for goal mode — /);
+        for (const heading of [
+            '## Entry',
+            '## Argument Routing',
+            '## Core Invariants (Mandatory)',
+            '## Workflow: Pursuit',
+            '## Report',
+            '## Goal Completion Checklist',
+            '## Handoffs',
+        ]) {
+            assert.ok(body.includes(`\n${heading}\n`), `the body has ${heading}`);
+            assert.ok(
+                body.includes(`- ${heading.replace(/^## /, '')}\n`),
+                `the Contents names ${heading}`,
+            );
+        }
+        has('`/magicspec goal`: name it, with its demand `per step`', 'the continue handoff');
+        assert.ok(!/AskUserQuestion/.test(body), 'the body asks no question itself');
+    });
+
+    test('the status briefing shows a recorded goal as one line under Position and recommends /magicspec goal first while a criterion is not met, and stays read-only (GM-3, SC-4)', () => {
+        const status = readShipped('skills/magicspec/workflows/status.md');
+        const page = readShipped('docs/status.md');
+
+        // The line: where it sits, what it holds, when it is absent, and that nothing is re-checked.
+        const position = lineWith(status, '2. **Position**');
+        assert.ok(position, 'the body has the Position item');
+        for (const needle of [
+            '`## Goal` section that names a goal',
+            '`Goal: {scope} — {met} met, {open} open, {blocked} blocked`',
+            '`, {k} consent(s) queued`',
+            '`Goal: {scope} — done`',
+            'a section that names no goal adds no line',
+            're-checks nothing',
+        ]) {
+            assert.ok(position.includes(needle), `the Position item states: ${needle}`);
+        }
+
+        // The next step: the goal comes before every other rule, and a finished goal is passed over.
+        const nextStart = status.indexOf('7. **Next**');
+        const goalRule = status.indexOf(
+            'A goal is recorded and not every criterion is `met`',
+            nextStart,
+        );
+        const firstOther = status.indexOf(
+            'STATE.md `Next Action` states that nothing is pending',
+            nextStart,
+        );
+        assert.ok(
+            nextStart !== -1 && goalRule > nextStart && goalRule < firstOther,
+            'the goal rule is the first line of Next',
+        );
+        assert.ok(
+            status.includes(
+                '→ `/magicspec goal`, which continues it; this comes before every line below',
+            ),
+        );
+        assert.ok(status.includes('a goal with no criteria yet counts as not met'));
+        assert.ok(
+            status.includes('A goal whose criteria are all `met` is done and is passed over.'),
+        );
+
+        // The resume line, the checklist and the handoff follow, and the briefing is still read-only.
+        assert.ok(
+            status.includes('a task recorded `In Progress`, a recorded goal, or both in one line'),
+        );
+        assert.ok(
+            status.includes('`/magicspec goal` recommended first while a criterion is not `met`'),
+        );
+        assert.ok(
+            status.includes(
+                '- **Continue a goal** → `/magicspec goal`: Continue the recorded goal in a new session. Condition: `goal_open`.',
+            ),
+        );
+        assert.ok(
+            status.includes('this workflow performs ZERO writes'),
+            'the read-only invariant is untouched',
+        );
+        assert.ok(!/update-state/.test(status), 'the briefing names no writer');
+
+        // The page says the same.
+        for (const needle of [
+            'a recorded goal adds one line',
+            '`Goal: {scope}',
+            '`/magicspec goal` first while a recorded goal',
+        ]) {
+            assert.ok(page.includes(needle), `docs/status.md states: ${needle}`);
+        }
+    });
+
     test('shipped text: spec and analyze end at their boundary and name plan; rule, status and help name the stage that owns what they recommend (PS-1, PL-5)', () => {
         const spec = readShipped('skills/magicspec/workflows/spec.md');
         const analyze = readShipped('skills/magicspec/workflows/analyze.md');
@@ -13025,7 +13437,7 @@ describe('Magic Engine Scripts', () => {
 
         // Triggers: exactly the shipped bodies, one `Input Pass` gate each.
         const bodies = fs.readdirSync(path.join(shippedRoot, 'skills/magicspec/workflows')).filter((f) => f.endsWith('.md')).map((f) => f.slice(0, -3)).sort();
-        assert.strictEqual(bodies.length, 12, 'twelve shipped bodies');
+        assert.strictEqual(bodies.length, 13, 'thirteen shipped bodies');
         const triggered = [...card.matchAll(/- workflow: (\S+)\.md\n {4}gate: "Input Pass"/g)].map((m) => m[1]).sort();
         assert.deepStrictEqual(triggered, bodies, 'every shipped body, and no other, is an Input Pass trigger');
         for (const body of bodies) assert.ok(mirror.includes(`  - workflow: ${body}.md\n    gate: "Input Pass"`), `the mirror lists ${body}`);
@@ -13043,6 +13455,7 @@ describe('Magic Engine Scripts', () => {
             'skills/magicspec/workflows/graph.md': ['## Steps', '### 1. Build the Specification Knowledge Graph'],
             'skills/magicspec/workflows/fix.md': ['**Trigger:** `/magicspec fix [defect]`', '**Scope:**'],
             'skills/magicspec/workflows/simulate.md': ['## Argument Routing', '## Core Invariants (Mandatory)'],
+            'skills/magicspec/workflows/goal.md': ['## Argument Routing', '## Core Invariants (Mandatory)'],
             'skills/magicspec-dev/workflows/init.md': ['## Arguments', '## Agent Map'],
             'skills/magicspec-dev/workflows/fix.md': ['**Command:**', '## Inputs'],
             'skills/magicspec-dev/workflows/test.md': ['**Scope:**', '## Core Invariants (Mandatory)'],
@@ -13063,6 +13476,10 @@ describe('Magic Engine Scripts', () => {
         }
         assert.ok(lineWith(readShipped('skills/magicspec/workflows/task.md'), '**Input Pass**:').includes('T4 Capture of Core Invariant 4'), 'task hands a set-aside rule clause to the T4 Capture');
         assert.ok(lineWith(readShipped('skills/magicspec/workflows/help.md'), '**Input Pass**:').includes('before `spec` is offered with it'), 'help passes typed text through the pass before offering spec');
+        // goal starts with the intake (IP-6): its statement runs the pass, a phase and a count are names, and the card says the comprehension check is performed in `goal` too.
+        assert.ok(lineWith(readShipped('skills/magicspec/workflows/goal.md'), '**Input Pass**:').includes('a phase and a count are names and run none'), 'goal runs the pass for a statement and none for a phase or a count');
+        assert.ok(card.includes('5. **Findings:** in `spec` — and in `goal`, which starts with it — they feed the intake gate'), 'the card widens item 5 to goal (IP-6)');
+        assert.ok(mirror.includes('5. **Findings:** in `spec` — and in `goal`, which starts with it — they feed the intake gate'), 'and so does its mirror');
 
         // The specification workflow: the pass is the first step, the intake gate judges comprehension on its statement.
         const spec = readShipped('skills/magicspec/workflows/spec.md');
@@ -15736,7 +16153,7 @@ describe('Magic Engine Scripts', () => {
         text
             .split(/\r?\n/)
             .map((l) =>
-                /^\| `([a-z][a-z-]*)`(?: \(alias `([a-z][a-z-]*)`\))? \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| (deep|standard|light) \| `workflows\/([a-z-]+)\.md` \|$/.exec(
+                /^\| `([a-z][a-z-]*)`(?: \(alias `([a-z][a-z-]*)`\))? \| ([^|]+) \| ([^|]+) \| ([^|]+) \| ([^|]+) \| (deep|standard|light|per step) \| `workflows\/([a-z-]+)\.md` \|$/.exec(
                     l,
                 ),
             )
@@ -15799,7 +16216,7 @@ describe('Magic Engine Scripts', () => {
                 `${row.name}: the description names the command`,
             );
         }
-        assert.strictEqual(rows.length, 12);
+        assert.strictEqual(rows.length, 13);
         assert.ok(
             !fs.existsSync(path.join(skillSrc, 'workflows', 'context.md')),
             'a shared module is not a command',
@@ -15820,6 +16237,7 @@ describe('Magic Engine Scripts', () => {
             run: 'standard',
             fix: 'deep',
             simulate: 'standard',
+            goal: 'per step',
             analyze: 'deep',
             rule: 'standard',
             status: 'light',
@@ -15858,6 +16276,7 @@ describe('Magic Engine Scripts', () => {
         // A row that is not seven columns, has no known demand or an alias that is not backticked is not a row.
         assert.strictEqual(hosts.parseCommandRow('| `x` | pipeline | s | a | m | `workflows/x.md` |'), null, 'six columns');
         assert.strictEqual(hosts.parseCommandRow('| `x` | pipeline | s | a | m | fast | `workflows/x.md` |'), null, 'an unknown demand');
+        assert.strictEqual(hosts.parseCommandRow('| `x` | pipeline | s | a | m | per step | `workflows/x.md` |').demand, 'per step', 'the demand of a command that runs other commands');
         assert.strictEqual(hosts.parseCommandRow('| `x` (alias y) | pipeline | s | a | m | light | `workflows/x.md` |'), null, 'an alias with no backticks');
         assert.deepStrictEqual(
             hosts.parseCommandRow('| `x` (aliases `y`, `z`) | pipeline | s | a | m | light | `workflows/x.md` |').aliases,
@@ -15868,6 +16287,66 @@ describe('Magic Engine Scripts', () => {
         assert.match(text, /or an alias in its row \(`audit` is `analyze`\) → that command/);
         assert.match(text, /An alias runs the command with no narration/);
         assert.match(text, /Pipeline: `spec` → `plan` → `task` → `run`/);
+    });
+
+    test('the router has the goal row with the demand per step in its group, lets a bare goal reach its body, names the command in its description, and the handoff line prints the demand as the table has it (CS-1, GM-3, GM-9)', () => {
+        const hosts = require(path.join(scriptsDir, 'lib', 'hosts.js'));
+        const text = fs.readFileSync(path.join(skillSrc, 'SKILL.md'), 'utf8');
+        const help = fs.readFileSync(path.join(skillSrc, 'workflows', 'help.md'), 'utf8');
+        const rows = routerRows();
+        const row = rows.find((r) => r.name === 'goal');
+        assert.ok(row, 'the router lists goal');
+        assert.deepStrictEqual(
+            { group: row.group, demand: row.demand, file: row.file },
+            { group: 'quality & automation', demand: 'per step', file: 'goal' },
+        );
+        for (const form of ['a goal statement', '`phase-3`', '`5 tasks`']) {
+            assert.ok(row.argument.includes(form), `the argument cell names the form ${form}`);
+        }
+        assert.ok(
+            row.missing.startsWith(
+                '**required** unless a goal is recorded — a recorded goal continues',
+            ),
+            'the missing cell: required unless a goal is recorded',
+        );
+        const order = rows.map((r) => r.name);
+        assert.ok(
+            order.indexOf('simulate') < order.indexOf('goal') &&
+                order.indexOf('goal') < order.indexOf('analyze'),
+            'the goal row follows simulate, in its group, in the order of the specification',
+        );
+        assert.ok(
+            hosts.readCommands().some((c) => c.name === 'goal' && c.demand === 'per step'),
+            'the one parser reads the row',
+        );
+
+        // A bare goal is not asked for: the body continues a recorded goal and asks only when none is recorded.
+        assert.ok(
+            text.includes('**Exception — `goal`**'),
+            'the argument contract has the goal exception',
+        );
+        assert.match(
+            text,
+            /With no argument the body looks for the recorded goal first and continues it/,
+        );
+        assert.match(text, /only when none is recorded does the argument form ask/);
+        assert.match(
+            text,
+            /`goal` has no demand of its own: each of its steps carries the demand of the command it runs/,
+        );
+        assert.ok(
+            help.includes('`goal`: its *Entry*'),
+            'help names where the goal argument comes from',
+        );
+
+        // The description names the command, and the handoff line prints the demand the table gives.
+        const description = /^description: (.*)$/m.exec(text)[1];
+        assert.ok(description.includes('`goal`') && description.length <= 1024);
+        const finalize = require(path.join(scriptsDir, 'finalize.js'));
+        assert.strictEqual(
+            finalize.handoffLine('Run /magicspec goal to continue the recorded goal', 'engine'),
+            'Next: /magicspec goal — per step reasoning',
+        );
     });
 
     test('the help body is rendered from the router table: no second list, the picker by host capability, a bounded ask and verbatim names (skill folder)', () => {
@@ -16043,8 +16522,8 @@ describe('Magic Engine Scripts', () => {
             .map((r) => r.name);
         assert.deepStrictEqual(
             required.sort(),
-            ['fix', 'rule', 'spec'],
-            'the commands that cannot act without input are the ones that ask for it',
+            ['fix', 'goal', 'rule', 'spec'],
+            'the commands that cannot act without input are the ones that ask for it (goal asks only when no goal is recorded)',
         );
 
         const byName = Object.fromEntries(rows.map((r) => [r.name, r]));
@@ -16250,7 +16729,7 @@ describe('Magic Engine Scripts', () => {
             assert.ok(agents.startsWith('# Mine\n\nKeep this.\n'), 'the project text is kept');
             assert.match(
                 agents,
-                /<!-- magicspec:begin -->\nBefore any work in this project, read `\.agents\/skills\/magicspec\/AGENT-RULES\.md`/,
+                /<!-- magicspec:begin -->\nBefore any work in this project, read `\.agents\/skills\/magicspec\/CONSTITUTION\.md`/,
             );
 
             // idempotent

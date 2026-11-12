@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.5.1
+**Version:** 1.5.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -55,18 +55,18 @@ skills/magic-status/SKILL.md      (generated projection of the wrapper)
 Rendered in this fixed order:
 
 1. **Header** — workspace, `Status`, `Phase`, `Updated` (from `STATE.md`).
-2. **Position** — current/last task ID and title, active spec (from `STATE.md` Current Position).
+2. **Position** — current/last task ID and title, active spec (from `STATE.md` Current Position). When `STATE.md` has a `## Goal` section that names a goal, one more line follows: `Goal: {scope} — {met} met, {open} open, {blocked} blocked`, with `, {k} consent(s) queued` appended when consents wait, or `Goal: {scope} — done` when every criterion is `met`; the briefing shows what the block records and re-checks nothing.
 3. **Progress** — phase and overall progress bars, verbatim from `STATE.md` Progress.
 4. **Blockers & Blocking Constraints** — both sections surfaced; constraints are mandatory reading before resuming work.
 5. **Recent Decisions** — last 3 entries.
 6. **Engine line** — local engine version vs. registry snapshot: `Engine: {version} (in sync)` or `Engine: {local} (snapshot {snap} — drift; /magicspec analyze revalidates)`. Informational only.
-7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one. When `Next Action` is a note in the owner's words — it names no `/magicspec <command>` command and does not say that nothing is pending — render `Next: {the text, verbatim}`, recommend no command of your own and leave the note unrewritten.
+7. **Next** — exactly one recommended command with a one-line rationale, in Decision Record format: `[DR] Next: {command} — {criterion}. (Override: any /magicspec <command> command)`. When `Next Action` states that nothing is pending, render `Next: nothing pending — {the statement}` instead and recommend no command; the briefing never invents one. When `Next Action` is a note in the owner's words — it names no `/magicspec <command>` command and does not say that nothing is pending — render `Next: {the text, verbatim}`, recommend no command of your own and leave the note unrewritten. While a goal is recorded and not every criterion is `met` (a goal with no criteria yet counts as not met), the recommended command is `/magicspec goal`, before any other rule of this item.
 
 ### 5.3 Resolution & Degraded States
 
 - **Workspace resolution**: standard resolution chain (context load order, Priority 1-4). Optional argument `{workspace}` overrides. With multiple workspaces and no argument, render the resolved workspace and append a one-line `Other workspaces: {name} ({status}), ...` footer.
 - **`STATE.md` missing** (fresh or partially initialized project): emit a bootstrap briefing — registry summary from `INDEX.md` (spec counts, statuses) plus the recommendation to run the planning workflow, whose auto-init provisions `STATE.md`. Never create files from the status command.
-- **In-flight session**: the resume line comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3), never from this command's own reading of the files — a task recorded `In Progress` in the active phase. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert and is not a paused session (SC-9(b), SC-9(g)).
+- **In-flight session**: the resume line comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3), never from this command's own reading of the files — a task recorded `In Progress` in the active phase, a recorded goal, or both in one line. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert and is not a paused session (SC-9(b), SC-9(g)).
 - **Unreadable artifacts**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})` instead of aborting the whole briefing.
 
 ### 5.4 Engine Upgrade Detection Interplay
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.5.2 | 2026-11-12 | Agent | As built in Phase 53, Stable retained (the requirement moved with the goal mode specification that declared it, CH-9, and this record follows). §5.2: the Position item carries the `Goal:` line and the Next item recommends `/magicspec goal` first while a criterion is not met; §5.3: the in-flight line covers a recorded goal. The briefing stays read-only and keeps its seven sections. |
 | 1.5.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.5.0 | 2026-10-29 | Agent | §5.2 item 7 and the SC-4 row gain the third branch of the next-step line: an owner's note that names no command is rendered verbatim with no command added. Found walking `workflows/status.md` against this repository's own `STATE.md`, whose `Next Action` is such a note — none of the three branches applied and the agent had to improvise the last section of a read-only briefing. The body's Entry list also stopped telling the reader to read the file it is in. |
 | 1.4.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

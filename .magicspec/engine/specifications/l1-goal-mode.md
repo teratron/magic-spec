@@ -1,6 +1,6 @@
 # Goal Mode: Non-Stop Pursuit of a Stated Goal
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -91,6 +91,7 @@ Next: {one command}
 3. The status briefing shows the goal and the criteria counts.
 4. The cognitive suite gains scenarios for each stop condition.
 5. Declared supersessions (`l1-coherence-check.md` CH-9): the live-memory layout and SC-2 in [l1-session-continuity.md](l1-session-continuity.md); the resume line in [l2-session-checkpoint.md](l2-session-checkpoint.md); the briefing in [l2-status-command.md](l2-status-command.md).
+6. **As built (Phase 53), no requirement changed.** (a) The goal block is the section `## Goal` of `STATE.md`, between Current Position and Progress, present only while a goal is recorded, at most 28 lines, written only by `update-state` from a JSON file (`--goal-file`; `--goal-clear` removes it) through the one module that renders, parses and checks it (`scripts/lib/goal-block.js`); a goal that fails the closed schema or the bound is refused before any write with one HALT line and the finding `STATE_GOAL_REFUSED`. (b) It holds the statement, the target phase, the task limit, a stated bound, the counters `Without progress`, `Tasks done`, `Iterations`, `Phases done` and the moment `Started` (GM-6 names bounds of iterations, phases and time and a count of tasks; they need the counters), each criterion with its state and its check, and the consents queued with their reasons. (c) A phase goal records one criterion, `phase {N} is Done`, met when the phase's status is `Done` or `Done (Archived)`: the phase's tasks are its criteria (GM-9 item 2) and their workbook is the per-task record, the block being bounded; a count alone records `{N} tasks reach Done`. (d) The resume line reports a recorded goal in the same one line, a goal alone included, with `/magicspec goal` as its next step; the briefing shows one `Goal:` line under Position and recommends `/magicspec goal` first while a criterion is not met. (e) The router row has the demand `per step`, which the one parser admits and the handoff line prints as the table has it (`Next: /magicspec goal — per step reasoning`); a bare `goal` is not asked for, the body looks for the recorded goal first, in the other workspaces too (`resume-state --all --json`); a new scope over a recorded goal replaces it, with one `[DR]` naming the replaced goal. (f) Each step is read from its own body and finalizes as its own workflow: the mode finalizes as none, queues the consent entries E1, E2 and E4 in the block and asks them one at a time after its one report.
 
 ## 7. Drawbacks & Alternatives
 
@@ -111,6 +112,7 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-11-12 | Agent | **As built in Phase 53**, Stable retained, no requirement changed. §6 item 6 records what the build decided: the goal block (its place, bound, writer, refusal and the counters GM-6's bounds need), the one criterion of a phase goal, the resume line and the briefing, the `per step` demand and the bare `goal`, the replacement of a recorded goal. The two harness-visible additions to GM-3 (`Iterations`, `Phases done`, `Started`) were found by writing the body, not by the specification review. |
 | 1.1.0 | 2026-11-11 | Agent | **Scope forms** (origin `user-stated`: the owner's list of commands of 2026-11-11 — "a phase or some number of tasks" as the argument). New GM-9: a phase makes that phase `Done` the goal, a task count bounds the work, and either may bound a statement; GM-1 states that neither has an intake. Related: `l1-pipeline-stages.md` PS-6. Amendment Rule: `Stable → RFC`. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (non-stop mode, `/magicspec goal`). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

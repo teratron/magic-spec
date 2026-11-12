@@ -17,6 +17,7 @@ const { stripQuoted } = require('./lib/scan-hygiene');
 const { collectInFlight } = require('./lib/in-flight');
 const { isGitRepo, headSha, changedPaths } = require('./lib/git-utils');
 const diagnostics = require('./lib/diagnostics');
+const { countCriteria, describeScope, parseGoalSection } = require('./lib/goal-block');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // RESUME STATE (Shared Resume-Detection Predicate)
@@ -177,9 +178,10 @@ function readStateField(stripped, raw, labelRe) {
  *
  * @param {{ name: string, dir: string }} workspace
  * @returns {{ workspace: string, source: string, tasks: Object[], attempts: number,
- *             nextAction: string|null, changedFiles: number|null }|null}
- *          `null` when nothing is in flight or the workspace has no readable
- *          `STATE.md`. `changedFiles` is filled in by the caller.
+ *             nextAction: string|null, changedFiles: number|null,
+ *             goal: ReturnType<typeof parseGoalSection> }|null}
+ *          `null` when nothing is in flight, no goal is recorded or the workspace has
+ *          no readable `STATE.md`. `changedFiles` is filled in by the caller.
  */
 function inspectWorkspace(workspace) {
     const state = readText(path.join(workspace.dir, 'STATE.md'));
@@ -201,7 +203,9 @@ function inspectWorkspace(workspace) {
 
     const stripped = stripQuoted(state.text);
     const tasks = collectInFlight(workspace.dir);
-    if (tasks.length === 0) return null;
+    // A goal recorded in the block (GM-3) is work to resume too, task in flight or not.
+    const goal = parseGoalSection(state.text);
+    if (tasks.length === 0 && goal === null) return null;
 
     return {
         workspace: workspace.name,
@@ -210,6 +214,7 @@ function inspectWorkspace(workspace) {
         attempts: tasks.reduce((sum, task) => sum + task.attempts, 0),
         nextAction: readStateField(stripped, state.text, /^- \*\*Next Action:\*\*[ \t]+(.+)$/),
         changedFiles: null,
+        goal,
     };
 }
 
@@ -243,16 +248,55 @@ function countModifiedFiles() {
  * @returns {string}
  */
 function formatLine(summary) {
-    const named = summary.tasks
-        .slice(0, MAX_TASKS_PER_WORKSPACE)
-        .map((task) => `${task.id} ${task.title}`.trim());
-    const extra = summary.tasks.length - named.length;
-    const body =
-        `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
-        ` — ${summary.attempts} dead end(s) recorded` +
-        `${summary.changedFiles === null ? '' : `, ${summary.changedFiles} file(s) modified`}`;
-    const next = summary.nextAction ? ` Next: ${summary.nextAction}` : '';
-    return `▶ Resume [${summary.workspace}]: ${body}.${next}`;
+    const parts = [];
+    if (summary.tasks.length > 0) {
+        const named = summary.tasks
+            .slice(0, MAX_TASKS_PER_WORKSPACE)
+            .map((task) => `${task.id} ${task.title}`.trim());
+        const extra = summary.tasks.length - named.length;
+        parts.push(
+            `${named.join('; ')}${extra > 0 ? ` +${extra} more` : ''} in flight` +
+                ` — ${summary.attempts} dead end(s) recorded` +
+                `${summary.changedFiles === null ? '' : `, ${summary.changedFiles} file(s) modified`}`,
+        );
+    }
+    if (summary.goal !== null) parts.push(describeGoal(summary.goal));
+    // A task in flight is resumed where it stopped; a goal alone is continued by its command.
+    const next = summary.tasks.length > 0 ? summary.nextAction : '/magicspec goal';
+    return `▶ Resume [${summary.workspace}]: ${parts.join('; ')}.${next ? ` Next: ${next}` : ''}`;
+}
+
+/**
+ * Describes a recorded goal for the resume line: its scope and the criteria counts,
+ * with the consents queued when there are any.
+ *
+ * @param {NonNullable<ReturnType<typeof parseGoalSection>>} goal - The recorded goal.
+ * @returns {string}
+ */
+function describeGoal(goal) {
+    const { met, open, blocked } = countCriteria(goal);
+    const queued = goal.consents.length > 0 ? `, ${goal.consents.length} consent(s) queued` : '';
+    return `goal ${describeScope(goal)} — ${met} met, ${open} open, ${blocked} blocked${queued}`;
+}
+
+/**
+ * The machine-readable form of a recorded goal: the same facts the line states, unbounded.
+ *
+ * @param {NonNullable<ReturnType<typeof parseGoalSection>>} goal - The recorded goal.
+ * @returns {Object}
+ */
+function goalJson(goal) {
+    return {
+        scope: describeScope(goal),
+        statement: goal.statement,
+        phase: goal.phase,
+        task_limit: goal.taskLimit,
+        bound: goal.bound,
+        criteria: countCriteria(goal),
+        consents: goal.consents.length,
+        without_progress: goal.withoutProgress,
+        tasks_done: goal.tasksDone,
+    };
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -291,13 +335,14 @@ function main() {
         // Machine-readable and unbounded: the caps below are for a human line.
         console.log(
             JSON.stringify({
-                in_flight: summaries.length > 0,
+                in_flight: summaries.some((summary) => summary.tasks.length > 0),
                 workspaces: summaries.map((summary) => ({
                     workspace: summary.workspace,
                     source: summary.source,
                     tasks: summary.tasks,
                     changed_files: summary.changedFiles,
                     next_action: summary.nextAction,
+                    ...(summary.goal === null ? {} : { goal: goalJson(summary.goal) }),
                 })),
             }),
         );
