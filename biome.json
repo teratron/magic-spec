@@ -7,11 +7,17 @@
   },
   "files": {
     "ignoreUnknown": false,
-    "includes": ["**/*.js", "**/*.cjs", "**/*.mjs", "**/*.json"],
+    "includes": [
+      "**/*.js",
+      "**/*.cjs",
+      "**/*.mjs",
+      "**/*.json"
+    ],
     "maxSize": 4194304
   },
   "formatter": {
     "enabled": true,
+    "expand": "always",
     "indentStyle": "space",
     "indentWidth": 4,
     "lineWidth": 100
