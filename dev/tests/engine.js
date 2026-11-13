@@ -12649,4 +12649,19 @@ describe('Magic Engine Scripts', () => {
             'a review that runs after the write must not tell the agent to resolve before writing',
         );
     });
+
+    test('no script starts a child Node process by the name node: the executors, the diagnostics recheck and the maintenance pipeline use the path of the running runtime', () => {
+        const sources = {
+            executor: readShipped('.magic/scripts/executor.js'),
+            diagnostics: readShipped('.magic/scripts/lib/diagnostics.js'),
+            wrapper: readShipped('dev/scripts/executor.js'),
+            pipeline: readShipped('dev/scripts/sync.js'),
+        };
+        assert.ok(sources.executor.includes('command = process.execPath;'), 'the executor starts a script with the runtime path');
+        assert.ok(!sources.executor.includes("command = 'node'"), 'and never by name');
+        assert.ok(sources.diagnostics.includes('execFileSync(process.execPath,'), 'the diagnostics recheck uses the runtime path');
+        assert.ok(!/execFileSync\('node'/.test(sources.diagnostics));
+        assert.ok(sources.wrapper.includes('spawn(process.execPath,') && !sources.wrapper.includes("spawn('node'"), 'the maintenance executor wrapper');
+        assert.ok(sources.pipeline.includes('execFileSync(process.execPath,') && !sources.pipeline.includes('execSync(' + String.fromCharCode(96) + 'node'), 'the maintenance pipeline');
+    });
 });

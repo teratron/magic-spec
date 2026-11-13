@@ -41,7 +41,7 @@ if (!fs.existsSync(scriptPath)) {
     process.exit(1);
 }
 
-const child = spawn('node', [scriptPath, ...args], {
+const child = spawn(process.execPath, [scriptPath, ...args], {
     stdio: 'inherit',
     cwd: process.cwd(),
     env: process.env,

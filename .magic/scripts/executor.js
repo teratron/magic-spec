@@ -147,7 +147,8 @@ const shellPath = path.join(__dirname, `${scriptName}${shellExtension}`);
 let command, cmdArgs;
 
 if (fs.existsSync(jsPath)) {
-    command = 'node';
+    // The runtime that started this process, not the first node on PATH: one invocation runs on one runtime.
+    command = process.execPath;
     cmdArgs = [jsPath, ...args];
 } else {
     const scriptPath = shellPath;
