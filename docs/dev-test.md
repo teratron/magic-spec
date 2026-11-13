@@ -26,7 +26,7 @@ The engine enforces 6 mandatory invariants:
 | ---: | --- | --- |
 | 1 | **Context (Zero-Prompt)** | Automatic workspace resolution chain |
 | 2 | **Cognitive Execution ONLY** | Never write/run physical simulation scripts; evaluate logic internally (LLM task) |
-| 3 | **Surgical Fix & Test** | If friction found → adjudicate it, then apply the fix and write the regression test in `suite.md` in the same run — no approval prompt |
+| 3 | **Surgical Fix & Test** | If friction found → adjudicate it, then apply the fix and write the regression test in the area file of `tests/suite/` in the same run — no approval prompt |
 | 4 | **Engine Integrity (C14)** | Checksums updated after `skills/magicspec/` modifications — blocking gate before reporting |
 | 5 | **No Metrics** | Real-world history/logs are for `retrospective.md`, not simulation |
 | 6 | **Anti-Fabrication** | `0 rough edges` is a valid outcome; every finding must include file, line, evidence, and verification command |
@@ -76,7 +76,15 @@ Run the full predefined regression test suite:
 /magicspec-dev:test test
 ```
 
-Reads `tests/suite.md` and executes all predefined scenarios. If missing, falls back to Improv Mode automatically.
+Reads the index `tests/suite.md` and every area file in `tests/suite/`, and executes all predefined scenarios. If the index is missing, falls back to Improv Mode automatically.
+
+To run one area only, name it:
+
+```
+/magicspec-dev:test spec-intake
+```
+
+This reads the index, that area's file and the text its cases cite, and not the other areas.
 
 ## 4. Pre-flight (Mandatory — All Modes)
 
@@ -121,7 +129,7 @@ If simulation reveals a logical flaw, the engine decides and fixes it in the sam
 
 1. **Adjudication**: evidence decides, rung by rung, until one is conclusive — *Reproduction* (a script, fixture or harness check fails today), *Dead end* (the engine's own plan is halted by its own guard), *Contradiction* (two statements, or a statement and its specification, test or page, cannot both hold), *Reading test* (the literal text and the specification's intent predict different actions). The outcome is **DEFECT**, **AMBIGUITY**, **NOT A DEFECT** (no change) or **VULNERABILITY** (a trust-boundary crossing, named in the report).
 2. **Fix Selection**: the Consequence Forecast (DA-10) walks *no change*, the smallest wording patch and a structural rule through five scenarios — expected, wrong root cause, boundary, adversarial, change later. A candidate that fails the reproducing case or the harness, or loses an earlier guarantee, is dropped; then the lowest worst-case cost of being wrong wins, and exactly one does. Sibling sites are searched before the patch.
-3. The winner is applied together with a new regression test in `tests/suite.md`, and proven: the reproducing case fails before the patch and passes after it, mutation controls catch each assertion, the harness stays green.
+3. The winner is applied together with a new regression test in the area file of `tests/suite/` (listed in the index `tests/suite.md`), and proven: the reproducing case fails before the patch and passes after it, mutation controls catch each assertion, the harness stays green.
 4. **C14 Enforcement Gate**: Checksums must be regenerated **before** reporting (blocking step).
 5. **Succession**: Run `/magicspec-dev:test test` post-fix. Max 2 rounds — if second pass still finds new failures, report remaining issues and stop.
 

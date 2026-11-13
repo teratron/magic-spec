@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "entry": ["skills/magicspec/scripts/*.js", "scripts/*.js", "scripts/init/*.js", "tests/*.js"],
+  "entry": ["skills/magicspec/scripts/*.js", "scripts/*.js", "scripts/init/*.js", "tests/**/*.js"],
   "health": {
     "maxCrap": 0
   },

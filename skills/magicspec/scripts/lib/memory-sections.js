@@ -89,62 +89,85 @@ function workspaceOf(rel) {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Splits a body into paragraphs at blank lines, keeping a fenced block whole.
+ * Splits a body into paragraphs at blank lines, keeping a fenced block whole. Each paragraph
+ * records the offsets, within the body's lines, of its first and last line.
  *
  * @param {string} body - Section text.
- * @returns {string[]} Non-empty paragraphs.
+ * @returns {{text: string, from: number, to: number}[]} Non-empty paragraphs.
  */
 function paragraphsOf(body) {
     const paragraphs = [];
     let current = [];
+    let from = 0;
     let fence = null;
-    for (const line of body.split('\n')) {
+    body.split('\n').forEach((line, offset) => {
         const marker = /^\s*(```|~~~)/.exec(line);
         if (marker) fence = fence === null ? marker[1] : fence === marker[1] ? null : fence;
         if (fence === null && line.trim() === '') {
-            if (current.length > 0) paragraphs.push(current.join('\n'));
+            if (current.length > 0) {
+                paragraphs.push({ text: current.join('\n'), from, to: offset - 1 });
+            }
             current = [];
         } else {
+            if (current.length === 0) from = offset;
             current.push(line);
         }
+    });
+    if (current.length > 0) {
+        paragraphs.push({ text: current.join('\n'), from, to: from + current.length - 1 });
     }
-    if (current.length > 0) paragraphs.push(current.join('\n'));
     return paragraphs;
 }
 
 /**
- * Cuts one body into parts of at most `MAX_SECTION_CHARS`, at paragraph boundaries. A
- * paragraph that alone exceeds the bound (a long table, a run of list items) is cut at its
- * line boundaries, so a row or an item stays whole; only a single line longer than the bound
- * stays whole. Every part is therefore a run of whole paragraphs or of whole lines.
+ * The pieces a long body is cut from: its paragraphs, and, for a paragraph that alone exceeds
+ * the bound (a long table, a run of list items), its lines, so a row or an item stays whole.
+ * Each piece records the text that joins it to the one before (`gap`) and the offsets, within the
+ * body's lines, of its first and last line.
  *
  * @param {string} body - Section text.
- * @returns {string[]} The parts, in order; one part when the body fits.
+ * @returns {{text: string, gap: string, from: number, to: number}[]}
+ */
+function atomsOf(body) {
+    return paragraphsOf(body).flatMap((paragraph) => {
+        if (paragraph.text.length <= MAX_SECTION_CHARS) {
+            return [{ text: paragraph.text, gap: '\n\n', from: paragraph.from, to: paragraph.to }];
+        }
+        return paragraph.text.split('\n').map((line, i) => {
+            const offset = paragraph.from + i;
+            return { text: line, gap: i === 0 ? '\n\n' : '\n', from: offset, to: offset };
+        });
+    });
+}
+
+/**
+ * Cuts one body into parts of at most `MAX_SECTION_CHARS`, at paragraph boundaries. A
+ * paragraph that alone exceeds the bound is cut at its line boundaries; only a single line
+ * longer than the bound stays whole. Every part is therefore a run of whole paragraphs or of
+ * whole lines.
+ *
+ * @param {string} body - Section text.
+ * @returns {{text: string, from: number, to: number}[]} The parts, in order; one part when the
+ *   body fits. `from` and `to` are the offsets, within the body's lines, of the part's first and
+ *   last line.
  */
 function splitBody(body) {
-    if (body.length <= MAX_SECTION_CHARS) return [body];
-    const atoms = [];
-    for (const paragraph of paragraphsOf(body)) {
-        if (paragraph.length <= MAX_SECTION_CHARS) {
-            atoms.push({ text: paragraph, gap: '\n\n' });
-        } else {
-            paragraph.split('\n').forEach((line, i) => {
-                atoms.push({ text: line, gap: i === 0 ? '\n\n' : '\n' });
-            });
-        }
+    if (body.length <= MAX_SECTION_CHARS) {
+        return [{ text: body, from: 0, to: body.split('\n').length - 1 }];
     }
     const parts = [];
-    let current = '';
-    for (const atom of atoms) {
-        const joined = current === '' ? atom.text : `${current}${atom.gap}${atom.text}`;
-        if (current !== '' && joined.length > MAX_SECTION_CHARS) {
+    /** @type {{text: string, from: number, to: number}|null} */
+    let current = null;
+    for (const atom of atomsOf(body)) {
+        const joined = current === null ? atom.text : `${current.text}${atom.gap}${atom.text}`;
+        if (current !== null && joined.length > MAX_SECTION_CHARS) {
             parts.push(current);
-            current = atom.text;
+            current = { text: atom.text, from: atom.from, to: atom.to };
         } else {
-            current = joined;
+            current = { text: joined, from: current?.from ?? atom.from, to: atom.to };
         }
     }
-    if (current !== '') parts.push(current);
+    if (current !== null) parts.push(current);
     return parts;
 }
 
@@ -166,25 +189,30 @@ function specHeader(text) {
 /**
  * Cuts a Markdown file into heading-delimited blocks. A section starts at each `##` and
  * `###` heading outside a fenced block; the text before the first one (the title and the
- * header fields) is a block of its own, headed by the title.
+ * header fields) is a block of its own, headed by the title. Each block records the file's
+ * line number (1-based) of its heading and of every line of its trimmed body, so a section can
+ * be located in the file.
  *
  * @param {string} text - Whole file text, newlines already normalized.
  * @param {string} fallbackTitle - Title used when the file has no `#` heading.
- * @returns {{heading: string, headingText: string, body: string}[]} Blocks in file order.
+ * @returns {{heading: string, headingText: string, headingLine: number, body: string, lines: number[]}[]}
+ *   Blocks in file order; `headingLine` is 0 when the block has no heading line, and `lines[k]` is
+ *   the file line of line `k` of `body`.
  */
 function blocksOf(text, fallbackTitle) {
     const blocks = [];
     let title = null;
     let h2 = null;
-    let current = { heading: null, headingText: '', lines: [] };
+    let current = { heading: null, headingText: '', headingLine: 0, entries: [] };
     let fence = null;
 
-    const open = (heading, headingText) => {
+    const open = (heading, headingText, headingLine) => {
         blocks.push(current);
-        current = { heading, headingText, lines: [] };
+        current = { heading, headingText, headingLine, entries: [] };
     };
 
-    for (const line of text.split('\n')) {
+    text.split('\n').forEach((line, index) => {
+        const no = index + 1;
         const marker = /^\s*(```|~~~)/.exec(line);
         if (marker) fence = fence === null ? marker[1] : fence === marker[1] ? null : fence;
         const heading = fence === null ? /^(#{1,3})[ \t]+(.+?)[ \t]*#*[ \t]*$/.exec(line) : null;
@@ -192,22 +220,42 @@ function blocksOf(text, fallbackTitle) {
             title = `# ${heading[2]}`;
             current.heading = title;
             current.headingText = heading[2];
+            current.headingLine = no;
         } else if (heading && heading[1] === '##') {
             h2 = `## ${heading[2]}`;
-            open([title, h2].filter(Boolean).join(PATH_SEPARATOR), heading[2]);
+            open([title, h2].filter(Boolean).join(PATH_SEPARATOR), heading[2], no);
         } else if (heading && heading[1] === '###') {
-            open([title, h2, `### ${heading[2]}`].filter(Boolean).join(PATH_SEPARATOR), heading[2]);
+            open(
+                [title, h2, `### ${heading[2]}`].filter(Boolean).join(PATH_SEPARATOR),
+                heading[2],
+                no,
+            );
         } else {
-            current.lines.push(line);
+            current.entries.push({ text: line, no });
         }
-    }
+    });
     blocks.push(current);
 
-    return blocks.map((block) => ({
-        heading: block.heading || title || `# ${fallbackTitle}`,
-        headingText: block.headingText,
-        body: block.lines.join('\n').trim(),
-    }));
+    return blocks.map((block) => {
+        const filled = block.entries.filter((entry) => entry.text.trim() !== '');
+        const kept =
+            filled.length === 0
+                ? []
+                : block.entries.slice(
+                      block.entries.indexOf(filled[0]),
+                      block.entries.indexOf(filled[filled.length - 1]) + 1,
+                  );
+        return {
+            heading: block.heading || title || `# ${fallbackTitle}`,
+            headingText: block.headingText,
+            headingLine: block.headingLine,
+            body: kept
+                .map((entry) => entry.text)
+                .join('\n')
+                .trim(),
+            lines: kept.map((entry) => entry.no),
+        };
+    });
 }
 
 /**
@@ -217,9 +265,14 @@ function blocksOf(text, fallbackTitle) {
  * An empty block (a heading with nothing under it) holds nothing to find and is dropped.
  * The units of one file are numbered in file order, so the numbering is stable across runs.
  *
+ * A unit also records the lines it occupies in the file (`lineStart`, `lineEnd`, 1-based and
+ * inclusive), counted in the text after newline normalization, so a reader of the file finds the
+ * section by those lines. The first part of a section starts at its heading line; a later part of
+ * a section cut at paragraph or line boundaries starts at its own first line.
+ *
  * @param {string} rel - Path relative to the state folder, forward slashes.
  * @param {string} text - Whole file text.
- * @returns {{path: string, heading: string, kind: string, workspace: string, status: string, version: string, ordinal: number, body: string}[]}
+ * @returns {{path: string, heading: string, kind: string, workspace: string, status: string, version: string, ordinal: number, lineStart: number, lineEnd: number, body: string}[]}
  *   The units; empty when the location gives the file no kind.
  */
 function sectionsOf(rel, text) {
@@ -235,7 +288,8 @@ function sectionsOf(rel, text) {
     for (const block of blocksOf(normalized, path.posix.basename(rel, '.md'))) {
         if (block.body === '') continue;
         const kind = /^document history$/i.test(block.headingText) ? 'history' : fileKind;
-        for (const part of splitBody(block.body)) {
+        splitBody(block.body).forEach((part, index) => {
+            const firstLine = block.lines[part.from];
             units.push({
                 path: rel,
                 heading: block.heading,
@@ -244,9 +298,14 @@ function sectionsOf(rel, text) {
                 status: kind === 'spec' ? status : '',
                 version: kind === 'spec' ? version : '',
                 ordinal: units.length,
-                body: part,
+                lineStart:
+                    index === 0 && block.headingLine > 0
+                        ? Math.min(block.headingLine, firstLine)
+                        : firstLine,
+                lineEnd: block.lines[part.to],
+                body: part.text,
             });
-        }
+        });
     }
     return units;
 }

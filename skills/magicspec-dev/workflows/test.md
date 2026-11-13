@@ -1,6 +1,6 @@
 # Simulation Workflow
 
-**Command:** `/magicspec-dev:test [target]` — validates the engine by cognitive simulation and the regression suite (`tests/suite.md`, `tests/engine.js`).
+**Command:** `/magicspec-dev:test [target]` — validates the engine by cognitive simulation and the regression suite (the index `tests/suite.md` with its area files in `tests/suite/`, and `tests/engine.js`).
 
 Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and AOP.
 
@@ -22,7 +22,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 
 1. **Context (Zero-Prompt)**: Apply [references/context.md](../../magicspec/references/context.md) as a whole — every section applies unless it names other workflows.
 2. **Cognitive Execution ONLY**: **GUARD**: Never write/run physical simulation scripts. Evaluate logic internally (LLM task) and report expected outcomes.
-3. **Surgical Fix & Test (C9, C27, C28)**: If friction found → adjudicate it (§5), then apply the fix and write the regression test in `tests/suite.md` in the same run, following the C1 procedure (read first, trace impact, update atomically). No approval prompt: only a C27 whitelist entry stops the run for a question.
+3. **Surgical Fix & Test (C9, C27, C28)**: If friction found → adjudicate it (§5), then apply the fix and write the regression test in the area file of `tests/suite/` that the case's `Workflow` names, with the identifier after `Last` in the index `tests/suite.md` and the index updated in the same run, following the C1 procedure (read first, trace impact, update atomically). No approval prompt: only a C27 whitelist entry stops the run for a question.
 4. **Engine Integrity (C14)**: If engine files (`skills/magicspec/`) modified → `node skills/magicspec/scripts/executor.js update-engine-meta`.
 5. **No Metrics**: Real-world history/logs are for `skills/magicspec/references/retrospective.md`.
 6. **Anti-Fabrication Rule**: `0 rough edges` is a VALID and expected outcome. If the Logic Audit finds no vague terms, no divergent duplicates, and all guards pass — report it as a clean result. DO NOT invent findings to fill the report structure. Every finding MUST include: `file` (exact filename), `line` (exact line number), `evidence` (verbatim quote copy-pasted from the file), and `verification` (the grep/read command used to confirm). Findings without evidence are INVALID and must be rejected by any reviewer.
@@ -33,7 +33,7 @@ Debugs engine logic via synthetic "war games". Focus: logic gaps, friction, and 
 graph TD
     A[Trigger: Simulate] --> B[Pre-flight: Pre-reqs & Engine Guard]
     B --> C{Select Mode}
-    C -->|test| D[Execute suite.md Scenarios]
+    C -->|test or area| D[Execute suite Scenarios: every area, or one]
     C -->|target| E[Cognitive Walkthrough: workflow]
     C -->|empty| F[Improv Mode: Crisis Synthesis]
     D & E & F --> G[Identify Rough Edges & Ambiguity]
@@ -55,12 +55,14 @@ graph TD
     - Missing `.magicspec/` → silently execute `skills/magicspec/references/init.md` (do not prompt user), then resume.
 2. Read `.magicspec/workspace.json` → resolve active workspace(s) per Context invariant.
 3. **Read-Before-Claim Gate** (Grounding Phase): Read ALL workflow files that will be evaluated in the Logic Audit. Record a checklist of files read with their line counts. This phase MUST complete before any analysis begins. Any claim about a file NOT read in this step is automatically INVALID.
-    - `test` / `improv` mode: read ALL `skills/magicspec/{workflows,references}/*.md` files + `tests/suite.md`.
+    - `test` / `improv` mode: read ALL `skills/magicspec/{workflows,references}/*.md` files + the index `tests/suite.md` and every file of `tests/suite/`.
+    - `area` mode (`/magicspec-dev:test {area}`): read the index, that area's file, the workflow body the area is named for and the shipped text its cases cite — not the other areas and not the other workflows.
     - `direct` mode: read only the target workflow file(s).
 
 ### 1. Mode Selection
 
-- **Test Suite**: `/magicspec-dev:test test`. Runs all scenarios in `tests/suite.md`. If missing **OR** if the file contains 0 parseable `### T{N} —` scenario headers (corrupted/empty): fallback to Improv Mode automatically; notify user with hint to restore the file from origin. Before executing any scenario, run **Suite Integrity** (pre-execution): validate all scenario blocks follow `### T{N} — {name}` format. Report malformed headers (e.g., `:` instead of `—`) and skip the offending entry with a note; remaining valid scenarios proceed normally.
+- **Test Suite**: `/magicspec-dev:test test`. Runs all scenarios of every area: the index `tests/suite.md` lists the areas and `tests/suite/{area}.md` holds their cases. If the index is missing **OR** the index and the area files together contain 0 parseable `### T{N} —` scenario headers (corrupted/empty): fallback to Improv Mode automatically; notify user with hint to restore the files from origin.
+- **Area**: `/magicspec-dev:test {area}`, where `{area}` is a row of the index (`spec`, `plan`, `run`, `analyze`, `scripts`, …). Runs the cases of that one area and reads only what `area` mode of the Grounding Phase lists, so a run costs what its area costs and not what the suite costs. A workflow name that is also an area keeps its Direct walkthrough of that workflow and adds the cases of the area. A new case goes to the area file of its `Workflow`, takes the identifier after `Last` in the index and is listed there in the same change; no identifier is ever renumbered. Before executing any scenario, run **Suite Integrity** (pre-execution): validate all scenario blocks follow `### T{N} — {name}` format. Report malformed headers (e.g., `:` instead of `—`) and skip the offending entry with a note; remaining valid scenarios proceed normally.
 - **Direct**: `/magicspec-dev:test {workflow}` or `/magicspec-dev:test {workflow} {mode}` (e.g., `/magicspec-dev:test spec analyze`). Targets specific logic or sub-modes. Also accepts file paths (e.g., `@/path/to/workflow.md`) — extract the workflow name from the filename.
 - **Improv**: Default if 0 args. Synthesize a crisis scenario following the **Crisis Template** (see below) and perform a **Cognitive Walkthrough** of the full SDD chain (Spec→Task→Run) on this imaginary state to find leaks.
 

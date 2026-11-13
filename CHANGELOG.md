@@ -85,6 +85,8 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - Updated implementation plan (engine)
 - Completed 4 tasks (engine)
 - Updated 2 specifications (engine)
+- Updated 3 specifications (engine)
+- Updated 5 specifications (engine)
 
 ## [3.0.0] - 2026-10-28
 

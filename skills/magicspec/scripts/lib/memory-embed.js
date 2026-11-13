@@ -18,7 +18,9 @@
 //
 // `url`, `model` and `dimensions` are required; `apiKeyEnv` names the environment variable
 // that holds a bearer key, if the provider needs one — the key itself is never written to a
-// project file. The request is the widely implemented shape: a JSON body with `model` and
+// project file. The setting is committed with the project and so reaches every copy of it, the
+// credential does not: a machine where the named variable is unset or empty sends nothing and
+// ranks lexically (`credentialProblem`). The request is the widely implemented shape: a JSON body with `model` and
 // `input` (a list of texts), answered by `{"data": [{"embedding": [...]}, ...]}`. What is sent
 // is, for an indexing run, the heading path and the text of each section that has no vector
 // yet (cut at 6000 characters), and for a query, the query text.
@@ -111,6 +113,22 @@ function hostOf(setting) {
     return new URL(setting.url).host;
 }
 
+/**
+ * Why this machine cannot use the setting, when it names a credential it does not hold. The
+ * setting is committed with the project, so every copy receives it; whether a machine takes part
+ * is decided by what that machine holds, and a machine without the named variable sends nothing
+ * (AM-7). The reason names the variable and never its value.
+ *
+ * @param {{apiKeyEnv?: string}} setting - A valid setting.
+ * @param {NodeJS.ProcessEnv} [env] - The environment of the run.
+ * @returns {string|null} The reason, or null when the setting names no credential or it is held.
+ */
+function credentialProblem(setting, env = process.env) {
+    if (!setting.apiKeyEnv) return null;
+    if ((env[setting.apiKeyEnv] ?? '').trim() !== '') return null;
+    return `the environment variable ${setting.apiKeyEnv}, named by memory.embeddings.apiKeyEnv, is not set here, so nothing was sent`;
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // The request (the only network call)
 // ───────────────────────────────────────────────────────────────────────────
@@ -122,9 +140,12 @@ function hostOf(setting) {
  * @param {{url: string, model: string, dimensions: number, apiKeyEnv?: string}} setting - A valid setting.
  * @param {string[]} texts - Texts to embed, at least one.
  * @returns {Float32Array[]} One vector per text, in order.
- * @throws {Error} With the reason, when the provider cannot be reached or answers wrongly.
+ * @throws {Error} With the reason, when the machine lacks the credential the setting names (before
+ *   any request is made) or the provider cannot be reached or answers wrongly.
  */
 function embed(setting, texts) {
+    const missing = credentialProblem(setting);
+    if (missing) throw new Error(missing);
     const key = setting.apiKeyEnv ? process.env[setting.apiKeyEnv] : undefined;
     const child = spawnSync(process.execPath, [__filename], {
         input: JSON.stringify({ url: setting.url, model: setting.model, input: texts, key }),
@@ -214,9 +235,10 @@ function runRequest() {
 // ───────────────────────────────────────────────────────────────────────────
 
 /**
- * Embeds the sections that have no vector yet and stores the vectors. A change of model or
- * of size discards every stored vector first, so all are embedded again. Each batch is
- * saved, so a failure part-way keeps what was done.
+ * Embeds the sections that have no vector yet and stores the vectors. Vectors are comparable only
+ * when the same provider address, model and size produced them, so a change of any of the three
+ * discards every stored vector first and all are embedded again. Each batch is saved, so a
+ * failure part-way keeps what was done.
  *
  * @param {object} backend - An open backend with the vector methods.
  * @param {{url: string, model: string, dimensions: number, apiKeyEnv?: string}} setting - A valid setting.
@@ -225,11 +247,16 @@ function runRequest() {
  * @throws {Error} When a request fails.
  */
 function embedPending(backend, setting, embedFn = embed) {
-    const { model, dimensions } = setting;
-    if (backend.getMeta('model') !== model || backend.getMeta('dim') !== String(dimensions)) {
+    const { model, dimensions, url } = setting;
+    if (
+        backend.getMeta('model') !== model ||
+        backend.getMeta('dim') !== String(dimensions) ||
+        backend.getMeta('url') !== url
+    ) {
         backend.clearVectors();
         backend.setMeta('model', model);
         backend.setMeta('dim', dimensions);
+        backend.setMeta('url', url);
     }
     backend.setMeta('provider', hostOf(setting));
     let sent = 0;
@@ -314,6 +341,7 @@ module.exports = {
     RRF_K,
     readSetting,
     hostOf,
+    credentialProblem,
     embed,
     embedPending,
     cosine,

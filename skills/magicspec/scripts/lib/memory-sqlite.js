@@ -14,7 +14,7 @@
 // Schema:
 //   meta(key, value)                     settings: schema_version, backend, provider, model, dim
 //   files(path, sha256, indexed_at)      the fingerprint of every indexed file
-//   sections(id, path, heading, kind, workspace, status, version, ordinal, body)
+//   sections(id, path, heading, kind, workspace, status, version, ordinal, line_start, line_end, body)
 //   sections_fts                         FTS5 over heading and body, external content
 //   vectors(section_id, model, dim, data)  optional embeddings, Float32 blobs
 
@@ -23,14 +23,14 @@ const path = require('path');
 const { HISTORY_KINDS } = require('./memory-sections');
 
 /** Layout version of the database; a different value empties the index, which is rebuilt. */
-const SCHEMA_VERSION = '1';
+const SCHEMA_VERSION = '2';
 
 const SCHEMA = `
 CREATE TABLE IF NOT EXISTS meta(key TEXT PRIMARY KEY, value TEXT);
 CREATE TABLE IF NOT EXISTS files(path TEXT PRIMARY KEY, sha256 TEXT, indexed_at TEXT);
 CREATE TABLE IF NOT EXISTS sections(
     id INTEGER PRIMARY KEY, path TEXT, heading TEXT, kind TEXT, workspace TEXT,
-    status TEXT, version TEXT, ordinal INTEGER, body TEXT
+    status TEXT, version TEXT, ordinal INTEGER, line_start INTEGER, line_end INTEGER, body TEXT
 );
 CREATE INDEX IF NOT EXISTS sections_path ON sections(path);
 CREATE VIRTUAL TABLE IF NOT EXISTS sections_fts USING fts5(
@@ -49,6 +49,45 @@ CREATE TRIGGER IF NOT EXISTS sections_ad AFTER DELETE ON sections BEGIN
     DELETE FROM vectors WHERE section_id = old.id;
 END;
 `;
+
+// ───────────────────────────────────────────────────────────────────────────
+// Query parts
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * The FTS5 expression of a parsed query: each phrase is a quoted run of adjacent tokens and
+ * the phrases are joined by OR.
+ *
+ * @param {string[][]} phrases - Parsed query (`parseQuery`).
+ * @returns {string}
+ */
+function matchOf(phrases) {
+    return phrases.map((tokens) => `"${tokens.join(' ')}"`).join(' OR ');
+}
+
+/**
+ * The SQL conditions and their parameters for a query's filters, shared by the ranked query and
+ * the count so that both see the same set of sections.
+ *
+ * @param {{kinds?: string[], workspace?: string, history?: boolean}} options - As in `query`.
+ * @returns {{where: string[], params: string[]}}
+ */
+function filtersOf(options) {
+    const where = [];
+    const params = [];
+    if (options.kinds?.length) {
+        where.push(`s.kind IN (${options.kinds.map(() => '?').join(', ')})`);
+        params.push(...options.kinds);
+    } else if (!options.history) {
+        where.push(`s.kind NOT IN (${HISTORY_KINDS.map(() => '?').join(', ')})`);
+        params.push(...HISTORY_KINDS);
+    }
+    if (options.workspace) {
+        where.push('s.workspace = ?');
+        params.push(options.workspace);
+    }
+    return { where, params };
+}
 
 // ───────────────────────────────────────────────────────────────────────────
 // The backend
@@ -144,7 +183,7 @@ function open(dbPath, sqlite) {
         ofFile: db.prepare('SELECT id, heading, body FROM sections WHERE path = ?'),
         deleteId: db.prepare('DELETE FROM sections WHERE id = ?'),
         refile: db.prepare(
-            'UPDATE sections SET kind = ?, workspace = ?, status = ?, version = ?, ordinal = ? WHERE id = ?',
+            'UPDATE sections SET kind = ?, workspace = ?, status = ?, version = ?, ordinal = ?, line_start = ?, line_end = ? WHERE id = ?',
         ),
         meta: db.prepare('SELECT id, kind, workspace FROM sections'),
         pending: db.prepare(
@@ -160,7 +199,7 @@ function open(dbPath, sqlite) {
             'INSERT OR REPLACE INTO files(path, sha256, indexed_at) VALUES (?, ?, ?)',
         ),
         insert: db.prepare(
-            'INSERT INTO sections(path, heading, kind, workspace, status, version, ordinal, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+            'INSERT INTO sections(path, heading, kind, workspace, status, version, ordinal, line_start, line_end, body) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
         ),
         getMeta: db.prepare('SELECT value FROM meta WHERE key = ?'),
         putMeta: db.prepare('INSERT OR REPLACE INTO meta(key, value) VALUES (?, ?)'),
@@ -182,7 +221,8 @@ function open(dbPath, sqlite) {
 
         replaceFile(rel, sha256, units) {
             begin();
-            // A section whose heading and text did not change keeps its row, and with it its vector.
+            // A section whose heading and text did not change keeps its row, and with it its vector;
+            // its kind, version and lines are location and header, so they follow the file.
             const kept = new Map();
             for (const row of statement.ofFile.all(rel)) {
                 const key = JSON.stringify([row.heading, row.body]);
@@ -192,7 +232,18 @@ function open(dbPath, sqlite) {
             for (const u of units) {
                 const id = kept.get(JSON.stringify([u.heading, u.body]))?.shift();
                 if (id === undefined) fresh.push(u);
-                else statement.refile.run(u.kind, u.workspace, u.status, u.version, u.ordinal, id);
+                else {
+                    statement.refile.run(
+                        u.kind,
+                        u.workspace,
+                        u.status,
+                        u.version,
+                        u.ordinal,
+                        u.lineStart,
+                        u.lineEnd,
+                        id,
+                    );
+                }
             }
             for (const ids of kept.values()) for (const id of ids) statement.deleteId.run(id);
             for (const u of fresh) {
@@ -204,6 +255,8 @@ function open(dbPath, sqlite) {
                     u.status,
                     u.version,
                     u.ordinal,
+                    u.lineStart,
+                    u.lineEnd,
                     u.body,
                 );
             }
@@ -231,7 +284,7 @@ function open(dbPath, sqlite) {
                 const chunk = ids.slice(i, i + 500);
                 const rows = db
                     .prepare(
-                        `SELECT id, path, heading, kind, workspace, status, version, ordinal, body FROM sections WHERE id IN (${chunk.map(() => '?').join(', ')})`,
+                        `SELECT id, path, heading, kind, workspace, status, version, ordinal, line_start AS lineStart, line_end AS lineEnd, body FROM sections WHERE id IN (${chunk.map(() => '?').join(', ')})`,
                     )
                     .all(...chunk);
                 for (const row of rows) found.set(Number(row.id), { ...row });
@@ -283,31 +336,38 @@ function open(dbPath, sqlite) {
          */
         query(phrases, options = {}) {
             if (phrases.length === 0) return [];
-            const match = phrases.map((tokens) => `"${tokens.join(' ')}"`).join(' OR ');
-            const where = [];
-            const params = [match];
-            if (options.kinds?.length) {
-                where.push(`s.kind IN (${options.kinds.map(() => '?').join(', ')})`);
-                params.push(...options.kinds);
-            } else if (!options.history) {
-                where.push(`s.kind NOT IN (${HISTORY_KINDS.map(() => '?').join(', ')})`);
-                params.push(...HISTORY_KINDS);
-            }
-            if (options.workspace) {
-                where.push('s.workspace = ?');
-                params.push(options.workspace);
-            }
-            params.push(options.limit ?? 10);
+            const { where, params } = filtersOf(options);
             const rows = db
                 .prepare(
-                    `SELECT s.id, s.path, s.heading, s.kind, s.workspace, s.status, s.version, s.ordinal, s.body,
+                    `SELECT s.id, s.path, s.heading, s.kind, s.workspace, s.status, s.version, s.ordinal,
+                            s.line_start AS lineStart, s.line_end AS lineEnd, s.body,
                             -bm25(sections_fts) AS score
                      FROM sections_fts JOIN sections s ON s.id = sections_fts.rowid
                      WHERE sections_fts MATCH ? ${where.map((w) => `AND ${w}`).join(' ')}
                      ORDER BY score DESC, s.id ASC LIMIT ?`,
                 )
-                .all(...params);
+                .all(matchOf(phrases), ...params, options.limit ?? 10);
             return rows.map((row) => ({ ...row }));
+        },
+
+        /**
+         * Counts the sections that hold at least one phrase under the same filters as `query`,
+         * whatever its limit.
+         *
+         * @param {string[][]} phrases - Parsed query (`parseQuery`).
+         * @param {{kinds?: string[], workspace?: string, history?: boolean}} [options] - As in `query`.
+         * @returns {number}
+         */
+        count(phrases, options = {}) {
+            if (phrases.length === 0) return 0;
+            const { where, params } = filtersOf(options);
+            const row = db
+                .prepare(
+                    `SELECT COUNT(*) AS n FROM sections_fts JOIN sections s ON s.id = sections_fts.rowid
+                     WHERE sections_fts MATCH ? ${where.map((w) => `AND ${w}`).join(' ')}`,
+                )
+                .get(matchOf(phrases), ...params);
+            return Number(row?.n ?? 0);
         },
 
         save() {

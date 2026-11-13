@@ -77,7 +77,9 @@
 │   ├── magicspec/
 │   └── magicspec-dev/
 └── tests/
+    ├── engine/
     ├── engine.js
+    ├── suite/
     └── suite.md
 ```
 

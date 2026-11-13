@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.65.0
-**Generated:** 2026-11-12
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.66.0
+**Version:** 1.68.0
+**Generated:** 2026-11-13
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.69.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 59](archives/tasks/phase-59.md) | Layout of the Suites (Harness by Domain, Cognitive Suite by Area) — the harness keeps its one entry and its case names and registers one module per domain over two shared helper layers; the cognitive suite becomes an index and one file per area; 12 tasks in four tracks (S, H, E/T, Y) | `Done (Archived)` |
+| [Phase 58](archives/tasks/phase-58.md) | Artifact Memory: Readable Citations, Announced Cut, Credential and Vector Identity — a result of `memory-query` carries its lines and a size estimate, a cut list says how many matched and pages to the rest, a clone without the key its shared provider setting names sends no text, and vectors from another provider address are discarded; 10 tasks in five tracks (M, W, D, E, T/S) | `Done (Archived)` |
 | [Phase 57](archives/tasks/phase-57.md) | Maintenance: One Runtime per Invocation — a child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the maintenance pipeline starts with the runtime that started its parent, not by the name `node` (feedback note n2, found by the floor run of Phase 56) | `Done (Archived)` |
 | [Phase 56](archives/tasks/phase-56.md) | Development Toolchain (Stages 0 and 1) — Biome processes every script after one formatting change, a strict type check over the existing JSDoc covers the scripts, the maintenance scripts and the harness, Fallow analyzes the engine with the entry points the executor hides from a static reader, and continuous integration is two jobs: the tools on the current LTS line and the harness on the stated runtime floor and the LTS line, each check advisory until it passes and gating afterwards; nothing a user installs changes | `Done (Archived)` |
 | [Phase 55](archives/tasks/phase-55.md) | Sync Command — `/magicspec sync` brings derived state back in line with its sources (the registry's computed cells, the rule projection and host copies, the graph and wiki, live memory's progress lines, declared version anchors, registered documentation blocks), writes only what needs no judgement, reports every disagreement and stale file with the command that resolves it, deletes nothing, writes nothing on a second run and previews with `--dry-run`; the registration form for anchors and blocks, the body and router row, the kernel's exemptions and caution, the constitution's C2, and the maintenance pipeline running the shipped pass as its project-meta stage | `Done (Archived)` |
@@ -79,11 +81,6 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 | [Phase 22](archives/tasks/phase-22.md) | Field-Report Triage — DESIGN_DEBT_PENDING Structural Predicate, Mode C Depth Control, Project-Auditor Citation | `Done (Archived)` |
 | [Phase 23](archives/tasks/phase-23.md) | Next-Action Task-Level Precedence & Decision-Prune Honesty — Detailed Tracking `Status`/`Assignment` screen, terminal all-excluded branch, decision-prune claim correction | `Done (Archived)` |
 | [Phase 24](archives/tasks/phase-24.md) | Dev-Repo Engine-Version Snapshot Sync — L2 snapshot writer, guarded L1 delegation, `rules/magic.md` §1 sole-writer carve-out; plus Track C, the Next Action title-stripping regression found by this phase's own planning run | `Done (Archived)` |
-
-## Replan Directive
-
-**Plan version:** 1.64.0
-**Directive:** The engine registry moved from v1.74.0 to v1.75.0 (Phase 56 recorded as built: `l2-engine-toolchain` 1.2.1, `l2-test-suite` 1.44.0): revalidate the plan against it, and mark Phase 56 done in the plan.
 
 ## Backlog
 

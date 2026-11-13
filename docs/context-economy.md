@@ -10,7 +10,7 @@ An agent turn re-reads the whole context, so the cost of a session is the sum, o
 | Working documents | `check-bloat` flags a registry, plan, task ledger or constitution over 30 KB (`DOC_BLOAT`) or 60 KB (`DOC_DECOMPOSE`), in the workspace and globally. Every workflow reads them whole. Override in `.magicspec/workspace.json` under `bloat.doc` (`soft` and `hard`, in KB; `0` turns a tier off). |
 | Specifications and phases | `SPEC_BLOAT` / `SPEC_DECOMPOSE` (300 / 500 lines) and `TASK_BLOAT` / `TASK_DECOMPOSE` (250 / 400 lines), as before. |
 | Graph queries | `build-spec-graph --json --out` writes the graph to `.magicspec/graph/query.json` and prints one line. Plain `--json` prints the whole graph, tens of thousands of tokens on a large registry. |
-| Content questions | `memory-query "{text}"` returns the few sections that bear on a question, ranked, with citations, instead of a read of every specification that might hold the answer. See [graph.md](graph.md) section 6. |
+| Content questions | `memory-query "{text}"` returns the few sections that bear on a question, ranked, each with its lines and a size estimate, instead of a read of every specification that might hold the answer. A list that is cut says how many matched and names the next `--offset`. See [graph.md](graph.md) section 6. |
 | Resuming | `resume-state` restores position from `STATE.md`, so a fresh session loses nothing that was saved. |
 
 ## 2. What the Session Has to Do

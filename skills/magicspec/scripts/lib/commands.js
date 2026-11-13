@@ -239,6 +239,10 @@ const COMMANDS = {
                 help: 'Comma-separated kinds to keep: spec, rules, plan, tasks, state, registry, archive, history, retrospective, changelog',
             },
             '--k': { kind: 'value', help: 'Most results to print, 1 to 50 (default: 10)' },
+            '--offset': {
+                kind: 'value',
+                help: 'Results to skip, for the next page of a cut list (default: 0); the first line names the next offset',
+            },
             '--history': {
                 kind: 'bool',
                 help: 'Include archives, history tables, retrospectives and changelogs',

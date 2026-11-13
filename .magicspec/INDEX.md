@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.48.0
+**Version:** 1.52.0
 **Status:** Active
-**Engine Version:** 3.0.136
+**Engine Version:** 3.0.142
 
 ## Overview
 
@@ -24,6 +24,10 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.52.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). Phase 59 recorded as built: `l2-test-suite.md` 1.48.0. The engine registry is 1.80.0. |
+| 1.51.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). `l2-test-suite.md` 1.47.0 (§Layout of the Suites). The engine registry is 1.79.0. |
+| 1.50.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). Phase 58 recorded as built: `l2-artifact-memory-store.md` 1.3.0, `l2-test-suite.md` 1.46.0, `l2-role-cards-governance.md` 1.4.9, `l2-role-cards-execution.md` 1.3.2. The engine registry is 1.78.0. |
+| 1.49.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). A second reference-mining pass over the memory collection: `l1-artifact-memory.md` 1.1.0, `l2-artifact-memory-store.md` 1.2.0, `l2-test-suite.md` 1.45.0. The engine registry is 1.77.0 and loses a duplicated copy of 65 history lines. |
 | 1.48.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). `l2-engine-automation.md` 1.32.1. The engine registry is 1.76.0. |
 | 1.47.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). Phase 56 recorded as built: `l2-engine-toolchain.md` 1.2.1 and `l2-test-suite.md` 1.44.0. The engine registry is 1.75.0. |
 | 1.46.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). `l2-engine-toolchain.md` 1.2.0 (TypeScript as a checker, non-strict, over a growing set of files with `// @ts-check`; the conversion to `.ts` removed). The engine registry is 1.74.0. |

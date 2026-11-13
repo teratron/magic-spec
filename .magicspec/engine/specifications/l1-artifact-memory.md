@@ -1,6 +1,6 @@
 # Artifact Memory Index
 
-**Version:** 1.0.1
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -31,6 +31,12 @@ A reference-mining pass over the collection (seventeen memory and code-graph pro
 
 The lexical half gives most of the benefit with none of the cost; the vector half adds recall on paraphrase at the price of a model.
 
+**Second pass: token economy and the shared knowledge base `[ADDED]`.** A second mining pass over the same collection (2026-11-13) asked two narrower questions: what makes such an index cheap to *read*, and what lets a team share what it knows. Three findings, each recorded by class:
+
+1. **A ranked list that hides its own cut misleads its reader.** Three of the projects — a token compressor for tool output, a code-graph server and a graph-extraction tool — settle independently on one rule: output cut to a budget says what was left out and how to get it (omitted totals and a continuation, a sentence at the top of the output, a retrieval pointer). This index had no such line. Measured on this repository: `check-prerequisites` matches 79 sections in force across 18 files, and 220 more in history; the default query prints ten with nothing to show that 69 were left out. The coherence check (CH-1), the plan check and the sibling-site search build their comparison set from that list, so the cut becomes a gap in the set and nothing signals it (AM-9).
+2. **A citation without a location costs a whole file.** A session-memory project shows each result's retrieval cost beside its title and fetches the detail only for what the agent chooses. This index gave a file and a heading path but no lines and no size, so "read the cited section" could only be done by reading the file — and this repository's plan is 228 KB, its registry 163 KB. The context guidance already says to read the section, not the file; the citation now makes that possible (AM-2, AM-3).
+3. **The knowledge base a team shares is the artifacts; each clone builds its own index.** A team-memory project commits its learnings with the code and keeps its map as a local cache, with personal notes kept apart; others share through a server with per-person keys. Here the artifacts already travel through version control and the index is a cache (AM-1), so nothing new is shared — but the provider setting is: it sits in a file every clone receives. A clone that lacks the credential the setting names was found to send section text anyway, in a request the provider refuses (reproduced: the body arrived with no authorization header and was answered 401, and it repeats on every refresh). The setting is the team's choice; whether a given machine takes part is decided by what that machine holds (AM-7).
+
 ## 2. Constraints & Assumptions
 
 - The markdown artifacts stay the only source of truth; the index is runtime state, ignored by version control and safe to delete.
@@ -41,13 +47,14 @@ The lexical half gives most of the benefit with none of the cost; the vector hal
 ## 3. Core Invariants
 
 - **AM-1 Derived and disposable.** The index is built only from the project's SDD artifacts and can be deleted and rebuilt with no loss; nothing is ever written into it that is not in an artifact.
-- **AM-2 Section units with provenance.** The unit of the index is a section; each carries its file, its heading path, its artifact kind and, for a specification, its status and version.
-- **AM-3 Cite, then read.** A query returns sections with their citations and a score, never a synthesized answer. An agent that relies on a result reads the cited section first.
+- **AM-2 Section units with provenance.** The unit of the index is a section; each carries its file, its heading path, the lines it occupies in that file, its artifact kind and, for a specification, its status and version. `[MODIFIED]`
+- **AM-3 Cite, then read.** A query returns sections with their citations, a score and each section's size as an estimate of what reading it costs, never a synthesized answer. An agent that relies on a result reads the cited lines first — that section, not the whole file. `[MODIFIED]`
 - **AM-4 Lexical always, semantic optional.** Ranked lexical search works on every installation. Semantic search is added only when an embedding provider is configured; then results combine both rankings. A query states which modes produced its results.
 - **AM-5 Fresh on use.** The index knows the content fingerprint of every file it holds. A query first re-indexes files whose fingerprint changed, so it never answers from a stale section; the refresh that already follows every change to the state folder also refreshes the index.
 - **AM-6 History stays history.** Archives, history tables, retrospectives and changelogs are indexed with their kind, and excluded from results by default; a query can ask for them.
-- **AM-7 Local unless configured.** The index never sends text anywhere. A configured remote embedding provider receives section text only after the person has configured it, and the configuration names what it sends.
+- **AM-7 Local unless configured.** The index never sends text anywhere. A configured remote embedding provider receives section text only after the person has configured it, and the configuration names what it sends. The setting is shared with every copy of the project, so it alone does not make a machine take part: a run sends nothing when the setting names a credential this environment does not hold — it ranks lexically and records why. `[MODIFIED]`
 - **AM-8 Never in the way.** A failure to build, open or query the index never fails a workflow: the caller falls back to plain text search and the failure is recorded as a diagnostic.
+- **AM-9 A cut list says so.** A query that returns fewer sections than matched states how many matched in force, how many more matched in history, and how to get the rest. A caller that needs every match — a comparison set, a sibling-site search — treats a cut list as incomplete: it asks for the rest or narrows the query before it relies on the set. `[ADDED]`
 
 ## 5. Detailed Design
 
@@ -74,6 +81,10 @@ graph LR
 - **Summaries in the wiki instead** — rejected earlier on measured recall (`l2-spec-graph-memory.md` §4.5).
 - **A vector store only** — rejected: it needs a model on every installation and loses exact-name matches that lexical search gets right.
 - **A memory server process** — rejected: the engine has no long-running process, and the index must work in a plain session.
+- **A shared team store with per-person keys** `[ADDED]` — rejected: the artifacts already reach every teammate through version control, and the index is rebuilt from them on each machine; a server would add a second copy of the knowledge base that can disagree with the first.
+- **A "tokens saved" figure** `[ADDED]` — rejected: one project reports, per learning, what working it out cost less what reading it costs. The agent has no reliable reading of its own usage, so such a figure would be invented; the size AM-3 adds is an estimate of what one read costs, labelled as an estimate, and claims no saving.
+- **Blocking a whole-file read when the index knows the file** `[ADDED]` — rejected: a read gate is a host hook and a blocking control, and the citation's line range gives the same economy without refusing anything.
+- **Ranking by freshness** `[ADDED]` — rejected: an invariant is not less true for being old; currency is carried by status, version and the history kinds (AM-6), not by age.
 
 ## Canonical References
 
@@ -87,5 +98,6 @@ graph LR
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-13 | Agent | **Second reference-mining pass over the memory collection** (operator focus: token economy, a knowledge base other developers receive, SQLite with vectors), recorded by class. AM-2 adds the lines a section occupies; AM-3 adds each result's size and reads the cited lines, not the file; AM-7 states that the shared provider setting does not by itself make a machine send — a missing credential sends nothing; new AM-9: a cut result list says how many matched and how to get the rest, and a caller that needs every match does not treat it as complete. Measured: 79 in-force matches of one name shown as 10 with no remainder; the unset-credential upload reproduced. §7 records four rejected designs. Spec-critic and prompt-engineer reviews below; Stable retained under Trust Mode. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (SQLite vector memory, research `.references/.memory`) and the memory store of `.drafts/flowchart.md`. Reference-mining recorded by class only. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

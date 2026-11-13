@@ -17,6 +17,7 @@
 //   fileHashes()                  Map of indexed file path -> SHA-256 of its content
 //   replaceFile(rel, sha, units)  swaps one file's sections for new ones, with its hash; a section
 //                                 whose heading and text are unchanged keeps its id and its vector
+//                                 (a unit carries lineStart and lineEnd: the lines it occupies in the file)
 //   removeFile(rel)               drops a file, its hash and its sections
 //   sectionCount()                number of sections held
 //   sectionMeta()                 Map of section id -> {kind, workspace}, for filtering vector hits
@@ -26,6 +27,7 @@
 //   vectors(model, dim)           Map of section id -> Float32Array
 //   clearVectors()                forgets every vector (the model or its size changed)
 //   query(phrases, options)       ranked rows, best first (see `query` below)
+//   count(phrases, options)       how many sections the same filters match, whatever the limit
 //   save() / close()              persist (a no-op for a database) / release
 //
 // Ranking is Okapi BM25 as SQLite's FTS5 computes it (`bm25()`, k1 = 1.2, b = 0.75, equal
@@ -38,10 +40,10 @@
 
 const fs = require('fs');
 const path = require('path');
-const { HISTORY_KINDS, tokenize } = require('./memory-sections');
+const { matchesFilters, tokenize } = require('./memory-sections');
 
 /** Layout version of the file; a different value empties the index, which is rebuilt. */
-const SCHEMA_VERSION = '1';
+const SCHEMA_VERSION = '2';
 
 const K1 = 1.2;
 const B = 0.75;
@@ -173,6 +175,30 @@ function occurrences(stats, phrase) {
     return found;
 }
 
+/**
+ * The BM25 score of every section that holds at least one phrase, over the statistics of all
+ * sections.
+ *
+ * @param {ReturnType<typeof analyze>} stats - Statistics of the sections.
+ * @param {number} rows - How many sections there are.
+ * @param {string[][]} phrases - Parsed query (`parseQuery`).
+ * @returns {Map<number, number>} Section index -> score.
+ */
+function scoresOf(stats, rows, phrases) {
+    const average = stats.total / rows;
+    const scores = new Map();
+    for (const phrase of phrases) {
+        const hits = occurrences(stats, phrase);
+        const idfRaw = Math.log((rows - hits.size + 0.5) / (hits.size + 0.5));
+        const idf = idfRaw <= 0 ? MIN_IDF : idfRaw;
+        for (const [index, f] of hits) {
+            const norm = f + K1 * (1 - B + (B * stats.lengths[index]) / average);
+            scores.set(index, (scores.get(index) ?? 0) + (idf * (f * (K1 + 1))) / norm);
+        }
+    }
+    return scores;
+}
+
 // ───────────────────────────────────────────────────────────────────────────
 // The backend
 // ───────────────────────────────────────────────────────────────────────────
@@ -196,7 +222,7 @@ function open(cachePath) {
         changed = true;
     };
 
-    return {
+    const backend = {
         name: 'fallback',
 
         getMeta: (key) => state.meta[key] ?? null,
@@ -286,6 +312,25 @@ function open(cachePath) {
         },
 
         /**
+         * Ranks the sections that hold at least one phrase, all of them, best first.
+         *
+         * @param {string[][]} phrases - Parsed query (`parseQuery`).
+         * @param {{kinds?: string[], workspace?: string, history?: boolean}} options - As in `query`.
+         * @returns {object[]} Sections with a `score` (higher is better) and their position `index`.
+         */
+        rank(phrases, options) {
+            if (phrases.length === 0 || state.sections.length === 0) return [];
+            stats ??= analyze(state.sections);
+            const ranked = [];
+            for (const [index, score] of scoresOf(stats, state.sections.length, phrases)) {
+                const section = state.sections[index];
+                if (matchesFilters(section, options)) ranked.push({ ...section, score, index });
+            }
+            ranked.sort((a, b) => b.score - a.score || a.index - b.index);
+            return ranked;
+        },
+
+        /**
          * Ranks the sections that hold at least one phrase.
          *
          * @param {string[][]} phrases - Parsed query (`parseQuery`).
@@ -296,36 +341,22 @@ function open(cachePath) {
          *   file and section order.
          */
         query(phrases, options = {}) {
-            if (phrases.length === 0 || state.sections.length === 0) return [];
-            stats ??= analyze(state.sections);
-            const rows = state.sections.length;
-            const average = stats.total / rows;
-            const scores = new Map();
-            for (const phrase of phrases) {
-                const hits = occurrences(stats, phrase);
-                const idfRaw = Math.log((rows - hits.size + 0.5) / (hits.size + 0.5));
-                const idf = idfRaw <= 0 ? MIN_IDF : idfRaw;
-                for (const [index, f] of hits) {
-                    const norm = f + K1 * (1 - B + (B * stats.lengths[index]) / average);
-                    scores.set(index, (scores.get(index) ?? 0) + (idf * (f * (K1 + 1))) / norm);
-                }
-            }
-            const wanted = options.kinds?.length ? new Set(options.kinds) : null;
-            const ranked = [];
-            for (const [index, score] of scores) {
-                const section = state.sections[index];
-                if (
-                    wanted
-                        ? !wanted.has(section.kind)
-                        : !options.history && HISTORY_KINDS.includes(section.kind)
-                ) {
-                    continue;
-                }
-                if (options.workspace && section.workspace !== options.workspace) continue;
-                ranked.push({ ...section, score, index });
-            }
-            ranked.sort((a, b) => b.score - a.score || a.index - b.index);
-            return ranked.slice(0, options.limit ?? 10).map(({ index, ...row }) => row);
+            return backend
+                .rank(phrases, options)
+                .slice(0, options.limit ?? 10)
+                .map(({ index, ...row }) => row);
+        },
+
+        /**
+         * Counts the sections that hold at least one phrase under the same filters as `query`,
+         * whatever its limit.
+         *
+         * @param {string[][]} phrases - Parsed query (`parseQuery`).
+         * @param {{kinds?: string[], workspace?: string, history?: boolean}} [options] - As in `query`.
+         * @returns {number}
+         */
+        count(phrases, options = {}) {
+            return backend.rank(phrases, options).length;
         },
 
         save() {
@@ -345,6 +376,7 @@ function open(cachePath) {
 
         close() {},
     };
+    return backend;
 }
 
 module.exports = { open, SCHEMA_VERSION };

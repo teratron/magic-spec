@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-13 05:33
-**Phase:** 57 — complete
+**Updated:** 2026-11-13 10:54
+**Phase:** 59 — Layout of the Suites (Harness by Domain, Cognitive Suite by Area)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-57F01 children start with the running runtime
+- **Task:** T-59T01 Validation
 - **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
 - **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [57/57] ████████ 100%
+Overall: [59/59] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-13 **Decision:** Phase 59 complete. Provides: tests/engine.js as a 43-line entry over 33 domain modules and two helper layers with every case name kept (447 of 447), the cognitive suite as a 4.7 KB index and 17 area files with stable identifiers, /magicspec-dev:test {area} reading one area, two layout cases under six caught mutations, Fallow entry and ts-check on 25 of 36 files; suite 1.9.107, registry 1.80.0
+- 2026-11-13 **Decision:** Phase 58 complete. Provides: memory-query citations with their file lines and a size estimate (schema 2), a cut list that counts what matched in force and in history and pages by --offset over a fixed fused pool, no upload from a machine that lacks the key a shared provider setting names, vectors comparable by provider address, the five readers paging or narrowing a cut list, docs/graph.md section 6; harness 445, suite 1.9.105, registry 1.78.0, 20 mutation entries caught
 - 2026-11-13 **Decision:** Phase 57 complete (maintenance). Provides: every child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the pipeline starts with process.execPath; two harness cases and four caught mutations; the same repair on v2.1 (2.1.147); feedback note n2 discarded; harness 438
 - 2026-11-13 **Decision:** Phase 56 complete. Provides: Biome over code only after one formatting change, a non-strict TypeScript check over the files that carry // @ts-check (TypeScript is a checker, no source converted), Fallow over the skill folder, two CI jobs (toolchain on Node 24; harness on Node 18 and 24), the harness run on the Node 18 floor (427 of 436, five classified, one engine defect recorded as feedback note n2); engine registry 1.75.0, harness 436
 - 2026-11-12 **Decision:** Phase 55 complete. Provides: the sync command (registry counts, live-memory counters, rule projections and host copies, wiki and index, declared version anchors, registered documentation blocks; a judgement reported with its command and left alone, a stale file reported and kept, a second run writing nothing, a preview changing no byte), the sync section of workspace.json, constitution 1.24.0 and the kernel's exemptions, the maintenance pipeline running the shipped pass with the updater retired, a repair of the handoff line; engine 3.0.129, harness 432, suite 1.9.104, registry 1.72.0, kernel 16263 bytes
-- 2026-11-12 **Decision:** Phase 54 complete. Provides: memory-query and memory-index (a local, derived, always-fresh index over the state folder with ranked citations, SQLite or pure-script backend chosen by trying, history out unless asked, never in the way), optional embeddings (one network file, one line naming host and count, RRF k 60, a failing provider a warning), the wiki refresh calling the indexer, the five instruction sites naming memory-query first, docs/graph.md section 6; engine 3.0.115, harness 419, suite 1.9.102, registry 1.71.0, rule kernel unchanged at 16021 bytes
-- 2026-11-12 **Decision:** Phase 53 complete. Provides: the goal command (a goal in words, a phase or a number of tasks pursued without pausing, each step its own body, six closed stop conditions, consent queued and asked after the one report), the goal block in live memory written only by update-state with its resume line and briefing line, the demand per step in the router and its parser, constitution 1.23.0, the rule kernel at 16021 bytes; engine 3.0.105, harness 386, suite 1.9.101
 
 ## Blockers
 

@@ -79,33 +79,37 @@ The wiki is a derivative artifact: any specification, plan, or rules change inva
 
 ## 6. Artifact Index
 
-The graph answers questions about structure. Questions about content — *which specification already defines the retry rule*, *has a decision about the lock been recorded* — are answered by searching the text, and the text is large. `memory-query` searches it for you: it finds the sections of your specifications, rules, plan, tasks and decisions that bear on a question, ranked, each with its file and heading.
+The graph answers questions about structure. Questions about content — *which specification already defines the retry rule*, *has a decision about the lock been recorded* — are answered by searching the text, and the text is large. `memory-query` searches it for you: it finds the sections of your specifications, rules, plan, tasks and decisions that bear on a question, ranked, each with its file, its heading, the lines it occupies and what reading it costs.
 
 ```bash
 node skills/magicspec/scripts/executor.js memory-query "retry rule"
 node skills/magicspec/scripts/executor.js memory-query "check-prerequisites" --kind=spec,rules --k=5
+node skills/magicspec/scripts/executor.js memory-query "check-prerequisites" --offset=10   # the next page
 node skills/magicspec/scripts/executor.js memory-query "retry rule" --history --json
 node skills/magicspec/scripts/executor.js memory-index              # build or refresh the index
 node skills/magicspec/scripts/executor.js memory-index --rebuild    # delete it and build from nothing
 ```
 
 ```plaintext
-modes: lexical
- 1. 12.4  .magicspec/ws/specifications/l1-x.md › ## 3. Core Invariants › X-4   (spec, Stable v1.2.0)
+modes: lexical · 1-10 of 79 in force, 220 more in history — next: --offset=10 (--k up to 50), --history for history
+ 1. 12.4  .magicspec/ws/specifications/l1-x.md:120-164 › ## 3. Core Invariants › X-4   (spec, Stable v1.2.0, ~1.1k tokens)
       … a failed call is retried three times with a pause …
 ```
+
+When every match fits, the first line is only `modes: lexical`. When the list is cut, the first line says how many sections matched in force, how many more matched in history, and the `--offset` that returns the next page (`--k` stays at 50 or less, so a long list is read in pages). Treat a cut list as incomplete: take the next page, or narrow the query with a more specific name, `--kind` or `--workspace`, before you rely on the set.
 
 | Option | Effect |
 | --- | --- |
 | `--kind=spec,rules` | Keep only these kinds: `spec`, `rules`, `plan`, `tasks`, `state`, `registry`, and the history kinds `archive`, `history`, `retrospective`, `changelog` |
 | `--k=10` | Most results to print, 1 to 50 |
+| `--offset=0` | Results to skip, for the next page of a cut list; the first line names the next offset |
 | `--history` | Include archives, history tables, retrospectives and changelogs, which are left out otherwise |
 | `--json` | The same results as data |
 | `--workspace={name}` | Only that workspace's sections |
 
 How to read it:
 
-- **A result is a citation, never an answer.** It names the section, its kind (and status and version for a specification), a score and a snippet. Open the cited section and read it before relying on it: the index finds, the text decides.
+- **A result is a citation, never an answer.** It names the section, the lines of the file it occupies, its kind (and status and version for a specification), a score, a size estimate and a snippet. Read the cited lines, not the file, before relying on it: the index finds, the text decides. The size is the section's characters over four, to two significant figures: what reading that section costs, not a saving.
 - **It reads the state folder only** — the Markdown of `.magicspec/` — not your product's code, and not what the engine derives from it (the graph folder, the caches, the generated context).
 - **It is always current.** A file whose content changed is re-indexed before a query answers, so no result comes from a stale section; unchanged files are not read again. `export-wiki` refreshes the index after the wiki, so one refresh keeps graph, wiki and index current.
 - **It is disposable.** The index lives in `.magicspec/.cache/` (`memory.sqlite`, or `memory.json` where the runtime has no SQLite module) and is rebuilt from your files at any time; `clean-cache` removes it and nothing is lost.
@@ -130,7 +134,9 @@ Out of the box the ranking is lexical: it works on every installation and sends 
 
 The provider must answer the widely implemented request: a JSON body with `model` and `input` (a list of texts), returning `{"data": [{"embedding": [...]}]}`. `apiKeyEnv` is optional and names an environment variable that holds a bearer key; the key itself is never written to a project file.
 
-**What is sent, and when.** Nothing leaves the machine until you configure this. `memory-index` sends, for each section that has no vector yet, its heading path and its text (cut at 6000 characters), in requests of 32 sections, and prints one line with the host and the number of sections sent; a section is sent again only when its text changes, and every section is sent again when you change the model or its dimensions. A query sends its own text, once. Results then combine the lexical and the vector ranking, and the first line reads `modes: lexical + vector`. If the provider fails, the lexical results are returned as before and a warning is recorded.
+**Sharing it with a team.** The setting lives in `workspace.json`, which goes into version control, so every developer who clones the project receives it; the key does not travel. Each developer sets the variable on their own machine. A machine where the variable is unset or empty sends nothing and ranks lexically, with one warning that names the variable, so a teammate without a key is never in the way and never uploads anything. Each developer builds their own index from the same files; nothing but the files and the setting is shared.
+
+**What is sent, and when.** Nothing leaves the machine until you configure this. `memory-index` sends, for each section that has no vector yet, its heading path and its text (cut at 6000 characters), in requests of 32 sections, and prints one line with the host and the number of sections sent; a section is sent again only when its text changes, and every section is sent again when you change the model, its dimensions or the provider address (vectors from another address are never ranked against the current ones). A query sends its own text, once. Results then combine the lexical and the vector ranking, and the first line reads `modes: lexical + vector`; a cut list counts the pool as the lexical matches plus the sections that match by meaning only. If the provider fails, the lexical results are returned as before and a warning is recorded.
 
 ## 7. Visualization
 
