@@ -172,7 +172,7 @@ function updateEngineMeta() {
     if (eolOnly.length > 0) {
         console.log(
             `ℹ️  ${eolOnly.length} engine file(s) differ from the release only in line endings; they are treated as unchanged. ` +
-            `To keep the release bytes on checkout, add \`/${ENGINE_REL}/** -text\` to .gitattributes.`,
+                `To keep the release bytes on checkout, add \`/${ENGINE_REL}/** -text\` to .gitattributes.`,
         );
     }
 
@@ -186,7 +186,7 @@ function updateEngineMeta() {
             if (missingFiles.length > 0) {
                 console.error(
                     `❌ ${missingFiles.length} file(s) listed in ${ENGINE_REL}/.checksums are absent from disk. ` +
-                    `Restore ${ENGINE_REL}/ from the release archive.`,
+                        `Restore ${ENGINE_REL}/ from the release archive.`,
                 );
             } else if (hasEngineWriteTooling()) {
                 console.error(
@@ -198,7 +198,7 @@ function updateEngineMeta() {
                 // check exists to surface.
                 console.error(
                     `❌ Engine drift detected. Restore ${ENGINE_REL}/ from the release archive — ` +
-                    'do not regenerate .checksums (that would mask the change).',
+                        'do not regenerate .checksums (that would mask the change).',
                 );
             }
             process.exit(1);

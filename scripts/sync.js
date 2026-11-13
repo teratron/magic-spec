@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+// @ts-check
 'use strict';
 
-const { execSync } = require('child_process');
+const { execFileSync } = require('child_process');
 const path = require('path');
 const fs = require('fs');
 const { enginePath } = require('./engine-path');
@@ -91,9 +92,8 @@ function runScript(scriptPath, extraArgs = [], opts = {}) {
         return;
     }
 
-    const argString = extraArgs.length ? ' ' + extraArgs.map((a) => `"${a}"`).join(' ') : '';
     try {
-        execSync(`node "${scriptPath}"${argString}`, { stdio: 'inherit' });
+        execFileSync(process.execPath, [scriptPath, ...extraArgs], { stdio: 'inherit' });
     } catch {
         if (opts.tolerant) {
             console.warn(`⚠️  ${path.basename(scriptPath)} exited non-zero (tolerant).`);

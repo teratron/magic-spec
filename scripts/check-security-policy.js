@@ -70,17 +70,22 @@ function checkPolicy(policyText, version) {
     if (!releaseLine) return [`'${version}' is not a version (expected major.minor.patch)`];
 
     const rows = parseSupportedVersions(policyText);
-    if (rows.length === 0) return ['the policy has no supported-versions table (rows like | `3.0.x` | Yes |)'];
+    if (rows.length === 0)
+        return ['the policy has no supported-versions table (rows like | `3.0.x` | Yes |)'];
 
     const problems = [];
     const releaseRows = rows.filter((row) => row.line === releaseLine);
     if (releaseRows.length === 0) {
         problems.push(`the policy does not list the ${releaseLine} line, which is being released`);
     } else if (releaseRows.some((row) => !row.supported)) {
-        problems.push(`the policy lists the ${releaseLine} line, which is being released, as not supported`);
+        problems.push(
+            `the policy lists the ${releaseLine} line, which is being released, as not supported`,
+        );
     }
     if (releaseRows.some((row) => row.supported) && releaseRows.some((row) => !row.supported)) {
-        problems.push(`the policy lists the ${releaseLine} line as both supported and not supported`);
+        problems.push(
+            `the policy lists the ${releaseLine} line as both supported and not supported`,
+        );
     }
     for (const row of rows) {
         if (row.supported && row.line !== releaseLine) {
@@ -114,15 +119,20 @@ function main() {
         fs.readFileSync(path.join(ROOT_DIR, 'skills', 'magicspec', '.version'), 'utf8').trim();
 
     if (!fs.existsSync(policyPath)) {
-        console.error(`[BLOCKED] The security policy is missing: ${path.relative(ROOT_DIR, policyPath)}`);
+        console.error(
+            `[BLOCKED] The security policy is missing: ${path.relative(ROOT_DIR, policyPath)}`,
+        );
         process.exit(1);
     }
     const problems = checkPolicy(fs.readFileSync(policyPath, 'utf8'), version);
     if (problems.length > 0) {
-        for (const problem of problems) console.error(`[BLOCKED] ${path.basename(policyPath)}: ${problem}`);
+        for (const problem of problems)
+            console.error(`[BLOCKED] ${path.basename(policyPath)}: ${problem}`);
         process.exit(1);
     }
-    console.log(`✅ ${path.basename(policyPath)} supports the ${minorLineOf(version)} line, as ${version} requires.`);
+    console.log(
+        `✅ ${path.basename(policyPath)} supports the ${minorLineOf(version)} line, as ${version} requires.`,
+    );
 }
 
 if (require.main === module) main();

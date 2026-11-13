@@ -145,9 +145,11 @@ function runHarness(harness, pattern, cwd) {
     // would make the nested run emit machine output instead of a report.
     const env = { ...process.env };
     delete env.NODE_TEST_CONTEXT;
+    // The report is read as the spec reporter prints it; Node 18 prints TAP by default, which this parser
+    // does not read, so every entry would be REFUSED there.
     const result = spawnSync(
         process.execPath,
-        ['--test', `--test-name-pattern=${pattern}`, harness],
+        ['--test', '--test-reporter=spec', `--test-name-pattern=${pattern}`, harness],
         { cwd, encoding: 'utf8', env },
     );
     if (result.error) throw result.error;

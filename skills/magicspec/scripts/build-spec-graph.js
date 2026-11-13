@@ -17,6 +17,7 @@ const {
     compilePathSet,
     loadGitignore,
     isSkippedDir,
+    listMarkdownFiles,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -280,7 +281,7 @@ function extractSpecDetails(wsName) {
     const specsDir = path.join(designAbs, wsName, 'specifications');
     if (!fs.existsSync(specsDir)) return;
 
-    const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md'));
+    const specFiles = listMarkdownFiles(specsDir);
 
     for (const specFile of specFiles) {
         const specPath = path.join(specsDir, specFile);

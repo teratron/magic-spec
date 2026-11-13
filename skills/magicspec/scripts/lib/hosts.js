@@ -1,3 +1,4 @@
+// @ts-check
 'use strict';
 
 const fs = require('fs');
@@ -6,6 +7,8 @@ const {
     engineRoot,
     engineRel,
     normalizePath,
+    isLink,
+    realOrNull,
     STATE_DIR_NAME,
     GRAPH_DIR_NAME,
 } = require('../utils');
@@ -109,9 +112,14 @@ const DEMANDS = Object.freeze(['deep', 'standard', 'light', 'per step']);
  */
 function parseCommandRow(line) {
     if (!line.startsWith('| `') || !line.endsWith('|')) return null;
-    const cells = line.slice(1, -1).split('|').map((cell) => cell.trim());
+    const cells = line
+        .slice(1, -1)
+        .split('|')
+        .map((cell) => cell.trim());
     if (cells.length !== 7) return null;
-    const command = /^`([a-z][a-z-]*)`(?: \(alias(?:es)? ((?:`[a-z][a-z-]*`(?:, )?)+)\))?$/.exec(cells[0]);
+    const command = /^`([a-z][a-z-]*)`(?: \(alias(?:es)? ((?:`[a-z][a-z-]*`(?:, )?)+)\))?$/.exec(
+        cells[0],
+    );
     const body = /^`workflows\/([a-z-]+\.md)`$/.exec(cells[6]);
     if (!command || !body || !DEMANDS.includes(cells[5])) return null;
     return {
@@ -182,30 +190,6 @@ function pointerBlock() {
 // ───────────────────────────────────────────────────────────────────────────
 // Writing
 // ───────────────────────────────────────────────────────────────────────────
-
-/**
- * @param {string} p - Path to inspect.
- * @returns {boolean} True for a symbolic link or a junction, without following it.
- */
-function isLink(p) {
-    try {
-        return fs.lstatSync(p).isSymbolicLink();
-    } catch {
-        return false;
-    }
-}
-
-/**
- * @param {string} p - Path to probe.
- * @returns {string|null} Its real path, or null when it does not exist.
- */
-function realOrNull(p) {
-    try {
-        return fs.realpathSync.native(p);
-    } catch {
-        return null;
-    }
-}
 
 /**
  * Writes a generated file unless something that is not ours is already there.

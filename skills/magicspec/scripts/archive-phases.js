@@ -8,6 +8,7 @@ const path = require('path');
 const {
     resolveProjectRoot,
     executorHint,
+    runMain,
     STATE_DIR_NAME,
     unregisteredWorkspaceMessage,
 } = require('./utils');
@@ -139,10 +140,4 @@ function main() {
     return 0;
 }
 
-try {
-    process.exit(main());
-} catch (err) {
-    console.error(`❌ archive-phases failed: ${err.message}`);
-    if (process.env.MAGIC_DEBUG) console.error(err.stack);
-    process.exit(1);
-}
+runMain('archive-phases', main);

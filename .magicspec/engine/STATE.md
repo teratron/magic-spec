@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-12 15:57
-**Phase:** 56 — Development Toolchain (Stages 0 and 1)
+**Updated:** 2026-11-13 05:33
+**Phase:** 57 — complete
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-55S01 Spec sync
+- **Task:** T-57F01 children start with the running runtime
 - **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
-- **Next Action:** Run /magicspec plan engine "The constitution moved from v1.23.0 to v1.24.0 (C2 lists `sync` as shipped) and the engine registry from v1.71.0 to v1.72.0 (Phase 55 recorded as built): revalidate the plan against both, and mark Phase 55 done in the plan."
+- **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [55/55] ████████ 100%
+Overall: [57/57] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-13 **Decision:** Phase 57 complete (maintenance). Provides: every child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the pipeline starts with process.execPath; two harness cases and four caught mutations; the same repair on v2.1 (2.1.147); feedback note n2 discarded; harness 438
+- 2026-11-13 **Decision:** Phase 56 complete. Provides: Biome over code only after one formatting change, a non-strict TypeScript check over the files that carry // @ts-check (TypeScript is a checker, no source converted), Fallow over the skill folder, two CI jobs (toolchain on Node 24; harness on Node 18 and 24), the harness run on the Node 18 floor (427 of 436, five classified, one engine defect recorded as feedback note n2); engine registry 1.75.0, harness 436
 - 2026-11-12 **Decision:** Phase 55 complete. Provides: the sync command (registry counts, live-memory counters, rule projections and host copies, wiki and index, declared version anchors, registered documentation blocks; a judgement reported with its command and left alone, a stale file reported and kept, a second run writing nothing, a preview changing no byte), the sync section of workspace.json, constitution 1.24.0 and the kernel's exemptions, the maintenance pipeline running the shipped pass with the updater retired, a repair of the handoff line; engine 3.0.129, harness 432, suite 1.9.104, registry 1.72.0, kernel 16263 bytes
 - 2026-11-12 **Decision:** Phase 54 complete. Provides: memory-query and memory-index (a local, derived, always-fresh index over the state folder with ranked citations, SQLite or pure-script backend chosen by trying, history out unless asked, never in the way), optional embeddings (one network file, one line naming host and count, RRF k 60, a failing provider a warning), the wiki refresh calling the indexer, the five instruction sites naming memory-query first, docs/graph.md section 6; engine 3.0.115, harness 419, suite 1.9.102, registry 1.71.0, rule kernel unchanged at 16021 bytes
 - 2026-11-12 **Decision:** Phase 53 complete. Provides: the goal command (a goal in words, a phase or a number of tasks pursued without pausing, each step its own body, six closed stop conditions, consent queued and asked after the one report), the goal block in live memory written only by update-state with its resume line and briefing line, the demand per step in the router and its parser, constitution 1.23.0, the rule kernel at 16021 bytes; engine 3.0.105, harness 386, suite 1.9.101
-- 2026-11-12 **Decision:** Phase 52 complete. Provides: the simulate command (scenarios run live or traced, every result labelled, findings kept in Last run and read by finalize and fix), the interface design (ui-ux-designer, design-system template, interface section, draft task, verification by looking), the simulator-tester and ui-ux-designer cards (sixteen), the planner's scenario list, constitution 1.22.0, the rule kernel at 15741 bytes; engine 3.0.94, harness 376, suite 1.9.99
-- 2026-11-11 **Decision:** Phase 51 complete. Provides: the fix command (triage by a closed rule, the repair as a task, a regression check seen to fail), the engine feedback channel (bounded notes, scrubbed drafts, submission only of a shown draft behind a yes, the work queue in the engine repository), the maintenance set with its fix, constitution 1.21.0; engine 3.0.79, harness 365, suite 1.9.98
 
 ## Blockers
 

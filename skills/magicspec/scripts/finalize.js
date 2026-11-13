@@ -215,7 +215,7 @@ function noteArchivalOff(wsDir) {
     if (waiting.length > 0) {
         console.log(
             `ℹ  Phase archival is off (archival.enabled = false in workspace.json): ` +
-            `${waiting.length} finished phase(s) stay in tasks/.`,
+                `${waiting.length} finished phase(s) stay in tasks/.`,
         );
     }
     return { archived: [], skipped: [], unrecognized: [] };
@@ -298,7 +298,11 @@ function workQueueFirst(workspace, wsDir, next) {
  * @returns {string}
  */
 function computeNextAction(workflow, workspace, wsDir, plan) {
-    const next = workQueueFirst(workspace, wsDir, synthesizeNextAction(workflow, workspace, wsDir, plan));
+    const next = workQueueFirst(
+        workspace,
+        wsDir,
+        synthesizeNextAction(workflow, workspace, wsDir, plan),
+    );
     if (RESERVED_COMMAND_RE.test(stepOf(next))) {
         const message =
             `Next Action "${next}" names a command reserved by ` +
@@ -581,7 +585,8 @@ function synthesizeNextAction(workflow, workspace, wsDir, classified) {
     if (workflow !== 'plan') {
         // A plan written against an older constitution is stale (PL-4): it is revalidated before more work.
         const stale = rulesGapAfter(wsDir);
-        if (stale) return `Run /magicspec plan ${workspace} to revalidate the plan against amended rules`;
+        if (stale)
+            return `Run /magicspec plan ${workspace} to revalidate the plan against amended rules`;
     }
     if (workflow === 'plan') {
         // A plan that was just written leaves the task ledger behind it: decomposition is next.
@@ -920,8 +925,8 @@ function emitSuccess(ctx) {
         const clStatus = changelogResult.deduped
             ? `skipped (duplicate — run 'release-changelog' to rotate [Unreleased])`
             : changelogResult.formatWarning
-                ? 'prepended with warning (non-standard format)'
-                : `appended to [Unreleased] § ${changelogResult.category}`;
+              ? 'prepended with warning (non-standard format)'
+              : `appended to [Unreleased] § ${changelogResult.category}`;
         lines.push(`| CHANGELOG | ${clStatus} |`);
     }
 
@@ -930,8 +935,8 @@ function emitSuccess(ctx) {
         const stateStatus = stateResult.updated
             ? `updated (SC-2) — ${CHECKPOINT_CLAIM}`
             : stateResult.dryRun
-                ? 'dry-run preview'
-                : 'skipped (warning above)';
+              ? 'dry-run preview'
+              : 'skipped (warning above)';
         lines.push(`| STATE.md | ${stateStatus} |`);
     }
     // DG-7: a row that renders on every invocation regardless of content is a
@@ -992,9 +997,10 @@ function emitSuccess(ctx) {
  * @returns {string|null} The line, or `null`.
  */
 function handoffLine(nextAction, workspace) {
-    const hit = /\/magicspec ([a-z][a-z-]*)(?: ([A-Za-z0-9][A-Za-z0-9._-]*))?(?: (\x22[^\x22]*\x22))?/.exec(
-        stepOf(nextAction),
-    );
+    const hit =
+        /\/magicspec ([a-z][a-z-]*)(?: ([A-Za-z0-9][A-Za-z0-9._-]*))?(?: (\x22[^\x22]*\x22))?/.exec(
+            stepOf(nextAction),
+        );
     if (!hit) return null;
     let commands;
     try {
@@ -1019,7 +1025,11 @@ function handoffLine(nextAction, workspace) {
  */
 function pendingNotesBlock(dryRun) {
     try {
-        return feedback.pendingBlock({ developer: hasEngineWriteTooling(), dryRun: Boolean(dryRun), root: projectRoot });
+        return feedback.pendingBlock({
+            developer: hasEngineWriteTooling(),
+            dryRun: Boolean(dryRun),
+            root: projectRoot,
+        });
     } catch {
         return null;
     }
@@ -1052,7 +1062,9 @@ function emitTail(ctx) {
     if (nextAction) {
         // The handoff line follows the step it summarizes, once: the next command, its argument, its demand.
         const handoff = handoffLine(nextAction, workspace);
-        blocks.push(['### Next step', '', nextAction, ...(handoff ? ['', handoff] : [])].join('\n'));
+        blocks.push(
+            ['### Next step', '', nextAction, ...(handoff ? ['', handoff] : [])].join('\n'),
+        );
     }
 
     if (blocks.length === 0) return;

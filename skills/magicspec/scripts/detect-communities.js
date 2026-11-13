@@ -11,6 +11,7 @@ const {
     resolveDesignRoot,
     resolveProjectRoot,
     loadGitignore,
+    walkFiles,
     BUILD_NOISE_DIRS,
     isSkippedDir,
 } = require('./utils');
@@ -91,7 +92,8 @@ function shouldSkip(absPath) {
     const rel = normalizePath(path.relative(rootDir, absPath));
     const parts = rel.split('/');
 
-    if (parts.some((p, i) => isSkippedDir(SKIP_DIRS, p, parts.slice(0, i + 1).join('/')))) return true;
+    if (parts.some((p, i) => isSkippedDir(SKIP_DIRS, p, parts.slice(0, i + 1).join('/'))))
+        return true;
     if (SKIP_PATH_FRAGMENTS.some((f) => rel.includes(f))) return true;
     if (isGitignored(rel)) return true;
 
@@ -108,30 +110,16 @@ const SCAN_EXTENSIONS = new Set(['.js', '.py', '.md']);
  * Recursively collects all scannable files from a directory.
  *
  * @param {string} dir - Absolute directory path.
- * @param {string[]} [result=[]] - Accumulator.
  * @returns {string[]} Absolute paths of collected files.
  */
-function scanDir(dir, result = []) {
-    let entries;
-    try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch (_) {
-        return result;
-    }
-
-    for (const entry of entries) {
-        const abs = path.join(dir, entry.name);
-        if (entry.isSymbolicLink()) continue;
-        if (entry.isDirectory()) {
+function scanDir(dir) {
+    return walkFiles(dir, {
+        skipDir: (entry, abs) => {
             const dirRel = normalizePath(path.relative(rootDir, abs));
-            if (isSkippedDir(SKIP_DIRS, entry.name, dirRel)) continue;
-            if (isGitignored(dirRel)) continue;
-            scanDir(abs, result);
-        } else if (entry.isFile() && SCAN_EXTENSIONS.has(path.extname(entry.name))) {
-            if (!shouldSkip(abs)) result.push(abs);
-        }
-    }
-    return result;
+            return isSkippedDir(SKIP_DIRS, entry.name, dirRel) || isGitignored(dirRel);
+        },
+        takeFile: (entry, abs) => SCAN_EXTENSIONS.has(path.extname(entry.name)) && !shouldSkip(abs),
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -648,8 +636,15 @@ function generateSplitSuggestions(communities, totalNodes) {
  * @param {object} report - Full analysis result object.
  */
 function printSummary(report) {
-    const { graph, communities, alignments, modularity, suggestions, workspaceNames, wholeProject } =
-        report;
+    const {
+        graph,
+        communities,
+        alignments,
+        modularity,
+        suggestions,
+        workspaceNames,
+        wholeProject,
+    } = report;
     const oversizedAt = (size) => size > (OVERSIZED_THRESHOLD_PCT / 100) * graph.nodes;
     const oversizedCount = communities.filter((c) => oversizedAt(c.size)).length;
 
@@ -711,7 +706,9 @@ function printSummary(report) {
         console.log('───────────────────────────────────────────────────────────────');
         for (const ws of workspaceNames) {
             if (wholeProject.includes(ws)) {
-                console.log(`  ${ws}: no scope — covers the whole project, alignment not applicable`);
+                console.log(
+                    `  ${ws}: no scope — covers the whole project, alignment not applicable`,
+                );
                 continue;
             }
             const matching = communities.filter((c) => alignments.get(c.label)?.workspace === ws);

@@ -136,7 +136,7 @@ if (fs.existsSync(checksumsFile)) {
                 const currentHash = hashFile(fullPath);
                 if (currentHash !== storedHash) {
                     const delta = describeManifestDelta(fullPath, storedHash);
-                    if (delta && delta.lineEndingsOnly) {
+                    if (delta?.lineEndingsOnly) {
                         eolOnlyFiles.push({ file: normalizedRelPath, found: delta.found });
                     } else {
                         mismatchedFiles.push({ file: normalizedRelPath, delta });
@@ -249,9 +249,7 @@ const pending = planExists ? findPendingWork(designDir) : null;
 // The flat legacy layout (the state folder itself) has no workspace to name.
 const planWorkspace = path.basename(designDir);
 const planRemedy =
-    planWorkspace === STATE_DIR_NAME
-        ? '/magicspec plan'
-        : `/magicspec plan ${planWorkspace}`;
+    planWorkspace === STATE_DIR_NAME ? '/magicspec plan' : `/magicspec plan ${planWorkspace}`;
 
 // The registry-vs-disk scan reads INDEX.md alone, so it runs whether or not a plan
 // exists: a spec that is registered but absent from disk (or misnamed) is as much a
@@ -693,7 +691,7 @@ if (jsonOutput) {
         // that failed to run looks like.
         console.log(
             `Pre-flight: ok — ${specCount} specification(s), ${stableCount} Stable` +
-            (warnings.length > 0 ? `; ${warnings.length} advisory finding(s):` : '.'),
+                (warnings.length > 0 ? `; ${warnings.length} advisory finding(s):` : '.'),
         );
         for (const w of warnings) {
             console.log(`[${w.type}] ${w.message}${w.fix ? ` 💡 Fix: ${w.fix}` : ''}`);

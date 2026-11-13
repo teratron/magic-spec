@@ -106,7 +106,8 @@ function buildTree(
                 // Landmark roots bypass every hiding mechanism at depth 1 —
                 // including a user project that gitignores its design dir.
                 if (currentDepth === 1 && FORCE_VISIBLE_ROOTS.has(f)) return true;
-                if (isSkippedDir(ignores, f, normalizePath(path.relative('.', path.join(dir, f))))) return false;
+                if (isSkippedDir(ignores, f, normalizePath(path.relative('.', path.join(dir, f)))))
+                    return false;
                 return !isIgnored(normalizePath(path.relative('.', path.join(dir, f))));
             })
             .sort();

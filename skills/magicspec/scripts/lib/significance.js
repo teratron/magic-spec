@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 'use strict';
 
 const fs = require('fs');
@@ -39,10 +40,7 @@ const WHITELIST = {
         `${STATE_DIR_NAME}/{ws}/RULES.md`,
     ],
     'magic.plan': [`${STATE_DIR_NAME}/{ws}/PLAN.md`],
-    'magic.task': [
-        `${STATE_DIR_NAME}/{ws}/TASKS.md`,
-        `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`,
-    ],
+    'magic.task': [`${STATE_DIR_NAME}/{ws}/TASKS.md`, `${STATE_DIR_NAME}/{ws}/tasks/**/*.md`],
     'magic.run': [
         `${STATE_DIR_NAME}/{ws}/TASKS.md`,
         `${STATE_DIR_NAME}/{ws}/STATE.md`,

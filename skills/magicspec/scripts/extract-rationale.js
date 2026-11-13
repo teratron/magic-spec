@@ -14,6 +14,7 @@ const {
     compilePathEntry,
     PATH_PATTERN_CHARS,
     isSkippedDir,
+    readOptionValue,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -29,14 +30,7 @@ process.chdir(resolveProjectRoot());
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
 
-// `--scope x` and `--scope=x` mean the same.
-const scopeIdx = args.findIndex((a) => a === '--scope' || a.startsWith('--scope='));
-const scopeOverride =
-    scopeIdx === -1
-        ? null
-        : args[scopeIdx].startsWith('--scope=')
-          ? args[scopeIdx].slice('--scope='.length) || null
-          : args[scopeIdx + 1] || null;
+const scopeOverride = readOptionValue(args, '--scope');
 
 const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
 

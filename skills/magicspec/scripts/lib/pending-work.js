@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+// @ts-check
 'use strict';
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -130,7 +131,9 @@ function pendingReplanDirective(tasksContent, planContent) {
         .match(/## Replan Directive\r?\n([\s\S]*?)(?=\r?\n## |$)/);
     if (!section) return null;
     const version = section[1].match(/\*\*Plan version:\*\*\s*v?([0-9][0-9.]*)/);
-    const text = section[1].match(/\*\*Directive:\*\*\s*([\s\S]*?)(?=\r?\n\s*\r?\n|\r?\n\s*[-*]\s+\*\*|$)/);
+    const text = section[1].match(
+        /\*\*Directive:\*\*\s*([\s\S]*?)(?=\r?\n\s*\r?\n|\r?\n\s*[-*]\s+\*\*|$)/,
+    );
     const planVersion = planContent.match(/^\*\*Version:\*\*\s+([0-9][0-9.]*)/m);
     if (!version || !text || !planVersion || planVersion[1] !== version[1]) return null;
     const directive = text[1].replace(/\s+/g, ' ').trim();
@@ -247,7 +250,9 @@ function findPendingWork(designDir) {
         result.replanDirective = pendingReplanDirective(tasks, planText);
         const ledgerBase = tasks.match(/^\*\*Based on PLAN:\*\*\s+.*?v([0-9.]+)/m);
         const planVersion = planText.match(/^\*\*Version:\*\*\s+([0-9][0-9.]*)/m);
-        result.ledgerBehindPlan = Boolean(ledgerBase && planVersion && ledgerBase[1] !== planVersion[1]);
+        result.ledgerBehindPlan = Boolean(
+            ledgerBase && planVersion && ledgerBase[1] !== planVersion[1],
+        );
         if (result.planComplete) {
             result.openBacklogItems = openBacklogItems(planText);
         }

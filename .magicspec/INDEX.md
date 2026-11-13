@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.44.0
+**Version:** 1.48.0
 **Status:** Active
-**Engine Version:** 3.0.129
+**Engine Version:** 3.0.136
 
 ## Overview
 
@@ -24,6 +24,10 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.48.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). `l2-engine-automation.md` 1.32.1. The engine registry is 1.76.0. |
+| 1.47.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). Phase 56 recorded as built: `l2-engine-toolchain.md` 1.2.1 and `l2-test-suite.md` 1.44.0. The engine registry is 1.75.0. |
+| 1.46.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). `l2-engine-toolchain.md` 1.2.0 (TypeScript as a checker, non-strict, over a growing set of files with `// @ts-check`; the conversion to `.ts` removed). The engine registry is 1.74.0. |
+| 1.45.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). `l2-engine-toolchain.md` 1.1.0 (the continuous-integration job split in two: the tools on the LTS line, the harness on the floor and the LTS line) and `l2-release-pipeline.md` 2.3.1. The engine registry is 1.73.0. |
 | 1.44.0 | 2026-11-12 | Agent | No spec-count change (55/55 Stable). Phase 55 recorded as built: `l1-sync-command.md` 1.1.0, `l1-command-surface.md` 2.2.5, `l2-engine-automation.md` 1.32.0, `l2-test-suite.md` 1.43.0, `l2-role-cards-governance.md` 1.4.8 and `l2-engine-diagnostics.md` 1.4.3. The constitution is 1.24.0. The engine registry is 1.72.0. |
 | 1.43.0 | 2026-11-11 | Agent | No spec-count change (55/55 Stable). Phase 49 recorded as built: `l1-plan-command.md` 2.0.1, `l1-pipeline-stages.md` 1.0.1, `l1-command-surface.md` 2.2.1, `l1-engine-core.md` 1.9.4, `l1-session-continuity.md` 2.5.5, `l2-engine-finalization.md` 3.7.2, `l2-skill-wrappers.md` 3.1.2, `l2-skill-layout.md` 1.6.1, `l2-test-suite.md` 1.39.0, `l2-role-cards-execution.md` 1.2.8, `l2-role-cards.md` 2.1.5 and `l2-role-integration.md` 2.2.5. The engine registry is 1.66.0. |
 | 1.42.0 | 2026-11-11 | Agent | No spec-count change (55/55 Stable). Phase 48 recorded as built: l1-workspace-intent-routing.md 3.0.2, l2-engine-automation.md 1.29.0, l1-community-health-files.md 1.1.0, l2-role-cards-execution.md 1.2.7, l2-role-cards.md and l2-role-integration.md one patch each. |

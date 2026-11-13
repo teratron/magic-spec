@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.32.0
+**Version:** 1.32.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -15,7 +15,7 @@ Automate repetitive tasks like checksum generation, versioning, and environment 
 
 ## Components
 
-- **executor.js**: Cross-platform wrapper for the engine's scripts. Answers `--help` and refuses an unknown command, option or argument from the command table before it starts anything (§Command Line Contract), resolves the project root and the workspace, and runs the script from the root (§Project Location). Requires Node.js 18 or newer and says so otherwise.
+- **executor.js**: Cross-platform wrapper for the engine's scripts. Answers `--help` and refuses an unknown command, option or argument from the command table before it starts anything (§Command Line Contract), resolves the project root and the workspace, and runs the script from the root (§Project Location). Requires Node.js 18 or newer and says so otherwise. Starts every child Node process — the script of a command, the diagnostics recheck — with the path of the runtime that started it (`process.execPath`), never the name `node`: one invocation runs on one runtime, so the runtime flags chosen for the parent apply to the child.
 - **lib/commands.js**: The command table: every command the executor runs, the options each reads, and the help it prints.
 - **memory-index.js**, **memory-query.js** with **lib/memory-sections.js**, **lib/memory-fallback.js**, **lib/memory-sqlite.js**, **lib/memory-embed.js** and **lib/memory-refresh.js**: the artifact index and its ranked query ([l2-artifact-memory-store.md](l2-artifact-memory-store.md)); both commands are reading commands that write only the cache, and `export-wiki` runs the indexer as its last step.
 - **sync.js** with **lib/sync-config.js**, **lib/sync-report.js**, **lib/sync-registry.js**, **lib/sync-state.js**, **lib/sync-projections.js**, **lib/sync-graph.js**, **lib/sync-versions.js**, **lib/sync-docs.js** and **lib/sync-markers.js**: the `sync` command ([l1-sync-command.md](l1-sync-command.md)); it writes only what differs from what is stored, reaches the wiki through `export-wiki --out` and the live-memory counters through `update-state`, and the extraction cache of the graph build honors `MAGIC_DRY_RUN` so a preview writes nothing.
@@ -390,6 +390,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.32.1 | 2026-11-13 | Agent | Clarification patch, Stable retained (a repair of Phase 57, feedback note n2): the executor section states that a child Node process is started with the running runtime's own path and not by the name `node`, which on Windows without a shell found another Node than the one that started the executor. The maintenance executor wrapper and the maintenance pipeline follow the same rule. |
 | 1.32.0 | 2026-11-12 | Agent | As built in Phase 55, Stable retained: the Components list gains `sync.js` and its nine libraries; the command table gains `sync` (`[area \| workspace]`,`--dry-run`; no`provisions`, no`usesSqlite`); the folder-write table gains its row; the graph extraction cache honors`MAGIC_DRY_RUN`; and the maintenance script`update-project-meta.js`is retired — its entry leaves the command-guard list, the cache inventory (`.cache/project-meta-state.json` was its alone, and `clean-cache` no longer lists it) and the script inventory, and the sentence that kept its history rule says that registry versions and history are authored with the specifications. |
 | 1.31.0 | 2026-11-12 | Agent | As built in Phase 54, Stable retained: the Components list gains the artifact index scripts and libraries; the command table gains `memory-index` and `memory-query` and the entry field `usesSqlite` with `runtimeFlags` (the executor passes the warning-silencing flag only to such a command, and only when the runtime lists it); the cache row of the memory index names its lock; `memory-query` joins the commands that read `MAGIC_DESIGN_DIR` and write only at the state folder's level. |
 | 1.30.1 | 2026-11-12 | Agent | As built in Phase 52, Stable retained: the Components list gains `lib/simulation-findings.js`, the shared reader of the open simulation findings. |

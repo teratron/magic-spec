@@ -61,7 +61,8 @@ function explicitChoice(flag, projectRoot, designAbs) {
     const source = process.env.MAGIC_WORKSPACE_SOURCE;
     const fromDir = workspaceFromDesignDir(projectRoot, designAbs);
     if (source === 'argument' && fromDir) return { value: fromDir, source: 'argument' };
-    if (process.env.MAGIC_WORKSPACE) return { value: process.env.MAGIC_WORKSPACE, source: 'environment' };
+    if (process.env.MAGIC_WORKSPACE)
+        return { value: process.env.MAGIC_WORKSPACE, source: 'environment' };
     if (!source && fromDir) return { value: fromDir, source: 'environment' };
     return null;
 }
@@ -97,10 +98,14 @@ function numbersText(byName, digits) {
  * @returns {string} The human report: one fact per line, empty facts left out.
  */
 function renderText(result) {
-    const lines = [`Workspace: ${result.workspace === null ? '(none registered)' : result.workspace}`, `Signal: ${result.signal}`];
+    const lines = [
+        `Workspace: ${result.workspace === null ? '(none registered)' : result.workspace}`,
+        `Signal: ${result.signal}`,
+    ];
     const matched = matchedText(result.matched);
     if (matched) lines.push(`Matched paths: ${matched}`);
-    if (result.unmatched.length > 0) lines.push(`Paths no scope covers: ${result.unmatched.join(', ')}`);
+    if (result.unmatched.length > 0)
+        lines.push(`Paths no scope covers: ${result.unmatched.join(', ')}`);
     if (result.scores) lines.push(`Topic scores: ${numbersText(result.scores, 2)}`);
     if (result.in_flight) lines.push(`Work in flight: ${result.in_flight.join(', ') || 'none'}`);
     if (result.coverage) lines.push(`Scope coverage: ${numbersText(result.coverage, 4)}`);
@@ -126,7 +131,9 @@ function main() {
 
     const command = values['--command'] || null;
     if (command !== null && !/^[a-z][a-z0-9-]*$/.test(command)) {
-        throw new RoutingError(`Invalid command name '${command}'. Must be lower-case letters, digits and hyphens.`);
+        throw new RoutingError(
+            `Invalid command name '${command}'. Must be lower-case letters, digits and hyphens.`,
+        );
     }
 
     const projectRoot = resolveProjectRoot();
@@ -138,7 +145,9 @@ function main() {
         registry = JSON.parse(fs.readFileSync(path.join(designAbs, 'workspace.json'), 'utf8'));
     } catch (error) {
         if (error && error.code !== 'ENOENT') {
-            throw new RoutingError(`${STATE_DIR_NAME}/workspace.json cannot be read: ${error.message}`);
+            throw new RoutingError(
+                `${STATE_DIR_NAME}/workspace.json cannot be read: ${error.message}`,
+            );
         }
     }
     if (registry === null) {

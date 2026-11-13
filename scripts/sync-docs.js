@@ -8,7 +8,9 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { enginePath } = require('./engine-path');
-const { writeFileSafe, mkdirSafe, isDryRun, STATE_DIR_NAME } = require(enginePath('scripts', 'utils'));
+const { writeFileSafe, mkdirSafe, isDryRun, STATE_DIR_NAME } = require(
+    enginePath('scripts', 'utils'),
+);
 
 // ═══════════════════════════════════════════════════════════════════════════
 // DOCUMENTATION SYNC — Real Content Sync, Not Version Stamping
@@ -169,7 +171,9 @@ function fillBlock(text, key, body, inline) {
     const escaped = (s) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
     const pattern = new RegExp(`${escaped(open)}[\\s\\S]*?${escaped(close)}`, 'g');
     // A function replacement: the body is data, and `$` sequences in it must stay as written.
-    return text.replace(pattern, () => (inline ? open + body + close : `${open}\n${body}\n${close}`));
+    return text.replace(pattern, () =>
+        inline ? open + body + close : `${open}\n${body}\n${close}`,
+    );
 }
 
 /**
@@ -273,7 +277,8 @@ function buildWorkflowsTable() {
         return null;
     }
     let table = '| Command | Description |\n| --- | --- |\n';
-    for (const command of commands) table += `| \`/magicspec ${command.name}\` | ${command.summary} |\n`;
+    for (const command of commands)
+        table += `| \`/magicspec ${command.name}\` | ${command.summary} |\n`;
     return table.trim();
 }
 
@@ -334,7 +339,6 @@ function generateContributing(targetVersion, state) {
     }
     return false;
 }
-
 
 // ═══════════════════════════════════════════════════════════════════════════
 // docs/{name}.md SYNC FROM workflows/{name}.md

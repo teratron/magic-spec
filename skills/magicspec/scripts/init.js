@@ -211,9 +211,13 @@ for (const name of requestedHosts) {
 // on another machine cannot make the integrity check fail.
 const guidance = hosts.versionControlLines(requestedHosts, projectRoot);
 console.log('');
-console.log('📋 Add to .gitignore (the engine and what is generated from it are installed, like node_modules/):');
+console.log(
+    '📋 Add to .gitignore (the engine and what is generated from it are installed, like node_modules/):',
+);
 for (const line of guidance.ignore) console.log(`   ${line}`);
 if (guidance.engineInProject) {
-    console.log('   To commit the engine instead (vendoring), leave its folder out of .gitignore and add to .gitattributes:');
+    console.log(
+        '   To commit the engine instead (vendoring), leave its folder out of .gitignore and add to .gitattributes:',
+    );
     console.log(`   /${guidance.engineInProject}/** -text`);
 }

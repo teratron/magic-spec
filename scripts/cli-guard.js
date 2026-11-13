@@ -1,3 +1,4 @@
+// @ts-check
 'use strict';
 
 const { enginePath } = require('./engine-path');
@@ -20,12 +21,17 @@ const commands = require(enginePath('scripts', 'lib', 'commands'));
  */
 const MAINTENANCE_COMMANDS = {
     'sync-docs': {
-        summary: 'Refill the marked blocks of CONTRIBUTING.md and the Sync Note lines of docs/ from the registries.',
+        summary:
+            'Refill the marked blocks of CONTRIBUTING.md and the Sync Note lines of docs/ from the registries.',
     },
     'check-security-policy': {
-        summary: 'Check that the supported-versions table of SECURITY.md matches the version being released.',
+        summary:
+            'Check that the supported-versions table of SECURITY.md matches the version being released.',
         options: {
-            '--version': { kind: 'space', help: 'Version being released (default: the content of skills/magicspec/.version)' },
+            '--version': {
+                kind: 'space',
+                help: 'Version being released (default: the content of skills/magicspec/.version)',
+            },
             '--policy': { kind: 'space', help: 'Policy file (default: SECURITY.md)' },
         },
     },
@@ -74,7 +80,15 @@ function guardCli(name, scriptModule) {
     const tail = commands.usageFor(name, entry).slice(name.length).trim();
     const usage = `node scripts/${name}.js ${tail}`.trimEnd();
     if (argv.includes('--help') || argv.includes('-h')) {
-        console.log(commands.helpFor(`${name}.js`, entry, 'node', false, `scripts/${name}.js ${tail}`.trimEnd()));
+        console.log(
+            commands.helpFor(
+                `${name}.js`,
+                entry,
+                'node',
+                false,
+                `scripts/${name}.js ${tail}`.trimEnd(),
+            ),
+        );
         process.exit(0);
     }
     const errors = commands.validateEntry(entry, argv);

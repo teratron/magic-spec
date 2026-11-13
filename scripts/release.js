@@ -1,3 +1,4 @@
+// @ts-check
 const { execFileSync } = require('child_process');
 const fs = require('fs');
 const path = require('path');
@@ -122,11 +123,15 @@ if (fs.existsSync(CHANGELOG_FILE)) {
 
 // The security policy promises fixes to the line being released: its supported-versions table must say so.
 try {
-    execFileSync(process.execPath, [path.join(__dirname, 'check-security-policy.js'), '--version', version], {
-        cwd: ROOT_DIR,
-        encoding: 'utf8',
-        stdio: 'pipe',
-    });
+    execFileSync(
+        process.execPath,
+        [path.join(__dirname, 'check-security-policy.js'), '--version', version],
+        {
+            cwd: ROOT_DIR,
+            encoding: 'utf8',
+            stdio: 'pipe',
+        },
+    );
 } catch (failure) {
     const detail = String(failure.stderr || failure.message)
         .trim()
@@ -137,7 +142,9 @@ try {
 }
 
 if (gitOk(['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`])) {
-    blockers.push(`tag ${tagName} already exists locally; bump the version or delete the tag deliberately`);
+    blockers.push(
+        `tag ${tagName} already exists locally; bump the version or delete the tag deliberately`,
+    );
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -147,12 +154,20 @@ if (gitOk(['rev-parse', '--verify', '--quiet', `refs/tags/${tagName}`])) {
 log(`Release plan for ${tagName}${publish ? '' : ' (nothing is changed without --yes)'}:`);
 log(`  branch:    ${branch || '(none)'} → origin/${branch || '?'}`);
 log(`  version:   ${version} (skills/magicspec/.version)`);
-log('  checked:   CHANGELOG.md entry, supported-versions table of SECURITY.md, clean tree, free tag');
-log('  steps:     QA gate (node tests/engine.js) → C14 + sync → release commit of what they changed → tag → push branch and tag');
+log(
+    '  checked:   CHANGELOG.md entry, supported-versions table of SECURITY.md, clean tree, free tag',
+);
+log(
+    '  steps:     QA gate (node tests/engine.js) → C14 + sync → release commit of what they changed → tag → push branch and tag',
+);
 for (const b of blockers) console.error(`\x1b[31m[BLOCKED]\x1b[0m ${b}`);
 
 if (!publish) {
-    log(blockers.length === 0 ? 'Ready. Run with --yes to publish.' : 'Not ready: resolve the blockers above.');
+    log(
+        blockers.length === 0
+            ? 'Ready. Run with --yes to publish.'
+            : 'Not ready: resolve the blockers above.',
+    );
     process.exit(blockers.length === 0 ? 0 : 1);
 }
 if (blockers.length > 0) error('Refusing to publish: resolve the blockers above.');

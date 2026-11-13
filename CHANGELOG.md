@@ -36,6 +36,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - **`init`** now prints the `.gitignore` lines it promised and records the hook installer's own reason when a hook was not installed. **`check-prerequisites`** prints a line when nothing is wrong. **`/magicspec:status`** has a branch for an owner's note as a `Next Action`; two bodies no longer tell the reader to read the file they are in.
 - **The regression harness is green on a fresh clone** (two cases read a gitignored projection) and a new workflow, `.github/workflows/test.yml`, runs it on every push and pull request.
 - Repaired a reported defect (engine)
+- Repaired 2 reported defects (engine)
 
 ### Added
 
@@ -59,6 +60,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 
 ### Changed
 
+- **Duplicated helpers moved to one place.** Fallow's duplication report on the engine scripts is empty. `utils.js` now holds the directory walker (`walkFiles`, used by `detect-communities`, the vocabulary sweep and the maintenance benchmark), `listMarkdownFiles`, `readOptionValue` (the `--scope` option of `analyze-coverage` and `extract-rationale`), `isLink` and `realOrNull` (shared by `lib/hosts.js` and `validate-hardlinks`) and `runMain` (the exit wrapper of `archive-phases` and `check-bloat`). Behaviour is unchanged; one harness helper replaces a repeated query closure.
 - **The constitution is 1.22.0:** C24's row for the engine's own test workflow names `test.md` (`/magicspec-dev test`), C24 counts sixteen role cards and C2 lists `fix` and `simulate` among the commands that ship. The engine's own test is documented in `docs/dev-test.md`, so the name `simulate` means the product command alone. The always-on rule is 642 bytes shorter before the new lines (wording tightened, no section moved, the read-only guard untouched).
 - **One command, `/magicspec <command> [argument]`, is the only printed form.** The router is the only command surface: `init` no longer writes `.claude/commands/magicspec/` or `.qwen/commands/magicspec/` and removes the entries a 3.0.x installation left (`PROJECTION_RETIRED` until it does), the `.gitignore` lines it prints name no command folder, and the plugin channel (`build-plugin`) is removed. The colon spelling is gone from the shipped text, the scripts' output, the README and the documentation; the router still reads it when typed. The router table gained the group, argument and when-missing columns, and the frontmatter an `argument-hint`.
 - **`task` decomposes a plan that stands.** On a missing or stale plan it stops naming `/magicspec plan` and why, writing nothing; a decomposition finding it cannot repair (a specification too large for a phase, a dependency the plan does not state) is recorded in the ledger as a replan directive that `plan` reads, and that retires when the plan is rewritten. After a run the one next step is `/magicspec plan`.
@@ -82,6 +84,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - Updated task index (engine)
 - Updated implementation plan (engine)
 - Completed 4 tasks (engine)
+- Updated 2 specifications (engine)
 
 ## [3.0.0] - 2026-10-28
 

@@ -8,7 +8,7 @@ const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
 const { enginePath } = require('./engine-path');
-const { resolveDesignRoot, BUILD_NOISE_DIRS } = require(enginePath('scripts', 'utils'));
+const { resolveDesignRoot, walkFiles, BUILD_NOISE_DIRS } = require(enginePath('scripts', 'utils'));
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TOKEN BENCHMARK — SDD Graph vs Raw Corpus
@@ -100,28 +100,13 @@ const DOC_EXTENSIONS = new Set(['.md', '.txt', '.rst']);
  *
  * @param {string} dir
  * @param {Set<string>} extensions
- * @param {string[]} [result=[]]
  * @returns {string[]}
  */
-function scanDir(dir, extensions, result = []) {
-    let entries;
-    try {
-        entries = fs.readdirSync(dir, { withFileTypes: true });
-    } catch (_) {
-        return result;
-    }
-
-    for (const entry of entries) {
-        const abs = path.join(dir, entry.name);
-        if (entry.isSymbolicLink()) continue;
-        if (entry.isDirectory()) {
-            if (SKIP_DIRS.has(entry.name)) continue;
-            scanDir(abs, extensions, result);
-        } else if (entry.isFile() && extensions.has(path.extname(entry.name))) {
-            result.push(abs);
-        }
-    }
-    return result;
+function scanDir(dir, extensions) {
+    return walkFiles(dir, {
+        skipDir: (entry) => SKIP_DIRS.has(entry.name),
+        takeFile: (entry) => extensions.has(path.extname(entry.name)),
+    });
 }
 
 // ═══════════════════════════════════════════════════════════════════════════

@@ -6,7 +6,7 @@ require('./lib/commands').guardArgv('check-bloat', module);
 
 const fs = require('fs');
 const path = require('path');
-const { resolveProjectRoot, statePath, STATE_DIR_NAME } = require('./utils');
+const { resolveProjectRoot, runMain, statePath, STATE_DIR_NAME } = require('./utils');
 const { PHASE_FILE_RE } = require('./lib/phase-files');
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -301,10 +301,4 @@ function main() {
     return 0;
 }
 
-try {
-    process.exit(main());
-} catch (err) {
-    console.error(`❌ check-bloat failed: ${err.message}`);
-    if (process.env.MAGIC_DEBUG) console.error(err.stack);
-    process.exit(1);
-}
+runMain('check-bloat', main);

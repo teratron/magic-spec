@@ -35,7 +35,10 @@ const COMMANDS = {
         summary: 'Classify project files by how well the specifications cover them.',
         options: {
             '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
-            '--scope': { kind: 'value', help: 'Comma-separated scope entries (default: the workspace scope)' },
+            '--scope': {
+                kind: 'value',
+                help: 'Comma-separated scope entries (default: the workspace scope)',
+            },
         },
     },
     'archive-phases': {
@@ -49,9 +52,18 @@ const COMMANDS = {
     'build-spec-graph': {
         summary: 'Build the specification knowledge graph and print its summary.',
         options: {
-            '--json': { kind: 'bool', help: 'Print the whole graph as JSON (or write it with --out)' },
-            '--out': { kind: 'optSpace', help: 'With --json: write the graph to a file (default: graph/query.json) and print one line' },
-            '--html': { kind: 'optSpace', help: 'Write the interactive page (default: graph/graph.html)' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print the whole graph as JSON (or write it with --out)',
+            },
+            '--out': {
+                kind: 'optSpace',
+                help: 'With --json: write the graph to a file (default: graph/query.json) and print one line',
+            },
+            '--html': {
+                kind: 'optSpace',
+                help: 'Write the interactive page (default: graph/graph.html)',
+            },
             '--no-cache': { kind: 'bool', help: 'Ignore the extraction cache' },
         },
     },
@@ -62,17 +74,27 @@ const COMMANDS = {
     'check-prerequisites': {
         summary: 'Pre-flight: engine integrity, projections, registry and plan consistency.',
         options: {
-            '--json': { kind: 'bool', help: 'Print machine-readable JSON (what the workflows read)' },
+            '--json': {
+                kind: 'bool',
+                help: 'Print machine-readable JSON (what the workflows read)',
+            },
             '--require-plan': { kind: 'bool', help: 'Fail when PLAN.md is missing' },
             '--require-tasks': { kind: 'bool', help: 'Fail when TASKS.md is missing' },
             '--require-specs': { kind: 'bool', help: 'Fail when no specification exists' },
-            '--verify-headers': { kind: 'bool', help: 'Compare each specification header with the registry' },
+            '--verify-headers': {
+                kind: 'bool',
+                help: 'Compare each specification header with the registry',
+            },
         },
     },
     'clean-cache': {
-        summary: 'Remove the caches the engine can rebuild (graph, wiki, state files); never findings, notes or backups.',
+        summary:
+            'Remove the caches the engine can rebuild (graph, wiki, state files); never findings, notes or backups.',
         options: {
-            '--dry-run': { kind: 'bool', help: 'List what would be removed with its size; remove nothing' },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'List what would be removed with its size; remove nothing',
+            },
         },
     },
     'create-workspace': {
@@ -85,11 +107,15 @@ const COMMANDS = {
         },
     },
     'detect-communities': {
-        summary: 'Detect communities in the dependency graph and score them against workspace scopes.',
+        summary:
+            'Detect communities in the dependency graph and score them against workspace scopes.',
         options: {
             '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
             '--include-md': { kind: 'bool', help: 'Include Markdown files as nodes' },
-            '--threshold': { kind: 'value', help: 'Oversized-community threshold in percent (default 25)' },
+            '--threshold': {
+                kind: 'value',
+                help: 'Oversized-community threshold in percent (default 25)',
+            },
             '--max-iter': { kind: 'value', help: 'Iteration limit (default 50)' },
             '--min-nodes': { kind: 'value', help: 'Smallest community to report (default 2)' },
         },
@@ -102,41 +128,74 @@ const COMMANDS = {
     'export-wiki': {
         summary: 'Export the graph as a Markdown wiki under graph/wiki/.',
         options: {
-            '--from-file': { kind: 'space', help: 'Use a graph JSON file instead of building the graph' },
+            '--from-file': {
+                kind: 'space',
+                help: 'Use a graph JSON file instead of building the graph',
+            },
             '--out': { kind: 'space', help: 'Write the wiki to this folder' },
         },
     },
     'extract-rationale': {
-        summary: 'Find design-rationale markers in source and detect logic no specification covers.',
+        summary:
+            'Find design-rationale markers in source and detect logic no specification covers.',
         options: {
             '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
-            '--scope': { kind: 'value', help: 'Comma-separated scope entries (default: the workspace scope)' },
+            '--scope': {
+                kind: 'value',
+                help: 'Comma-separated scope entries (default: the workspace scope)',
+            },
         },
     },
     feedback: {
-        summary: 'Engine feedback notes: note records one, list shows the pending ones, draft turns them into reports, submit publishes a draft the person approved, keep delivers a draft as text, discard removes a note or a draft. Always exits 0.',
+        summary:
+            'Engine feedback notes: note records one, list shows the pending ones, draft turns them into reports, submit publishes a draft the person approved, keep delivers a draft as text, discard removes a note or a draft. Always exits 0.',
         positional: ['<action>', '<id>'],
         options: {
-            '--kind': { kind: 'value', help: 'note: bug | missing-capability | improvement | docs' },
+            '--kind': {
+                kind: 'value',
+                help: 'note: bug | missing-capability | improvement | docs',
+            },
             '--summary': { kind: 'value', help: 'note: one line' },
             '--tried': { kind: 'value', help: 'note: what was tried' },
             '--happened': { kind: 'value', help: 'note: what happened' },
             '--expected': { kind: 'value', help: 'note: what was expected (optional)' },
             '--suggestion': { kind: 'value', help: 'note: what is suggested (optional)' },
             '--impact': { kind: 'value', help: 'note: blocked | workaround | minor (optional)' },
-            '--engine-file': { kind: 'value', help: 'note: the engine file concerned, a path inside the skill folder (optional)' },
-            '--code': { kind: 'value', help: 'note: the finding code concerned, UPPER_SNAKE_CASE (optional)' },
-            '--workflow': { kind: 'value', help: 'note: the command the agent was running (optional)' },
-            '--script': { kind: 'value', help: 'note: the executor command that failed (optional)' },
-            '--exit-status': { kind: 'value', help: 'note: the exit status it returned (optional)' },
-            '--new': { kind: 'bool', help: 'submit: create a new issue even when an open one carries the fingerprint' },
+            '--engine-file': {
+                kind: 'value',
+                help: 'note: the engine file concerned, a path inside the skill folder (optional)',
+            },
+            '--code': {
+                kind: 'value',
+                help: 'note: the finding code concerned, UPPER_SNAKE_CASE (optional)',
+            },
+            '--workflow': {
+                kind: 'value',
+                help: 'note: the command the agent was running (optional)',
+            },
+            '--script': {
+                kind: 'value',
+                help: 'note: the executor command that failed (optional)',
+            },
+            '--exit-status': {
+                kind: 'value',
+                help: 'note: the exit status it returned (optional)',
+            },
+            '--new': {
+                kind: 'bool',
+                help: 'submit: create a new issue even when an open one carries the fingerprint',
+            },
         },
     },
     finalize: {
-        summary: 'Post-workflow: version bump, changelog entry, STATE.md update and phase archival.',
+        summary:
+            'Post-workflow: version bump, changelog entry, STATE.md update and phase archival.',
         provisions: true,
         options: {
-            '--workflow': { kind: 'value', help: 'spec | plan | task | run | rule | fix | simulate (required)' },
+            '--workflow': {
+                kind: 'value',
+                help: 'spec | plan | task | run | rule | fix | simulate (required)',
+            },
             '--dry-run': { kind: 'bool', help: 'Report what would change; write nothing' },
             '--no-bump': { kind: 'bool', help: 'Skip the project version bump' },
             '--no-changelog': { kind: 'bool', help: 'Skip the changelog entry' },
@@ -148,24 +207,30 @@ const COMMANDS = {
         provisions: true,
     },
     init: {
-        summary: 'Create the SDD workspace, install the pre-commit hook, project the rule and commands for hosts.',
+        summary:
+            'Create the SDD workspace, install the pre-commit hook, project the rule and commands for hosts.',
         provisions: true,
         options: {
-            '--host': { kind: 'value', help: 'Comma-separated hosts to project for: claude, codex, qwen' },
+            '--host': {
+                kind: 'value',
+                help: 'Comma-separated hosts to project for: claude, codex, qwen',
+            },
         },
     },
     'install-hooks': {
         summary: 'Install the git pre-commit hook that checks engine integrity.',
     },
     'memory-index': {
-        summary: 'Build or refresh the local index over the specification artifacts. Always exits 0.',
+        summary:
+            'Build or refresh the local index over the specification artifacts. Always exits 0.',
         usesSqlite: true,
         options: {
             '--rebuild': { kind: 'bool', help: 'Delete the index and build it from nothing' },
         },
     },
     'memory-query': {
-        summary: 'Find the sections that bear on a question, ranked, with citations. Always exits 0 when the index is unavailable.',
+        summary:
+            'Find the sections that bear on a question, ranked, with citations. Always exits 0 when the index is unavailable.',
         usesSqlite: true,
         positional: ['<text>'],
         options: {
@@ -185,7 +250,10 @@ const COMMANDS = {
         summary: 'Migrate a 2.x project to the current layout (a dry run unless --apply is given).',
         options: {
             '--apply': { kind: 'bool', help: 'Execute the plan' },
-            '--host': { kind: 'value', help: 'Comma-separated hosts to project for (default: the hosts found)' },
+            '--host': {
+                kind: 'value',
+                help: 'Comma-separated hosts to project for (default: the hosts found)',
+            },
         },
     },
     'record-diagnostic': {
@@ -208,17 +276,30 @@ const COMMANDS = {
         },
     },
     remove: {
-        summary: 'Remove the engine from this project: the marked projections, the hook and the engine folder. Keeps ' + STATE_DIR_NAME + '/ and your files.',
+        summary:
+            'Remove the engine from this project: the marked projections, the hook and the engine folder. Keeps ' +
+            STATE_DIR_NAME +
+            '/ and your files.',
         options: {
             '--dry-run': { kind: 'bool', help: 'List what would be removed; change nothing' },
         },
     },
     'resolve-workspace': {
-        summary: 'Choose the workspace a command acts on, and say which signal chose it. Writes nothing.',
+        summary:
+            'Choose the workspace a command acts on, and say which signal chose it. Writes nothing.',
         options: {
-            '--command': { kind: 'value', help: 'The command being routed, for the narration line' },
-            '--text': { kind: 'value', help: 'The request as typed: its paths and words are the location and topic signals' },
-            '--paths': { kind: 'value', help: 'Comma-separated paths the work touches, in addition to those in the text' },
+            '--command': {
+                kind: 'value',
+                help: 'The command being routed, for the narration line',
+            },
+            '--text': {
+                kind: 'value',
+                help: 'The request as typed: its paths and words are the location and topic signals',
+            },
+            '--paths': {
+                kind: 'value',
+                help: 'Comma-separated paths the work touches, in addition to those in the text',
+            },
             '--json': { kind: 'bool', help: 'Print machine-readable JSON' },
         },
     },
@@ -233,17 +314,26 @@ const COMMANDS = {
         summary: 'Serve the graph to an agent over stdio (MCP, JSON-RPC 2.0).',
     },
     sync: {
-        summary: 'Bring derived state up to date: registries, projections, graph, live-memory progress, version anchors, registered documentation blocks. Reports every disagreement with its command; deletes nothing.',
+        summary:
+            'Bring derived state up to date: registries, projections, graph, live-memory progress, version anchors, registered documentation blocks. Reports every disagreement with its command; deletes nothing.',
         positional: ['[area|workspace]'],
         options: {
-            '--dry-run': { kind: 'bool', help: 'Compute everything, list every write it would make, write nothing' },
+            '--dry-run': {
+                kind: 'bool',
+                help: 'Compute everything, list every write it would make, write nothing',
+            },
         },
     },
     'update-engine-meta': {
-        summary: 'Verify engine integrity (--check); in the engine repository also bump the version and regenerate the manifest.',
+        summary:
+            'Verify engine integrity (--check); in the engine repository also bump the version and regenerate the manifest.',
         options: {
             '--check': { kind: 'bool', help: 'Verify only; exit 1 on drift' },
-            '--workflow': { kind: 'value', help: 'Accepted and ignored (older callers pass it)', ignored: true },
+            '--workflow': {
+                kind: 'value',
+                help: 'Accepted and ignored (older callers pass it)',
+                ignored: true,
+            },
         },
     },
     'update-state': {
@@ -337,9 +427,13 @@ function validateEntry(entry, argv) {
                 break;
             case 'value':
                 if (hasEq) {
-                    if (token.slice(eq + 1) === '') errors.push(`'${key}' requires a non-empty value.`);
+                    if (token.slice(eq + 1) === '')
+                        errors.push(`'${key}' requires a non-empty value.`);
                 } else if (nextIsValue) i++;
-                else errors.push(`'${key}' requires a value (use ${key}=<value> or ${key} <value>).`);
+                else
+                    errors.push(
+                        `'${key}' requires a value (use ${key}=<value> or ${key} <value>).`,
+                    );
                 break;
             case 'eq':
                 if (!hasEq || token.slice(eq + 1) === '') {
@@ -347,12 +441,16 @@ function validateEntry(entry, argv) {
                 }
                 break;
             case 'space':
-                if (hasEq) errors.push(`'${key}' takes its value as a separate argument: ${key} <value>.`);
+                if (hasEq)
+                    errors.push(`'${key}' takes its value as a separate argument: ${key} <value>.`);
                 else if (nextIsValue) i++;
                 else errors.push(`'${key}' requires a value: ${key} <value>.`);
                 break;
             case 'optSpace':
-                if (hasEq) errors.push(`'${key}' takes its optional value as a separate argument: ${key} [value].`);
+                if (hasEq)
+                    errors.push(
+                        `'${key}' takes its optional value as a separate argument: ${key} [value].`,
+                    );
                 else if (nextIsValue) i++;
                 break;
             default:

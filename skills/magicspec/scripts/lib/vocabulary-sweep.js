@@ -1,9 +1,16 @@
+// @ts-check
 'use strict';
 
 const fs = require('fs');
 const path = require('path');
 const { execFileSync } = require('child_process');
-const { engineRel, normalizePath, STATE_DIR_NAME, LEGACY_STATE_DIR_NAME } = require('../utils');
+const {
+    engineRel,
+    normalizePath,
+    walkFiles,
+    STATE_DIR_NAME,
+    LEGACY_STATE_DIR_NAME,
+} = require('../utils');
 
 // ═══════════════════════════════════════════════════════════════════════════
 // VOCABULARY SWEEP (the references to the earlier layout inside a migrated project)
@@ -42,8 +49,22 @@ const REPORT_ONLY_FILES = new Set(['RULES.md']);
 
 /** Text a product scan reads; anything else is not looked into. */
 const PRODUCT_EXTENSIONS = new Set([
-    '.md', '.txt', '.json', '.js', '.mjs', '.cjs', '.ts', '.tsx', '.jsx', '.py', '.sh',
-    '.yml', '.yaml', '.toml', '.html', '.css',
+    '.md',
+    '.txt',
+    '.json',
+    '.js',
+    '.mjs',
+    '.cjs',
+    '.ts',
+    '.tsx',
+    '.jsx',
+    '.py',
+    '.sh',
+    '.yml',
+    '.yaml',
+    '.toml',
+    '.html',
+    '.css',
 ]);
 const PRODUCT_MAX_BYTES = 512 * 1024;
 const PRODUCT_REPORT_LIMIT = 10;
@@ -117,9 +138,7 @@ function bumpSpecification(text, date) {
     const lines = text.split('\n');
     const heading = lines.findIndex((l) => /^## Document History\b/.test(l));
     if (heading < 0) return null;
-    const separator = lines.findIndex(
-        (l, i) => i > heading && /^\|\s*:?-{3,}/.test(l),
-    );
+    const separator = lines.findIndex((l, i) => i > heading && /^\|\s*:?-{3,}/.test(l));
     if (separator < 0) return null;
 
     const from = `${version[2]}.${version[3]}.${version[4]}`;
@@ -143,27 +162,10 @@ function bumpSpecification(text, date) {
  * @returns {string[]} Absolute paths of the Markdown artifacts the sweep may read.
  */
 function collectArtifacts(stateDir) {
-    const files = [];
-    const walk = (dir) => {
-        let entries;
-        try {
-            entries = fs.readdirSync(dir, { withFileTypes: true });
-        } catch {
-            return;
-        }
-        for (const entry of entries) {
-            if (entry.isSymbolicLink()) continue;
-            const full = path.join(dir, entry.name);
-            if (entry.isDirectory()) {
-                if (SKIPPED_DIRS.has(entry.name) || entry.name.startsWith('.')) continue;
-                walk(full);
-            } else if (entry.name.endsWith('.md') && !SKIPPED_FILES.has(entry.name)) {
-                files.push(full);
-            }
-        }
-    };
-    walk(stateDir);
-    return files.sort();
+    return walkFiles(stateDir, {
+        skipDir: (entry) => SKIPPED_DIRS.has(entry.name) || entry.name.startsWith('.'),
+        takeFile: (entry) => entry.name.endsWith('.md') && !SKIPPED_FILES.has(entry.name),
+    }).sort();
 }
 
 /**
@@ -191,24 +193,10 @@ function scanProductFiles(root, engineFolder, exclude) {
         );
         rels = listing.split('\0').filter(Boolean);
     } catch {
-        rels = [];
-        const walk = (dir) => {
-            let entries;
-            try {
-                entries = fs.readdirSync(dir, { withFileTypes: true });
-            } catch {
-                return;
-            }
-            for (const entry of entries) {
-                if (entry.isSymbolicLink() || entry.name === '.git' || entry.name === 'node_modules') {
-                    continue;
-                }
-                const full = path.join(dir, entry.name);
-                if (entry.isDirectory()) walk(full);
-                else rels.push(normalizePath(path.relative(root, full)));
-            }
-        };
-        walk(root);
+        const unlisted = (entry) => entry.name === '.git' || entry.name === 'node_modules';
+        rels = walkFiles(root, { skipDir: unlisted, takeFile: (entry) => !unlisted(entry) }).map(
+            (full) => normalizePath(path.relative(root, full)),
+        );
     }
 
     const skipped = [
@@ -330,7 +318,12 @@ function planSweep(root, stateDir, options = {}) {
         }))
         .sort((a, b) => a.rel.localeCompare(b.rel));
 
-    return { edits, reportOnly, unrewritten, product: scanProductFiles(root, engineFolder, new Set(options.exclude || [])) };
+    return {
+        edits,
+        reportOnly,
+        unrewritten,
+        product: scanProductFiles(root, engineFolder, new Set(options.exclude || [])),
+    };
 }
 
 /**

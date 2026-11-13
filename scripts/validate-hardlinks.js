@@ -40,7 +40,8 @@ const path = require('path');
  *   --strict   Treat any missing sibling or link as a hard error
  */
 
-const { ENGINE_DIR } = require('./engine-path');
+const { ENGINE_DIR, enginePath } = require('./engine-path');
+const { isLink, realOrNull } = require(enginePath('scripts', 'utils'));
 const ENGINE_POSIX = ENGINE_DIR.split(require('path').sep).join('/');
 
 const projectRoot = process.cwd();
@@ -149,30 +150,6 @@ function validateAgentsLinks() {
 // ───────────────────────────────────────────────────────────────────────────
 // Directory links (host skills folder → skill folder)
 // ───────────────────────────────────────────────────────────────────────────
-
-/**
- * @param {string} p - Path to inspect.
- * @returns {boolean} True for a symbolic link or a junction, without following it.
- */
-function isLink(p) {
-    try {
-        return fs.lstatSync(p).isSymbolicLink();
-    } catch {
-        return false;
-    }
-}
-
-/**
- * @param {string} p - Path to resolve.
- * @returns {string|null} Its real path, or null when it does not exist.
- */
-function realOrNull(p) {
-    try {
-        return fs.realpathSync.native(p);
-    } catch {
-        return null;
-    }
-}
 
 /**
  * Checks one directory link: it exists, it is a link (not a copy), and it leads to the target.

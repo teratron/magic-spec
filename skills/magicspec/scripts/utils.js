@@ -334,7 +334,15 @@ const BUILD_NOISE_DIRS = Object.freeze([
  *
  * @type {ReadonlyArray<string>}
  */
-const ROOT_ONLY_NOISE_DIRS = Object.freeze(['env', 'ENV', 'dist', 'build', 'target', 'temp', 'sandbox']);
+const ROOT_ONLY_NOISE_DIRS = Object.freeze([
+    'env',
+    'ENV',
+    'dist',
+    'build',
+    'target',
+    'temp',
+    'sandbox',
+]);
 
 /**
  * Whether a scanner skips a directory entry by name.
@@ -348,6 +356,104 @@ function isSkippedDir(skipNames, name, relPath) {
     const listed = skipNames instanceof Set ? skipNames.has(name) : skipNames.includes(name);
     if (!listed) return false;
     return !ROOT_ONLY_NOISE_DIRS.includes(name) || !String(relPath).includes('/');
+}
+
+// ───────────────────────────────────────────────────────────────────────────
+// Shared Walkers and Probes
+// ───────────────────────────────────────────────────────────────────────────
+
+/**
+ * Collects the files under a directory, depth first, in directory order. A symbolic link is
+ * never followed and a directory that cannot be read is skipped without a word.
+ *
+ * @param {string} dir - Absolute directory to walk.
+ * @param {{skipDir?: (entry: import('fs').Dirent, abs: string) => boolean, takeFile?: (entry: import('fs').Dirent, abs: string) => boolean}} [filters] - `skipDir` true leaves a directory unvisited; `takeFile` true collects a file (default: every file).
+ * @param {string[]} [result] - Accumulator.
+ * @returns {string[]} Absolute paths of the collected files.
+ */
+function walkFiles(dir, filters = {}, result = []) {
+    let entries;
+    try {
+        entries = fs.readdirSync(dir, { withFileTypes: true });
+    } catch {
+        return result;
+    }
+    for (const entry of entries) {
+        if (entry.isSymbolicLink()) continue;
+        const abs = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+            if (!filters.skipDir?.(entry, abs)) walkFiles(abs, filters, result);
+        } else if (entry.isFile() && (!filters.takeFile || filters.takeFile(entry, abs))) {
+            result.push(abs);
+        }
+    }
+    return result;
+}
+
+/**
+ * @param {string} dir - Directory holding specifications.
+ * @returns {string[]} The names of its Markdown files.
+ * @throws {Error} When the directory cannot be read.
+ */
+function listMarkdownFiles(dir) {
+    return fs.readdirSync(dir).filter((name) => name.endsWith('.md'));
+}
+
+/**
+ * Reads one value option of a scanner; `--name x` and `--name=x` mean the same.
+ *
+ * @param {string[]} args - The script's arguments.
+ * @param {string} flag - The option as typed, such as `--scope`.
+ * @returns {string|null} The value, or null when the option is absent or empty.
+ */
+function readOptionValue(args, flag) {
+    const at = args.findIndex((a) => a === flag || a.startsWith(`${flag}=`));
+    if (at === -1) return null;
+    return args[at].startsWith(`${flag}=`)
+        ? args[at].slice(flag.length + 1) || null
+        : args[at + 1] || null;
+}
+
+/**
+ * @param {string} p - Path to inspect.
+ * @returns {boolean} True for a symbolic link or a junction, without following it.
+ */
+function isLink(p) {
+    try {
+        return fs.lstatSync(p).isSymbolicLink();
+    } catch {
+        return false;
+    }
+}
+
+/**
+ * @param {string} p - Path to resolve.
+ * @returns {string|null} Its real path, or null when it does not exist.
+ */
+function realOrNull(p) {
+    try {
+        return fs.realpathSync.native(p);
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Runs a script's `main` and exits with its code; a crash prints one line (and the stack under
+ * `MAGIC_DEBUG`) and exits 1.
+ *
+ * @param {string} name - The script's name, for the failure line.
+ * @param {() => number} main - The script body, returning its exit code.
+ * @returns {void}
+ */
+function runMain(name, main) {
+    try {
+        process.exit(main());
+    } catch (err) {
+        console.error(`❌ ${name} failed: ${err.message}`);
+        if (process.env.MAGIC_DEBUG) console.error(err.stack);
+        process.exit(1);
+    }
 }
 
 // ───────────────────────────────────────────────────────────────────────────
@@ -604,7 +710,9 @@ function unknownWorkspaceMessage(name, registered) {
 function registeredWorkspaceNames(registry) {
     const entries = registry?.workspaces;
     if (!entries || typeof entries !== 'object') return [];
-    return Object.keys(entries).filter((name) => entries[name] && typeof entries[name] === 'object');
+    return Object.keys(entries).filter(
+        (name) => entries[name] && typeof entries[name] === 'object',
+    );
 }
 
 /**
@@ -624,7 +732,9 @@ function unregisteredWorkspaceMessage(workspaceDir) {
     const abs = path.resolve(workspaceDir);
     let registry;
     try {
-        registry = JSON.parse(fs.readFileSync(path.join(path.dirname(abs), 'workspace.json'), 'utf8'));
+        registry = JSON.parse(
+            fs.readFileSync(path.join(path.dirname(abs), 'workspace.json'), 'utf8'),
+        );
     } catch {
         return null;
     }
@@ -1037,6 +1147,12 @@ module.exports = {
     BUILD_NOISE_DIRS,
     ROOT_ONLY_NOISE_DIRS,
     isSkippedDir,
+    walkFiles,
+    listMarkdownFiles,
+    readOptionValue,
+    isLink,
+    realOrNull,
+    runMain,
     WORKSPACE_NAME_RE,
     unknownWorkspaceMessage,
     registeredWorkspaceNames,

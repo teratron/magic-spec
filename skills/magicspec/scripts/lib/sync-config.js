@@ -67,6 +67,30 @@ function unknownKeys(entry, known) {
 }
 
 /**
+ * Checks that a list entry is an object holding only the keys its kind allows, recording a
+ * problem otherwise.
+ *
+ * @param {unknown} entry - The entry as parsed.
+ * @param {string} at - Location for the problem.
+ * @param {string} shape - The message for an entry that is not an object.
+ * @param {Set<string>} known - The keys the kind allows.
+ * @param {SyncProblem[]} problems
+ * @returns {boolean} True when the entry is an object with no unknown key.
+ */
+function isKnownEntry(entry, at, shape, known, problems) {
+    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
+        problems.push(problem(at, shape));
+        return false;
+    }
+    const extra = unknownKeys(entry, known);
+    if (extra.length > 0) {
+        problems.push(problem(at, `unknown key ${extra.map((k) => `\`${k}\``).join(', ')}`));
+        return false;
+    }
+    return true;
+}
+
+/**
  * Resolves a registered path, recording a problem when it names nothing inside the project.
  *
  * @param {string} root - Project root.
@@ -97,17 +121,8 @@ function resolveRegistered(root, rel, at, problems) {
  * @returns {VersionAnchor|null}
  */
 function readVersionAnchor(root, entry, at, problems) {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-        problems.push(
-            problem(at, 'an anchor is an object with a `file` and either `json` or `marker`'),
-        );
-        return null;
-    }
-    const extra = unknownKeys(entry, VERSION_KEYS);
-    if (extra.length > 0) {
-        problems.push(problem(at, `unknown key ${extra.map((k) => `\`${k}\``).join(', ')}`));
-        return null;
-    }
+    const shape = 'an anchor is an object with a `file` and either `json` or `marker`';
+    if (!isKnownEntry(entry, at, shape, VERSION_KEYS, problems)) return null;
     const abs = resolveRegistered(root, entry.file, at, problems);
     const hasJson = entry.json !== undefined;
     const hasMarker = entry.marker !== undefined;
@@ -156,15 +171,8 @@ function readVersionAnchor(root, entry, at, problems) {
  * @returns {DocBlock|null}
  */
 function readDocBlock(root, entry, at, problems) {
-    if (!entry || typeof entry !== 'object' || Array.isArray(entry)) {
-        problems.push(problem(at, 'a block is an object with `file`, `marker` and `from`'));
-        return null;
-    }
-    const extra = unknownKeys(entry, DOC_KEYS);
-    if (extra.length > 0) {
-        problems.push(problem(at, `unknown key ${extra.map((k) => `\`${k}\``).join(', ')}`));
-        return null;
-    }
+    const shape = 'a block is an object with `file`, `marker` and `from`';
+    if (!isKnownEntry(entry, at, shape, DOC_KEYS, problems)) return null;
     const abs = resolveRegistered(root, entry.file, at, problems);
     const fromAbs = resolveRegistered(root, entry.from, at, problems);
     for (const key of ['marker', 'fromMarker']) {

@@ -66,7 +66,10 @@ function toProjectRelative(candidate, root) {
         if (path.isAbsolute(relative)) return null;
         spelled = normalizePath(relative);
     }
-    spelled = path.posix.normalize(spelled).replace(/^(\.\/)+/, '').replace(/\/+$/, '');
+    spelled = path.posix
+        .normalize(spelled)
+        .replace(/^(\.\/)+/, '')
+        .replace(/\/+$/, '');
     if (spelled === '' || spelled === '.' || spelled === '..' || spelled.startsWith('../')) {
         return null;
     }
@@ -255,7 +258,10 @@ function lexicon(designAbs, name, entry) {
     const specsDir = path.join(designAbs, name, 'specifications');
     let files = [];
     try {
-        files = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md')).sort();
+        files = fs
+            .readdirSync(specsDir)
+            .filter((f) => f.endsWith('.md'))
+            .sort();
     } catch {
         /* a workspace without specifications has a short lexicon */
     }
@@ -327,7 +333,8 @@ function scopeCoverage(root, names, scopes) {
             if (files.length >= COVERAGE_FILE_CAP) return;
             const full = path.join(dir, entry.name);
             const relative = normalizePath(path.relative(root, full));
-            if (isSkippedDir(BUILD_NOISE_DIRS, entry.name, relative) || isIgnored(relative)) continue;
+            if (isSkippedDir(BUILD_NOISE_DIRS, entry.name, relative) || isIgnored(relative))
+                continue;
             if (entry.isSymbolicLink()) continue;
             if (entry.isDirectory()) walk(full);
             else files.push(relative);
@@ -339,7 +346,8 @@ function scopeCoverage(root, names, scopes) {
         const covered = files.filter((file) => scopes[name].matches(file)).length;
         // Four decimals: in a large project one file is a hundredth of a percent, and two
         // decimals would round a real difference into a tie.
-        coverage[name] = files.length === 0 ? 0 : Math.round((covered / files.length) * 10000) / 10000;
+        coverage[name] =
+            files.length === 0 ? 0 : Math.round((covered / files.length) * 10000) / 10000;
     }
     return coverage;
 }
@@ -360,7 +368,8 @@ function scopeCoverage(root, names, scopes) {
  */
 function runnerUp(chosen, names, matched, scores) {
     const others = names.filter((name) => name !== chosen);
-    const rank = (name) => (matched[name] ? matched[name].length : 0) * 1000 + (scores ? scores[name] || 0 : 0);
+    const rank = (name) =>
+        (matched[name] ? matched[name].length : 0) * 1000 + (scores ? scores[name] || 0 : 0);
     return others.reduce((best, name) => (rank(name) > rank(best) ? name : best), others[0]);
 }
 
@@ -409,13 +418,26 @@ function narration(result, names, command, pathCount) {
  * @throws {RoutingError} When an explicit name is malformed or not registered.
  */
 function resolveWorkspace(input) {
-    const { root, designAbs, registry, explicit = null, command = null, text = '', paths = [] } = input;
-    const entries = registry && typeof registry.workspaces === 'object' && registry.workspaces ? registry.workspaces : {};
+    const {
+        root,
+        designAbs,
+        registry,
+        explicit = null,
+        command = null,
+        text = '',
+        paths = [],
+    } = input;
+    const entries =
+        registry && typeof registry.workspaces === 'object' && registry.workspaces
+            ? registry.workspaces
+            : {};
     const names = registeredWorkspaceNames(registry).filter((name) => WORKSPACE_NAME_RE.test(name));
 
     if (explicit) {
         if (!WORKSPACE_NAME_RE.test(explicit.value)) {
-            throw new RoutingError(`Invalid workspace name '${explicit.value}'. Must match ${WORKSPACE_NAME_RE}.`);
+            throw new RoutingError(
+                `Invalid workspace name '${explicit.value}'. Must match ${WORKSPACE_NAME_RE}.`,
+            );
         }
         if (!names.includes(explicit.value)) {
             throw new RoutingError(unknownWorkspaceMessage(explicit.value, names));
@@ -423,14 +445,20 @@ function resolveWorkspace(input) {
     }
 
     const scopes = Object.fromEntries(
-        names.map((name) => [name, compilePathSet(Array.isArray(entries[name].scope) ? entries[name].scope : [])]),
+        names.map((name) => [
+            name,
+            compilePathSet(Array.isArray(entries[name].scope) ? entries[name].scope : []),
+        ]),
     );
     const written = extractPaths(text);
     const named = cleanPaths([...written, ...paths], root);
     const { matched, unmatched } = matchPaths(names, scopes, named);
     // The topic signal reads what the request says, not where it points: a path is the location
     // signal's business, and its words would score the workspace the path already chose.
-    const prose = written.reduce((rest, candidate) => rest.split(candidate).join(' '), String(text || ''));
+    const prose = written.reduce(
+        (rest, candidate) => rest.split(candidate).join(' '),
+        String(text || ''),
+    );
 
     const result = {
         workspace: null,
@@ -462,7 +490,9 @@ function resolveWorkspace(input) {
     const byTopic = result.scores ? topicWinner(result.scores, names) : null;
     if (byTopic) return decide(byTopic, 'topic');
 
-    result.in_flight = names.filter((name) => collectInFlight(path.join(designAbs, name)).length > 0);
+    result.in_flight = names.filter(
+        (name) => collectInFlight(path.join(designAbs, name)).length > 0,
+    );
     if (result.in_flight.length === 1) return decide(result.in_flight[0], 'work-in-flight');
 
     if (typeof registry.default === 'string' && names.includes(registry.default)) {
@@ -471,7 +501,10 @@ function resolveWorkspace(input) {
 
     result.coverage = scopeCoverage(root, names, scopes);
     const top = Math.max(...names.map((name) => result.coverage[name]));
-    return decide(names.find((name) => result.coverage[name] === top), 'coverage');
+    return decide(
+        names.find((name) => result.coverage[name] === top),
+        'coverage',
+    );
 }
 
 module.exports = {

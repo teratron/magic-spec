@@ -1,6 +1,6 @@
 # Release Pipeline
 
-**Version:** 2.3.0
+**Version:** 2.3.1
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -74,7 +74,7 @@ The tag push starts the workflow above and cannot be recalled, so the script tha
 
 ### 5.2b The Test Workflow `[ADDED]`
 
-`.github/workflows/test.yml` runs `npm test` (the regression harness) on every push to `master` and `develop` and on every pull request, on Ubuntu and Windows with the current LTS of Node.js, so a red harness is seen where the change is made and not at release time. The harness depends on no file a fresh clone lacks (the gitignored rule projection under `.agents/rules/` is compared with the source where it exists and skipped where it does not). `Assumption (forecast)`: the first CI run may expose an assumption of the Windows development machine; the workflow is the place that shows it.
+`.github/workflows/test.yml` runs `npm test` (the regression harness) on every push to `master` and `develop` and on every pull request, on Ubuntu and Windows, with the Node versions of [l2-engine-toolchain.md](l2-engine-toolchain.md) §5.5 (the stated runtime floor and the current LTS line), so a red harness is seen where the change is made and not at release time. The harness depends on no file a fresh clone lacks (the gitignored rule projection under `.agents/rules/` is compared with the source where it exists and skipped where it does not). `Assumption (forecast)`: the first CI run may expose an assumption of the Windows development machine; the workflow is the place that shows it.
 
 ### 5.3 Engine-Version Tracking [RETIRED]
 
@@ -98,6 +98,7 @@ The earlier constraint — a change confined to `workflows/`, `skills/` or `rule
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 2.3.1 | 2026-11-12 | Agent | Clarification patch, Stable retained: the test workflow's Node versions are the ones [l2-engine-toolchain.md](l2-engine-toolchain.md) §5.5 names (the stated runtime floor and the current LTS line), not the current LTS alone; the triggers and the harness's freedom from untracked files stay here. Resolves the contradiction the coherence check found when that section split the job. |
 | 2.3.0 | 2026-10-29 | Agent | **§5.2a The Release Script** (plan by default, `--yes` to publish, the blockers, the current branch, consent) and **§5.2b The Test Workflow**, from a simulation pass in which `release.js --help` published a release in a scratch clone. Specification changed together with the code; cases named in [l2-test-suite.md](l2-test-suite.md). |
 | 2.2.0 | 2026-10-28 | Agent | The archive composition and its smoke step as built ([l2-skill-distribution.md](l2-skill-distribution.md) §5.5): the workflow builds the archive from the list printed by `scripts/archive-composition.js list` and runs `unzip -Z1 … \| scripts/archive-composition.js check --prefix …`, which exits non-zero on a path outside the composition or a missing required file; the "no archive content test" gap in §7 is closed. Status reverted`Stable → RFC` (Amendment Rule, minor) and re-promoted to `Stable` after the Post-Update Review in the same pass. |
 | 2.0.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |

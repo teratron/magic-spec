@@ -1,9 +1,9 @@
 # Master Task Index (Registry)
 
-**Version:** 1.62.0
+**Version:** 1.65.0
 **Generated:** 2026-11-12
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.61.0
-**Based on RULES:** .magicspec/RULES.md v1.23.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.66.0
+**Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
 
@@ -17,6 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 57](archives/tasks/phase-57.md) | Maintenance: One Runtime per Invocation — a child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the maintenance pipeline starts with the runtime that started its parent, not by the name `node` (feedback note n2, found by the floor run of Phase 56) | `Done (Archived)` |
+| [Phase 56](archives/tasks/phase-56.md) | Development Toolchain (Stages 0 and 1) — Biome processes every script after one formatting change, a strict type check over the existing JSDoc covers the scripts, the maintenance scripts and the harness, Fallow analyzes the engine with the entry points the executor hides from a static reader, and continuous integration is two jobs: the tools on the current LTS line and the harness on the stated runtime floor and the LTS line, each check advisory until it passes and gating afterwards; nothing a user installs changes | `Done (Archived)` |
 | [Phase 55](archives/tasks/phase-55.md) | Sync Command — `/magicspec sync` brings derived state back in line with its sources (the registry's computed cells, the rule projection and host copies, the graph and wiki, live memory's progress lines, declared version anchors, registered documentation blocks), writes only what needs no judgement, reports every disagreement and stale file with the command that resolves it, deletes nothing, writes nothing on a second run and previews with `--dry-run`; the registration form for anchors and blocks, the body and router row, the kernel's exemptions and caution, the constitution's C2, and the maintenance pipeline running the shipped pass as its project-meta stage | `Done (Archived)` |
 | [Phase 54](archives/tasks/phase-54.md) | Artifact Memory Index — a local index over the state folder's artifacts, one row per section with its provenance, answers a content question with ranked citations (lexical always, semantic only with a configured provider), re-indexes changed files before answering and never fails a workflow: `memory-index` and `memory-query` on SQLite with a pure-script fallback, refreshed by `export-wiki`, queried first by the comparison-set, intake and sibling-site searches | `Done (Archived)` |
 | [Phase 53](archives/tasks/phase-53.md) | Goal Mode — `/magicspec goal` takes a goal statement, a phase or a number of tasks and drives the pipeline toward it without pausing between steps: each computed next step executed instead of narrated and ended at its own boundary, consent queued and asked only when the mode stops, a closed list of stop conditions and one report; the goal and its criteria kept in `STATE.md`, so the resume line, the status briefing and a bare `goal` continue it; the router row with its demand read per step, the Input Pass and the constitution's command set | `Done (Archived)` |
@@ -80,8 +82,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 ## Replan Directive
 
-**Plan version:** 1.61.0
-**Directive:** The constitution moved from v1.23.0 to v1.24.0 (C2 lists `sync` as shipped) and the engine registry from v1.71.0 to v1.72.0 (Phase 55 recorded as built): revalidate the plan against both, and mark Phase 55 done in the plan.
+**Plan version:** 1.64.0
+**Directive:** The engine registry moved from v1.74.0 to v1.75.0 (Phase 56 recorded as built: `l2-engine-toolchain` 1.2.1, `l2-test-suite` 1.44.0): revalidate the plan against it, and mark Phase 56 done in the plan.
 
 ## Backlog
 

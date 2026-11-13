@@ -28,6 +28,8 @@ This guide tells you, in order, how to report a bug, how to propose a change, ho
     node --test tests/engine.js
     ```
 
+    If you changed JavaScript or JSON, also run the code checks (`pnpm install` once; see [docs/development.md](docs/development.md#the-toolchain)): `pnpm run lint` and `pnpm run typecheck`.
+
 4. Check that the engine folder matches its integrity manifest:
 
     ```bash

@@ -1,11 +1,14 @@
 #!/usr/bin/env node
+// @ts-check
 'use strict';
 
 // The engine's scripts use APIs from Node 16.9 on and are run on current LTS releases; an older
 // runtime would fail somewhere inside them with a TypeError, so it is refused here, first.
 const MIN_NODE_MAJOR = 18;
 if (Number(process.versions.node.split('.')[0]) < MIN_NODE_MAJOR) {
-    console.error(`HALT: Node.js ${MIN_NODE_MAJOR} or newer is required (found ${process.version}).`);
+    console.error(
+        `HALT: Node.js ${MIN_NODE_MAJOR} or newer is required (found ${process.version}).`,
+    );
     process.exit(1);
 }
 
@@ -285,9 +288,7 @@ function missingEngineFiles(entry) {
         } catch {
             continue;
         }
-        const code = source
-            .replace(/\/\*[\s\S]*?\*\//g, '')
-            .replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
+        const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/(^|[^:'"`])\/\/.*$/gm, '$1');
         for (const match of code.matchAll(/require\(\s*['"](\.{1,2}\/[^'"]+)['"]\s*\)/g)) {
             const base = path.resolve(path.dirname(current), match[1]);
             const found = [base, `${base}.js`, `${base}.json`, path.join(base, 'index.js')].find(
@@ -326,7 +327,8 @@ if (absent.length > 0) {
 }
 
 if (fs.existsSync(jsPath)) {
-    command = 'node';
+    // The runtime that started this process, not the first node on PATH: one invocation runs on one runtime.
+    command = process.execPath;
     cmdArgs = [...commands.runtimeFlags(commandEntry), jsPath, ...args];
 } else {
     const scriptPath = shellPath;

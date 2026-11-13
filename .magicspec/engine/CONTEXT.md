@@ -1,6 +1,6 @@
 # Project Context
 
-**Generated:** 2026-11-12
+**Generated:** 2026-11-13
 
 ## Active Technologies
 
@@ -51,6 +51,7 @@
 │   ├── simulate.md
 │   ├── spec.md
 │   ├── status.md
+│   ├── sync.md
 │   └── task.md
 ├── package.json
 ├── scripts/
@@ -71,7 +72,6 @@
 │   ├── sync.js
 │   ├── templates/
 │   ├── token-audit.js
-│   ├── update-project-meta.js
 │   └── validate-hardlinks.js
 ├── skills/
 │   ├── magicspec/

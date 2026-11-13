@@ -1,14 +1,14 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "entry": [
-    "scripts/*.js",
-    "scripts/init/*.js",
-    "tests/*.js"
-  ],
-  "ignorePatterns": [
-    "skills/magicspec/**"
-  ],
+  "entry": ["skills/magicspec/scripts/*.js", "scripts/*.js", "scripts/init/*.js", "tests/*.js"],
   "health": {
     "maxCrap": 0
-  }
+  },
+  "ignoreExportsUsedInFile": true,
+  "ignoreExports": [
+    {
+      "file": "skills/magicspec/scripts/lib/memory-*.js",
+      "exports": ["SCHEMA_VERSION", "open"]
+    }
+  ]
 }

@@ -556,9 +556,7 @@ function main(argv) {
                 ? 'Pre-flight: ok.'
                 : 'Pre-flight reported findings: run check-prerequisites to read them.',
         );
-        console.log(
-            'Commands are now typed as /magicspec <command>; /magicspec help lists them.',
-        );
+        console.log('Commands are now typed as /magicspec <command>; /magicspec help lists them.');
         console.log(
             `Suggested commit (not executed): git add -A && git commit -m "chore: migrate to the magicspec skill layout"`,
         );

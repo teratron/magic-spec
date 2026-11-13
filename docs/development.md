@@ -37,6 +37,19 @@ node skills/magicspec/scripts/executor.js update-engine-meta
 
 Then run the harness. A change to a shipped script that adds, renames or drops an option also changes its entry in `skills/magicspec/scripts/lib/commands.js` (the command table for the engine's scripts) or `scripts/cli-guard.js` (the table for the maintenance scripts); the harness compares each table with its scripts' source and fails when they differ.
 
+## The toolchain
+
+Four tools check the code. They are development dependencies of this repository (`pnpm install`); none ships, and an installed engine needs nothing but the runtime.
+
+| Command | What it checks |
+| --- | --- |
+| `pnpm run lint` | Biome: formatting and lint of every `*.js` and `*.json` (Markdown and YAML are out of its scope). `pnpm run lint:fix` writes the fixes |
+| `pnpm run typecheck` | The TypeScript check over the JSDoc, not strict, of the files that begin with `// @ts-check`; it changes nothing and compiles nothing. The sources stay JavaScript |
+| `pnpm run audit` | Fallow on the files a change touched: dead code, duplication, complexity. The whole project: `pnpm exec fallow dead-code` |
+| `npm test` | The regression harness, `node --test tests/engine.js` |
+
+Continuous integration runs two jobs, because the tools need a recent Node (Fallow declares Node 22 or later, the root manifest Node 24 or later) while the engine's stated floor is Node 18 and the harness installs nothing: `toolchain` runs the frozen install, `biome ci`, the type check and Fallow on the current LTS line, and `harness` runs `node --test tests/engine.js` on Ubuntu and Windows on the floor and on the LTS line once `toolchain` has passed. A step is advisory (it reports and does not fail the job) until the work that makes it pass is done, and gating afterwards; Only the harness's floor entries are advisory today, the rest gate. The type check covers a set of files that only grows: a script that passes gains `// @ts-check` when you touch it, a new script starts with it, and the pragma is never removed to make a check pass.
+
 ## Commands
 
 Every command takes `--help`, which prints its usage and writes nothing, and refuses an option it does not read before it touches anything:

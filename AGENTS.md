@@ -114,14 +114,18 @@ Both are devDependencies (`pnpm install`) and read `biome.json` and `.fallowrc.j
 # Formatter and linter on the files you changed (whole repository: pnpm run lint; pnpm run lint:fix writes the fixes)
 node_modules/.bin/biome check <changed files>
 
+# Type check (not strict) of the files that begin with `// @ts-check`; it changes nothing
+pnpm run typecheck
+
 # Dead code, duplication and complexity on the files the change touched
 pnpm run audit        # fallow audit (plain `pnpm audit` is pnpm's own security audit)
 ```
 
 - A finding on code you wrote is fixed in the same task: for a duplicated block reuse the helper that exists or extract one; never suppress it to pass.
 - The IDE shows the same fallow findings as diagnostics (`code-duplication`, complexity); a new one counts as a finding of the task.
-- A finding on code you did not touch is inherited: report it, and do not reformat a file wholesale to clear it (an edit inside `skills/magicspec/` is a C14 event, so a repository-wide `biome --write` is a task of its own).
-- Biome also lists Markdown and YAML formatting; the check is for code, so run it on `*.js` and `*.json`.
+- A finding on code you did not touch is inherited: report it and leave it. The repository was formatted once as one change, so a formatting finding on a line you did not touch should not occur; a file that has drifted from Biome is cleaned with `biome check --write` on that file.
+- Biome is configured for `*.js`, `*.cjs`, `*.mjs` and `*.json` only (`files.includes` in `biome.json`); Markdown and YAML are out of its scope.
+- The type check gates in continuous integration and covers only the files that begin with `// @ts-check`: a script you touch that passes it gains the pragma, a new script starts with it, and the pragma is never removed to make a check pass. Fallow's whole-project command (`pnpm exec fallow dead-code`) gates too: an export that no file imports and its own file does not use is a finding, and a name only the harness loads by a computed path is used by the harness, not dead. A type error or a Fallow finding on code you wrote is fixed in the same task.
 
 ## 4. Python Coding Style
 

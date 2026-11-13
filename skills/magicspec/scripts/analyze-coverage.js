@@ -13,6 +13,8 @@ const {
     compilePathEntry,
     compilePathSet,
     isSkippedDir,
+    listMarkdownFiles,
+    readOptionValue,
     STATE_DIR_NAME,
     BUILD_NOISE_DIRS,
 } = require('./utils');
@@ -32,17 +34,9 @@ const { parseCanonicalRefs } = require('./lib/canonical-refs');
 
 const args = process.argv.slice(2);
 const jsonOutput = args.includes('--json');
-// `--scope x` and `--scope=x` mean the same.
-const scopeIdx = args.findIndex((a) => a === '--scope' || a.startsWith('--scope='));
-const scopeOverride =
-    scopeIdx === -1
-        ? null
-        : args[scopeIdx].startsWith('--scope=')
-          ? args[scopeIdx].slice('--scope='.length) || null
-          : args[scopeIdx + 1] || null;
-
 const designDir = process.env.MAGIC_DESIGN_DIR || STATE_DIR_NAME;
-const workspaceScope = scopeOverride || process.env.MAGIC_WORKSPACE_SCOPE || null;
+const workspaceScope =
+    readOptionValue(args, '--scope') || process.env.MAGIC_WORKSPACE_SCOPE || null;
 
 /**
  * Shared build-noise floor plus this scanner's domain excludes.
@@ -107,7 +101,7 @@ function buildRefIndex(specsDir) {
 
     if (!fs.existsSync(specsDir)) return { pathToSpec, refEntries, specRefs };
 
-    const specFiles = fs.readdirSync(specsDir).filter((f) => f.endsWith('.md'));
+    const specFiles = listMarkdownFiles(specsDir);
 
     for (const specFile of specFiles) {
         const specPath = path.join(specsDir, specFile);

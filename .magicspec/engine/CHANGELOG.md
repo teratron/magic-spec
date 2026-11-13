@@ -1,5 +1,18 @@
 # Engine Workspace Changelog
 
+## Phase 57 — 2026-11-13 (Maintenance: One Runtime per Invocation)
+
+- **One invocation, one runtime.** The executor, the diagnostics recheck, the maintenance wrapper and the maintenance pipeline start every child Node process with the path of the runtime that started their parent, not by the name `node`. Found by running the harness on Node 18 under `npx` on Windows: the children ran on the system Node 24 and printed a warning Node 18 cannot print. The same repair is on the 2.x line (engine 2.1.147). `l2-engine-automation` 1.32.1; harness 436 → 438.
+
+## Phase 56 — 2026-11-13 (Development Toolchain)
+
+- **The code is formatted, linted, type-checked and analyzed, and CI says so.** Biome processes every `*.js`, `*.cjs`, `*.mjs` and `*.json` (it was formatting Markdown and YAML too, which is where 218 of its 244 findings came from; `tests/engine.js` was skipped for being 1.1 MiB and is now processed) after one formatting change; `biome ci .` is clean. A non-strict TypeScript check covers the files that begin with `// @ts-check` (27 to start, 19 of them in the skill folder as one added comment line); TypeScript is a checker and the sources stay JavaScript. `fallow dead-code` sees the skill folder through its entry points and gates.
+- **Two CI jobs.** `toolchain` (frozen install, `biome ci`, the type check, Fallow) on Node 24; `harness` on Ubuntu and Windows, on Node 18 and 24, `node --test tests/engine.js` with no install, waiting for `toolchain`. The Node 18 entries are advisory until the engine finding below is repaired.
+- **Decisions that came from measuring.** A strict check gave 1999 errors (825 untyped parameters, 845 in the harness, no defect in a sample) and the owner chose the growing non-strict set and removed the conversion to `.ts` from the specification; the first CI design could not run Fallow on the stated runtime floor (Node 18) and was split in two; TypeScript 7 turns `strict` on by default, so it is written as `false`.
+- **The floor, run.** The harness on Node 18.20.8: 436 tests, 427 pass, 5 fail, 4 skipped (the `node:sqlite` cases). One mutation-driver incompatibility with Node 18's default reporter was repaired; two git-hook cases are a Windows `npx` launch artefact; two cases exposed an engine defect — `executor.js` and the diagnostics recheck start children by the name `node`, not `process.execPath` — recorded as feedback note n2.
+- **Specifications:** `l2-engine-toolchain` 1.2.1, `l2-test-suite` 1.44.0 and `l2-release-pipeline` 2.3.1, registry 1.75.0.
+- **Coverage.** Harness 432 → 436 (four configuration cases); 17 mutation entries, 16 caught and one equivalent mutant.
+
 ## Phase 55 — 2026-11-12 (Sync Command)
 
 - **`/magicspec sync`: derived state back in line with its sources.** One command recomputes the registry's specification counts and workspace rows, live memory's progress counters, the rule projection and the host copies of the installed skill folder, the wiki of the specification graph with the artifact index, the version anchors a project declared and the documentation blocks it registered — and rewrites only what differs. What needs a judgement (a specification header that disagrees with its registry row, a registered file missing from the disk, a failed integrity check) is listed with its place and the one command that resolves it and is left as it is; a stale derived file is listed and kept. A second run with nothing changed writes nothing and says so in one line; `--dry-run` lists every write and changes no byte.

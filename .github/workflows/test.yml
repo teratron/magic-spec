@@ -1,8 +1,13 @@
 name: Tests
 
-# The engine's regression harness, on every push and pull request. A release runs the same
-# suite as its quality gate (`node scripts/release.js --yes`), so a red run here is a release
-# that would have stopped there.
+# The engine's checks, on every push and pull request, in two jobs because the tools and the
+# harness do not share a runtime range: the tools (Biome, the type check, Fallow) need a recent
+# Node and run on the current LTS line; the harness installs nothing and runs on the stated
+# runtime floor as well. A release runs the harness as its quality gate
+# (`node scripts/release.js --yes`), so a red run here is a release that would have stopped there.
+#
+# A step that carries `continue-on-error: true` is advisory: it reports and does not fail the job.
+# Only the floor entry of the harness is advisory, until its first run is classified.
 
 on:
   push:
@@ -19,15 +24,56 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  toolchain:
+    name: toolchain (node ${{ matrix.node }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      matrix:
+        # The current LTS line; the root manifest declares the same floor for the tools.
+        node: [24]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Format and lint
+        run: pnpm exec biome ci .
+
+      - name: Type check
+        run: pnpm run typecheck
+
+      - name: Analyze (Fallow)
+        run: pnpm exec fallow dead-code
+
   harness:
     name: harness (${{ matrix.os }}, node ${{ matrix.node }})
+    needs: toolchain
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
+    # The floor entry is advisory until its first run is classified (l2-engine-toolchain.md §2).
+    continue-on-error: ${{ matrix.node == 18 }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, windows-latest]
-        node: [22]
+        # The stated runtime floor (executor.js MIN_NODE_MAJOR) and the current LTS line.
+        node: [18, 24]
 
     steps:
       - name: Checkout
@@ -42,4 +88,4 @@ jobs:
           node-version: ${{ matrix.node }}
 
       - name: Run the harness
-        run: npm test
+        run: node --test tests/engine.js

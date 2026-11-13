@@ -296,7 +296,7 @@ function runRecheck(recheck) {
             MAGIC_DIAGNOSTICS_SUPPRESS: '1',
         });
 
-        const stdout = execFileSync('node', [scriptPath, ...args], {
+        const stdout = execFileSync(process.execPath, [scriptPath, ...args], {
             cwd: projectRoot,
             env,
             encoding: 'utf8',

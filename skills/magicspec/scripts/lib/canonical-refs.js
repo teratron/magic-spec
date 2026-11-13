@@ -1,3 +1,4 @@
+// @ts-check
 'use strict';
 
 const { normalizePath } = require('../utils');
@@ -24,7 +25,10 @@ const { normalizePath } = require('../utils');
  * @returns {string[]} The cells.
  */
 function splitRow(line) {
-    const cells = line.trim().split('|').map((c) => c.trim());
+    const cells = line
+        .trim()
+        .split('|')
+        .map((c) => c.trim());
     if (cells.length && cells[0] === '') cells.shift();
     if (cells.length && cells[cells.length - 1] === '') cells.pop();
     return cells;

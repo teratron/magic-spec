@@ -223,8 +223,13 @@ function main() {
     if (backups.length > 0) {
         console.log('Migration backups (never removed by this command):');
         for (const backup of backups) {
-            const age = backup.days === 0 ? 'made today' : `${backup.days} ${backup.days === 1 ? 'day' : 'days'} old`;
-            console.log(`  ${backup.name}/  (${age}, ${formatSize(backup.bytes)}) — delete it by hand: ${deleteCommand(backup.name)}`);
+            const age =
+                backup.days === 0
+                    ? 'made today'
+                    : `${backup.days} ${backup.days === 1 ? 'day' : 'days'} old`;
+            console.log(
+                `  ${backup.name}/  (${age}, ${formatSize(backup.bytes)}) — delete it by hand: ${deleteCommand(backup.name)}`,
+            );
         }
     }
     return failed > 0 ? 1 : 0;
