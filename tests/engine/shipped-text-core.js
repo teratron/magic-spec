@@ -868,6 +868,31 @@ module.exports = () => {
         assert.ok(!/AskUserQuestion/.test(body), 'the body asks no question itself');
     });
 
+    test('goal mode re-runs the scenario of a repaired finding before it chooses fix for it again, and the repair records the run it repaired (GM-4, FX-7)', () => {
+        const goal = readShipped('skills/magicspec/workflows/goal.md');
+        const rerun = goal.indexOf(
+            "| A failed or inconclusive scenario step whose repair is `Done` — a task names it in its `Verify` line, and the `Last run` it was found in is still the scenario's last | `simulate` for that area",
+        );
+        const finding = goal.indexOf(
+            "| An open finding: a failed or inconclusive step in a scenario's `Last run` that no such repair names",
+        );
+        assert.ok(rerun > 0, 'goal.md sends a repaired scenario finding to simulate');
+        assert.ok(finding > 0, 'goal.md keeps the fix row for an open finding');
+        assert.ok(rerun < finding, 'the re-run row is chosen before the fix row');
+        assert.ok(
+            goal.includes('only a run rewrites `Last run`'),
+            'goal.md says why the re-run closes the finding',
+        );
+
+        const fix = readShipped('skills/magicspec/workflows/fix.md');
+        assert.ok(
+            fix.includes(
+                'For a simulation finding, `Notes` also records the scenario, the step and the date of the `Last run` it was found in',
+            ),
+            'fix.md records the run a repair of a scenario finding answers',
+        );
+    });
+
     test('the status briefing shows a recorded goal as one line under Position and recommends /magicspec goal first while a criterion is not met, and stays read-only (GM-3, SC-4)', () => {
         const status = readShipped('skills/magicspec/workflows/status.md');
         const page = readShipped('docs/status.md');

@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 62 — 2026-11-18 (Maintenance: A Failed Engine Scenario Enters Through the Maintenance Fix)
+
+- **A failed step of the engine's own scenarios has one route to its repair in this repository.** The maintenance `fix` workflow takes it as an input (read from the `Last run` records of the scenarios), and a section *A Failed Scenario Step* says how it is reproduced (in a disposable copy of the engine), repaired (in the shipped folder, or in the scenario file alone when the scenario is out of date) and closed (by the next `simulate` run of its area); the maintenance router, the development guide and the contributor page name the same route, while `simulate` and `finalize` keep printing `/magicspec fix`.
+- **The constitution was not amended.** The rule workflow's admission declined the amendment of C28 item 2 (agent-originated, no harm on record, the route already stated in the specification), so `RULES.md` stays 1.24.0.
+- **Step names of the finalization for a stale plan.** `finalize` names `/magicspec plan`, not `/magicspec task`, for a phase waiting for its tasks while the plan is behind the registry or leaves a Stable specification unplaced (feedback note n5; engine 3.0.148, task `T-62F01`).
+- **Specifications:** `l1-fix-command` 1.3.1 (as built), `l1-session-continuity` 2.6.1, `l2-engine-finalization` 3.9.2, `l2-test-suite` 1.48.3, registry 1.89.0. Harness 457.
+
 ## Phase 61 — 2026-11-18 (Maintenance: The Step After a Complete Plan With an Open Design Item)
 
 - **The next step after a plan is no longer a bounce.** On a complete plan whose Backlog holds an open design item, `/magicspec plan` ended by naming `/magicspec task` to re-sync the ledger, a step whose Plan Gate refuses on that same item; it now names the planning funnel, as after every other workflow, and keeps the re-sync where nothing is pending. One harness case with its Parked control, two mutation entries caught.

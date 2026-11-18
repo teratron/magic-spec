@@ -343,7 +343,15 @@ function planCompleteNextAction(workspace, wsDir) {
         const pending = findPendingWork(wsDir);
         // A phase the plan holds and the ledger has no row for is waiting for its tasks, not complete.
         if (pending.nextUndecomposed) {
-            return `Run /magicspec task ${workspace} to decompose Phase ${pending.nextUndecomposed.phase}`;
+            const phase = pending.nextUndecomposed.phase;
+            // The task command decomposes nothing on a plan the registry has moved past or that
+            // leaves a Stable specification unplaced (its Plan Gate, PL-4), so those findings of
+            // the planning command come first, as in the status briefing's order. A constitution
+            // the plan has not caught up with is named earlier, for every workflow but `plan`.
+            if (pending.syncGap || pending.orphanedSpecs.length > 0) {
+                return `Run /magicspec plan ${workspace} to bring the plan up to date before decomposing Phase ${phase}`;
+            }
+            return `Run /magicspec task ${workspace} to decompose Phase ${phase}`;
         }
         const nothingPending =
             pending.registryEvaluated &&
@@ -667,10 +675,11 @@ function rulesGapAfter(wsDir) {
  * After `/magicspec plan`: whether the task ledger was decomposed from an older plan, and then
  * the decomposition step to name. `{ws}` stands for the workspace, filled by the caller.
  *
- * A complete plan whose Backlog holds an open design item is left to the plan-complete
- * resolution, which names the planning funnel for every workflow: the task command's Plan Gate
- * refuses on that item, because it is a finding of the planning command, so a re-sync of the
- * ledger could only send the person back to planning.
+ * A complete plan — every phase of the ledger terminal — is left to the plan-complete resolution,
+ * which names the planning funnel when work is pending and no step when nothing is, for every
+ * workflow. The task command re-syncs only tasks that are not Done, so a ledger with no open phase
+ * has nothing for it to apply (PL-5), and its Plan Gate refuses on an open design item, which is
+ * a finding of the planning command, so a re-sync there could only send the person back.
  *
  * @param {string} wsDir - The workspace design directory.
  * @returns {string|null} The next step, or `null` when the ledger is in step with the plan or the
@@ -682,8 +691,9 @@ function ledgerAfterPlan(wsDir) {
         if (pending.nextUndecomposed) {
             return `Run /magicspec task {ws} to decompose Phase ${pending.nextUndecomposed.phase}`;
         }
-        const designDebt = pending.planComplete && pending.openBacklogItems.length > 0;
-        if (!pending.ledgerBehindPlan || designDebt) return null;
+        // The task command's Sync step blocks, releases or cancels only tasks that are not Done, so a
+        // ledger whose every phase is terminal has nothing to apply: the plan state decides the step.
+        if (!pending.ledgerBehindPlan || pending.planComplete) return null;
         return 'Run /magicspec task {ws} to bring the tasks in line with the plan';
     } catch {
         return null;

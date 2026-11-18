@@ -290,9 +290,42 @@ module.exports = () => {
             'A pasted engine bug report',
             'A pending feedback note',
             'A failing harness case',
-            'A finding of an engine simulation',
+            'A finding of the maintenance test command',
+            "A failed or inconclusive step of the engine's own scenarios",
         ]) {
             assert.ok(body.includes(`| ${input} |`), `an input: ${input}`);
+        }
+        assert.ok(
+            !body.includes('| A finding of an engine simulation |'),
+            'the one row for the report of the maintenance test command and for the scenarios is split in two',
+        );
+        assert.ok(
+            body.includes(
+                "then the failing cases, then the failed steps of the engine's own scenarios",
+            ),
+            'the open findings end with the scenario steps',
+        );
+        assert.ok(
+            !body.includes('tests/suite.md'),
+            'the lasting check for behaviour a person sees is the engine scenario, not a case of the cognitive suite',
+        );
+        const scenarioSection = body.slice(
+            body.indexOf('## A Failed Scenario Step'),
+            body.indexOf('## What Only the Engine Has'),
+        );
+        assert.ok(
+            scenarioSection.length > 0,
+            'the section on a failed scenario step exists before the engine steps',
+        );
+        for (const needle of [
+            'Reproduce it in a disposable copy of the engine',
+            "never by running the step in this repository's own state folder",
+            '`Not a defect` of the engine',
+            'closed by the next `/magicspec simulate` run of its area',
+            'does not write the `Last run` record (SM-7)',
+            'the date of the `Last run` it was found in (FX-7)',
+        ]) {
+            assert.ok(scenarioSection.includes(needle), `the scenario section says: ${needle}`);
         }
         assert.ok(
             body.includes('node skills/magicspec/scripts/executor.js feedback list'),
@@ -411,6 +444,26 @@ module.exports = () => {
             development.includes('## Maintenance commands') &&
                 development.includes('| `fix` | Carries error feedback about the engine'),
             'the development guide lists it',
+        );
+        // The one route for a failed step of the engine's own scenarios, in the router, the guide and the contributor page.
+        const scenarioStep = "a failed step of the engine's own scenarios";
+        const fixRow = (text) => text.split('\n').find((line) => line.startsWith('| `fix` |'));
+        assert.ok(fixRow(router)?.includes(scenarioStep), 'the router row names the scenario step');
+        assert.ok(
+            fixRow(development)?.includes(scenarioStep),
+            'the development guide row names the scenario step',
+        );
+        assert.ok(
+            readShipped('docs/dev-test.md').includes(
+                'in this repository the person repairs it through `/magicspec-dev fix`',
+            ),
+            'the contributor page names the one route',
+        );
+        assert.ok(
+            !readShipped('docs/dev-test.md').includes(
+                'the entry for error feedback about the engine is `/magicspec-dev fix`.',
+            ),
+            'and no longer leaves the two routes side by side',
         );
         assert.ok(
             readShipped('docs/distribution.md').includes(

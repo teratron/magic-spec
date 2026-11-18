@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.56.0
+**Version:** 1.61.0
 **Status:** Active
-**Engine Version:** 3.0.145
+**Engine Version:** 3.0.149
 
 ## Overview
 
@@ -24,6 +24,11 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.61.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 64 (maintenance): `l2-engine-finalization.md` 3.10.0, `l2-test-suite.md` 1.48.4. The engine registry is 1.90.0. |
+| 1.60.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 62 recorded as built: `l1-fix-command.md` 1.3.1. The engine registry is 1.89.0. |
+| 1.59.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Task T-62F01 recorded as built: `l2-engine-finalization.md` 3.9.2, `l1-session-continuity.md` 2.6.1, `l2-test-suite.md` 1.48.3. The engine registry is 1.88.0. |
+| 1.58.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 63 (maintenance): `l1-session-continuity.md` 2.6.0, `l2-engine-automation.md` 1.32.2, `l1-goal-mode.md` 1.2.0, `l1-fix-command.md` 1.3.0. The engine registry is 1.87.0. |
+| 1.57.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). `l1-fix-command.md` 1.2.0 (the failed step of the engine's own scenarios enters through the maintenance `fix`), `l1-product-simulation.md` 1.1.2, `l1-command-surface.md` 2.2.6. The engine registry is 1.86.0. |
 | 1.56.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 61 recorded as built: `l2-engine-finalization.md` 3.9.1, `l2-test-suite.md` 1.48.2, `l1-engine-diagnostics.md` 1.1.4, `l2-engine-diagnostics.md` 1.4.4. The engine registry is 1.85.0. |
 | 1.55.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 60 recorded as built: `l1-product-simulation.md` 1.1.1. The engine registry is 1.83.0. |
 | 1.54.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). `l1-product-simulation.md` 1.1.0 (the engine's scenarios in `simulations/`, beside the cognitive suite). The engine registry is 1.82.0. |

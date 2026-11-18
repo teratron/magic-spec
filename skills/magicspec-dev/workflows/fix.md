@@ -15,20 +15,31 @@ An engine bug report pasted by a user, a feedback note an agent recorded, a fail
 | A pasted engine bug report | The `MAGIC-SPEC ENGINE BUG REPORT` block of the always-on rules, pasted into the request | A report to reproduce and fix, not one to forward |
 | A pending feedback note | `node skills/magicspec/scripts/executor.js feedback list` | A fix candidate recorded by an agent while it worked (kinds `bug`, `missing-capability`, `improvement`, `docs`) |
 | A failing harness case | `node --test tests/engine.js` | A regression or a case that pins behaviour the engine no longer has |
-| A finding of an engine simulation | The report of `/magicspec-dev test` | A logic gap, friction or an ambiguity in a shipped text |
+| A finding of the maintenance test command | The report of `/magicspec-dev test` | A logic gap, friction or an ambiguity in a shipped text |
+| A failed or inconclusive step of the engine's own scenarios | A `fail` or `inconclusive` line in the `Last run` record of a scenario under `.magicspec/{workspace}/simulations/`, left by `/magicspec simulate` | A failure of the engine seen from its user's side: the engine itself, or a scenario that no longer matches what its specification states (see *A Failed Scenario Step*) |
 
-With no input the open findings are the work: `feedback list` first, then the failing cases.
+With no input the open findings are the work: `feedback list` first, then the failing cases, then the failed steps of the engine's own scenarios.
 
 ## The Triage
 
 Read `skills/magicspec/workflows/fix.md` in full and follow it unchanged, with the engine as the product: re-verify first (FX-1), reproduce by a named check (FX-2), test the reported cause (FX-3), classify by the closed rule and apply the specification test (FX-4, FX-5), group by confirmed cause, search the sibling sites (FX-6), record the repair as a task and pass the gates (FX-7), leave a lasting check (FX-8). A report that arrives for a version older than the current one is re-verified against the current tree; one that names a maintained release line is re-verified on that line too.
+
+## A Failed Scenario Step
+
+A failed or inconclusive step of the engine's own scenarios is error feedback about the engine seen from its user's side, and in this repository it enters here (FX-10). `/magicspec simulate` ends such a run with `/magicspec fix`, as in every project, because shipped text names no maintenance command; this workflow is the entry the repository's own text routes the person to. The triage is the shipped one, read as follows:
+
+- **The report is the step.** The scenario, the step, its expected outcome and the observed outcome of its `Last run` line are the defect; the scenario's `Verifies` names the specification statement a repair restores (FX-4).
+- **Reproduce it in a disposable copy of the engine** — a scratch directory outside this repository, holding its own copy of the engine folder and initialised there — never by running the step in this repository's own state folder, whose files are the project's record.
+- **A scenario that no longer matches what its specification states** makes the step `Not a defect` of the engine: the scenario file is repaired and nothing in the shipped folder changes.
+- **Otherwise the repair is made in the shipped folder**, with the engine steps below (the harness case, C14, every maintained release line). The scenario stays the check from the user's side and is not restated as a case of the cognitive suite.
+- **The finding is closed by the next `/magicspec simulate` run of its area**, which replaces the scenario's lines; this workflow does not write the `Last run` record (SM-7). The repair task records the scenario, the step and the date of the `Last run` it was found in (FX-7), so a later run is told from a new failure.
 
 ## What Only the Engine Has
 
 These steps come on top of the triage; none of them changes it.
 
 1. **The sibling search covers the whole shipped folder.** The same guard, parser, path computation, rule or wording is searched in `skills/magicspec/` as a whole — workflow bodies, role cards, references, templates and scripts, with the always-on rules — and in the maintenance tooling and tests that pin it. A role card and the specification that mirrors it are one site: both change or neither.
-2. **The lasting check is a harness case that fails without the repair.** Write the case in `tests/engine.js` first and run it red. After the repair, prove the case guards the repaired line with `node scripts/mutation-check.js {list.json}`: an entry that reverts the repair must be reported `CAUGHT`. A repair whose case survives the mutation is not done. For a defect of shipped prose the case pins the sentence the agent obeys, as the neighbouring cases do. User-facing behaviour of the engine also gets a scenario in `tests/suite.md`.
+2. **The lasting check is a harness case that fails without the repair.** Write the case in `tests/engine.js` first and run it red. After the repair, prove the case guards the repaired line with `node scripts/mutation-check.js {list.json}`: an entry that reverts the repair must be reported `CAUGHT`. A repair whose case survives the mutation is not done. For a defect of shipped prose the case pins the sentence the agent obeys, as the neighbouring cases do. Behaviour a person sees also gets its scenario under `.magicspec/{workspace}/simulations/`, kept as SM-4 states; the cognitive suite stays the regression suite of the workflow text and is not extended to restate it.
 3. **Code style and static checks.** Changed `*.js` and `*.json` files pass `node_modules/.bin/biome check <files>` and `pnpm run audit`; a finding on code written in the repair is fixed in the repair (reuse the helper that exists, never suppress), a finding on code not touched is reported and left.
 4. **C14 follows every change inside the shipped folder.** After any edit under `skills/magicspec/` run `node skills/magicspec/scripts/executor.js update-engine-meta` at once — before reporting, before running the harness, before the next edit.
 5. **Layer rules hold.** The shipped folder never requires the maintenance folders except through the one graceful-fallback guard; a script that must tell the repository from an installation uses the presence of `scripts/generate-checksums.js` and nothing else.

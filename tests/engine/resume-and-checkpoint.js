@@ -855,4 +855,118 @@ module.exports = () => {
             'a genuinely absent file hashes to null, not UNREADABLE — no diagnostic',
         );
     });
+
+    // The task command decomposes nothing on a plan the registry has moved past or that leaves a Stable
+    // specification unplaced (its Plan Gate, PL-4), so a phase waiting for its tasks is named for it only
+    // when the plan is current: the status briefing already puts the planning step first in that order.
+    test('finalize.js names the planning step, not task, for an undecomposed phase while the plan is behind the registry or leaves a Stable specification unplaced (PL-4, SC-2.1)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            const DECOMPOSE = 'Run /magicspec task engine to decompose Phase 2';
+            const REVALIDATE =
+                'Run /magicspec plan engine to bring the plan up to date before decomposing Phase 2';
+            const write = ({ registry = '1.0.0', extraSpec = false } = {}) => {
+                fs.writeFileSync(
+                    path.join(wsDir, 'INDEX.md'),
+                    [
+                        '# Index',
+                        '',
+                        `**Version:** ${registry}`,
+                        '',
+                        '| [l1-a.md](specifications/l1-a.md) | d | Stable | 1 | 1.0.0 |',
+                        ...(extraSpec
+                            ? [
+                                  '| [l1-b.md](specifications/l1-b.md) | d | Stable | 1 | 1.0.0 |',
+                              ]
+                            : []),
+                        '',
+                    ].join('\n'),
+                );
+                fs.writeFileSync(
+                    path.join(wsDir, 'PLAN.md'),
+                    [
+                        '# Plan',
+                        '',
+                        '**Version:** 1.0.0',
+                        '**Based on:** .magicspec/engine/INDEX.md v1.0.0',
+                        '',
+                        '## Active Phases',
+                        '',
+                        '### Phase 1 — First',
+                        '',
+                        '- [x] **A** ([l1-a.md](specifications/l1-a.md))',
+                        '',
+                        '### Phase 2 — Second',
+                        '',
+                        '- [ ] **A again** ([l1-a.md](specifications/l1-a.md))',
+                        '',
+                        '## Backlog',
+                        '',
+                        '*None.*',
+                        '',
+                    ].join('\n'),
+                );
+                fs.writeFileSync(
+                    tasksPath,
+                    [
+                        '# Master Task Index',
+                        '',
+                        '**Based on PLAN:** .magicspec/engine/PLAN.md v1.0.0',
+                        '',
+                        '## Active Phases',
+                        '',
+                        '| Phase | Description | Status |',
+                        '| --- | --- | --- |',
+                        '| [Phase 1](archives/tasks/phase-1.md) | d | `Done (Archived)` |',
+                        '',
+                    ].join('\n'),
+                );
+            };
+
+            // Control: a current plan with a phase waiting for its tasks names the decomposition.
+            write();
+            for (const workflow of [
+                'task',
+                'run',
+                'fix',
+                'simulate',
+            ]) {
+                assert.strictEqual(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    DECOMPOSE,
+                    `${workflow}: a current plan hands its undecomposed phase to the task command`,
+                );
+            }
+
+            // The registry moved past the plan (a specification pass ran since it was written).
+            write({
+                registry: '1.1.0',
+            });
+            for (const workflow of [
+                'task',
+                'run',
+                'fix',
+                'simulate',
+            ]) {
+                assert.strictEqual(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    REVALIDATE,
+                    `${workflow}: the task command refuses a plan behind the registry, so the planning step comes first`,
+                );
+            }
+
+            // A Stable specification the plan neither holds nor parks.
+            write({
+                extraSpec: true,
+            });
+            assert.strictEqual(
+                finalize.computeNextAction('fix', 'engine', wsDir),
+                REVALIDATE,
+                'a Stable specification in neither a phase nor the backlog is the planning command’s finding',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
 };

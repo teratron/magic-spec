@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-18 10:01
-**Phase:** 60 — The Engine's Own Scenarios (Simulations Beside the Cognitive Suite)
+**Updated:** 2026-11-18 12:50
+**Phase:** 64 — Maintenance: A Finished Ledger Is Not Re-Synced After a Plan
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-60Y01 Spec sync of l1-product-simulation.md as built
+- **Task:** T-62Y01 Spec sync of l1-fix-command.md as built
 - **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
-- **Next Action:** Plan complete — run /magicspec plan engine to plan new scope
+- **Next Action:** Plan complete — nothing pending
 
 ## Progress
 
 ```
-Overall: [61/61] ████████ 100%
+Overall: [64/64] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-18 **Decision:** Phase 64 complete (maintenance). Provides: finalize names the task command after a plan only while a phase of the ledger is open; a finished ledger leaves the step to the plan state; l2-engine-finalization 3.10.0 (PL-5 restored), l2-test-suite 1.48.4; engine 3.0.149, harness 457, registry 1.90.0
+- 2026-11-18 **Decision:** Phase 62 complete (maintenance). Provides: the maintenance fix takes a failed step of the engine's own scenarios (inputs, open findings, a section on reproducing, repairing and closing it), the router, guide and contributor page name the one route; the C28 item 2 amendment declined by admission, RULES.md stays 1.24.0; finalize names plan before task for an undecomposed phase on a stale plan (n5); engine 3.0.148, harness 457, registry 1.89.0
 - 2026-11-18 **Decision:** Phase 61 complete (maintenance). Provides: finalize names the planning funnel after a plan on a complete plan with an open design item (no task re-sync the Plan Gate refuses); the 17 area files of the cognitive suite carry a Cases heading (markdownlint MD001 cleared) with the layout case asserting it; four specifications patched as built; engine 3.0.145, harness 454, registry 1.85.0
 - 2026-11-18 **Decision:** Phase 60 complete. Provides: five scenario files for the engine in .magicspec/engine/simulations/ (twelve scenarios, forty steps, each step tagged printed or composed, disposable-project preconditions, Last run never), one bullet in docs/dev-test.md on the division with the cognitive suite, l1-product-simulation 1.1.1 with one open finding (SM-7 against FX-10); harness 453, suite 1.9.108, registry 1.83.0, no engine file changed
 - 2026-11-13 **Decision:** Phase 59 complete. Provides: tests/engine.js as a 43-line entry over 33 domain modules and two helper layers with every case name kept (447 of 447), the cognitive suite as a 4.7 KB index and 17 area files with stable identifiers, /magicspec-dev:test {area} reading one area, two layout cases under six caught mutations, Fallow entry and ts-check on 25 of 36 files; suite 1.9.107, registry 1.80.0
-- 2026-11-13 **Decision:** Phase 58 complete. Provides: memory-query citations with their file lines and a size estimate (schema 2), a cut list that counts what matched in force and in history and pages by --offset over a fixed fused pool, no upload from a machine that lacks the key a shared provider setting names, vectors comparable by provider address, the five readers paging or narrowing a cut list, docs/graph.md section 6; harness 445, suite 1.9.105, registry 1.78.0, 20 mutation entries caught
-- 2026-11-13 **Decision:** Phase 57 complete (maintenance). Provides: every child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the pipeline starts with process.execPath; two harness cases and four caught mutations; the same repair on v2.1 (2.1.147); feedback note n2 discarded; harness 438
 
 ## Blockers
 

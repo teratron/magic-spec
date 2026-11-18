@@ -111,7 +111,8 @@ graph TD
    | State read from the files | Step |
    | --- | --- |
    | A criterion of a statement that no `Stable` specification states (the criterion of a phase or a count is not one) | `spec` with that criterion as the idea (its intake is done; the survey does not run again) |
-   | An open finding: a failed or inconclusive step in a scenario's `Last run`, or a failing check of a criterion | `fix` with that finding |
+   | A failed or inconclusive scenario step whose repair is `Done` — a task names it in its `Verify` line, and the `Last run` it was found in is still the scenario's last | `simulate` for that area: only a run rewrites `Last run`, so the finding closes there, or comes back with a newer run |
+   | An open finding: a failed or inconclusive step in a scenario's `Last run` that no such repair names, or a failing check of a criterion | `fix` with that finding |
    | A phase goal and the phase has no workbook yet | `task {workspace} "phase-{N}"` |
    | A phase goal and the phase holds a `Todo` or `In Progress` task | `run {workspace} "phase-{N}"` |
    | `STATE.md`'s `Next Action` names `/magicspec spec`, `plan`, `task` or `run` (every finalization computes it, DA-6) | that step, with the argument it names |

@@ -389,11 +389,46 @@ module.exports = () => {
                 finalize.computeNextAction('plan', 'engine', wsDir),
                 'Run /magicspec task engine to decompose Phase 2',
             );
-            // … or the re-sync of the tasks when every phase has its row.
-            writePlan({ version: '1.1.0', phases: [['1', 'First', true]] });
+            // … or the re-sync of the tasks when every phase has its row and one is still open.
+            writePlan({
+                version: '1.1.0',
+                phases: [
+                    [
+                        '1',
+                        'First',
+                        false,
+                    ],
+                ],
+            });
+            writeLedger({
+                rows: [
+                    [
+                        '1',
+                        'In Progress',
+                    ],
+                ],
+            });
             assert.strictEqual(
                 finalize.computeNextAction('plan', 'engine', wsDir),
                 'Run /magicspec task engine to bring the tasks in line with the plan',
+            );
+            // A ledger whose every phase is terminal has nothing for the task command to apply (PL-5):
+            // the plan state decides the step, here the funnel, since no registry is evaluated.
+            writePlan({
+                version: '1.1.0',
+                phases: [
+                    [
+                        '1',
+                        'First',
+                        true,
+                    ],
+                ],
+            });
+            writeLedger();
+            assert.strictEqual(
+                finalize.computeNextAction('plan', 'engine', wsDir),
+                'Plan complete — run /magicspec plan engine to plan new scope',
+                'a plan that changed no open phase is not handed to a task re-sync',
             );
 
             // A plan whose ledger is in step: the step the plan state computes — execute the open task.
@@ -436,7 +471,6 @@ module.exports = () => {
         try {
             const { finalize, wsDir, tasksPath } = requireFinalizeWorkspace(tempDir);
             const FUNNEL = 'Plan complete — run /magicspec plan engine to plan new scope';
-            const RESYNC = 'Run /magicspec task engine to bring the tasks in line with the plan';
             const write = (/** @type {string} */ backlog) => {
                 fs.writeFileSync(
                     path.join(wsDir, 'INDEX.md'),
@@ -502,14 +536,15 @@ module.exports = () => {
                 );
             }
 
-            // Control: the same item Parked leaves nothing pending, and the ledger behind the plan is re-synced.
+            // Control: the same item Parked leaves nothing pending, and a ledger whose every phase is terminal
+            // has nothing for the task command to apply, so no step is named (PL-5).
             write(
                 '- **Design item** that needs a specification pass. *(Parked — waiting on evidence)*',
             );
             assert.strictEqual(
                 finalize.computeNextAction('plan', 'engine', wsDir),
-                RESYNC,
-                'with nothing pending, a plan that left the ledger behind still hands it to the task command',
+                'Plan complete — nothing pending',
+                'with nothing pending, a plan that left only a finished ledger behind names no step',
             );
         } finally {
             cleanup(tempDir);

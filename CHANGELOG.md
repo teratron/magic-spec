@@ -44,6 +44,7 @@ Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consume
 - **The regression harness is green on a fresh clone** (two cases read a gitignored projection) and a new workflow, `.github/workflows/test.yml`, runs it on every push and pull request.
 - Repaired a reported defect (engine)
 - Repaired 2 reported defects (engine)
+- Repaired 3 reported defects (engine)
 
 ### Added
 

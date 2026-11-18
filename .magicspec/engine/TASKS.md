@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.70.0
+**Version:** 1.72.0
 **Generated:** 2026-11-18
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.72.0
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.77.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,9 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 64](archives/tasks/phase-64.md) | Maintenance: A Finished Ledger Is Not Re-Synced After a Plan — after `/magicspec plan` the next step names the task command only while a phase of the ledger is open (PL-5); with every phase terminal the plan state decides | `Done (Archived)` |
+| [Phase 62](archives/tasks/phase-62.md) | Maintenance: A Failed Engine Scenario Enters Through the Maintenance Fix — in this repository a failed or inconclusive step of the engine's own scenarios is repaired through `/magicspec-dev fix`, stated in the maintenance workflow, its router row, the development guide, the contributor document on the scenarios and C28 item 2, while the shipped folder keeps printing `/magicspec fix` | `Done (Archived)` |
+| [Phase 63](archives/tasks/phase-63.md) | Maintenance: A Stale Plan Is Revalidated Before Its Backlog Is Judged, and a Repaired Scenario Finding Is Re-Run — a plan the registry or the constitution moved past no longer raises the design-debt halt before its revalidation, and goal mode re-runs the scenario of a repaired finding before handing it to `fix` again | `Done (Archived)` |
 | [Phase 61](archives/tasks/phase-61.md) | Maintenance: The Step After a Complete Plan With an Open Design Item — after `/magicspec plan` on a complete plan whose Backlog holds an open design item, the next step is the planning funnel, as after every other workflow, and not a task re-sync that the Plan Gate refuses; the specification statements that still named a task funnel are patched as built | `Done (Archived)` |
 | [Phase 60](archives/tasks/phase-60.md) | The Engine's Own Scenarios (Simulations Beside the Cognitive Suite) — the first user scenarios of this repository, five area files in `.magicspec/engine/simulations/` (pipeline, intake, session, routing, quality; twelve scenarios), each step judged against what a specification states and tagged as printed by a script or composed by the agent, run live only on a disposable copy of the engine; one paragraph of `docs/dev-test.md` says how the work divides with the cognitive suite; no file of the engine's folder changes | `Done (Archived)` |
 | [Phase 59](archives/tasks/phase-59.md) | Layout of the Suites (Harness by Domain, Cognitive Suite by Area) — the harness keeps its one entry and its case names and registers one module per domain over two shared helper layers; the cognitive suite becomes an index and one file per area; 12 tasks in four tracks (S, H, E/T, Y) | `Done (Archived)` |

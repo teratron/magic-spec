@@ -391,7 +391,14 @@ if (planExists && indexExists) {
 // A complete plan is recognized by positive reads only (a marker, all-terminal
 // rows, or a vacant section), and Backlog bullets carrying a trailing Parked
 // marker are not open — both rules live in lib/pending-work.js.
-if (pending?.planComplete && pending.openBacklogItems.length > 0) {
+//
+// Only the Backlog of a current plan is judged. A plan the registry or the
+// constitution has moved past is stale (SYNC_GAP above) and is revalidated
+// first: the pass that moved it may have answered the very item counted here,
+// and only the revalidation can record that disposition. Halting on it would
+// send the person back to the specification pass that just ran.
+const planIsCurrent = !pending?.syncGap && !pending?.rulesGap;
+if (pending?.planComplete && planIsCurrent && pending.openBacklogItems.length > 0) {
     const workspaceName = normalizePath(designDir).split('/').pop();
     warn(
         'DESIGN_DEBT_PENDING',

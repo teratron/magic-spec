@@ -1,6 +1,6 @@
 # Engine Automation Specification
 
-**Version:** 1.32.1
+**Version:** 1.32.2
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-core.md
@@ -307,6 +307,10 @@ GOOD: zero rows counts however it is spelled — marker, vacant section, or head
 
 **Regression coverage**: one harness case pinning all three halves together — a vacant section under a populated `## Completed Phases` fires; a header-only table (same zero-row state, scaffolding left behind) fires; and unrecognized prose in the section still does **not** fire. The third assertion is the load-bearing one: without it the fix is indistinguishable from deleting the guard.
 
+#### A Current Plan Only `[ADDED]`
+
+As built in Phase 63 ([l1-session-continuity.md](l1-session-continuity.md) §Stale-Plan Precedence): the gate also requires the plan to be current — neither the registry gap nor the constitution gap that the same `findPendingWork` call returns (`syncGap`, `rulesGap`) is present. A stale plan reports `SYNC_GAP` alone, and `workflows/plan.md` Step 1 revalidates instead of halting. The Next Action computation reads the same predicate and is unchanged, because a stale plan already resolves to the planning funnel. Regression coverage: one harness case with the current plan as its control (the signal fires) and a plan behind the registry and a plan behind the constitution (the signal waits, `SYNC_GAP` reported), under one caught mutation.
+
 ### Cache Retention — Every Cache Has an Owner and a Bound `[ADDED]`
 
 The owner's list of 2026-10-29 asks for the engine's cache to be cleaned periodically, and chose the same day that compaction of the SDD artifacts is not wanted now and that the cache is cleaned by a separate simple command. Measured in this repository the same day: the graph extraction cache under `graph/.cache/` holds 148 entries for a state folder of 40 specifications and 98 Markdown files — its entries are keyed by content hash and nothing ever removes the entry of a file that changed or disappeared.
@@ -390,6 +394,7 @@ A harness case classifies every script that mentions `MAGIC_DESIGN_DIR`, so a ne
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.32.2 | 2026-11-18 | Agent | Clarification patch, Stable retained (a repair of Phase 63, feedback note n3): the DESIGN_DEBT_PENDING predicate as built also requires a current plan — no registry or constitution gap — so a plan a specification pass moved past is revalidated before its Backlog can halt it; the requirement is `l1-session-continuity.md` 2.6.0 §Stale-Plan Precedence. |
 | 1.32.1 | 2026-11-13 | Agent | Clarification patch, Stable retained (a repair of Phase 57, feedback note n2): the executor section states that a child Node process is started with the running runtime's own path and not by the name `node`, which on Windows without a shell found another Node than the one that started the executor. The maintenance executor wrapper and the maintenance pipeline follow the same rule. |
 | 1.32.0 | 2026-11-12 | Agent | As built in Phase 55, Stable retained: the Components list gains `sync.js` and its nine libraries; the command table gains `sync` (`[area \| workspace]`,`--dry-run`; no`provisions`, no`usesSqlite`); the folder-write table gains its row; the graph extraction cache honors`MAGIC_DRY_RUN`; and the maintenance script`update-project-meta.js`is retired — its entry leaves the command-guard list, the cache inventory (`.cache/project-meta-state.json` was its alone, and `clean-cache` no longer lists it) and the script inventory, and the sentence that kept its history rule says that registry versions and history are authored with the specifications. |
 | 1.31.0 | 2026-11-12 | Agent | As built in Phase 54, Stable retained: the Components list gains the artifact index scripts and libraries; the command table gains `memory-index` and `memory-query` and the entry field `usesSqlite` with `runtimeFlags` (the executor passes the warning-silencing flag only to such a command, and only when the runtime lists it); the cache row of the memory index names its lock; `memory-query` joins the commands that read `MAGIC_DESIGN_DIR` and write only at the state folder's level. |
