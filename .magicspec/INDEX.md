@@ -1,6 +1,6 @@
 # Project Specification Index
 
-**Version:** 1.61.0
+**Version:** 1.62.0
 **Status:** Active
 **Engine Version:** 3.0.149
 
@@ -24,6 +24,7 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.62.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). A reference-mining pass over a model vendor's prompting guidance: `l1-goal-mode.md` 1.3.0, `l1-input-prompt-pass.md` 1.1.0, `l1-interface-design.md` 1.1.0. The engine registry is 1.91.0. |
 | 1.61.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 64 (maintenance): `l2-engine-finalization.md` 3.10.0, `l2-test-suite.md` 1.48.4. The engine registry is 1.90.0. |
 | 1.60.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 62 recorded as built: `l1-fix-command.md` 1.3.1. The engine registry is 1.89.0. |
 | 1.59.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Task T-62F01 recorded as built: `l2-engine-finalization.md` 3.9.2, `l1-session-continuity.md` 2.6.1, `l2-test-suite.md` 1.48.3. The engine registry is 1.88.0. |

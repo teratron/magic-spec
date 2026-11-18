@@ -1,6 +1,6 @@
 # Goal Mode: Non-Stop Pursuit of a Stated Goal
 
-**Version:** 1.2.0
+**Version:** 1.3.0
 **Status:** Stable
 **Layer:** concept
 
@@ -17,7 +17,7 @@
 - [l1-product-simulation.md](l1-product-simulation.md) - Scenarios that verify user-facing criteria.
 - [l1-fix-command.md](l1-fix-command.md) - The step that consumes simulation findings.
 - [l1-command-surface.md](l1-command-surface.md) - CS-1, the command set `goal` joins.
-- [l1-pipeline-stages.md](l1-pipeline-stages.md) - PS-6: `goal` is the one command that crosses stage boundaries, through the same records.
+- [l1-pipeline-stages.md](l1-pipeline-stages.md) - PS-6: `goal` is the one command that crosses stage boundaries, through the same records; the handoff line a stage ends with (PS-4, PS-7) is, inside this mode, the input of the next iteration (GM-10).
 
 ## 1. Motivation
 
@@ -27,12 +27,15 @@ Two failure modes bound the design. A loop that also skips consent turns an assi
 
 The owner's list of 2026-11-11 adds two forms of the argument: a phase, or a number of tasks, besides a goal stated in words (GM-9). Both name work that is already specified and planned, so neither needs an intake.
 
+`[ADDED]` A third failure mode is quieter: a loop that stops itself. A message that starts no next action ends the agent's turn, and the work waits until the person types again. A model vendor's prompting guidance for a current model generation reports that on long tasks with several parts the model ends turns with progress messages — a summary that announces the next step, an offer to continue, a list of decisions, a pause at a milestone — and that an instruction naming those ends makes them rarer. This mode invites the first of them at every step: each step prints its finalization, whose last line names the next command, so the output reads as a finished stage. The mode then stops on no condition of GM-6 and without its report, and the person reads a handoff to `task` or `run` instead of `goal` (GM-10).
+
 ## 2. Constraints & Assumptions
 
-- Goal mode runs inside the host's session; it schedules nothing outside it. A host that ends the turn ends the iteration, and the next session resumes from live memory.
+- Goal mode runs inside the host's session; it schedules nothing outside it. `[MODIFIED]` A host that ends the turn on its own — a limit or an error — ends the iteration, and the next session resumes from live memory. The mode itself never ends a turn before it stops (GM-10).
 - The engine never commits. Goal mode leaves its changes uncommitted and lists commit suggestions per phase in its report, as each workflow does today.
 - **Assumption (forecast):** a consent gate does not stop the whole mode — the action is queued and every piece of work that does not depend on it continues — because stopping at the first gate would make the mode stop in exactly the long runs it exists for, while asking at once would leave the question unanswered in an unattended run. Runner-up: stop and ask at the first gate. Override: `/magicspec spec amend l1-goal-mode.md "stop at the first consent gate"`.
 - **Assumption (forecast):** three consecutive iterations without progress (GM-6) end the mode, because one or two can be spent on a fix that lands in the next iteration. Runner-up: two. Override: a bound stated in the goal ("give up after 5 rounds without progress").
+- **Assumption (forecast):** `[ADDED]` naming the four ends of GM-10 in the mode's own text is enough to keep the turn going, because the guidance this rests on reports that the model responds to an instruction that names the ends to avoid and the ends to take, and such text needs nothing a host may lack. Runner-up: a host-side continuation that, when a turn ends early, sends the open criteria back as the next message and gives up after two or three. Override: `/magicspec spec amend l1-goal-mode.md "continue through a host hook"`.
 
 ## 3. Core Invariants
 
@@ -50,6 +53,13 @@ The owner's list of 2026-11-11 adds two forms of the argument: a phase, or a num
   3. **A number of tasks** (`goal 5 tasks`) — a bound on the work, not a goal: the mode follows the plan from its next runnable task and stops after that many tasks reach `Done`, at a task boundary, never in the middle of one. Combined with a statement or a phase (`goal phase-3 5 tasks`), it bounds that goal, as a stated bound of GM-6 does.
 
   A phase or a count is recorded in live memory like a statement (GM-3), so `goal` with no argument continues it in a new session. A number with no unit, or a phrase that is neither a phase nor a count, is read as a goal statement.
+- **GM-10 The mode does not stop itself.** `[ADDED]` While no condition of GM-6 holds, the mode never ends its turn with a message that starts no next action (a command, an edit or a check): such a message is a stop on no condition of GM-6, without the GM-8 report. It adds no obligation GM-6 and DA-6 do not already carry; it names the ends that break them. Four such ends read as reports and are never taken:
+  1. A summary of a step that closes by announcing the next step instead of taking it. A step's finalization output, whose last line names the next command, is followed in the same turn by the re-check of GM-4.
+  2. An offer to continue unless the person would rather not.
+  3. A list of decisions for the person when none of them blocks the remaining work: an elective one is decided and narrated as a `[DR]`, one that needs consent is queued (GM-5).
+  4. A pause because the turn has been long or a phase is done.
+
+  A progress note goes in the same message as the next action. The mode ends a turn for two things only: a round of the intake survey at the start (GM-1), and the GM-8 report with its queued consents. A turn the host ends is the case of §2; the person's interruption is a stop of GM-6.
 
 ## 5. Detailed Design
 
@@ -92,6 +102,7 @@ Next: {one command}
 4. The cognitive suite gains scenarios for each stop condition.
 5. Declared supersessions (`l1-coherence-check.md` CH-9): the live-memory layout and SC-2 in [l1-session-continuity.md](l1-session-continuity.md); the resume line in [l2-session-checkpoint.md](l2-session-checkpoint.md); the briefing in [l2-status-command.md](l2-status-command.md).
 6. **As built (Phase 53), no requirement changed.** (a) The goal block is the section `## Goal` of `STATE.md`, between Current Position and Progress, present only while a goal is recorded, at most 28 lines, written only by `update-state` from a JSON file (`--goal-file`; `--goal-clear` removes it) through the one module that renders, parses and checks it (`scripts/lib/goal-block.js`); a goal that fails the closed schema or the bound is refused before any write with one HALT line and the finding `STATE_GOAL_REFUSED`. (b) It holds the statement, the target phase, the task limit, a stated bound, the counters `Without progress`, `Tasks done`, `Iterations`, `Phases done` and the moment `Started` (GM-6 names bounds of iterations, phases and time and a count of tasks; they need the counters), each criterion with its state and its check, and the consents queued with their reasons. (c) A phase goal records one criterion, `phase {N} is Done`, met when the phase's status is `Done` or `Done (Archived)`: the phase's tasks are its criteria (GM-9 item 2) and their workbook is the per-task record, the block being bounded; a count alone records `{N} tasks reach Done`. (d) The resume line reports a recorded goal in the same one line, a goal alone included, with `/magicspec goal` as its next step; the briefing shows one `Goal:` line under Position and recommends `/magicspec goal` first while a criterion is not met. (e) The router row has the demand `per step`, which the one parser admits and the handoff line prints as the table has it (`Next: /magicspec goal — per step reasoning`); a bare `goal` is not asked for, the body looks for the recorded goal first, in the other workspaces too (`resume-state --all --json`); a new scope over a recorded goal replaces it, with one `[DR]` naming the replaced goal. (f) Each step is read from its own body and finalizes as its own workflow: the mode finalizes as none, queues the consent entries E1, E2 and E4 in the block and asks them one at a time after its one report.
+7. `[ADDED]` **GM-10 (1.3.0), not yet built.** The goal body's Scope bullet *Inside the session* gains the distinction of §2 between a turn the host ends and one the mode would end; its Core Invariants name the four ends once; its Step 5 states that the step's finalization output is followed in the same turn by the re-check. The cognitive suite gains a scenario in which a step's finalization ends with its handoff line and the iteration continues. Declared supersession (`l1-coherence-check.md` CH-9): the *Inside the session* bullet of `workflows/goal.md`, which reads every end of a turn as the host's.
 
 ## 7. Drawbacks & Alternatives
 
@@ -99,6 +110,7 @@ Next: {one command}
 - **Unattended changes.** Accepted within GM-5 and GM-7: nothing irreversible happens without a yes, and every change stays uncommitted and reviewable.
 - **A host scheduler for the loop** — rejected: hosts differ; the in-session loop plus the resume record works on every host.
 - **Auto-approving consent inside goal mode** — rejected: it would turn the consent entries into a setting, which DA-2 forbids.
+- `[ADDED]` **A host-side continuation** — a hook that refuses an early end of a turn and sends the open criteria back as the next message, giving up after two or three — deferred: whether a hook can refuse the end of a turn differs between hosts, while GM-10 is text every host carries. A host that offers such a hook can add it at the implementation layer (the runner-up of §2).
 
 ## Canonical References
 
@@ -112,6 +124,7 @@ Next: {one command}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.3.0 | 2026-11-18 | Agent | **The mode does not stop itself** (new GM-10; §1 a third failure mode; §2 a turn the host ends told apart from one the mode would end, with a forecast premise; §6 item 7; §7 the host-side continuation deferred). Origin: a reference-mining pass over a model vendor's prompting guidance for a current model generation, recorded by class only — on long tasks with several parts the model ends turns with progress messages, and an instruction naming those ends makes them rarer. In this mode every step's finalization ends with a handoff line that reads as a finished stage, so a self-made end stops the goal on no GM-6 condition, without its report, under a handoff to another command. GM-10 adds no obligation GM-6 and DA-6 did not already carry. Amendment Rule round trip: RFC, Post-Update Review (coherence: 4 artifacts compared — `l1-decision-autonomy.md` DA-6, `l1-pipeline-stages.md` PS-6 and PS-7, `l2-finalize-output-contract.md`, `workflows/goal.md` — 0 blocking findings, 1 declared superseded; spec-critic PASS after one rewrite, the zero-context reading of "a message alone"; prompt-engineer PASS), Stable. |
 | 1.2.0 | 2026-11-18 | Agent | **A repaired scenario finding is run again before it is repaired again** (GM-4, a specification gap closed by `/magicspec-dev fix`, feedback note n4, Phase 63): GM-4 named `simulate` and `fix` with no order between them and the goal body chose an open finding first, so after a repair the scenario's `Last run` still read `fail`, the next iteration handed the same finding to `fix`, FX-1 answered it as fixed, and three such iterations stopped the goal on no progress. The repair records the run it answered (`l1-fix-command.md` 1.3.0 FX-7), which lets the order be read from the files. Amendment Rule round trip: RFC, Post-Update Review (coherence: 4 artifacts compared — `l1-product-simulation.md` SM-7, `l1-fix-command.md` FX-7 and FX-10, `workflows/goal.md` Step 4 — 0 blocking findings; spec-critic PASS; prompt-engineer PASS), Stable. |
 | 1.1.1 | 2026-11-12 | Agent | **As built in Phase 53**, Stable retained, no requirement changed. §6 item 6 records what the build decided: the goal block (its place, bound, writer, refusal and the counters GM-6's bounds need), the one criterion of a phase goal, the resume line and the briefing, the `per step` demand and the bare `goal`, the replacement of a recorded goal. The two harness-visible additions to GM-3 (`Iterations`, `Phases done`, `Started`) were found by writing the body, not by the specification review. |
 | 1.1.0 | 2026-11-11 | Agent | **Scope forms** (origin `user-stated`: the owner's list of commands of 2026-11-11 — "a phase or some number of tasks" as the argument). New GM-9: a phase makes that phase `Done` the goal, a task count bounds the work, and either may bound a statement; GM-1 states that neither has an intake. Related: `l1-pipeline-stages.md` PS-6. Amendment Rule: `Stable → RFC`. |

@@ -1,6 +1,6 @@
 # Interface Design: UI/UX, Layout and Front-End Work
 
-**Version:** 1.0.2
+**Version:** 1.1.0
 **Status:** Stable
 **Layer:** concept
 
@@ -29,19 +29,22 @@ A reference-mining pass over that collection (283 skills in ten collections) fou
 6. **Verification by looking** — render the result and check it against the specification; a review of the change, not of the whole codebase.
 7. **Grounded taste** — style chosen from references or the existing system, never from generic defaults, and the decisions persisted for reuse.
 
+`[ADDED]` A model vendor's prompting guidance for a current model generation sharpens item 7. Asked for an interface without design direction, the model falls back on a few default styles, and a general instruction to avoid a generic look mostly swaps one default for another. What works is naming the specific patterns to avoid and adding to the list the defaults the first result still used. The engine's own anti-pattern, "choosing a style from generic defaults", is such a general instruction: it can be satisfied in words while the output lands on a default (UI-2, UI-5).
+
 ## 2. Constraints & Assumptions
 
 - Technology-neutral: "interface" covers any surface a person sees and operates — a web page, a desktop or mobile screen, a terminal interface.
 - Design artifacts are specifications in the state folder; the product receives only code and its own assets (containment).
 - **Assumption (forecast):** one role covers design, layout and front-end work, because R4 forbids modelling a "developer" as a role and the coding itself stays with `coder`, who adopts this stance for interface work. Runner-up: separate designer and front-end roles. Override: `/magicspec spec amend l1-interface-design.md "split the role"`.
+- **Assumption (forecast):** `[ADDED]` a list of named patterns the product does not use, kept in the design system and grown from the defaults each draft fell back on, steers the result better than a general instruction, because the guidance of §1 reports exactly that for a current model generation, and the list costs a few lines of one specification. Runner-up: keep the general anti-pattern and rely on the design context alone (UI-1). Override: `/magicspec spec amend l1-interface-design.md "no list of patterns not used"`.
 
 ## 3. Core Invariants
 
 - **UI-1 Context first.** Before an interface is specified, the existing design context is gathered and cited: the product's design system specification if one exists, its brand material, the current interface. Absent all three, the specification says so and states where its choices come from.
-- **UI-2 One design system.** A product with an interface has one design-system specification: its tokens, its components with their variants and states, and the rules for overriding them in one place. Screen and flow specifications reference it and never redefine a token.
+- **UI-2 One design system.** `[MODIFIED]` A product with an interface has one design-system specification: its tokens, its components with their variants and states, the rules for overriding them in one place, and the patterns the product does not use. Each of those patterns is named concretely — a background tone, a heading treatment, a label style, a button shape; a general wish such as "not generic" names none and is not an entry. Screen and flow specifications reference it and never redefine a token.
 - **UI-3 States are specified.** Every screen or flow specification states, for each view: the normal state and the empty, loading, error, partial, disabled and long-content states that apply to it, and what the person can do in each.
 - **UI-4 Accessibility is specified.** Every interface specification states its accessibility requirements — contrast, keyboard operation and focus order, accessible names, reduced motion, and the sizes or windows it must work at — as verifiable statements.
-- **UI-5 Early draft.** For a new screen or flow, the first task produces a draft the person can look at before the full build. The draft is recorded and the build continues; nothing pauses for a look (DA-2), and a correction arrives as the person's interruption or a later amendment.
+- **UI-5 Early draft.** For a new screen or flow, the first task produces a draft the person can look at before the full build. The draft is recorded and the build continues; nothing pauses for a look (DA-2), and a correction arrives as the person's interruption or a later amendment. `[ADDED]` Before the build continues, the agent looks at the draft as UI-6 does and compares it with the design context: a pattern in it that no cited source chose is a default the draft fell back on. That pattern is either recorded with the source that justifies it or added by name to the design system's patterns not used (UI-2).
 - **UI-6 Verified by looking.** A task that changes an interface is verified by rendering it where the session can (a screenshot, a driven browser or a captured terminal) and comparing it with the statements of UI-2 to UI-4; where it cannot render, the task says so and the check is a review against the specification. The verification method is named in the task's `Verify` line.
 - **UI-7 The role.** `ui-ux-designer` (executor) writes the interface sections of specifications and the design-system specification, adds design acceptance to interface tasks at planning time, and is the stance `coder` adopts for layout and front-end work. It hands off to `code-reviewer`, `test-engineer` and, for journeys, `simulator-tester`.
 
@@ -72,6 +75,7 @@ Sizes: {narrowest} … {widest}
 2. A design-system specification template among the engine templates.
 3. The parked `frontend-specialist` backlog item is closed by this specification.
 4. **As built (Phase 52).** UI-1 to UI-4: the creation step of `workflows/spec.md` (the `Interface` bullet), `templates/design-system.md` and the optional `## Interface` section of `templates/spec.md`. UI-5 and UI-6: step 4 of `workflows/task.md` (the draft task, the design acceptance, the named way of looking) and step 3.1 of `workflows/run.md`. UI-7: `roles/ui-ux-designer.md`, with one sub-bullet under the minimal-diff step of `roles/coder.md`. The card recommends the `frontend-design` skill as a hint only (R6).
+5. `[ADDED]` **UI-2 and UI-5 (1.1.0), not yet built.** `templates/design-system.md` gains a section for the patterns the product does not use; the card's *One design system* and *Early draft* steps gain the list and the comparison with the draft; its first anti-pattern gains "or guarding against defaults with a general wish instead of named patterns". Declared supersession (`l1-coherence-check.md` CH-9): that anti-pattern line of `roles/ui-ux-designer.md` and its mirror in `l2-role-cards-execution.md`, which name no list.
 
 ## 7. Drawbacks & Alternatives
 
@@ -90,6 +94,7 @@ Sizes: {narrowest} … {widest}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.0 | 2026-11-18 | Agent | **Patterns the product does not use, named** (UI-2 and UI-5 modified; §1 the guidance on item 7; §2 a forecast premise; §6 item 5). Origin: a reference-mining pass over a model vendor's prompting guidance for a current model generation, recorded by class only: without design direction the model falls back on a few default styles, a general instruction to avoid a generic look swaps one default for another, and a list of named patterns, extended with what the first result still used, works. The engine's own anti-pattern was that general instruction. Amendment Rule round trip: RFC, Post-Update Review (coherence: 5 artifacts compared — `l2-role-cards-execution.md`, `roles/ui-ux-designer.md`, `templates/design-system.md`, `l2-role-integration.md`, `l1-role-system.md` — 0 blocking findings, the anti-pattern line declared superseded; spec-critic PASS; prompt-engineer PASS), Stable. |
 | 1.0.2 | 2026-11-12 | Agent | As built in Phase 52, Stable retained, no requirement changed. §6 records where each requirement lives: UI-1 to UI-4 in the creation step of the specification workflow with the design-system template and the optional interface section of the specification template; UI-5 and UI-6 in the decomposition and execution workflows; UI-7 in the `ui-ux-designer` card and the stance line of the `coder` card. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (a UI/UX role for layout and front-end work, informed by `.references/.design`). Reference-mining over the collection recorded by class only. Closes the parked `frontend-specialist` backlog item. Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

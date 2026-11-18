@@ -4,7 +4,7 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-18 12:50
+**Updated:** 2026-11-18 13:17
 **Phase:** 64 — Maintenance: A Finished Ledger Is Not Re-Synced After a Plan
 **Status:** Active
 
@@ -12,7 +12,7 @@
 
 - **Task:** T-62Y01 Spec sync of l1-fix-command.md as built
 - **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
-- **Next Action:** Plan complete — nothing pending
+- **Next Action:** Run /magicspec plan engine to update the plan
 
 ## Progress
 
