@@ -3799,6 +3799,49 @@ describe('Magic Engine Scripts', () => {
         }
     });
 
+    test('check-prerequisites.js judges the Backlog of a current plan only: a plan the registry moved past is re-synced first, so DESIGN_DEBT_PENDING waits for it (SC-2.4)', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const designDir = makeMinimalDesignDir(tempDir);
+            fs.writeFileSync(
+                path.join(designDir, 'TASKS.md'),
+                '# Tasks\n\n## Active Phases\n\n*None — plan complete. New scope enters via `/magic.task`.*\n',
+            );
+            const probe = (registry) => {
+                fs.writeFileSync(
+                    path.join(designDir, 'PLAN.md'),
+                    `# Plan\n\n**Based on:** .design/INDEX.md v${registry}\n\n## Backlog\n\n- An open design item.\n`,
+                );
+                const types = runCheckPrerequisites(tempDir).warnings.map((w) => w.type);
+                return {
+                    debt: types.includes('DESIGN_DEBT_PENDING'),
+                    gap: types.includes('SYNC_GAP'),
+                };
+            };
+
+            // Control: a current plan, complete, with an open item — the design-debt halt stands.
+            assert.deepStrictEqual(
+                probe('1.0.0'),
+                {
+                    debt: true,
+                    gap: false,
+                },
+                'a current plan with an open Backlog item still raises the signal',
+            );
+            // The registry moved past the plan (a specification pass ran since it was written).
+            assert.deepStrictEqual(
+                probe('0.9.0'),
+                {
+                    debt: false,
+                    gap: true,
+                },
+                'a plan behind the registry is re-synced before its Backlog is judged',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     // ───────────────────────────────────────────────────────────────────────────
     // 6b2-bis. check-prerequisites.js — DESIGN_DEBT_PENDING's openItems count
     //          skips Parked-marked Backlog bullets (SC-2.4 addendum, Backlog
