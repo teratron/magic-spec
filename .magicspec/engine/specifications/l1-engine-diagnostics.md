@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest
 
-**Version:** 1.1.3
+**Version:** 1.1.4
 **Status:** Stable
 **Layer:** concept
 
@@ -31,8 +31,8 @@ Node's `console.warn` and `console.error` write to **stderr**. Every non-fatal f
 This is observable today, without a synthetic case. When `computeNextAction()` rejects a synthesized recommendation naming a command `skills/magicspec/CONSTITUTION.md` §5 reserves, it substitutes the planning funnel and warns:
 
 ```plaintext
-[state] Next Action "…" names a command reserved by skills/magicspec/CONSTITUTION.md §5;
-        substituting the /magicspec task funnel.
+[state] Next Action "…" names a command reserved by CONSTITUTION.md §5;
+        substituting the /magicspec plan funnel.
 ```
 
 The engine has just overwritten a computed value with a different one and written the result into live memory. The stdout block reports `| STATE.md | updated (SC-2) |` and nothing else. A compliant agent shows the user the second line and not the first — the substitution is invisible at exactly the surface built for the user to review what happened.
@@ -240,6 +240,7 @@ Shrinking DG-4's aggregation window — draining more often, or scoping it to "s
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.4 | 2026-11-18 | Agent | Reality sync, Stable retained, no requirement changed: the example of the substituted next step quotes the message as `finalize` prints it — `CONSTITUTION.md §5` and the `/magicspec plan` funnel (the example named the `/magicspec task` funnel, stale since Phase 49). |
 | 1.1.3 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.1.2 | 2026-10-28 | Agent | Reality sync for the state folder rename: the folder is `.magicspec/` in all engine, maintenance and workspace text. No requirement changed. |
 | 1.1.1 | 2026-10-28 | Agent | Reality sync for the single-skill layout: engine paths and command names follow `skills/magicspec/` and the `/magicspec:` form. No requirement changed. |

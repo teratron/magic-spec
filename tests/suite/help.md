@@ -2,6 +2,8 @@
 
 Cases of the area `help` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T268 — A Bare `/magicspec` on a Host With a Four-Choice Form Lists the Commands and Opens a Two-Step Picker
 
 - **Workflow:** `help.md` with the router `SKILL.md` (Dispatch step 1)

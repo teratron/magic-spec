@@ -268,4 +268,4 @@ Distributed under the [MIT](./LICENSE).
 
 ## 📊 Project Status
 
-**Active Development** (v3.0.129). We are constantly refining the SDD engine based on real-world usage.
+**Active Development** (v3.0.144). We are constantly refining the SDD engine based on real-world usage.

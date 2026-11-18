@@ -2,6 +2,8 @@
 
 Cases of the area `run` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T09 — Run Sequential Happy Path
 
 - **Workflow:** `run.md` (Executing Tasks — Sequential Mode)

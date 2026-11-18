@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+An improvised `/magicspec-dev:test` crisis (a fresh project walked from `status` through `spec`, `plan`, `task` and `run`) found six places where shipped text named the wrong owner or the wrong next step. A harness case under mutation control now pins each one:
+
+- **`/magicspec status` on a project without `STATE.md` always recommended `/magicspec plan`.** On a fresh project that command halts at once because the registry is empty. The briefing now recommends by pipeline order (`/magicspec spec` for an empty registry) and no longer says that auto-init creates `STATE.md`.
+- **`plan` and `task` said `init` creates `STATE.md`.** It does not: the state update of the step does, as `init` itself states.
+- **The `spec` body sent the stabilization batch to `task.md`**, and its Pipeline header skipped `plan.md`. Both now name `plan.md`.
+- **`migrate` cited Invariant 6 for relaying a stop** (the rule is 7). **The retrospective checklist** allowed only `RETROSPECTIVE.md`, but the retrospective also writes two graph snapshots. **The analysis Sync Path example** was `/magicspec spec auto-spec`, a form `spec` does not have.
+
 A simulation pass drove the shipped engine from every role on disposable copies; each item below was reproduced there before it was fixed.
 
 Field reports against engine 2.1.144 (MAGIC-SPEC ENGINE BUG REPORTs from consumer projects), each re-verified against this engine before it was fixed:

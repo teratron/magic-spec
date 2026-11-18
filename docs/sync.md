@@ -88,4 +88,4 @@ The maintenance command of the same name runs this pass as its project-state ste
 
 ## Sync Note
 
-Synchronized with engine workflows on 2026-11-12 (v3.0.129).
+Synchronized with engine workflows on 2026-11-18 (v3.0.144).

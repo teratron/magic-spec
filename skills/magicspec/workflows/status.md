@@ -63,7 +63,7 @@ Examples: `/magicspec status`, `/magicspec status {workspace}`.
 
 ### 3. Degraded States
 
-- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus the recommendation to run `/magicspec plan {workspace}` — its auto-init provisions STATE.md. NEVER create files from this workflow.
+- **STATE.md missing** (fresh or partially initialized project) → Bootstrap Briefing: registry summary from `INDEX.md` (workspaces, spec counts and statuses) plus one recommended command, computed as Step 2 item 7 computes it when `Next Action` is absent — an empty registry → `/magicspec spec` (planning halts on an empty registry), registered specifications the plan does not hold → `/magicspec plan {workspace}`, and so on down that list. `STATE.md` appears with the first command that updates live memory. NEVER create files from this workflow.
 - **In-flight session** → add the resume line printed by `node scripts/executor.js resume-state --workspace={workspace}`: a task recorded `In Progress`, a recorded goal, or both in one line. A missing or failing script adds no line.
 - **Multi-workspace, no argument** → render the resolved workspace; append footer `Other workspaces: {name} ({status}), ...` (one line).
 - **Unreadable artifact** → per-section `{section}: unavailable ({reason})`; continue with remaining sections.

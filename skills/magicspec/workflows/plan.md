@@ -150,7 +150,7 @@ graph TD
 
 After `PLAN.md` is written:
 
-- If `STATE.md` does not exist → it will be created by `init.md` automatically (always called first).
+- If `STATE.md` does not exist → the `update-state` call below creates it from `templates/state.md`; `init` does not create it (`references/init.md` Step 2).
 - Update STATE.md to reflect the new plan:
   `node scripts/executor.js update-state --workspace={active-workspace} --phase="{N} — {Phase Name}" --status=Active --next-action="Run /magicspec task {active-workspace} to decompose Phase {N}"`
 - On a revalidation that changed nothing the active or next phase holds, patch `--next-action` to the step the plan state computes (SC-2.1).

@@ -2,6 +2,8 @@
 
 Cases of the area `scripts` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T80 — Engine Integrity Mandatory HALT
 
 - **Workflow:** `check-prerequisites.js`

@@ -667,16 +667,24 @@ function rulesGapAfter(wsDir) {
  * After `/magicspec plan`: whether the task ledger was decomposed from an older plan, and then
  * the decomposition step to name. `{ws}` stands for the workspace, filled by the caller.
  *
+ * A complete plan whose Backlog holds an open design item is left to the plan-complete
+ * resolution, which names the planning funnel for every workflow: the task command's Plan Gate
+ * refuses on that item, because it is a finding of the planning command, so a re-sync of the
+ * ledger could only send the person back to planning.
+ *
  * @param {string} wsDir - The workspace design directory.
- * @returns {string|null} The next step, or `null` when the ledger is in step with the plan.
+ * @returns {string|null} The next step, or `null` when the ledger is in step with the plan or the
+ *   plan state decides the step.
  */
 function ledgerAfterPlan(wsDir) {
     try {
         const pending = findPendingWork(wsDir);
-        if (!pending.ledgerBehindPlan && !pending.nextUndecomposed) return null;
-        return pending.nextUndecomposed
-            ? `Run /magicspec task {ws} to decompose Phase ${pending.nextUndecomposed.phase}`
-            : 'Run /magicspec task {ws} to bring the tasks in line with the plan';
+        if (pending.nextUndecomposed) {
+            return `Run /magicspec task {ws} to decompose Phase ${pending.nextUndecomposed.phase}`;
+        }
+        const designDebt = pending.planComplete && pending.openBacklogItems.length > 0;
+        if (!pending.ledgerBehindPlan || designDebt) return null;
+        return 'Run /magicspec task {ws} to bring the tasks in line with the plan';
     } catch {
         return null;
     }

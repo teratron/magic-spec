@@ -2,6 +2,8 @@
 
 Cases of the area `context` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T215 — Context Step 0 Scope Claim Matches Implementation
 
 - **Workflow:** `context.md` (§Step 0 scope) vs. `plan.md`, `task.md` and `rule.md`

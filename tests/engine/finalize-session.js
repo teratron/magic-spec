@@ -426,6 +426,96 @@ module.exports = () => {
         }
     });
 
+    // After a plan, a ledger behind it is re-synced by the task command — unless the plan is complete
+    // and its Backlog holds an open design item. The task command's Plan Gate refuses on that item (it
+    // is the planning command's finding), so that step could only send the person back; the planning
+    // funnel, whose pre-flight is the door to the specification pass, is the step, as after every
+    // other workflow.
+    test('finalize.js after a plan: a complete plan with an open design item names the planning funnel, as for every workflow, and not a task re-sync the Plan Gate refuses', () => {
+        const tempDir = createTempWorkspace();
+        try {
+            const { finalize, wsDir, tasksPath } = requireFinalizeWorkspace(tempDir);
+            const FUNNEL = 'Plan complete — run /magicspec plan engine to plan new scope';
+            const RESYNC = 'Run /magicspec task engine to bring the tasks in line with the plan';
+            const write = (/** @type {string} */ backlog) => {
+                fs.writeFileSync(
+                    path.join(wsDir, 'INDEX.md'),
+                    [
+                        '# Index',
+                        '',
+                        '**Version:** 1.0.0',
+                        '',
+                        '| [l1-a.md](specifications/l1-a.md) | d | Stable | 1 | 1.0.0 |',
+                        '',
+                    ].join('\n'),
+                );
+                fs.writeFileSync(
+                    path.join(wsDir, 'PLAN.md'),
+                    [
+                        '# Plan',
+                        '',
+                        '**Version:** 1.1.0',
+                        '**Based on:** .magicspec/engine/INDEX.md v1.0.0',
+                        '',
+                        '## Active Phases',
+                        '',
+                        '### Phase 1 — First',
+                        '',
+                        '- [x] **A** ([l1-a.md](specifications/l1-a.md))',
+                        '',
+                        '## Backlog',
+                        '',
+                        backlog,
+                        '',
+                    ].join('\n'),
+                );
+                // The ledger was written against the plan before this revalidation, and every phase is done.
+                fs.writeFileSync(
+                    tasksPath,
+                    [
+                        '# Master Task Index',
+                        '',
+                        '**Based on PLAN:** .magicspec/engine/PLAN.md v1.0.0',
+                        '',
+                        '## Active Phases',
+                        '',
+                        '| Phase | Description | Status |',
+                        '| --- | --- | --- |',
+                        '| [Phase 1](archives/tasks/phase-1.md) | d | `Done (Archived)` |',
+                        '',
+                    ].join('\n'),
+                );
+            };
+
+            write('- **Design item** that needs a specification pass.');
+            for (const workflow of [
+                'plan',
+                'task',
+                'run',
+                'fix',
+                'simulate',
+            ]) {
+                assert.strictEqual(
+                    finalize.computeNextAction(workflow, 'engine', wsDir),
+                    FUNNEL,
+                    `${workflow}: an open design item behind a complete plan is the funnel's, whatever the ledger records`,
+                );
+            }
+
+            // Control: the same item Parked leaves nothing pending, and the ledger behind the plan is re-synced.
+            write(
+                '- **Design item** that needs a specification pass. *(Parked — waiting on evidence)*',
+            );
+            assert.strictEqual(
+                finalize.computeNextAction('plan', 'engine', wsDir),
+                RESYNC,
+                'with nothing pending, a plan that left the ledger behind still hands it to the task command',
+            );
+        } finally {
+            cleanup(tempDir);
+        }
+    });
+
     test('finalize.js turns a replan directive into the next step while the plan it was written against stands, and drops it once the plan is rewritten', () => {
         const tempDir = createTempWorkspace();
         try {

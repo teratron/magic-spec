@@ -2,6 +2,8 @@
 
 Cases of the area `init` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T01 — Fresh Init Cold Start
 
 - **Workflow:** `init.md`

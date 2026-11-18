@@ -1,6 +1,6 @@
 # Status Command
 
-**Version:** 1.5.2
+**Version:** 1.6.0
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-session-continuity.md
@@ -65,7 +65,7 @@ Rendered in this fixed order:
 ### 5.3 Resolution & Degraded States
 
 - **Workspace resolution**: standard resolution chain (context load order, Priority 1-4). Optional argument `{workspace}` overrides. With multiple workspaces and no argument, render the resolved workspace and append a one-line `Other workspaces: {name} ({status}), ...` footer.
-- **`STATE.md` missing** (fresh or partially initialized project): emit a bootstrap briefing — registry summary from `INDEX.md` (spec counts, statuses) plus the recommendation to run the planning workflow, whose auto-init provisions `STATE.md`. Never create files from the status command.
+- **`STATE.md` missing** (fresh or partially initialized project): emit a bootstrap briefing — registry summary from `INDEX.md` (spec counts, statuses) plus exactly one recommended command, computed by pipeline order as for an absent `Next Action` (DA-6): an empty registry → the specification workflow; registered specifications the plan does not hold, or a plan older than the registry or the constitution → the planning workflow; a planned phase with no tasks → the task workflow; open tasks → the run workflow. The planning workflow is never the recommendation for an empty registry, because its pre-flight halts on one. `STATE.md` is created by the first command that updates live memory — neither by the status command nor by `init` ([l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) WI-10). Never create files from the status command.
 - **In-flight session**: the resume line comes from the shared resume predicate ([l2-session-checkpoint.md](l2-session-checkpoint.md) §5.3), never from this command's own reading of the files — a task recorded `In Progress` in the active phase, a recorded goal, or both in one line. A `HANDOFF.json`, or a hand-set `Status: Paused`, is inert and is not a paused session (SC-9(b), SC-9(g)).
 - **Unreadable artifacts**: each briefing section degrades independently — an unreadable source yields `{section}: unavailable ({reason})` instead of aborting the whole briefing.
 
@@ -99,6 +99,7 @@ The engine-upgrade detection rule (prompt to re-validate on version drift) is sa
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.6.0 | 2026-11-18 | Agent | §5.3: the bootstrap briefing of a project without `STATE.md` recommends by pipeline order instead of always recommending planning — on a fresh project the registry is empty and the planning workflow's pre-flight halts there, so the "useful bootstrap briefing" of §2 sent the user to a command that stops and names the specification workflow. The bullet also stopped crediting `init` with creating `STATE.md` (the first live-memory update does, WI-10). Found by a `/magicspec-dev:test` improvised crisis; the body, its documentation page and a harness case under mutation control follow. Amendment Rule applied — reverted to `RFC`, re-promoted to `Stable` after the Post-Update Review in the same invocation: the coherence check compared SC-4 of [l1-session-continuity.md](l1-session-continuity.md) (one command, selected per DA-3/DA-6) and WI-10 of [l1-workspace-intent-routing.md](l1-workspace-intent-routing.md) — 2 artifacts, 0 findings. |
 | 1.5.2 | 2026-11-12 | Agent | As built in Phase 53, Stable retained (the requirement moved with the goal mode specification that declared it, CH-9, and this record follows). §5.2: the Position item carries the `Goal:` line and the Next item recommends `/magicspec goal` first while a criterion is not met; §5.3: the in-flight line covers a recorded goal. The briefing stays read-only and keeps its seven sections. |
 | 1.5.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.5.0 | 2026-10-29 | Agent | §5.2 item 7 and the SC-4 row gain the third branch of the next-step line: an owner's note that names no command is rendered verbatim with no command added. Found walking `workflows/status.md` against this repository's own `STATE.md`, whose `Next Action` is such a note — none of the three branches applied and the agent had to improvise the last section of a read-only briefing. The body's Entry list also stopped telling the reader to read the file it is in. |

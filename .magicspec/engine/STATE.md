@@ -4,31 +4,31 @@
 <!-- Maximum 100 lines. Agent updates AFTER each completed action. -->
 
 **Workspace:** engine
-**Updated:** 2026-11-13 10:54
-**Phase:** 59 — Layout of the Suites (Harness by Domain, Cognitive Suite by Area)
+**Updated:** 2026-11-18 10:01
+**Phase:** 60 — The Engine's Own Scenarios (Simulations Beside the Cognitive Suite)
 **Status:** Active
 
 ## Current Position
 
-- **Task:** T-59T01 Validation
+- **Task:** T-60Y01 Spec sync of l1-product-simulation.md as built
 - **Spec:** l1-artifact-memory.md AM-1 to AM-8 · l2-artifact-memory-store.md
-- **Next Action:** Plan complete — nothing pending
+- **Next Action:** Plan complete — run /magicspec plan engine to plan new scope
 
 ## Progress
 
 ```
-Overall: [59/59] ████████ 100%
+Overall: [61/61] ████████ 100%
 ```
 
 ## Recent Decisions
 
 <!-- Last 3-5 locked decisions. Older entries are dropped (not archived) — see PLAN.md / CHANGELOG.md for phase history. -->
 
+- 2026-11-18 **Decision:** Phase 61 complete (maintenance). Provides: finalize names the planning funnel after a plan on a complete plan with an open design item (no task re-sync the Plan Gate refuses); the 17 area files of the cognitive suite carry a Cases heading (markdownlint MD001 cleared) with the layout case asserting it; four specifications patched as built; engine 3.0.145, harness 454, registry 1.85.0
+- 2026-11-18 **Decision:** Phase 60 complete. Provides: five scenario files for the engine in .magicspec/engine/simulations/ (twelve scenarios, forty steps, each step tagged printed or composed, disposable-project preconditions, Last run never), one bullet in docs/dev-test.md on the division with the cognitive suite, l1-product-simulation 1.1.1 with one open finding (SM-7 against FX-10); harness 453, suite 1.9.108, registry 1.83.0, no engine file changed
 - 2026-11-13 **Decision:** Phase 59 complete. Provides: tests/engine.js as a 43-line entry over 33 domain modules and two helper layers with every case name kept (447 of 447), the cognitive suite as a 4.7 KB index and 17 area files with stable identifiers, /magicspec-dev:test {area} reading one area, two layout cases under six caught mutations, Fallow entry and ts-check on 25 of 36 files; suite 1.9.107, registry 1.80.0
 - 2026-11-13 **Decision:** Phase 58 complete. Provides: memory-query citations with their file lines and a size estimate (schema 2), a cut list that counts what matched in force and in history and pages by --offset over a fixed fused pool, no upload from a machine that lacks the key a shared provider setting names, vectors comparable by provider address, the five readers paging or narrowing a cut list, docs/graph.md section 6; harness 445, suite 1.9.105, registry 1.78.0, 20 mutation entries caught
 - 2026-11-13 **Decision:** Phase 57 complete (maintenance). Provides: every child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the pipeline starts with process.execPath; two harness cases and four caught mutations; the same repair on v2.1 (2.1.147); feedback note n2 discarded; harness 438
-- 2026-11-13 **Decision:** Phase 56 complete. Provides: Biome over code only after one formatting change, a non-strict TypeScript check over the files that carry // @ts-check (TypeScript is a checker, no source converted), Fallow over the skill folder, two CI jobs (toolchain on Node 24; harness on Node 18 and 24), the harness run on the Node 18 floor (427 of 436, five classified, one engine defect recorded as feedback note n2); engine registry 1.75.0, harness 436
-- 2026-11-12 **Decision:** Phase 55 complete. Provides: the sync command (registry counts, live-memory counters, rule projections and host copies, wiki and index, declared version anchors, registered documentation blocks; a judgement reported with its command and left alone, a stale file reported and kept, a second run writing nothing, a preview changing no byte), the sync section of workspace.json, constitution 1.24.0 and the kernel's exemptions, the maintenance pipeline running the shipped pass with the updater retired, a repair of the handoff line; engine 3.0.129, harness 432, suite 1.9.104, registry 1.72.0, kernel 16263 bytes
 
 ## Blockers
 

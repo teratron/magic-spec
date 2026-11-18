@@ -1,6 +1,6 @@
 # Contributing to magic-spec
 
-Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.129<!-- /generated:version -->).
+Thank you for contributing to **magic-spec** (engine <!-- generated:version -->v3.0.144<!-- /generated:version -->).
 This guide tells you, in order, how to report a bug, how to propose a change, how to run the repository's checks, what a pull request must contain, and which conventions a change follows.
 
 ## 1. Report a bug or propose a change

@@ -67,6 +67,15 @@ module.exports = () => {
             const headers = body.match(/^### T\d+\b.*$/gm) ?? [];
             const malformed = headers.filter((h) => !/^### T\d+ — \S/.test(h));
             assert.deepStrictEqual(malformed, [], `${file}: every header is "### T{N} — {name}"`);
+            const levels = (body.match(/^#{1,6} /gm) ?? []).slice(0, 2).map((h) => h.trim());
+            assert.deepStrictEqual(
+                levels,
+                [
+                    '#',
+                    '##',
+                ],
+                `${file}: a level-2 heading follows the title, so the case headings skip no level`,
+            );
             const ids = headers.map((h) => Number(/^### T(\d+)/.exec(h)[1]));
             idsOf.set(file, ids);
             all.push(...ids);

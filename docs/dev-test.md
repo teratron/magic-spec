@@ -142,6 +142,7 @@ Each finding is reported as one Decision Record line, `[DR] {finding} → {verdi
 - **Post-Change Verification**: Simulation is mandatory after any significant `skills/magicspec/` modification.
 - **Cross-Platform Check**: Every simulation verifies script calls use the universal `node executor.js` wrapper.
 - **Regression Suite**: After major engine changes, run `/magicspec-dev:test test` to verify all scenarios pass.
+- **Engine scenarios**: beside the suite the engine has user scenarios of its own, written as in any project — journeys a developer takes through an installed engine, in the `simulations/` folder of the engine's workspace (`.magicspec/{workspace}/simulations/`), one file per area. `/magicspec simulate` runs them, live only in a disposable project that holds its own copy of the engine and never in this repository's own state folder. The two divide the work: a scenario is judged against what a specification states and walks a journey across commands; a case of the suite is judged against what a workflow body says under a synthetic state and checks one guard, and `/magicspec-dev:test` repairs a failure in the same run. Neither restates the other. A failed scenario step ends the `simulate` run with `/magicspec fix` as its one next step; in this repository the entry for error feedback about the engine is `/magicspec-dev fix`.
 
 ## Sync Note
 

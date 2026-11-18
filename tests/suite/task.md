@@ -2,6 +2,8 @@
 
 Cases of the area `task` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T152 — Cross-Workflow Handoff Propagation with Scoped Argument
 
 - **Workflow:** `task.md` → `run.md` (Handoff chain)

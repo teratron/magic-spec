@@ -2,6 +2,8 @@
 
 Cases of the area `engine-text` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T36 — Workspace Context Resolution (Zero-Prompt)
 
 - **Workflow:** Any (`plan.md` and `task.md` used as example)
@@ -517,3 +519,29 @@ Cases of the area `engine-text` of the cognitive suite. The index, the way to ru
 - **Control:** the same first query with `--history` prints the six sections and no history count.
 - **Guards tested:** AM-9 (a complete list is not annotated); AM-6.
 - **Regression for:** none yet — the control of the cut-list scenario.
+
+### T361 — A Project Without `STATE.md` Gets a Briefing Whose One Command Can Run
+
+- **Workflow:** `status.md` (Step 3 Degraded States, Step 2 item 7) with `plan.md` (Step 1, Stable-Spec Requirement) and `l2-status-command.md` §5.3
+- **Synthetic State (Test A):** a fresh project: `.magicspec/` provisioned, `INDEX.md` registers no specification, no `STATE.md`, no `PLAN.md`.
+- **Action A:** `/magicspec status`.
+- **Expected A:**
+  - [ ] The Bootstrap Briefing prints the registry summary and exactly one command, computed as item 7 computes it when `Next Action` is absent: `/magicspec spec` — not `/magicspec plan`, whose pre-flight halts on an empty registry.
+  - [ ] Nothing is written; the briefing does not say that a later command's auto-init creates `STATE.md` (the first live-memory update does).
+- **Synthetic State (Test B — control):** no `STATE.md`, three `Stable` specifications registered and no `PLAN.md`.
+- **Expected B:**
+  - [ ] The one command is `/magicspec plan {workspace}`, as before.
+- **Guards tested:** SC-4 (one recommended command per DA-3/DA-6); DA-8 (a recommended path is one that runs); the status command's "useful bootstrap briefing" (§2).
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — the briefing always recommended planning, so on a fresh project the user was sent to a command that halts at once and names `/magicspec spec`.
+
+### T362 — A Non-Zero Exit of `migrate` Follows the Invariant Its Step Cites
+
+- **Workflow:** `migrate.md` (Step 2, Core Invariants 2 and 7)
+- **Synthetic State:** `node scripts/executor.js migrate` exits 1 with a `HALT` line naming one recommended path.
+- **Action:** the agent reads Step 2's non-zero-exit branch and the invariant it cites.
+- **Expected:**
+  - [ ] The branch cites Invariant 7, *A stop is relayed, not worked around*: the `HALT` line is shown verbatim and no other path is followed.
+  - [ ] Step 3 cites Invariant 2 for the one consent question; each number a step cites is the invariant that says what the step does.
+- **Control:** Invariant 6 (*Files the user changed are kept*) is about `ENGINE_FILE_MODIFIED`, not about a stop; a reader sent there finds no rule for the exit.
+- **Guards tested:** Broken Loops — a cross-reference that points at the wrong rule.
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — Step 2 cited Invariant 6 for the relay rule, which is number 7.

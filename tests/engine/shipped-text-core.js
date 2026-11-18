@@ -1030,7 +1030,11 @@ module.exports = () => {
             statusStep.includes('older than the registry or the constitution') &&
                 helpStep.includes('older than the registry or the constitution'),
         );
-        assert.ok(status.includes('plus the recommendation to run `/magicspec plan {workspace}`'));
+        assert.ok(
+            status.includes(
+                'registered specifications the plan does not hold → `/magicspec plan {workspace}`',
+            ),
+        );
         assert.ok(status.includes('- **Replan** → `/magicspec plan`'));
     });
 
@@ -1399,5 +1403,166 @@ module.exports = () => {
                 notes.includes('name each specification and section it supersedes'),
             'the template says where a supersession is declared',
         );
+    });
+
+    // ───────────────────────────────────────────────────────────────────────
+    // Cross-References That Name Their Owner
+    // ───────────────────────────────────────────────────────────────────────
+
+    test('shipped text: the spec body names plan.md as the home of Pre-Planning Stabilization and of the pipeline stage after it (PL-2)', () => {
+        const spec = readShipped('skills/magicspec/workflows/spec.md');
+        const stabilization = spec
+            .split(/\r?\n/)
+            .filter((line) => line.includes('Pre-Planning Stabilization'));
+        assert.ok(stabilization.length >= 3, 'the body names the batch where it is called from');
+        for (const line of stabilization) {
+            assert.ok(line.includes('`plan.md`'), `names plan.md: ${line.trim()}`);
+            assert.ok(
+                !/`task\.md` Pre-Planning|Pre-Planning Stabilization in `task\.md`/.test(line),
+                `does not give the batch to task.md: ${line.trim()}`,
+            );
+        }
+        const pipeline = lineWith(spec, '> **Pipeline:**') ?? '';
+        assert.ok(
+            pipeline.includes('plan.md') &&
+                pipeline.indexOf('plan.md') < pipeline.indexOf('task.md'),
+            `the pipeline header runs through plan.md before task.md: ${pipeline}`,
+        );
+        assert.ok(
+            lineWith(spec, '> **Workflow tooling**')?.includes('`workflows/plan.md`'),
+            'the tooling note names the planning body',
+        );
+    });
+
+    test('shipped text: live memory is created by update-state, and no shipped page says init or auto-init creates it (SC-2)', () => {
+        const init = readShipped('skills/magicspec/references/init.md');
+        assert.ok(
+            init.includes('`STATE.md` is **not** created here'),
+            'init.md states that it does not create STATE.md',
+        );
+        for (const rel of [
+            'skills/magicspec/workflows/plan.md',
+            'skills/magicspec/workflows/task.md',
+        ]) {
+            const line = lineWith(readShipped(rel), 'If `STATE.md` does not exist') ?? '';
+            assert.ok(
+                line.includes('`update-state`') && line.includes('`init` does not create it'),
+                `${rel} names the writer that creates STATE.md: ${line.trim()}`,
+            );
+        }
+        const pages = [
+            ...listShipped('skills/magicspec', [
+                '.md',
+            ]),
+            ...listShipped('docs', [
+                '.md',
+            ]),
+        ];
+        const claims = [];
+        for (const rel of pages) {
+            readShipped(rel)
+                .split(/\r?\n/)
+                .forEach((line, index) => {
+                    if (
+                        /created by `init\.md`|auto-init provisions (the missing file|`?STATE\.md)/.test(
+                            line,
+                        )
+                    ) {
+                        claims.push(`${rel}:${index + 1}`);
+                    }
+                });
+        }
+        assert.deepStrictEqual(claims, [], 'a page credits init with creating STATE.md');
+    });
+
+    test('shipped text: the status briefing of a project without STATE.md recommends by pipeline order, not a plan that halts on an empty registry', () => {
+        const status = readShipped('skills/magicspec/workflows/status.md');
+        const bootstrap = lineWith(status, '**STATE.md missing**') ?? '';
+        assert.ok(
+            bootstrap.includes('Step 2 item 7') &&
+                bootstrap.includes('an empty registry → `/magicspec spec`'),
+            `the bootstrap briefing computes its command as item 7 does: ${bootstrap}`,
+        );
+        assert.ok(
+            !bootstrap.includes('auto-init'),
+            'the line does not credit auto-init with STATE.md',
+        );
+        assert.ok(
+            lineWith(status, 'Absent → compute by pipeline order')?.includes(
+                'an empty registry → `/magicspec spec`',
+            ),
+            'item 7 names spec for an empty registry',
+        );
+        assert.ok(
+            lineWith(
+                readShipped('skills/magicspec/workflows/plan.md'),
+                '**Stable-Spec Requirement**',
+            )?.includes('An empty registry (`Stable specs (0 specs found)`) → **HALT**'),
+            'plan halts on an empty registry, which is why it is not the recommendation for one',
+        );
+        const page = lineWith(readShipped('docs/status.md'), '**`STATE.md` missing**') ?? '';
+        assert.ok(
+            page.includes('`/magicspec spec` for an empty registry'),
+            `the documentation page says the same: ${page}`,
+        );
+    });
+
+    test('shipped text: the migrate body cites by number the invariants that say what its steps do', () => {
+        const migrate = readShipped('skills/magicspec/workflows/migrate.md');
+        const section = migrate.slice(
+            migrate.indexOf('## Core Invariants'),
+            migrate.indexOf('\n## Steps'),
+        );
+        const numberOf = (label) => {
+            const match = section.match(new RegExp(`^(\\d+)\\. \\*\\*${label}`, 'm'));
+            return match ? match[1] : null;
+        };
+        const relay = numberOf('A stop is relayed');
+        const consent = numberOf('One consent question');
+        assert.ok(relay && consent, 'both invariants are numbered');
+        assert.ok(
+            lineWith(migrate, '**Non-zero exit**')?.includes(`(Invariant ${relay})`),
+            `a non-zero exit cites the relay invariant, ${relay}`,
+        );
+        assert.ok(
+            lineWith(migrate, 'Ask the consent question of Invariant')?.includes(
+                `Invariant ${consent} `,
+            ),
+            `the question cites the consent invariant, ${consent}`,
+        );
+    });
+
+    test('shipped text: the retrospective checklist allows the graph snapshots its invariant and Step 2 write', () => {
+        const retro = readShipped('skills/magicspec/references/retrospective.md');
+        assert.ok(
+            lineWith(retro, '2. **Read-only Analysis**')?.includes('`graph/snapshot.json`'),
+            'the invariant allows the snapshot write',
+        );
+        const box = lineWith(retro, '☐ Context: Zero-Prompt resolution') ?? '';
+        assert.ok(
+            box.includes('RETROSPECTIVE.md') &&
+                box.includes('`graph/snapshot.json`') &&
+                box.includes('`graph/before.json`'),
+            `the checklist line names every file the retrospective writes: ${box}`,
+        );
+    });
+
+    test('shipped text: the analysis Sync Path names only argument forms spec declares, never `auto-spec`', () => {
+        const analyze = readShipped('skills/magicspec/workflows/analyze.md');
+        const actionable = lineWith(analyze, '- **Actionable**: each Uncovered/Drift item') ?? '';
+        assert.ok(
+            actionable.includes('`→ /magicspec spec create {name}`') &&
+                actionable.includes('`→ /magicspec spec amend {name}`'),
+            `the Sync Path names create for an uncovered item and amend for a drifted one: ${actionable}`,
+        );
+        const phantom = [
+            ...listShipped('skills/magicspec', [
+                '.md',
+            ]),
+            ...listShipped('docs', [
+                '.md',
+            ]),
+        ].filter((rel) => readShipped(rel).includes('/magicspec spec auto-spec'));
+        assert.deepStrictEqual(phantom, [], 'a page advertises `/magicspec spec auto-spec`');
     });
 };

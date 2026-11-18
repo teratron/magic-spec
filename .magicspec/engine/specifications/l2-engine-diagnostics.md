@@ -1,6 +1,6 @@
 # Engine Diagnostics Digest — Implementation
 
-**Version:** 1.4.3
+**Version:** 1.4.4
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-engine-diagnostics.md
@@ -125,7 +125,7 @@ One JSON object per line:
 ```plaintext
 {"ts":"<ISO-8601>","severity":"fix","source":"finalize",
  "code":"NEXT_ACTION_SUBSTITUTED",
- "message":"Next Action named a reserved command; substituted the /magicspec task funnel.",
+ "message":"Next Action named a reserved command; substituted the /magicspec plan funnel.",
  "locus":".magicspec/engine/STATE.md","remedy":"→ /magicspec task engine"}
 ```
 
@@ -182,7 +182,7 @@ Rendered shape:
   → restore STATE.md or run /magicspec task engine
 - ⚠️ `STATE_CAP_EXHAUSTED` (update-state) — STATE.md at 110 lines; Recent Decisions at its floor, nothing pruned (×3)
   → archive stale entries from ## Blocking Constraints
-- 🔧 `NEXT_ACTION_SUBSTITUTED` (finalize) — Next Action named a reserved command; substituted the /magicspec task funnel
+- 🔧 `NEXT_ACTION_SUBSTITUTED` (finalize) — Next Action named a reserved command; substituted the /magicspec plan funnel
 ```
 
 The severity glyphs reuse the engine's existing output vocabulary (`❌`/`⚠️`) and add one for the previously unnamed class. The `→` remedy form matches the Advisory Report's action notation, per DG-3.
@@ -284,7 +284,7 @@ Every non-fatal emitter currently in `skills/magicspec/scripts/`, with its assig
 
 | Current message | Severity | Code |
 | --- | --- | --- |
-| `Next Action "…" names a command reserved by skills/magicspec/CONSTITUTION.md §5; substituting the /magicspec task funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
+| `Next Action "…" names a command reserved by CONSTITUTION.md §5; substituting the /magicspec plan funnel.` | `fix` | `NEXT_ACTION_SUBSTITUTED` |
 | `STATE.md update skipped (non-blocking): {err}` | `error` | `STATE_UPDATE_SKIPPED` |
 | `CHANGELOG.md does not follow Keep-a-Changelog format. Prepended with marker.` | `fix` | `CHANGELOG_FORMAT_NONSTANDARD` |
 | `Could not update CHANGELOG.md: {err}` | `error` | `CHANGELOG_WRITE_FAILED` |
@@ -392,6 +392,7 @@ Per the finalize-pipeline coverage mandate ([l2-test-suite.md](l2-test-suite.md)
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.4.4 | 2026-11-18 | Agent | Reality sync, Stable retained, no contract changed: the `NEXT_ACTION_SUBSTITUTED` message in the catalogue row and in the two examples names the `/magicspec plan` funnel and `CONSTITUTION.md §5`, as `finalize` prints it (they named the `/magicspec task` funnel, stale since Phase 49). |
 | 1.4.3 | 2026-11-12 | Agent | Reality sync, no contract change (as built in Phase 55): the runtime state the sink joins in `.cache/` no longer lists `project-meta-state.json`, whose writer, the maintenance updater, was retired. |
 | 1.4.2 | 2026-11-12 | Agent | Inventory rows only, no contract change (as built in Phase 54): §5.4 lists the two findings of the artifact index — `MEMORY_INDEX_UNAVAILABLE`, recorded when the index cannot be built, opened or queried (the command exits 0 and tells the reader to search the text), and `MEMORY_EMBEDDINGS_FAILED`, recorded when the embeddings provider fails or its setting cannot be used (lexical search is unaffected). Both are warnings with a remedy. |
 | 1.4.1 | 2026-11-12 | Agent | Inventory row only, no contract change (as built in Phase 53): §5.2 lists the finding `update-state.js` records when it refuses a goal block — a goal that fails the closed schema or the line bound, two goal flags together, a goal file that cannot be read. |

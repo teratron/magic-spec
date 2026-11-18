@@ -2,6 +2,8 @@
 
 Cases of the area `spec-intake` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T209 — Idea Intake Gate Stays Silent on a Coherent Idea (IK-1/IK-4)
 
 - **Workflow:** `spec.md` (Step 0.5 Idea Intake Gate)

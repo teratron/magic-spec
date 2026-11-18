@@ -2,6 +2,8 @@
 
 Cases of the area `goal` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T329 — A Goal Statement Passes One Intake and Then Runs to Its Criteria Without a Question
 
 - **Workflow:** `goal.md` (Steps 1 to 5) with `spec.md` (the Idea Intake Gate)

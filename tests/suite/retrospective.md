@@ -2,6 +2,8 @@
 
 Cases of the area `retrospective` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T14 — Retrospective Level 1 Auto-Snapshot (RETRO Missing)
 
 - **Workflow:** `retrospective.md` (Level 1: Auto-Snapshot)
@@ -132,3 +134,15 @@ Cases of the area `retrospective` of the cognitive suite. The index, the way to 
   - [ ] T197–T199 reach Retro L2 through Plan Completion, not through a command.
 - **Guards tested:** no advertised trigger without a wrapper (the PHANTOM_COMMAND rule's spirit); C2 (no new command without an explicit exception).
 - **Regression for:** `/magicspec-dev:test test` (2026-10-01) — the Levels table promised a "manual command" for Retro L2 that no wrapper provides.
+
+### T363 — The Retrospective Checklist Can Be Ticked After the Writes the Retrospective Makes
+
+- **Workflow:** `retrospective.md` (Core Invariant 2, Step 2 Graph Snapshot, Retrospective Completion Checklist)
+- **Synthetic State:** a phase completes; `.magicspec/graph/before.json` exists from the previous retrospective.
+- **Action:** Retro L1 runs Step 2 (the snapshot, the diff, the rename to `before.json`) and Step 6, then the checklist.
+- **Expected:**
+  - [ ] The writes are `RETROSPECTIVE.md`, `graph/snapshot.json` and `graph/before.json`, as Invariant 2 allows; no specification, plan or task file changes.
+  - [ ] The checklist's Context line names those three and can be ticked honestly; it does not claim that only `RETROSPECTIVE.md` was modified.
+- **Control:** a write to `PLAN.md` or a phase file during the retrospective is still a violation of Invariant 2 and is not covered by the line.
+- **Guards tested:** Broken Loops — a checklist that does not cover the work; Invariant 2 (read-only analysis).
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — the checklist allowed only `RETROSPECTIVE.md` while Step 2 writes two graph snapshots.

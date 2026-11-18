@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.68.0
-**Generated:** 2026-11-13
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.69.0
+**Version:** 1.70.0
+**Generated:** 2026-11-18
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.72.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 61](archives/tasks/phase-61.md) | Maintenance: The Step After a Complete Plan With an Open Design Item — after `/magicspec plan` on a complete plan whose Backlog holds an open design item, the next step is the planning funnel, as after every other workflow, and not a task re-sync that the Plan Gate refuses; the specification statements that still named a task funnel are patched as built | `Done (Archived)` |
+| [Phase 60](archives/tasks/phase-60.md) | The Engine's Own Scenarios (Simulations Beside the Cognitive Suite) — the first user scenarios of this repository, five area files in `.magicspec/engine/simulations/` (pipeline, intake, session, routing, quality; twelve scenarios), each step judged against what a specification states and tagged as printed by a script or composed by the agent, run live only on a disposable copy of the engine; one paragraph of `docs/dev-test.md` says how the work divides with the cognitive suite; no file of the engine's folder changes | `Done (Archived)` |
 | [Phase 59](archives/tasks/phase-59.md) | Layout of the Suites (Harness by Domain, Cognitive Suite by Area) — the harness keeps its one entry and its case names and registers one module per domain over two shared helper layers; the cognitive suite becomes an index and one file per area; 12 tasks in four tracks (S, H, E/T, Y) | `Done (Archived)` |
 | [Phase 58](archives/tasks/phase-58.md) | Artifact Memory: Readable Citations, Announced Cut, Credential and Vector Identity — a result of `memory-query` carries its lines and a size estimate, a cut list says how many matched and pages to the rest, a clone without the key its shared provider setting names sends no text, and vectors from another provider address are discarded; 10 tasks in five tracks (M, W, D, E, T/S) | `Done (Archived)` |
 | [Phase 57](archives/tasks/phase-57.md) | Maintenance: One Runtime per Invocation — a child Node process of the executor, the diagnostics recheck, the maintenance wrapper and the maintenance pipeline starts with the runtime that started its parent, not by the name `node` (feedback note n2, found by the floor run of Phase 56) | `Done (Archived)` |
@@ -88,5 +90,5 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 ## Meta Information
 
-- **Last Updated**: 2026-11-12
+- **Last Updated**: 2026-11-18
 - **Maintainer**: Core Team

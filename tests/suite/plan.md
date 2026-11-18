@@ -2,6 +2,8 @@
 
 Cases of the area `plan` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T06 — Task New Plan from Stable Specs
 
 - **Workflow:** `plan.md` (the decision) and `task.md` (its application) (Generating Tasks & Plan)
@@ -695,3 +697,16 @@ Cases of the area `plan` of the cognitive suite. The index, the way to run it an
 - **Control:** the whitelist keys the script matches internally keep their form; only the text the user reads changes.
 - **Guards tested:** CS-2 (one command, one printed form).
 - **Regression for:** the finalization output named the command by the pre-3.0 dotted form.
+
+### T360 — Live Memory Is Created by the State Update, and Neither `plan` Nor `task` Waits for `init` to Create It
+
+- **Workflow:** `plan.md` and `task.md` (State Init/Update) with `references/init.md` (Steps 2 and 3) and `scripts/update-state.js`
+- **Synthetic State:** a project whose `.magicspec/` was just provisioned by `init` inside the first `/magicspec plan`; no `STATE.md` exists, and three `Stable` specifications are registered.
+- **Action:** `/magicspec plan engine` writes the plan and reaches State Init/Update; later `/magicspec task engine` reaches its own.
+- **Expected:**
+  - [ ] The agent does not treat the missing `STATE.md` as a failed `init` (`init.md` Step 3: its absence directly after `init` is the expected state) and does not re-run `init` to obtain it.
+  - [ ] The `update-state` call of the step creates `STATE.md` from `templates/state.md`, and the phase and the next action are written into it in the same call.
+  - [ ] No shipped page — body, reference or documentation page — says that `init` or the auto-init creates `STATE.md`.
+- **Control:** a project that already has `STATE.md`: the same call updates it in place.
+- **Guards tested:** WI-10 (a claim about *when* an artifact appears is bound like one about *whether* it does); one writer of live memory.
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — `plan.md` and `task.md` both said `STATE.md` "will be created by `init.md` automatically (always called first)", which `init.md` denies in so many words.

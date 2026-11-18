@@ -2,6 +2,8 @@
 
 Cases of the area `analyze` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T27 — Analyze First-Time on Existing Project
 
 - **Workflow:** `analyze.md` (First-Time Analysis, delegated from `spec.md`)
@@ -692,3 +694,15 @@ Cases of the area `analyze` of the cognitive suite. The index, the way to run it
   - [ ] All nine invocations (`init.md`, `spec.md` ×2, `rule.md`, `plan.md`, `task.md`, `run.md`, `analyze.md`, `retrospective.md`) carry `--workspace={active-workspace}`.
 - **Guards tested:** Context resolution reaching the script (Core Invariant 1 of every workflow); flag-over-default precedence in `executor.js`; parity of the Pre-flight command across workflows.
 - **Regression for:** `/magicspec-dev:test test` (2026-10-01) — two of the eight Pre-flight commands omitted the flag, so in a multi-workspace project the default workspace was validated in place of the one the user named.
+
+### T364 — Every Sync Path of the Advisory Report Is an Argument Form `spec` Declares
+
+- **Workflow:** `analyze.md` (Advisory Report Criteria — Actionable, Action Proposals) with the router `SKILL.md` (the Argument column of `spec`)
+- **Synthetic State:** a Mode C run finds one uncovered module (`scripts/`) and one drifted `Stable` specification (`l2-api.md`).
+- **Action:** the agent writes the Sync Path of each item.
+- **Expected:**
+  - [ ] The uncovered item gets `→ /magicspec spec create {name}` and the drifted one `→ /magicspec spec amend {name}`, the forms the Action Proposals list.
+  - [ ] No item carries `/magicspec spec auto-spec`, a form `spec` does not have, and no shipped page advertises it.
+- **Control:** a Shadow Logic file gets `→ /magicspec spec create {module}`, as before.
+- **Guards tested:** verb-to-interface parity (the engine's own remedies name forms its commands accept, as T232 holds for `plan` and `task`).
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — the Actionable rule gave `/magicspec spec auto-spec` as its example Sync Path.

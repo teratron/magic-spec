@@ -1,8 +1,8 @@
 # Project Specification Index
 
-**Version:** 1.52.0
+**Version:** 1.56.0
 **Status:** Active
-**Engine Version:** 3.0.142
+**Engine Version:** 3.0.145
 
 ## Overview
 
@@ -24,6 +24,10 @@ Each workspace owns its detailed registry; this file provides cross-workspace na
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.56.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 61 recorded as built: `l2-engine-finalization.md` 3.9.1, `l2-test-suite.md` 1.48.2, `l1-engine-diagnostics.md` 1.1.4, `l2-engine-diagnostics.md` 1.4.4. The engine registry is 1.85.0. |
+| 1.55.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). Phase 60 recorded as built: `l1-product-simulation.md` 1.1.1. The engine registry is 1.83.0. |
+| 1.54.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). `l1-product-simulation.md` 1.1.0 (the engine's scenarios in `simulations/`, beside the cognitive suite). The engine registry is 1.82.0. |
+| 1.53.0 | 2026-11-18 | Agent | No spec-count change (55/55 Stable). `l2-status-command.md` 1.6.0 (the bootstrap briefing recommends by pipeline order). The engine registry is 1.81.0. |
 | 1.52.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). Phase 59 recorded as built: `l2-test-suite.md` 1.48.0. The engine registry is 1.80.0. |
 | 1.51.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). `l2-test-suite.md` 1.47.0 (§Layout of the Suites). The engine registry is 1.79.0. |
 | 1.50.0 | 2026-11-13 | Agent | No spec-count change (55/55 Stable). Phase 58 recorded as built: `l2-artifact-memory-store.md` 1.3.0, `l2-test-suite.md` 1.46.0, `l2-role-cards-governance.md` 1.4.9, `l2-role-cards-execution.md` 1.3.2. The engine registry is 1.78.0. |

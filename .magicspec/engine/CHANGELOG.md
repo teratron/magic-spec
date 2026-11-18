@@ -1,5 +1,19 @@
 # Engine Workspace Changelog
 
+## Phase 61 — 2026-11-18 (Maintenance: The Step After a Complete Plan With an Open Design Item)
+
+- **The next step after a plan is no longer a bounce.** On a complete plan whose Backlog holds an open design item, `/magicspec plan` ended by naming `/magicspec task` to re-sync the ledger, a step whose Plan Gate refuses on that same item; it now names the planning funnel, as after every other workflow, and keeps the re-sync where nothing is pending. One harness case with its Parked control, two mutation entries caught.
+- **The cognitive suite lints clean.** The 17 area files gained a `## Cases` heading between the title and the cases, which clears markdownlint MD001 on each; the layout case asserts it and SL-2 states it. No case header or identifier changed.
+- **Specifications:** `l2-engine-finalization` 3.9.1, `l2-test-suite` 1.48.2, `l1-engine-diagnostics` 1.1.4, `l2-engine-diagnostics` 1.4.4 (the funnel is `/magicspec plan`, stale since Phase 49), registry 1.85.0. Engine 3.0.145, harness 454.
+
+## Phase 60 — 2026-11-18 (The Engine's Own Scenarios)
+
+- **The engine has user scenarios of its own.** Five files in `.magicspec/engine/simulations/` — `pipeline`, `intake`, `session`, `routing`, `quality` — hold twelve scenarios and forty steps, each a journey a developer takes through an installed engine, judged against what a specification states. Every step ends with a tag, `(printed)` for an outcome observed directly and `(composed)` for text the agent writes from a workflow body; the preconditions name a disposable project with its own copy of the engine folder. `Last run` reads never everywhere, so the first `/magicspec simulate` is the run.
+- **The suite and the scenarios divide the work.** The cognitive suite stays the regression suite of the engine's text, one guard per case; the scenarios walk the seams between commands. Three steps that only repeated a suite case were replaced during validation: the nothing-pending variant of S-3, the cold read set of S-2 (now a decision carried across two new sessions) and the two checks of S-9's variant (now a task in flight in both workspaces).
+- **Documentation.** One bullet of `docs/dev-test.md` says where the scenarios live and how the work divides with the suite; the harness case of WI-14 found the engine's own workspace name in its first wording and it was changed to the placeholder.
+- **Specifications:** `l1-product-simulation` 1.1.1 (as built), registry 1.83.0. One open finding is recorded, not resolved: SM-7 hands a failed scenario step to `/magicspec fix` and FX-10 makes `/magicspec-dev fix` the entry for error feedback about the engine, so which command repairs a failure of the engine's own scenarios is left open — next step `/magicspec spec amend l1-fix-command.md`.
+- **Coverage.** Harness 453 of 453 (no case added), the cognitive suite unchanged at 1.9.108; no file of the engine's folder changed, so no engine bump.
+
 ## Phase 59 — 2026-11-13 (Layout of the Suites)
 
 - **The harness is readable by part.** `tests/engine.js` (27,384 lines, 1.3 MB, one `describe`) is a 43-line entry that registers 33 modules from `tests/engine/` in the order their sections had, over two helper layers in `tests/engine/lib/`. It was cut by a script, not by hand, and proved by the sorted case names (the same 445 plus the two new layout cases) and a full run: 447 of 447 under `node --test` and under `node tests/engine.js`, the release gate's form. A blanket rename of `__dirname` also hit the one fixture script that embeds it in a string; the first full run failed five revalidation cases until it was restored.

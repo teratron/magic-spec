@@ -42,7 +42,7 @@ Run `node scripts/executor.js migrate` and display its entire output verbatim in
 
 ### 2. Read the Result
 
-- **Non-zero exit** → relay the `HALT` line as it stands and stop (Invariant 6).
+- **Non-zero exit** → relay the `HALT` line as it stands and stop (Invariant 7).
 - **`Nothing to migrate`** or **`Migration complete`** → the project needs nothing more. Say so in one line, relay the list of kept files when the output has one, and stop. No question is asked.
 - **A printed plan** (it lists files to remove or a folder to rename) → Step 3.
 

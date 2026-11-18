@@ -2,6 +2,8 @@
 
 Cases of the area `spec` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T03 — Spec Dispatch Multi-Topic
 
 - **Workflow:** `spec.md` (Dispatching from Raw Input)
@@ -797,3 +799,16 @@ Cases of the area `spec` of the cognitive suite. The index, the way to run it an
 - **Control:** a product with a design-system specification cites it first and the section adds no token.
 - **Guards tested:** UI-1; UI-2; UI-3; UI-4.
 - **Regression for:** none yet — new with the interface design.
+
+### T359 — The Spec Body Names `plan.md` as the Home of Pre-Planning Stabilization and of the Stage After It
+
+- **Workflow:** `spec.md` (Pipeline header, Workflow tooling note, C12 Quarantine step 3, Batch Stabilization Trigger, Consistency Check analog) with `plan.md` (Step 2)
+- **Synthetic State:** a workspace with two `Draft` specifications that pass MVC and a plan that holds neither; the agent is inside `/magicspec spec stabilize` and reads where the batch is called from, and then ends the invocation.
+- **Action:** the agent follows the Batch Stabilization Trigger to its caller, and the Handoff to the next stage.
+- **Expected:**
+  - [ ] Every line of `spec.md` that names Pre-Planning Stabilization names `plan.md` (Step 2) as its home; none gives it to `task.md`, whose body carries no such step (PL-2).
+  - [ ] The Pipeline header reads `this → plan.md → task.md → run.md`, and the tooling note names the planning body; the header and the Handoff (`/magicspec plan {workspace}`) name the same next stage.
+  - [ ] The C12 note lists `plan.md` among the bodies that react to a status drop without reversing it.
+- **Control:** `task.md` names no Pre-Planning Stabilization step; a search for one there finds nothing.
+- **Guards tested:** PL-2 guard ownership; diagram-text and header-handoff parity.
+- **Regression for:** "The Fresh-Start Detour" crisis (Improv Mode 2026-11-18) — the planning stage split from decomposition, but three lines of `spec.md` still sent the reader to `task.md` for the stabilization batch and the Pipeline header skipped `plan.md`.

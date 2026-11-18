@@ -316,7 +316,7 @@ Only after this pass, proceed to generate the Advisory Report categories below.
 ### Advisory Report Criteria
 
 - **Signal**: final report starts with 🟢/🟡/🔴 icon. 🟢 = <5% uncovered/drift AND <3 shadow logic files. 🟡 = AMBIGUOUS files >15% of total OR shadow files with ≥3 HACK/FIXME markers. 🔴 = any core engine drift or >25% project drift.
-- **Actionable**: each Uncovered/Drift item must have a "Sync Path" (e.g. `/magicspec spec auto-spec`). Shadow Logic items get `→ /magicspec spec create {module}`.
+- **Actionable**: each Uncovered/Drift item must have a "Sync Path" — `→ /magicspec spec create {name}` for an uncovered item, `→ /magicspec spec amend {name}` for a drifted one, as the Action Proposals below list them. Shadow Logic items get `→ /magicspec spec create {module}`.
 - **Engine Bias**: if engine files (this skill folder) are drifting → priority = `BLOCKER`.
 - **Confidence Breakdown**: include a summary line: `Coverage: {extracted}% EXTRACTED, {inferred}% INFERRED, {ambiguous}% AMBIGUOUS, {uncovered}% UNCOVERED`.
 

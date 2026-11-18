@@ -2,6 +2,8 @@
 
 Cases of the area `rule` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T12 — Rule Add Duplicate Convention
 
 - **Workflow:** `rule.md` (Adding a Convention)

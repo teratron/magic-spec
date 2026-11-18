@@ -7,7 +7,7 @@ description: Workflow for creating and managing project specifications and the s
 Universal process for managing project specifications in `.magicspec/specifications/`.
 
 > **Scope**: Specification authoring structure and lifecycle. Task phasing is handled by `task.md`.
-> **Pipeline:** this → [`task.md`](task.md) → [`run.md`](run.md)
+> **Pipeline:** this → [`plan.md`](plan.md) → [`task.md`](task.md) → [`run.md`](run.md)
 
 **Contents:**
 
@@ -94,7 +94,7 @@ Every spec declares its layer in metadata via `Layer:`.
 - **Layer 1 (concept)**: abstract requirements, business logic, domain mechanics. Technology-agnostic; portable to any stack.
 - **Layer 2 (implementation)**: concrete realization of an L1 concept in a specific tech stack. Must include `Implements: {l1-file.md}` pointing to its L1 parent. Cannot enter `RFC` or `Stable` until its L1 parent is `Stable`.
 
-> **Workflow tooling**: specs are created and managed by this workflow (`workflows/spec.md`). Orchestrated by `workflows/task.md`, executed by `workflows/run.md`, rule governance by `workflows/rule.md`, health audited by `workflows/analyze.md`; the router `SKILL.md` lists them all.
+> **Workflow tooling**: specs are created and managed by this workflow (`workflows/spec.md`). Planned by `workflows/plan.md`, decomposed by `workflows/task.md`, executed by `workflows/run.md`, rule governance by `workflows/rule.md`, health audited by `workflows/analyze.md`; the router `SKILL.md` lists them all.
 
 ## Status Lifecycle
 
@@ -258,7 +258,7 @@ graph TD
    - **C12 (Quarantine)**: if L1 status drops (Stable → RFC/Draft):
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` (full registry scan — not open-file only).
      2. For each L2 found, recursively repeat: scan for `Implements: {L2-file}` to discover L3 dependents.
-     3. **Update INDEX.md**: set status of all discovered dependents to match parent's new status (`RFC` or `Draft`). Update file headers to match. This **downward** cascade is the authoritative status change — `task.md` and `run.md` react to C12/deprecation status drops, they never reverse them. (Upward `Draft → Stable` promotion is owned by `task.md` Pre-Planning Stabilization / `spec.md` Batch Stabilization.)
+     3. **Update INDEX.md**: set status of all discovered dependents to match parent's new status (`RFC` or `Draft`). Update file headers to match. This **downward** cascade is the authoritative status change — `plan.md`, `task.md` and `run.md` react to C12/deprecation status drops, they never reverse them. (Upward `Draft → Stable` promotion is owned by `plan.md` Pre-Planning Stabilization / `spec.md` Batch Stabilization.)
      4. Report: *"C12 Cascade: {N} dependents quarantined: [{list}]."*
    - **Deprecation Cascade**: if a spec transitions to `Deprecated`:
      1. Scan `INDEX.md` for ALL specs with `Implements: {target-file}` — flag each as having an **invalid L1 parent** (layer integrity violation). Report: *"L2 `{file}` has no valid L1 parent — `{target}` is Deprecated."*
@@ -271,7 +271,7 @@ graph TD
 
 ### Batch Stabilization
 
-**Trigger**: called from `task.md` Pre-Planning Stabilization (Step 2), or `/magicspec spec stabilize [workspace]`.
+**Trigger**: called from `plan.md` Pre-Planning Stabilization (Step 2), or `/magicspec spec stabilize [workspace]`.
 
 Promotes multiple `Draft` specs to `Stable` in a single pass, applying Trust Mode (C9) criteria consistently.
 
@@ -350,7 +350,7 @@ Update only via triggers. Never contradict §1-6 without explicit amendment.
 ### Consistency Check (Pre-flight)
 
 Compares specs vs. project filesystem and engine integrity.
-*(Pre-flight gate analog: Pre-Planning Stabilization in `task.md` — both block progression until invariants pass.)*
+*(Pre-flight gate analog: Pre-Planning Stabilization in `plan.md` — both block progression until invariants pass.)*
 
 **Trigger**: the pre-flight of `/magicspec plan` or *"Verify specs"*.
 

@@ -1,6 +1,6 @@
 # Product Simulation: Scenarios, the Simulate Command and the Simulator-Tester
 
-**Version:** 1.0.2
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -17,6 +17,7 @@ The engine keeps, beside the product's code, written scenarios of users interact
 - [l1-sdd-reference-containment.md](l1-sdd-reference-containment.md) - Scenarios are SDD artifacts; the product never references them.
 - [l1-interface-design.md](l1-interface-design.md) - Interface states and accessibility requirements that interface scenarios cover.
 - [l1-command-surface.md](l1-command-surface.md) - CS-1, the command set `simulate` joins.
+- [l2-test-suite.md](l2-test-suite.md) - The cognitive suite the engine's own scenarios stand beside (§5.4).
 
 ## 1. Motivation
 
@@ -29,7 +30,7 @@ The owner asks for three things together: files that simulate the user's interac
 - Scenarios describe behaviour, not implementation: no code, no selectors tied to markup, no internal function names — the product's observable surface only.
 - Live execution happens only against a local or disposable instance of the product. No scenario step touches a production system, real money, real messages to real people or real accounts.
 - **Assumption (forecast):** scenarios live in the state folder (`.magicspec/{workspace}/simulations/`), not among the product's test files, because they are instructions for an agent, written from the specifications, and containment keeps SDD artifacts out of the product. Runner-up: a product test folder. Override: `/magicspec spec amend l1-product-simulation.md "scenarios in the product tree"`.
-- **Assumption (forecast):** in the engine's own repository the cognitive suite (`tests/suite.md`, run by the maintenance test command) stands for the scenario files SM-3 asks of a phase: the engine's user-facing behaviour is its commands, and the suite's scenarios are written by the phases' tasks against exactly them, so a second collection would restate the first. Runner-up: scenario files under `.magicspec/engine/simulations/`. Override: `/magicspec spec amend l1-product-simulation.md "engine scenarios in simulations/"`.
+- **The engine's own repository (the owner's decision, 2026-11-18)** `[MODIFIED]`: the engine is a product like any other, and its scenario files live where every project keeps them, `.magicspec/engine/simulations/`, run by `simulate` and kept by SM-3 and SM-4 as written. The cognitive suite (`tests/suite.md` and `tests/suite/`, run by the maintenance test command `/magicspec-dev:test`) stays where it is and does not stand for them: the suite checks the engine's own text, a scenario checks the engine from its user's side (§5.4). This replaces the forecast of 1.0.2, under which the suite stood for the scenario files. That forecast left `simulate` in this repository with nothing to run, and its handoff for a missing scenario came back to it unchanged: planning listed the suite, which `simulate` does not read.
 - **Assumption (forecast):** where the product cannot be run in the session, `simulate` traces the code instead of skipping, and labels the result, because a labelled weaker check is worth more than none and the label keeps it from being mistaken for a live one. Runner-up: skip and report. Override: `simulate --live-only`.
 
 ## 3. Core Invariants
@@ -62,7 +63,7 @@ The owner asks for three things together: files that simulate the user's interac
     Last run: {date} · v{version} · {live|traced} · {pass|fail per step}
 ```
 
-**As built (Phase 52).** The `Last run` record is the date and the product's version, then one line per step — `- Step {n}: {pass, fail, inconclusive or skipped} · {live or traced}`, and for a failed or inconclusive step ` — observed: {the outcome}` (`templates/simulation.md`). What is open is read from these lines: a run replaces a scenario's lines, so `finalize` (the next step after a run is `fix` while any `fail` or `inconclusive` line stands) and `fix` (the suggestions of its argument form) read the scenario files and keep no store of their own (`lib/simulation-findings.js`).
+**As built (Phase 52).** The `Last run` record is the date and the product's version, then one line per step — `- Step {n}: {pass, fail, inconclusive or skipped} · {live or traced}`, and for a failed or inconclusive step `— observed: {the outcome}` (`templates/simulation.md`). What is open is read from these lines: a run replaces a scenario's lines, so `finalize` (the next step after a run is `fix` while any `fail` or `inconclusive` line stands) and `fix` (the suggestions of its argument form) read the scenario files and keep no store of their own (`lib/simulation-findings.js`).
 
 ### 5.2 Run
 
@@ -87,12 +88,35 @@ graph TD
 | `simulate "{feature or spec}"` | Scenarios that verify it |
 | `simulate --live-only` | Steps that cannot run live are skipped and listed |
 
+### 5.4 The Engine's Own Scenarios `[ADDED]`
+
+In the engine's repository the product is the engine, and its user is a developer working in a project where the engine is installed. The scenarios and the cognitive suite stand side by side and divide the work:
+
+| | Scenarios (`.magicspec/engine/simulations/`) | Cognitive suite (`tests/suite.md`, `tests/suite/`) |
+| --- | --- | --- |
+| Judged against | What a specification states (`Verifies`, SM-2) | What a workflow body says, under a synthetic state |
+| Seen from | The user's side: the command typed, the lines printed, the project files that change | The engine's side: the step, the guard, the role card |
+| Unit | A journey across commands and the seams between stages | One guard or one step per case |
+| Run by | `simulate`; findings go to `fix` (SM-7) | `/magicspec-dev:test`, which repairs a failure and adds its regression case in the same run |
+| Recorded in | Each scenario's `Last run` | The run's report |
+
+- **No restatement.** A scenario does not restate a suite case. Where both touch one behaviour, the scenario checks the journey that reaches it and the case checks the guard; a step that would only repeat a case is left out.
+- **Journeys, not guards.** An engine scenario spans at least two commands, or one command and what a later session reads from the files it left: the seams the suite, one guard per case, does not walk (§1).
+- **A disposable instance is a copy.** A step runs live only in a project created for the run that holds its own copy of the engine folder, never in this repository's own workspace, whose files are the project's record (SM-6). Observed: a fixture driven through the repository's own scripts wrote a stray workspace into the repository's state folder, because the scripts find the project from where they are installed.
+- **The judge is not the producer.** A step whose outcome the agent composes from a workflow body — not a line a script prints — is traced, or run live by a fresh agent given only the scenario and its preconditions; the agent that judges the outcome would otherwise be the one producing it.
+- **What the set covers.** The scenarios cover what the L1 specifications state a person sees or does across commands; planning names the area files and the scenario titles (SM-3).
+
 ## 6. Implementation Notes
 
 1. A new workflow body for `simulate`, a scenario template, and the `simulator-tester` card (`l2-role-cards-review.md`).
 2. Planning and execution workflows gain SM-3 and SM-4 at their validation-task and task-completion steps.
 3. The developer-only `magicspec-dev:test` is unaffected: it simulates the engine, this simulates a product. Its old body name lingers in the constitution: C24's dev-only row names `simulate.md`, and `docs/simulate.md` documents the developer workflow. Before the product's `simulate` body ships, that row is renamed to the maintenance workflow (`/magicspec rule`) and the document is renamed, so that one name means one workflow.
 4. `simulate` writes only scenario files (their `Last run` fields) and finalizes like the other writing workflows.
+5. `[ADDED]` In the engine's repository the first scenario files are written by the phase that plans them (SM-3, §5.4). Phase entries written under the 1.0.2 forecast that name `tests/suite.md` as their scenarios stay as written: they are history.
+
+   **As built (Phase 60).** Five area files in `.magicspec/engine/simulations/` — `pipeline` (S-1 to S-3), `intake` (S-4 to S-6), `session` (S-7 and S-8), `routing` (S-9 and S-10), `quality` (S-11 and S-12) — twelve scenarios and forty steps, numbered across the files so no identifier repeats. Each step ends with a tag: `(printed)` for an outcome observed directly (a line an engine script prints, or a file's presence, absence or unchanged content) and `(composed)` for text the agent writes from a workflow body, so a run chooses live or traced without reading code. Each scenario's preconditions open with the disposable project (a scratch directory outside the repository, its own copy of the engine folder, initialised there) and each has a variant; every `Verifies` cites a section that exists in a specification. Scenarios that would only repeat a case of the suite were reshaped into journeys, and the steps that pass a case's guard on the way to a seam stay as the entry of the journey. `Last run` reads never in every scenario, so the first `/magicspec simulate` is the run. The artifact index has no kind for `simulations/`, so `memory-query` does not find the scenario files, as in every project. One bullet of `docs/dev-test.md` says where the scenarios live and how the work divides with the suite.
+
+   **Open finding (recorded, not resolved).** SM-7 ends a failed `simulate` run with `/magicspec fix` as its one next step, and the finalization prints it; `l1-fix-command.md` FX-10 makes `/magicspec-dev fix` the entry for error feedback about the engine in this repository, and the input table of that command lists the report of `/magicspec-dev test` but not a scenario finding. Which command repairs a failure of the engine's own scenarios here is left open, and the maintenance page states both routes as written. The next step is `/magicspec spec amend l1-fix-command.md`.
 
 ## 7. Drawbacks & Alternatives
 
@@ -106,11 +130,14 @@ graph TD
 | --- | --- | --- |
 | `[DEV-SIM]` | `skills/magicspec-dev/workflows/test.md` | The engine's own simulation workflow; precedent for scenario-driven review. |
 | `[TEST-ENGINEER]` | `skills/magicspec/roles/test-engineer.md` | The task gate SM-8 distinguishes from. |
+| `[COGNITIVE-SUITE]` | `tests/suite.md` | The engine's regression suite of its own text, which the engine's scenarios stand beside (§5.4). |
 
 ## Document History
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-11-18 | Agent | As built in Phase 60, Stable retained, no requirement changed. §6 item 5 records the five scenario files of the engine (`pipeline`, `intake`, `session`, `routing`, `quality`: twelve scenarios, forty steps), the `(printed)` and `(composed)` tags of their steps, the disposable-project preconditions, the reshaping of scenarios that would have repeated a case of the suite, and an open finding for `/magicspec spec amend l1-fix-command.md`: SM-7 hands a failed scenario step to `/magicspec fix` while FX-10 makes `/magicspec-dev fix` the entry for error feedback about the engine here, and neither names the other for a scenario finding. |
+| 1.1.0 | 2026-11-18 | Agent | **The engine's scenarios in `simulations/`, beside the cognitive suite**: the owner's decision after the first `simulate` run in this repository found no scenario to run and a check of moving the suite under it found the suite a different instrument (363 cases, 18 citing a specification; judged against the workflow text, with its own repair loop). §2 replaces the 1.0.2 forecast (the suite stood for the scenario files) with that decision; new §5.4 divides the work between the scenarios (judged against the specifications, journeys across commands, live only on a copy of the engine, never judged by their own producer) and the suite (judged against the workflow text, one guard per case, repaired in its own run); §6 item 5; `l2-test-suite.md` in Related Specifications and Canonical References. No invariant changed. Amendment Rule round trip: RFC, Post-Update Review (coherence: 9 artifacts compared, 0 findings; spec-critic PASS; prompt-engineer PASS-WITH-REWRITES, one sentence of §5.4 rewritten in the pass), Stable. |
 | 1.0.2 | 2026-11-12 | Agent | As built in Phase 52, Stable retained, no requirement changed. §5.1 records the `Last run` record as built (the date and the product version, then one line per step with its result, its mode and, for a failed or inconclusive step, the observed outcome; what is open is read from those lines by `finalize` and `fix`, which keep no store), and §2 records the forecast that settles SM-3 for this repository: the engine's cognitive suite stands for its scenario files. The `simulate.md` row of C24 and the developer document were renamed first (§6 item 3), as required. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |
 | 1.0.0 | 2026-10-29 | Agent | Created from the owner's list of ideas (simulation files created in parallel with the code, `/magicspec simulate`, scenarios written at planning time, a simulator-tester role). Post-Update Review: spec-critic PASS after the fixes of the review, prompt-engineer PASS-WITH-REWRITES (rewrites applied in the same pass); promoted to Stable under Trust Mode. |

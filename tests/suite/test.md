@@ -2,6 +2,8 @@
 
 Cases of the area `test` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T15 — Simulate Checksums Mismatch HALT
 
 - **Workflow:** `test.md` (Step 0: Pre-flight)

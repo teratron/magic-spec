@@ -132,7 +132,7 @@ graph TD
 
 After TASKS.md and the phase files are written:
 
-- If `STATE.md` does not exist → it will be created by `init.md` automatically (always called first).
+- If `STATE.md` does not exist → the `update-state` call below creates it from `templates/state.md`; `init` does not create it (`references/init.md` Step 2).
 - Update STATE.md to reflect the new tasks:
   `node scripts/executor.js update-state --workspace={active-workspace} --phase="{N} — {Phase Name}" --status=Active --next-action="Run /magicspec run {active-workspace} to execute Phase {N}"`
 - On a decomposition that ended with a finding, patch `--next-action` to `Run /magicspec plan {active-workspace} "{directive}"`.

@@ -2,6 +2,8 @@
 
 Cases of the area `fix` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T300 — A Report of an Already-Fixed Defect Is Answered Without a Change
 
 - **Workflow:** `fix.md` (Step 1)

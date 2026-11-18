@@ -78,7 +78,7 @@ Phase archival — moving `tasks/phase-N.md` → `archives/tasks/` and rewriting
 
 ```
 Retro Checklist — {Level}
-  ☐ Context: Zero-Prompt resolution; only RETROSPECTIVE.md modified
+  ☐ Context: Zero-Prompt resolution; only RETROSPECTIVE.md and the graph snapshots (`graph/snapshot.json`, `graph/before.json`) modified
   ☐ Data: INDEX (statuses), PLAN (coverage), TASKS (metrics) analyzed
   ☐ Graph Snapshot: build-spec-graph --json saved to .magicspec/graph/snapshot.json
   ☐ Graph Diff: diff-spec-graph executed if graph/before.json exists; structural deltas noted

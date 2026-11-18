@@ -2,6 +2,8 @@
 
 Cases of the area `simulate` of the cognitive suite. The index, the way to run it and the pass criteria are in [../suite.md](../suite.md).
 
+## Cases
+
 ### T317 — A Step That Cannot Run Live Is Traced, Labelled, and Never Counted as a Live Pass
 
 - **Workflow:** `simulate.md` (Steps 2 and 3; Core Invariant 4, two modes) with `roles/simulator-tester.md`
