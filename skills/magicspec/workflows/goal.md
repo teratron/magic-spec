@@ -35,7 +35,7 @@ Examples: `/magicspec goal "the import works end to end for all three file forma
 
 - **Ownership**: this workflow writes the goal block of `STATE.md` and nothing else of its own. Every other file is written by the step it runs, under that step's rules.
 - **Reads**: `STATE.md`, the registry, the plan and the workbooks, the findings of simulation runs, and the body of each step it is about to run.
-- **Inside the session**: the mode schedules nothing outside the host's session. A host that ends the turn ends the iteration; the next session continues from the recorded goal.
+- **Inside the session**: the mode schedules nothing outside the host's session. A host that ends the turn on its own — a limit or an error — ends the iteration, and the next session continues from the recorded goal. The mode itself never ends a turn before it stops (GM-10).
 - **Never commits**: changes stay uncommitted and reviewable. The report lists a commit suggestion per phase as text, never as an action.
 - **Finalization**: this workflow does not finalize as itself. Each step finalizes as its own workflow (`finalize --workflow={step}`), as it does outside this mode.
 
@@ -71,6 +71,7 @@ Read the argument into a scope before anything is written. The tokens `phase-{N}
    - **The files carry the state (PS-6)**: each step ends at its own stage boundary and leaves the records the next one reads. The next step is computed from the files after each one, never from what was in mind when the previous step began. A goal interrupted at any boundary resumes from the files.
    - **The step is its body**: to run a step, read `workflows/{step}.md` in full and follow it with the argument the iteration gives it. This workflow re-implements no step, so a change to a body reaches goal mode with no edit here.
    - **Closed stop conditions (GM-6)**: the mode stops on exactly one of the six conditions of Step 6 and on nothing else.
+   - **The mode does not stop itself (GM-10)**: while no stop condition holds, a turn is never ended with a message that starts no next action (a command, an edit or a check) — such a message is a stop on no condition of GM-6, without the report. Four ends read as reports and are never taken: a summary of a step that closes by announcing the next step instead of taking it; an offer to continue unless the person would rather not; a list of decisions for the person when none of them blocks the remaining work (an elective one is decided and narrated as a `[DR]`, one that needs consent is queued (GM-5)); a pause because the turn has been long or a phase is done. A progress note goes in the same message as the next action. The mode ends a turn for two things only: a round of the intake survey at the start (GM-1), and the report of Step 6 with its queued consents (GM-8). The person's interruption is the stop of Step 6 condition 6.
    - **Containment**: the goal block is an SDD artifact; nothing written into the product's tree names it, a criterion, a task or a specification (`CONSTITUTION.md` §6).
 5. **Engine Integrity (C14)**: if this skill folder is modified → `node scripts/executor.js update-engine-meta`.
 
@@ -120,7 +121,7 @@ graph TD
    | None of the above | no step runs: the iteration is the re-check of Step 5 alone, and it counts as without progress when nothing changes |
 
    A task limit makes `run` execute one task at a time (`/magicspec run {workspace} "{task id}"`, the next runnable one), so the count is exact and the mode stops at a task boundary. A step the recorded state names that is not one of the six, or none, is not run. Before running the step, find the consent it would need: a step whose next action is itself consent-gated is queued (Core Invariant 4) and the next row is taken instead.
-5. **Run the step**: read `workflows/{step}.md` in full and follow it, with its own pre-flight, gates and finalization (`finalize --workflow={step}`), displaying its finalization output verbatim as that body says. Where the body would ask a consent question, queue it instead (Core Invariant 4). Then:
+5. **Run the step**: read `workflows/{step}.md` in full and follow it, with its own pre-flight, gates and finalization (`finalize --workflow={step}`), displaying its finalization output verbatim as that body says. Where the body would ask a consent question, queue it instead (Core Invariant 4). The finalization output ends with its handoff line, whose last line names the next command; in this mode that line is the input of the next iteration, not the end of the turn, and the re-check below follows in the same turn. Then:
    - **Re-check the criteria**: run each criterion's named check; set its state `met`, `open` or `blocked` (waiting for consent, or for a decision the mode may not make).
    - **Count progress (GM-6)**: an iteration makes progress when it changes a recorded state — a criterion's state, a task's status, a specification's status, the plan's membership or order, or a finding closed. Repeating a step on unchanged input with an unchanged outcome is no progress. Compare the states read before the step with those read after; the counters are `withoutProgress` (reset to 0 on progress, else +1), `iterations` (+1), `tasksDone` (the tasks that reached `Done` in this step) and `phasesDone` (a phase that reached `Done`).
    - **Record** the new block through the writer (Step 3's command).
@@ -166,6 +167,7 @@ Goal Workflow Checklist — {operation}
   ☐ Consent: no E1, E2 or E4 action performed or silently skipped; each queued with its reason, its dependent work `Blocked [!]`, asked one at a time only after the report
   ☐ No guard relaxed: no review gate, pre-flight check, HALT or containment rule skipped in goal mode
   ☐ Progress counted by the recorded states that changed; a stop on exactly one of the six conditions
+  ☐ No self-made stop (GM-10): no turn ended before a stop condition held — no summary announcing the next step, no offer to continue, no list of non-blocking decisions, no pause for a long turn; a step's finalization output was followed by the re-check in the same turn
   ☐ A task limit: `run` one task at a time, the mode stopped at a task boundary, never in the middle of one
   ☐ One report in the layout above, once; commit suggestions as text only, nothing committed; the handoff line printed once
   ☐ Engine Meta: C14 bump performed if files of this skill folder were modified

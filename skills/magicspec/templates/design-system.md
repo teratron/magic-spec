@@ -62,7 +62,13 @@ Why the product needs a design system of its own, and what goes wrong without on
 - **Reduced motion:** {the rule}
 - **Sizes or windows:** {the narrowest and widest the interface must work at}
 
-## 7. Implementation Notes
+## 7. Patterns Not Used
+
+<!-- The patterns this product does not use, each named concretely: a background tone, a heading treatment, a label style, a button shape; a general wish such as "not generic" names none and is not an entry. Grown from the defaults each draft fell back on: a pattern in a draft that no source in section 2 chose is either recorded there with its source or added here by name. -->
+
+- {Pattern — what it looks like, and what the product uses instead.}
+
+## 8. Implementation Notes
 
 <!-- Optional. Where the tokens live in the product's code, and how a change to one reaches the screens. -->
 

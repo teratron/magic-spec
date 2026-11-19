@@ -22,15 +22,16 @@ Each expectation ends with a tag: `(printed)` for an outcome observed directly �
 ## S-12: A goal runs through the stages without pausing and reports once
 
 **Actor:** a developer working in a project where the engine is installed
-**Verifies:** l1-goal-mode.md §3 GM-1, l1-goal-mode.md §3 GM-4, l1-goal-mode.md §3 GM-5, l1-goal-mode.md §3 GM-6, l1-goal-mode.md §3 GM-8
+**Verifies:** l1-goal-mode.md §3 GM-1, l1-goal-mode.md §3 GM-4, l1-goal-mode.md §3 GM-5, l1-goal-mode.md §3 GM-6, l1-goal-mode.md §3 GM-8, l1-goal-mode.md §3 GM-10
 **Preconditions:** a disposable project as in S-11 with one workspace, an empty registry and no product code, and no goal recorded.
 
 **Steps:**
 
 1. `/magicspec goal "a command-line tool that prints the sum of its arguments, with a test that checks it"` → expect: the goal passes the input pass and the idea intake once, at the start, and the only questions of the whole run come there; the goal is clear, so none is asked (composed).
 2. Give no further input → expect: the stages follow one another — specification, plan, tasks, execution — each ending at its own boundary after its own finalization, and nothing asks, pauses or waits between them (composed).
-3. Wait for the mode to stop → expect: it stops on one closed condition and names it: every criterion met, nothing unblocked left with consents queued, three iterations without progress, an integrity halt, a bound the goal stated, or an interruption (composed).
-4. Read the report → expect: one report is printed once, at the stop, holding the stop condition, the criteria each with its state and its evidence, the work per phase with a commit suggestion, the queued consents and the one next step (composed); each criterion marked met names evidence the project bears out — the command it names prints the sum and the test it names exists and passes (composed).
+3. Watch the end of a stage → expect: a stage's finalization prints its handoff line (`Next: /magicspec {command} …`) and the same turn goes on with the re-check of the criteria and the next iteration; no summary that announces the next step, no offer to continue, no list of decisions that block nothing and no pause because the turn has been long or a phase is done (composed).
+4. Wait for the mode to stop → expect: it stops on one closed condition and names it: every criterion met, nothing unblocked left with consents queued, three iterations without progress, an integrity halt, a bound the goal stated, or an interruption (composed).
+5. Read the report → expect: one report is printed once, at the stop, holding the stop condition, the criteria each with its state and its evidence, the work per phase with a commit suggestion, the queued consents and the one next step (composed); each criterion marked met names evidence the project bears out — the command it names prints the sum and the test it names exists and passes (composed).
 
 **Variants:** a step needs consent, such as deleting a file the goal does not own → it is not performed and not skipped in silence: it is queued with its reason, the work that does not depend on it goes on, the report counts it under the queued consents, and the question is asked once, in queue order, only after the mode has stopped (composed).
 

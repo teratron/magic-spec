@@ -1,8 +1,8 @@
 # Master Task Index (Registry)
 
-**Version:** 1.72.0
-**Generated:** 2026-11-18
-**Based on PLAN:** .magicspec/engine/PLAN.md v1.77.0
+**Version:** 1.74.0
+**Generated:** 2026-11-19
+**Based on PLAN:** .magicspec/engine/PLAN.md v1.79.0
 **Based on RULES:** .magicspec/RULES.md v1.24.0
 **Execution Mode:** Parallel
 **Status:** Active
@@ -17,6 +17,8 @@ What a phase planned and produced is recorded in `PLAN.md`, in the workbook's `p
 
 | Phase | Description | Status |
 | --- | --- | --- |
+| [Phase 65](archives/tasks/phase-65.md) | Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used — three amendments built in three independent tracks: goal mode names the four ends of a turn it never takes (GM-10), the Input Pass lets the person's own words reach an instruction inside pasted material (IP-3), and a design system names the patterns its product does not use (UI-2, UI-5); a fourth track writes the cognitive-suite cases and brings the three specifications to as-built; 10 tasks in four tracks (G, P, U, S) | `Done (Archived)` |
+| [Phase 66](archives/tasks/phase-66.md) | Maintenance: The Analysis the Specification Workflow Delegates Is Governed by analyze.md Alone — the `Project Analysis Delegation` section of `workflows/spec.md` states that `analyze.md` governs the delegated analysis under its own write rules, with no guard, approval wait or effort plea of its own; the read-only guard names Explore Mode only | `Done (Archived)` |
 | [Phase 64](archives/tasks/phase-64.md) | Maintenance: A Finished Ledger Is Not Re-Synced After a Plan — after `/magicspec plan` the next step names the task command only while a phase of the ledger is open (PL-5); with every phase terminal the plan state decides | `Done (Archived)` |
 | [Phase 62](archives/tasks/phase-62.md) | Maintenance: A Failed Engine Scenario Enters Through the Maintenance Fix — in this repository a failed or inconclusive step of the engine's own scenarios is repaired through `/magicspec-dev fix`, stated in the maintenance workflow, its router row, the development guide, the contributor document on the scenarios and C28 item 2, while the shipped folder keeps printing `/magicspec fix` | `Done (Archived)` |
 | [Phase 63](archives/tasks/phase-63.md) | Maintenance: A Stale Plan Is Revalidated Before Its Backlog Is Judged, and a Repaired Scenario Finding Is Re-Run — a plan the registry or the constitution moved past no longer raises the design-debt halt before its revalidation, and goal mode re-runs the scenario of a repaired finding before handing it to `fix` again | `Done (Archived)` |

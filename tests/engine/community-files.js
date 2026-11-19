@@ -849,6 +849,13 @@ module.exports = () => {
             'a screenshot, a driven browser, a captured terminal',
             'the check is a review against the specification',
             "The method is named in the task's `Verify` line.",
+            // UI-2 and UI-5: the patterns the product does not use, and the draft compared with the design context.
+            'the rules for overriding them in one place, and the patterns the product does not use',
+            'a general wish such as "not generic" names none and is not an entry',
+            'look at the draft as step 6 does and compare it with the design context',
+            'a pattern in it that no cited source chose is a default the draft fell back on',
+            "added by name to the design system's patterns not used",
+            'or guarding against defaults with a general wish instead of named patterns',
         ]) {
             assert.ok(card.includes(needle), `the card states: ${needle}`);
         }
@@ -908,11 +915,22 @@ module.exports = () => {
             '## 5. Overrides',
             '## 6. Accessibility Baseline',
             '- **Reduced motion:**',
+            '## 7. Patterns Not Used',
+            'each named concretely: a background tone, a heading treatment, a label style, a button shape',
+            'a general wish such as "not generic" names none and is not an entry',
+            'a pattern in a draft that no source in section 2 chose is either recorded there with its source or added here by name',
+            '## 8. Implementation Notes',
             '## Document History',
             'screen and flow specifications reference it and never redefine a token',
         ]) {
             assert.ok(design.includes(needle), `the design-system template carries: ${needle}`);
         }
+        const baselineAt = design.indexOf('## 6. Accessibility Baseline');
+        const patternsAt = design.indexOf('## 7. Patterns Not Used');
+        assert.ok(
+            baselineAt < patternsAt && patternsAt < design.indexOf('## 8. Implementation Notes'),
+            'the patterns not used sit after the accessibility baseline and before the implementation notes',
+        );
         const spec = readShipped('skills/magicspec/templates/spec.md');
         const at = spec.indexOf('\n## Interface\n');
         assert.ok(

@@ -1,6 +1,6 @@
 # Interface Design: UI/UX, Layout and Front-End Work
 
-**Version:** 1.1.0
+**Version:** 1.1.1
 **Status:** Stable
 **Layer:** concept
 
@@ -75,7 +75,7 @@ Sizes: {narrowest} … {widest}
 2. A design-system specification template among the engine templates.
 3. The parked `frontend-specialist` backlog item is closed by this specification.
 4. **As built (Phase 52).** UI-1 to UI-4: the creation step of `workflows/spec.md` (the `Interface` bullet), `templates/design-system.md` and the optional `## Interface` section of `templates/spec.md`. UI-5 and UI-6: step 4 of `workflows/task.md` (the draft task, the design acceptance, the named way of looking) and step 3.1 of `workflows/run.md`. UI-7: `roles/ui-ux-designer.md`, with one sub-bullet under the minimal-diff step of `roles/coder.md`. The card recommends the `frontend-design` skill as a hint only (R6).
-5. `[ADDED]` **UI-2 and UI-5 (1.1.0), not yet built.** `templates/design-system.md` gains a section for the patterns the product does not use; the card's *One design system* and *Early draft* steps gain the list and the comparison with the draft; its first anti-pattern gains "or guarding against defaults with a general wish instead of named patterns". Declared supersession (`l1-coherence-check.md` CH-9): that anti-pattern line of `roles/ui-ux-designer.md` and its mirror in `l2-role-cards-execution.md`, which name no list.
+5. `[ADDED]` **As built (Phase 65), no requirement changed.** UI-2 and UI-5 (1.1.0). `templates/design-system.md` gains `## 7. Patterns Not Used` (Implementation Notes became section 8, no pinned heading moved); in `roles/ui-ux-designer.md` step 2 (*One design system*) lists the patterns not used and how an entry is named, step 5 (*Early draft*) compares the draft with the design context and records a pattern no cited source chose or adds it by name, and the first anti-pattern gains "or guarding against defaults with a general wish instead of named patterns"; the mirror in `l2-role-cards-execution.md` carries the three lines word for word. The harness cases of the template and of the designer card gain the needles. The engine has no interface of its own, so no scenario was written. The declared supersession of the first anti-pattern is carried out.
 
 ## 7. Drawbacks & Alternatives
 
@@ -94,6 +94,7 @@ Sizes: {narrowest} … {widest}
 
 | Version | Date | Author | Description |
 | --- | --- | --- | --- |
+| 1.1.1 | 2026-11-19 | Agent | As built in Phase 65, Stable retained, no requirement changed. §6 item 5 records the build of UI-2 and UI-5 (1.1.0): the section *Patterns Not Used* of `templates/design-system.md`, steps 2 and 5 and the first anti-pattern of the `ui-ux-designer` card with their mirror in `l2-role-cards-execution.md`; the needles added to the harness cases of the template and the card under ten mutation entries (the mirror proved by manual controls). The engine has no interface of its own, so no scenario was written. The declared supersession of the first anti-pattern is carried out. |
 | 1.1.0 | 2026-11-18 | Agent | **Patterns the product does not use, named** (UI-2 and UI-5 modified; §1 the guidance on item 7; §2 a forecast premise; §6 item 5). Origin: a reference-mining pass over a model vendor's prompting guidance for a current model generation, recorded by class only: without design direction the model falls back on a few default styles, a general instruction to avoid a generic look swaps one default for another, and a list of named patterns, extended with what the first result still used, works. The engine's own anti-pattern was that general instruction. Amendment Rule round trip: RFC, Post-Update Review (coherence: 5 artifacts compared — `l2-role-cards-execution.md`, `roles/ui-ux-designer.md`, `templates/design-system.md`, `l2-role-integration.md`, `l1-role-system.md` — 0 blocking findings, the anti-pattern line declared superseded; spec-critic PASS; prompt-engineer PASS), Stable. |
 | 1.0.2 | 2026-11-12 | Agent | As built in Phase 52, Stable retained, no requirement changed. §6 records where each requirement lives: UI-1 to UI-4 in the creation step of the specification workflow with the design-system template and the optional interface section of the specification template; UI-5 and UI-6 in the decomposition and execution workflows; UI-7 in the `ui-ux-designer` card and the stance line of the `coder` card. |
 | 1.0.1 | 2026-10-30 | Agent | **Reality sync: the printed command form** is `/magicspec <command>` ([l1-command-surface.md](l1-command-surface.md) CS-2); the earlier colon spelling is rewritten wherever the text prints a command. No requirement changed. |

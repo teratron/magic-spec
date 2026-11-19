@@ -95,3 +95,17 @@ Cases of the area `goal` of the cognitive suite. The index, the way to run it an
 - **Control:** `/magicspec goal phase-3 5 tasks` stops at the end of the phase or after five tasks, whichever comes first; a task that ends `Blocked [!]` does not count toward the five.
 - **Guards tested:** GM-9 (item 3); GM-6 (condition 5).
 - **Regression for:** none yet — new with the goal command.
+
+### T365 — A Step's Finalization Ends With Its Handoff Line and the Iteration Goes On in the Same Turn
+
+- **Workflow:** `goal.md` (Core Invariant 4, Step 5 and Step 6) with the finalization output of the step it ran
+- **Synthetic State:** a goal recorded with two criteria `open`; the step just run is `task`, and its finalization output ends with `Next: /magicspec run {workspace} — standard reasoning`; no condition of Step 6 holds.
+- **Action:** the finalization output of the step is displayed.
+- **Expected:**
+  - [ ] The same turn goes on: the criteria are re-checked, the block is recorded and the next iteration starts with the step the files compute — the handoff line is the input of the next iteration, not the end of the turn (GM-10).
+  - [ ] The message that ends the step holds no summary that closes by announcing the next step, no offer to continue, no list of decisions that block nothing and no pause because the turn has been long or a phase is done; a progress note, when there is one, is in the same message as the next action.
+  - [ ] A decision that blocks none of the remaining work is decided and narrated as a `[DR]`; one that needs consent is queued with its reason (GM-5).
+  - [ ] The turn ends only for a round of the intake survey at the start (GM-1) or for the report of one of the six conditions, with the queued consents asked after it (GM-6, GM-8).
+- **Control:** the host ends the turn on its own, by a limit or an error: the iteration ends there and is not a stop of the mode; the next session's bare `goal` continues from the recorded goal (GM-3).
+- **Guards tested:** GM-10; GM-6 (the closed list of six); GM-3.
+- **Regression for:** the handoff line of a stage's finalization read, inside goal mode, as the end of the turn — a stop on no condition and without the report.

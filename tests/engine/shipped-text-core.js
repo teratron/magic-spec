@@ -868,6 +868,59 @@ module.exports = () => {
         assert.ok(!/AskUserQuestion/.test(body), 'the body asks no question itself');
     });
 
+    test("goal mode does not stop itself: the host's end of a turn is told apart from the mode's, the four ends that read as reports are named once and never taken, a step's finalization is followed by the re-check in the same turn (GM-10)", () => {
+        const body = readShipped('skills/magicspec/workflows/goal.md');
+        const has = (needle, what) =>
+            assert.ok(body.includes(needle), `goal.md states ${what}: ${needle}`);
+
+        // The scope bullet tells the host's end of a turn from the mode's.
+        has(
+            'A host that ends the turn on its own — a limit or an error — ends the iteration',
+            'the host-ended turn',
+        );
+        has('The mode itself never ends a turn before it stops (GM-10)', 'the mode-ended turn');
+        assert.ok(
+            !body.includes('A host that ends the turn ends the iteration;'),
+            "the bullet no longer reads every end of a turn as the host's",
+        );
+
+        // The guard names the four ends once and the two ends the mode takes.
+        const guard = lineWith(body, '**The mode does not stop itself (GM-10)**');
+        assert.ok(guard, 'Core Invariant 4 has the guard');
+        for (const needle of [
+            'never ended with a message that starts no next action (a command, an edit or a check)',
+            'a stop on no condition of GM-6',
+            'announcing the next step instead of taking it',
+            'an offer to continue',
+            'a list of decisions for the person when none of them blocks the remaining work',
+            'a pause because the turn has been long or a phase is done',
+            'an elective one is decided and narrated as a `[DR]`',
+            'one that needs consent is queued (GM-5)',
+            'A progress note goes in the same message as the next action',
+            'a round of the intake survey at the start (GM-1)',
+            'the report of Step 6 with its queued consents (GM-8)',
+        ]) {
+            assert.ok(guard.includes(needle), `the guard states: ${needle}`);
+        }
+
+        // Step 5: the handoff line of a finalization is the input of the next iteration.
+        const step5 = body.slice(
+            body.indexOf('5. **Run the step**'),
+            body.indexOf('6. **Stop condition**'),
+        );
+        for (const needle of [
+            'whose last line names the next command',
+            'is the input of the next iteration, not the end of the turn',
+            'the re-check below follows in the same turn',
+        ]) {
+            assert.ok(step5.includes(needle), `Step 5 states: ${needle}`);
+        }
+
+        // The closed list stays six, and the checklist carries one line for the guard.
+        has('the mode stops on exactly one of the six conditions', 'the closed list');
+        has('☐ No self-made stop (GM-10)', 'the checklist line');
+    });
+
     test('goal mode re-runs the scenario of a repaired finding before it chooses fix for it again, and the repair records the run it repaired (GM-4, FX-7)', () => {
         const goal = readShipped('skills/magicspec/workflows/goal.md');
         const rerun = goal.indexOf(

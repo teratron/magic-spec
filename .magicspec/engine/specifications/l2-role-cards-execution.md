@@ -1,6 +1,6 @@
 # Role Cards — Execution Pipeline
 
-**Version:** 1.3.2
+**Version:** 1.3.3
 **Status:** Stable
 **Layer:** implementation
 **Implements:** l1-role-system.md
@@ -278,16 +278,16 @@ related_rules: [C24]
 **Operating Protocol:**
 
 1. **Context first:** before an interface is specified, gather and cite the existing design context: the product's design-system specification if one exists, its brand material, the current interface. Absent all three, the specification says so and states where its choices come from.
-2. **One design system:** a product with an interface has one design-system specification: its tokens (colour, type, spacing, radius, elevation, motion), its components with their variants and states, and the rules for overriding them in one place. Screen and flow specifications reference it and never redefine a token.
+2. **One design system:** a product with an interface has one design-system specification: its tokens (colour, type, spacing, radius, elevation, motion), its components with their variants and states, the rules for overriding them in one place, and the patterns the product does not use. Each of those patterns is named concretely — a background tone, a heading treatment, a label style, a button shape; a general wish such as "not generic" names none and is not an entry. Screen and flow specifications reference it and never redefine a token.
 3. **States:** every screen or flow specification states, for each view, the normal state and the empty, loading, error, partial, disabled and long-content states that apply to it, and what the person can do in each.
 4. **Accessibility:** every interface specification states its accessibility requirements as verifiable statements: contrast, keyboard operation and focus order, accessible names, reduced motion, and the sizes or windows it must work at.
-5. **Early draft:** for a new screen or flow, the first task produces a draft the person can look at before the full build. Record the draft and continue the build; nothing pauses for a look, and a correction arrives as an interruption or a later amendment.
+5. **Early draft:** for a new screen or flow, the first task produces a draft the person can look at before the full build. Record the draft and continue the build; nothing pauses for a look, and a correction arrives as an interruption or a later amendment. Before the build continues, look at the draft as step 6 does and compare it with the design context: a pattern in it that no cited source chose is a default the draft fell back on, and is either recorded with the source that justifies it or added by name to the design system's patterns not used.
 6. **Verified by looking:** a task that changes an interface is verified by rendering it where the session can (a screenshot, a driven browser, a captured terminal) and comparing it with the specification's design system, states and accessibility statements. Where it cannot render, the task says so and the check is a review against the specification. The method is named in the task's `Verify` line.
 7. In implementation the `coder` adopts this stance for layout and front-end work; hand off to `code-reviewer` and `test-engineer`, and for a journey across screens to `simulator-tester`.
 
 **Anti-patterns:**
 
-- Choosing a style from generic defaults instead of the design context or the design system.
+- Choosing a style from generic defaults instead of the design context or the design system, or guarding against defaults with a general wish instead of named patterns.
 - Redefining a token in a screen or flow specification.
 - Specifying only the happy path of a view.
 - Leaving accessibility as an afterthought, or stated in terms nobody can verify.
@@ -313,6 +313,7 @@ related_rules: [C24]
 
 | Version | Date | Description |
 | --- | --- | --- |
+| 1.3.3 | 2026-11-19 | Clarification patch, Stable retained (as built in Phase 65; the mirror follows the deployed card word for word): steps 2 and 5 and the first anti-pattern of the `ui-ux-designer` card name the patterns the product does not use and compare a draft with the design context. |
 | 1.3.2 | 2026-11-13 | Clarification patch, Stable retained (the mirror follows the deployed card word for word). Planner: step 6, the plan check, reads the cited lines, not the file, and, when the first line of the query counts more matches than it showed, takes the next page it names or narrows the query before treating the set as complete; the fallback to a direct search is unchanged. |
 | 1.3.1 | 2026-11-12 | Clarification patch, Stable retained (as built in Phase 54; the mirror follows the deployed card word for word). Planner: step 6, the plan check, searches for the names the draft introduces with `memory-query "{name}"` (with `--history` to reach archived phases), reads a cited section before relying on it and falls back to a direct search when the query prints that the index is unavailable. |
 | 1.3.0 | 2026-11-12 | As built in Phase 52 (Stable retained via Trust Mode re-review, C9): new §6, the `ui-ux-designer` card, generated from the deployed card word for word; the coder's mirror and card gain the interface-stance sub-bullet under the minimal-diff step; the planner gains step 7, the scenario list, with the write-back and stage-boundary steps renumbered 8 and 9. Pre-existing, not touched: this mirror of the coder lacks the deployed card's step 4 (surface multiple interpretations) and words step 5 differently. |

@@ -1,5 +1,12 @@
 # Engine Workspace Changelog
 
+## Phase 65 — 2026-11-19 (Prompting Guidance: Goal Mode Does Not Stop Itself, Material the Person's Words Reach, Patterns Not Used)
+
+- **Goal mode names the ends of a turn it never takes (GM-10).** A summary that announces the next step, an offer to continue, a list of decisions that block nothing and a pause because the turn has been long are never taken; a turn the host ends (a limit, an error) is told apart from one the mode would end; a finalization's handoff line is the input of the next iteration, with the re-check in the same turn. The six stop conditions are unchanged.
+- **An instruction inside pasted material is followed as far as the person's own words ask for it (IP-3).** The `prompt-engineer` card, the `spec`, `fix` and maintenance `fix` bodies and the contributor page state the boundary; the host's marking can only add to what is material, and an adopted instruction passes every gate and consent entry.
+- **A design system names the patterns its product does not use (UI-2, UI-5).** The template gains a section for them; the `ui-ux-designer` card compares a draft with the design context and grows the list from the defaults the draft fell back on.
+- **Records:** suite cases T365 and T366 (suite 1.9.109), scenario S-13 and one step of S-12 (thirteen scenarios, forty-three steps). **Specifications:** `l1-goal-mode` 1.3.1, `l1-input-prompt-pass` 1.1.1, `l1-interface-design` 1.1.1, `l1-product-simulation` 1.1.3 (all as built), the mirrors `l2-role-cards-governance` 1.4.10 and `l2-role-cards-execution` 1.3.3, registry 1.92.0. Engine 3.0.154. Harness 461.
+
 ## Phase 62 — 2026-11-18 (Maintenance: A Failed Engine Scenario Enters Through the Maintenance Fix)
 
 - **A failed step of the engine's own scenarios has one route to its repair in this repository.** The maintenance `fix` workflow takes it as an input (read from the `Last run` records of the scenarios), and a section *A Failed Scenario Step* says how it is reproduced (in a disposable copy of the engine), repaired (in the shipped folder, or in the scenario file alone when the scenario is out of date) and closed (by the next `simulate` run of its area); the maintenance router, the development guide and the contributor page name the same route, while `simulate` and `finalize` keep printing `/magicspec fix`.

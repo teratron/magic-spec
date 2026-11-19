@@ -1737,4 +1737,75 @@ module.exports = () => {
             'a review that runs after the write must not tell the agent to resolve before writing',
         );
     });
+
+    test('shipped text: the analysis the specification workflow delegates is governed by analyze.md alone — no guard that forbids the writes it makes, no approval wait, no effort plea — and the read-only guard names Explore Mode only', () => {
+        const spec = readShipped('skills/magicspec/workflows/spec.md');
+        const analyze = readShipped('skills/magicspec/workflows/analyze.md');
+
+        const delegation = spec.slice(
+            spec.indexOf('### Project Analysis Delegation'),
+            spec.indexOf('### Dispatching from Raw Input'),
+        );
+        assert.ok(
+            delegation.startsWith('### Project Analysis Delegation'),
+            'spec.md must keep the Project Analysis Delegation section',
+        );
+        for (const needle of [
+            '`workflows/analyze.md` governs',
+            'Core Invariant 3',
+            'adds no step and no guard',
+        ]) {
+            assert.ok(delegation.includes(needle), `the delegation must state ${needle}`);
+        }
+        // The guard the delegated analysis could not obey: analyze.md repairs the registry and
+        // writes the engine snapshot into INDEX.md in every mode.
+        assert.ok(
+            analyze.includes('`INDEX.md` registry fields') &&
+                analyze.includes('update the `**Engine Version:**` field in `.magicspec/INDEX.md`'),
+            'analyze.md must still write the registry fields and the engine snapshot (the premise of the delegation)',
+        );
+        for (const stale of [
+            'MUST NOT modify',
+            'explicitly approves',
+            'thinking partner',
+            'deeply analyze',
+            'output thoughts directly',
+        ]) {
+            assert.ok(
+                !delegation.includes(stale),
+                `the delegation must not carry the contradicting or inert wording: ${stale}`,
+            );
+        }
+
+        // Core Invariant 2 and the graph refresh name Explore Mode as the read-only mode.
+        const prohibitions = lineWith(spec, '2. **Prohibitions**');
+        assert.ok(prohibitions, 'spec.md must keep its Prohibitions invariant');
+        assert.ok(
+            !prohibitions.includes('Explore/Analyze'),
+            'Prohibitions must not bind an analysis',
+        );
+        assert.ok(
+            prohibitions.includes('during Explore Mode'),
+            'Prohibitions must bind Explore Mode',
+        );
+        const refresh = lineWith(spec, 'Skip the refresh in');
+        assert.ok(
+            refresh && !/Project Analysis Delegation\*\* — both are read-only/.test(refresh),
+            'the refresh skip must not call the delegated analysis read-only',
+        );
+        assert.ok(
+            !spec.includes('Explore/Analysis Delegation read-only modes'),
+            'the checklist must not call the delegated analysis read-only',
+        );
+
+        // The safe-drafting statement the delegation used to carry belongs to Explore Mode.
+        const explore = spec.slice(
+            spec.indexOf('### Explore Mode (Brainstorming)'),
+            spec.indexOf('### Mode Transition'),
+        );
+        assert.ok(
+            explore.includes('never in `.magicspec/`') && explore.includes('temporary file'),
+            'Explore Mode must state that its drafts stay out of .magicspec/',
+        );
+    });
 };
