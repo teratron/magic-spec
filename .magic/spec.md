@@ -23,7 +23,7 @@ Universal process for managing project specifications in `.design/specifications
 ## Core Invariants (Mandatory)
 
 1. **Context (Zero-Prompt)**: Apply [context.md](context.md) as a whole — every section applies unless it names other workflows.
-2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during "Explore/Analyze" modes.
+2. **Prohibitions**: No implementation code in specs; use pseudo-code for internal logic. **TECHNICAL CONTRACTS** (interfaces, types, API schemas, and reference snippets clearly marked as `[REFERENCE]`) are **PERMITTED** to ensure architectural precision. Unformatted/active implementation code detected → **HALT**. No modification of `INDEX.md`, `PLAN.md`, `TASKS.md`, or live specs during Explore Mode (an analysis delegated to `analyze.md` writes under that workflow's own rules — Project Analysis Delegation).
 3. **Auto-Init**: If `.design/` or system files missing, silently execute `.magic/init.md` (do not prompt user).
 4. **Engine Integrity (C14)**: If `.magic/` or `workflows/` modified → `node .magic/scripts/executor.js update-engine-meta`.
 5. **Linking**: every spec must be in `INDEX.md`. Map relations in `Related Specifications`.
@@ -136,6 +136,8 @@ Use this workflow for safe exploration. In **Trust Mode (C9)**, the agent strive
 2. Identify "Uncovered" modules or logical next steps in the architecture.
 3. Surface up to 3 candidate "Creative Sparks" (topics for new specs or refinement) as a brief declarative list, then **rank them by DA-3 and select the highest-coverage gap in the same turn**, narrate the choice as a Decision Record (`[DR] Specifying {spark} — highest-coverage gap (DA-3). (Override: /magic.spec amend {other})`), and proceed to Dispatch. This is a Selection fork (DA-9): a blank/no-argument invocation resolves by DA-3, **never** by a question or option menu (e.g. an `AskUserQuestion` call) asking which spark to pursue. The user's redirect arrives as an interrupt (C25 §5), not a solicited answer — do not stall on confirmation (C9 default).
 
+**Draft safely**: while the exploration lasts, ideas and proposals go to the chat or to a temporary file in the agent's artifacts directory, never in `.design/`; the registry and the specifications change only after the transition below.
+
 ### Mode Transition: Explore → Dispatch
 
 Explore Mode ends automatically; the agent MUST transition to Dispatching/Writing when:
@@ -145,14 +147,9 @@ Explore Mode ends automatically; the agent MUST transition to Dispatching/Writin
 
 ### Project Analysis Delegation
 
-**Trigger intent**: "/magic.analyze", "Analyze project", "Scan project", "Re-analyze", "Ventilate".
+**Trigger intent**: "Analyze project", "Scan project", "Re-analyze", "Ventilate". (`/magic.analyze` itself never reaches this workflow: its own entry reads `.magic/analyze.md` directly.)
 
-> **Delegation Rule**: if the user's intent is to analyze the *existing codebase* — **delegate to `.magic/analyze.md`**. Read that file and follow its workflow.
-
-1. **Act as a thinking partner**: use available codebase reasoning tools (file search, content search, directory listing) to deeply analyze the user's request.
-2. **Draft safely**: output thoughts directly to chat or create a temporary `proposal.md` file in the agent's artifacts directory (never in `.design/`).
-3. **Actionable Guard (Analysis Mode ONLY)**: while in this delegated analysis mode, you MUST NOT modify `INDEX.md`, `PLAN.md`, `TASKS.md`, or any live `.design/specifications/` documents. Restriction is lifted immediately upon transition to Spec/Dispatch modes.
-4. **Transition**: only update live specs when the user explicitly approves transitioning the brainstorm into a formal spec update (triggering *Dispatching from Raw Input* or *Updating an Existing Specification*).
+> **Delegation Rule**: when the user's intent is to analyze the *existing codebase*, `.magic/analyze.md` governs the whole invocation — read it and follow it. Its write rules apply as written, the registry repairs and the engine snapshot included (its Core Invariant 3); this workflow adds no step and no guard to the analysis and writes nothing for it.
 
 ### Dispatching from Raw Input
 
@@ -278,7 +275,7 @@ node .magic/scripts/executor.js export-wiki
 
 Single call rebuilds the graph (cached extraction, ~ms per warm spec) and regenerates `.design/wiki/`. Best-effort — on failure log non-blocking warning (`[Graph-Refresh] export-wiki failed: {err}. Wiki may be stale.`) and continue.
 
-Skip the refresh in **Explore Mode** and **Project Analysis Delegation** — both are read-only.
+Skip the refresh in **Explore Mode**, which is read-only, and in **Project Analysis Delegation**, where `analyze.md` runs its own refresh after a dispatch.
 
 ### Updating RULES.md (Constitution)
 
@@ -352,7 +349,7 @@ Checklist — {task description}
   ☐ Engine: update-engine-meta run if .magic/ or workflows/ modified (C14)
   ☐ Review: Post-Update Review performed by `@role:spec-critic` (Purity, Completeness, Compliance)
   ☐ Instruction Quality: dispatched sections reviewed by `@role:prompt-engineer` (PQ-6 verdict recorded)
-  ☐ Graph: export-wiki run after dispatch (skip for Explore/Analysis Delegation read-only modes)
+  ☐ Graph: export-wiki run after dispatch (skip for Explore Mode, which is read-only, and for a delegated analysis, whose `analyze.md` refreshes its own)
   ☐ Idea Intake (E6): Step 0.5 evaluated; fired only on F1–F3 after IK-2 investigation; questions stayed
      in the intent layer and plain language, options from the forecast with its winner marked and an
      Other (IK-3, IK-5); rounds shrank, Other answers re-checked (IK-6); delegated questions answered

@@ -514,13 +514,13 @@ If any test fails, document the failure reason and propose a fix.
   - **Expected:**
     - [ ] `spec.md` Explore Mode entered
     - [ ] Delegation rule matches: "Scan ... modules" → `analyze.md`
-    - [ ] `analyze.md` read and Re-Analysis flow executed
+    - [ ] `analyze.md` read and Re-Analysis flow executed under its own write rules (registry repairs and the engine snapshot allowed); `spec.md` adds no guard and asks no approval
 - **Test B — Generic brainstorm (no delegation):**
   - **Action:** `"Let's brainstorm about caching strategies"`
   - **Expected:**
     - [ ] `spec.md` Explore Mode entered
     - [ ] Delegation rule does NOT match (no project analysis intent)
-    - [ ] Standard Explore Mode proceeds (thinking partner, no live writes)
+    - [ ] Standard Explore Mode proceeds (no live writes; drafts stay in the chat or the artifacts directory, never in `.design/`)
 - **Guards tested:** Delegation trigger accuracy, non-matching triggers stay in Explore Mode
 
 ### T30 — Init Existing Codebase Hint
